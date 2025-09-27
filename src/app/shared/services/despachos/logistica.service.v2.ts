@@ -279,14 +279,69 @@ export class LogisticaServiceV2 extends BaseService {
         return this.http.post(`${this.apiUrl}/v1/logistics/shipments/delete`, shipment);
     }
 
-    trackShipment(shipment: any): Observable<any> {
-        return this.http.post(`${this.apiUrl}/v1/logistics/shipments/track`, shipment);
-    }
 
     // Nuevo método para seguimiento de pedidos despachados
     trackDespachado(companyId: string, provider: string, order: string, options: any = {}): Observable<any> {
         const payload = { companyId, provider, order, options };
         return this.http.post(`${this.apiUrl}/v1/logistics/despachados/track`, payload);
+    }
+
+    // ========== MÉTODOS ESPECÍFICOS PARA ENVIAME.IO ==========
+
+    /**
+     * Obtener tarifas de envío para cotización
+     * @param payload Datos para cotización
+     */
+    getRates(payload: {
+        companyId: string;
+        provider: string;
+        origin: any;
+        destination: any;
+        package: any;
+        options?: any;
+    }): Observable<any> {
+        return this.http.post(`${this.apiUrl}/v1/logistics/shipments/rates`, payload);
+    }
+
+    /**
+     * Cancelar envío creado
+     * @param payload Datos para cancelación
+     */
+    cancelShipment(payload: {
+        companyId: string;
+        provider: string;
+        trackingNumber: string;
+        reason?: string;
+        options?: any;
+    }): Observable<any> {
+        return this.http.post(`${this.apiUrl}/v1/logistics/shipments/cancel`, payload);
+    }
+
+    /**
+     * Rastrear envío usando el endpoint específico /track
+     * @param payload Datos para tracking
+     */
+    trackShipment(payload: {
+        companyId: string;
+        provider: string;
+        trackingNumber: string;
+        options?: any;
+    }): Observable<any> {
+        return this.http.post(`${this.apiUrl}/v1/logistics/shipments/track`, payload);
+    }
+
+    /**
+     * Obtener etiqueta de envío para descarga/impresión
+     * @param payload Datos para obtener etiqueta
+     */
+    getShipmentLabel(payload: {
+        companyId: string;
+        provider: string;
+        trackingNumber: string;
+        format?: 'pdf' | 'zpl';
+        options?: any;
+    }): Observable<any> {
+        return this.http.post(`${this.apiUrl}/v1/logistics/shipments/label`, payload);
     }
 
 } 

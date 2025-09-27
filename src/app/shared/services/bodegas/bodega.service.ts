@@ -49,6 +49,11 @@ export class BodegaService {
     return this.http.post<any>(`${this.apiUrl}/byName`, { nombre });
   }
 
+  // Obtener bodega por código
+  getBodegaByCode(code: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/byCode`, { code });
+  }
+
   // Métodos para la bodega seleccionada
   getBodegaSeleccionada(): Observable<any> {
     return this.bodegaSeleccionadaBS.asObservable();

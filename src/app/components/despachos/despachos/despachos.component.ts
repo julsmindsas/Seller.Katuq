@@ -1215,8 +1215,6 @@ export class DespachosComponent implements OnInit {
         else if (maxRange < 0.5) zoom = 9;   // Disperso
         else zoom = 7;                       // Muy disperso
 
-        console.log(`🎯 Centro calculado: ${promedioLat.toFixed(4)}, ${promedioLng.toFixed(4)} (zoom: ${zoom}, dispersión: ${maxRange.toFixed(4)})`);
-
         return {
           centro: { lat: promedioLat, lng: promedioLng },
           zoom: zoom
@@ -1224,7 +1222,6 @@ export class DespachosComponent implements OnInit {
       }
     }
 
-    console.log(`🏢 Usando centro por defecto (Bogotá): ${defaultCenter.lat}, ${defaultCenter.lng}`);
     return {
       centro: defaultCenter,
       zoom: defaultZoom

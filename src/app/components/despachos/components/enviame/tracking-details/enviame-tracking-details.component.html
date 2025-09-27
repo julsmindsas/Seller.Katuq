@@ -1,0 +1,246 @@
+<div class="enviame-tracking-details">
+
+  <!-- Header con información general -->
+  <div class="tracking-header mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+      <div>
+        <h4 class="mb-1">
+          <i class="pi pi-truck text-primary me-2"></i>
+          Tracking Enviame.io
+        </h4>
+        <p class="text-muted mb-0">Número de guía: <strong>{{ trackingNumber }}</strong></p>
+      </div>
+
+      <div class="header-actions">
+        <!-- Auto-refresh toggle -->
+        <p-toggleButton
+          [(ngModel)]="autoRefresh"
+          onLabel="Auto-actualización ON"
+          offLabel="Auto-actualización OFF"
+          onIcon="pi pi-pause"
+          offIcon="pi pi-play"
+          (onChange)="toggleAutoRefresh()"
+          class="me-2">
+        </p-toggleButton>
+
+        <!-- Refresh button -->
+        <button pButton
+                type="button"
+                icon="pi pi-refresh"
+                class="p-button-outlined p-button-sm"
+                [loading]="refreshing"
+                pTooltip="Actualizar información"
+                (click)="refreshTrackingData()">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado actual y progreso -->
+  <div class="current-status-card mb-4" *ngIf="trackingData">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="status-info">
+          <div class="d-flex align-items-center mb-2">
+            <i [class]="currentStatusIcon" class="status-icon me-3"></i>
+            <div>
+              <h5 class="mb-1">{{ currentStatus }}</h5>
+              <p class="text-muted mb-0">
+                <i class="pi pi-map-marker me-1"></i>
+                {{ lastKnownLocation }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Barra de progreso -->
+          <div class="progress-section mt-3">
+            <div class="d-flex justify-content-between mb-2">
+              <small class="text-muted">Progreso del envío</small>
+              <small class="text-muted">{{ deliveryProgress }}%</small>
+            </div>
+            <p-progressBar [value]="deliveryProgress"
+                          [showValue]="false"
+                          styleClass="custom-progress">
+            </p-progressBar>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4 text-end">
+        <div class="delivery-info">
+          <div class="mb-3" *ngIf="!isDelivered">
+            <small class="text-muted d-block">Entrega estimada</small>
+            <strong class="text-success">{{ estimatedDelivery }}</strong>
+          </div>
+
+          <div class="mb-3" *ngIf="isDelivered && actualDelivery">
+            <small class="text-muted d-block">Entregado el</small>
+            <strong class="text-success">{{ actualDelivery }}</strong>
+          </div>
+
+          <!-- Botones de acción -->
+          <div class="action-buttons">
+            <button pButton
+                    type="button"
+                    icon="pi pi-external-link"
+                    label="Ver en Enviame.io"
+                    class="p-button-outlined p-button-sm mb-2 w-100"
+                    (click)="openExternalTracking()">
+            </button>
+
+            <button pButton
+                    type="button"
+                    icon="pi pi-copy"
+                    label="Copiar Número"
+                    class="p-button-outlined p-button-secondary p-button-sm w-100"
+                    (click)="copyTrackingNumber()">
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información del destinatario -->
+  <div class="recipient-info mb-4" *ngIf="trackingData">
+    <h6 class="text-info mb-3">
+      <i class="pi pi-user me-2"></i>Información de Entrega
+    </h6>
+    <div class="info-card">
+      <p class="mb-2">
+        <strong>Destinatario:</strong> {{ recipientInfo }}
+      </p>
+      <div *ngIf="trackingData.recipient?.address" class="address-details">
+        <p class="mb-0">
+          <i class="pi pi-map-marker me-2 text-muted"></i>
+          {{ trackingData.recipient.address }}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline de eventos -->
+  <div class="tracking-timeline" *ngIf="hasEvents">
+    <h6 class="text-primary mb-4">
+      <i class="pi pi-clock me-2"></i>Historial de Movimientos
+    </h6>
+
+    <div class="timeline">
+      <div class="timeline-item"
+           *ngFor="let item of timelineItems; let first = first; let last = last"
+           [class.latest]="item.isLatest">
+
+        <!-- Timeline connector -->
+        <div class="timeline-connector" *ngIf="!last">
+          <div class="connector-line"></div>
+        </div>
+
+        <!-- Timeline marker -->
+        <div class="timeline-marker"
+             [style.background-color]="item.backgroundColor"
+             [style.border-color]="item.color">
+          <i [class]="item.icon" [style.color]="item.textColor"></i>
+        </div>
+
+        <!-- Timeline content -->
+        <div class="timeline-content">
+          <div class="timeline-card"
+               [class.latest-card]="item.isLatest">
+
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="event-info flex-grow-1">
+                <h6 class="event-status mb-1"
+                    [style.color]="item.textColor">
+                  {{ item.status }}
+                </h6>
+
+                <p class="event-description mb-2" *ngIf="item.description">
+                  {{ item.description }}
+                </p>
+
+                <div class="event-details">
+                  <span class="location" *ngIf="item.location">
+                    <i class="pi pi-map-marker me-1"></i>
+                    {{ item.location }}
+                  </span>
+
+                  <span class="courier ms-3" *ngIf="item.courier">
+                    <i class="pi pi-user me-1"></i>
+                    {{ item.courier }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="event-timestamp">
+                <small class="text-muted">{{ item.date }}</small>
+              </div>
+            </div>
+
+            <!-- Latest event indicator -->
+            <div class="latest-indicator" *ngIf="item.isLatest">
+              <span class="badge bg-primary">
+                <i class="pi pi-clock me-1"></i>Más Reciente
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="text-center py-5" *ngIf="loading">
+    <p-progressSpinner strokeWidth="4" animationDuration="1s"></p-progressSpinner>
+    <p class="mt-3 text-muted">Obteniendo información de tracking...</p>
+  </div>
+
+  <!-- No tracking data available -->
+  <div class="no-tracking-data text-center py-5" *ngIf="!loading && !trackingData">
+    <i class="pi pi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+    <h5 class="mt-3 mb-2">Información no disponible</h5>
+    <p class="text-muted mb-3">
+      No se pudo obtener la información de tracking para este envío.
+    </p>
+    <button pButton
+            type="button"
+            icon="pi pi-refresh"
+            label="Reintentar"
+            class="p-button-outlined"
+            (click)="loadTrackingData()">
+    </button>
+  </div>
+
+  <!-- Footer con botones -->
+  <div class="modal-footer-actions mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <!-- Status indicators -->
+        <div class="status-indicators" *ngIf="trackingData">
+          <span class="badge me-2"
+                [class.bg-success]="isDelivered"
+                [class.bg-warning]="!isDelivered && deliveryProgress > 0"
+                [class.bg-secondary]="deliveryProgress === 0">
+            <i class="pi pi-info-circle me-1"></i>
+            {{ isDelivered ? 'Entregado' : 'En proceso' }}
+          </span>
+
+          <span class="badge bg-info" *ngIf="canCancel">
+            <i class="pi pi-times me-1"></i>
+            Cancelable
+          </span>
+        </div>
+      </div>
+
+      <div>
+        <button pButton
+                type="button"
+                icon="pi pi-times"
+                label="Cerrar"
+                class="p-button-secondary"
+                (click)="onClose()">
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

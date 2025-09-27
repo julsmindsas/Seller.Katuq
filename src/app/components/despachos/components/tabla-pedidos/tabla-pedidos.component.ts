@@ -7,6 +7,10 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { FilterService, MenuItem } from 'primeng/api';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { DialogService } from 'primeng/dynamicdialog';
+import { EnviameHelperService } from '../enviame/services/enviame-helper.service';
+import { EnviameTrackingDetailsComponent } from '../enviame/tracking-details/enviame-tracking-details.component';
+import { EnviameCancelModalComponent } from '../enviame/cancel-modal/enviame-cancel-modal.component';
 
 @Component({
   selector: 'app-tabla-pedidos',
@@ -37,7 +41,12 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   @Output() onViewFullObservaciones = new EventEmitter<any>();
   @Output() onTrackShipment = new EventEmitter<Pedido>();
   @Output() onFindShipment = new EventEmitter<Pedido>();
-  
+
+  // NEW - Enviame specific actions
+  @Output() onEnviameTrackingDetails = new EventEmitter<Pedido>();
+  @Output() onEnviameCancelShipment = new EventEmitter<Pedido>();
+  @Output() onEnviameDownloadLabel = new EventEmitter<Pedido>();
+
   // NEW - Lazy loading output (2025.09.05)
   @Output() onLazyLoad = new EventEmitter<LazyLoadEvent>();
   
@@ -78,7 +87,9 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   
   constructor(
     private filterService: FilterService,
-    private formBuilder: FormBuilder
+    private formBuilder: FormBuilder,
+    private dialogService: DialogService,
+    private enviameHelper: EnviameHelperService
   ) {
     // Cargar configuración guardada si existe
     const savedColumns = localStorage.getItem('despachosColumns');
@@ -463,5 +474,159 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       // Emit complete event with filters and sorting for server-side processing
       this.onLazyLoad.emit(event);
     }
+  }
+
+  // =====================================
+  // ENVIAME.IO SPECIFIC METHODS
+  // =====================================
+
+  /**
+   * Checks if a pedido uses Enviame.io as shipping provider
+   */
+  isEnviameShipment(pedido: Pedido): boolean {
+    return this.enviameHelper.isEnviameShipment(pedido);
+  }
+
+  /**
+   * Checks if an Enviame shipment can be cancelled
+   */
+  canCancelEnviameShipment(pedido: Pedido): boolean {
+    if (!this.isEnviameShipment(pedido)) return false;
+
+    // Check if we have shipping tracking information
+    const shippingNumber = pedido.shippingOrder;
+    if (!shippingNumber) return false;
+
+    // Use helper to check cancellation possibility based on current status
+    const currentStatus = pedido.estadoProceso?.toString();
+    return this.enviameHelper.canCancelShipment(currentStatus);
+  }
+
+  /**
+   * Opens Enviame tracking details modal
+   */
+  openEnviameTrackingDetails(pedido: Pedido): void {
+    if (!this.isEnviameShipment(pedido)) {
+      console.warn('⚠️ TablaPedidos - Attempted to open Enviame tracking for non-Enviame shipment');
+      return;
+    }
+
+    const trackingNumber = pedido.shippingOrder;
+    if (!trackingNumber) {
+      console.warn('⚠️ TablaPedidos - No tracking number found for Enviame shipment');
+      return;
+    }
+
+    const ref = this.dialogService.open(EnviameTrackingDetailsComponent, {
+      header: `Tracking Enviame.io - ${trackingNumber}`,
+      width: '900px',
+      modal: true,
+      closable: true,
+      data: {
+        trackingNumber: trackingNumber,
+        pedido: pedido,
+        companyId: pedido.company || localStorage.getItem('companyId')
+      }
+    });
+
+    ref.onClose.subscribe((result) => {
+      if (result) {
+        console.log('🔄 TablaPedidos - Tracking modal closed with result:', result);
+        // Refresh order data if needed
+        this.onRefreshData.emit(this.dt1);
+      }
+    });
+
+    // Emit event for parent component tracking
+    this.onEnviameTrackingDetails.emit(pedido);
+  }
+
+  /**
+   * Opens Enviame cancellation modal
+   */
+  openEnviameCancelModal(pedido: Pedido): void {
+    if (!this.canCancelEnviameShipment(pedido)) {
+      console.warn('⚠️ TablaPedidos - Cannot cancel this Enviame shipment');
+      return;
+    }
+
+    const trackingNumber = pedido.shippingOrder;
+
+    const ref = this.dialogService.open(EnviameCancelModalComponent, {
+      header: `Cancelar Envío Enviame.io - ${trackingNumber}`,
+      width: '600px',
+      modal: true,
+      closable: true,
+      data: {
+        trackingNumber: trackingNumber,
+        pedido: pedido,
+        companyId: pedido.company || localStorage.getItem('companyId')
+      }
+    });
+
+    ref.onClose.subscribe((result) => {
+      if (result && result.cancelled) {
+        console.log('✅ TablaPedidos - Enviame shipment cancelled successfully');
+        // Refresh order data
+        this.onRefreshData.emit(this.dt1);
+      }
+    });
+
+    // Emit event for parent component tracking
+    this.onEnviameCancelShipment.emit(pedido);
+  }
+
+  /**
+   * Downloads/views Enviame shipping label
+   */
+  downloadEnviameLabel(pedido: Pedido): void {
+    if (!this.isEnviameShipment(pedido)) {
+      console.warn('⚠️ TablaPedidos - Attempted to download label for non-Enviame shipment');
+      return;
+    }
+
+    const trackingNumber = pedido.shippingOrder;
+    if (!trackingNumber) {
+      console.warn('⚠️ TablaPedidos - No tracking number found for Enviame shipment');
+      return;
+    }
+
+    console.log('📄 TablaPedidos - Downloading Enviame label for:', trackingNumber);
+
+    // Emit event for parent component to handle the actual download
+    // The parent component should have access to LogisticaServiceV2
+    this.onEnviameDownloadLabel.emit(pedido);
+  }
+
+  /**
+   * Gets display information for Enviame shipments
+   */
+  getEnviameShipmentInfo(pedido: Pedido): {
+    trackingNumber: string;
+    status: string;
+    canCancel: boolean;
+    canTrack: boolean;
+    canDownloadLabel: boolean;
+  } {
+    if (!this.isEnviameShipment(pedido)) {
+      return {
+        trackingNumber: '',
+        status: '',
+        canCancel: false,
+        canTrack: false,
+        canDownloadLabel: false
+      };
+    }
+
+    const trackingNumber = pedido.shippingOrder || '';
+    const status = pedido.estadoProceso?.toString() || '';
+
+    return {
+      trackingNumber,
+      status,
+      canCancel: this.canCancelEnviameShipment(pedido),
+      canTrack: !!trackingNumber,
+      canDownloadLabel: !!trackingNumber
+    };
   }
 }

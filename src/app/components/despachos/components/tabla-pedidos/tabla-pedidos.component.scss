@@ -716,3 +716,153 @@ $border-radius: 8px;
     }
   }
 }
+
+// =====================================
+// ENVIAME.IO SPECIFIC STYLES
+// =====================================
+
+// Enviame actions group styling
+.enviame-actions-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+
+  // Enviame specific button styles
+  .p-button {
+    font-size: 0.75rem !important;
+    padding: 0.35rem 0.75rem !important;
+    height: 30px !important;
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    white-space: nowrap;
+    min-width: 85px;
+
+    // Primary button (Tracking)
+    &.p-button-primary {
+      background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+      border-color: #007bff;
+
+      &:hover {
+        background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+        border-color: #0056b3;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 123, 255, 0.25);
+      }
+    }
+
+    // Warning button (Cancel)
+    &.p-button-warning {
+      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+      border-color: #ffc107;
+      color: #212529;
+
+      &:hover {
+        background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+        border-color: #e0a800;
+        color: #212529;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(255, 193, 7, 0.25);
+      }
+    }
+
+    // Secondary button (Label Download)
+    &.p-button-secondary {
+      background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+      border-color: #6c757d;
+
+      &:hover {
+        background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+        border-color: #5a6268;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(108, 117, 125, 0.25);
+      }
+    }
+
+    // Icon styling within buttons
+    .pi {
+      font-size: 0.8rem !important;
+    }
+  }
+}
+
+// Enviame info badge styling
+.enviame-info-badge {
+  margin-top: 0.5rem;
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+    box-shadow: 0 2px 4px rgba(23, 162, 184, 0.2);
+
+    .pi {
+      font-size: 0.75rem;
+    }
+
+    &:hover {
+      transform: scale(1.05);
+      box-shadow: 0 3px 6px rgba(23, 162, 184, 0.3);
+    }
+  }
+}
+
+// Enviame button hover animations
+:host ::ng-deep .enviame-actions-group .p-button {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  &:active {
+    transform: translateY(0) scale(0.98) !important;
+  }
+}
+
+// Mobile responsive styles for Enviame actions
+@media (max-width: 768px) {
+  .enviame-actions-group {
+    .p-button {
+      min-width: 75px;
+      font-size: 0.7rem !important;
+      padding: 0.3rem 0.6rem !important;
+      height: 28px !important;
+    }
+  }
+
+  .enviame-info-badge .badge {
+    font-size: 0.65rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+
+// Enhanced seguimiento cell for Enviame
+.seguimiento-cell {
+  &:has(.enviame-actions-group) {
+    padding: 0.5rem 0.4rem !important;
+  }
+}
+
+// Loading state for Enviame buttons
+:host ::ng-deep .enviame-actions-group .p-button[loading] {
+  opacity: 0.7;
+  cursor: wait;
+
+  .p-button-icon {
+    animation: rotation 1s linear infinite;
+  }
+}
+
+// Disabled state for Enviame buttons
+:host ::ng-deep .enviame-actions-group .p-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+
+  &:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}

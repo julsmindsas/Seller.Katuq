@@ -973,3 +973,256 @@
     font-size: 0.7rem;
   }
 }
+
+// ===============================================
+// ESTILOS PARA MODAL DE OPCIONES ENVIAME.IO
+// ===============================================
+
+.enviame-options-modal {
+  max-width: 700px !important;
+  width: 90% !important;
+
+  .modal-body-custom {
+    padding: 1.5rem;
+  }
+
+  .order-info-section {
+    .alert {
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+      border-left: 4px solid #2196f3;
+    }
+  }
+
+  .enviame-options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+  }
+
+  .option-card {
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+    background: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+      border-color: #007bff;
+    }
+
+    &.selected {
+      border-color: #007bff;
+      background: linear-gradient(135deg, #f8f9ff 0%, #fff 100%);
+      box-shadow: 0 4px 15px rgba(0, 123, 255, 0.15);
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #007bff 0%, #0056b3 100%);
+        border-radius: 12px 12px 0 0;
+      }
+    }
+
+    .option-icon {
+      text-align: center;
+      margin-bottom: 1rem;
+
+      i {
+        font-size: 2.5rem;
+        opacity: 0.8;
+      }
+    }
+
+    .option-content {
+      flex-grow: 1;
+      text-align: center;
+
+      h6 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+      }
+
+      p {
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
+      .option-features {
+        text-align: left;
+
+        small {
+          display: block;
+          margin-bottom: 0.25rem;
+          font-size: 0.8rem;
+
+          i {
+            width: 14px;
+          }
+        }
+      }
+    }
+
+    .option-radio {
+      text-align: center;
+      margin-top: 1rem;
+
+      i {
+        font-size: 1.5rem;
+        color: #dee2e6;
+
+        &.text-primary,
+        &.text-warning {
+          color: inherit !important;
+        }
+      }
+    }
+  }
+
+  // Transportadores alternativos
+  .alternative-transporters {
+    .divider {
+      text-align: center;
+      position: relative;
+
+      hr {
+        border-color: #dee2e6;
+        opacity: 0.5;
+      }
+
+      small {
+        background: white;
+        padding: 0 1rem;
+        position: relative;
+        z-index: 1;
+      }
+    }
+
+    .transporter-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      background: #f8f9fa;
+    }
+
+    .transporter-item {
+      padding: 1rem;
+      border-bottom: 1px solid #e9ecef;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:hover {
+        background: #e3f2fd;
+        transform: translateX(5px);
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+      }
+    }
+  }
+
+  .modal-footer-custom {
+    border-top: 1px solid #dee2e6;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    border-radius: 0 0 12px 12px;
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      font-weight: 500;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+
+      &.btn-primary {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        border: none;
+
+        &:hover:not(:disabled) {
+          transform: translateY(-1px);
+          box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          background: #6c757d;
+        }
+      }
+
+      &.btn-secondary {
+        border: 1px solid #6c757d;
+        color: #6c757d;
+
+        &:hover {
+          background: #6c757d;
+          color: white;
+          transform: translateY(-1px);
+        }
+      }
+
+      i {
+        font-size: 0.9rem;
+      }
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 576px) {
+  .enviame-options-modal {
+    width: 95% !important;
+    margin: 1rem !important;
+
+    .option-card {
+      padding: 1rem;
+      min-height: 150px;
+
+      .option-icon i {
+        font-size: 2rem;
+      }
+
+      .option-content h6 {
+        font-size: 1rem;
+      }
+    }
+
+    .modal-footer-custom {
+      padding: 1rem;
+      flex-direction: column;
+
+      .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}

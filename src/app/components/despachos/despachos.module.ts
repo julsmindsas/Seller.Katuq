@@ -29,6 +29,9 @@ import { RouterModule } from "@angular/router";
 import { DynamicDialogModule, DialogService } from "primeng/dynamicdialog";
 import { MenuModule } from "primeng/menu";
 import { SplitButtonModule } from 'primeng/splitbutton';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
 
 // Componentes
 import { TablaPedidosComponent } from "./components/tabla-pedidos/tabla-pedidos.component";
@@ -44,6 +47,15 @@ import { PdfTemplateComponent } from "./components/pdf-template/pdf-template.com
 import { SeguimientoModalComponent } from "./components/seguimiento-modal/seguimiento-modal.component";
 import { AnalisisDespachosComponent } from "./components/analisis-despachos/analisis-despachos.component";
 import { ZonaGestionModalComponent } from "./components/zona-gestion-modal/zona-gestion-modal.component";
+
+// Componentes de Enviame.io
+import { EnviameRatesModalComponent } from "./components/enviame/rates-modal/enviame-rates-modal.component";
+import { EnviameCancelModalComponent } from "./components/enviame/cancel-modal/enviame-cancel-modal.component";
+import { EnviameTrackingDetailsComponent } from "./components/enviame/tracking-details/enviame-tracking-details.component";
+import { EnviameHelperService } from "./components/enviame/services/enviame-helper.service";
+
+// Servicios para códigos DANE
+import { DaneCodesService } from "../../shared/services/dane-codes.service";
 
 // Pipes
 import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
@@ -75,10 +87,19 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     DynamicDialogModule,
     MenuModule,
     SplitButtonModule,
+    AutoCompleteModule,
+    InputNumberModule,
+    ProgressSpinnerModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
   ],
-  providers: [LogisticaService, DialogService, ZonaManagementService],
+  providers: [
+    LogisticaService,
+    DialogService,
+    ZonaManagementService,
+    EnviameHelperService,
+    DaneCodesService
+  ],
   declarations: [
     DespachosComponent,
     TablaPedidosComponent,
@@ -95,6 +116,10 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     SeguimientoModalComponent,
     AnalisisDespachosComponent,
     ZonaGestionModalComponent,
+    // Componentes de Enviame.io
+    EnviameRatesModalComponent,
+    EnviameCancelModalComponent,
+    EnviameTrackingDetailsComponent,
   ],
   exports: [DetalleEntregaComponent],
 })

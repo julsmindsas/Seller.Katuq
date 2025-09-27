@@ -1,0 +1,509 @@
+<div class="enviame-rates-modal">
+
+  <!-- Header con información de la orden -->
+  <div class="order-info-header mb-4">
+    <div class="d-flex align-items-center">
+      <i class="pi pi-truck text-primary me-3" style="font-size: 1.5rem;"></i>
+      <div>
+        <h5 class="mb-1">Cotización de Envío - Enviame.io</h5>
+        <p class="text-muted mb-0">Orden: <strong>{{order?.nroShippingOrder}}</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading state mientras se inicializa el formulario -->
+  <div *ngIf="!isReady" class="text-center py-4">
+    <p-progressSpinner strokeWidth="4" animationDuration="1s"></p-progressSpinner>
+    <p class="mt-3 text-muted">Cargando datos...</p>
+  </div>
+
+  <!-- Contenedor protegido para todo el contenido del formulario -->
+  <ng-container *ngIf="isReady">
+    <!-- Formulario de cotización -->
+    <form [formGroup]="quoteForm" class="quote-form">
+
+    <!-- Pestañas -->
+    <p-tabView>
+
+      <!-- Pestaña 1: Direcciones -->
+      <p-tabPanel header="Ubicaciones" leftIcon="pi pi-map-marker">
+        <!-- Tipo de envío -->
+        <div class="mb-4">
+          <h6 class="text-info mb-3">
+            <i class="pi pi-send me-2"></i>Tipo de Envío
+          </h6>
+          <div class="d-flex gap-3">
+            <div class="form-check" *ngFor="let tipo of tiposEnvio">
+              <input type="radio"
+                     [id]="'tipo-' + tipo.value"
+                     formControlName="shippingType"
+                     [value]="tipo.value"
+                     class="form-check-input">
+              <label [for]="'tipo-' + tipo.value" class="form-check-label">
+                <i [class]="'pi ' + tipo.icon + ' me-1'"></i>
+                {{ tipo.label }}
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <!-- Origen -->
+          <div class="col-md-6">
+            <h6 class="text-primary mb-3">
+              <i class="pi pi-home me-2"></i>Origen del Envío
+            </h6>
+
+            <div class="form-group mb-3">
+              <label>Municipio de Origen * <small class="text-muted">(Buscar por nombre)</small></label>
+              <p-autoComplete
+                formControlName="originMunicipio"
+                [suggestions]="municipiosSugeridosOrigen"
+                (completeMethod)="buscarMunicipiosOrigen($event)"
+                (onSelect)="onSelectMunicipioOrigen($event)"
+                field="label"
+                [minLength]="2"
+                placeholder="Escriba para buscar municipio..."
+                styleClass="w-100">
+                <ng-template let-municipio pTemplate="item">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong>{{ municipio.nombre }}</strong>
+                      <small class="text-muted ms-2">{{ municipio.departamento }}</small>
+                    </div>
+                    <span class="badge bg-secondary">{{ municipio.codigo }}</span>
+                  </div>
+                </ng-template>
+              </p-autoComplete>
+            </div>
+
+            <div class="form-group mb-3">
+              <label>Dirección Específica</label>
+              <input type="text" pInputText formControlName="originAddress"
+                     class="form-control" placeholder="Ej: Carrera 7 #32-16 (Opcional)">
+            </div>
+
+            <div class="row">
+              <div class="col-md-8 form-group mb-3">
+                <label>Ciudad *</label>
+                <input type="text" pInputText formControlName="originCity"
+                       class="form-control" placeholder="Ej: Bogotá"
+                       [class.is-invalid]="isFieldInvalid('originCity')">
+                <div *ngIf="isFieldInvalid('originCity')" class="invalid-feedback">
+                  {{ getFieldError('originCity') }}
+                </div>
+              </div>
+              <div class="col-md-4 form-group mb-3">
+                <label>País *</label>
+                <p-dropdown formControlName="originCountry"
+                           [options]="[{label: 'Colombia', value: 'CO'}, {label: 'Chile', value: 'CL'}]"
+                           optionLabel="label" optionValue="value"
+                           placeholder="País" styleClass="w-100">
+                </p-dropdown>
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label>Código Postal</label>
+              <input type="text" pInputText formControlName="originPostalCode"
+                     class="form-control" placeholder="Ej: 110311">
+            </div>
+          </div>
+
+          <!-- Destino -->
+          <div class="col-md-6">
+            <h6 class="text-success mb-3">
+              <i class="pi pi-map-marker me-2"></i>Destino del Envío
+            </h6>
+
+            <div class="form-group mb-3">
+              <label>Municipio de Destino * <small class="text-muted">(Buscar por nombre)</small></label>
+              <p-autoComplete
+                formControlName="destinationMunicipio"
+                [suggestions]="municipiosSugeridosDestino"
+                (completeMethod)="buscarMunicipiosDestino($event)"
+                (onSelect)="onSelectMunicipioDestino($event)"
+                field="label"
+                [minLength]="2"
+                placeholder="Escriba para buscar municipio..."
+                styleClass="w-100">
+                <ng-template let-municipio pTemplate="item">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                      <strong>{{ municipio.nombre }}</strong>
+                      <small class="text-muted ms-2">{{ municipio.departamento }}</small>
+                    </div>
+                    <span class="badge bg-secondary">{{ municipio.codigo }}</span>
+                  </div>
+                </ng-template>
+              </p-autoComplete>
+            </div>
+
+            <div class="form-group mb-3">
+              <label>Dirección Específica</label>
+              <input type="text" pInputText formControlName="destinationAddress"
+                     class="form-control" placeholder="Dirección completa del destinatario (Opcional)">
+            </div>
+
+            <div class="row">
+              <div class="col-md-8 form-group mb-3">
+                <label>Ciudad *</label>
+                <input type="text" pInputText formControlName="destinationCity"
+                       class="form-control" placeholder="Ciudad de destino"
+                       [class.is-invalid]="isFieldInvalid('destinationCity')">
+                <div *ngIf="isFieldInvalid('destinationCity')" class="invalid-feedback">
+                  {{ getFieldError('destinationCity') }}
+                </div>
+              </div>
+              <div class="col-md-4 form-group mb-3">
+                <label>País *</label>
+                <p-dropdown formControlName="destinationCountry"
+                           [options]="[{label: 'Colombia', value: 'CO'}, {label: 'Chile', value: 'CL'}]"
+                           optionLabel="label" optionValue="value"
+                           placeholder="País" styleClass="w-100">
+                </p-dropdown>
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label>Código Postal</label>
+              <input type="text" pInputText formControlName="destinationPostalCode"
+                     class="form-control" placeholder="Código postal del destinatario">
+            </div>
+
+            <!-- Datos del destinatario -->
+            <h6 class="text-info mb-3 mt-4">
+              <i class="pi pi-user me-2"></i>Datos del Destinatario
+            </h6>
+
+            <div class="form-group mb-3">
+              <label>Nombre Completo *</label>
+              <input type="text" pInputText formControlName="recipientName"
+                     class="form-control" placeholder="Nombre completo del destinatario"
+                     [class.is-invalid]="isFieldInvalid('recipientName')">
+              <div *ngIf="isFieldInvalid('recipientName')" class="invalid-feedback">
+                {{ getFieldError('recipientName') }}
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 form-group mb-3">
+                <label>Teléfono</label>
+                <input type="text" pInputText formControlName="recipientPhone"
+                       class="form-control" placeholder="Ej: +57 300 123 4567">
+              </div>
+              <div class="col-md-6 form-group mb-3">
+                <label>Email</label>
+                <input type="email" pInputText formControlName="recipientEmail"
+                       class="form-control" placeholder="email@ejemplo.com"
+                       [class.is-invalid]="isFieldInvalid('recipientEmail')">
+                <div *ngIf="isFieldInvalid('recipientEmail')" class="invalid-feedback">
+                  {{ getFieldError('recipientEmail') }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </p-tabPanel>
+
+      <!-- Pestaña 2: Paquete -->
+      <p-tabPanel header="Paquete" leftIcon="pi pi-box">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="text-warning mb-3">
+              <i class="pi pi-box me-2"></i>Información del Paquete
+            </h6>
+
+            <div class="form-group mb-3">
+              <label>Peso (kg) *</label>
+              <div class="input-group">
+                <input type="number"
+                       class="form-control"
+                       formControlName="weight"
+                       step="0.1"
+                       min="0.1"
+                       max="50"
+                       placeholder="Peso en kilogramos">
+                <span class="input-group-text">kg</span>
+              </div>
+              <small class="text-muted">Peso máximo: 50 kg</small>
+            </div>
+
+            <h6 class="text-secondary mb-3">Dimensiones (cm) <small class="text-muted">(Opcional)</small></h6>
+
+            <div class="row">
+              <div class="col-4 form-group mb-3">
+                <label>Largo</label>
+                <div class="input-group">
+                  <input type="number"
+                         class="form-control"
+                         formControlName="length"
+                         step="1"
+                         min="1"
+                         placeholder="Largo">
+                  <span class="input-group-text">cm</span>
+                </div>
+              </div>
+              <div class="col-4 form-group mb-3">
+                <label>Ancho</label>
+                <div class="input-group">
+                  <input type="number"
+                         class="form-control"
+                         formControlName="width"
+                         step="1"
+                         min="1"
+                         placeholder="Ancho">
+                  <span class="input-group-text">cm</span>
+                </div>
+              </div>
+              <div class="col-4 form-group mb-3">
+                <label>Alto</label>
+                <div class="input-group">
+                  <input type="number"
+                         class="form-control"
+                         formControlName="height"
+                         step="1"
+                         min="1"
+                         placeholder="Alto">
+                  <span class="input-group-text">cm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <h6 class="text-info mb-3">
+              <i class="pi pi-dollar me-2"></i>Valor y Descripción
+            </h6>
+
+            <div class="form-group mb-3">
+              <label>Valor Declarado</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                <input type="number"
+                       class="form-control"
+                       formControlName="value"
+                       min="0"
+                       step="1000"
+                       placeholder="Valor del contenido">
+                <span class="input-group-text">COP</span>
+              </div>
+              <small class="text-muted">Valor para efectos de seguro</small>
+            </div>
+
+            <div class="form-group mb-3">
+              <label>Descripción del Contenido</label>
+              <textarea pInputTextarea formControlName="description"
+                       rows="3" class="form-control"
+                       placeholder="Describe el contenido del paquete">
+              </textarea>
+            </div>
+
+            <!-- Opciones adicionales -->
+            <h6 class="text-secondary mb-3">Opciones de Envío</h6>
+
+            <div class="form-check mb-2">
+              <p-checkbox formControlName="insurance"
+                         inputId="insurance"></p-checkbox>
+              <label for="insurance" class="form-check-label ms-2">
+                Contratar seguro adicional
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <p-checkbox formControlName="cashOnDelivery"
+                         inputId="cashOnDelivery"></p-checkbox>
+              <label for="cashOnDelivery" class="form-check-label ms-2">
+                Pago contra entrega
+              </label>
+            </div>
+
+            <div class="form-check mb-2">
+              <p-checkbox formControlName="signature"
+                         inputId="signature"></p-checkbox>
+              <label for="signature" class="form-check-label ms-2">
+                Requerir firma del destinatario
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botón para cotizar -->
+        <div class="text-center mt-4">
+          <button type="button" pButton
+                  class="p-button-primary p-button-lg"
+                  icon="pi pi-search"
+                  label="Obtener Cotización"
+                  [loading]="quotingRates"
+                  [disabled]="quoteForm.invalid"
+                  (click)="onQuoteRates()">
+          </button>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+    </form>
+
+    <!-- Resultados de cotización -->
+    <div *ngIf="availableRates.length > 0" class="rates-results mt-4">
+    <h5 class="mb-3">
+      <i class="pi pi-list text-success me-2"></i>
+      Opciones de Envío Disponibles ({{ availableRates.length }})
+    </h5>
+
+    <!-- Indicadores de mejores opciones -->
+    <div class="best-options-info mb-3" *ngIf="getCheapestRate() || getFastestRate()">
+      <div class="row">
+        <div class="col-md-6" *ngIf="getCheapestRate()">
+          <div class="alert alert-info">
+            <i class="pi pi-dollar me-2"></i>
+            <strong>Más económica:</strong> {{ getCheapestRate()?.service }} ({{ getCheapestRate()?.carrier }}) -
+            {{ formatPrice(getCheapestRate()?.price || 0) }}
+          </div>
+        </div>
+        <div class="col-md-6" *ngIf="getFastestRate()">
+          <div class="alert alert-success">
+            <i class="pi pi-clock me-2"></i>
+            <strong>Más rápida:</strong> {{ getFastestRate()?.service }} ({{ getFastestRate()?.carrier }}) -
+            {{ getFastestRate()?.estimatedTime || getFastestRate()?.estimatedDays }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de opciones -->
+    <div class="rates-table">
+      <div class="rate-option"
+           *ngFor="let rate of availableRates"
+           [class.selected]="selectedRate === rate"
+           (click)="onSelectRate(rate)">
+
+        <div class="d-flex align-items-center justify-content-between">
+          <div class="rate-info">
+            <div class="d-flex align-items-center mb-2">
+              <i class="pi pi-truck me-2 text-primary"></i>
+              <h6 class="mb-0">{{ rate.service }}</h6>
+              <span class="badge ms-2 bg-secondary" *ngIf="rate.serviceCode">
+                {{ rate.serviceCode }}
+              </span>
+              <span class="badge ms-2" *ngIf="rate.serviceTypes && rate.serviceTypes.length > 0"
+                    [class.bg-success]="rate.serviceTypes.includes('express')"
+                    [class.bg-warning]="rate.serviceTypes.includes('standard')"
+                    [class.bg-info]="rate.serviceTypes.includes('economy')">
+                {{ rate.serviceTypes[0] | titlecase }}
+              </span>
+            </div>
+
+            <div class="rate-details">
+              <span class="carrier text-primary fw-bold">
+                <i class="pi pi-building me-1"></i>
+                {{ rate.carrier }}
+              </span>
+              <span class="text-muted ms-2" *ngIf="rate.carrierCode">
+                ({{ rate.carrierCode }})
+              </span>
+              <span class="delivery-time ms-3" *ngIf="rate.estimatedTime || rate.estimatedDays">
+                <i class="pi pi-clock me-1"></i>
+                {{ rate.estimatedTime || rate.estimatedDays }}
+              </span>
+              <span *ngIf="rate.cutoffTime" class="cutoff-time ms-3 text-warning">
+                <i class="pi pi-exclamation-circle me-1"></i>
+                Corte: {{ rate.cutoffTime }}
+              </span>
+            </div>
+
+            <div *ngIf="rate.description" class="rate-description mt-2">
+              <small class="text-muted">{{ rate.description }}</small>
+            </div>
+
+            <div *ngIf="rate.coverage" class="coverage mt-1">
+              <small class="text-info">
+                <i class="pi pi-map me-1"></i>
+                Cobertura: {{ rate.coverage }}
+              </small>
+            </div>
+
+            <div *ngIf="rate.maxWeight || rate.maxDimensions" class="restrictions mt-1">
+              <small class="text-warning">
+                <i class="pi pi-info-circle me-1"></i>
+                <span *ngIf="rate.maxWeight">Peso máx: {{ rate.maxWeight }}kg</span>
+                <span *ngIf="rate.maxDimensions" class="ms-2">Dim máx: {{ rate.maxDimensions }}</span>
+              </small>
+            </div>
+
+            <div *ngIf="rate.costFreightIncluded" class="freight-info mt-2">
+              <small class="text-success">
+                <i class="pi pi-check-circle me-1"></i>
+                Costo de flete incluido
+              </small>
+              <div *ngIf="rate.costFreightInfo" class="ms-3">
+                <small class="text-muted d-block" *ngIf="rate.costFreightInfo.original_price">
+                  Precio original: {{ formatPrice(rate.costFreightInfo.original_price) }}
+                </small>
+                <small class="text-muted d-block" *ngIf="rate.costFreightInfo.route_charges_cost_applied">
+                  Cargo aplicado: {{ formatPrice(rate.costFreightInfo.route_charges_cost_applied) }}
+                </small>
+              </div>
+            </div>
+          </div>
+
+          <div class="rate-price text-end">
+            <div class="price">
+              <span class="amount fw-bold fs-5">{{ formatPrice(rate.price, rate.currency) }}</span>
+            </div>
+
+            <div class="price-details" *ngIf="rate.basePrice || rate.taxes || rate.insurancePrice">
+              <small class="text-muted d-block" *ngIf="rate.basePrice && rate.basePrice !== rate.price">
+                Base: {{ formatPrice(rate.basePrice, rate.currency) }}
+              </small>
+              <small class="text-muted d-block" *ngIf="rate.taxes > 0">
+                Impuestos: {{ formatPrice(rate.taxes, rate.currency) }}
+              </small>
+              <small class="text-muted d-block" *ngIf="rate.insurancePrice > 0">
+                Seguro: {{ formatPrice(rate.insurancePrice, rate.currency) }}
+              </small>
+            </div>
+
+            <!-- Radio button -->
+            <div class="mt-2">
+              <input type="radio"
+                     [checked]="selectedRate === rate"
+                     (change)="onSelectRate(rate)"
+                     class="form-check-input">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Loading state -->
+    <div *ngIf="quotingRates" class="text-center py-4">
+      <p-progressSpinner strokeWidth="4" animationDuration="1s"></p-progressSpinner>
+      <p class="mt-3 text-muted">Obteniendo opciones de envío...</p>
+    </div>
+
+    <!-- Botones del modal -->
+    <div class="modal-footer-actions mt-4">
+    <div class="d-flex justify-content-between">
+      <button type="button" pButton
+              class="p-button-secondary"
+              icon="pi pi-times"
+              label="Cancelar"
+              (click)="onCancel()">
+      </button>
+
+      <button type="button" pButton
+              class="p-button-success"
+              icon="pi pi-check"
+              label="Crear Envío"
+              [disabled]="!selectedRate"
+              [loading]="creatingShipment"
+              (click)="onConfirmShipment()">
+      </button>
+    </div>
+    </div>
+  </ng-container>
+  <!-- Fin del contenedor protegido -->
+
+
+</div>

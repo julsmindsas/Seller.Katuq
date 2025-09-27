@@ -1,0 +1,175 @@
+<div class="enviame-cancel-modal">
+
+  <!-- Header con información del envío -->
+  <div class="shipment-info-header mb-4">
+    <div class="alert alert-warning">
+      <div class="d-flex align-items-center">
+        <i class="pi pi-exclamation-triangle text-warning me-3" style="font-size: 1.5rem;"></i>
+        <div>
+          <h5 class="mb-1">Cancelar Envío - Enviame.io</h5>
+          <p class="mb-0">
+            <strong>Número de guía:</strong> {{ trackingNumber }}<br>
+            <strong>Estado actual:</strong>
+            <i [class]="statusIcon" class="me-1"></i>
+            {{ currentStatusName }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verificar si se puede cancelar -->
+  <div *ngIf="!canCancel" class="alert alert-danger">
+    <div class="d-flex align-items-center">
+      <i class="pi pi-ban text-danger me-2"></i>
+      <div>
+        <strong>Cancelación no disponible</strong>
+        <p class="mb-0">Este envío no puede ser cancelado en su estado actual.
+        Contacta a Enviame.io directamente para más información.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de cancelación -->
+  <form *ngIf="canCancel" [formGroup]="cancelForm" class="cancel-form">
+
+    <!-- Información del pedido -->
+    <div class="order-details mb-4">
+      <h6 class="text-info mb-3">
+        <i class="pi pi-info-circle me-2"></i>Información del Pedido
+      </h6>
+
+      <div class="row">
+        <div class="col-md-6">
+          <p><strong>Número de pedido:</strong> {{ pedido?.nroPedido || 'N/A' }}</p>
+          <p><strong>Cliente:</strong> {{ pedido?.cliente?.nombres_completos || 'N/A' }}</p>
+        </div>
+        <div class="col-md-6">
+          <p><strong>Fecha de creación:</strong> {{ pedido?.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}</p>
+          <p><strong>Transportador:</strong> {{ pedido?.transportador || 'N/A' }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="pedido?.envio" class="mt-3">
+        <p><strong>Destino:</strong> {{ pedido.envio.direccion }}, {{ pedido.envio.ciudad }}</p>
+      </div>
+    </div>
+
+    <!-- Motivo de cancelación -->
+    <div class="form-group mb-4">
+      <label class="form-label fw-semibold">
+        <i class="pi pi-question-circle me-2"></i>Motivo de la Cancelación *
+      </label>
+
+      <p-dropdown formControlName="reason"
+                 [options]="cancelReasons"
+                 optionLabel="label"
+                 optionValue="value"
+                 placeholder="Selecciona el motivo de cancelación"
+                 styleClass="w-100"
+                 [class.is-invalid]="isFieldInvalid('reason')">
+      </p-dropdown>
+
+      <div *ngIf="isFieldInvalid('reason')" class="invalid-feedback">
+        {{ getFieldError('reason') }}
+      </div>
+    </div>
+
+    <!-- Motivo personalizado (solo si se selecciona "Otro") -->
+    <div *ngIf="isReasonOther" class="form-group mb-4">
+      <label class="form-label fw-semibold">
+        <i class="pi pi-pencil me-2"></i>Especifica el Motivo *
+      </label>
+
+      <textarea pInputTextarea
+               formControlName="customReason"
+               rows="3"
+               class="form-control"
+               placeholder="Describe detalladamente el motivo de la cancelación (mínimo 10 caracteres)"
+               [class.is-invalid]="isFieldInvalid('customReason')">
+      </textarea>
+
+      <div *ngIf="isFieldInvalid('customReason')" class="invalid-feedback">
+        {{ getFieldError('customReason') }}
+      </div>
+
+      <small class="form-text text-muted">
+        Proporciona información detallada que pueda ser útil para el proceso de cancelación.
+      </small>
+    </div>
+
+    <!-- Notas adicionales -->
+    <div class="form-group mb-4">
+      <label class="form-label fw-semibold">
+        <i class="pi pi-file-edit me-2"></i>Notas Adicionales (Opcional)
+      </label>
+
+      <textarea pInputTextarea
+               formControlName="notes"
+               rows="2"
+               class="form-control"
+               placeholder="Información adicional que consideres relevante">
+      </textarea>
+
+      <small class="form-text text-muted">
+        Estas notas serán enviadas a Enviame.io junto con la solicitud de cancelación.
+      </small>
+    </div>
+
+    <!-- Advertencia importante -->
+    <div class="alert alert-info mb-4">
+      <h6 class="alert-heading">
+        <i class="pi pi-info-circle me-2"></i>Información Importante
+      </h6>
+      <ul class="mb-0 ps-3">
+        <li>La cancelación puede tomar hasta 24 horas en ser procesada.</li>
+        <li>Si el envío ya fue recolectado, puede aplicar un cargo por cancelación.</li>
+        <li>Los reembolsos (si aplican) son procesados según las políticas de Enviame.io.</li>
+        <li>Recibirás una confirmación por email una vez procesada la cancelación.</li>
+      </ul>
+    </div>
+
+    <!-- Confirmación -->
+    <div class="form-group mb-4">
+      <div class="form-check">
+        <p-checkbox formControlName="confirmCancel"
+                   [binary]="true"
+                   inputId="confirmCancel"
+                   [class.is-invalid]="isFieldInvalid('confirmCancel')">
+        </p-checkbox>
+        <label for="confirmCancel" class="form-check-label ms-2 fw-semibold">
+          Confirmo que deseo cancelar este envío y entiendo las condiciones mencionadas *
+        </label>
+      </div>
+
+      <div *ngIf="isFieldInvalid('confirmCancel')" class="invalid-feedback">
+        {{ getFieldError('confirmCancel') }}
+      </div>
+    </div>
+
+  </form>
+
+  <!-- Botones de acción -->
+  <div class="modal-footer-actions">
+    <div class="d-flex justify-content-between">
+      <button type="button"
+              pButton
+              class="p-button-secondary"
+              icon="pi pi-times"
+              label="No Cancelar"
+              (click)="onCancel()">
+      </button>
+
+      <button type="button"
+              pButton
+              class="p-button-danger"
+              icon="pi pi-ban"
+              label="Confirmar Cancelación"
+              [disabled]="!canCancel || cancelForm.invalid"
+              [loading]="cancelling"
+              (click)="onConfirmCancel()">
+      </button>
+    </div>
+  </div>
+
+</div>

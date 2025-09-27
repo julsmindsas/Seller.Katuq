@@ -506,3 +506,157 @@
     </div>
   </div>
 </div>
+
+<!-- =============================================== -->
+<!-- MODAL DE OPCIONES ESPECÍFICAS PARA ENVIAME.IO -->
+<!-- =============================================== -->
+<div class="modal-overlay" *ngIf="showEnviameOptionsModal" (click)="closeEnviameOptionsModal()">
+  <div class="modal-container enviame-options-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header-custom">
+      <h5>
+        <i class="pi pi-truck me-2 text-primary"></i>
+        {{ 'Opciones de Envío con Enviame.io' | translate }}
+      </h5>
+      <button type="button" class="btn-close-custom" (click)="closeEnviameOptionsModal()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="modal-body-custom">
+      <!-- Información de la orden -->
+      <div class="order-info-section mb-4">
+        <div class="alert alert-info d-flex align-items-center">
+          <i class="pi pi-info-circle me-3 fs-4"></i>
+          <div>
+            <strong>Orden: {{ selectedOrderForDispatch?.nroShippingOrder }}</strong><br>
+            <small>Seleccione cómo desea proceder con Enviame.io</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Opciones principales -->
+      <div class="enviame-options-grid">
+        <!-- Opción 1: Cotizar con Enviame -->
+        <div class="option-card"
+             [class.selected]="enviameSelectedOption === 'quote'"
+             (click)="onEnviameOptionSelected('quote')">
+          <div class="option-icon">
+            <i class="pi pi-calculator text-primary"></i>
+          </div>
+          <div class="option-content">
+            <h6>{{ 'Cotizar con Enviame.io' | translate }}</h6>
+            <p class="text-muted mb-0">
+              Ver tarifas disponibles, comparar servicios y crear el envío directamente con Enviame.io
+            </p>
+            <div class="option-features mt-2">
+              <small class="text-success">
+                <i class="pi pi-check me-1"></i>Múltiples transportadoras
+              </small><br>
+              <small class="text-success">
+                <i class="pi pi-check me-1"></i>Comparación de precios
+              </small><br>
+              <small class="text-success">
+                <i class="pi pi-check me-1"></i>Tracking integrado
+              </small>
+            </div>
+          </div>
+          <div class="option-radio">
+            <i class="pi pi-circle" *ngIf="enviameSelectedOption !== 'quote'"></i>
+            <i class="pi pi-check-circle text-primary" *ngIf="enviameSelectedOption === 'quote'"></i>
+          </div>
+        </div>
+
+        <!-- Opción 2: Ver otros transportadores -->
+        <div class="option-card"
+             [class.selected]="enviameSelectedOption === 'other'"
+             (click)="onEnviameOptionSelected('other')">
+          <div class="option-icon">
+            <i class="pi pi-list text-warning"></i>
+          </div>
+          <div class="option-content">
+            <h6>{{ 'Ver Otros Transportadores' | translate }}</h6>
+            <p class="text-muted mb-0">
+              Explorar otros transportadores registrados o integraciones disponibles
+            </p>
+            <div class="option-features mt-2">
+              <small class="text-info">
+                <i class="pi pi-info me-1"></i>Transportadores locales
+              </small><br>
+              <small class="text-info">
+                <i class="pi pi-info me-1"></i>Otras integraciones
+              </small>
+            </div>
+          </div>
+          <div class="option-radio">
+            <i class="pi pi-circle" *ngIf="enviameSelectedOption !== 'other'"></i>
+            <i class="pi pi-check-circle text-warning" *ngIf="enviameSelectedOption === 'other'"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transportadores alternativos (solo se muestra si selecciona "other") -->
+      <div class="alternative-transporters mt-4" *ngIf="showAlternativeTransporters">
+        <div class="divider mb-3">
+          <hr class="mb-2">
+          <small class="text-muted">Transportadores disponibles:</small>
+        </div>
+
+        <!-- Transportadores locales -->
+        <div class="transporter-list">
+          <div *ngFor="let vendor of allVendors; let i = index"
+               class="transporter-item"
+               (click)="selectAlternativeTransporter(getVendorValue(vendor))">
+            <div class="d-flex align-items-center">
+              <i class="pi pi-truck me-3 text-success"></i>
+              <div class="flex-grow-1">
+                <div class="fw-semibold">{{ getVendorDisplayName(vendor) }}</div>
+                <small class="text-muted">Transportador local</small>
+              </div>
+              <span class="badge bg-primary">Registrado</span>
+            </div>
+          </div>
+
+          <!-- Integraciones alternativas -->
+          <div *ngFor="let transporter of alternativeTransporters; let i = index"
+               class="transporter-item"
+               (click)="selectAlternativeTransporter(transporter.provider || transporter.type)">
+            <div class="d-flex align-items-center">
+              <i class="pi pi-send me-3 text-info"></i>
+              <div class="flex-grow-1">
+                <div class="fw-semibold">{{ getTransporterDisplayName(transporter) }}</div>
+                <small class="text-muted">Integración configurada</small>
+              </div>
+              <span *ngIf="transporter.enabled" class="badge bg-success">Activo</span>
+              <span *ngIf="!transporter.enabled" class="badge bg-warning">Inactivo</span>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="allVendors.length === 0 && alternativeTransporters.length === 0"
+             class="text-center py-3 text-muted">
+          <i class="pi pi-exclamation-triangle me-2"></i>
+          No hay otros transportadores disponibles
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer con botones -->
+    <div class="modal-footer-custom">
+      <button type="button"
+              class="btn btn-secondary"
+              (click)="closeEnviameOptionsModal()">
+        {{ 'Cancelar' | translate }}
+      </button>
+
+      <button type="button"
+              class="btn btn-primary"
+              [disabled]="!enviameSelectedOption"
+              (click)="confirmEnviameOption()">
+        <i class="pi pi-arrow-right me-2"></i>
+        <span *ngIf="enviameSelectedOption === 'quote'">{{ 'Ver Cotizaciones' | translate }}</span>
+        <span *ngIf="enviameSelectedOption === 'other'">{{ 'Ver Transportadores' | translate }}</span>
+        <span *ngIf="!enviameSelectedOption">{{ 'Seleccione una opción' | translate }}</span>
+      </button>
+    </div>
+  </div>
+</div>
