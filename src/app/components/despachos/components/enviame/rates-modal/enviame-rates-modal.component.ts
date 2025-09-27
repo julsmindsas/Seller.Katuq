@@ -29,6 +29,16 @@ export class EnviameRatesModalComponent implements OnInit {
   availableRates: EnviameRate[] = [];
   selectedRate: EnviameRate | null = null;
 
+  // Mejoras UX: Estados y filtros
+  filteredRates: EnviameRate[] = [];
+  recommendedRates: EnviameRate[] = [];
+  otherRates: EnviameRate[] = [];
+
+  // Controles de filtrado y ordenamiento
+  sortBy: string = 'price'; // price | time | carrier
+  filterCarrier: string = '';
+  showOnlyRecommended: boolean = false;
+
   loading = false;
   quotingRates = false;
   creatingShipment = false;
@@ -39,8 +49,23 @@ export class EnviameRatesModalComponent implements OnInit {
   // Estado de carga de datos
   loadingShipmentData = false;
 
+  // Estados de carga mejorados
+  loadingStep: number = 0;
+  loadingMessages = [
+    'Validando direcciones...',
+    'Calculando rutas disponibles...',
+    'Obteniendo tarifas actualizadas...'
+  ];
+
   // Un solo flag para controlar cuando TODO está listo
   isReady = false;
+
+  // Control de pestañas con validación
+  activeTabIndex: number = 0;
+  tabsValidation = {
+    locations: { valid: false, errors: [] as string[] },
+    package: { valid: false, errors: [] as string[] }
+  };
 
   // Municipios para autocompletado
   municipiosSugeridosOrigen: any[] = [];
@@ -48,12 +73,32 @@ export class EnviameRatesModalComponent implements OnInit {
   municipioSeleccionadoOrigen: MunicipioDane | null = null;
   municipioSeleccionadoDestino: MunicipioDane | null = null;
 
+  // Estados de búsqueda de municipios
+  searchingMunicipiosOrigen: boolean = false;
+  searchingMunicipiosDestino: boolean = false;
+
   // Tipos de envío disponibles
   tiposEnvio = [
     { label: 'Estándar', value: 'estandar', icon: 'pi-box' },
     { label: 'Express', value: 'express', icon: 'pi-forward' },
     { label: 'Prioritario', value: 'prioritario', icon: 'pi-bolt' }
   ];
+
+  // Opciones de ordenamiento para el dropdown
+  sortOptions = [
+    { label: 'Precio: Menor a mayor', value: 'price_asc' },
+    { label: 'Precio: Mayor a menor', value: 'price_desc' },
+    { label: 'Tiempo: Más rápido', value: 'time_asc' },
+    { label: 'Tiempo: Más lento', value: 'time_desc' },
+    { label: 'Transportadora A-Z', value: 'carrier_asc' },
+    { label: 'Transportadora Z-A', value: 'carrier_desc' }
+  ];
+
+  selectedSort: string = 'price_asc';
+
+  // Control de confirmación mejorado
+  showConfirmDialog: boolean = false;
+  confirmedDetails: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -84,10 +129,15 @@ export class EnviameRatesModalComponent implements OnInit {
       // Forzar actualización de valores después de la inicialización
       setTimeout(() => {
         if (this.quoteForm) {
+          // Validar el formulario inicialmente
+          this.validateTabs();
           this.cdr.detectChanges();
         }
       }, 200);
     }, 100); // 100ms es suficiente para que Angular procese todo
+
+    // Suscribirse a cambios del formulario para validación progresiva
+    this.setupFormValidation();
   }
 
   private createForm(): void {
@@ -403,12 +453,18 @@ export class EnviameRatesModalComponent implements OnInit {
     this.availableRates = [];
     this.selectedRate = null;
 
+    // Iniciar simulación de progreso de carga
+    this.simulateLoadingProgress();
+
     this.logisticaService.getRates(quoteRequest).subscribe({
       next: (response: EnviameRatesResponse) => {
         this.quotingRates = false;
 
         if (response.success && response.rates && response.rates.length > 0) {
           this.availableRates = response.rates;
+          this.filteredRates = [...response.rates];
+          // Ordenar y categorizar tarifas
+          this.sortAndFilterRates();
           this.toastr.success(`Se encontraron ${response.rates.length} opciones de envío`, 'Cotización exitosa');
         } else {
           this.toastr.warning('No se encontraron opciones de envío disponibles', 'Sin resultados');
@@ -585,12 +641,14 @@ export class EnviameRatesModalComponent implements OnInit {
    */
   buscarMunicipiosOrigen(event: any): void {
     const query = event.query;
+    this.searchingMunicipiosOrigen = true;
     this.daneCodesService.searchMunicipios(query).subscribe(municipios => {
       this.municipiosSugeridosOrigen = municipios.map(m => ({
         label: this.daneCodesService.formatMunicipioLabel(m),
         value: m,
         ...m
       }));
+      this.searchingMunicipiosOrigen = false;
     });
   }
 
@@ -599,12 +657,14 @@ export class EnviameRatesModalComponent implements OnInit {
    */
   buscarMunicipiosDestino(event: any): void {
     const query = event.query;
+    this.searchingMunicipiosDestino = true;
     this.daneCodesService.searchMunicipios(query).subscribe(municipios => {
       this.municipiosSugeridosDestino = municipios.map(m => ({
         label: this.daneCodesService.formatMunicipioLabel(m),
         value: m,
         ...m
       }));
+      this.searchingMunicipiosDestino = false;
     });
   }
 
@@ -644,6 +704,321 @@ export class EnviameRatesModalComponent implements OnInit {
       // Guardar como frecuente
       this.daneCodesService.addMunicipioFrecuente(mun);
     }
+  }
+
+  // ========= NUEVOS MÉTODOS PARA MEJORAS UX =========
+
+  /**
+   * Configurar validación de formulario en tiempo real
+   */
+  private setupFormValidation(): void {
+    if (this.quoteForm) {
+      this.quoteForm.valueChanges.pipe(
+        debounceTime(300)
+      ).subscribe(() => {
+        this.validateTabs();
+      });
+    }
+  }
+
+  /**
+   * Validar pestañas y actualizar estado
+   */
+  validateTabs(): void {
+    // Validar pestaña de Ubicaciones
+    const locationFields = ['originMunicipio', 'originCity', 'originCountry',
+                           'destinationMunicipio', 'destinationCity', 'destinationCountry',
+                           'recipientName'];
+
+    const locationErrors: string[] = [];
+    locationFields.forEach(field => {
+      const control = this.quoteForm.get(field);
+      if (control && control.invalid) {
+        locationErrors.push(this.getFieldLabel(field));
+      }
+    });
+
+    this.tabsValidation.locations = {
+      valid: locationErrors.length === 0,
+      errors: locationErrors
+    };
+
+    // Validar pestaña de Paquete
+    const packageFields = ['weight', 'value'];
+    const packageErrors: string[] = [];
+
+    packageFields.forEach(field => {
+      const control = this.quoteForm.get(field);
+      if (control && control.invalid) {
+        packageErrors.push(this.getFieldLabel(field));
+      }
+    });
+
+    this.tabsValidation.package = {
+      valid: packageErrors.length === 0,
+      errors: packageErrors
+    };
+  }
+
+  /**
+   * Obtener etiqueta amigable para el campo
+   */
+  private getFieldLabel(field: string): string {
+    const labels: {[key: string]: string} = {
+      originMunicipio: 'Municipio de origen',
+      originCity: 'Ciudad de origen',
+      originCountry: 'País de origen',
+      destinationMunicipio: 'Municipio de destino',
+      destinationCity: 'Ciudad de destino',
+      destinationCountry: 'País de destino',
+      recipientName: 'Nombre del destinatario',
+      recipientPhone: 'Teléfono del destinatario',
+      recipientEmail: 'Email del destinatario',
+      weight: 'Peso del paquete',
+      value: 'Valor declarado'
+    };
+    return labels[field] || field;
+  }
+
+  /**
+   * Verificar si la pestaña de ubicaciones está completa
+   */
+  isLocationTabComplete(): boolean {
+    return this.tabsValidation.locations.valid;
+  }
+
+  /**
+   * Verificar si la pestaña de paquete está completa
+   */
+  isPackageTabComplete(): boolean {
+    return this.tabsValidation.package.valid;
+  }
+
+  /**
+   * Obtener clase CSS para validación de pestaña
+   */
+  getTabValidationClass(tab: string): string {
+    if (tab === 'locations') {
+      return this.tabsValidation.locations.valid ? 'tab-valid' :
+             this.tabsValidation.locations.errors.length > 0 ? 'tab-invalid' : '';
+    } else if (tab === 'package') {
+      return this.tabsValidation.package.valid ? 'tab-valid' :
+             this.tabsValidation.package.errors.length > 0 ? 'tab-invalid' : '';
+    }
+    return '';
+  }
+
+  /**
+   * Verificar si el formulario es válido para cotizar
+   */
+  isFormValidForQuote(): boolean {
+    return this.tabsValidation.locations.valid && this.tabsValidation.package.valid;
+  }
+
+  /**
+   * Obtener resumen de origen
+   */
+  getOriginSummary(): string {
+    const formData = this.quoteForm.value;
+    const parts = [];
+    if (formData.originCity) parts.push(formData.originCity);
+    if (formData.originAddress) parts.push(formData.originAddress);
+    return parts.join(', ') || 'No especificado';
+  }
+
+  /**
+   * Obtener resumen de destino
+   */
+  getDestinationSummary(): string {
+    const formData = this.quoteForm.value;
+    const parts = [];
+    if (formData.destinationCity) parts.push(formData.destinationCity);
+    if (formData.destinationAddress) parts.push(formData.destinationAddress);
+    if (formData.recipientName) parts.push(`(${formData.recipientName})`);
+    return parts.join(' ') || 'No especificado';
+  }
+
+  /**
+   * Obtener resumen de dimensiones
+   */
+  getDimensionsSummary(): string {
+    const formData = this.quoteForm.value;
+    if (formData.length && formData.width && formData.height) {
+      return `${formData.length} x ${formData.width} x ${formData.height} cm`;
+    }
+    return 'No especificadas';
+  }
+
+  /**
+   * Manejar cambio de pestaña con validación
+   */
+  onTabChange(event: any): void {
+    // Si está intentando ir a la pestaña de paquete (index 1)
+    if (event.index === 1) {
+      // Validar primero la pestaña de ubicaciones
+      this.validateTabs();
+
+      // Si la pestaña de ubicaciones no está completa, no permitir el cambio
+      if (!this.tabsValidation.locations.valid) {
+        // Mostrar mensaje de error
+        this.toastr.warning(
+          'Por favor complete los campos requeridos en Ubicaciones antes de continuar',
+          'Información incompleta',
+          { timeOut: 3000 }
+        );
+
+        // Forzar a quedarse en la pestaña actual
+        setTimeout(() => {
+          this.activeTabIndex = 0;
+          this.cdr.detectChanges();
+        }, 50);
+        return;
+      }
+    }
+
+    this.activeTabIndex = event.index;
+    this.validateTabs();
+  }
+
+  /**
+   * Verificar si puede navegar a la pestaña de paquete
+   */
+  canNavigateToPackage(): boolean {
+    return this.tabsValidation.locations.valid;
+  }
+
+  /**
+   * Ordenar y filtrar tarifas
+   */
+  sortAndFilterRates(): void {
+    let rates = [...this.availableRates];
+
+    // Filtrar por transportadora
+    if (this.filterCarrier) {
+      rates = rates.filter(r =>
+        r.carrier?.toLowerCase().includes(this.filterCarrier.toLowerCase()) ||
+        r.service?.toLowerCase().includes(this.filterCarrier.toLowerCase())
+      );
+    }
+
+    // Ordenar según criterio seleccionado
+    switch(this.selectedSort) {
+      case 'price_asc':
+        rates.sort((a, b) => (a.price || 0) - (b.price || 0));
+        break;
+      case 'price_desc':
+        rates.sort((a, b) => (b.price || 0) - (a.price || 0));
+        break;
+      case 'time_asc':
+        rates.sort((a, b) => this.getEstimatedDays(a) - this.getEstimatedDays(b));
+        break;
+      case 'time_desc':
+        rates.sort((a, b) => this.getEstimatedDays(b) - this.getEstimatedDays(a));
+        break;
+      case 'carrier_asc':
+        rates.sort((a, b) => (a.carrier || '').localeCompare(b.carrier || ''));
+        break;
+      case 'carrier_desc':
+        rates.sort((a, b) => (b.carrier || '').localeCompare(a.carrier || ''));
+        break;
+    }
+
+    this.filteredRates = rates;
+
+    // Separar recomendadas y otras
+    this.categorizeRates();
+  }
+
+  /**
+   * Categorizar tarifas en recomendadas y otras
+   */
+  private categorizeRates(): void {
+    const cheapest = this.getCheapestRate();
+    const fastest = this.getFastestRate();
+
+    this.recommendedRates = this.filteredRates.filter(rate =>
+      rate === cheapest || rate === fastest ||
+      (rate.serviceTypes && rate.serviceTypes.includes('express'))
+    );
+
+    this.otherRates = this.filteredRates.filter(rate =>
+      !this.recommendedRates.includes(rate)
+    );
+  }
+
+  /**
+   * Obtener días estimados de una tarifa
+   */
+  private getEstimatedDays(rate: EnviameRate): number {
+    if (rate.estimatedDays) {
+      const match = rate.estimatedDays.match(/\d+/);
+      return match ? parseInt(match[0]) : 999;
+    }
+    if (rate.estimatedTime) {
+      const match = rate.estimatedTime.match(/\d+/);
+      return match ? parseInt(match[0]) : 999;
+    }
+    return 999;
+  }
+
+  /**
+   * Manejar cambio de filtro de transportadora
+   */
+  onCarrierFilterChange(): void {
+    this.sortAndFilterRates();
+  }
+
+  /**
+   * Manejar cambio de ordenamiento
+   */
+  onSortChange(): void {
+    this.sortAndFilterRates();
+  }
+
+  /**
+   * Alternar mostrar solo recomendadas
+   */
+  toggleRecommendedOnly(): void {
+    this.showOnlyRecommended = !this.showOnlyRecommended;
+    if (this.showOnlyRecommended) {
+      this.filteredRates = this.recommendedRates;
+    } else {
+      this.sortAndFilterRates();
+    }
+  }
+
+  /**
+   * Obtener tarifas para mostrar
+   */
+  getRatesToDisplay(): EnviameRate[] {
+    return this.showOnlyRecommended ? this.recommendedRates : this.filteredRates;
+  }
+
+  /**
+   * Verificar si una tarifa es recomendada
+   */
+  isRecommended(rate: EnviameRate): boolean {
+    return this.recommendedRates.includes(rate);
+  }
+
+  /**
+   * Simular progreso de carga
+   */
+  private simulateLoadingProgress(): void {
+    this.loadingStep = 0;
+    const interval = setInterval(() => {
+      this.loadingStep++;
+      if (this.loadingStep >= this.loadingMessages.length || !this.quotingRates) {
+        clearInterval(interval);
+      }
+    }, 800);
+  }
+
+  /**
+   * Obtener mensaje de carga actual
+   */
+  getCurrentLoadingMessage(): string {
+    return this.loadingMessages[Math.min(this.loadingStep, this.loadingMessages.length - 1)];
   }
 
   /**
