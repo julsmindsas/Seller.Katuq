@@ -3656,10 +3656,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             return;
           }
           // Solo agregar al carrito si se configuró correctamente el producto
-          if (order.carrito && 
-              configuracionResult?.producto?.identificacion?.referencia &&
-              configuracionResult?.configuracion) { // Verificar que tiene configuración válida
-            order.carrito.push(configuracionResult);
+          if (order.carrito && configuracionResult?.producto) {
+            // Verificar que al menos tenga producto válido
+            if (configuracionResult.producto.identificacion?.referencia || 
+                configuracionResult.producto.crearProducto?.cd) {
+              order.carrito.push(configuracionResult);
+              console.log('✅ Producto agregado a recompra:', configuracionResult);
+            } else {
+              console.error('❌ Producto sin referencia válida:', configuracionResult);
+            }
           }
 
           // Sincronizar forma de entrega antes de actualizar valores

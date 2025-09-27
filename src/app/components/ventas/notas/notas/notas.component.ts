@@ -272,7 +272,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           const notasExistentes =
             this.pedido.notasPedido?.notasProduccion || [];
 
-          this.pedido.carrito = productos.map((item) => ({
+          const carritoExistente = this.pedido.carrito || [];
+          const nuevosProductos = productos.map((item) => ({
             producto: item.producto,
             configuracion: item.configuracion,
             cantidad: item.cantidad || item.configuracion?.cantidad || 1,
@@ -281,6 +282,9 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
             precio: item.producto?.precio,
             disponibilidad: item.producto?.disponibilidad,
           }));
+
+          // Combinar carrito existente con nuevos productos
+          this.pedido.carrito = [...carritoExistente, ...nuevosProductos];
 
           // RESTAURAR las notas de producción existentes
           if (!this.pedido.notasPedido) {
