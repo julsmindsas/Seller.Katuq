@@ -198,15 +198,34 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
 
-    window.addEventListener('error', (event) => {
-      console.error('Error global de ventana:', event.error);
-      this.errorHandlerService.logError(event.error);
-    });
+    // Configurar manejadores de error global para debugging
+    if (!environment.production) {
+      window.addEventListener('error', (event) => {
+        // Filtrar errores del Angular DevTools
+        if (event.error && event.error.stack &&
+            (event.error.stack.includes('ng-debug-api') ||
+             event.error.stack.includes('getComponent'))) {
+          console.warn('Angular DevTools error ignorado:', event.error.message);
+          event.preventDefault();
+          return;
+        }
+        console.error('Error global de ventana:', event.error);
+        this.errorHandlerService.logError(event.error);
+      });
 
-    window.addEventListener('unhandledrejection', (event) => {
-      console.error('Promesa no manejada:', event.reason);
-      this.errorHandlerService.logError(event.reason);
-    });
+      window.addEventListener('unhandledrejection', (event) => {
+        // Filtrar errores del Angular DevTools
+        if (event.reason && event.reason.stack &&
+            (event.reason.stack.includes('ng-debug-api') ||
+             event.reason.message?.includes('getComponent'))) {
+          console.warn('Angular DevTools promise rejection ignorada:', event.reason);
+          event.preventDefault();
+          return;
+        }
+        console.error('Promesa no manejada:', event.reason);
+        this.errorHandlerService.logError(event.reason);
+      });
+    }
 
     // Restaurar datos de sesión al inicializar la aplicación
     this.initializeSessionData();
