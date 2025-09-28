@@ -307,7 +307,13 @@ body {
 		}
 
 		.page-wrapper {
+			// Modern header dark theme
+			.modern-header,
 			.page-header {
+				background-color: $dark-card-background;
+				border-bottom-color: $dark-card-border;
+				box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+
 				.header-wrapper {
 					.search-full {
 						.ProfileCard {

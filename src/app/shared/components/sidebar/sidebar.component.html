@@ -15,17 +15,40 @@
   <div class="swipe-hint"></div>
 </div>
 
+<!-- Indicador visual cuando el sidebar está oculto en auto-hide -->
+<div class="sidebar-edge-indicator"
+     *ngIf="isAutoHideEnabled && !isSidebarVisible && !isMobile()"
+     [attr.aria-label]="'Pase el cursor para mostrar el menú'"
+     title="Pase el cursor para mostrar el menú">
+  <div class="edge-line"></div>
+  <div class="edge-hint">
+    <i class="fa fa-chevron-right"></i>
+  </div>
+</div>
+
+<!-- Zona invisible de hover extendida (MEJORA UX) -->
+<div class="sidebar-hover-zone"
+     *ngIf="collapseMenu && !isMobile()"
+     (mouseenter)="onMouseEnter()"
+     (mouseleave)="onMouseLeave()"
+     [class.active]="isTemporarilyExpanded">
+</div>
+
 <!-- Sidebar Container -->
-<aside class="sidebar-container" 
-       [class.collapsed]="collapseMenu"
+<aside class="sidebar-container"
+       [class.collapsed]="collapseMenu && !isTemporarilyExpanded"
+       [class.temporarily-expanded]="collapseMenu && isTemporarilyExpanded"
        [class.compact]="isCompactMode"
-       role="navigation" 
+       [class.auto-hide-enabled]="isAutoHideEnabled"
+       [class.sidebar-hidden]="isAutoHideEnabled && !isSidebarVisible"
+       [class.sidebar-hovering]="isAutoHideEnabled && isHovering"
+       role="navigation"
        aria-label="Menú principal">
 
   <!-- Header del Sidebar -->
   <header class="sidebar-header">
     <!-- Logo Principal (modo normal) -->
-    <div class="logo-section" [class.hidden]="isCompactMode || collapseMenu">
+    <div class="logo-section" [class.hidden]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">
       <a routerLink='/welcome' class="logo-link" [attr.aria-label]="'Ir a inicio - ' + (companyInformation?.razonSocial || 'Katuq')">
         <img class="logo-main" 
              src="assets/images/logo/Katuq/katuq_dark.svg" 
@@ -43,36 +66,39 @@
       </div>
     </div>
 
-    <!-- Logo Compacto (modo compacto pero expandido) -->
-    <div class="logo-compact" [class.visible]="isCompactMode && !collapseMenu">
+    <!-- Logo Compacto (modo colapsado o compacto) -->
+    <div class="logo-compact" [class.visible]="(collapseMenu && !isTemporarilyExpanded) || (isCompactMode && !collapseMenu)">
       <a routerLink='/welcome' [attr.aria-label]="'Ir a inicio'" title="Katuq">
         <img src="assets/images/logo/Katuq/katuq_logo_solo.svg" alt="K">
       </a>
     </div>
 
     <!-- Controles del Sidebar -->
-    <div class="sidebar-controls" [class.collapsed-controls]="collapseMenu">
-      <button class="control-btn collapse-btn" 
-              (click)="sidebarToggle()" 
-              [attr.aria-label]="collapseMenu ? 'Expandir menú' : 'Contraer menú'"
+    <div class="sidebar-controls" [class.collapsed-controls]="collapseMenu && !isTemporarilyExpanded">
+      <!-- Botón de colapso tradicional con hover-expand -->
+      <button class="control-btn collapse-btn"
+              (click)="sidebarToggle()"
+              [attr.aria-label]="collapseMenu ? 'Expandir menú (hover para vista previa)' : 'Contraer menú'"
               [attr.aria-expanded]="!collapseMenu"
-              [title]="collapseMenu ? 'Expandir menú' : 'Contraer menú'">
+              [title]="collapseMenu ? 'Expandir menú (hover para vista previa)' : 'Contraer menú'">
         <i class="fa" [ngClass]="collapseMenu ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
       </button>
-      
-      <button class="control-btn compact-btn" 
-              (click)="toggleCompactMode()" 
-              [attr.aria-label]="isCompactMode ? 'Modo normal' : 'Modo compacto'"
-              [title]="isCompactMode ? 'Modo normal' : 'Modo compacto'"
-              *ngIf="!collapseMenu">
-        <i class="fa" [ngClass]="isCompactMode ? 'fa-expand' : 'fa-compress'"></i>
+
+      <!-- Botón de Auto-Hide -->
+      <button class="control-btn auto-hide-btn"
+              (click)="toggleAutoHide()"
+              [attr.aria-label]="isAutoHideEnabled ? 'Auto-ocultar activado (el menú se oculta automáticamente)' : 'Activar auto-ocultar (el menú se ocultará cuando no lo uses)'"
+              [title]="isAutoHideEnabled ? 'Auto-ocultar activado' : 'Activar auto-ocultar'"
+              [class.active]="isAutoHideEnabled"
+              *ngIf="!collapseMenu && !isMobile()">
+        <i class="fa" [ngClass]="isAutoHideEnabled ? 'fa-eye' : 'fa-eye-slash'"></i>
       </button>
     </div>
   </header>
 
   <!-- Barra de Búsqueda -->
-  <div class="search-section" 
-       [class.hidden]="isCompactMode || collapseMenu" 
+  <div class="search-section"
+       [class.hidden]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)"
        [class.active]="isSearchFocused"
        role="search">
     <div class="search-input-container">
@@ -117,8 +143,8 @@
   </div>
 
   <!-- Sección de Favoritos -->
-  <div class="favorites-section" 
-       *ngIf="favoriteItems.length > 0 && !isCompactMode && !collapseMenu"
+  <div class="favorites-section"
+       *ngIf="favoriteItems.length > 0 && !isCompactMode && (!collapseMenu || isTemporarilyExpanded)"
        role="region" 
        aria-labelledby="favorites-title">
     <h3 id="favorites-title" class="favorites-title">
@@ -130,8 +156,8 @@
       <li class="favorite-item" 
           *ngFor="let favorite of favoriteItems" 
           role="listitem">
-        <a [routerLink]="favorite.path" 
-           (click)="onMobileLinkClick()"
+        <a [routerLink]="favorite.path"
+           (click)="onMenuItemClick(favorite); onMobileLinkClick()"
            class="favorite-link"
            [attr.aria-label]="'Ir a ' + (favorite.title | translate)">
           <i class="fa" [ngClass]="getMenuIcon(favorite.icon, favorite.title)" aria-hidden="true"></i>
@@ -156,8 +182,8 @@
            [attr.data-section]="sectionIndex">
         
         <!-- Título de sección -->
-        <button class="section-header" 
-                *ngIf="section.isHeaderSection && !isCompactMode && !collapseMenu"
+        <button class="section-header"
+                *ngIf="section.isHeaderSection && !isCompactMode && (!collapseMenu || isTemporarilyExpanded)"
                 (click)="toggleSection(section)"
                 [class.expanded]="!section.collapsed"
                 [attr.aria-expanded]="!section.collapsed"
@@ -174,57 +200,59 @@
         <!-- Items de la sección -->
         <ul class="menu-items" 
             [id]="'section-content-' + sectionIndex"
-            [class.collapsed]="section.collapsed && !isCompactMode && !collapseMenu"
+            [class.collapsed]="section.collapsed && !isCompactMode && (!collapseMenu || isTemporarilyExpanded)"
             [class.compact]="isCompactMode"
             [class.sidebar-collapsed]="collapseMenu"
             role="group"
             [attr.aria-labelledby]="section.isHeaderSection ? 'section-header-' + sectionIndex : null">
           
-          <li class="menu-item" 
+          <li class="menu-item"
               *ngFor="let item of section.items"
               [class.has-children]="item.children?.length > 0"
               [class.active]="item.active"
+              [attr.data-tooltip]="item.title"
               role="none">
             
             <!-- Item sin hijos (Link directo) -->
-            <a *ngIf="!item.children && item.type === 'link'" 
+            <a *ngIf="!item.children && item.type === 'link'"
                [routerLink]="item.path"
-               (click)="onMobileLinkClick()"
+               (click)="onMenuItemClick(item); onMobileLinkClick()"
                routerLinkActive="active"
                class="menu-link"
-               [class.collapsed-link]="collapseMenu"
+               [class.collapsed-link]="collapseMenu && !isTemporarilyExpanded"
                [attr.aria-label]="item.title | translate"
                [attr.title]="collapseMenu ? (item.title | translate) : ''"
                role="menuitem">
               <div class="menu-icon">
                 <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title)" aria-hidden="true"></i>
               </div>
-              <span class="menu-text" 
-                    [class.sr-only]="isCompactMode || collapseMenu">{{item.title | translate}}</span>
-              <button class="favorite-btn" 
-                      *ngIf="!collapseMenu"
+              <span class="menu-text"
+                    [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
+              <button class="favorite-btn"
+                      *ngIf="!collapseMenu || isTemporarilyExpanded"
                       (click)="toggleFavorite(item, $event)"
                       [class.active]="isFavorite(item)"
                       [attr.aria-label]="isFavorite(item) ? 'Quitar de favoritos' : 'Añadir a favoritos'">
                 <i class="fa fa-star" aria-hidden="true"></i>
               </button>
               <!-- Tooltip para modo compacto o colapsado -->
-              <div class="tooltip" *ngIf="isCompactMode || collapseMenu">{{item.title | translate}}</div>
+              <div class="tooltip" *ngIf="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</div>
             </a>
 
             <!-- Item externo -->
-            <a *ngIf="!item.children && item.type === 'extLink'" 
+            <a *ngIf="!item.children && item.type === 'extLink'"
                [href]="item.path"
+               (click)="onMenuItemClick(item)"
                class="menu-link external"
-               [class.collapsed-link]="collapseMenu"
+               [class.collapsed-link]="collapseMenu && !isTemporarilyExpanded"
                [attr.aria-label]="(item.title | translate) + ' (enlace externo)'"
                [attr.title]="collapseMenu ? (item.title | translate) + ' (enlace externo)' : ''"
                role="menuitem">
               <div class="menu-icon">
                 <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-external-link'" aria-hidden="true"></i>
               </div>
-              <span class="menu-text" 
-                    [class.sr-only]="isCompactMode || collapseMenu">{{item.title | translate}}</span>
+              <span class="menu-text"
+                    [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
               <i class="fa fa-external-link external-icon" 
                  *ngIf="!collapseMenu" 
                  aria-hidden="true"></i>
@@ -234,7 +262,7 @@
             <!-- Item con hijos (Submenu) -->
             <button *ngIf="item.children" 
                     class="menu-link submenu-toggle"
-                    [class.collapsed-link]="collapseMenu"
+                    [class.collapsed-link]="collapseMenu && !isTemporarilyExpanded"
                     (click)="toggletNavActive(item, $event)"
                     [class.active]="item.active && !collapseMenu"
                     [attr.aria-expanded]="item.active && !collapseMenu"
@@ -245,14 +273,14 @@
               <div class="menu-icon">
                 <i class="fa" [ngClass]="getMenuIcon(item.icon, item.title) || 'fa-folder-o'" aria-hidden="true"></i>
               </div>
-              <span class="menu-text" 
-                    [class.sr-only]="isCompactMode || collapseMenu">{{item.title | translate}}</span>
-              <i class="fa fa-chevron-down submenu-chevron" 
-                 *ngIf="!collapseMenu"
+              <span class="menu-text"
+                    [class.sr-only]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">{{item.title | translate}}</span>
+              <i class="fa fa-chevron-down submenu-chevron"
+                 *ngIf="!collapseMenu || isTemporarilyExpanded"
                  [class.rotated]="item.active" 
                  aria-hidden="true"></i>
-              <button class="favorite-btn" 
-                      *ngIf="!collapseMenu"
+              <button class="favorite-btn"
+                      *ngIf="!collapseMenu || isTemporarilyExpanded"
                       (click)="toggleFavorite(item, $event)"
                       [class.active]="isFavorite(item)"
                       [attr.aria-label]="isFavorite(item) ? 'Quitar de favoritos' : 'Añadir a favoritos'">
@@ -262,8 +290,8 @@
             </button>
 
             <!-- Submenú -->
-            <ul class="submenu" 
-                *ngIf="item.children && !collapseMenu"
+            <ul class="submenu"
+                *ngIf="item.children && (!collapseMenu || isTemporarilyExpanded)"
                 [id]="'submenu-' + item.title?.replace(' ', '-')"
                 [class.expanded]="item.active"
                 [class.compact-submenu]="isCompactMode"
@@ -276,9 +304,9 @@
                   role="none">
                 
                 <!-- Subitem sin hijos -->
-                <a *ngIf="!child.children && child.type === 'link'" 
+                <a *ngIf="!child.children && child.type === 'link'"
                    [routerLink]="child.path"
-                   (click)="onMobileLinkClick()"
+                   (click)="onSubMenuItemClick($event); onMobileLinkClick()"
                    routerLinkActive="active"
                    class="submenu-link"
                    role="menuitem">
@@ -315,7 +343,7 @@
                       [class.active]="grandchild.active"
                       role="none">
                     <a [routerLink]="grandchild.path"
-                       (click)="onMobileLinkClick()"
+                       (click)="onSubMenuItemClick($event); onMobileLinkClick()"
                        routerLinkActive="active"
                        class="sub-submenu-link"
                        role="menuitem">

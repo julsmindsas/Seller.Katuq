@@ -39,10 +39,11 @@
   --bg-active: #f3f4f6;
   --bg-section: #fafafa;
 
-  // Transiciones suaves
-  --transition-fast: 0.15s ease;
-  --transition-normal: 0.25s ease;
-  --transition-slow: 0.35s ease;
+  // Transiciones OPTIMIZADAS para mejor rendimiento
+  --transition-ultrafast: 0.1s ease-out;   // Para hover effects
+  --transition-fast: 0.15s ease-out;       // Para expansión rápida
+  --transition-normal: 0.2s ease-out;      // Para animaciones normales
+  --transition-slow: 0.3s ease-out;        // Para animaciones complejas
 
   // Espaciado compacto
   --spacing-xs: 2px;
@@ -58,12 +59,118 @@
   --radius-lg: 10px;
   --radius-xl: 12px;
 
-  // Z-index
+  // Z-index - Estructura mejorada para evitar conflictos
   --z-dropdown: 1000;
   --z-sticky: 1020;
-  --z-fixed: 1030;
+  --z-sidebar: 1024;    // Sidebar por debajo del header
+  --z-header: 1025;     // Header por encima del sidebar
+  --z-fixed: 1030;      // Nivel base para elementos fijos
   --z-modal: 1050;
   --z-tooltip: 1070;
+}
+
+// ===================================================
+// MODO OSCURO - Dark Theme Support
+// ===================================================
+.dark-only,
+.dark,
+[data-theme="dark"],
+body.dark,
+body.dark-only {
+  // Fondos oscuros
+  --sidebar-bg: #1f2937;
+  --sidebar-border: rgba(255, 255, 255, 0.1);
+  --sidebar-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+
+  // Sistema de colores oscuro
+  --primary-color: #818cf8;
+  --primary-hover: #6366f1;
+  --primary-dark: #4f46e5;
+  --primary-light: rgba(129, 140, 248, 0.15);
+  --primary-lighter: rgba(129, 140, 248, 0.08);
+
+  // Texto en modo oscuro
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --text-white: #ffffff;
+
+  // Fondos en modo oscuro
+  --bg-hover: #374151;
+  --bg-active: #4b5563;
+  --bg-section: #111827;
+
+  // Bordes en modo oscuro
+  --border-color: rgba(255, 255, 255, 0.12);
+}
+
+// Selectores más específicos para el modo oscuro
+.dark-only .sidebar-container,
+.dark .sidebar-container {
+  background: var(--sidebar-bg) !important;
+  border-color: var(--sidebar-border) !important;
+
+  // Intercambiar logos en modo oscuro - MANTENIENDO LAS MISMAS DIMENSIONES
+  .logo-link {
+    // Mantener las dimensiones del contenedor
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    height: 60px !important;
+
+    .logo-main {
+      display: none !important;
+    }
+
+    .logo-dark {
+      display: block !important;
+      // DIMENSIONES ADAPTATIVAS IGUALES AL MODO CLARO
+      max-width: 160px;
+      width: 100%;
+      height: 50px;
+      object-fit: contain !important;
+    }
+  }
+
+  .sidebar-header,
+  .search-section,
+  .favorites-section,
+  .menu-section,
+  .notification-section,
+  .plan-card {
+    background: transparent !important;
+    color: var(--text-primary) !important;
+  }
+
+  .menu-link,
+  .submenu-link,
+  .section-header {
+    color: var(--text-primary) !important;
+
+    &:hover {
+      background: var(--bg-hover) !important;
+    }
+
+    &.active {
+      background: var(--bg-active) !important;
+    }
+  }
+
+  .search-input {
+    background: var(--bg-section) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+  }
+
+  .control-btn {
+    background: var(--bg-section) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
+
+    &:hover {
+      background: var(--bg-hover) !important;
+    }
+  }
 }
 
 // ===================================================
@@ -97,6 +204,27 @@
 // OVERLAY Y SWIPE INDICATOR
 // ===================================================
 
+// NUEVO: Zona invisible de hover extendida para mejor UX
+.sidebar-hover-zone {
+  position: fixed;
+  top: 64px; // Comenzar después del header para evitar interferencia
+  left: 0;
+  width: 80px; // Reducido para minimizar interferencia
+  height: calc(100vh - 64px); // Ajustar altura para excluir header
+  z-index: 1034; // Justo debajo del sidebar pero encima del contenido
+  pointer-events: auto;
+  background: transparent; // Invisible
+
+  // Cuando está activo (sidebar expandido), extender la zona
+  &.active {
+    width: 270px; // Ligeramente más ancho que el sidebar expandido
+  }
+
+  @media (max-width: 991.98px) {
+    display: none !important;
+  }
+}
+
 .sidebar-overlay {
   position: fixed;
   top: 0;
@@ -107,7 +235,7 @@
   z-index: 1054;
   opacity: 0;
   visibility: hidden;
-  transition: all var(--transition-normal);
+  transition: opacity var(--transition-fast), visibility var(--transition-fast);
   pointer-events: none;
 
   &.active {
@@ -162,18 +290,53 @@
   box-shadow: var(--sidebar-shadow);
   display: flex;
   flex-direction: column;
-  z-index: var(--z-fixed);
+  z-index: 1035; // Mayor que el header (1025) para evitar superposición
   transform: translateX(0);
-  transition: all var(--transition-normal);
+  transition: transform var(--transition-fast), width var(--transition-fast);
   font-family: var(--font-family);
   overflow: hidden;
 
   &.collapsed {
     @media (min-width: 992px) {
       width: 70px;
+      overflow-x: hidden; // Asegurar que el contenido no se desborde
+      // OPTIMIZADO: Transición más rápida
+      transition: width var(--transition-fast) ease-out;
+
+      // NUEVO: Transición aún más rápida al colapsar por click
+      &:not(.temporarily-expanded) {
+        transition: width var(--transition-ultrafast) ease-out !important;
+      }
 
       .sidebar-header {
         padding: var(--spacing-md);
+        overflow: hidden; // Prevenir desbordamiento del logo
+      }
+
+      // Ocultar elementos cuando está colapsado
+      .menu-text,
+      .search-section,
+      .favorites-section,
+      .section-header,
+      .submenu-chevron,
+      .favorite-btn,
+      .logo-section { // Ocultar logo principal cuando está colapsado
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity var(--transition-ultrafast), visibility var(--transition-ultrafast);
+      }
+
+      // Mostrar logo compacto cuando está colapsado
+      .logo-compact {
+        display: block !important;
+        opacity: 1;
+        visibility: visible;
+      }
+
+      // Mostrar solo iconos
+      .menu-icon {
+        margin: 0 auto;
+        transition: margin var(--transition-fast);
       }
     }
 
@@ -182,8 +345,168 @@
     }
   }
 
+  // Estado temporalmente expandido (hover en colapso tradicional) - OPTIMIZADO
+  &.temporarily-expanded {
+    @media (min-width: 992px) {
+      width: var(--sidebar-width) !important;
+      // MEJORA: Transición INSTANTÁNEA para expansión
+      transition: width var(--transition-fast) ease-out !important;
+      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+      z-index: calc(var(--z-fixed) + 1);
+
+      // Mostrar elementos con animación ULTRA RÁPIDA
+      .menu-text,
+      .search-section,
+      .favorites-section,
+      .section-header,
+      .submenu-chevron,
+      .favorite-btn {
+        opacity: 1;
+        visibility: visible;
+        // OPTIMIZADO: Aparición instantánea del texto
+        transition: opacity var(--transition-ultrafast), visibility var(--transition-ultrafast);
+      }
+
+      // Logo principal visible - con dimensiones consistentes
+      .logo-section {
+        display: block !important;
+        opacity: 1;
+        transition: opacity var(--transition-ultrafast);
+
+        .logo-link {
+          display: flex !important;
+          justify-content: center !important;
+          align-items: center !important;
+          height: 60px !important;
+
+          img {
+            width: 160px !important;
+            height: 50px !important;
+            object-fit: contain !important;
+          }
+        }
+      }
+
+      // Restaurar margen de iconos
+      .menu-icon {
+        margin-right: var(--spacing-md);
+        transition: margin var(--transition-fast);
+      }
+
+      // Controles visibles
+      .sidebar-controls {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      // Tooltips no necesarios cuando está expandido
+      .tooltip {
+        display: none !important;
+      }
+    }
+  }
+
   &.compact {
     width: var(--sidebar-compact-width);
+  }
+
+  // Auto-Collapse Mode Styles (DEPRECADO - Mantener por compatibilidad temporal)
+  // Nota: Auto-collapse ha sido reemplazado por hover-expand en colapso tradicional
+  &.auto-collapse-enabled {
+    // Redirigir al estilo de colapso tradicional
+    @extend .collapsed;
+
+    // Estado colapsado por defecto (mantener estructura por compatibilidad)
+    &:not(.auto-collapse-expanded) {
+      .menu-title,
+      .section-header span,
+      .plan-status .card-content,
+      .notification-manager .notifications-list {
+        opacity: 0;
+        transform: translateX(-10px);
+        pointer-events: none;
+      }
+
+      .sidebar-header .logo-section {
+        display: none;
+      }
+
+      .sidebar-header .logo-compact {
+        display: block;
+      }
+
+      .search-section {
+        opacity: 0;
+        height: 0;
+        overflow: hidden;
+        margin: 0;
+      }
+
+      .menu-icon {
+        margin-right: 0;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .menu-item {
+        justify-content: center;
+
+        .menu-content {
+          justify-content: center;
+        }
+      }
+
+      .submenu-arrow {
+        opacity: 0;
+      }
+
+      // Tooltips para los íconos cuando está colapsado
+      .menu-item {
+        position: relative;
+
+        &:hover::after {
+          content: attr(data-tooltip);
+          position: absolute;
+          left: 100%;
+          top: 50%;
+          transform: translateY(-50%);
+          background: var(--text-primary);
+          color: white;
+          padding: 6px 12px;
+          border-radius: var(--radius-sm);
+          font-size: 12px;
+          white-space: nowrap;
+          z-index: 1000;
+          margin-left: 10px;
+          opacity: 0.95;
+          pointer-events: none;
+        }
+      }
+
+      // Ocultar secciones menos importantes
+      .plan-status,
+      .notification-manager {
+        height: 0;
+        overflow: hidden;
+        opacity: 0;
+        margin: 0;
+        padding: 0;
+      }
+
+      // Ajustar controles en modo colapsado
+      .sidebar-controls {
+        justify-content: center;
+
+        .auto-collapse-btn {
+          margin: 0 auto;
+        }
+      }
+
+      // Ajustar header para modo colapsado
+      .sidebar-header {
+        padding: var(--spacing-md);
+      }
+    }
   }
 }
 
@@ -195,27 +518,57 @@
   padding: var(--spacing-xl);
   border-bottom: 1px solid var(--sidebar-border);
   background: var(--sidebar-bg);
+  position: relative;
+  overflow: hidden; // Prevenir desbordamiento del logo
 
   .logo-section {
     transition: all var(--transition-normal);
+    width: 100%; // Asegurar que ocupe todo el ancho disponible
+    overflow: hidden; // Prevenir desbordamiento
 
     &.hidden {
       display: none;
     }
 
     .logo-link {
-      display: block;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       text-decoration: none;
-      text-align: center;
+      height: 60px; // Altura fija del contenedor
       margin-bottom: var(--spacing-md);
+      padding: 0 var(--spacing-md);
+      overflow: hidden; // Prevenir desbordamiento de imágenes
 
       img {
-        max-width: 140px;
-        height: auto;
+        // DIMENSIONES ADAPTATIVAS PARA PREVENIR DESBORDAMIENTO
+        max-width: 160px;
+        width: 100%; // Adaptarse al contenedor
+        height: 50px;
+        object-fit: contain; // Mantener proporción dentro del contenedor fijo
+        display: block;
         transition: transform var(--transition-fast);
 
         &:hover {
           transform: scale(1.02);
+        }
+
+        // Logo para modo claro - con dimensiones adaptativas
+        &.logo-main {
+          display: block;
+          max-width: 160px;
+          width: 100%;
+          height: 50px;
+          object-fit: contain;
+        }
+
+        // Logo para modo oscuro - con dimensiones adaptativas idénticas
+        &.logo-dark {
+          display: none;
+          max-width: 160px;
+          width: 100%;
+          height: 50px;
+          object-fit: contain;
         }
       }
     }
@@ -242,14 +595,23 @@
   .logo-compact {
     display: none;
     text-align: center;
+    width: 100%;
+    padding: var(--spacing-sm);
 
     &.visible {
       display: block;
     }
 
+    a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
     img {
       width: 32px;
       height: 32px;
+      object-fit: contain;
     }
   }
 
@@ -270,7 +632,7 @@
       background: var(--sidebar-bg);
       color: var(--text-secondary);
       cursor: pointer;
-      transition: all var(--transition-fast);
+      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
       &:hover {
         background: var(--primary-color);
@@ -318,7 +680,7 @@
       background: var(--bg-section);
       font-size: 13px;
       color: var(--text-primary);
-      transition: all var(--transition-fast);
+      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
       &:focus {
         outline: none;
@@ -405,7 +767,7 @@
         color: var(--text-primary);
         text-decoration: none;
         border-radius: var(--radius-sm);
-        transition: all var(--transition-fast);
+        transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
         font-size: 12px;
 
         &:hover {
@@ -435,7 +797,7 @@
           background: none;
           color: var(--text-muted);
           cursor: pointer;
-          transition: all var(--transition-fast);
+          transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
           &:hover {
             color: #e74c3c;
@@ -499,7 +861,7 @@
     background: transparent;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
     font-size: 10px;
     font-weight: 600;
     text-transform: uppercase;
@@ -542,7 +904,7 @@
   list-style: none;
   margin: 0;
   padding: 0 var(--spacing-md);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
   &.collapsed {
     max-height: 0;
@@ -560,7 +922,7 @@
       color: var(--text-primary);
       text-decoration: none;
       border-radius: var(--radius-md);
-      transition: all var(--transition-fast);
+      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
       border: none;
       background: transparent;
       width: 100%;
@@ -607,7 +969,7 @@
         i {
           font-size: 13px;
           color: var(--text-secondary);
-          transition: all var(--transition-fast);
+          transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
         }
       }
 
@@ -650,7 +1012,7 @@
         color: var(--text-muted);
         cursor: pointer;
         opacity: 0;
-        transition: all var(--transition-fast);
+        transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
         &:hover {
           color: #f39c12;
@@ -690,7 +1052,7 @@
         white-space: nowrap;
         opacity: 0;
         visibility: hidden;
-        transition: all var(--transition-fast);
+        transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
         margin-left: var(--spacing-md);
         pointer-events: none;
 
@@ -740,7 +1102,7 @@
       color: var(--text-secondary);
       text-decoration: none;
       border-radius: var(--radius-sm);
-      transition: all var(--transition-fast);
+      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
       font-size: 12px;
 
       &:hover {
@@ -769,7 +1131,7 @@
         i {
           font-size: 11px;
           color: var(--text-muted);
-          transition: all var(--transition-fast);
+          transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
         }
       }
 
@@ -811,7 +1173,7 @@
       color: var(--text-muted);
       text-decoration: none;
       border-radius: var(--radius-sm);
-      transition: all var(--transition-fast);
+      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
       font-size: 11px;
 
       &:hover {
@@ -847,7 +1209,7 @@
   background: var(--bg-section);
   border-radius: var(--radius-md);
   border: 1px solid var(--sidebar-border);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
   &:hover {
     background: var(--bg-hover);
@@ -867,7 +1229,7 @@
   cursor: pointer;
   padding: 4px;
   border-radius: var(--radius-sm);
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
   &:hover {
     background: var(--bg-hover);
@@ -936,7 +1298,7 @@
     color: var(--text-secondary);
     font-size: 11px;
     cursor: pointer;
-    transition: all var(--transition-fast);
+    transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
     &:hover {
       background: var(--primary-color);
@@ -1093,7 +1455,7 @@
       .usage-progress {
         height: 100%;
         background: var(--primary-color);
-        transition: width 0.3s ease;
+        transition: width var(--transition-normal);
       }
     }
 
@@ -1111,7 +1473,7 @@
         font-size: 11px;
         font-weight: 500;
         cursor: pointer;
-        transition: all var(--transition-fast);
+        transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
         &:hover {
           background: var(--primary-color);
@@ -1148,7 +1510,7 @@
   align-items: center;
   justify-content: center;
   z-index: 1060;
-  transition: all var(--transition-fast);
+  transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
 
   &:hover {
     background: var(--primary-hover);
@@ -1237,5 +1599,319 @@
     --text-primary: #000000;
     --text-secondary: #333333;
     --sidebar-border: #666666;
+  }
+}
+
+// ===================================================
+// AUTO-HIDE FUNCTIONALITY STYLES
+// ===================================================
+
+// Zona de hover para activar el sidebar
+.sidebar-hover-zone {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--hover-zone-width, 20px);
+  z-index: 999;
+  background: transparent;
+  cursor: pointer;
+
+  // Debug visual (comentar en producción)
+  // background: rgba(255, 0, 0, 0.1);
+}
+
+// Indicador visual cuando el sidebar está oculto
+.sidebar-edge-indicator {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+
+  .edge-line {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg,
+      transparent 0%,
+      var(--primary-light) 20%,
+      var(--primary-color) 50%,
+      var(--primary-light) 80%,
+      transparent 100%);
+    opacity: 0.3;
+    transition: opacity var(--transition-normal);
+  }
+
+  .edge-hint {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 8px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 0 8px 8px 0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transition: opacity var(--transition-normal), transform var(--transition-normal);
+
+    i {
+      font-size: 12px;
+      animation: pulseArrow 2s infinite;
+    }
+  }
+
+  &:hover {
+    .edge-line {
+      opacity: 0.6;
+    }
+
+    .edge-hint {
+      opacity: 1;
+      transform: translateY(-50%) translateX(2px);
+    }
+  }
+}
+
+// Animación para el indicador
+@keyframes pulseArrow {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+// Estados del sidebar con auto-hide
+.sidebar-container {
+  &.auto-hide-enabled {
+    transition: transform var(--transition-normal) ease-out,
+                opacity var(--transition-fast),
+                box-shadow var(--transition-fast);
+
+    &.sidebar-hidden {
+      transform: translateX(-100%);
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: none;
+
+      // Ocultar completamente en móviles
+      @media (max-width: 768px) {
+        display: none;
+      }
+    }
+
+    &.sidebar-hovering {
+      box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+
+      // Efecto de brillo sutil al hacer hover
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: -1px;
+        bottom: 0;
+        width: 1px;
+        background: linear-gradient(180deg,
+          transparent 0%,
+          var(--primary-light) 50%,
+          transparent 100%);
+        opacity: 0.5;
+      }
+    }
+
+    &.sidebar-pinned {
+      // Indicador visual de que está fijado
+      .sidebar-header::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 8px;
+        height: 8px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        animation: pinIndicator 2s ease-in-out infinite;
+      }
+    }
+  }
+}
+
+@keyframes pinIndicator {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+// Botones de control adicionales
+.sidebar-controls {
+  .auto-hide-btn,
+  .pin-btn {
+    opacity: 0.7;
+    transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
+
+    &:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+
+    &.active {
+      color: var(--primary-color);
+      opacity: 1;
+    }
+
+    &.pinned {
+      color: var(--primary-color);
+
+      i {
+        transform: none !important;
+      }
+    }
+
+    .rotate-45 {
+      transform: rotate(-45deg);
+      transition: transform var(--transition-normal);
+    }
+  }
+}
+
+// Ajustes para el contenido principal
+.page-wrapper {
+  transition: margin-left var(--transition-normal) ease-out;
+
+  &.sidebar-auto-hidden {
+    margin-left: 0 !important;
+
+    @media (min-width: 992px) {
+      margin-left: 4px !important; // Espacio para el indicador visual
+    }
+  }
+}
+
+// Ajustes responsivos para auto-hide
+@media (max-width: 991px) {
+  .sidebar-hover-zone {
+    display: none;
+  }
+
+  .sidebar-edge-indicator {
+    display: none;
+  }
+
+  // En móviles, usar el comportamiento de swipe existente
+  .sidebar-container.auto-hide-enabled {
+    &.sidebar-hidden {
+      transform: translateX(-100%);
+    }
+  }
+}
+
+// Mejoras de accesibilidad para auto-hide
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-container.auto-hide-enabled {
+    transition-duration: 0.01ms !important;
+  }
+
+  .sidebar-edge-indicator * {
+    animation: none !important;
+  }
+}
+
+// Modo oscuro para auto-hide (si se implementa tema oscuro)
+@media (prefers-color-scheme: dark) {
+  .sidebar-edge-indicator {
+    .edge-line {
+      background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(139, 92, 246, 0.2) 20%,
+        rgba(139, 92, 246, 0.6) 50%,
+        rgba(139, 92, 246, 0.2) 80%,
+        transparent 100%);
+    }
+  }
+}
+
+// Mejoras UX para botón auto-hide
+.sidebar-controls {
+  .auto-collapse-btn {
+    position: relative;
+
+    &.active {
+      background: var(--primary-lighter);
+      color: var(--primary-color);
+      border-color: var(--primary-color);
+
+      // Indicador visual cuando está activo
+      &::before {
+        content: '';
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 5px;
+        height: 5px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+    }
+
+  }
+
+  .auto-hide-btn {
+    position: relative;
+
+    &.active {
+      background: var(--primary-lighter);
+
+      // Indicador visual pulsante cuando está activo
+      &::before {
+        content: '';
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        width: 5px;
+        height: 5px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        animation: pulse-indicator 2s infinite;
+      }
+    }
+  }
+}
+
+// Animación del indicador
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.8);
+  }
+}
+
+@keyframes pulse-indicator {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(0.8);
   }
 }

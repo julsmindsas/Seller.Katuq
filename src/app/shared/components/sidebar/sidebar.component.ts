@@ -25,6 +25,56 @@ export interface SidebarSection {
   encapsulation: ViewEncapsulation.None
 })
 export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
+
+  /**
+   * Host Listener para manejar hover-expand en colapso tradicional
+   * OPTIMIZADO: Expansión instantánea y mejor control
+   */
+  @HostListener('mouseenter')
+  onMouseEnter() {
+    // Solo activar si está en modo colapso tradicional (no auto-collapse)
+    if (this.collapseMenu && !this.isAutoCollapseEnabled && !this.isMobile()) {
+      // Limpiar cualquier timeout pendiente de colapso
+      if (this.hoverExpandTimeout) {
+        clearTimeout(this.hoverExpandTimeout);
+        this.hoverExpandTimeout = null;
+      }
+
+      // MEJORA: Expandir INSTANTÁNEAMENTE sin delay
+      this.isTemporarilyExpanded = true;
+      this.isMouseInsideSidebar = true;
+    }
+  }
+
+  @HostListener('mouseleave')
+  onMouseLeave() {
+    // Solo aplicar si está temporalmente expandido
+    if (this.collapseMenu && this.isTemporarilyExpanded && !this.isAutoCollapseEnabled && !this.isMobile()) {
+      this.isMouseInsideSidebar = false;
+
+      // MEJORA: Delay aumentado a 500ms y verificar si hay submenús abiertos
+      this.hoverExpandTimeout = setTimeout(() => {
+        // No colapsar si hay un submenú abierto o el mouse volvió a entrar
+        if (!this.hasOpenSubmenu() && !this.isMouseInsideSidebar) {
+          this.isTemporarilyExpanded = false;
+        }
+      }, 500); // Aumentado de 300ms a 500ms
+    }
+  }
+
+  /**
+   * NUEVO: Listener para clicks dentro del sidebar
+   * COMENTADO: Se desactiva para evitar extensiones no deseadas del timer
+   * Los clicks ahora se manejan específicamente en cada tipo de elemento
+   */
+  /*@HostListener('click', ['$event'])
+  onSidebarClick(event: Event) {
+    // Si está temporalmente expandido, resetear el timer de colapso
+    if (this.isTemporarilyExpanded) {
+      this.resetCollapseTimer();
+    }
+  }*/
+
   public showPlanModal: boolean = false;
   public currentPlan: any = {
     type: 'Completo',
@@ -71,6 +121,27 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public notificationSoundEnabled: boolean = true;
   private notificationSubscription: Subscription;
   private newNotificationTimer: any;
+
+  // Propiedades para auto-hide
+  public isAutoHideEnabled: boolean = false;
+  public isSidebarVisible: boolean = true;
+  public isPinned: boolean = true;
+  public isHovering: boolean = false;
+  private hoverTimeout: any;
+  private hideTimeout: any;
+  private clickOutsideListener: any;
+  private hoverZoneListener: any;
+  private sidebarStateSubscription: Subscription;
+
+  // Propiedades para hover-expand en colapso tradicional (MEJORADAS)
+  public isTemporarilyExpanded: boolean = false;
+  private hoverExpandTimeout: any;
+  private isMouseInsideSidebar: boolean = false;
+  private collapseDelayMs: number = 500; // Delay configurable
+
+  // Propiedades para auto-collapse (DEPRECADO - será eliminado)
+  public isAutoCollapseEnabled: boolean = false;
+  private autoCollapseTimeout: any;
 
   constructor(
     private router: Router,
@@ -142,13 +213,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (savedState) {
       this.isPlanCardCollapsed = savedState === 'true';
     }
-    
+
     // Configurar estado inicial basado en tamaño de pantalla
     this.initializeSidebarState();
-    
+
     // Inicializar sistema de notificaciones
     this.initializeNotifications();
-    
+
     // Cargar preferencia de modo compacto
     const compactMode = localStorage.getItem('sidebarCompactMode');
     if (compactMode) {
@@ -157,19 +228,25 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         document.body.classList.add('sidebar-compact-mode');
       }
     }
-    
+
     // Cargar favoritos
     this.loadFavoriteItems();
-    
+
     // Configurar eventos táctiles para dispositivos móviles
     setTimeout(() => {
       this.setupMobileGestures();
     }, 100);
+
+    // Inicializar auto-hide
+    this.initializeAutoHide();
   }
 
   ngAfterViewInit(): void {
     // Inicializar efectos cinematográficos después de que la vista esté lista
     this.initializeCinematographicEffects();
+
+    // Configurar zona de hover para auto-hide
+    this.setupHoverZone();
   }
   
   // Configurar eventos táctiles para móviles
@@ -317,15 +394,21 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Detectar tipo de deslizamiento y actuar en consecuencia
   private handleSwipe(): void {
     const distance = this.touchEndX - this.touchStartX;
-    
+
     // Si estamos en móvil y el swipe es suficientemente largo
     if (this.isMobile() && Math.abs(distance) > this.swipeThreshold && !this.isToggling) {
-      if (distance > 0 && this.collapseMenu && this.touchStartX < 50) {
-        // Deslizamiento de izquierda a derecha desde el borde (abrir menú)
-        this.sidebarToggle();
-      } else if (distance < 0 && !this.collapseMenu) {
-        // Deslizamiento de derecha a izquierda (cerrar menú)
-        this.sidebarToggle();
+      // Si auto-hide está activado, usar la lógica de auto-hide
+      if (this.isAutoHideEnabled) {
+        this.handleSwipeGesture(this.touchStartX, this.touchEndX);
+      } else {
+        // Lógica original para modo normal
+        if (distance > 0 && this.collapseMenu && this.touchStartX < 50) {
+          // Deslizamiento de izquierda a derecha desde el borde (abrir menú)
+          this.sidebarToggle();
+        } else if (distance < 0 && !this.collapseMenu) {
+          // Deslizamiento de derecha a izquierda (cerrar menú)
+          this.sidebarToggle();
+        }
       }
     }
   }
@@ -409,12 +492,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   // Method to close sidebar after navigation on mobile/tablet
+  // MEJORADO: También colapsa inmediatamente en desktop con hover-expand
   onMobileLinkClick(): void {
     if (window.innerWidth < 992) {
       // Close sidebar on mobile/tablet after navigation
       setTimeout(() => {
         this.navServices.hideMobileSidebar();
       }, 100); // Small delay to ensure navigation starts
+    } else if (this.collapseMenu && this.isTemporarilyExpanded) {
+      // Para desktop con hover-expand, colapsar inmediatamente
+      this.collapseImmediately();
     }
   }
 
@@ -549,12 +636,21 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.isToggling) {
       return;
     }
-    
+
     this.isToggling = true;
-    
+
     // Cambiar estado
     this.collapseMenu = !this.collapseMenu;
     this.navServices.collapseSidebar = this.collapseMenu;
+
+    // Resetear estado temporal cuando se hace click manual
+    this.isTemporarilyExpanded = false;
+
+    // Limpiar timeouts de hover
+    if (this.hoverExpandTimeout) {
+      clearTimeout(this.hoverExpandTimeout);
+      this.hoverExpandTimeout = null;
+    }
     
     // Cerrar submenú flotante si está abierto
     this.closeCollapsedSubmenu();
@@ -661,9 +757,15 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       event.stopPropagation();
       event.preventDefault();
     }
-    
-    // En estado colapsado para desktop, mostrar submenú flotante
-    if (this.collapseMenu && !this.isMobile()) {
+
+    // MEJORA: NO colapsar al abrir/cerrar submenús
+    if (this.collapseMenu && this.isTemporarilyExpanded) {
+      // Mantener expandido mientras el usuario interactúa con submenús
+      this.resetCollapseTimer();
+    }
+
+    // En estado colapsado para desktop (sin expansión temporal), mostrar submenú flotante
+    if (this.collapseMenu && !this.isTemporarilyExpanded && !this.isMobile()) {
       if (item.path && !item.children) {
         // Si es un item sin hijos, navegar directamente
         this.router.navigate([item.path]);
@@ -673,7 +775,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.showCollapsedSubmenu(item, event);
       return;
     }
-    
+
     // En móviles, manejar con delay para mejor experiencia táctil
     if (this.isMobile() && item.children) {
       this.handleMobileSubmenuToggle(item, event);
@@ -681,7 +783,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     const currentlyActive = item.active; // Guardar estado actual
-    
+
     // Si no está activo, cerramos otros menús del mismo nivel o superiores antes de abrir
     if (!currentlyActive) {
        this.sections.forEach(section => {
@@ -690,8 +792,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
          });
        });
     }
-    
+
     item.active = !currentlyActive; // Cambiar estado del item clickeado
+
+    // MEJORA: Si abrimos un submenú mientras está temporalmente expandido, mantenerlo
+    if (this.isTemporarilyExpanded && item.active && item.children) {
+      this.resetCollapseTimer();
+    }
   }
 
   // Helper para resetear el estado activo al hacer toggle en submenús
@@ -712,6 +819,102 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!potentialAncestor.children) return false;
     if (potentialAncestor.children.includes(item)) return true;
     return potentialAncestor.children.some(child => this.isAncestor(child, item));
+  }
+
+  /**
+   * NUEVO: Verificar si hay algún submenú abierto en todo el sidebar
+   * Esto previene el colapso automático cuando el usuario está interactuando con submenús
+   */
+  private hasOpenSubmenu(): boolean {
+    // Verificar en todas las secciones
+    for (const section of this.sections) {
+      for (const item of section.items) {
+        if (this.hasActiveChildren(item)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
+   * NUEVO: Verificar recursivamente si un item o sus hijos están activos
+   */
+  private hasActiveChildren(item: Menu): boolean {
+    if (!item) return false;
+
+    // Si el item está activo y tiene hijos, hay un submenú abierto
+    if (item.active && item.children && item.children.length > 0) {
+      return true;
+    }
+
+    // Verificar recursivamente en los hijos
+    if (item.children) {
+      return item.children.some(child => this.hasActiveChildren(child));
+    }
+
+    return false;
+  }
+
+  /**
+   * NUEVO: Resetear el timer de colapso cuando el usuario está interactuando
+   * Esto da más tiempo al usuario para navegar por los menús
+   */
+  private resetCollapseTimer(): void {
+    // Limpiar timeout existente
+    if (this.hoverExpandTimeout) {
+      clearTimeout(this.hoverExpandTimeout);
+      this.hoverExpandTimeout = null;
+    }
+
+    // Establecer nuevo timeout con delay extendido
+    this.hoverExpandTimeout = setTimeout(() => {
+      // Solo colapsar si no hay submenús abiertos y el mouse no está dentro
+      if (!this.hasOpenSubmenu() && !this.isMouseInsideSidebar) {
+        this.isTemporarilyExpanded = false;
+      }
+    }, 800); // Tiempo extendido para mejor UX
+  }
+
+  /**
+   * NUEVO: Método para colapsar inmediatamente el sidebar
+   * Usado cuando el usuario hace click en un link de navegación
+   */
+  private collapseImmediately(): void {
+    this.isTemporarilyExpanded = false;
+    this.isMouseInsideSidebar = false;
+    if (this.hoverExpandTimeout) {
+      clearTimeout(this.hoverExpandTimeout);
+      this.hoverExpandTimeout = null;
+    }
+  }
+
+  /**
+   * NUEVO: Manejar click en items del menú principal
+   * Colapsa inmediatamente si es un link de navegación
+   */
+  onMenuItemClick(item: Menu): void {
+    // Si es un link de navegación (no un submenú)
+    if (!item.children) {
+      // Colapsar inmediatamente si estaba temporalmente expandido
+      if (this.collapseMenu && this.isTemporarilyExpanded) {
+        this.collapseImmediately();
+      }
+    }
+  }
+
+  /**
+   * NUEVO: Manejar click en items de submenús
+   * Colapsa con un pequeño delay para permitir la navegación
+   */
+  onSubMenuItemClick(event: Event): void {
+    // Colapsar inmediatamente después de seleccionar
+    if (this.collapseMenu && this.isTemporarilyExpanded) {
+      // Pequeño delay para que la navegación se complete
+      setTimeout(() => {
+        this.collapseImmediately();
+      }, 50);
+    }
   }
 
   // For Horizontal Menu (Sin cambios)
@@ -1794,26 +1997,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.saveSectionsState();
   }
 
-  // Limpiar recursos al destruir componente
-  ngOnDestroy(): void {
-    this.cleanupEventListeners();
-    this.closeCollapsedSubmenu();
-    this.restoreBodyScroll();
-    
-    // Limpiar efectos cinematográficos
-    if (this.animationFrameId) {
-      cancelAnimationFrame(this.animationFrameId);
-    }
-    
-    // Limpiar suscripciones de notificaciones
-    if (this.notificationSubscription) {
-      this.notificationSubscription.unsubscribe();
-    }
-    
-    if (this.newNotificationTimer) {
-      clearTimeout(this.newNotificationTimer);
-    }
-  }
 
   // ===================================================
   // VALIDACIÓN Y OPTIMIZACIÓN DE ICONOS FA 4.7.0
@@ -2423,9 +2606,284 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   
   public toggleNotificationSound(event: Event): void {
     event.stopPropagation();
-    
+
     this.notificationSoundEnabled = !this.notificationSoundEnabled;
     localStorage.setItem('notificationSound', this.notificationSoundEnabled.toString());
+  }
+
+  // ========================= AUTO-HIDE FUNCTIONALITY =========================
+
+  /**
+   * Inicializa el sistema de auto-hide
+   */
+  private initializeAutoHide(): void {
+    // Suscribirse a los cambios de estado del sidebar desde LayoutService
+    this.sidebarStateSubscription = this.layout.sidebarState$.subscribe(state => {
+      this.isAutoHideEnabled = state.isAutoHideEnabled;
+      this.isAutoCollapseEnabled = state.isAutoCollapseEnabled;
+      this.isTemporarilyExpanded = state.isTemporarilyExpanded;
+      this.isSidebarVisible = state.isVisible;
+      this.isPinned = state.isPinned;
+      this.isHovering = state.isHovering;
+
+      // Aplicar clases CSS correspondientes
+      this.updateSidebarClasses();
+    });
+
+    // Configurar listener para clicks fuera del sidebar
+    this.setupClickOutsideListener();
+
+    // Configurar eventos de hover para auto-collapse
+    this.setupAutoCollapseListeners();
+  }
+
+  /**
+   * Configura la zona de hover para mostrar el sidebar
+   */
+  private setupHoverZone(): void {
+    // Crear zona de hover invisible
+    const hoverZone = this.renderer.createElement('div');
+    this.renderer.addClass(hoverZone, 'sidebar-hover-zone');
+    this.renderer.appendChild(document.body, hoverZone);
+
+    // Listener para mostrar sidebar en hover
+    this.hoverZoneListener = this.renderer.listen(hoverZone, 'mouseenter', () => {
+      if (this.isAutoHideEnabled && !this.isSidebarVisible) {
+        // Limpiar timeout de ocultar si existe
+        if (this.hideTimeout) {
+          clearTimeout(this.hideTimeout);
+        }
+
+        // Aplicar delay antes de mostrar
+        this.hoverTimeout = setTimeout(() => {
+          this.layout.showSidebar();
+          this.layout.setHovering(true);
+        }, this.layout.autoHideConfig.hoverDelay);
+      }
+    });
+
+    // Listener para ocultar sidebar cuando el mouse sale
+    const sidebarElement = this.elementRef.nativeElement;
+    this.renderer.listen(sidebarElement, 'mouseleave', () => {
+      if (this.isAutoHideEnabled && this.isHovering) {
+        // Limpiar timeout de mostrar si existe
+        if (this.hoverTimeout) {
+          clearTimeout(this.hoverTimeout);
+        }
+
+        // Aplicar delay antes de ocultar
+        this.hideTimeout = setTimeout(() => {
+          this.layout.hideSidebar();
+          this.layout.setHovering(false);
+        }, this.layout.autoHideConfig.hideDelay);
+      }
+    });
+
+    // Listener para cuando el mouse entra al sidebar
+    this.renderer.listen(sidebarElement, 'mouseenter', () => {
+      // Cancelar timeout de ocultar si existe
+      if (this.hideTimeout) {
+        clearTimeout(this.hideTimeout);
+      }
+    });
+  }
+
+  /**
+   * Configura el listener para detectar clicks fuera del sidebar
+   */
+  private setupClickOutsideListener(): void {
+    this.clickOutsideListener = this.renderer.listen('document', 'click', (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      const sidebarElement = this.elementRef.nativeElement;
+
+      // Verificar si el click fue fuera del sidebar
+      if (!sidebarElement.contains(target) &&
+          !target.closest('.sidebar-hover-zone') &&
+          !target.closest('.sidebar-toggle-btn')) {
+
+        // Solo ocultar si auto-hide está activo
+        if (this.isAutoHideEnabled && this.isSidebarVisible) {
+          this.layout.hideSidebar();
+        }
+      }
+    });
+  }
+
+  /**
+   * Actualiza las clases CSS del sidebar según su estado
+   */
+  private updateSidebarClasses(): void {
+    const sidebarElement = this.elementRef.nativeElement;
+
+    // Remover todas las clases de estado
+    this.renderer.removeClass(sidebarElement, 'auto-hide-enabled');
+    this.renderer.removeClass(sidebarElement, 'sidebar-hidden');
+    this.renderer.removeClass(sidebarElement, 'sidebar-pinned');
+    this.renderer.removeClass(sidebarElement, 'sidebar-hovering');
+    this.renderer.removeClass(sidebarElement, 'auto-collapse-enabled');
+    this.renderer.removeClass(sidebarElement, 'auto-collapse-expanded');
+
+    // Aplicar clases para auto-collapse
+    if (this.isAutoCollapseEnabled) {
+      this.renderer.addClass(sidebarElement, 'auto-collapse-enabled');
+
+      if (this.isTemporarilyExpanded) {
+        this.renderer.addClass(sidebarElement, 'auto-collapse-expanded');
+      }
+    }
+    // Aplicar clases para auto-hide (solo si auto-collapse no está activo)
+    else if (this.isAutoHideEnabled) {
+      this.renderer.addClass(sidebarElement, 'auto-hide-enabled');
+
+      if (!this.isSidebarVisible) {
+        this.renderer.addClass(sidebarElement, 'sidebar-hidden');
+      }
+
+      // Funcionalidad de pin eliminada
+
+      if (this.isHovering) {
+        this.renderer.addClass(sidebarElement, 'sidebar-hovering');
+      }
+    }
+
+    // Actualizar el contenido principal
+    this.updateContentMargin();
+  }
+
+  /**
+   * Actualiza el margen del contenido principal
+   */
+  private updateContentMargin(): void {
+    const contentElement = document.querySelector('.page-wrapper');
+    if (contentElement) {
+      if (this.isAutoHideEnabled && !this.isSidebarVisible) {
+        this.renderer.addClass(contentElement, 'sidebar-auto-hidden');
+      } else {
+        this.renderer.removeClass(contentElement, 'sidebar-auto-hidden');
+      }
+    }
+  }
+
+  /**
+   * Alterna el modo auto-hide
+   */
+  public toggleAutoHide(): void {
+    // Si el sidebar está colapsado, expandirlo primero
+    if (this.collapseMenu) {
+      this.collapseMenu = false;
+      this.navServices.collapseSidebar = false;
+    }
+    this.layout.toggleAutoHide();
+  }
+
+  /**
+   * Método deprecado - Auto-collapse ha sido reemplazado por hover-expand en colapso tradicional
+   * @deprecated Usar el botón de flecha con hover-expand
+   */
+  public toggleAutoCollapse(): void {
+    // Función desactivada - redirigir al colapso tradicional
+    console.warn('Auto-collapse está deprecado. Use el botón de flecha con hover-expand.');
+    this.sidebarToggle();
+  }
+
+  /**
+   * Configura los listeners para auto-collapse
+   */
+  private setupAutoCollapseListeners(): void {
+    const sidebarElement = this.elementRef.nativeElement.querySelector('.sidebar-container');
+    if (!sidebarElement) return;
+
+    // Mouse enter - expandir inmediatamente
+    this.renderer.listen(sidebarElement, 'mouseenter', () => {
+      if (this.isAutoCollapseEnabled && !this.isTemporarilyExpanded) {
+        // Limpiar cualquier timeout de colapso pendiente
+        if (this.autoCollapseTimeout) {
+          clearTimeout(this.autoCollapseTimeout);
+          this.autoCollapseTimeout = null;
+        }
+
+        this.isMouseInsideSidebar = true;
+        this.layout.setTemporarilyExpanded(true);
+      }
+    });
+
+    // Mouse leave - colapsar después de un delay
+    this.renderer.listen(sidebarElement, 'mouseleave', () => {
+      if (this.isAutoCollapseEnabled && this.isTemporarilyExpanded) {
+        this.isMouseInsideSidebar = false;
+
+        // Aplicar delay antes de colapsar
+        this.autoCollapseTimeout = setTimeout(() => {
+          if (!this.isMouseInsideSidebar && this.isAutoCollapseEnabled) {
+            this.layout.setTemporarilyExpanded(false);
+          }
+        }, this.layout.autoCollapseConfig.collapseDelay);
+      }
+    });
+  }
+
+  // Funcionalidad de pin eliminada - ya no es necesaria
+
+  /**
+   * Manejador para swipe en dispositivos móviles
+   */
+  private handleSwipeGesture(startX: number, endX: number): void {
+    const swipeDistance = endX - startX;
+    const threshold = this.layout.autoHideConfig.swipeThreshold;
+
+    if (Math.abs(swipeDistance) < threshold) {
+      return;
+    }
+
+    // Swipe hacia la derecha desde el borde izquierdo: mostrar sidebar
+    if (startX < 50 && swipeDistance > threshold && !this.isSidebarVisible) {
+      this.layout.showSidebar();
+    }
+    // Swipe hacia la izquierda: ocultar sidebar
+    else if (swipeDistance < -threshold && this.isSidebarVisible && this.isAutoHideEnabled) {
+      this.layout.hideSidebar();
+    }
+  }
+
+  /**
+   * Limpia los recursos cuando el componente se destruye
+   */
+  ngOnDestroy(): void {
+    // Limpiar suscripciones
+    if (this.notificationSubscription) {
+      this.notificationSubscription.unsubscribe();
+    }
+    if (this.sidebarStateSubscription) {
+      this.sidebarStateSubscription.unsubscribe();
+    }
+
+    // Limpiar timeouts
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
+    }
+    if (this.hideTimeout) {
+      clearTimeout(this.hideTimeout);
+    }
+    if (this.newNotificationTimer) {
+      clearTimeout(this.newNotificationTimer);
+    }
+
+    // Limpiar listeners
+    if (this.clickOutsideListener) {
+      this.clickOutsideListener();
+    }
+    if (this.hoverZoneListener) {
+      this.hoverZoneListener();
+    }
+
+    // Limpiar otros event listeners
+    this.cleanupEventListeners();
+
+    // Remover la zona de hover
+    const hoverZone = document.querySelector('.sidebar-hover-zone');
+    if (hoverZone) {
+      hoverZone.remove();
+    }
   }
 
 }
