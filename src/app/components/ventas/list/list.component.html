@@ -766,7 +766,7 @@
                                                                                         class="btn btn-outline-primary"
                                                                                         [disabled]="!canModifyProducts(pedido)"
                                                                                         [title]="canModifyProducts(pedido) ? 'Configurar producto' : 'No se puede modificar - Pedido congelado: ' + pedido.estadoProceso"
-                                                                                        (click)="confProductToCart(confProductToCartModal,item,pedido)">
+                                                                                        (click)="confProductToCart(confProductToCartModal,item,pedido,i)">
                                                                                     <i class="fa fa-cogs"></i>
                                                                                 </button>
                                                                                 <button type="button" 

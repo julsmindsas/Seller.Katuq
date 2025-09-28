@@ -567,6 +567,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
   representatives: { name: string; image: string }[];
   configuracionCarritoSeleccionado: Carrito;
+  indiceProductoSeleccionado: number;
   fechaInicial: string;
   fechaFinal: string;
   
@@ -3490,7 +3491,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  confProductToCart(content, carritoConfiguracion: Carrito, order: Pedido) {
+  confProductToCart(content, carritoConfiguracion: Carrito, order: Pedido, indiceProducto?: number) {
     // Evitar warning de aria-hidden con foco persistente en botones bajo app-root
     try {
       const active = document.activeElement as HTMLElement | null;
@@ -3511,6 +3512,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.verifyCartPreferences(carritoConfiguracion);
 
     this.configuracionCarritoSeleccionado = carritoConfiguracion;
+    this.indiceProductoSeleccionado = indiceProducto ?? -1;
 
     // Establecer el producto seleccionado desde la configuración del carrito
     this.productoSeleccionado = carritoConfiguracion?.producto;
@@ -3518,6 +3520,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('🔄 Abriendo modal de configuración:', {
       configuracion: carritoConfiguracion,
       producto: this.productoSeleccionado,
+      indiceProducto: this.indiceProductoSeleccionado,
       preferencias: carritoConfiguracion?.configuracion?.preferencias?.length || 0
     });
     this.modalService
@@ -3552,18 +3555,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // Solo actualizar el carrito si se configuró correctamente el producto
           if (
             order.carrito &&
-            configuracionResult?.producto?.identificacion?.referencia &&
+            configuracionResult?.producto &&
             configuracionResult?.configuracion // Verificar que tiene configuración válida
           ) {
-            const index = order.carrito.findIndex(
-              (carrito) =>
-                carrito.producto &&
-                carrito.producto.identificacion &&
-                carrito.producto.identificacion.referencia ===
-                configuracionResult?.producto?.identificacion?.referencia,
-            );
-            if (index !== -1) {
-              order.carrito[index] = configuracionResult;
+            // Usar el índice específico del producto que se está editando
+            if (this.indiceProductoSeleccionado >= 0 && this.indiceProductoSeleccionado < order.carrito.length) {
+              console.log('✅ Actualizando producto en índice:', this.indiceProductoSeleccionado);
+              order.carrito[this.indiceProductoSeleccionado] = configuracionResult;
+            } else {
+              console.error('❌ Índice de producto inválido:', this.indiceProductoSeleccionado);
             }
           }
           const tieneDomicilio = (order.carrito ?? []).some((car) => {
@@ -5414,6 +5414,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       (cloned as any).fechaYHorarioDespachado = '';
       (cloned as any).fechaHoraEmpacado = '';
       cloned.validacion = false;
+
+      // Limpiar todas las notas del pedido duplicado
+      cloned.notasPedido = {
+        notasProduccion: [],
+        notasCliente: [],
+        notasDespachos: [],
+        notasEntregas: [],
+        notasFacturacionPagos: []
+      };
+      
+      // Limpiar notas de producción de productos individuales en el carrito
+      if (cloned.carrito && cloned.carrito.length > 0) {
+        cloned.carrito.forEach(item => {
+          if (item.notaProduccion) {
+            delete item.notaProduccion;
+          }
+        });
+      }
 
       // Recalcular totales
       this.pedidoUtilService.pedido = cloned as any;
