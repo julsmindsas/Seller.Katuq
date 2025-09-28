@@ -20,7 +20,7 @@ export class EnviameHelperService {
    * Verificar si un pedido es de Enviame
    */
   isEnviameShipment(pedido: Pedido): boolean {
-    return pedido.providerShipment === 'enviame' && !!pedido.shippingOrder;
+    return pedido.transportador === 'enviame' && !!pedido.shippment?.trackingNumber;
   }
 
   /**
