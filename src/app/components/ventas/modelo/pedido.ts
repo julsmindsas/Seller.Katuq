@@ -68,6 +68,24 @@ export interface Pedido {
   historialEstadoProceso?: HistorialEstadoProceso[];
   ultimaImpresion?: string; // Fecha/hora de la última impresión
   revisadoParaProduccion?: string; // Fecha/hora de revisión para producción
+  shippment?: Shippment;
+}
+
+export interface Shippment {
+  trackingNumber?: string;
+  status?: string;
+  canCancel?: boolean;
+  canTrack?: boolean;
+  canDownloadLabel?: boolean;
+  provider?: string;
+  historyShippment?: HistoryShippment[];
+}
+
+export interface HistoryShippment {
+  status?: string;
+  fecha?: string;
+  usuario?: string;
+  notas?: string;
 }
 
 export interface HistorialEstadoProceso {

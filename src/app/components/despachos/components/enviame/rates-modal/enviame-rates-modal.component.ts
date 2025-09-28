@@ -29,6 +29,16 @@ export class EnviameRatesModalComponent implements OnInit {
   availableRates: EnviameRate[] = [];
   selectedRate: EnviameRate | null = null;
 
+  // Mejoras UX: Estados y filtros
+  filteredRates: EnviameRate[] = [];
+  recommendedRates: EnviameRate[] = [];
+  otherRates: EnviameRate[] = [];
+
+  // Controles de filtrado y ordenamiento
+  sortBy: string = 'price'; // price | time | carrier
+  filterCarrier: string = '';
+  showOnlyRecommended: boolean = false;
+
   loading = false;
   quotingRates = false;
   creatingShipment = false;
@@ -39,8 +49,23 @@ export class EnviameRatesModalComponent implements OnInit {
   // Estado de carga de datos
   loadingShipmentData = false;
 
+  // Estados de carga mejorados
+  loadingStep: number = 0;
+  loadingMessages = [
+    'Validando direcciones...',
+    'Calculando rutas disponibles...',
+    'Obteniendo tarifas actualizadas...'
+  ];
+
   // Un solo flag para controlar cuando TODO está listo
   isReady = false;
+
+  // Control de pestañas con validación
+  activeTabIndex: number = 0;
+  tabsValidation = {
+    locations: { valid: false, errors: [] as string[] },
+    package: { valid: false, errors: [] as string[] }
+  };
 
   // Municipios para autocompletado
   municipiosSugeridosOrigen: any[] = [];
@@ -48,12 +73,41 @@ export class EnviameRatesModalComponent implements OnInit {
   municipioSeleccionadoOrigen: MunicipioDane | null = null;
   municipioSeleccionadoDestino: MunicipioDane | null = null;
 
+  // Estados de búsqueda de municipios
+  searchingMunicipiosOrigen: boolean = false;
+  searchingMunicipiosDestino: boolean = false;
+
   // Tipos de envío disponibles
   tiposEnvio = [
     { label: 'Estándar', value: 'estandar', icon: 'pi-box' },
     { label: 'Express', value: 'express', icon: 'pi-forward' },
     { label: 'Prioritario', value: 'prioritario', icon: 'pi-bolt' }
   ];
+
+  // Opciones de ordenamiento para el dropdown
+  sortOptions = [
+    { label: 'Precio: Menor a mayor', value: 'price_asc' },
+    { label: 'Precio: Mayor a menor', value: 'price_desc' },
+    { label: 'Tiempo: Más rápido', value: 'time_asc' },
+    { label: 'Tiempo: Más lento', value: 'time_desc' },
+    { label: 'Transportadora A-Z', value: 'carrier_asc' },
+    { label: 'Transportadora Z-A', value: 'carrier_desc' }
+  ];
+
+  selectedSort: string = 'price_asc';
+
+  // Control de confirmación mejorado
+  showConfirmDialog: boolean = false;
+  confirmedDetails: boolean = false;
+
+  // Propiedades para tracking de auto-llenado
+  isAutoFilledOrigin: boolean = false;
+  isAutoFilledDestination: boolean = false;
+  originalOriginCity: string = '';
+  originalDestinationCity: string = '';
+
+  // Cache para búsquedas
+  private searchCache = new Map<string, any[]>();
 
   constructor(
     private fb: FormBuilder,
@@ -84,10 +138,15 @@ export class EnviameRatesModalComponent implements OnInit {
       // Forzar actualización de valores después de la inicialización
       setTimeout(() => {
         if (this.quoteForm) {
+          // Validar el formulario inicialmente
+          this.validateTabs();
           this.cdr.detectChanges();
         }
       }, 200);
     }, 100); // 100ms es suficiente para que Angular procese todo
+
+    // Suscribirse a cambios del formulario para validación progresiva
+    this.setupFormValidation();
   }
 
   private createForm(): void {
@@ -193,6 +252,9 @@ export class EnviameRatesModalComponent implements OnInit {
 
           this.quoteForm.patchValue(formData);
 
+          // Pre-cargar datos de ciudades con búsqueda inteligente
+          this.preloadCityData(shipment);
+
           // Forzar detección de cambios
           this.cdr.detectChanges();
         }
@@ -295,6 +357,9 @@ export class EnviameRatesModalComponent implements OnInit {
           };
 
           this.quoteForm.patchValue(formData);
+
+          // Pre-cargar datos de ciudades con búsqueda inteligente
+          this.preloadCityData(shipment);
 
           // Forzar detección de cambios
           this.cdr.detectChanges();
@@ -403,12 +468,18 @@ export class EnviameRatesModalComponent implements OnInit {
     this.availableRates = [];
     this.selectedRate = null;
 
+    // Iniciar simulación de progreso de carga
+    this.simulateLoadingProgress();
+
     this.logisticaService.getRates(quoteRequest).subscribe({
       next: (response: EnviameRatesResponse) => {
         this.quotingRates = false;
 
         if (response.success && response.rates && response.rates.length > 0) {
           this.availableRates = response.rates;
+          this.filteredRates = [...response.rates];
+          // Ordenar y categorizar tarifas
+          this.sortAndFilterRates();
           this.toastr.success(`Se encontraron ${response.rates.length} opciones de envío`, 'Cotización exitosa');
         } else {
           this.toastr.warning('No se encontraron opciones de envío disponibles', 'Sin resultados');
@@ -581,30 +652,98 @@ export class EnviameRatesModalComponent implements OnInit {
   formatPrice = (price: number, currency?: string) => this.enviameHelper.formatPrice(price, currency);
 
   /**
-   * Buscar municipios para origen
+   * Buscar municipios para origen con tolerancia a tildes
    */
   buscarMunicipiosOrigen(event: any): void {
-    const query = event.query;
+    const query = this.normalizeText(event.query);
+    this.searchingMunicipiosOrigen = true;
+
+    // Buscar con al menos 2 caracteres
+    if (query.length < 2) {
+      this.municipiosSugeridosOrigen = [];
+      this.searchingMunicipiosOrigen = false;
+      return;
+    }
+
+    // Verificar caché primero
+    const cacheKey = `origen_${query}`;
+    if (this.searchCache.has(cacheKey)) {
+      this.municipiosSugeridosOrigen = this.searchCache.get(cacheKey) || [];
+      this.searchingMunicipiosOrigen = false;
+      return;
+    }
+
     this.daneCodesService.searchMunicipios(query).subscribe(municipios => {
-      this.municipiosSugeridosOrigen = municipios.map(m => ({
+      // Calcular score para cada municipio
+      let sugeridos = municipios.map(m => ({
         label: this.daneCodesService.formatMunicipioLabel(m),
         value: m,
+        score: this.fuzzySearchCity(event.query, m.nombre),
         ...m
-      }));
+      }))
+      .filter(item => item.score > 30) // Filtrar resultados irrelevantes
+      .sort((a, b) => {
+        // Priorizar la ciudad original si está en los resultados
+        if (this.originalOriginCity) {
+          const scoreA = this.compareTexts(a.nombre, this.originalOriginCity) ? 1000 : a.score;
+          const scoreB = this.compareTexts(b.nombre, this.originalOriginCity) ? 1000 : b.score;
+          return scoreB - scoreA;
+        }
+        return b.score - a.score;
+      })
+      .slice(0, 10); // Limitar a 10 resultados
+
+      this.municipiosSugeridosOrigen = sugeridos;
+      this.searchCache.set(cacheKey, sugeridos); // Guardar en caché
+      this.searchingMunicipiosOrigen = false;
     });
   }
 
   /**
-   * Buscar municipios para destino
+   * Buscar municipios para destino con tolerancia a tildes
    */
   buscarMunicipiosDestino(event: any): void {
-    const query = event.query;
+    const query = this.normalizeText(event.query);
+    this.searchingMunicipiosDestino = true;
+
+    // Buscar con al menos 2 caracteres
+    if (query.length < 2) {
+      this.municipiosSugeridosDestino = [];
+      this.searchingMunicipiosDestino = false;
+      return;
+    }
+
+    // Verificar caché primero
+    const cacheKey = `destino_${query}`;
+    if (this.searchCache.has(cacheKey)) {
+      this.municipiosSugeridosDestino = this.searchCache.get(cacheKey) || [];
+      this.searchingMunicipiosDestino = false;
+      return;
+    }
+
     this.daneCodesService.searchMunicipios(query).subscribe(municipios => {
-      this.municipiosSugeridosDestino = municipios.map(m => ({
+      // Calcular score para cada municipio
+      let sugeridos = municipios.map(m => ({
         label: this.daneCodesService.formatMunicipioLabel(m),
         value: m,
+        score: this.fuzzySearchCity(event.query, m.nombre),
         ...m
-      }));
+      }))
+      .filter(item => item.score > 30) // Filtrar resultados irrelevantes
+      .sort((a, b) => {
+        // Priorizar la ciudad original si está en los resultados
+        if (this.originalDestinationCity) {
+          const scoreA = this.compareTexts(a.nombre, this.originalDestinationCity) ? 1000 : a.score;
+          const scoreB = this.compareTexts(b.nombre, this.originalDestinationCity) ? 1000 : b.score;
+          return scoreB - scoreA;
+        }
+        return b.score - a.score;
+      })
+      .slice(0, 10); // Limitar a 10 resultados
+
+      this.municipiosSugeridosDestino = sugeridos;
+      this.searchCache.set(cacheKey, sugeridos); // Guardar en caché
+      this.searchingMunicipiosDestino = false;
     });
   }
 
@@ -644,6 +783,472 @@ export class EnviameRatesModalComponent implements OnInit {
       // Guardar como frecuente
       this.daneCodesService.addMunicipioFrecuente(mun);
     }
+  }
+
+  // ========= NUEVOS MÉTODOS PARA MEJORAS UX =========
+
+  /**
+   * Configurar validación de formulario en tiempo real
+   */
+  private setupFormValidation(): void {
+    if (this.quoteForm) {
+      this.quoteForm.valueChanges.pipe(
+        debounceTime(300)
+      ).subscribe(() => {
+        this.validateTabs();
+      });
+    }
+  }
+
+  /**
+   * Validar pestañas y actualizar estado
+   */
+  validateTabs(): void {
+    // Validar pestaña de Ubicaciones
+    const locationFields = ['originMunicipio', 'originCity', 'originCountry',
+                           'destinationMunicipio', 'destinationCity', 'destinationCountry',
+                           'recipientName'];
+
+    const locationErrors: string[] = [];
+    locationFields.forEach(field => {
+      const control = this.quoteForm.get(field);
+      if (control && control.invalid) {
+        locationErrors.push(this.getFieldLabel(field));
+      }
+    });
+
+    this.tabsValidation.locations = {
+      valid: locationErrors.length === 0,
+      errors: locationErrors
+    };
+
+    // Validar pestaña de Paquete
+    const packageFields = ['weight', 'value'];
+    const packageErrors: string[] = [];
+
+    packageFields.forEach(field => {
+      const control = this.quoteForm.get(field);
+      if (control && control.invalid) {
+        packageErrors.push(this.getFieldLabel(field));
+      }
+    });
+
+    this.tabsValidation.package = {
+      valid: packageErrors.length === 0,
+      errors: packageErrors
+    };
+  }
+
+  /**
+   * Obtener etiqueta amigable para el campo
+   */
+  private getFieldLabel(field: string): string {
+    const labels: {[key: string]: string} = {
+      originMunicipio: 'Municipio de origen',
+      originCity: 'Ciudad de origen',
+      originCountry: 'País de origen',
+      destinationMunicipio: 'Municipio de destino',
+      destinationCity: 'Ciudad de destino',
+      destinationCountry: 'País de destino',
+      recipientName: 'Nombre del destinatario',
+      recipientPhone: 'Teléfono del destinatario',
+      recipientEmail: 'Email del destinatario',
+      weight: 'Peso del paquete',
+      value: 'Valor declarado'
+    };
+    return labels[field] || field;
+  }
+
+  /**
+   * Verificar si la pestaña de ubicaciones está completa
+   */
+  isLocationTabComplete(): boolean {
+    return this.tabsValidation.locations.valid;
+  }
+
+  /**
+   * Verificar si la pestaña de paquete está completa
+   */
+  isPackageTabComplete(): boolean {
+    return this.tabsValidation.package.valid;
+  }
+
+  /**
+   * Obtener clase CSS para validación de pestaña
+   */
+  getTabValidationClass(tab: string): string {
+    if (tab === 'locations') {
+      return this.tabsValidation.locations.valid ? 'tab-valid' :
+             this.tabsValidation.locations.errors.length > 0 ? 'tab-invalid' : '';
+    } else if (tab === 'package') {
+      return this.tabsValidation.package.valid ? 'tab-valid' :
+             this.tabsValidation.package.errors.length > 0 ? 'tab-invalid' : '';
+    }
+    return '';
+  }
+
+  /**
+   * Verificar si el formulario es válido para cotizar
+   */
+  isFormValidForQuote(): boolean {
+    return this.tabsValidation.locations.valid && this.tabsValidation.package.valid;
+  }
+
+  /**
+   * Obtener resumen de origen
+   */
+  getOriginSummary(): string {
+    const formData = this.quoteForm.value;
+    const parts = [];
+    if (formData.originCity) parts.push(formData.originCity);
+    if (formData.originAddress) parts.push(formData.originAddress);
+    return parts.join(', ') || 'No especificado';
+  }
+
+  /**
+   * Obtener resumen de destino
+   */
+  getDestinationSummary(): string {
+    const formData = this.quoteForm.value;
+    const parts = [];
+    if (formData.destinationCity) parts.push(formData.destinationCity);
+    if (formData.destinationAddress) parts.push(formData.destinationAddress);
+    if (formData.recipientName) parts.push(`(${formData.recipientName})`);
+    return parts.join(' ') || 'No especificado';
+  }
+
+  /**
+   * Obtener resumen de dimensiones
+   */
+  getDimensionsSummary(): string {
+    const formData = this.quoteForm.value;
+    if (formData.length && formData.width && formData.height) {
+      return `${formData.length} x ${formData.width} x ${formData.height} cm`;
+    }
+    return 'No especificadas';
+  }
+
+  /**
+   * Manejar cambio de pestaña con validación
+   */
+  onTabChange(event: any): void {
+    // Si está intentando ir a la pestaña de paquete (index 1)
+    if (event.index === 1) {
+      // Validar primero la pestaña de ubicaciones
+      this.validateTabs();
+
+      // Si la pestaña de ubicaciones no está completa, no permitir el cambio
+      if (!this.tabsValidation.locations.valid) {
+        // Mostrar mensaje de error
+        this.toastr.warning(
+          'Por favor complete los campos requeridos en Ubicaciones antes de continuar',
+          'Información incompleta',
+          { timeOut: 3000 }
+        );
+
+        // Forzar a quedarse en la pestaña actual
+        setTimeout(() => {
+          this.activeTabIndex = 0;
+          this.cdr.detectChanges();
+        }, 50);
+        return;
+      }
+    }
+
+    this.activeTabIndex = event.index;
+    this.validateTabs();
+  }
+
+  /**
+   * Verificar si puede navegar a la pestaña de paquete
+   */
+  canNavigateToPackage(): boolean {
+    return this.tabsValidation.locations.valid;
+  }
+
+  /**
+   * Ordenar y filtrar tarifas
+   */
+  sortAndFilterRates(): void {
+    let rates = [...this.availableRates];
+
+    // Filtrar por transportadora
+    if (this.filterCarrier) {
+      rates = rates.filter(r =>
+        r.carrier?.toLowerCase().includes(this.filterCarrier.toLowerCase()) ||
+        r.service?.toLowerCase().includes(this.filterCarrier.toLowerCase())
+      );
+    }
+
+    // Ordenar según criterio seleccionado
+    switch(this.selectedSort) {
+      case 'price_asc':
+        rates.sort((a, b) => (a.price || 0) - (b.price || 0));
+        break;
+      case 'price_desc':
+        rates.sort((a, b) => (b.price || 0) - (a.price || 0));
+        break;
+      case 'time_asc':
+        rates.sort((a, b) => this.getEstimatedDays(a) - this.getEstimatedDays(b));
+        break;
+      case 'time_desc':
+        rates.sort((a, b) => this.getEstimatedDays(b) - this.getEstimatedDays(a));
+        break;
+      case 'carrier_asc':
+        rates.sort((a, b) => (a.carrier || '').localeCompare(b.carrier || ''));
+        break;
+      case 'carrier_desc':
+        rates.sort((a, b) => (b.carrier || '').localeCompare(a.carrier || ''));
+        break;
+    }
+
+    this.filteredRates = rates;
+
+    // Separar recomendadas y otras
+    this.categorizeRates();
+  }
+
+  /**
+   * Categorizar tarifas en recomendadas y otras
+   */
+  private categorizeRates(): void {
+    const cheapest = this.getCheapestRate();
+    const fastest = this.getFastestRate();
+
+    this.recommendedRates = this.filteredRates.filter(rate =>
+      rate === cheapest || rate === fastest ||
+      (rate.serviceTypes && rate.serviceTypes.includes('express'))
+    );
+
+    this.otherRates = this.filteredRates.filter(rate =>
+      !this.recommendedRates.includes(rate)
+    );
+  }
+
+  /**
+   * Obtener días estimados de una tarifa
+   */
+  private getEstimatedDays(rate: EnviameRate): number {
+    if (rate.estimatedDays) {
+      const match = rate.estimatedDays.match(/\d+/);
+      return match ? parseInt(match[0]) : 999;
+    }
+    if (rate.estimatedTime) {
+      const match = rate.estimatedTime.match(/\d+/);
+      return match ? parseInt(match[0]) : 999;
+    }
+    return 999;
+  }
+
+  /**
+   * Manejar cambio de filtro de transportadora
+   */
+  onCarrierFilterChange(): void {
+    this.sortAndFilterRates();
+  }
+
+  /**
+   * Manejar cambio de ordenamiento
+   */
+  onSortChange(): void {
+    this.sortAndFilterRates();
+  }
+
+  /**
+   * Alternar mostrar solo recomendadas
+   */
+  toggleRecommendedOnly(): void {
+    this.showOnlyRecommended = !this.showOnlyRecommended;
+    if (this.showOnlyRecommended) {
+      this.filteredRates = this.recommendedRates;
+    } else {
+      this.sortAndFilterRates();
+    }
+  }
+
+  /**
+   * Obtener tarifas para mostrar
+   */
+  getRatesToDisplay(): EnviameRate[] {
+    return this.showOnlyRecommended ? this.recommendedRates : this.filteredRates;
+  }
+
+  /**
+   * Verificar si una tarifa es recomendada
+   */
+  isRecommended(rate: EnviameRate): boolean {
+    return this.recommendedRates.includes(rate);
+  }
+
+  /**
+   * Simular progreso de carga
+   */
+  private simulateLoadingProgress(): void {
+    this.loadingStep = 0;
+    const interval = setInterval(() => {
+      this.loadingStep++;
+      if (this.loadingStep >= this.loadingMessages.length || !this.quotingRates) {
+        clearInterval(interval);
+      }
+    }, 800);
+  }
+
+  /**
+   * Obtener mensaje de carga actual
+   */
+  getCurrentLoadingMessage(): string {
+    return this.loadingMessages[Math.min(this.loadingStep, this.loadingMessages.length - 1)];
+  }
+
+  /**
+   * Calcular porcentaje de progreso para la barra móvil
+   */
+  getProgressPercentage(): number {
+    if (this.selectedRate) return 100;
+    if (this.availableRates.length > 0) return 75;
+    if (this.isPackageTabComplete()) return 50;
+    if (this.isLocationTabComplete()) return 25;
+    return 10;
+  }
+
+  /**
+   * Pre-cargar datos de ciudades con búsqueda inteligente
+   */
+  private preloadCityData(shipment: any): void {
+    // Pre-seleccionar municipio de ORIGEN basado en la bodega
+    if (shipment.origin?.city) {
+      const searchTerm = this.normalizeText(shipment.origin.city).substring(0, 4);
+
+      this.daneCodesService.searchMunicipios(searchTerm).subscribe(municipios => {
+        // Ordenar por mejor coincidencia
+        const municipiosConScore = municipios.map(m => ({
+          municipio: m,
+          score: this.fuzzySearchCity(shipment.origin.city, m.nombre)
+        }))
+        .filter(item => item.score > 40) // Solo mostrar coincidencias relevantes
+        .sort((a, b) => b.score - a.score);
+
+        if (municipiosConScore.length > 0) {
+          const bestMatch = municipiosConScore[0].municipio;
+          this.municipioSeleccionadoOrigen = bestMatch;
+
+          // Actualizar el formulario
+          this.quoteForm.patchValue({
+            originMunicipio: {
+              label: this.daneCodesService.formatMunicipioLabel(bestMatch),
+              value: bestMatch,
+              ...bestMatch
+            },
+            originCity: bestMatch.nombre // Usar el nombre correcto con tildes
+          });
+
+          // Marcar como auto-llenado
+          this.isAutoFilledOrigin = true;
+          this.originalOriginCity = shipment.origin.city;
+
+          // Agregar las primeras sugerencias
+          this.municipiosSugeridosOrigen = municipiosConScore.slice(0, 5).map(item => ({
+            label: this.daneCodesService.formatMunicipioLabel(item.municipio),
+            value: item.municipio,
+            ...item.municipio
+          }));
+
+          console.log(`✅ Ciudad origen pre-cargada: "${shipment.origin.city}" → "${bestMatch.nombre}"`);
+        } else {
+          console.warn(`⚠️ No se encontró municipio para origen: "${shipment.origin.city}"`);
+        }
+      });
+    }
+
+    // Pre-seleccionar municipio de DESTINO basado en la orden
+    if (shipment.destination?.city) {
+      const searchTerm = this.normalizeText(shipment.destination.city).substring(0, 4);
+
+      this.daneCodesService.searchMunicipios(searchTerm).subscribe(municipios => {
+        // Ordenar por mejor coincidencia
+        const municipiosConScore = municipios.map(m => ({
+          municipio: m,
+          score: this.fuzzySearchCity(shipment.destination.city, m.nombre)
+        }))
+        .filter(item => item.score > 40)
+        .sort((a, b) => b.score - a.score);
+
+        if (municipiosConScore.length > 0) {
+          const bestMatch = municipiosConScore[0].municipio;
+          this.municipioSeleccionadoDestino = bestMatch;
+
+          // Actualizar el formulario
+          this.quoteForm.patchValue({
+            destinationMunicipio: {
+              label: this.daneCodesService.formatMunicipioLabel(bestMatch),
+              value: bestMatch,
+              ...bestMatch
+            },
+            destinationCity: bestMatch.nombre // Usar el nombre correcto con tildes
+          });
+
+          // Marcar como auto-llenado
+          this.isAutoFilledDestination = true;
+          this.originalDestinationCity = shipment.destination.city;
+
+          // Agregar las primeras sugerencias
+          this.municipiosSugeridosDestino = municipiosConScore.slice(0, 5).map(item => ({
+            label: this.daneCodesService.formatMunicipioLabel(item.municipio),
+            value: item.municipio,
+            ...item.municipio
+          }));
+
+          console.log(`✅ Ciudad destino pre-cargada: "${shipment.destination.city}" → "${bestMatch.nombre}"`);
+        } else {
+          console.warn(`⚠️ No se encontró municipio para destino: "${shipment.destination.city}"`);
+        }
+      });
+    }
+  }
+
+  /**
+   * Normaliza texto para comparación (elimina tildes y convierte a minúsculas)
+   */
+  private normalizeText(text: string): string {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Elimina tildes
+      .trim();
+  }
+
+  /**
+   * Compara textos ignorando tildes y mayúsculas
+   */
+  private compareTexts(text1: string, text2: string): boolean {
+    return this.normalizeText(text1) === this.normalizeText(text2);
+  }
+
+  /**
+   * Búsqueda fuzzy para ciudades (tolerante a errores)
+   */
+  private fuzzySearchCity(searchTerm: string, cityName: string): number {
+    const normalized1 = this.normalizeText(searchTerm);
+    const normalized2 = this.normalizeText(cityName);
+
+    // Coincidencia exacta
+    if (normalized1 === normalized2) return 100;
+
+    // Coincidencia al inicio
+    if (normalized2.startsWith(normalized1)) return 90;
+    if (normalized1.startsWith(normalized2)) return 85;
+
+    // Contiene el término
+    if (normalized2.includes(normalized1)) return 70;
+    if (normalized1.includes(normalized2)) return 65;
+
+    // Coincidencia de las primeras 3 letras
+    if (normalized1.length >= 3 && normalized2.length >= 3) {
+      if (normalized1.substring(0, 3) === normalized2.substring(0, 3)) return 50;
+    }
+
+    return 0;
   }
 
   /**

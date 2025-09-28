@@ -9,7 +9,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { DialogService } from 'primeng/dynamicdialog';
 import { EnviameHelperService } from '../enviame/services/enviame-helper.service';
-import { EnviameTrackingDetailsComponent } from '../enviame/tracking-details/enviame-tracking-details.component';
+import { TrackingDetailsModalComponent } from '../enviame/tracking-details/tracking-details-modal.component';
 import { EnviameCancelModalComponent } from '../enviame/cancel-modal/enviame-cancel-modal.component';
 
 @Component({
@@ -503,29 +503,40 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
-   * Opens Enviame tracking details modal
+   * Opens tracking details modal (TEMPORAL: Habilitado para TODOS los pedidos)
+   * Detecta automáticamente el proveedor: Enviame, Servientrega, Interrapidísimo, etc.
    */
   openEnviameTrackingDetails(pedido: Pedido): void {
-    if (!this.isEnviameShipment(pedido)) {
-      console.warn('⚠️ TablaPedidos - Attempted to open Enviame tracking for non-Enviame shipment');
-      return;
-    }
+    // TEMPORAL: Comentado para permitir TODOS los pedidos
+    // if (!this.isEnviameShipment(pedido)) {
+    //   console.warn('⚠️ TablaPedidos - Attempted to open Enviame tracking for non-Enviame shipment');
+    //   return;
+    // }
 
-    const trackingNumber = pedido.shippingOrder;
-    if (!trackingNumber) {
-      console.warn('⚠️ TablaPedidos - No tracking number found for Enviame shipment');
-      return;
-    }
+    const trackingNumber = pedido?.shippment?.trackingNumber || pedido.shippingOrder || pedido.nroPedido; // Usar nroPedido como fallback
 
-    const ref = this.dialogService.open(EnviameTrackingDetailsComponent, {
-      header: `Tracking Enviame.io - ${trackingNumber}`,
+    // TEMPORAL: No requerir tracking number
+    // if (!trackingNumber) {
+    //   console.warn('⚠️ TablaPedidos - No tracking number found for shipment');
+    //   return;
+    // }
+
+    console.log('🚀 TablaPedidos - Abriendo modal de tracking multiprovider para pedido:', {
+      nroPedido: pedido.nroPedido,
+      shippingOrder: pedido.shippingOrder,
+      estadoProceso: pedido.estadoProceso,
+      providerShipment: pedido.providerShipment
+    });
+
+    const ref = this.dialogService.open(TrackingDetailsModalComponent, {
+      header: `Seguimiento de Envío - ${trackingNumber || 'Sin Guía'}`,
       width: '900px',
       modal: true,
       closable: true,
       data: {
         trackingNumber: trackingNumber,
         pedido: pedido,
-        companyId: pedido.company || localStorage.getItem('companyId')
+        companyId: pedido.company || localStorage.getItem('x_idEmpresa') || localStorage.getItem('companyId')
       }
     });
 
