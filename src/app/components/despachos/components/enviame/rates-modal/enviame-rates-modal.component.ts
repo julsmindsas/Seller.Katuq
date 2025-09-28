@@ -100,6 +100,15 @@ export class EnviameRatesModalComponent implements OnInit {
   showConfirmDialog: boolean = false;
   confirmedDetails: boolean = false;
 
+  // Propiedades para tracking de auto-llenado
+  isAutoFilledOrigin: boolean = false;
+  isAutoFilledDestination: boolean = false;
+  originalOriginCity: string = '';
+  originalDestinationCity: string = '';
+
+  // Cache para búsquedas
+  private searchCache = new Map<string, any[]>();
+
   constructor(
     private fb: FormBuilder,
     private logisticaService: LogisticaServiceV2,
@@ -243,6 +252,9 @@ export class EnviameRatesModalComponent implements OnInit {
 
           this.quoteForm.patchValue(formData);
 
+          // Pre-cargar datos de ciudades con búsqueda inteligente
+          this.preloadCityData(shipment);
+
           // Forzar detección de cambios
           this.cdr.detectChanges();
         }
@@ -345,6 +357,9 @@ export class EnviameRatesModalComponent implements OnInit {
           };
 
           this.quoteForm.patchValue(formData);
+
+          // Pre-cargar datos de ciudades con búsqueda inteligente
+          this.preloadCityData(shipment);
 
           // Forzar detección de cambios
           this.cdr.detectChanges();
@@ -637,33 +652,97 @@ export class EnviameRatesModalComponent implements OnInit {
   formatPrice = (price: number, currency?: string) => this.enviameHelper.formatPrice(price, currency);
 
   /**
-   * Buscar municipios para origen
+   * Buscar municipios para origen con tolerancia a tildes
    */
   buscarMunicipiosOrigen(event: any): void {
-    const query = event.query;
+    const query = this.normalizeText(event.query);
     this.searchingMunicipiosOrigen = true;
+
+    // Buscar con al menos 2 caracteres
+    if (query.length < 2) {
+      this.municipiosSugeridosOrigen = [];
+      this.searchingMunicipiosOrigen = false;
+      return;
+    }
+
+    // Verificar caché primero
+    const cacheKey = `origen_${query}`;
+    if (this.searchCache.has(cacheKey)) {
+      this.municipiosSugeridosOrigen = this.searchCache.get(cacheKey) || [];
+      this.searchingMunicipiosOrigen = false;
+      return;
+    }
+
     this.daneCodesService.searchMunicipios(query).subscribe(municipios => {
-      this.municipiosSugeridosOrigen = municipios.map(m => ({
+      // Calcular score para cada municipio
+      let sugeridos = municipios.map(m => ({
         label: this.daneCodesService.formatMunicipioLabel(m),
         value: m,
+        score: this.fuzzySearchCity(event.query, m.nombre),
         ...m
-      }));
+      }))
+      .filter(item => item.score > 30) // Filtrar resultados irrelevantes
+      .sort((a, b) => {
+        // Priorizar la ciudad original si está en los resultados
+        if (this.originalOriginCity) {
+          const scoreA = this.compareTexts(a.nombre, this.originalOriginCity) ? 1000 : a.score;
+          const scoreB = this.compareTexts(b.nombre, this.originalOriginCity) ? 1000 : b.score;
+          return scoreB - scoreA;
+        }
+        return b.score - a.score;
+      })
+      .slice(0, 10); // Limitar a 10 resultados
+
+      this.municipiosSugeridosOrigen = sugeridos;
+      this.searchCache.set(cacheKey, sugeridos); // Guardar en caché
       this.searchingMunicipiosOrigen = false;
     });
   }
 
   /**
-   * Buscar municipios para destino
+   * Buscar municipios para destino con tolerancia a tildes
    */
   buscarMunicipiosDestino(event: any): void {
-    const query = event.query;
+    const query = this.normalizeText(event.query);
     this.searchingMunicipiosDestino = true;
+
+    // Buscar con al menos 2 caracteres
+    if (query.length < 2) {
+      this.municipiosSugeridosDestino = [];
+      this.searchingMunicipiosDestino = false;
+      return;
+    }
+
+    // Verificar caché primero
+    const cacheKey = `destino_${query}`;
+    if (this.searchCache.has(cacheKey)) {
+      this.municipiosSugeridosDestino = this.searchCache.get(cacheKey) || [];
+      this.searchingMunicipiosDestino = false;
+      return;
+    }
+
     this.daneCodesService.searchMunicipios(query).subscribe(municipios => {
-      this.municipiosSugeridosDestino = municipios.map(m => ({
+      // Calcular score para cada municipio
+      let sugeridos = municipios.map(m => ({
         label: this.daneCodesService.formatMunicipioLabel(m),
         value: m,
+        score: this.fuzzySearchCity(event.query, m.nombre),
         ...m
-      }));
+      }))
+      .filter(item => item.score > 30) // Filtrar resultados irrelevantes
+      .sort((a, b) => {
+        // Priorizar la ciudad original si está en los resultados
+        if (this.originalDestinationCity) {
+          const scoreA = this.compareTexts(a.nombre, this.originalDestinationCity) ? 1000 : a.score;
+          const scoreB = this.compareTexts(b.nombre, this.originalDestinationCity) ? 1000 : b.score;
+          return scoreB - scoreA;
+        }
+        return b.score - a.score;
+      })
+      .slice(0, 10); // Limitar a 10 resultados
+
+      this.municipiosSugeridosDestino = sugeridos;
+      this.searchCache.set(cacheKey, sugeridos); // Guardar en caché
       this.searchingMunicipiosDestino = false;
     });
   }
@@ -1019,6 +1098,157 @@ export class EnviameRatesModalComponent implements OnInit {
    */
   getCurrentLoadingMessage(): string {
     return this.loadingMessages[Math.min(this.loadingStep, this.loadingMessages.length - 1)];
+  }
+
+  /**
+   * Calcular porcentaje de progreso para la barra móvil
+   */
+  getProgressPercentage(): number {
+    if (this.selectedRate) return 100;
+    if (this.availableRates.length > 0) return 75;
+    if (this.isPackageTabComplete()) return 50;
+    if (this.isLocationTabComplete()) return 25;
+    return 10;
+  }
+
+  /**
+   * Pre-cargar datos de ciudades con búsqueda inteligente
+   */
+  private preloadCityData(shipment: any): void {
+    // Pre-seleccionar municipio de ORIGEN basado en la bodega
+    if (shipment.origin?.city) {
+      const searchTerm = this.normalizeText(shipment.origin.city).substring(0, 4);
+
+      this.daneCodesService.searchMunicipios(searchTerm).subscribe(municipios => {
+        // Ordenar por mejor coincidencia
+        const municipiosConScore = municipios.map(m => ({
+          municipio: m,
+          score: this.fuzzySearchCity(shipment.origin.city, m.nombre)
+        }))
+        .filter(item => item.score > 40) // Solo mostrar coincidencias relevantes
+        .sort((a, b) => b.score - a.score);
+
+        if (municipiosConScore.length > 0) {
+          const bestMatch = municipiosConScore[0].municipio;
+          this.municipioSeleccionadoOrigen = bestMatch;
+
+          // Actualizar el formulario
+          this.quoteForm.patchValue({
+            originMunicipio: {
+              label: this.daneCodesService.formatMunicipioLabel(bestMatch),
+              value: bestMatch,
+              ...bestMatch
+            },
+            originCity: bestMatch.nombre // Usar el nombre correcto con tildes
+          });
+
+          // Marcar como auto-llenado
+          this.isAutoFilledOrigin = true;
+          this.originalOriginCity = shipment.origin.city;
+
+          // Agregar las primeras sugerencias
+          this.municipiosSugeridosOrigen = municipiosConScore.slice(0, 5).map(item => ({
+            label: this.daneCodesService.formatMunicipioLabel(item.municipio),
+            value: item.municipio,
+            ...item.municipio
+          }));
+
+          console.log(`✅ Ciudad origen pre-cargada: "${shipment.origin.city}" → "${bestMatch.nombre}"`);
+        } else {
+          console.warn(`⚠️ No se encontró municipio para origen: "${shipment.origin.city}"`);
+        }
+      });
+    }
+
+    // Pre-seleccionar municipio de DESTINO basado en la orden
+    if (shipment.destination?.city) {
+      const searchTerm = this.normalizeText(shipment.destination.city).substring(0, 4);
+
+      this.daneCodesService.searchMunicipios(searchTerm).subscribe(municipios => {
+        // Ordenar por mejor coincidencia
+        const municipiosConScore = municipios.map(m => ({
+          municipio: m,
+          score: this.fuzzySearchCity(shipment.destination.city, m.nombre)
+        }))
+        .filter(item => item.score > 40)
+        .sort((a, b) => b.score - a.score);
+
+        if (municipiosConScore.length > 0) {
+          const bestMatch = municipiosConScore[0].municipio;
+          this.municipioSeleccionadoDestino = bestMatch;
+
+          // Actualizar el formulario
+          this.quoteForm.patchValue({
+            destinationMunicipio: {
+              label: this.daneCodesService.formatMunicipioLabel(bestMatch),
+              value: bestMatch,
+              ...bestMatch
+            },
+            destinationCity: bestMatch.nombre // Usar el nombre correcto con tildes
+          });
+
+          // Marcar como auto-llenado
+          this.isAutoFilledDestination = true;
+          this.originalDestinationCity = shipment.destination.city;
+
+          // Agregar las primeras sugerencias
+          this.municipiosSugeridosDestino = municipiosConScore.slice(0, 5).map(item => ({
+            label: this.daneCodesService.formatMunicipioLabel(item.municipio),
+            value: item.municipio,
+            ...item.municipio
+          }));
+
+          console.log(`✅ Ciudad destino pre-cargada: "${shipment.destination.city}" → "${bestMatch.nombre}"`);
+        } else {
+          console.warn(`⚠️ No se encontró municipio para destino: "${shipment.destination.city}"`);
+        }
+      });
+    }
+  }
+
+  /**
+   * Normaliza texto para comparación (elimina tildes y convierte a minúsculas)
+   */
+  private normalizeText(text: string): string {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Elimina tildes
+      .trim();
+  }
+
+  /**
+   * Compara textos ignorando tildes y mayúsculas
+   */
+  private compareTexts(text1: string, text2: string): boolean {
+    return this.normalizeText(text1) === this.normalizeText(text2);
+  }
+
+  /**
+   * Búsqueda fuzzy para ciudades (tolerante a errores)
+   */
+  private fuzzySearchCity(searchTerm: string, cityName: string): number {
+    const normalized1 = this.normalizeText(searchTerm);
+    const normalized2 = this.normalizeText(cityName);
+
+    // Coincidencia exacta
+    if (normalized1 === normalized2) return 100;
+
+    // Coincidencia al inicio
+    if (normalized2.startsWith(normalized1)) return 90;
+    if (normalized1.startsWith(normalized2)) return 85;
+
+    // Contiene el término
+    if (normalized2.includes(normalized1)) return 70;
+    if (normalized1.includes(normalized2)) return 65;
+
+    // Coincidencia de las primeras 3 letras
+    if (normalized1.length >= 3 && normalized2.length >= 3) {
+      if (normalized1.substring(0, 3) === normalized2.substring(0, 3)) return 50;
+    }
+
+    return 0;
   }
 
   /**

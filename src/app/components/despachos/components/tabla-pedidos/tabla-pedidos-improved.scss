@@ -1,0 +1,278 @@
+// =====================================
+// IMPROVED SEGUIMIENTO COLUMN STYLES
+// =====================================
+// These styles should be added/merged with the existing tabla-pedidos.component.scss file
+
+// Estilos mejorados para la columna de seguimiento
+.seguimiento-cell {
+  text-align: center !important;
+  vertical-align: middle !important;
+  padding: 12px 8px !important; // Better padding using 4px multiples
+
+  .text-muted.fst-italic {
+    font-size: 0.75rem;
+    color: #6c757d;
+  }
+
+  // Main flex container for button groups
+  .d-flex {
+    justify-content: center;
+    align-items: center;
+    gap: 12px; // Consistent 12px spacing between groups
+
+    &.flex-column {
+      gap: 12px; // Vertical spacing between button groups
+    }
+  }
+
+  // Tracking actions group styling
+  .tracking-actions-group {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px; // Consistent 8px gap between buttons
+    width: 100%;
+    max-width: 160px; // Limit width for better appearance
+
+    .p-button {
+      width: 100%;
+      min-height: 36px; // Better height for accessibility
+      font-size: 0.8rem !important;
+      padding: 8px 12px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 6px; // Space between icon and text
+      transition: all 0.2s ease-in-out !important;
+
+      // Icon styling
+      .pi {
+        font-size: 0.85rem !important;
+      }
+    }
+  }
+}
+
+// Enviame actions group styling - IMPROVED SPACING
+.enviame-actions-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch; // Changed to stretch for consistent button widths
+  gap: 8px; // Improved spacing: 8px instead of 0.25rem (4px)
+  width: 100%;
+  max-width: 160px; // Limit maximum width
+
+  // Enviame specific button styles - IMPROVED SIZING & SPACING
+  .p-button {
+    font-size: 0.8rem !important;
+    padding: 8px 12px !important; // Better padding using 4px multiples
+    min-height: 36px !important; // Better height for touch targets
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+    white-space: nowrap;
+    width: 100%; // Full width within container
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px; // Space between icon and text
+    transition: all 0.2s ease-in-out !important;
+
+    // Primary button (Tracking) - IMPROVED CONTRAST
+    &.p-button-primary {
+      background: #2563eb !important; // Katuq primary blue - solid color
+      border: 1px solid #2563eb !important;
+      color: #ffffff !important; // Ensure white text for contrast
+
+      &:hover:not(:disabled) {
+        background: #1d4ed8 !important; // Darker on hover
+        border-color: #1d4ed8 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      // Outlined variant
+      &.p-button-outlined {
+        background: transparent !important;
+        color: #2563eb !important;
+        border: 1px solid #2563eb !important;
+
+        &:hover:not(:disabled) {
+          background: rgba(37, 99, 235, 0.08) !important;
+          border-color: #1d4ed8 !important;
+          color: #1d4ed8 !important;
+        }
+      }
+    }
+
+    // Warning button (Cancel) - BETTER CONTRAST
+    &.p-button-warning {
+      background: #f59e0b !important; // Katuq warning amber - solid color
+      border: 1px solid #f59e0b !important;
+      color: #ffffff !important; // White text for better contrast
+
+      &:hover:not(:disabled) {
+        background: #d97706 !important;
+        border-color: #d97706 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      // Outlined variant
+      &.p-button-outlined {
+        background: transparent !important;
+        color: #f59e0b !important;
+        border: 1px solid #f59e0b !important;
+
+        &:hover:not(:disabled) {
+          background: rgba(245, 158, 11, 0.08) !important;
+          border-color: #d97706 !important;
+          color: #d97706 !important;
+        }
+      }
+    }
+
+    // Secondary button (Label Download) - BETTER CONTRAST
+    &.p-button-secondary {
+      background: #6b7280 !important; // Neutral gray - solid color
+      border: 1px solid #6b7280 !important;
+      color: #ffffff !important; // White text for contrast
+
+      &:hover:not(:disabled) {
+        background: #4b5563 !important;
+        border-color: #4b5563 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(107, 114, 128, 0.25);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      // Outlined variant
+      &.p-button-outlined {
+        background: transparent !important;
+        color: #6b7280 !important;
+        border: 1px solid #6b7280 !important;
+
+        &:hover:not(:disabled) {
+          background: rgba(107, 114, 128, 0.08) !important;
+          border-color: #4b5563 !important;
+          color: #4b5563 !important;
+        }
+      }
+    }
+
+    // Icon styling within buttons
+    .pi {
+      font-size: 0.85rem !important;
+    }
+
+    // Disabled state
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    // Loading state
+    &[loading] {
+      opacity: 0.7;
+      cursor: wait;
+
+      .p-button-icon {
+        animation: rotation 1s linear infinite;
+      }
+    }
+  }
+}
+
+// Enviame info badge styling - IMPROVED SPACING
+.enviame-info-badge {
+  margin-top: 8px; // Consistent 8px spacing
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 6px 10px; // Better padding with 2px multiples
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px; // Consistent gap
+    background: #0891b2 !important; // Solid cyan color
+    color: #ffffff !important; // Ensure white text
+    box-shadow: 0 2px 4px rgba(8, 145, 178, 0.2);
+    transition: transform 0.2s ease;
+
+    .pi {
+      font-size: 0.8rem;
+    }
+
+    &:hover {
+      transform: scale(1.02); // Subtle scale on hover
+      box-shadow: 0 3px 6px rgba(8, 145, 178, 0.3);
+    }
+  }
+}
+
+// Override the default button styles in seguimiento cells
+:host ::ng-deep .seguimiento-cell {
+  .p-button {
+    // Remove the default small button styles
+    &.p-button-sm {
+      height: auto !important;
+      padding: 8px 12px !important;
+      font-size: 0.8rem !important;
+    }
+
+    // Ensure outlined buttons have proper styling
+    &.p-button-outlined {
+      font-weight: 500 !important;
+    }
+  }
+}
+
+// Mobile responsive styles for improved button layout
+@media (max-width: 768px) {
+  .seguimiento-cell {
+    padding: 8px 4px !important;
+
+    .tracking-actions-group,
+    .enviame-actions-group {
+      gap: 6px; // Slightly reduced gap on mobile
+      max-width: 140px; // Smaller max width on mobile
+
+      .p-button {
+        font-size: 0.75rem !important;
+        padding: 6px 8px !important; // Smaller padding on mobile
+        min-height: 32px !important;
+
+        .pi {
+          font-size: 0.75rem !important;
+        }
+      }
+    }
+  }
+
+  .enviame-info-badge .badge {
+    font-size: 0.7rem;
+    padding: 4px 8px; // Consistent padding with 4px multiples
+  }
+}
+
+// Animation keyframes (if not already defined)
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

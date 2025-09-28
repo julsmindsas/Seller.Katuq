@@ -272,15 +272,16 @@
                                                 <!-- ENVIAME.IO SPECIFIC ACTIONS -->
                                                 <ng-container *ngIf="isEnviameShipment(pedido)">
                                                     <div class="enviame-actions-group">
-                                                        <!-- Enviame Tracking Details -->
-                                                        <button *ngIf="getEnviameShipmentInfo(pedido).canTrack"
-                                                            pButton pRipple type="button" icon="pi pi-eye"
+
+                                                        <!-- Enviame Tracking Button -->
+                                                        <button
+                                                            pButton pRipple type="button" icon="pi pi-search"
                                                             class="p-button-outlined p-button-sm p-button-primary mb-1"
                                                             (click)="openEnviameTrackingDetails(pedido)"
-                                                            pTooltip="Ver detalles de tracking Enviame.io"
+                                                            pTooltip="Ver seguimiento del envío"
                                                             tooltipPosition="top">
-                                                            <i class="pi pi-external-link me-1"></i>
-                                                            {{ 'Tracking' | translate }}
+                                                            <i class="pi pi-search me-1"></i>
+                                                            {{ 'Ver Seguimiento' | translate }}
                                                         </button>
 
                                                         <!-- Enviame Cancel Button -->
@@ -294,14 +295,14 @@
                                                         </button>
 
                                                         <!-- Enviame Label Download -->
-                                                        <button *ngIf="getEnviameShipmentInfo(pedido).canDownloadLabel"
+                                                        <!-- <button *ngIf="getEnviameShipmentInfo(pedido).canDownloadLabel"
                                                             pButton pRipple type="button" icon="pi pi-download"
                                                             class="p-button-outlined p-button-sm p-button-secondary mb-1"
                                                             (click)="downloadEnviameLabel(pedido)"
                                                             pTooltip="Descargar etiqueta Enviame.io"
                                                             tooltipPosition="top">
                                                             {{ 'Etiqueta' | translate }}
-                                                        </button>
+                                                        </button> -->
 
                                                         <!-- Enviame Shipment Info Badge -->
                                                         <div class="enviame-info-badge mt-1" *ngIf="getEnviameShipmentInfo(pedido).trackingNumber">
@@ -313,9 +314,9 @@
                                                     </div>
                                                 </ng-container>
 
-                                                <!-- STANDARD TRACKING ACTIONS (non-Enviame) -->
-                                                <ng-container *ngIf="!isEnviameShipment(pedido)">
-                                                    <!-- Botón de Seguimiento -->
+                                                <!-- STANDARD TRACKING ACTIONS (DESHABILITADO TEMPORALMENTE) -->
+                                                <ng-container *ngIf="false">
+                                                    <!-- Botón de Seguimiento Original (Deshabilitado) -->
                                                     <button *ngIf="pedido.estadoProceso === 'Despachado' && pedido.shippingOrder"
                                                         pButton pRipple type="button" icon="pi pi-search"
                                                         class="p-button-outlined p-button-sm p-button-info mb-1"

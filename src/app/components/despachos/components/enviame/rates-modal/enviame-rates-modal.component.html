@@ -1,64 +1,44 @@
 <div class="enviame-rates-modal enviame-modal-redesigned">
 
-  <!-- Header Visual Moderno con Gradiente -->
-  <div class="modal-header-banner">
-    <div class="banner-gradient">
-      <div class="header-content">
-        <div class="order-info-card">
-          <div class="order-badge">
-            <i class="pi pi-truck"></i>
-          </div>
-          <div class="order-details">
-            <h4 class="modal-title">Cotización de Envío</h4>
-            <div class="order-meta">
-              <span class="order-number">
-                <i class="pi pi-tag"></i>
-                Orden #{{order?.nroShippingOrder}}
-              </span>
-              <span class="order-date" *ngIf="order?.fechaCreacion">
-                <i class="pi pi-calendar"></i>
-                {{ order.fechaCreacion | date:'dd/MM/yyyy' }}
-              </span>
-            </div>
-          </div>
-        </div>
+  <!-- Header Minimalista -->
+  <div class="modal-header-minimal">
+    <div class="header-left">
+      <i class="pi pi-truck header-icon"></i>
+      <h4 class="header-title">Cotización de Envío</h4>
+    </div>
+    <div class="header-center">
+      <span class="order-badge" *ngIf="order?.nroShippingOrder">Orden #{{order.nroShippingOrder}}</span>
+    </div>
+    <div class="header-right" *ngIf="order?.fechaCreacion">
+      <i class="pi pi-calendar"></i>
+      <span>{{ order.fechaCreacion | date:'dd/MM/yyyy' }}</span>
+    </div>
+  </div>
 
-        <!-- Progress Tracker -->
-        <div class="progress-tracker" *ngIf="isReady">
-          <div class="progress-step"
-               [class.active]="activeTabIndex === 0"
-               [class.completed]="isLocationTabComplete()">
-            <div class="step-number">
-              <i class="pi pi-map-marker" *ngIf="!isLocationTabComplete()"></i>
-              <i class="pi pi-check" *ngIf="isLocationTabComplete()"></i>
-            </div>
-            <span class="step-label">Ubicaciones</span>
-            <div class="step-connector"></div>
-          </div>
-
-          <div class="progress-step"
-               [class.active]="activeTabIndex === 1"
-               [class.completed]="isPackageTabComplete()"
-               [class.disabled]="!canNavigateToPackage()">
-            <div class="step-number">
-              <i class="pi pi-box" *ngIf="!isPackageTabComplete()"></i>
-              <i class="pi pi-check" *ngIf="isPackageTabComplete()"></i>
-            </div>
-            <span class="step-label">Paquete</span>
-            <div class="step-connector"></div>
-          </div>
-
-          <div class="progress-step"
-               [class.active]="availableRates.length > 0"
-               [class.completed]="selectedRate !== null">
-            <div class="step-number">
-              <i class="pi pi-dollar" *ngIf="!selectedRate"></i>
-              <i class="pi pi-check" *ngIf="selectedRate"></i>
-            </div>
-            <span class="step-label">Cotización</span>
-          </div>
-        </div>
+  <!-- Progress Bar Solo para Móviles -->
+  <div class="mobile-progress-bar d-lg-none" *ngIf="isReady">
+    <div class="progress-steps">
+      <div class="progress-step"
+           [class.active]="activeTabIndex === 0"
+           [class.completed]="isLocationTabComplete()">
+        <span class="step-number">1</span>
+        <span class="step-name">Ubicaciones</span>
       </div>
+      <div class="progress-step"
+           [class.active]="activeTabIndex === 1"
+           [class.completed]="isPackageTabComplete()">
+        <span class="step-number">2</span>
+        <span class="step-name">Paquete</span>
+      </div>
+      <div class="progress-step"
+           [class.active]="availableRates.length > 0"
+           [class.completed]="selectedRate !== null">
+        <span class="step-number">3</span>
+        <span class="step-name">Cotización</span>
+      </div>
+    </div>
+    <div class="progress-line">
+      <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
     </div>
   </div>
 
@@ -190,8 +170,11 @@
                     <label class="field-label">
                       <span>Municipio de Origen</span>
                       <span class="required-badge">Requerido</span>
+                      <span class="auto-filled-badge" *ngIf="isAutoFilledOrigin">
+                        <i class="pi pi-info-circle"></i> Sugerido desde bodega
+                      </span>
                     </label>
-                    <div class="input-wrapper" [class.valid]="quoteForm.get('originMunicipio')?.valid && quoteForm.get('originMunicipio')?.touched">
+                    <div class="input-wrapper" [class.valid]="quoteForm.get('originMunicipio')?.valid && quoteForm.get('originMunicipio')?.touched" [class.auto-filled]="isAutoFilledOrigin">
                       <i class="input-icon pi pi-map-marker"></i>
                       <p-autoComplete
                         formControlName="originMunicipio"
@@ -220,6 +203,10 @@
                     <div class="field-error" *ngIf="isFieldInvalid('originMunicipio')">
                       <i class="pi pi-exclamation-triangle"></i>
                       {{ getFieldError('originMunicipio') || 'Campo obligatorio' }}
+                    </div>
+                    <div class="field-hint" *ngIf="isAutoFilledOrigin && originalOriginCity">
+                      <i class="pi pi-info-circle"></i>
+                      Valor original: "{{ originalOriginCity }}"
                     </div>
                   </div>
 
@@ -309,8 +296,11 @@
                     <label class="field-label">
                       <span>Municipio de Destino</span>
                       <span class="required-badge">Requerido</span>
+                      <span class="auto-filled-badge" *ngIf="isAutoFilledDestination">
+                        <i class="pi pi-info-circle"></i> Sugerido desde orden
+                      </span>
                     </label>
-                    <div class="input-wrapper" [class.valid]="quoteForm.get('destinationMunicipio')?.valid && quoteForm.get('destinationMunicipio')?.touched">
+                    <div class="input-wrapper" [class.valid]="quoteForm.get('destinationMunicipio')?.valid && quoteForm.get('destinationMunicipio')?.touched" [class.auto-filled]="isAutoFilledDestination">
                       <i class="input-icon pi pi-map-marker"></i>
                       <p-autoComplete
                         formControlName="destinationMunicipio"
@@ -335,6 +325,10 @@
                       </p-autoComplete>
                       <i class="validation-icon pi pi-check-circle"
                          *ngIf="quoteForm.get('destinationMunicipio')?.valid && quoteForm.get('destinationMunicipio')?.touched"></i>
+                    </div>
+                    <div class="field-hint" *ngIf="isAutoFilledDestination && originalDestinationCity">
+                      <i class="pi pi-info-circle"></i>
+                      Valor original: "{{ originalDestinationCity }}"
                     </div>
                   </div>
 

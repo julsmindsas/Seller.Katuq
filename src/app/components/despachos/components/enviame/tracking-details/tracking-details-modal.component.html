@@ -1,0 +1,389 @@
+<div class="tracking-modal-container-optimized" [@fadeIn]>
+
+  <!-- Header compacto y funcional -->
+  <div class="tracking-header-compact" [@slideDown]>
+    <div class="header-content-compact">
+      <div class="provider-section-compact">
+        <div class="provider-logo-wrapper-compact" [class.has-logo]="hasValidLogo">
+          <img *ngIf="hasValidLogo"
+               [src]="safeProviderLogo"
+               [alt]="providerName"
+               class="provider-logo-compact"
+               (error)="onLogoError()">
+          <div *ngIf="!hasValidLogo" class="provider-icon-placeholder-compact">
+            <i class="pi pi-truck"></i>
+          </div>
+        </div>
+        <div class="provider-details-compact">
+          <span class="provider-label-compact">Proveedor</span>
+          <span class="provider-name-compact">{{ providerName }}</span>
+        </div>
+      </div>
+
+      <div class="tracking-number-section-compact">
+        <div class="tracking-badge-compact">
+          <i class="pi pi-tag badge-icon-compact"></i>
+          <span class="badge-value-compact">{{ trackingNumber }}</span>
+          <button class="btn-copy-compact"
+                  (click)="copyTrackingNumber()"
+                  pTooltip="Copiar"
+                  tooltipPosition="left"
+                  [class.copied]="copied">
+            <i [class]="copied ? 'pi pi-check' : 'pi pi-copy'"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Contenedor scrollable para el contenido principal -->
+  <div class="tracking-content-scrollable">
+
+    <!-- Estado actual - Card prominente y optimizada -->
+    <div class="status-card-prominent" *ngIf="trackingData && !loading" [@slideUp]>
+      <div class="status-visual-compact">
+        <div class="status-icon-container-compact" [@bounce]>
+          <i [class]="currentStatusIcon + ' status-icon-large status-' + trackingData.currentStatus"></i>
+        </div>
+      </div>
+      <div class="status-content-prominent">
+        <div class="status-header-prominent">
+          <h2 class="status-title-large" [@fadeIn]>
+            {{ currentStatus }}
+            <span class="status-badge-prominent" [class]="'badge-' + trackingData.currentStatus">
+              <i class="pi pi-circle-fill"></i>
+              Activo
+            </span>
+          </h2>
+        </div>
+
+        <div class="status-details-prominent">
+          <div class="detail-item-prominent location" *ngIf="lastKnownLocation !== 'Ubicación no disponible'" [@slideLeft]>
+            <div class="detail-icon-prominent">
+              <i class="pi pi-map-marker"></i>
+            </div>
+            <div class="detail-text-prominent">
+              <span class="detail-label-prominent">Ubicación actual</span>
+              <span class="detail-value-prominent">{{ lastKnownLocation }}</span>
+          </div>
+        </div>
+
+          <div class="detail-item-prominent update" [@slideLeft]>
+            <div class="detail-icon-prominent">
+              <i class="pi pi-clock"></i>
+            </div>
+            <div class="detail-text-prominent">
+              <span class="detail-label-prominent">Última actualización</span>
+              <span class="detail-value-prominent">{{ getLastUpdateTime() }}</span>
+          </div>
+        </div>
+      </div>
+        <div class="progress-section-prominent">
+        <div class="progress-header">
+          <span class="progress-label">Progreso del envío</span>
+          <span class="progress-percentage" [@countUp]>{{ deliveryProgress }}%</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar-modern">
+            <div class="progress-background"></div>
+            <div class="progress-fill-modern"
+                 [style.width.%]="deliveryProgress"
+                 [@progressAnimation]>
+              <div class="progress-glow"></div>
+              <div class="progress-stripes"></div>
+            </div>
+          </div>
+          <div class="progress-milestones">
+            <div class="milestone"
+                 *ngFor="let milestone of progressMilestones"
+                 [class.reached]="deliveryProgress >= milestone.value"
+                 [style.left.%]="milestone.value"
+                 pTooltip="{{milestone.label}}"
+                 tooltipPosition="top">
+              <i [class]="milestone.icon"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timeline mejorado con animaciones escalonadas -->
+  <div class="timeline-section-modern" *ngIf="hasEvents && !loading" [@fadeIn]>
+    <div class="section-header">
+      <div class="section-icon-wrapper">
+        <i class="pi pi-history"></i>
+      </div>
+      <h4 class="section-title">Historial de seguimiento</h4>
+      <div class="section-count">
+        <span class="count-badge">{{ timelineItems.length }}</span>
+        <span class="count-label">eventos</span>
+      </div>
+    </div>
+
+    <div class="timeline-modern">
+      <div class="timeline-line-gradient"></div>
+      <div class="timeline-item-modern"
+           *ngFor="let item of timelineItems; let i = index; let last = last"
+           [class.is-latest]="i === 0"
+           [class.is-last]="last"
+           [@staggerAnimation]="i"
+           (mouseenter)="hoveredTimelineItem = i"
+           (mouseleave)="hoveredTimelineItem = null"
+           [class.hovered]="hoveredTimelineItem === i">
+
+        <div class="timeline-connector">
+          <div class="connector-line" *ngIf="!last" [@lineAnimation]></div>
+          <div class="node-wrapper" [@nodeAnimation]>
+            <div class="node-ripple" *ngIf="i === 0"></div>
+            <div class="node-dot-modern"
+                 [style.background]="item.color"
+                 [class.pulse-animation]="i === 0">
+              <i [class]="item.icon" class="node-icon-modern"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="timeline-card" [@cardHover]="hoveredTimelineItem === i ? 'hovered' : 'default'">
+          <div class="card-accent" [style.background]="item.color"></div>
+          <div class="card-content">
+            <div class="event-header-modern">
+              <div class="event-status-wrapper">
+                <span class="event-status-modern">{{ item.status }}</span>
+                <span class="event-status-indicator" [style.background]="item.color"></span>
+              </div>
+              <span class="event-time-modern">
+                <i class="pi pi-clock time-icon"></i>
+                {{ item.date }}
+              </span>
+            </div>
+
+            <p class="event-description-modern" *ngIf="item.description">
+              {{ item.description }}
+            </p>
+
+            <div class="event-metadata">
+              <span class="metadata-item" *ngIf="item.location">
+                <i class="pi pi-map-marker"></i>
+                {{ item.location }}
+              </span>
+              <span class="metadata-item" *ngIf="item.providerSpecific?.courier">
+                <i class="pi pi-truck"></i>
+                {{ item.providerSpecific.courier }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Información del envío - Cards mejoradas con iconos descriptivos -->
+  <div class="shipping-info-section" *ngIf="trackingData && !loading" [@fadeIn]>
+    <div class="section-header">
+      <div class="section-icon-wrapper">
+        <i class="pi pi-box"></i>
+      </div>
+      <h4 class="section-title">Información del envío</h4>
+    </div>
+
+    <div class="info-cards-grid">
+      <div class="info-card-modern"
+           *ngIf="recipientInfo !== 'Información no disponible'"
+           [@slideUp]
+           (mouseenter)="hoveredInfoCard = 'recipient'"
+           (mouseleave)="hoveredInfoCard = null"
+           [class.hovered]="hoveredInfoCard === 'recipient'">
+        <div class="card-icon-wrapper recipient">
+          <i class="pi pi-user"></i>
+        </div>
+        <div class="card-info">
+          <span class="info-label-modern">Destinatario</span>
+          <span class="info-value-modern" pTooltip="{{recipientInfo}}" tooltipPosition="top">
+            {{ recipientInfo }}
+          </span>
+        </div>
+      </div>
+
+      <div class="info-card-modern"
+           *ngIf="estimatedDelivery !== 'No disponible'"
+           [@slideUp]
+           (mouseenter)="hoveredInfoCard = 'delivery'"
+           (mouseleave)="hoveredInfoCard = null"
+           [class.hovered]="hoveredInfoCard === 'delivery'">
+        <div class="card-icon-wrapper delivery">
+          <i class="pi pi-calendar"></i>
+        </div>
+        <div class="card-info">
+          <span class="info-label-modern">Entrega estimada</span>
+          <span class="info-value-modern highlight">{{ estimatedDelivery }}</span>
+        </div>
+      </div>
+
+      <div class="info-card-modern success-card"
+           *ngIf="isDelivered && actualDelivery"
+           [@slideUp]
+           (mouseenter)="hoveredInfoCard = 'delivered'"
+           (mouseleave)="hoveredInfoCard = null"
+           [class.hovered]="hoveredInfoCard === 'delivered'">
+        <div class="card-icon-wrapper success">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="card-info">
+          <span class="info-label-modern">Entregado</span>
+          <span class="info-value-modern success">{{ actualDelivery }}</span>
+        </div>
+      </div>
+
+      <div class="info-card-modern"
+           *ngIf="trackingData.packageInfo"
+           [@slideUp]
+           (mouseenter)="hoveredInfoCard = 'package'"
+           (mouseleave)="hoveredInfoCard = null"
+           [class.hovered]="hoveredInfoCard === 'package'">
+        <div class="card-icon-wrapper package">
+          <i class="pi pi-box"></i>
+        </div>
+        <div class="card-info">
+          <span class="info-label-modern">Información del paquete</span>
+          <div class="package-details">
+            <span class="package-count">
+              <i class="pi pi-inbox"></i>
+              {{ trackingData.packageInfo.packageCount || 1 }}
+              {{ (trackingData.packageInfo.packageCount || 1) === 1 ? 'paquete' : 'paquetes' }}
+            </span>
+            <span class="package-weight" *ngIf="trackingData.packageInfo.weight">
+              <i class="pi pi-chart-line"></i>
+              {{ trackingData.packageInfo.weight }} kg
+            </span>
+            <span class="package-dimensions" *ngIf="trackingData.packageInfo.dimensions">
+              <i class="pi pi-arrows-alt"></i>
+              {{ trackingData.packageInfo.dimensions }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado de carga con skeleton loader -->
+  <div class="loading-state-modern" *ngIf="loading">
+    <div class="skeleton-container">
+      <!-- Skeleton del header -->
+      <div class="skeleton-header">
+        <div class="skeleton-item skeleton-logo"></div>
+        <div class="skeleton-item skeleton-text-large"></div>
+      </div>
+
+      <!-- Skeleton del status card -->
+      <div class="skeleton-status-card">
+        <div class="skeleton-item skeleton-icon-large"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-item skeleton-text-medium"></div>
+          <div class="skeleton-item skeleton-text-small"></div>
+        </div>
+        <div class="skeleton-item skeleton-progress"></div>
+      </div>
+
+      <!-- Skeleton del timeline -->
+      <div class="skeleton-timeline">
+        <div class="skeleton-timeline-item" *ngFor="let item of [1,2,3]">
+          <div class="skeleton-item skeleton-dot"></div>
+          <div class="skeleton-timeline-content">
+            <div class="skeleton-item skeleton-text-medium"></div>
+            <div class="skeleton-item skeleton-text-small"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-indicator">
+      <div class="spinner-modern">
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+      </div>
+      <p class="loading-text">Obteniendo información de seguimiento...</p>
+    </div>
+  </div>
+
+  <!-- Estado sin datos mejorado -->
+  <div class="empty-state-modern" *ngIf="!loading && !trackingData" [@fadeIn]>
+    <div class="empty-illustration">
+      <div class="illustration-box">
+        <i class="pi pi-inbox"></i>
+      </div>
+      <div class="illustration-shadow"></div>
+    </div>
+    <div class="empty-content">
+      <h4 class="empty-title">Sin información de tracking</h4>
+      <p class="empty-description">
+        No se encontró información de seguimiento para este envío.
+        <br>Intenta actualizar o verifica el número de guía.
+      </p>
+      <div class="empty-actions">
+        <button class="btn-retry-modern" (click)="loadTrackingData()" [@pulse]>
+          <i class="pi pi-refresh"></i>
+          <span>Reintentar</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  </div>
+  <!-- Fin del contenedor scrollable -->
+
+  <!-- Footer fijo con botones siempre visibles -->
+  <div class="modal-footer-fixed" [@slideUp]>
+    <div class="footer-actions">
+      <button class="btn-modern btn-refresh"
+              (click)="refreshTrackingData()"
+              [disabled]="refreshing || loading"
+              *ngIf="trackingData"
+              pTooltip="Actualizar información"
+              tooltipPosition="top">
+        <div class="btn-icon-wrapper">
+          <i class="pi pi-refresh" [class.spin-animation]="refreshing"></i>
+        </div>
+        <span class="btn-text">{{ refreshing ? 'Actualizando...' : 'Actualizar' }}</span>
+      </button>
+
+      <button class="btn-modern btn-download"
+              (click)="downloadLabel()"
+              *ngIf="trackingData?.labelUrl"
+              pTooltip="Descargar etiqueta de envío"
+              tooltipPosition="top">
+        <div class="btn-icon-wrapper">
+          <i class="pi pi-download"></i>
+        </div>
+        <span class="btn-text">Etiqueta</span>
+      </button>
+
+      <button class="btn-modern btn-external"
+              (click)="openExternalTracking()"
+              *ngIf="trackingData && (trackingData.provider !== 'transportadora' || trackingData.trackingUrl)"
+              pTooltip="Abrir en sitio del transportista"
+              tooltipPosition="top">
+        <div class="btn-icon-wrapper">
+          <i class="pi pi-external-link"></i>
+        </div>
+        <span class="btn-text">Ver en {{ providerName }}</span>
+      </button>
+    </div>
+
+    <div class="footer-divider"></div>
+
+    <button class="btn-modern btn-close" (click)="onClose()">
+      <div class="btn-icon-wrapper">
+        <i class="pi pi-times"></i>
+      </div>
+      <span class="btn-text">Cerrar</span>
+    </button>
+  </div>
+
+</div>
