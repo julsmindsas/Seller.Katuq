@@ -65,6 +65,13 @@ export class HeaderComponent implements OnInit {
     this.layout.config.settings.layout_version = this.dark ? 'dark-only' : 'light';
     this.ngpService.switchTheme(this.dark ? 'md-dark-deeppurple' : 'lara-light-blue');
 
+    // Apply dark-only class to body for proper dark mode styling
+    if (this.dark) {
+      document.body.classList.add('dark-only');
+    } else {
+      document.body.classList.remove('dark-only');
+    }
+
     document.body.style.backgroundColor = this.dark ? 'black' : 'white';
   }
 
@@ -81,6 +88,13 @@ export class HeaderComponent implements OnInit {
     this.ngpService.switchTheme(this.dark ? 'md-dark-deeppurple' : 'lara-light-blue');
 
     this.layout.config.settings.layout_version = this.dark ? 'dark-only' : 'light';
+
+    // Apply dark-only class to body for proper dark mode styling
+    if (this.dark) {
+      document.body.classList.add('dark-only');
+    } else {
+      document.body.classList.remove('dark-only');
+    }
 
     // actualizar tema
     const item = {

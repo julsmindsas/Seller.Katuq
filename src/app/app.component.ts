@@ -236,7 +236,14 @@ export class AppComponent implements OnInit, OnDestroy {
 
     this.layout.config.settings.layout_version = tema ? 'dark-only' : 'light';
 
-    this.ngpService.switchTheme(this.layout.config.settings.layout_version = tema ? 'md-dark-deeppurple' : 'lara-light-blue');
+    this.ngpService.switchTheme(tema ? 'md-dark-deeppurple' : 'lara-light-blue');
+
+    // Apply dark-only class to body for proper dark mode styling
+    if (tema) {
+      document.body.classList.add('dark-only');
+    } else {
+      document.body.classList.remove('dark-only');
+    }
 
     document.body.style.backgroundColor = tema ? 'black' : 'white';
 
