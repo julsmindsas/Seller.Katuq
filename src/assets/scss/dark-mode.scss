@@ -3582,4 +3582,450 @@ body.dark-only {
       color: #4AC5E2;
     }
   }
+
+  // ===== COMPONENTES PRIMENG ADICIONALES - p-avatar y p-chip =====
+
+  // PrimeNG Avatar
+  .p-avatar {
+    background: #3d4149;
+    color: #e0e0e0;
+
+    &.p-avatar-circle {
+      border-radius: 50%;
+    }
+
+    &.p-avatar-square {
+      border-radius: 6px;
+    }
+
+    &.p-avatar-lg {
+      width: 4rem;
+      height: 4rem;
+      font-size: 2rem;
+    }
+
+    &.p-avatar-xl {
+      width: 5rem;
+      height: 5rem;
+      font-size: 2.5rem;
+    }
+
+    // Avatar with image
+    .p-avatar-image {
+      background: #2d3139;
+    }
+
+    // Avatar icon
+    .p-avatar-icon {
+      color: #b0b0b0;
+    }
+
+    // Avatar label (initials)
+    .p-avatar-text {
+      color: #e0e0e0;
+      font-weight: 600;
+    }
+  }
+
+  // PrimeNG AvatarGroup
+  .p-avatar-group {
+    .p-avatar {
+      border: 2px solid #252830;
+
+      &:hover {
+        z-index: 2;
+        transform: scale(1.05);
+        transition: all 0.2s ease;
+      }
+    }
+
+    .p-avatar + .p-avatar {
+      margin-left: -1rem;
+    }
+  }
+
+  // PrimeNG Chip (individual)
+  .p-chip {
+    background: #3d4149;
+    color: #e0e0e0;
+    border-radius: 16px;
+    padding: 0 0.75rem;
+
+    .p-chip-text {
+      color: #e0e0e0;
+      line-height: 1.5;
+      margin-top: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .p-chip-icon {
+      color: #b0b0b0;
+      margin-right: 0.5rem;
+
+      &.pi {
+        font-size: 0.875rem;
+      }
+    }
+
+    .p-chip-image {
+      width: 2rem;
+      height: 2rem;
+      margin-left: -0.5rem;
+      margin-right: 0.5rem;
+      border-radius: 50%;
+    }
+
+    .p-chip-remove-icon {
+      color: #b0b0b0;
+      margin-left: 0.5rem;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+
+      &:hover {
+        color: #e0e0e0;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      &:focus {
+        outline: 0 none;
+        box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+      }
+    }
+
+    // Chip con imagen
+    &.p-chip-image {
+      .p-chip-text {
+        margin-left: 0.5rem;
+      }
+    }
+
+    // Variantes de color para Chip
+    &.p-chip-primary {
+      background: rgba(106, 181, 232, 0.15);
+      color: #6AB5E8;
+
+      .p-chip-icon,
+      .p-chip-remove-icon {
+        color: #6AB5E8;
+      }
+    }
+
+    &.p-chip-success {
+      background: rgba(92, 184, 92, 0.15);
+      color: #5cb85c;
+
+      .p-chip-icon,
+      .p-chip-remove-icon {
+        color: #5cb85c;
+      }
+    }
+
+    &.p-chip-warning {
+      background: rgba(255, 179, 71, 0.15);
+      color: #ffb347;
+
+      .p-chip-icon,
+      .p-chip-remove-icon {
+        color: #ffb347;
+      }
+    }
+
+    &.p-chip-danger {
+      background: rgba(255, 107, 125, 0.15);
+      color: #ff6b7d;
+
+      .p-chip-icon,
+      .p-chip-remove-icon {
+        color: #ff6b7d;
+      }
+    }
+
+    &.p-chip-info {
+      background: rgba(74, 197, 226, 0.15);
+      color: #4AC5E2;
+
+      .p-chip-icon,
+      .p-chip-remove-icon {
+        color: #4AC5E2;
+      }
+    }
+  }
+
+  // ===== MÓDULO VENTAS - CLIENTES OVERRIDES =====
+
+  // Modal crear cliente
+  .modal-crear-cliente {
+    .modal-content {
+      background: #252830;
+      border-color: #3d4149;
+    }
+
+    .modal-header {
+      background: #2d3139;
+      border-bottom-color: #3d4149;
+
+      .modal-title {
+        color: #f0f0f0;
+      }
+    }
+
+    .modal-body {
+      background: #252830;
+
+      .form-group {
+        label {
+          color: #b0b0b0;
+        }
+
+        input, select, textarea {
+          background: #2d3139;
+          border-color: #3d4149;
+          color: #e0e0e0;
+
+          &:focus {
+            background: #33363f;
+            border-color: #6AB5E8;
+            box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+          }
+
+          &::placeholder {
+            color: #808080;
+          }
+        }
+      }
+
+      .cliente-type-selector {
+        .type-option {
+          background: #2d3139;
+          border-color: #3d4149;
+          color: #e0e0e0;
+
+          &:hover {
+            background: #33363f;
+            border-color: #4d5159;
+          }
+
+          &.selected {
+            background: rgba(106, 181, 232, 0.15);
+            border-color: #6AB5E8;
+            color: #6AB5E8;
+          }
+        }
+      }
+    }
+
+    .modal-footer {
+      background: #2d3139;
+      border-top-color: #3d4149;
+    }
+  }
+
+  // Lista de clientes
+  .clientes-lista {
+    background: #252830;
+
+    .clientes-header {
+      background: #2d3139;
+      border-bottom-color: #3d4149;
+
+      .search-box {
+        input {
+          background: #33363f;
+          border-color: #3d4149;
+          color: #e0e0e0;
+
+          &::placeholder {
+            color: #808080;
+          }
+
+          &:focus {
+            border-color: #6AB5E8;
+            box-shadow: 0 0 0 0.2rem rgba(106, 181, 232, 0.25);
+          }
+        }
+      }
+
+      .filter-dropdown {
+        background: #2d3139;
+        border-color: #3d4149;
+        color: #e0e0e0;
+
+        &:hover {
+          background: #33363f;
+        }
+      }
+    }
+
+    .clientes-table {
+      .table {
+        background: #252830;
+
+        thead {
+          background: #2d3139;
+
+          th {
+            background: #2d3139;
+            border-color: #3d4149;
+            color: #f0f0f0;
+          }
+        }
+
+        tbody {
+          tr {
+            background: #252830;
+            border-color: #3d4149;
+
+            &:nth-child(even) {
+              background: #22252d;
+            }
+
+            &:hover {
+              background: #33363f !important;
+            }
+
+            td {
+              border-color: #3d4149;
+              color: #e0e0e0;
+
+              .cliente-nombre {
+                color: #e0e0e0;
+              }
+
+              .cliente-email {
+                color: #808080;
+              }
+
+              .cliente-badge {
+                &.badge-active {
+                  background: rgba(92, 184, 92, 0.15);
+                  color: #5cb85c;
+                }
+
+                &.badge-inactive {
+                  background: rgba(255, 107, 125, 0.15);
+                  color: #ff6b7d;
+                }
+              }
+
+              .action-buttons {
+                .btn-action {
+                  background: #2d3139;
+                  border-color: #3d4149;
+                  color: #b0b0b0;
+
+                  &:hover {
+                    background: #33363f;
+                    color: #e0e0e0;
+                  }
+
+                  &.btn-edit {
+                    &:hover {
+                      color: #6AB5E8;
+                    }
+                  }
+
+                  &.btn-delete {
+                    &:hover {
+                      color: #ff6b7d;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .clientes-pagination {
+      background: #2d3139;
+      border-top-color: #3d4149;
+
+      .pagination {
+        .page-item {
+          .page-link {
+            background: #2d3139;
+            border-color: #3d4149;
+            color: #e0e0e0;
+
+            &:hover {
+              background: #33363f;
+              border-color: #4d5159;
+            }
+          }
+
+          &.active .page-link {
+            background: #6AB5E8;
+            border-color: #6AB5E8;
+            color: #1a1d23;
+          }
+        }
+      }
+    }
+  }
+
+  // Detalle de cliente
+  .cliente-detalle {
+    background: #252830;
+
+    .cliente-header {
+      background: #2d3139;
+      border-bottom-color: #3d4149;
+
+      .cliente-avatar {
+        background: #3d4149;
+        border-color: #4d5159;
+        color: #e0e0e0;
+      }
+
+      .cliente-info {
+        .cliente-nombre {
+          color: #f0f0f0;
+        }
+
+        .cliente-meta {
+          color: #808080;
+        }
+      }
+    }
+
+    .cliente-tabs {
+      .nav-tabs {
+        background: #2d3139;
+        border-bottom-color: #3d4149;
+
+        .nav-link {
+          color: #b0b0b0;
+          border-color: transparent;
+
+          &:hover {
+            background: rgba(106, 181, 232, 0.1);
+            color: #e0e0e0;
+          }
+
+          &.active {
+            background: #252830;
+            border-color: #3d4149 #3d4149 #252830;
+            color: #6AB5E8;
+          }
+        }
+      }
+
+      .tab-content {
+        background: #252830;
+
+        .info-row {
+          border-bottom-color: #3d4149;
+
+          .info-label {
+            color: #808080;
+          }
+
+          .info-value {
+            color: #e0e0e0;
+          }
+        }
+      }
+    }
+  }
 }
