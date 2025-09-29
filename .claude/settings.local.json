@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx ng build:*)",
-      "Bash(ng serve:*)"
+      "Bash(ng serve:*)",
+      "WebFetch(domain:primeng-v14.pages.dev)",
+      "Bash(findstr:*)"
     ],
     "deny": [],
     "ask": []
