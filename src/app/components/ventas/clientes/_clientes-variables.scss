@@ -5,12 +5,18 @@
 // Following Katuq's established patterns
 
 // Color Palette - Using Katuq's primary colors
-$clientes-primary: var(--primary-color, #459BD1);
-$clientes-secondary: var(--secondary-color, #4555D1);
-$clientes-tertiary: var(--tertiary-color, #00a5d2);
-$clientes-success: var(--success-color, #27AE60);
-$clientes-warning: var(--warning-color, #D35400);
-$clientes-error: var(--error-color, #d12b38);
+$clientes-primary: #459BD1;
+$clientes-primary-dark: #3A87B3;
+$clientes-primary-light: #6BADD8;
+$clientes-secondary: #4555D1;
+$clientes-secondary-dark: #3A47B3;
+$clientes-tertiary: #00a5d2;
+$clientes-success: #27AE60;
+$clientes-success-dark: #209050;
+$clientes-warning: #D35400;
+$clientes-warning-dark: #B34700;
+$clientes-error: #d12b38;
+$clientes-error-dark: #B3242F;
 
 // Neutral Colors
 $clientes-dark: #2F2F3B;

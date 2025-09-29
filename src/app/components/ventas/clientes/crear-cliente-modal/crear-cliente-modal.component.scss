@@ -375,7 +375,7 @@ input[type="radio"] {
       transition: $clientes-transition-fast;
 
       &:hover {
-        background: darken($clientes-primary, 10%);
+        background: $clientes-primary-dark;
       }
 
       i {
@@ -507,8 +507,8 @@ input[type="radio"] {
     border-color: $clientes-primary;
 
     &:hover:not(:disabled) {
-      background: darken($clientes-primary, 8%);
-      border-color: darken($clientes-primary, 8%);
+      background: $clientes-primary-dark;
+      border-color: $clientes-primary-dark;
       transform: translateY(-2px);
       box-shadow: $clientes-shadow-md;
     }
@@ -524,8 +524,8 @@ input[type="radio"] {
     border-color: $clientes-grey-light;
 
     &:hover:not(:disabled) {
-      background: darken($clientes-grey-light, 8%);
-      border-color: darken($clientes-grey-light, 8%);
+      background: $clientes-grey;
+      border-color: $clientes-grey;
       transform: translateY(-2px);
       box-shadow: $clientes-shadow-md;
     }
@@ -537,8 +537,8 @@ input[type="radio"] {
     border-color: $clientes-success;
 
     &:hover:not(:disabled) {
-      background: darken($clientes-success, 8%);
-      border-color: darken($clientes-success, 8%);
+      background: $clientes-success-dark;
+      border-color: $clientes-success-dark;
       transform: translateY(-2px);
       box-shadow: $clientes-shadow-md;
     }
@@ -550,8 +550,8 @@ input[type="radio"] {
     border-color: $clientes-error;
 
     &:hover:not(:disabled) {
-      background: darken($clientes-error, 8%);
-      border-color: darken($clientes-error, 8%);
+      background: $clientes-error-dark;
+      border-color: $clientes-error-dark;
       transform: translateY(-2px);
       box-shadow: $clientes-shadow-md;
     }
@@ -614,25 +614,25 @@ input[type="radio"] {
   &.alert-success {
     background: rgba($clientes-success, 0.1);
     border-color: rgba($clientes-success, 0.2);
-    color: darken($clientes-success, 20%);
+    color: $clientes-success-dark;
   }
 
   &.alert-danger {
     background: rgba($clientes-error, 0.1);
     border-color: rgba($clientes-error, 0.2);
-    color: darken($clientes-error, 20%);
+    color: $clientes-error-dark;
   }
 
   &.alert-warning {
     background: rgba($clientes-warning, 0.1);
     border-color: rgba($clientes-warning, 0.2);
-    color: darken($clientes-warning, 20%);
+    color: $clientes-warning-dark;
   }
 
   &.alert-info {
     background: rgba($clientes-primary, 0.1);
     border-color: rgba($clientes-primary, 0.2);
-    color: darken($clientes-primary, 20%);
+    color: $clientes-primary-dark;
   }
 }
 

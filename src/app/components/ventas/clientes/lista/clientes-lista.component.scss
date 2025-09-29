@@ -42,7 +42,7 @@
       transition: $clientes-transition-fast;
 
       &:hover {
-        background: darken($clientes-table-header-bg, 3%);
+        background: $clientes-border-light;
       }
 
       // Sort Icon
