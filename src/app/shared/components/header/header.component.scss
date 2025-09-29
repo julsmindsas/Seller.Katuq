@@ -1,3 +1,137 @@
+/* Header Component Styles - Consistente con Sidebar */
+.page-header {
+  position: relative;
+  z-index: 1025; // Mayor que sidebar (1035) pero menor que modales
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  min-height: 60px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  .header-wrapper {
+    padding: 8px 16px; // Consistente con sidebar spacing
+    align-items: center;
+    
+    .left-header {
+      display: flex;
+      align-items: center;
+      min-height: 44px; // Consistente con sidebar menu items
+    }
+
+    .nav-right {
+      .nav-menus {
+        display: flex;
+        align-items: center;
+        gap: 4px; // Consistente con sidebar spacing
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+          display: flex;
+          align-items: center;
+          
+          .header-search,
+          .mode {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px; // Consistente con sidebar radius
+            cursor: pointer;
+            transition: all 0.1s ease-out; // Consistente con sidebar transitions
+            background: rgba(0, 0, 0, 0.03);
+
+            &:hover {
+              background: rgba(0, 0, 0, 0.08);
+            }
+
+            svg, i {
+              font-size: 13px; // Consistente con sidebar icon size
+            }
+          }
+
+          .language-nav {
+            cursor: pointer;
+            padding: 6px 12px; // Consistente con sidebar menu padding
+            border-radius: 6px;
+            transition: all 0.1s ease-out;
+
+            &:hover {
+              background: rgba(0, 0, 0, 0.05);
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+/* Dark theme - Consistente con sidebar dark theme */
+body.dark-only {
+  .page-header {
+    background: rgba(31, 41, 55, 0.95); // Consistente con sidebar dark bg
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+
+    .header-wrapper {
+      .nav-right .nav-menus li {
+        .header-search,
+        .mode {
+          background: rgba(255, 255, 255, 0.05);
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+          }
+        }
+
+        .language-nav:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+      }
+    }
+  }
+}
+
+/* Responsive - Consistente con sidebar breakpoints */
+@media (max-width: 991px) {
+  .page-header {
+    min-height: 56px;
+
+    .header-wrapper {
+      padding: 6px 12px;
+
+      .nav-right .nav-menus {
+        gap: 2px;
+
+        li {
+          .header-search,
+          .mode {
+            width: 30px;
+            height: 30px;
+
+            svg, i {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .page-header {
+    min-height: 52px;
+
+    .header-wrapper {
+      padding: 4px 8px;
+      flex-wrap: wrap;
+    }
+  }
+}
+
 /* Tour Navigation Button Styles */
 .tour-nav {
   margin-right: 8px;

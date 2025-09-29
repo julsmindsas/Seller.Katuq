@@ -1,21 +1,40 @@
 .sizelogoHeader {
-    width: 30%;
-    height: 20%;
-    // margin: 0 auto;
+    width: auto;
+    height: 36px; // Consistente con sidebar logo height
+    max-width: 180px;
     display: block;
-    margin-top: 15px;
-    // margin-bottom: 10px;
-    // border-radius: 50%;
-    // border: 1px solid #000;
-    // overflow: hidden;
+    margin: 0;
+    object-fit: contain;
 
     img {
-        width: 50%;
-        height: 50%;
-        object-fit: cover;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
     }
 }
 
-.font-size-custom{
+.font-size-custom {
     font-size: x-small;
+}
+
+/* Responsive adjustments - Consistente con sidebar breakpoints */
+@media (max-width: 1199px) {
+    .sizelogoHeader {
+        height: 32px;
+        max-width: 160px;
+    }
+}
+
+@media (max-width: 991px) {
+    .sizelogoHeader {
+        height: 28px;
+        max-width: 140px;
+    }
+}
+
+@media (max-width: 767px) {
+    .sizelogoHeader {
+        height: 24px;
+        max-width: 120px;
+    }
 }

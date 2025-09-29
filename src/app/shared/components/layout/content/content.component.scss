@@ -9,16 +9,39 @@ a {
   }
 }
 
+// Page Body Layout - Consistente con Header
+.page-body {
+  // Ajustar margin-top para coincidir con header height
+  margin-top: 2px !important; // Mínimo espaciado
+  min-height: calc(100vh - 2px) !important;
+  padding: 16px !important; // Consistente con header padding
+  transition: margin-top 0.1s ease-out; // Consistente con header transitions
+  
+  // Asegurar que no se superponga con el header
+  position: relative;
+  z-index: 1;
+}
+
 // Mobile navigation adjustments
 @media (max-width: 991px) {
   .page-body {
     // Add bottom padding to account for bottom navigation
     padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+    margin-top: 2px !important; // Mínimo espaciado
+    min-height: calc(100vh - 2px) !important;
   }
   
   .footer {
     // Ensure footer doesn't overlap with bottom navigation
     margin-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .page-body {
+    margin-top: 2px !important; // Mínimo espaciado
+    min-height: calc(100vh - 2px) !important;
+    padding: 12px !important; // Padding reducido para móviles
   }
 }
 
