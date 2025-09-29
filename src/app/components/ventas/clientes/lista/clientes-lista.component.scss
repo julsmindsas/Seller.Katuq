@@ -1,13 +1,762 @@
-ng::deep .p-datatable .p-datatable-header {
-    padding: 0rem !important;
+// ==============================================
+// KATUQ CLIENTES LISTA COMPONENT - STYLES
+// ==============================================
+@import '../clientes-variables';
+
+// ==============================================
+// PRIMENG DATATABLE CUSTOMIZATION
+// ==============================================
+::ng-deep {
+  .p-datatable {
+    font-family: $clientes-font-primary;
+    font-size: $clientes-font-size-base;
+    background: $clientes-white;
+    border: 1px solid $clientes-border-light;
+    border-radius: $clientes-border-radius-lg;
+    overflow: hidden;
+    box-shadow: $clientes-shadow-sm;
+
+    // Header Section
+    .p-datatable-header {
+      background: $clientes-white;
+      border: none;
+      border-bottom: 2px solid $clientes-border-light;
+      padding: $clientes-spacing-lg !important;
+
+      @include clientes-responsive('tablet') {
+        padding: $clientes-spacing-md !important;
+      }
+    }
+
+    // Table Header (Column Headers)
+    .p-datatable-thead > tr > th {
+      background: $clientes-table-header-bg;
+      color: $clientes-grey;
+      font-weight: $clientes-font-weight-semibold;
+      text-transform: uppercase;
+      font-size: $clientes-font-size-small;
+      letter-spacing: 0.5px;
+      padding: $clientes-spacing-md;
+      border: none;
+      border-bottom: 2px solid $clientes-border-light;
+      transition: $clientes-transition-fast;
+
+      &:hover {
+        background: darken($clientes-table-header-bg, 3%);
+      }
+
+      // Sort Icon
+      .p-sortable-column-icon {
+        color: $clientes-grey-light;
+        margin-left: $clientes-spacing-xs;
+        font-size: 0.75rem;
+      }
+
+      &.p-highlight {
+        background: $clientes-primary;
+        color: $clientes-white;
+
+        .p-sortable-column-icon {
+          color: $clientes-white;
+        }
+      }
+
+      // Column Filter
+      .p-column-filter {
+        width: 100%;
+        margin-top: $clientes-spacing-xs;
+      }
+
+      input.p-column-filter {
+        @include clientes-input-base;
+        width: 100%;
+        height: 32px;
+        font-size: $clientes-font-size-small;
+        padding: 0 $clientes-spacing-sm;
+        margin-bottom: 0;
+      }
+    }
+
+    // Table Body
+    .p-datatable-tbody {
+      > tr {
+        background: $clientes-white;
+        transition: $clientes-transition-fast;
+
+        &:nth-child(even) {
+          background: $clientes-table-row-striped;
+        }
+
+        &:hover {
+          background: $clientes-table-row-hover;
+        }
+
+        &.p-highlight {
+          background: rgba($clientes-primary, 0.1);
+          color: $clientes-dark;
+        }
+
+        > td {
+          padding: $clientes-spacing-md;
+          border: none;
+          border-bottom: 1px solid $clientes-border-light;
+          color: $clientes-dark-light;
+          vertical-align: middle;
+
+          &:first-child {
+            font-weight: $clientes-font-weight-medium;
+          }
+        }
+      }
+    }
+
+    // Empty Message
+    .p-datatable-emptymessage {
+      padding: $clientes-spacing-xl;
+      text-align: center;
+      color: $clientes-grey;
+      font-size: $clientes-font-size-large;
+      background: $clientes-bg-lighter;
+    }
+
+    // Loading
+    .p-datatable-loading-overlay {
+      background: rgba($clientes-white, 0.9);
+    }
+
+    .p-datatable-loading-icon {
+      color: $clientes-primary;
+      font-size: 2rem;
+    }
+
+    // Footer
+    .p-datatable-footer {
+      background: $clientes-white;
+      border: none;
+      border-top: 2px solid $clientes-border-light;
+      padding: $clientes-spacing-md $clientes-spacing-lg;
+      font-size: $clientes-font-size-base;
+      color: $clientes-grey;
+    }
+
+    // Responsive Stack
+    &.p-datatable-responsive-stack {
+      .p-datatable-tbody > tr > td {
+        display: block;
+        border: 0;
+        width: 100%;
+        text-align: left;
+        padding: $clientes-spacing-sm $clientes-spacing-md;
+
+        &:before {
+          content: attr(data-label);
+          font-weight: $clientes-font-weight-semibold;
+          color: $clientes-grey;
+          display: inline-block;
+          width: 40%;
+          margin-right: $clientes-spacing-sm;
+        }
+      }
+    }
+  }
+
+  // Paginator Customization
+  .p-paginator {
+    background: $clientes-white;
+    border: 1px solid $clientes-border-light;
+    border-top: none;
+    padding: $clientes-spacing-md;
+    border-radius: 0 0 $clientes-border-radius-lg $clientes-border-radius-lg;
+
+    .p-paginator-element {
+      color: $clientes-grey;
+      min-width: 32px;
+      height: 32px;
+      margin: 0 $clientes-spacing-xs;
+      border-radius: $clientes-border-radius-sm;
+      transition: $clientes-transition-fast;
+
+      &:hover:not(.p-disabled):not(.p-highlight) {
+        background: $clientes-bg-light;
+        color: $clientes-dark;
+      }
+
+      &.p-highlight {
+        background: $clientes-primary;
+        color: $clientes-white;
+        font-weight: $clientes-font-weight-medium;
+      }
+
+      &.p-disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+    }
+
+    .p-paginator-current {
+      color: $clientes-grey;
+      font-size: $clientes-font-size-small;
+      margin: 0 $clientes-spacing-md;
+    }
+
+    .p-dropdown {
+      border: 1px solid $clientes-border;
+      border-radius: $clientes-border-radius-sm;
+      height: 32px;
+
+      &:hover {
+        border-color: $clientes-primary;
+      }
+
+      .p-dropdown-label {
+        padding: $clientes-spacing-xs $clientes-spacing-sm;
+        font-size: $clientes-font-size-small;
+      }
+    }
+  }
+
+  // Column Toggle & Export Buttons
+  .p-column-toggler {
+    .p-multiselect {
+      border: 1px solid $clientes-border;
+      border-radius: $clientes-border-radius-sm;
+      min-width: 200px;
+
+      &:hover {
+        border-color: $clientes-primary;
+      }
+
+      .p-multiselect-label {
+        padding: $clientes-spacing-sm;
+        font-size: $clientes-font-size-base;
+      }
+    }
+
+    .p-multiselect-panel {
+      border-radius: $clientes-border-radius;
+      box-shadow: $clientes-shadow-lg;
+      border: 1px solid $clientes-border;
+
+      .p-multiselect-item {
+        padding: $clientes-spacing-sm $clientes-spacing-md;
+        transition: $clientes-transition-fast;
+
+        &:hover {
+          background: $clientes-bg-light;
+        }
+
+        &.p-highlight {
+          background: rgba($clientes-primary, 0.1);
+          color: $clientes-primary;
+        }
+      }
+    }
+  }
+
+  // Custom Datatable Class
+  .custom-datatable {
+    input {
+      @include clientes-input-base;
+      margin-bottom: 5px !important;
+      height: 34px;
+      font-size: $clientes-font-size-small;
+    }
+
+    .p-inputtext {
+      font-family: $clientes-font-primary;
+    }
+  }
 }
 
-ng::deep .custom-datatable input {
-    margin-bottom: 5px !important;
-}
- 
+// ==============================================
+// LIST CONTAINER
+// ==============================================
+.clientes-lista-container {
+  padding: $clientes-spacing-lg;
+  background: $clientes-bg-lighter;
+  min-height: 100vh;
 
-.columna{
+  @include clientes-responsive('tablet') {
+    padding: $clientes-spacing-md;
+  }
+
+  @include clientes-responsive('mobile') {
+    padding: $clientes-spacing-sm;
+  }
+}
+
+// ==============================================
+// LIST HEADER
+// ==============================================
+.lista-header {
+  background: $clientes-white;
+  padding: $clientes-spacing-lg;
+  border-radius: $clientes-border-radius-lg;
+  box-shadow: $clientes-shadow-sm;
+  margin-bottom: $clientes-spacing-lg;
+
+  h1, h2 {
+    color: $clientes-dark;
+    font-size: $clientes-font-size-heading;
+    font-weight: $clientes-font-weight-semibold;
+    margin: 0 0 $clientes-spacing-xs 0;
+    display: flex;
+    align-items: center;
+    gap: $clientes-spacing-sm;
+
+    i {
+      color: $clientes-primary;
+    }
+  }
+
+  p {
+    color: $clientes-grey;
+    font-size: $clientes-font-size-base;
+    margin: 0;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: $clientes-spacing-sm;
+    flex-wrap: wrap;
+    margin-top: $clientes-spacing-md;
+
+    @include clientes-responsive('mobile') {
+      flex-direction: column;
+
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// ==============================================
+// SEARCH AND FILTERS BAR
+// ==============================================
+.filters-bar {
+  background: $clientes-white;
+  padding: $clientes-spacing-md;
+  border-radius: $clientes-border-radius-lg;
+  box-shadow: $clientes-shadow-sm;
+  margin-bottom: $clientes-spacing-lg;
+
+  .filters-row {
+    display: flex;
+    gap: $clientes-spacing-md;
+    align-items: center;
+    flex-wrap: wrap;
+
+    @include clientes-responsive('tablet') {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .search-group {
+    flex: 1;
+    min-width: 300px;
+    display: flex;
+    gap: $clientes-spacing-sm;
+
+    input {
+      @include clientes-input-base;
+      flex: 1;
+    }
+
+    .btn-search {
+      padding: 0 $clientes-spacing-lg;
+    }
+  }
+
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: $clientes-spacing-sm;
+
+    label {
+      color: $clientes-grey;
+      font-size: $clientes-font-size-small;
+      font-weight: $clientes-font-weight-medium;
+      white-space: nowrap;
+    }
+
+    select {
+      @include clientes-input-base;
+      min-width: 150px;
+    }
+  }
+}
+
+// ==============================================
+// ACTION BUTTONS
+// ==============================================
+.action-buttons {
+  display: flex;
+  gap: $clientes-spacing-xs;
+  justify-content: center;
+  flex-wrap: nowrap;
+
+  .btn-action {
+    padding: $clientes-spacing-xs;
+    width: 32px;
+    height: 32px;
+    border-radius: $clientes-border-radius-sm;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: $clientes-transition-fast;
+    border: 1px solid transparent;
+
+    &.btn-view {
+      background: rgba($clientes-primary, 0.1);
+      color: $clientes-primary;
+      border-color: rgba($clientes-primary, 0.2);
+
+      &:hover {
+        background: $clientes-primary;
+        color: $clientes-white;
+        transform: scale(1.1);
+      }
+    }
+
+    &.btn-edit {
+      background: rgba($clientes-warning, 0.1);
+      color: $clientes-warning;
+      border-color: rgba($clientes-warning, 0.2);
+
+      &:hover {
+        background: $clientes-warning;
+        color: $clientes-white;
+        transform: scale(1.1);
+      }
+    }
+
+    &.btn-delete {
+      background: rgba($clientes-error, 0.1);
+      color: $clientes-error;
+      border-color: rgba($clientes-error, 0.2);
+
+      &:hover {
+        background: $clientes-error;
+        color: $clientes-white;
+        transform: scale(1.1);
+      }
+    }
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// ==============================================
+// STATUS BADGES
+// ==============================================
+.status-badge {
+  display: inline-block;
+  padding: $clientes-spacing-xs $clientes-spacing-sm;
+  border-radius: $clientes-border-radius-pill;
+  font-size: $clientes-font-size-small;
+  font-weight: $clientes-font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+
+  &.status-active {
+    background: rgba($clientes-success, 0.1);
+    color: $clientes-success;
+    border: 1px solid rgba($clientes-success, 0.2);
+  }
+
+  &.status-inactive {
+    background: rgba($clientes-grey, 0.1);
+    color: $clientes-grey;
+    border: 1px solid rgba($clientes-grey, 0.2);
+  }
+
+  &.status-pending {
+    background: rgba($clientes-warning, 0.1);
+    color: $clientes-warning;
+    border: 1px solid rgba($clientes-warning, 0.2);
+  }
+
+  &.status-blocked {
+    background: rgba($clientes-error, 0.1);
+    color: $clientes-error;
+    border: 1px solid rgba($clientes-error, 0.2);
+  }
+}
+
+// ==============================================
+// COLUMN CUSTOMIZATION
+// ==============================================
+.columna {
+  text-align: center;
+  background-color: $clientes-primary;
+  color: $clientes-white;
+  font-weight: $clientes-font-weight-semibold;
+  padding: $clientes-spacing-sm;
+  border-radius: $clientes-border-radius-sm;
+}
+
+// ==============================================
+// EXPORT BUTTONS
+// ==============================================
+.export-buttons {
+  display: flex;
+  gap: $clientes-spacing-sm;
+
+  .btn-export {
+    background: $clientes-white;
+    border: 1px solid $clientes-border;
+    color: $clientes-dark-light;
+    padding: $clientes-spacing-sm $clientes-spacing-md;
+    border-radius: $clientes-border-radius-sm;
+    font-size: $clientes-font-size-small;
+    transition: $clientes-transition-fast;
+    display: flex;
+    align-items: center;
+    gap: $clientes-spacing-xs;
+
+    &:hover {
+      background: $clientes-primary;
+      color: $clientes-white;
+      border-color: $clientes-primary;
+      transform: translateY(-2px);
+      box-shadow: $clientes-shadow-md;
+    }
+
+    i {
+      font-size: 1rem;
+    }
+  }
+}
+
+// ==============================================
+// BULK ACTIONS
+// ==============================================
+.bulk-actions {
+  background: $clientes-primary;
+  color: $clientes-white;
+  padding: $clientes-spacing-md;
+  border-radius: $clientes-border-radius;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $clientes-spacing-md;
+  animation: slideDown 0.3s ease;
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .selected-count {
+    font-weight: $clientes-font-weight-medium;
+  }
+
+  .bulk-buttons {
+    display: flex;
+    gap: $clientes-spacing-sm;
+
+    .btn {
+      background: rgba($clientes-white, 0.2);
+      color: $clientes-white;
+      border: 1px solid rgba($clientes-white, 0.3);
+
+      &:hover {
+        background: $clientes-white;
+        color: $clientes-primary;
+      }
+    }
+  }
+}
+
+// ==============================================
+// CHECKBOXES FOR DATATABLE
+// ==============================================
+::ng-deep {
+  // PrimeNG Checkbox Customization
+  .p-checkbox {
+    .p-checkbox-box {
+      width: 14px !important;
+      height: 14px !important;
+      border: 1px solid $clientes-border;
+      border-radius: 3px;
+      transition: $clientes-transition-fast;
+
+      &.p-highlight {
+        background: $clientes-primary;
+        border-color: $clientes-primary;
+      }
+
+      &:hover {
+        border-color: $clientes-primary;
+      }
+
+      .p-checkbox-icon {
+        font-size: 10px;
+      }
+    }
+  }
+
+  // Standard checkbox override
+  input[type="checkbox"] {
+    width: 14px !important;
+    height: 14px !important;
+    cursor: pointer;
+  }
+}
+
+// ==============================================
+// EMPTY STATE
+// ==============================================
+.empty-state {
+  text-align: center;
+  padding: $clientes-spacing-xxl;
+  background: $clientes-white;
+  border-radius: $clientes-border-radius-lg;
+  box-shadow: $clientes-shadow-sm;
+
+  .empty-icon {
+    font-size: 4rem;
+    color: $clientes-grey-light;
+    margin-bottom: $clientes-spacing-lg;
+  }
+
+  h3 {
+    color: $clientes-dark;
+    font-size: $clientes-font-size-heading;
+    margin-bottom: $clientes-spacing-sm;
+  }
+
+  p {
+    color: $clientes-grey;
+    font-size: $clientes-font-size-base;
+    margin-bottom: $clientes-spacing-lg;
+  }
+
+  .btn-primary {
+    min-width: 200px;
+  }
+}
+
+// ==============================================
+// LOADING OVERLAY
+// ==============================================
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba($clientes-white, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $clientes-zindex-modal;
+
+  .loading-content {
     text-align: center;
-    background-color: var(--primary-color);
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid $clientes-border;
+      border-top-color: $clientes-primary;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto $clientes-spacing-md;
+    }
+
+    p {
+      color: $clientes-grey;
+      font-size: $clientes-font-size-base;
+    }
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// ==============================================
+// RESPONSIVE ADJUSTMENTS
+// ==============================================
+@include clientes-responsive('tablet') {
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-thead > tr > th {
+        padding: $clientes-spacing-sm;
+        font-size: 0.7rem;
+      }
+
+      .p-datatable-tbody > tr > td {
+        padding: $clientes-spacing-sm;
+        font-size: $clientes-font-size-small;
+      }
+    }
+
+    .p-paginator {
+      .p-paginator-element {
+        min-width: 28px;
+        height: 28px;
+        font-size: $clientes-font-size-small;
+      }
+    }
+  }
+
+  .action-buttons {
+    .btn-action {
+      width: 28px;
+      height: 28px;
+
+      i {
+        font-size: 0.75rem;
+      }
+    }
+  }
+}
+
+@include clientes-responsive('mobile') {
+  ::ng-deep {
+    .p-datatable {
+      font-size: $clientes-font-size-small;
+
+      .p-datatable-header {
+        padding: $clientes-spacing-sm !important;
+      }
+
+      &.p-datatable-responsive-stack {
+        .p-datatable-thead {
+          display: none;
+        }
+
+        .p-datatable-tbody > tr {
+          border: 1px solid $clientes-border-light;
+          border-radius: $clientes-border-radius;
+          margin-bottom: $clientes-spacing-sm;
+          box-shadow: $clientes-shadow-sm;
+        }
+      }
+    }
+  }
+
+  .lista-header {
+    padding: $clientes-spacing-md;
+
+    h1, h2 {
+      font-size: 1.25rem;
+    }
+  }
+
+  .filters-bar {
+    padding: $clientes-spacing-sm;
+  }
 }

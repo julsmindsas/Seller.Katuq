@@ -1,0 +1,178 @@
+// ==============================================
+// KATUQ CLIENTES MODULE - SHARED VARIABLES
+// ==============================================
+// Clean, professional design system without gradients
+// Following Katuq's established patterns
+
+// Color Palette - Using Katuq's primary colors
+$clientes-primary: var(--primary-color, #459BD1);
+$clientes-secondary: var(--secondary-color, #4555D1);
+$clientes-tertiary: var(--tertiary-color, #00a5d2);
+$clientes-success: var(--success-color, #27AE60);
+$clientes-warning: var(--warning-color, #D35400);
+$clientes-error: var(--error-color, #d12b38);
+
+// Neutral Colors
+$clientes-dark: #2F2F3B;
+$clientes-dark-light: #495057;
+$clientes-grey: #6c757d;
+$clientes-grey-light: #8B92A0;
+$clientes-border: #E3E6EA;
+$clientes-border-light: #F0F2F5;
+$clientes-bg-light: #F8F9FA;
+$clientes-bg-lighter: #FCFCFD;
+$clientes-white: #FFFFFF;
+
+// Typography
+$clientes-font-primary: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+$clientes-font-size-base: 0.8125rem;  // 13px
+$clientes-font-size-small: 0.75rem;    // 12px
+$clientes-font-size-large: 0.875rem;   // 14px
+$clientes-font-size-title: 1rem;       // 16px
+$clientes-font-size-heading: 1.25rem;  // 20px
+$clientes-font-weight-normal: 400;
+$clientes-font-weight-medium: 500;
+$clientes-font-weight-semibold: 600;
+$clientes-line-height: 1.5;
+
+// Spacing System
+$clientes-spacing-xs: 0.25rem;
+$clientes-spacing-sm: 0.5rem;
+$clientes-spacing-md: 1rem;
+$clientes-spacing-lg: 1.5rem;
+$clientes-spacing-xl: 2rem;
+$clientes-spacing-xxl: 3rem;
+
+// Border and Radius
+$clientes-border-radius: 6px;
+$clientes-border-radius-sm: 4px;
+$clientes-border-radius-lg: 8px;
+$clientes-border-radius-pill: 50px;
+$clientes-border-width: 1px;
+
+// Shadows - Subtle and professional
+$clientes-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+$clientes-shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+$clientes-shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.1);
+$clientes-shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.12);
+$clientes-shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+
+// Transitions
+$clientes-transition-fast: all 0.15s ease;
+$clientes-transition-base: all 0.25s ease;
+$clientes-transition-slow: all 0.35s ease;
+
+// Component Heights
+$clientes-input-height: 34px;
+$clientes-input-height-sm: 28px;
+$clientes-input-height-lg: 40px;
+$clientes-button-height: 34px;
+$clientes-button-height-sm: 28px;
+$clientes-button-height-lg: 40px;
+
+// Table Styles
+$clientes-table-header-bg: $clientes-bg-light;
+$clientes-table-row-hover: rgba($clientes-primary, 0.04);
+$clientes-table-row-striped: $clientes-bg-lighter;
+$clientes-table-border: $clientes-border-light;
+
+// Form Styles
+$clientes-input-bg: $clientes-white;
+$clientes-input-border: $clientes-border;
+$clientes-input-focus-border: $clientes-primary;
+$clientes-input-focus-shadow: 0 0 0 3px rgba($clientes-primary, 0.1);
+$clientes-input-disabled-bg: $clientes-bg-light;
+$clientes-label-color: $clientes-dark-light;
+
+// Button States
+$clientes-button-hover-transform: translateY(-1px);
+$clientes-button-active-transform: translateY(0);
+
+// Responsive Breakpoints
+$clientes-mobile: 576px;
+$clientes-tablet: 768px;
+$clientes-desktop: 992px;
+$clientes-wide: 1200px;
+
+// Z-index Layers
+$clientes-zindex-dropdown: 1000;
+$clientes-zindex-modal: 1050;
+$clientes-zindex-tooltip: 1070;
+
+// Mixins for consistent styling
+@mixin clientes-card {
+  background: $clientes-white;
+  border: $clientes-border-width solid $clientes-border-light;
+  border-radius: $clientes-border-radius-lg;
+  box-shadow: $clientes-shadow-card;
+  transition: $clientes-transition-base;
+
+  &:hover {
+    box-shadow: $clientes-shadow-hover;
+  }
+}
+
+@mixin clientes-button-base {
+  height: $clientes-button-height;
+  padding: 0 $clientes-spacing-md;
+  font-size: $clientes-font-size-base;
+  font-weight: $clientes-font-weight-medium;
+  border-radius: $clientes-border-radius-sm;
+  transition: $clientes-transition-base;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: $clientes-border-width solid transparent;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    transform: $clientes-button-hover-transform;
+    box-shadow: $clientes-shadow-md;
+  }
+
+  &:active:not(:disabled) {
+    transform: $clientes-button-active-transform;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+@mixin clientes-input-base {
+  height: $clientes-input-height;
+  padding: 0 $clientes-spacing-md;
+  font-size: $clientes-font-size-base;
+  background: $clientes-input-bg;
+  border: $clientes-border-width solid $clientes-input-border;
+  border-radius: $clientes-border-radius-sm;
+  transition: $clientes-transition-fast;
+
+  &:focus {
+    outline: none;
+    border-color: $clientes-input-focus-border;
+    box-shadow: $clientes-input-focus-shadow;
+  }
+
+  &:disabled {
+    background: $clientes-input-disabled-bg;
+    cursor: not-allowed;
+  }
+
+  &::placeholder {
+    color: $clientes-grey-light;
+  }
+}
+
+@mixin clientes-responsive($breakpoint) {
+  @if $breakpoint == 'mobile' {
+    @media (max-width: $clientes-mobile) { @content; }
+  } @else if $breakpoint == 'tablet' {
+    @media (max-width: $clientes-tablet) { @content; }
+  } @else if $breakpoint == 'desktop' {
+    @media (max-width: $clientes-desktop) { @content; }
+  } @else if $breakpoint == 'wide' {
+    @media (min-width: $clientes-wide) { @content; }
+  }
+}
