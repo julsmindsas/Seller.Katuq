@@ -32,6 +32,10 @@ import { SplitButtonModule } from 'primeng/splitbutton';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { AccordionModule } from 'primeng/accordion';
+import { CheckboxModule } from 'primeng/checkbox';
+import { InputTextareaModule } from 'primeng/inputtextarea';
+import { InputTextModule } from 'primeng/inputtext';
 
 // Componentes
 import { TablaPedidosComponent } from "./components/tabla-pedidos/tabla-pedidos.component";
@@ -90,6 +94,10 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     AutoCompleteModule,
     InputNumberModule,
     ProgressSpinnerModule,
+    AccordionModule,
+    CheckboxModule,
+    InputTextareaModule,
+    InputTextModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
   ],

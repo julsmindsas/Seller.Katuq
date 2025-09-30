@@ -67,6 +67,9 @@ export class EnviameRatesModalComponent implements OnInit {
     package: { valid: false, errors: [] as string[] }
   };
 
+  // UI Enhancement States
+  dimensionsCollapsed = false;
+
   // Municipios para autocompletado
   municipiosSugeridosOrigen: any[] = [];
   municipiosSugeridosDestino: any[] = [];
@@ -77,11 +80,80 @@ export class EnviameRatesModalComponent implements OnInit {
   searchingMunicipiosOrigen: boolean = false;
   searchingMunicipiosDestino: boolean = false;
 
-  // Tipos de envío disponibles
+  // Tipos de envío disponibles con información mejorada
   tiposEnvio = [
-    { label: 'Estándar', value: 'estandar', icon: 'pi-box' },
-    { label: 'Express', value: 'express', icon: 'pi-forward' },
-    { label: 'Prioritario', value: 'prioritario', icon: 'pi-bolt' }
+    {
+      label: 'Estándar',
+      value: 'estandar',
+      icon: 'pi-box',
+      description: '3-5 días hábiles',
+      priceRange: 'Desde $15.000',
+      popular: true,
+      features: ['Cobertura nacional', 'Seguro básico incluido'],
+      badge: null,
+      badgeType: null,
+      recommended: false
+    },
+    {
+      label: 'Express',
+      value: 'express',
+      icon: 'pi-forward',
+      description: '1-2 días hábiles',
+      priceRange: 'Desde $35.000',
+      recommended: true,
+      features: ['Tracking en tiempo real', 'Prioridad en despacho'],
+      badge: 'Más rápido',
+      badgeType: 'fast',
+      popular: false
+    },
+    {
+      label: 'Prioritario',
+      value: 'prioritario',
+      icon: 'pi-bolt',
+      description: 'Entrega en 24 horas',
+      priceRange: 'Desde $50.000',
+      features: ['Entrega garantizada', 'Seguro premium'],
+      badge: 'Premium',
+      badgeType: 'premium',
+      recommended: false,
+      popular: false
+    },
+    {
+      label: 'Mismo Día',
+      value: 'sameday',
+      icon: 'pi-clock',
+      description: 'Entrega hoy mismo',
+      priceRange: 'Desde $70.000',
+      features: ['Solo ciudades principales', 'Máx. 10kg'],
+      badge: 'Urgente',
+      badgeType: 'urgent',
+      recommended: false,
+      popular: false
+    },
+    {
+      label: 'Día Siguiente',
+      value: 'nextday',
+      icon: 'pi-calendar-plus',
+      description: 'Entrega mañana',
+      priceRange: 'Desde $40.000',
+      features: ['Amplia cobertura', 'Entrega antes 6pm'],
+      badge: null,
+      badgeType: null,
+      recommended: false,
+      popular: false
+    },
+    {
+      label: 'Logística Inversa',
+      value: 'logistica-inversa',
+      icon: 'pi-replay',
+      description: 'Para devoluciones',
+      priceRange: 'Desde $20.000',
+      features: ['Recolección incluida', 'Gestión simplificada'],
+      badge: 'Devoluciones',
+      badgeType: 'return',
+      recommended: false,
+      popular: false
+    }
   ];
 
   // Opciones de ordenamiento para el dropdown
@@ -100,6 +172,9 @@ export class EnviameRatesModalComponent implements OnInit {
   showConfirmDialog: boolean = false;
   confirmedDetails: boolean = false;
 
+  // Control de opciones colapsables (nuevo diseño)
+  optionsExpanded: boolean = false;
+
   // Propiedades para tracking de auto-llenado
   isAutoFilledOrigin: boolean = false;
   isAutoFilledDestination: boolean = false;
@@ -108,6 +183,17 @@ export class EnviameRatesModalComponent implements OnInit {
 
   // Cache para búsquedas
   private searchCache = new Map<string, any[]>();
+
+  // ========================================
+  // ACCORDION INTELIGENTE CON AUTO-GUIADO
+  // ========================================
+  activeStep: number = 0;
+  stepStates = [
+    { completed: false, locked: false, optional: false }, // Paso 1: Tipo + Distancia
+    { completed: false, locked: true, optional: false },  // Paso 2: Ubicaciones
+    { completed: false, locked: true, optional: false },  // Paso 3: Paquete
+    { completed: false, locked: false, optional: true }   // Paso 4: Opciones (opcional)
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -147,6 +233,9 @@ export class EnviameRatesModalComponent implements OnInit {
 
     // Suscribirse a cambios del formulario para validación progresiva
     this.setupFormValidation();
+
+    // Configurar validación dinámica de distancia según tipo de envío
+    this.setupDistanceValidation();
   }
 
   private createForm(): void {
@@ -160,6 +249,9 @@ export class EnviameRatesModalComponent implements OnInit {
 
         // Tipo de envío
         shippingType: ['estandar', Validators.required],
+
+        // Distancia (requerida solo para Express)
+        distanceKm: [null],
 
         // Origen
         originAddress: [''],
@@ -463,6 +555,11 @@ export class EnviameRatesModalComponent implements OnInit {
         signature: formData.signature
       }
     };
+
+    // Agregar distancia si el tipo de envío es Express
+    if (formData.shippingType === 'express' && formData.distanceKm) {
+      (quoteRequest as any).distanceKm = formData.distanceKm;
+    }
 
     this.quotingRates = true;
     this.availableRates = [];
@@ -796,6 +893,7 @@ export class EnviameRatesModalComponent implements OnInit {
         debounceTime(300)
       ).subscribe(() => {
         this.validateTabs();
+        this.updateStepStates(); // Actualizar estados del accordion automáticamente
       });
     }
   }
@@ -1112,6 +1210,30 @@ export class EnviameRatesModalComponent implements OnInit {
   }
 
   /**
+   * UI Enhancement Methods
+   */
+  toggleDimensionsSection(): void {
+    this.dimensionsCollapsed = !this.dimensionsCollapsed;
+  }
+
+  calculateVolume(): number {
+    const length = this.quoteForm?.get('length')?.value || 0;
+    const width = this.quoteForm?.get('width')?.value || 0;
+    const height = this.quoteForm?.get('height')?.value || 0;
+    return length * width * height;
+  }
+
+  calculateVolumetricWeight(): number {
+    const volume = this.calculateVolume();
+    // Standard formula: volume (cm³) / 5000 for air shipping
+    return Math.round((volume / 5000) * 10) / 10;
+  }
+
+  setDescription(text: string): void {
+    this.quoteForm?.get('description')?.setValue(text);
+  }
+
+  /**
    * Pre-cargar datos de ciudades con búsqueda inteligente
    */
   private preloadCityData(shipment: any): void {
@@ -1307,5 +1429,359 @@ export class EnviameRatesModalComponent implements OnInit {
       bodegasInfo: bodegaAnalysis.bodegasInfo,
       erroresCompletos: errors
     });
+  }
+
+  /**
+   * Configura validación dinámica del campo distancia según tipo de envío
+   */
+  private setupDistanceValidation(): void {
+    if (!this.quoteForm) return;
+
+    this.quoteForm.get('shippingType')?.valueChanges.subscribe(shippingType => {
+      const distanceControl = this.quoteForm.get('distanceKm');
+
+      if (shippingType === 'express') {
+        // Hacer obligatorio para Express
+        distanceControl?.setValidators([Validators.required, Validators.min(1)]);
+        distanceControl?.markAsUntouched(); // Reset touched state
+      } else {
+        // Opcional para otros tipos
+        distanceControl?.clearValidators();
+        distanceControl?.setValue(null);
+      }
+
+      distanceControl?.updateValueAndValidity();
+    });
+  }
+
+  /**
+   * Indica si se debe mostrar el campo de distancia
+   */
+  get shouldShowDistanceInput(): boolean {
+    return this.quoteForm?.get('shippingType')?.value === 'express';
+  }
+
+  /**
+   * Verifica si el formulario es válido considerando el campo de distancia
+   */
+  isFormValidForQuoteWithDistance(): boolean {
+    const baseValid = this.tabsValidation.locations.valid && this.tabsValidation.package.valid;
+
+    // Si es Express, validar que tenga origen, destino Y distancia
+    if (this.quoteForm.get('shippingType')?.value === 'express') {
+      const hasOrigin = this.quoteForm.get('originMunicipio')?.valid && this.quoteForm.get('originCity')?.valid;
+      const hasDestination = this.quoteForm.get('destinationMunicipio')?.valid && this.quoteForm.get('destinationCity')?.valid;
+      const distanceKm = this.quoteForm.get('distanceKm')?.value;
+
+      return baseValid && hasOrigin && hasDestination && distanceKm > 0;
+    }
+
+    return baseValid;
+  }
+
+  /**
+   * Toggle para expandir/colapsar opciones adicionales
+   */
+  toggleOptionsExpanded(): void {
+    this.optionsExpanded = !this.optionsExpanded;
+  }
+
+  /**
+   * Verifica si hay datos mínimos para mostrar el resumen sticky
+   */
+  hasMinimumData(): boolean {
+    return !!(
+      this.quoteForm.get('originCity')?.value ||
+      this.quoteForm.get('destinationCity')?.value ||
+      this.quoteForm.get('weight')?.value
+    );
+  }
+
+  /**
+   * Scroll al inicio del modal (para botón "Cambiar Datos")
+   */
+  scrollToTop(): void {
+    const modalBody = document.querySelector('.modal-body-single-view');
+    if (modalBody) {
+      modalBody.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  // ========================================
+  // MÉTODOS DEL ACCORDION INTELIGENTE
+  // ========================================
+
+  /**
+   * Ir al siguiente paso (con validación)
+   */
+  goToNextStep(): void {
+    if (this.activeStep < this.stepStates.length - 1) {
+      // Validar paso actual antes de avanzar
+      if (this.isStepCompleted(this.activeStep) || this.stepStates[this.activeStep].optional) {
+        // Marcar paso actual como completado
+        this.stepStates[this.activeStep].completed = true;
+
+        // Desbloquear siguiente paso
+        const nextStep = this.activeStep + 1;
+        this.stepStates[nextStep].locked = false;
+
+        // Avanzar
+        this.activeStep = nextStep;
+
+        // Auto-focus en el primer campo del nuevo paso
+        setTimeout(() => this.autoFocusFirstField(this.activeStep), 300);
+      } else {
+        this.toastr.warning(
+          'Por favor completa todos los campos requeridos antes de continuar',
+          'Paso incompleto'
+        );
+      }
+    }
+  }
+
+  /**
+   * Ir al paso anterior
+   */
+  goToPreviousStep(): void {
+    if (this.activeStep > 0) {
+      this.activeStep--;
+    }
+  }
+
+  /**
+   * Verificar si se puede proceder a un paso específico
+   */
+  canProceedToStep(stepIndex: number): boolean {
+    // Siempre se puede volver atrás
+    if (stepIndex <= this.activeStep) {
+      return true;
+    }
+
+    // Para avanzar, verificar que el paso no esté bloqueado
+    return !this.stepStates[stepIndex].locked;
+  }
+
+  /**
+   * Verificar si un paso está completado
+   */
+  isStepCompleted(stepIndex: number): boolean {
+    switch (stepIndex) {
+      case 0: // Tipo de Envío + Distancia
+        const shippingType = this.quoteForm.get('shippingType')?.value;
+        if (shippingType === 'express') {
+          const distanceKm = this.quoteForm.get('distanceKm')?.value;
+          return !!shippingType && distanceKm > 0;
+        }
+        return !!shippingType;
+
+      case 1: // Ubicaciones
+        const originValid = this.quoteForm.get('originMunicipio')?.valid &&
+                           this.quoteForm.get('originCity')?.valid;
+        const destinationValid = this.quoteForm.get('destinationMunicipio')?.valid &&
+                                this.quoteForm.get('destinationCity')?.valid;
+        const recipientValid = this.quoteForm.get('recipientName')?.valid;
+        return !!(originValid && destinationValid && recipientValid);
+
+      case 2: // Paquete
+        const weightValid = this.quoteForm.get('weight')?.valid;
+        return !!weightValid;
+
+      case 3: // Opciones (siempre completado porque es opcional)
+        return true;
+
+      default:
+        return false;
+    }
+  }
+
+  /**
+   * Obtener resumen del paso cuando está colapsado
+   */
+  getStepSummary(stepIndex: number): string {
+    if (!this.isStepCompleted(stepIndex)) {
+      return '';
+    }
+
+    switch (stepIndex) {
+      case 0: // Tipo de Envío
+        const shippingType = this.quoteForm.get('shippingType')?.value;
+        const tipoLabel = this.tiposEnvio.find(t => t.value === shippingType)?.label || shippingType;
+        const distanceKm = this.quoteForm.get('distanceKm')?.value;
+        return distanceKm ? `${tipoLabel} (${distanceKm}km)` : tipoLabel;
+
+      case 1: // Ubicaciones
+        const originCity = this.quoteForm.get('originCity')?.value;
+        const destinationCity = this.quoteForm.get('destinationCity')?.value;
+        return `${originCity} → ${destinationCity}`;
+
+      case 2: // Paquete
+        const weight = this.quoteForm.get('weight')?.value;
+        const value = this.quoteForm.get('value')?.value;
+        const weightStr = weight ? `${weight}kg` : '';
+        const valueStr = value > 0 ? `, ${this.formatPrice(value)}` : '';
+        return `${weightStr}${valueStr}`;
+
+      case 3: // Opciones
+        const options: string[] = [];
+        if (this.quoteForm.get('insurance')?.value) options.push('Seguro');
+        if (this.quoteForm.get('cashOnDelivery')?.value) options.push('Pago contraentrega');
+        if (this.quoteForm.get('signature')?.value) options.push('Firma');
+        return options.length > 0 ? options.join(', ') : 'Sin opciones';
+
+      default:
+        return '';
+    }
+  }
+
+  /**
+   * Calcular porcentaje de progreso general
+   */
+  getProgressPercentageAccordion(): number {
+    // Calcular pasos completados (sin contar el último que es opcional)
+    const totalSteps = 3; // Solo contamos los 3 primeros (obligatorios)
+    let completedSteps = 0;
+
+    for (let i = 0; i < totalSteps; i++) {
+      if (this.isStepCompleted(i)) {
+        completedSteps++;
+      }
+    }
+
+    // Si hay tarifas disponibles, 100%
+    if (this.availableRates.length > 0) {
+      return 100;
+    }
+
+    // Calcular porcentaje
+    return Math.round((completedSteps / totalSteps) * 100);
+  }
+
+  /**
+   * Auto-focus en el primer campo del paso
+   */
+  autoFocusFirstField(stepIndex: number): void {
+    let selector = '';
+
+    switch (stepIndex) {
+      case 0: // Tipo de envío (ya tiene valor por defecto, focus en distancia si es express)
+        if (this.shouldShowDistanceInput) {
+          selector = 'input[formControlName="distanceKm"]';
+        }
+        break;
+
+      case 1: // Ubicaciones
+        selector = 'p-autoComplete[formControlName="originMunicipio"] input';
+        break;
+
+      case 2: // Paquete
+        selector = 'input[formControlName="weight"]';
+        break;
+
+      case 3: // Opciones
+        // No hacer focus en checkboxes
+        break;
+    }
+
+    if (selector) {
+      setTimeout(() => {
+        const element = document.querySelector(selector) as HTMLElement;
+        if (element) {
+          element.focus();
+        }
+      }, 100);
+    }
+  }
+
+  /**
+   * Manejar clic en header del accordion
+   */
+  onAccordionHeaderClick(stepIndex: number): void {
+    // Solo permitir clic si no está bloqueado
+    if (!this.stepStates[stepIndex].locked) {
+      this.activeStep = stepIndex;
+      setTimeout(() => this.autoFocusFirstField(stepIndex), 300);
+    } else {
+      this.toastr.info(
+        'Completa el paso anterior para desbloquear este paso',
+        'Paso bloqueado'
+      );
+    }
+  }
+
+  /**
+   * Obtener clase CSS para el header del paso
+   */
+  getStepHeaderClass(stepIndex: number): string {
+    const classes: string[] = ['step-header'];
+
+    if (this.stepStates[stepIndex].completed && stepIndex !== this.activeStep) {
+      classes.push('completed');
+    } else if (stepIndex === this.activeStep) {
+      classes.push('active');
+    } else if (this.stepStates[stepIndex].locked) {
+      classes.push('locked');
+    } else if (!this.isStepCompleted(stepIndex)) {
+      classes.push('incomplete');
+    }
+
+    return classes.join(' ');
+  }
+
+  /**
+   * Obtener icono del estado del paso
+   */
+  getStepIcon(stepIndex: number): string {
+    if (this.stepStates[stepIndex].completed && stepIndex !== this.activeStep) {
+      return 'pi-check-circle'; // Verde - Completado
+    } else if (stepIndex === this.activeStep) {
+      return 'pi-chevron-down'; // Azul - Activo
+    } else if (this.stepStates[stepIndex].locked) {
+      return 'pi-lock'; // Gris - Bloqueado
+    } else if (!this.isStepCompleted(stepIndex)) {
+      return 'pi-exclamation-circle'; // Naranja - Incompleto
+    }
+    return 'pi-circle';
+  }
+
+  /**
+   * Validar y actualizar estados de pasos automáticamente
+   */
+  private updateStepStates(): void {
+    // Paso 1: Tipo de Envío
+    if (this.isStepCompleted(0)) {
+      this.stepStates[0].completed = true;
+      this.stepStates[1].locked = false; // Desbloquear paso 2
+    } else {
+      this.stepStates[0].completed = false;
+      this.stepStates[1].locked = true; // Bloquear paso 2
+      this.stepStates[2].locked = true; // Bloquear paso 3
+    }
+
+    // Paso 2: Ubicaciones
+    if (this.isStepCompleted(1)) {
+      this.stepStates[1].completed = true;
+      this.stepStates[2].locked = false; // Desbloquear paso 3
+    } else {
+      this.stepStates[1].completed = false;
+      this.stepStates[2].locked = true; // Bloquear paso 3
+    }
+
+    // Paso 3: Paquete
+    if (this.isStepCompleted(2)) {
+      this.stepStates[2].completed = true;
+      this.stepStates[3].locked = false; // Desbloquear paso 4
+    } else {
+      this.stepStates[2].completed = false;
+    }
+
+    // Paso 4: Opciones (siempre desbloqueado si llegamos aquí)
+    this.stepStates[3].completed = true; // Siempre completado porque es opcional
+  }
+
+  /**
+   * Verificar si puede cotizar (todos los pasos obligatorios completados)
+   */
+  canQuote(): boolean {
+    return this.isStepCompleted(0) && this.isStepCompleted(1) && this.isStepCompleted(2);
   }
 }

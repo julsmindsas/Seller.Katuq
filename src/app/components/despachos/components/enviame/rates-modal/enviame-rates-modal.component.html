@@ -1,4 +1,4 @@
-<div class="enviame-rates-modal enviame-modal-redesigned">
+<div class="enviame-rates-modal enviame-modal-accordion-view">
 
   <!-- Header Minimalista -->
   <div class="modal-header-minimal">
@@ -12,33 +12,6 @@
     <div class="header-right" *ngIf="order?.fechaCreacion">
       <i class="pi pi-calendar"></i>
       <span>{{ order.fechaCreacion | date:'dd/MM/yyyy' }}</span>
-    </div>
-  </div>
-
-  <!-- Progress Bar Solo para Móviles -->
-  <div class="mobile-progress-bar d-lg-none" *ngIf="isReady">
-    <div class="progress-steps">
-      <div class="progress-step"
-           [class.active]="activeTabIndex === 0"
-           [class.completed]="isLocationTabComplete()">
-        <span class="step-number">1</span>
-        <span class="step-name">Ubicaciones</span>
-      </div>
-      <div class="progress-step"
-           [class.active]="activeTabIndex === 1"
-           [class.completed]="isPackageTabComplete()">
-        <span class="step-number">2</span>
-        <span class="step-name">Paquete</span>
-      </div>
-      <div class="progress-step"
-           [class.active]="availableRates.length > 0"
-           [class.completed]="selectedRate !== null">
-        <span class="step-number">3</span>
-        <span class="step-name">Cotización</span>
-      </div>
-    </div>
-    <div class="progress-line">
-      <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
     </div>
   </div>
 
@@ -57,125 +30,211 @@
     </div>
   </div>
 
-  <!-- Wizard Container -->
+  <!-- Accordion View Content -->
   <ng-container *ngIf="isReady">
-    <div class="wizard-container">
 
-      <!-- Sidebar con Steps Vertical (Desktop) -->
-      <div class="steps-sidebar d-none d-lg-block">
-        <div class="step-item"
-             [class.active]="activeTabIndex === 0"
-             [class.completed]="isLocationTabComplete()"
-             (click)="activeTabIndex = 0">
-          <div class="step-icon">
-            <i class="pi pi-map-marker"></i>
-          </div>
-          <div class="step-content">
-            <span class="step-title">Paso 1</span>
-            <span class="step-description">Ubicaciones</span>
-            <div class="step-status" *ngIf="isLocationTabComplete()">
-              <i class="pi pi-check-circle text-success"></i>
-            </div>
-            <div class="step-errors" *ngIf="tabsValidation.locations.errors.length > 0 && activeTabIndex !== 0">
-              <span class="badge bg-danger">{{ tabsValidation.locations.errors.length }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-item"
-             [class.active]="activeTabIndex === 1"
-             [class.completed]="isPackageTabComplete()"
-             [class.disabled]="!canNavigateToPackage()"
-             (click)="canNavigateToPackage() && (activeTabIndex = 1)">
-          <div class="step-icon">
-            <i class="pi pi-box"></i>
-          </div>
-          <div class="step-content">
-            <span class="step-title">Paso 2</span>
-            <span class="step-description">Información del Paquete</span>
-            <div class="step-status" *ngIf="isPackageTabComplete()">
-              <i class="pi pi-check-circle text-success"></i>
-            </div>
-            <div class="step-errors" *ngIf="tabsValidation.package.errors.length > 0 && activeTabIndex !== 1">
-              <span class="badge bg-danger">{{ tabsValidation.package.errors.length }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="step-item"
-             [class.active]="availableRates.length > 0"
-             [class.completed]="selectedRate !== null"
-             [class.disabled]="!isFormValidForQuote()">
-          <div class="step-icon">
-            <i class="pi pi-dollar"></i>
-          </div>
-          <div class="step-content">
-            <span class="step-title">Paso 3</span>
-            <span class="step-description">Revisar Cotización</span>
-            <div class="step-status" *ngIf="selectedRate">
-              <i class="pi pi-check-circle text-success"></i>
-            </div>
-          </div>
-        </div>
+    <!-- Progress Bar Sticky -->
+    <div class="progress-bar-sticky">
+      <div class="progress-info">
+        <span class="progress-label">Paso {{ activeStep + 1 }} de 4</span>
+        <span class="progress-percentage">{{ getProgressPercentageAccordion() }}%</span>
       </div>
+      <div class="progress-track">
+        <div class="progress-fill" [style.width.%]="getProgressPercentageAccordion()"></div>
+      </div>
+    </div>
 
-      <!-- Step Content Area -->
-      <div class="step-content-area">
-        <form [formGroup]="quoteForm">
+    <div class="modal-body-accordion-view">
+      <form [formGroup]="quoteForm">
 
-          <!-- PASO 1: Ubicaciones -->
-          <div class="step-panel" *ngIf="activeTabIndex === 0">
+        <!-- ACCORDION INTELIGENTE -->
+        <p-accordion [activeIndex]="activeStep" (onOpen)="activeStep = $event.index">
 
-            <!-- Tipo de Envío Card -->
-            <div class="info-card shipping-type-card">
-              <div class="card-header">
-                <i class="pi pi-send"></i>
-                <h5>Tipo de Envío</h5>
+          <!-- ======================================== -->
+          <!-- PASO 1: TIPO DE ENVÍO + DISTANCIA -->
+          <!-- ======================================== -->
+          <p-accordionTab>
+            <ng-template pTemplate="header">
+              <div [class]="getStepHeaderClass(0)" (click)="onAccordionHeaderClick(0)">
+                <div class="step-number-badge">1</div>
+                <div class="step-info">
+                  <span class="step-title">Tipo de Envío</span>
+                  <span class="step-summary" *ngIf="isStepCompleted(0) && activeStep !== 0">
+                    {{ getStepSummary(0) }}
+                  </span>
+                </div>
+                <i [class]="'step-status-icon pi ' + getStepIcon(0)"></i>
               </div>
-              <div class="card-body">
+            </ng-template>
+
+            <div class="step-content">
+              <div class="section-shipping-type">
+
+              <!-- Card contenedora de toda la sección -->
+              <div class="shipping-type-section-card">
+
+                <!-- Título de sección -->
+                <div class="section-header">
+                  <div class="section-icon-wrapper">
+                    <i class="pi pi-box"></i>
+                  </div>
+                  <div class="section-text">
+                    <h3 class="section-title">Selecciona el tipo de envío</h3>
+                    <p class="section-subtitle">Elige la opción que mejor se adapte a tus necesidades</p>
+                  </div>
+                </div>
+
+                <!-- SHIPPING TYPES GRID -->
                 <div class="shipping-types-grid">
-                  <label class="shipping-type-option"
+                  <label class="shipping-card"
                          *ngFor="let tipo of tiposEnvio"
-                         [class.selected]="quoteForm.get('shippingType')?.value === tipo.value">
+                         [class.selected]="quoteForm.get('shippingType')?.value === tipo.value"
+                         [class.recommended]="tipo.recommended">
+
+                    <!-- Radio button -->
                     <input type="radio"
                            [id]="'tipo-' + tipo.value"
                            formControlName="shippingType"
                            [value]="tipo.value"
                            class="d-none">
-                    <div class="option-card">
-                      <i [class]="'option-icon pi ' + tipo.icon"></i>
-                      <span class="option-label">{{ tipo.label }}</span>
-                      <div class="option-check">
+
+                    <!-- Badges -->
+                    <div class="card-badges" *ngIf="tipo.recommended || tipo.popular">
+                      <span class="badge badge-recommended" *ngIf="tipo.recommended">
+                        <i class="pi pi-star-fill"></i> Recomendado
+                      </span>
+                      <span class="badge badge-popular" *ngIf="tipo.popular">
+                        <i class="pi pi-heart-fill"></i> Popular
+                      </span>
+                    </div>
+
+                    <!-- Contenido -->
+                    <div class="card-body">
+                      <!-- Icono -->
+                      <div class="card-icon">
+                        <i [class]="'pi ' + tipo.icon"></i>
+                      </div>
+
+                      <!-- Título -->
+                      <h4 class="card-title">{{ tipo.label }}</h4>
+
+                      <!-- Tiempo de entrega -->
+                      <div class="card-delivery">
+                        <i class="pi pi-clock"></i>
+                        <span>{{ tipo.description }}</span>
+                      </div>
+
+                      <!-- Precio -->
+                      <div class="card-price">
+                        <span class="price-from">Desde</span>
+                        <span class="price-amount">{{ tipo.priceRange || 'Consultar' }}</span>
+                      </div>
+
+                      <!-- Features -->
+                      <div class="card-features" *ngIf="tipo.features && tipo.features.length > 0">
+                        <div class="feature" *ngFor="let feature of tipo.features">
+                          <i class="pi pi-check-circle"></i>
+                          <span>{{ feature }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Indicador selección -->
+                      <div class="card-selected" *ngIf="quoteForm.get('shippingType')?.value === tipo.value">
                         <i class="pi pi-check"></i>
+                        Seleccionado
                       </div>
                     </div>
                   </label>
                 </div>
-              </div>
-            </div>
 
-            <div class="locations-grid">
-              <!-- Card de Origen -->
-              <div class="location-card origin-card">
-                <div class="card-header">
-                  <div class="header-icon origin">
-                    <i class="pi pi-home"></i>
+                <!-- Distancia (solo para Express) -->
+                <div class="distance-input-section" *ngIf="shouldShowDistanceInput">
+                  <div class="distance-card">
+                    <div class="distance-header">
+                      <i class="pi pi-map-marker"></i>
+                      <div>
+                        <h5>Distancia del envío</h5>
+                        <p>Requerido para envío Express</p>
+                      </div>
+                    </div>
+                    <div class="distance-body">
+                      <div class="distance-input-group">
+                        <input type="number"
+                               formControlName="distanceKm"
+                               min="1"
+                               step="1"
+                               placeholder="Ejemplo: 450"
+                               class="distance-input">
+                        <span class="distance-unit">kilómetros</span>
+                      </div>
+                      <small class="distance-help" *ngIf="!isFieldInvalid('distanceKm')">
+                        <i class="pi pi-info-circle"></i>
+                        Ingresa la distancia aproximada por carretera
+                      </small>
+                      <small class="distance-error" *ngIf="isFieldInvalid('distanceKm')">
+                        <i class="pi pi-exclamation-triangle"></i>
+                        Este campo es requerido para envíos Express
+                      </small>
+                    </div>
                   </div>
-                  <h5>Origen del Envío</h5>
                 </div>
 
-                <div class="card-body">
-                  <!-- Municipio con validación visual -->
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Municipio de Origen</span>
-                      <span class="required-badge">Requerido</span>
-                      <span class="auto-filled-badge" *ngIf="isAutoFilledOrigin">
-                        <i class="pi pi-info-circle"></i> Sugerido desde bodega
+              </div>
+
+              </div>
+
+              <!-- Botones de acción -->
+              <div class="step-actions">
+                <button type="button"
+                        pButton
+                        label="Continuar al siguiente paso"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        class="p-button-primary p-button-lg"
+                        [disabled]="!isStepCompleted(0)"
+                        (click)="goToNextStep()">
+                </button>
+              </div>
+            </div>
+          </p-accordionTab>
+
+          <!-- ======================================== -->
+          <!-- PASO 2: UBICACIONES -->
+          <!-- ======================================== -->
+          <p-accordionTab [disabled]="stepStates[1].locked">
+            <ng-template pTemplate="header">
+              <div [class]="getStepHeaderClass(1)" (click)="onAccordionHeaderClick(1)">
+                <div class="step-number-badge">2</div>
+                <div class="step-info">
+                  <span class="step-title">Ubicaciones</span>
+                  <span class="step-summary" *ngIf="isStepCompleted(1) && activeStep !== 1">
+                    {{ getStepSummary(1) }}
+                  </span>
+                </div>
+                <i [class]="'step-status-icon pi ' + getStepIcon(1)"></i>
+              </div>
+            </ng-template>
+
+            <div class="step-content">
+              <div class="locations-grid-2col">
+
+                <!-- Origen -->
+                <div class="location-card compact origin">
+                  <div class="location-header">
+                    <i class="pi pi-home"></i>
+                    <span>Origen</span>
+                  </div>
+
+                  <!-- Municipio Origen -->
+                  <div class="form-field compact">
+                    <label>
+                      Municipio
+                      <span class="req">*</span>
+                      <span class="auto-badge" *ngIf="isAutoFilledOrigin">
+                        <i class="pi pi-info-circle"></i> Auto
                       </span>
                     </label>
-                    <div class="input-wrapper" [class.valid]="quoteForm.get('originMunicipio')?.valid && quoteForm.get('originMunicipio')?.touched" [class.auto-filled]="isAutoFilledOrigin">
-                      <i class="input-icon pi pi-map-marker"></i>
+                    <div class="input-wrapper" [class.valid]="quoteForm.get('originMunicipio')?.valid">
                       <p-autoComplete
                         formControlName="originMunicipio"
                         [suggestions]="municipiosSugeridosOrigen"
@@ -183,125 +242,84 @@
                         (onSelect)="onSelectMunicipioOrigen($event)"
                         field="label"
                         [minLength]="2"
-                        placeholder="Escriba para buscar..."
-                        emptyMessage="No se encontraron municipios"
+                        placeholder="Buscar..."
+                        emptyMessage="Sin resultados"
                         [showEmptyMessage]="true"
-                        styleClass="custom-autocomplete">
+                        styleClass="compact-autocomplete">
                         <ng-template let-municipio pTemplate="item">
-                          <div class="municipio-item">
-                            <div class="municipio-info">
-                              <strong>{{ municipio.nombre }}</strong>
-                              <small>{{ municipio.departamento }}</small>
-                            </div>
-                            <span class="municipio-code">{{ municipio.codigo }}</span>
+                          <div class="municipio-item-compact">
+                            <strong>{{ municipio.nombre }}</strong>
+                            <small>{{ municipio.departamento }}</small>
                           </div>
                         </ng-template>
                       </p-autoComplete>
-                      <i class="validation-icon pi pi-check-circle"
-                         *ngIf="quoteForm.get('originMunicipio')?.valid && quoteForm.get('originMunicipio')?.touched"></i>
+                      <i class="valid-icon pi pi-check-circle" *ngIf="quoteForm.get('originMunicipio')?.valid"></i>
                     </div>
-                    <div class="field-error" *ngIf="isFieldInvalid('originMunicipio')">
+                    <small class="error-msg" *ngIf="isFieldInvalid('originMunicipio')">
                       <i class="pi pi-exclamation-triangle"></i>
-                      {{ getFieldError('originMunicipio') || 'Campo obligatorio' }}
-                    </div>
-                    <div class="field-hint" *ngIf="isAutoFilledOrigin && originalOriginCity">
-                      <i class="pi pi-info-circle"></i>
-                      Valor original: "{{ originalOriginCity }}"
-                    </div>
+                      {{ getFieldError('originMunicipio') || 'Requerido' }}
+                    </small>
                   </div>
 
-                  <!-- Ciudad y País en línea -->
-                  <div class="form-row">
-                    <div class="form-field flex-grow">
-                      <label class="field-label">
-                        <span>Ciudad</span>
-                        <span class="required-badge">Requerido</span>
-                      </label>
-                      <div class="input-wrapper" [class.valid]="quoteForm.get('originCity')?.valid && quoteForm.get('originCity')?.touched">
-                        <i class="input-icon pi pi-building"></i>
-                        <input type="text"
-                               pInputText
-                               formControlName="originCity"
-                               placeholder="Ej: Bogotá"
-                               class="modern-input">
-                        <i class="validation-icon pi pi-check-circle"
-                           *ngIf="quoteForm.get('originCity')?.valid && quoteForm.get('originCity')?.touched"></i>
-                      </div>
-                      <div class="field-error" *ngIf="isFieldInvalid('originCity')">
-                        <i class="pi pi-exclamation-triangle"></i>
-                        {{ getFieldError('originCity') }}
-                      </div>
-                    </div>
-
-                    <div class="form-field">
-                      <label class="field-label">País</label>
-                      <div class="input-wrapper">
-                        <i class="input-icon pi pi-globe"></i>
-                        <p-dropdown formControlName="originCountry"
-                                   [options]="[{label: 'Colombia', value: 'CO'}, {label: 'Chile', value: 'CL'}]"
-                                   optionLabel="label"
-                                   optionValue="value"
-                                   placeholder="Seleccione"
-                                   styleClass="modern-dropdown">
-                        </p-dropdown>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Dirección y Código Postal -->
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Dirección Específica</span>
-                      <span class="optional-badge">Opcional</span>
-                    </label>
-                    <div class="input-wrapper">
-                      <i class="input-icon pi pi-map"></i>
+                  <!-- Ciudad y País (inline) -->
+                  <div class="form-row-inline">
+                    <div class="form-field compact flex-1">
+                      <label>Ciudad <span class="req">*</span></label>
                       <input type="text"
                              pInputText
-                             formControlName="originAddress"
-                             placeholder="Carrera 7 #32-16"
-                             class="modern-input">
+                             formControlName="originCity"
+                             placeholder="Ciudad"
+                             class="input-compact">
+                      <small class="error-msg" *ngIf="isFieldInvalid('originCity')">Campo requerido</small>
+                    </div>
+                    <div class="form-field compact">
+                      <label>País</label>
+                      <p-dropdown formControlName="originCountry"
+                                 [options]="[{label: 'Colombia', value: 'CO'}, {label: 'Chile', value: 'CL'}]"
+                                 optionLabel="label"
+                                 optionValue="value"
+                                 styleClass="dropdown-compact">
+                      </p-dropdown>
                     </div>
                   </div>
 
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Código Postal</span>
-                      <span class="optional-badge">Opcional</span>
-                    </label>
-                    <div class="input-wrapper">
-                      <i class="input-icon pi pi-hashtag"></i>
-                      <input type="text"
-                             pInputText
-                             formControlName="originPostalCode"
-                             placeholder="110311"
-                             class="modern-input">
-                    </div>
+                  <!-- Dirección y CP -->
+                  <div class="form-field compact">
+                    <label>Dirección <small class="opt">(opcional)</small></label>
+                    <input type="text"
+                           pInputText
+                           formControlName="originAddress"
+                           placeholder="Carrera 7 #32-16"
+                           class="input-compact">
+                  </div>
+
+                  <div class="form-field compact">
+                    <label>Código Postal <small class="opt">(opcional)</small></label>
+                    <input type="text"
+                           pInputText
+                           formControlName="originPostalCode"
+                           placeholder="110311"
+                           class="input-compact">
                   </div>
                 </div>
-              </div>
 
-              <!-- Card de Destino -->
-              <div class="location-card destination-card">
-                <div class="card-header">
-                  <div class="header-icon destination">
+                <!-- Destino -->
+                <div class="location-card compact destination">
+                  <div class="location-header">
                     <i class="pi pi-map-marker"></i>
+                    <span>Destino</span>
                   </div>
-                  <h5>Destino del Envío</h5>
-                </div>
 
-                <div class="card-body">
                   <!-- Municipio Destino -->
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Municipio de Destino</span>
-                      <span class="required-badge">Requerido</span>
-                      <span class="auto-filled-badge" *ngIf="isAutoFilledDestination">
-                        <i class="pi pi-info-circle"></i> Sugerido desde orden
+                  <div class="form-field compact">
+                    <label>
+                      Municipio
+                      <span class="req">*</span>
+                      <span class="auto-badge" *ngIf="isAutoFilledDestination">
+                        <i class="pi pi-info-circle"></i> Auto
                       </span>
                     </label>
-                    <div class="input-wrapper" [class.valid]="quoteForm.get('destinationMunicipio')?.valid && quoteForm.get('destinationMunicipio')?.touched" [class.auto-filled]="isAutoFilledDestination">
-                      <i class="input-icon pi pi-map-marker"></i>
+                    <div class="input-wrapper" [class.valid]="quoteForm.get('destinationMunicipio')?.valid">
                       <p-autoComplete
                         formControlName="destinationMunicipio"
                         [suggestions]="municipiosSugeridosDestino"
@@ -309,764 +327,779 @@
                         (onSelect)="onSelectMunicipioDestino($event)"
                         field="label"
                         [minLength]="2"
-                        placeholder="Escriba para buscar..."
-                        emptyMessage="No se encontraron municipios"
+                        placeholder="Buscar..."
+                        emptyMessage="Sin resultados"
                         [showEmptyMessage]="true"
-                        styleClass="custom-autocomplete">
+                        styleClass="compact-autocomplete">
                         <ng-template let-municipio pTemplate="item">
-                          <div class="municipio-item">
-                            <div class="municipio-info">
-                              <strong>{{ municipio.nombre }}</strong>
-                              <small>{{ municipio.departamento }}</small>
-                            </div>
-                            <span class="municipio-code">{{ municipio.codigo }}</span>
+                          <div class="municipio-item-compact">
+                            <strong>{{ municipio.nombre }}</strong>
+                            <small>{{ municipio.departamento }}</small>
                           </div>
                         </ng-template>
                       </p-autoComplete>
-                      <i class="validation-icon pi pi-check-circle"
-                         *ngIf="quoteForm.get('destinationMunicipio')?.valid && quoteForm.get('destinationMunicipio')?.touched"></i>
+                      <i class="valid-icon pi pi-check-circle" *ngIf="quoteForm.get('destinationMunicipio')?.valid"></i>
                     </div>
-                    <div class="field-hint" *ngIf="isAutoFilledDestination && originalDestinationCity">
-                      <i class="pi pi-info-circle"></i>
-                      Valor original: "{{ originalDestinationCity }}"
-                    </div>
+                    <small class="error-msg" *ngIf="isFieldInvalid('destinationMunicipio')">
+                      <i class="pi pi-exclamation-triangle"></i>
+                      {{ getFieldError('destinationMunicipio') || 'Requerido' }}
+                    </small>
                   </div>
 
-                  <!-- Ciudad y País Destino -->
-                  <div class="form-row">
-                    <div class="form-field flex-grow">
-                      <label class="field-label">
-                        <span>Ciudad</span>
-                        <span class="required-badge">Requerido</span>
-                      </label>
-                      <div class="input-wrapper" [class.valid]="quoteForm.get('destinationCity')?.valid && quoteForm.get('destinationCity')?.touched">
-                        <i class="input-icon pi pi-building"></i>
-                        <input type="text"
-                               pInputText
-                               formControlName="destinationCity"
-                               placeholder="Ciudad destino"
-                               class="modern-input">
-                        <i class="validation-icon pi pi-check-circle"
-                           *ngIf="quoteForm.get('destinationCity')?.valid && quoteForm.get('destinationCity')?.touched"></i>
-                      </div>
-                      <div class="field-error" *ngIf="isFieldInvalid('destinationCity')">
-                        <i class="pi pi-exclamation-triangle"></i>
-                        {{ getFieldError('destinationCity') }}
-                      </div>
-                    </div>
-
-                    <div class="form-field">
-                      <label class="field-label">País</label>
-                      <div class="input-wrapper">
-                        <i class="input-icon pi pi-globe"></i>
-                        <p-dropdown formControlName="destinationCountry"
-                                   [options]="[{label: 'Colombia', value: 'CO'}, {label: 'Chile', value: 'CL'}]"
-                                   optionLabel="label"
-                                   optionValue="value"
-                                   placeholder="Seleccione"
-                                   styleClass="modern-dropdown">
-                        </p-dropdown>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Dirección Destino -->
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Dirección de Entrega</span>
-                      <span class="optional-badge">Opcional</span>
-                    </label>
-                    <div class="input-wrapper">
-                      <i class="input-icon pi pi-map"></i>
+                  <!-- Ciudad y País -->
+                  <div class="form-row-inline">
+                    <div class="form-field compact flex-1">
+                      <label>Ciudad <span class="req">*</span></label>
                       <input type="text"
                              pInputText
-                             formControlName="destinationAddress"
-                             placeholder="Dirección completa"
-                             class="modern-input">
+                             formControlName="destinationCity"
+                             placeholder="Ciudad"
+                             class="input-compact">
+                      <small class="error-msg" *ngIf="isFieldInvalid('destinationCity')">Campo requerido</small>
+                    </div>
+                    <div class="form-field compact">
+                      <label>País</label>
+                      <p-dropdown formControlName="destinationCountry"
+                                 [options]="[{label: 'Colombia', value: 'CO'}, {label: 'Chile', value: 'CL'}]"
+                                 optionLabel="label"
+                                 optionValue="value"
+                                 styleClass="dropdown-compact">
+                      </p-dropdown>
                     </div>
                   </div>
 
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Código Postal</span>
-                      <span class="optional-badge">Opcional</span>
-                    </label>
-                    <div class="input-wrapper">
-                      <i class="input-icon pi pi-hashtag"></i>
+                  <!-- Dirección y CP -->
+                  <div class="form-field compact">
+                    <label>Dirección <small class="opt">(opcional)</small></label>
+                    <input type="text"
+                           pInputText
+                           formControlName="destinationAddress"
+                           placeholder="Dirección completa"
+                           class="input-compact">
+                  </div>
+
+                  <div class="form-field compact">
+                    <label>Código Postal <small class="opt">(opcional)</small></label>
+                    <input type="text"
+                           pInputText
+                           formControlName="destinationPostalCode"
+                           placeholder="Código"
+                           class="input-compact">
+                  </div>
+
+                  <!-- Destinatario (inline dentro de destino) -->
+                  <div class="recipient-inline">
+                    <div class="divider-line"></div>
+                    <label class="subsection-label">Destinatario</label>
+
+                    <div class="form-field compact">
+                      <label>Nombre <span class="req">*</span></label>
                       <input type="text"
                              pInputText
-                             formControlName="destinationPostalCode"
-                             placeholder="Código postal"
-                             class="modern-input">
-                    </div>
-                  </div>
-
-                  <!-- Card de Destinatario -->
-                  <div class="recipient-section">
-                    <div class="section-divider">
-                      <span>Datos del Destinatario</span>
+                             formControlName="recipientName"
+                             placeholder="Nombre completo"
+                             class="input-compact">
+                      <small class="error-msg" *ngIf="isFieldInvalid('recipientName')">Campo requerido</small>
                     </div>
 
-                    <div class="form-field">
-                      <label class="field-label">
-                        <span>Nombre Completo</span>
-                        <span class="required-badge">Requerido</span>
-                      </label>
-                      <div class="input-wrapper" [class.valid]="quoteForm.get('recipientName')?.valid && quoteForm.get('recipientName')?.touched">
-                        <i class="input-icon pi pi-user"></i>
+                    <div class="form-row-inline">
+                      <div class="form-field compact flex-1">
+                        <label>Teléfono</label>
                         <input type="text"
                                pInputText
-                               formControlName="recipientName"
-                               placeholder="Nombre del destinatario"
-                               class="modern-input">
-                        <i class="validation-icon pi pi-check-circle"
-                           *ngIf="quoteForm.get('recipientName')?.valid && quoteForm.get('recipientName')?.touched"></i>
+                               formControlName="recipientPhone"
+                               placeholder="+57 300 123 4567"
+                               class="input-compact">
                       </div>
-                      <div class="field-error" *ngIf="isFieldInvalid('recipientName')">
-                        <i class="pi pi-exclamation-triangle"></i>
-                        {{ getFieldError('recipientName') }}
-                      </div>
-                    </div>
-
-                    <div class="form-row">
-                      <div class="form-field">
-                        <label class="field-label">Teléfono</label>
-                        <div class="input-wrapper">
-                          <i class="input-icon pi pi-phone"></i>
-                          <input type="text"
-                                 pInputText
-                                 formControlName="recipientPhone"
-                                 placeholder="+57 300 123 4567"
-                                 class="modern-input">
-                        </div>
-                      </div>
-
-                      <div class="form-field">
-                        <label class="field-label">Email</label>
-                        <div class="input-wrapper" [class.valid]="quoteForm.get('recipientEmail')?.valid && quoteForm.get('recipientEmail')?.touched">
-                          <i class="input-icon pi pi-envelope"></i>
-                          <input type="email"
-                                 pInputText
-                                 formControlName="recipientEmail"
-                                 placeholder="correo@ejemplo.com"
-                                 class="modern-input">
-                          <i class="validation-icon pi pi-check-circle"
-                             *ngIf="quoteForm.get('recipientEmail')?.valid && quoteForm.get('recipientEmail')?.touched"></i>
-                        </div>
-                        <div class="field-error" *ngIf="isFieldInvalid('recipientEmail')">
-                          <i class="pi pi-exclamation-triangle"></i>
-                          {{ getFieldError('recipientEmail') }}
-                        </div>
+                      <div class="form-field compact flex-1">
+                        <label>Email</label>
+                        <input type="email"
+                               pInputText
+                               formControlName="recipientEmail"
+                               placeholder="correo@ejemplo.com"
+                               class="input-compact">
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+
+              <!-- Botones de navegación -->
+              <div class="step-actions">
+                <button type="button"
+                        pButton
+                        label="Anterior"
+                        icon="pi pi-arrow-left"
+                        class="p-button-secondary p-button-outlined"
+                        (click)="goToPreviousStep()">
+                </button>
+                <button type="button"
+                        pButton
+                        label="Continuar"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        class="p-button-primary"
+                        [disabled]="!isStepCompleted(1)"
+                        (click)="goToNextStep()">
+                </button>
+              </div>
             </div>
+          </p-accordionTab>
 
-            <!-- Navigation Buttons -->
-            <div class="step-navigation">
-              <button type="button"
-                      pButton
-                      label="Cancelar"
-                      icon="pi pi-times"
-                      class="p-button-text p-button-secondary"
-                      (click)="onCancel()">
-              </button>
-              <button type="button"
-                      pButton
-                      label="Siguiente"
-                      icon="pi pi-arrow-right"
-                      iconPos="right"
-                      class="p-button-primary"
-                      [disabled]="!isLocationTabComplete()"
-                      (click)="activeTabIndex = 1">
-              </button>
-            </div>
-          </div>
+          <!-- ======================================== -->
+          <!-- PASO 3: PAQUETE -->
+          <!-- ======================================== -->
+          <p-accordionTab [disabled]="stepStates[2].locked">
+            <ng-template pTemplate="header">
+              <div [class]="getStepHeaderClass(2)" (click)="onAccordionHeaderClick(2)">
+                <div class="step-number-badge">3</div>
+                <div class="step-info">
+                  <span class="step-title">Paquete</span>
+                  <span class="step-summary" *ngIf="isStepCompleted(2) && activeStep !== 2">
+                    {{ getStepSummary(2) }}
+                  </span>
+                </div>
+                <i [class]="'step-status-icon pi ' + getStepIcon(2)"></i>
+              </div>
+            </ng-template>
 
-          <!-- PASO 2: Información del Paquete -->
-          <div class="step-panel" *ngIf="activeTabIndex === 1">
+            <div class="step-content">
+              <!-- ENHANCED PACKAGE FORM - MODERN & USER-FRIENDLY -->
+              <div class="package-form-enhanced">
 
-            <div class="package-grid">
-              <!-- Card de Dimensiones -->
-              <div class="info-card package-card">
-                <div class="card-header">
-                  <div class="header-icon package">
-                    <i class="pi pi-box"></i>
+                <!-- Main Package Info Card -->
+                <div class="package-info-card">
+                  <div class="card-header">
+                    <div class="header-icon">
+                      <i class="pi pi-box"></i>
+                    </div>
+                    <div class="header-content">
+                      <h5>Información Principal del Paquete</h5>
+                      <p>Define el peso y valor de tu envío</p>
+                    </div>
                   </div>
-                  <h5>Información del Paquete</h5>
+
+                  <div class="card-body">
+                    <div class="input-fields-row">
+                      <!-- Weight Field -->
+                      <div class="enhanced-field weight-field">
+                        <div class="field-icon">
+                          <i class="pi pi-inbox"></i>
+                        </div>
+                        <div class="field-content">
+                          <div class="floating-label-group">
+                            <input type="number"
+                                   id="package-weight"
+                                   formControlName="weight"
+                                   step="0.1"
+                                   min="0.1"
+                                   max="50"
+                                   placeholder=" "
+                                   class="enhanced-input"
+                                   [class.has-value]="quoteForm.get('weight')?.value">
+                            <label for="package-weight" class="floating-label">
+                              Peso del paquete <span class="required">*</span>
+                            </label>
+                            <span class="field-unit">kg</span>
+                          </div>
+                          <div class="field-helper">
+                            <i class="pi pi-info-circle"></i>
+                            <span>Máximo permitido: 50 kg</span>
+                          </div>
+                          <div class="field-progress">
+                            <div class="progress-bar"
+                                 [style.width.%]="(quoteForm.get('weight')?.value || 0) * 2">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Value Field -->
+                      <div class="enhanced-field value-field">
+                        <div class="field-icon">
+                          <i class="pi pi-dollar"></i>
+                        </div>
+                        <div class="field-content">
+                          <div class="floating-label-group">
+                            <input type="number"
+                                   id="package-value"
+                                   formControlName="value"
+                                   min="0"
+                                   step="1000"
+                                   placeholder=" "
+                                   class="enhanced-input currency-input"
+                                   [class.has-value]="quoteForm.get('value')?.value">
+                            <label for="package-value" class="floating-label">
+                              Valor declarado (opcional)
+                            </label>
+                            <span class="field-currency">$</span>
+                            <span class="field-unit">COP</span>
+                          </div>
+                          <div class="field-helper">
+                            <i class="pi pi-shield"></i>
+                            <span>Incluye seguro del envío</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div class="card-body">
-                  <!-- Peso -->
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Peso del Paquete</span>
-                      <span class="required-badge">Requerido</span>
-                    </label>
-                    <div class="weight-input-group">
-                      <div class="input-wrapper large-input">
-                        <i class="input-icon pi pi-inbox"></i>
-                        <input type="number"
-                               formControlName="weight"
-                               step="0.1"
-                               min="0.1"
-                               max="50"
-                               placeholder="0.0"
-                               class="modern-input text-center">
-                        <span class="input-suffix">kg</span>
-                      </div>
-                      <div class="weight-hint">
-                        <i class="pi pi-info-circle"></i>
-                        <span>Peso máximo permitido: 50 kg</span>
-                      </div>
+                <!-- Dimensions Card -->
+                <div class="dimensions-card">
+                  <div class="card-header collapsible" (click)="toggleDimensionsSection()">
+                    <div class="header-icon">
+                      <i class="pi pi-th-large"></i>
+                    </div>
+                    <div class="header-content">
+                      <h5>Dimensiones del Paquete</h5>
+                      <p>Opcional - Ayuda a calcular mejor el precio</p>
+                    </div>
+                    <div class="header-action">
+                      <i class="pi pi-chevron-down" [class.rotated]="!dimensionsCollapsed"></i>
                     </div>
                   </div>
 
-                  <!-- Dimensiones -->
-                  <div class="dimensions-section">
-                    <div class="section-header">
-                      <span class="section-title">Dimensiones</span>
-                      <span class="optional-badge">Opcional</span>
+                  <div class="card-body" [class.collapsed]="dimensionsCollapsed">
+                    <!-- Visual Box Representation -->
+                    <div class="dimensions-visual">
+                      <div class="box-3d"
+                           [style.--box-width]="(quoteForm.get('width')?.value || 20) + 'px'"
+                           [style.--box-height]="(quoteForm.get('height')?.value || 15) + 'px'"
+                           [style.--box-depth]="(quoteForm.get('length')?.value || 30) + 'px'">
+                        <div class="face front"></div>
+                        <div class="face back"></div>
+                        <div class="face left"></div>
+                        <div class="face right"></div>
+                        <div class="face top"></div>
+                        <div class="face bottom"></div>
+                      </div>
                     </div>
 
-                    <div class="dimensions-grid">
-                      <div class="dimension-input">
-                        <label>Largo</label>
-                        <div class="input-wrapper">
+                    <!-- Dimension Inputs -->
+                    <div class="dimensions-inputs">
+                      <div class="dimension-input-group">
+                        <div class="dimension-icon">
+                          <i class="pi pi-arrows-h"></i>
+                        </div>
+                        <div class="floating-label-group">
                           <input type="number"
+                                 id="dim-length"
                                  formControlName="length"
                                  step="1"
                                  min="1"
-                                 placeholder="0"
-                                 class="modern-input text-center">
-                          <span class="input-suffix">cm</span>
+                                 placeholder=" "
+                                 class="enhanced-input"
+                                 [class.has-value]="quoteForm.get('length')?.value">
+                          <label for="dim-length" class="floating-label">Largo</label>
+                          <span class="field-unit">cm</span>
                         </div>
                       </div>
 
-                      <div class="dimension-input">
-                        <label>Ancho</label>
-                        <div class="input-wrapper">
+                      <div class="dimension-multiply">×</div>
+
+                      <div class="dimension-input-group">
+                        <div class="dimension-icon">
+                          <i class="pi pi-arrows-v"></i>
+                        </div>
+                        <div class="floating-label-group">
                           <input type="number"
+                                 id="dim-width"
                                  formControlName="width"
                                  step="1"
                                  min="1"
-                                 placeholder="0"
-                                 class="modern-input text-center">
-                          <span class="input-suffix">cm</span>
+                                 placeholder=" "
+                                 class="enhanced-input"
+                                 [class.has-value]="quoteForm.get('width')?.value">
+                          <label for="dim-width" class="floating-label">Ancho</label>
+                          <span class="field-unit">cm</span>
                         </div>
                       </div>
 
-                      <div class="dimension-input">
-                        <label>Alto</label>
-                        <div class="input-wrapper">
+                      <div class="dimension-multiply">×</div>
+
+                      <div class="dimension-input-group">
+                        <div class="dimension-icon">
+                          <i class="pi pi-arrows-alt"></i>
+                        </div>
+                        <div class="floating-label-group">
                           <input type="number"
+                                 id="dim-height"
                                  formControlName="height"
                                  step="1"
                                  min="1"
-                                 placeholder="0"
-                                 class="modern-input text-center">
-                          <span class="input-suffix">cm</span>
+                                 placeholder=" "
+                                 class="enhanced-input"
+                                 [class.has-value]="quoteForm.get('height')?.value">
+                          <label for="dim-height" class="floating-label">Alto</label>
+                          <span class="field-unit">cm</span>
                         </div>
                       </div>
                     </div>
 
-                    <!-- Visual de dimensiones -->
-                    <div class="dimension-visual" *ngIf="quoteForm.get('length')?.value || quoteForm.get('width')?.value || quoteForm.get('height')?.value">
-                      <div class="box-3d">
-                        <div class="box-face front">{{ quoteForm.get('width')?.value || '?' }} cm</div>
-                        <div class="box-face side">{{ quoteForm.get('length')?.value || '?' }} cm</div>
-                        <div class="box-face top">{{ quoteForm.get('height')?.value || '?' }} cm</div>
-                      </div>
+                    <!-- Volume Calculator -->
+                    <div class="volume-info" *ngIf="calculateVolume() > 0">
+                      <i class="pi pi-calculator"></i>
+                      <span>Volumen: {{ calculateVolume() }} cm³</span>
+                      <span class="volume-weight">Peso volumétrico: {{ calculateVolumetricWeight() }} kg</span>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              <!-- Card de Valor y Descripción -->
-              <div class="info-card value-card">
-                <div class="card-header">
-                  <div class="header-icon value">
-                    <i class="pi pi-dollar"></i>
-                  </div>
-                  <h5>Valor y Descripción</h5>
-                </div>
-
-                <div class="card-body">
-                  <!-- Valor Declarado -->
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Valor Declarado</span>
-                      <span class="optional-badge">Para seguro</span>
-                    </label>
-                    <div class="currency-input-group">
-                      <div class="input-wrapper large-input">
-                        <span class="currency-symbol">$</span>
-                        <input type="number"
-                               formControlName="value"
-                               min="0"
-                               step="1000"
-                               placeholder="0"
-                               class="modern-input text-right">
-                        <span class="input-suffix">COP</span>
-                      </div>
-                      <div class="value-hint">
-                        <i class="pi pi-shield"></i>
-                        <span>Este valor se usa para calcular el seguro</span>
-                      </div>
+                <!-- Description Card -->
+                <div class="description-card">
+                  <div class="card-header">
+                    <div class="header-icon">
+                      <i class="pi pi-align-left"></i>
+                    </div>
+                    <div class="header-content">
+                      <h5>Descripción del Contenido</h5>
+                      <p>Ayuda a agilizar el proceso de envío</p>
                     </div>
                   </div>
 
-                  <!-- Descripción -->
-                  <div class="form-field">
-                    <label class="field-label">
-                      <span>Descripción del Contenido</span>
-                      <span class="optional-badge">Opcional</span>
-                    </label>
-                    <div class="input-wrapper">
-                      <textarea pInputTextarea
+                  <div class="card-body">
+                    <div class="textarea-wrapper">
+                      <textarea id="package-description"
                                formControlName="description"
                                rows="3"
-                               placeholder="Describe brevemente el contenido del paquete"
-                               class="modern-textarea">
-                      </textarea>
-                    </div>
-                  </div>
-
-                  <!-- Opciones Adicionales -->
-                  <div class="options-section">
-                    <div class="section-header">
-                      <span class="section-title">Opciones Adicionales</span>
-                    </div>
-
-                    <div class="options-list">
-                      <label class="option-checkbox">
-                        <p-checkbox formControlName="insurance"
-                                   inputId="insurance"
-                                   [binary]="true">
-                        </p-checkbox>
-                        <div class="option-content">
-                          <span class="option-label">Seguro Adicional</span>
-                          <span class="option-description">Protección extra para tu envío</span>
-                        </div>
+                               placeholder=" "
+                               class="enhanced-textarea"
+                               [class.has-value]="quoteForm.get('description')?.value"></textarea>
+                      <label for="package-description" class="textarea-label">
+                        Describe el contenido del paquete (opcional)
                       </label>
-
-                      <label class="option-checkbox">
-                        <p-checkbox formControlName="cashOnDelivery"
-                                   inputId="cashOnDelivery"
-                                   [binary]="true">
-                        </p-checkbox>
-                        <div class="option-content">
-                          <span class="option-label">Pago Contra Entrega</span>
-                          <span class="option-description">El destinatario paga al recibir</span>
+                      <div class="textarea-footer">
+                        <div class="quick-options">
+                          <span class="quick-option" (click)="setDescription('Documentos')">
+                            <i class="pi pi-file"></i> Documentos
+                          </span>
+                          <span class="quick-option" (click)="setDescription('Ropa y accesorios')">
+                            <i class="pi pi-shopping-bag"></i> Ropa
+                          </span>
+                          <span class="quick-option" (click)="setDescription('Electrónicos')">
+                            <i class="pi pi-desktop"></i> Electrónicos
+                          </span>
+                          <span class="quick-option" (click)="setDescription('Productos frágiles')">
+                            <i class="pi pi-exclamation-triangle"></i> Frágil
+                          </span>
                         </div>
-                      </label>
-
-                      <label class="option-checkbox">
-                        <p-checkbox formControlName="signature"
-                                   inputId="signature"
-                                   [binary]="true">
-                        </p-checkbox>
-                        <div class="option-content">
-                          <span class="option-label">Requiere Firma</span>
-                          <span class="option-description">Confirmación de entrega con firma</span>
+                        <div class="char-count">
+                          {{ (quoteForm.get('description')?.value?.length || 0) }}/200
                         </div>
-                      </label>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+              </div>
+
+              <!-- Botones de navegación -->
+              <div class="step-actions">
+                <button type="button"
+                        pButton
+                        label="Anterior"
+                        icon="pi pi-arrow-left"
+                        class="p-button-secondary p-button-outlined"
+                        (click)="goToPreviousStep()">
+                </button>
+                <button type="button"
+                        pButton
+                        label="Continuar"
+                        icon="pi pi-arrow-right"
+                        iconPos="right"
+                        class="p-button-primary"
+                        [disabled]="!isStepCompleted(2)"
+                        (click)="goToNextStep()">
+                </button>
               </div>
             </div>
+          </p-accordionTab>
 
-            <!-- Resumen Visual Pre-Cotización -->
-            <div class="quote-summary-modern" *ngIf="isFormValidForQuote()">
-              <div class="summary-header">
-                <i class="pi pi-info-circle"></i>
-                <span>Resumen de tu Cotización</span>
+          <!-- ======================================== -->
+          <!-- PASO 4: OPCIONES ADICIONALES (OPCIONAL) -->
+          <!-- ======================================== -->
+          <p-accordionTab [disabled]="stepStates[3].locked">
+            <ng-template pTemplate="header">
+              <div [class]="getStepHeaderClass(3)" (click)="onAccordionHeaderClick(3)">
+                <div class="step-number-badge">4</div>
+                <div class="step-info">
+                  <span class="step-title">Opciones Adicionales</span>
+                  <span class="step-badge-optional">(opcional)</span>
+                  <span class="step-summary" *ngIf="activeStep !== 3">
+                    {{ getStepSummary(3) }}
+                  </span>
+                </div>
+                <i [class]="'step-status-icon pi ' + getStepIcon(3)"></i>
               </div>
-              <div class="summary-content">
-                <div class="summary-item">
-                  <div class="item-icon origin">
-                    <i class="pi pi-home"></i>
-                  </div>
-                  <div class="item-details">
-                    <span class="item-label">Origen</span>
-                    <span class="item-value">{{ getOriginSummary() }}</span>
-                  </div>
-                </div>
+            </ng-template>
 
-                <div class="summary-arrow">
-                  <i class="pi pi-arrow-right"></i>
-                </div>
+            <div class="step-content">
+              <div class="options-checkboxes">
+                <label class="checkbox-option">
+                  <p-checkbox formControlName="insurance"
+                             inputId="insurance"
+                             [binary]="true">
+                  </p-checkbox>
+                  <div class="option-text">
+                    <span class="option-name">Seguro Adicional</span>
+                    <span class="option-desc">Protección extra para tu envío</span>
+                  </div>
+                </label>
 
-                <div class="summary-item">
-                  <div class="item-icon destination">
-                    <i class="pi pi-map-marker"></i>
+                <label class="checkbox-option">
+                  <p-checkbox formControlName="cashOnDelivery"
+                             inputId="cashOnDelivery"
+                             [binary]="true">
+                  </p-checkbox>
+                  <div class="option-text">
+                    <span class="option-name">Pago Contra Entrega</span>
+                    <span class="option-desc">El destinatario paga al recibir</span>
                   </div>
-                  <div class="item-details">
-                    <span class="item-label">Destino</span>
-                    <span class="item-value">{{ getDestinationSummary() }}</span>
-                  </div>
-                </div>
+                </label>
 
-                <div class="summary-divider"></div>
+                <label class="checkbox-option">
+                  <p-checkbox formControlName="signature"
+                             inputId="signature"
+                             [binary]="true">
+                  </p-checkbox>
+                  <div class="option-text">
+                    <span class="option-name">Requiere Firma</span>
+                    <span class="option-desc">Confirmación de entrega con firma</span>
+                  </div>
+                </label>
+              </div>
 
-                <div class="summary-item">
-                  <div class="item-icon package">
-                    <i class="pi pi-box"></i>
-                  </div>
-                  <div class="item-details">
-                    <span class="item-label">Paquete</span>
-                    <span class="item-value">
-                      {{ quoteForm.get('weight')?.value }} kg
-                      <span *ngIf="getDimensionsSummary() !== 'No especificado'">
-                        • {{ getDimensionsSummary() }}
-                      </span>
-                    </span>
-                  </div>
-                </div>
-
-                <div class="summary-item" *ngIf="quoteForm.get('value')?.value > 0">
-                  <div class="item-icon value">
-                    <i class="pi pi-dollar"></i>
-                  </div>
-                  <div class="item-details">
-                    <span class="item-label">Valor Declarado</span>
-                    <span class="item-value">{{ formatPrice(quoteForm.get('value')?.value || 0) }}</span>
-                  </div>
-                </div>
+              <!-- Botón Anterior (no continuar porque ya está todo) -->
+              <div class="step-actions">
+                <button type="button"
+                        pButton
+                        label="Anterior"
+                        icon="pi pi-arrow-left"
+                        class="p-button-secondary p-button-outlined"
+                        (click)="goToPreviousStep()">
+                </button>
               </div>
             </div>
+          </p-accordionTab>
 
-            <!-- Navigation Buttons -->
-            <div class="step-navigation">
-              <button type="button"
-                      pButton
-                      label="Anterior"
-                      icon="pi pi-arrow-left"
-                      class="p-button-text p-button-secondary"
-                      (click)="activeTabIndex = 0">
-              </button>
-              <button type="button"
-                      pButton
-                      label="Obtener Cotización"
-                      icon="pi pi-search"
-                      iconPos="right"
-                      class="p-button-primary p-button-lg"
-                      [loading]="quotingRates"
-                      [disabled]="!isFormValidForQuote()"
-                      (click)="onQuoteRates()">
-              </button>
+        </p-accordion>
+
+      </form>
+
+      <!-- Botón de Cotizar (siempre visible al final) -->
+      <div class="action-quote-accordion">
+        <button type="button"
+                pButton
+                label="Obtener Cotización"
+                icon="pi pi-search"
+                iconPos="right"
+                class="p-button-primary p-button-lg btn-quote"
+                [loading]="quotingRates"
+                [disabled]="!canQuote()"
+                (click)="onQuoteRates()">
+        </button>
+        <button type="button"
+                pButton
+                label="Cancelar"
+                icon="pi pi-times"
+                class="p-button-text p-button-secondary"
+                (click)="onCancel()">
+        </button>
+      </div>
+
+    </div>
+
+    <!-- RESULTADOS DE COTIZACIÓN (mantenido del diseño original) -->
+    <div class="results-panel-accordion" *ngIf="availableRates.length > 0 && !quotingRates">
+
+      <!-- Header de Resultados -->
+      <div class="results-header">
+        <h4 class="results-title">
+          <i class="pi pi-list"></i>
+          Opciones de Envío Disponibles
+          <span class="results-count">{{ availableRates.length }} opciones</span>
+        </h4>
+
+        <!-- Controles de Filtrado -->
+        <div class="filter-controls">
+          <div class="control-item">
+            <label>Ordenar:</label>
+            <p-dropdown [options]="sortOptions"
+                       [(ngModel)]="selectedSort"
+                       optionLabel="label"
+                       optionValue="value"
+                       (onChange)="onSortChange()"
+                       styleClass="filter-dropdown">
+            </p-dropdown>
+          </div>
+
+          <div class="control-item">
+            <label>Buscar:</label>
+            <div class="search-input">
+              <i class="pi pi-search"></i>
+              <input type="text"
+                     placeholder="Transportadora..."
+                     [(ngModel)]="filterCarrier"
+                     (input)="onCarrierFilterChange()"
+                     class="filter-input">
             </div>
           </div>
 
-        </form>
-
-        <!-- PASO 3: Resultados de Cotización -->
-        <div class="step-panel results-panel" *ngIf="availableRates.length > 0 && !quotingRates">
-
-          <!-- Header de Resultados -->
-          <div class="results-header">
-            <h4 class="results-title">
-              <i class="pi pi-list"></i>
-              Opciones de Envío Disponibles
-              <span class="results-count">{{ availableRates.length }} opciones</span>
-            </h4>
-
-            <!-- Controles de Filtrado -->
-            <div class="filter-controls">
-              <div class="control-item">
-                <label>Ordenar por:</label>
-                <p-dropdown [options]="sortOptions"
-                           [(ngModel)]="selectedSort"
-                           optionLabel="label"
-                           optionValue="value"
-                           (onChange)="onSortChange()"
-                           styleClass="filter-dropdown">
-                </p-dropdown>
-              </div>
-
-              <div class="control-item">
-                <label>Filtrar:</label>
-                <div class="search-input">
-                  <i class="pi pi-search"></i>
-                  <input type="text"
-                         placeholder="Buscar transportadora..."
-                         [(ngModel)]="filterCarrier"
-                         (input)="onCarrierFilterChange()"
-                         class="filter-input">
-                </div>
-              </div>
-
-              <div class="control-item">
-                <p-toggleButton [(ngModel)]="showOnlyRecommended"
-                               onLabel="Solo recomendados"
-                               offLabel="Mostrar todos"
-                               onIcon="pi pi-star-fill"
-                               offIcon="pi pi-list"
-                               (onChange)="toggleRecommendedOnly()"
-                               styleClass="filter-toggle">
-                </p-toggleButton>
-              </div>
-            </div>
+          <div class="control-item">
+            <p-toggleButton [(ngModel)]="showOnlyRecommended"
+                           [onLabel]="'Solo recomendados'"
+                           [offLabel]="'Mostrar todos'"
+                           [onIcon]="'pi pi-star-fill'"
+                           [offIcon]="'pi pi-list'"
+                           (onChange)="toggleRecommendedOnly()"
+                           styleClass="filter-toggle">
+            </p-toggleButton>
           </div>
+        </div>
+      </div>
 
-          <!-- Indicadores de Mejores Opciones -->
-          <div class="best-options-indicators" *ngIf="getCheapestRate() || getFastestRate()">
-            <div class="indicator-card cheapest" *ngIf="getCheapestRate()">
-              <div class="indicator-icon">
-                <i class="pi pi-dollar"></i>
-              </div>
-              <div class="indicator-content">
-                <span class="indicator-label">Más Económica</span>
-                <span class="indicator-value">{{ getCheapestRate()?.carrier }} - {{ formatPrice(getCheapestRate()?.price || 0) }}</span>
-              </div>
-            </div>
-
-            <div class="indicator-card fastest" *ngIf="getFastestRate()">
-              <div class="indicator-icon">
-                <i class="pi pi-clock"></i>
-              </div>
-              <div class="indicator-content">
-                <span class="indicator-label">Más Rápida</span>
-                <span class="indicator-value">{{ getFastestRate()?.carrier }} - {{ getFastestRate()?.estimatedTime || getFastestRate()?.estimatedDays }}</span>
-              </div>
-            </div>
+      <!-- Indicadores de Mejores Opciones -->
+      <div class="best-options-indicators" *ngIf="getCheapestRate() || getFastestRate()">
+        <div class="indicator-card cheapest" *ngIf="getCheapestRate()">
+          <div class="indicator-icon">
+            <i class="pi pi-dollar"></i>
           </div>
+          <div class="indicator-content">
+            <span class="indicator-label">Más Económica</span>
+            <span class="indicator-value">{{ getCheapestRate()?.carrier }} - {{ formatPrice(getCheapestRate()?.price || 0) }}</span>
+          </div>
+        </div>
 
-          <!-- Grid de Opciones -->
-          <div class="rates-grid">
+        <div class="indicator-card fastest" *ngIf="getFastestRate()">
+          <div class="indicator-icon">
+            <i class="pi pi-clock"></i>
+          </div>
+          <div class="indicator-content">
+            <span class="indicator-label">Más Rápida</span>
+            <span class="indicator-value">{{ getFastestRate()?.carrier }} - {{ getFastestRate()?.estimatedTime || getFastestRate()?.estimatedDays }}</span>
+          </div>
+        </div>
+      </div>
 
-            <!-- Opciones Recomendadas -->
-            <div class="rates-section recommended" *ngIf="recommendedRates.length > 0 && !showOnlyRecommended">
-              <h5 class="section-title">
+      <!-- Grid de Opciones -->
+      <div class="rates-grid">
+
+        <!-- Opciones Recomendadas -->
+        <div class="rates-section recommended" *ngIf="recommendedRates.length > 0 && !showOnlyRecommended">
+          <h5 class="section-title">
+            <i class="pi pi-star-fill"></i>
+            Recomendadas para ti
+          </h5>
+
+          <div class="rate-cards">
+            <div class="rate-card recommended"
+                 *ngFor="let rate of recommendedRates"
+                 [class.selected]="selectedRate === rate"
+                 (click)="onSelectRate(rate)">
+
+              <div class="recommended-badge">
                 <i class="pi pi-star-fill"></i>
-                Recomendadas para ti
-              </h5>
-
-              <div class="rate-cards">
-                <div class="rate-card recommended"
-                     *ngFor="let rate of recommendedRates"
-                     [class.selected]="selectedRate === rate"
-                     (click)="onSelectRate(rate)">
-
-                  <div class="recommended-badge">
-                    <i class="pi pi-star-fill"></i>
-                    RECOMENDADO
-                  </div>
-
-                  <div class="rate-header">
-                    <div class="carrier-logo">
-                      <i class="pi pi-truck"></i>
-                    </div>
-                    <div class="carrier-info">
-                      <h6>{{ rate.carrier }}</h6>
-                      <span class="service-name">{{ rate.service }}</span>
-                    </div>
-                  </div>
-
-                  <div class="rate-details">
-                    <div class="detail-item">
-                      <i class="pi pi-clock"></i>
-                      <span>{{ rate.estimatedTime || rate.estimatedDays || 'Consultar' }}</span>
-                    </div>
-
-                    <div class="detail-item" *ngIf="rate.coverage">
-                      <i class="pi pi-map"></i>
-                      <span>{{ rate.coverage }}</span>
-                    </div>
-
-                    <div class="detail-item" *ngIf="rate.maxWeight">
-                      <i class="pi pi-inbox"></i>
-                      <span>Máx: {{ rate.maxWeight }}kg</span>
-                    </div>
-                  </div>
-
-                  <div class="rate-price">
-                    <span class="price-label">Total</span>
-                    <span class="price-amount">{{ formatPrice(rate.price, rate.currency) }}</span>
-
-                    <div class="price-breakdown" *ngIf="rate.basePrice || rate.taxes || rate.insurancePrice">
-                      <small *ngIf="rate.basePrice && rate.basePrice !== rate.price">
-                        Base: {{ formatPrice(rate.basePrice, rate.currency) }}
-                      </small>
-                      <small *ngIf="rate.taxes > 0">
-                        + Impuestos: {{ formatPrice(rate.taxes, rate.currency) }}
-                      </small>
-                      <small *ngIf="rate.insurancePrice > 0">
-                        + Seguro: {{ formatPrice(rate.insurancePrice, rate.currency) }}
-                      </small>
-                    </div>
-                  </div>
-
-                  <div class="rate-selection">
-                    <input type="radio"
-                           [checked]="selectedRate === rate"
-                           (change)="onSelectRate(rate)"
-                           class="rate-radio">
-                    <span class="selection-label">Seleccionar</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Otras Opciones -->
-            <div class="rates-section other" *ngIf="otherRates.length > 0 && !showOnlyRecommended">
-              <h5 class="section-title">Otras Opciones Disponibles</h5>
-
-              <div class="rate-cards">
-                <div class="rate-card"
-                     *ngFor="let rate of otherRates"
-                     [class.selected]="selectedRate === rate"
-                     (click)="onSelectRate(rate)">
-
-                  <div class="rate-header">
-                    <div class="carrier-logo">
-                      <i class="pi pi-truck"></i>
-                    </div>
-                    <div class="carrier-info">
-                      <h6>{{ rate.carrier }}</h6>
-                      <span class="service-name">{{ rate.service }}</span>
-                    </div>
-                  </div>
-
-                  <div class="rate-details">
-                    <div class="detail-item">
-                      <i class="pi pi-clock"></i>
-                      <span>{{ rate.estimatedTime || rate.estimatedDays || 'Consultar' }}</span>
-                    </div>
-
-                    <div class="detail-item" *ngIf="rate.coverage">
-                      <i class="pi pi-map"></i>
-                      <span>{{ rate.coverage }}</span>
-                    </div>
-                  </div>
-
-                  <div class="rate-price">
-                    <span class="price-label">Total</span>
-                    <span class="price-amount">{{ formatPrice(rate.price, rate.currency) }}</span>
-                  </div>
-
-                  <div class="rate-selection">
-                    <input type="radio"
-                           [checked]="selectedRate === rate"
-                           (change)="onSelectRate(rate)"
-                           class="rate-radio">
-                    <span class="selection-label">Seleccionar</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Todas las Opciones (cuando showOnlyRecommended está activo) -->
-            <div class="rates-section all" *ngIf="showOnlyRecommended">
-              <div class="rate-cards">
-                <div class="rate-card"
-                     *ngFor="let rate of getRatesToDisplay()"
-                     [class.selected]="selectedRate === rate"
-                     [class.recommended]="isRecommended(rate)"
-                     (click)="onSelectRate(rate)">
-
-                  <div class="recommended-badge" *ngIf="isRecommended(rate)">
-                    <i class="pi pi-star-fill"></i>
-                    RECOMENDADO
-                  </div>
-
-                  <div class="rate-header">
-                    <div class="carrier-logo">
-                      <i class="pi pi-truck"></i>
-                    </div>
-                    <div class="carrier-info">
-                      <h6>{{ rate.carrier }}</h6>
-                      <span class="service-name">{{ rate.service }}</span>
-                    </div>
-                  </div>
-
-                  <div class="rate-details">
-                    <div class="detail-item">
-                      <i class="pi pi-clock"></i>
-                      <span>{{ rate.estimatedTime || rate.estimatedDays || 'Consultar' }}</span>
-                    </div>
-                  </div>
-
-                  <div class="rate-price">
-                    <span class="price-label">Total</span>
-                    <span class="price-amount">{{ formatPrice(rate.price, rate.currency) }}</span>
-                  </div>
-
-                  <div class="rate-selection">
-                    <input type="radio"
-                           [checked]="selectedRate === rate"
-                           (change)="onSelectRate(rate)"
-                           class="rate-radio">
-                    <span class="selection-label">Seleccionar</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Botones de Acción Final -->
-          <div class="final-actions">
-            <button type="button"
-                    pButton
-                    label="Cambiar Datos"
-                    icon="pi pi-pencil"
-                    class="p-button-text p-button-secondary"
-                    (click)="activeTabIndex = 1">
-            </button>
-
-            <button type="button"
-                    pButton
-                    label="Crear Envío"
-                    icon="pi pi-check"
-                    iconPos="right"
-                    class="p-button-success p-button-lg"
-                    [disabled]="!selectedRate"
-                    [loading]="creatingShipment"
-                    (click)="onConfirmShipment()">
-            </button>
-          </div>
-        </div>
-
-        <!-- Loading State para Cotización -->
-        <div *ngIf="quotingRates" class="quoting-loading">
-          <div class="loading-card modern">
-            <div class="spinner-container">
-              <p-progressSpinner strokeWidth="3" animationDuration="0.8s"></p-progressSpinner>
-            </div>
-
-            <h5 class="loading-title">Obteniendo las mejores tarifas</h5>
-            <p class="loading-subtitle">{{ getCurrentLoadingMessage() }}</p>
-
-            <div class="loading-steps">
-              <div class="loading-step" [class.completed]="loadingStep >= 1">
-                <div class="step-icon">
-                  <i [class]="loadingStep >= 1 ? 'pi pi-check-circle' : 'pi pi-circle'"></i>
-                </div>
-                <span>Validando direcciones</span>
+                RECOMENDADO
               </div>
 
-              <div class="loading-step" [class.completed]="loadingStep >= 2">
-                <div class="step-icon">
-                  <i [class]="loadingStep >= 2 ? 'pi pi-check-circle' : 'pi pi-circle'"></i>
+              <div class="rate-header">
+                <div class="carrier-logo">
+                  <i class="pi pi-truck"></i>
                 </div>
-                <span>Calculando rutas</span>
+                <div class="carrier-info">
+                  <h6>{{ rate.carrier }}</h6>
+                  <span class="service-name">{{ rate.service }}</span>
+                </div>
               </div>
 
-              <div class="loading-step" [class.completed]="loadingStep >= 3">
-                <div class="step-icon">
-                  <i [class]="loadingStep >= 3 ? 'pi pi-check-circle' : 'pi pi-circle'"></i>
+              <div class="rate-details">
+                <div class="detail-item">
+                  <i class="pi pi-clock"></i>
+                  <span>{{ rate.estimatedTime || rate.estimatedDays || 'Consultar' }}</span>
                 </div>
-                <span>Obteniendo tarifas</span>
+
+                <div class="detail-item" *ngIf="rate.coverage">
+                  <i class="pi pi-map"></i>
+                  <span>{{ rate.coverage }}</span>
+                </div>
+
+                <div class="detail-item" *ngIf="rate.maxWeight">
+                  <i class="pi pi-inbox"></i>
+                  <span>Máx: {{ rate.maxWeight }}kg</span>
+                </div>
+              </div>
+
+              <div class="rate-price">
+                <span class="price-label">Total</span>
+                <span class="price-amount">{{ formatPrice(rate.price, rate.currency) }}</span>
+              </div>
+
+              <div class="rate-selection">
+                <input type="radio"
+                       [checked]="selectedRate === rate"
+                       (change)="onSelectRate(rate)"
+                       class="rate-radio">
+                <span class="selection-label">Seleccionar</span>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Otras Opciones -->
+        <div class="rates-section other" *ngIf="otherRates.length > 0 && !showOnlyRecommended">
+          <h5 class="section-title">Otras Opciones Disponibles</h5>
+
+          <div class="rate-cards">
+            <div class="rate-card"
+                 *ngFor="let rate of otherRates"
+                 [class.selected]="selectedRate === rate"
+                 (click)="onSelectRate(rate)">
+
+              <div class="rate-header">
+                <div class="carrier-logo">
+                  <i class="pi pi-truck"></i>
+                </div>
+                <div class="carrier-info">
+                  <h6>{{ rate.carrier }}</h6>
+                  <span class="service-name">{{ rate.service }}</span>
+                </div>
+              </div>
+
+              <div class="rate-details">
+                <div class="detail-item">
+                  <i class="pi pi-clock"></i>
+                  <span>{{ rate.estimatedTime || rate.estimatedDays || 'Consultar' }}</span>
+                </div>
+
+                <div class="detail-item" *ngIf="rate.coverage">
+                  <i class="pi pi-map"></i>
+                  <span>{{ rate.coverage }}</span>
+                </div>
+              </div>
+
+              <div class="rate-price">
+                <span class="price-label">Total</span>
+                <span class="price-amount">{{ formatPrice(rate.price, rate.currency) }}</span>
+              </div>
+
+              <div class="rate-selection">
+                <input type="radio"
+                       [checked]="selectedRate === rate"
+                       (change)="onSelectRate(rate)"
+                       class="rate-radio">
+                <span class="selection-label">Seleccionar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Todas las Opciones (cuando showOnlyRecommended está activo) -->
+        <div class="rates-section all" *ngIf="showOnlyRecommended">
+          <div class="rate-cards">
+            <div class="rate-card"
+                 *ngFor="let rate of getRatesToDisplay()"
+                 [class.selected]="selectedRate === rate"
+                 [class.recommended]="isRecommended(rate)"
+                 (click)="onSelectRate(rate)">
+
+              <div class="recommended-badge" *ngIf="isRecommended(rate)">
+                <i class="pi pi-star-fill"></i>
+                RECOMENDADO
+              </div>
+
+              <div class="rate-header">
+                <div class="carrier-logo">
+                  <i class="pi pi-truck"></i>
+                </div>
+                <div class="carrier-info">
+                  <h6>{{ rate.carrier }}</h6>
+                  <span class="service-name">{{ rate.service }}</span>
+                </div>
+              </div>
+
+              <div class="rate-details">
+                <div class="detail-item">
+                  <i class="pi pi-clock"></i>
+                  <span>{{ rate.estimatedTime || rate.estimatedDays || 'Consultar' }}</span>
+                </div>
+              </div>
+
+              <div class="rate-price">
+                <span class="price-label">Total</span>
+                <span class="price-amount">{{ formatPrice(rate.price, rate.currency) }}</span>
+              </div>
+
+              <div class="rate-selection">
+                <input type="radio"
+                       [checked]="selectedRate === rate"
+                       (change)="onSelectRate(rate)"
+                       class="rate-radio">
+                <span class="selection-label">Seleccionar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de Acción Final -->
+      <div class="final-actions">
+        <button type="button"
+                pButton
+                label="Cambiar Datos"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-secondary"
+                (click)="scrollToTop()">
+        </button>
+
+        <button type="button"
+                pButton
+                label="Crear Envío"
+                icon="pi pi-check"
+                iconPos="right"
+                class="p-button-success p-button-lg"
+                [disabled]="!selectedRate"
+                [loading]="creatingShipment"
+                (click)="onConfirmShipment()">
+        </button>
       </div>
     </div>
+
+    <!-- Loading State para Cotización -->
+    <div *ngIf="quotingRates" class="quoting-loading">
+      <div class="loading-card modern">
+        <div class="spinner-container">
+          <p-progressSpinner strokeWidth="3" animationDuration="0.8s"></p-progressSpinner>
+        </div>
+
+        <h5 class="loading-title">Obteniendo las mejores tarifas</h5>
+        <p class="loading-subtitle">{{ getCurrentLoadingMessage() }}</p>
+
+        <div class="loading-steps">
+          <div class="loading-step" [class.completed]="loadingStep >= 1">
+            <div class="step-icon">
+              <i [class]="loadingStep >= 1 ? 'pi pi-check-circle' : 'pi pi-circle'"></i>
+            </div>
+            <span>Validando direcciones</span>
+          </div>
+
+          <div class="loading-step" [class.completed]="loadingStep >= 2">
+            <div class="step-icon">
+              <i [class]="loadingStep >= 2 ? 'pi pi-check-circle' : 'pi pi-circle'"></i>
+            </div>
+            <span>Calculando rutas</span>
+          </div>
+
+          <div class="loading-step" [class.completed]="loadingStep >= 3">
+            <div class="step-icon">
+              <i [class]="loadingStep >= 3 ? 'pi pi-check-circle' : 'pi pi-circle'"></i>
+            </div>
+            <span>Obteniendo tarifas</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </ng-container>
 
 </div>
