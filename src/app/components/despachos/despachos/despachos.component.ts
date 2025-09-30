@@ -55,6 +55,8 @@ import { Integration, IntegrationCategory, IntegrationsService } from "../../int
 import { PaginatedOrdersResponse } from "../interfaces/paginated-orders.interface";
 import { ZonaGestionModalComponent } from "../components/zona-gestion-modal/zona-gestion-modal.component";
 import { ToastrService } from 'ngx-toastr';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 interface MapaMetricas {
   despachados: number;
@@ -154,6 +156,7 @@ interface UbicacionPedido {
   ]
 })
 export class DespachosComponent implements OnInit {
+  @ViewChild("autoCompleteInput") autoCompleteInput: any;
   @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
   @ViewChild("entrega", { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild("pantallaOrdenEnvioModal", { static: false })
@@ -202,7 +205,7 @@ export class DespachosComponent implements OnInit {
   fechaFinal: Date | null;
   
   // Propiedades para el sistema de filtros avanzados
-  searchQuery: string = '';
+  searchQuery: string | any = '';
   fechaInicialDate: Date | null;
   fechaFinalDate: Date | null;
   selectedDatePreset: string = '';
@@ -211,6 +214,12 @@ export class DespachosComponent implements OnInit {
     estadoPago: 'all',
     estadoProceso: 'all'
   };
+
+  // Propiedades para búsqueda con autocompletado
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
+  isSearching: boolean = false;
+  searchError: string | null = null;
   // Opciones para los dropdowns de filtros
   estadosPagoOptions: any[] = [];
   estadosProcesoOptions: any[] = [];
@@ -1972,11 +1981,51 @@ export class DespachosComponent implements OnInit {
     this.orders = [event];
     // this.orders= this.ordersByName.filter(P=>)
   }
+
+  /**
+   * Maneja la tecla Enter en el campo de búsqueda
+   */
+  onSearchEnter(event: any): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const query = typeof this.searchQuery === 'string' ? this.searchQuery : this.searchQuery?.nroPedido || '';
+    console.log('🔍 Enter presionado en despachos, query:', query);
+
+    if (query.trim().length >= 3) {
+      console.log('✅ Ejecutando búsqueda para:', query);
+      this.filtroGlobal({ query: query.trim() });
+    } else {
+      console.log('⚠️ Se requieren al menos 3 caracteres');
+    }
+  }
+
   filtroGlobal(event: any) {
     const query = event.query;
+
+    // Validar longitud mínima de 3 caracteres
+    if (!query || query.trim().length < 3) {
+      console.log('⚠️ Búsqueda requiere al menos 3 caracteres');
+      this.filteredOrderNumbers = [];
+      return;
+    }
+
+    this.isSearching = true;
     this.service.getOrderByName(query).then((res) => {
       this.filteredOrderNumbers = res;
       this.ordersByName = res;
+      this.isSearching = false;
+
+      // Mostrar el panel del autocomplete después de cargar los datos
+      setTimeout(() => {
+        if (this.autoCompleteInput && this.filteredOrderNumbers && this.filteredOrderNumbers.length > 0) {
+          this.autoCompleteInput.show();
+        }
+      }, 50);
+    }).catch((err) => {
+      console.log('⚠️ Error en búsqueda:', err);
+      this.filteredOrderNumbers = [];
+      this.isSearching = false;
     });
   }
 

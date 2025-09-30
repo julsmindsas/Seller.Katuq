@@ -74,6 +74,7 @@ import { MultiSelectModule } from 'primeng/multiselect';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 
 @NgModule({
   declarations: [
@@ -135,7 +136,8 @@ import { InputTextModule } from 'primeng/inputtext';
     MultiSelectModule,
     ButtonModule,
     TooltipModule,
-    InputTextModule
+    InputTextModule,
+    AutoCompleteModule
   ],
   providers: [
     NavService,

@@ -71,6 +71,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
   @ViewChild("entrega", { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild("htmlPdf", { static: true }) htmlPdf: ElementRef;
+  @ViewChild("sharedFilters", { static: false }) sharedFilters: any;
 
   @ViewChild("fechaInicialCtrl", { static: false })
   fechaInicialCtrl: ElementRef;
@@ -950,8 +951,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return false;
     }
 
-    // Validar longitud mínima (reducir a 1 para ser más flexible)
-    if (query.trim().length < 1) {
+    // Validar longitud mínima de 3 caracteres
+    if (query.trim().length < 3) {
+      console.log('⚠️ Búsqueda requiere al menos 3 caracteres');
       return false;
     }
 
@@ -986,22 +988,52 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.ordersByName = results;
         this.isSearching = false;
         this.searchError = null;
+
+        // Si no hay resultados, mostrar array vacío (el template 'empty' se mostrará automáticamente)
+        if (results.length === 0) {
+          console.log('ℹ️ No se encontraron pedidos para:', trimmedQuery);
+        }
+
+        // Mostrar el panel del autocomplete después de cargar los datos
+        if (this.sharedFilters && this.sharedFilters.showAutocompletePanel) {
+          this.sharedFilters.showAutocompletePanel();
+        }
       },
       error: (err) => {
-        // Fallback al servicio original si el nuevo falla
-        this.service.getOrderByName(trimmedQuery).then((res: any) => {
-          const results = Array.isArray(res) ? res : (res ? [res] : []);
-          this.filteredOrderNumbers = results;
-          this.ordersByName = results;
-          this.isSearching = false;
-          this.searchError = null;
-        }).catch((fallbackErr: any) => {
-          this.searchError = 'Error al buscar pedido. Intente nuevamente.';
+        console.log('⚠️ Error en búsqueda principal:', err);
+
+        // Verificar si el error es por "no encontrado"
+        const isNotFoundError = err?.error?.message?.includes('No se encontraron pedidos') ||
+                               err?.status === 404;
+
+        if (isNotFoundError) {
+          // No es un error real, simplemente no hay resultados
           this.filteredOrderNumbers = [];
           this.ordersByName = [];
           this.isSearching = false;
-          this.toastrService.error(this.searchError, 'Error de Búsqueda');
-        });
+          this.searchError = null;
+          console.log('ℹ️ No se encontraron pedidos (404)');
+        } else {
+          // Fallback al servicio original si es un error real
+          this.service.getOrderByName(trimmedQuery).then((res: any) => {
+            const results = Array.isArray(res) ? res : (res ? [res] : []);
+            this.filteredOrderNumbers = results;
+            this.ordersByName = results;
+            this.isSearching = false;
+            this.searchError = null;
+
+            // Mostrar el panel del autocomplete después de cargar los datos
+            if (this.sharedFilters && this.sharedFilters.showAutocompletePanel) {
+              this.sharedFilters.showAutocompletePanel();
+            }
+          }).catch((fallbackErr: any) => {
+            this.searchError = 'Error al buscar pedido. Intente nuevamente.';
+            this.filteredOrderNumbers = [];
+            this.ordersByName = [];
+            this.isSearching = false;
+            this.toastrService.error(this.searchError, 'Error de Búsqueda');
+          });
+        }
       }
     });
   }
@@ -1249,6 +1281,33 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchQuery = query;
     this.sharedFilterService.updateFilterState({ searchQuery: query });
     this.onSearchQueryChange(query);
+  }
+
+  /**
+   * Maneja el evento completeMethod del autocompletado
+   */
+  onSearchComplete(event: any): void {
+    const query = event.query || '';
+    console.log('🔍 Búsqueda autocompletado (Enter presionado):', query);
+
+    // Ejecutar búsqueda inmediatamente sin debounce cuando viene del Enter
+    // Esto permite que el dropdown se muestre con los resultados
+    if (query.trim().length >= 3) {
+      this.performSearch(query);
+    } else {
+      this.filteredOrderNumbers = [];
+      this.isSearching = false;
+    }
+  }
+
+  /**
+   * Maneja la selección de un pedido desde el autocompletado
+   */
+  onSearchSelect(event: any): void {
+    console.log('✅ Pedido seleccionado desde autocompletado:', event);
+
+    // Llamar al método existente de selección
+    this.selectOrder(event);
   }
 
   /**

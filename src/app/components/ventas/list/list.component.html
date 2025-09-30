@@ -35,6 +35,7 @@
                                     <!-- CAPTION: Filtros compartidos -->
                                     <ng-template pTemplate="caption">
                                         <app-shared-filters
+                                            #sharedFilters
                                             [estadosPagoOptions]="estadosPagoOptions"
                                             [estadosProcesoOptions]="estadosProcesoOptions"
                                             [displayedColumns]="displayedColumns"
@@ -44,11 +45,14 @@
                                             [showStatusFilters]="true"
                                             [showExportButton]="true"
                                             [exportDisabled]="orders.length == 0"
-                                            [searchPlaceholder]="'Buscar pedido...'"
+                                            [searchPlaceholder]="'Buscar pedido por número...'"
                                             [filterButtonLabel]="'Filtrar'"
                                             [exportButtonTooltip]="'Exportar Excel'"
                                             [initialDateFrom]="fechaInicialDate"
                                             [initialDateTo]="fechaFinalDate"
+                                            [searchSuggestions]="filteredOrderNumbers"
+                                            [isSearching]="isSearching"
+                                            [searchField]="'nroPedido'"
                                             (searchQueryChange)="onSharedSearchQueryChange($event)"
                                             (dateFromChange)="onSharedDateFromChange($event)"
                                             (dateToChange)="onSharedDateToChange($event)"
@@ -60,7 +64,9 @@
                                             (exportAction)="exportarExcel()"
                                             (clearAllFilters)="onSharedClearAllFilters()"
                                             (clearSpecificFilter)="onSharedClearSpecificFilter($event)"
-                                            (resetColumns)="resetColumnConfig()">
+                                            (resetColumns)="resetColumnConfig()"
+                                            (searchComplete)="onSearchComplete($event)"
+                                            (searchSelect)="onSearchSelect($event)">
                                         </app-shared-filters>
 
                                         <!-- BÚSQUEDA LOCAL ADICIONAL -->

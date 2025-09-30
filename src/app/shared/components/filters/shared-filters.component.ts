@@ -1,5 +1,6 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 import { trigger, state, style, transition, animate } from '@angular/animations';
+import { AutoComplete } from 'primeng/autocomplete';
 
 export interface FilterOptions {
   searchQuery: string;
@@ -43,6 +44,8 @@ export interface ColumnDefinition {
   ]
 })
 export class SharedFiltersComponent implements OnInit {
+  @ViewChild('autoCompleteInput') autoCompleteInput: AutoComplete;
+
   @Input() estadosPagoOptions: FilterOption[] = [];
   @Input() estadosProcesoOptions: FilterOption[] = [];
   @Input() displayedColumns: ColumnDefinition[] = [];
@@ -57,6 +60,9 @@ export class SharedFiltersComponent implements OnInit {
   @Input() exportButtonTooltip: string = 'Exportar Excel';
   @Input() initialDateFrom: Date | null = null;
   @Input() initialDateTo: Date | null = null;
+  @Input() searchSuggestions: any[] = []; // Sugerencias para autocompletado
+  @Input() isSearching: boolean = false; // Indicador de búsqueda en progreso
+  @Input() searchField: string = 'nroPedido'; // Campo a mostrar en sugerencias
 
   @Output() searchQueryChange = new EventEmitter<string>();
   @Output() dateFromChange = new EventEmitter<Date | null>();
@@ -70,8 +76,22 @@ export class SharedFiltersComponent implements OnInit {
   @Output() clearAllFilters = new EventEmitter<void>();
   @Output() clearSpecificFilter = new EventEmitter<{type: string, value?: string}>();
   @Output() resetColumns = new EventEmitter<void>();
+  @Output() searchComplete = new EventEmitter<any>(); // Evento para búsqueda (completeMethod)
+  @Output() searchSelect = new EventEmitter<any>(); // Evento para selección de item
 
-  searchQuery: string = '';
+  /**
+   * Método público para mostrar el dropdown del autocomplete
+   * Debe ser llamado por el componente padre después de actualizar searchSuggestions
+   */
+  public showAutocompletePanel(): void {
+    if (this.autoCompleteInput) {
+      setTimeout(() => {
+        this.autoCompleteInput.show();
+      }, 50);
+    }
+  }
+
+  searchQuery: string | any = '';
   fechaInicialDate: Date | null = null;
   fechaFinalDate: Date | null = null;
   selectedDatePreset: string = '';
@@ -140,6 +160,58 @@ export class SharedFiltersComponent implements OnInit {
   onSearchQueryChange(value: string): void {
     this.searchQuery = value;
     this.searchQueryChange.emit(value);
+  }
+
+  /**
+   * Maneja la búsqueda con autocompletado (completeMethod)
+   */
+  onSearchComplete(event: any): void {
+    const query = event.query || '';
+    this.searchComplete.emit(event);
+  }
+
+  /**
+   * Maneja cambios en el input para prevenir búsquedas automáticas
+   */
+  onInputChange(event: any): void {
+    // Solo actualizar el modelo, no disparar búsqueda
+    const value = event.target?.value || '';
+    if (typeof this.searchQuery === 'string') {
+      this.searchQuery = value;
+    }
+  }
+
+  /**
+   * Maneja la tecla Enter en el campo de búsqueda
+   */
+  onSearchEnter(event: any): void {
+    const query = typeof this.searchQuery === 'string' ? this.searchQuery : this.searchQuery?.nroPedido || '';
+    console.log('🔍 Enter presionado, query:', query);
+
+    if (query.trim().length >= 3) {
+      console.log('✅ Emitiendo búsqueda para:', query);
+      // Emitir evento de búsqueda - el componente padre debe llamar showAutocompletePanel()
+      // después de actualizar searchSuggestions
+      this.searchComplete.emit({ query: query.trim(), originalEvent: event });
+    } else {
+      console.log('⚠️ Se requieren al menos 3 caracteres');
+    }
+  }
+
+  /**
+   * Maneja la selección de un item del autocompletado
+   */
+  onSearchSelect(event: any): void {
+    this.searchSelect.emit(event);
+  }
+
+  /**
+   * Limpia el campo de búsqueda del autocompletado
+   */
+  clearSearch(): void {
+    this.searchQuery = '';
+    this.searchQueryChange.emit('');
+    this.clearSearchFilter();
   }
 
   onDateFromChange(date: Date | null): void {

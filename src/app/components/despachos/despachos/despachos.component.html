@@ -73,28 +73,64 @@
                                 <div class="filter-bar-row">
                                     <!-- Sección izquierda: Filtros inline -->
                                     <div class="filter-inline-section">
-                                        <!-- Búsqueda rápida -->
+                                        <!-- Búsqueda rápida con autocompletado -->
                                         <div class="filter-inline-item search-box">
-                                            <div class="p-inputgroup">
+                                            <div class="p-inputgroup autocomplete-wrapper">
                                                 <span class="p-inputgroup-addon">
-                                                    <i class="pi pi-search"></i>
+                                                    <i class="pi" [ngClass]="isSearching ? 'pi-spin pi-spinner' : 'pi-search'"></i>
                                                 </span>
-                                                <input type="text" 
-                                                    pInputText 
-                                                    placeholder="{{ 'Buscar pedido...' | translate }}"
-                                                    [(ngModel)]="searchQuery" 
-                                                    (input)="onSearchQueryChange($event.target.value)"
-                                                    class="p-inputtext-sm search-input"
-                                                    [style]="{'min-width': '250px'}" />
-                                                <button *ngIf="searchQuery && searchQuery.trim().length > 0"
-                                                    pButton 
-                                                    type="button" 
-                                                    icon="pi pi-times" 
+                                                <p-autoComplete
+                                                    #autoCompleteInput
+                                                    [(ngModel)]="searchQuery"
+                                                    [suggestions]="filteredOrderNumbers"
+                                                    (completeMethod)="filtroGlobal($event)"
+                                                    (onSelect)="onOrderSelect($event)"
+                                                    field="nroPedido"
+                                                    placeholder="{{ 'Buscar pedido por número...' | translate }}"
+                                                    [minLength]="3"
+                                                    [delay]="99999"
+                                                    [forceSelection]="false"
+                                                    [dropdown]="false"
+                                                    [autofocus]="false"
+                                                    styleClass="search-autocomplete"
+                                                    inputStyleClass="p-inputtext-sm"
+                                                    [style]="{'width': '100%', 'min-width': '250px'}"
+                                                    appendTo="body"
+                                                    (keydown.enter)="onSearchEnter($event)">
+                                                    <ng-template let-item pTemplate="item">
+                                                        <div class="autocomplete-item">
+                                                            <div class="item-main">
+                                                                <i class="pi pi-shopping-cart me-2"></i>
+                                                                <strong>{{ item.nroPedido }}</strong>
+                                                            </div>
+                                                            <div class="item-details" *ngIf="item.cliente">
+                                                                <small class="text-muted">
+                                                                    <i class="pi pi-user me-1"></i>{{ item.cliente.nombres_completos }}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                    </ng-template>
+                                                    <ng-template pTemplate="empty">
+                                                        <div class="autocomplete-empty">
+                                                            <i class="pi pi-search text-muted"></i>
+                                                            <p class="mb-0">{{ 'No se encontraron pedidos' | translate }}</p>
+                                                            <small class="text-muted">{{ 'Intenta con otro número de pedido' | translate }}</small>
+                                                        </div>
+                                                    </ng-template>
+                                                </p-autoComplete>
+                                                <button *ngIf="searchQuery"
+                                                    pButton
+                                                    type="button"
+                                                    icon="pi pi-times"
                                                     class="p-button-text p-button-sm p-button-danger"
                                                     (click)="clearSearchFilter()"
                                                     pTooltip="{{ 'Limpiar búsqueda' | translate }}">
                                                 </button>
                                             </div>
+                                            <small class="search-hint">
+                                                <i class="pi pi-info-circle me-1"></i>
+                                                {{ 'Escribe al menos 3 caracteres y presiona Enter para buscar' | translate }}
+                                            </small>
                                         </div>
 
                                         <!-- Rango de fechas compacto -->
