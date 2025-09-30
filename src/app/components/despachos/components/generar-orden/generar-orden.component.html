@@ -140,6 +140,23 @@
                                     class="text-danger small text-center mt-1">
                                     {{ "El método de envío es requerido" | translate }}
                                 </div>
+
+                                <!-- Botón de selección de transportadora (solo visible si se selecciona transportadora) -->
+                                <div *ngIf="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'" class="mt-3">
+                                    <button type="button"
+                                            class="btn btn-outline-primary w-100"
+                                            (click)="openTransporterModal()">
+                                        <i class="pi pi-truck me-2"></i>
+                                        {{ selectedTransporter ? 'Cambiar Transportadora' : 'Seleccionar Transportadora' | translate }}
+                                        <span *ngIf="selectedTransporter" class="badge bg-success ms-2">
+                                            {{ getSelectedTransporterName() }}
+                                        </span>
+                                    </button>
+                                    <small class="text-muted d-block text-center mt-1">
+                                        <i class="pi pi-info-circle me-1"></i>
+                                        Selecciona una transportadora integrada para continuar
+                                    </small>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1397,6 +1414,243 @@
                         }}
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL DE SELECCIÓN DE TRANSPORTADORAS -->
+    <!-- ========================================== -->
+    <div class="modal-overlay" *ngIf="showTransporterModal" (click)="closeTransporterModal()">
+        <div class="modal-container" (click)="$event.stopPropagation()">
+            <div class="modal-header-custom">
+                <h5>
+                    <i class="pi pi-truck me-2 text-primary"></i>
+                    {{ 'Seleccionar Transportadora Integrada' | translate }}
+                </h5>
+                <button type="button" class="btn-close-custom" (click)="closeTransporterModal()">
+                    <i class="pi pi-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body-custom">
+                <div class="mb-3">
+                    <div class="alert alert-info border-0 mb-4">
+                        <div class="d-flex align-items-center">
+                            <i class="pi pi-info-circle me-2"></i>
+                            <span>{{ 'Seleccione una transportadora integrada para esta orden de envío.' | translate }}</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label fw-semibold mb-3">
+                            <i class="pi pi-truck me-2 text-primary"></i>
+                            {{ 'Transportadoras Integradas Disponibles' | translate }}
+                        </label>
+
+                        <!-- Transportadores Integrados (SOLO INTEGRADOS, NO VENDORS LOCALES) -->
+                        <div class="transporters-list">
+                            <div *ngFor="let transporter of availableTransporters; let i = index"
+                                 class="transporter-card"
+                                 [class.transporter-selected]="selectedTransporter === (transporter.provider || transporter.type)"
+                                 (click)="selectedTransporter = transporter.provider || transporter.type">
+                                <div class="transporter-radio">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           [(ngModel)]="selectedTransporter"
+                                           [value]="transporter.provider || transporter.type"
+                                           [id]="'transporter_generar_' + i">
+                                </div>
+                                <div class="transporter-icon">
+                                    <i class="pi pi-send"></i>
+                                </div>
+                                <div class="transporter-content">
+                                    <div class="transporter-name">{{ getTransporterDisplayName(transporter) }}</div>
+                                    <div class="transporter-description">{{ 'Integración configurada' | translate }}</div>
+                                </div>
+                                <div class="transporter-status">
+                                    <span *ngIf="transporter.enabled" class="badge bg-success">
+                                        <i class="pi pi-check me-1"></i>{{ 'Activo' | translate }}
+                                    </span>
+                                    <span *ngIf="!transporter.enabled" class="badge bg-warning text-dark">
+                                        <i class="pi pi-exclamation-triangle me-1"></i>{{ 'Inactivo' | translate }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mensaje si no hay transportadores configurados -->
+                        <div *ngIf="availableTransporters.length === 0" class="alert alert-warning border-0 mt-3">
+                            <div class="d-flex align-items-start">
+                                <i class="pi pi-exclamation-triangle me-2 mt-1"></i>
+                                <div>
+                                    <strong>No hay transportadoras configuradas</strong>
+                                    <p class="mb-0 mt-1 small">Por favor configura al menos una integración de transportadora en el sistema.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-custom">
+                <button type="button" class="btn btn-secondary" (click)="closeTransporterModal()">
+                    {{ 'Cancelar' | translate }}
+                </button>
+                <button type="button"
+                        class="btn btn-primary"
+                        (click)="confirmTransporterSelection()"
+                        [disabled]="!selectedTransporter">
+                    <i class="pi pi-check me-2"></i>
+                    {{ 'Confirmar Selección' | translate }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================== -->
+    <!-- MODAL DE OPCIONES ESPECÍFICAS PARA ENVIAME.IO -->
+    <!-- =============================================== -->
+    <div class="modal-overlay" *ngIf="showEnviameOptionsModal" (click)="closeEnviameOptionsModal()">
+        <div class="modal-container enviame-options-modal" (click)="$event.stopPropagation()">
+            <div class="modal-header-custom">
+                <h5>
+                    <i class="pi pi-truck me-2 text-primary"></i>
+                    {{ 'Opciones de Envío con Enviame.io' | translate }}
+                </h5>
+                <button type="button" class="btn-close-custom" (click)="closeEnviameOptionsModal()">
+                    <i class="pi pi-times"></i>
+                </button>
+            </div>
+
+            <div class="modal-body-custom">
+                <!-- Información de la orden -->
+                <div class="order-info-section mb-4">
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="pi pi-info-circle me-3 fs-4"></i>
+                        <div>
+                            <strong>Orden de Envío</strong><br>
+                            <small>Seleccione cómo desea proceder con Enviame.io</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Opciones principales -->
+                <div class="row g-3">
+                    <!-- Opción 1: Cotizar con Enviame -->
+                    <div class="col-md-6">
+                        <div class="form-check enviame-option-box h-100"
+                             [class.option-selected]="enviameSelectedOption === 'quote'"
+                             (click)="onEnviameOptionSelected('quote')">
+                            <input class="form-check-input"
+                                   type="radio"
+                                   name="enviameOption"
+                                   id="enviameQuote"
+                                   [checked]="enviameSelectedOption === 'quote'">
+                            <label class="form-check-label w-100" for="enviameQuote">
+                                <div class="option-header">
+                                    <i class="pi pi-calculator fs-4 text-primary"></i>
+                                    <h6 class="mb-0 ms-2">{{ 'Cotizar con Enviame.io' | translate }}</h6>
+                                </div>
+                                <p class="option-description">
+                                    Ver tarifas disponibles, comparar servicios y crear el envío directamente con Enviame.io
+                                </p>
+                                <div class="option-features">
+                                    <div class="feature-item">
+                                        <i class="pi pi-check-circle text-success"></i>
+                                        <span>Múltiples transportadoras</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="pi pi-check-circle text-success"></i>
+                                        <span>Comparación de precios</span>
+                                    </div>
+                                    <div class="feature-item">
+                                        <i class="pi pi-check-circle text-success"></i>
+                                        <span>Tracking integrado</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Opción 2: Ver otros transportadores -->
+                    <div class="col-md-6">
+                        <div class="form-check enviame-option-box h-100"
+                             [class.option-selected]="enviameSelectedOption === 'other'"
+                             (click)="onEnviameOptionSelected('other')">
+                            <input class="form-check-input"
+                                   type="radio"
+                                   name="enviameOption"
+                                   id="enviameOther"
+                                   [checked]="enviameSelectedOption === 'other'">
+                            <label class="form-check-label w-100" for="enviameOther">
+                                <div class="option-header">
+                                    <i class="pi pi-list fs-4 text-primary"></i>
+                                    <h6 class="mb-0 ms-2">{{ 'Ver Otras Transportadoras' | translate }}</h6>
+                                </div>
+                                <p class="option-description">
+                                    Explorar otras transportadoras integradas disponibles
+                                </p>
+                                <div class="option-features">
+                                    <div class="feature-item">
+                                        <i class="pi pi-info-circle text-info"></i>
+                                        <span>Otras integraciones disponibles</span>
+                                    </div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transportadores alternativos (solo se muestra si selecciona "other") -->
+                <div class="alternative-transporters mt-4" *ngIf="showAlternativeTransporters">
+                    <div class="divider mb-3">
+                        <hr class="mb-2">
+                        <small class="text-muted">Transportadoras alternativas:</small>
+                    </div>
+
+                    <!-- Integraciones alternativas -->
+                    <div class="transporter-list">
+                        <div *ngFor="let transporter of alternativeTransporters; let i = index"
+                             class="transporter-item"
+                             (click)="selectAlternativeTransporter(transporter.provider || transporter.type)">
+                            <div class="d-flex align-items-center">
+                                <i class="pi pi-send me-3 text-info"></i>
+                                <div class="flex-grow-1">
+                                    <div class="fw-semibold">{{ getTransporterDisplayName(transporter) }}</div>
+                                    <small class="text-muted">Integración configurada</small>
+                                </div>
+                                <span *ngIf="transporter.enabled" class="badge bg-success">Activo</span>
+                                <span *ngIf="!transporter.enabled" class="badge bg-warning">Inactivo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div *ngIf="alternativeTransporters.length === 0"
+                         class="text-center py-3 text-muted">
+                        <i class="pi pi-exclamation-triangle me-2"></i>
+                        No hay otras transportadoras disponibles
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer con botones -->
+            <div class="modal-footer-custom">
+                <button type="button"
+                        class="btn btn-secondary"
+                        (click)="closeEnviameOptionsModal()">
+                    {{ 'Cancelar' | translate }}
+                </button>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        [disabled]="!enviameSelectedOption"
+                        (click)="confirmEnviameOption()">
+                    <i class="pi pi-arrow-right me-2"></i>
+                    <span *ngIf="enviameSelectedOption === 'quote'">{{ 'Ver Cotizaciones' | translate }}</span>
+                    <span *ngIf="enviameSelectedOption === 'other'">{{ 'Ver Transportadoras' | translate }}</span>
+                    <span *ngIf="!enviameSelectedOption">{{ 'Seleccione una opción' | translate }}</span>
+                </button>
             </div>
         </div>
     </div>

@@ -5,6 +5,9 @@ import { Observable, Subject } from 'rxjs';
 import { EstadoPago, EstadoProceso, Pedido } from "../../../ventas/modelo/pedido";
 import { LogisticaServiceV2 } from "../../../../shared/services/despachos/logistica.service.v2";
 import { VentasService } from "../../../../shared/services/ventas/ventas.service";
+import { IntegrationsService, Integration, IntegrationCategory } from '../../../integrations/integrations.service';
+import { DialogService } from 'primeng/dynamicdialog';
+import { EnviameRatesModalComponent } from '../enviame/rates-modal/enviame-rates-modal.component';
 import Swal from "sweetalert2";
 
 interface ColumnDefinition {
@@ -85,10 +88,23 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   // Límite de pedidos
   readonly LIMITE_PEDIDOS = 200;
 
+  // Propiedades para manejo de transportadoras integradas
+  showTransporterModal: boolean = false;
+  availableTransporters: Integration[] = [];
+  selectedTransporter: string = '';
+  isDispatchingShipment: boolean = false;
+
+  // Modal específico de opciones Enviame
+  showEnviameOptionsModal: boolean = false;
+  enviameSelectedOption: 'quote' | 'other' | '' = '';
+  showAlternativeTransporters: boolean = false;
+
   constructor(
     private formBuilder: FormBuilder,
     private logisticaService: LogisticaServiceV2,
-    private ventasService: VentasService // NUEVO - para modo independiente
+    private ventasService: VentasService, // NUEVO - para modo independiente
+    private integrationsService: IntegrationsService,
+    private dialogService: DialogService
   ) {}
 
   // Computed getter para determinar si estamos en modo edición
@@ -99,6 +115,9 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.initForm();
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
+
+    // Cargar transportadoras integradas disponibles
+    this.loadLogisticsIntegrations();
 
     // Detectar modo de operación
     if (!this.usarPedidosPadre) {
@@ -1420,6 +1439,233 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   printLabel(pedido: Pedido): void {
     this.onPrintLabel.emit(pedido);
+  }
+
+  // ========== MÉTODOS PARA MANEJO DE TRANSPORTADORAS INTEGRADAS ==========
+
+  /**
+   * Cargar las integraciones logísticas disponibles
+   */
+  loadLogisticsIntegrations(): void {
+    this.integrationsService.getIntegrationsByCategory(IntegrationCategory.LOGISTICS)
+      .subscribe({
+        next: (integrations) => {
+          this.availableTransporters = integrations;
+          console.log('Integraciones logísticas cargadas en generar-orden:', integrations);
+        },
+        error: (error) => {
+          console.error('Error al cargar integraciones logísticas:', error);
+          this.availableTransporters = [];
+        }
+      });
+  }
+
+  /**
+   * Abrir modal de selección de transportadora
+   */
+  openTransporterModal(): void {
+    if (this.availableTransporters.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No hay transportadoras configuradas',
+        text: 'Por favor configura al menos una integración de transportadora antes de continuar.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    this.selectedTransporter = '';
+    this.showTransporterModal = true;
+  }
+
+  /**
+   * Cerrar modal de transportadoras
+   */
+  closeTransporterModal(): void {
+    this.showTransporterModal = false;
+    this.selectedTransporter = '';
+  }
+
+  /**
+   * Confirmar selección de transportadora
+   */
+  confirmTransporterSelection(): void {
+    if (!this.selectedTransporter) {
+      return;
+    }
+
+    // Si es Enviame.io, mostrar modal de opciones específicas
+    if (this.selectedTransporter === 'enviame') {
+      this.showEnviameOptionsModal = true;
+      this.showTransporterModal = false;
+      return;
+    }
+
+    // Para otras transportadoras, guardar selección directamente
+    this.saveTransporterSelection();
+  }
+
+  /**
+   * Guardar la transportadora seleccionada en el formulario
+   */
+  private saveTransporterSelection(): void {
+    // Guardar el transportador en algún lugar del formulario o estado
+    // Por ahora solo mostramos confirmación
+    Swal.fire({
+      icon: 'success',
+      title: 'Transportadora Seleccionada',
+      text: `Has seleccionado: ${this.getSelectedTransporterName()}`,
+      timer: 2000,
+      showConfirmButton: false
+    });
+
+    this.closeTransporterModal();
+    this.closeEnviameOptionsModal();
+  }
+
+  /**
+   * Obtener el nombre de la transportadora seleccionada
+   */
+  private getSelectedTransporterName(): string {
+    const transporter = this.availableTransporters.find(
+      t => (t.provider || t.type) === this.selectedTransporter
+    );
+    return transporter ? (transporter.name || transporter.type || transporter.provider || 'Transportadora') : this.selectedTransporter;
+  }
+
+  /**
+   * Obtener nombre de display de una transportadora
+   */
+  getTransporterDisplayName(transporter: Integration): string {
+    return transporter.name || transporter.type || transporter.provider || 'Transportador';
+  }
+
+  // ========== MÉTODOS PARA MODAL DE OPCIONES ENVIAME ==========
+
+  /**
+   * Cerrar modal de opciones de Enviame
+   */
+  closeEnviameOptionsModal(): void {
+    this.showEnviameOptionsModal = false;
+    this.enviameSelectedOption = '';
+    this.showAlternativeTransporters = false;
+  }
+
+  /**
+   * Manejar selección de opción en el modal de Enviame
+   */
+  onEnviameOptionSelected(option: 'quote' | 'other'): void {
+    this.enviameSelectedOption = option;
+
+    if (option === 'quote') {
+      // Mostrar directamente el modal de cotización
+      this.showAlternativeTransporters = false;
+    } else if (option === 'other') {
+      // Mostrar otros transportadores disponibles
+      this.showAlternativeTransporters = true;
+    }
+  }
+
+  /**
+   * Confirmar opción seleccionada en modal de Enviame
+   */
+  confirmEnviameOption(): void {
+    if (!this.enviameSelectedOption) {
+      return;
+    }
+
+    if (this.enviameSelectedOption === 'quote') {
+      // Abrir modal de cotización de Enviame
+      this.openEnviameRatesModal();
+    } else if (this.enviameSelectedOption === 'other') {
+      // Regresar al modal de selección de transportadores pero sin Enviame
+      this.closeEnviameOptionsModal();
+      this.showTransporterModal = true;
+      this.selectedTransporter = ''; // Reset selection
+    }
+  }
+
+  /**
+   * Abrir modal de cotización de Enviame.io
+   */
+  openEnviameRatesModal(): void {
+    // Para generar-orden, necesitamos preparar los datos de la orden
+    const orderData = {
+      nroShippingOrder: this.nroShippingOrder || 'TEMP',
+      fecha: this.ordenEnvioForm.get('fechaFin')?.value || new Date(),
+      pedidos: this.pedidosSeleccionados
+    };
+
+    const modalRef = this.dialogService.open(EnviameRatesModalComponent, {
+      data: {
+        order: orderData,
+        companyId: this.getCompanyId()
+      },
+      header: 'Cotizar Envío con Enviame.io',
+      width: '90%',
+      height: '90%',
+      modal: true,
+      dismissableMask: false,
+      closeOnEscape: false
+    });
+
+    modalRef.onClose.subscribe((result) => {
+      if (result && result.confirmed) {
+        console.log('✅ Cotización de Enviame completada:', result);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Transportadora Enviame.io Seleccionada',
+          text: 'La cotización se ha completado exitosamente.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        this.closeEnviameOptionsModal();
+      } else {
+        console.log('❌ Usuario canceló la cotización de Enviame');
+      }
+    });
+  }
+
+  /**
+   * Obtener transportadores alternativos (excluyendo Enviame)
+   */
+  get alternativeTransporters(): Integration[] {
+    return this.availableTransporters.filter(t =>
+      (t.provider || t.type) !== 'enviame'
+    );
+  }
+
+  /**
+   * Seleccionar un transportador alternativo desde el modal de opciones de Enviame
+   */
+  selectAlternativeTransporter(transporterId: string): void {
+    this.selectedTransporter = transporterId;
+    this.closeEnviameOptionsModal();
+    this.saveTransporterSelection();
+  }
+
+  /**
+   * Obtener el ID de la empresa actual
+   */
+  private getCompanyId(): string {
+    const directCompanyId = localStorage.getItem('currentCompanyId');
+    if (directCompanyId) {
+      return directCompanyId;
+    }
+
+    const currentCompany = localStorage.getItem('currentCompany');
+    if (currentCompany) {
+      try {
+        const company = JSON.parse(currentCompany);
+        return company.nomComercial || company.nombreComercio || company.razonSocial || company.nombre || 'default_company';
+      } catch (error) {
+        console.error('Error parsing currentCompany from localStorage:', error);
+      }
+    }
+
+    return 'default_company';
   }
 
   // Método lifecycle para limpiar suscripciones

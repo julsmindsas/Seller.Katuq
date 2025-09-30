@@ -436,57 +436,62 @@
     
     <div class="modal-body-custom">
       <div class="mb-3">
-        <p class="text-muted mb-3">
-          {{ 'Esta orden requiere transportadora externa. Seleccione el transportador:' | translate }}
-          <strong>{{ selectedOrderForDispatch?.nroShippingOrder }}</strong>
-        </p>
+        <div class="alert alert-info border-0 mb-4">
+          <div class="d-flex align-items-center">
+            <i class="pi pi-info-circle me-2"></i>
+            <div>
+              <span>{{ 'Esta orden requiere transportadora externa. Seleccione el transportador:' | translate }}</span>
+              <strong class="ms-1">{{ selectedOrderForDispatch?.nroShippingOrder }}</strong>
+            </div>
+          </div>
+        </div>
 
         <div class="form-group">
-          <label class="form-label fw-semibold">{{ 'Transportadores Externos Disponibles' | translate }}</label>
+          <label class="form-label fw-semibold mb-3">
+            <i class="pi pi-truck me-2 text-primary"></i>
+            {{ 'Transportadoras Integradas Disponibles' | translate }}
+          </label>
 
-          <!-- Vendors Locales -->
-          <div *ngFor="let vendor of allVendors; let i = index" 
-               class="form-check mb-2 p-3 border rounded">
-            <input class="form-check-input" type="radio" 
-                   [(ngModel)]="selectedTransporter" 
-                   [value]="getVendorValue(vendor)" 
-                   [id]="'vendor_' + i">
-            <label class="form-check-label w-100" [for]="'vendor_' + i">
-              <div class="d-flex align-items-center">
-                <i class="pi pi-truck me-3 text-success"></i>
-                <div class="flex-grow-1">
-                  <div class="fw-semibold">{{ getVendorDisplayName(vendor) }}</div>
-                  <small class="text-muted">{{ 'Transportador local' | translate }}</small>
-                  <span class="badge bg-primary ms-2">{{ 'Registrado' | translate }}</span>
-                </div>
+          <!-- Transportadores Integrados (SOLO INTEGRADOS, NO VENDORS LOCALES) -->
+          <div class="transporters-list">
+            <div *ngFor="let transporter of availableTransporters; let i = index"
+                 class="transporter-card"
+                 [class.transporter-selected]="selectedTransporter === (transporter.provider || transporter.type)"
+                 (click)="selectedTransporter = transporter.provider || transporter.type">
+              <div class="transporter-radio">
+                <input class="form-check-input"
+                       type="radio"
+                       [(ngModel)]="selectedTransporter"
+                       [value]="transporter.provider || transporter.type"
+                       [id]="'transporter_' + i">
               </div>
-            </label>
-          </div>
-
-          <!-- Transportadores Integrados -->
-          <div *ngFor="let transporter of availableTransporters; let i = index" 
-               class="form-check mb-2 p-3 border rounded">
-            <input class="form-check-input" type="radio" 
-                   [(ngModel)]="selectedTransporter" 
-                   [value]="transporter.provider || transporter.type" 
-                   [id]="'transporter_' + i">
-            <label class="form-check-label w-100" [for]="'transporter_' + i">
-              <div class="d-flex align-items-center">
-                <i class="pi pi-send me-3 text-warning"></i>
-                <div class="flex-grow-1">
-                  <div class="fw-semibold">{{ getTransporterDisplayName(transporter) }}</div>
-                  <small class="text-muted">{{ 'Integración configurada' | translate }}</small>
-                  <span *ngIf="transporter.enabled" class="badge bg-success ms-2">{{ 'Activo' | translate }}</span>
-                  <span *ngIf="!transporter.enabled" class="badge bg-warning">{{ 'Inactivo' | translate }}</span>
-                </div>
+              <div class="transporter-icon">
+                <i class="pi pi-send"></i>
               </div>
-            </label>
+              <div class="transporter-content">
+                <div class="transporter-name">{{ getTransporterDisplayName(transporter) }}</div>
+                <div class="transporter-description">{{ 'Integración configurada' | translate }}</div>
+              </div>
+              <div class="transporter-status">
+                <span *ngIf="transporter.enabled" class="badge bg-success">
+                  <i class="pi pi-check me-1"></i>{{ 'Activo' | translate }}
+                </span>
+                <span *ngIf="!transporter.enabled" class="badge bg-warning text-dark">
+                  <i class="pi pi-exclamation-triangle me-1"></i>{{ 'Inactivo' | translate }}
+                </span>
+              </div>
+            </div>
           </div>
 
           <!-- Mensaje si no hay transportadores configurados -->
-          <div *ngIf="allVendors.length === 0 && availableTransporters.length === 0" class="alert alert-warning mt-3">
-            <i class="pi pi-exclamation-triangle me-2"></i>
-            {{ 'No hay transportadores configurados. Solo está disponible mensajero propio.' | translate }}
+          <div *ngIf="availableTransporters.length === 0" class="alert alert-warning border-0 mt-3">
+            <div class="d-flex align-items-start">
+              <i class="pi pi-exclamation-triangle me-2 mt-1"></i>
+              <div>
+                <strong>No hay transportadoras configuradas</strong>
+                <p class="mb-0 mt-1 small">Por favor configura al menos una integración de transportadora en el sistema.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
