@@ -5,6 +5,34 @@
 // ========================================
 
 // ========================================
+// ESTILOS GLOBALES PARA PRIMENG DIALOG
+// ========================================
+:host ::ng-deep .enviame-rates-compact-modal {
+  .p-dialog {
+    max-width: 800px !important;
+    width: 800px !important;
+  }
+
+  .p-dialog-header {
+    padding: 12px 16px !important;
+    background: white !important;
+    border-bottom: 2px solid #e2e8f0 !important;
+
+    .p-dialog-title {
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      color: #1e293b !important;
+    }
+  }
+
+  .p-dialog-content {
+    padding: 0 !important;
+    max-height: 85vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+// ========================================
 // VARIABLES
 // ========================================
 $primary: #2563eb;
@@ -59,64 +87,48 @@ $radius-lg: 12px;
   }
 
   // ========================================
-  // PROGRESS BAR STICKY
+  // PROGRESS BAR STICKY - MUY COMPACTO
   // ========================================
   .progress-bar-sticky {
     position: sticky;
-    top: 0;
-    z-index: 100;
+    top: 36px;
+    z-index: 999;
     background: white;
     border-bottom: 1px solid $border;
-    padding: $spacing-md $spacing-xl;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    margin: 0 (-$spacing-base) $spacing-lg (-$spacing-base);
-
-    .progress-info {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: $spacing-sm;
-
-      .progress-label {
-        font-size: 14px;
-        font-weight: 600;
-        color: $text-primary;
-      }
-
-      .progress-percentage {
-        font-size: 13px;
-        font-weight: 600;
-        color: $primary;
-        background: $primary-light;
-        padding: 2px $spacing-sm;
-        border-radius: $radius-base;
-      }
-    }
+    padding: 4px $spacing-sm;
+    margin: 0;
 
     .progress-track {
       width: 100%;
-      height: 6px;
+      height: 3px;
       background: $lighter-bg;
-      border-radius: $radius-base;
+      border-radius: 2px;
       overflow: hidden;
       position: relative;
 
       .progress-fill {
         height: 100%;
         background: linear-gradient(90deg, $primary, $primary-dark);
-        border-radius: $radius-base;
         transition: width 0.3s ease;
-        box-shadow: 0 0 8px rgba($primary, 0.3);
+      }
+
+      .progress-text {
+        position: absolute;
+        top: -16px;
+        right: 0;
+        font-size: 10px;
+        font-weight: 600;
+        color: $text-secondary;
       }
     }
   }
 
   // ========================================
-  // MODAL BODY ACCORDION VIEW
+  // MODAL BODY ACCORDION VIEW - MUY COMPACTO
   // ========================================
   .modal-body-accordion-view {
-    padding: $spacing-xl;
-    max-height: 60vh;
+    padding: $spacing-sm;
+    max-height: 70vh;
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
@@ -127,7 +139,7 @@ $radius-lg: 12px;
   // ========================================
   ::ng-deep .p-accordion {
     .p-accordion-header {
-      margin-bottom: $spacing-md;
+      margin-bottom: $spacing-xs;
 
       .p-accordion-header-link {
         padding: 0 !important;
@@ -148,7 +160,7 @@ $radius-lg: 12px;
     }
 
     .p-accordion-tab {
-      margin-bottom: $spacing-lg;
+      margin-bottom: $spacing-sm;
 
       &.p-accordion-tab-active {
         .step-header {
@@ -160,68 +172,67 @@ $radius-lg: 12px;
     }
   }
 
-  // Step Header (personalizado)
+  // Step Header (personalizado) - MUY COMPACTO
   .step-header {
     display: flex;
     align-items: center;
-    gap: $spacing-base;
-    padding: $spacing-base $spacing-lg;
+    gap: $spacing-xs;
+    padding: 6px $spacing-sm;
     background: white;
-    border: 2px solid $border;
-    border-radius: $radius-md;
+    border: 1px solid $border;
+    border-radius: $radius-sm;
     cursor: pointer;
-    transition: all $transition-base;
+    transition: all $transition-fast;
     position: relative;
 
     .step-number-badge {
-      width: 36px;
-      height: 36px;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: $lighter-bg;
       border-radius: 50%;
-      font-size: 16px;
+      font-size: 11px;
       font-weight: 700;
       color: $text-secondary;
       flex-shrink: 0;
-      transition: all $transition-base;
+      transition: all $transition-fast;
     }
 
     .step-info {
       flex: 1;
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: $spacing-xs;
 
       .step-title {
-        font-size: 15px;
+        font-size: 12px;
         font-weight: 600;
         color: $text-primary;
       }
 
       .step-summary {
-        font-size: 13px;
+        font-size: 10px;
         color: $text-secondary;
         font-weight: 400;
       }
 
       .step-badge-optional {
         display: inline-block;
-        font-size: 11px;
+        font-size: 9px;
         color: $text-muted;
         background: $lighter-bg;
-        padding: 2px $spacing-sm;
+        padding: 1px 4px;
         border-radius: $radius-sm;
         font-weight: 500;
-        margin-left: $spacing-xs;
       }
     }
 
     .step-status-icon {
-      font-size: 20px;
+      font-size: 14px;
       flex-shrink: 0;
-      transition: all $transition-base;
+      transition: all $transition-fast;
     }
 
     // Estados del header
@@ -302,14 +313,14 @@ $radius-lg: 12px;
   }
 
   // ========================================
-  // STEP CONTENT
+  // STEP CONTENT - MUY COMPACTO
   // ========================================
   .step-content {
-    padding: $spacing-lg;
+    padding: $spacing-sm;
     background: $light-bg;
-    border-radius: $radius-md;
-    margin-top: $spacing-md;
-    animation: fadeIn 0.3s ease;
+    border-radius: $radius-sm;
+    margin-top: 4px;
+    animation: fadeIn 0.15s ease;
   }
 
   @keyframes fadeIn {
@@ -324,44 +335,44 @@ $radius-lg: 12px;
   }
 
   // ========================================
-  // STEP ACTIONS (botones de navegación)
+  // STEP ACTIONS (botones de navegación) - COMPACTO
   // ========================================
   .step-actions {
     display: flex;
-    gap: $spacing-md;
+    gap: $spacing-sm;
     justify-content: flex-end;
-    margin-top: $spacing-lg;
-    padding-top: $spacing-lg;
+    margin-top: $spacing-md;
+    padding-top: $spacing-md;
     border-top: 1px solid $border-light;
   }
 
   // ========================================
-  // ACTION QUOTE ACCORDION (botón cotizar)
+  // ACTION QUOTE ACCORDION (botón cotizar) - COMPACTO
   // ========================================
   .action-quote-accordion {
     display: flex;
-    gap: $spacing-md;
+    gap: $spacing-sm;
     justify-content: flex-end;
     align-items: center;
-    padding: $spacing-xl;
+    padding: $spacing-md;
     background: $lighter-bg;
-    border-radius: $radius-md;
-    margin-top: $spacing-xl;
-    border: 2px dashed $border;
+    border-radius: $radius-base;
+    margin-top: $spacing-lg;
+    border: 1px dashed $border;
 
     .btn-quote {
-      min-width: 200px;
+      min-width: 180px;
     }
   }
 
   // ========================================
-  // RESULTS PANEL ACCORDION
+  // RESULTS PANEL ACCORDION - COMPACTO
   // ========================================
   .results-panel-accordion {
-    margin-top: $spacing-2xl;
-    padding-top: $spacing-2xl;
-    border-top: 3px solid $primary;
-    animation: slideIn 0.4s ease;
+    margin-top: $spacing-lg;
+    padding-top: $spacing-lg;
+    border-top: 2px solid $primary;
+    animation: slideIn 0.3s ease;
   }
 
   @keyframes slideIn {
@@ -376,51 +387,47 @@ $radius-lg: 12px;
   }
 
   // ========================================
-  // HEADER
+  // HEADER - LEGIBLE Y COMPACTO
   // ========================================
   .modal-header-minimal {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    height: 48px;
-    padding: 0 $spacing-xl;
-    background: $primary;
-    color: $background;
-    margin: -$spacing-base -$spacing-base 0 -$spacing-base;
-    border-radius: $radius-lg $radius-lg 0 0;
+    gap: $spacing-sm;
+    height: 36px;
+    padding: 0 $spacing-md;
+    background: white;
+    color: $text-primary;
+    border-bottom: 2px solid $border;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: $spacing-md;
-
-      .header-icon {
-        font-size: $spacing-lg;
-      }
-
-      .header-title {
-        margin: 0;
-        font-size: $spacing-base;
-        font-weight: 500;
-      }
+    i.pi-truck {
+      font-size: 14px;
+      color: $primary;
     }
 
-    .header-center {
-      .order-badge {
-        background: rgba(255, 255, 255, 0.2);
-        padding: $spacing-xs $spacing-md;
-        border-radius: $radius-base;
-        font-size: 13px;
-        font-weight: 500;
-      }
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
+    h4 {
+      margin: 0;
       font-size: 13px;
-      opacity: 0.9;
+      font-weight: 600;
+      flex: 1;
+      color: $text-primary;
+    }
+
+    .order-badge {
+      background: $primary-light;
+      color: $primary;
+      padding: 2px $spacing-xs;
+      border-radius: $radius-sm;
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .date-badge {
+      font-size: 10px;
+      color: $text-secondary;
     }
   }
 
@@ -582,214 +589,167 @@ $radius-lg: 12px;
       }
     }
 
-    // Shipping types grid
-    .shipping-types-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: $spacing-md;
-      margin-bottom: $spacing-xl;
+    // Shipping types - VERSIÓN COMPACTA (lista vertical)
+    .shipping-types-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: $spacing-lg;
 
-      .shipping-card {
+      .shipping-option-compact {
         position: relative;
         background: white;
-        border: 2px solid $border;
-        border-radius: $radius-lg;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
         cursor: pointer;
-        transition: all $transition-base;
-        overflow: hidden;
+        transition: all 0.2s ease;
+        padding: 0.875rem 1rem;
         display: flex;
-        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
 
         &:hover {
-          border-color: $primary;
-          box-shadow: $shadow-md;
-          transform: translateY(-4px);
+          border-color: #2196f3;
+          box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
         }
 
         &.selected {
-          border-color: $primary;
-          border-width: 3px;
-          background: rgba($primary, 0.02);
-          box-shadow: 0 0 0 4px rgba($primary, 0.1);
+          border-color: #2196f3;
+          background: #f0f7ff;
+          box-shadow: 0 2px 12px rgba(33, 150, 243, 0.15);
 
-          .card-title {
-            color: $primary;
+          .option-name {
+            color: #2196f3;
+            font-weight: 600;
           }
 
-          .card-icon i {
-            color: $primary;
+          .option-icon {
+            color: #2196f3;
+            background-color: #e3f2fd;
           }
 
-          .price-amount {
-            color: $primary;
+          .option-price {
+            color: #2196f3;
             font-weight: 700;
           }
         }
 
-        &.recommended {
-          border-color: #f59e0b;
+        // Radio button personalizado
+        .option-radio {
+          appearance: none;
+          width: 20px;
+          height: 20px;
+          border: 2px solid #e0e0e0;
+          border-radius: 50%;
+          cursor: pointer;
+          position: relative;
+          flex-shrink: 0;
+          transition: all 0.2s ease;
 
-          &::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+          &:checked {
+            border-color: #2196f3;
+            border-width: 6px;
           }
         }
 
-        .card-badges {
+        // Badge recomendado pequeño
+        .recommended-tag {
           position: absolute;
-          top: $spacing-md;
-          right: $spacing-md;
+          top: 0.5rem;
+          right: 0.5rem;
+          background: #fbbf24;
+          color: white;
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
           display: flex;
-          flex-direction: column;
-          gap: $spacing-xs;
-          z-index: 1;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 
-          .badge {
+          i {
             font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            padding: 4px $spacing-sm;
-            border-radius: $radius-sm;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            box-shadow: $shadow-sm;
-
-            i {
-              font-size: 9px;
-            }
-
-            &.badge-recommended {
-              background: linear-gradient(135deg, #fbbf24, #f59e0b);
-              color: white;
-            }
-
-            &.badge-popular {
-              background: linear-gradient(135deg, #34d399, #10b981);
-              color: white;
-            }
           }
         }
 
-        .card-body {
-          padding: $spacing-lg $spacing-md;
+        // Contenido principal
+        .option-content {
           display: flex;
-          flex-direction: column;
           align-items: center;
-          text-align: center;
-          gap: $spacing-sm;
+          justify-content: space-between;
+          flex: 1;
+          gap: 1rem;
 
-          .card-icon {
-            width: 48px;
-            height: 48px;
+          .option-left {
             display: flex;
             align-items: center;
-            justify-content: center;
-            background: $lighter-bg;
-            border-radius: $radius-lg;
-            margin-bottom: $spacing-sm;
+            gap: 0.75rem;
+            flex: 1;
 
-            i {
-              font-size: 24px;
-              color: $text-secondary;
-              transition: color $transition-fast;
-            }
-          }
-
-          .card-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: $text-primary;
-            margin: 0;
-            transition: color $transition-fast;
-          }
-
-          .card-delivery {
-            font-size: 12px;
-            color: $text-secondary;
-            display: flex;
-            align-items: center;
-            gap: $spacing-xs;
-
-            i {
-              font-size: 12px;
-              color: $primary;
-            }
-          }
-
-          .card-price {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            margin: $spacing-sm 0;
-
-            .price-from {
-              font-size: 11px;
-              color: $text-muted;
-              text-transform: uppercase;
-            }
-
-            .price-amount {
-              font-size: 16px;
-              font-weight: 600;
-              color: $text-primary;
-              transition: color $transition-fast;
-            }
-          }
-
-          .card-features {
-            display: flex;
-            flex-direction: column;
-            gap: $spacing-xs;
-            width: 100%;
-            align-items: flex-start;
-            padding: $spacing-md 0 0;
-            border-top: 1px solid $border-light;
-
-            .feature {
-              font-size: 11px;
-              color: $text-secondary;
+            .option-icon {
+              width: 36px;
+              height: 36px;
               display: flex;
               align-items: center;
-              gap: $spacing-xs;
+              justify-content: center;
+              background: #f5f5f5;
+              border-radius: 8px;
+              font-size: 18px;
+              color: #666;
+              transition: all 0.2s ease;
+              flex-shrink: 0;
+            }
 
-              i {
-                color: #10b981;
-                font-size: 13px;
-                flex-shrink: 0;
+            .option-info {
+              display: flex;
+              flex-direction: column;
+              gap: 0.25rem;
+
+              .option-name {
+                font-size: 0.9375rem;
+                font-weight: 600;
+                color: #333;
+                transition: color 0.2s ease;
+              }
+
+              .option-time {
+                font-size: 0.8125rem;
+                color: #666;
+                display: flex;
+                align-items: center;
+                gap: 0.25rem;
+
+                i {
+                  font-size: 0.75rem;
+                  color: #2196f3;
+                }
               }
             }
           }
 
-          .card-selected {
-            margin-top: $spacing-xs;
-            padding: $spacing-xs $spacing-sm;
-            background: $primary;
-            color: white;
-            border-radius: $radius-md;
-            font-size: 12px;
-            font-weight: 600;
+          .option-right {
             display: flex;
             align-items: center;
-            gap: $spacing-xs;
-            animation: checkPop 0.3s ease;
+            padding-right: 1.5rem;
 
-            i {
-              font-size: 12px;
+            .option-price {
+              font-size: 0.9375rem;
+              font-weight: 600;
+              color: #333;
+              white-space: nowrap;
+              transition: color 0.2s ease;
             }
           }
         }
 
-        // Responsive
-        @media (max-width: 768px) {
-          .card-body {
-            padding: $spacing-base;
-          }
+        // Icono de selección
+        .selected-icon {
+          position: absolute;
+          right: 0.75rem;
+          font-size: 1.25rem;
+          color: #2196f3;
+          animation: checkPop 0.3s ease;
         }
       }
     }
@@ -962,71 +922,71 @@ $radius-lg: 12px;
     .location-card.compact {
       background: $light-bg;
       border: 1px solid $border;
-      border-radius: $radius-md;
-      padding: $spacing-base;
+      border-radius: $radius-sm;
+      padding: $spacing-xs;
 
       &.origin {
-        border-left: 3px solid $success;
+        border-left: 2px solid $success;
       }
 
       &.destination {
-        border-left: 3px solid $primary;
+        border-left: 2px solid $primary;
       }
 
       .location-header {
         display: flex;
         align-items: center;
-        gap: $spacing-sm;
-        margin-bottom: $spacing-base;
-        padding-bottom: $spacing-sm;
+        gap: $spacing-xs;
+        margin-bottom: $spacing-xs;
+        padding-bottom: $spacing-xs;
         border-bottom: 1px solid $border-light;
 
         i {
-          font-size: 16px;
+          font-size: 12px;
           color: $primary;
         }
 
         span {
           font-weight: 600;
-          font-size: 14px;
+          font-size: 11px;
           color: $text-primary;
         }
       }
 
       // Destinatario inline
       .recipient-inline {
-        margin-top: $spacing-base;
-        padding-top: $spacing-base;
+        margin-top: $spacing-xs;
+        padding-top: $spacing-xs;
 
         .divider-line {
           height: 1px;
           background: $border-light;
-          margin-bottom: $spacing-md;
+          margin-bottom: $spacing-xs;
         }
 
         .subsection-label {
           display: block;
-          font-size: 13px;
+          font-size: 10px;
           font-weight: 600;
           color: $text-secondary;
-          margin-bottom: $spacing-md;
+          margin-bottom: $spacing-xs;
         }
       }
     }
   }
 
   // ========================================
-  // FORM FIELDS COMPACTOS
+  // FORM FIELDS MUY COMPACTOS
   // ========================================
   .form-field.compact {
-    margin-bottom: $spacing-md;
+    margin-bottom: 6px;
 
     label {
       display: block;
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 500;
       color: $text-primary;
-      margin-bottom: $spacing-xs;
+      margin-bottom: 2px;
 
       .req {
         color: $danger;
@@ -1086,10 +1046,10 @@ $radius-lg: 12px;
 
     .input-compact {
       width: 100%;
-      padding: $spacing-sm $spacing-md;
+      padding: 4px 6px;
       border: 1px solid $border;
-      border-radius: $radius-base;
-      font-size: 14px;
+      border-radius: $radius-sm;
+      font-size: 12px;
       transition: all $transition-fast;
 
       &:focus {
@@ -1115,12 +1075,12 @@ $radius-lg: 12px;
       display: flex;
       align-items: center;
       gap: $spacing-xs;
-      font-size: 12px;
+      font-size: 10px;
       color: $danger;
-      margin-top: $spacing-xs;
+      margin-top: 2px;
 
       i {
-        font-size: 12px;
+        font-size: 10px;
       }
     }
 
@@ -2205,19 +2165,20 @@ $radius-lg: 12px;
   }
 
   .results-header {
-    margin-bottom: $spacing-xl;
+    margin-bottom: $spacing-md;
 
     .results-title {
       display: flex;
       align-items: center;
-      gap: $spacing-sm;
-      font-size: 18px;
+      gap: $spacing-xs;
+      font-size: 14px;
       font-weight: 600;
       color: $text-primary;
-      margin-bottom: $spacing-lg;
+      margin-bottom: $spacing-md;
 
       i {
         color: $primary;
+        font-size: 14px;
       }
 
       .results-count {
@@ -2226,11 +2187,11 @@ $radius-lg: 12px;
         justify-content: center;
         background: $primary-light;
         color: $primary;
-        font-size: 13px;
+        font-size: 11px;
         font-weight: 600;
-        padding: $spacing-xs $spacing-md;
-        border-radius: $radius-lg;
-        margin-left: $spacing-sm;
+        padding: 2px $spacing-sm;
+        border-radius: $radius-base;
+        margin-left: $spacing-xs;
       }
     }
 
@@ -2283,17 +2244,17 @@ $radius-lg: 12px;
 
   .best-options-indicators {
     display: flex;
-    gap: $spacing-lg;
-    margin-bottom: $spacing-xl;
+    gap: $spacing-sm;
+    margin-bottom: $spacing-md;
 
     .indicator-card {
       flex: 1;
       display: flex;
       align-items: center;
-      gap: $spacing-md;
-      padding: $spacing-base;
-      border-radius: $radius-md;
-      border: 2px solid;
+      gap: $spacing-sm;
+      padding: $spacing-sm;
+      border-radius: $radius-base;
+      border: 1px solid;
 
       &.cheapest {
         background: rgba($success, 0.05);
@@ -2316,29 +2277,29 @@ $radius-lg: 12px;
       }
 
       .indicator-icon {
-        width: 40px;
-        height: 40px;
+        width: 32px;
+        height: 32px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 50%;
-        font-size: 18px;
+        font-size: 14px;
       }
 
       .indicator-content {
         display: flex;
         flex-direction: column;
-        gap: $spacing-xs;
+        gap: 2px;
 
         .indicator-label {
-          font-size: 12px;
+          font-size: 10px;
           font-weight: 500;
           color: $text-secondary;
           text-transform: uppercase;
         }
 
         .indicator-value {
-          font-size: 14px;
+          font-size: 12px;
           font-weight: 600;
           color: $text-primary;
         }
@@ -2348,27 +2309,27 @@ $radius-lg: 12px;
 
   .rates-grid {
     .rates-section {
-      margin-bottom: $spacing-xl;
+      margin-bottom: $spacing-lg;
 
       .section-title {
         display: flex;
         align-items: center;
-        gap: $spacing-sm;
-        font-size: 15px;
+        gap: $spacing-xs;
+        font-size: 13px;
         font-weight: 600;
         color: $text-primary;
-        margin-bottom: $spacing-md;
+        margin-bottom: $spacing-sm;
 
         i {
           color: $warning;
-          font-size: 14px;
+          font-size: 12px;
         }
       }
 
       .rate-cards {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: $spacing-md;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: $spacing-sm;
       }
     }
   }
@@ -2376,11 +2337,11 @@ $radius-lg: 12px;
   .rate-card {
     position: relative;
     background: white;
-    border: 2px solid $border;
-    border-radius: $radius-md;
-    padding: $spacing-md;
+    border: 1px solid $border;
+    border-radius: $radius-base;
+    padding: $spacing-sm;
     cursor: pointer;
-    transition: all $transition-base;
+    transition: all $transition-fast;
 
     &:hover {
       border-color: $primary-light;

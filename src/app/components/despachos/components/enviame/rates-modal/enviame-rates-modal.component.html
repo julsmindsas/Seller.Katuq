@@ -1,18 +1,11 @@
 <div class="enviame-rates-modal enviame-modal-accordion-view">
 
-  <!-- Header Minimalista -->
+  <!-- Header Compacto y Legible -->
   <div class="modal-header-minimal">
-    <div class="header-left">
-      <i class="pi pi-truck header-icon"></i>
-      <h4 class="header-title">Cotización de Envío</h4>
-    </div>
-    <div class="header-center">
-      <span class="order-badge" *ngIf="order?.nroShippingOrder">Orden #{{order.nroShippingOrder}}</span>
-    </div>
-    <div class="header-right" *ngIf="order?.fechaCreacion">
-      <i class="pi pi-calendar"></i>
-      <span>{{ order.fechaCreacion | date:'dd/MM/yyyy' }}</span>
-    </div>
+    <i class="pi pi-truck"></i>
+    <h4>Cotización de Envío</h4>
+    <span class="order-badge" *ngIf="order?.nroShippingOrder">Orden #{{order.nroShippingOrder}}</span>
+    <span class="date-badge" *ngIf="order?.fechaCreacion">{{ order.fechaCreacion | date:'dd/MM/yy' }}</span>
   </div>
 
   <!-- Loading State Inicial -->
@@ -33,14 +26,11 @@
   <!-- Accordion View Content -->
   <ng-container *ngIf="isReady">
 
-    <!-- Progress Bar Sticky -->
+    <!-- Progress Bar Compacto -->
     <div class="progress-bar-sticky">
-      <div class="progress-info">
-        <span class="progress-label">Paso {{ activeStep + 1 }} de 4</span>
-        <span class="progress-percentage">{{ getProgressPercentageAccordion() }}%</span>
-      </div>
       <div class="progress-track">
         <div class="progress-fill" [style.width.%]="getProgressPercentageAccordion()"></div>
+        <span class="progress-text">{{ activeStep + 1 }}/4 ({{ getProgressPercentageAccordion() }}%)</span>
       </div>
     </div>
 
@@ -84,66 +74,43 @@
                   </div>
                 </div>
 
-                <!-- SHIPPING TYPES GRID -->
-                <div class="shipping-types-grid">
-                  <label class="shipping-card"
+                <!-- SHIPPING TYPES - VERSIÓN COMPACTA (Lista Horizontal) -->
+                <div class="shipping-types-compact">
+                  <label class="shipping-option-compact"
                          *ngFor="let tipo of tiposEnvio"
-                         [class.selected]="quoteForm.get('shippingType')?.value === tipo.value"
-                         [class.recommended]="tipo.recommended">
+                         [class.selected]="quoteForm.get('shippingType')?.value === tipo.value">
 
                     <!-- Radio button -->
                     <input type="radio"
                            [id]="'tipo-' + tipo.value"
                            formControlName="shippingType"
                            [value]="tipo.value"
-                           class="d-none">
+                           class="option-radio">
 
-                    <!-- Badges -->
-                    <div class="card-badges" *ngIf="tipo.recommended || tipo.popular">
-                      <span class="badge badge-recommended" *ngIf="tipo.recommended">
-                        <i class="pi pi-star-fill"></i> Recomendado
-                      </span>
-                      <span class="badge badge-popular" *ngIf="tipo.popular">
-                        <i class="pi pi-heart-fill"></i> Popular
-                      </span>
-                    </div>
+                    <!-- Badge recomendado (más pequeño) -->
+                    <span class="recommended-tag" *ngIf="tipo.recommended">
+                      <i class="pi pi-star-fill"></i>
+                    </span>
 
-                    <!-- Contenido -->
-                    <div class="card-body">
-                      <!-- Icono -->
-                      <div class="card-icon">
-                        <i [class]="'pi ' + tipo.icon"></i>
-                      </div>
-
-                      <!-- Título -->
-                      <h4 class="card-title">{{ tipo.label }}</h4>
-
-                      <!-- Tiempo de entrega -->
-                      <div class="card-delivery">
-                        <i class="pi pi-clock"></i>
-                        <span>{{ tipo.description }}</span>
-                      </div>
-
-                      <!-- Precio -->
-                      <div class="card-price">
-                        <span class="price-from">Desde</span>
-                        <span class="price-amount">{{ tipo.priceRange || 'Consultar' }}</span>
-                      </div>
-
-                      <!-- Features -->
-                      <div class="card-features" *ngIf="tipo.features && tipo.features.length > 0">
-                        <div class="feature" *ngFor="let feature of tipo.features">
-                          <i class="pi pi-check-circle"></i>
-                          <span>{{ feature }}</span>
+                    <!-- Contenido en una sola línea compacta -->
+                    <div class="option-content">
+                      <div class="option-left">
+                        <i [class]="'pi ' + tipo.icon + ' option-icon'"></i>
+                        <div class="option-info">
+                          <span class="option-name">{{ tipo.label }}</span>
+                          <span class="option-time">
+                            <i class="pi pi-clock"></i>
+                            {{ tipo.description }}
+                          </span>
                         </div>
                       </div>
-
-                      <!-- Indicador selección -->
-                      <div class="card-selected" *ngIf="quoteForm.get('shippingType')?.value === tipo.value">
-                        <i class="pi pi-check"></i>
-                        Seleccionado
+                      <div class="option-right">
+                        <span class="option-price">{{ tipo.priceRange || 'Consultar' }}</span>
                       </div>
                     </div>
+
+                    <!-- Checkmark cuando está seleccionado -->
+                    <i class="pi pi-check-circle selected-icon" *ngIf="quoteForm.get('shippingType')?.value === tipo.value"></i>
                   </label>
                 </div>
 

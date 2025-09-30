@@ -1601,12 +1601,13 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
         order: orderData,
         companyId: this.getCompanyId()
       },
-      header: 'Cotizar Envío con Enviame.io',
-      width: '90%',
-      height: '90%',
+      header: 'Cotizar Envío - Enviame.io',
+      width: '800px',
+      height: 'auto',
       modal: true,
       dismissableMask: false,
-      closeOnEscape: false
+      closeOnEscape: false,
+      styleClass: 'enviame-rates-compact-modal'
     });
 
     modalRef.onClose.subscribe((result) => {
