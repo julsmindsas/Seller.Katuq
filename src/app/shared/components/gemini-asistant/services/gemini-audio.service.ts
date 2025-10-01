@@ -225,12 +225,30 @@ export class GeminiAudioService {
       const message = await this.waitMessage();
       turns.push(message);
 
-      console.log('🔄 [Turn] Mensaje procesado en turno:', {
+      console.log('🔄 [Turn] ==================== MENSAJE RECIBIDO ====================');
+      console.log('🔄 [Turn] Tipo de mensaje:', this.getMessageType(message));
+      console.log('🔄 [Turn] ¿Tiene serverContent?:', !!message.serverContent);
+      console.log('🔄 [Turn] ¿Tiene toolCall?:', !!message.toolCall);
+      console.log('🔄 [Turn] turnComplete:', message.serverContent?.turnComplete);
+
+      if (message.toolCall) {
+        console.log('🛠️ [Turn] ✅ TOOL CALL DETECTADO:');
+        console.log('🛠️ [Turn] Function calls:', JSON.stringify(message.toolCall, null, 2));
+      } else {
+        console.log('⚠️ [Turn] ❌ NO HAY TOOL CALL - El modelo solo respondió con texto/audio');
+      }
+
+      if (message.serverContent?.modelTurn) {
+        console.log('💬 [Turn] Model turn parts:', message.serverContent.modelTurn.parts?.length || 0);
+      }
+
+      console.log('🔄 [Turn] Resumen:', {
         hasServerContent: !!message.serverContent,
         turnComplete: message.serverContent?.turnComplete,
         hasToolCall: !!message.toolCall,
         messageType: this.getMessageType(message)
       });
+      console.log('🔄 [Turn] ================================================================');
 
       // Optimizar detección de turnos completos
       if (message.serverContent?.turnComplete === true) {
@@ -521,6 +539,54 @@ export class GeminiAudioService {
       this.pedidoEnProgreso.envio &&
       this.pedidoEnProgreso.facturacion
     );
+  }
+
+  /**
+   * Infiere el departamento a partir de la ciudad colombiana
+   */
+  private inferDepartmentFromCity(city: string): string {
+    const cityDepartmentMap: { [key: string]: string } = {
+      'Bogotá': 'Cundinamarca',
+      'Medellín': 'Antioquia',
+      'Cali': 'Valle del Cauca',
+      'Barranquilla': 'Atlántico',
+      'Cartagena': 'Bolívar',
+      'Bucaramanga': 'Santander',
+      'Pereira': 'Risaralda',
+      'Manizales': 'Caldas',
+      'Ibagué': 'Tolima',
+      'Pasto': 'Nariño',
+      'Cúcuta': 'Norte de Santander',
+      'Armenia': 'Quindío',
+      'Villavicencio': 'Meta',
+      'Neiva': 'Huila',
+      'Popayán': 'Cauca'
+    };
+    return cityDepartmentMap[city] || 'Cundinamarca';
+  }
+
+  /**
+   * Obtiene el código postal estándar para ciudades colombianas
+   */
+  private getPostalCodeForCity(city: string): string {
+    const cityPostalMap: { [key: string]: string } = {
+      'Bogotá': '110111',
+      'Medellín': '050001',
+      'Cali': '760001',
+      'Barranquilla': '080001',
+      'Cartagena': '130001',
+      'Bucaramanga': '680001',
+      'Pereira': '660001',
+      'Manizales': '170001',
+      'Ibagué': '730001',
+      'Pasto': '520001',
+      'Cúcuta': '540001',
+      'Armenia': '630001',
+      'Villavicencio': '500001',
+      'Neiva': '410001',
+      'Popayán': '190001'
+    };
+    return cityPostalMap[city] || '110111';
   }
 
   /**
@@ -1043,7 +1109,7 @@ export class GeminiAudioService {
   async initSessionWithKatuqTools(): Promise<void> {
     const config: GeminiLiveConfig = {
       model: 'gemini-live-2.5-flash-preview',
-      systemInstruction: `Eres un asistente de voz inteligente del sistema Katuq Seller, especializado en la gestión de inventario y ventas e inventarios de productos. 
+      systemInstruction: `Eres un asistente de voz inteligente del sistema Katuq Seller, especializado en la gestión de inventario y ventas e inventarios de productos.
 
 CAPACIDADES PRINCIPALES:
 - Gestión completa de ventas paso a paso con feedback visual esférico
@@ -1061,18 +1127,97 @@ PERSONALIDAD:
 - Explica claramente cada acción realizada
 - Crea experiencias visuales inolvidables
 
+MODO DEMO - DATOS SIMPLIFICADOS:
+- Para facturación: Solo pide el nombre del cliente (ciudad opcional)
+- Para envío: Solo pide la dirección de entrega (ciudad opcional)
+- Todo lo demás se auto-completa con datos demo realistas
+- Enfócate en velocidad y fluidez, no en formularios largos
+- IMPORTANTE: Siempre habla de precios en PESOS COLOMBIANOS (COP)
+- Usa formato de moneda colombiano: $50.000, $1.200.000, etc.
+- Di "pesos" o "pesos colombianos" cuando menciones precios
+- Ejemplos: "El total es cincuenta mil pesos", "Son dos millones de pesos"
+
+⚠️ IMPORTANTE: USO OBLIGATORIO DE HERRAMIENTAS ⚠️
+
+DEBES usar las herramientas (function calls) para TODAS las operaciones. NUNCA respondas solo con texto cuando existe una herramienta disponible.
+
+GUÍA DE USO DE HERRAMIENTAS POR PASO:
+
+1️⃣ BODEGAS
+Usuario dice: "lista bodegas" / "muestra bodegas" / "qué bodegas hay"
+→ EJECUTA: listWarehouses()
+→ Luego menciona las bodegas recibidas
+
+Usuario dice: "selecciona bodega X" / "usa la bodega principal"
+→ EJECUTA: selectWarehouse({warehouseId: "ID_DE_BODEGA"})
+
+2️⃣ PRODUCTOS
+Usuario dice: "busca productos" / "muestra productos" / "busca Samsung"
+→ EJECUTA: searchProductsAdvanced({query: "Samsung"})
+→ Lee los productos encontrados con nombre y precio
+
+Usuario dice: "agrega producto X" / "añade al carrito"
+→ EJECUTA: addToCart({productId: "ID", quantity: 1})
+
+3️⃣ CARRITO
+Usuario dice: "muestra el carrito" / "qué hay en el carrito"
+→ EJECUTA: getCartContents()
+
+4️⃣ CLIENTE
+Usuario da nombre y documento
+→ EJECUTA: quickCreateClient({name: "...", document: "..."})
+
+5️⃣ ENVÍO
+Usuario da dirección
+→ EJECUTA: configureShipping({direccion: "...", ciudad: "Bogotá"})
+
+6️⃣ FACTURACIÓN
+Usuario confirma datos
+→ EJECUTA: configureBilling({nombres: "...", ciudad: "Bogotá"})
+
+7️⃣ PAGO
+Usuario confirma pedido
+→ EJECUTA: processSale({paymentMethod: "Efectivo"})
+
+🚨 REGLAS CRÍTICAS:
+✅ CORRECTO: Usuario: "busca Samsung" → TÚ: [EJECUTAS searchProductsAdvanced] → "Encontré 3 productos Samsung..."
+❌ INCORRECTO: Usuario: "busca Samsung" → TÚ: "Claro, voy a buscar productos Samsung..." [NO HACE NADA]
+
+✅ CORRECTO: Usuario: "agrega ese producto" → TÚ: [EJECUTAS addToCart con el ID del último producto mencionado]
+❌ INCORRECTO: Usuario: "agrega ese producto" → TÚ: "Necesito que me des el ID del producto"
+
+📋 REGLAS DE DATOS:
+✅ Datos OBLIGATORIOS que DEBES pedir al usuario:
+- Bodega de origen
+- Nombres del cliente
+- Dirección completa de envío
+- Ciudad de destino
+- Productos a agregar
+
+✅ Datos OPCIONALES que puedes autocompletar:
+- Teléfonos (usa +57 por defecto)
+- Emails (genera temporal si no proporcionan)
+- Departamento (infiere de la ciudad)
+- Código postal (estándar de la ciudad)
+- Tipo documento (CC por defecto en Colombia)
+
+💬 FLUJO CONVERSACIONAL:
+Usuario: "Crea una venta para María García"
+Tú: [EJECUTAS quickCreateClient] "Cliente María creado. ¿Qué productos necesitas agregar?"
+
+Usuario: "Busca laptops"
+Tú: [EJECUTAS searchProductsAdvanced] "Encontré 5 laptops. ¿Cuál quieres agregar?"
+
+Usuario: "Agrega la primera"
+Tú: [EJECUTAS addToCart] "Laptop agregada. ¿Algo más o configuramos envío?"
+
+Usuario: "Envía a Calle 123 Bogotá"
+Tú: [EJECUTAS configureShipping] "Envío configurado a Bogotá. ¿Procesamos la venta?"
+
 FLUJO DE VENTAS COMPLETO:
 1. Seleccionar bodega → 2. Buscar productos → 3. Agregar al carrito → 4. Configurar cliente → 5. Configurar envío → 6. Configurar facturación → 7. Procesar venta → 8. Confirmación
 
-POSIBILIDADES DE INVENTARIO:
-- Buscar productos por nombre, referencia, descripción o código
-- Buscar productos por categoría
-- Buscar productos por precio
-- Buscar productos por stock
-- Buscar productos por bodega
-- Buscar productos por proveedor
-
-Siempre proporciona retroalimentación clara sobre el progreso y sugieres las mejores acciones a seguir. Crea experiencias visuales únicas en cada paso.`,
+Siempre usa las herramientas para obtener datos reales. Proporciona retroalimentación clara sobre el progreso y sugieres las mejores acciones a seguir.`,
       responseModalities: [Modality.AUDIO],
       tools: {
         functionDeclarations: [
@@ -1172,24 +1317,14 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           // === NUEVAS HERRAMIENTAS DE FACTURACIÓN ===
           {
             name: 'configureBilling',
-            description: 'Configura los datos de facturación del pedido con información completa',
+            description: 'Configura facturación con datos mínimos para demo rápida. Solo requiere el nombre, el resto se auto-completa.',
             parameters: {
               type: 'object',
               properties: {
                 nombres: { type: 'string', description: 'Nombres completos para facturación' },
-                documento: { type: 'string', description: 'Número de documento de identificación' },
-                tipoDocumento: { type: 'string', description: 'Tipo de documento (CC, CE, NIT, etc.)', default: 'CC' },
-                correoElectronico: { type: 'string', description: 'Correo electrónico para facturación' },
-                celular: { type: 'string', description: 'Número de celular para facturación' },
-                direccion: { type: 'string', description: 'Dirección completa para facturación' },
-                ciudad: { type: 'string', description: 'Ciudad para facturación' },
-                departamento: { type: 'string', description: 'Departamento para facturación' },
-                pais: { type: 'string', description: 'País para facturación', default: 'Colombia' },
-                codigoPostal: { type: 'string', description: 'Código postal (opcional)' },
-                indicativoCel: { type: 'string', description: 'Indicativo del país para celular', default: '57' },
-                alias: { type: 'string', description: 'Alias para la dirección', default: 'Principal' }
+                ciudad: { type: 'string', description: 'Ciudad para facturación (opcional, default: Bogotá)' }
               },
-              required: ['nombres', 'documento']
+              required: ['nombres']
             }
           },
           {
@@ -1212,29 +1347,14 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           // === NUEVAS HERRAMIENTAS DE ENVÍO ===
           {
             name: 'configureShipping',
-            description: 'Configura los datos de envío del pedido con información completa',
+            description: 'Configura envío con dirección básica para demo rápida. Solo requiere la dirección, el resto se auto-completa.',
             parameters: {
               type: 'object',
               properties: {
-                nombres: { type: 'string', description: 'Nombres completos para envío' },
-                apellidos: { type: 'string', description: 'Apellidos para envío' },
-                direccionEntrega: { type: 'string', description: 'Dirección completa de entrega' },
-                ciudad: { type: 'string', description: 'Ciudad de entrega' },
-                departamento: { type: 'string', description: 'Departamento de entrega' },
-                pais: { type: 'string', description: 'País de entrega', default: 'Colombia' },
-                celular: { type: 'string', description: 'Número de celular para envío' },
-                barrio: { type: 'string', description: 'Barrio o sector de entrega' },
-                codigoPV: { type: 'string', description: 'Código de punto de venta (opcional)' },
-                especificacionesInternas: { type: 'string', description: 'Especificaciones adicionales de la dirección' },
-                indicativoCel: { type: 'string', description: 'Indicativo del país para celular', default: '57' },
-                indicativoOtroNumero: { type: 'string', description: 'Indicativo para otro número (opcional)' },
-                nombreUnidad: { type: 'string', description: 'Nombre de la unidad (apartamento, oficina, etc.)' },
-                otroNumero: { type: 'string', description: 'Otro número de contacto' },
-                observaciones: { type: 'string', description: 'Observaciones adicionales para el envío' },
-                alias: { type: 'string', description: 'Alias para la dirección de envío', default: 'Principal' },
-                zonaCobro: { type: 'string', description: 'Zona de cobro para el envío' }
+                direccion: { type: 'string', description: 'Dirección completa de entrega' },
+                ciudad: { type: 'string', description: 'Ciudad de entrega (opcional, default: Bogotá)' }
               },
-              required: ['nombres', 'direccionEntrega', 'ciudad']
+              required: ['direccion']
             }
           },
           {
@@ -2317,12 +2437,15 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
    * Maneja la búsqueda avanzada de productos
    */
   private async handleSearchProductsAdvanced(args: any): Promise<DemoResponse> {
-    console.log('🔍 === INICIO: handleSearchProductsAdvanced ===');
-    console.log('🔍 Argumentos recibidos:', args);
-    console.log('🔍 Bodega seleccionada:', this.bodegaSeleccionada);
-    console.log('🔍 Productos en catálogo actual:', this.productosCatalogo?.length || 0);
-    
+    console.log('🔍 ==================== SEARCH PRODUCTS START ====================');
+    console.log('🔍 [SEARCH] Argumentos recibidos:', JSON.stringify(args, null, 2));
+    console.log('🔍 [SEARCH] Bodega seleccionada:', this.bodegaSeleccionada);
+    console.log('🔍 [SEARCH] ID Bodega:', this.bodegaSeleccionada?.idBodega);
+    console.log('🔍 [SEARCH] Productos en catálogo actual:', this.productosCatalogo?.length || 0);
+
     const { query, category, minPrice, maxPrice, minStock, sortBy, limit = 10 } = args;
+    console.log('🔍 [SEARCH] Query extraído:', query);
+    console.log('🔍 [SEARCH] Limit:', limit);
 
     if (!this.bodegaSeleccionada) {
       console.log('🔍 ❌ No hay bodega seleccionada');
@@ -2458,20 +2581,31 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       this.updateVisualStep('productos');
       this.updateOrderStatus();
 
-      console.log('🔍 === FIN: handleSearchProductsAdvanced ===');
-
       // Preparar respuesta con información detallada de productos
-      const productosFormateados = productosFiltrados.map(p => ({
-        id: p.cd,
-        nombre: p.crearProducto?.titulo || p.nombre || 'Sin nombre',
-        descripcion: p.crearProducto?.descripcion || p.descripcion || 'Sin descripción',
-        categoria: p.crearProducto?.categorias?.label || p.categorias?.label || 'Sin categoría',
-        precio: p.precio?.precioUnitarioConIva || p.precioUnitario || 0,
-        stock: p.disponibilidad?.cantidadDisponible || p.stock || 0,
-        bodega: this.bodegaSeleccionada.nombre
-      }));
+      console.log('🔍 [SEARCH] ========== FORMATEANDO RESULTADOS ==========');
+      console.log('🔍 [SEARCH] Productos filtrados antes de formatear:', productosFiltrados.length);
 
-      return {
+      const productosFormateados = productosFiltrados.map((p, index) => {
+        const formatted = {
+          id: p.cd,
+          nombre: p.crearProducto?.titulo || p.nombre || 'Sin nombre',
+          descripcion: p.crearProducto?.descripcion || p.descripcion || 'Sin descripción',
+          categoria: p.crearProducto?.categorias?.label || p.categorias?.label || 'Sin categoría',
+          precio: p.precio?.precioUnitarioConIva || p.precioUnitario || 0,
+          stock: p.disponibilidad?.cantidadDisponible || p.stock || 0,
+          bodega: this.bodegaSeleccionada.nombre
+        };
+
+        if (index < 3) {
+          console.log(`🔍 [SEARCH] Producto ${index + 1}:`, JSON.stringify(formatted, null, 2));
+        }
+
+        return formatted;
+      });
+
+      console.log('🔍 [SEARCH] Total productos formateados:', productosFormateados.length);
+
+      const response = {
         success: true,
         data: {
           products: productosFormateados,
@@ -2482,11 +2616,16 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
         },
         message: `Se encontraron ${productosFiltrados.length} productos${query ? ` para "${query}"` : ''} en ${this.bodegaSeleccionada.nombre}`,
         visualUpdate: {
-          stepName: 'productos', 
-          progress: 40, 
-          nextActions: ['Agrega productos al carrito con addToCart'] 
+          stepName: 'productos',
+          progress: 40,
+          nextActions: ['Agrega productos al carrito con addToCart']
         }
       };
+
+      console.log('🔍 [SEARCH] Response completo:', JSON.stringify(response, null, 2));
+      console.log('🔍 [SEARCH] ==================== SEARCH PRODUCTS END ====================');
+
+      return response;
 
     } catch (error: any) {
       console.error('🔍 ❌ Error en búsqueda avanzada:', error);
@@ -3136,15 +3275,26 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
   }
 
   private handleQuickCreateClient(args: any): DemoResponse {
-    const { name, document, email, phone } = args;
-    console.log('👥 Creando cliente:', { name, document });
+    console.log('👤 Creación rápida de cliente con args:', args);
+    const { name, document } = args;
+
+    if (!name || name.trim() === '') {
+      return {
+        success: false,
+        message: '❌ Necesito el nombre del cliente. Por ejemplo: "Crea cliente Juan Pérez"',
+        error: 'Nombre requerido'
+      };
+    }
 
     const newClient: Cliente = {
-      documento: document,
       nombres_completos: name,
-      correo_electronico_comprador: email || `${document}@email.com`,
-      numero_celular_comprador: phone || `300${Math.floor(Math.random() * 1000000)}`
-    };
+      documento: document || 'TEMP' + Date.now(),
+      isDemoClient: true, // NUEVO FLAG para identificar clientes demo
+      correo_electronico_comprador: `${name.split(' ')[0].toLowerCase()}@temp.co`,
+      numero_celular_comprador: '3001234567',
+      indicativo_celular_comprador: '+57',
+      tipo_documento_comprador: 'CC'
+    } as any;
 
     this.pedidoEnProgreso.cliente = newClient;
     
@@ -3152,8 +3302,8 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     this.pedidoEnProgreso.facturacion = {
       nombres: name,
       documento: document,
-      correoElectronico: email || '',
-      celular: phone || '',
+      correoElectronico: `${name.split(' ')[0].toLowerCase()}@temp.co`,
+      celular: '3001234567',
       direccion: 'Dirección por confirmar',
       ciudad: 'Bogotá',
       departamento: 'Cundinamarca',
@@ -3169,7 +3319,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       direccionEntrega: 'Dirección por confirmar',
       ciudad: 'Bogotá',
       departamento: 'Cundinamarca',
-      celular: phone || '',
+      celular: '3001234567',
       apellidos: '',
       barrio: '',
       codigoPV: '',
@@ -3184,15 +3334,16 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       zonaCobro: ''
     };
 
-    this.pasoActual = 7; // Avanzar directamente al pago
-    this.updateVisualStep('pago');
+    // Update visual step
+    this.pasoActual = 4;
+    this.updateVisualStep('cliente');
     this.updateOrderStatus();
 
     return {
       success: true,
       data: { client: newClient },
-      message: `Cliente ${name} creado exitosamente con datos auto-completados`,
-      visualUpdate: { stepName: 'pago', progress: 85, nextActions: ['Procesa la venta con processSale'] }
+      message: `✅ Cliente ${name} creado con datos demo. Puedes editar los datos después si es necesario.`,
+      visualUpdate: { stepName: 'cliente', progress: 50, nextActions: ['Agrega productos al carrito', 'Configura envío y facturación'] }
     };
   }
 
@@ -3227,6 +3378,31 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
     };
   }
 
+  /**
+   * Valida que el pedido tenga todos los datos obligatorios
+   */
+  private validateOrderData(): { isValid: boolean; errors: string[]; warnings: string[] } {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // ERRORES CRÍTICOS (bloquean venta)
+    if (!this.bodegaSeleccionada) errors.push('Bodega no seleccionada');
+    if (!this.pedidoEnProgreso.carrito?.length) errors.push('Carrito vacío');
+    if (!this.pedidoEnProgreso.cliente?.nombres_completos) errors.push('Nombre de cliente faltante');
+    if (!this.pedidoEnProgreso.envio?.direccionEntrega) errors.push('Dirección de envío faltante');
+    if (!this.pedidoEnProgreso.envio?.ciudad) errors.push('Ciudad de envío faltante');
+
+    // ADVERTENCIAS (pueden procesarse, datos fueron mock)
+    if ((this.pedidoEnProgreso.cliente as any)?.isDemoClient) warnings.push('Cliente creado con datos demo');
+    if (!this.pedidoEnProgreso.facturacion?.correoElectronico?.includes('@')) warnings.push('Email mock generado');
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }
+
   private handleValidateOrderBeforePay(_args: any): DemoResponse {
     console.log('✅ Validando pedido antes del pago');
 
@@ -3254,24 +3430,53 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
   }
 
   private async handleProcessSale(args: any): Promise<DemoResponse> {
-    console.log('💳 Procesando venta real con VentasService');
+    console.log('💳 [PROCESS SALE] Iniciando procesamiento de venta real');
+    console.log('💳 [PROCESS SALE] Args recibidos:', args);
     const { paymentMethod = 'Efectivo' } = args;
 
+    // NUEVA VALIDACIÓN DETALLADA
+    const validation = this.validateOrderData();
+    if (!validation.isValid) {
+      console.error('❌ [PROCESS SALE] Validación fallida:', validation.errors);
+      return {
+        success: false,
+        message: `❌ Faltan datos obligatorios: ${validation.errors.join(', ')}`,
+        error: 'Datos incompletos',
+        visualUpdate: {
+          stepName: 'validation',
+          progress: 85,
+          nextActions: ['Completa los datos faltantes antes de procesar']
+        }
+      };
+    }
+
+    // MOSTRAR ADVERTENCIAS PERO CONTINUAR
+    if (validation.warnings.length > 0) {
+      console.warn('⚠️ [PROCESS SALE] Advertencias:', validation.warnings.join(', '));
+    }
+
+    console.log('💳 [PROCESS SALE] Verificando si está listo para pago...');
     if (!this.isReadyForPayment()) {
+      console.error('❌ [PROCESS SALE] Pedido NO está listo para procesar');
       return { success: false, message: 'El pedido no está listo para procesar', error: 'Datos incompletos' };
     }
+    console.log('✅ [PROCESS SALE] Pedido listo para procesar');
 
     try {
       // Preparar el pedido para el sistema real
-      const orderTemplate = this.prepareOrderForRealSystem();
-      
-      console.log('📋 Pedido preparado para sistema real:', orderTemplate);
-      
+      console.log('📋 [PROCESS SALE] Llamando a prepareOrderForRealSystem...');
+      const orderTemplate = await this.prepareOrderForRealSystem();
+
+      console.log('📋 [PROCESS SALE] Pedido preparado:', JSON.stringify(orderTemplate, null, 2));
+
       // Procesar la venta usando VentasService real
+      console.log('🚀 [PROCESS SALE] Enviando pedido a VentasService.createOrder...');
       const ventaResult = await this.ventasService.createOrder(orderTemplate).toPromise();
+      console.log('📥 [PROCESS SALE] Respuesta de VentasService:', JSON.stringify(ventaResult, null, 2));
       
       if (ventaResult && ventaResult.success !== false) {
-        console.log('✅ Venta procesada exitosamente en sistema real:', ventaResult);
+        console.log('✅ [PROCESS SALE] Venta procesada exitosamente en sistema real');
+        console.log('✅ [PROCESS SALE] Resultado completo:', JSON.stringify(ventaResult, null, 2));
         
         // Actualizar el pedido local con la respuesta del sistema
         if (ventaResult.orderNumber) {
@@ -3333,10 +3538,13 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       }
       
     } catch (error: any) {
-      console.error('❌ Error procesando venta real:', error);
-      
+      console.error('❌ [PROCESS SALE] Error procesando venta real');
+      console.error('❌ [PROCESS SALE] Error completo:', error);
+      console.error('❌ [PROCESS SALE] Stack trace:', error?.stack);
+      console.error('❌ [PROCESS SALE] Mensaje:', error?.message);
+
       // Fallback a procesamiento local
-      console.log('🔄 Usando procesamiento local como fallback');
+      console.log('🔄 [PROCESS SALE] Usando procesamiento local como fallback');
       return this.handleProcessSaleLocal(args);
     }
   }
@@ -3423,57 +3631,69 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
    * Maneja la configuración de datos de facturación
    */
   private handleConfigureBilling(args: any): DemoResponse {
-    console.log('📄 handleConfigureBilling llamado con args:', args);
-    const { nombres, documento, tipoDocumento = 'CC', correoElectronico, celular, direccion, ciudad, departamento, pais = 'Colombia', codigoPostal, indicativoCel = '57', alias = 'Principal' } = args;
+    console.log('📤 Configurando facturación con args:', args);
+    const { nombres, ciudad = 'Bogotá', correo, telefono } = args;
 
-    if (!nombres || !documento) {
+    // VALIDAR SOLO DATOS CRÍTICOS
+    if (!nombres || nombres.trim() === '') {
       return {
         success: false,
-        message: 'Se requieren nombres y documento para la facturación',
-        error: 'Datos obligatorios faltantes'
+        message: '❌ Necesito el nombre para facturación. Por ejemplo: "Configura facturación para Juan Pérez"',
+        error: 'Nombre requerido',
+        visualUpdate: {
+          stepName: 'facturacion',
+          progress: 70,
+          nextActions: ['Proporciona el nombre completo para facturación']
+        }
       };
     }
 
-    // Crear objeto de facturación
-    const facturacion: Facturacion = {
-      nombres,
-      documento,
-      tipoDocumento,
-      correoElectronico: correoElectronico || `${documento}@email.com`,
-      celular: celular || `300${Math.floor(Math.random() * 1000000)}`,
-      direccion: direccion || 'Dirección por confirmar',
-      ciudad: ciudad || 'Bogotá',
-      departamento: departamento || 'Cundinamarca',
-      pais,
-      codigoPostal: codigoPostal || '',
-      indicativoCel,
-      alias
+    // USAR DATOS DEL CLIENTE SI YA EXISTEN
+    const clienteExistente = this.pedidoEnProgreso.cliente;
+    const correoFinal = correo || clienteExistente?.correo_electronico_comprador || `${nombres.split(' ')[0].toLowerCase()}@temp.co`;
+    const telefonoFinal = telefono || clienteExistente?.numero_celular_comprador || '3001234567';
+    const documentoFinal = clienteExistente?.documento || 'TEMP' + Date.now();
+
+    // Configurar facturación con datos inteligentes
+    this.pedidoEnProgreso.facturacion = {
+      nombres: nombres,
+      ciudad: ciudad,
+      departamento: this.inferDepartmentFromCity(ciudad),
+      pais: 'Colombia',
+      correoElectronico: correoFinal,
+      celular: telefonoFinal,
+      indicativoCel: '57',
+      tipoDocumento: 'CC',
+      documento: documentoFinal,
+      direccion: `Dirección ${ciudad}`,
+      codigoPostal: this.getPostalCodeForCity(ciudad),
+      alias: 'Principal'
     };
 
-    this.pedidoEnProgreso.facturacion = facturacion;
+    console.log('📤 Facturación configurada:', this.pedidoEnProgreso.facturacion);
+
+    // Actualizar paso visual
     this.pasoActual = 6;
     this.updateVisualStep('facturacion');
     this.updateOrderStatus();
 
-    // Mostrar notificación
-    this.showToast(`Facturación configurada para ${nombres}`, 'Facturación Configurada');
-
-    const response: DemoResponse = {
+    return {
       success: true,
       data: {
-        billing: facturacion,
-        customer: this.pedidoEnProgreso.cliente?.nombres_completos
+        billing: this.pedidoEnProgreso.facturacion,
+        autoCompleted: {
+          email: !correo,
+          phone: !telefono,
+          document: !clienteExistente?.documento
+        }
       },
-      message: `✅ Facturación configurada exitosamente para ${nombres} con documento ${documento}`,
+      message: `✅ Facturación configurada para ${nombres} en ${ciudad}${!correo ? ' (email temporal generado)' : ''}`,
       visualUpdate: {
         stepName: 'facturacion',
         progress: 75,
         nextActions: ['Configura el envío con configureShipping', 'Procesa la venta con processSale']
       }
     };
-
-    console.log('📤 Facturación configurada:', response);
-    return response;
   }
 
   /**
@@ -3570,62 +3790,73 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
    * Maneja la configuración de datos de envío
    */
   private handleConfigureShipping(args: any): DemoResponse {
-    console.log('🚚 handleConfigureShipping llamado con args:', args);
-    const { nombres, apellidos, direccionEntrega, ciudad, departamento, pais = 'Colombia', celular, barrio, codigoPV, especificacionesInternas, indicativoCel = '57', indicativoOtroNumero, nombreUnidad, otroNumero, observaciones, alias = 'Principal', zonaCobro } = args;
+    console.log('📤 Configurando envío con args:', args);
+    const { direccion, ciudad = 'Bogotá', barrio, telefono } = args;
 
-    if (!nombres || !direccionEntrega || !ciudad) {
+    // VALIDAR DATOS CRÍTICOS
+    if (!direccion || direccion.trim() === '') {
       return {
         success: false,
-        message: 'Se requieren nombres, dirección de entrega y ciudad para el envío',
-        error: 'Datos obligatorios faltantes'
+        message: '❌ Necesito la dirección de envío. Por ejemplo: "Envía a Calle 123 #45-67"',
+        error: 'Dirección requerida',
+        visualUpdate: {
+          stepName: 'envio',
+          progress: 60,
+          nextActions: ['Proporciona la dirección completa de envío']
+        }
       };
     }
 
-    // Crear objeto de envío
-    const envio: Envio = {
-      nombres,
-      apellidos: apellidos || '',
-      direccionEntrega,
-      ciudad,
-      departamento: departamento || 'Cundinamarca',
-      pais,
-      celular: celular || `300${Math.floor(Math.random() * 1000000)}`,
-      barrio: barrio || '',
-      codigoPV: codigoPV || '',
-      especificacionesInternas: especificacionesInternas || '',
-      indicativoCel,
-      indicativoOtroNumero: indicativoOtroNumero || '',
-      nombreUnidad: nombreUnidad || '',
-      otroNumero: otroNumero || '',
-      observaciones: observaciones || '',
-      alias,
-      zonaCobro: zonaCobro || ''
+    // USAR DATOS DEL CLIENTE SI YA EXISTEN
+    const clienteExistente = this.pedidoEnProgreso.cliente;
+    const telefonoFinal = telefono || clienteExistente?.numero_celular_comprador || '3001234567';
+    const nombresFinales = clienteExistente?.nombres_completos || 'Cliente';
+
+    // Configurar envío con datos inteligentes
+    this.pedidoEnProgreso.envio = {
+      nombres: nombresFinales,
+      apellidos: '',
+      indicativoCel: '57',
+      celular: telefonoFinal,
+      direccionEntrega: direccion,
+      barrio: barrio || 'Centro',
+      ciudad: ciudad,
+      departamento: this.inferDepartmentFromCity(ciudad),
+      pais: 'Colombia',
+      codigoPV: this.getPostalCodeForCity(ciudad),
+      observaciones: 'Envío configurado por asistente de voz',
+      especificacionesInternas: '',
+      indicativoOtroNumero: '',
+      nombreUnidad: '',
+      otroNumero: '',
+      alias: 'Principal',
+      zonaCobro: ciudad
     };
 
-    this.pedidoEnProgreso.envio = envio;
+    console.log('📤 Envío configurado:', this.pedidoEnProgreso.envio);
+
+    // Actualizar paso visual
     this.pasoActual = 5;
     this.updateVisualStep('envio');
     this.updateOrderStatus();
 
-    // Mostrar notificación
-    this.showToast(`Envío configurado para ${nombres} en ${ciudad}`, 'Envío Configurado');
-
-    const response: DemoResponse = {
+    return {
       success: true,
       data: {
-        shipping: envio,
-        customer: this.pedidoEnProgreso.cliente?.nombres_completos
+        shipping: this.pedidoEnProgreso.envio,
+        autoCompleted: {
+          phone: !telefono,
+          barrio: !barrio,
+          names: !clienteExistente?.nombres_completos
+        }
       },
-      message: `✅ Envío configurado exitosamente para ${nombres} en ${ciudad}`,
+      message: `✅ Envío configurado a ${direccion}, ${ciudad}${!telefono ? ' (teléfono del cliente usado)' : ''}`,
       visualUpdate: {
         stepName: 'envio',
         progress: 65,
         nextActions: ['Configura la facturación con configureBilling', 'Procesa la venta con processSale']
       }
     };
-
-    console.log('📤 Envío configurado:', response);
-    return response;
   }
 
   /**
@@ -4089,20 +4320,52 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
   /**
    * Prepara el pedido para el sistema real de ventas
    */
-  private prepareOrderForRealSystem(): any {
-    console.log('📋 Preparando pedido para sistema real');
-    
+  private async prepareOrderForRealSystem(): Promise<any> {
+    console.log('📋 [PREPARE ORDER] ==================== INICIO ====================');
+    console.log('📋 [PREPARE ORDER] Estado del pedido en progreso:', this.pedidoEnProgreso);
+
+    // Obtener company desde localStorage
+    const empresaActual = JSON.parse(localStorage.getItem("currentCompany") || '{}');
+    const companyName = empresaActual.nomComercial || 'KATUQ';
+    console.log('🏢 [PREPARE ORDER] Company desde localStorage:', companyName);
+
+    // Obtener número de pedido consecutivo
+    console.log('🔢 [PREPARE ORDER] Obteniendo número consecutivo de pedido...');
+    let nroPedido = this.pedidoEnProgreso.nroPedido;
+
+    if (!nroPedido) {
+      try {
+        const consecutiveResult = await this.ventasService.getNextRef(companyName).toPromise();
+        console.log('✅ [PREPARE ORDER] Resultado de getNextRef:', consecutiveResult);
+        nroPedido = consecutiveResult?.nroPedido || `PED-${Date.now()}`;
+        console.log('📌 [PREPARE ORDER] Número de pedido asignado:', nroPedido);
+      } catch (error) {
+        console.error('❌ [PREPARE ORDER] Error obteniendo consecutivo:', error);
+        nroPedido = `PED-${Date.now()}`;
+        console.log('⚠️ [PREPARE ORDER] Usando número de pedido temporal:', nroPedido);
+      }
+    } else {
+      console.log('📌 [PREPARE ORDER] Usando nroPedido existente:', nroPedido);
+    }
+
     // Calcular totales
-    const total = this.pedidoEnProgreso.carrito!.reduce((sum, item) => 
-      sum + ((item.producto?.precio?.precioUnitarioConIva || 0) * (item.cantidad || 0)), 0
-    );
+    console.log('💰 [PREPARE ORDER] Calculando totales del carrito...');
+    const total = this.pedidoEnProgreso.carrito!.reduce((sum, item) => {
+      const precio = item.producto?.precio?.precioUnitarioConIva || 0;
+      const cantidad = item.cantidad || 0;
+      const subtotalItem = precio * cantidad;
+      const nombreProducto = item.producto?.crearProducto?.titulo || item.producto?.identificacion?.referencia || 'Producto';
+      console.log(`   - ${nombreProducto}: $${precio} x ${cantidad} = $${subtotalItem}`);
+      return sum + subtotalItem;
+    }, 0);
+    console.log('💰 [PREPARE ORDER] Total calculado:', total);
 
     // Preparar template del pedido para VentasService
     const orderTemplate = {
       // Datos básicos del pedido
       referencia: this.pedidoEnProgreso.referencia || `VENTA-${Date.now()}`,
-      nroPedido: this.pedidoEnProgreso.nroPedido || `PED-${Date.now()}`,
-      company: this.pedidoEnProgreso.company || 'KATUQ',
+      nroPedido: nroPedido,
+      company: companyName,
       typeOrder: 'E-commerce',
       channel: {
         activo: true,
@@ -4113,17 +4376,17 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
 
       // Cliente
       cliente: this.pedidoEnProgreso.cliente,
-      
+
       // Bodega
       bodegaId: this.bodegaSeleccionada?.idBodega,
-      
+
       // Carrito
       carrito: this.pedidoEnProgreso.carrito?.map(item => ({
         producto: item.producto,
         cantidad: item.cantidad || 1,
         configuracion: item.configuracion
       })),
-      
+
       // Totales
       totalPedidoSinDescuento: total,
       totalPedididoConDescuento: total,
@@ -4131,26 +4394,39 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       totalDescuento: this.pedidoEnProgreso.totalDescuento || 0,
       totalImpuesto: this.pedidoEnProgreso.totalImpuesto || 0,
       subtotal: total,
-      
+
       // Forma de pago
       formaDePago: this.pedidoEnProgreso.formaDePago || 'Efectivo',
-      
+
       // Estado inicial
       estadoProceso: EstadoProceso.SinProducir,
       estadoPago: EstadoPago.Pendiente,
-      
+
       // Fechas
       fechaCreacion: new Date().toISOString(),
-      
+
       // Facturación y envío
       facturacion: this.pedidoEnProgreso.facturacion,
       envio: this.pedidoEnProgreso.envio,
-      
+
       // Notas
       notasPedido: this.pedidoEnProgreso.notasPedido
     };
 
-    console.log('📋 Template del pedido preparado:', orderTemplate);
+    console.log('📋 [PREPARE ORDER] ==================== VALIDACIÓN ====================');
+    console.log('✅ [PREPARE ORDER] referencia:', orderTemplate.referencia);
+    console.log('✅ [PREPARE ORDER] nroPedido:', orderTemplate.nroPedido);
+    console.log('✅ [PREPARE ORDER] company:', orderTemplate.company);
+    console.log('✅ [PREPARE ORDER] typeOrder:', orderTemplate.typeOrder);
+    console.log('✅ [PREPARE ORDER] channel:', orderTemplate.channel);
+    console.log('✅ [PREPARE ORDER] cliente:', orderTemplate.cliente ? '✓' : '✗ FALTA');
+    console.log('✅ [PREPARE ORDER] bodegaId:', orderTemplate.bodegaId ? '✓' : '✗ FALTA');
+    console.log('✅ [PREPARE ORDER] carrito (items):', orderTemplate.carrito?.length || 0);
+    console.log('✅ [PREPARE ORDER] facturacion:', orderTemplate.facturacion ? '✓' : '✗ FALTA');
+    console.log('✅ [PREPARE ORDER] envio:', orderTemplate.envio ? '✓' : '✗ FALTA');
+    console.log('✅ [PREPARE ORDER] subtotal:', orderTemplate.subtotal);
+    console.log('📋 [PREPARE ORDER] ==================== FIN ====================');
+
     return orderTemplate;
   }
 
