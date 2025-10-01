@@ -12,6 +12,7 @@ import { VentasService } from '../../../services/ventas/ventas.service';
 import { CartSingletonService } from "../../../services/ventas/cart.singleton.service";
 import { BodegaService } from "../../../services/bodegas/bodega.service";
 import { InventarioService } from "../../../services/inventarios/inventario.service";
+import { MaestroService } from "../../../services/maestros/maestro.service";
 import { Carrito, Pedido, Cliente, Facturacion, Envio, EstadoProceso, EstadoPago } from '../../../../components/ventas/modelo/pedido';
 import { Producto } from '../../../models/productos/Producto';
 import { UserLite } from '../../../models/User/UserLite';
@@ -159,12 +160,13 @@ export class GeminiAudioService {
   progress$: Observable<number> = this.progressSubject.asObservable();
 
   constructor(
-    private sphereVisualService: SphereVisualService, 
+    private sphereVisualService: SphereVisualService,
     private bodegaService: BodegaService,
     private inventarioService: InventarioService,
-    private cartService: CartSingletonService, 
+    private cartService: CartSingletonService,
     private ventasService: VentasService,
-    private inventoryToolsService: KatuqInventoryToolsService
+    private inventoryToolsService: KatuqInventoryToolsService,
+    private maestroService: MaestroService
   ) {
     this.initClient();
     this.initSalesSystem();
@@ -1699,7 +1701,7 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
           break;
 
         case 'searchClient':
-          response = this.handleSearchClient(args);
+          response = await this.handleSearchClient(args);
           this.emitKatuqToolEvent('searchClient', response.data, response.success, response.message);
           break;
 
@@ -3061,33 +3063,76 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
 
   // === HERRAMIENTAS DE GESTIÓN DE CLIENTES ===
 
-  private handleSearchClient(args: any): DemoResponse {
+  private async handleSearchClient(args: any): Promise<DemoResponse> {
     const { document } = args;
     console.log('👤 Buscando cliente con documento:', document);
 
     if (!document) {
-      return { success: false, message: 'Se requiere el número de documento', error: 'Documento requerido' };
+      return {
+        success: false,
+        message: 'Se requiere el número de documento',
+        error: 'Documento requerido'
+      };
     }
 
-    // Simular cliente encontrado
-    const mockClient: Cliente = {
-      documento: document,
-      nombres_completos: `Cliente Demo ${document}`,
-      correo_electronico_comprador: `cliente${document}@email.com`,
-      numero_celular_comprador: `300${document.slice(-7)}`
-    };
+    try {
+      // 🔄 BÚSQUEDA REAL usando MaestroService
+      const res: any = await this.maestroService.getClientByDocument({ documento: document }).toPromise();
 
-    this.pedidoEnProgreso.cliente = mockClient;
-    this.pasoActual = 4;
-    this.updateVisualStep('cliente');
-    this.updateOrderStatus();
+      if (!res || !res.company) {
+        // Cliente no encontrado
+        console.log('❌ Cliente no encontrado:', document);
+        return {
+          success: false,
+          message: `Cliente con documento ${document} no encontrado. ¿Deseas crear uno nuevo con quickCreateClient?`,
+          error: 'Cliente no existe',
+          visualUpdate: {
+            stepName: 'cliente',
+            progress: 50,
+            nextActions: ['Crea un nuevo cliente con quickCreateClient']
+          }
+        };
+      }
 
-    return {
-      success: true,
-      data: { client: mockClient },
-      message: `Cliente encontrado: ${mockClient.nombres_completos}`,
-      visualUpdate: { stepName: 'cliente', progress: 60, nextActions: ['Configura datos de envío'] }
-    };
+      // Cliente encontrado - mapear datos reales
+      console.log('✅ Cliente encontrado:', res.nombres_completos);
+      const cliente: Cliente = {
+        documento: res.documento,
+        nombres_completos: res.nombres_completos,
+        correo_electronico_comprador: res.correo_electronico_comprador,
+        numero_celular_comprador: res.numero_celular_comprador,
+        datosFacturacionElectronica: res.datosFacturacionElectronica,
+        datosEntrega: res.datosEntrega
+      };
+
+      this.pedidoEnProgreso.cliente = cliente;
+      this.pasoActual = 4;
+      this.updateVisualStep('cliente');
+      this.updateOrderStatus();
+
+      return {
+        success: true,
+        data: { client: cliente },
+        message: `✅ Cliente encontrado: ${cliente.nombres_completos}`,
+        visualUpdate: {
+          stepName: 'cliente',
+          progress: 60,
+          nextActions: ['Configura envío con configureShipping', 'Configura facturación con configureBilling']
+        }
+      };
+    } catch (error) {
+      console.error('❌ Error buscando cliente:', error);
+      return {
+        success: false,
+        message: `Error al buscar cliente: ${error.message || 'Error desconocido'}`,
+        error: error.message || 'Error en búsqueda',
+        visualUpdate: {
+          stepName: 'cliente',
+          progress: 50,
+          nextActions: ['Intenta de nuevo o crea un nuevo cliente con quickCreateClient']
+        }
+      };
+    }
   }
 
   private handleQuickCreateClient(args: any): DemoResponse {
@@ -4058,7 +4103,14 @@ Siempre proporciona retroalimentación clara sobre el progreso y sugieres las me
       referencia: this.pedidoEnProgreso.referencia || `VENTA-${Date.now()}`,
       nroPedido: this.pedidoEnProgreso.nroPedido || `PED-${Date.now()}`,
       company: this.pedidoEnProgreso.company || 'KATUQ',
-      
+      typeOrder: 'E-commerce',
+      channel: {
+        activo: true,
+        createdAt: new Date().toISOString(),
+        name: 'Venta Asistida',
+        tipo: 'E-commerce'
+      },
+
       // Cliente
       cliente: this.pedidoEnProgreso.cliente,
       

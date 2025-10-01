@@ -318,12 +318,17 @@ export class Visual3dComponent implements OnInit, OnChanges {
     camera.position.set(2, -2, 5);
     this.camera = camera;
 
+    // Detectar si es móvil para ajustar calidad
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
     this.renderer = new THREE.WebGLRenderer({
       canvas: this.canvasRef.nativeElement,
-      antialias: true,
+      antialias: !isMobile, // Desactivar antialiasing en móvil para mejor performance
+      powerPreference: isMobile ? 'low-power' : 'high-performance', // Modo bajo consumo en móvil
     });
     this.renderer.setSize(width, height);
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Limitar pixel ratio en móvil para mejor performance (máximo 1.5 en móvil, 2 en desktop)
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobile ? 1.5 : 2));
 
     const geometry = new THREE.IcosahedronGeometry(1.0, 8); // Tamaño moderado y detalle sutil
 
@@ -685,9 +690,12 @@ export class Visual3dComponent implements OnInit, OnChanges {
       this.toolAnimationTime = 0;
       this.toolParticles = [];
 
+      // AGREGAR Energy Wave para cada herramienta
+      this.createEnergyWaveEffect(toolConfig.color.getHex());
+
       // Crear visuales específicas según la herramienta
       this.createToolSpecificVisuals(toolConfig, toolName);
-      
+
       // Limpiar después de un tiempo
       setTimeout(() => {
         console.log('🎨 [Visual3D] Limpiando efectos de herramienta:', toolName);
@@ -1626,9 +1634,104 @@ export class Visual3dComponent implements OnInit, OnChanges {
     }
   }
 
+  private createMoneyRainEffect() {
+    const moneyGroup = new THREE.Group();
+
+    // Crear 100 billetes colombianos
+    for (let i = 0; i < 100; i++) {
+      const billGeometry = new THREE.PlaneGeometry(0.3, 0.15);
+      const billMaterial = new THREE.MeshBasicMaterial({
+        color: 0x00FF00, // Verde billete colombiano
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.9
+      });
+
+      const bill = new THREE.Mesh(billGeometry, billMaterial);
+
+      // Posición aleatoria arriba
+      bill.position.set(
+        (Math.random() - 0.5) * 4,
+        Math.random() * 3 + 2,
+        (Math.random() - 0.5) * 4
+      );
+
+      // Rotación aleatoria
+      bill.rotation.set(
+        Math.random() * Math.PI,
+        Math.random() * Math.PI,
+        Math.random() * Math.PI
+      );
+
+      // Velocidad de caída
+      (bill as any).velocity = {
+        y: -0.02 - Math.random() * 0.03,
+        rotation: (Math.random() - 0.5) * 0.1
+      };
+
+      moneyGroup.add(bill);
+    }
+
+    this.sphere.add(moneyGroup);
+    this.toolParticles.push(moneyGroup);
+
+    // Animar caída
+    const animateMoneyRain = () => {
+      moneyGroup.children.forEach((bill: any) => {
+        bill.position.y += bill.velocity.y;
+        bill.rotation.y += bill.velocity.rotation;
+        bill.rotation.x += bill.velocity.rotation * 0.5;
+
+        // Resetear cuando llegue abajo
+        if (bill.position.y < -2) {
+          bill.position.y = Math.random() * 2 + 2;
+        }
+      });
+    };
+
+    // Ejecutar animación por 5 segundos
+    const interval = setInterval(animateMoneyRain, 16);
+    setTimeout(() => clearInterval(interval), 5000);
+  }
+
+  private createEnergyWaveEffect(color: number) {
+    const waveGeometry = new THREE.RingGeometry(0.5, 0.6, 32);
+    const waveMaterial = new THREE.MeshBasicMaterial({
+      color: color,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.8
+    });
+
+    const wave = new THREE.Mesh(waveGeometry, waveMaterial);
+    wave.position.set(0, 0, 0);
+
+    this.sphere.add(wave);
+    this.toolParticles.push(wave);
+
+    // Animar expansión
+    let scale = 1;
+    const expandWave = () => {
+      scale += 0.1;
+      wave.scale.setScalar(scale);
+      waveMaterial.opacity = Math.max(0, 0.8 - (scale / 10));
+
+      if (scale < 10) {
+        requestAnimationFrame(expandWave);
+      } else {
+        this.sphere.remove(wave);
+      }
+    };
+
+    expandWave();
+  }
+
   private createCelebrationVisuals(config: ToolVisualConfig) {
-    // Crear una celebración espectacular
+    // Crear una celebración espectacular con Money Rain
     const celebrationGroup = new THREE.Group();
+
+    // AGREGAR Money Rain
+    this.createMoneyRainEffect();
     
     // Confeti dorado
     for (let i = 0; i < 50; i++) {

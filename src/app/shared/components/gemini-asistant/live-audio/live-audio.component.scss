@@ -214,58 +214,198 @@
   }
 }
 
-// Responsive adjustments
+// Responsive adjustments - OPTIMIZADO PARA DEMO MÓVIL
 @media (max-width: 768px) {
   .live-audio-fullscreen {
     .header {
-      padding: 15px;
+      padding: 12px 15px;
+      height: 60px;
 
       h1 {
-        font-size: 1.2rem;
+        font-size: 1rem;
+        font-weight: 600;
       }
 
       .close-btn {
-        padding: 8px 15px;
-        font-size: 0.8rem;
+        padding: 8px 12px;
+        font-size: 0.75rem;
+        min-width: 70px;
+
+        i {
+          margin-right: 5px;
+        }
       }
     }
 
     .main-content {
+      // Ocultar panel de logs en móvil para mejor performance
+      .visual-logs-container {
+        display: none;
+      }
+
       .controls-overlay {
-        bottom: 80px;
-        padding: 15px;
+        bottom: 100px;
+        padding: 12px 20px;
+        border-radius: 40px;
 
         .controls {
-          gap: 10px;
+          gap: 12px;
+          flex-direction: row;
 
           button {
-            min-width: 50px;
-            min-height: 50px;
+            min-width: 64px;
+            min-height: 64px;
             padding: 12px;
 
+            // Botón START más grande y destacado
+            &#startButton {
+              min-width: 80px;
+              min-height: 80px;
+              background: rgba(200, 0, 0, 0.2);
+              border: 2px solid rgba(200, 0, 0, 0.5);
+
+              &:hover {
+                background: rgba(200, 0, 0, 0.3);
+              }
+            }
+
+            // Botón STOP más grande
+            &#stopButton {
+              min-width: 80px;
+              min-height: 80px;
+              background: rgba(0, 0, 0, 0.5);
+              border: 2px solid rgba(255, 255, 255, 0.5);
+              animation: pulse-recording 1.5s ease-in-out infinite;
+            }
+
+            // Botón de test más pequeño en móvil
+            &#testVisualsButton {
+              display: none !important; // Ocultar en móvil
+            }
+
             svg {
-              width: 20px;
-              height: 20px;
+              width: 28px;
+              height: 28px;
             }
           }
         }
       }
 
       .status-overlay {
-        top: 80px;
-        padding: 10px 20px;
+        top: 70px;
+        left: 10px;
+        right: 10px;
+        transform: translateX(0);
+        padding: 12px 20px;
+        max-width: calc(100vw - 20px);
 
         .status {
-          font-size: 0.9rem;
+          font-size: 0.85rem;
+
+          .status-text {
+            display: block;
+            word-wrap: break-word;
+          }
+
+          .error-text {
+            font-size: 0.8rem;
+          }
         }
       }
     }
 
     .footer {
-      padding: 15px;
+      padding: 12px 15px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
       p {
-        font-size: 0.9rem;
+        font-size: 0.8rem;
+        line-height: 1.3;
+      }
+    }
+  }
+}
+
+// Extra responsive para celulares muy pequeños
+@media (max-width: 400px) {
+  .live-audio-fullscreen {
+    .header h1 {
+      font-size: 0.9rem;
+    }
+
+    .main-content {
+      .controls-overlay {
+        padding: 10px 15px;
+
+        .controls {
+          gap: 8px;
+
+          button {
+            min-width: 56px;
+            min-height: 56px;
+
+            &#startButton,
+            &#stopButton {
+              min-width: 70px;
+              min-height: 70px;
+            }
+          }
+        }
+      }
+
+      .status-overlay {
+        top: 65px;
+        padding: 10px 15px;
+
+        .status {
+          font-size: 0.75rem;
+        }
+      }
+    }
+
+    .footer p {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+// Animación de pulso para grabación
+@keyframes pulse-recording {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(200, 0, 0, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(200, 0, 0, 0);
+  }
+}
+
+// Mejoras de touch para móvil
+@media (hover: none) and (pointer: coarse) {
+  .live-audio-fullscreen {
+    .main-content .controls-overlay .controls button {
+      // Eliminar hover en touch devices
+      &:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: none;
+      }
+
+      // Agregar efecto touch
+      &:active {
+        transform: scale(0.95);
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+
+    .header .close-btn {
+      &:hover {
+        transform: none;
+      }
+
+      &:active {
+        transform: scale(0.95);
       }
     }
   }

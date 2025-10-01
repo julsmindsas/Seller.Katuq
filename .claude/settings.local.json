@@ -4,7 +4,8 @@
       "Bash(npx ng build:*)",
       "Bash(ng serve:*)",
       "WebFetch(domain:primeng-v14.pages.dev)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(Select-String -Pattern \"error|Error|successfully|Build\")"
     ],
     "deny": [],
     "ask": []
