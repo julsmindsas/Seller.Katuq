@@ -2709,4 +2709,667 @@ $radius-lg: 12px;
       }
     }
   }
+
+  // ========================================
+  // ESTILOS MULTI-PEDIDO - SELECTOR DE CARDS
+  // ========================================
+
+  .multi-pedido-selector {
+    margin-bottom: $spacing-xl;
+
+    .selector-header {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+      margin-bottom: $spacing-lg;
+      padding: $spacing-md;
+      background: linear-gradient(135deg, $primary 0%, darken($primary, 10%) 100%);
+      color: white;
+      border-radius: $radius-md;
+      font-size: 15px;
+      font-weight: 600;
+
+      i {
+        font-size: 20px;
+      }
+    }
+
+    .pedidos-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: $spacing-md;
+      margin-bottom: $spacing-lg;
+    }
+
+    .pedido-card-selector {
+      position: relative;
+      background: white;
+      border: 2px solid $border;
+      border-radius: $radius-md;
+      padding: $spacing-md;
+      cursor: pointer;
+      transition: all $transition-base;
+      overflow: hidden;
+
+      &:hover {
+        border-color: $primary-light;
+        box-shadow: $shadow-lg;
+        transform: translateY(-2px);
+      }
+
+      &.active {
+        border-color: $primary;
+        background: linear-gradient(135deg, rgba($primary, 0.05) 0%, rgba($primary, 0.02) 100%);
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+
+        .card-header h5 {
+          color: $primary;
+        }
+      }
+
+      .card-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: $primary;
+        color: white;
+        padding: $spacing-xs $spacing-sm;
+        border-radius: $radius-sm;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+        box-shadow: $shadow-md;
+
+        i {
+          font-size: 12px;
+        }
+      }
+
+      .card-header {
+        margin-bottom: $spacing-md;
+        padding-right: 80px; // Espacio para el badge
+
+        h5 {
+          font-size: 16px;
+          font-weight: 700;
+          color: $text-primary;
+          margin: 0;
+          transition: color $transition-fast;
+        }
+      }
+
+      .card-body {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-sm;
+
+        .info-row {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+          font-size: 13px;
+          color: $text-secondary;
+
+          i {
+            font-size: 14px;
+            color: $primary;
+            width: 18px;
+            text-align: center;
+          }
+
+          strong {
+            color: $text-primary;
+            margin-right: $spacing-xs;
+          }
+        }
+      }
+    }
+  }
+
+  // Wrapper para tabs de multi-pedido en acordeón (legacy - puede eliminarse)
+  .multi-pedido-wrapper {
+    margin-bottom: $spacing-md;
+    padding: $spacing-sm;
+    background: $lighter-bg;
+    border-radius: $radius-sm;
+    border: 1px solid $border-light;
+  }
+
+  // Badge informativo en cada tab
+  .pedido-info-badge {
+    display: flex;
+    align-items: center;
+    gap: $spacing-md;
+    flex-wrap: wrap;
+    padding: $spacing-sm;
+    background: white;
+    border-radius: $radius-sm;
+    border: 1px solid $border;
+    margin-bottom: $spacing-md;
+    font-size: 11px;
+
+    .badge-item {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      color: $text-secondary;
+
+      i {
+        color: $primary;
+        font-size: 12px;
+      }
+
+      strong {
+        color: $text-primary;
+        font-weight: 600;
+      }
+    }
+
+    span {
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      color: $text-secondary;
+
+      strong {
+        color: $text-primary;
+        font-weight: 600;
+      }
+    }
+  }
+
+  // ========================================
+  // RATES LIST COMPACT (para multi-pedido)
+  // ========================================
+  .rates-list-compact {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-sm;
+    margin-top: $spacing-md;
+
+    .rate-item-compact {
+      background: white;
+      border: 2px solid $border;
+      border-radius: $radius-md;
+      padding: $spacing-md;
+      cursor: pointer;
+      transition: all $transition-base;
+      position: relative;
+
+      &:hover {
+        border-color: $primary-light;
+        box-shadow: $shadow-md;
+        transform: translateY(-1px);
+      }
+
+      &.selected {
+        border-color: $primary;
+        background: rgba($primary, 0.03);
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+
+        .rate-price-compact .price {
+          color: $primary;
+        }
+      }
+
+      .rate-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: $spacing-sm;
+
+        .carrier-info {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+          flex: 1;
+
+          i {
+            font-size: 20px;
+            color: $primary;
+            background: rgba($primary, 0.1);
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: $radius-base;
+          }
+
+          div {
+            display: flex;
+            flex-direction: column;
+            gap: $spacing-xs;
+
+            strong {
+              font-size: 14px;
+              font-weight: 600;
+              color: $text-primary;
+            }
+
+            .service {
+              font-size: 12px;
+              color: $text-secondary;
+            }
+          }
+        }
+
+        .rate-price-compact {
+          text-align: right;
+
+          .price {
+            font-size: 18px;
+            font-weight: 700;
+            color: $text-primary;
+            white-space: nowrap;
+          }
+        }
+      }
+
+      .rate-item-details {
+        display: flex;
+        gap: $spacing-base;
+        flex-wrap: wrap;
+
+        .detail {
+          display: flex;
+          align-items: center;
+          gap: $spacing-xs;
+          font-size: 12px;
+          color: $text-secondary;
+
+          i {
+            font-size: 13px;
+            color: $primary;
+          }
+        }
+      }
+
+      .selection-indicator {
+        margin-top: $spacing-sm;
+        padding-top: $spacing-sm;
+        border-top: 1px solid $border-light;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: $spacing-xs;
+        font-size: 13px;
+        font-weight: 600;
+        color: $primary;
+
+        i {
+          font-size: 16px;
+        }
+      }
+    }
+  }
+
+  // Acciones de multi-pedido
+  .multi-pedido-actions {
+    margin-top: $spacing-lg;
+    padding: $spacing-lg;
+    background: rgba($success, 0.05);
+    border: 2px solid rgba($success, 0.2);
+    border-radius: $radius-md;
+    text-align: center;
+
+    button {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .help-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: $spacing-xs;
+      margin-top: $spacing-md;
+      font-size: 12px;
+      color: $text-secondary;
+
+      i {
+        color: $primary;
+        font-size: 14px;
+      }
+    }
+  }
+
+  // Confirmación multi-pedido
+  .multi-confirm-action {
+    margin-top: $spacing-xl;
+    padding: $spacing-xl;
+    background: white;
+    border: 2px solid $success;
+    border-radius: $radius-md;
+    text-align: center;
+
+    button {
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .help-text {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: $spacing-xs;
+      margin-top: $spacing-md;
+      font-size: 13px;
+      color: $text-secondary;
+
+      i {
+        color: $primary;
+        font-size: 15px;
+      }
+    }
+  }
+
+  // Sección de resultados multi-pedido
+  .multi-pedido-results {
+    margin-top: $spacing-xl;
+    padding: $spacing-lg;
+    background: $light-bg;
+    border-radius: $radius-md;
+    border: 2px solid $border;
+
+    .results-header-multi {
+      margin-bottom: $spacing-lg;
+      padding-bottom: $spacing-md;
+      border-bottom: 2px solid $border;
+
+      h4 {
+        display: flex;
+        align-items: center;
+        gap: $spacing-md;
+        font-size: 16px;
+        font-weight: 700;
+        color: $text-primary;
+        margin: 0;
+
+        i {
+          color: $success;
+          font-size: 20px;
+        }
+
+        .results-badge {
+          display: inline-flex;
+          align-items: center;
+          background: $success;
+          color: white;
+          font-size: 12px;
+          font-weight: 600;
+          padding: $spacing-xs $spacing-md;
+          border-radius: $radius-md;
+          margin-left: auto;
+        }
+      }
+    }
+
+    // Estado de cotización por pedido
+    .pedido-quote-status {
+      .status-loading,
+      .status-error,
+      .status-pending,
+      .status-success {
+        padding: $spacing-lg;
+        background: white;
+        border-radius: $radius-md;
+        border: 2px solid $border;
+        text-align: center;
+      }
+
+      .status-loading {
+        border-color: $warning;
+        background: rgba($warning, 0.05);
+
+        p-progressSpinner {
+          display: block;
+          margin: 0 auto $spacing-md;
+        }
+
+        p {
+          color: $text-secondary;
+          font-size: 14px;
+          margin: 0;
+        }
+      }
+
+      .status-error {
+        border-color: $danger;
+        background: rgba($danger, 0.05);
+
+        i {
+          font-size: 48px;
+          color: $danger;
+          display: block;
+          margin-bottom: $spacing-md;
+        }
+
+        h5 {
+          font-size: 16px;
+          font-weight: 600;
+          color: $text-primary;
+          margin: 0 0 $spacing-sm 0;
+        }
+
+        p {
+          color: $text-secondary;
+          font-size: 13px;
+          margin: 0 0 $spacing-md 0;
+        }
+
+        button {
+          margin: 0 auto;
+        }
+      }
+
+      .status-pending {
+        border-color: $text-muted;
+        background: $lighter-bg;
+
+        i {
+          font-size: 48px;
+          color: $text-muted;
+          display: block;
+          margin-bottom: $spacing-md;
+        }
+
+        p {
+          color: $text-secondary;
+          font-size: 14px;
+          margin: 0 0 $spacing-md 0;
+        }
+
+        button {
+          margin: 0 auto;
+        }
+      }
+
+      .status-success {
+        border-color: $success;
+        background: rgba($success, 0.02);
+
+        .rates-summary {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: $spacing-sm;
+          padding: $spacing-md;
+          background: rgba($success, 0.1);
+          border-radius: $radius-base;
+          margin-bottom: $spacing-lg;
+
+          i {
+            font-size: 20px;
+            color: $success;
+          }
+
+          p {
+            font-size: 14px;
+            font-weight: 600;
+            color: $success;
+            margin: 0;
+          }
+        }
+
+        .recotizar-action {
+          margin-top: $spacing-md;
+          padding-top: $spacing-md;
+          border-top: 1px solid $border-light;
+          text-align: center;
+        }
+      }
+
+      .status-message {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        font-size: 13px;
+        font-weight: 500;
+        color: $text-primary;
+
+        i {
+          font-size: 16px;
+        }
+
+        &.loading { color: $warning; i { color: $warning; } }
+        &.success { color: $success; i { color: $success; } }
+        &.error { color: $danger; i { color: $danger; } }
+      }
+    }
+
+    // Grilla de tarifas en resultados multi-pedido
+    .rates-list-multi {
+      display: grid;
+      gap: $spacing-md;
+      margin-top: $spacing-md;
+    }
+
+    // Mensaje de "sin resultados"
+    .no-rates-message {
+      text-align: center;
+      padding: $spacing-2xl;
+      color: $text-muted;
+      font-size: 13px;
+
+      i {
+        display: block;
+        font-size: 32px;
+        margin-bottom: $spacing-md;
+        opacity: 0.5;
+      }
+    }
+  }
+
+  // ========================================
+  // ESTILOS PARA TABS DE NG-BOOTSTRAP
+  // ========================================
+  .nav-tabs-custom {
+    background: white;
+    border: 1px solid $border;
+    border-radius: $radius-md $radius-md 0 0;
+    padding: $spacing-xs;
+    margin-bottom: 0;
+    border-bottom: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $spacing-xs;
+
+    li {
+      margin: 0;
+
+      a.nav-link {
+        border: none;
+        padding: $spacing-sm $spacing-lg;
+        font-size: 13px;
+        font-weight: 500;
+        color: $text-secondary;
+        border-radius: $radius-sm;
+        transition: all $transition-fast;
+        cursor: pointer;
+        background: transparent;
+        position: relative;
+
+        &:hover {
+          background: $lighter-bg;
+          color: $text-primary;
+        }
+
+        &.active {
+          background: $primary;
+          color: white;
+          font-weight: 600;
+          box-shadow: 0 2px 4px rgba($primary, 0.3);
+
+          &::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: $primary;
+          }
+        }
+
+        &:focus {
+          outline: none;
+          box-shadow: 0 0 0 3px rgba($primary, 0.2);
+        }
+      }
+    }
+  }
+
+  .nav-outlet {
+    padding: $spacing-md;
+    background: white;
+    border: 1px solid $border;
+    border-top: none;
+    border-radius: 0 0 $radius-md $radius-md;
+    min-height: 100px;
+  }
+
+  // Estilos específicos para multi-pedido wrapper
+  .multi-pedido-wrapper {
+    .nav-tabs-custom {
+      background: $lighter-bg;
+      border-color: $border-light;
+    }
+
+    .nav-outlet {
+      background: transparent;
+      border: none;
+      padding: $spacing-sm 0;
+    }
+  }
+
+  // Estilos para resultados
+  .multi-pedido-results {
+    .nav-tabs-custom {
+      margin-bottom: 0;
+    }
+
+    .nav-outlet {
+      padding: $spacing-lg;
+    }
+  }
+
+  // Estilos globales para ng-bootstrap nav
+  ::ng-deep {
+    .multi-pedido-wrapper,
+    .multi-pedido-results {
+      .nav-tabs {
+        border-bottom: none;
+      }
+
+      .nav-link {
+        &.active {
+          background-color: $primary !important;
+          border-color: $primary !important;
+        }
+      }
+    }
+  }
 }

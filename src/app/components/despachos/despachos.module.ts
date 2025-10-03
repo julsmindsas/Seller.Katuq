@@ -10,6 +10,7 @@ import { GalleryModule } from "@ks89/angular-modal-gallery";
 import { NgxDatatableModule } from "@swimlane/ngx-datatable";
 import { ArchwizardModule } from "angular-archwizard";
 import { NgxStarRatingModule } from "ngx-star-rating";
+import { NgbNavModule } from "@ng-bootstrap/ng-bootstrap";
 import { CalendarModule } from "primeng/calendar";
 import { MultiSelectModule } from "primeng/multiselect";
 import { SliderModule } from "primeng/slider";
@@ -98,6 +99,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     CheckboxModule,
     InputTextareaModule,
     InputTextModule,
+    NgbNavModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
   ],

@@ -2,7 +2,8 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { ToastrService } from 'ngx-toastr';
-import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs/operators';
+import { forkJoin, of, Observable } from 'rxjs';
 
 import { LogisticaServiceV2 } from '../../../../../shared/services/despachos/logistica.service.v2';
 import { ShipmentPreparationService, BodegaAnalysis } from '../../../../../shared/services/despachos/shipment-preparation.service';
@@ -12,7 +13,8 @@ import { MunicipioDane } from '../../../../../shared/data/colombia-dane-codes';
 import {
   EnviameRate,
   EnviameQuoteRequest,
-  EnviameRatesResponse
+  EnviameRatesResponse,
+  PedidoQuoteData
 } from '../models/enviame.interfaces';
 import { Pedido } from '../../../../ventas/modelo/pedido';
 
@@ -48,6 +50,16 @@ export class EnviameRatesModalComponent implements OnInit {
 
   // Estado de carga de datos
   loadingShipmentData = false;
+
+  // ========================================
+  // SOPORTE MULTI-PEDIDO
+  // ========================================
+  pedidosQuotesList: PedidoQuoteData[] = [];
+  isMultiPedidoMode: boolean = false;
+  selectedPedidoTabUbicaciones: number | string = 0;
+  selectedPedidoTabPaquete: number | string = 0;
+  selectedPedidoTabResultados: number | string = 0;
+  currentPedidoIndex: number = 0; // Índice del pedido actualmente mostrado en el formulario
 
   // Estados de carga mejorados
   loadingStep: number = 0;
@@ -296,6 +308,16 @@ export class EnviameRatesModalComponent implements OnInit {
       return;
     }
 
+    // Detectar si es multi-pedido
+    const pedidos = this.order.pedidos || [];
+    this.isMultiPedidoMode = pedidos.length > 1;
+
+    if (this.isMultiPedidoMode) {
+      console.log(`📦 Modo multi-pedido activado: ${pedidos.length} pedidos detectados`);
+      this.initializePedidosQuotes();
+      return; // Salir temprano si es multi-pedido
+    }
+
     // TEMPORALMENTE DESHABILITADO: No bloquear por validación
     const validation = this.shipmentPreparation.validateOrderForShipment(this.order);
     if (!validation.valid) {
@@ -356,6 +378,155 @@ export class EnviameRatesModalComponent implements OnInit {
         console.error('❌ Error al preparar datos del envío:', error);
       }
     });
+  }
+
+  /**
+   * Inicializa array de quotes para múltiples pedidos
+   */
+  private initializePedidosQuotes(): void {
+    console.log('🔄 Inicializando quotes para múltiples pedidos...');
+
+    const pedidos = this.order.pedidos || [];
+    this.loadingShipmentData = true;
+    this.pedidosQuotesList = [];
+
+    // Procesar cada pedido
+    pedidos.forEach((pedido: Pedido, index: number) => {
+      // Llamar al servicio de preparación para cada pedido
+      this.shipmentPreparation.prepareShipment(this.order, pedido).subscribe({
+        next: (shipment) => {
+          console.log(`✅ Pedido ${index + 1} preparado:`, shipment);
+
+          // Crear objeto PedidoQuoteData
+          const pedidoQuoteData: PedidoQuoteData = {
+            pedido: pedido,
+            pedidoIndex: index,
+
+            // Bodega (origen)
+            bodegaId: pedido.bodegaId || 'sin_bodega',
+            bodegaNombre: shipment.origin?.warehouse?.nombre ||
+                          shipment.origin?.city ||
+                          'Bodega sin nombre',
+            bodegaData: {
+              address: shipment.origin?.address || '',
+              city: shipment.origin?.city || '',
+              department: shipment.origin?.department || '',
+              country: shipment.origin?.country || 'CO',
+              postalCode: shipment.origin?.postalCode || ''
+            },
+
+            // Destino
+            destinoData: {
+              address: shipment.destination?.address || '',
+              city: shipment.destination?.city || '',
+              department: shipment.destination?.department || '',
+              country: shipment.destination?.country || 'CO',
+              postalCode: shipment.destination?.postalCode || '',
+              recipient: {
+                name: shipment.destination?.recipient?.name || '',
+                phone: shipment.destination?.recipient?.phone || '',
+                email: shipment.destination?.recipient?.email || ''
+              }
+            },
+
+            // Paquete
+            packageData: {
+              weight: shipment.package?.weight || 1,
+              dimensions: shipment.package?.dimensions || undefined,
+              value: shipment.package?.value || 0,
+              description: shipment.package?.description || 'Productos varios'
+            },
+
+            // Municipios (se cargarán después)
+            municipioOrigen: null,
+            municipioDestino: null,
+
+            // Estado inicial
+            availableRates: [],
+            selectedRate: null,
+            quotingStatus: 'pending',
+            errorMessage: undefined
+          };
+
+          this.pedidosQuotesList.push(pedidoQuoteData);
+
+          // Pre-cargar códigos DANE para este pedido
+          this.preloadMunicipiosForPedido(index, shipment);
+
+          // Verificar si todos los pedidos están listos
+          if (this.pedidosQuotesList.length === pedidos.length) {
+            this.loadingShipmentData = false;
+            console.log('✅ Todos los pedidos inicializados:', this.pedidosQuotesList);
+
+            // Cargar el primer pedido al formulario
+            if (this.pedidosQuotesList.length > 0) {
+              this.loadPedidoDataToForm(0);
+            }
+
+            this.toastr.success(
+              `${pedidos.length} pedidos listos para cotizar`,
+              'Datos cargados'
+            );
+          }
+        },
+        error: (error) => {
+          console.error(`❌ Error al preparar pedido ${index + 1}:`, error);
+          this.loadingShipmentData = false;
+          this.toastr.error(
+            `Error al preparar datos del pedido #${pedido.nroPedido || index + 1}`,
+            'Error de preparación'
+          );
+        }
+      });
+    });
+  }
+
+  /**
+   * Pre-carga códigos DANE para un pedido específico
+   */
+  private preloadMunicipiosForPedido(pedidoIndex: number, shipment: any): void {
+    const pedidoData = this.pedidosQuotesList[pedidoIndex];
+    if (!pedidoData) return;
+
+    // Pre-cargar origen
+    if (shipment.origin?.city) {
+      const searchTerm = this.normalizeText(shipment.origin.city).substring(0, 4);
+      this.daneCodesService.searchMunicipios(searchTerm).subscribe(municipios => {
+        const municipiosConScore = municipios
+          .map(m => ({
+            municipio: m,
+            score: this.fuzzySearchCity(shipment.origin.city, m.nombre)
+          }))
+          .filter(item => item.score > 40)
+          .sort((a, b) => b.score - a.score);
+
+        if (municipiosConScore.length > 0) {
+          pedidoData.municipioOrigen = municipiosConScore[0].municipio;
+          console.log(`✅ Municipio origen cargado para pedido ${pedidoIndex + 1}:`,
+                      pedidoData.municipioOrigen.nombre);
+        }
+      });
+    }
+
+    // Pre-cargar destino
+    if (shipment.destination?.city) {
+      const searchTerm = this.normalizeText(shipment.destination.city).substring(0, 4);
+      this.daneCodesService.searchMunicipios(searchTerm).subscribe(municipios => {
+        const municipiosConScore = municipios
+          .map(m => ({
+            municipio: m,
+            score: this.fuzzySearchCity(shipment.destination.city, m.nombre)
+          }))
+          .filter(item => item.score > 40)
+          .sort((a, b) => b.score - a.score);
+
+        if (municipiosConScore.length > 0) {
+          pedidoData.municipioDestino = municipiosConScore[0].municipio;
+          console.log(`✅ Municipio destino cargado para pedido ${pedidoIndex + 1}:`,
+                      pedidoData.municipioDestino.nombre);
+        }
+      });
+    }
   }
 
   loadOrderData(): void {
@@ -601,6 +772,436 @@ export class EnviameRatesModalComponent implements OnInit {
     });
   }
 
+  // ========================================
+  // MÉTODOS PARA MULTI-PEDIDO
+  // ========================================
+
+  /**
+   * Cotiza todos los pedidos en paralelo
+   */
+  cotizarTodosPedidos(): void {
+    if (!this.isMultiPedidoMode || this.pedidosQuotesList.length === 0) {
+      this.toastr.warning('No hay pedidos para cotizar', 'Sin pedidos');
+      return;
+    }
+
+    // Guardar datos del pedido actual antes de cotizar
+    this.savePedidoDataFromForm(this.currentPedidoIndex);
+
+    console.log('📦 Cotizando todos los pedidos...');
+    const cotizaciones = this.pedidosQuotesList.map((pedido, index) =>
+      this.cotizarPedidoObservable(index)
+    );
+
+    forkJoin(cotizaciones).subscribe({
+      next: (resultados) => {
+        console.log('✅ Todas las cotizaciones completadas:', resultados);
+        const exitosos = resultados.filter(r => r.success).length;
+        const fallidos = resultados.length - exitosos;
+
+        if (exitosos > 0) {
+          this.toastr.success(
+            `${exitosos} pedido(s) cotizado(s) exitosamente${fallidos > 0 ? `, ${fallidos} fallido(s)` : ''}`,
+            'Cotizaciones completas'
+          );
+        } else {
+          this.toastr.error('No se pudieron cotizar los pedidos', 'Error de cotización');
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error al cotizar pedidos:', error);
+        this.toastr.error('Error al procesar las cotizaciones', 'Error');
+      }
+    });
+  }
+
+  /**
+   * Cotiza un pedido específico
+   */
+  cotizarPedido(pedidoIndex: number): void {
+    if (!this.pedidosQuotesList[pedidoIndex]) {
+      console.error(`❌ Pedido ${pedidoIndex} no existe`);
+      return;
+    }
+
+    console.log(`📦 Cotizando pedido ${pedidoIndex + 1}...`);
+
+    this.cotizarPedidoObservable(pedidoIndex).subscribe({
+      next: (resultado) => {
+        if (resultado.success) {
+          this.toastr.success(
+            `${resultado.ratesCount} opciones disponibles`,
+            `Pedido #${resultado.pedidoNro || pedidoIndex + 1} cotizado`
+          );
+        } else {
+          this.toastr.error(
+            resultado.error || 'Error desconocido',
+            `Error en pedido #${resultado.pedidoNro || pedidoIndex + 1}`
+          );
+        }
+      },
+      error: (error) => {
+        console.error(`❌ Error al cotizar pedido ${pedidoIndex + 1}:`, error);
+        this.toastr.error('Error al cotizar', 'Error');
+      }
+    });
+  }
+
+  /**
+   * Observable para cotizar un pedido (usado en forkJoin)
+   */
+  private cotizarPedidoObservable(pedidoIndex: number): Observable<any> {
+    const pedidoData = this.pedidosQuotesList[pedidoIndex];
+    if (!pedidoData) {
+      return of({ success: false, pedidoIndex, error: 'Pedido no encontrado' });
+    }
+
+    // Marcar como loading
+    pedidoData.quotingStatus = 'loading';
+    pedidoData.errorMessage = undefined;
+
+    // Construir request de cotización
+    const quoteRequest = this.buildQuoteRequestForPedido(pedidoData);
+
+    return this.logisticaService.getRates(quoteRequest).pipe(
+      map((response: EnviameRatesResponse) => {
+        if (response.success && response.rates && response.rates.length > 0) {
+          pedidoData.availableRates = response.rates;
+          pedidoData.quotingStatus = 'success';
+
+          console.log(`✅ Pedido ${pedidoIndex + 1}: ${response.rates.length} tarifas`);
+
+          return {
+            success: true,
+            pedidoIndex,
+            pedidoNro: pedidoData.pedido.nroPedido,
+            ratesCount: response.rates.length
+          };
+        } else {
+          pedidoData.quotingStatus = 'error';
+          pedidoData.errorMessage = 'No se encontraron tarifas disponibles';
+
+          return {
+            success: false,
+            pedidoIndex,
+            pedidoNro: pedidoData.pedido.nroPedido,
+            error: pedidoData.errorMessage
+          };
+        }
+      }),
+      catchError((error) => {
+        console.error(`❌ Error cotizando pedido ${pedidoIndex + 1}:`, error);
+        pedidoData.quotingStatus = 'error';
+        pedidoData.errorMessage = error?.message || 'Error al obtener cotización';
+
+        return of({
+          success: false,
+          pedidoIndex,
+          pedidoNro: pedidoData.pedido.nroPedido,
+          error: pedidoData.errorMessage
+        });
+      })
+    );
+  }
+
+  /**
+   * Construye el EnviameQuoteRequest para un pedido específico
+   */
+  private buildQuoteRequestForPedido(pedidoData: PedidoQuoteData): EnviameQuoteRequest {
+    // Preparar origen con códigos DANE
+    const originData: any = {
+      address: pedidoData.bodegaData.address || 'Dirección pendiente',
+      city: pedidoData.bodegaData.city,
+      country: pedidoData.bodegaData.country,
+      postalCode: pedidoData.bodegaData.postalCode
+    };
+
+    if (pedidoData.municipioOrigen) {
+      originData.municipioCode = pedidoData.municipioOrigen.codigo;
+      originData.municipioName = pedidoData.municipioOrigen.nombre;
+      originData.placeCode = this.daneCodesService.getPlaceCode(pedidoData.municipioOrigen.codigo);
+    }
+
+    // Preparar destino con códigos DANE
+    const destinationData: any = {
+      address: pedidoData.destinoData.address || 'Dirección pendiente',
+      city: pedidoData.destinoData.city,
+      country: pedidoData.destinoData.country,
+      postalCode: pedidoData.destinoData.postalCode
+    };
+
+    if (pedidoData.municipioDestino) {
+      destinationData.municipioCode = pedidoData.municipioDestino.codigo;
+      destinationData.municipioName = pedidoData.municipioDestino.nombre;
+      destinationData.placeCode = this.daneCodesService.getPlaceCode(pedidoData.municipioDestino.codigo);
+    }
+
+    // Preparar paquete
+    const packageData: any = {
+      weight: pedidoData.packageData.weight,
+      value: pedidoData.packageData.value,
+      description: pedidoData.packageData.description
+    };
+
+    // Agregar dimensiones si existen
+    if (pedidoData.packageData.dimensions) {
+      packageData.dimensions = pedidoData.packageData.dimensions;
+    }
+
+    // Construir request
+    const quoteRequest: EnviameQuoteRequest = {
+      companyId: this.companyId,
+      provider: 'enviame',
+      origin: originData,
+      destination: destinationData,
+      package: packageData,
+      shippingType: this.quoteForm?.get('shippingType')?.value || 'estandar',
+      options: {
+        insuranceValue: this.quoteForm?.get('insurance')?.value ? packageData.value : 0,
+        cashOnDelivery: this.quoteForm?.get('cashOnDelivery')?.value || false,
+        signature: this.quoteForm?.get('signature')?.value || false
+      }
+    };
+
+    // Agregar distancia si es Express
+    const distanceKm = this.quoteForm?.get('distanceKm')?.value;
+    if (quoteRequest.shippingType === 'express' && distanceKm) {
+      (quoteRequest as any).distanceKm = distanceKm;
+    }
+
+    return quoteRequest;
+  }
+
+  /**
+   * Selecciona una tarifa para un pedido específico
+   */
+  onSelectRateForPedido(pedidoIndex: number, rate: EnviameRate): void {
+    if (this.pedidosQuotesList[pedidoIndex]) {
+      this.pedidosQuotesList[pedidoIndex].selectedRate = rate;
+      console.log(`✅ Tarifa seleccionada para pedido ${pedidoIndex + 1}:`, rate.service);
+    }
+  }
+
+  /**
+   * Obtiene el tab header para un pedido
+   */
+  getPedidoTabHeader(pedidoData: PedidoQuoteData): string {
+    const nroPedido = pedidoData.pedido.nroPedido || `#${pedidoData.pedidoIndex + 1}`;
+    return `Pedido ${nroPedido}`;
+  }
+
+  /**
+   * Verifica si todos los pedidos tienen tarifa seleccionada
+   */
+  allPedidosHaveSelectedRate(): boolean {
+    return this.pedidosQuotesList.length > 0 &&
+           this.pedidosQuotesList.every(p => p.selectedRate !== null);
+  }
+
+  /**
+   * Cuenta cuántos pedidos tienen tarifas cotizadas
+   */
+  getQuotedPedidosCount(): number {
+    return this.pedidosQuotesList.filter(p => p.quotingStatus === 'success').length;
+  }
+
+  /**
+   * Guarda los datos actuales del formulario en el pedido correspondiente
+   */
+  savePedidoDataFromForm(pedidoIndex: number): void {
+    if (!this.pedidosQuotesList[pedidoIndex] || !this.quoteForm) {
+      return;
+    }
+
+    const pedidoData = this.pedidosQuotesList[pedidoIndex];
+    const formData = this.quoteForm.value;
+
+    // Actualizar datos de bodega (origen)
+    pedidoData.bodegaData = {
+      address: formData.originAddress || pedidoData.bodegaData.address,
+      city: formData.originCity || pedidoData.bodegaData.city,
+      department: pedidoData.bodegaData.department,
+      country: formData.originCountry || pedidoData.bodegaData.country,
+      postalCode: formData.originPostalCode || pedidoData.bodegaData.postalCode
+    };
+
+    // Actualizar municipio origen si cambió
+    if (this.municipioSeleccionadoOrigen) {
+      pedidoData.municipioOrigen = this.municipioSeleccionadoOrigen;
+    }
+
+    // Actualizar datos de destino
+    pedidoData.destinoData = {
+      address: formData.destinationAddress || pedidoData.destinoData.address,
+      city: formData.destinationCity || pedidoData.destinoData.city,
+      department: pedidoData.destinoData.department,
+      country: formData.destinationCountry || pedidoData.destinoData.country,
+      postalCode: formData.destinationPostalCode || pedidoData.destinoData.postalCode,
+      recipient: {
+        name: formData.recipientName || pedidoData.destinoData.recipient.name,
+        phone: formData.recipientPhone || pedidoData.destinoData.recipient.phone,
+        email: formData.recipientEmail || pedidoData.destinoData.recipient.email
+      }
+    };
+
+    // Actualizar municipio destino si cambió
+    if (this.municipioSeleccionadoDestino) {
+      pedidoData.municipioDestino = this.municipioSeleccionadoDestino;
+    }
+
+    // Actualizar datos del paquete
+    pedidoData.packageData = {
+      weight: formData.weight || pedidoData.packageData.weight,
+      dimensions: (formData.length && formData.width && formData.height) ? {
+        length: formData.length,
+        width: formData.width,
+        height: formData.height
+      } : pedidoData.packageData.dimensions,
+      value: formData.value || pedidoData.packageData.value,
+      description: formData.description || pedidoData.packageData.description
+    };
+
+    console.log(`💾 Datos guardados para pedido ${pedidoIndex + 1}`);
+  }
+
+  /**
+   * Carga los datos de un pedido al formulario
+   */
+  loadPedidoDataToForm(pedidoIndex: number): void {
+    if (!this.pedidosQuotesList[pedidoIndex] || !this.quoteForm) {
+      console.warn(`⚠️ No se puede cargar pedido ${pedidoIndex}: datos no disponibles`);
+      return;
+    }
+
+    const pedidoData = this.pedidosQuotesList[pedidoIndex];
+
+    console.log(`📥 Cargando datos del pedido ${pedidoIndex + 1} al formulario:`, {
+      bodega: pedidoData.bodegaNombre,
+      ciudad: pedidoData.bodegaData.city,
+      destino: pedidoData.destinoData.city,
+      destinatario: pedidoData.destinoData.recipient.name
+    });
+
+    // Actualizar referencias de municipios primero
+    if (pedidoData.municipioOrigen) {
+      this.municipioSeleccionadoOrigen = pedidoData.municipioOrigen;
+    }
+    if (pedidoData.municipioDestino) {
+      this.municipioSeleccionadoDestino = pedidoData.municipioDestino;
+    }
+
+    // Construir objeto de valores consolidado
+    const formValues: any = {
+      // Origen
+      originAddress: pedidoData.bodegaData.address || '',
+      originCity: pedidoData.bodegaData.city || '',
+      originCountry: pedidoData.bodegaData.country || 'CO',
+      originPostalCode: pedidoData.bodegaData.postalCode || '',
+
+      // Destino
+      destinationAddress: pedidoData.destinoData.address || '',
+      destinationCity: pedidoData.destinoData.city || '',
+      destinationCountry: pedidoData.destinoData.country || 'CO',
+      destinationPostalCode: pedidoData.destinoData.postalCode || '',
+
+      // Destinatario
+      recipientName: pedidoData.destinoData.recipient.name || '',
+      recipientPhone: pedidoData.destinoData.recipient.phone || '',
+      recipientEmail: pedidoData.destinoData.recipient.email || '',
+
+      // Paquete
+      weight: pedidoData.packageData.weight || 1,
+      value: pedidoData.packageData.value || 0,
+      description: pedidoData.packageData.description || ''
+    };
+
+    // Añadir municipio origen si existe
+    if (pedidoData.municipioOrigen) {
+      formValues.originMunicipio = {
+        nombre: pedidoData.municipioOrigen.nombre,
+        departamento: pedidoData.municipioOrigen.departamento,
+        codigo: pedidoData.municipioOrigen.codigo,
+        label: `${pedidoData.municipioOrigen.nombre}, ${pedidoData.municipioOrigen.departamento}`
+      };
+    }
+
+    // Añadir municipio destino si existe
+    if (pedidoData.municipioDestino) {
+      formValues.destinationMunicipio = {
+        nombre: pedidoData.municipioDestino.nombre,
+        departamento: pedidoData.municipioDestino.departamento,
+        codigo: pedidoData.municipioDestino.codigo,
+        label: `${pedidoData.municipioDestino.nombre}, ${pedidoData.municipioDestino.departamento}`
+      };
+    }
+
+    // Añadir dimensiones si existen
+    if (pedidoData.packageData.dimensions) {
+      formValues.length = pedidoData.packageData.dimensions.length || 30;
+      formValues.width = pedidoData.packageData.dimensions.width || 20;
+      formValues.height = pedidoData.packageData.dimensions.height || 15;
+    }
+
+    // Actualizar índice actual
+    this.currentPedidoIndex = pedidoIndex;
+
+    // RESETEAR el formulario primero para forzar la actualización
+    this.quoteForm.reset(formValues, { emitEvent: false });
+
+    // Luego hacer un patchValue para asegurar que todos los valores se actualicen
+    setTimeout(() => {
+      this.quoteForm.patchValue(formValues, { emitEvent: false });
+
+      // Forzar detección de cambios múltiples veces
+      this.cdr.detectChanges();
+      this.cdr.markForCheck();
+
+      console.log(`✅ Formulario actualizado - Pedido ${pedidoIndex + 1}:`, {
+        destinatario: this.quoteForm.get('recipientName')?.value,
+        ciudad: this.quoteForm.get('destinationCity')?.value
+      });
+    }, 100);
+  }
+
+  /**
+   * Selecciona un pedido para editar (reemplaza los tabs)
+   */
+  selectPedido(newIndex: number): void {
+    console.log(`🔄 Seleccionando pedido: ${this.currentPedidoIndex} → ${newIndex}`);
+
+    // Si es el mismo índice, no hacer nada
+    if (this.currentPedidoIndex === newIndex) {
+      console.log(`⏭️  Ya está seleccionado el pedido ${newIndex + 1}`);
+      return;
+    }
+
+    const pedidoData = this.pedidosQuotesList[newIndex];
+    console.log(`📦 Pedido seleccionado:`, {
+      nroPedido: pedidoData.pedido.nroPedido,
+      bodega: pedidoData.bodegaNombre,
+      destinatario: pedidoData.destinoData.recipient.name
+    });
+
+    // Guardar datos del pedido actual antes de cambiar
+    this.savePedidoDataFromForm(this.currentPedidoIndex);
+
+    // Actualizar el índice actual
+    this.currentPedidoIndex = newIndex;
+
+    // Cargar datos del nuevo pedido inmediatamente
+    this.loadPedidoDataToForm(newIndex);
+
+    // Scroll suave al formulario
+    setTimeout(() => {
+      const formElement = document.querySelector('.locations-grid-2col, .package-form-enhanced');
+      if (formElement) {
+        formElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }, 200);
+
+    console.log(`✅ Pedido ${newIndex + 1} cargado correctamente`);
+  }
+
   onConfirmShipment(): void {
     if (!this.selectedRate) {
       this.toastr.warning('Selecciona una opción de envío para continuar', 'Opción requerida');
@@ -679,6 +1280,149 @@ export class EnviameRatesModalComponent implements OnInit {
         console.error('Error al crear envío:', error);
         this.creatingShipment = false;
         this.toastr.error('Error al crear el envío. Verifica los datos e intenta nuevamente.', 'Error al crear envío');
+      }
+    });
+  }
+
+  /**
+   * Confirma y crea múltiples envíos (uno por pedido)
+   */
+  onConfirmMultipleShipments(): void {
+    // Verificar que todos tengan tarifa seleccionada
+    if (!this.allPedidosHaveSelectedRate()) {
+      this.toastr.warning('Todos los pedidos deben tener una tarifa seleccionada', 'Selección incompleta');
+      return;
+    }
+
+    // Guardar datos del pedido actual antes de confirmar
+    this.savePedidoDataFromForm(this.currentPedidoIndex);
+
+    console.log('📦 Creando múltiples envíos...');
+
+    this.creatingShipment = true;
+
+    // Crear array de observables para crear cada envío
+    const shipmentCreations = this.pedidosQuotesList.map((pedidoData, index) => {
+      const shipmentPayload = {
+        companyId: this.companyId,
+        provider: 'enviame',
+        order: {
+          nroShippingOrder: this.order.nroShippingOrder,
+          fecha: this.order.fecha,
+          pedidos: [pedidoData.pedido] // Solo este pedido
+        },
+        selectedService: {
+          service: pedidoData.selectedRate!.service,
+          serviceCode: pedidoData.selectedRate!.serviceCode,
+          carrier: pedidoData.selectedRate!.carrier,
+          carrierCode: pedidoData.selectedRate!.carrierCode,
+          price: pedidoData.selectedRate!.price,
+          basePrice: pedidoData.selectedRate!.basePrice,
+          taxes: pedidoData.selectedRate!.taxes
+        },
+        origin: {
+          address: pedidoData.bodegaData.address,
+          city: pedidoData.bodegaData.city,
+          country: pedidoData.bodegaData.country,
+          postalCode: pedidoData.bodegaData.postalCode
+        },
+        destination: {
+          address: pedidoData.destinoData.address,
+          city: pedidoData.destinoData.city,
+          country: pedidoData.destinoData.country,
+          postalCode: pedidoData.destinoData.postalCode,
+          recipient: {
+            name: pedidoData.destinoData.recipient.name,
+            phone: pedidoData.destinoData.recipient.phone,
+            email: pedidoData.destinoData.recipient.email
+          }
+        },
+        package: {
+          weight: pedidoData.packageData.weight,
+          dimensions: pedidoData.packageData.dimensions,
+          value: pedidoData.packageData.value,
+          description: pedidoData.packageData.description
+        },
+        options: {
+          insuranceValue: this.quoteForm?.get('insurance')?.value ? pedidoData.packageData.value : 0,
+          cashOnDelivery: this.quoteForm?.get('cashOnDelivery')?.value || false,
+          signature: this.quoteForm?.get('signature')?.value || false,
+          normalizeResponse: false
+        }
+      };
+
+      return this.logisticaService.createShipment(shipmentPayload).pipe(
+        map((response) => ({
+          success: true,
+          pedidoIndex: index,
+          pedidoNro: pedidoData.pedido.nroPedido,
+          response
+        })),
+        catchError((error) => {
+          console.error(`❌ Error creando envío para pedido ${index + 1}:`, error);
+          return of({
+            success: false,
+            pedidoIndex: index,
+            pedidoNro: pedidoData.pedido.nroPedido,
+            error: error?.message || 'Error desconocido'
+          });
+        })
+      );
+    });
+
+    // Ejecutar todas las creaciones en paralelo
+    forkJoin(shipmentCreations).subscribe({
+      next: (resultados) => {
+        this.creatingShipment = false;
+
+        const exitosos = resultados.filter(r => r.success).length;
+        const fallidos = resultados.length - exitosos;
+
+        console.log('✅ Creación de envíos completada:', {
+          exitosos,
+          fallidos,
+          total: resultados.length
+        });
+
+        if (exitosos === resultados.length) {
+          // Todos exitosos
+          this.toastr.success(
+            `${exitosos} envío(s) creado(s) exitosamente`,
+            'Envíos creados'
+          );
+
+          // Cerrar modal con resultado exitoso
+          this.dialogRef.close({
+            confirmed: true,
+            multiShipment: true,
+            shipmentsData: resultados.filter(r => r.success)
+          });
+        } else if (exitosos > 0) {
+          // Algunos exitosos, algunos fallidos
+          this.toastr.warning(
+            `${exitosos} envío(s) creado(s), ${fallidos} fallido(s)`,
+            'Creación parcial'
+          );
+
+          // Cerrar modal con resultado parcial
+          this.dialogRef.close({
+            confirmed: true,
+            multiShipment: true,
+            partial: true,
+            shipmentsData: resultados
+          });
+        } else {
+          // Todos fallaron
+          this.toastr.error(
+            'No se pudo crear ningún envío. Verifica los datos e intenta nuevamente.',
+            'Error al crear envíos'
+          );
+        }
+      },
+      error: (error) => {
+        this.creatingShipment = false;
+        console.error('❌ Error general al crear envíos:', error);
+        this.toastr.error('Error al procesar los envíos', 'Error');
       }
     });
   }

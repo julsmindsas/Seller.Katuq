@@ -183,6 +183,45 @@
             </ng-template>
 
             <div class="step-content">
+
+              <!-- MODO MULTI-PEDIDO: Selector de pedido -->
+              <div *ngIf="isMultiPedidoMode" class="multi-pedido-selector">
+                <div class="selector-header">
+                  <i class="pi pi-box"></i>
+                  <span>Selecciona el pedido a configurar ({{currentPedidoIndex + 1}} de {{pedidosQuotesList.length}}):</span>
+                </div>
+
+                <div class="pedidos-cards-grid">
+                  <div *ngFor="let pedidoData of pedidosQuotesList; let i = index"
+                       class="pedido-card-selector"
+                       [class.active]="currentPedidoIndex === i"
+                       (click)="selectPedido(i)">
+                    <div class="card-badge" *ngIf="currentPedidoIndex === i">
+                      <i class="pi pi-check-circle"></i>
+                      Editando
+                    </div>
+                    <div class="card-header">
+                      <h5>{{getPedidoTabHeader(pedidoData)}}</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="info-row">
+                        <i class="pi pi-building"></i>
+                        <span><strong>Bodega:</strong> {{pedidoData.bodegaNombre}}</span>
+                      </div>
+                      <div class="info-row">
+                        <i class="pi pi-map-marker"></i>
+                        <span><strong>Destino:</strong> {{pedidoData.destinoData.city}}</span>
+                      </div>
+                      <div class="info-row">
+                        <i class="pi pi-user"></i>
+                        <span><strong>Cliente:</strong> {{pedidoData.destinoData.recipient.name}}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Formulario de ubicaciones (ÚNICO - se actualiza según pedido seleccionado) -->
               <div class="locations-grid-2col">
 
                 <!-- Origen -->
@@ -431,7 +470,45 @@
             </ng-template>
 
             <div class="step-content">
-              <!-- ENHANCED PACKAGE FORM - MODERN & USER-FRIENDLY -->
+
+              <!-- MODO MULTI-PEDIDO: Selector de pedido (mismo que en ubicaciones) -->
+              <div *ngIf="isMultiPedidoMode" class="multi-pedido-selector">
+                <div class="selector-header">
+                  <i class="pi pi-box"></i>
+                  <span>Selecciona el pedido a configurar ({{currentPedidoIndex + 1}} de {{pedidosQuotesList.length}}):</span>
+                </div>
+
+                <div class="pedidos-cards-grid">
+                  <div *ngFor="let pedidoData of pedidosQuotesList; let i = index"
+                       class="pedido-card-selector"
+                       [class.active]="currentPedidoIndex === i"
+                       (click)="selectPedido(i)">
+                    <div class="card-badge" *ngIf="currentPedidoIndex === i">
+                      <i class="pi pi-check-circle"></i>
+                      Editando
+                    </div>
+                    <div class="card-header">
+                      <h5>{{getPedidoTabHeader(pedidoData)}}</h5>
+                    </div>
+                    <div class="card-body">
+                      <div class="info-row">
+                        <i class="pi pi-box"></i>
+                        <span><strong>Pedido:</strong> {{pedidoData.pedido.nroPedido}}</span>
+                      </div>
+                      <div class="info-row">
+                        <i class="pi pi-building"></i>
+                        <span><strong>Bodega:</strong> {{pedidoData.bodegaNombre}}</span>
+                      </div>
+                      <div class="info-row">
+                        <i class="pi pi-box"></i>
+                        <span><strong>Peso:</strong> {{pedidoData.packageData.weight}} kg</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Formulario de paquete (ÚNICO - se actualiza según pedido seleccionado) -->
               <div class="package-form-enhanced">
 
                 <!-- Main Package Info Card -->
@@ -659,6 +736,21 @@
                   </div>
                 </div>
 
+              </div> <!-- Cierre de package-form-enhanced -->
+
+              <!-- Botón de cotización para multi-pedido (antes de guardar cambios) -->
+              <div *ngIf="isMultiPedidoMode" class="multi-pedido-actions">
+                <button type="button"
+                        pButton
+                        label="Cotizar Todos los Pedidos ({{pedidosQuotesList.length}})"
+                        icon="pi pi-calculator"
+                        class="p-button-lg p-button-success"
+                        (click)="cotizarTodosPedidos()">
+                </button>
+                <p class="help-text">
+                  <i class="pi pi-info-circle"></i>
+                  Se realizarán {{pedidosQuotesList.length}} cotizaciones individuales
+                </p>
               </div>
 
               <!-- Botones de navegación -->
@@ -754,8 +846,132 @@
 
       </form>
 
-      <!-- Botón de Cotizar (siempre visible al final) -->
-      <div class="action-quote-accordion">
+      <!-- ========================================= -->
+      <!-- RESULTADOS MULTI-PEDIDO -->
+      <!-- ========================================= -->
+      <div *ngIf="isMultiPedidoMode && getQuotedPedidosCount() > 0" class="multi-pedido-results">
+        <div class="results-header-multi">
+          <h4>
+            <i class="pi pi-check-circle"></i>
+            Resultados de Cotización
+            <span class="results-badge">{{getQuotedPedidosCount()}} / {{pedidosQuotesList.length}} pedidos cotizados</span>
+          </h4>
+        </div>
+
+        <!-- Tabs con resultados por pedido -->
+        <ul ngbNav #navResultados="ngbNav" [(activeId)]="selectedPedidoTabResultados" class="nav-tabs nav-tabs-custom">
+          <li *ngFor="let pedidoData of pedidosQuotesList; let i = index" [ngbNavItem]="i">
+            <a ngbNavLink>{{getPedidoTabHeader(pedidoData)}}</a>
+            <ng-template ngbNavContent>
+              <!-- Estado del pedido -->
+              <div class="pedido-quote-status">
+              <!-- Loading -->
+              <div *ngIf="pedidoData.quotingStatus === 'loading'" class="status-loading">
+                <p-progressSpinner strokeWidth="3" [style]="{width: '50px', height: '50px'}"></p-progressSpinner>
+                <p>Cotizando pedido...</p>
+              </div>
+
+              <!-- Error -->
+              <div *ngIf="pedidoData.quotingStatus === 'error'" class="status-error">
+                <i class="pi pi-exclamation-circle"></i>
+                <h5>Error al cotizar</h5>
+                <p>{{pedidoData.errorMessage || 'No se pudieron obtener tarifas para este pedido'}}</p>
+                <button pButton
+                        label="Reintentar"
+                        icon="pi pi-refresh"
+                        class="p-button-sm"
+                        (click)="cotizarPedido(i)"></button>
+              </div>
+
+              <!-- Pending -->
+              <div *ngIf="pedidoData.quotingStatus === 'pending'" class="status-pending">
+                <i class="pi pi-info-circle"></i>
+                <p>Este pedido aún no ha sido cotizado</p>
+                <button pButton
+                        label="Cotizar Ahora"
+                        icon="pi pi-calculator"
+                        class="p-button-sm p-button-success"
+                        (click)="cotizarPedido(i)"></button>
+              </div>
+
+              <!-- Success - Mostrar tarifas -->
+              <div *ngIf="pedidoData.quotingStatus === 'success' && pedidoData.availableRates.length > 0"
+                   class="status-success">
+                <div class="rates-summary">
+                  <p>
+                    <i class="pi pi-check-circle"></i>
+                    {{pedidoData.availableRates.length}} opciones disponibles
+                  </p>
+                </div>
+
+                <!-- Grid de tarifas del pedido -->
+                <div class="rates-list-compact">
+                  <div class="rate-item-compact"
+                       *ngFor="let rate of pedidoData.availableRates"
+                       [class.selected]="pedidoData.selectedRate === rate"
+                       (click)="onSelectRateForPedido(i, rate)">
+
+                    <div class="rate-item-header">
+                      <div class="carrier-info">
+                        <i class="pi pi-truck"></i>
+                        <div>
+                          <strong>{{rate.carrier}}</strong>
+                          <span class="service">{{rate.service}}</span>
+                        </div>
+                      </div>
+                      <div class="rate-price-compact">
+                        <span class="price">{{ formatPrice(rate.price) }}</span>
+                      </div>
+                    </div>
+
+                    <div class="rate-item-details">
+                      <span class="detail">
+                        <i class="pi pi-clock"></i>
+                        {{rate.estimatedTime || rate.estimatedDays || 'Consultar'}}
+                      </span>
+                    </div>
+
+                    <!-- Indicador de selección -->
+                    <div class="selection-indicator" *ngIf="pedidoData.selectedRate === rate">
+                      <i class="pi pi-check"></i>
+                      Seleccionada
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botón de recotizar individual -->
+                <div class="recotizar-action">
+                  <button pButton
+                          label="Recotizar este pedido"
+                          icon="pi pi-refresh"
+                          class="p-button-sm p-button-text"
+                          (click)="cotizarPedido(i)"></button>
+                </div>
+              </div>
+            </div>
+            </ng-template>
+          </li>
+        </ul>
+        <div [ngbNavOutlet]="navResultados" class="nav-outlet"></div>
+
+        <!-- Botón de confirmación (solo si todos tienen tarifa seleccionada) -->
+        <div *ngIf="allPedidosHaveSelectedRate()" class="multi-confirm-action">
+          <button pButton
+                  label="Confirmar Envíos para Todos los Pedidos"
+                  icon="pi pi-check"
+                  class="p-button-lg p-button-success"
+                  [loading]="creatingShipment"
+                  (click)="onConfirmMultipleShipments()">
+          </button>
+          <p class="help-text">
+            <i class="pi pi-info-circle"></i>
+            Se crearán {{pedidosQuotesList.length}} envíos individuales
+          </p>
+        </div>
+      </div>
+
+      <!-- Botón de Cotizar (siempre visible al final - solo modo normal) -->
+      <div *ngIf="!isMultiPedidoMode" class="action-quote-accordion">
         <button type="button"
                 pButton
                 label="Obtener Cotización"

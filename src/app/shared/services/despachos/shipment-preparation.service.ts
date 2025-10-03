@@ -83,6 +83,8 @@ export class ShipmentPreparationService {
 
   /**
    * Prepara toda la información del envío desde una orden con múltiples pedidos
+   * @param order - Orden completa con múltiples pedidos
+   * @param pedido - Pedido específico a usar (si se proporciona, usa este en lugar del primero)
    */
   prepareShipment(order: any, pedido?: Pedido): Observable<PreparedShipment> {
     const pedidos = order.pedidos || [];
@@ -91,21 +93,30 @@ export class ShipmentPreparationService {
       throw new Error('La orden no tiene pedidos válidos');
     }
 
-    // Usar el primer pedido como base para dirección de entrega y datos principales
-    const mainPedido = pedidos[0];
+    // CORRECCIÓN: Si se proporciona un pedido específico, usar ese.
+    // De lo contrario, usar el primer pedido como base
+    const mainPedido = pedido || pedidos[0];
 
-    // Determinar bodega: usar la del primer pedido o buscar una común
-    const bodegaId = this.determineBodegaForOrder(pedidos);
+    console.log(`📦 prepareShipment - Usando pedido específico:`, {
+      pedidoProporcionado: !!pedido,
+      nroPedido: mainPedido.nroPedido,
+      cliente: mainPedido.cliente?.nombres_completos,
+      bodegaId: mainPedido.bodegaId
+    });
+
+    // Determinar bodega: si hay un pedido específico, usar su bodega
+    // De lo contrario, buscar una bodega común
+    const bodegaId = pedido ? pedido.bodegaId : this.determineBodegaForOrder(pedidos);
 
     return this.getOriginFromWarehouse(bodegaId).pipe(
       map(origin => ({
         origin: origin,
         destination: this.getDestinationFromOrder(mainPedido),
-        package: this.calculateConsolidatedPackageDetails(pedidos),
-        paymentMethod: this.determinePaymentMethod(pedidos),
-        isCashOnDelivery: this.determineIfCashOnDelivery(pedidos),
+        package: pedido ? this.getPackageDetailsForSinglePedido(pedido) : this.calculateConsolidatedPackageDetails(pedidos),
+        paymentMethod: this.determinePaymentMethod([mainPedido]),
+        isCashOnDelivery: this.determineIfCashOnDelivery([mainPedido]),
         orderReference: order.nroShippingOrder || order.nroOrden || mainPedido.nroPedido || '',
-        totalValue: this.calculateTotalOrderValue(pedidos)
+        totalValue: pedido ? this.calculatePedidoValue(pedido) : this.calculateTotalOrderValue(pedidos)
       }))
     );
   }
@@ -198,6 +209,21 @@ export class ShipmentPreparationService {
       description,
       items: pedido.carrito || []
     };
+  }
+
+  /**
+   * Obtiene los detalles del paquete para un pedido específico
+   * (Alias para calculatePackageDetails con mejor nombre)
+   */
+  private getPackageDetailsForSinglePedido(pedido: Pedido): ShipmentPackage {
+    return this.calculatePackageDetails(pedido);
+  }
+
+  /**
+   * Calcula el valor de un pedido específico
+   */
+  private calculatePedidoValue(pedido: Pedido): number {
+    return pedido.totalPedididoConDescuento || 0;
   }
 
   /**

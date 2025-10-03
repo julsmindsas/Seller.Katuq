@@ -255,3 +255,62 @@ export interface EnviameRateFormConfig {
   allowedCountries: string[];
   requiredFields: string[];
 }
+
+/**
+ * Datos de cotización por pedido individual
+ * Usado para manejar múltiples pedidos con diferentes bodegas/destinos
+ */
+export interface PedidoQuoteData {
+  // Datos del pedido
+  pedido: any;  // Pedido interface
+  pedidoIndex: number;
+
+  // Información de bodega (origen)
+  bodegaId: string;
+  bodegaNombre: string;
+  bodegaData: {
+    address: string;
+    city: string;
+    department: string;
+    country: string;
+    postalCode?: string;
+  };
+
+  // Información de destino
+  destinoData: {
+    address: string;
+    city: string;
+    department: string;
+    country: string;
+    postalCode?: string;
+    recipient: {
+      name: string;
+      phone: string;
+      email: string;
+    };
+  };
+
+  // Información del paquete
+  packageData: {
+    weight: number;
+    dimensions?: {
+      length: number;
+      width: number;
+      height: number;
+    };
+    value: number;
+    description: string;
+  };
+
+  // Municipios DANE
+  municipioOrigen: any;
+  municipioDestino: any;
+
+  // Resultados de cotización
+  availableRates: EnviameRate[];
+  selectedRate: EnviameRate | null;
+
+  // Estado de cotización
+  quotingStatus: 'pending' | 'loading' | 'success' | 'error';
+  errorMessage?: string;
+}
