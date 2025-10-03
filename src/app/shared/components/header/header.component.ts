@@ -1,5 +1,7 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, Inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { NavService } from '../../services/nav.service';
 import { LayoutService } from '../../services/layout.service';
 import { NotificationrlService } from '../../services/notificationrl.service';
@@ -12,7 +14,8 @@ import { TourNavigationService } from '../../services/tour-navigation.service';
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
   public elem: any;
   public dark: boolean = this.layout.config.settings.layout_version == 'dark-only' ? true : false;
@@ -41,10 +44,12 @@ export class HeaderComponent implements OnInit {
     // });
   }
   loadNotifications() {
-    this.notificationService.getNotifications().subscribe((notifications) => {
-      this.unreadNotifications = notifications.filter((n) => !n.read); // Filtra las no leídas
-      this.newTickets = notifications; // Lista completa de notificaciones
-    });
+    this.notificationService.getNotifications()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((notifications) => {
+        this.unreadNotifications = notifications.filter((n) => !n.read); // Filtra las no leídas
+        this.newTickets = notifications; // Lista completa de notificaciones
+      });
   }
   // Marcar una notificación como leída
   markNotificationAsRead(notificationId: string) {
@@ -58,8 +63,9 @@ export class HeaderComponent implements OnInit {
     this.elem = document.documentElement;
     this.loadNotifications();
 
-
-    this.UserLogged = JSON.parse(localStorage.getItem('user')!);
+    // Validar localStorage antes de parsear
+    const userData = localStorage.getItem('user');
+    this.UserLogged = userData ? JSON.parse(userData) : {};
 
     this.dark = this.UserLogged.tema;
     this.layout.config.settings.layout_version = this.dark ? 'dark-only' : 'light';
@@ -102,17 +108,13 @@ export class HeaderComponent implements OnInit {
       tema: this.dark,
     }
 
-    this.service.updateUser(item).subscribe((res: any) => {
-
-      // const data = await res;
-
-      this.UserLogged.tema = this.dark;
-
-      localStorage.setItem('user', JSON.stringify(this.UserLogged));
-
-      document.body.style.backgroundColor = this.dark ? 'black' : 'white';
-
-    });
+    this.service.updateUser(item)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((res: any) => {
+        this.UserLogged.tema = this.dark;
+        localStorage.setItem('user', JSON.stringify(this.UserLogged));
+        document.body.style.backgroundColor = this.dark ? 'black' : 'white';
+      });
   }
 
   searchToggle() {
@@ -139,7 +141,7 @@ export class HeaderComponent implements OnInit {
         this.elem.msRequestFullscreen();
       }
     } else {
-      if (!this.document.exitFullscreen) {
+      if (this.document.exitFullscreen) {
         this.document.exitFullscreen();
       } else if (this.document.mozCancelFullScreen) {
         /* Firefox */
@@ -157,6 +159,11 @@ export class HeaderComponent implements OnInit {
   openTourMenu() {
     console.log('Opening tour menu...');
     this.tourNavigationService.showTourMenu();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 }

@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { NavService, Menu } from '../../../../services/nav.service';
 
 @Component({
@@ -6,7 +8,8 @@ import { NavService, Menu } from '../../../../services/nav.service';
   templateUrl: './bookmark.component.html',
   styleUrls: ['./bookmark.component.scss']
 })
-export class BookmarkComponent implements OnInit {
+export class BookmarkComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
   public menuItems: Menu[];
   public items: Menu[];
@@ -24,20 +27,22 @@ export class BookmarkComponent implements OnInit {
   constructor(public navServices: NavService) { }
 
   ngOnInit() {
-    this.navServices.items.subscribe(menuItems => {
-      this.items = menuItems
-      this.items.filter(items => {
-        if (items.bookmark) {
-          this.bookmarkItems.push(items)
-        }
-        if(!items.children) return false;
-        items.children.filter(subItems => {
-          if (subItems.bookmark) {
-            this.bookmarkItems.push(subItems);
+    this.navServices.items
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(menuItems => {
+        this.items = menuItems
+        this.items.filter(items => {
+          if (items.bookmark) {
+            this.bookmarkItems.push(items)
           }
+          if(!items.children) return;
+          items.children.filter(subItems => {
+            if (subItems.bookmark) {
+              this.bookmarkItems.push(subItems);
+            }
+          });
         });
       });
-    });
   }
 
   openBookMark() {
@@ -57,17 +62,17 @@ export class BookmarkComponent implements OnInit {
     const items = [];
     term = term.toLowerCase();
     this.items.filter(menuItems => {
-      if (!menuItems?.title) return false
+      if (!menuItems?.title) return;
       if (menuItems.title.toLowerCase().includes(term) && menuItems.type === 'link') {
         items.push(menuItems);
       }
-      if (!menuItems.children) { return false; }
+      if (!menuItems.children) { return; }
       menuItems.children.filter(subItems => {
         if (subItems.title.toLowerCase().includes(term) && subItems.type === 'link') {
           subItems.icon = menuItems.icon;
           items.push(subItems);
         }
-        if (!subItems.children) { return false; }
+        if (!subItems.children) { return; }
         subItems.children.filter(suSubItems => {
           if (suSubItems.title.toLowerCase().includes(term)) {
             suSubItems.icon = menuItems.icon;
@@ -107,6 +112,11 @@ export class BookmarkComponent implements OnInit {
       this.bookmarkItems.splice(index, 1);
       items.bookmark = false;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 }

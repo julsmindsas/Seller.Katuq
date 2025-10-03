@@ -68,6 +68,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   // Referencias para cleanup
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
+  private cleanupInterval: any;
 
   // Enums para template
   public NotificationPriority = NotificationPriority;
@@ -86,6 +87,9 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.cleanupInterval) {
+      clearInterval(this.cleanupInterval);
+    }
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -119,7 +123,7 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       });
 
     // Configurar limpeza automática de notificaciones expiradas
-    setInterval(() => {
+    this.cleanupInterval = setInterval(() => {
       this.notificationManager.cleanupExpiredNotifications();
     }, 5 * 60 * 1000); // Cada 5 minutos
   }
@@ -203,6 +207,13 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     const startIndex = (this.currentPage - 1) * this.pageSize;
     const endIndex = startIndex + this.pageSize;
     return this.filteredNotifications.slice(0, endIndex);
+  }
+
+  /**
+   * TrackBy function para optimizar el renderizado de la lista de notificaciones
+   */
+  public trackByNotificationId(index: number, notification: KatuqNotification): string {
+    return notification.id || index.toString();
   }
 
   /**

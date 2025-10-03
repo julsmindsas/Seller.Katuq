@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { NavService, Menu } from '../../../../services/nav.service';
 
 @Component({
@@ -6,17 +8,22 @@ import { NavService, Menu } from '../../../../services/nav.service';
   templateUrl: './mega-menu.component.html',
   styleUrls: ['./mega-menu.component.scss']
 })
-export class MegaMenuComponent implements OnInit {
+export class MegaMenuComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
   public megaItems: Menu[];
   public levelmenuitems: Menu[];
-  
-  constructor(public navServices: NavService) { 
-    this.navServices.megaItems.subscribe(megaItems => this.megaItems = megaItems);
-    this.navServices.levelmenuitems.subscribe(levelmenuitems => this.levelmenuitems = levelmenuitems);
-  }
+
+  constructor(public navServices: NavService) { }
 
   ngOnInit() {
+    this.navServices.megaItems
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(megaItems => this.megaItems = megaItems);
+
+    this.navServices.levelmenuitems
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(levelmenuitems => this.levelmenuitems = levelmenuitems);
   }
 
   megaMenuToggle() {
@@ -42,7 +49,7 @@ export class MegaMenuComponent implements OnInit {
         if (this.megaItems.includes(item)) {
           a.active = false;
         }
-        if (!a.children) { return false; }
+        if (!a.children) { return; }
         a.children.forEach(b => {
           if (a.children.includes(item)) {
             b.active = false;
@@ -53,5 +60,9 @@ export class MegaMenuComponent implements OnInit {
     item.active = !item.active;
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
 }

@@ -1,4 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import { NavService, Menu } from '../../../../services/nav.service';
 import { UserLogged } from '../../../../../shared/models/User/UserLogged';
@@ -9,7 +11,8 @@ import { MaestroService } from '../../../../services/maestros/maestro.service';
   templateUrl: './languages.component.html',
   styleUrls: ['./languages.component.scss']
 })
-export class LanguagesComponent implements OnInit {
+export class LanguagesComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
 
   public language: boolean = false;
 
@@ -53,13 +56,15 @@ export class LanguagesComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    // Validar localStorage antes de parsear
+    const userData = localStorage.getItem('user');
+    this.UserLogged = userData ? JSON.parse(userData) as UserLogged : null;
 
-    this.UserLogged = JSON.parse(localStorage.getItem('user')!) as UserLogged;
-
-    this.translate.use(this.UserLogged.lang.code)
-    this.translate.setDefaultLang(this.UserLogged.lang.code)
-    this.selectedLanguage = this.UserLogged.lang;
-
+    if (this.UserLogged?.lang) {
+      this.translate.use(this.UserLogged.lang.code)
+      this.translate.setDefaultLang(this.UserLogged.lang.code)
+      this.selectedLanguage = this.UserLogged.lang;
+    }
   }
 
   changeLanguage(lang: any) {
@@ -70,14 +75,6 @@ export class LanguagesComponent implements OnInit {
   }
 
   async guardarLenguaje(lang: any) {
-
-    // const item = {
-    //   email: this.UserLogged.email,
-    //   emailAnt: this.UserLogged.email,
-    //   idioma: lang,
-    //   settings: '1',
-    // }
-
     this.UserLogged.lang = lang;
 
     const item: any = {
@@ -85,11 +82,16 @@ export class LanguagesComponent implements OnInit {
       lang: lang
     }
 
-    this.service.updateUser(item).subscribe((response: any) => {
+    this.service.updateUser(item)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((response: any) => {
+        localStorage.setItem("user", JSON.stringify(this.UserLogged));
+      });
+  }
 
-      localStorage.setItem("user", JSON.stringify(this.UserLogged));
-
-    });
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
 }
