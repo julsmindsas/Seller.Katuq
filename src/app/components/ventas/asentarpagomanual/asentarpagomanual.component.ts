@@ -153,7 +153,16 @@ export class AsentarpagomanualComponent implements OnInit {
       console.log("Pagos existentes:", this.pedido.PagosAsentados?.length || 0);
       console.log("Nuevo valor a registrar:", this.transaccionForm.value.valor);
 
-      const valorNuevoPago = Number(this.transaccionForm.get("valor")?.value) || 0;
+      // ✅ CORREGIDO: Preservar el valor exacto del formulario
+      const valorNuevoPago = parseFloat(String(this.transaccionForm.get("valor")?.value)) || 0;
+      
+      console.log(`🔍 DEBUG ASENTAMIENTO PAGO - Pedido ${this.pedido.nroPedido}:`, {
+        valorFormularioOriginal: this.transaccionForm.get("valor")?.value,
+        valorFormularioParseado: valorNuevoPago,
+        totalPedido: this.pedido.totalPedididoConDescuento,
+        anticipoAnterior: this.pedido.anticipo,
+        faltaPorPagarAnterior: this.pedido.faltaPorPagar
+      });
       const formaPagoSeleccionada = this.transaccionForm.get("formaPago")?.value;
       const formaPagoObj = Array.isArray(this.formasPago)
         ? this.formasPago.find((f: any) => f?.id == formaPagoSeleccionada)
@@ -196,7 +205,8 @@ export class AsentarpagomanualComponent implements OnInit {
                               pago.estadoVerificacion !== "Cancelado";
           
           if (estadoValido) {
-            const valorPago = Number(pago.valor || pago.valorRegistrado || 0) || 0;
+            // ✅ CORREGIDO: Usar parseFloat para evitar pérdida de precisión
+            const valorPago = parseFloat(String(pago.valor || pago.valorRegistrado || 0)) || 0;
             console.log(`💰 PAGO INCLUIDO EN CÁLCULO - Pedido ${order.nroPedido}:`, {
               formaPago: pago.formaPago,
               estadoVerificacion: pago.estadoVerificacion,
@@ -216,11 +226,25 @@ export class AsentarpagomanualComponent implements OnInit {
           }
         }, 0);
 
-        order.anticipo = Math.round((totalPagosAsentados + Number.EPSILON) * 100) / 100;
+        // ✅ CORREGIDO: Función de redondeo segura para evitar errores de precisión
+        const safeRound = (value: number, decimals: number = 2): number => {
+          return Math.round((value + Number.EPSILON) * Math.pow(10, decimals)) / Math.pow(10, decimals);
+        };
+
+        order.anticipo = safeRound(totalPagosAsentados);
         order.faltaPorPagar = Math.max(
           0,
-          Math.round(((order.totalPedididoConDescuento || 0) - totalPagosAsentados + Number.EPSILON) * 100) / 100,
+          safeRound((order.totalPedididoConDescuento || 0) - totalPagosAsentados),
         );
+
+        console.log(`💰 RESULTADO FINAL ASENTAMIENTO - Pedido ${order.nroPedido}:`, {
+          valorNuevoPago,
+          totalPagosAsentados,
+          anticipoFinal: order.anticipo,
+          faltaPorPagarFinal: order.faltaPorPagar,
+          totalPedido: order.totalPedididoConDescuento,
+          diferencia: totalPagosAsentados - order.anticipo
+        });
 
         if (order.faltaPorPagar <= 0) {
           order.estadoPago = EstadoPago.Aprobado;
