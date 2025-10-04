@@ -52,13 +52,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.collapseMenu && this.isTemporarilyExpanded && !this.isAutoCollapseEnabled && !this.isMobile()) {
       this.isMouseInsideSidebar = false;
 
-      // MEJORA: Delay aumentado a 500ms y verificar si hay submenús abiertos
+      // ✅ OPTIMIZADO: Delay reducido a 300ms para mejor responsividad
       this.hoverExpandTimeout = setTimeout(() => {
         // No colapsar si hay un submenú abierto o el mouse volvió a entrar
         if (!this.hasOpenSubmenu() && !this.isMouseInsideSidebar) {
           this.isTemporarilyExpanded = false;
         }
-      }, 500); // Aumentado de 300ms a 500ms
+      }, this.collapseDelayMs); // Configurable: 300ms
     }
   }
 
@@ -137,7 +137,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public isTemporarilyExpanded: boolean = false;
   private hoverExpandTimeout: any;
   private isMouseInsideSidebar: boolean = false;
-  private collapseDelayMs: number = 500; // Delay configurable
+  private collapseDelayMs: number = 300; // ✅ Optimizado: 500ms → 300ms
 
   // Propiedades para auto-collapse (DEPRECADO - será eliminado)
   public isAutoCollapseEnabled: boolean = false;

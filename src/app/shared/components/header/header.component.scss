@@ -1,28 +1,92 @@
-/* Header Component Styles - Consistente con Sidebar */
+/* Header Component Styles - MEJORADO VISUALMENTE */
 .page-header {
   position: relative;
-  z-index: 1025; // Mayor que sidebar (1035) pero menor que modales
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-  min-height: 60px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  z-index: var(--z-header, 1025);
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); // ✨ Gradiente sutil
+  backdrop-filter: blur(12px); // Mayor blur
+  border-bottom: 2px solid #e5e7eb; // Border más notorio
+  min-height: 70px; // ✨ Más alto (60px → 70px)
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12),
+              0 1px 3px rgba(0, 0, 0, 0.08); // ✨ Sombra más profunda
+  font-family: var(--font-family, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+
+  transition: background-color 0.3s ease,
+              border-color 0.3s ease,
+              box-shadow 0.3s ease;
 
   .header-wrapper {
-    padding: 8px 16px; // Consistente con sidebar spacing
+    padding: 12px 24px; // ✨ Más espacioso (8px→12px, 16px→24px)
     align-items: center;
-    
+
+    // ✨ Logo móvil mejorado
+    .header-logo-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      .logo-wrapper {
+        padding: 8px 16px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+        border-radius: 12px;
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+        img {
+          max-height: 36px;
+          transition: transform 0.2s ease;
+
+          &:hover {
+            transform: scale(1.05);
+          }
+        }
+      }
+
+      .toggle-sidebar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+        border: 1px solid rgba(99, 102, 241, 0.15);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
+        &:hover {
+          background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+          border-color: rgba(99, 102, 241, 0.3);
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        &:active {
+          transform: translateY(0);
+        }
+
+        ::ng-deep app-feather-icons svg {
+          color: #6366f1;
+          width: 20px;
+          height: 20px;
+        }
+      }
+    }
+
     .left-header {
       display: flex;
       align-items: center;
-      min-height: 44px; // Consistente con sidebar menu items
+      min-height: 46px;
+      padding-right: 24px;
+      border-right: 2px solid #e5e7eb; // ✨ Separador visual
+      margin-right: 24px;
     }
 
     .nav-right {
       .nav-menus {
         display: flex;
         align-items: center;
-        gap: 4px; // Consistente con sidebar spacing
+        gap: 12px; // ✨ Más espacio entre items (4px → 12px)
         margin: 0;
         padding: 0;
         list-style: none;
@@ -36,27 +100,39 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 32px;
-            height: 32px;
-            border-radius: 6px; // Consistente con sidebar radius
+            width: 42px; // ✨ Más grande (32px → 42px)
+            height: 42px;
+            border-radius: 10px; // ✨ Más redondeado (6px → 10px)
             cursor: pointer;
-            transition: all 0.1s ease-out; // Consistente con sidebar transitions
-            background: rgba(0, 0, 0, 0.03);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%); // ✨ Gradiente
+            border: 1px solid rgba(99, 102, 241, 0.15); // ✨ Border sutil
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); // ✨ Sombra sutil
 
             &:hover {
-              background: rgba(0, 0, 0, 0.08);
+              background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+              border-color: rgba(99, 102, 241, 0.3);
+              transform: translateY(-2px) scale(1.05); // ✨ Efecto lift
+              box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+            }
+
+            &:active {
+              transform: translateY(0) scale(0.98);
+              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
             }
 
             svg, i {
-              font-size: 13px; // Consistente con sidebar icon size
+              font-size: 18px; // ✨ Más grande (14px → 18px)
+              color: #6366f1; // ✨ Color primary
+              transition: color 0.3s ease;
             }
           }
 
           .language-nav {
             cursor: pointer;
-            padding: 6px 12px; // Consistente con sidebar menu padding
-            border-radius: 6px;
-            transition: all 0.1s ease-out;
+            padding: var(--item-padding-y, 8px) var(--item-padding-x, 12px);
+            border-radius: var(--radius-sm, 6px);
+            transition: all var(--transition-ultrafast, 0.1s) ease-out;
 
             &:hover {
               background: rgba(0, 0, 0, 0.05);
@@ -68,26 +144,50 @@
   }
 }
 
-/* Dark theme - Consistente con sidebar dark theme */
+/* Dark theme - MEJORADO VISUALMENTE */
 body.dark-only {
   .page-header {
-    background: rgba(31, 41, 55, 0.95); // Consistente con sidebar dark bg
-    border-bottom-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%); // ✨ Gradiente oscuro
+    border-bottom: 2px solid #374151; // ✨ Border más notorio
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6),
+                0 1px 4px rgba(0, 0, 0, 0.4); // ✨ Sombra más profunda
 
     .header-wrapper {
+      .left-header {
+        border-right-color: #374151; // ✨ Separador dark
+      }
+
       .nav-right .nav-menus li {
         .header-search,
         .mode {
-          background: rgba(255, 255, 255, 0.05);
+          background: linear-gradient(135deg, rgba(129, 140, 248, 0.15) 0%, rgba(167, 139, 250, 0.15) 100%); // ✨ Gradiente purple
+          border: 1px solid rgba(129, 140, 248, 0.25);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
           &:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(129, 140, 248, 0.25) 0%, rgba(167, 139, 250, 0.25) 100%);
+            border-color: rgba(129, 140, 248, 0.4);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 16px rgba(129, 140, 248, 0.3);
+          }
+
+          &:active {
+            transform: translateY(0) scale(0.98);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+          }
+
+          svg, i {
+            color: #a5b4fc; // ✨ Purple claro
           }
         }
 
-        .language-nav:hover {
-          background: rgba(255, 255, 255, 0.05);
+        .language-nav {
+          transition: background-color 0.2s ease, color 0.3s ease;
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+          }
         }
       }
     }
@@ -98,12 +198,13 @@ body.dark-only {
 @media (max-width: 991px) {
   .page-header {
     min-height: 56px;
+    z-index: calc(var(--z-header, 1025) + 1); // Ligeramente más alto en tablets
 
     .header-wrapper {
-      padding: 6px 12px;
+      padding: var(--spacing-sm, 6px) var(--spacing-lg, 12px);
 
       .nav-right .nav-menus {
-        gap: 2px;
+        gap: var(--spacing-xs, 2px);
 
         li {
           .header-search,
