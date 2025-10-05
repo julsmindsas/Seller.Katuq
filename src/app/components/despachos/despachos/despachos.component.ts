@@ -4067,14 +4067,14 @@ export class DespachosComponent implements OnInit {
 
   private getOptimizedPDFOptions() {
     return {
-      margin: [0.5, 0.4, 0.5, 0.4],
+      margin: [0.31, 0.31, 0.31, 0.31], // 8mm margins for paper savings
       filename: `orden-envio-${this.nroShippingOrder}.pdf`,
       image: {
-        type: "jpeg",
-        quality: 0.8,
+        type: "png",
+        quality: 1.0, // Maximum quality for crisp text
       },
       html2canvas: {
-        scale: 1.0,
+        scale: 3.0, // 288 DPI for high resolution
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
@@ -4082,10 +4082,16 @@ export class DespachosComponent implements OnInit {
         letterRendering: true,
       },
       jsPDF: {
-        unit: "in",
+        unit: "mm", // More precise than inches
         format: "a4",
         orientation: "landscape",
+        compress: true,
+        precision: 16,
       },
+      pagebreak: {
+        mode: ['avoid-all', 'css', 'legacy'],
+        avoid: 'tr' // Don't cut table rows
+      }
     };
   }
 

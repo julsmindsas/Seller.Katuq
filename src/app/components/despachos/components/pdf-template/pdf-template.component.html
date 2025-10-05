@@ -56,10 +56,21 @@
       <tbody>
         <tr *ngFor="let pedido of pedidos; trackBy: trackByPedido">
           <td>{{ getValorSeguro(pedido.nroPedido) }}</td>
-          <td>
-            <p class="cliente-nombre"><strong>Nombre:</strong> {{ getClienteNombre(pedido) }}</p>
-            <p class="cliente-telefono"><strong>Teléfono:</strong> {{ getTelefonoDestinatario(pedido) }}</p>
-            <p class="cliente-informacion-adicional"><strong>Información Adicional:</strong> {{ getObservacionesCompletas(pedido) }}</p>
+          <td class="col-cliente">
+            <div class="cliente-info-compact">
+              <div class="cliente-line">
+                <strong class="label-inline">Nombre:</strong>
+                <span class="data-inline">{{ getClienteNombreCompacto(pedido) }}</span>
+              </div>
+              <div class="cliente-line">
+                <strong class="label-inline">Tel:</strong>
+                <span class="data-inline">{{ getTelefonoDestinatario(pedido) }}</span>
+              </div>
+              <div class="cliente-line direccion-line">
+                <strong class="label-inline">Dir:</strong>
+                <span class="data-inline direccion-text">{{ getObservacionesCompactasPDF(pedido) }}</span>
+              </div>
+            </div>
           </td>
           <td>{{ getValorSeguro(pedido.envio?.zonaCobro) }}</td>
           <td>{{ getValorSeguro(pedido.horarioEntrega) }}</td>

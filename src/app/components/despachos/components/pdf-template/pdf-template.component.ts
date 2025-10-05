@@ -183,6 +183,50 @@ export class PdfTemplateComponent implements OnInit {
     return informacionAdicional.join(', ');
   }
 
+  /**
+   * Obtiene las observaciones compactadas para el PDF con truncamiento inteligente
+   * @param pedido - El pedido del cual obtener la información
+   * @returns Información compactada máximo 120 caracteres
+   */
+  getObservacionesCompactasPDF(pedido: Pedido): string {
+    const infoCompleta = this.getObservacionesCompletas(pedido);
+    const MAX_LENGTH = 120;
+
+    if (infoCompleta.length <= MAX_LENGTH) {
+      return infoCompleta;
+    }
+
+    // Truncar en el último punto de coma o espacio para no cortar palabras
+    const truncated = infoCompleta.substring(0, MAX_LENGTH);
+    const lastComma = truncated.lastIndexOf(',');
+    const lastSpace = truncated.lastIndexOf(' ');
+    const cutPoint = lastComma > 80 ? lastComma : (lastSpace > 80 ? lastSpace : MAX_LENGTH);
+
+    return truncated.substring(0, cutPoint) + '...';
+  }
+
+  /**
+   * Obtiene el nombre del cliente de forma compacta para el PDF
+   * @param pedido - El pedido del cual obtener el nombre
+   * @returns Nombre compactado (máximo 30 caracteres o primeras 2 palabras)
+   */
+  getClienteNombreCompacto(pedido: Pedido): string {
+    const nombreCompleto = this.getClienteNombre(pedido);
+
+    if (nombreCompleto.length <= 30) {
+      return nombreCompleto;
+    }
+
+    // Intentar obtener solo las primeras dos palabras (nombre y apellido)
+    const partes = nombreCompleto.trim().split(/\s+/);
+    if (partes.length >= 2) {
+      return `${partes[0]} ${partes[1]}`;
+    }
+
+    // Si solo hay una palabra o falla, truncar a 30 caracteres
+    return nombreCompleto.substring(0, 30) + '...';
+  }
+
   getCurrentDate(): string {
     return new Date().toLocaleDateString("es-CO", {
       year: "numeric",
