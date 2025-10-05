@@ -4280,27 +4280,41 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Cargar la lista de usuarios para mostrar como opciones de asesores
     this.maestroService.consultarUsuarios().subscribe((usuarios: any) => {
-      // Filtrar solo usuarios activos de la empresa específica que puedan ser asesores
-      const asesoresDisponibles = usuarios.filter((usuario: any) =>
-        usuario.activo &&
-        (usuario.empresa === empresaPedido || usuario.company === empresaPedido) &&
-        usuario.roles &&
-        (usuario.roles.toLowerCase().includes('vendedor') ||
-          usuario.roles.toLowerCase().includes('asesor') ||
-          usuario.roles.toLowerCase().includes('comercial') ||
-          usuario.roles.toLowerCase().includes('ventas'))
-      );
+      console.log(`🔍 DEBUG ASIGNACIÓN ASESOR - Empresa: ${empresaPedido}`);
+      console.log(`📊 Total usuarios obtenidos: ${usuarios.length}`);
+      
+      // ✅ CORREGIDO: Filtrar usuarios activos de la empresa específica
+      // Incluir TODOS los usuarios activos de la empresa, no solo roles específicos
+      const usuariosEmpresa = usuarios.filter((usuario: any) => {
+        const esActivo = usuario.activo;
+        const esDeEmpresa = (usuario.empresa === empresaPedido || usuario.company === empresaPedido);
+        
+        console.log(`👤 Usuario: ${usuario.nombre} ${usuario.apellido}`, {
+          activo: esActivo,
+          empresa: usuario.empresa,
+          company: usuario.company,
+          roles: usuario.roles,
+          esDeEmpresa: esDeEmpresa
+        });
+        
+        return esActivo && esDeEmpresa;
+      });
 
-      if (asesoresDisponibles.length === 0) {
+      console.log(`✅ Usuarios filtrados por empresa: ${usuariosEmpresa.length}`);
+
+      if (usuariosEmpresa.length === 0) {
         Swal.fire({
           title: "Error",
-          text: `No hay asesores disponibles en la empresa ${empresaPedido}.`,
+          text: `No hay usuarios disponibles en la empresa ${empresaPedido}.`,
           icon: "error",
           confirmButtonColor: "#3085d6",
           confirmButtonText: "Aceptar",
         });
         return;
       }
+
+      // ✅ CORREGIDO: Usar todos los usuarios de la empresa como asesores disponibles
+      const asesoresDisponibles = usuariosEmpresa;
 
       // Crear opciones para el select
       const options = asesoresDisponibles.map((asesor: any) => ({
@@ -5470,27 +5484,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       (cloned as any).empacador = '';
       (cloned as any).despachador = undefined;
       (cloned as any).entregado = undefined;
+      (cloned as any).transportador = undefined;
       (cloned as any).fechaYHorarioDespachado = '';
       (cloned as any).fechaHoraEmpacado = '';
       cloned.validacion = false;
 
-      // Limpiar todas las notas del pedido duplicado
-      cloned.notasPedido = {
-        notasProduccion: [],
-        notasCliente: [],
-        notasDespachos: [],
-        notasEntregas: [],
-        notasFacturacionPagos: []
-      };
+      // Mantener las notas del pedido original (ya no se limpian)
       
-      // Limpiar notas de producción de productos individuales en el carrito
-      if (cloned.carrito && cloned.carrito.length > 0) {
-        cloned.carrito.forEach(item => {
-          if (item.notaProduccion) {
-            delete item.notaProduccion;
-          }
-        });
-      }
+      // Mantener las notas de producción de productos individuales en el carrito
 
       // Recalcular totales
       this.pedidoUtilService.pedido = cloned as any;

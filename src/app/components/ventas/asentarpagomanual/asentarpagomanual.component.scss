@@ -632,3 +632,14 @@
     background: #0056b3;
   }
 }
+
+// Ocultar flechas (spinners) del input de tipo number
+.no-spinner {
+  -moz-appearance: textfield; /* Firefox */
+  
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none; /* Chrome, Safari, Edge */
+    margin: 0;
+  }
+}

@@ -59,7 +59,7 @@ export class AsentarpagomanualComponent implements OnInit {
       valor: new FormControl("", [Validators.required]),
       numeroComprobante: new FormControl("", Validators.required),
       archivo: new FormControl(""),
-      notas: new FormControl("", Validators.required),
+      notas: new FormControl(""),
     });
     this.transaccionForm.get("valor").valueChanges.subscribe((value) => {
       this.validateMaxValue(value);

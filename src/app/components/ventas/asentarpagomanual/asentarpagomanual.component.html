@@ -172,7 +172,7 @@
                 <input type="number" 
                        id="valor" 
                        formControlName="valor" 
-                       class="form-control"
+                       class="form-control no-spinner"
                        [class.is-invalid]="(transaccionForm.get('valor')?.touched && transaccionForm.get('valor')?.errors) || valorExcedido"
                        placeholder="0.00"
                        step="0.01"
@@ -244,18 +244,12 @@
               <label class="form-label" for="notas">
                 <i class="pi pi-comment"></i>
                 {{ 'Notas' | translate }}
-                <span class="required">*</span>
               </label>
               <textarea id="notas" 
                         formControlName="notas" 
                         class="form-control"
-                        [class.is-invalid]="transaccionForm.get('notas')?.touched && transaccionForm.get('notas')?.errors"
                         rows="3"
-                        placeholder="{{ 'Ingrese observaciones o comentarios sobre este pago' | translate }}"></textarea>
-              <div class="invalid-feedback" 
-                   *ngIf="transaccionForm.get('notas')?.touched && transaccionForm.get('notas')?.errors?.['required']">
-                {{ 'Las notas son requeridas' | translate }}
-              </div>
+                        placeholder="{{ 'Ingrese observaciones o comentarios sobre este pago (opcional)' | translate }}"></textarea>
             </div>
           </div>
 
