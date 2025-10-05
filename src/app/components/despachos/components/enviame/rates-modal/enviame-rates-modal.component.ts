@@ -694,6 +694,7 @@ export class EnviameRatesModalComponent implements OnInit {
     if (this.municipioSeleccionadoDestino) {
       destinationData.municipioCode = this.municipioSeleccionadoDestino.codigo;
       destinationData.municipioName = this.municipioSeleccionadoDestino.nombre;
+      destinationData.department = this.municipioSeleccionadoDestino.departamento;
       destinationData.placeCode = this.daneCodesService.getPlaceCode(this.municipioSeleccionadoDestino.codigo);
     }
 
@@ -933,6 +934,7 @@ export class EnviameRatesModalComponent implements OnInit {
     if (pedidoData.municipioDestino) {
       destinationData.municipioCode = pedidoData.municipioDestino.codigo;
       destinationData.municipioName = pedidoData.municipioDestino.nombre;
+      destinationData.department = pedidoData.municipioDestino.departamento;
       destinationData.placeCode = this.daneCodesService.getPlaceCode(pedidoData.municipioDestino.codigo);
     }
 
@@ -1236,6 +1238,7 @@ export class EnviameRatesModalComponent implements OnInit {
       destination: {
         address: formData.destinationAddress,
         city: formData.destinationCity,
+        department: this.municipioSeleccionadoDestino?.departamento || '',
         country: formData.destinationCountry,
         postalCode: formData.destinationPostalCode,
         recipient: {

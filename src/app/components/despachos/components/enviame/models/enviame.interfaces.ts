@@ -66,6 +66,7 @@ export interface EnviameQuoteRequest {
     placeCode?: string;      // Código DANE convertido a 8 dígitos
     municipioCode?: string;  // Código DANE original del municipio
     municipioName?: string;  // Nombre del municipio
+    department?: string;     // Departamento/provincia del destino
     address: string;
     city: string;
     country: string;
