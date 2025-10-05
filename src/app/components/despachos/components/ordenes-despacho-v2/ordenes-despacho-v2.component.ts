@@ -175,9 +175,6 @@ export class OrdenesDespachoV2Component implements OnInit {
             order.pedidos.forEach((pedido: any) => {
               pedido.faltaPorPagar = this.getValorACobrarPorPedido(pedido);
             });
-
-            // Verificar y actualizar estado si tiene transportador asignado
-            this.updateOrderStateIfNeeded(order);
           }
         });
         
@@ -436,38 +433,103 @@ export class OrdenesDespachoV2Component implements OnInit {
   getEstadoProceso(order: any): string {
     if (!order.pedidos || order.pedidos.length === 0) return 'Sin pedidos';
 
-    // Verificar si todos los pedidos están entregados
-    const todosEntregados = order.pedidos.every((pedido: any) =>
-      pedido.estadoProceso === EstadoProceso.Entregado
-    );
+    const estados = order.pedidos.map((p: any) => p.estadoProceso);
+
+    // PRIORIDAD 1: Si TODOS están en el mismo estado final, mostrarlo
+    const todosCerrados = estados.every((e: string) => e === EstadoProceso.Cerrado);
+    if (todosCerrados) return 'Cerrado';
+
+    const todosRechazados = estados.every((e: string) => e === EstadoProceso.Rechazado);
+    if (todosRechazados) return 'Rechazado';
+
+    const todosEntregados = estados.every((e: string) => e === EstadoProceso.Entregado);
     if (todosEntregados) return 'Entregado';
 
-    // Verificar si la orden tiene transportador asignado
-    const tieneTransportador = order.transportador &&
-                              order.transportador !== '' &&
-                              order.transportador !== 'N/A' &&
-                              order.transportador !== null;
+    // PRIORIDAD 2: Si TODOS están en el mismo estado de despacho
+    const todosDespachados = estados.every((e: string) => e === EstadoProceso.Despachado);
+    if (todosDespachados) return 'Despachado';
 
-    // Verificar si todos los pedidos están despachados
-    const todosDespachados = order.pedidos.every((pedido: any) =>
-      pedido.estadoProceso === EstadoProceso.Despachado
+    const todosEnDespacho = estados.every((e: string) => e === EstadoProceso.EnDespacho);
+    if (todosEnDespacho) return 'En Despacho';
+
+    const todosParaDespachar = estados.every((e: string) => e === EstadoProceso.ParaDespachar);
+    if (todosParaDespachar) return 'Para Despachar';
+
+    const todosEmpacados = estados.every((e: string) => e === EstadoProceso.Empacado);
+    if (todosEmpacados) return 'Empacado';
+
+    // PRIORIDAD 3: Si TODOS están en el mismo estado de producción
+    const todosProducidos = estados.every((e: string) =>
+      e === EstadoProceso.ProducidoTotalmente || e === EstadoProceso.Producido
     );
+    if (todosProducidos) return 'Producido';
 
-    // Si tiene transportador asignado o todos están despachados, es "Despachado"
-    if (tieneTransportador || todosDespachados) return 'Despachado';
+    const todosEnProduccion = estados.every((e: string) =>
+      e === EstadoProceso.EnProduccion || e === EstadoProceso.ProducidoParcialmente
+    );
+    if (todosEnProduccion) return 'En Producción';
 
-    // De lo contrario, está por despachar
+    const todosSinProducir = estados.every((e: string) => e === EstadoProceso.SinProducir);
+    if (todosSinProducir) return 'Sin Producir';
+
+    // PRIORIDAD 4: Estados mixtos - Mostrar el MENOS avanzado
+    // Orden de prioridad de menos a más avanzado
+    const ordenPrioridad = [
+      EstadoProceso.SinProducir,
+      EstadoProceso.EnProduccion,
+      EstadoProceso.ProducidoParcialmente,
+      EstadoProceso.ProducidoTotalmente,
+      EstadoProceso.Producido,
+      EstadoProceso.ParaDespachar,
+      EstadoProceso.Empacado,
+      EstadoProceso.EnDespacho,
+      EstadoProceso.Despachado,
+      EstadoProceso.Entregado,
+      EstadoProceso.Rechazado,
+      EstadoProceso.Cerrado
+    ];
+
+    // Encontrar el estado menos avanzado presente
+    for (const estadoPrioridad of ordenPrioridad) {
+      if (estados.includes(estadoPrioridad)) {
+        // Mapeo de estado de pedido a estado de orden (para display)
+        const mapeoEstados: { [key: string]: string } = {
+          'SinProducir': 'En Producción',
+          'EnProduccion': 'En Producción',
+          'ProducidoParcialmente': 'En Producción',
+          'ProducidoTotalmente': 'Producido',
+          'Producido': 'Producido',
+          'ParaDespachar': 'Para Despachar',
+          'Empacado': 'Empacado',
+          'EnDespacho': 'En Despacho',
+          'Despachado': 'Despachado',
+          'Entregado': 'Entregado',
+          'Rechazado': 'Rechazado',
+          'Cerrado': 'Cerrado'
+        };
+        return mapeoEstados[estadoPrioridad] || 'Por despachar';
+      }
+    }
+
+    // Fallback (no debería llegar aquí)
     return 'Por despachar';
   }
 
   canDispatchOrder(order: any): boolean {
     const estado = this.getEstadoProceso(order);
-    // Solo permitir despachar si está "Por despachar" y NO tiene transportador asignado
-    const tieneTransportador = order.transportador &&
-                              order.transportador !== '' &&
-                              order.transportador !== 'N/A' &&
-                              order.transportador !== null;
-    return estado === 'Por despachar' && !tieneTransportador;
+
+    // Permitir despachar en múltiples estados antes de la entrega/cierre
+    const estadosDespachables = [
+      'Por despachar',
+      'Para Despachar',
+      'Empacado',
+      'En Despacho',
+      'En Producción',
+      'Producido',
+      'Sin Producir'
+    ];
+
+    return estadosDespachables.includes(estado);
   }
 
   canEditOrder(order: any): boolean {
@@ -563,6 +625,15 @@ export class OrdenesDespachoV2Component implements OnInit {
       return;
     }
 
+    // Verificar si es una orden ya despachada que solo necesita especificar transportadora
+    const needsSpecification = this.needsTransporterSpecification(this.selectedOrderForDispatch);
+
+    if (needsSpecification) {
+      // Solo actualizar el nombre de la transportadora, sin crear shipment
+      this.updateTransporterName(this.selectedOrderForDispatch, this.selectedTransporter);
+      return;
+    }
+
     // Si es Enviame.io, mostrar modal de opciones específicas
     if (this.selectedTransporter === 'enviame') {
       this.showEnviameOptionsModal = true;
@@ -570,8 +641,102 @@ export class OrdenesDespachoV2Component implements OnInit {
       return;
     }
 
-    // Flujo normal para otros transportadores
+    // Flujo normal para otros transportadores (crear shipment)
     this.createShipmentDirectly();
+  }
+
+  /**
+   * Actualiza solo el nombre de la transportadora sin crear shipment (para órdenes ya despachadas)
+   */
+  private updateTransporterName(order: any, transporterName: string): void {
+    this.isDispatchingShipment = true;
+
+    // Primero obtener la orden completa para actualizarla
+    this.logisticaService.getShippingOrder(order.nroShippingOrder).subscribe({
+      next: (fullOrder) => {
+        // Guardar el estado actual para preservarlo (CRUCIAL: orden ya despachada)
+        const estadoActual = fullOrder.estado || this.getEstadoProceso(order);
+
+        // Actualizar el transportador en la orden completa
+        const orderToUpdate = {
+          ...fullOrder,
+          transportador: transporterName,
+          estado: estadoActual, // PRESERVAR el estado actual (ya está Despachado o Entregado)
+          metadata: {
+            ...(fullOrder.metadata || {}),
+            especificacionTransportadora: {
+              transportadora: transporterName,
+              estadoPreservado: estadoActual,
+              fecha: new Date().toISOString(),
+              usuario: localStorage.getItem('user'),
+              motivo: 'Especificación posterior al despacho'
+            }
+          }
+        };
+
+        // Actualizar cada pedido de la orden con el transportador
+        if (orderToUpdate.pedidos && Array.isArray(orderToUpdate.pedidos)) {
+          orderToUpdate.pedidos.forEach((pedido: any) => {
+            pedido.transportador = transporterName;
+            // NO modificar pedido.estadoProceso - ya está en Despachado o Entregado
+
+            // Actualizar cada pedido en la base de datos
+            this.ventasService.editOrder(pedido).subscribe({
+              next: () => {
+                console.log(`✅ Pedido ${pedido.nroPedido} actualizado con transportadora ${transporterName}`);
+              },
+              error: (error) => {
+                console.error(`❌ Error actualizando pedido ${pedido.nroPedido}:`, error);
+              }
+            });
+          });
+        }
+
+        // Actualizar la orden de envío completa usando createShippingOrder (sirve para crear y editar)
+        this.logisticaService.createShippingOrder(orderToUpdate).subscribe({
+          next: (response) => {
+            this.isDispatchingShipment = false;
+
+            // Actualizar localmente
+            order.transportador = transporterName;
+
+            Swal.fire({
+              icon: 'success',
+              title: 'Transportadora Especificada',
+              text: `Se ha registrado "${this.formatTransporterName(transporterName)}" como la transportadora de esta orden.`,
+              timer: 2000,
+              showConfirmButton: false
+            });
+
+            // Reload orders to reflect updated status
+            this.loadInitialOrders();
+            this.closeTransporterModal();
+          },
+          error: (error) => {
+            console.error('❌ Error actualizando orden de envío:', error);
+            this.isDispatchingShipment = false;
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudo especificar la transportadora. Por favor intenta nuevamente.',
+              confirmButtonText: 'Entendido'
+            });
+          }
+        });
+      },
+      error: (error) => {
+        console.error('❌ Error obteniendo orden completa:', error);
+        this.isDispatchingShipment = false;
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo obtener la información de la orden. Por favor intenta nuevamente.',
+          confirmButtonText: 'Entendido'
+        });
+      }
+    });
   }
 
   openEnviameRatesModal(): void {
@@ -977,7 +1142,25 @@ export class OrdenesDespachoV2Component implements OnInit {
     const userLite = user ? JSON.parse(user) : null;
 
     pedidos.forEach((pedido: any) => {
-      // Actualizar el estado del pedido localmente primero
+      // Guardar estado anterior ANTES de modificar
+      const estadoOriginal = pedido.estadoProceso;
+
+      // Validar que el estado actual permita transición a Despachado
+      const estadosFinales = [
+        EstadoProceso.Entregado,
+        EstadoProceso.Rechazado,
+        EstadoProceso.Cerrado
+      ];
+
+      if (estadosFinales.includes(pedido.estadoProceso)) {
+        console.warn(
+          `⚠️ Pedido ${pedido.nroPedido || pedido.referencia} ya está en estado final ` +
+          `(${pedido.estadoProceso}), se omite actualización a Despachado`
+        );
+        return; // No actualizar pedidos en estados finales
+      }
+
+      // Actualizar el estado del pedido localmente
       pedido.estadoProceso = EstadoProceso.Despachado;
       pedido.fechaYHorarioDespachado = new Date().toISOString();
       pedido.despachador = userLite;
@@ -987,12 +1170,12 @@ export class OrdenesDespachoV2Component implements OnInit {
       // Enviar la actualización al backend
       this.ventasService.editOrder(pedido).subscribe({
         next: (response) => {
-          console.log(`✅ Pedido ${pedido.nroPedido || pedido.referencia} actualizado automáticamente a "Despachado"`);
+          console.log(`✅ Pedido ${pedido.nroPedido || pedido.referencia} actualizado a "Despachado"`);
         },
         error: (error) => {
-          console.error(`❌ Error actualizando automáticamente pedido ${pedido.nroPedido || pedido.referencia}:`, error);
-          // Revertir el cambio local si falló el backend
-          pedido.estadoProceso = pedido.estadoProcesoAnterior || 'ParaDespachar';
+          console.error(`❌ Error actualizando pedido ${pedido.nroPedido || pedido.referencia}:`, error);
+          // Revertir usando el estado original guardado
+          pedido.estadoProceso = estadoOriginal;
         }
       });
     });
@@ -1021,5 +1204,486 @@ export class OrdenesDespachoV2Component implements OnInit {
     }
 
     return 'default_company';
+  }
+
+  // ========== MÉTODOS PARA CAMBIO DE MÉTODO DE ENVÍO ==========
+
+  /**
+   * Verifica si una orden puede cambiar de mensajero propio a transportadora
+   */
+  canChangeToTransporter(order: any): boolean {
+    if (!order) return false;
+
+    // Verificar que el método actual sea mensajero propio
+    const esMensajeroPropio = !this.isTransportadoraOrder(order);
+
+    // Verificar el estado de la orden - CORRECCIÓN: Aceptar múltiples estados despachables
+    const estado = this.getEstadoProceso(order);
+    const estadosDespachables = [
+      'Por despachar',      // Valor legacy (por compatibilidad)
+      'Para Despachar',     // Valor nuevo del método corregido
+      'Empacado',           // Estado válido para cambio
+      'En Despacho',        // Estado válido para cambio
+      'Producido',          // Estado válido para cambio
+      'En Producción'       // Estado válido para cambio
+    ];
+    const estadoPermitido = estadosDespachables.includes(estado);
+
+    // Verificar que no tenga transportador asignado
+    const noTieneTransportador = !order.transportador ||
+                                  order.transportador === '' ||
+                                  order.transportador === 'N/A' ||
+                                  order.transportador === 'mensajero_propio' ||
+                                  order.transportador === 'Mensajero Propio';
+
+    return esMensajeroPropio && estadoPermitido && noTieneTransportador;
+  }
+
+  /**
+   * Verifica si una orden puede cambiar de transportadora a mensajero propio
+   */
+  canChangeToOwnMessenger(order: any): boolean {
+    if (!order) return false;
+
+    // Verificar que el método actual sea transportadora
+    const esTransportadora = this.isTransportadoraOrder(order);
+
+    // Verificar el estado de la orden - CORRECCIÓN: Aceptar múltiples estados despachables
+    const estado = this.getEstadoProceso(order);
+    const estadosDespachables = [
+      'Por despachar',      // Valor legacy (por compatibilidad)
+      'Para Despachar',     // Valor nuevo del método corregido
+      'Empacado',           // Estado válido para cambio
+      'En Despacho',        // Estado válido para cambio
+      'Producido',          // Estado válido para cambio
+      'En Producción'       // Estado válido para cambio
+    ];
+    const estadoPermitido = estadosDespachables.includes(estado);
+
+    // Verificar que NO esté despachada (no se puede cambiar después de despachar)
+    const noEstaDespachada = estado !== 'Despachado' && estado !== 'Entregado';
+
+    return esTransportadora && estadoPermitido && noEstaDespachada;
+  }
+
+  /**
+   * Cambia el método de envío de mensajero propio a transportadora
+   */
+  changeToTransporter(order: any): void {
+    if (!this.canChangeToTransporter(order)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No se puede cambiar',
+        text: 'Esta orden no puede cambiar a transportadora en su estado actual.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Contar pedidos en la orden
+    const totalPedidos = order.pedidos?.length || 0;
+
+    Swal.fire({
+      title: 'Cambiar a Transportadora',
+      html: `
+        <div class="text-start">
+          <p>¿Desea cambiar la orden <strong>${order.nroShippingOrder}</strong> a transportadora externa?</p>
+          <div class="alert alert-info mt-3">
+            <i class="pi pi-info-circle me-2"></i>
+            <strong>Orden actual:</strong>
+            <ul class="mb-0 mt-2">
+              <li>Método: Mensajero Propio</li>
+              <li>Pedidos: ${totalPedidos}</li>
+              <li>Estado: ${this.getEstadoProceso(order)}</li>
+            </ul>
+          </div>
+          <div class="alert alert-success mt-2">
+            <i class="pi pi-check-circle me-2"></i>
+            Al confirmar, podrá seleccionar una transportadora integrada (Enviame, DHL, etc.)
+          </div>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cambiar a transportadora',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0d6efd'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Obtener la orden completa primero
+        this.logisticaService.getShippingOrder(order.nroShippingOrder).subscribe({
+          next: (fullOrder) => {
+            // Guardar el estado actual para preservarlo
+            const estadoActual = fullOrder.estado || this.getEstadoProceso(order);
+
+            // Actualizar el campo metodoEnvio en la orden completa
+            const orderToUpdate = {
+              ...fullOrder,
+              metodoEnvio: 'transportadora',
+              estado: estadoActual, // PRESERVAR el estado actual
+              metadata: {
+                ...(fullOrder.metadata || {}),
+                cambioMetodo: {
+                  anterior: 'mensajeroPropio',
+                  nuevo: 'transportadora',
+                  estadoPreservado: estadoActual,
+                  fecha: new Date().toISOString(),
+                  usuario: localStorage.getItem('user')
+                }
+              }
+            };
+
+            // Preservar estado de cada pedido
+            if (orderToUpdate.pedidos && Array.isArray(orderToUpdate.pedidos)) {
+              orderToUpdate.pedidos.forEach((pedido: any) => {
+                // NO modificar pedido.estadoProceso aquí
+                // Solo cambiará cuando se despache con la transportadora
+              });
+            }
+
+            // Actualizar en el backend usando createShippingOrder (sirve para crear y editar)
+            this.logisticaService.createShippingOrder(orderToUpdate).subscribe({
+              next: (response) => {
+                console.log('✅ Método de envío actualizado:', response);
+
+                // Actualizar localmente
+                order.metodoEnvio = 'transportadora';
+
+                // Abrir modal de selección de transportadora
+                this.selectedOrderForDispatch = order;
+                this.selectedTransporter = '';
+                this.showTransporterModal = true;
+
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Método Actualizado',
+                  text: 'Ahora puede seleccionar la transportadora para esta orden.',
+                  timer: 2000,
+                  showConfirmButton: false
+                });
+              },
+              error: (error) => {
+                console.error('❌ Error actualizando método de envío:', error);
+
+                // Revertir cambio local
+                order.metodoEnvio = 'mensajeroPropio';
+
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: 'No se pudo actualizar el método de envío. Por favor intenta nuevamente.',
+                  confirmButtonText: 'Entendido'
+                });
+              }
+            });
+          },
+          error: (error) => {
+            console.error('❌ Error obteniendo orden completa:', error);
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudo obtener la información de la orden. Por favor intenta nuevamente.',
+              confirmButtonText: 'Entendido'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Obtiene el label del método de envío para mostrar
+   */
+  getShippingMethodLabel(order: any): string {
+    if (this.isTransportadoraOrder(order)) {
+      // Si es transportadora, SIEMPRE mostrar cuál transportadora específica
+      if (order.transportador &&
+          order.transportador !== '' &&
+          order.transportador !== 'N/A' &&
+          order.transportador !== 'mensajero_propio' &&
+          order.transportador !== 'Mensajero Propio') {
+        // Capitalizar y formatear nombre de transportadora
+        return this.formatTransporterName(order.transportador);
+      }
+
+      // Si no tiene transportadora asignada, verificar el estado
+      const estado = this.getEstadoProceso(order);
+      if (estado === 'Despachado' || estado === 'Entregado') {
+        // Ya está despachada pero sin nombre registrado (datos legacy o error)
+        return 'Transportadora (Sin especificar)';
+      }
+
+      // Si aún no está despachada
+      return 'Transportadora (Pendiente asignar)';
+    }
+
+    // Si es mensajero propio, mostrar el nombre del mensajero específico si existe
+    if (order.transportador &&
+        order.transportador !== '' &&
+        order.transportador !== 'N/A' &&
+        order.transportador !== 'mensajero_propio' &&
+        order.transportador !== 'Mensajero Propio') {
+      return order.transportador; // Nombre específico del mensajero
+    }
+
+    return 'Mensajero Propio'; // Fallback si no hay nombre específico
+  }
+
+  /**
+   * Formatea el nombre de la transportadora para mejor visualización
+   */
+  private formatTransporterName(name: string): string {
+    if (!name) return 'Transportadora';
+
+    // Mapeo de nombres conocidos de transportadoras
+    const knownTransporters: { [key: string]: string } = {
+      'enviame': 'Enviame.io',
+      'dhl': 'DHL Express',
+      'fedex': 'FedEx',
+      'servientrega': 'Servientrega',
+      'coordinadora': 'Coordinadora',
+      'interrapidisimo': 'Interrapidísimo',
+      'tcc': 'TCC',
+      'deprisa': 'Deprisa'
+    };
+
+    // Verificar si es un nombre conocido (case-insensitive)
+    const lowerName = name.toLowerCase().trim();
+    if (knownTransporters[lowerName]) {
+      return knownTransporters[lowerName];
+    }
+
+    // Si no es conocido, retornar el nombre tal cual (puede ser nombre de mensajero)
+    return name;
+  }
+
+  /**
+   * Obtiene la clase CSS para el badge del método de envío
+   */
+  getShippingMethodBadgeClass(order: any): string {
+    if (this.isTransportadoraOrder(order)) {
+      // Si es transportadora pero no tiene asignada todavía
+      if (!order.transportador ||
+          order.transportador === '' ||
+          order.transportador === 'N/A' ||
+          order.transportador === 'mensajero_propio' ||
+          order.transportador === 'Mensajero Propio') {
+        return 'bg-warning text-dark'; // Advertencia: falta asignar
+      }
+      return 'bg-primary'; // Transportadora asignada
+    }
+    return 'bg-info'; // Mensajero propio
+  }
+
+  /**
+   * Obtiene el ícono para el método de envío
+   */
+  getShippingMethodIcon(order: any): string {
+    if (this.isTransportadoraOrder(order)) {
+      return 'pi-truck';
+    }
+    return 'pi-user';
+  }
+
+  /**
+   * Cambia el método de envío de transportadora a mensajero propio
+   */
+  changeToOwnMessenger(order: any): void {
+    if (!this.canChangeToOwnMessenger(order)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No se puede cambiar',
+        text: 'Esta orden no puede cambiar a mensajero propio en su estado actual.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Contar pedidos en la orden
+    const totalPedidos = order.pedidos?.length || 0;
+    const transportadorActual = this.getShippingMethodLabel(order);
+
+    Swal.fire({
+      title: 'Cambiar a Mensajero Propio',
+      html: `
+        <div class="text-start">
+          <p>¿Desea cambiar la orden <strong>${order.nroShippingOrder}</strong> a mensajero propio?</p>
+          <div class="alert alert-info mt-3">
+            <i class="pi pi-info-circle me-2"></i>
+            <strong>Orden actual:</strong>
+            <ul class="mb-0 mt-2">
+              <li>Método: ${transportadorActual}</li>
+              <li>Pedidos: ${totalPedidos}</li>
+              <li>Estado: ${this.getEstadoProceso(order)}</li>
+            </ul>
+          </div>
+          <div class="alert alert-warning mt-2">
+            <i class="pi pi-exclamation-triangle me-2"></i>
+            Al confirmar, la orden se gestionará con mensajero propio de la empresa.
+          </div>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, cambiar a mensajero propio',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0d6efd'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Obtener la orden completa primero
+        this.logisticaService.getShippingOrder(order.nroShippingOrder).subscribe({
+          next: (fullOrder) => {
+            // Guardar el estado actual para preservarlo
+            const estadoActual = fullOrder.estado || this.getEstadoProceso(order);
+
+            // Actualizar el campo metodoEnvio en la orden completa
+            const orderToUpdate = {
+              ...fullOrder,
+              metodoEnvio: 'mensajeroPropio',
+              transportador: 'mensajero_propio', // Limpiar transportadora asignada
+              estado: estadoActual, // PRESERVAR el estado actual
+              metadata: {
+                ...(fullOrder.metadata || {}),
+                cambioMetodo: {
+                  anterior: 'transportadora',
+                  nuevo: 'mensajeroPropio',
+                  transportadorAnterior: order.transportador || 'N/A',
+                  estadoPreservado: estadoActual,
+                  fecha: new Date().toISOString(),
+                  usuario: localStorage.getItem('user')
+                }
+              }
+            };
+
+            // Actualizar también cada pedido para preservar su estado
+            if (orderToUpdate.pedidos && Array.isArray(orderToUpdate.pedidos)) {
+              orderToUpdate.pedidos.forEach((pedido: any) => {
+                // Solo actualizar el transportador, NO el estado del pedido
+                pedido.transportador = 'mensajero_propio';
+                // NO modificar pedido.estadoProceso aquí
+              });
+            }
+
+            // Actualizar en el backend usando createShippingOrder (sirve para crear y editar)
+            this.logisticaService.createShippingOrder(orderToUpdate).subscribe({
+              next: (response) => {
+                console.log('✅ Método de envío actualizado a mensajero propio:', response);
+
+                // Actualizar localmente
+                order.metodoEnvio = 'mensajeroPropio';
+                order.transportador = 'mensajero_propio';
+
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Método Actualizado',
+                  text: 'La orden ahora se gestionará con mensajero propio.',
+                  timer: 2000,
+                  showConfirmButton: false
+                });
+
+                // Recargar órdenes para reflejar cambios
+                this.loadInitialOrders();
+              },
+              error: (error) => {
+                console.error('❌ Error actualizando método de envío:', error);
+
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Error',
+                  text: 'No se pudo actualizar el método de envío. Por favor intenta nuevamente.',
+                  confirmButtonText: 'Entendido'
+                });
+              }
+            });
+          },
+          error: (error) => {
+            console.error('❌ Error obteniendo orden completa:', error);
+
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudo obtener la información de la orden. Por favor intenta nuevamente.',
+              confirmButtonText: 'Entendido'
+            });
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Verifica si una orden despachada necesita especificar la transportadora
+   */
+  needsTransporterSpecification(order: any): boolean {
+    if (!order) return false;
+
+    // Solo para órdenes con método transportadora
+    if (!this.isTransportadoraOrder(order)) return false;
+
+    // Verificar que esté despachada o entregada
+    const estado = this.getEstadoProceso(order);
+    const estaDespachada = estado === 'Despachado' || estado === 'Entregado';
+
+    // Verificar que NO tenga transportadora asignada
+    const noTieneTransportador = !order.transportador ||
+                                  order.transportador === '' ||
+                                  order.transportador === 'N/A' ||
+                                  order.transportador === 'mensajero_propio' ||
+                                  order.transportador === 'Mensajero Propio';
+
+    return estaDespachada && noTieneTransportador;
+  }
+
+  /**
+   * Permite especificar la transportadora para órdenes ya despachadas sin transportadora registrada
+   */
+  specifyTransporter(order: any): void {
+    if (!this.needsTransporterSpecification(order)) {
+      return;
+    }
+
+    Swal.fire({
+      title: 'Especificar Transportadora',
+      html: `
+        <div class="text-start">
+          <p>La orden <strong>${order.nroShippingOrder}</strong> fue despachada con transportadora, pero no se registró cuál.</p>
+          <div class="alert alert-info mt-3">
+            <i class="pi pi-info-circle me-2"></i>
+            <strong>Estado actual:</strong>
+            <ul class="mb-0 mt-2">
+              <li>Método: Transportadora</li>
+              <li>Transportadora: Sin especificar</li>
+              <li>Estado: ${this.getEstadoProceso(order)}</li>
+            </ul>
+          </div>
+          <div class="alert alert-warning mt-2">
+            <i class="pi pi-exclamation-triangle me-2"></i>
+            Por favor especifique qué transportadora realizó el envío para completar los registros.
+          </div>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Seleccionar Transportadora',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#0d6efd'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Abrir modal de selección de transportadora
+        this.selectedOrderForDispatch = order;
+        this.selectedTransporter = '';
+        this.showTransporterModal = true;
+
+        // Mensaje informativo
+        Swal.fire({
+          icon: 'info',
+          title: 'Seleccione la Transportadora',
+          text: 'Elija la transportadora que realizó el envío de esta orden.',
+          timer: 2000,
+          showConfirmButton: false
+        });
+      }
+    });
   }
 }

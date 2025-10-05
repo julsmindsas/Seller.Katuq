@@ -175,7 +175,12 @@
           
           <div class="cell">
             <span class="cell-label">{{ 'Transportador' | translate }}:</span>
-            <span class="transporter-name">{{ order.transportador || 'N/A' }}</span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge" [ngClass]="getShippingMethodBadgeClass(order)">
+                <i class="pi me-1" [ngClass]="getShippingMethodIcon(order)"></i>
+                {{ getShippingMethodLabel(order) }}
+              </span>
+            </div>
           </div>
           
           <div class="cell">
@@ -203,19 +208,37 @@
           
           <div class="cell actions-cell">
             <div class="action-buttons">
-              <button class="btn btn-sm btn-outline-primary" 
+              <button class="btn btn-sm btn-outline-primary"
                       (click)="viewOrder(order.nroShippingOrder)"
                       title="{{ 'Ver Orden' | translate }}">
                 <i class="pi pi-eye"></i>
               </button>
-              <button class="btn btn-sm btn-outline-success" 
+              <button class="btn btn-sm btn-outline-success"
                       (click)="printOrder(order.nroShippingOrder)"
                       title="{{ 'Imprimir' | translate }}">
                 <i class="pi pi-print"></i>
               </button>
+              <button *ngIf="canChangeToTransporter(order)"
+                      class="btn btn-sm btn-outline-info"
+                      (click)="changeToTransporter(order)"
+                      title="{{ 'Cambiar a Transportadora' | translate }}">
+                <i class="pi pi-truck"></i>
+              </button>
+              <button *ngIf="canChangeToOwnMessenger(order)"
+                      class="btn btn-sm btn-outline-secondary"
+                      (click)="changeToOwnMessenger(order)"
+                      title="{{ 'Cambiar a Mensajero Propio' | translate }}">
+                <i class="pi pi-user"></i>
+              </button>
+              <button *ngIf="needsTransporterSpecification(order)"
+                      class="btn btn-sm btn-outline-warning"
+                      (click)="specifyTransporter(order)"
+                      title="{{ 'Especificar Transportadora' | translate }}">
+                <i class="pi pi-exclamation-triangle"></i>
+              </button>
               <button [style.visibility]="canDispatchOrder(order) ? 'visible' : 'hidden'"
                       [style.pointer-events]="canDispatchOrder(order) ? 'auto' : 'none'"
-                      class="btn btn-sm btn-outline-warning" 
+                      class="btn btn-sm btn-outline-warning"
                       (click)="dispatchOrder(order)"
                       title="{{ 'Despachar' | translate }}">
                 <i class="pi pi-send"></i>
@@ -310,8 +333,10 @@
           
           <div class="card-body">
             <div class="order-detail">
-              <i class="pi pi-truck"></i>
-              <span>{{ order.transportador || 'N/A' }}</span>
+              <span class="badge" [ngClass]="getShippingMethodBadgeClass(order)">
+                <i class="pi me-1" [ngClass]="getShippingMethodIcon(order)"></i>
+                {{ getShippingMethodLabel(order) }}
+              </span>
             </div>
             <div class="order-detail">
               <i class="pi pi-shopping-cart"></i>
@@ -379,9 +404,24 @@
             <button class="btn btn-outline-success btn-sm" (click)="printOrder(order.nroShippingOrder)">
               <i class="pi pi-print me-1"></i>{{ 'Imprimir' | translate }}
             </button>
+            <button *ngIf="canChangeToTransporter(order)"
+                    class="btn btn-outline-info btn-sm"
+                    (click)="changeToTransporter(order)">
+              <i class="pi pi-truck me-1"></i>{{ 'A Transportadora' | translate }}
+            </button>
+            <button *ngIf="canChangeToOwnMessenger(order)"
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="changeToOwnMessenger(order)">
+              <i class="pi pi-user me-1"></i>{{ 'A Mensajero' | translate }}
+            </button>
+            <button *ngIf="needsTransporterSpecification(order)"
+                    class="btn btn-outline-warning btn-sm"
+                    (click)="specifyTransporter(order)">
+              <i class="pi pi-exclamation-triangle me-1"></i>{{ 'Especificar' | translate }}
+            </button>
             <button [style.visibility]="canDispatchOrder(order) ? 'visible' : 'hidden'"
                     [style.pointer-events]="canDispatchOrder(order) ? 'auto' : 'none'"
-                    class="btn btn-outline-warning btn-sm" 
+                    class="btn btn-outline-warning btn-sm"
                     (click)="dispatchOrder(order)">
               <i class="pi pi-send me-1"></i>{{ 'Despachar' | translate }}
             </button>
