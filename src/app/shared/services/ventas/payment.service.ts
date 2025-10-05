@@ -561,18 +561,18 @@ export class PaymentService extends BaseService {
     return {
       colors: {
         // Paleta moderna profesional 2025 - Colores s\u00f3lidos para emails
-        primary: '#1a73e8', // Google Blue - profesional y confiable
+        primary: '#820AD1', // Google Blue - profesional y confiable
         primaryDark: '#1557b0', // Versi\u00f3n oscura para contraste
         secondary: '#5f6368', // Gris neutro moderno
         accent: '#34a853', // Verde \u00e9xito
         warning: '#fbbc04', // Amarillo alerta
         danger: '#ea4335', // Rojo error
         info: '#4285f4', // Azul informativo
-        white: '#ffffff',
-        black: '#202124', // Negro moderno (no puro)
+        white: '#FFFFFF',
+        black: '#000000', // Negro moderno (no puro)
         // Escala de grises moderna
-        gray50: '#f8f9fa',
-        gray100: '#f1f3f4',
+        gray50: '#F5F5F5',
+        gray100: '#F5F5F5',
         gray200: '#e8eaed',
         gray300: '#dadce0',
         gray400: '#bdc1c6',
@@ -582,23 +582,23 @@ export class PaymentService extends BaseService {
         gray800: '#3c4043',
         gray900: '#202124',
         // Sem\u00e1nticos
-        text: '#202124',
-        textMuted: '#5f6368',
+        text: '#000000',
+        textMuted: '#5F6368',
         textLight: '#80868b',
-        border: '#dadce0',
-        borderLight: '#e8eaed',
-        background: '#f8f9fa',
+        border: '#E0E0E0',
+        borderLight: '#E0E0E0',
+        background: '#FFFFFF',
+        backgroundSubtle: '#F5F5F5',
         backgroundCard: '#ffffff'
       },
       typography: {
         fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
         // Tama\u00f1os optimizados para legibilidad en emails (14-16px base)
-        heading1: '22px',
+        heading1: '24px',
         heading2: '18px',
         heading3: '16px',
-        heading4: '14px',
         body: '14px',
-        bodySmall: '12px',
+        bodySmall: '13px',
         caption: '11px',
         // Pesos
         light: '300',
@@ -610,15 +610,14 @@ export class PaymentService extends BaseService {
       spacing: {
         xs: '4px',
         sm: '8px',
-        md: '12px',
-        lg: '16px',
-        xl: '24px',
-        xxl: '32px'
+        md: '16px',
+        lg: '24px',
+        xl: '32px',
+        xxl: '40px'
       },
       borderRadius: {
         sm: '4px',
-        md: '8px',
-        lg: '12px'
+        md: '8px'
       }
     };
   }
@@ -789,12 +788,12 @@ export class PaymentService extends BaseService {
 
         notasProduccionHtml += `
           <tr>
-            <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${producto}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${fechaNota}</td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
+            <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; white-space: nowrap;">${producto}</td>
+            <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; white-space: nowrap;">${fechaNota}</td>
+            <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 100%;">
               ${descripcion}
             </td>
-            <td style="border: 1px solid #ddd; padding: 8px; width: 200px;">
+            <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 200px;">
               ${archivosHtml}
             </td>
           </tr>
@@ -856,11 +855,11 @@ export class PaymentService extends BaseService {
 
       notasDespachosHtml += `
         <tr>
-          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 100%;">
             ${nota.nota ?? ""}
           </td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 200px;">
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 200px;">
             ${archivosHtml}
           </td>
         </tr>
@@ -919,11 +918,11 @@ export class PaymentService extends BaseService {
 
       notasEntregasHtml += `
         <tr>
-          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 100%;">
             ${nota.nota ?? ""}
           </td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 200px;">
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 200px;">
             ${archivosHtml}
           </td>
         </tr>
@@ -982,11 +981,11 @@ export class PaymentService extends BaseService {
 
       notasFacturacionPagosHtml += `
         <tr>
-          <td style="border: 1px solid #ddd; padding: 8px; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 100%;">
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; white-space: nowrap;">${this.customFormatDateHour(nota.fecha)}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 100%;">
             ${nota.nota ?? ""}
           </td>
-          <td style="border: 1px solid #ddd; padding: 8px; width: 200px;">
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 200px;">
             ${archivosHtml}
           </td>
         </tr>
@@ -1056,29 +1055,29 @@ export class PaymentService extends BaseService {
 
       // Cabecera de producto principal
       carritoHtml += `
-        <tr>
-          <th style="border: 1px solid #ddd; padding: 8px;">Imagen</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Producto</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Referencia</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Cantidad</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Precio Unit. Sin IVA</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">% IVA</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Valor IVA Total</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Total (Con IVA)</th>
+        <tr style="background-color: #F5F5F5;">
+          <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 13px; font-weight: 700; color: #000000; text-align: left;">Imagen</th>
+          <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 13px; font-weight: 700; color: #000000; text-align: left;">Producto</th>
+          <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 13px; font-weight: 700; color: #000000; text-align: left;">Referencia</th>
+          <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 13px; font-weight: 700; color: #000000; text-align: left;">Cantidad</th>
+          <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 13px; font-weight: 700; color: #000000; text-align: left;">Precio Unit. Sin IVA</th>
+          <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 13px; font-weight: 700; color: #000000; text-align: left;">% IVA</th>
+          <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 13px; font-weight: 700; color: #000000; text-align: left;">Valor IVA Total</th>
+          <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 13px; font-weight: 700; color: #000000; text-align: left;">Total (Con IVA)</th>
         </tr>
         <tr>
-          <td style="border: 1px solid #ddd; padding: 8px;"><img src="${imagenUrl}" alt="${tituloProducto}" style="width: 80px; height: auto; max-width: 100px;"></td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${tituloProducto}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${referenciaProducto}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${cantidad}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioUnitarioSinIva)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${porcentajeIva}%</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaTotalProducto)}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(totalConIvaProducto)}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;"><img src="${imagenUrl}" alt="${tituloProducto}" style="width: 80px; height: auto; max-width: 100px;"></td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${tituloProducto}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${referenciaProducto}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${cantidad}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(precioUnitarioSinIva)}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${porcentajeIva}%</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(valorIvaTotalProducto)}</td>
+          <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(totalConIvaProducto)}</td>
         </tr>
         ${isComanda && producto?.crearProducto?.descripcion ? `
           <tr>
-            <td colspan="8" style="border: 1px solid #ddd; padding: 8px; color: #555; font-style: italic;">
+            <td colspan="8" style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; color: #555; font-style: italic;">
               <strong>Descripción:</strong> ${producto.crearProducto.descripcion}
             </td>
           </tr>
@@ -1101,12 +1100,12 @@ export class PaymentService extends BaseService {
           carritoHtml += `
             <tr style="background-color: #f9f9f9;">
               <td></td> <!-- Indentación -->
-              <td style="border: 1px solid #ddd; padding: 8px;"><img src="${pref.imagen ?? ""}" alt="Preferencia" style="width: 40px; height: auto;"></td>
-              <td style="border: 1px solid #ddd; padding: 8px;" colspan="2">${pref.titulo ?? ""}: ${pref.subtitulo ?? ""}</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorUnitarioSinIvaPref)}</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${pref.porcentajeIva ?? "0"}%</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaPrefTotal)}</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioTotalConIvaPrefTotal)}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;"><img src="${pref.imagen ?? ""}" alt="Preferencia" style="width: 40px; height: auto;"></td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;" colspan="2">${pref.titulo ?? ""}: ${pref.subtitulo ?? ""}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(valorUnitarioSinIvaPref)}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${pref.porcentajeIva ?? "0"}%</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(valorIvaPrefTotal)}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(precioTotalConIvaPrefTotal)}</td>
             </tr>
           `;
         });
@@ -1128,13 +1127,13 @@ export class PaymentService extends BaseService {
           carritoHtml += `
             <tr style="background-color: #f0f0f0;">
               <td></td> <!-- Indentación -->
-              <td style="border: 1px solid #ddd; padding: 8px;"><img src="${adic.imagen ?? ""}" alt="Adición" style="width: 40px; height: auto;"></td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${adic.titulo ?? ""}: ${adic.subtitulo ?? ""}</td>
-              <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${cantidadTotalAdicion}</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorUnitarioSinIvaAdic)}</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${adic.porcentajeIva ?? "0"}%</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(valorIvaAdicTotal)}</td>
-              <td style="border: 1px solid #ddd; padding: 8px;">${this.formatCurrency(precioTotalConIvaAdicTotal)}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;"><img src="${adic.imagen ?? ""}" alt="Adición" style="width: 40px; height: auto;"></td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${adic.titulo ?? ""}: ${adic.subtitulo ?? ""}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; text-align: center;">${cantidadTotalAdicion}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(valorUnitarioSinIvaAdic)}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${adic.porcentajeIva ?? "0"}%</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(valorIvaAdicTotal)}</td>
+              <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${this.formatCurrency(precioTotalConIvaAdicTotal)}</td>
             </tr>
           `;
         });
@@ -1179,16 +1178,16 @@ export class PaymentService extends BaseService {
                 <table style="width: 100%; border-collapse: collapse;">
                   <thead>
                     <tr style="background-color: #e9e9e9;">
-                      ${ocasionName ? '<th style="border: 1px solid #ddd; padding: 8px; width: 25%;">Ocasión</th>' : ""}
-                      ${generoName ? '<th style="border: 1px solid #ddd; padding: 8px; width: 25%;">Género</th>' : ""}
-                      <th style="border: 1px solid #ddd; padding: 8px;">Observaciones</th>
+                      ${ocasionName ? '<th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 25%;">Ocasión</th>' : ""}
+                      ${generoName ? '<th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000; width: 25%;">Género</th>' : ""}
+                      <th style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">Observaciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr style="background-color: #f9f9f9;">
-                      ${ocasionName ? `<td style="border: 1px solid #ddd; padding: 8px;">${ocasionName}</td>` : ""}
-                      ${generoName ? `<td style="border: 1px solid #ddd; padding: 8px;">${generoName}</td>` : ""}
-                      <td style="border: 1px solid #ddd; padding: 8px;">${observaciones}</td>
+                      ${ocasionName ? `<td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${ocasionName}</td>` : ""}
+                      ${generoName ? `<td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${generoName}</td>` : ""}
+                      <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">${observaciones}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1208,9 +1207,9 @@ export class PaymentService extends BaseService {
               <tr style="background-color: #fefefe;"><td colspan="8" style="padding: 5px 8px; font-weight: bold; color: #333;">Tarjeta ${tarjetaIndex}:</td></tr>
               <tr style="background-color: #fefefe;">
                 <td></td> <!-- Indentación -->
-                <td style="border: 1px solid #ddd; padding: 8px;">Para: ${tarjeta.para ?? ""}</td>
-                <td colspan="5" style="border: 1px solid #ddd; padding: 8px;">Mensaje: ${tarjeta.mensaje}</td>
-                <td style="border: 1px solid #ddd; padding: 8px;">De: ${tarjeta.de ?? ""}</td>
+                <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">Para: ${tarjeta.para ?? ""}</td>
+                <td colspan="5" style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">Mensaje: ${tarjeta.mensaje}</td>
+                <td style="border: 1px solid #E0E0E0; padding: 16px; font-size: 14px; color: #000000;">De: ${tarjeta.de ?? ""}</td>
               </tr>
             `;
           }
@@ -1308,10 +1307,10 @@ export class PaymentService extends BaseService {
     // Cards individuales modernizadas con INLINE STYLES para compatibilidad con emails
     const htmlDatosClienteModerno = !isComanda
       ? `
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.backgroundCard}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.md}; border: 1px solid ${styles.colors.borderLight};">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.backgroundCard}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.lg}; border: 1px solid ${styles.colors.border}; box-shadow: none;">
                     <tr>
-                      <td style="padding: ${styles.spacing.md};">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.md};">
+                      <td style="padding: ${styles.spacing.lg};">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.lg};">
                           <tr>
                             <td style="padding: 0;">
                               <span style="display: inline-block; width: 24px; height: 24px; background-color: ${styles.colors.primary}; color: ${styles.colors.white}; font-size: ${styles.typography.body}; text-align: center; line-height: 24px; border-radius: 50%; margin-right: ${styles.spacing.sm}; vertical-align: middle;">👤</span>
@@ -1337,10 +1336,10 @@ export class PaymentService extends BaseService {
     const htmlFacturacionModerno =
       !isComanda && pedido?.facturacion
         ? `
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.backgroundCard}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.md}; border: 1px solid ${styles.colors.borderLight};">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.backgroundCard}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.lg}; border: 1px solid ${styles.colors.border}; box-shadow: none;">
                     <tr>
-                      <td style="padding: ${styles.spacing.md};">
-                        <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.md};">
+                      <td style="padding: ${styles.spacing.lg};">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.lg};">
                           <tr>
                             <td style="padding: 0;">
                               <span style="display: inline-block; width: 24px; height: 24px; background-color: ${styles.colors.primary}; color: ${styles.colors.white}; font-size: ${styles.typography.body}; text-align: center; line-height: 24px; border-radius: 50%; margin-right: ${styles.spacing.sm}; vertical-align: middle;">🧾</span>
@@ -1555,9 +1554,9 @@ export class PaymentService extends BaseService {
 
     const htmlTotales = !isComanda
       ? `
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.backgroundCard}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.lg}; border: 1px solid ${styles.colors.borderLight};">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #FAFAFA; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.lg}; border: 1px solid ${styles.colors.border}; border-left: 4px solid ${styles.colors.primary}; box-shadow: none;">
       <tr>
-        <td style="padding: ${styles.spacing.md};">
+        <td style="padding: ${styles.spacing.lg};">
           <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.md};">
             <tr>
               <td style="padding: 0;">
@@ -1618,8 +1617,8 @@ export class PaymentService extends BaseService {
               </tr>
               <tr><td colspan="2" style="padding: ${styles.spacing.xs} 0; border: none;"></td></tr>
               <tr style="background-color: ${styles.colors.primary};">
-                <td style="border: 1px solid ${styles.colors.primary}; padding: ${styles.spacing.md}; text-align: left; font-size: ${styles.typography.heading3}; color: ${styles.colors.white}; font-weight: ${styles.typography.bold};">Total a Pagar:</td>
-                <td style="border: 1px solid ${styles.colors.primary}; padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.heading3}; color: ${styles.colors.white}; font-weight: ${styles.typography.bold};">${this.formatCurrency(totalPagar)}</td>
+                <td style="border: 1px solid ${styles.colors.primary}; padding: ${styles.spacing.lg}; text-align: left; font-size: 20px; color: ${styles.colors.white}; font-weight: ${styles.typography.bold};">Total a Pagar:</td>
+                <td style="border: 1px solid ${styles.colors.primary}; padding: ${styles.spacing.lg}; text-align: right; font-size: 20px; color: ${styles.colors.white}; font-weight: ${styles.typography.bold};">${this.formatCurrency(totalPagar)}</td>
               </tr>
             </tbody>
           </table>
@@ -1693,9 +1692,9 @@ export class PaymentService extends BaseService {
         }
       </style>
     </head>
-    <body style="font-family: ${styles.typography.fontFamily}; margin: 0; padding: 0; background-color: ${styles.colors.background};">
+    <body style="font-family: ${styles.typography.fontFamily}; margin: 0; padding: 0; background-color: #F5F5F5;">
       <!-- Contenedor principal con ancho máximo de 600px para emails -->
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${styles.colors.background};">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #F5F5F5;">
         <tr>
           <td align="center" style="padding: ${styles.spacing.lg} 0;">
             <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background-color: ${styles.colors.white}; border-radius: ${styles.borderRadius.md};" class="two-column">
@@ -1715,12 +1714,12 @@ export class PaymentService extends BaseService {
                   <!-- Content Area -->
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
-                      <td style="padding: ${styles.spacing.lg};">
+                      <td style="padding: ${styles.spacing.xl};">
 
                         <!-- Hero Section con color sólido -->
-                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.primary}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.lg};">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.primary}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.lg}; border: none; box-shadow: none;">
                           <tr>
-                            <td style="padding: ${styles.spacing.xl}; text-align: center;">
+                            <td style="padding: ${styles.spacing.xxl}; text-align: center;">
                               <h1 style="margin: 0 0 ${styles.spacing.sm} 0; color: ${styles.colors.white}; font-size: ${styles.typography.heading1}; font-weight: ${styles.typography.bold}; line-height: 1.3;">${textoEncabezado}</h1>
                               ${!isComanda ? `<p style="margin: 0 0 ${styles.spacing.xs} 0; color: ${styles.colors.white}; font-size: ${styles.typography.body}; opacity: 0.95;">Referencia: <strong>${pedido.nroPedido ?? "N/A"}</strong></p>` : ""}
                               <p style="margin: 0; color: ${styles.colors.white}; font-size: ${styles.typography.bodySmall}; opacity: 0.9;">Gracias por elegirnos. Estamos procesando tu pedido.</p>
@@ -1742,7 +1741,7 @@ export class PaymentService extends BaseService {
                               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.backgroundCard}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.md}; border: 1px solid ${styles.colors.borderLight};">
                                 <tr>
                                   <td style="padding: ${styles.spacing.md};">
-                                    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.md};">
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.lg};">
                                       <tr>
                                         <td style="padding: 0;">
                                           <span style="display: inline-block; width: 24px; height: 24px; background-color: ${styles.colors.primary}; color: ${styles.colors.white}; font-size: ${styles.typography.body}; text-align: center; line-height: 24px; border-radius: 50%; margin-right: ${styles.spacing.sm}; vertical-align: middle;">📅</span>
@@ -1765,7 +1764,7 @@ export class PaymentService extends BaseService {
                               <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.backgroundCard}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.md}; border: 1px solid ${styles.colors.borderLight};">
                                 <tr>
                                   <td style="padding: ${styles.spacing.md};">
-                                    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.md};">
+                                    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.lg};">
                                       <tr>
                                         <td style="padding: 0;">
                                           <span style="display: inline-block; width: 24px; height: 24px; background-color: ${styles.colors.primary}; color: ${styles.colors.white}; font-size: ${styles.typography.body}; text-align: center; line-height: 24px; border-radius: 50%; margin-right: ${styles.spacing.sm}; vertical-align: middle;">📋</span>
@@ -1794,7 +1793,7 @@ export class PaymentService extends BaseService {
                         <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${styles.colors.backgroundCard}; border-radius: ${styles.borderRadius.md}; margin-bottom: ${styles.spacing.lg}; border: 1px solid ${styles.colors.borderLight};">
                           <tr>
                             <td style="padding: ${styles.spacing.md};">
-                              <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.md};">
+                              <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid ${styles.colors.primary}; padding-bottom: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.lg};">
                                 <tr>
                                   <td style="padding: 0;">
                                     <span style="display: inline-block; width: 24px; height: 24px; background-color: ${styles.colors.primary}; color: ${styles.colors.white}; font-size: ${styles.typography.body}; text-align: center; line-height: 24px; border-radius: 50%; margin-right: ${styles.spacing.sm}; vertical-align: middle;">🛍️</span>
