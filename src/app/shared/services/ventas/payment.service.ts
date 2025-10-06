@@ -623,6 +623,74 @@ export class PaymentService extends BaseService {
     };
   }
 
+  /**
+   * Estilos compactos para comanda de producción (modo impresión)
+   * Diseño optimizado para uso interno: fuentes pequeñas, espaciados mínimos, sin decoración
+   */
+  private getComandaStyles() {
+    return {
+      colors: {
+        // Colores simples para impresión (blanco y negro)
+        primary: '#000000',
+        primaryGradient: '#000000',
+
+        // Sin colores decorativos
+        linkBlue: '#000000',
+        uberBlue: '#000000',
+        accent: '#000000',
+        warning: '#666666',
+        secondary: '#666666',
+
+        // Backgrounds minimalistas
+        background: '#FFFFFF',
+        backgroundCard: '#FFFFFF',
+
+        // Textos
+        black: '#000000',
+        white: '#FFFFFF',
+        gray: '#666666',
+        grayLight: '#F5F5F5',
+        gray50: '#F5F5F5',
+        gray100: '#F5F5F5',
+        text: '#000000',
+        textMuted: '#666666',
+
+        // Divisores simples
+        divider: '#CCCCCC',
+        border: '#333333',
+        borderLight: '#CCCCCC'
+      },
+      typography: {
+        fontFamily: 'Arial, sans-serif',
+        // Fuentes compactas para ahorrar espacio
+        heading1: '18px',  // Encabezados principales
+        heading2: '14px',  // Secciones
+        heading3: '12px',  // Subsecciones
+        body: '11px',      // Texto base compacto
+        bodySmall: '10px', // Texto pequeño
+        large: '16px',     // Total destacado (más pequeño que email)
+        bold: '700',
+        semibold: '600',
+        normal: '400',
+        medium: '500'
+      },
+      spacing: {
+        xs: '2px',
+        sm: '4px',
+        md: '6px',
+        lg: '8px',
+        xl: '12px',
+        xxl: '16px',
+        xxxl: '20px'
+      },
+      borderRadius: {
+        sm: '0px',  // Sin bordes redondeados para impresión
+        md: '0px',
+        lg: '0px'
+      }
+    };
+  }
+
   // Método principal reactivo para generar el HTML del correo/comanda
   getHtmlContentObservable(pedido: Pedido, isComanda: boolean = false): Observable<SafeHtml | null> {
     if (!pedido) {
@@ -707,8 +775,9 @@ export class PaymentService extends BaseService {
   }
 
   private generateHtmlContentInternal(pedido: Pedido, isComanda: boolean = false): SafeHtml {
-    // Cargar sistema de estilos moderno
-    const styles = this.getEmailStyles();
+    // Cargar sistema de estilos según el tipo de documento
+    // isComanda: estilos compactos para producción | !isComanda: estilos bonitos para email
+    const styles = isComanda ? this.getComandaStyles() : this.getEmailStyles();
 
     let carritoHtml = "";
     let notasProduccionHtml = "";
@@ -740,51 +809,61 @@ export class PaymentService extends BaseService {
         // Generar HTML para archivos adjuntos si existen
         let archivosHtml = "";
         if (nota.archivos && nota.archivos.length > 0) {
-          archivosHtml = `
-            <div style="margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
-              <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px;">
-                <i class="fa fa-paperclip" style="margin-right: 4px;"></i>
-                Archivos adjuntos (${nota.archivos.length}):
+          // Modo Comanda: solo mostrar texto con cantidad (ahorra espacio y tinta)
+          if (isComanda) {
+            archivosHtml = `
+              <div style="font-size: 10px; color: #666666; padding: 2px;">
+                📎 ${nota.archivos.length} archivo${nota.archivos.length > 1 ? 's' : ''}
               </div>
-              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-          `;
-          
-          nota.archivos.forEach((archivo) => {
-            if (archivo.tipo === 'imagen') {
-              archivosHtml += `
-                <div style="position: relative; display: inline-block;">
-                  <img src="${archivo.url}" alt="${archivo.nombre}" 
-                       style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
-                    ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
-                  </div>
+            `;
+          } else {
+            // Modo Email: mostrar imágenes y archivos completos
+            archivosHtml = `
+              <div style="margin-top: 8px; padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+                <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px;">
+                  <i class="fa fa-paperclip" style="margin-right: 4px;"></i>
+                  Archivos adjuntos (${nota.archivos.length}):
                 </div>
-              `;
-            } else if (archivo.tipo === 'video') {
-              archivosHtml += `
-                <div style="position: relative; display: inline-block;">
-                  <video src="${archivo.url}" controls style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;"></video>
-                  <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
-                    ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            `;
+
+            nota.archivos.forEach((archivo) => {
+              if (archivo.tipo === 'imagen') {
+                archivosHtml += `
+                  <div style="position: relative; display: inline-block;">
+                    <img src="${archivo.url}" alt="${archivo.nombre}"
+                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;">
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                      ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                    </div>
                   </div>
-                </div>
-              `;
-            } else {
-              archivosHtml += `
-                <div style="display: inline-block; text-align: center; width: 60px; height: 60px; background: #e9ecef; border-radius: 4px; border: 1px solid #dee2e6; padding: 8px;">
-                  <div style="font-size: 24px; color: #6c757d; margin-bottom: 4px;">📄</div>
-                  <div style="font-size: 9px; color: #6c757d; word-break: break-word;">
-                    ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                `;
+              } else if (archivo.tipo === 'video') {
+                archivosHtml += `
+                  <div style="position: relative; display: inline-block;">
+                    <video src="${archivo.url}" controls style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #dee2e6;"></video>
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7); color: white; font-size: 9px; padding: 2px 4px; text-align: center; border-radius: 0 0 4px 4px;">
+                      ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                    </div>
                   </div>
+                `;
+              } else {
+                archivosHtml += `
+                  <div style="display: inline-block; text-align: center; width: 60px; height: 60px; background: #e9ecef; border-radius: 4px; border: 1px solid #dee2e6; padding: 8px;">
+                    <div style="font-size: 24px; color: #6c757d; margin-bottom: 4px;">📄</div>
+                    <div style="font-size: 9px; color: #6c757d; word-break: break-word;">
+                      ${archivo.nombre.length > 15 ? archivo.nombre.substring(0, 15) + '...' : archivo.nombre}
+                    </div>
+                  </div>
+                `;
+              }
+            });
+
+            archivosHtml += `
                 </div>
-              `;
-            }
-          });
-          
-          archivosHtml += `
               </div>
-            </div>
-          `;
+            `;
+          }
         }
 
         notasProduccionHtml += `
@@ -994,6 +1073,25 @@ export class PaymentService extends BaseService {
     });
 
     // --- Generación HTML Carrito ---
+
+    // Inicializar tabla para modo comanda (encabezado UNA SOLA VEZ antes del forEach)
+    if (isComanda) {
+      carritoHtml = `
+        <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse: collapse; margin-bottom: 12px; font-family: Arial, sans-serif;">
+          <thead>
+            <tr style="border-bottom: 2px solid #000; background-color: #F5F5F5;">
+              <th style="padding: 6px 4px; font-size: 10px; text-align: left; width: 50px; font-weight: bold;">Img</th>
+              <th style="padding: 6px 4px; font-size: 10px; text-align: left; font-weight: bold;">Producto</th>
+              <th style="padding: 6px 4px; font-size: 10px; text-align: center; width: 50px; font-weight: bold;">Cant</th>
+              <th style="padding: 6px 4px; font-size: 10px; text-align: left; width: 180px; font-weight: bold;">Configuración</th>
+              <th style="padding: 6px 4px; font-size: 10px; text-align: right; width: 80px; font-weight: bold;">P.Unit</th>
+              <th style="padding: 6px 4px; font-size: 10px; text-align: right; width: 80px; font-weight: bold;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+      `;
+    }
+
     (pedido.carrito ?? []).forEach((item) => {
       const producto = item?.producto;
       const configuracion = item?.configuracion;
@@ -1005,10 +1103,10 @@ export class PaymentService extends BaseService {
       const tituloProducto =
         producto?.crearProducto?.titulo ?? "Producto no disponible";
       const referenciaProducto = producto?.identificacion?.referencia ?? "N/A";
-      
+
       // 🔄 NUEVO: Calcular precios considerando escalas de volumen
       const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
-      
+
       // Precio unitario sin IVA con escalas de volumen
       let precioUnitarioSinIva = Number(producto?.precio?.precioUnitarioSinIva) || 0;
       if (preciosVolumen.length > 0) {
@@ -1021,7 +1119,7 @@ export class PaymentService extends BaseService {
           precioUnitarioSinIva = Number(precioVolumen.valorUnitarioPorVolumenSinIVA) || 0;
         }
       }
-      
+
       // Precio unitario con IVA con escalas de volumen
       let precioUnitarioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
       if (preciosVolumen.length > 0) {
@@ -1034,7 +1132,7 @@ export class PaymentService extends BaseService {
           precioUnitarioConIva = Number(precioVolumen.valorUnitarioPorVolumenConIVA) || 0;
         }
       }
-      
+
       // IVA unitario con escalas de volumen
       let valorIva = Number(producto?.precio?.valorIva) || 0;
       if (preciosVolumen.length > 0) {
@@ -1047,233 +1145,335 @@ export class PaymentService extends BaseService {
           valorIva = Number(precioVolumen.valorUnitarioPorVolumenIva) || 0;
         }
       }
-      
+
       const porcentajeIva = producto?.precio?.precioUnitarioIva ?? "0";
-      
+
       // Totales por cantidad (respetando precio unitario en las columnas unitarias)
       const valorIvaTotalProducto = valorIva * cantidad;
       const totalConIvaProducto = precioUnitarioConIva * cantidad;
 
-      // Fila de producto estilo Uber/Nubank (sin bordes laterales)
-      carritoHtml += `
-        <tr style="background-color: ${styles.colors.grayLight};">
-          <th style="padding: ${styles.spacing.md}; text-align: left; font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.gray};">Producto</th>
-          <th style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.gray};">Total</th>
-        </tr>
-        <tr style="border-bottom: 1px solid ${styles.colors.divider};">
-          <td style="padding: ${styles.spacing.lg} ${styles.spacing.md};">
-            <img src="${imagenUrl}" width="60" height="60" style="border-radius: ${styles.borderRadius.md}; vertical-align: middle; margin-right: ${styles.spacing.md};">
-            <div style="display: inline-block; vertical-align: middle;">
-              <div style="font-size: ${styles.typography.body}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold}; line-height: 1.4;">
-                ${tituloProducto}
-              </div>
-              <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; margin-top: ${styles.spacing.xs}; line-height: 1.4;">
-                Ref: ${referenciaProducto} • Cantidad: ${cantidad}
-              </div>
-            </div>
-          </td>
-          <td style="padding: ${styles.spacing.lg} ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.black};">
-            ${this.formatCurrency(totalConIvaProducto)} COP
-          </td>
-        </tr>
-        ${isComanda && producto?.crearProducto?.descripcion ? `
-          <tr>
-            <td colspan="8" style="border: 1px solid #E0E0E0; padding: 12px; font-size: 13px; color: #000000; color: #555; font-style: italic;">
-              <strong>Descripción:</strong> ${producto.crearProducto.descripcion}
+      // ========== MODO COMANDA: Tabla compacta tradicional ==========
+      if (isComanda) {
+        // Generar preferencias condensadas inline
+        let configHtml = "";
+
+        if (configuracion?.preferencias && configuracion.preferencias.length > 0) {
+          const prefsTexto = configuracion.preferencias.map((pref: Preferencia) => {
+            const precioTotalConIvaPref = Number(pref.precioTotalConIva) || 0;
+            const precioTotalConIvaPrefTotal = precioTotalConIvaPref * cantidad;
+            return `✓ ${pref.titulo || ''}: ${pref.subtitulo || ''} (+${this.formatCurrency(precioTotalConIvaPrefTotal)})`;
+          }).join(', ');
+          configHtml += prefsTexto;
+        }
+
+        // Generar adiciones condensadas inline
+        if (configuracion?.adiciones && configuracion.adiciones.length > 0) {
+          if (configHtml) configHtml += '<br>';
+          const adicsTexto = configuracion.adiciones.map((adic: Adicion) => {
+            const precioTotalConIvaAdic = Number(adic.precioTotalConIva) || 0;
+            const cantidadAdicion = (adic as any).cantidad || 1;
+            const cantidadTotalAdicion = cantidadAdicion * cantidad;
+            const precioTotalConIvaAdicTotal = precioTotalConIvaAdic * cantidadTotalAdicion;
+            return `+ ${adic.titulo || ''} x${cantidadTotalAdicion} (+${this.formatCurrency(precioTotalConIvaAdicTotal)})`;
+          }).join(', ');
+          configHtml += adicsTexto;
+        }
+
+        // Fila compacta para comanda
+        carritoHtml += `
+          <tr style="border-bottom: 1px solid #333;">
+            <td style="padding: 4px; vertical-align: top;">
+              <img src="${imagenUrl}" width="40" height="40" style="display: block; border-radius: 4px;">
             </td>
+            <td style="padding: 4px; font-size: 10px; vertical-align: top;">
+              <div style="font-weight: bold; color: #000; margin-bottom: 2px;">${tituloProducto}</div>
+              <div style="font-size: 9px; color: #666;">Ref: ${referenciaProducto}</div>
+              ${producto?.crearProducto?.descripcion ? `<div style="font-size: 9px; font-style: italic; color: #666; margin-top: 3px; line-height: 1.3;">${producto.crearProducto.descripcion}</div>` : ''}
+            </td>
+            <td style="padding: 4px; text-align: center; font-size: 11px; font-weight: bold; vertical-align: top;">${cantidad}</td>
+            <td style="padding: 4px; font-size: 9px; color: #333; line-height: 1.4; vertical-align: top;">${configHtml || '-'}</td>
+            <td style="padding: 4px; text-align: right; font-size: 10px; vertical-align: top;">${this.formatCurrency(precioUnitarioConIva)}</td>
+            <td style="padding: 4px; text-align: right; font-size: 11px; font-weight: bold; vertical-align: top;">${this.formatCurrency(totalConIvaProducto)}</td>
           </tr>
-        ` : ""}
-      `;
+        `;
 
-      // Preferencias estilo Nubank/Uber
-      if (
-        configuracion?.preferencias &&
-        configuracion.preferencias.length > 0
-      ) {
-        carritoHtml += `
-          <tr>
-            <td colspan="2" style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.sm} ${styles.spacing.md};">
-              <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; font-weight: ${styles.typography.semibold};">
-                ✨ Preferencias seleccionadas
-              </div>
-            </td>
-          </tr>`;
+        // Detalles de Entrega condensados (Ocasión, Género, Observaciones)
+        if (configuracion?.datosEntrega) {
+          const datosEntrega = configuracion.datosEntrega;
+          const ocasionId = datosEntrega.ocasion;
+          let generoId: any = datosEntrega.genero;
+          if (Array.isArray(datosEntrega.genero)) {
+            generoId = datosEntrega.genero[0];
+          }
 
-        configuracion.preferencias.forEach((pref: Preferencia) => {
-          // Asegurar valores numéricos
-          const valorUnitarioSinIvaPref = Number(pref.valorUnitarioSinIva) || 0;
-          const valorIvaPref = Number(pref.valorIva) || 0;
-          const precioTotalConIvaPref = Number(pref.precioTotalConIva) || 0;
-          const valorIvaPrefTotal = valorIvaPref * cantidad;
-          const precioTotalConIvaPrefTotal = precioTotalConIvaPref * cantidad;
+          const ocasionObj = this.maestros.ocasiones?.find((o) => o.id == ocasionId);
+          const generoObj = this.maestros.generos?.find((g) => g.id == generoId);
+          const ocasionName = ocasionObj?.name ?? null;
+          const generoName = generoObj?.name ?? null;
+          const observaciones = datosEntrega.observaciones ?? "";
 
-          carritoHtml += `
-            <tr style="border-bottom: 1px solid ${styles.colors.divider};">
-              <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
-                ${pref.imagen ? `<img src="${pref.imagen}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
-                <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle;">
-                  ${pref.titulo || ''}: ${pref.subtitulo || ''}
-                </span>
-              </td>
-              <td style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black};">
-                ${this.formatCurrency(precioTotalConIvaPrefTotal)} COP
-              </td>
-            </tr>`;
-        });
-      }
+          if (ocasionName || generoName || observaciones) {
+            let detallesTexto = "";
+            if (ocasionName) detallesTexto += `Ocasión: ${ocasionName}`;
+            if (generoName) detallesTexto += `${detallesTexto ? ' • ' : ''}Género: ${generoName}`;
+            if (observaciones) detallesTexto += `${detallesTexto ? ' • ' : ''}Obs: ${observaciones}`;
 
-      // Adiciones estilo Nubank/Uber
-      if (configuracion?.adiciones && configuracion.adiciones.length > 0) {
-        carritoHtml += `
-          <tr>
-            <td colspan="2" style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.sm} ${styles.spacing.md};">
-              <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; font-weight: ${styles.typography.semibold};">
-                ➕ Adiciones extras
-              </div>
-            </td>
-          </tr>`;
-
-        configuracion.adiciones.forEach((adic: Adicion) => {
-          // Asegurar valores numéricos
-          const valorUnitarioSinIvaAdic = Number(adic.valorUnitarioSinIva) || 0;
-          const valorIvaAdic = Number(adic.valorIva) || 0;
-          const precioTotalConIvaAdic = Number(adic.precioTotalConIva) || 0;
-          // Obtener la cantidad de la adición (si existe) o usar 1 por defecto
-          const cantidadAdicion = (adic as any).cantidad || 1;
-          const cantidadTotalAdicion = cantidadAdicion * cantidad;
-          const valorIvaAdicTotal = valorIvaAdic * cantidadTotalAdicion;
-          const precioTotalConIvaAdicTotal = precioTotalConIvaAdic * cantidadTotalAdicion;
-
-          carritoHtml += `
-            <tr style="border-bottom: 1px solid ${styles.colors.divider};">
-              <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
-                ${adic.imagen ? `<img src="${adic.imagen}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
-                <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle;">
-                  ${adic.titulo || ''}: ${adic.subtitulo || ''} ${cantidadTotalAdicion > 1 ? `(x${cantidadTotalAdicion})` : ''}
-                </span>
-              </td>
-              <td style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black};">
-                ${this.formatCurrency(precioTotalConIvaAdicTotal)} COP
-              </td>
-            </tr>`;
-        });
-      }
-
-      // Detalles de Entrega (Ocasión, Género, Observaciones) - Condicional
-      if (configuracion?.datosEntrega) {
-        const datosEntrega = configuracion.datosEntrega;
-        // Buscar nombres en maestros usando IDs
-        const ocasionId = datosEntrega.ocasion; // Es el ID directo
-        
-        // El género puede ser un ID directo o un array, verificamos ambos casos
-        let generoId: any = datosEntrega.genero;
-        if (Array.isArray(datosEntrega.genero)) {
-          generoId = datosEntrega.genero[0]; // Si es array, tomamos el primero
-        }
-
-        const ocasionObj = this.maestros.ocasiones?.find(
-          (o) => o.id == ocasionId,
-        );
-        const generoObj = this.maestros.generos?.find((g) => g.id == generoId);
-
-        const ocasionName = ocasionObj?.name ?? null; // Obtener nombre o null
-        const generoName = generoObj?.name ?? null; // Obtener nombre o null
-        const observaciones = datosEntrega.observaciones ?? "";
-
-        // Log para depuración del género
-        console.log('🔍 Debug género en payment.service:', {
-          datosEntrega: datosEntrega,
-          generoId: generoId,
-          generoObj: generoObj,
-          generoName: generoName,
-          maestrosGeneros: this.maestros.generos
-        });
-
-        // Detalles de Entrega simplificados
-        if (ocasionName || generoName || observaciones) {
-          carritoHtml += `
-            <tr>
-              <td colspan="2" style="padding: ${styles.spacing.md};">
-                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8F9FA; border-radius: ${styles.borderRadius.md}; border-left: 4px solid ${styles.colors.primary}; overflow: hidden;">
-                  <tr>
-                    <td style="padding: ${styles.spacing.md};">
-                      <div style="font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.black}; margin-bottom: ${styles.spacing.sm};">
-                        📝 Detalles de Entrega
-                      </div>
-                      ${ocasionName ? `
-                      <div style="margin: ${styles.spacing.xs} 0;">
-                        <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Ocasión: </span>
-                        <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold};">${ocasionName}</span>
-                      </div>` : ''}
-                      ${generoName ? `
-                      <div style="margin: ${styles.spacing.xs} 0;">
-                        <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Género: </span>
-                        <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold};">${generoName}</span>
-                      </div>` : ''}
-                      ${observaciones ? `
-                      <div style="margin: ${styles.spacing.sm} 0 0 0;">
-                        <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Observaciones: </span>
-                        <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; margin-top: ${styles.spacing.xs}; line-height: 1.6;">
-                          ${observaciones}
-                        </div>
-                      </div>` : ''}
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>`;
-        }
-      }
-
-      // Tarjetas de regalo modernas
-      if (configuracion?.tarjetas && configuracion.tarjetas.length > 0) {
-        configuracion.tarjetas.forEach((tarjeta: Tarjeta) => {
-          if (tarjeta.mensaje) {
-            // Solo mostrar si hay mensaje
-            tarjetaIndex++;
             carritoHtml += `
               <tr>
-                <td colspan="2" style="padding: ${styles.spacing.lg} ${styles.spacing.md};">
-                  <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #FFF9F0 0%, #FFEBF5 100%); border-left: 4px solid #EC4899; border-radius: ${styles.borderRadius.md}; overflow: hidden;">
+                <td colspan="6" style="padding: 4px 4px 4px 50px; font-size: 9px; color: #555; font-style: italic; border-bottom: 1px solid #E0E0E0;">
+                  📝 ${detallesTexto}
+                </td>
+              </tr>
+            `;
+          }
+        }
+
+        // Tarjetas de regalo condensadas
+        if (configuracion?.tarjetas && configuracion.tarjetas.length > 0) {
+          configuracion.tarjetas.forEach((tarjeta: Tarjeta) => {
+            if (tarjeta.mensaje) {
+              tarjetaIndex++;
+              carritoHtml += `
+                <tr>
+                  <td colspan="6" style="padding: 4px 4px 4px 50px; font-size: 9px; background-color: #FFF9F0; border-bottom: 1px solid #E0E0E0;">
+                    💌 <strong>Tarjeta ${tarjetaIndex}:</strong> De ${tarjeta.de || 'Anónimo'} para ${tarjeta.para || 'Destinatario'} • "${tarjeta.mensaje}"
+                  </td>
+                </tr>
+              `;
+            }
+          });
+        }
+
+      } else {
+        // ========== MODO EMAIL: Diseño Uber/Nubank (SIN CAMBIOS) ==========
+        carritoHtml += `
+          <tr style="background-color: ${styles.colors.grayLight};">
+            <th style="padding: ${styles.spacing.md}; text-align: left; font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.gray};">Producto</th>
+            <th style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.gray};">Total</th>
+          </tr>
+          <tr style="border-bottom: 1px solid ${styles.colors.divider};">
+            <td style="padding: ${styles.spacing.lg} ${styles.spacing.md};">
+              <img src="${imagenUrl}" width="60" height="60" style="border-radius: ${styles.borderRadius.md}; vertical-align: middle; margin-right: ${styles.spacing.md};">
+              <div style="display: inline-block; vertical-align: middle;">
+                <div style="font-size: ${styles.typography.body}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold}; line-height: 1.4;">
+                  ${tituloProducto}
+                </div>
+                <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; margin-top: ${styles.spacing.xs}; line-height: 1.4;">
+                  Ref: ${referenciaProducto} • Cantidad: ${cantidad}
+                </div>
+              </div>
+            </td>
+            <td style="padding: ${styles.spacing.lg} ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.black};">
+              ${this.formatCurrency(totalConIvaProducto)} COP
+            </td>
+          </tr>
+          ${isComanda && producto?.crearProducto?.descripcion ? `
+            <tr>
+              <td colspan="8" style="border: 1px solid #E0E0E0; padding: 12px; font-size: 13px; color: #000000; color: #555; font-style: italic;">
+                <strong>Descripción:</strong> ${producto.crearProducto.descripcion}
+              </td>
+            </tr>
+          ` : ""}
+        `;
+
+        // Preferencias estilo Nubank/Uber
+        if (
+          configuracion?.preferencias &&
+          configuracion.preferencias.length > 0
+        ) {
+          carritoHtml += `
+            <tr>
+              <td colspan="2" style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.sm} ${styles.spacing.md};">
+                <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; font-weight: ${styles.typography.semibold};">
+                  ✨ Preferencias seleccionadas
+                </div>
+              </td>
+            </tr>`;
+
+          configuracion.preferencias.forEach((pref: Preferencia) => {
+            // Asegurar valores numéricos
+            const valorUnitarioSinIvaPref = Number(pref.valorUnitarioSinIva) || 0;
+            const valorIvaPref = Number(pref.valorIva) || 0;
+            const precioTotalConIvaPref = Number(pref.precioTotalConIva) || 0;
+            const valorIvaPrefTotal = valorIvaPref * cantidad;
+            const precioTotalConIvaPrefTotal = precioTotalConIvaPref * cantidad;
+
+            carritoHtml += `
+              <tr style="border-bottom: 1px solid ${styles.colors.divider};">
+                <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
+                  ${pref.imagen ? `<img src="${pref.imagen}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
+                  <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle;">
+                    ${pref.titulo || ''}: ${pref.subtitulo || ''}
+                  </span>
+                </td>
+                <td style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black};">
+                  ${this.formatCurrency(precioTotalConIvaPrefTotal)} COP
+                </td>
+              </tr>`;
+          });
+        }
+
+        // Adiciones estilo Nubank/Uber
+        if (configuracion?.adiciones && configuracion.adiciones.length > 0) {
+          carritoHtml += `
+            <tr>
+              <td colspan="2" style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.sm} ${styles.spacing.md};">
+                <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; font-weight: ${styles.typography.semibold};">
+                  ➕ Adiciones extras
+                </div>
+              </td>
+            </tr>`;
+
+          configuracion.adiciones.forEach((adic: Adicion) => {
+            // Asegurar valores numéricos
+            const valorUnitarioSinIvaAdic = Number(adic.valorUnitarioSinIva) || 0;
+            const valorIvaAdic = Number(adic.valorIva) || 0;
+            const precioTotalConIvaAdic = Number(adic.precioTotalConIva) || 0;
+            // Obtener la cantidad de la adición (si existe) o usar 1 por defecto
+            const cantidadAdicion = (adic as any).cantidad || 1;
+            const cantidadTotalAdicion = cantidadAdicion * cantidad;
+            const valorIvaAdicTotal = valorIvaAdic * cantidadTotalAdicion;
+            const precioTotalConIvaAdicTotal = precioTotalConIvaAdic * cantidadTotalAdicion;
+
+            carritoHtml += `
+              <tr style="border-bottom: 1px solid ${styles.colors.divider};">
+                <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
+                  ${adic.imagen ? `<img src="${adic.imagen}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
+                  <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle;">
+                    ${adic.titulo || ''}: ${adic.subtitulo || ''} ${cantidadTotalAdicion > 1 ? `(x${cantidadTotalAdicion})` : ''}
+                  </span>
+                </td>
+                <td style="padding: ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black};">
+                  ${this.formatCurrency(precioTotalConIvaAdicTotal)} COP
+                </td>
+              </tr>`;
+          });
+        }
+
+        // Detalles de Entrega (Ocasión, Género, Observaciones) - Condicional
+        if (configuracion?.datosEntrega) {
+          const datosEntrega = configuracion.datosEntrega;
+          // Buscar nombres en maestros usando IDs
+          const ocasionId = datosEntrega.ocasion; // Es el ID directo
+
+          // El género puede ser un ID directo o un array, verificamos ambos casos
+          let generoId: any = datosEntrega.genero;
+          if (Array.isArray(datosEntrega.genero)) {
+            generoId = datosEntrega.genero[0]; // Si es array, tomamos el primero
+          }
+
+          const ocasionObj = this.maestros.ocasiones?.find(
+            (o) => o.id == ocasionId,
+          );
+          const generoObj = this.maestros.generos?.find((g) => g.id == generoId);
+
+          const ocasionName = ocasionObj?.name ?? null; // Obtener nombre o null
+          const generoName = generoObj?.name ?? null; // Obtener nombre o null
+          const observaciones = datosEntrega.observaciones ?? "";
+
+          // Log para depuración del género
+          console.log('🔍 Debug género en payment.service:', {
+            datosEntrega: datosEntrega,
+            generoId: generoId,
+            generoObj: generoObj,
+            generoName: generoName,
+            maestrosGeneros: this.maestros.generos
+          });
+
+          // Detalles de Entrega simplificados
+          if (ocasionName || generoName || observaciones) {
+            carritoHtml += `
+              <tr>
+                <td colspan="2" style="padding: ${styles.spacing.md};">
+                  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F8F9FA; border-radius: ${styles.borderRadius.md}; border-left: 4px solid ${styles.colors.primary}; overflow: hidden;">
                     <tr>
                       <td style="padding: ${styles.spacing.md};">
-                        <!-- Header -->
-                        <div style="margin-bottom: ${styles.spacing.md};">
-                          <span style="font-size: 20px; margin-right: ${styles.spacing.sm};">💌</span>
-                          <span style="font-size: ${styles.typography.body}; font-weight: ${styles.typography.bold}; color: ${styles.colors.black};">
-                            Tarjeta de Regalo ${tarjetaIndex}
-                          </span>
+                        <div style="font-size: ${styles.typography.bodySmall}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.black}; margin-bottom: ${styles.spacing.sm};">
+                          📝 Detalles de Entrega
                         </div>
-
-                        <!-- De/Para -->
-                        <div style="margin-bottom: ${styles.spacing.md};">
-                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">De: </span>
-                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold};">
-                            ${tarjeta.de || 'Anónimo'}
-                          </span>
-                          <span style="margin: 0 ${styles.spacing.sm}; color: #E0E0E0;">•</span>
-                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Para: </span>
-                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold};">
-                            ${tarjeta.para || 'Destinatario'}
-                          </span>
-                        </div>
-
-                        <!-- Mensaje -->
-                        <div style="background-color: ${styles.colors.white}; padding: ${styles.spacing.md}; border-radius: ${styles.borderRadius.sm}; border-left: 3px solid #EC4899;">
-                          <p style="margin: 0; font-size: ${styles.typography.body}; color: ${styles.colors.black}; line-height: 1.6; font-style: italic;">
-                            "${tarjeta.mensaje}"
-                          </p>
-                        </div>
+                        ${ocasionName ? `
+                        <div style="margin: ${styles.spacing.xs} 0;">
+                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Ocasión: </span>
+                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold};">${ocasionName}</span>
+                        </div>` : ''}
+                        ${generoName ? `
+                        <div style="margin: ${styles.spacing.xs} 0;">
+                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Género: </span>
+                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold};">${generoName}</span>
+                        </div>` : ''}
+                        ${observaciones ? `
+                        <div style="margin: ${styles.spacing.sm} 0 0 0;">
+                          <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Observaciones: </span>
+                          <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; margin-top: ${styles.spacing.xs}; line-height: 1.6;">
+                            ${observaciones}
+                          </div>
+                        </div>` : ''}
                       </td>
                     </tr>
                   </table>
                 </td>
               </tr>`;
           }
-        });
+        }
+
+        // Tarjetas de regalo modernas
+        if (configuracion?.tarjetas && configuracion.tarjetas.length > 0) {
+          configuracion.tarjetas.forEach((tarjeta: Tarjeta) => {
+            if (tarjeta.mensaje) {
+              // Solo mostrar si hay mensaje
+              tarjetaIndex++;
+              carritoHtml += `
+                <tr>
+                  <td colspan="2" style="padding: ${styles.spacing.lg} ${styles.spacing.md};">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #FFF9F0 0%, #FFEBF5 100%); border-left: 4px solid #EC4899; border-radius: ${styles.borderRadius.md}; overflow: hidden;">
+                      <tr>
+                        <td style="padding: ${styles.spacing.md};">
+                          <!-- Header -->
+                          <div style="margin-bottom: ${styles.spacing.md};">
+                            <span style="font-size: 20px; margin-right: ${styles.spacing.sm};">💌</span>
+                            <span style="font-size: ${styles.typography.body}; font-weight: ${styles.typography.bold}; color: ${styles.colors.black};">
+                              Tarjeta de Regalo ${tarjetaIndex}
+                            </span>
+                          </div>
+
+                          <!-- De/Para -->
+                          <div style="margin-bottom: ${styles.spacing.md};">
+                            <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">De: </span>
+                            <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold};">
+                              ${tarjeta.de || 'Anónimo'}
+                            </span>
+                            <span style="margin: 0 ${styles.spacing.sm}; color: #E0E0E0;">•</span>
+                            <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray};">Para: </span>
+                            <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: ${styles.typography.semibold};">
+                              ${tarjeta.para || 'Destinatario'}
+                            </span>
+                          </div>
+
+                          <!-- Mensaje -->
+                          <div style="background-color: ${styles.colors.white}; padding: ${styles.spacing.md}; border-radius: ${styles.borderRadius.sm}; border-left: 3px solid #EC4899;">
+                            <p style="margin: 0; font-size: ${styles.typography.body}; color: ${styles.colors.black}; line-height: 1.6; font-style: italic;">
+                              "${tarjeta.mensaje}"
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>`;
+            }
+          });
+        }
       }
       // carritoHtml += `<tr><td colspan="8" style="border-bottom: 2px solid #ccc; padding: 5px 0;"></td></tr>`; // Separador visual - ELIMINADO para diseño más limpio
     }); // Fin forEach carrito
+
+    // Cerrar tabla para modo comanda (DESPUÉS del forEach)
+    if (isComanda) {
+      carritoHtml += `
+          </tbody>
+        </table>
+      `;
+    }
 
     // --- Secciones HTML ---
     // (Se mantienen las definiciones de las secciones como constantes para claridad)
@@ -1359,6 +1559,52 @@ export class PaymentService extends BaseService {
       ? `¡Tu pedido ha sido registrado con éxito!`
       : `Orden Pedido Nro: ${pedido.nroPedido ?? "N/A"}`;
     const linkReferenciaPedido = `<a href="${window.location.origin}/ventas/pedidos?nroPedido=${pedido.nroPedido ?? ""}" style="text-decoration: none; color: #007bff;"><p>Referencia del Pedido: ${pedido.nroPedido ?? "N/A"}</p></a>`;
+
+    // Encabezado compacto para comanda (solo modo producción)
+    const htmlEncabezadoComanda = isComanda ? `
+      <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 2px solid #000; padding: ${styles.spacing.md} 0; margin-bottom: ${styles.spacing.md};">
+        <tr>
+          <td width="60%" style="vertical-align: top;">
+            <h1 style="font-size: 20px; margin: 0 0 ${styles.spacing.sm} 0; font-weight: bold; color: #000;">
+              ORDEN #${pedido.nroPedido ?? "N/A"}
+            </h1>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td style="padding: ${styles.spacing.xs} 0; font-size: ${styles.typography.body}; color: ${styles.colors.text};"><strong>Cliente:</strong> ${pedido?.cliente?.nombres_completos ?? "N/A"} ${pedido?.cliente?.apellidos_completos ?? ""}</td></tr>
+              <tr><td style="padding: ${styles.spacing.xs} 0; font-size: ${styles.typography.body}; color: ${styles.colors.text};"><strong>Teléfono:</strong> ${pedido?.cliente?.numero_celular_comprador ?? "N/A"}</td></tr>
+              <tr><td style="padding: ${styles.spacing.xs} 0; font-size: ${styles.typography.body}; color: ${styles.colors.text};"><strong>Email:</strong> ${pedido?.cliente?.correo_electronico_comprador ?? "N/A"}</td></tr>
+            </table>
+          </td>
+          <td width="40%" style="vertical-align: top; text-align: right;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td style="padding: ${styles.spacing.xs} 0; font-size: ${styles.typography.body}; text-align: right;"><strong>Estado:</strong> ${pedido?.estadoProceso ?? "N/A"}</td></tr>
+              <tr><td style="padding: ${styles.spacing.xs} 0; font-size: ${styles.typography.body}; text-align: right;"><strong>Entrega:</strong> ${this.customFormatDate(pedido.fechaEntrega)}</td></tr>
+              <tr><td style="padding: ${styles.spacing.xs} 0; font-size: ${styles.typography.body}; text-align: right;"><strong>Creado:</strong> ${this.customFormatDate(pedido.fechaCreacion)}</td></tr>
+              <tr><td style="padding: ${styles.spacing.xs} 0; font-size: ${styles.typography.body}; text-align: right;"><strong>Impreso:</strong> ${this.customFormatDate(new Date().toISOString())}</td></tr>
+              ${pedido?.asesorAsignado?.name ? `<tr><td style="padding: ${styles.spacing.xs} 0; font-size: ${styles.typography.body}; text-align: right;"><strong>Asesor:</strong> ${pedido.asesorAsignado.name}</td></tr>` : ''}
+            </table>
+          </td>
+        </tr>
+      </table>
+      ${pedido?.envio ? `
+      <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #F5F5F5; border: 1px solid #CCC; padding: ${styles.spacing.sm}; margin-bottom: ${styles.spacing.md};">
+        <tr>
+          <td width="50%" style="vertical-align: top;">
+            <div style="font-size: ${styles.typography.body}; font-weight: bold; margin-bottom: ${styles.spacing.xs};">📦 Datos de Envío</div>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr><td style="font-size: ${styles.typography.bodySmall}; padding: 2px 0;"><strong>Dirección:</strong> ${pedido.envio.direccionEntrega ?? "N/A"}</td></tr>
+              <tr><td style="font-size: ${styles.typography.bodySmall}; padding: 2px 0;"><strong>Ciudad:</strong> ${pedido.envio.ciudad ?? "N/A"}, ${pedido.envio.departamento ?? ""}</td></tr>
+              ${pedido.envio.barrio ? `<tr><td style="font-size: ${styles.typography.bodySmall}; padding: 2px 0;"><strong>Barrio:</strong> ${pedido.envio.barrio}</td></tr>` : ''}
+              ${pedido.envio.celular ? `<tr><td style="font-size: ${styles.typography.bodySmall}; padding: 2px 0;"><strong>Tel:</strong> ${pedido.envio.celular}</td></tr>` : ''}
+            </table>
+          </td>
+          <td width="50%" style="vertical-align: top; padding-left: ${styles.spacing.sm};">
+            ${pedido.envio.observaciones ? `<div style="font-size: ${styles.typography.bodySmall}; padding: ${styles.spacing.xs}; background-color: #FFF8DC; border-left: 3px solid #FFD700;"><strong>📝 Observaciones:</strong><br>${pedido.envio.observaciones}</div>` : ''}
+            ${pedido.formaEntrega ? `<div style="font-size: ${styles.typography.bodySmall}; margin-top: ${styles.spacing.xs};"><strong>Forma Entrega:</strong> ${pedido.formaEntrega}</div>` : ''}
+            ${pedido.horarioEntrega ? `<div style="font-size: ${styles.typography.bodySmall};"><strong>Horario:</strong> ${pedido.horarioEntrega}</div>` : ''}
+          </td>
+        </tr>
+      </table>` : ''}
+    ` : '';
 
     // Reconstruir secciones con validaciones internas y usando las variables HTML generadas
     // Cards individuales modernizadas con INLINE STYLES para compatibilidad con emails
@@ -1597,8 +1843,62 @@ export class PaymentService extends BaseService {
     const baseIva19 =
       totalIva19 > 0 && !isNaN(totalIva19) ? totalIva19 / 0.19 : 0;
 
-    const htmlTotales = !isComanda
+    const htmlTotales = isComanda
       ? `
+    <!-- Sección Totales Comanda (Compacta) -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-top: 2px solid #000; margin-top: ${styles.spacing.xl}; padding-top: ${styles.spacing.md}; margin-bottom: ${styles.spacing.md};">
+      <tr>
+        <td style="padding: ${styles.spacing.sm} 0; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          Subtotal productos:
+        </td>
+        <td style="padding: ${styles.spacing.sm} 0; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          ${this.formatCurrency(subtotal)} COP
+        </td>
+      </tr>
+      <tr>
+        <td style="padding: ${styles.spacing.sm} 0; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          Envío:
+        </td>
+        <td style="padding: ${styles.spacing.sm} 0; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          ${this.formatCurrency(envioSinIva)} COP
+        </td>
+      </tr>
+      ${descuentos > 0 ? `
+      <tr>
+        <td style="padding: ${styles.spacing.sm} 0; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          Descuentos:
+        </td>
+        <td style="padding: ${styles.spacing.sm} 0; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          -${this.formatCurrency(descuentos)} COP
+        </td>
+      </tr>` : ''}
+      <tr>
+        <td style="padding: ${styles.spacing.sm} 0; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          IVA:
+        </td>
+        <td style="padding: ${styles.spacing.sm} 0; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          ${this.formatCurrency(totalIVA)} COP
+        </td>
+      </tr>
+      <tr style="border-top: 1px solid #333;">
+        <td style="padding: ${styles.spacing.md} 0; font-size: ${styles.typography.heading2}; font-weight: ${styles.typography.bold}; color: ${styles.colors.black};">
+          TOTAL:
+        </td>
+        <td style="padding: ${styles.spacing.md} 0; text-align: right; font-size: ${styles.typography.heading2}; font-weight: ${styles.typography.bold}; color: ${styles.colors.black};">
+          ${this.formatCurrency(totalPagar)} COP
+        </td>
+      </tr>
+      ${pedido.formaDePago ? `
+      <tr style="border-top: 1px solid #CCC;">
+        <td style="padding: ${styles.spacing.sm} 0; font-size: ${styles.typography.body}; color: ${styles.colors.text};">
+          Forma de pago:
+        </td>
+        <td style="padding: ${styles.spacing.sm} 0; text-align: right; font-size: ${styles.typography.body}; font-weight: ${styles.typography.semibold}; color: ${styles.colors.text};">
+          ${pedido.formaDePago}
+        </td>
+      </tr>` : ''}
+    </table>`
+      : `
     <!-- Sección Totales Estilo Uber -->
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: ${styles.spacing.xl};">
       <tr>
@@ -1671,8 +1971,7 @@ export class PaymentService extends BaseService {
 
         </td>
       </tr>
-    </table>`
-      : "";
+    </table>`;
 
     // Layout de dos columnas usando tablas para compatibilidad con emails
     const twoColumnSection = !isComanda ? `
@@ -1740,6 +2039,20 @@ export class PaymentService extends BaseService {
       </style>
     </head>
     <body style="font-family: ${styles.typography.fontFamily}; margin: 0; padding: 0; background-color: ${styles.colors.background};">
+      ${isComanda ? `
+      <!-- Contenedor Comanda (Full Width A4) -->
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${styles.colors.background};">
+        <tr>
+          <td style="padding: ${styles.spacing.md};">
+
+            <!-- Encabezado Comanda -->
+            ${htmlEncabezadoComanda}
+
+            <!-- Content Area Comanda -->
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="padding: 0;">
+      ` : `
       <!-- Contenedor principal con ancho máximo de 600px para emails -->
       <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${styles.colors.background};">
         <tr>
@@ -1763,7 +2076,9 @@ export class PaymentService extends BaseService {
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td style="padding: ${styles.spacing.lg};">
+      `}
 
+                        ${!isComanda ? `
                         <!-- Banner Confirmación Gradiente Púrpura -->
                         <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, ${styles.colors.primary} 0%, ${styles.colors.primaryGradient} 100%); margin-bottom: ${styles.spacing.xl}; border-radius: ${styles.borderRadius.md}; overflow: hidden;">
                           <tr>
@@ -1823,6 +2138,7 @@ export class PaymentService extends BaseService {
                             </td>
                           </tr>
                         </table>` : ''}
+                        ` : ''}
 
                         <!-- Cliente y Facturación -->
                         ${twoColumnSection}
@@ -1911,8 +2227,9 @@ export class PaymentService extends BaseService {
                     </tr>
                   </table>
 
+                  ${!isComanda ? `
                   <!-- Footer Image -->
-                  ${!isComanda && pieDePaginaUrl ? `
+                  ${pieDePaginaUrl ? `
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="center" style="padding: ${styles.spacing.md} 0;">
@@ -1922,7 +2239,7 @@ export class PaymentService extends BaseService {
                   </table>` : ""}
 
                   <!-- Publicidad -->
-                  ${!isComanda && imgPublicidad ? `
+                  ${imgPublicidad ? `
                   <table width="100%" cellpadding="0" cellspacing="0">
                     <tr>
                       <td align="center" style="padding: ${styles.spacing.md} 0;">
@@ -1930,6 +2247,7 @@ export class PaymentService extends BaseService {
                       </td>
                     </tr>
                   </table>` : ""}
+                  ` : ''}
 
                 </td>
               </tr>

@@ -632,6 +632,19 @@
             (click)="guardarOrden()">
         </button>
 
+        <!-- Nuevo botón: Guardar y Despachar (solo en modo creación y con mensajero propio) -->
+        <button pButton pRipple
+            *ngIf="!nroShippingOrder && ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
+            type="button"
+            class="p-button-success"
+            [icon]="isSaving ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"
+            [label]="isSaving ? ('Guardando...' | translate) : ('Guardar y Despachar' | translate)"
+            [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0 || isSaving"
+            (click)="guardarYDespacharOrden()"
+            pTooltip="Guarda la orden y abre directamente el modal para asignar mensajero"
+            tooltipPosition="top">
+        </button>
+
         <button pButton pRipple
             *ngIf="nroShippingOrder"
             type="button"

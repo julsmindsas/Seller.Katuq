@@ -43,6 +43,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   @Output() onRemoveOrder = new EventEmitter<Pedido>();
   @Output() onPrintOrder = new EventEmitter<void>();
   @Output() onDispatchOrder = new EventEmitter<void>();
+  @Output() onSaveAndDispatch = new EventEmitter<any>(); // Nuevo evento para guardar y despachar
   @Output() onPrintPdf = new EventEmitter<Pedido>();
   @Output() onViewTags = new EventEmitter<Pedido>();
   @Output() onPrintLabel = new EventEmitter<Pedido>();
@@ -779,6 +780,79 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   despacharOrden(): void {
     this.onDispatchOrder.emit();
+  }
+
+  /**
+   * Método para guardar la orden y despacharla en un solo paso
+   * Combina las operaciones de guardarOrden() y despacharOrden()
+   */
+  guardarYDespacharOrden(): void {
+    // Prevenir múltiples clics
+    if (this.isSaving || this.ordenEnvioForm.invalid || this.pedidosSeleccionados.length === 0) {
+      return;
+    }
+
+    this.isSaving = true;
+
+    // Si hay pedidos movidos, mostrar confirmación adicional
+    if (this.hayPedidosMovidos) {
+      const listaPedidosMovidos = Array.from(this.pedidosMovidos.entries())
+        .map(
+          ([nroPedido, ordenAnterior]) =>
+            `#${nroPedido} (desde orden ${ordenAnterior})`,
+        )
+        .join(", ");
+
+      Swal.fire({
+        title: "Confirmar cambios y despacho",
+        html: `
+          <div class="text-start">
+            <p>Esta acción realizará los siguientes cambios:</p>
+            <ul>
+              <li><strong>Pedidos movidos:</strong> ${listaPedidosMovidos}</li>
+              <li>Estos pedidos serán removidos de sus órdenes anteriores</li>
+              <li>Se creará la orden y se abrirá el selector de mensajero</li>
+            </ul>
+            <div class="alert alert-info mt-3">
+              <i class="pi pi-info-circle me-2"></i>
+              Podrás asignar el mensajero inmediatamente después de guardar.
+            </div>
+          </div>
+        `,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, guardar y despachar",
+        cancelButtonText: "Cancelar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.ejecutarGuardarYDespachar();
+        } else {
+          this.isSaving = false; // Resetear si se cancela
+        }
+      });
+    } else {
+      this.ejecutarGuardarYDespachar();
+    }
+  }
+
+  /**
+   * Ejecuta el guardado y emisión del evento para despachar
+   */
+  private ejecutarGuardarYDespachar(): void {
+    const ordenData = {
+      ...this.ordenEnvioForm.value,
+      pedidos: this.pedidosSeleccionados,
+      pedidosMovidos: Array.from(this.pedidosMovidos.entries()).map(
+        ([nroPedido, ordenAnterior]) => ({
+          nroPedido,
+          ordenAnterior,
+        }),
+      ),
+      autoDispatch: true, // Flag para indicar que se debe despachar automáticamente
+    };
+
+    this.onSaveAndDispatch.emit(ordenData);
+    // Nota: isSaving se resetea cuando el componente padre responde
   }
 
   shouldDisplayPedido(pedido: any): boolean {

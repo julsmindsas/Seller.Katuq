@@ -4427,7 +4427,7 @@ export class DespachosComponent implements OnInit {
     // Validar que el evento no sea nulo
     if (!event) {
       console.error("Error: No se recibieron datos de la orden de envío");
-      
+
       // Resetear flag de guardado en caso de error
       if (this.generarOrdenComponent) {
         this.generarOrdenComponent.resetSavingState();
@@ -4435,7 +4435,7 @@ export class DespachosComponent implements OnInit {
       if (this.editarOrdenComponent) {
         this.editarOrdenComponent.resetSavingState();
       }
-      
+
       Swal.fire(
         "Error",
         "No se recibieron datos para la orden de envío",
@@ -4499,7 +4499,7 @@ export class DespachosComponent implements OnInit {
       console.error(
         "Error: No hay pedidos seleccionados para la orden de envío",
       );
-      
+
       // Resetear flag de guardado en caso de error
       if (this.generarOrdenComponent) {
         this.generarOrdenComponent.resetSavingState();
@@ -4507,7 +4507,7 @@ export class DespachosComponent implements OnInit {
       if (this.editarOrdenComponent) {
         this.editarOrdenComponent.resetSavingState();
       }
-      
+
       Swal.fire(
         "Error",
         "No hay pedidos seleccionados para la orden de envío",
@@ -4573,6 +4573,120 @@ export class DespachosComponent implements OnInit {
         },
       });
     }
+  }
+
+  /**
+   * Nuevo método: Guardar orden y despachar en un solo paso
+   * Combina la creación de la orden con el despacho inmediato
+   */
+  onGuardarYDespacharOrden(event: any) {
+    console.log("Guardando y despachando orden:", event);
+
+    // Validaciones similares a onSubmitOrdenEnvio
+    if (!event) {
+      console.error("Error: No se recibieron datos de la orden de envío");
+
+      if (this.generarOrdenComponent) {
+        this.generarOrdenComponent.resetSavingState();
+      }
+      if (this.editarOrdenComponent) {
+        this.editarOrdenComponent.resetSavingState();
+      }
+
+      Swal.fire("Error", "No se recibieron datos para la orden de envío", "error");
+      return;
+    }
+
+    if (!this.pedidosSeleccionados || this.pedidosSeleccionados.length === 0) {
+      console.error("Error: No hay pedidos seleccionados para la orden de envío");
+
+      if (this.generarOrdenComponent) {
+        this.generarOrdenComponent.resetSavingState();
+      }
+      if (this.editarOrdenComponent) {
+        this.editarOrdenComponent.resetSavingState();
+      }
+
+      Swal.fire("Error", "No hay pedidos seleccionados para la orden de envío", "error");
+      return;
+    }
+
+    // Preparar datos de la orden
+    const currentCompanyStr = localStorage.getItem("currentCompany");
+    const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : "";
+
+    this.nuevaOrdenEnvio = {
+      id: "",
+      nroShippingOrder: "",
+      fecha: event.fechaEnvio || new Date().toISOString(),
+      metodoEnvio: event.metodoEnvio,
+      transportador: this.transportadorSeleccionado || "",
+      company: companyName,
+      pedidos: this.pedidosSeleccionados || [],
+      pedidosMovidos: event.pedidosMovidos || [],
+    };
+
+    // Crear la orden
+    this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
+      next: (response) => {
+        console.log("Orden creada exitosamente:", response);
+
+        // Actualizar nroShippingOrder
+        if (response && response.nroShippingOrder) {
+          this.nroShippingOrder = response.nroShippingOrder;
+          this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
+        }
+
+        // Mostrar mensaje de éxito
+        Swal.fire({
+          title: "Orden Creada",
+          text: `La orden ${response.nroShippingOrder || ""} ha sido creada. Ahora asigna el mensajero.`,
+          icon: "success",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+
+        // Resetear flag de guardado
+        if (this.generarOrdenComponent) {
+          this.generarOrdenComponent.resetSavingState();
+        }
+        if (this.editarOrdenComponent) {
+          this.editarOrdenComponent.resetSavingState();
+        }
+
+        // Actualizar datos
+        this.refrescarDatos();
+
+        if (this.ordenesDespachoV2Component) {
+          console.log('Actualizando ordenes-despacho-v2 después de crear orden...');
+          this.ordenesDespachoV2Component.loadInitialOrders();
+        }
+
+        // Cerrar el modal de creación
+        this.modalService.dismissAll();
+
+        // Esperar un momento para que se cierre el modal y luego abrir el de despacho
+        setTimeout(() => {
+          this.despacharOrden();
+        }, 500);
+      },
+      error: (error) => {
+        console.error("Error al crear la orden:", error);
+
+        if (this.generarOrdenComponent) {
+          this.generarOrdenComponent.resetSavingState();
+        }
+        if (this.editarOrdenComponent) {
+          this.editarOrdenComponent.resetSavingState();
+        }
+
+        Swal.fire(
+          "Error",
+          "Hubo un problema al crear la orden: " + (error.message || "Error desconocido"),
+          "error"
+        );
+      },
+    });
   }
 
   // Método para crear una nueva orden de envío
