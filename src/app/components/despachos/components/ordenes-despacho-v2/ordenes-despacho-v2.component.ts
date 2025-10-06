@@ -76,15 +76,15 @@ export class OrdenesDespachoV2Component implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Establecer fechas correctamente: HOY y hace 30 días
+    // Establecer fechas correctamente: HOY y hace 8 días (por defecto)
     const hoy = new Date();
-    const hace30Dias = new Date();
-    hace30Dias.setDate(hoy.getDate() - 30);
-    
-    this.fechaInicio = hace30Dias;
+    const hace8Dias = new Date();
+    hace8Dias.setDate(hoy.getDate() - 8);
+
+    this.fechaInicio = hace8Dias;
     this.fechaFin = hoy;
     this.fechaFin.setHours(23, 59, 59, 999);
-    
+
     this.loadLogisticsIntegrations();
     this.loadVendors();
     this.loadInitialOrders();
@@ -131,7 +131,9 @@ export class OrdenesDespachoV2Component implements OnInit {
       limit: this.pageSize,
       fechaInicio: this.fechaInicio?.toISOString().split('T')[0],
       fechaFin: this.fechaFin?.toISOString().split('T')[0],
-      fields: 'full' as 'minimal' | 'full'
+      fields: 'full' as 'minimal' | 'full',
+      sortBy: 'fecha',           // Ordenar por fecha de creación
+      sortOrder: 'desc' as 'asc' | 'desc'  // Descendente (más recientes primero)
     };
     
     console.log(`Cargando órdenes - Página ${this.currentPage}:`, params);
@@ -274,9 +276,9 @@ export class OrdenesDespachoV2Component implements OnInit {
   clearFilters(): void {
     this.searchTerm = '';
     const hoy = new Date();
-    const hace30Dias = new Date();
-    hace30Dias.setDate(hoy.getDate() - 30);
-    this.fechaInicio = hace30Dias;
+    const hace8Dias = new Date();
+    hace8Dias.setDate(hoy.getDate() - 8);
+    this.fechaInicio = hace8Dias;
     this.fechaFin = hoy;
     this.fechaFin.setHours(23, 59, 59, 999);
     this.applyFilters();
