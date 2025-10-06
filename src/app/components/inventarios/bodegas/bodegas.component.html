@@ -46,11 +46,25 @@
 
                         <ng-template pTemplate="header" let-columns>
                             <tr>
-                                <th class="text-center" pSortableColumn="nombre">Bodega</th>
-                                <th class="text-center" pSortableColumn="idBodega">Código</th>
-                                <th class="text-center" pSortableColumn="ciudad">Ubicación</th>
-                                <th class="text-center" pSortableColumn="tipo">Tipo</th>
-                                <th class="text-center">Acciones</th>
+                                <th class="text-center" pSortableColumn="nombre">
+                                    {{ "Bodega" | translate }}
+                                    <p-sortIcon field="nombre"></p-sortIcon>
+                                </th>
+                                <th class="text-center" pSortableColumn="idBodega">
+                                    {{ "Código" | translate }}
+                                    <p-sortIcon field="idBodega"></p-sortIcon>
+                                </th>
+                                <th class="text-center" pSortableColumn="ciudad">
+                                    {{ "Ubicación" | translate }}
+                                    <p-sortIcon field="ciudad"></p-sortIcon>
+                                </th>
+                                <th class="text-center" pSortableColumn="tipo">
+                                    {{ "Tipo" | translate }}
+                                    <p-sortIcon field="tipo"></p-sortIcon>
+                                </th>
+                                <th class="text-center">
+                                    {{ "Acciones" | translate }}
+                                </th>
                             </tr>
                         </ng-template>
 

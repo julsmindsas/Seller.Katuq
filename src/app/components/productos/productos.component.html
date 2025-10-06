@@ -81,64 +81,61 @@
                         <!-- ENCABEZADO -->
                         <ng-template pTemplate="header">
                             <tr>
-                                <!-- Imagen (no solemos darle sort, pero puedes quitar pSortableColumn si lo prefieres) -->
-                                <th class="text-center" pSortableColumn="imagen">
+                                <!-- Imagen (sin ordenamiento) -->
+                                <th class="text-center">
                                     {{ "Imagen" | translate }}
-                                    <!-- <p-sortIcon field="imagen"></p-sortIcon> -->
                                 </th>
 
                                 <th class="text-center" pSortableColumn="crearProducto.titulo">
                                     {{ "Título" | translate }}
-                                    <!-- <p-sortIcon field="crearProducto.titulo"></p-sortIcon> -->
+                                    <p-sortIcon field="crearProducto.titulo"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="identificacion.referencia" *ngIf="!isMobile">
                                     {{ "Referencia" | translate }}
-                                    <!-- <p-sortIcon field="identificacion.referencia"></p-sortIcon> -->
+                                    <p-sortIcon field="identificacion.referencia"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="disponibilidad.cantidadDisponible" *ngIf="!isMobile">
                                     {{ "Cantidad disponible" | translate }}
-                                    <!-- <p-sortIcon field="disponibilidad.cantidadDisponible"></p-sortIcon> -->
+                                    <p-sortIcon field="disponibilidad.cantidadDisponible"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="exposicion.activar" *ngIf="!isMobile">
                                     {{ "Está activo" | translate }}
-                                    <!-- <p-sortIcon field="exposicion.activar"></p-sortIcon> -->
+                                    <p-sortIcon field="exposicion.activar"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="exposicion.disponible" *ngIf="!isMobile">
                                     {{ "Está disponible" | translate }}
-                                    <!-- <p-sortIcon field="exposicion.disponible"></p-sortIcon> -->
+                                    <p-sortIcon field="exposicion.disponible"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="crearProducto.paraProduccion" *ngIf="!isMobile">
                                     {{ "Se produce" | translate }}
-                                    <!-- <p-sortIcon field="crearProducto.paraProduccion"></p-sortIcon> -->
+                                    <p-sortIcon field="crearProducto.paraProduccion"></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="precio.precioUnitarioSinIva" style="text-align: right"
-                                    *ngIf="!isMobile">
+                                <th class="text-center" pSortableColumn="precio.precioUnitarioSinIva" *ngIf="!isMobile">
                                     {{ "Precio unitario" | translate }}
-                                    <!-- <p-sortIcon field="precio.precioUnitarioSinIva"></p-sortIcon> -->
+                                    <p-sortIcon field="precio.precioUnitarioSinIva"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="date_edit" *ngIf="!isMobile">
                                     {{ "Fecha editado" | translate }}
-                                    <!-- <p-sortIcon field="date_edit"></p-sortIcon> -->
+                                    <p-sortIcon field="date_edit"></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="precio.precioUnitarioIva"
-                                    *ngIf="!isMobile">
+                                <th class="text-center" pSortableColumn="precio.precioUnitarioIva" *ngIf="!isMobile">
                                     {{ "IVA" | translate }}
-                                    <!-- <p-sortIcon field="precio.precioUnitarioIva"></p-sortIcon> -->
+                                    <p-sortIcon field="precio.precioUnitarioIva"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" *ngIf="!isMobile">
                                     {{ "Tipo" | translate }}
                                 </th>
 
-                                <th  class="text-center">
+                                <th class="text-center">
                                     {{ "Acciones" | translate }}
                                 </th>
                             </tr>

@@ -2359,6 +2359,44 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Helper para mostrar estados de proceso abreviados con tooltips
+   * Utilizado para optimizar el espacio visual en la tabla
+   */
+  getStatusDisplay(status: string): { short: string, full: string } {
+    const statusMap: { [key: string]: { short: string, full: string } } = {
+      'ProducidoTotalmente': { short: 'Prod. Total', full: 'Producido Totalmente' },
+      'ProducidoParcialmente': { short: 'Prod. Parcial', full: 'Producido Parcialmente' },
+      'SinProducir': { short: 'Sin Producir', full: 'Sin Producir' },
+      'EnProduccion': { short: 'En Prod.', full: 'En Producción' },
+      'ParaDespachar': { short: 'P. Despachar', full: 'Para Despachar' },
+      'Despachado': { short: 'Despachado', full: 'Despachado' },
+      'Entregado': { short: 'Entregado', full: 'Entregado' },
+      'Empacado': { short: 'Empacado', full: 'Empacado' },
+      'Producido': { short: 'Producido', full: 'Producido' },
+      'Rechazado': { short: 'Rechazado', full: 'Rechazado' },
+      'Cerrado': { short: 'Cerrado', full: 'Cerrado' }
+    };
+    return statusMap[status] || { short: status, full: status };
+  }
+
+  /**
+   * Helper para mostrar estados de pago abreviados con tooltips
+   * Utilizado para optimizar el espacio visual en la tabla
+   */
+  getPaymentStatusDisplay(status: string): { short: string, full: string } {
+    const statusMap: { [key: string]: { short: string, full: string } } = {
+      'Pospendiente': { short: 'Pendiente', full: 'Pospendiente' },
+      'Pendiente': { short: 'Pendiente', full: 'Pendiente' },
+      'PreAprobado': { short: 'Pre-Aprob.', full: 'Pre-Aprobado' },
+      'Aprobado': { short: 'Aprobado', full: 'Aprobado' },
+      'Rechazado': { short: 'Rechazado', full: 'Rechazado' },
+      'Cancelado': { short: 'Cancelado', full: 'Cancelado' },
+      'Precancelado': { short: 'Pre-Cancel', full: 'Pre-Cancelado' }
+    };
+    return statusMap[status] || { short: status, full: status };
+  }
+
+  /**
    * Conteo de pedidos por estado de proceso
    */
   getProcesoCount(proceso: string): number {

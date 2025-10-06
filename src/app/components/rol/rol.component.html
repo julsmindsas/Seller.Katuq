@@ -42,11 +42,25 @@
 
             <ng-template pTemplate="header">
               <tr>
-                <th class="text-center" pSortableColumn="rol">{{ 'Rol' | translate }}</th>
-                <th class="text-center" pSortableColumn="nombre">{{ 'Nombre' | translate }}</th>
-                <th class="text-center" pSortableColumn="empresa">{{ 'Empresa' | translate }}</th>
-                <th class="text-center" pSortableColumn="user_edit">{{ 'Usuario que Editó' | translate }}</th>
-                <th class="text-center">{{ 'Acciones' | translate }}</th>
+                <th class="text-center" pSortableColumn="rol">
+                  {{ 'Rol' | translate }}
+                  <p-sortIcon field="rol"></p-sortIcon>
+                </th>
+                <th class="text-center" pSortableColumn="nombre">
+                  {{ 'Nombre' | translate }}
+                  <p-sortIcon field="nombre"></p-sortIcon>
+                </th>
+                <th class="text-center" pSortableColumn="empresa">
+                  {{ 'Empresa' | translate }}
+                  <p-sortIcon field="empresa"></p-sortIcon>
+                </th>
+                <th class="text-center" pSortableColumn="user_edit">
+                  {{ 'Usuario que Editó' | translate }}
+                  <p-sortIcon field="user_edit"></p-sortIcon>
+                </th>
+                <th class="text-center">
+                  {{ 'Acciones' | translate }}
+                </th>
               </tr>
             </ng-template>
 

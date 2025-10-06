@@ -45,21 +45,26 @@
 
                         <!-- HEADER: Encabezados y filtros -->
                         <ng-template pTemplate="header">
-                            <tr class="p-table-tr-th" style="font-size: 0.85em; background-color: #f8f9fa;">
+                            <tr class="p-table-tr-th" style="font-size: 0.8rem; background-color: #f8f9fa; font-weight: 600;">
                                 <!-- Recorremos todas las columnas -->
                                 <ng-container *ngFor="let col of selectedColumns">
                                     <!-- Columnas especiales sin ordenamiento -->
-                                    <th *ngIf="isColumnVisible(col.field) && (col.field === 'detalles' || col.field === 'opciones')">
-                                        <div>
+                                    <th *ngIf="isColumnVisible(col.field) && (col.field === 'detalles' || col.field === 'opciones')"
+                                        class="text-center"
+                                        style="padding: 0.75rem 0.5rem; vertical-align: middle;">
+                                        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                             {{ col.header | translate }}
-                                        </div>
+                                        </span>
                                     </th>
                                     <!-- Columnas ordenables -->
                                     <th *ngIf="isColumnVisible(col.field) && col.field !== 'detalles' && col.field !== 'opciones'"
-                                        [pSortableColumn]="col.field">
-                                        <div class="d-flex align-items-center">
-                                            <span>{{ col.header | translate }}</span>
-                                            <p-sortIcon [field]="col.field"></p-sortIcon>
+                                        class="text-center"
+                                        [pSortableColumn]="col.field"
+                                        style="padding: 0.75rem 0.5rem; vertical-align: middle; white-space: nowrap;">
+                                        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                            {{ col.header | translate }}
+                                        </span>
+                                        <p-sortIcon [field]="col.field" style="margin-left: 0.25rem;"></p-sortIcon>
                                             <!-- Si es una columna con filtro de texto con debouncing -->
                                             <p-columnFilter *ngIf="['nroPedido', 'nroFactura', 'shippingOrder', 'cliente', 'ciudad', 'zonaCobro', 'formaEntrega', 'horarioEntrega', 'fechaHoraEmpacado', 'fechaYHorarioDespachado', 'empacador', 'transportador'].includes(col.field)" 
                                                 type="text" 
@@ -108,7 +113,6 @@
                                                     </p-multiSelect>
                                                 </ng-template>
                                             </p-columnFilter>
-                                        </div>
                                     </th>
                                 </ng-container>
                             </tr>
@@ -133,9 +137,9 @@
                                 <!-- Columnas dinámicas -->
                                 <ng-container *ngFor="let col of selectedColumns">
                                     <ng-container *ngIf="col.field !== 'detalles' && col.field !== 'opciones' && isColumnVisible(col.field)">
-                                        <!-- Estado de Pago -->
-                                        <td *ngIf="col.field === 'estadoPago'" class="estado-cell text-center col-estadoPago" [attr.data-label]="col.header | translate">
-                                            <span class="modern-badge" 
+                                        <!-- Estado de Pago - Optimizado y Compacto -->
+                                        <td *ngIf="col.field === 'estadoPago'" class="estado-cell text-center col-estadoPago" [attr.data-label]="col.header | translate" style="padding: 0.5rem;">
+                                            <span class="modern-badge"
                                                 [pTooltip]="getPaymentStatusDisplay(pedido?.estadoPago).full"
                                                 tooltipPosition="top"
                                                 [ngClass]="{
@@ -154,9 +158,9 @@
                                             </span>
                                         </td>
                                         
-                                        <!-- Estado de Proceso -->
-                                        <td *ngIf="col.field === 'estadoProceso'" class="estado-cell text-center col-estadoProceso" [attr.data-label]="col.header | translate">
-                                            <span class="modern-badge" 
+                                        <!-- Estado de Proceso - Optimizado y Compacto -->
+                                        <td *ngIf="col.field === 'estadoProceso'" class="estado-cell text-center col-estadoProceso" [attr.data-label]="col.header | translate" style="padding: 0.5rem;">
+                                            <span class="modern-badge"
                                                 [pTooltip]="getStatusDisplay(pedido?.estadoProceso).full"
                                                 tooltipPosition="top"
                                                 [ngClass]="{
@@ -217,9 +221,15 @@
                                             </div>
                                         </td>
                                         
-                                        <!-- Valores monetarios -->
-                                        <td *ngIf="col.field === 'totalEnvio'" class="text-end text-nowrap col-totalEnvio" [attr.data-label]="col.header | translate">{{ pedido.totalEnvio | currency }}</td>
-                                        <td *ngIf="col.field === 'faltaPorPagar'" class="text-end text-nowrap col-faltaPorPagar" [attr.data-label]="col.header | translate">{{ pedido?.faltaPorPagar | currency }}</td>
+                                        <!-- Valores monetarios - Optimizados -->
+                                        <td *ngIf="col.field === 'totalEnvio'" class="text-end text-nowrap col-totalEnvio" [attr.data-label]="col.header | translate" style="padding: 0.5rem; font-weight: 500; font-family: 'Courier New', monospace;">
+                                            {{ pedido.totalEnvio | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                        </td>
+                                        <td *ngIf="col.field === 'faltaPorPagar'" class="text-end text-nowrap col-faltaPorPagar" [attr.data-label]="col.header | translate" style="padding: 0.5rem; font-weight: 500; font-family: 'Courier New', monospace;">
+                                            <span [ngClass]="{'text-danger': pedido?.faltaPorPagar > 0, 'text-success': pedido?.faltaPorPagar === 0}">
+                                                {{ pedido?.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                            </span>
+                                        </td>
                                         
                                         <!-- Fechas -->
                                         <td *ngIf="col.field === 'fechaCreacion'" class="text-nowrap col-fechaCreacion" [attr.data-label]="col.header | translate">{{ pedido.fechaCreacion | date: 'dd/MM/yyyy' }}</td>

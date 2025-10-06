@@ -50,12 +50,29 @@
 
                       <ng-template pTemplate="header">
                           <tr>
-                              <th class="text-center" pSortableColumn="posicion">{{ "Posición" | translate }}</th>
-                              <th class="text-center" pSortableColumn="nombreInterno">{{ "Nombre interno" | translate }}</th>
-                              <th class="text-center" pSortableColumn="nombreExterno">{{ "Nombre externo" | translate }}</th>
-                              <th class="text-center" pSortableColumn="minDias">{{ "Mínimo de días" | translate }}</th>
-                              <th class="text-center" pSortableColumn="activo">{{ "Activo" | translate }}</th>
-                              <th class="text-center">{{ "Acciones" | translate }}</th>
+                              <th class="text-center" pSortableColumn="posicion">
+                                  {{ "Posición" | translate }}
+                                  <p-sortIcon field="posicion"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="nombreInterno">
+                                  {{ "Nombre interno" | translate }}
+                                  <p-sortIcon field="nombreInterno"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="nombreExterno">
+                                  {{ "Nombre externo" | translate }}
+                                  <p-sortIcon field="nombreExterno"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="minDias">
+                                  {{ "Mínimo de días" | translate }}
+                                  <p-sortIcon field="minDias"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="activo">
+                                  {{ "Activo" | translate }}
+                                  <p-sortIcon field="activo"></p-sortIcon>
+                              </th>
+                              <th class="text-center">
+                                  {{ "Acciones" | translate }}
+                              </th>
                           </tr>
                       </ng-template>
 

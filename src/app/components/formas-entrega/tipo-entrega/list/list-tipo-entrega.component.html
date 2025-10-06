@@ -49,11 +49,25 @@
 
                       <ng-template pTemplate="header">
                           <tr>
-                              <th class="text-center" pSortableColumn="posicion">{{ "Posición" | translate }}</th>
-                              <th class="text-center" pSortableColumn="nombreInterno">{{ "Nombre interno" | translate }}</th>
-                              <th class="text-center" pSortableColumn="activo">{{ "Activo" | translate }}</th>
-                              <th class="text-center" pSortableColumn="formaEntrega">{{ "Formas de entrega" | translate }}</th>
-                              <th class="text-center">{{ "Acciones" | translate }}</th>
+                              <th class="text-center" pSortableColumn="posicion">
+                                  {{ "Posición" | translate }}
+                                  <p-sortIcon field="posicion"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="nombreInterno">
+                                  {{ "Nombre interno" | translate }}
+                                  <p-sortIcon field="nombreInterno"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="activo">
+                                  {{ "Activo" | translate }}
+                                  <p-sortIcon field="activo"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="formaEntrega">
+                                  {{ "Formas de entrega" | translate }}
+                                  <p-sortIcon field="formaEntrega"></p-sortIcon>
+                              </th>
+                              <th class="text-center">
+                                  {{ "Acciones" | translate }}
+                              </th>
                           </tr>
                       </ng-template>
 

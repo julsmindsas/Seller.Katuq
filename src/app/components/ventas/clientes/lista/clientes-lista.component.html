@@ -49,12 +49,29 @@
 
                         <ng-template pTemplate="header" let-columns>
                             <tr>
-                                <th class="text-center" pSortableColumn="nombres_completos">{{ "Cliente" | translate }}</th>
-                                <th class="text-center" pSortableColumn="documento">{{ "Documento" | translate }}</th>
-                                <th class="text-center" pSortableColumn="correo_electronico_comprador">{{ "Email" | translate }}</th>
-                                <th class="text-center" pSortableColumn="numero_celular_comprador">{{ "Celular" | translate }}</th>
-                                <th class="text-center" pSortableColumn="estado">{{ "Estado" | translate }}</th>
-                                <th class="text-center">{{ "Acciones" | translate }}</th>
+                                <th class="text-center" pSortableColumn="nombres_completos">
+                                    {{ "Cliente" | translate }}
+                                    <p-sortIcon field="nombres_completos"></p-sortIcon>
+                                </th>
+                                <th class="text-center" pSortableColumn="documento">
+                                    {{ "Documento" | translate }}
+                                    <p-sortIcon field="documento"></p-sortIcon>
+                                </th>
+                                <th class="text-center" pSortableColumn="correo_electronico_comprador">
+                                    {{ "Email" | translate }}
+                                    <p-sortIcon field="correo_electronico_comprador"></p-sortIcon>
+                                </th>
+                                <th class="text-center" pSortableColumn="numero_celular_comprador">
+                                    {{ "Celular" | translate }}
+                                    <p-sortIcon field="numero_celular_comprador"></p-sortIcon>
+                                </th>
+                                <th class="text-center" pSortableColumn="estado">
+                                    {{ "Estado" | translate }}
+                                    <p-sortIcon field="estado"></p-sortIcon>
+                                </th>
+                                <th class="text-center">
+                                    {{ "Acciones" | translate }}
+                                </th>
                             </tr>
                         </ng-template>
 

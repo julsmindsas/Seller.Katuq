@@ -49,11 +49,25 @@
 
                       <ng-template pTemplate="header" let-columns>
                           <tr>
-                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="id">{{ "Id" | translate }}</th>
-                              <th class="text-center" pSortableColumn="name">{{ "Nombre" | translate }}</th>
-                              <th class="text-center" pSortableColumn="position">{{ "Posición" | translate }}</th>
-                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">{{ "Activo" | translate }}</th>
-                              <th class="text-center">{{ "Acciones" | translate }}</th>
+                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="id">
+                                  {{ "Id" | translate }}
+                                  <p-sortIcon field="id"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="name">
+                                  {{ "Nombre" | translate }}
+                                  <p-sortIcon field="name"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="position">
+                                  {{ "Posición" | translate }}
+                                  <p-sortIcon field="position"></p-sortIcon>
+                              </th>
+                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
+                                  {{ "Activo" | translate }}
+                                  <p-sortIcon field="activo"></p-sortIcon>
+                              </th>
+                              <th class="text-center">
+                                  {{ "Acciones" | translate }}
+                              </th>
                           </tr>
                       </ng-template>
 

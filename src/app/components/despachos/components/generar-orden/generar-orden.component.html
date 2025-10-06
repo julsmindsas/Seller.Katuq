@@ -22,11 +22,11 @@
                     <div class="card shadow-sm mb-3 filter-section" *ngIf="!usarPedidosPadre">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title fw-bold text-primary mb-0">
+                        <h5 class="card-title fw-bold text-primary mb-0" style="font-size: 0.95rem;">
                             <i class="pi pi-filter me-2"></i>Filtros de Búsqueda de Pedidos
                         </h5>
-                        <div class="badge bg-info">
-                            <i class="pi pi-box me-1"></i>
+                        <div class="modern-badge badge-info" style="font-size: 0.7rem; padding: 0.35rem 0.6rem;">
+                            <i class="status-icon pi pi-box"></i>
                             {{ totalPedidosEncontrados }} pedidos encontrados
                         </div>
                     </div>
@@ -109,7 +109,9 @@
                     <!-- EXISTENTE: Configuración de envío -->
                     <div class="card shadow-sm mb-3">
                 <div class="card-body">
-                    <h5 class="card-title fw-bold text-primary mb-3">{{ "Configuración de Envío" | translate }}</h5>
+                    <h5 class="card-title fw-bold text-primary mb-3" style="font-size: 0.95rem;">
+                        <i class="pi pi-cog me-2"></i>{{ "Configuración de Envío" | translate }}
+                    </h5>
 
                     <!-- Fila de Controles -->
                     <div class="row g-3">
@@ -169,9 +171,9 @@
                     <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title m-0">
-                            {{ "Pedidos Disponibles" | translate }}
-                            <span class="badge bg-secondary ms-2">{{ pedidosDisponibles.length }}</span>
+                        <h5 class="card-title m-0 fw-bold text-primary" style="font-size: 0.95rem;">
+                            <i class="pi pi-list me-2"></i>{{ "Pedidos Disponibles" | translate }}
+                            <span class="modern-badge badge-primary ms-2" style="font-size: 0.7rem; padding: 0.35rem 0.6rem;">{{ pedidosDisponibles.length }}</span>
                         </h5>
 
                         <!-- Controles de filtrado y columnas -->
@@ -224,21 +226,25 @@
                             [sortMode]="'single'" dataKey="nroPedido"
                             paginatorPosition="top">
                             <ng-template pTemplate="header">
-                                <tr>
+                                <tr style="background-color: #f8f9fa;">
                                     <ng-container *ngFor="let col of selectedColumns">
-                                        <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'"
+                                        <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'" class="text-center"
                                             [pSortableColumn]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field"
-                                            [ngStyle]="{'min-width': col.field === 'direccionEntrega' ? '200px' : 'auto'}">
+                                            [ngStyle]="{'min-width': col.field === 'direccionEntrega' ? '200px' : 'auto'}"
+                                            style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                             {{ col.header | translate }}
                                             <p-sortIcon
-                                                [field]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field"></p-sortIcon>
+                                                [field]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field"
+                                                style="margin-left: 0.25rem;"></p-sortIcon>
                                         </th>
-                                        <th *ngIf="col.field === 'opciones' || col.field === 'enOrden'"
-                                            [ngStyle]="{'min-width': col.field === 'enOrden' ? '150px' : 'auto'}">
+                                        <th *ngIf="col.field === 'opciones' || col.field === 'enOrden'" class="text-center"
+                                            [ngStyle]="{'min-width': col.field === 'enOrden' ? '150px' : 'auto'}"
+                                            style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                             {{ col.header | translate }}
                                         </th>
                                     </ng-container>
-                                    <th *ngIf="isActionColumnVisible()">
+                                    <th *ngIf="isActionColumnVisible()" class="text-center"
+                                        style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
                                         {{ "Acción" | translate }}
                                     </th>
                                 </tr>
@@ -285,20 +291,23 @@
                                                             pedido
                                                         )
                                                     " class="d-flex flex-column gap-1">
-                                                        <span class="badge bg-warning text-dark" [title]="
+                                                        <span class="modern-badge badge-warning"
+                                                            style="font-size: 0.65rem; padding: 0.2rem 0.4rem;"
+                                                            [title]="
                                                             'Pedido incluido en la orden: ' +
                                                             getNumeroOrdenPedido(
                                                                 pedido
                                                             )
                                                         ">
-                                                            <i class="pi pi-exclamation-triangle me-1"></i>Orden
-                                                            {{
+                                                            <i class="status-icon pi pi-exclamation-triangle"></i>
+                                                            Orden {{
                                                             getNumeroOrdenPedido(
                                                             pedido
                                                             )
                                                             }}
                                                         </span>
                                                         <button type="button" class="btn btn-sm btn-outline-info"
+                                                            style="font-size: 0.7rem; padding: 0.25rem 0.5rem;"
                                                             (click)="
                                                             moverPedidoDeOrden(
                                                                 pedido
@@ -317,8 +326,9 @@
                                                         !pedidoExisteEnOrden(
                                                             pedido
                                                         )
-                                                    " class="badge bg-success">
-                                                        <i class="pi pi-check me-1"></i>Disponible
+                                                    " class="modern-badge badge-success"
+                                                    style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                                        <i class="status-icon pi pi-check"></i>Disponible
                                                     </span>
                                                 </ng-container>
                                                 <ng-container *ngSwitchCase="'opciones'">
@@ -375,42 +385,44 @@
                                         </td>
                                     </ng-container>
                                     <td *ngIf="isActionColumnVisible()">
-                                        <div class="d-flex flex-column gap-1">
-                                            <button type="button" class="btn btn-sm btn-outline-primary"
-                                                (click)="agregarPedido(pedido)" [disabled]="
-                                                pedidoExisteEnOrden(pedido)
-                                            " [title]="
-                                                pedidoExisteEnOrden(pedido)
-                                                    ? 'Este pedido ya existe en la orden: ' +
-                                                      getNumeroOrdenPedido(
-                                                          pedido
-                                                      )
-                                                    : 'Agregar pedido a la orden'
-                                            ">
-                                                <i class="pi pi-plus"></i>
-                                                {{ "Agregar" | translate }}
+                                        <div class="d-flex flex-column gap-2 align-items-stretch">
+                                            <button pButton pRipple
+                                                type="button"
+                                                class="p-button-sm p-button-success"
+                                                icon="pi pi-plus"
+                                                label="{{ 'Agregar' | translate }}"
+                                                (click)="agregarPedido(pedido)"
+                                                [disabled]="pedidoExisteEnOrden(pedido)"
+                                                [pTooltip]="pedidoExisteEnOrden(pedido)
+                                                    ? ('Este pedido ya existe en la orden: ' + getNumeroOrdenPedido(pedido))
+                                                    : 'Agregar pedido a la orden'"
+                                                tooltipPosition="top"
+                                                styleClass="w-100">
                                             </button>
 
                                             <!-- Botón para ver detalles del pedido -->
-                                            <button type="button" class="btn btn-sm btn-outline-info"
-                                                (click)="verDetallesPedido(pedido)" [title]="
-                                                'Ver detalles completos del pedido'
-                                            ">
-                                                <i class="pi pi-info-circle"></i>
-                                                {{ "Detalles" | translate }}
+                                            <button pButton pRipple
+                                                type="button"
+                                                class="p-button-sm p-button-outlined p-button-info"
+                                                icon="pi pi-info-circle"
+                                                label="{{ 'Detalles' | translate }}"
+                                                (click)="verDetallesPedido(pedido)"
+                                                pTooltip="Ver detalles completos del pedido"
+                                                tooltipPosition="top"
+                                                styleClass="w-100">
                                             </button>
 
                                             <!-- Botón para ver detalles de la orden existente -->
-                                            <button type="button" *ngIf="pedidoExisteEnOrden(pedido)"
-                                                class="btn btn-sm btn-outline-secondary" (click)="
-                                                verDetallesOrdenExistente(
-                                                    pedido
-                                                )
-                                            " [title]="
-                                                'Ver detalles de la orden ' +
-                                                getNumeroOrdenPedido(pedido)
-                                            ">
-                                                <i class="pi pi-eye"></i> Ver orden
+                                            <button pButton pRipple
+                                                *ngIf="pedidoExisteEnOrden(pedido)"
+                                                type="button"
+                                                class="p-button-sm p-button-outlined p-button-secondary"
+                                                icon="pi pi-eye"
+                                                label="Ver orden"
+                                                (click)="verDetallesOrdenExistente(pedido)"
+                                                [pTooltip]="'Ver detalles de la orden ' + getNumeroOrdenPedido(pedido)"
+                                                tooltipPosition="top"
+                                                styleClass="w-100">
                                             </button>
                                         </div>
                                     </td>
@@ -437,15 +449,19 @@
                     <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="card-title m-0">
-                            {{ "Pedidos Seleccionados" | translate }}
+                        <h5 class="card-title m-0 fw-bold text-primary" style="font-size: 0.95rem;">
+                            <i class="pi pi-check-square me-2"></i>{{ "Pedidos Seleccionados" | translate }}
                         </h5>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-primary">{{
-                                pedidosSeleccionados.length
-                                }}</span>
-                            <span *ngIf="hayPedidosMovidos" class="badge bg-info">
-                                <i class="pi pi-refresh me-1"></i>{{ contarPedidosMovidos() }} movidos
+                            <span class="modern-badge badge-primary" style="font-size: 0.7rem; padding: 0.35rem 0.6rem;">
+                                <i class="status-icon pi pi-shopping-cart"></i>
+                                {{ pedidosSeleccionados.length }}
+                            </span>
+                            <span *ngIf="hayPedidosMovidos"
+                                class="modern-badge badge-info"
+                                style="font-size: 0.7rem; padding: 0.35rem 0.6rem;">
+                                <i class="status-icon pi pi-refresh"></i>
+                                {{ contarPedidosMovidos() }} movidos
                             </span>
                         </div>
                     </div>
@@ -453,26 +469,43 @@
                     <div class="table-responsive">
                         <p-table [value]="pedidosSeleccionados" styleClass="p-datatable-sm">
                             <ng-template pTemplate="header">
-                                <tr>
-                                    <th>{{ "Nro. Pedido" | translate }}</th>
-                                    <th>{{ "Cliente" | translate }}</th>
-                                    <th>{{ "Ciudad" | translate }}</th>
-                                    <th>{{ "Valor a Cobrar" | translate }}</th>
-                                    <th>{{ "Estado" | translate }}</th>
-                                    <th>{{ "Opciones" | translate }}</th>
-                                    <th>{{ "Acción" | translate }}</th>
+                                <tr style="background-color: #f8f9fa;">
+                                    <th class="text-center" style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ "Nro. Pedido" | translate }}
+                                    </th>
+                                    <th class="text-center" style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ "Cliente" | translate }}
+                                    </th>
+                                    <th class="text-center" style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ "Ciudad" | translate }}
+                                    </th>
+                                    <th class="text-center" style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ "Valor a Cobrar" | translate }}
+                                    </th>
+                                    <th class="text-center" style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ "Estado" | translate }}
+                                    </th>
+                                    <th class="text-center" style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ "Opciones" | translate }}
+                                    </th>
+                                    <th class="text-center" style="padding: 0.75rem 0.5rem; vertical-align: middle; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        {{ "Acción" | translate }}
+                                    </th>
                                 </tr>
                             </ng-template>
 
                             <ng-template pTemplate="body" let-pedido>
                                 <tr [class.table-info]="esPedidoMovido(pedido)">
                                     <td>
-                                        {{ pedido.nroPedido }}
-                                        <span *ngIf="esPedidoMovido(pedido)" class="badge bg-info ms-1" [title]="
+                                        <strong>{{ pedido.nroPedido }}</strong>
+                                        <span *ngIf="esPedidoMovido(pedido)"
+                                            class="modern-badge badge-info ms-2"
+                                            style="font-size: 0.65rem; padding: 0.2rem 0.4rem;"
+                                            [title]="
                                             'Movido desde la orden ' +
                                             getOrdenAnteriorPedido(pedido)
                                         ">
-                                            <i class="pi pi-refresh"></i>
+                                            <i class="status-icon pi pi-refresh"></i>
                                         </span>
                                     </td>
                                     <td>
@@ -482,12 +515,17 @@
                                         {{ getNestedProperty(pedido, "ciudad") }}
                                     </td>
                                     <td>{{ pedido.faltaPorPagar | currency }}</td>
-                                    <td>
-                                        <span *ngIf="esPedidoMovido(pedido)" class="badge bg-warning text-dark">
-                                            Movido desde orden
-                                            {{ getOrdenAnteriorPedido(pedido) }}
+                                    <td class="text-center">
+                                        <span *ngIf="esPedidoMovido(pedido)"
+                                            class="modern-badge badge-warning"
+                                            style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                            <i class="status-icon pi pi-arrow-right"></i>
+                                            Movido desde orden {{ getOrdenAnteriorPedido(pedido) }}
                                         </span>
-                                        <span *ngIf="!esPedidoMovido(pedido)" class="badge bg-success">
+                                        <span *ngIf="!esPedidoMovido(pedido)"
+                                            class="modern-badge badge-success"
+                                            style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
+                                            <i class="status-icon pi pi-check"></i>
                                             Agregado normalmente
                                         </span>
                                     </td>
@@ -527,11 +565,15 @@
                                             </ul>
                                         </div>
                                     </td>
-                                    <td>
-                                        <button type="button" class="btn btn-sm btn-outline-danger"
-                                            (click)="retirarPedido(pedido)">
-                                            <i class="pi pi-trash"></i>
-                                            {{ "Retirar" | translate }}
+                                    <td class="text-center">
+                                        <button pButton pRipple
+                                            type="button"
+                                            class="p-button-sm p-button-danger p-button-outlined"
+                                            icon="pi pi-trash"
+                                            label="{{ 'Retirar' | translate }}"
+                                            (click)="retirarPedido(pedido)"
+                                            pTooltip="Remover pedido de la orden"
+                                            tooltipPosition="top">
                                         </button>
                                     </td>
                                 </tr>
@@ -573,30 +615,31 @@
     </div>
 
     <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" (click)="closeModal()">
-            {{ "Cancelar" | translate }}
+        <button pButton pRipple
+            type="button"
+            class="p-button-secondary p-button-outlined"
+            icon="pi pi-times"
+            label="{{ 'Cancelar' | translate }}"
+            (click)="closeModal()">
         </button>
 
-        <button type="button" class="btn btn-primary"
+        <button pButton pRipple
+            type="button"
+            class="p-button-primary"
+            [icon]="isSaving ? 'pi pi-spin pi-spinner' : 'pi pi-save'"
+            [label]="isSaving ? ('Guardando...' | translate) : ('Guardar Orden' | translate)"
             [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0 || isSaving"
             (click)="guardarOrden()">
-            <span *ngIf="!isSaving">
-                {{ "Guardar Orden" | translate }}
-            </span>
-            <span *ngIf="isSaving">
-                <i class="pi pi-spin pi-spinner me-1"></i>{{ "Guardando..." | translate }}
-            </span>
         </button>
 
-        <button type="button" class="btn btn-success" *ngIf="nroShippingOrder" (click)="imprimirOrden()"
-            [disabled]="isGeneratingPDF">
-            <span *ngIf="!isGeneratingPDF">
-                <i class="pi pi-print me-1"></i>{{ "Imprimir" | translate }}
-            </span>
-            <span *ngIf="isGeneratingPDF">
-                <i class="pi pi-spin pi-spinner me-1"></i>Generando PDF...
-                {{ pdfProgress }}%
-            </span>
+        <button pButton pRipple
+            *ngIf="nroShippingOrder"
+            type="button"
+            class="p-button-success"
+            [icon]="isGeneratingPDF ? 'pi pi-spin pi-spinner' : 'pi pi-print'"
+            [label]="isGeneratingPDF ? ('Generando PDF... ' + pdfProgress + '%') : ('Imprimir' | translate)"
+            [disabled]="isGeneratingPDF"
+            (click)="imprimirOrden()">
         </button>
 
         <!-- Progress bar for PDF generation -->
@@ -610,10 +653,13 @@
             </div>
         </div>
 
-        <button type="button" class="btn btn-warning"
+        <button pButton pRipple
             *ngIf="nroShippingOrder && ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
+            type="button"
+            class="p-button-warning"
+            icon="pi pi-send"
+            label="{{ 'Despachar' | translate }}"
             (click)="despacharOrden()">
-            <i class="pi pi-send me-1"></i>{{ "Despachar" | translate }}
         </button>
     </div>
 </div>

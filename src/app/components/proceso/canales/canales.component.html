@@ -52,10 +52,21 @@
 
                       <ng-template pTemplate="header" let-columns>
                           <tr>
-                              <th class="text-center" pSortableColumn="name">{{ "Nombre" | translate }}</th>
-                              <th class="text-center" pSortableColumn="tipo">{{ "Tipo" | translate }}</th>
-                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">{{ "Activo" | translate }}</th>
-                              <th class="text-center">{{ "Acciones" | translate }}</th>
+                              <th class="text-center" pSortableColumn="name">
+                                  {{ "Nombre" | translate }}
+                                  <p-sortIcon field="name"></p-sortIcon>
+                              </th>
+                              <th class="text-center" pSortableColumn="tipo">
+                                  {{ "Tipo" | translate }}
+                                  <p-sortIcon field="tipo"></p-sortIcon>
+                              </th>
+                              <th *ngIf="!isMobile" class="text-center" pSortableColumn="activo">
+                                  {{ "Activo" | translate }}
+                                  <p-sortIcon field="activo"></p-sortIcon>
+                              </th>
+                              <th class="text-center">
+                                  {{ "Acciones" | translate }}
+                              </th>
                           </tr>
                       </ng-template>
 

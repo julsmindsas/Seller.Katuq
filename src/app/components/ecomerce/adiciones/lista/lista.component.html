@@ -81,29 +81,35 @@
                         <p-table [value]="rows" [scrollable]="true" scrollHeight="400px" [rows]="10" [paginator]="true" [sortField]="'posicion'" [sortOrder]="1" [responsive]="true">
                             <ng-template pTemplate="header">
                               <tr>
-                                <th rowspan="2">
-                                  <span>{{ '' | translate }}</span>
+                                <th class="text-center">
+                                  {{ '' | translate }}
                                 </th>
-                                <th rowspan="2">
-                                  <span>{{ 'Titulo' | translate }}</span>
+                                <th class="text-center" pSortableColumn="titulo">
+                                  {{ 'Titulo' | translate }}
+                                  <p-sortIcon field="titulo"></p-sortIcon>
                                 </th>
-                                <th rowspan="2">
-                                    <span>{{ 'Referencia' | translate }}</span>
-                                  </th>
-                                <th rowspan="2">
-                                  <span>{{ 'Descripción' | translate }}</span>
+                                <th class="text-center" pSortableColumn="referencia">
+                                  {{ 'Referencia' | translate }}
+                                  <p-sortIcon field="referencia"></p-sortIcon>
                                 </th>
-                                <th rowspan="2">
-                                  <span>{{ 'Activo' | translate }}</span>
+                                <th class="text-center" pSortableColumn="descripcion">
+                                  {{ 'Descripción' | translate }}
+                                  <p-sortIcon field="descripcion"></p-sortIcon>
                                 </th>
-                                <th rowspan="2">
-                                  <span>{{ 'Tiempo Entrega' | translate }}</span>
+                                <th class="text-center" pSortableColumn="active">
+                                  {{ 'Activo' | translate }}
+                                  <p-sortIcon field="active"></p-sortIcon>
                                 </th>
-                                <th rowspan="2">
-                                  <span>{{ 'Tipo Entrega' | translate }}</span>
+                                <th class="text-center" pSortableColumn="tiempoEntrega">
+                                  {{ 'Tiempo Entrega' | translate }}
+                                  <p-sortIcon field="tiempoEntrega"></p-sortIcon>
                                 </th>
-                                <th rowspan="2">
-                                  <span>{{ 'Acciones' | translate }}</span>
+                                <th class="text-center" pSortableColumn="tipoEntrega">
+                                  {{ 'Tipo Entrega' | translate }}
+                                  <p-sortIcon field="tipoEntrega"></p-sortIcon>
+                                </th>
+                                <th class="text-center">
+                                  {{ 'Acciones' | translate }}
                                 </th>
                               </tr>
                             </ng-template>

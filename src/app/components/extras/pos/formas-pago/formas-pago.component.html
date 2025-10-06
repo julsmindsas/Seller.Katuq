@@ -30,11 +30,13 @@
                    [scrollable]="true" scrollHeight="flex" [loading]="cargando" [rowsPerPageOptions]="[10,20,50]">
             <ng-template pTemplate="header">
               <tr>
-                <th *ngFor="let col of columns" [pSortableColumn]="col.field">
+                <th *ngFor="let col of columns" [pSortableColumn]="col.field" class="text-center">
                   {{ col.header | translate }}
                   <p-sortIcon [field]="col.field"></p-sortIcon>
                 </th>
-                <th>{{ 'Acciones' | translate }}</th>
+                <th class="text-center">
+                  {{ 'Acciones' | translate }}
+                </th>
               </tr>
             </ng-template>
 

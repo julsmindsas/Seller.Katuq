@@ -137,362 +137,331 @@
                                     <th colspan="8" style="text-align: center;">Título de la Tabla</th>
                                 </tr> -->
                                         <!-- Fila de encabezados y filtros por columna -->
-                                        <tr style="font-size: 0.8em;">
-                                            <!-- Columna Detalles -->
-                                            <th *ngIf="isColumnVisible('detalles')"
-                                                style="width: 2.5rem; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex justify-content-center">
-                                                    {{'Detalles' | translate}}
-                                                </div>
+                                        <tr class="p-table-tr-th" style="font-size: 0.8em;">
+                                            <!-- Columna Detalles (no ordenable) -->
+                                            <th *ngIf="isColumnVisible('detalles')" class="text-center"
+                                                style="width: 2.5rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                {{ 'Detalles' | translate }}
                                             </th>
 
                                             <!-- Columna # Pedido -->
-                                            <th *ngIf="isColumnVisible('nroPedido')"
+                                            <th *ngIf="isColumnVisible('nroPedido')" class="text-center" pSortableColumn="nroPedido"
                                                 style="width: 8rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex text-center align-items-center">
-                                                    {{'# Pedido' | translate}}
-                                                    <p-columnFilter type="text" field="nroPedido" display="menu"
-                                                        placeholder="{{'Buscar número de pedido' | translate}}"
-                                                        matchMode="contains" [showMenu]="true">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ '# Pedido' | translate }}
+                                                <p-sortIcon field="nroPedido"></p-sortIcon>
+                                                <p-columnFilter type="text" field="nroPedido" display="menu"
+                                                    placeholder="{{'Buscar número de pedido' | translate}}"
+                                                    matchMode="contains" [showMenu]="true">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Fecha Entrega -->
-                                            <th *ngIf="isColumnVisible('fechaEntrega')"
+                                            <th *ngIf="isColumnVisible('fechaEntrega')" class="text-center" pSortableColumn="fechaEntrega"
                                                 style="width: 7rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Fecha entrega' | translate}}
-                                                    <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega"
-                                                        type="date" display="menu" [showMatchModes]="false"
-                                                        [showOperator]="false" [showAddButton]="false">
-                                                        <ng-template pTemplate="filter" let-value
-                                                            let-filter="filterCallback">
-                                                            <p-calendar (onSelect)="filter($event)"
-                                                                dateFormat="yy-mm-dd"
-                                                                (onSelect)="onDateFilterSelect($event, filter)">
-                                                            </p-calendar>
-                                                        </ng-template>
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Fecha entrega' | translate }}
+                                                <p-sortIcon field="fechaEntrega"></p-sortIcon>
+                                                <p-columnFilter [matchMode]="'customDate'" field="fechaEntrega"
+                                                    type="date" display="menu" [showMatchModes]="false"
+                                                    [showOperator]="false" [showAddButton]="false">
+                                                    <ng-template pTemplate="filter" let-value
+                                                        let-filter="filterCallback">
+                                                        <p-calendar (onSelect)="filter($event)"
+                                                            dateFormat="yy-mm-dd"
+                                                            (onSelect)="onDateFilterSelect($event, filter)">
+                                                        </p-calendar>
+                                                    </ng-template>
+                                                </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Opciones -->
-                                            <th *ngIf="isColumnVisible('opciones')"
-                                                style="width: 5rem; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex justify-content-center">
-                                                    {{'Opciones' | translate}}
-                                                </div>
+                                            <!-- Columna Opciones (no ordenable) -->
+                                            <th *ngIf="isColumnVisible('opciones')" class="text-center"
+                                                style="width: 5rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                {{ 'Opciones' | translate }}
                                             </th>
 
                                             <!-- Columna Estado de Pago -->
-                                            <th *ngIf="isColumnVisible('estadoPago')"
-                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex text-center align-items-center">
-                                                    {{'Estado de Pago' | translate}}
-                                                    <p-columnFilter field="estadoPago" matchMode="equals"
-                                                        [showMenu]="true" display="menu">
-                                                        <ng-template pTemplate="filter" let-value
-                                                            let-filter="filterCallback">
-                                                            <p-multiSelect [ngModel]="value" [options]="estadosPago"
-                                                                placeholder="{{'Seleccione' | translate}}"
-                                                                (onChange)="filter($event.value)"
-                                                                style="width: 100%; font-size: 0.8em;">
-                                                            </p-multiSelect>
-                                                        </ng-template>
-                                                    </p-columnFilter>
-                                                </div>
+                                            <th *ngIf="isColumnVisible('estadoPago')" class="text-center" pSortableColumn="estadoPago">
+                                                {{ 'Estado de Pago' | translate }}
+                                                <p-sortIcon field="estadoPago"></p-sortIcon>
+                                                <p-columnFilter field="estadoPago" matchMode="equals"
+                                                    [showMenu]="true" display="menu">
+                                                    <ng-template pTemplate="filter" let-value
+                                                        let-filter="filterCallback">
+                                                        <p-multiSelect [ngModel]="value" [options]="estadosPago"
+                                                            placeholder="{{'Seleccione' | translate}}"
+                                                            (onChange)="filter($event.value)"
+                                                            style="width: 100%; font-size: 0.8em;">
+                                                        </p-multiSelect>
+                                                    </ng-template>
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Estado de Proceso -->
-                                            <th *ngIf="isColumnVisible('estadoProceso')"
-                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Estado de Proceso' | translate}}
-                                                    <p-columnFilter field="estadoProceso" matchMode="equals"
-                                                        [showMenu]="true" display="menu">
-                                                        <ng-template pTemplate="filter" let-value
-                                                            let-filter="filterCallback">
-                                                            <p-multiSelect [ngModel]="value" [options]="estadosProcesos"
-                                                                placeholder="{{'Seleccione' | translate}}"
-                                                                (onChange)="filter($event.value)"
-                                                                style="width: 100%; font-size: 0.8em;">
-                                                            </p-multiSelect>
-                                                        </ng-template>
-                                                    </p-columnFilter>
-                                                </div>
+                                            <th *ngIf="isColumnVisible('estadoProceso')" class="text-center" pSortableColumn="estadoProceso">
+                                                {{ 'Estado de Proceso' | translate }}
+                                                <p-sortIcon field="estadoProceso"></p-sortIcon>
+                                                <p-columnFilter field="estadoProceso" matchMode="equals"
+                                                    [showMenu]="true" display="menu">
+                                                    <ng-template pTemplate="filter" let-value
+                                                        let-filter="filterCallback">
+                                                        <p-multiSelect [ngModel]="value" [options]="estadosProcesos"
+                                                            placeholder="{{'Seleccione' | translate}}"
+                                                            (onChange)="filter($event.value)"
+                                                            style="width: 100%; font-size: 0.8em;">
+                                                        </p-multiSelect>
+                                                    </ng-template>
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Validación -->
-                                            <th *ngIf="isColumnVisible('validacion') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('validacion') && !isFromProduction" class="text-center" pSortableColumn="validacion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Validación' | translate}}
-                                                    <p-columnFilter field="validacion" matchMode="equals"
-                                                        [showMenu]="true" display="menu">
-                                                        <ng-template pTemplate="filter" let-value
-                                                            let-filter="filterCallback">
-                                                            <p-multiSelect [ngModel]="value" [options]="validaciones"
-                                                                optionLabel="nombre" optionValue="value"
-                                                                placeholder="{{'Seleccione' | translate}}"
-                                                                (onChange)="filter($event.value)"
-                                                                style="width: 100%; font-size: 0.8em;">
-                                                            </p-multiSelect>
-                                                        </ng-template>
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Validación' | translate }}
+                                                <p-sortIcon field="validacion"></p-sortIcon>
+                                                <p-columnFilter field="validacion" matchMode="equals"
+                                                    [showMenu]="true" display="menu">
+                                                    <ng-template pTemplate="filter" let-value
+                                                        let-filter="filterCallback">
+                                                        <p-multiSelect [ngModel]="value" [options]="validaciones"
+                                                            optionLabel="nombre" optionValue="value"
+                                                            placeholder="{{'Seleccione' | translate}}"
+                                                            (onChange)="filter($event.value)"
+                                                            style="width: 100%; font-size: 0.8em;">
+                                                        </p-multiSelect>
+                                                    </ng-template>
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Cliente -->
-                                            <th *ngIf="isColumnVisible('cliente') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('cliente') && !isFromProduction" class="text-center" pSortableColumn="cliente.nombres_completos"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Cliente' | translate}}
-                                                    <p-columnFilter type="text" field="cliente.nombres_completos"
-                                                        matchMode="contains" placeholder="{{'Cliente' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Cliente' | translate }}
+                                                <p-sortIcon field="cliente.nombres_completos"></p-sortIcon>
+                                                <p-columnFilter type="text" field="cliente.nombres_completos"
+                                                    matchMode="contains" placeholder="{{'Cliente' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Valor Bruto -->
-                                            <th *ngIf="isColumnVisible('valorBruto') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('valorBruto') && !isFromProduction" class="text-center" pSortableColumn="totalPedidoSinDescuento"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Valor Bruto' | translate}}
-                                                    <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
-                                                        matchMode="contains" placeholder="{{'V. Bruto' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Valor Bruto' | translate }}
+                                                <p-sortIcon field="totalPedidoSinDescuento"></p-sortIcon>
+                                                <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
+                                                    matchMode="contains" placeholder="{{'V. Bruto' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Descuento -->
-                                            <th *ngIf="isColumnVisible('descuento') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('descuento') && !isFromProduction" class="text-center" pSortableColumn="totalDescuento"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Descuento' | translate}}
-                                                    <p-columnFilter type="numeric" field="totalDescuento"
-                                                        matchMode="contains" placeholder="{{'Desc.' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Descuento' | translate }}
+                                                <p-sortIcon field="totalDescuento"></p-sortIcon>
+                                                <p-columnFilter type="numeric" field="totalDescuento"
+                                                    matchMode="contains" placeholder="{{'Desc.' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Domicilio -->
-                                            <th *ngIf="isColumnVisible('domicilio') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('domicilio') && !isFromProduction" class="text-center" pSortableColumn="totalEnvio"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Domicilio' | translate}}
-                                                    <p-columnFilter type="numeric" field="totalEnvio"
-                                                        matchMode="contains" placeholder="{{'Domicilio' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Domicilio' | translate }}
+                                                <p-sortIcon field="totalEnvio"></p-sortIcon>
+                                                <p-columnFilter type="numeric" field="totalEnvio"
+                                                    matchMode="contains" placeholder="{{'Domicilio' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Subtotal -->
-                                            <th *ngIf="isColumnVisible('subtotal') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('subtotal') && !isFromProduction" class="text-center" pSortableColumn="subtotal"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Subtotal' | translate}}
-                                                    <p-columnFilter type="numeric" field="subtotal" matchMode="contains"
-                                                        placeholder="{{'Subt.' | translate}}" [showMenu]="true"
-                                                        display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Subtotal' | translate }}
+                                                <p-sortIcon field="subtotal"></p-sortIcon>
+                                                <p-columnFilter type="numeric" field="subtotal" matchMode="contains"
+                                                    placeholder="{{'Subt.' | translate}}" [showMenu]="true"
+                                                    display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna IVA -->
-                                            <th *ngIf="isColumnVisible('iva') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('iva') && !isFromProduction" class="text-center" pSortableColumn="totalImpuesto"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'IVA' | translate}}
-                                                    <p-columnFilter type="numeric" field="totalImpuesto"
-                                                        matchMode="contains" placeholder="{{'IVA' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'IVA' | translate }}
+                                                <p-sortIcon field="totalImpuesto"></p-sortIcon>
+                                                <p-columnFilter type="numeric" field="totalImpuesto"
+                                                    matchMode="contains" placeholder="{{'IVA' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Total -->
-                                            <th *ngIf="isColumnVisible('total') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('total') && !isFromProduction" class="text-center" pSortableColumn="totalPedididoConDescuento"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Total' | translate}}
-                                                    <p-columnFilter type="numeric" field="totalPedididoConDescuento"
-                                                        matchMode="contains" placeholder="{{'Total' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Total' | translate }}
+                                                <p-sortIcon field="totalPedididoConDescuento"></p-sortIcon>
+                                                <p-columnFilter type="numeric" field="totalPedididoConDescuento"
+                                                    matchMode="contains" placeholder="{{'Total' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Anticipo -->
-                                            <th *ngIf="isColumnVisible('anticipo') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('anticipo') && !isFromProduction" class="text-center" pSortableColumn="anticipo"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Anticipo' | translate}}
-                                                    <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
-                                                        placeholder="{{'Anticipo' | translate}}" [showMenu]="true"
-                                                        display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Anticipo' | translate }}
+                                                <p-sortIcon field="anticipo"></p-sortIcon>
+                                                <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
+                                                    placeholder="{{'Anticipo' | translate}}" [showMenu]="true"
+                                                    display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Falta por Pagar -->
-                                            <th *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" class="text-center" pSortableColumn="faltaPorPagar"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Falta por Pagar' | translate}}
-                                                    <p-columnFilter type="numeric" field="faltaPorPagar"
-                                                        matchMode="contains" placeholder="{{'Falta' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Falta por Pagar' | translate }}
+                                                <p-sortIcon field="faltaPorPagar"></p-sortIcon>
+                                                <p-columnFilter type="numeric" field="faltaPorPagar"
+                                                    matchMode="contains" placeholder="{{'Falta' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Fecha de compra -->
-                                            <th *ngIf="isColumnVisible('fechaCreacion')"
+                                            <th *ngIf="isColumnVisible('fechaCreacion')" class="text-center" pSortableColumn="fechaCreacion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Fecha de compra' | translate}}
-                                                    <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion"
-                                                        type="date" display="menu" [showMatchModes]="false"
-                                                        [showOperator]="false" [showAddButton]="false">
-                                                        <ng-template pTemplate="filter" let-value
-                                                            let-filter="filterCallback">
-                                                             <p-calendar (onSelect)="onDateFilterSelect($event, filter)"
-                                                                 dateFormat="yy-mm-dd"
-                                                                 [showIcon]="true"
-                                                                 [showButtonBar]="true">
-                                                            </p-calendar>
-                                                        </ng-template>
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Fecha de compra' | translate }}
+                                                <p-sortIcon field="fechaCreacion"></p-sortIcon>
+                                                <p-columnFilter [matchMode]="'customDate'" field="fechaCreacion"
+                                                    type="date" display="menu" [showMatchModes]="false"
+                                                    [showOperator]="false" [showAddButton]="false">
+                                                    <ng-template pTemplate="filter" let-value
+                                                        let-filter="filterCallback">
+                                                         <p-calendar (onSelect)="onDateFilterSelect($event, filter)"
+                                                             dateFormat="yy-mm-dd"
+                                                             [showIcon]="true"
+                                                             [showButtonBar]="true">
+                                                        </p-calendar>
+                                                    </ng-template>
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Ciudad -->
-                                            <th *ngIf="isColumnVisible('ciudad') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('ciudad') && !isFromProduction" class="text-center" pSortableColumn="envio.ciudad"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Ciudad' | translate}}
-                                                    <p-columnFilter type="text" field="envio.ciudad"
-                                                        matchMode="contains" placeholder="{{'Ciudad' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Ciudad' | translate }}
+                                                <p-sortIcon field="envio.ciudad"></p-sortIcon>
+                                                <p-columnFilter type="text" field="envio.ciudad"
+                                                    matchMode="contains" placeholder="{{'Ciudad' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Zona de Entrega -->
-                                            <th *ngIf="isColumnVisible('zonaCobro') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" class="text-center" pSortableColumn="envio.zonaCobro"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Zona de Entrega' | translate}}
-                                                    <p-columnFilter type="text" field="envio.zonaCobro"
-                                                        matchMode="contains" placeholder="{{'Zona' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Zona de Entrega' | translate }}
+                                                <p-sortIcon field="envio.zonaCobro"></p-sortIcon>
+                                                <p-columnFilter type="text" field="envio.zonaCobro"
+                                                    matchMode="contains" placeholder="{{'Zona' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Forma de Entrega -->
-                                            <th *ngIf="isColumnVisible('formaEntrega')"
+                                            <th *ngIf="isColumnVisible('formaEntrega')" class="text-center" pSortableColumn="formaEntrega"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Forma de Entrega' | translate}}
-                                                    <p-columnFilter type="text" field="formaEntrega"
-                                                        matchMode="contains" placeholder="{{'Entrega' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Forma de Entrega' | translate }}
+                                                <p-sortIcon field="formaEntrega"></p-sortIcon>
+                                                <p-columnFilter type="text" field="formaEntrega"
+                                                    matchMode="contains" placeholder="{{'Entrega' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Horario de Entrega -->
-                                            <th *ngIf="isColumnVisible('horarioEntrega')"
+                                            <th *ngIf="isColumnVisible('horarioEntrega')" class="text-center" pSortableColumn="horarioEntrega"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Horario de Entrega' | translate}}
-                                                    <p-columnFilter type="text" field="horarioEntrega"
-                                                        matchMode="contains" placeholder="{{'Horario' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Horario de Entrega' | translate }}
+                                                <p-sortIcon field="horarioEntrega"></p-sortIcon>
+                                                <p-columnFilter type="text" field="horarioEntrega"
+                                                    matchMode="contains" placeholder="{{'Horario' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Canal -->
-                                            <th *ngIf="isColumnVisible('channel')"
+                                            <th *ngIf="isColumnVisible('channel')" class="text-center" pSortableColumn="channel.name"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Canal' | translate}}
-                                                    <p-columnFilter type="text" field="channel.name"
-                                                        matchMode="contains" placeholder="{{'Canal' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Canal' | translate }}
+                                                <p-sortIcon field="channel.name"></p-sortIcon>
+                                                <p-columnFilter type="text" field="channel.name"
+                                                    matchMode="contains" placeholder="{{'Canal' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Vendedor -->
-                                            <th *ngIf="isColumnVisible('vendedor') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="text-center" pSortableColumn="asesorAsignado.name"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Vendedor' | translate}}
-                                                    <p-columnFilter type="text" field="asesorAsignado.name"
-                                                        matchMode="contains" placeholder="{{'Vendedor' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Vendedor' | translate }}
+                                                <p-sortIcon field="asesorAsignado.name"></p-sortIcon>
+                                                <p-columnFilter type="text" field="asesorAsignado.name"
+                                                    matchMode="contains" placeholder="{{'Vendedor' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Fecha Última Impresión -->
-                                            <th *ngIf="isColumnVisible('ultimaImpresion')"
+                                            <th *ngIf="isColumnVisible('ultimaImpresion')" class="text-center" pSortableColumn="ultimaImpresion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Última impresión' | translate}}
-                                                </div>
+                                                {{ 'Última impresión' | translate }}
+                                                <p-sortIcon field="ultimaImpresion"></p-sortIcon>
                                             </th>
 
                                             <!-- Columna Despachador -->
-                                            <th *ngIf="isColumnVisible('despachador') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('despachador') && !isFromProduction" class="text-center" pSortableColumn="despachador.name"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Despachador' | translate}}
-                                                    <p-columnFilter type="text" field="despachador.name"
-                                                        matchMode="contains" placeholder="{{'Despachador' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Despachador' | translate }}
+                                                <p-sortIcon field="despachador.name"></p-sortIcon>
+                                                <p-columnFilter type="text" field="despachador.name"
+                                                    matchMode="contains" placeholder="{{'Despachador' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Transportador -->
-                                            <th *ngIf="isColumnVisible('transportador') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('transportador') && !isFromProduction" class="text-center" pSortableColumn="transportador"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Transportador' | translate}}
-                                                    <p-columnFilter type="text" field="transportador"
-                                                        matchMode="contains" placeholder="{{'Transportador' | translate}}"
-                                                        [showMenu]="true" display="menu">
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Transportador' | translate }}
+                                                <p-sortIcon field="transportador"></p-sortIcon>
+                                                <p-columnFilter type="text" field="transportador"
+                                                    matchMode="contains" placeholder="{{'Transportador' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
                                             </th>
 
                                             <!-- Columna Fecha y Horario de Despachado -->
-                                            <th *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction"
+                                            <th *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction" class="text-center" pSortableColumn="fechaYHorarioDespachado"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                <div class="flex align-items-center">
-                                                    {{'Fecha y Horario de Despachado' | translate}}
-                                                    <p-columnFilter [matchMode]="'customDate'" field="fechaYHorarioDespachado"
-                                                        type="date" display="menu" [showMatchModes]="false"
-                                                        [showOperator]="false" [showAddButton]="false">
-                                                        <ng-template pTemplate="filter" let-value
-                                                            let-filter="filterCallback">
-                                                             <p-calendar (onSelect)="onDateFilterSelect($event, filter)"
-                                                                 dateFormat="yy-mm-dd"
-                                                                 [showIcon]="true"
-                                                                 [showButtonBar]="true">
-                                                            </p-calendar>
-                                                        </ng-template>
-                                                    </p-columnFilter>
-                                                </div>
+                                                {{ 'Fecha y Horario de Despachado' | translate }}
+                                                <p-sortIcon field="fechaYHorarioDespachado"></p-sortIcon>
+                                                <p-columnFilter [matchMode]="'customDate'" field="fechaYHorarioDespachado"
+                                                    type="date" display="menu" [showMatchModes]="false"
+                                                    [showOperator]="false" [showAddButton]="false">
+                                                    <ng-template pTemplate="filter" let-value
+                                                        let-filter="filterCallback">
+                                                         <p-calendar (onSelect)="onDateFilterSelect($event, filter)"
+                                                             dateFormat="yy-mm-dd"
+                                                             [showIcon]="true"
+                                                             [showButtonBar]="true">
+                                                        </p-calendar>
+                                                    </ng-template>
+                                                </p-columnFilter>
                                             </th>
                                         </tr>
                                     </ng-template>
@@ -542,19 +511,22 @@
 
                                             <!-- Columna Estado de Pago -->
                                             <td *ngIf="isColumnVisible('estadoPago')" class="estado-cell text-center">
-                                                <span class="modern-badge" [ngClass]="{
-                                                    'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
-                                                    'badge-success': pedido?.estadoPago === 'Aprobado',
-                                                    'badge-info': pedido?.estadoPago === 'PreAprobado',
-                                                    'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
-                                                }">
+                                                <span class="modern-badge"
+                                                    [pTooltip]="getPaymentStatusDisplay(pedido?.estadoPago).full"
+                                                    tooltipPosition="top"
+                                                    [ngClass]="{
+                                                        'badge-warning': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
+                                                        'badge-success': pedido?.estadoPago === 'Aprobado',
+                                                        'badge-info': pedido?.estadoPago === 'PreAprobado',
+                                                        'badge-danger': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
+                                                    }">
                                                     <i class="status-icon pi" [ngClass]="{
                                                         'pi-clock': pedido?.estadoPago === 'Pendiente' || pedido?.estadoPago === 'Pospendiente',
                                                         'pi-check-circle': pedido?.estadoPago === 'Aprobado',
                                                         'pi-eye': pedido?.estadoPago === 'PreAprobado',
                                                         'pi-times-circle': pedido?.estadoPago === 'Rechazado' || pedido?.estadoPago === 'Cancelado' || pedido?.estadoPago === 'Precancelado'
                                                     }"></i>
-                                                    {{ pedido?.estadoPago }}
+                                                    {{ getPaymentStatusDisplay(pedido?.estadoPago).short }}
                                                 </span>
                                             </td>
 
@@ -562,15 +534,18 @@
                                             <td *ngIf="isColumnVisible('estadoProceso')"
                                                 class="estado-cell text-center">
                                                 <div class="estado-container">
-                                                    <span class="modern-badge" [ngClass]="{
-                                                        'badge-secondary': pedido?.estadoProceso === 'SinProducir',
-                                                        'badge-info': pedido?.estadoProceso === 'EnProduccion' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                                        'badge-primary': pedido?.estadoProceso === 'Empacado',
-                                                        'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                                        'badge-success': pedido?.estadoProceso === 'Entregado',
-                                                        'badge-danger': pedido?.estadoProceso === 'Rechazado',
-                                                        'badge-dark': pedido?.estadoProceso === 'Cerrado'
-                                                    }">
+                                                    <span class="modern-badge"
+                                                        [pTooltip]="getStatusDisplay(pedido?.estadoProceso).full"
+                                                        tooltipPosition="top"
+                                                        [ngClass]="{
+                                                            'badge-secondary': pedido?.estadoProceso === 'SinProducir',
+                                                            'badge-info': pedido?.estadoProceso === 'EnProduccion' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                            'badge-primary': pedido?.estadoProceso === 'Empacado',
+                                                            'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                            'badge-success': pedido?.estadoProceso === 'Entregado',
+                                                            'badge-danger': pedido?.estadoProceso === 'Rechazado',
+                                                            'badge-dark': pedido?.estadoProceso === 'Cerrado'
+                                                        }">
                                                         <i class="status-icon pi" [ngClass]="{
                                                             'pi-circle': pedido?.estadoProceso === 'SinProducir',
                                                             'pi-cog': pedido?.estadoProceso === 'EnProduccion' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
@@ -580,7 +555,7 @@
                                                             'pi-times-circle': pedido?.estadoProceso === 'Rechazado',
                                                             'pi-lock': pedido?.estadoProceso === 'Cerrado'
                                                         }"></i>
-                                                        {{ pedido?.estadoProceso }}
+                                                        {{ getStatusDisplay(pedido?.estadoProceso).short }}
                                                     </span>
                                                     <!-- Indicador de pedido congelado -->
                                                     <div *ngIf="isPedidoCongelado(pedido)" class="frozen-indicator"
