@@ -2733,6 +2733,33 @@ export class DashboardComponent implements OnInit, AfterViewInit {
     this.refrescarDatosEnsamble();
   }
 
+  /**
+   * Maneja el click en las métricas breadcrumb para aplicar filtros de ensamble
+   */
+  onMetricEnsambleClick(estadoProceso: string): void {
+    if (estadoProceso === 'all') {
+      // Limpiar todos los filtros de estado
+      this.quickFilters.estadoProceso = 'all';
+    } else if (estadoProceso === 'urgentes') {
+      // Filtrar solo pedidos urgentes (usando la tabla local ya filtrada)
+      // No hay un estado específico, pero podríamos implementarlo
+      console.log('Filtro de urgentes - Feature en desarrollo');
+      return;
+    } else if (estadoProceso === 'riesgo') {
+      // Filtrar solo pedidos en riesgo (usando la tabla local ya filtrada)
+      console.log('Filtro de riesgo - Feature en desarrollo');
+      return;
+    } else {
+      // Aplicar filtro por estado de proceso
+      this.setQuickFilter('estadoProceso', estadoProceso);
+      return; // setQuickFilter ya llama a refrescarDatosEnsamble
+    }
+
+    // Guardar y refrescar solo si no retornamos antes
+    this.saveFiltersToStorage();
+    this.refrescarDatosEnsamble();
+  }
+
   // Manejar cambios en las fechas
   onDateChange(): void {
     this.saveFiltersToStorage();

@@ -33,6 +33,7 @@ import { PedidoFacturacionComponent } from "./facturacion/pedido-facturacion.com
 import { MultiSelectModule } from "primeng/multiselect";
 import { PedidosUtilService } from "./service/pedidos.util.service";
 import { ToastModule } from "primeng/toast";
+import { TooltipModule } from "primeng/tooltip";
 import { AsentarpagomanualComponent } from "./asentarpagomanual/asentarpagomanual.component";
 import { AutoCompleteModule } from "primeng/autocomplete";
 import { ClientesListaComponent } from "./clientes/lista/clientes-lista.component";
@@ -86,6 +87,7 @@ import { ListProduccionComponent } from './list/list-produccion.component';
     TableModule,
     MultiSelectModule,
     ToastModule,
+    TooltipModule,
     HttpClientModule,
     VoiceInteractionModule,
     DespachosModule,

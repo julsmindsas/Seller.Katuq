@@ -396,3 +396,306 @@
     opacity: 0.9;
   }
 }
+
+/* ========================================
+   ESTILOS PARA MÉTRICAS BREADCRUMB/CHIP
+   ======================================== */
+
+.metrics-breadcrumb-panel {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+  .d-flex {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 4px;
+    }
+  }
+}
+
+.metric-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  user-select: none;
+  border: 1.5px solid transparent;
+  background-color: #f1f3f5;
+  color: #495057;
+
+  i {
+    font-size: 0.9rem;
+    opacity: 0.8;
+  }
+
+  .metric-label {
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .metric-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    height: 20px;
+    padding: 0 0.4rem;
+    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.9);
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  // Hover effect
+  &:not(.metric-chip-info-only):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border-color: currentColor;
+  }
+
+  // Active/Click effect
+  &:not(.metric-chip-info-only):active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  // Info-only chips (no filtrable)
+  &.metric-chip-info-only {
+    cursor: default;
+    opacity: 0.85;
+  }
+
+  // Variantes de color
+  &.metric-chip-primary {
+    background-color: #e3f2fd;
+    color: #1976d2;
+
+    .metric-badge {
+      background-color: #1976d2;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #bbdefb;
+      border-color: #1976d2;
+    }
+  }
+
+  &.metric-chip-success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+
+    .metric-badge {
+      background-color: #2e7d32;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #c8e6c9;
+      border-color: #2e7d32;
+    }
+  }
+
+  &.metric-chip-info {
+    background-color: #e1f5fe;
+    color: #0277bd;
+
+    .metric-badge {
+      background-color: #0277bd;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #b3e5fc;
+      border-color: #0277bd;
+    }
+  }
+
+  &.metric-chip-warning {
+    background-color: #fff3e0;
+    color: #ef6c00;
+
+    .metric-badge {
+      background-color: #ef6c00;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #ffe0b2;
+      border-color: #ef6c00;
+    }
+  }
+
+  &.metric-chip-danger {
+    background-color: #ffebee;
+    color: #c62828;
+
+    .metric-badge {
+      background-color: #c62828;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #ffcdd2;
+      border-color: #c62828;
+    }
+  }
+
+  &.metric-chip-secondary {
+    background-color: #f5f5f5;
+    color: #616161;
+
+    .metric-badge {
+      background-color: #616161;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #eeeeee;
+      border-color: #616161;
+    }
+  }
+
+  &.metric-chip-production {
+    background-color: #f3e5f5;
+    color: #7b1fa2;
+
+    .metric-badge {
+      background-color: #7b1fa2;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #e1bee7;
+      border-color: #7b1fa2;
+    }
+  }
+
+  &.metric-chip-packed {
+    background-color: #e0f2f1;
+    color: #00695c;
+
+    .metric-badge {
+      background-color: #00695c;
+      color: white;
+    }
+
+    &:hover {
+      background-color: #b2dfdb;
+      border-color: #00695c;
+    }
+  }
+}
+
+// Separadores entre métricas
+.separator {
+  color: #dee2e6;
+  font-weight: 300;
+  font-size: 1rem;
+  user-select: none;
+  padding: 0 0.25rem;
+}
+
+// Divider vertical
+.metric-divider {
+  width: 1px;
+  height: 24px;
+  background-color: #dee2e6;
+  margin: 0 0.5rem;
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .metrics-breadcrumb-panel {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .metric-chip {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+
+    .metric-badge {
+      min-width: 20px;
+      height: 18px;
+      font-size: 0.7rem;
+    }
+
+    i {
+      font-size: 0.85rem;
+    }
+  }
+
+  .separator {
+    display: none;
+  }
+
+  .metric-divider {
+    display: none;
+  }
+}
+
+// Compact metrics with hover expansion
+.metric-chip-compact {
+  padding: 0.25rem 0.5rem !important;
+  gap: 0.25rem !important;
+  max-width: 80px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  white-space: nowrap;
+
+  .metric-label-short {
+    display: inline;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .metric-label-full {
+    display: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  &:hover {
+    max-width: 250px;
+    padding: 0.35rem 0.75rem !important;
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+    .metric-label-short {
+      display: none;
+    }
+
+    .metric-label-full {
+      display: inline;
+    }
+  }
+}
+
+// Extra compact for process metrics
+.metric-chip-sm.metric-chip-compact {
+  max-width: 65px;
+  padding: 0.2rem 0.4rem !important;
+
+  &:hover {
+    max-width: 180px;
+  }
+}

@@ -12,6 +12,87 @@
               (onChange)="handleColumnSelectionChange($event.value)">
             </p-multiSelect>
           </div>
+
+          <!-- Panel de Métricas Estilo Breadcrumb -->
+          <div class="metrics-breadcrumb-panel bg-white border-top border-bottom py-2 px-3 mb-3">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <!-- Total Productos -->
+              <div class="metric-chip metric-chip-primary"
+                   (click)="onMetricClick('all')"
+                   pTooltip="{{ 'Ver todos los productos' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-shopping-cart"></i>
+                <span class="metric-label">Total</span>
+                <span class="metric-badge">{{ productsView?.length || 0 }}</span>
+              </div>
+
+              <span class="separator">/</span>
+
+              <!-- Sin Producir -->
+              <div class="metric-chip metric-chip-secondary metric-chip-compact"
+                   (click)="onMetricClick('SinProducir')"
+                   pTooltip="{{ 'Filtrar productos sin producir' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-circle"></i>
+                <span class="metric-label-short">SP</span>
+                <span class="metric-label-full">Sin Producir</span>
+                <span class="metric-badge">{{ getProcesoCount('SinProducir') }}</span>
+              </div>
+
+              <span class="separator">/</span>
+
+              <!-- En Producción -->
+              <div class="metric-chip metric-chip-info metric-chip-compact"
+                   (click)="onMetricClick('EnProduccion')"
+                   pTooltip="{{ 'Filtrar productos en producción' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-cog"></i>
+                <span class="metric-label-short">EP</span>
+                <span class="metric-label-full">En Producción</span>
+                <span class="metric-badge">{{ getProcesoCount('EnProduccion') }}</span>
+              </div>
+
+              <span class="separator">/</span>
+
+              <!-- Producido Parcialmente -->
+              <div class="metric-chip metric-chip-warning metric-chip-compact"
+                   (click)="onMetricClick('ProducidoParcialmente')"
+                   pTooltip="{{ 'Filtrar productos producidos parcialmente' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-check"></i>
+                <span class="metric-label-short">PP</span>
+                <span class="metric-label-full">Prod. Parcial</span>
+                <span class="metric-badge">{{ getProcesoCount('ProducidoParcialmente') }}</span>
+              </div>
+
+              <span class="separator">/</span>
+
+              <!-- Producido Totalmente -->
+              <div class="metric-chip metric-chip-success metric-chip-compact"
+                   (click)="onMetricClick('ProducidoTotalmente')"
+                   pTooltip="{{ 'Filtrar productos producidos totalmente' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-check-circle"></i>
+                <span class="metric-label-short">PT</span>
+                <span class="metric-label-full">Prod. Total</span>
+                <span class="metric-badge">{{ getProcesoCount('ProducidoTotalmente') }}</span>
+              </div>
+
+              <span class="separator">/</span>
+
+              <!-- Para Despachar -->
+              <div class="metric-chip metric-chip-packed metric-chip-compact"
+                   (click)="onMetricClick('ParaDespachar')"
+                   pTooltip="{{ 'Filtrar productos listos para despachar' | translate }}"
+                   tooltipPosition="top">
+                <i class="pi pi-box"></i>
+                <span class="metric-label-short">PD</span>
+                <span class="metric-label-full">P/ Despachar</span>
+                <span class="metric-badge">{{ getProcesoCount('ParaDespachar') }}</span>
+              </div>
+            </div>
+          </div>
+
           <p-table #dt1 [value]="productsView" [responsiveLayout]="'scroll'"
             styleClass="p-datatable-sm modern-prod-table p-datatable-gridlines p-datatable-striped"
             [scrollable]="true" scrollHeight="80vh" [rows]="200" [paginator]="true"

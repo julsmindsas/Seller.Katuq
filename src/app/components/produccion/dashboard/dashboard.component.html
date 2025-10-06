@@ -526,6 +526,95 @@
                                 </div>
                             </div>
 
+                            <!-- Panel de Métricas Estilo Breadcrumb para ENSAMBLE -->
+                            <div class="metrics-breadcrumb-panel bg-white border-top border-bottom py-2 px-3">
+                                <div class="d-flex flex-wrap align-items-center gap-2">
+                                    <!-- Total Ensambles -->
+                                    <div class="metric-chip metric-chip-primary"
+                                         (click)="onMetricEnsambleClick('all')"
+                                         pTooltip="{{ 'Ver todos los ensambles' | translate }}"
+                                         tooltipPosition="top">
+                                        <i class="pi pi-th-large"></i>
+                                        <span class="metric-label">Total</span>
+                                        <span class="metric-badge">{{ ordersEnsamble?.length || 0 }}</span>
+                                    </div>
+
+                                    <span class="separator">/</span>
+
+                                    <!-- Pendientes -->
+                                    <div class="metric-chip metric-chip-secondary metric-chip-compact"
+                                         (click)="onMetricEnsambleClick('SinProducir')"
+                                         pTooltip="{{ 'Filtrar ensambles sin producir' | translate }}"
+                                         tooltipPosition="top">
+                                        <i class="pi pi-circle"></i>
+                                        <span class="metric-label-short">PEND</span>
+                                        <span class="metric-label-full">Pendientes</span>
+                                        <span class="metric-badge">{{ ensamblesPendientes || 0 }}</span>
+                                    </div>
+
+                                    <span class="separator">/</span>
+
+                                    <!-- En Proceso -->
+                                    <div class="metric-chip metric-chip-warning metric-chip-compact"
+                                         (click)="onMetricEnsambleClick('EnProceso')"
+                                         pTooltip="{{ 'Filtrar ensambles en proceso' | translate }}"
+                                         tooltipPosition="top">
+                                        <i class="pi pi-sync"></i>
+                                        <span class="metric-label-short">EP</span>
+                                        <span class="metric-label-full">En Proceso</span>
+                                        <span class="metric-badge">{{ ensamblesProceso || 0 }}</span>
+                                    </div>
+
+                                    <span class="separator">/</span>
+
+                                    <!-- Completados -->
+                                    <div class="metric-chip metric-chip-success metric-chip-compact"
+                                         (click)="onMetricEnsambleClick('Completado')"
+                                         pTooltip="{{ 'Filtrar ensambles completados' | translate }}"
+                                         tooltipPosition="top">
+                                        <i class="pi pi-check-circle"></i>
+                                        <span class="metric-label-short">COMP</span>
+                                        <span class="metric-label-full">Completados</span>
+                                        <span class="metric-badge">{{ ensamblesCompletados || 0 }}</span>
+                                    </div>
+
+                                    <!-- Divider -->
+                                    <div class="metric-divider"></div>
+
+                                    <!-- Urgentes -->
+                                    <div class="metric-chip metric-chip-danger metric-chip-compact"
+                                         (click)="onMetricEnsambleClick('urgentes')"
+                                         pTooltip="{{ 'Filtrar ensambles urgentes (entrega en 2 días o menos)' | translate }}"
+                                         tooltipPosition="top">
+                                        <i class="pi pi-exclamation-triangle"></i>
+                                        <span class="metric-label-short">URG</span>
+                                        <span class="metric-label-full">Urgentes</span>
+                                        <span class="metric-badge">{{ pedidosUrgentes?.length || 0 }}</span>
+                                    </div>
+
+                                    <!-- En Riesgo -->
+                                    <div class="metric-chip metric-chip-info metric-chip-compact"
+                                         (click)="onMetricEnsambleClick('riesgo')"
+                                         pTooltip="{{ 'Filtrar ensambles en riesgo (entrega en 3-5 días)' | translate }}"
+                                         tooltipPosition="top">
+                                        <i class="pi pi-clock"></i>
+                                        <span class="metric-label-short">RIESGO</span>
+                                        <span class="metric-label-full">En Riesgo</span>
+                                        <span class="metric-badge">{{ pedidosEnRiesgo?.length || 0 }}</span>
+                                    </div>
+
+                                    <!-- Capacidad (solo info) -->
+                                    <div class="metric-chip metric-chip-production metric-chip-info-only metric-chip-compact"
+                                         pTooltip="{{ 'Capacidad utilizada en producción' | translate }}"
+                                         tooltipPosition="top">
+                                        <i class="pi pi-chart-bar"></i>
+                                        <span class="metric-label-short">CAP</span>
+                                        <span class="metric-label-full">Capacidad</span>
+                                        <span class="metric-badge">{{ capacidadUtilizada || 0 }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Tabla de Producción Moderna -->
                             <div class="px-3 pb-3">
                                 <div class="production-table-container">

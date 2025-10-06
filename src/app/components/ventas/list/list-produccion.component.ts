@@ -424,6 +424,28 @@ export class ListProduccionComponent implements OnInit, OnChanges {
     return this.dt1?.filteredValue || this.productsView || [];
   }
 
+  /**
+   * Conteo de productos por estado de proceso
+   */
+  getProcesoCount(proceso: string): number {
+    return this.getFilteredProductsView().filter(
+      (producto) => producto.estadoProceso === proceso,
+    ).length;
+  }
+
+  /**
+   * Maneja el click en las métricas breadcrumb para aplicar filtros
+   */
+  onMetricClick(estado: string): void {
+    if (estado === 'all') {
+      // Limpiar todos los filtros de la tabla
+      this.dt1.clear();
+    } else {
+      // Aplicar filtro de estado de proceso usando el filter API de PrimeNG
+      this.dt1.filter(estado, 'estadoProceso', 'equals');
+    }
+  }
+
   calculateTotalQuantity(): number {
     const filteredData = this.getFilteredProductsView();
     return filteredData.reduce((total, item) => {

@@ -334,60 +334,65 @@
                                 <span class="separator">/</span>
 
                                 <!-- En Producción -->
-                                <div class="metric-chip metric-chip-production"
+                                <div class="metric-chip metric-chip-production metric-chip-compact"
                                      (click)="onMetricClick('EnProduccion')"
                                      pTooltip="{{ 'Filtrar pedidos en producción' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-cog"></i>
-                                    <span class="metric-label">{{ "En Prod." | translate }}</span>
+                                    <span class="metric-label-short">EP</span>
+                                    <span class="metric-label-full">{{ "En Prod." | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.enProduccion || contarPedidosPorEstado('EnProduccion') }}</span>
                                 </div>
 
                                 <span class="separator">/</span>
 
                                 <!-- Empacados -->
-                                <div class="metric-chip metric-chip-packed"
+                                <div class="metric-chip metric-chip-packed metric-chip-compact"
                                      (click)="onMetricClick('Empacado')"
                                      pTooltip="{{ 'Filtrar pedidos empacados' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-inbox"></i>
-                                    <span class="metric-label">{{ "Empacados" | translate }}</span>
+                                    <span class="metric-label-short">EMP</span>
+                                    <span class="metric-label-full">{{ "Empacados" | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.empacados || contarPedidosPorEstado('Empacado') }}</span>
                                 </div>
 
                                 <span class="separator">/</span>
 
                                 <!-- Para Despacho -->
-                                <div class="metric-chip metric-chip-warning"
+                                <div class="metric-chip metric-chip-warning metric-chip-compact"
                                      (click)="onMetricClick('ParaDespachar')"
                                      pTooltip="{{ 'Filtrar pedidos listos para despachar' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-box"></i>
-                                    <span class="metric-label">{{ "Para Desp." | translate }}</span>
+                                    <span class="metric-label-short">PD</span>
+                                    <span class="metric-label-full">{{ "Para Desp." | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.paraDespachar || metricasLogistica?.pedidosDespacho || 0 }}</span>
                                 </div>
 
                                 <span class="separator">/</span>
 
                                 <!-- En Ruta -->
-                                <div class="metric-chip metric-chip-info"
+                                <div class="metric-chip metric-chip-info metric-chip-compact"
                                      (click)="onMetricClick('Despachado')"
                                      pTooltip="{{ 'Filtrar pedidos despachados/en ruta' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-send"></i>
-                                    <span class="metric-label">{{ "En Ruta" | translate }}</span>
+                                    <span class="metric-label-short">ER</span>
+                                    <span class="metric-label-full">{{ "En Ruta" | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.enRuta || metricasLogistica?.pedidosEnRuta || 0 }}</span>
                                 </div>
 
                                 <span class="separator">/</span>
 
                                 <!-- Entregados -->
-                                <div class="metric-chip metric-chip-success"
+                                <div class="metric-chip metric-chip-success metric-chip-compact"
                                      (click)="onMetricClick('Entregado')"
                                      pTooltip="{{ 'Filtrar pedidos entregados' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-check-circle"></i>
-                                    <span class="metric-label">{{ "Entregados" | translate }}</span>
+                                    <span class="metric-label-short">ENT</span>
+                                    <span class="metric-label-full">{{ "Entregados" | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.entregados || contarPedidosPorEstado('Entregado') }}</span>
                                 </div>
 
@@ -395,21 +400,23 @@
                                 <div class="metric-divider"></div>
 
                                 <!-- Urgentes -->
-                                <div class="metric-chip metric-chip-danger"
+                                <div class="metric-chip metric-chip-danger metric-chip-compact"
                                      (click)="onMetricClick('urgentes')"
                                      pTooltip="{{ 'Filtrar pedidos urgentes' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-clock"></i>
-                                    <span class="metric-label">{{ "Urgentes" | translate }}</span>
+                                    <span class="metric-label-short">URG</span>
+                                    <span class="metric-label-full">{{ "Urgentes" | translate }}</span>
                                     <span class="metric-badge">{{ obtenerConteoPedidosUrgentesNoDespachados() }}</span>
                                 </div>
 
                                 <!-- Por Cobrar (solo info, no filtrable) -->
-                                <div class="metric-chip metric-chip-danger metric-chip-info-only"
+                                <div class="metric-chip metric-chip-danger metric-chip-info-only metric-chip-compact"
                                      pTooltip="{{ 'Monto total pendiente de cobro' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-wallet"></i>
-                                    <span class="metric-label">{{ "Por Cobrar" | translate }}</span>
+                                    <span class="metric-label-short">PC</span>
+                                    <span class="metric-label-full">{{ "Por Cobrar" | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.porCobrar || calculateFaltaPorPagar() | currency:'USD':'symbol':'1.0-0' }}</span>
                                 </div>
                             </div>

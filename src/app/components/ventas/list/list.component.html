@@ -129,6 +129,142 @@
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <!-- Panel de Métricas Estilo Breadcrumb (Solo para vista de todos los pedidos) -->
+                                        <div *ngIf="!isFromProduction" class="metrics-breadcrumb-panel bg-white border-top border-bottom py-2 px-3 mt-3">
+                                        <div class="d-flex flex-wrap align-items-center gap-2">
+                                            <!-- Total Pedidos -->
+                                            <div class="metric-chip metric-chip-primary"
+                                                 (click)="onMetricClick('all')"
+                                                 pTooltip="{{ 'Ver todos los pedidos' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-shopping-cart"></i>
+                                                <span class="metric-label">Total</span>
+                                                <span class="metric-badge">{{ orders?.length || 0 }}</span>
+                                            </div>
+
+                                            <!-- Separador Principal -->
+                                            <div class="metric-divider"></div>
+
+                                            <!-- SECCIÓN: Métricas de Proceso (Reducidas) -->
+
+                                            <!-- Sin Producir (Compacto) -->
+                                            <div class="metric-chip metric-chip-secondary metric-chip-sm metric-chip-compact"
+                                                 (click)="onMetricClick('SinProducir')"
+                                                 pTooltip="{{ 'Pedidos pendientes de iniciar producción' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-circle"></i>
+                                                <span class="metric-label-short">SP</span>
+                                                <span class="metric-label-full">Sin Prod.</span>
+                                                <span class="metric-badge">{{ getProcesoCount('SinProducir') }}</span>
+                                            </div>
+
+                                            <span class="separator">/</span>
+
+                                            <!-- Para Despachar (Compacto) -->
+                                            <div class="metric-chip metric-chip-packed metric-chip-sm metric-chip-compact"
+                                                 (click)="onMetricClick('ParaDespachar')"
+                                                 pTooltip="{{ 'Pedidos listos para despachar - Acción inmediata' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-box"></i>
+                                                <span class="metric-label-short">PD</span>
+                                                <span class="metric-label-full">P/ Desp.</span>
+                                                <span class="metric-badge">{{ getProcesoCount('ParaDespachar') }}</span>
+                                            </div>
+
+                                            <!-- Divider Principal -->
+                                            <div class="metric-divider"></div>
+
+                                            <!-- SECCIÓN: Métricas Comerciales/Financieras -->
+
+                                            <!-- Pendientes de Pago -->
+                                            <div class="metric-chip metric-chip-warning metric-chip-compact"
+                                                 (click)="onMetricClick('pendientesPago')"
+                                                 pTooltip="{{ 'Pedidos pendientes de pago - Requieren seguimiento' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-dollar"></i>
+                                                <span class="metric-label-short">PP</span>
+                                                <span class="metric-label-full">Pend. Pago</span>
+                                                <span class="metric-badge">{{ getPendientesPagoCount() }}</span>
+                                            </div>
+
+                                            <span class="separator">/</span>
+
+                                            <!-- Pagos Aprobados Hoy -->
+                                            <div class="metric-chip metric-chip-success metric-chip-compact"
+                                                 (click)="onMetricClick('aprobadosHoy')"
+                                                 pTooltip="{{ 'Pedidos con pago aprobado hoy - KPI de conversión diaria' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-check-circle"></i>
+                                                <span class="metric-label-short">AH</span>
+                                                <span class="metric-label-full">Aprob. Hoy</span>
+                                                <span class="metric-badge">{{ getPagosAprobadosHoyCount() }}</span>
+                                            </div>
+
+                                            <span class="separator">/</span>
+
+                                            <!-- Ventas del Día -->
+                                            <div class="metric-chip metric-chip-info metric-chip-compact"
+                                                 pTooltip="{{ 'Valor total de pedidos creados hoy - Métrica financiera diaria' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-chart-line"></i>
+                                                <span class="metric-label-short">VH</span>
+                                                <span class="metric-label-full">Ventas Hoy</span>
+                                                <span class="metric-badge">{{ getVentasDelDia() | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                            </div>
+
+                                            <span class="separator">/</span>
+
+                                            <!-- Ticket Promedio -->
+                                            <div class="metric-chip metric-chip-primary metric-chip-compact"
+                                                 pTooltip="{{ 'Valor promedio por pedido - Indicador de pricing' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-calculator"></i>
+                                                <span class="metric-label-short">TP</span>
+                                                <span class="metric-label-full">Ticket Prom.</span>
+                                                <span class="metric-badge">{{ getTicketPromedio() | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                            </div>
+
+                                            <span class="separator">/</span>
+
+                                            <!-- Pedidos Urgentes -->
+                                            <div class="metric-chip metric-chip-danger metric-chip-compact"
+                                                 (click)="onMetricClick('urgentes')"
+                                                 pTooltip="{{ 'Pedidos con entrega próxima (hoy o mañana) no completados - Atención urgente' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-exclamation-triangle"></i>
+                                                <span class="metric-label-short">URG</span>
+                                                <span class="metric-label-full">Urgentes</span>
+                                                <span class="metric-badge">{{ getPedidosUrgentesCount() }}</span>
+                                            </div>
+
+                                            <span class="separator">/</span>
+
+                                            <!-- Anticipo Pendiente -->
+                                            <div class="metric-chip metric-chip-warning metric-chip-compact"
+                                                 (click)="onMetricClick('anticipoPendiente')"
+                                                 pTooltip="{{ 'Pedidos con saldo pendiente después de anticipo - Cuentas por cobrar' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-wallet"></i>
+                                                <span class="metric-label-short">CS</span>
+                                                <span class="metric-label-full">C/ Saldo</span>
+                                                <span class="metric-badge">{{ getAnticiposPendientesCount() }}</span>
+                                            </div>
+
+                                            <span class="separator">/</span>
+
+                                            <!-- Con Descuento -->
+                                            <div class="metric-chip metric-chip-info metric-chip-compact"
+                                                 (click)="onMetricClick('conDescuento')"
+                                                 pTooltip="{{ 'Pedidos con descuento aplicado - Monitoreo de promociones' | translate }}"
+                                                 tooltipPosition="top">
+                                                <i class="pi pi-tag"></i>
+                                                <span class="metric-label-short">CD</span>
+                                                <span class="metric-label-full">C/ Desc.</span>
+                                                <span class="metric-badge">{{ getPedidosConDescuentoCount() }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                     </ng-template>
 
                                     <!-- HEADER: Dos filas (títulos y filtros) -->

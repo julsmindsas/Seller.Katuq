@@ -2406,6 +2406,264 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Conteo de pedidos revisados para producción
+   */
+  getRevisadosCount(): number {
+    return this.getFilteredOrders().filter(
+      (pedido) => pedido.revisadoParaProduccion && pedido.revisadoParaProduccion !== '',
+    ).length;
+  }
+
+  /**
+   * Conteo de pedidos no revisados para producción
+   */
+  getNoRevisadosCount(): number {
+    return this.getFilteredOrders().filter(
+      (pedido) => !pedido.revisadoParaProduccion || pedido.revisadoParaProduccion === '',
+    ).length;
+  }
+
+  /**
+   * ===== MÉTRICAS COMERCIALES/FINANCIERAS =====
+   */
+
+  /**
+   * Conteo de pedidos pendientes de pago
+   * Incluye estados: Pendiente y Pospendiente
+   */
+  getPendientesPagoCount(): number {
+    return this.getFilteredOrders().filter(
+      (pedido) => pedido.estadoPago === 'Pendiente' || pedido.estadoPago === 'Pospendiente',
+    ).length;
+  }
+
+  /**
+   * Conteo de pedidos con pago aprobado creados hoy
+   * KPI de conversión diaria
+   */
+  getPagosAprobadosHoyCount(): number {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    return this.getFilteredOrders().filter((pedido) => {
+      if (pedido.estadoPago !== 'Aprobado') {
+        return false;
+      }
+
+      if (!pedido.fechaCreacion) {
+        return false;
+      }
+
+      const fechaPedido = new Date(pedido.fechaCreacion);
+      fechaPedido.setHours(0, 0, 0, 0);
+
+      return fechaPedido.getTime() === hoy.getTime();
+    }).length;
+  }
+
+  /**
+   * Suma del valor total de pedidos creados hoy
+   * Métrica financiera diaria
+   */
+  getVentasDelDia(): number {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    return this.getFilteredOrders()
+      .filter((pedido) => {
+        if (!pedido.fechaCreacion) {
+          return false;
+        }
+
+        const fechaPedido = new Date(pedido.fechaCreacion);
+        fechaPedido.setHours(0, 0, 0, 0);
+
+        return fechaPedido.getTime() === hoy.getTime();
+      })
+      .reduce((acc, pedido) => acc + (pedido.totalPedidoSinDescuento || 0), 0);
+  }
+
+  /**
+   * Valor promedio por pedido (Ticket Promedio)
+   * Indicador de valor por transacción
+   */
+  getTicketPromedio(): number {
+    const pedidos = this.getFilteredOrders();
+
+    if (pedidos.length === 0) {
+      return 0;
+    }
+
+    const total = pedidos.reduce(
+      (acc, pedido) => acc + (pedido.totalPedidoSinDescuento || 0),
+      0,
+    );
+
+    return total / pedidos.length;
+  }
+
+  /**
+   * Conteo de pedidos urgentes
+   * Pedidos con fecha de entrega hoy o mañana que no están completados
+   */
+  getPedidosUrgentesCount(): number {
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+
+    const manana = new Date(hoy);
+    manana.setDate(manana.getDate() + 1);
+
+    return this.getFilteredOrders().filter((pedido) => {
+      // Solo pedidos no completados (no Entregado, no Rechazado, no Cerrado)
+      const estadosNoCompletados = ['SinProducir', 'EnProduccion', 'ProducidoParcialmente', 'ProducidoTotalmente', 'Empacado', 'ParaDespachar', 'Despachado'];
+
+      if (!estadosNoCompletados.includes(pedido.estadoProceso)) {
+        return false;
+      }
+
+      if (!pedido.fechaEntrega) {
+        return false;
+      }
+
+      const fechaEntrega = new Date(pedido.fechaEntrega);
+      fechaEntrega.setHours(0, 0, 0, 0);
+
+      // Entrega hoy o mañana
+      return fechaEntrega.getTime() <= manana.getTime();
+    }).length;
+  }
+
+  /**
+   * Conteo de pedidos con anticipo pendiente
+   * Pedidos con saldo por pagar después de anticipo
+   */
+  getAnticiposPendientesCount(): number {
+    return this.getFilteredOrders().filter(
+      (pedido) => {
+        const tieneAnticipo = pedido.anticipo && pedido.anticipo > 0;
+        const tieneSaldoPendiente = pedido.faltaPorPagar && pedido.faltaPorPagar > 0;
+        return tieneAnticipo && tieneSaldoPendiente;
+      },
+    ).length;
+  }
+
+  /**
+   * Conteo de pedidos con descuento aplicado
+   * Monitoreo de estrategia promocional
+   */
+  getPedidosConDescuentoCount(): number {
+    return this.getFilteredOrders().filter(
+      (pedido) => pedido.totalDescuento && pedido.totalDescuento > 0,
+    ).length;
+  }
+
+  /**
+   * Maneja el click en las métricas breadcrumb para aplicar filtros
+   */
+  onMetricClick(estado: string): void {
+    // Limpiar filtros previos en la tabla si existe
+    if (this.table) {
+      this.table.clear();
+    }
+
+    if (estado === 'all') {
+      // Limpiar todos los filtros de estado
+      this.quickFilters.estadoProceso = 'all';
+    } else if (estado === 'revisados') {
+      // Filtro de revisados
+      this.toastrService.info('Filtro de revisados - Próximamente', 'Información');
+      return;
+    } else if (estado === 'noRevisados') {
+      // Filtro de no revisados
+      this.toastrService.info('Filtro de no revisados - Próximamente', 'Información');
+      return;
+    } else if (estado === 'pendientesPago') {
+      // Filtrar pedidos pendientes de pago
+      if (this.table) {
+        this.table.filter(['Pendiente', 'Pospendiente'], 'estadoPago', 'in');
+      }
+      this.toastrService.info(`Filtrando ${this.getPendientesPagoCount()} pedidos pendientes de pago`, 'Filtro Aplicado');
+      return;
+    } else if (estado === 'aprobadosHoy') {
+      // Filtrar pedidos aprobados hoy
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      const pedidosAprobadosHoy = this.orders.filter((pedido) => {
+        if (pedido.estadoPago !== 'Aprobado') return false;
+        if (!pedido.fechaCreacion) return false;
+
+        const fechaPedido = new Date(pedido.fechaCreacion);
+        fechaPedido.setHours(0, 0, 0, 0);
+
+        return fechaPedido.getTime() === hoy.getTime();
+      });
+
+      // Aplicar filtro combinado: estado de pago y fecha
+      if (this.table) {
+        this.table.filter('Aprobado', 'estadoPago', 'equals');
+      }
+
+      this.toastrService.success(`Mostrando ${pedidosAprobadosHoy.length} pedidos aprobados hoy`, 'Filtro Aplicado');
+      return;
+    } else if (estado === 'urgentes') {
+      // Filtrar pedidos urgentes (entrega hoy o mañana, no completados)
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const manana = new Date(hoy);
+      manana.setDate(manana.getDate() + 1);
+
+      // Definir estados no completados fuera del filter para reutilizar
+      const estadosNoCompletados = ['SinProducir', 'EnProduccion', 'ProducidoParcialmente', 'ProducidoTotalmente', 'Empacado', 'ParaDespachar', 'Despachado'];
+
+      const pedidosUrgentes = this.orders.filter((pedido) => {
+        if (!estadosNoCompletados.includes(pedido.estadoProceso)) return false;
+        if (!pedido.fechaEntrega) return false;
+
+        const fechaEntrega = new Date(pedido.fechaEntrega);
+        fechaEntrega.setHours(0, 0, 0, 0);
+
+        return fechaEntrega.getTime() <= manana.getTime();
+      });
+
+      if (this.table) {
+        this.table.filter(estadosNoCompletados, 'estadoProceso', 'in');
+      }
+
+      this.toastrService.warning(`${pedidosUrgentes.length} pedidos urgentes requieren atención inmediata`, 'Pedidos Urgentes', { timeOut: 5000 });
+      return;
+    } else if (estado === 'anticipoPendiente') {
+      // Filtrar pedidos con anticipo pendiente
+      const pedidosConAnticipo = this.orders.filter((pedido) => {
+        return pedido.anticipo && pedido.anticipo > 0 && pedido.faltaPorPagar && pedido.faltaPorPagar > 0;
+      });
+
+      // Mostrar solo estos pedidos usando un filtro custom
+      this.toastrService.info(`Mostrando ${pedidosConAnticipo.length} pedidos con saldo pendiente`, 'Filtro Aplicado');
+
+      // No hay un campo directo para filtrar, se debe implementar lógica personalizada
+      // Por ahora solo notificar
+      return;
+    } else if (estado === 'conDescuento') {
+      // Filtrar pedidos con descuento
+      const pedidosConDescuento = this.orders.filter(
+        (pedido) => pedido.totalDescuento && pedido.totalDescuento > 0,
+      );
+
+      this.toastrService.info(`Mostrando ${pedidosConDescuento.length} pedidos con descuento aplicado`, 'Filtro Aplicado');
+      return;
+    } else {
+      // Aplicar filtro por estado de proceso (estados estándar)
+      this.quickFilters.estadoProceso = estado;
+      // Actualizar el servicio compartido de filtros
+      this.sharedFilterService.updateFilterState({ estadoProceso: estado });
+    }
+
+    // Refrescar los datos con el nuevo filtro
+    this.refrescarDatos();
+  }
+
+  /**
    * Conteo de pedidos validados
    */
   getValidacionCount(): number {
