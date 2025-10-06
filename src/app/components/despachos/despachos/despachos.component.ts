@@ -6591,6 +6591,27 @@ export class DespachosComponent implements OnInit {
   }
 
   /**
+   * Maneja el click en las métricas para aplicar filtros
+   */
+  onMetricClick(estadoProceso: string): void {
+    if (estadoProceso === 'all') {
+      // Limpiar todos los filtros de estado
+      this.quickFilters.estadoProceso = 'all';
+    } else if (estadoProceso === 'urgentes') {
+      // Para pedidos urgentes, no hay un filtro específico de estado
+      // Podríamos implementar una lógica custom aquí en el futuro
+      this.toastr.info('Filtro de urgentes en desarrollo', 'Información');
+      return;
+    } else {
+      // Aplicar filtro por estado de proceso
+      this.quickFilters.estadoProceso = estadoProceso;
+    }
+
+    // Refrescar los datos con el nuevo filtro
+    this.refrescar();
+  }
+
+  /**
    * Formatea una fecha para mostrar en los tags
    */
   formatDateForDisplay(date: Date): string {
