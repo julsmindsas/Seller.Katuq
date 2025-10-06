@@ -728,19 +728,23 @@ export class DespachosComponent implements OnInit {
       pedido.puntajeKAI = Math.max(0, Math.min(100, puntajeBase));
     });
 
-    // Ordenar cada categoría por días restantes (ascendente)
-    this.pedidosUrgentes.sort(
-      (a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999),
-    );
-    this.pedidosEnRiesgo.sort(
-      (a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999),
-    );
-    this.pedidosNormales.sort(
-      (a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999),
-    );
-    this.pedidosSinProducir.sort(
-      (a, b) => (a.diasRestantes || 999) - (b.diasRestantes || 999),
-    );
+    // Ordenar cada categoría: primero sin orden de despacho, luego por días restantes
+    const ordenarPedidos = (a: any, b: any) => {
+      // Primero: pedidos SIN orden de despacho van al inicio
+      const aHasOrder = !!(a.shippingOrder || a.nroShippingOrder);
+      const bHasOrder = !!(b.shippingOrder || b.nroShippingOrder);
+
+      if (aHasOrder && !bHasOrder) return 1;  // a tiene orden, va al final
+      if (!aHasOrder && bHasOrder) return -1; // b tiene orden, va al final
+
+      // Si ambos tienen o no tienen orden, ordenar por días restantes (ascendente)
+      return (a.diasRestantes || 999) - (b.diasRestantes || 999);
+    };
+
+    this.pedidosUrgentes.sort(ordenarPedidos);
+    this.pedidosEnRiesgo.sort(ordenarPedidos);
+    this.pedidosNormales.sort(ordenarPedidos);
+    this.pedidosSinProducir.sort(ordenarPedidos);
 
     // Implementar optimización rudimentaria de ruta
     // Optimizar rutas agrupando pedidos por zonas
