@@ -9,19 +9,18 @@
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- Header Standar -->
-                <div class="row col-12 m-2">
+                <!-- Header Compacto -->
+                <div class="row col-12 mx-2 my-1">
                     <div class="col-6">
-                        <p class="text-left fc-secondary fs-24 fw-bold m-0 p-0">{{ "Pedidos" | translate }}</p>
-                        <p class="text-left text-muted fs-18 m-0 p-0">{{ "Listado de pedidos" | translate }}</p>
+                        <h5 class="text-left fc-secondary fw-bold mb-0">{{ "Pedidos" | translate }}</h5>
+                        <small class="text-left text-muted">{{ "Listado de pedidos" | translate }}</small>
                     </div>
                 </div>
-                <br>
 
                 <div class="col-sm-12">
                     <div class="">
                         <div class="">
-                            <div class="p-3">
+                            <div class="p-2">
                                     <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50"
                                         [showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,25,50]"
                                         [loading]="loading" [reorderableColumns]="true" [scrollable]="true"
@@ -69,37 +68,37 @@
                                             (searchSelect)="onSearchSelect($event)">
                                         </app-shared-filters>
 
-                                        <!-- BÚSQUEDA LOCAL ADICIONAL -->
-                                        <div class="local-search-container mt-3 mb-2" *ngIf="shouldShowLocalSearch()">
-                                            <div class="row align-items-center">
+                                        <!-- BÚSQUEDA LOCAL ADICIONAL - Compacto -->
+                                        <div class="local-search-container mt-2 mb-2" *ngIf="shouldShowLocalSearch()">
+                                            <div class="row align-items-center g-2">
                                                 <div class="col-md-6">
                                                     <div class="local-search-wrapper">
-                                                        <label class="form-label fw-medium text-muted mb-1">
-                                                            <i class="pi pi-search me-2 text-primary"></i>
+                                                        <label class="form-label fw-medium text-muted mb-1 small">
+                                                            <i class="pi pi-search me-1 text-primary"></i>
                                                             {{ 'Búsqueda Local' | translate }}
                                                         </label>
-                                                        <div class="input-group">
-                                                            <input 
-                                                                type="text" 
-                                                                class="form-control" 
+                                                        <div class="input-group input-group-sm">
+                                                            <input
+                                                                type="text"
+                                                                class="form-control form-control-sm"
                                                                 [(ngModel)]="localSearchQuery"
                                                                 (input)="onLocalSearchInput($event)"
                                                                 placeholder="{{ 'Buscar por número, cliente, documento o referencia...' | translate }}"
                                                                 [class.is-searching]="hasActiveLocalSearch()">
-                                                            <button 
+                                                            <button
                                                                 *ngIf="localSearchQuery && localSearchQuery.trim().length > 0"
-                                                                class="btn btn-outline-secondary" 
+                                                                class="btn btn-outline-secondary btn-sm"
                                                                 type="button"
                                                                 (click)="clearLocalSearch()"
                                                                 pTooltip="{{ 'Limpiar búsqueda local' | translate }}">
                                                                 <i class="pi pi-times"></i>
                                                             </button>
                                                         </div>
-                                                        <small class="text-muted mt-1 d-block">
+                                                        <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">
                                                             <i class="pi pi-info-circle me-1"></i>
                                                             {{ 'Búsqueda en pedidos filtrados por fecha' | translate }}
                                                         </small>
-                                                        <small *ngIf="hasActiveLocalSearch() && getLocalSearchResultsCount() === 0" class="text-warning mt-1 d-block">
+                                                        <small *ngIf="hasActiveLocalSearch() && getLocalSearchResultsCount() === 0" class="text-warning mt-1 d-block" style="font-size: 0.75rem;">
                                                             <i class="pi pi-exclamation-triangle me-1"></i>
                                                             {{ 'No se encontraron pedidos con los criterios de búsqueda' | translate }}
                                                         </small>
@@ -107,7 +106,7 @@
                                                 </div>
                                                 <div class="col-md-6">
                                                     <div class="local-search-results" *ngIf="hasActiveLocalSearch()">
-                                                        <div class="d-flex align-items-center justify-content-end">
+                                                        <div class="d-flex align-items-center justify-content-end gap-2">
                                                             <span class="badge" [ngClass]="getLocalSearchResultsCount() > 0 ? 'bg-primary' : 'bg-warning'">
                                                                 <i class="pi" [ngClass]="getLocalSearchResultsCount() > 0 ? 'pi-filter' : 'pi-exclamation-triangle'"></i>
                                                                 <span *ngIf="getLocalSearchResultsCount() > 0">
@@ -117,7 +116,7 @@
                                                                     {{ 'Sin resultados' | translate }}
                                                                 </span>
                                                             </span>
-                                                            <button 
+                                                            <button
                                                                 class="btn btn-sm btn-outline-secondary"
                                                                 (click)="clearLocalSearch()"
                                                                 pTooltip="{{ 'Limpiar búsqueda local' | translate }}">
@@ -130,8 +129,8 @@
                                             </div>
                                         </div>
 
-                                        <!-- Panel de Métricas Estilo Breadcrumb (Solo para vista de todos los pedidos) -->
-                                        <div *ngIf="!isFromProduction" class="metrics-breadcrumb-panel bg-white border-top border-bottom py-2 px-3 mt-3">
+                                        <!-- Panel de Métricas Estilo Breadcrumb (Solo para vista de todos los pedidos) - Compacto -->
+                                        <div *ngIf="!isFromProduction" class="metrics-breadcrumb-panel bg-white border-top border-bottom py-1 px-2 mt-2">
                                         <div class="d-flex flex-wrap align-items-center gap-2">
                                             <!-- Total Pedidos -->
                                             <div class="metric-chip metric-chip-primary"

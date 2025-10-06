@@ -1,121 +1,115 @@
 // ==========================================
 // GENERAR-ORDEN - DISEÑO ULTRA MINIMALISTA
 // ==========================================
-// Inspirado en: Linear, Vercel, Notion, GitHub moderno
-// Principio: Menos es más
+// Principio: Menos es más - Máxima funcionalidad, mínimo visual
 
 // ===========================================
-// VARIABLES DE COLOR MINIMALISTAS
+// VARIABLES MINIMALISTAS
 // ===========================================
-$text-primary: #1a1a1a;
-$text-secondary: #6c757d;
-$border-color: #e5e7eb;
+$text-primary: #18181b;
+$text-secondary: #71717a;
+$text-muted: #a1a1aa;
+$border-color: #e4e4e7;
 $bg-white: #ffffff;
-$bg-gray: #f9fafb;
+$bg-gray: #fafafa;
+$bg-hover: #f4f4f5;
 
-$accent-primary: #3b82f6;
+$accent-primary: #2563eb;
 $accent-success: #10b981;
 $accent-warning: #f59e0b;
 $accent-danger: #ef4444;
-$accent-info: #0ea5e9;
 
-// ===========================================
-// TIPOGRAFÍA
-// ===========================================
-$font-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-$font-size-sm: 0.875rem;
-$font-size-base: 1rem;
-$font-size-lg: 1.125rem;
+// Espaciado compacto
+$spacing-xs: 0.25rem;  // 4px
+$spacing-sm: 0.5rem;   // 8px
+$spacing-md: 0.75rem;  // 12px
+$spacing-lg: 1rem;     // 16px
+$spacing-xl: 1.5rem;   // 24px
 
-// ===========================================
-// ESPACIADO
-// ===========================================
-$spacing-2: 0.5rem;
-$spacing-3: 0.75rem;
-$spacing-4: 1rem;
-$spacing-6: 1.5rem;
+// Tipografía reducida
+$font-xs: 0.6875rem;   // 11px
+$font-sm: 0.75rem;     // 12px
+$font-base: 0.875rem;  // 14px
+$font-md: 0.9375rem;   // 15px
+$font-lg: 1rem;        // 16px
 
-// Desktop Compact Spacing
-$spacing-desktop-compact-2: 0.375rem;
-$spacing-desktop-compact-3: 0.5rem;
-$spacing-desktop-compact-4: 0.75rem;
-$spacing-desktop-compact-6: 1rem;
-
-// ===========================================
-// BORDES Y RADIOS
-// ===========================================
+// Bordes
 $border: 1px solid $border-color;
-$radius-sm: 4px;
-$radius-md: 6px;
-$radius-lg: 8px;
+$radius: 6px;
 
 // ===========================================
 // ESTRUCTURA PRINCIPAL
 // ===========================================
 .modal-content.modern-modal {
-  height: 88vh;
-  max-height: 88vh;
+  height: 90vh;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  border-radius: $radius-lg;
+  border-radius: $radius;
   border: $border;
   overflow: hidden;
-  font-family: $font-base;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 // ===========================================
-// HEADER MINIMALISTA
+// HEADER COMPACTO
 // ===========================================
 .modal-header.modern-header {
   flex-shrink: 0;
-  padding: $spacing-4 $spacing-6;
+  padding: $spacing-md $spacing-lg;
   background: $bg-white;
   border-bottom: $border;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
   .header-content {
-    display: flex;
-    align-items: center;
-    gap: $spacing-3;
     flex: 1;
 
-    .header-text {
-      .modal-title {
-        font-size: $font-size-lg;
-        font-weight: 600;
-        color: $text-primary;
-        margin: 0;
-      }
+    .modal-title {
+      font-size: $font-md;
+      font-weight: 600;
+      color: $text-primary;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
 
       .modal-subtitle {
-        font-size: $font-size-sm;
+        font-size: $font-sm;
+        font-weight: 500;
         color: $text-secondary;
-        margin: 0.25rem 0 0;
       }
     }
   }
 
   .btn-close-modern {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: transparent;
     border: $border;
-    border-radius: $radius-sm;
+    border-radius: 4px;
     color: $text-secondary;
     cursor: pointer;
     transition: all 0.15s;
+    padding: 0;
 
     &:hover {
-      background: $bg-gray;
-      border-color: darken($border-color, 10%);
+      background: $bg-hover;
+      color: $text-primary;
+    }
+
+    i {
+      font-size: $font-base;
     }
   }
 }
 
 // ===========================================
-// BODY LIMPIO
+// BODY
 // ===========================================
 .modal-body {
   flex: 1;
@@ -126,12 +120,138 @@ $radius-lg: 8px;
 
 .orden-envio-container {
   height: 100%;
-  padding: $spacing-6;
+  padding: $spacing-lg;
   overflow-y: auto;
-  overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: $spacing-6;
+  gap: $spacing-lg;
+}
+
+// ===========================================
+// CONFIGURACIÓN COMPACTA (TODO EN UNA LÍNEA)
+// ===========================================
+.config-compact-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  padding: $spacing-md;
+  background: $bg-white;
+  border: $border;
+  border-radius: $radius;
+  align-items: flex-start;
+}
+
+.config-compact-section {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  flex: 1;
+  min-width: 200px;
+
+  .config-compact-label {
+    font-size: $font-xs;
+    font-weight: 600;
+    color: $text-secondary;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    cursor: help;
+  }
+
+  .config-compact-inputs {
+    display: flex;
+    gap: $spacing-sm;
+    align-items: center;
+  }
+
+  .config-compact-methods {
+    display: flex;
+    gap: $spacing-sm;
+  }
+}
+
+// Botones compactos
+.btn-compact {
+  height: 32px;
+  padding: 0 $spacing-md;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-xs;
+  background: $bg-white;
+  border: $border;
+  border-radius: 4px;
+  font-size: $font-sm;
+  font-weight: 500;
+  color: $text-primary;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+
+  i {
+    font-size: $font-sm;
+  }
+
+  &:hover:not(:disabled) {
+    background: $bg-hover;
+    border-color: darken($border-color, 10%);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.btn-compact-primary {
+    background: $accent-primary;
+    border-color: $accent-primary;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: darken($accent-primary, 5%);
+    }
+  }
+
+  &.btn-compact-outline {
+    background: transparent;
+    border: $border;
+    color: $text-primary;
+
+    &:hover:not(:disabled) {
+      background: $bg-hover;
+    }
+  }
+}
+
+// Method compact (botones de método)
+.method-compact {
+  height: 32px;
+  padding: 0 $spacing-md;
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-xs;
+  background: $bg-white;
+  border: $border;
+  border-radius: 4px;
+  font-size: $font-sm;
+  font-weight: 500;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  i {
+    font-size: $font-base;
+  }
+
+  &:hover {
+    border-color: $accent-primary;
+    color: $text-primary;
+  }
+
+  &.selected {
+    background: lighten($accent-primary, 48%);
+    border-color: $accent-primary;
+    color: $accent-primary;
+  }
 }
 
 // ===========================================
@@ -139,375 +259,104 @@ $radius-lg: 8px;
 // ===========================================
 .card.modern-card {
   border: $border;
-  border-radius: $radius-md;
+  border-radius: $radius;
   background: $bg-white;
   overflow: hidden;
 
   .card-header-modern {
-    padding: $spacing-4;
+    padding: $spacing-md $spacing-lg;
     border-bottom: $border;
     background: $bg-white;
-
-    h5, .card-title-modern {
-      font-size: 0.9375rem;
-      font-weight: 600;
-      color: $text-primary;
-      margin: 0;
-    }
   }
 
   .card-body {
-    padding: $spacing-4;
+    padding: $spacing-lg;
   }
 }
 
 // ===========================================
-// SECCIÓN DE CONFIGURACIÓN
+// TABLE HEADER COMPACTO
 // ===========================================
-.seccion-configuracion {
+.table-header-compact {
   display: flex;
-  flex-direction: column;
-  gap: $spacing-4;
-}
-
-// ===========================================
-// WRAPPER RESPONSIVE: FILTROS + CONFIGURACIÓN
-// ===========================================
-.filters-config-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: $spacing-4;
-
-  // Desktop: Layout horizontal (lado a lado)
-  @media (min-width: 992px) {
-    flex-direction: row;
-    gap: $spacing-4;
-
-    .filters-section,
-    .config-section {
-      flex: 1; // Igual ancho para ambas columnas
-      min-width: 0; // Para que flex funcione correctamente
-    }
-  }
-
-  // Mobile/Tablet: Layout vertical
-  @media (max-width: 991px) {
-    flex-direction: column;
-  }
-}
-
-// ===========================================
-// SECCIÓN DE FILTROS
-// ===========================================
-.filters-section {
-  border: $border;
-  border-radius: $radius-md;
-  background: $bg-white;
-  overflow: hidden;
-
-  .section-header {
-    padding: $spacing-4;
-    border-bottom: $border;
-    background: $bg-white;
-
-    h6 {
-      margin: 0;
-      font-weight: 600;
-      color: $text-primary;
-      font-size: 0.9375rem;
-    }
-  }
-
-  .section-content {
-    padding: $spacing-4;
-  }
-}
-
-// ===========================================
-// SECCIÓN DE CONFIGURACIÓN
-// ===========================================
-.config-section {
-  border: $border;
-  border-radius: $radius-md;
-  background: $bg-white;
-  overflow: hidden;
-
-  .section-header {
-    padding: $spacing-4;
-    border-bottom: $border;
-    background: $bg-white;
-
-    h6 {
-      margin: 0;
-      font-weight: 600;
-      color: $text-primary;
-      font-size: 0.9375rem;
-    }
-  }
-
-  .section-content {
-    padding: $spacing-4;
-  }
-}
-
-// ===========================================
-// FORM GROUPS
-// ===========================================
-.form-group {
-  margin-bottom: $spacing-4;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  label {
-    display: block;
-    font-size: $font-size-sm;
-    font-weight: 500;
-    color: $text-primary;
-    margin-bottom: 0.5rem;
-  }
-
-  input,
-  select,
-  .p-dropdown {
-    width: 100%;
-  }
-}
-
-// ===========================================
-// BOTONES DE FILTRO ALINEADOS
-// ===========================================
-.filter-actions {
-  display: flex;
-  gap: $spacing-2;
-  margin-top: $spacing-4;
-
-  .btn {
-    height: 38px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: $spacing-2;
-    flex: 1;
-    border-radius: $radius-sm;
-    font-weight: 500;
-    font-size: $font-size-sm;
-    transition: all 0.15s;
-
-    &.btn-primary {
-      background: $accent-primary;
-      border-color: $accent-primary;
-      color: white;
-
-      &:hover:not(:disabled) {
-        background: darken($accent-primary, 5%);
-      }
-    }
-
-    &.btn-outline-secondary {
-      background: transparent;
-      border: $border;
-      color: $text-secondary;
-
-      &:hover:not(:disabled) {
-        background: $bg-gray;
-        border-color: darken($border-color, 10%);
-      }
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-}
-
-// ===========================================
-// INFO BOX COMPACTO
-// ===========================================
-.info-box-compact {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: $spacing-3;
-  padding: $spacing-3;
-  background: $bg-gray;
-  border: $border;
-  border-radius: $radius-sm;
+  flex-wrap: wrap;
+  gap: $spacing-md;
 
-  .info-icon-compact {
-    width: 24px;
-    height: 24px;
+  .table-title-compact {
+    font-size: $font-base;
+    font-weight: 600;
+    color: $text-primary;
+    margin: 0;
     display: flex;
     align-items: center;
-    justify-content: center;
-    color: $accent-primary;
-    flex-shrink: 0;
-
-    i {
-      font-size: 1rem;
-    }
+    gap: $spacing-sm;
   }
 
-  .info-content-compact {
-    flex: 1;
+  .table-controls-compact {
     display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-
-    .info-item {
-      font-size: 0.75rem;
-      color: $text-secondary;
-
-      strong {
-        color: $text-primary;
-      }
-    }
+    align-items: center;
+    gap: $spacing-md;
   }
 }
 
-// ===========================================
-// CARDS DE SELECCIÓN DE MÉTODO
-// ===========================================
-.method-selection {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: $spacing-3;
-
-  @media (max-width: 767px) {
-    grid-template-columns: 1fr; // Una columna en móvil
-  }
-}
-
-.method-card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
+// Count badge
+.count-badge {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: $spacing-2;
-  padding: $spacing-4;
-  border: $border;
-  border-radius: $radius-md;
-  background: $bg-white;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  min-height: 100px;
+  min-width: 24px;
+  height: 20px;
+  padding: 0 $spacing-xs;
+  background: $bg-gray;
+  color: $text-secondary;
+  border-radius: 10px;
+  font-size: $font-xs;
+  font-weight: 600;
+
+  &.badge-warning-compact {
+    background: lighten($accent-warning, 42%);
+    color: darken($accent-warning, 30%);
+  }
+}
+
+// Compact switch
+.compact-switch {
+  .form-check-label {
+    font-size: $font-sm;
+    color: $text-secondary;
+  }
+}
+
+// Empty state
+.empty-state-compact {
+  padding: $spacing-xl;
+  text-align: center;
+  color: $text-muted;
 
   i {
-    font-size: 1.5rem;
+    font-size: 2rem;
+    margin-bottom: $spacing-sm;
+  }
+
+  p {
+    margin: $spacing-xs 0;
+    font-size: $font-base;
     color: $text-secondary;
-    transition: color 0.15s;
   }
 
-  span {
-    font-size: $font-size-sm;
-    font-weight: 500;
-    color: $text-primary;
-    text-align: center;
-    transition: color 0.15s;
-  }
-
-  .check-indicator {
-    position: absolute;
-    top: $spacing-2;
-    right: $spacing-2;
-    color: $accent-primary;
-    font-size: 1.25rem;
-  }
-
-  &:hover {
-    border-color: darken($border-color, 10%);
-    background: $bg-gray;
-  }
-
-  &.selected {
-    border-color: $accent-primary;
-    border-width: 2px;
-    background: lighten($accent-primary, 48%);
-
-    i {
-      color: $accent-primary;
-    }
-
-    span {
-      color: $accent-primary;
-      font-weight: 600;
-    }
+  small {
+    font-size: $font-sm;
+    color: $text-muted;
   }
 }
 
 // ===========================================
-// MÉTODO DE ENVÍO - CARDS SIMPLES
-// ===========================================
-.selection-card-modern {
-  display: flex;
-  align-items: center;
-  gap: $spacing-3;
-  padding: $spacing-4;
-  border: $border;
-  border-radius: $radius-md;
-  background: $bg-white;
-  cursor: pointer;
-  transition: all 0.15s;
-
-  &:hover {
-    border-color: $accent-primary;
-    background: lighten($accent-primary, 48%);
-  }
-
-  &.selected {
-    border-color: $accent-primary;
-    border-width: 2px;
-    background: lighten($accent-primary, 48%);
-
-    .selection-content .selection-title {
-      color: $accent-primary;
-    }
-  }
-
-  .selection-icon-container {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border-radius: $radius-sm;
-    color: $text-secondary;
-
-    i {
-      font-size: 1.25rem;
-    }
-  }
-
-  .selection-content {
-    flex: 1;
-
-    .selection-title {
-      font-size: 0.9375rem;
-      font-weight: 500;
-      color: $text-primary;
-      margin-bottom: 0.125rem;
-    }
-
-    .selection-subtitle {
-      font-size: 0.8125rem;
-      color: $text-secondary;
-    }
-  }
-
-  .selection-check {
-    color: $accent-primary;
-    font-size: 1.25rem;
-  }
-}
-
-// ===========================================
-// TABLAS LIMPIAS
+// TABLAS ULTRA COMPACTAS
 // ===========================================
 ::ng-deep {
-  .p-datatable {
+  .p-datatable-compact {
     .p-datatable-thead > tr > th {
       background: $bg-white !important;
       border-bottom: $border;
@@ -515,117 +364,199 @@ $radius-lg: 8px;
       border-left: none;
       border-right: none;
       font-weight: 600;
-      font-size: 0.75rem;
+      font-size: $font-xs;
       text-transform: uppercase;
       color: $text-secondary;
-      letter-spacing: 0.5px;
-      padding: 0.75rem 0.5rem;
+      letter-spacing: 0.3px;
+      padding: $spacing-sm $spacing-md;
     }
 
     .p-datatable-tbody > tr {
       border-bottom: $border;
 
       &:hover {
-        background: $bg-gray !important;
+        background: $bg-hover !important;
+      }
+
+      &.row-moved {
+        background: lighten($accent-warning, 48%) !important;
       }
 
       td {
         border: none;
-        padding: 0.75rem 0.5rem;
-        font-size: $font-size-sm;
-      }
-    }
-  }
+        padding: $spacing-sm $spacing-md;
+        font-size: $font-sm;
+        color: $text-primary;
 
-  .p-button {
-    border-radius: $radius-sm;
-    font-weight: 500;
-    font-size: $font-size-sm;
-    border: $border;
-    transition: all 0.15s;
-
-    &.p-button-success {
-      background: $accent-success;
-      border-color: $accent-success;
-
-      &:hover {
-        background: darken($accent-success, 5%);
-      }
-    }
-
-    &.p-button-outlined {
-      background: transparent;
-
-      &.p-button-info {
-        color: $accent-info;
-        border-color: $accent-info;
-
-        &:hover {
-          background: lighten($accent-info, 48%);
+        &.actions-col {
+          width: 120px;
+          text-align: center;
         }
       }
     }
+
+    .p-datatable-footer {
+      border-top: $border;
+      background: $bg-white;
+
+      .footer-total {
+        td {
+          padding: $spacing-md;
+          font-size: $font-base;
+        }
+      }
+    }
+
+    .p-paginator {
+      border: none;
+      background: $bg-white;
+      padding: $spacing-md;
+
+      .p-paginator-element {
+        min-width: 32px;
+        height: 32px;
+        font-size: $font-sm;
+      }
+    }
   }
 
-  .p-calendar .p-inputtext,
-  .p-dropdown,
-  .p-multiselect {
-    border-radius: $radius-sm;
-    border: $border;
-    transition: all 0.15s;
+  // Inputs PrimeNG compactos
+  .input-compact {
+    .p-inputtext {
+      height: 32px;
+      padding: 0 $spacing-md;
+      font-size: $font-sm;
+      border: $border;
+      border-radius: 4px;
 
-    &:focus {
-      border-color: $accent-primary;
-      box-shadow: none;
+      &:focus {
+        border-color: $accent-primary;
+        box-shadow: none;
+      }
+    }
+
+    .p-datepicker-trigger {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  .p-multiselect {
+    height: 32px;
+    font-size: $font-sm;
+    border: $border;
+
+    .p-multiselect-label {
+      padding: $spacing-xs $spacing-md;
+      font-size: $font-sm;
+    }
+
+    .p-multiselect-trigger {
+      width: 32px;
     }
   }
 }
 
 // ===========================================
-// BADGES MINIMALISTAS
+// BADGES COMPACTOS
 // ===========================================
-.badge-modern,
-.modern-badge {
+.badge-compact {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  border-radius: $radius-sm;
-  font-size: 0.75rem;
+  gap: $spacing-xs;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: 4px;
+  font-size: $font-xs;
   font-weight: 500;
 
-  &.badge-success {
+  &.badge-compact-success {
     background: lighten($accent-success, 48%);
     color: darken($accent-success, 20%);
   }
 
-  &.badge-warning {
+  &.badge-compact-warning {
     background: lighten($accent-warning, 48%);
     color: darken($accent-warning, 30%);
-  }
-
-  &.badge-info {
-    background: lighten($accent-info, 48%);
-    color: darken($accent-info, 20%);
   }
 }
 
 // ===========================================
-// ALERTS SIMPLES
+// ESTADO ORDEN COMPACT
 // ===========================================
-.alert {
-  border-radius: $radius-md;
-  border: $border;
-  font-size: $font-size-sm;
+.estado-orden-compact {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
 
-  &.alert-info,
-  &.alert-light-info {
-    background: lighten($accent-info, 48%);
-    border-color: lighten($accent-info, 40%);
-    color: darken($accent-info, 20%);
+.btn-icon-compact {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: $border;
+  border-radius: 4px;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+
+  i {
+    font-size: $font-sm;
   }
 
-  &.alert-warning {
+  &:hover {
+    background: $accent-primary;
+    border-color: $accent-primary;
+    color: white;
+  }
+}
+
+// ===========================================
+// ACTIONS COMPACT (botones de acción inline)
+// ===========================================
+.actions-compact {
+  display: flex;
+  gap: $spacing-xs;
+  justify-content: center;
+}
+
+::ng-deep .actions-compact {
+  .p-button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .p-button-icon {
+      font-size: $font-base;
+    }
+  }
+}
+
+// ===========================================
+// ALERT COMPACTO
+// ===========================================
+.alert-compact {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  border: $border;
+  border-radius: $radius;
+  font-size: $font-sm;
+  margin-top: $spacing-md;
+
+  i {
+    font-size: $font-base;
+    flex-shrink: 0;
+  }
+
+  &.alert-compact-warning {
     background: lighten($accent-warning, 48%);
     border-color: lighten($accent-warning, 40%);
     color: darken($accent-warning, 30%);
@@ -633,157 +564,57 @@ $radius-lg: 8px;
 }
 
 // ===========================================
-// INFO BOX SIMPLE
-// ===========================================
-.info-box-container {
-  .info-box {
-    display: flex;
-    gap: $spacing-3;
-    padding: $spacing-4;
-    background: $bg-gray;
-    border: $border;
-    border-radius: $radius-md;
-
-    .info-icon {
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: transparent;
-      color: $accent-primary;
-      flex-shrink: 0;
-
-      i {
-        font-size: 1.25rem;
-      }
-    }
-
-    .info-content {
-      flex: 1;
-
-      .info-title {
-        font-size: $font-size-sm;
-        font-weight: 600;
-        color: $text-primary;
-        margin: 0 0 0.5rem;
-      }
-
-      .info-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-
-        li {
-          font-size: 0.8125rem;
-          color: $text-secondary;
-          padding: 0.25rem 0;
-        }
-      }
-    }
-  }
-}
-
-// ===========================================
-// FOOTER MINIMALISTA CON BOTONES ALINEADOS
+// FOOTER COMPACTO
 // ===========================================
 .modal-footer.modern-footer {
   flex-shrink: 0;
-  padding: $spacing-4 $spacing-6;
+  padding: $spacing-md $spacing-lg;
   background: $bg-white;
   border-top: $border;
+  position: relative;
 
   .footer-actions {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: $spacing-3;
-    width: 100%;
+    gap: $spacing-md;
 
     .footer-actions-primary {
       display: flex;
       align-items: center;
-      gap: $spacing-3;
+      gap: $spacing-sm;
     }
   }
 
   .btn-footer {
-    height: 38px;
-    padding: 0 $spacing-4;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: $radius-sm;
+    height: 36px;
+    padding: 0 $spacing-lg;
+    font-size: $font-sm;
     font-weight: 500;
-    font-size: $font-size-sm;
-    white-space: nowrap;
-    border: $border;
+    border-radius: 4px;
     transition: all 0.15s;
-    background: $bg-white;
-    color: $text-primary;
-
-    &:hover:not(:disabled) {
-      background: $bg-gray;
-      border-color: darken($border-color, 10%);
-    }
-
-    &.p-button-primary {
-      background: $accent-primary;
-      border-color: $accent-primary;
-      color: white;
-
-      &:hover {
-        background: darken($accent-primary, 5%);
-      }
-    }
-
-    &.p-button-success {
-      background: $accent-success;
-      border-color: $accent-success;
-      color: white;
-
-      &:hover {
-        background: darken($accent-success, 5%);
-      }
-    }
-
-    &.p-button-secondary {
-      background: transparent;
-      border-color: $border-color;
-      color: $text-secondary;
-
-      &:hover {
-        background: $bg-gray;
-      }
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+    white-space: nowrap;
   }
 
-  .pdf-progress-container {
-    width: 100%;
-    margin-top: $spacing-4;
+  // Progress inline
+  .pdf-progress-inline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: $bg-gray;
 
-    .progress-modern {
-      height: 8px;
-      background: $bg-gray;
-      border-radius: 4px;
-      overflow: hidden;
-
-      .progress-bar-modern {
-        height: 100%;
-        background: $accent-primary;
-        transition: width 0.3s;
-      }
+    .progress-bar-inline {
+      height: 100%;
+      background: $accent-primary;
+      transition: width 0.3s;
     }
   }
 }
 
 // ===========================================
-// SCROLLBAR LIMPIA
+// SCROLLBAR MINIMALISTA
 // ===========================================
 ::-webkit-scrollbar {
   width: 8px;
@@ -804,537 +635,6 @@ $radius-lg: 8px;
 }
 
 // ===========================================
-// RESPONSIVE
-// ===========================================
-
-// ===========================================
-// DESKTOP: DISEÑO COMPACTO (≥992px)
-// ===========================================
-@media (min-width: 992px) {
-  // Container principal más compacto
-  .orden-envio-container {
-    padding: $spacing-desktop-compact-6;
-    gap: $spacing-desktop-compact-6;
-  }
-
-  // Modal header compacto
-  .modal-header.modern-header {
-    padding: $spacing-desktop-compact-4 $spacing-desktop-compact-6;
-
-    .header-content {
-      gap: $spacing-desktop-compact-3;
-
-      .header-text {
-        .modal-title {
-          font-size: 1.0625rem; // Reducido de 1.125rem
-        }
-
-        .modal-subtitle {
-          font-size: 0.8125rem; // Reducido de 0.875rem
-          margin-top: 0.125rem;
-        }
-      }
-    }
-
-    .btn-close-modern {
-      width: 28px;
-      height: 28px;
-    }
-  }
-
-  // Cards compactos
-  .card.modern-card {
-    .card-header-modern {
-      padding: $spacing-desktop-compact-4;
-
-      h5, .card-title-modern {
-        font-size: 0.875rem; // Reducido de 0.9375rem
-      }
-    }
-
-    .card-body {
-      padding: $spacing-desktop-compact-4;
-    }
-  }
-
-  // Wrapper filtros + config más compacto
-  .filters-config-wrapper {
-    margin-bottom: $spacing-desktop-compact-6;
-    gap: $spacing-desktop-compact-6;
-  }
-
-  // Secciones de filtros y configuración
-  .filters-section,
-  .config-section {
-    .section-header {
-      padding: $spacing-desktop-compact-4;
-
-      h6 {
-        font-size: 0.875rem; // Reducido de 0.9375rem
-        margin: 0;
-      }
-    }
-
-    .section-content {
-      padding: $spacing-desktop-compact-4;
-    }
-  }
-
-  // Form groups más compactos
-  .form-group {
-    margin-bottom: $spacing-desktop-compact-4;
-
-    label {
-      margin-bottom: 0.25rem;
-      font-size: 0.8125rem; // Reducido
-    }
-
-    input,
-    select,
-    .p-dropdown {
-      height: 36px; // Reducido de 38px
-      padding: 0.375rem 0.5rem;
-      font-size: 0.875rem;
-    }
-
-    ::ng-deep .p-calendar .p-inputtext {
-      height: 36px;
-      padding: 0.375rem 0.5rem;
-      font-size: 0.875rem;
-    }
-  }
-
-  // Botones de filtro más compactos
-  .filter-actions {
-    gap: $spacing-desktop-compact-2;
-    margin-top: $spacing-desktop-compact-4;
-
-    .btn {
-      height: 36px; // Reducido de 38px
-      padding: 0.375rem 0.75rem;
-      font-size: 0.875rem;
-    }
-  }
-
-  // Info box compacto
-  .info-box-compact {
-    padding: $spacing-desktop-compact-3;
-    margin-top: $spacing-desktop-compact-4 !important;
-
-    .info-icon-compact {
-      width: 20px;
-      height: 20px;
-
-      i {
-        font-size: 0.875rem;
-      }
-    }
-
-    .info-content-compact {
-      gap: 0.125rem;
-
-      .info-item {
-        font-size: 0.6875rem; // Más pequeño
-      }
-    }
-  }
-
-  // Method cards más compactos
-  .method-selection {
-    gap: $spacing-desktop-compact-3;
-  }
-
-  .method-card {
-    padding: $spacing-desktop-compact-4;
-    min-height: 85px; // Reducido de 100px
-    gap: $spacing-desktop-compact-2;
-
-    i {
-      font-size: 1.25rem; // Reducido de 1.5rem
-    }
-
-    span {
-      font-size: 0.8125rem; // Reducido de 0.875rem
-    }
-
-    .check-indicator {
-      top: $spacing-desktop-compact-2;
-      right: $spacing-desktop-compact-2;
-      font-size: 1.125rem;
-    }
-  }
-
-  // Selection cards más compactos
-  .selection-card-modern {
-    padding: $spacing-desktop-compact-4;
-    gap: $spacing-desktop-compact-3;
-
-    .selection-icon-container {
-      width: 36px;
-      height: 36px;
-
-      i {
-        font-size: 1.125rem;
-      }
-    }
-
-    .selection-content {
-      .selection-title {
-        font-size: 0.875rem; // Reducido
-        margin-bottom: 0.0625rem;
-      }
-
-      .selection-subtitle {
-        font-size: 0.75rem; // Reducido
-      }
-    }
-
-    .selection-check {
-      font-size: 1.125rem;
-    }
-  }
-
-  // Tablas más densas
-  ::ng-deep .p-datatable {
-    font-size: 0.8125rem;
-
-    .p-datatable-header {
-      padding: $spacing-desktop-compact-3;
-    }
-
-    .p-datatable-thead > tr > th {
-      padding: 0.5rem 0.5rem; // Reducido
-      font-size: 0.6875rem; // Reducido
-    }
-
-    .p-datatable-tbody > tr {
-      min-height: 42px; // Reducido de 48px
-
-      td {
-        padding: 0.5rem 0.5rem; // Reducido
-        font-size: 0.8125rem; // Reducido
-      }
-    }
-
-    .p-paginator {
-      padding: 0.5rem;
-
-      .p-paginator-element {
-        min-width: 1.875rem;
-        height: 1.875rem;
-        font-size: 0.8125rem;
-      }
-    }
-  }
-
-  // Botones PrimeNG más compactos
-  ::ng-deep .p-button {
-    font-size: 0.8125rem;
-    padding: 0.375rem 0.75rem;
-
-    &.p-button-sm {
-      font-size: 0.75rem;
-      padding: 0.3125rem 0.625rem;
-    }
-  }
-
-  // Badges más pequeños
-  .badge,
-  .badge-modern,
-  .modern-badge {
-    font-size: 0.6875rem;
-    padding: 0.1875rem 0.375rem;
-  }
-
-  // Alerts más compactos
-  .alert {
-    padding: $spacing-desktop-compact-4;
-    font-size: 0.8125rem;
-
-    &.alert-light-info,
-    &.alert-info {
-      padding: $spacing-desktop-compact-3;
-    }
-  }
-
-  // Info box container
-  .info-box-container {
-    .info-box {
-      padding: $spacing-desktop-compact-4;
-      gap: $spacing-desktop-compact-3;
-
-      .info-icon {
-        width: 28px;
-        height: 28px;
-
-        i {
-          font-size: 1.125rem;
-        }
-      }
-
-      .info-content {
-        .info-title {
-          font-size: 0.8125rem;
-          margin-bottom: 0.375rem;
-        }
-
-        .info-list {
-          li {
-            font-size: 0.75rem;
-            padding: 0.1875rem 0;
-          }
-        }
-      }
-    }
-  }
-
-  // Footer más compacto
-  .modal-footer.modern-footer {
-    padding: $spacing-desktop-compact-4 $spacing-desktop-compact-6;
-
-    .footer-actions {
-      gap: $spacing-desktop-compact-3;
-
-      .footer-actions-primary {
-        gap: $spacing-desktop-compact-3;
-      }
-    }
-
-    .btn-footer {
-      height: 36px; // Reducido de 38px
-      padding: 0 $spacing-desktop-compact-4;
-      font-size: 0.875rem;
-    }
-
-    .pdf-progress-container {
-      margin-top: $spacing-desktop-compact-4;
-
-      .progress-modern {
-        height: 6px; // Reducido de 8px
-      }
-    }
-  }
-
-  // Modales anidados (transportadoras)
-  .modal-overlay {
-    padding: $spacing-desktop-compact-4;
-  }
-
-  .modal-container {
-    .modal-header-custom {
-      padding: $spacing-desktop-compact-4;
-
-      h5 {
-        font-size: 1.0625rem; // Reducido de 1.125rem
-      }
-
-      .btn-close-custom {
-        width: 28px;
-        height: 28px;
-      }
-    }
-
-    .modal-body-custom {
-      padding: $spacing-desktop-compact-4;
-    }
-
-    .modal-footer-custom {
-      padding: $spacing-desktop-compact-4;
-      gap: $spacing-desktop-compact-3;
-
-      .btn {
-        height: 36px;
-        padding: 0 $spacing-desktop-compact-4;
-        font-size: 0.875rem;
-      }
-    }
-  }
-
-  // Transporters list
-  .transporters-list {
-    gap: $spacing-desktop-compact-3;
-  }
-
-  .transporter-card {
-    padding: $spacing-desktop-compact-3;
-    gap: $spacing-desktop-compact-3;
-
-    .transporter-icon {
-      width: 32px;
-      height: 32px;
-
-      i {
-        font-size: 1rem;
-      }
-    }
-
-    .transporter-content {
-      .transporter-name {
-        font-size: 0.8125rem;
-      }
-
-      .transporter-description {
-        font-size: 0.6875rem;
-      }
-    }
-  }
-
-  // Dropdowns más compactos
-  .dropdown-menu {
-    font-size: 0.8125rem;
-
-    .dropdown-item {
-      padding: 0.375rem 0.75rem;
-      font-size: 0.8125rem;
-
-      i {
-        font-size: 0.75rem;
-      }
-    }
-  }
-
-  // Form check/switch más compacto
-  .form-check {
-    .form-check-label {
-      font-size: 0.8125rem;
-    }
-  }
-
-  // Multiselect más compacto
-  ::ng-deep .p-multiselect {
-    font-size: 0.8125rem;
-
-    .p-multiselect-label {
-      padding: 0.375rem 0.5rem;
-    }
-  }
-}
-
-// ===========================================
-// MOBILE/TABLET: ESPACIADO CÓMODO (≤991px)
-// ===========================================
-@media (max-width: 991px) {
-  .orden-envio-container {
-    padding: $spacing-4;
-    gap: $spacing-4;
-  }
-
-  // Headers con padding normal
-  .filters-section,
-  .config-section,
-  .card.modern-card {
-    .section-header,
-    .card-header-modern {
-      padding: $spacing-4;
-    }
-
-    .section-content,
-    .card-body {
-      padding: $spacing-4;
-    }
-  }
-
-  // Form inputs con altura cómoda para touch
-  .form-group {
-    margin-bottom: $spacing-4;
-
-    label {
-      margin-bottom: 0.5rem;
-      font-size: $font-size-sm;
-    }
-
-    input,
-    select,
-    .p-dropdown {
-      height: 42px; // Touch-friendly
-      padding: 0.5rem 0.75rem;
-      font-size: 1rem;
-    }
-
-    ::ng-deep .p-calendar .p-inputtext {
-      height: 42px;
-      padding: 0.5rem 0.75rem;
-      font-size: 1rem;
-    }
-  }
-
-  // Botones con altura para touch
-  .filter-actions {
-    .btn {
-      height: 42px;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-    }
-  }
-
-  .btn-footer {
-    height: 42px;
-    font-size: 1rem;
-  }
-
-  // Method cards con espaciado cómodo
-  .method-card {
-    padding: $spacing-4;
-    min-height: 100px;
-  }
-
-  // Tablas con espaciado normal
-  ::ng-deep .p-datatable {
-    .p-datatable-thead > tr > th {
-      padding: 0.75rem 0.5rem;
-      font-size: 0.75rem;
-    }
-
-    .p-datatable-tbody > tr > td {
-      padding: 0.75rem 0.5rem;
-      font-size: $font-size-sm;
-    }
-  }
-
-  .modal-footer.modern-footer {
-    .footer-actions {
-      flex-wrap: wrap;
-    }
-  }
-}
-
-@media (max-width: 767px) {
-  .modal-header.modern-header {
-    padding: $spacing-3 $spacing-4;
-  }
-
-  .orden-envio-container {
-    padding: $spacing-3;
-    gap: $spacing-3;
-  }
-
-  .card.modern-card .card-body {
-    padding: $spacing-3;
-  }
-
-  .modal-footer.modern-footer {
-    padding: $spacing-3 $spacing-4;
-
-    .footer-actions {
-      flex-direction: column;
-
-      .footer-actions-primary {
-        width: 100%;
-        flex-direction: column;
-
-        .btn-footer {
-          width: 100%;
-        }
-      }
-
-      > .btn-footer {
-        width: 100%;
-      }
-    }
-  }
-}
-
-// ===========================================
 // MODALES ANIDADOS (TRANSPORTADORAS)
 // ===========================================
 .modal-overlay {
@@ -1348,90 +648,90 @@ $radius-lg: 8px;
   align-items: center;
   justify-content: center;
   z-index: 10001;
-  padding: $spacing-4;
+  padding: $spacing-lg;
 }
 
 .modal-container {
   background: $bg-white;
-  border-radius: $radius-lg;
+  border-radius: $radius;
   max-width: 600px;
   width: 100%;
-  max-height: 90vh;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
   border: $border;
 
   .modal-header-custom {
-    padding: $spacing-4;
+    padding: $spacing-md $spacing-lg;
     border-bottom: $border;
     display: flex;
     justify-content: space-between;
     align-items: center;
 
     h5 {
-      font-size: $font-size-lg;
+      font-size: $font-md;
       font-weight: 600;
       color: $text-primary;
       margin: 0;
     }
 
     .btn-close-custom {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
       background: transparent;
       border: $border;
-      border-radius: $radius-sm;
+      border-radius: 4px;
       color: $text-secondary;
       cursor: pointer;
+      transition: all 0.15s;
 
       &:hover {
-        background: $bg-gray;
+        background: $bg-hover;
+        color: $text-primary;
       }
     }
   }
 
   .modal-body-custom {
-    padding: $spacing-4;
+    padding: $spacing-lg;
     overflow-y: auto;
     flex: 1;
   }
 
   .modal-footer-custom {
-    padding: $spacing-4;
+    padding: $spacing-md $spacing-lg;
     border-top: $border;
     display: flex;
     justify-content: flex-end;
-    gap: $spacing-3;
+    gap: $spacing-sm;
 
     .btn {
-      height: 38px;
-      padding: 0 $spacing-4;
-      border-radius: $radius-sm;
+      height: 36px;
+      padding: 0 $spacing-lg;
+      border-radius: 4px;
       font-weight: 500;
-      font-size: $font-size-sm;
+      font-size: $font-sm;
     }
   }
 }
 
-// ===========================================
-// TRANSPORTERS LIST
-// ===========================================
+// Transporters list
 .transporters-list {
   display: flex;
   flex-direction: column;
-  gap: $spacing-3;
+  gap: $spacing-sm;
 }
 
 .transporter-card {
   display: flex;
   align-items: center;
-  gap: $spacing-3;
-  padding: $spacing-3;
+  gap: $spacing-md;
+  padding: $spacing-md;
   border: $border;
-  border-radius: $radius-md;
+  border-radius: $radius;
   cursor: pointer;
   transition: all 0.15s;
 
@@ -1447,16 +747,15 @@ $radius-lg: 8px;
   }
 
   .transporter-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: transparent;
     color: $text-secondary;
 
     i {
-      font-size: 1.125rem;
+      font-size: $font-lg;
     }
   }
 
@@ -1464,14 +763,319 @@ $radius-lg: 8px;
     flex: 1;
 
     .transporter-name {
-      font-size: $font-size-sm;
+      font-size: $font-sm;
       font-weight: 500;
       color: $text-primary;
+      margin-bottom: $spacing-xs;
     }
 
     .transporter-description {
-      font-size: 0.75rem;
+      font-size: $font-xs;
       color: $text-secondary;
     }
   }
+}
+
+// ===========================================
+// FECHA DE ENTREGA EN TABLA
+// ===========================================
+.fecha-entrega-column {
+  min-width: 110px;
+  white-space: nowrap;
+}
+
+.fecha-entrega {
+  display: inline-flex;
+  align-items: center;
+  font-size: $font-sm;
+  color: $text-primary;
+  font-weight: 500;
+
+  i {
+    color: $text-secondary;
+    font-size: $font-sm;
+    flex-shrink: 0;
+  }
+
+  // Destacar fechas urgentes (hoy o pasadas)
+  &.urgente {
+    color: $accent-danger;
+    font-weight: 600;
+
+    i {
+      color: $accent-danger;
+    }
+  }
+}
+
+// ===========================================
+// RESPONSIVE
+// ===========================================
+@media (max-width: 991px) {
+  .config-compact-container {
+    flex-direction: column;
+  }
+
+  .config-compact-section {
+    min-width: 100%;
+  }
+
+  .table-header-compact {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .modal-footer.modern-footer {
+    .footer-actions {
+      flex-direction: column;
+      align-items: stretch;
+
+      .footer-actions-primary {
+        width: 100%;
+        flex-direction: column;
+
+        .btn-footer {
+          width: 100%;
+        }
+      }
+
+      > .btn-footer {
+        width: 100%;
+      }
+    }
+  }
+
+  // Formato compacto para fechas en tablet
+  .fecha-entrega {
+    font-size: $font-xs;
+
+    i {
+      font-size: $font-xs;
+    }
+  }
+}
+
+@media (max-width: 767px) {
+  .orden-envio-container {
+    padding: $spacing-md;
+    gap: $spacing-md;
+  }
+
+  .modal-header.modern-header {
+    padding: $spacing-sm $spacing-md;
+
+    .header-content .modal-title {
+      font-size: $font-base;
+    }
+  }
+
+  .card.modern-card {
+    .card-header-modern {
+      padding: $spacing-sm $spacing-md;
+    }
+
+    .card-body {
+      padding: $spacing-md;
+    }
+  }
+
+  .modal-footer.modern-footer {
+    padding: $spacing-sm $spacing-md;
+  }
+
+  // Ocultar icono de calendario en mobile para ahorrar espacio
+  .fecha-entrega {
+    i {
+      display: none;
+    }
+  }
+
+  // Reducir ancho de columna en mobile
+  .fecha-entrega-column {
+    min-width: 80px;
+    font-size: $font-xs;
+  }
+}
+
+// ===========================================
+// MODAL DE DETALLES DEL PEDIDO
+// ===========================================
+
+// Info item (campo de información)
+.info-item {
+  margin-bottom: 1rem;
+
+  .info-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.25rem;
+    display: block;
+  }
+
+  .info-value {
+    font-size: 0.875rem;
+    color: #1f2937;
+    font-weight: 500;
+
+    &.address-block {
+      padding: 0.5rem;
+      background: #f9fafb;
+      border-radius: 4px;
+      border-left: 3px solid #3b82f6;
+    }
+  }
+}
+
+// Product thumbnail - optimizado para tag <img>
+.product-thumbnail {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 4px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  flex-shrink: 0;
+  display: block;
+  transition: opacity 0.2s ease;
+
+  // Estado de carga
+  &:not([src]) {
+    background: #f3f4f6;
+    opacity: 0.5;
+  }
+
+  // Estado de error - aplicado por handleImageError()
+  &.image-error {
+    opacity: 0.6;
+    filter: grayscale(50%);
+    background: #f3f4f6;
+  }
+
+  // Hover effect
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+// Estilo para imágenes placeholder (data URI SVG)
+img.product-thumbnail[src^="data:image/svg"] {
+  opacity: 0.4;
+  background: #f9fafb;
+}
+
+// Delivery summary (resumen de envío)
+.delivery-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  .delivery-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 6px;
+
+    .delivery-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      i {
+        font-size: 1.25rem;
+      }
+    }
+
+    .delivery-content {
+      flex: 1;
+
+      .delivery-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+      }
+
+      .delivery-value {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+      }
+    }
+  }
+}
+
+// Payment summary (resumen de pagos)
+.payment-summary {
+  .payment-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+
+    .payment-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .payment-value {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+  }
+
+  .payment-item-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 6px;
+
+    .payment-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .payment-value-total {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+  }
+}
+
+// Payment pending card
+.payment-pending {
+  padding: 1.5rem;
+
+  .pending-amount {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 1rem 0;
+  }
+}
+
+// Gradient backgrounds
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: none !important;
 }

@@ -1307,6 +1307,31 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   verDetallesPedido(pedido: Pedido): void {
     this.pedidoSeleccionadoDetalle = pedido;
 
+    // DEBUG: Analizar estructura de productos para verificar imágenes
+    if (pedido.carrito && pedido.carrito.length > 0) {
+      console.log('=== DEBUG: ESTRUCTURA DE PRODUCTOS ===');
+      console.log('Total de items en carrito:', pedido.carrito.length);
+
+      pedido.carrito.forEach((item, index) => {
+        console.log(`\nItem ${index + 1}:`);
+        console.log('- Producto completo:', item.producto);
+        console.log('- Imagen detectada:', this.getProductImage(item));
+        console.log('- Título:', this.getProductTitle(item));
+        console.log('- Referencia:', this.getProductReference(item));
+
+        if (item.producto) {
+          const prod = item.producto as any;
+          console.log('- Estructura de imagenes:');
+          console.log('  - producto.imagenes:', prod.imagenes);
+          console.log('  - producto.crearProducto?.imagenes:', prod.crearProducto?.imagenes);
+          console.log('  - producto.imagen:', prod.imagen);
+          console.log('  - producto.foto:', prod.foto);
+        }
+      });
+
+      console.log('=====================================');
+    }
+
     // Mostrar el modal usando Bootstrap
     const modalElement = document.getElementById("detallesPedidoModal");
     if (modalElement) {
@@ -1343,12 +1368,88 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     return this.pedidoSeleccionadoDetalle?.carrito?.length || 0;
   }
 
+  /**
+   * Obtiene la URL de la imagen del producto
+   * Intenta múltiples fuentes en orden de prioridad
+   * @param item - Item del carrito con información del producto
+   * @returns URL de la imagen o placeholder si no hay imagen disponible
+   */
   getProductImage(item: any): string {
-    return (
-      item.producto?.crearProducto?.imagenes?.[0]?.url ||
-      item.producto?.imagenes?.[0]?.url ||
-      ""
-    );
+    if (!item || !item.producto) {
+      return this.getPlaceholderImage();
+    }
+
+    const producto = item.producto as any;
+
+    // Prioridad 1: Array de imágenes en crearProducto
+    if (producto.crearProducto?.imagenes && Array.isArray(producto.crearProducto.imagenes) && producto.crearProducto.imagenes.length > 0) {
+      const firstImage = producto.crearProducto.imagenes[0];
+
+      // Puede ser objeto con URL o string directo
+      if (typeof firstImage === 'object' && firstImage.url) {
+        return firstImage.url;
+      }
+      if (typeof firstImage === 'string') {
+        return firstImage;
+      }
+    }
+
+    // Prioridad 2: Array de imágenes directo en producto
+    if (producto.imagenes && Array.isArray(producto.imagenes) && producto.imagenes.length > 0) {
+      const firstImage = producto.imagenes[0];
+
+      // Puede ser objeto con URL o string directo
+      if (typeof firstImage === 'object' && firstImage.url) {
+        return firstImage.url;
+      }
+      if (typeof firstImage === 'string') {
+        return firstImage;
+      }
+    }
+
+    // Prioridad 3: Campo imagen único
+    if (producto.imagen && typeof producto.imagen === 'string') {
+      return producto.imagen;
+    }
+
+    // Prioridad 4: Campo foto
+    if (producto.foto && typeof producto.foto === 'string') {
+      return producto.foto;
+    }
+
+    // Prioridad 5: Campo imageUrl
+    if (producto.imageUrl && typeof producto.imageUrl === 'string') {
+      return producto.imageUrl;
+    }
+
+    // Prioridad 6: Imagen en crearProducto.imagen
+    if (producto.crearProducto?.imagen && typeof producto.crearProducto.imagen === 'string') {
+      return producto.crearProducto.imagen;
+    }
+
+    // Placeholder si no hay imagen
+    return this.getPlaceholderImage();
+  }
+
+  /**
+   * Retorna imagen placeholder
+   * @returns URL de la imagen placeholder
+   */
+  getPlaceholderImage(): string {
+    // Usar data URI para evitar dependencia de archivos externos
+    // SVG simple con icono de "sin imagen"
+    return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDgiIGhlaWdodD0iNDgiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQ4IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjZjNmNGY2Ii8+PHBhdGggZD0iTTI0IDE4YzIuMiAwIDQgMS44IDQgNHMtMS44IDQtNCA0LTQtMS44LTQtNCAxLjgtNCA0LTR6bTAtMmMtMy4zIDAtNiAyLjctNiA2czIuNyA2IDYgNiA2LTIuNyA2LTYtMi43LTYtNi02eiIgZmlsbD0iIzljYTNhZiIvPjxwYXRoIGQ9Ik0xNiAxNGgydjJoLTJ6bTE2IDB2Mmgydi0yaC0yeiIgZmlsbD0iIzljYTNhZiIvPjwvc3ZnPg==';
+  }
+
+  /**
+   * Maneja errores al cargar imágenes
+   * @param event - Evento de error del elemento img
+   */
+  handleImageError(event: any): void {
+    if (event && event.target) {
+      event.target.src = this.getPlaceholderImage();
+      event.target.classList.add('image-error');
+    }
   }
 
   getProductTitle(item: any): string {
@@ -1495,6 +1596,46 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       });
     } catch (error) {
       return "Fecha inválida";
+    }
+  }
+
+  /**
+   * Formatea una fecha en formato compacto para la tabla (DD/MM/YYYY)
+   */
+  formatDateCompact(dateString: string | Date): string {
+    if (!dateString) return '';
+
+    try {
+      const dateObj = typeof dateString === 'string' ? new Date(dateString) : dateString;
+      if (isNaN(dateObj.getTime())) return '';
+
+      return dateObj.toLocaleDateString('es-CO', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Determina si una fecha de entrega es urgente (hoy o pasada)
+   */
+  esEntregaUrgente(pedido: any): boolean {
+    if (!pedido.fechaEntrega) return false;
+
+    try {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+
+      const fechaEntrega = new Date(pedido.fechaEntrega);
+      fechaEntrega.setHours(0, 0, 0, 0);
+
+      // Es urgente si la entrega es hoy o ya pasó
+      return fechaEntrega.getTime() <= hoy.getTime();
+    } catch {
+      return false;
     }
   }
 

@@ -2,14 +2,10 @@
     <!-- HEADER MINIMALISTA -->
     <div class="modal-header modern-header">
         <div class="header-content">
-            <div class="header-text">
-                <h4 class="modal-title">
-                    {{ isEditMode ? "Editar Orden de Envío" : ("Generar Orden de Envío" | translate) }}
-                </h4>
-                <p class="modal-subtitle" *ngIf="isEditMode">
-                    # {{ nroShippingOrder }}
-                </p>
-            </div>
+            <h4 class="modal-title">
+                {{ isEditMode ? "Editar Orden de Envío" : ("Generar Orden de Envío" | translate) }}
+                <span *ngIf="isEditMode" class="modal-subtitle">#{{ nroShippingOrder }}</span>
+            </h4>
         </div>
         <button type="button" class="btn-close-modern" aria-label="Close" (click)="closeModal()">
             <i class="pi pi-times"></i>
@@ -21,234 +17,148 @@
         <div class="orden-envio-container">
             <form [formGroup]="ordenEnvioForm">
 
-                <!-- SECCIÓN: Configuración (Desktop: lado a lado, Mobile: vertical) -->
-                <div class="seccion-configuracion">
-                    <!-- Wrapper para layout horizontal en desktop -->
-                    <div class="filters-config-wrapper">
+                <!-- CONFIGURACIÓN COMPACTA: TODO EN UNA LÍNEA (Desktop) -->
+                <div class="config-compact-container">
 
-                        <!-- FILTROS DE BÚSQUEDA (solo modo independiente) -->
-                        <div class="filters-section" *ngIf="!usarPedidosPadre">
-                            <div class="section-header">
-                                <h6>Filtros de Búsqueda de Pedidos</h6>
-                            </div>
-                            <div class="section-content">
-                                <div class="alert alert-light-info mb-3">
-                                    <i class="pi pi-info-circle me-2"></i>
-                                    <span>Selecciona el rango de fechas para buscar pedidos disponibles para despacho</span>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="fechaInicio" class="form-label">
-                                        <i class="pi pi-calendar me-1"></i>Fecha Inicio
-                                    </label>
-                                    <p-calendar inputId="fechaInicio" formControlName="fechaInicio" [showIcon]="true"
-                                        dateFormat="dd/mm/yy" placeholder="Selecciona fecha inicio" appendTo="body"
-                                        [baseZIndex]="10001" styleClass="w-100" [disabled]="loadingPedidos">
-                                    </p-calendar>
-                                    <div *ngIf="ordenEnvioForm.get('fechaInicio')?.invalid && ordenEnvioForm.get('fechaInicio')?.touched"
-                                        class="text-danger small mt-1">
-                                        La fecha de inicio es requerida
-                                    </div>
-                                </div>
-
-                                <div class="form-group">
-                                    <label for="fechaFin" class="form-label">
-                                        <i class="pi pi-calendar me-1"></i>Fecha Fin
-                                    </label>
-                                    <p-calendar inputId="fechaFin" formControlName="fechaFin" [showIcon]="true"
-                                        dateFormat="dd/mm/yy" placeholder="Selecciona fecha fin" appendTo="body"
-                                        [baseZIndex]="10001" styleClass="w-100" [disabled]="loadingPedidos">
-                                    </p-calendar>
-                                    <div *ngIf="ordenEnvioForm.get('fechaFin')?.invalid && ordenEnvioForm.get('fechaFin')?.touched"
-                                        class="text-danger small mt-1">
-                                        La fecha fin es requerida
-                                    </div>
-                                </div>
-
-                                <!-- Botones de acción alineados -->
-                                <div class="filter-actions">
-                                    <button type="button" class="btn btn-primary" (click)="filtrarPedidos()"
-                                        [disabled]="loadingPedidos || ordenEnvioForm.get('fechaInicio')?.invalid || ordenEnvioForm.get('fechaFin')?.invalid">
-                                        <span *ngIf="!loadingPedidos">
-                                            <i class="pi pi-filter me-1"></i>Filtrar
-                                        </span>
-                                        <span *ngIf="loadingPedidos">
-                                            <i class="pi pi-spin pi-spinner me-1"></i>Filtrando...
-                                        </span>
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary" (click)="resetForm()"
-                                        [disabled]="loadingPedidos">
-                                        <i class="pi pi-times me-1"></i>Limpiar
-                                    </button>
-                                </div>
-
-                                <!-- Info box compacto -->
-                                <div class="info-box-compact mt-3">
-                                    <div class="info-icon-compact">
-                                        <i class="pi pi-info-circle"></i>
-                                    </div>
-                                    <div class="info-content-compact">
-                                        <div class="info-item">Límite: <strong>{{ LIMITE_PEDIDOS }}</strong> pedidos</div>
-                                        <div class="info-item">Rango: <strong>30 días</strong> máx.</div>
-                                    </div>
-                                </div>
-
-                                <!-- Indicador de carga -->
-                                <div *ngIf="loadingPedidos" class="text-center mt-3">
-                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                        <span class="visually-hidden">Cargando...</span>
-                                    </div>
-                                    <p class="text-muted small mt-2 mb-0">Obteniendo pedidos...</p>
-                                </div>
-                            </div>
+                    <!-- FILTROS DE FECHAS (solo modo independiente) -->
+                    <div class="config-compact-section" *ngIf="!usarPedidosPadre">
+                        <label class="config-compact-label"
+                               [title]="'Límite: ' + LIMITE_PEDIDOS + ' pedidos. Rango máximo: 30 días'">
+                            Fechas
+                        </label>
+                        <div class="config-compact-inputs">
+                            <p-calendar inputId="fechaInicio"
+                                formControlName="fechaInicio"
+                                [showIcon]="true"
+                                dateFormat="dd/mm/yy"
+                                placeholder="Inicio"
+                                appendTo="body"
+                                [baseZIndex]="10001"
+                                styleClass="input-compact"
+                                [disabled]="loadingPedidos">
+                            </p-calendar>
+                            <p-calendar inputId="fechaFin"
+                                formControlName="fechaFin"
+                                [showIcon]="true"
+                                dateFormat="dd/mm/yy"
+                                placeholder="Fin"
+                                appendTo="body"
+                                [baseZIndex]="10001"
+                                styleClass="input-compact"
+                                [disabled]="loadingPedidos">
+                            </p-calendar>
+                            <button type="button"
+                                    class="btn-compact btn-compact-primary"
+                                    (click)="filtrarPedidos()"
+                                    [disabled]="loadingPedidos || ordenEnvioForm.get('fechaInicio')?.invalid || ordenEnvioForm.get('fechaFin')?.invalid"
+                                    [title]="'Filtrar pedidos'">
+                                <i [class]="loadingPedidos ? 'pi pi-spin pi-spinner' : 'pi pi-filter'"></i>
+                            </button>
                         </div>
-
-                        <!-- CONFIGURACIÓN DE ENVÍO -->
-                        <div class="config-section">
-                            <div class="section-header">
-                                <h6>{{ "Método de Envío" | translate }}</h6>
-                            </div>
-                            <div class="section-content">
-                                <label class="form-label">
-                                    <i class="pi pi-truck me-2"></i>{{ "Selecciona el método" | translate }}
-                                </label>
-
-                                <!-- Cards de selección de método -->
-                                <div class="method-selection">
-                                    <div class="method-card"
-                                        (click)="seleccionarMetodo('mensajeroPropio')"
-                                        [ngClass]="{'selected': ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'}">
-                                        <i class="pi pi-user"></i>
-                                        <span>{{ "Mensajero Propio" | translate }}</span>
-                                        <div class="check-indicator" *ngIf="ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'">
-                                            <i class="pi pi-check-circle"></i>
-                                        </div>
-                                    </div>
-
-                                    <div class="method-card"
-                                        (click)="seleccionarMetodo('transportadora')"
-                                        [ngClass]="{'selected': ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'}">
-                                        <i class="pi pi-send"></i>
-                                        <span>{{ "Transportadora" | translate }}</span>
-                                        <div class="check-indicator" *ngIf="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'">
-                                            <i class="pi pi-check-circle"></i>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div *ngIf="ordenEnvioForm.get('metodoEnvio')?.invalid && ordenEnvioForm.get('metodoEnvio')?.touched"
-                                    class="text-danger small text-center mt-2">
-                                    {{ "El método de envío es requerido" | translate }}
-                                </div>
-
-                                <!-- Botón de selección de transportadora -->
-                                <div *ngIf="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'" class="mt-3">
-                                    <button type="button"
-                                            class="btn btn-outline-primary w-100"
-                                            (click)="openTransporterModal()">
-                                        <i class="pi pi-truck me-2"></i>
-                                        {{ selectedTransporter ? 'Cambiar Transportadora' : 'Seleccionar Transportadora' | translate }}
-                                        <span *ngIf="selectedTransporter" class="badge bg-success ms-2">
-                                            {{ getSelectedTransporterName() }}
-                                        </span>
-                                    </button>
-                                    <small class="text-muted d-block text-center mt-2">
-                                        <i class="pi pi-info-circle me-1"></i>
-                                        Selecciona una transportadora integrada
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-
                     </div>
+
+                    <!-- MÉTODO DE ENVÍO -->
+                    <div class="config-compact-section">
+                        <label class="config-compact-label">Método de Envío</label>
+                        <div class="config-compact-methods">
+                            <button type="button"
+                                    class="method-compact"
+                                    [class.selected]="ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
+                                    (click)="seleccionarMetodo('mensajeroPropio')">
+                                <i class="pi pi-user"></i>
+                                <span>{{ "Mensajero" | translate }}</span>
+                            </button>
+                            <button type="button"
+                                    class="method-compact"
+                                    [class.selected]="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'"
+                                    (click)="seleccionarMetodo('transportadora')">
+                                <i class="pi pi-send"></i>
+                                <span>{{ "Transportadora" | translate }}</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- SELECTOR DE TRANSPORTADORA (cuando aplica) -->
+                    <div class="config-compact-section" *ngIf="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'">
+                        <label class="config-compact-label">Transportadora</label>
+                        <button type="button"
+                                class="btn-compact btn-compact-outline"
+                                (click)="openTransporterModal()"
+                                [title]="selectedTransporter ? 'Cambiar transportadora' : 'Seleccionar transportadora'">
+                            <i class="pi pi-truck"></i>
+                            <span *ngIf="selectedTransporter">{{ getSelectedTransporterName() }}</span>
+                            <span *ngIf="!selectedTransporter">{{ "Seleccionar" | translate }}</span>
+                        </button>
+                    </div>
+
                 </div>
 
                 <!-- SECCIÓN: Pedidos disponibles -->
                 <div class="seccion-pedidos-disponibles" *ngIf="metodoEnvio">
                     <div class="card modern-card">
                         <div class="card-header-modern">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <h5 class="mb-0">
+                            <div class="table-header-compact">
+                                <h5 class="table-title-compact">
                                     {{ "Pedidos Disponibles" | translate }}
-                                    <span class="badge bg-secondary ms-2">{{ pedidosDisponibles.length }}</span>
+                                    <span class="count-badge">{{ pedidosDisponibles.length }}</span>
                                 </h5>
 
-                                <div class="d-flex align-items-center gap-3">
+                                <div class="table-controls-compact">
                                     <!-- Filtro mostrar pedidos en órdenes -->
-                                    <div class="form-check form-switch">
+                                    <div class="form-check form-switch compact-switch">
                                         <input class="form-check-input" type="checkbox" id="mostrarPedidosEnOrdenes"
                                             [(ngModel)]="mostrarPedidosEnOrdenes" [ngModelOptions]="{ standalone: true }"
                                             (change)="actualizarPedidosDisponibles()" />
-                                        <label class="form-check-label small" for="mostrarPedidosEnOrdenes">
-                                            Mostrar pedidos ya en órdenes
+                                        <label class="form-check-label" for="mostrarPedidosEnOrdenes">
+                                            Mostrar en órdenes
                                         </label>
                                     </div>
 
-                                    <!-- Selector de columnas -->
-                                    <div class="d-flex align-items-center gap-2">
-                                        <label class="me-2 text-nowrap">{{ "Columnas:" | translate }}</label>
-                                        <p-multiSelect [options]="displayedColumns" [(ngModel)]="selectedColumns"
-                                            optionLabel="header" [style]="{ width: '200px' }"
-                                            defaultLabel="Seleccionar columnas" [ngModelOptions]="{ standalone: true }"
-                                            (onChange)="onColumnSelectionChange()"></p-multiSelect>
-                                    </div>
+                                    <!-- Selector de columnas (compacto) -->
+                                    <p-multiSelect [options]="displayedColumns"
+                                        [(ngModel)]="selectedColumns"
+                                        optionLabel="header"
+                                        [style]="{ width: '150px' }"
+                                        placeholder="Columnas"
+                                        [ngModelOptions]="{ standalone: true }"
+                                        (onChange)="onColumnSelectionChange()">
+                                    </p-multiSelect>
                                 </div>
                             </div>
 
-                            <div class="alert alert-info mt-3" *ngIf="pedidosDisponibles.length === 0">
-                                <i class="pi pi-info-circle me-2"></i>
-                                {{ "No hay pedidos disponibles para esta fecha y método de envío" | translate }}
-                                <div class="small mt-1" *ngIf="!mostrarPedidosEnOrdenes">
-                                    <em>Tip: Activa "Mostrar pedidos ya en órdenes" para ver todos los pedidos de la fecha y poder moverlos entre órdenes</em>
-                                </div>
+                            <div class="empty-state-compact" *ngIf="pedidosDisponibles.length === 0">
+                                <i class="pi pi-inbox"></i>
+                                <p>{{ "No hay pedidos disponibles" | translate }}</p>
+                                <small *ngIf="!mostrarPedidosEnOrdenes">Activa "Mostrar en órdenes" para ver todos</small>
                             </div>
                         </div>
 
                         <div class="table-responsive" *ngIf="pedidosDisponibles.length > 0">
-                            <p-table #dt [value]="pedidosDisponibles" styleClass="p-datatable-sm p-datatable-gridlines"
-                                [paginator]="true" [rows]="10" [rowsPerPageOptions]="[10, 25, 50,100]"
+                            <p-table #dt [value]="pedidosDisponibles" styleClass="p-datatable-sm p-datatable-compact"
+                                [paginator]="true" [rows]="15" [rowsPerPageOptions]="[15, 30, 50]"
                                 [showCurrentPageReport]="true"
-                                currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} pedidos"
+                                currentPageReportTemplate="{first} - {last} de {totalRecords}"
                                 [tableStyle]="{ 'min-width': '100%' }" [globalFilterFields]="globalFilterFields"
                                 [sortMode]="'single'" dataKey="nroPedido"
-                                paginatorPosition="top">
+                                paginatorPosition="bottom">
                                 <ng-template pTemplate="header">
                                     <tr>
                                         <ng-container *ngFor="let col of selectedColumns">
                                             <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'"
-                                                [pSortableColumn]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field"
-                                                [ngStyle]="{'min-width': col.field === 'direccionEntrega' ? '200px' : 'auto'}">
+                                                [pSortableColumn]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field">
                                                 {{ col.header | translate }}
                                                 <p-sortIcon [field]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field"></p-sortIcon>
                                             </th>
-                                            <th *ngIf="col.field === 'opciones' || col.field === 'enOrden'"
-                                                [ngStyle]="{'min-width': col.field === 'enOrden' ? '150px' : 'auto'}">
+                                            <th *ngIf="col.field === 'enOrden'">
                                                 {{ col.header | translate }}
                                             </th>
                                         </ng-container>
-                                        <th *ngIf="isActionColumnVisible()">
-                                            {{ "Acción" | translate }}
+                                        <th [pSortableColumn]="'fechaEntrega'" class="fecha-entrega-column">
+                                            {{ "Fecha de Entrega" | translate }}
+                                            <p-sortIcon field="fechaEntrega"></p-sortIcon>
                                         </th>
-                                    </tr>
-                                    <tr>
-                                        <ng-container *ngFor="let col of selectedColumns">
-                                            <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'">
-                                                <p-columnFilter type="text" [field]="col.field"
-                                                    [placeholder]="'Filtrar ' + col.header" [showMenu]="false"
-                                                    [matchMode]="'contains'">
-                                                    <ng-template pTemplate="filter" let-value>
-                                                        <input type="text" pInputText class="p-column-filter"
-                                                            style="width: 100%; font-size: 12px;" [value]="value"
-                                                            (input)="dt.filter($any($event.target).value, col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field, 'contains')">
-                                                    </ng-template>
-                                                </p-columnFilter>
-                                            </th>
-                                            <th *ngIf="col.field === 'opciones' || col.field === 'enOrden'">
-                                                <!-- Sin filtro -->
-                                            </th>
-                                        </ng-container>
-                                        <th *ngIf="isActionColumnVisible()">
-                                            <!-- Sin filtro -->
+                                        <th *ngIf="isActionColumnVisible()" class="actions-col">
+                                            {{ "Acción" | translate }}
                                         </th>
                                     </tr>
                                 </ng-template>
@@ -256,59 +166,25 @@
                                 <ng-template pTemplate="body" let-pedido>
                                     <tr>
                                         <ng-container *ngFor="let col of selectedColumns">
-                                            <td *ngIf="col.field !== 'accion'">
+                                            <td *ngIf="col.field !== 'accion' && col.field !== 'opciones'">
                                                 <ng-container [ngSwitch]="col.field">
                                                     <ng-container *ngSwitchCase="'faltaPorPagar'">
-                                                        {{ getNestedProperty(pedido, col.field) | currency }}
+                                                        {{ getNestedProperty(pedido, col.field) | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                     </ng-container>
                                                     <ng-container *ngSwitchCase="'enOrden'">
-                                                        <div *ngIf="pedidoExisteEnOrden(pedido)" class="d-flex flex-column gap-1">
-                                                            <span class="modern-badge badge-warning"
-                                                                style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
-                                                                <i class="pi pi-exclamation-triangle"></i>
+                                                        <div *ngIf="pedidoExisteEnOrden(pedido)" class="estado-orden-compact">
+                                                            <span class="badge-compact badge-compact-warning">
                                                                 Orden {{ getNumeroOrdenPedido(pedido) }}
                                                             </span>
-                                                            <button type="button" class="btn btn-sm btn-outline-info"
-                                                                style="font-size: 0.7rem; padding: 0.25rem 0.5rem;"
-                                                                (click)="moverPedidoDeOrden(pedido)">
-                                                                <i class="pi pi-arrow-right me-1"></i>Mover aquí
+                                                            <button type="button" class="btn-icon-compact"
+                                                                (click)="moverPedidoDeOrden(pedido)"
+                                                                title="Mover a esta orden">
+                                                                <i class="pi pi-arrow-right"></i>
                                                             </button>
                                                         </div>
-                                                        <span *ngIf="!pedidoExisteEnOrden(pedido)" class="modern-badge badge-success"
-                                                            style="font-size: 0.65rem; padding: 0.2rem 0.4rem;">
-                                                            <i class="pi pi-check"></i>Disponible
+                                                        <span *ngIf="!pedidoExisteEnOrden(pedido)" class="badge-compact badge-compact-success">
+                                                            Disponible
                                                         </span>
-                                                    </ng-container>
-                                                    <ng-container *ngSwitchCase="'opciones'">
-                                                        <div class="dropdown" ngbDropdown>
-                                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                                type="button" ngbDropdownToggle>
-                                                                <i class="pi pi-ellipsis-v"></i>
-                                                            </button>
-                                                            <ul class="dropdown-menu" ngbDropdownMenu>
-                                                                <li>
-                                                                    <button class="dropdown-item" (click)="printPdf(pedido)">
-                                                                        <i class="pi pi-file-pdf me-1"></i>{{ 'Imprimir Pdf' | translate }}
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button class="dropdown-item" (click)="viewTags(pedido)">
-                                                                        <i class="pi pi-tag me-1"></i>{{ 'Tarjeta' | translate }}
-                                                                    </button>
-                                                                </li>
-                                                                <li>
-                                                                    <button class="dropdown-item" (click)="printLabel(pedido)"
-                                                                        [disabled]="isRotuloGenerando(pedido)">
-                                                                        <span *ngIf="!isRotuloGenerando(pedido)">
-                                                                            <i class="pi pi-file me-1"></i>{{ 'Rótulo' | translate }}
-                                                                        </span>
-                                                                        <span *ngIf="isRotuloGenerando(pedido)">
-                                                                            <i class="pi pi-spin pi-spinner me-1"></i>{{ 'Generando...' | translate }}
-                                                                        </span>
-                                                                    </button>
-                                                                </li>
-                                                            </ul>
-                                                        </div>
                                                     </ng-container>
                                                     <ng-container *ngSwitchDefault>
                                                         {{ getNestedProperty(pedido, col.field) }}
@@ -316,33 +192,36 @@
                                                 </ng-container>
                                             </td>
                                         </ng-container>
-                                        <td *ngIf="isActionColumnVisible()">
-                                            <div class="d-flex flex-column gap-2">
-                                                <button pButton pRipple type="button"
-                                                    class="p-button-sm p-button-success"
+                                        <td class="fecha-entrega-column">
+                                            <span class="fecha-entrega" [class.urgente]="esEntregaUrgente(pedido)">
+                                                <i class="pi pi-calendar me-1"></i>
+                                                {{ formatDateCompact(pedido.fechaEntrega) || 'No asignada' }}
+                                            </span>
+                                        </td>
+                                        <td *ngIf="isActionColumnVisible()" class="actions-col">
+                                            <div class="actions-compact">
+                                                <button pButton type="button"
+                                                    class="p-button-sm p-button-success p-button-text"
                                                     icon="pi pi-plus"
-                                                    label="{{ 'Agregar' | translate }}"
                                                     (click)="agregarPedido(pedido)"
                                                     [disabled]="pedidoExisteEnOrden(pedido)"
-                                                    styleClass="w-100">
+                                                    pTooltip="{{ 'Agregar' | translate }}"
+                                                    tooltipPosition="top">
                                                 </button>
-
-                                                <button pButton pRipple type="button"
-                                                    class="p-button-sm p-button-outlined p-button-info"
+                                                <button pButton type="button"
+                                                    class="p-button-sm p-button-text"
                                                     icon="pi pi-info-circle"
-                                                    label="{{ 'Detalles' | translate }}"
                                                     (click)="verDetallesPedido(pedido)"
-                                                    styleClass="w-100">
+                                                    pTooltip="{{ 'Detalles' | translate }}"
+                                                    tooltipPosition="top">
                                                 </button>
-
-                                                <button pButton pRipple
-                                                    *ngIf="pedidoExisteEnOrden(pedido)"
+                                                <button pButton *ngIf="pedidoExisteEnOrden(pedido)"
                                                     type="button"
-                                                    class="p-button-sm p-button-outlined p-button-secondary"
+                                                    class="p-button-sm p-button-text"
                                                     icon="pi pi-eye"
-                                                    label="Ver orden"
                                                     (click)="verDetallesOrdenExistente(pedido)"
-                                                    styleClass="w-100">
+                                                    pTooltip="Ver orden"
+                                                    tooltipPosition="top">
                                                 </button>
                                             </div>
                                         </td>
@@ -351,7 +230,7 @@
 
                                 <ng-template pTemplate="emptymessage">
                                     <tr>
-                                        <td [attr.colspan]="selectedColumns.length" class="text-center">
+                                        <td [attr.colspan]="selectedColumns.length + 1" class="text-center">
                                             {{ "No hay pedidos disponibles" | translate }}
                                         </td>
                                     </tr>
@@ -365,124 +244,85 @@
                 <div class="seccion-pedidos-seleccionados" *ngIf="pedidosSeleccionados.length > 0">
                     <div class="card modern-card">
                         <div class="card-header-modern">
-                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                <h5 class="mb-0">{{ "Pedidos Seleccionados" | translate }}</h5>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span class="badge bg-secondary">
-                                        <i class="pi pi-shopping-cart me-1"></i>
-                                        {{ pedidosSeleccionados.length }} pedidos
-                                    </span>
-                                    <span *ngIf="hayPedidosMovidos" class="badge bg-warning">
-                                        <i class="pi pi-refresh me-1"></i>
+                            <div class="table-header-compact">
+                                <h5 class="table-title-compact">
+                                    {{ "Pedidos Seleccionados" | translate }}
+                                    <span class="count-badge">{{ pedidosSeleccionados.length }}</span>
+                                    <span *ngIf="hayPedidosMovidos" class="count-badge badge-warning-compact">
                                         {{ contarPedidosMovidos() }} movidos
                                     </span>
-                                </div>
+                                </h5>
                             </div>
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <p-table [value]="pedidosSeleccionados" styleClass="p-datatable-sm">
+                                <p-table [value]="pedidosSeleccionados" styleClass="p-datatable-sm p-datatable-compact">
                                     <ng-template pTemplate="header">
                                         <tr>
-                                            <th>{{ "Nro. Pedido" | translate }}</th>
+                                            <th>{{ "Pedido" | translate }}</th>
                                             <th>{{ "Cliente" | translate }}</th>
                                             <th>{{ "Ciudad" | translate }}</th>
-                                            <th>{{ "Valor a Cobrar" | translate }}</th>
+                                            <th class="fecha-entrega-column">{{ "Fecha de Entrega" | translate }}</th>
+                                            <th>{{ "Valor" | translate }}</th>
                                             <th>{{ "Estado" | translate }}</th>
-                                            <th>{{ "Opciones" | translate }}</th>
-                                            <th>{{ "Acción" | translate }}</th>
+                                            <th class="actions-col">{{ "Acción" | translate }}</th>
                                         </tr>
                                     </ng-template>
 
                                     <ng-template pTemplate="body" let-pedido>
-                                        <tr [class.table-info]="esPedidoMovido(pedido)">
+                                        <tr [class.row-moved]="esPedidoMovido(pedido)">
                                             <td>
                                                 <strong>{{ pedido.nroPedido }}</strong>
-                                                <span *ngIf="esPedidoMovido(pedido)"
-                                                    class="modern-badge badge-info ms-2"
-                                                    style="font-size: 0.65rem;">
-                                                    <i class="pi pi-refresh"></i>
-                                                </span>
+                                                <i *ngIf="esPedidoMovido(pedido)" class="pi pi-refresh ms-1 text-muted"
+                                                   style="font-size: 0.75rem;" title="Pedido movido"></i>
                                             </td>
                                             <td>{{ getNestedProperty(pedido, "cliente") }}</td>
                                             <td>{{ getNestedProperty(pedido, "ciudad") }}</td>
-                                            <td>{{ pedido.faltaPorPagar | currency }}</td>
-                                            <td>
-                                                <span *ngIf="esPedidoMovido(pedido)"
-                                                    class="modern-badge badge-warning"
-                                                    style="font-size: 0.65rem;">
-                                                    <i class="pi pi-arrow-right"></i>
-                                                    Movido desde orden {{ getOrdenAnteriorPedido(pedido) }}
-                                                </span>
-                                                <span *ngIf="!esPedidoMovido(pedido)"
-                                                    class="modern-badge badge-success"
-                                                    style="font-size: 0.65rem;">
-                                                    <i class="pi pi-check"></i>
-                                                    Agregado normalmente
+                                            <td class="fecha-entrega-column">
+                                                <span class="fecha-entrega" [class.urgente]="esEntregaUrgente(pedido)">
+                                                    <i class="pi pi-calendar me-1"></i>
+                                                    {{ formatDateCompact(pedido.fechaEntrega) || 'No asignada' }}
                                                 </span>
                                             </td>
+                                            <td>{{ pedido.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
                                             <td>
-                                                <div class="dropdown" ngbDropdown>
-                                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle"
-                                                        type="button" ngbDropdownToggle>
-                                                        <i class="pi pi-ellipsis-v"></i>
-                                                    </button>
-                                                    <ul class="dropdown-menu" ngbDropdownMenu>
-                                                        <li>
-                                                            <button class="dropdown-item" (click)="printPdf(pedido)">
-                                                                <i class="pi pi-file-pdf me-1"></i>{{ 'Imprimir Pdf' | translate }}
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="dropdown-item" (click)="viewTags(pedido)">
-                                                                <i class="pi pi-tag me-1"></i>{{ 'Tarjeta' | translate }}
-                                                            </button>
-                                                        </li>
-                                                        <li>
-                                                            <button class="dropdown-item" (click)="printLabel(pedido)"
-                                                                [disabled]="isRotuloGenerando(pedido)">
-                                                                <span *ngIf="!isRotuloGenerando(pedido)">
-                                                                    <i class="pi pi-file me-1"></i>{{ 'Rótulo' | translate }}
-                                                                </span>
-                                                                <span *ngIf="isRotuloGenerando(pedido)">
-                                                                    <i class="pi pi-spin pi-spinner me-1"></i>{{ 'Generando...' | translate }}
-                                                                </span>
-                                                            </button>
-                                                        </li>
-                                                    </ul>
-                                                </div>
+                                                <span *ngIf="esPedidoMovido(pedido)" class="badge-compact badge-compact-warning">
+                                                    Orden {{ getOrdenAnteriorPedido(pedido) }}
+                                                </span>
+                                                <span *ngIf="!esPedidoMovido(pedido)" class="badge-compact badge-compact-success">
+                                                    Normal
+                                                </span>
                                             </td>
-                                            <td>
-                                                <button pButton pRipple type="button"
-                                                    class="p-button-sm p-button-danger p-button-outlined"
+                                            <td class="actions-col">
+                                                <button pButton type="button"
+                                                    class="p-button-sm p-button-danger p-button-text"
                                                     icon="pi pi-trash"
-                                                    label="{{ 'Retirar' | translate }}"
-                                                    (click)="retirarPedido(pedido)">
+                                                    (click)="retirarPedido(pedido)"
+                                                    pTooltip="{{ 'Retirar' | translate }}"
+                                                    tooltipPosition="top">
                                                 </button>
                                             </td>
                                         </tr>
                                     </ng-template>
 
                                     <ng-template pTemplate="footer">
-                                        <tr>
-                                            <td colspan="3" class="text-end">
-                                                <strong>{{ "Total a Cobrar:" | translate }}</strong>
+                                        <tr class="footer-total">
+                                            <td colspan="4" class="text-end">
+                                                <strong>{{ "Total:" | translate }}</strong>
                                             </td>
                                             <td>
-                                                {{ pedidosSeleccionados | totalValorACobrar | currency }}
+                                                <strong>{{ pedidosSeleccionados | totalValorACobrar | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
                                             </td>
-                                            <td></td>
-                                            <td></td>
-                                            <td></td>
+                                            <td colspan="2"></td>
                                         </tr>
                                     </ng-template>
                                 </p-table>
                             </div>
 
-                            <!-- Advertencia pedidos movidos -->
-                            <div *ngIf="hayPedidosMovidos" class="alert alert-warning mt-3">
-                                <i class="pi pi-exclamation-triangle me-2"></i>
-                                <strong>Importante:</strong> Al guardar esta orden, los pedidos movidos serán removidos automáticamente de sus órdenes anteriores.
+                            <!-- Advertencia pedidos movidos (compacta) -->
+                            <div *ngIf="hayPedidosMovidos" class="alert-compact alert-compact-warning">
+                                <i class="pi pi-exclamation-triangle"></i>
+                                <span>Los pedidos movidos serán removidos de sus órdenes anteriores al guardar</span>
                             </div>
                         </div>
                     </div>
@@ -494,65 +334,56 @@
     <!-- FOOTER MINIMALISTA -->
     <div class="modal-footer modern-footer">
         <div class="footer-actions">
-            <button pButton pRipple type="button"
-                class="p-button-secondary p-button-outlined btn-footer"
+            <button pButton type="button"
+                class="p-button-text btn-footer"
                 icon="pi pi-times"
                 label="{{ 'Cancelar' | translate }}"
                 (click)="closeModal()">
             </button>
 
             <div class="footer-actions-primary">
-                <button pButton pRipple type="button"
+                <button pButton type="button"
                     class="p-button-primary btn-footer"
                     [icon]="isSaving ? 'pi pi-spin pi-spinner' : 'pi pi-save'"
-                    [label]="isSaving ? ('Guardando...' | translate) : ('Guardar Orden' | translate)"
+                    [label]="isSaving ? 'Guardando...' : 'Guardar'"
                     [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0 || isSaving"
                     (click)="guardarOrden()">
                 </button>
 
-                <button pButton pRipple
+                <button pButton
                     *ngIf="!nroShippingOrder && ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
                     type="button"
                     class="p-button-success btn-footer"
                     [icon]="isSaving ? 'pi pi-spin pi-spinner' : 'pi pi-check-circle'"
-                    [label]="isSaving ? ('Guardando...' | translate) : ('Guardar y Despachar' | translate)"
+                    label="Guardar y Despachar"
                     [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0 || isSaving"
                     (click)="guardarYDespacharOrden()">
                 </button>
 
-                <button pButton pRipple
+                <button pButton
                     *ngIf="nroShippingOrder"
                     type="button"
-                    class="p-button-info btn-footer"
+                    class="p-button-outlined btn-footer"
                     [icon]="isGeneratingPDF ? 'pi pi-spin pi-spinner' : 'pi pi-print'"
-                    [label]="isGeneratingPDF ? ('Generando PDF... ' + pdfProgress + '%') : ('Imprimir' | translate)"
+                    [label]="isGeneratingPDF ? pdfProgress + '%' : 'Imprimir'"
                     [disabled]="isGeneratingPDF"
                     (click)="imprimirOrden()">
                 </button>
 
-                <button pButton pRipple
+                <button pButton
                     *ngIf="nroShippingOrder && ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
                     type="button"
-                    class="p-button-warning btn-footer"
+                    class="p-button-outlined p-button-warning btn-footer"
                     icon="pi pi-send"
-                    label="{{ 'Despachar' | translate }}"
+                    label="Despachar"
                     (click)="despacharOrden()">
                 </button>
             </div>
         </div>
 
-        <!-- Progress bar PDF -->
-        <div *ngIf="isGeneratingPDF" class="pdf-progress-container">
-            <div class="progress-modern">
-                <div class="progress-bar-modern"
-                    role="progressbar"
-                    [style.width.%]="pdfProgress"
-                    [attr.aria-valuenow]="pdfProgress"
-                    aria-valuemin="0"
-                    aria-valuemax="100">
-                </div>
-            </div>
-            <p class="text-center small text-muted mt-2">Generando PDF: {{ pdfProgress }}%</p>
+        <!-- Progress bar PDF (inline) -->
+        <div *ngIf="isGeneratingPDF" class="pdf-progress-inline">
+            <div class="progress-bar-inline" [style.width.%]="pdfProgress"></div>
         </div>
     </div>
 </div>
@@ -601,19 +432,400 @@
                     </li>
                 </ul>
 
-                <!-- Contenido tabs (mantenido igual por brevedad) -->
+                <!-- Contenido de las pestañas -->
                 <div class="tab-content p-4">
+                    <!-- Pestaña General -->
                     <div class="tab-pane fade show active" id="general-content" role="tabpanel">
-                        <!-- contenido general -->
+                        <div class="row g-4">
+                            <!-- Información del Cliente -->
+                            <div class="col-lg-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-header bg-light border-0 pb-3">
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-user me-2"></i>{{ "Información del Cliente" | translate }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-12">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Nombre Completo" | translate }}</label>
+                                                    <div class="info-value">
+                                                        {{ pedidoSeleccionadoDetalle.cliente?.nombres_completos || pedidoSeleccionadoDetalle.cliente?.nombres + " " + pedidoSeleccionadoDetalle.cliente?.apellidos || "N/A" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Teléfono" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <i class="pi pi-phone me-2 text-success"></i>
+                                                        {{ pedidoSeleccionadoDetalle.cliente?.numero_celular_comprador || "N/A" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Email" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <i class="pi pi-envelope me-2 text-info"></i>
+                                                        {{ pedidoSeleccionadoDetalle.cliente?.correo_electronico_comprador || "N/A" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Documento" | translate }}</label>
+                                                    <div class="info-value">
+                                                        {{ pedidoSeleccionadoDetalle.cliente?.documento || "N/A" }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Estado del Pedido -->
+                            <div class="col-lg-6">
+                                <div class="card h-100 border-0 shadow-sm">
+                                    <div class="card-header bg-light border-0 pb-3">
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-flag me-2"></i>{{ "Estado del Pedido" | translate }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-sm-6">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Estado de Proceso" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <span class="badge" [ngClass]="getEstadoProcesoClass(pedidoSeleccionadoDetalle.estadoProceso)">
+                                                            {{ pedidoSeleccionadoDetalle.estadoProceso }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Estado de Pago" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <span class="badge" [ngClass]="getEstadoPagoClass(pedidoSeleccionadoDetalle.estadoPago)">
+                                                            {{ pedidoSeleccionadoDetalle.estadoPago }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Fecha de Creación" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <i class="pi pi-calendar me-2 text-secondary"></i>
+                                                        {{ formatDate(pedidoSeleccionadoDetalle.fechaCreacion) }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <div class="info-item">
+                                                    <label class="info-label" style="color: #f59e0b; font-weight: 600;">
+                                                        <i class="pi pi-clock me-1"></i>{{ "Fecha de Entrega" | translate }}
+                                                    </label>
+                                                    <div class="info-value" style="font-weight: 600; color: #d97706;">
+                                                        <i class="pi pi-calendar-times me-2 text-warning"></i>
+                                                        {{ formatDate(pedidoSeleccionadoDetalle.fechaEntrega) }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12" *ngIf="pedidoSeleccionadoDetalle.horarioEntrega">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Horario de Entrega" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <i class="pi pi-clock me-2 text-primary"></i>
+                                                        {{ pedidoSeleccionadoDetalle.horarioEntrega }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Pestaña Productos -->
                     <div class="tab-pane fade" id="productos-content" role="tabpanel">
-                        <!-- contenido productos -->
+                        <div class="row g-4">
+                            <div class="col-12">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-light border-0">
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-box me-2"></i>{{ "Productos del Pedido" | translate }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body p-0">
+                                        <div class="table-responsive">
+                                            <table class="table table-hover mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th class="border-0">{{ "Producto" | translate }}</th>
+                                                        <th class="border-0 text-center">{{ "Cantidad" | translate }}</th>
+                                                        <th class="border-0 text-end">{{ "Precio Unit." | translate }}</th>
+                                                        <th class="border-0 text-end">{{ "Subtotal" | translate }}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr *ngFor="let item of pedidoSeleccionadoDetalle.carrito; let i = index">
+                                                        <td class="border-0">
+                                                            <div class="d-flex align-items-center">
+                                                                <img [src]="getProductImage(item)"
+                                                                     [alt]="getProductTitle(item)"
+                                                                     class="product-thumbnail me-3"
+                                                                     (error)="handleImageError($event)"
+                                                                     loading="lazy" />
+                                                                <div>
+                                                                    <div class="fw-semibold">{{ getProductTitle(item) }}</div>
+                                                                    <small class="text-muted">Ref: {{ getProductReference(item) }}</small>
+                                                                    <div *ngIf="getProductVariations(item)" class="mt-1">
+                                                                        <small class="badge bg-light text-dark">{{ getProductVariations(item) }}</small>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="border-0 text-center">
+                                                            <span class="badge bg-primary">{{ item.cantidad }}</span>
+                                                        </td>
+                                                        <td class="border-0 text-end">
+                                                            {{ getProductPrice(item) | currency:'COP':'symbol':'1.0-0' }}
+                                                        </td>
+                                                        <td class="border-0 text-end fw-semibold">
+                                                            {{ getProductSubtotal(item) | currency:'COP':'symbol':'1.0-0' }}
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                                <tfoot class="table-light">
+                                                    <tr>
+                                                        <td colspan="3" class="text-end border-0 fw-bold">{{ "Total Productos:" | translate }}</td>
+                                                        <td class="text-end border-0 fw-bold text-primary">
+                                                            {{ getProductsTotalValue() | currency:'COP':'symbol':'1.0-0' }}
+                                                        </td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Pestaña Entrega -->
                     <div class="tab-pane fade" id="entrega-content" role="tabpanel">
-                        <!-- contenido entrega -->
+                        <div class="row g-4">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-header bg-light border-0">
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-map-marker me-2"></i>{{ "Dirección de Entrega" | translate }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Recibe" | translate }}</label>
+                                                    <div class="info-value">{{ getDeliveryRecipient() }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Teléfono de Contacto" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <i class="pi pi-phone me-2 text-success"></i>
+                                                        {{ getDeliveryPhone() }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Dirección Completa" | translate }}</label>
+                                                    <div class="info-value address-block">
+                                                        <i class="pi pi-home me-2 text-info"></i>
+                                                        {{ getFullAddress() }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Ciudad" | translate }}</label>
+                                                    <div class="info-value">{{ pedidoSeleccionadoDetalle.envio?.ciudad || "N/A" }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Departamento" | translate }}</label>
+                                                    <div class="info-value">{{ pedidoSeleccionadoDetalle.envio?.departamento || "N/A" }}</div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Zona de Cobro" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <span class="badge bg-info">{{ pedidoSeleccionadoDetalle.envio?.zonaCobro || "N/A" }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-12" *ngIf="pedidoSeleccionadoDetalle.envio?.observaciones">
+                                                <div class="info-item">
+                                                    <label class="info-label">{{ "Observaciones de Entrega" | translate }}</label>
+                                                    <div class="info-value">
+                                                        <div class="alert alert-info mb-0">
+                                                            <i class="pi pi-info-circle me-2"></i>
+                                                            {{ pedidoSeleccionadoDetalle.envio.observaciones }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <div class="card border-0 shadow-sm h-100">
+                                    <div class="card-header bg-light border-0">
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-truck me-2"></i>{{ "Información de Envío" | translate }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="delivery-summary">
+                                            <div class="delivery-item">
+                                                <div class="delivery-icon bg-primary">
+                                                    <i class="pi pi-send text-white"></i>
+                                                </div>
+                                                <div class="delivery-content">
+                                                    <div class="delivery-label">{{ "Forma de Entrega" | translate }}</div>
+                                                    <div class="delivery-value">{{ pedidoSeleccionadoDetalle.formaEntrega || "N/A" }}</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="delivery-item">
+                                                <div class="delivery-icon bg-success">
+                                                    <i class="pi pi-dollar text-white"></i>
+                                                </div>
+                                                <div class="delivery-content">
+                                                    <div class="delivery-label">{{ "Costo de Envío" | translate }}</div>
+                                                    <div class="delivery-value">{{ pedidoSeleccionadoDetalle.totalEnvio | currency:'COP':'symbol':'1.0-0' }}</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="delivery-item" *ngIf="pedidoSeleccionadoDetalle.transportador">
+                                                <div class="delivery-icon bg-info">
+                                                    <i class="pi pi-user text-white"></i>
+                                                </div>
+                                                <div class="delivery-content">
+                                                    <div class="delivery-label">{{ "Transportador" | translate }}</div>
+                                                    <div class="delivery-value">{{ pedidoSeleccionadoDetalle.transportador }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Pestaña Pagos -->
                     <div class="tab-pane fade" id="pagos-content" role="tabpanel">
-                        <!-- contenido pagos -->
+                        <div class="row g-4">
+                            <div class="col-lg-8">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-light border-0">
+                                        <h6 class="card-title mb-0 text-primary">
+                                            <i class="pi pi-credit-card me-2"></i>{{ "Resumen de Pagos" | translate }}
+                                        </h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="payment-summary">
+                                            <div class="row g-3">
+                                                <div class="col-sm-6">
+                                                    <div class="payment-item">
+                                                        <div class="payment-label">{{ "Subtotal Productos" | translate }}</div>
+                                                        <div class="payment-value">
+                                                            {{ pedidoSeleccionadoDetalle.totalPedidoSinDescuento | currency:'COP':'symbol':'1.0-0' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="payment-item">
+                                                        <div class="payment-label">{{ "Descuentos" | translate }}</div>
+                                                        <div class="payment-value text-success">
+                                                            -{{ pedidoSeleccionadoDetalle.totalDescuento | currency:'COP':'symbol':'1.0-0' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="payment-item">
+                                                        <div class="payment-label">{{ "Costo de Envío" | translate }}</div>
+                                                        <div class="payment-value">
+                                                            {{ pedidoSeleccionadoDetalle.totalEnvio | currency:'COP':'symbol':'1.0-0' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="payment-item">
+                                                        <div class="payment-label">{{ "Impuestos" | translate }}</div>
+                                                        <div class="payment-value">
+                                                            {{ pedidoSeleccionadoDetalle.totalImpuesto | currency:'COP':'symbol':'1.0-0' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <hr class="my-4" />
+
+                                            <div class="row g-3">
+                                                <div class="col-sm-6">
+                                                    <div class="payment-item-total">
+                                                        <div class="payment-label">{{ "Total del Pedido" | translate }}</div>
+                                                        <div class="payment-value-total">
+                                                            {{ pedidoSeleccionadoDetalle.totalPedididoConDescuento | currency:'COP':'symbol':'1.0-0' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <div class="payment-item-total">
+                                                        <div class="payment-label">{{ "Anticipo Pagado" | translate }}</div>
+                                                        <div class="payment-value-total text-success">
+                                                            {{ pedidoSeleccionadoDetalle.anticipo | currency:'COP':'symbol':'1.0-0' }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-lg-4">
+                                <div class="card border-0 shadow-sm bg-gradient-warning">
+                                    <div class="card-body text-center">
+                                        <div class="payment-pending">
+                                            <i class="pi pi-wallet display-4 text-warning mb-3"></i>
+                                            <h5 class="card-title text-dark">{{ "Falta por Pagar" | translate }}</h5>
+                                            <div class="pending-amount">
+                                                {{ pedidoSeleccionadoDetalle.faltaPorPagar | currency:'COP':'symbol':'1.0-0' }}
+                                            </div>
+                                            <div class="mt-3">
+                                                <span class="badge" [ngClass]="pedidoSeleccionadoDetalle.faltaPorPagar > 0 ? 'bg-warning text-dark' : 'bg-success'">
+                                                    {{ pedidoSeleccionadoDetalle.faltaPorPagar > 0 ? ("Pendiente" | translate) : ("Pagado" | translate) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
