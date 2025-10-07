@@ -59,11 +59,25 @@ export class PdfTemplateComponent implements OnInit {
 
   /**
    * Obtiene el teléfono priorizando información del envío sobre la del cliente
+   * Formatea el número para mejor legibilidad
    */
   getTelefonoDestinatario(pedido: Pedido): string {
-    return pedido.envio?.celular || 
-           pedido.cliente?.numero_celular_comprador || 
-           "N/A";
+    const telefono = pedido.envio?.celular ||
+                     pedido.cliente?.numero_celular_comprador ||
+                     "";
+
+    if (!telefono) return "N/A";
+
+    // Limpiar el número de espacios y caracteres especiales
+    const numeroLimpio = telefono.toString().replace(/[^\d]/g, '');
+
+    // Formatear números de 10 dígitos (Colombia: 3XX XXX XXXX)
+    if (numeroLimpio.length === 10) {
+      return `${numeroLimpio.substring(0, 3)} ${numeroLimpio.substring(3, 6)} ${numeroLimpio.substring(6)}`;
+    }
+
+    // Retornar número original si no coincide con formato esperado
+    return telefono.toString();
   }
 
   getDireccionCompleta(pedido: Pedido): string {
@@ -186,11 +200,11 @@ export class PdfTemplateComponent implements OnInit {
   /**
    * Obtiene las observaciones compactadas para el PDF con truncamiento inteligente
    * @param pedido - El pedido del cual obtener la información
-   * @returns Información compactada máximo 120 caracteres
+   * @returns Información compactada máximo 150 caracteres para landscape
    */
   getObservacionesCompactasPDF(pedido: Pedido): string {
     const infoCompleta = this.getObservacionesCompletas(pedido);
-    const MAX_LENGTH = 120;
+    const MAX_LENGTH = 150; // Aumentado para landscape
 
     if (infoCompleta.length <= MAX_LENGTH) {
       return infoCompleta;
@@ -200,9 +214,12 @@ export class PdfTemplateComponent implements OnInit {
     const truncated = infoCompleta.substring(0, MAX_LENGTH);
     const lastComma = truncated.lastIndexOf(',');
     const lastSpace = truncated.lastIndexOf(' ');
-    const cutPoint = lastComma > 80 ? lastComma : (lastSpace > 80 ? lastSpace : MAX_LENGTH);
 
-    return truncated.substring(0, cutPoint) + '...';
+    // Priorizar corte en coma si está después del 70% del contenido
+    const cutPoint = lastComma > (MAX_LENGTH * 0.7) ? lastComma :
+                     (lastSpace > (MAX_LENGTH * 0.7) ? lastSpace : MAX_LENGTH);
+
+    return truncated.substring(0, cutPoint).trim() + '...';
   }
 
   /**

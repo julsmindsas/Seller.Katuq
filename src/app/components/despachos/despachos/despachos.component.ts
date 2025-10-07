@@ -4086,7 +4086,7 @@ export class DespachosComponent implements OnInit {
     element.style.position = "fixed";
     element.style.top = "0";
     element.style.left = "0";
-    element.style.width = "210mm"; // Ancho estándar A4
+    element.style.width = "297mm"; // A4 landscape width (297mm x 210mm)
     element.style.height = "auto";
     element.style.visibility = "hidden"; // Oculta el elemento
     element.style.zIndex = "-9999"; // Envíalo detrás de todo
@@ -4097,30 +4097,32 @@ export class DespachosComponent implements OnInit {
 
   private getOptimizedPDFOptions() {
     return {
-      margin: [0.31, 0.31, 0.31, 0.31], // 8mm margins for paper savings
+      margin: [8, 8, 8, 8], // 8mm margins optimizados para landscape
       filename: `orden-envio-${this.nroShippingOrder}.pdf`,
       image: {
-        type: "png",
-        quality: 1.0, // Maximum quality for crisp text
+        type: "jpeg",
+        quality: 0.98, // Alta calidad optimizada
       },
       html2canvas: {
-        scale: 3.0, // 288 DPI for high resolution
+        scale: 2.5, // Optimizado para texto claro sin archivos muy pesados
         useCORS: true,
         allowTaint: true,
         backgroundColor: "#ffffff",
         logging: false,
         letterRendering: true,
+        windowWidth: 1280, // Ancho optimizado para landscape
+        windowHeight: 900,
       },
       jsPDF: {
-        unit: "mm", // More precise than inches
+        unit: "mm",
         format: "a4",
-        orientation: "landscape",
+        orientation: "landscape", // FORZAR landscape
         compress: true,
         precision: 16,
       },
       pagebreak: {
         mode: ['avoid-all', 'css', 'legacy'],
-        avoid: 'tr' // Don't cut table rows
+        avoid: ['tr', '.info-section', '.header-table'] // Evitar cortes en elementos críticos
       }
     };
   }

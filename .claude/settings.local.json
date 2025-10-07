@@ -9,7 +9,9 @@
       "WebSearch",
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
-      "mcp__ide__getDiagnostics"
+      "mcp__ide__getDiagnostics",
+      "Read(//c/sourcecodejuls/**)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []

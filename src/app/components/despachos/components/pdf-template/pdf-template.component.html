@@ -1,44 +1,45 @@
 <div class="pdf-container" *ngIf="isValidForGeneration()">
-  <!-- Encabezado con Tabla -->
+  <!-- Encabezado Compacto con Toda la Información -->
   <table class="header-table">
     <tbody>
-      <tr>
+      <!-- Fila 1: Título y Número de Orden -->
+      <tr class="header-row-1">
         <td class="header-left">
-          <h1 class="order-title">{{ getOrderTitle() }}</h1>
-          <div class="company-details">
-            <p>Katuq Seller</p>
-            <p>Fecha de Generación: {{ getCurrentDate() }}</p>
-          </div>
+          <h1 class="order-title">Orden de Envío #{{ nroShippingOrder }}</h1>
+          <p class="fecha-generacion">Fecha: {{ getCurrentDate() }}</p>
         </td>
         <td class="header-right">
           <div class="order-id">
-            <span>N° Orden de Envío</span>
+            <span>N° ORDEN DE ENVÍO</span>
             <p>{{ nroShippingOrder }}</p>
+          </div>
+        </td>
+      </tr>
+      <!-- Fila 2: Información del Despachador y Totales -->
+      <tr class="header-row-2">
+        <td colspan="2">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">TRANSPORTADOR</span>
+              <p class="info-value">{{ getTransportadorNombre() }}</p>
+            </div>
+            <div class="info-item">
+              <span class="info-label">DESPACHADOR</span>
+              <p class="info-value">{{ getValorSeguro(userName) }}</p>
+            </div>
+            <div class="info-item">
+              <span class="info-label">TOTAL PEDIDOS</span>
+              <p class="info-value">{{ getPedidosCount() }}</p>
+            </div>
+            <div class="info-item total-item">
+              <span class="info-label">TOTAL A RECAUDAR</span>
+              <p class="info-value total-value">{{ formatCurrency(totalPendiente) }}</p>
+            </div>
           </div>
         </td>
       </tr>
     </tbody>
   </table>
-
-  <!-- Información de la Orden -->
-  <section class="info-section">
-    <div class="info-box">
-      <span class="info-label">Transportador</span>
-      <p class="info-data">{{ getTransportadorNombre() }}</p>
-    </div>
-    <div class="info-box">
-      <span class="info-label">Despachador</span>
-      <p class="info-data">{{ getValorSeguro(userName) }}</p>
-    </div>
-    <div class="info-box">
-      <span class="info-label">Total de Pedidos</span>
-      <p class="info-data">{{ getPedidosCount() }}</p>
-    </div>
-    <div class="info-box total-box">
-      <span class="info-label">Total a Recaudar</span>
-      <p class="info-data total-amount">{{ formatCurrency(totalPendiente) }}</p>
-    </div>
-  </section>
 
   <!-- Tabla de Pedidos -->
   <section class="table-section">
@@ -55,7 +56,7 @@
       </thead>
       <tbody>
         <tr *ngFor="let pedido of pedidos; trackBy: trackByPedido">
-          <td>{{ getValorSeguro(pedido.nroPedido) }}</td>
+          <td><strong>{{ getValorSeguro(pedido.nroPedido) }}</strong></td>
           <td class="col-cliente">
             <div class="cliente-info-compact">
               <div class="cliente-line">
@@ -75,7 +76,9 @@
           <td>{{ getValorSeguro(pedido.envio?.zonaCobro) }}</td>
           <td>{{ getValorSeguro(pedido.horarioEntrega) }}</td>
           <td class="valor-cobrar">{{ formatCurrency(pedido.faltaPorPagar || 0) }}</td>
-          <td class="firma"></td>
+          <td class="firma">
+            <div class="firma-espacio">_____________</div>
+          </td>
         </tr>
       </tbody>
     </table>
