@@ -3471,6 +3471,17 @@ export class DespachosComponent implements OnInit {
   }
 
   despacharOrden() {
+    // DEBUG: Verificar estado antes de despachar
+    console.log("=== DEBUG despacharOrden() ===");
+    console.log("this.nroShippingOrder:", this.nroShippingOrder);
+    console.log("this.pedidosSeleccionados:", this.pedidosSeleccionados?.length || 0);
+    console.log("this.nuevaOrdenEnvio:", {
+      nroShippingOrder: this.nuevaOrdenEnvio?.nroShippingOrder,
+      pedidos: this.nuevaOrdenEnvio?.pedidos?.length || 0,
+      transportador: this.nuevaOrdenEnvio?.transportador,
+      metodoEnvio: this.nuevaOrdenEnvio?.metodoEnvio
+    });
+
     Swal.fire({
       title: "Asignar Transportador",
       input: "select",
@@ -3528,6 +3539,21 @@ export class DespachosComponent implements OnInit {
 
         this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados;
         this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
+
+        // DEBUG: Log del objeto que se enviará a dispatch
+        console.log("📦 ENVIANDO A DISPATCH:", JSON.stringify({
+          nroShippingOrder: this.nuevaOrdenEnvio.nroShippingOrder,
+          id: this.nuevaOrdenEnvio.id,
+          fecha: this.nuevaOrdenEnvio.fecha,
+          metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
+          transportador: this.nuevaOrdenEnvio.transportador,
+          company: this.nuevaOrdenEnvio.company,
+          pedidosCount: this.nuevaOrdenEnvio.pedidos?.length || 0,
+          pedidosData: this.nuevaOrdenEnvio.pedidos?.map(p => ({
+            nroPedido: p.nroPedido,
+            referencia: p.referencia
+          })) || []
+        }, null, 2));
 
         this.logisticaService
           .dispatchShippingOrder(this.nuevaOrdenEnvio)
@@ -4582,9 +4608,11 @@ export class DespachosComponent implements OnInit {
   /**
    * Nuevo método: Guardar orden y despachar en un solo paso
    * Combina la creación de la orden con el despacho inmediato
+   * CORREGIDO: Preserva el contexto de pedidos antes de cerrar el modal
    */
   onGuardarYDespacharOrden(event: any) {
-    console.log("Guardando y despachando orden:", event);
+    console.log("=== GUARDAR Y DESPACHAR ORDEN ===");
+    console.log("Evento recibido:", event);
 
     // Validaciones similares a onSubmitOrdenEnvio
     if (!event) {
@@ -4615,6 +4643,11 @@ export class DespachosComponent implements OnInit {
       return;
     }
 
+    // IMPORTANTE: Guardar copias de los datos ANTES de cualquier operación asíncrona
+    // Esto previene la pérdida de contexto al cerrar el modal
+    const pedidosParaDespacho = [...this.pedidosSeleccionados];
+    console.log("Pedidos preservados para despacho:", pedidosParaDespacho.length);
+
     // Preparar datos de la orden
     const currentCompanyStr = localStorage.getItem("currentCompany");
     const companyName = currentCompanyStr ? JSON.parse(currentCompanyStr).nomComercial : "";
@@ -4622,33 +4655,38 @@ export class DespachosComponent implements OnInit {
     this.nuevaOrdenEnvio = {
       id: "",
       nroShippingOrder: "",
-      fecha: event.fechaEnvio || new Date().toISOString(),
+      fecha: event.fechaFin || event.fechaEnvio || new Date().toISOString(),
       metodoEnvio: event.metodoEnvio,
       transportador: this.transportadorSeleccionado || "",
       company: companyName,
-      pedidos: this.pedidosSeleccionados || [],
+      pedidos: pedidosParaDespacho,
       pedidosMovidos: event.pedidosMovidos || [],
     };
+
+    console.log("Datos de orden preparados:", {
+      metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
+      cantidadPedidos: this.nuevaOrdenEnvio.pedidos.length,
+      fecha: this.nuevaOrdenEnvio.fecha
+    });
 
     // Crear la orden
     this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
       next: (response) => {
-        console.log("Orden creada exitosamente:", response);
+        console.log("✅ Orden creada exitosamente:", response);
 
         // Actualizar nroShippingOrder
         if (response && response.nroShippingOrder) {
           this.nroShippingOrder = response.nroShippingOrder;
           this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
+          console.log("Número de orden asignado:", this.nroShippingOrder);
         }
 
-        // Mostrar mensaje de éxito
-        Swal.fire({
-          title: "Orden Creada",
-          text: `La orden ${response.nroShippingOrder || ""} ha sido creada. Ahora asigna el mensajero.`,
-          icon: "success",
-          timer: 1500,
-          showConfirmButton: false,
-        });
+        // IMPORTANTE: Restaurar pedidos seleccionados para el despacho
+        // Esto asegura que despacharOrden() tenga acceso a los pedidos
+        this.pedidosSeleccionados = pedidosParaDespacho;
+
+        // Actualizar nuevaOrdenEnvio.pedidos para asegurar que esté sincronizado
+        this.nuevaOrdenEnvio.pedidos = pedidosParaDespacho;
 
         // Resetear flag de guardado
         if (this.generarOrdenComponent) {
@@ -4662,20 +4700,27 @@ export class DespachosComponent implements OnInit {
         this.refrescarDatos();
 
         if (this.ordenesDespachoV2Component) {
-          console.log('Actualizando ordenes-despacho-v2 después de crear orden...');
+          console.log("🔄 Actualizando ordenes-despacho-v2 después de crear orden...");
           this.ordenesDespachoV2Component.loadInitialOrders();
         }
 
-        // Cerrar el modal de creación
-        this.modalService.dismissAll();
+        console.log("📦 Iniciando proceso de despacho...");
+        console.log("Datos disponibles para despacho:", {
+          nroShippingOrder: this.nroShippingOrder,
+          nuevaOrdenEnvio: {
+            nroShippingOrder: this.nuevaOrdenEnvio?.nroShippingOrder,
+            pedidos: this.nuevaOrdenEnvio?.pedidos?.length || 0
+          },
+          pedidosSeleccionados: this.pedidosSeleccionados?.length || 0
+        });
 
-        // Esperar un momento para que se cierre el modal y luego abrir el de despacho
-        setTimeout(() => {
-          this.despacharOrden();
-        }, 500);
+        // IMPORTANTE: NO cerrar el modal aquí - despacharOrden() lo cerrará después del dispatch exitoso
+        // Ejecutar despacho inmediatamente sin cerrar el modal primero
+        console.log("🚀 Ejecutando despacharOrden() (modal permanece abierto)...");
+        this.despacharOrden();
       },
       error: (error) => {
-        console.error("Error al crear la orden:", error);
+        console.error("❌ Error al crear la orden:", error);
 
         if (this.generarOrdenComponent) {
           this.generarOrdenComponent.resetSavingState();

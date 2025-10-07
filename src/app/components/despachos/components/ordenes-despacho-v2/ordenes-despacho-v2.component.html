@@ -191,11 +191,16 @@
           <div class="cell">
             <span class="cell-label">{{ 'Estado' | translate }}:</span>
             <span class="badge"
-                  [class]="{
+                  [ngClass]="{
                     'bg-success': getEstadoProceso(order) === 'Entregado',
+                    'bg-dark': getEstadoProceso(order) === 'Cerrado',
+                    'bg-danger': getEstadoProceso(order) === 'Rechazado',
                     'bg-info': getEstadoProceso(order) === 'Despachado',
-                    'bg-warning': getEstadoProceso(order) === 'Por despachar',
-                    'bg-secondary': getEstadoProceso(order) === 'Sin pedidos'
+                    'bg-primary': getEstadoProceso(order) === 'En Despacho' || getEstadoProceso(order) === 'Producido',
+                    'bg-warning text-dark': getEstadoProceso(order) === 'Para Despachar' || getEstadoProceso(order) === 'Por despachar',
+                    'bg-warning': getEstadoProceso(order) === 'Empacado',
+                    'bg-secondary': getEstadoProceso(order) === 'En Producción' || getEstadoProceso(order) === 'Sin Producir',
+                    'bg-light text-dark': getEstadoProceso(order) === 'Sin pedidos'
                   }">
               {{ getEstadoProceso(order) }}
             </span>
@@ -261,7 +266,6 @@
                     <th>{{ 'Dirección' | translate }}</th>
                     <th>{{ 'Fecha Entrega' | translate }}</th>
                     <th>{{ 'Valor a Cobrar' | translate }}</th>
-                    <th>{{ 'Acciones' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -278,21 +282,6 @@
                     <td>{{ formatDate(pedido.fechaEntrega) }}</td>
                     <td class="text-end">
                       <strong class="text-success">{{ getValorACobrarPorPedido(pedido) | currency:'COP':'symbol':'1.0-0' }}</strong>
-                    </td>
-                    <td class="actions-column">
-                      <div class="d-flex gap-1">
-                        <button *ngIf="!isPedidoDispatched(pedido)"
-                                class="btn btn-sm btn-outline-primary" 
-                                (click)="dispatchPedido(pedido)"
-                                title="{{ 'Despachar Pedido' | translate }}">
-                          <i class="pi pi-send"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-info" 
-                                (click)="viewOrder(pedido.nroPedido)"
-                                title="{{ 'Ver Pedido' | translate }}">
-                          <i class="pi pi-eye"></i>
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 </tbody>
@@ -320,11 +309,16 @@
             </div>
             <div class="order-status">
               <span class="badge"
-                    [class]="{
+                    [ngClass]="{
                       'bg-success': getEstadoProceso(order) === 'Entregado',
+                      'bg-dark': getEstadoProceso(order) === 'Cerrado',
+                      'bg-danger': getEstadoProceso(order) === 'Rechazado',
                       'bg-info': getEstadoProceso(order) === 'Despachado',
-                      'bg-warning': getEstadoProceso(order) === 'Por despachar',
-                      'bg-secondary': getEstadoProceso(order) === 'Sin pedidos'
+                      'bg-primary': getEstadoProceso(order) === 'En Despacho' || getEstadoProceso(order) === 'Producido',
+                      'bg-warning text-dark': getEstadoProceso(order) === 'Para Despachar' || getEstadoProceso(order) === 'Por despachar',
+                      'bg-warning': getEstadoProceso(order) === 'Empacado',
+                      'bg-secondary': getEstadoProceso(order) === 'En Producción' || getEstadoProceso(order) === 'Sin Producir',
+                      'bg-light text-dark': getEstadoProceso(order) === 'Sin pedidos'
                     }">
                 {{ getEstadoProceso(order) }}
               </span>

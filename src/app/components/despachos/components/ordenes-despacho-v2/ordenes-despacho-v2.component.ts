@@ -1,5 +1,6 @@
 import { Component, EventEmitter, OnInit, Output, Input, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { Router } from '@angular/router';
+import { Observable, forkJoin, of, EMPTY } from 'rxjs';
 import { IntegrationsService, Integration, IntegrationCategory } from '../../../integrations/integrations.service';
 import { LogisticaServiceV2 } from '../../../../shared/services/despachos/logistica.service.v2';
 import { VentasService } from '../../../../shared/services/ventas/ventas.service';
@@ -656,19 +657,15 @@ export class OrdenesDespachoV2Component implements OnInit {
     // Primero obtener la orden completa para actualizarla
     this.logisticaService.getShippingOrder(order.nroShippingOrder).subscribe({
       next: (fullOrder) => {
-        // Guardar el estado actual para preservarlo (CRUCIAL: orden ya despachada)
-        const estadoActual = fullOrder.estado || this.getEstadoProceso(order);
-
         // Actualizar el transportador en la orden completa
+        // NO guardamos el campo "estado" - se calcula dinámicamente en getEstadoProceso()
         const orderToUpdate = {
           ...fullOrder,
           transportador: transporterName,
-          estado: estadoActual, // PRESERVAR el estado actual (ya está Despachado o Entregado)
           metadata: {
             ...(fullOrder.metadata || {}),
             especificacionTransportadora: {
               transportadora: transporterName,
-              estadoPreservado: estadoActual,
               fecha: new Date().toISOString(),
               usuario: localStorage.getItem('user'),
               motivo: 'Especificación posterior al despacho'
@@ -676,56 +673,91 @@ export class OrdenesDespachoV2Component implements OnInit {
           }
         };
 
+        // Eliminar campo estado si existe (no debe guardarse, se calcula dinámicamente)
+        delete orderToUpdate.estado;
+
         // Actualizar cada pedido de la orden con el transportador
+        const updatePedidosObservables: Observable<any>[] = [];
+
         if (orderToUpdate.pedidos && Array.isArray(orderToUpdate.pedidos)) {
           orderToUpdate.pedidos.forEach((pedido: any) => {
             pedido.transportador = transporterName;
             // NO modificar pedido.estadoProceso - ya está en Despachado o Entregado
 
-            // Actualizar cada pedido en la base de datos
-            this.ventasService.editOrder(pedido).subscribe({
-              next: () => {
-                console.log(`✅ Pedido ${pedido.nroPedido} actualizado con transportadora ${transporterName}`);
-              },
-              error: (error) => {
-                console.error(`❌ Error actualizando pedido ${pedido.nroPedido}:`, error);
-              }
+            // Crear observable para la actualización de este pedido
+            const updateObs = new Observable<void>((observer) => {
+              this.ventasService.editOrder(pedido).subscribe({
+                next: () => {
+                  console.log(`✅ Pedido ${pedido.nroPedido} actualizado con transportadora ${transporterName}`);
+                  observer.next(void 0);
+                  observer.complete();
+                },
+                error: (error) => {
+                  console.error(`❌ Error actualizando pedido ${pedido.nroPedido}:`, error);
+                  observer.error(error);
+                }
+              });
             });
+
+            updatePedidosObservables.push(updateObs);
           });
         }
 
-        // Actualizar la orden de envío completa usando createShippingOrder (sirve para crear y editar)
-        this.logisticaService.createShippingOrder(orderToUpdate).subscribe({
-          next: (response) => {
-            this.isDispatchingShipment = false;
+        // Función para ejecutar después de actualizar pedidos
+        const finalizarActualizacion = () => {
+          // Actualizar la orden de envío completa usando createShippingOrder (sirve para crear y editar)
+          this.logisticaService.createShippingOrder(orderToUpdate).subscribe({
+            next: (response) => {
+              this.isDispatchingShipment = false;
 
-            // Actualizar localmente
-            order.transportador = transporterName;
+              // Actualizar localmente
+              order.transportador = transporterName;
 
-            Swal.fire({
-              icon: 'success',
-              title: 'Transportadora Especificada',
-              text: `Se ha registrado "${this.formatTransporterName(transporterName)}" como la transportadora de esta orden.`,
-              timer: 2000,
-              showConfirmButton: false
-            });
+              Swal.fire({
+                icon: 'success',
+                title: 'Transportadora Especificada',
+                text: `Se ha registrado "${this.formatTransporterName(transporterName)}" como la transportadora de esta orden.`,
+                timer: 2000,
+                showConfirmButton: false
+              });
 
-            // Reload orders to reflect updated status
-            this.loadInitialOrders();
-            this.closeTransporterModal();
-          },
-          error: (error) => {
-            console.error('❌ Error actualizando orden de envío:', error);
-            this.isDispatchingShipment = false;
+              // Reload orders DESPUÉS de que todas las actualizaciones se completen
+              this.loadInitialOrders();
+              this.closeTransporterModal();
+            },
+            error: (error) => {
+              console.error('❌ Error actualizando orden de envío:', error);
+              this.isDispatchingShipment = false;
 
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'No se pudo especificar la transportadora. Por favor intenta nuevamente.',
-              confirmButtonText: 'Entendido'
-            });
-          }
-        });
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo especificar la transportadora. Por favor intenta nuevamente.',
+                confirmButtonText: 'Entendido'
+              });
+            }
+          });
+        };
+
+        // ESPERAR a que todas las actualizaciones de pedidos se completen
+        if (updatePedidosObservables.length > 0) {
+          console.log(`⏳ Esperando a que ${updatePedidosObservables.length} pedidos se actualicen...`);
+          forkJoin(updatePedidosObservables).subscribe({
+            next: () => {
+              console.log('✅ Todos los pedidos actualizados, finalizando...');
+              finalizarActualizacion();
+            },
+            error: (error) => {
+              console.error('❌ Error actualizando uno o más pedidos, finalizando de todos modos...', error);
+              // Finalizar de todos modos para no dejar el proceso colgado
+              finalizarActualizacion();
+            }
+          });
+        } else {
+          // No hay pedidos para actualizar, finalizar directamente
+          console.log('ℹ️ No hay pedidos para actualizar, finalizando...');
+          finalizarActualizacion();
+        }
       },
       error: (error) => {
         console.error('❌ Error obteniendo orden completa:', error);
@@ -771,17 +803,38 @@ export class OrdenesDespachoV2Component implements OnInit {
 
         if (pedidosSinDespachar.length > 0) {
           console.log(`🚚 Asignando transportador "enviame" y marcando ${pedidosSinDespachar.length} pedidos como despachados`);
-          this.updatePedidosToDispached(pedidosSinDespachar, this.selectedOrderForDispatch);
+
+          // ESPERAR a que todas las actualizaciones se completen antes de recargar
+          this.updatePedidosToDispached(pedidosSinDespachar, this.selectedOrderForDispatch).subscribe({
+            next: () => {
+              // Emit dispatch event to parent component
+              this.onDispatchOrder.emit(this.selectedOrderForDispatch);
+
+              // Reload orders DESPUÉS de que todas las actualizaciones se completen
+              this.loadInitialOrders();
+              this.closeTransporterModal();
+
+              console.log('📦 Procesamiento de envío Enviame completado');
+            },
+            error: (error) => {
+              console.error('❌ Error actualizando pedidos de Enviame:', error);
+
+              // Aún así recargar para reflejar el estado actual
+              this.loadInitialOrders();
+              this.closeTransporterModal();
+            }
+          });
+        } else {
+          // No hay pedidos para actualizar
+          // Emit dispatch event to parent component
+          this.onDispatchOrder.emit(this.selectedOrderForDispatch);
+
+          // Reload orders
+          this.loadInitialOrders();
+          this.closeTransporterModal();
+
+          console.log('📦 Procesamiento de envío Enviame completado (sin pedidos para actualizar)');
         }
-
-        // Emit dispatch event to parent component
-        this.onDispatchOrder.emit(this.selectedOrderForDispatch);
-
-        // Reload orders to reflect updated status
-        this.loadInitialOrders();
-        this.closeTransporterModal();
-
-        console.log('📦 Procesamiento de envío Enviame completado');
       } else {
         console.log('❌ Usuario canceló la cotización de Enviame');
       }
@@ -806,8 +859,6 @@ export class OrdenesDespachoV2Component implements OnInit {
     this.isDispatchingShipment = true;
     this.logisticaService.createShipment(shipmentPayload).subscribe({
       next: () => {
-        this.isDispatchingShipment = false;
-
         // Actualizar el transportador en la orden
         order.transportador = this.selectedTransporter;
 
@@ -819,30 +870,73 @@ export class OrdenesDespachoV2Component implements OnInit {
 
         if (pedidosSinDespachar.length > 0) {
           console.log(`🚚 Asignando transportador "${this.selectedTransporter}" y marcando ${pedidosSinDespachar.length} pedidos como despachados`);
-          this.updatePedidosToDispached(pedidosSinDespachar, order);
+
+          // ESPERAR a que todas las actualizaciones se completen antes de recargar
+          this.updatePedidosToDispached(pedidosSinDespachar, order).subscribe({
+            next: () => {
+              // Todas las actualizaciones completadas, ahora recargar
+              this.isDispatchingShipment = false;
+
+              // Emit dispatch event to parent component
+              this.onDispatchOrder.emit(this.selectedOrderForDispatch);
+
+              // Show success message
+              Swal.fire({
+                icon: 'success',
+                title: 'Despacho Confirmado',
+                text: 'La orden ha sido despachada exitosamente con la transportadora.',
+                timer: 2000,
+                showConfirmButton: false
+              });
+
+              // Reload orders DESPUÉS de que todas las actualizaciones se completen
+              this.loadInitialOrders();
+
+              this.closeTransporterModal();
+            },
+            error: (updateError) => {
+              console.error('Error actualizando pedidos:', updateError);
+              this.isDispatchingShipment = false;
+
+              // Aún así mostrar mensaje de éxito parcial
+              Swal.fire({
+                icon: 'warning',
+                title: 'Despacho Parcial',
+                text: 'La orden fue despachada pero algunos pedidos no se actualizaron correctamente.',
+                confirmButtonText: 'Entendido'
+              });
+
+              // Recargar de todos modos para reflejar el estado actual
+              this.loadInitialOrders();
+              this.closeTransporterModal();
+            }
+          });
+        } else {
+          // No hay pedidos para actualizar
+          this.isDispatchingShipment = false;
+
+          // Emit dispatch event to parent component
+          this.onDispatchOrder.emit(this.selectedOrderForDispatch);
+
+          // Show success message
+          Swal.fire({
+            icon: 'success',
+            title: 'Despacho Confirmado',
+            text: 'La orden ha sido despachada exitosamente con la transportadora.',
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          // Reload orders
+          this.loadInitialOrders();
+
+          this.closeTransporterModal();
         }
-
-        // Emit dispatch event to parent component
-        this.onDispatchOrder.emit(this.selectedOrderForDispatch);
-
-        // Show success message
-        Swal.fire({
-          icon: 'success',
-          title: 'Despacho Confirmado',
-          text: 'La orden ha sido despachada exitosamente con la transportadora.',
-          timer: 2000,
-          showConfirmButton: false
-        });
-
-        // Reload orders to reflect updated status
-        this.loadInitialOrders();
-
-        this.closeTransporterModal();
       },
       error: (error) => {
         console.error('Error creando envío con transportadora:', error);
         this.isDispatchingShipment = false;
-        
+
         // Show error message
         Swal.fire({
           icon: 'error',
@@ -1138,10 +1232,14 @@ export class OrdenesDespachoV2Component implements OnInit {
 
   /**
    * Actualiza una lista de pedidos a estado "Despachado"
+   * @returns Observable que se completa cuando TODAS las actualizaciones terminan
    */
-  private updatePedidosToDispached(pedidos: any[], order: any): void {
+  private updatePedidosToDispached(pedidos: any[], order: any): Observable<void> {
     const user = localStorage.getItem('user');
     const userLite = user ? JSON.parse(user) : null;
+
+    // Array para almacenar los observables de actualización
+    const updateObservables: Observable<any>[] = [];
 
     pedidos.forEach((pedido: any) => {
       // Guardar estado anterior ANTES de modificar
@@ -1169,15 +1267,43 @@ export class OrdenesDespachoV2Component implements OnInit {
       pedido.nroShippingOrder = order.nroShippingOrder;
       pedido.transportador = order.transportador;
 
-      // Enviar la actualización al backend
-      this.ventasService.editOrder(pedido).subscribe({
-        next: (response) => {
-          console.log(`✅ Pedido ${pedido.nroPedido || pedido.referencia} actualizado a "Despachado"`);
+      // Crear observable para esta actualización
+      const updateObs = new Observable<void>((observer) => {
+        this.ventasService.editOrder(pedido).subscribe({
+          next: (response) => {
+            console.log(`✅ Pedido ${pedido.nroPedido || pedido.referencia} actualizado a "Despachado"`);
+            observer.next(void 0);
+            observer.complete();
+          },
+          error: (error) => {
+            console.error(`❌ Error actualizando pedido ${pedido.nroPedido || pedido.referencia}:`, error);
+            // Revertir usando el estado original guardado
+            pedido.estadoProceso = estadoOriginal;
+            observer.error(error);
+          }
+        });
+      });
+
+      updateObservables.push(updateObs);
+    });
+
+    // Si no hay pedidos para actualizar, retornar observable completado
+    if (updateObservables.length === 0) {
+      console.log('ℹ️ No hay pedidos para actualizar a Despachado');
+      return of(void 0);
+    }
+
+    // Usar forkJoin para esperar a que TODAS las actualizaciones se completen
+    return new Observable((observer) => {
+      forkJoin(updateObservables).subscribe({
+        next: () => {
+          console.log(`✅ Todos los ${updateObservables.length} pedidos actualizados exitosamente`);
+          observer.next(void 0);
+          observer.complete();
         },
         error: (error) => {
-          console.error(`❌ Error actualizando pedido ${pedido.nroPedido || pedido.referencia}:`, error);
-          // Revertir usando el estado original guardado
-          pedido.estadoProceso = estadoOriginal;
+          console.error('❌ Error en una o más actualizaciones de pedidos:', error);
+          observer.error(error);
         }
       });
     });
@@ -1315,25 +1441,24 @@ export class OrdenesDespachoV2Component implements OnInit {
         // Obtener la orden completa primero
         this.logisticaService.getShippingOrder(order.nroShippingOrder).subscribe({
           next: (fullOrder) => {
-            // Guardar el estado actual para preservarlo
-            const estadoActual = fullOrder.estado || this.getEstadoProceso(order);
-
             // Actualizar el campo metodoEnvio en la orden completa
+            // NO guardamos el campo "estado" - se calcula dinámicamente en getEstadoProceso()
             const orderToUpdate = {
               ...fullOrder,
               metodoEnvio: 'transportadora',
-              estado: estadoActual, // PRESERVAR el estado actual
               metadata: {
                 ...(fullOrder.metadata || {}),
                 cambioMetodo: {
                   anterior: 'mensajeroPropio',
                   nuevo: 'transportadora',
-                  estadoPreservado: estadoActual,
                   fecha: new Date().toISOString(),
                   usuario: localStorage.getItem('user')
                 }
               }
             };
+
+            // Eliminar campo estado si existe (no debe guardarse, se calcula dinámicamente)
+            delete orderToUpdate.estado;
 
             // Preservar estado de cada pedido
             if (orderToUpdate.pedidos && Array.isArray(orderToUpdate.pedidos)) {
@@ -1536,27 +1661,26 @@ export class OrdenesDespachoV2Component implements OnInit {
         // Obtener la orden completa primero
         this.logisticaService.getShippingOrder(order.nroShippingOrder).subscribe({
           next: (fullOrder) => {
-            // Guardar el estado actual para preservarlo
-            const estadoActual = fullOrder.estado || this.getEstadoProceso(order);
-
             // Actualizar el campo metodoEnvio en la orden completa
+            // NO guardamos el campo "estado" - se calcula dinámicamente en getEstadoProceso()
             const orderToUpdate = {
               ...fullOrder,
               metodoEnvio: 'mensajeroPropio',
               transportador: 'mensajero_propio', // Limpiar transportadora asignada
-              estado: estadoActual, // PRESERVAR el estado actual
               metadata: {
                 ...(fullOrder.metadata || {}),
                 cambioMetodo: {
                   anterior: 'transportadora',
                   nuevo: 'mensajeroPropio',
                   transportadorAnterior: order.transportador || 'N/A',
-                  estadoPreservado: estadoActual,
                   fecha: new Date().toISOString(),
                   usuario: localStorage.getItem('user')
                 }
               }
             };
+
+            // Eliminar campo estado si existe (no debe guardarse, se calcula dinámicamente)
+            delete orderToUpdate.estado;
 
             // Actualizar también cada pedido para preservar su estado
             if (orderToUpdate.pedidos && Array.isArray(orderToUpdate.pedidos)) {
