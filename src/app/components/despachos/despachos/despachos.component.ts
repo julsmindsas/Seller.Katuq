@@ -4290,26 +4290,52 @@ export class DespachosComponent implements OnInit {
   }
 
   private optimizarDatosPedidos(pedidos: any[]): any[] {
-    return pedidos.map((pedido) => ({
-      nroPedido: pedido.nroPedido,
-      faltaPorPagar: pedido.faltaPorPagar || 0,
-      horarioEntrega: pedido.horarioEntrega,
-      envio: {
-        nombres: pedido.envio?.nombres || "",
-        apellidos: pedido.envio?.apellidos || "",
-        celular: pedido.envio?.celular || "",
-        otroNumero: pedido.envio?.otroNumero || "",
-        direccionEntrega: pedido.envio?.direccionEntrega || "",
-        nombreUnidad: pedido.envio?.nombreUnidad || "",
-        especificacionesInternas: pedido.envio?.especificacionesInternas || "",
-        observaciones: pedido.envio?.observaciones || "",
-        ciudad: pedido.envio?.ciudad || "",
-        departamento: pedido.envio?.departamento || "",
-        zonaCobro: pedido.envio?.zonaCobro || "",
-        barrio: pedido.envio?.barrio || "",
-        pais: pedido.envio?.pais || "Colombia",
-      },
-    }));
+    console.log('🔧 optimizarDatosPedidos - Procesando', pedidos.length, 'pedidos');
+
+    return pedidos.map((pedido, index) => {
+      const tieneNotasPedido = !!pedido.notasPedido;
+      const notasDespachos = pedido.notasPedido?.notasDespachos?.length || 0;
+      const notasEntregas = pedido.notasPedido?.notasEntregas?.length || 0;
+
+      console.log(`Pedido ${index + 1} (${pedido.nroPedido}):`, {
+        tieneNotasPedido,
+        notasDespachos,
+        notasEntregas,
+        tieneObservaciones: !!pedido.envio?.observaciones
+      });
+
+      return {
+        nroPedido: pedido.nroPedido,
+        faltaPorPagar: pedido.faltaPorPagar || 0,
+        horarioEntrega: pedido.horarioEntrega,
+        cliente: {
+          nombres_completos: pedido.cliente?.nombres_completos || "",
+          numero_celular_comprador: pedido.cliente?.numero_celular_comprador || ""
+        },
+        envio: {
+          nombres: pedido.envio?.nombres || "",
+          apellidos: pedido.envio?.apellidos || "",
+          celular: pedido.envio?.celular || "",
+          otroNumero: pedido.envio?.otroNumero || "",
+          direccionEntrega: pedido.envio?.direccionEntrega || "",
+          nombreUnidad: pedido.envio?.nombreUnidad || "",
+          especificacionesInternas: pedido.envio?.especificacionesInternas || "",
+          observaciones: pedido.envio?.observaciones || "",
+          ciudad: pedido.envio?.ciudad || "",
+          departamento: pedido.envio?.departamento || "",
+          zonaCobro: pedido.envio?.zonaCobro || "",
+          barrio: pedido.envio?.barrio || "",
+          pais: pedido.envio?.pais || "Colombia",
+        },
+        notasPedido: {
+          notasDespachos: pedido.notasPedido?.notasDespachos || [],
+          notasEntregas: pedido.notasPedido?.notasEntregas || [],
+          notasCliente: pedido.notasPedido?.notasCliente || [],
+          notasProduccion: pedido.notasPedido?.notasProduccion || [],
+          notasFacturacionPagos: pedido.notasPedido?.notasFacturacionPagos || []
+        }
+      };
+    });
   }
 
   // Manejadores para acciones desde OrdenesDespachoComponent
@@ -6289,7 +6315,7 @@ export class DespachosComponent implements OnInit {
         EstadoPago.Pendiente,
         EstadoPago.Pospendiente,
       ],
-      tipoFecha: "fechaEntrega",
+      tipoFecha: "fechaEntrega"
     };
 
     // Add sorting parameters from LazyLoadEvent

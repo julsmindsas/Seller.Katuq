@@ -2,11 +2,11 @@
   <!-- Encabezado Compacto con Toda la Información -->
   <table class="header-table">
     <tbody>
-      <!-- Fila 1: Título y Número de Orden -->
+      <!-- Fila 1: Fecha y Número de Orden (simplificado) -->
       <tr class="header-row-1">
         <td class="header-left">
-          <h1 class="order-title">Orden de Envío #{{ nroShippingOrder }}</h1>
-          <p class="fecha-generacion">Fecha: {{ getCurrentDate() }}</p>
+          <p class="fecha-generacion">Fecha de Generación: {{ getCurrentDate() }}</p>
+          <p class="empresa-name">Katuq Seller</p>
         </td>
         <td class="header-right">
           <div class="order-id">
@@ -71,6 +71,20 @@
                 <strong class="label-inline">Dir:</strong>
                 <span class="data-inline direccion-text">{{ getObservacionesCompactasPDF(pedido) }}</span>
               </div>
+              <!-- Observaciones de Envío -->
+              <div class="cliente-line obs-line" *ngIf="getObservacionesEnvio(pedido) !== 'N/A'">
+                <strong class="label-inline">Obs:</strong>
+                <span class="data-inline obs-text">{{ getObservacionesEnvio(pedido) }}</span>
+              </div>
+              <!-- Notas de Despacho y Entrega -->
+              <div class="cliente-line notas-line" *ngIf="getNotasDespacho(pedido) !== 'N/A'">
+                <strong class="label-inline">Despacho:</strong>
+                <span class="data-inline notas-text">{{ getNotasDespacho(pedido) }}</span>
+              </div>
+              <div class="cliente-line notas-line" *ngIf="getNotasEntrega(pedido) !== 'N/A'">
+                <strong class="label-inline">Entrega:</strong>
+                <span class="data-inline notas-text">{{ getNotasEntrega(pedido) }}</span>
+              </div>
             </div>
           </td>
           <td>{{ getValorSeguro(pedido.envio?.zonaCobro) }}</td>
@@ -85,22 +99,14 @@
   </section>
 
   <!-- Footer -->
-   <!-- <footer class="footer">
-    <div class="footer-bottom">
-      Documento generado por Katuq Seller | {{ getCurrentDateTime() }}
-     
+  <footer class="footer">
+    <div class="footer-content">
+      <img src="assets/images/logo/Katuq/katuq_dark.svg"
+           alt="Katuq Logo"
+           class="footer-logo">
+      <span class="footer-text">Documento generado por Katuq Seller | {{ getCurrentDateTime() }}</span>
     </div>
-   <div class="footer-right">
-       <div class="signature-box">
-        <p class="signature-line"></p>
-        <p>Firma Despachador</p>
-      </div>
-      <div class="signature-box">
-        <p class="signature-line"></p>
-        <p>Firma Transportador</p>
-      </div>
-      </div>
-    </footer>-->
+  </footer>
 </div>
 
 <!-- Estado de Error -->

@@ -20,6 +20,17 @@ export class PdfTemplateComponent implements OnInit {
     // Validar inputs requeridos
     if (!this.pedidos || this.pedidos.length === 0) {
       console.warn("PDF Template: No se proporcionaron pedidos");
+    } else {
+      console.log('📦 PDF Template recibió pedidos:', this.pedidos.length);
+      this.pedidos.forEach((p, i) => {
+        console.log(`Pedido ${i + 1}:`, {
+          nroPedido: p.nroPedido,
+          tieneNotasPedido: !!p.notasPedido,
+          notasDespachos: p.notasPedido?.notasDespachos?.length || 0,
+          notasEntregas: p.notasPedido?.notasEntregas?.length || 0,
+          observacionesEnvio: p.envio?.observaciones ? 'Sí' : 'No'
+        });
+      });
     }
   }
 
@@ -121,37 +132,84 @@ export class PdfTemplateComponent implements OnInit {
    * Obtiene las notas de despacho del pedido
    */
   getNotasDespacho(pedido: Pedido): string {
-    if (!pedido.notasPedido?.notasDespachos || pedido.notasPedido.notasDespachos.length === 0) {
+    console.log('🔍 getNotasDespacho - Pedido:', pedido.nroPedido);
+    console.log('🔍 notasPedido:', pedido.notasPedido);
+    console.log('🔍 notasDespachos array:', pedido.notasPedido?.notasDespachos);
+
+    // Verificación más robusta
+    const notasPedido = pedido.notasPedido;
+    if (!notasPedido) {
+      console.log('❌ pedido.notasPedido es null/undefined');
       return "N/A";
     }
 
-    return pedido.notasPedido.notasDespachos
-      .map(nota => `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`)
+    const notasDespachos = notasPedido.notasDespachos;
+    if (!notasDespachos || !Array.isArray(notasDespachos) || notasDespachos.length === 0) {
+      console.log('❌ notasDespachos vacío o inválido:', notasDespachos);
+      return "N/A";
+    }
+
+    const resultado = notasDespachos
+      .map((nota, index) => {
+        console.log(`📝 Nota despacho ${index + 1}:`, nota);
+        return `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`;
+      })
       .join(" | ");
+
+    console.log('✅ Resultado notasDespacho:', resultado);
+    return resultado;
   }
 
   /**
    * Obtiene las notas de entrega del pedido
    */
   getNotasEntrega(pedido: Pedido): string {
-    if (!pedido.notasPedido?.notasEntregas || pedido.notasPedido.notasEntregas.length === 0) {
+    console.log('🔍 getNotasEntrega - Pedido:', pedido.nroPedido);
+    console.log('🔍 notasPedido:', pedido.notasPedido);
+    console.log('🔍 notasEntregas array:', pedido.notasPedido?.notasEntregas);
+
+    // Verificación más robusta
+    const notasPedido = pedido.notasPedido;
+    if (!notasPedido) {
+      console.log('❌ pedido.notasPedido es null/undefined');
       return "N/A";
     }
 
-    return pedido.notasPedido.notasEntregas
-      .map(nota => `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`)
+    const notasEntregas = notasPedido.notasEntregas;
+    if (!notasEntregas || !Array.isArray(notasEntregas) || notasEntregas.length === 0) {
+      console.log('❌ notasEntregas vacío o inválido:', notasEntregas);
+      return "N/A";
+    }
+
+    const resultado = notasEntregas
+      .map((nota, index) => {
+        console.log(`📝 Nota entrega ${index + 1}:`, nota);
+        return `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`;
+      })
       .join(" | ");
+
+    console.log('✅ Resultado notasEntrega:', resultado);
+    return resultado;
   }
 
   /**
-   * Obtiene toda la información adicional combinada en un formato compacto
+   * Obtiene solo las observaciones del envío
+   * @param pedido - El pedido del cual obtener las observaciones
+   * @returns Observaciones del envío o N/A
+   */
+  getObservacionesEnvio(pedido: Pedido): string {
+    return pedido.envio?.observaciones?.trim() || "N/A";
+  }
+
+  /**
+   * Obtiene solo la información de dirección (sin observaciones ni notas)
    * @param pedido - El pedido del cual obtener la información
-   * @returns Toda la información adicional combinada
+   * @returns Información de dirección combinada
    */
   getObservacionesCompletas(pedido: Pedido): string {
     const informacionAdicional: string[] = [];
 
-    // Agregar información de dirección
+    // SOLO información de dirección (sin observaciones ni notas)
     if (pedido.envio?.direccionEntrega && pedido.envio.direccionEntrega.trim() !== '') {
       informacionAdicional.push(pedido.envio.direccionEntrega.trim());
     }
@@ -171,22 +229,7 @@ export class PdfTemplateComponent implements OnInit {
       informacionAdicional.push(pedido.envio.barrio.trim());
     }
 
-    // Agregar observaciones del envío
-    if (pedido.envio?.observaciones && pedido.envio.observaciones.trim() !== '') {
-      informacionAdicional.push(pedido.envio.observaciones.trim());
-    }
-
-    // Agregar notas de despacho
-    const notasDespacho = this.getNotasDespacho(pedido);
-    if (notasDespacho !== 'N/A') {
-      informacionAdicional.push(notasDespacho);
-    }
-
-    // Agregar notas de entrega
-    const notasEntrega = this.getNotasEntrega(pedido);
-    if (notasEntrega !== 'N/A') {
-      informacionAdicional.push(notasEntrega);
-    }
+    // NO incluir observaciones ni notas aquí - se muestran en líneas separadas
 
     // Si no hay información adicional, retornar N/A
     if (informacionAdicional.length === 0) {
