@@ -3441,6 +3441,21 @@ $filter-border-color: #e0e0e0;
           font-weight: 500;
         }
       }
+      
+      .config-actions {
+        flex-shrink: 0;
+        margin-left: auto;
+        
+        .btn {
+          border-radius: 3px;
+          transition: all 0.2s ease;
+          
+          &:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+          }
+        }
+      }
     }
     
     .no-products-message {

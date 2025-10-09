@@ -2199,6 +2199,55 @@ export class ConfProductToCartComponent
         .length > 0
       : false;
   }
+
+  /**
+   * Elimina la imagen de una preferencia específica
+   * @param item - FormControl del item de preferencia
+   */
+  deleteImageFromPreference(item: FormControl): void {
+    const tituloPreferencia = item.value.data.titulo;
+    
+    // Confirmar eliminación
+    Swal.fire({
+      title: '¿Eliminar imagen?',
+      text: `¿Estás seguro de que quieres eliminar la imagen de "${tituloPreferencia}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Limpiar la imagen del item
+        if (item.value.children && item.value.children.data) {
+          item.value.children.data = {
+            ...item.value.children.data,
+            imagen: 'assets/images/other-images/sinimagen.webp',
+            subtitulo: '',
+            titulo: ''
+          };
+        }
+
+        // Limpiar el input
+        item.get('imagenIngresado')?.setValue('');
+
+        // Actualizar la preferencia en el array
+        this.updateProductPreference(item, item.value.children);
+
+        // Mostrar confirmación
+        Swal.fire({
+          title: 'Imagen eliminada',
+          text: 'La imagen ha sido eliminada correctamente.',
+          icon: 'success',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        console.log(`🗑️ Imagen eliminada de la preferencia: ${tituloPreferencia}`);
+      }
+    });
+  }
   getVariablesControls() {
     return (this.formulario.get("variables") as FormArray).controls;
   }

@@ -922,6 +922,16 @@
                                                                                         <span class="config-name">{{ pref.titulo }}</span>
                                                                                         <small class="config-price">{{ pref.precioTotalConIva | currency }}</small>
                                                                                     </div>
+                                                                                    <!-- Botón de eliminar imagen -->
+                                                                                    <div class="config-actions" *ngIf="pref.imagen && pref.imagen !== 'assets/images/other-images/sinimagen.webp'">
+                                                                                        <button type="button" 
+                                                                                                class="btn btn-outline-danger btn-sm"
+                                                                                                (click)="deleteImageFromOrderPreference(pedido, item, pref)"
+                                                                                                title="Eliminar imagen"
+                                                                                                style="padding: 2px 6px; font-size: 12px;">
+                                                                                            <i class="fa fa-trash"></i>
+                                                                                        </button>
+                                                                                    </div>
                                                                                 </div>
                                                                             </div>
                                                                         </div>

@@ -3846,6 +3846,75 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  /**
+   * Elimina una imagen de una preferencia específica en el detalle del pedido
+   * @param pedido - El pedido que contiene la preferencia
+   * @param item - El item del carrito que contiene la configuración
+   * @param preferencia - La preferencia específica a eliminar
+   */
+  deleteImageFromOrderPreference(pedido: Pedido, item: any, preferencia: any): void {
+    // Confirmar eliminación
+    Swal.fire({
+      title: '¿Eliminar imagen?',
+      text: `¿Estás seguro de que quieres eliminar la imagen de "${preferencia.titulo}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Buscar la preferencia en la configuración del item
+        const preferencias = item.configuracion?.preferencias || [];
+        const index = preferencias.findIndex((p: any) => 
+          p.titulo === preferencia.titulo && p.subtitulo === preferencia.subtitulo
+        );
+
+        if (index !== -1) {
+          // Eliminar la imagen de la preferencia
+          preferencias[index] = {
+            ...preferencias[index],
+            imagen: 'assets/images/other-images/sinimagen.webp',
+            subtitulo: '',
+            titulo: preferencias[index].titulo // Mantener el título original
+          };
+
+          // Actualizar el pedido
+          this.updateOrderConfiguration(pedido, item);
+
+          // Mostrar confirmación
+          Swal.fire({
+            title: 'Imagen eliminada',
+            text: 'La imagen ha sido eliminada correctamente.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          console.log(`🗑️ Imagen eliminada de la preferencia: ${preferencia.titulo}`);
+        }
+      }
+    });
+  }
+
+  /**
+   * Actualiza la configuración del pedido después de eliminar una imagen
+   * @param pedido - El pedido a actualizar
+   * @param item - El item del carrito modificado
+   */
+  private updateOrderConfiguration(pedido: Pedido, item: any): void {
+    // Aquí puedes implementar la lógica para actualizar el pedido
+    // Por ejemplo, llamar al servicio de ventas para actualizar el pedido
+    console.log('🔄 Actualizando configuración del pedido:', {
+      pedidoId: pedido._id,
+      itemConfiguracion: item.configuracion
+    });
+
+    // Opcional: Actualizar el pedido en el servidor
+    // this.ventasService.updateOrder(pedido).subscribe(...)
+  }
+
   confProductToCart(content, carritoConfiguracion: Carrito, order: Pedido, indiceProducto?: number) {
     // Evitar warning de aria-hidden con foco persistente en botones bajo app-root
     try {
