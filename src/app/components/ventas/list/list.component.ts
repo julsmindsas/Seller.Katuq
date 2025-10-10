@@ -2835,7 +2835,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   pdfOrder(content, order: Pedido) {
-    this.scrollStack.push(window.scrollY);
+    // ✅ FIX: Capturar scroll y aplicar posición fija con offset para prevenir salto visual
+    const scrollY = window.scrollY;
+    this.scrollStack.push(scrollY);
+    document.body.style.top = `-${scrollY}px`;
 
     // 🔄 CRÍTICO: Actualizar valores del pedido ANTES de generar PDF
     // Esto asegura que el PDF muestre los valores más recientes
@@ -2872,6 +2875,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       })
       .result.then(
         (result) => {
+          // ✅ FIX: Restaurar posición del body antes de hacer scroll
+          document.body.style.top = '';
           this.htmlModal = null;
           const last = this.scrollStack.pop();
           if (last !== undefined) {
@@ -2881,6 +2886,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         },
         (reason) => {
+          // ✅ FIX: Restaurar posición del body antes de hacer scroll
+          document.body.style.top = '';
           const last = this.scrollStack.pop();
           if (last !== undefined) {
             setTimeout(() => {

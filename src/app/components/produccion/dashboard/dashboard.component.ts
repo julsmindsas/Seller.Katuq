@@ -51,6 +51,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   showMetrics: boolean = false; // Ocultar métricas por defecto
   totalDescuento: number;
   htmlModal: any;
+  scrollStack: number[] = []; // ✅ FIX: Stack para manejar scroll en modales
   clienteSeleccionado: Cliente;
   formulario: any;
   pedidoSeleccionado: Pedido;
@@ -346,6 +347,11 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
 
   pdfOrder(content, order: Pedido) {
+    // ✅ FIX: Capturar scroll y aplicar posición fija con offset para prevenir salto visual
+    const scrollY = window.scrollY;
+    this.scrollStack.push(scrollY);
+    document.body.style.top = `-${scrollY}px`;
+
     this.htmlModal = this.paymentService.getHtmlContent(order);
     this.modalService.open(content, {
       size: 'lg',
@@ -355,9 +361,25 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       ariaLabelledBy: 'modal-basic-title'
     }
     ).result.then((result) => {
+      // ✅ FIX: Restaurar posición del body antes de hacer scroll
+      document.body.style.top = '';
       this.htmlModal = null;
+      const last = this.scrollStack.pop();
+      if (last !== undefined) {
+        setTimeout(() => {
+          window.scrollTo({ top: last });
+        }, 0);
+      }
     }
       , (reason) => {
+        // ✅ FIX: Restaurar posición del body antes de hacer scroll
+        document.body.style.top = '';
+        const last = this.scrollStack.pop();
+        if (last !== undefined) {
+          setTimeout(() => {
+            window.scrollTo({ top: last });
+          }, 0);
+        }
       });
   }
 

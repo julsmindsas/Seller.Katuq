@@ -505,7 +505,10 @@ export class CerrararticuloComponent implements OnInit {
    * @param order - Datos del pedido
    */
   pdfOrder(order: Pedido) {
-    this.scrollStack.push(window.scrollY);
+    // ✅ FIX: Capturar scroll y aplicar posición fija con offset para prevenir salto visual
+    const scrollY = window.scrollY;
+    this.scrollStack.push(scrollY);
+    document.body.style.top = `-${scrollY}px`;
 
     // Actualizar el pedido antes de generar PDF (misma lógica que ventas/list)
     const pedidoActualizado = this.actualizarPedidoParaPDF(order);
@@ -524,27 +527,29 @@ export class CerrararticuloComponent implements OnInit {
 
     // Abrir nueva ventana para mostrar el PDF
     const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
-    
+
     if (newWindow && this.htmlModal) {
       // Convertir SafeHtml a string para escritura en nueva ventana
       const htmlString = (this.htmlModal as any).changingThisBreaksApplicationSecurity || this.htmlModal.toString();
       newWindow.document.write(htmlString);
       newWindow.document.close();
-      
+
       // Solo mostrar el PDF sin auto-imprimir
       // setTimeout(() => {
       //   newWindow.print();
       // }, 500);
     }
 
-    // Limpiar el HTML modal después de usarlo
+    // ✅ FIX: Reducir timeout de 1000ms a 100ms para restauración más rápida
     setTimeout(() => {
+      // ✅ FIX: Restaurar posición del body antes de hacer scroll
+      document.body.style.top = '';
       this.htmlModal = null;
       const last = this.scrollStack.pop();
       if (last !== undefined) {
         window.scrollTo({ top: last });
       }
-    }, 1000);
+    }, 100);
   }
 
   /**

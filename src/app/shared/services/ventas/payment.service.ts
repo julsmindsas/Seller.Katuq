@@ -1252,6 +1252,28 @@ export class PaymentService extends BaseService {
           carritoHtml += `</div>`;
         }
 
+        // ✅ NUEVO: Notas de Producción debajo de Preferencias
+        if (item?.notaProduccion && item.notaProduccion.length > 0) {
+          carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999; background-color: #FFF9E6;">`;
+          carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">📝 Notas de Producción:</div>`;
+
+          item.notaProduccion.forEach((nota: any) => {
+            const notaTexto = nota.nota || nota.descripcion || '';
+            const usuario = nota.usuario || '';
+            const fecha = nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '';
+
+            if (notaTexto) {
+              carritoHtml += `
+                <div style="margin-top: 2px; padding: 2px 4px; background-color: #FFFBF0; border-left: 2px solid #FFA500;">
+                  <div style="font-size: 9px; color: #333; line-height: 1.4; margin-bottom: 1px;">${notaTexto}</div>
+                  ${(usuario || fecha) ? `<div style="font-size: 7px; color: #666; font-style: italic;">${usuario}${usuario && fecha ? ' - ' : ''}${fecha}</div>` : ''}
+                </div>`;
+            }
+          });
+
+          carritoHtml += `</div>`;
+        }
+
         // Adiciones compactas con precios
         if (configuracion?.adiciones && configuracion.adiciones.length > 0) {
           carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
