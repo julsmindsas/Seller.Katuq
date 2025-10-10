@@ -139,6 +139,47 @@ export class PaymentService extends BaseService {
     return formatter.format(value);
   }
 
+  /**
+   * Valida y normaliza URLs de imágenes para que funcionen en PDFs.
+   * Convierte rutas relativas a absolutas usando el origin del navegador.
+   * @param imageUrl - URL de la imagen (puede ser relativa, absoluta, null o undefined)
+   * @returns URL absoluta válida o null si no hay imagen
+   */
+  private getValidImageUrl(imageUrl: string | undefined | null): string | null {
+    if (!imageUrl || imageUrl.trim() === '') return null;
+
+    // Si es una URL completa (http:// o https://), usarla directamente
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+
+    // Si es una ruta relativa, convertirla a absoluta usando el origin actual
+    // Esto es crítico para PDFs, que necesitan URLs completas
+    if (imageUrl.startsWith('assets/') || imageUrl.startsWith('/assets/')) {
+      const baseUrl = window.location.origin;
+      const cleanPath = imageUrl.startsWith('/') ? imageUrl : `/${imageUrl}`;
+      return `${baseUrl}${cleanPath}`;
+    }
+
+    // Si empieza con '/' pero no es assets, también convertir a absoluta
+    if (imageUrl.startsWith('/')) {
+      return `${window.location.origin}${imageUrl}`;
+    }
+
+    // Si no es ninguno de los casos anteriores, asumir que es relativa al root
+    return `${window.location.origin}/${imageUrl}`;
+  }
+
+  /**
+   * Retorna una imagen placeholder por defecto como data URI SVG.
+   * Esta imagen está embebida directamente y funciona en cualquier contexto (HTML, PDF).
+   * @returns Data URI de una imagen SVG placeholder
+   */
+  private getDefaultImageUrl(): string {
+    // Data URI con SVG embebido - funciona en PDFs sin necesidad de servidor
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"%3E%3Crect fill="%23ddd" width="32" height="32"/%3E%3Ctext x="16" y="16" text-anchor="middle" dy=".3em" fill="%23999" font-family="sans-serif" font-size="10"%3ENo img%3C/text%3E%3C/svg%3E';
+  }
+
   // formatearFecha no se usa en getHtmlContent, pero se mantiene por si acaso
   formatearFecha(fecha: string): string {
     if (!fecha) return "";
@@ -1189,11 +1230,15 @@ export class PaymentService extends BaseService {
             const valorIvaPrefTotal = valorIvaPref * cantidad;
             const precioTotalConIvaPrefTotal = precioTotalConIvaPref * cantidad;
 
+            // ✅ FIX: Validar y normalizar URL de imagen para PDFs
+            const imagenUrl = this.getValidImageUrl(pref.imagen);
+            const imagenFinal = imagenUrl || this.getDefaultImageUrl();
+
             carritoHtml += `
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 2px;">
                 <tr>
                   <td style="font-size: 9px; color: #333; padding: 1px 0 1px 4px; width: 40px;">
-                    ${pref.imagen ? `<img src="${pref.imagen}" onerror="this.src='assets/images/default-product.png'" alt="Pref" style="width: 32px; height: 32px; object-fit: cover; border-radius: 3px; vertical-align: middle;">` : '•'}
+                    ${imagenUrl ? `<img src="${imagenFinal}" alt="${pref.titulo || 'Pref'}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 3px; vertical-align: middle;">` : '•'}
                   </td>
                   <td style="font-size: 9px; color: #333; padding: 1px 0;">
                     ${pref.titulo || ''}: ${pref.subtitulo || ''}
@@ -1222,11 +1267,15 @@ export class PaymentService extends BaseService {
             const valorIvaAdicTotal = valorIvaAdic * cantidadTotalAdicion;
             const precioTotalConIvaAdicTotal = precioTotalConIvaAdic * cantidadTotalAdicion;
 
+            // ✅ FIX: Validar y normalizar URL de imagen para PDFs
+            const imagenUrl = this.getValidImageUrl(adic.imagen);
+            const imagenFinal = imagenUrl || this.getDefaultImageUrl();
+
             carritoHtml += `
               <table width="100%" cellpadding="0" cellspacing="0" style="margin-top: 2px;">
                 <tr>
                   <td style="font-size: 9px; color: #333; padding: 1px 0 1px 4px; width: 40px;">
-                    ${adic.imagen ? `<img src="${adic.imagen}" onerror="this.src='assets/images/default-product.png'" alt="Adic" style="width: 32px; height: 32px; object-fit: cover; border-radius: 3px; vertical-align: middle;">` : '•'}
+                    ${imagenUrl ? `<img src="${imagenFinal}" alt="${adic.titulo || 'Adic'}" style="width: 32px; height: 32px; object-fit: cover; border-radius: 3px; vertical-align: middle;">` : '•'}
                   </td>
                   <td style="font-size: 9px; color: #333; padding: 1px 0;">
                     ${adic.titulo || ''}: ${adic.subtitulo || ''} ${cantidadTotalAdicion > 1 ? `(x${cantidadTotalAdicion})` : ''}
@@ -1383,10 +1432,14 @@ export class PaymentService extends BaseService {
             const valorIvaPrefTotal = valorIvaPref * cantidad;
             const precioTotalConIvaPrefTotal = precioTotalConIvaPref * cantidad;
 
+            // ✅ FIX: Validar y normalizar URL de imagen para PDFs
+            const imagenUrl = this.getValidImageUrl(pref.imagen);
+            const imagenFinal = imagenUrl || this.getDefaultImageUrl();
+
             carritoHtml += `
               <tr style="border-bottom: 1px solid ${styles.colors.divider};">
                 <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
-                  ${pref.imagen ? `<img src="${pref.imagen}" onerror="this.src='assets/images/default-product.png'" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
+                  ${imagenUrl ? `<img src="${imagenFinal}" alt="${pref.titulo || 'Preferencia'}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
                   <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle;">
                     ${pref.titulo || ''}: ${pref.subtitulo || ''}
                   </span>
@@ -1420,10 +1473,14 @@ export class PaymentService extends BaseService {
             const valorIvaAdicTotal = valorIvaAdic * cantidadTotalAdicion;
             const precioTotalConIvaAdicTotal = precioTotalConIvaAdic * cantidadTotalAdicion;
 
+            // ✅ FIX: Validar y normalizar URL de imagen para PDFs
+            const imagenUrl = this.getValidImageUrl(adic.imagen);
+            const imagenFinal = imagenUrl || this.getDefaultImageUrl();
+
             carritoHtml += `
               <tr style="border-bottom: 1px solid ${styles.colors.divider};">
                 <td style="padding: ${styles.spacing.md} ${styles.spacing.md} ${styles.spacing.md} 40px;">
-                  ${adic.imagen ? `<img src="${adic.imagen}" onerror="this.src='assets/images/default-product.png'" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
+                  ${imagenUrl ? `<img src="${imagenFinal}" alt="${adic.titulo || 'Adición'}" width="32" height="32" style="border-radius: ${styles.borderRadius.sm}; vertical-align: middle; margin-right: ${styles.spacing.md};">` : ''}
                   <span style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; vertical-align: middle;">
                     ${adic.titulo || ''}: ${adic.subtitulo || ''} ${cantidadTotalAdicion > 1 ? `(x${cantidadTotalAdicion})` : ''}
                   </span>
