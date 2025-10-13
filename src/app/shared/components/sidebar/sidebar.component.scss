@@ -982,7 +982,7 @@ body.dark-only {
       }
 
       .menu-text {
-        flex: 1;
+        flex: 0;
 
         &.sr-only {
           position: absolute;
@@ -1089,7 +1089,7 @@ body.dark-only {
 
 .submenu {
   list-style: none;
-  margin: 2px 0 2px var(--spacing-lg);
+  margin: 2px 0 2px var(--spacing-sm);
   padding: 0;
   max-height: 0;
   overflow: hidden;
@@ -1106,7 +1106,7 @@ body.dark-only {
     .submenu-link {
       display: flex;
       align-items: center;
-      padding: 4px 12px;
+      padding: 4px 8px;
       color: var(--text-secondary);
       text-decoration: none;
       border-radius: var(--radius-sm);
@@ -1163,7 +1163,7 @@ body.dark-only {
 // Sub-submenú
 .sub-submenu {
   list-style: none;
-  margin: 2px 0 2px var(--spacing-lg);
+  margin: 2px 0 2px var(--spacing-sm);
   padding: 0;
   max-height: 0;
   overflow: hidden;
@@ -1177,7 +1177,7 @@ body.dark-only {
     .sub-submenu-link {
       display: flex;
       align-items: center;
-      padding: 3px 12px;
+      padding: 3px 8px;
       color: var(--text-muted);
       text-decoration: none;
       border-radius: var(--radius-sm);

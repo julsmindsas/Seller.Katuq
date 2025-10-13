@@ -26,11 +26,78 @@
   --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   --box-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s ease;
+
+  // ========== COLORES RGB (para transparencias) ==========
+  --primary-rgb: 67, 97, 238;
+  --secondary-rgb: 46, 196, 182;
+  --success-rgb: 6, 214, 160;
+  --warning-rgb: 255, 209, 102;
+  --danger-rgb: 239, 71, 111;
+
+  // ========== COLORES ADICIONALES (oscuros) ==========
+  --success-light: #39e4b5;
+  --success-dark: #05b085;
+  --warning-light: #ffe199;
+  --warning-dark: #c49b00;
+  --danger-light: #f57290;
+  --danger-dark: #c7365a;
+
+  // ========== TIPOGRAFÍA ==========
+  --font-size-xs: 0.75rem;      // 12px - Tiny (badges pequeños, hints)
+  --font-size-sm: 0.875rem;     // 14px - Small (labels, metadata)
+  --font-size-base: 1rem;       // 16px - Base (texto principal)
+  --font-size-md: 1.125rem;     // 18px - Medium (subtítulos)
+  --font-size-lg: 1.25rem;      // 20px - Large (títulos de sección)
+  --font-size-xl: 1.5rem;       // 24px - XL (títulos principales, precios)
+
+  --line-height-tight: 1.25;    // Títulos
+  --line-height-snug: 1.375;    // Subtítulos
+  --line-height-normal: 1.5;    // Párrafos
+  --line-height-relaxed: 1.75;  // Textos largos
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  // ========== ESPACIADO (sistema 4px base) ==========
+  --space-xs: 0.25rem;    // 4px
+  --space-sm: 0.5rem;     // 8px
+  --space-md: 1rem;       // 16px
+  --space-lg: 1.5rem;     // 24px
+  --space-xl: 2rem;       // 32px
+  --space-2xl: 3rem;      // 48px
+
+  // ========== BOX SHADOWS ADICIONALES ==========
+  --box-shadow-xs: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --box-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --box-shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+
+  // Shadows con color específico
+  --box-shadow-primary: 0 4px 12px rgba(67, 97, 238, 0.2);
+  --box-shadow-success: 0 4px 12px rgba(6, 214, 160, 0.2);
+  --box-shadow-warning: 0 4px 12px rgba(255, 209, 102, 0.2);
+  --box-shadow-danger: 0 4px 12px rgba(239, 71, 111, 0.2);
+
+  // ========== TRANSICIONES ==========
+  --transition-fast: all 0.15s ease;
+  --transition-base: all 0.3s ease;
+  --transition-slow: all 0.5s ease;
+
+  // ========== BORDER RADIUS ADICIONAL ==========
+  --border-radius-xl: 1rem;      // 16px
+  --border-radius-full: 9999px;  // Círculos perfectos
+}
+
+// Smooth scroll para navegación fluida
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 100px; // Compensar header sticky
 }
 
 /* Estilos generales */
 .container-fluid {
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
 }
 
 .card {
@@ -39,8 +106,8 @@
   box-shadow: var(--box-shadow);
   overflow: hidden;
   transition: var(--transition);
-  margin-bottom: 1.5rem;
-  
+  margin-bottom: 1rem;
+
   &:hover {
     transform: translateY(-2px);
     box-shadow: var(--box-shadow-lg);
@@ -127,7 +194,7 @@
 .btn-primary {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
-  
+
   &:hover, &:active, &:focus {
     background-color: var(--primary-dark);
     border-color: var(--primary-dark);
@@ -135,123 +202,911 @@
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background-color: #06d6a0;
   border: none;
-  transition: all 0.3s ease;
-  
+  min-height: 52px;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #218838 0%, #1ba085 100%);
+    background-color: #05c290;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    box-shadow: 0 4px 12px rgba(6, 214, 160, 0.3);
   }
-  
+
+  &:focus:not(:disabled) {
+    outline: 3px solid #4361ee;
+    outline-offset: 2px;
+    background-color: #05c290;
+  }
+
   &:disabled {
-    opacity: 0.7;
+    background-color: #6c757d;
+    opacity: 0.6;
     cursor: not-allowed;
+    pointer-events: none;
   }
 }
 
 .btn-outline-secondary {
   color: var(--gray-700);
-  border-color: var(--gray-400);
+  border: 2px solid #6c757d;
+  min-height: 52px;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+  background-color: transparent;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: #6c757d;
+    color: white;
+    border-color: #6c757d;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  }
+
+  &:focus:not(:disabled) {
+    outline: 3px solid #4361ee;
+    outline-offset: 2px;
+    background-color: #6c757d;
+    color: white;
+    border-color: #6c757d;
+  }
+
+  &:disabled {
+    background-color: #e9ecef;
+    border-color: #dee2e6;
+    color: #adb5bd;
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+/* ==============================================================================
+   WIZARD MINIMALISTA EN HEADER - Solo Texto, Sin Iconos
+   Diseño: Horizontal, compacto, estados diferenciados por tipografía y color
+   ============================================================================== */
+
+.wizard-integrated-header {
+  background-color: white;
+  border-bottom: 2px solid var(--gray-200);
+  padding: 0.875rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  @media (max-width: 991px) {
+    padding: 1rem;
+  }
+
+  @media (max-width: 767px) {
+    padding: 0.75rem;
+  }
+}
+
+/* Contenedor principal del wizard minimalista */
+.wizard-minimal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  padding: 0.5rem 0;
+
+  @media (max-width: 991px) {
+    justify-content: center;
+  }
+
+  @media (max-width: 767px) {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-400) transparent;
+
+    &::-webkit-scrollbar {
+      height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--gray-400);
+      border-radius: 2px;
+    }
+  }
+}
+
+/* Contenedor de los steps */
+.wizard-steps-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: nowrap;
+
+  @media (max-width: 767px) {
+    gap: 0.5rem;
+    padding: 0 0.5rem;
+  }
+}
+
+/* Step individual */
+.wizard-step {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  cursor: default;
+
+  /* Checkmark para steps completados */
+  .step-check {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--success-color);
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s ease;
+  }
+
+  .step-text {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+  }
+
+  /* ==========================================
+     ESTADO ACTIVO (current)
+     ========================================== */
+  &.current {
+    .step-text {
+      color: var(--primary-color);
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      position: relative;
+
+      /* Línea inferior animada */
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 100%;
+        height: 3px;
+        background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+        border-radius: 2px;
+        animation: stepPulse 2s ease-in-out infinite;
+      }
+    }
+  }
+
+  /* ==========================================
+     ESTADO COMPLETADO (done)
+     ========================================== */
+  &.done {
+    .step-check {
+      opacity: 1;
+      transform: scale(1);
+      animation: checkAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .step-text {
+      color: var(--success-color);
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+    }
+
+    /* Hover effect para steps navegables (opcional) */
+    &:hover {
+      .step-text {
+        color: var(--secondary-color);
+        cursor: pointer;
+      }
+    }
+  }
+
+  /* ==========================================
+     ESTADO PENDIENTE (pending)
+     ========================================== */
+  &.pending {
+    .step-text {
+      color: var(--gray-500);
+      font-weight: 500;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+      opacity: 0.7;
+    }
+  }
+
+  /* ==========================================
+     STEPS CLICKEABLES (navegables)
+     ========================================== */
+  &.clickeable {
+    cursor: pointer;
 
     &:hover {
-    background-color: var(--gray-200);
-    color: var(--gray-800);
-    border-color: var(--gray-500);
-    }
-}
-
-/* Wizard y Steps */
-.simplified-wizard {
-  .f1-step {
-    text-align: center;
-    
-    .f1-step-icon {
-      width: 50px;
-      height: 50px;
-      border-radius: 50%;
-      background: var(--primary-color);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 0.5rem;
-      box-shadow: 0 2px 10px rgba(67, 97, 238, 0.3);
-      transition: var(--transition);
-
-      i {
-        font-size: 1.2rem;
+      .step-text {
+        color: var(--secondary-color);
+        text-decoration: underline;
       }
-    }
-
-    .text-steper {
-        font-size: 0.9rem;
-      font-weight: 500;
-      color: var(--gray-700);
-      margin: 0;
-      }
-    }
-  
-  aw-wizard-navigation-bar.horizontal.large-filled-symbols {
-    ul.steps-indicator {
-      li.current .step-indicator {
-        background-color: var(--primary-color) !important;
-        border-color: var(--primary-color) !important;
-        color: white !important;
-        transform: scale(1.1);
-        box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.2);
-      }
-
-      li.done .step-indicator {
-        background-color: var(--success-color) !important;
-        border-color: var(--success-color) !important;
-      }
-      
-      li:not(.current):not(.done) .step-indicator {
-        background-color: var(--gray-200) !important;
-        border-color: var(--gray-300) !important;
-        color: var(--gray-600) !important;
-          }
     }
   }
 }
 
-/* Selector de bodega */
-.warehouse-selector {
-  background-color: white;
-  border-radius: var(--border-radius);
-  border: 1px solid var(--gray-200);
-  padding: 1rem;
-  transition: var(--transition);
-  
+/* Separadores entre steps */
+.wizard-separator {
+  color: var(--gray-400);
+  font-size: 0.9rem;
+  font-weight: 300;
+  user-select: none;
+  transition: color 0.3s ease;
+
+  @media (max-width: 767px) {
+    font-size: 0.8rem;
+  }
+}
+
+/* ==============================================================================
+   ANIMACIONES Y MICRO-INTERACCIONES
+   ============================================================================== */
+
+/* Animación sutil para step activo */
+@keyframes stepPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scaleX(0.95);
+  }
+}
+
+/* Animación al completar un step */
+@keyframes checkAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0) rotate(-45deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Focus states para accesibilidad (si se hace clickeable) */
+.wizard-step.done:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* ==========================================
+   RESPONSIVE ADJUSTMENTS
+   ========================================== */
+
+/* Tablet */
+@media (max-width: 991px) {
+  .wizard-step {
+    .step-text {
+      font-size: 0.85rem !important;
+    }
+
+    &.current .step-text {
+      font-size: 0.9rem !important;
+    }
+  }
+
+  .wizard-separator {
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+  .wizard-steps-container {
+    justify-content: flex-start;
+  }
+
+  .wizard-step {
+    .step-check {
+      font-size: 0.7rem;
+    }
+
+    .step-text {
+      font-size: 0.75rem !important;
+    }
+
+    &.current .step-text {
+      font-size: 0.8rem !important;
+
+      &::after {
+        height: 2px;
+        bottom: -3px;
+      }
+    }
+  }
+}
+
+/* ==============================================================================
+   OCULTAR TODA LA NAVEGACIÓN DEL WIZARD ANGULAR-ARCHWIZARD - NUCLEAR OPTION
+   Usa ::ng-deep para penetrar el View Encapsulation de Angular
+   Esto oculta TODOS los elementos posibles del wizard antiguo sin excepción
+   ============================================================================== */
+
+:host ::ng-deep .simplified-wizard {
+  /* Ocultar el contenedor principal de navegación */
+  aw-wizard-navigation-bar,
+  .aw-wizard-navigation-bar {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    width: 0 !important;
+    pointer-events: none !important;
+  }
+
+  /* Ocultar los pasos individuales del wizard */
+  aw-wizard-step > ng-template:first-child,
+  aw-wizard-step > ng-template[awWizardStepTitle],
+  aw-wizard-step > ng-template[awWizardStepSymbol],
+  .aw-wizard-step > ng-template:first-child,
+  .aw-wizard-step > ng-template[awWizardStepTitle],
+  .aw-wizard-step > ng-template[awWizardStepSymbol] {
+    display: none !important;
+  }
+
+  /* Ocultar símbolos de wizard - SOLO dentro de aw-wizard */
+  aw-wizard .wizard-steps,
+  aw-wizard-navigation-bar .wizard-steps,
+  aw-wizard .wizard-step,
+  aw-wizard-navigation-bar .wizard-step,
+  aw-wizard .wizard-step-indicator,
+  aw-wizard-navigation-bar .wizard-step-indicator,
+  aw-wizard .wizard-step-title,
+  aw-wizard-navigation-bar .wizard-step-title,
+  aw-wizard .wizard-step-symbol,
+  aw-wizard-navigation-bar .wizard-step-symbol {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Ocultar los contenedores de navegación horizontales y verticales - SOLO dentro de aw-wizard */
+  aw-wizard .horizontal-navigation,
+  aw-wizard-navigation-bar .horizontal-navigation,
+  aw-wizard .vertical-navigation,
+  aw-wizard-navigation-bar .vertical-navigation,
+  aw-wizard nav[class*="wizard"],
+  aw-wizard-navigation-bar nav[class*="wizard"] {
+    display: none !important;
+  }
+
+  /* Ocultar UL/LI de navegación - Ya específicos con .steps-indicator y .wizard-steps */
+  ul.steps-indicator,
+  ul.wizard-steps,
+  .steps-indicator,
+  li.step-indicator,
+  aw-wizard li.wizard-step,
+  aw-wizard-navigation-bar li.wizard-step {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* Ocultar TODOS los elementos con clase f1-step (círculos del wizard viejo) */
+  .f1-step,
+  .f1-step-icon,
+  .f1-step *,
+  div[class*="f1-step"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Ocultar elementos con atributos awWizard */
+  [awWizardStepSymbol],
+  [awWizardStepTitle],
+  ng-template[awWizardStepSymbol],
+  ng-template[awWizardStepTitle] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Ocultar contenedores de header del wizard que podrían tener círculos - SOLO dentro de aw-wizard */
+  aw-wizard .wizard-header,
+  aw-wizard-navigation-bar .wizard-header,
+  aw-wizard .step-header,
+  aw-wizard-navigation-bar .step-header,
+  aw-wizard .navigation-bar,
+  aw-wizard-navigation-bar .navigation-bar,
+  aw-wizard div[class*="wizard-navigation"],
+  aw-wizard-navigation-bar div[class*="wizard-navigation"],
+  aw-wizard div[class*="step-navigation"],
+  aw-wizard-navigation-bar div[class*="step-navigation"] {
+    display: none !important;
+  }
+
+  /* ==============================================================================
+     OCULTAR ESPECÍFICAMENTE: steps-7 y steps-indicator - MÁXIMA AGRESIVIDAD
+     ============================================================================== */
+
+  /* Ocultar steps-7 en TODAS sus variantes */
+  .steps-7,
+  div.steps-7,
+  ul.steps-7,
+  ol.steps-7,
+  nav.steps-7,
+  [class*="steps-7"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    min-height: 0 !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+  }
+
+  /* Ocultar steps-indicator en TODAS sus variantes */
+  .steps-indicator,
+  div.steps-indicator,
+  ul.steps-indicator,
+  ol.steps-indicator,
+  nav.steps-indicator,
+  [class*="steps-indicator"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    min-height: 0 !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+  }
+
+  /* Ocultar COMBINACIÓN de ambas clases - NUCLEAR */
+  .steps-7.steps-indicator,
+  div.steps-7.steps-indicator,
+  ul.steps-7.steps-indicator,
+  ol.steps-7.steps-indicator,
+  nav.steps-7.steps-indicator {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    max-height: 0 !important;
+    min-height: 0 !important;
+    width: 0 !important;
+    max-width: 0 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    z-index: -9999 !important;
+  }
+
+  /* Ocultar hijos de steps-7 y steps-indicator */
+  .steps-7 *,
+  .steps-indicator *,
+  .steps-7.steps-indicator * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* Pseudo-elementos de steps-7 y steps-indicator */
+  .steps-7::before,
+  .steps-7::after,
+  .steps-indicator::before,
+  .steps-indicator::after,
+  .steps-7.steps-indicator::before,
+  .steps-7.steps-indicator::after {
+    display: none !important;
+    content: none !important;
+    visibility: hidden !important;
+  }
+
+  /* ==============================================================================
+     SOLUCIÓN NUCLEAR PARA ESTILOS INLINE - Máxima especificidad
+     Apunta directamente a elementos con atributo style="" (estilos inline)
+     ============================================================================== */
+
+  /* Ocultar aw-wizard-navigation-bar con estilos inline */
+  aw-wizard-navigation-bar[style],
+  .aw-wizard-navigation-bar[style] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+  }
+
+  /* Ocultar elementos steps-7 con estilos inline - ULTRA ESPECÍFICO */
+  .steps-7[style],
+  div.steps-7[style],
+  ul.steps-7[style],
+  ol.steps-7[style],
+  nav.steps-7[style],
+  [class*="steps-7"][style] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    z-index: -9999 !important;
+  }
+
+  /* Ocultar elementos steps-indicator con estilos inline - ULTRA ESPECÍFICO */
+  .steps-indicator[style],
+  div.steps-indicator[style],
+  ul.steps-indicator[style],
+  ol.steps-indicator[style],
+  nav.steps-indicator[style],
+  [class*="steps-indicator"][style] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    z-index: -9999 !important;
+  }
+
+  /* Ocultar COMBINACIÓN steps-7.steps-indicator con estilos inline - MEGA ESPECÍFICO */
+  .steps-7.steps-indicator[style],
+  div.steps-7.steps-indicator[style],
+  ul.steps-7.steps-indicator[style],
+  ol.steps-7.steps-indicator[style],
+  nav.steps-7.steps-indicator[style] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    max-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    user-select: none !important;
+    z-index: -9999 !important;
+  }
+
+  /* Ocultar elementos con clase "current" y estilos inline */
+  .steps-7.current[style],
+  .steps-indicator.current[style],
+  .steps-7.steps-indicator.current[style],
+  .ng-star-inserted.current[style],
+  .steps-7.ng-star-inserted.current[style],
+  .steps-indicator.ng-star-inserted.current[style],
+  .steps-7.steps-indicator.ng-star-inserted.current[style] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+    top: -9999px !important;
+    width: 0 !important;
+    height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    clip: rect(0, 0, 0, 0) !important;
+    clip-path: inset(50%) !important;
+    pointer-events: none !important;
+    z-index: -9999 !important;
+  }
+
+  /* Ocultar elementos ng-star-inserted con estilos inline (super genérico) */
+  .ng-star-inserted[style][class*="steps"],
+  .ng-star-inserted[style][class*="indicator"],
+  .ng-star-inserted[style].current {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    left: -9999px !important;
+  }
+
+  /* Ocultar TODOS los hijos de aw-wizard-navigation-bar con estilos inline */
+  aw-wizard-navigation-bar[style] *,
+  .aw-wizard-navigation-bar[style] * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* Ocultar hijos de steps-7 y steps-indicator con estilos inline */
+  .steps-7[style] *,
+  .steps-indicator[style] *,
+  .steps-7.steps-indicator[style] * {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* Selector de fuerza bruta: cualquier elemento dentro de aw-wizard que tenga "steps" en su clase Y estilo inline */
+  aw-wizard [style][class*="step"],
+  aw-wizard [style][class*="indicator"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    position: absolute !important;
+    left: -9999px !important;
+    max-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Modo super agresivo: ocultar CUALQUIER elemento dentro de aw-wizard
+     que contenga círculos o símbolos (usando selectores amplios) */
+  aw-wizard {
+    > div:first-child:not(.card-body),
+    > nav,
+    > header {
+      display: none !important;
+    }
+  }
+
+  /* Asegurar que solo se oculten los ng-template del wizard, no el contenido real */
+  aw-wizard-step {
+    /* Solo ocultar ng-template que no hemos cubierto ya */
+    > ng-template {
+      display: none !important;
+    }
+  }
+
+  /* Ocultar cualquier pseudo-elemento que pueda estar renderizando círculos */
+  aw-wizard-navigation-bar::before,
+  aw-wizard-navigation-bar::after,
+  .aw-wizard-navigation-bar::before,
+  .aw-wizard-navigation-bar::after,
+  aw-wizard .wizard-step::before,
+  aw-wizard .wizard-step::after,
+  aw-wizard-navigation-bar .wizard-step::before,
+  aw-wizard-navigation-bar .wizard-step::after {
+    display: none !important;
+    content: none !important;
+  }
+}
+
+/* Selector de bodega - Diseño ultra compacto */
+.warehouse-selector-card {
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  box-shadow: var(--box-shadow-xs);
+
   &:hover {
-    border-color: var(--primary-light);
+    border-color: var(--primary-color);
+    box-shadow: 0 3px 8px rgba(var(--primary-rgb), 0.1);
   }
-  
-  .select-header {
+
+  .selector-header {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    
-    i {
-      color: var(--primary-color);
+    margin-bottom: 0.75rem;
+
+    .selector-icon {
+      width: 32px;
+      height: 32px;
+      background: rgba(var(--primary-rgb), 0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      i {
+        font-size: 0.875rem;
+        color: var(--primary-color);
+      }
     }
-    
-    .warehouse-title {
-      font-weight: 500;
-      color: var(--gray-700);
-      margin: 0;
+
+    .selector-label {
+      flex: 1;
+
+      .label-text {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #333;
+        line-height: 1.4;
+      }
+
+      .label-hint {
+        display: block;
+        font-size: 0.75rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+        line-height: 1.3;
+      }
     }
   }
-  
-  .selected-warehouse {
-    color: var(--success-color);
-    font-size: 0.9rem;
-    margin-top: 0.5rem;
-    
-    strong {
-      font-weight: 600;
+
+  .selector-body {
+    position: relative;
+
+    .warehouse-select {
+      width: 100%;
+      height: 40px;
+      padding: 0.5rem 2rem 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      line-height: 1.5;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      background: #fafafa;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      appearance: none;
+
+      &:hover {
+        border-color: var(--primary-color);
+        background: rgba(var(--primary-rgb), 0.05);
+      }
+
+      &:focus {
+        border-color: var(--primary-color);
+        background: #ffffff;
+        box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+        outline: none;
+      }
+
+      &.has-value {
+        border-color: var(--success-color);
+        background: rgba(var(--success-rgb), 0.1);
+        font-weight: 600;
+      }
+
+      option {
+        padding: 0.4rem;
+        font-weight: 500;
+      }
+    }
+
+    .select-icon-wrapper {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+
+      i {
+        font-size: 0.75rem;
+        color: #6c757d;
+        transition: transform 0.2s ease;
+      }
+    }
+
+    .warehouse-select:focus ~ .select-icon-wrapper i {
+      transform: rotate(180deg);
+      color: var(--primary-color);
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .selector-icon {
+      width: 36px;
+      height: 36px;
+    }
+
+    .warehouse-select {
+      height: 44px;
+      font-size: 0.875rem;
     }
   }
 }
@@ -306,11 +1161,29 @@
   left: 0;
   width: 100%;
   background-color: white;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem 2rem;
   border-top: 1px solid var(--gray-200);
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
-  margin-top: 2rem;
-  z-index: 10;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.06);
+  margin-top: 1rem;
+  z-index: 100;
+  transition: all 0.3s ease;
+  position: relative;
+
+  // Indicador sutil de que el footer está fijo
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg,
+                                transparent 0%,
+                                var(--primary-color) 20%,
+                                var(--primary-color) 80%,
+                                transparent 100%);
+    opacity: 0.3;
+  }
 }
 
 /* Animación para cliente recién creado */
@@ -375,19 +1248,31 @@
 }
 
 .btn-success {
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  background-color: #06d6a0;
   border: none;
-  transition: all 0.3s ease;
-  
+  min-height: 52px;
+  padding: 0.875rem 2rem;
+  font-size: 1rem;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+
   &:hover:not(:disabled) {
-    background: linear-gradient(135deg, #218838 0%, #1ba085 100%);
+    background-color: #05c290;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    box-shadow: 0 4px 12px rgba(6, 214, 160, 0.3);
   }
-  
+
+  &:focus:not(:disabled) {
+    outline: 3px solid #4361ee;
+    outline-offset: 2px;
+    background-color: #05c290;
+  }
+
   &:disabled {
-    opacity: 0.7;
+    background-color: #6c757d;
+    opacity: 0.6;
     cursor: not-allowed;
+    pointer-events: none;
   }
 }
 
@@ -397,44 +1282,49 @@
   color: var(--danger-color);
 }
 
-/* Responsive */
+/* ==============================================================================
+   RESPONSIVE GENERAL
+   ============================================================================== */
+
+/* Mobile */
 @media (max-width: 768px) {
   .container-fluid {
     padding: 1rem;
   }
-  
+
   .card {
-  .card-header {
+    .card-header {
       padding: 1rem;
     }
-    
+
     .card-body {
       padding: 1rem !important;
     }
   }
-  
+
   .btn {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
   }
-  
+
   .wizard-footer-container {
     padding: 1rem;
+    margin-top: 0.75rem;
   }
-  
-  .simplified-wizard {
-    .f1-step {
-      .f1-step-icon {
-        width: 40px;
-        height: 40px;
-        
-        i {
-          font-size: 1rem;
-        }
-      }
-      
-      .text-steper {
-        font-size: 0.8rem;
+}
+
+/* Mobile-specific wizard footer improvements */
+@media (max-width: 575.98px) {
+  .wizard-footer-container {
+    padding: 1.25rem 1rem;
+
+    .d-flex {
+      flex-direction: column !important;
+      gap: 1rem;
+
+      .btn {
+        width: 100% !important;
+        min-height: 52px;
       }
     }
   }
@@ -709,44 +1599,530 @@
   }
 }
 
-/* Mejoras para elementos específicos */
-.warehouse-selector {
-  background-color: var(--bs-light, #f8f9fa);
-  border-radius: 0.375rem;
-  padding: 0.5rem;
-  transition: all 0.3s ease;
-  
+/* ==========================================================================
+   BARRA UNIFICADA DE CONFIGURACIÓN DE VENTA
+   ========================================================================== */
+
+.sales-config-bar {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: var(--box-shadow-sm);
+  background: #ffffff;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
   &:hover {
-    background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.05);
+    box-shadow: var(--box-shadow-md);
   }
-  
-  .select-header {
-    color: var(--primary-color, #4361ee);
-    font-weight: 500;
+
+  .card-body {
+    padding: 1rem !important;
+    transition: padding 0.4s ease;
   }
-  
-  .selected-warehouse {
-    background-color: var(--bs-light, #f8f9fa);
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    font-size: 0.9rem;
-    
-    i {
-      color: var(--success, #28a745);
+
+  // Animaciones de colapso para selectores y mensajes de estado
+  .row.g-2,
+  .config-status {
+    max-height: 1000px;
+    overflow: hidden;
+    opacity: 1;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.3s ease,
+                margin 0.4s ease;
+  }
+
+  // Estado colapsado (steps 2-7)
+  &.collapsed {
+    .config-header {
+      margin-bottom: 0 !important;
+    }
+
+    .row.g-2,
+    .config-status {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0 !important;
+      margin-bottom: 0 !important;
+    }
+
+    .card-body {
+      padding-bottom: 0.75rem !important;
+    }
+  }
+
+  .config-header {
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+
+    h6 {
+      color: #333;
+      font-size: 0.875rem;
+      line-height: 1.4;
+    }
+
+    small {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+      color: #6c757d;
+      line-height: 1.3;
+    }
+  }
+
+  // Desktop: GARANTIZAR fila única horizontal
+  @media (min-width: 992px) {
+    .row.flex-nowrap > [class*="col-"] {
+      flex: 0 0 auto; // Respetar exactamente el tamaño de columna especificado
+    }
+  }
+
+  .config-step-card {
+    position: relative;
+    height: auto;
+    min-height: 100%;
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      margin-bottom: 0.5rem;
+
+      .step-number {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: #e9ecef;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+        z-index: 2;
+
+        &.completed {
+          background: var(--success-color);
+          color: white;
+          box-shadow: 0 2px 4px rgba(var(--success-rgb), 0.25);
+        }
+
+        &.disabled {
+          background: #f5f5f5;
+          color: #bdbdbd;
+          cursor: not-allowed;
+        }
+      }
+
+      .step-line {
+        flex: 1;
+        height: 2px;
+        background: #e9ecef;
+        margin-left: 0.5rem;
+        transition: all 0.3s ease;
+
+        &.active {
+          background: linear-gradient(to right, var(--success-color) 0%, var(--secondary-color) 100%);
+        }
+      }
+    }
+  }
+
+  // Estados disabled para cards
+  .disabled-card {
+    opacity: 0.5;
+    pointer-events: none;
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 12px;
+      z-index: 1;
+    }
+  }
+
+  // Selector de ciudad - Diseño ultra compacto
+  .city-selector-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--box-shadow-xs);
+
+    &:hover:not(.disabled-card) {
+      border-color: var(--secondary-color);
+      box-shadow: 0 3px 8px rgba(var(--secondary-rgb), 0.1);
+    }
+
+    .selector-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+
+      .selector-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(var(--secondary-rgb), 0.1);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        i {
+          font-size: 0.875rem;
+          color: var(--secondary-color);
+        }
+      }
+
+      .selector-label {
+        flex: 1;
+
+        .label-text {
+          display: block;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #333;
+          line-height: 1.4;
+        }
+
+        .label-hint {
+          display: block;
+          font-size: 0.75rem;
+          color: #6c757d;
+          margin-top: 0.25rem;
+          line-height: 1.3;
+        }
+      }
+    }
+
+    .selector-body {
+      position: relative;
+
+      .city-select {
+        width: 100%;
+        height: 40px;
+        padding: 0.5rem 2rem 0.5rem 0.75rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        line-height: 1.5;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background: #fafafa;
+        color: #333;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        appearance: none;
+
+        &:hover:not(:disabled) {
+          border-color: var(--secondary-color);
+          background: rgba(var(--secondary-rgb), 0.05);
+        }
+
+        &:focus {
+          border-color: var(--secondary-color);
+          background: #ffffff;
+          box-shadow: 0 0 0 2px rgba(var(--secondary-rgb), 0.1);
+          outline: none;
+        }
+
+        &.has-value {
+          border-color: var(--success-color);
+          background: rgba(var(--success-rgb), 0.1);
+          font-weight: 600;
+        }
+
+        &:disabled {
+          background: #f5f5f5;
+          cursor: not-allowed;
+          opacity: 0.6;
+        }
+
+        option {
+          padding: 0.4rem;
+          font-weight: 500;
+        }
+      }
+
+      .select-icon-wrapper {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+
+        i {
+          font-size: 0.75rem;
+          color: #6c757d;
+          transition: transform 0.2s ease;
+        }
+      }
+
+      .city-select:focus ~ .select-icon-wrapper i {
+        transform: rotate(180deg);
+        color: var(--secondary-color);
+      }
+    }
+
+    @media (max-width: 768px) {
+      padding: 1rem;
+
+      .selector-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .city-select {
+        height: 44px;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  // Componente de búsqueda de productos - Ultra compacto
+  .search-products-card {
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 0.75rem;
+    transition: all 0.3s ease;
+    box-shadow: var(--box-shadow-xs);
+
+    &:hover:not(.disabled-card) {
+      border-color: var(--warning-color);
+      box-shadow: 0 3px 8px rgba(var(--warning-rgb), 0.1);
+    }
+
+    .search-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+
+      .search-icon {
+        width: 32px;
+        height: 32px;
+        background: rgba(var(--warning-rgb), 0.1);
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+
+        i {
+          font-size: 0.875rem;
+          color: var(--warning-color);
+        }
+      }
+
+      .search-label {
+        flex: 1;
+
+        .label-text {
+          display: block;
+          font-size: 0.875rem;
+          font-weight: 600;
+          color: #333;
+          line-height: 1.4;
+        }
+
+        .label-hint {
+          display: block;
+          font-size: 0.75rem;
+          color: #6c757d;
+          margin-top: 0.25rem;
+          line-height: 1.3;
+        }
+      }
+    }
+
+    .search-body {
+      .input-group {
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+
+        &:focus-within {
+          border-color: var(--warning-color);
+          box-shadow: 0 0 0 2px rgba(var(--warning-rgb), 0.1);
+        }
+
+        .input-group-text {
+          background: transparent;
+          border: none;
+          padding: 0.5rem 0.75rem;
+        }
+
+        .form-control {
+          border: none;
+          background: transparent;
+          height: 40px;
+          font-size: 0.875rem;
+          line-height: 1.5;
+          padding: 0.5rem 0.75rem;
+
+          &:focus {
+            box-shadow: none;
+            outline: none;
+          }
+
+          &:disabled {
+            background: transparent;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      padding: 1rem;
+
+      .search-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .search-body input {
+        height: 44px;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  // Mensajes de estado
+  .config-status {
+    .alert-info {
+      background: #e3f2fd;
+      border: 1px solid var(--primary-color);
+      border-left: 3px solid var(--primary-color);
+      color: var(--primary-dark);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem !important;
+      font-size: 0.875rem;
+      line-height: 1.4;
+
+      i {
+        font-size: 1rem;
+      }
+    }
+  }
+
+  // Ajustar espaciado entre columnas - ultra compacto
+  .row.g-2 {
+    row-gap: 0.5rem !important;
+    column-gap: 0.5rem !important;
+  }
+
+  // Forzar una sola fila horizontal - SOLUCIÓN AL WRAPPING
+  .row.flex-nowrap {
+    flex-wrap: nowrap !important;
+
+    > [class*="col-"] {
+      min-width: 0; // Permite que flex-basis funcione correctamente
+      flex-shrink: 1; // Permite encogimiento si es necesario
     }
   }
 }
 
-/* Responsive */
-@media (max-width: 767.98px) {
-  .warehouse-selector {
-    .row {
-      flex-direction: column;
-      
-      .col-auto {
-        width: 100%;
+/* Responsive para barra unificada */
+@media (max-width: 992px) {
+  .sales-config-bar {
+    .config-step-card {
+      .step-indicator {
+        .step-line {
+          display: none; // Ocultar líneas en tablet/móvil
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .sales-config-bar {
+    .card-body {
+      padding: 1rem !important;
+    }
+
+    .config-step-card {
+      margin-bottom: 1rem;
+
+      .step-indicator {
+        justify-content: center;
         margin-bottom: 0.5rem;
       }
+    }
+
+    .warehouse-selector-card,
+    .city-selector-card,
+    .search-products-card {
+      padding: 1rem;
+
+      .selector-header,
+      .search-header {
+        .selector-icon,
+        .search-icon {
+          width: 36px;
+          height: 36px;
+
+          i {
+            font-size: 1rem;
+          }
+        }
+
+        .selector-label,
+        .search-label {
+          .label-text {
+            font-size: 0.875rem;
+          }
+
+          .label-hint {
+            font-size: 0.7rem;
+          }
+        }
+      }
+
+      .selector-body select,
+      .search-body input {
+        height: 44px;
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  .warehouse-selector-card {
+    padding: 1rem;
+
+    .selector-header {
+      .selector-icon {
+        width: 36px;
+        height: 36px;
+
+        i {
+          font-size: 1rem;
+        }
+      }
+
+      .selector-label {
+        .label-text {
+          font-size: 0.875rem;
+        }
+
+        .label-hint {
+          font-size: 0.7rem;
+        }
+      }
+    }
+
+    .selector-body .warehouse-select {
+      height: 44px;
+      font-size: 0.875rem;
     }
   }
 }

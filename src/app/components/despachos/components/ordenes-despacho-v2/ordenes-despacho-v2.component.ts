@@ -77,14 +77,10 @@ export class OrdenesDespachoV2Component implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Establecer fechas correctamente: HOY y hace 8 días (por defecto)
-    const hoy = new Date();
-    const hace8Dias = new Date();
-    hace8Dias.setDate(hoy.getDate() - 8);
-
-    this.fechaInicio = hace8Dias;
-    this.fechaFin = hoy;
-    this.fechaFin.setHours(23, 59, 59, 999);
+    // NO establecer fechas por defecto - el backend manejará el límite de 8 días automáticamente
+    // Esto permite que las nuevas órdenes aparezcan sin necesidad de filtrar fechas
+    this.fechaInicio = null;
+    this.fechaFin = null;
 
     this.loadLogisticsIntegrations();
     this.loadVendors();
@@ -127,15 +123,20 @@ export class OrdenesDespachoV2Component implements OnInit {
       ? JSON.parse(currentCompanyStr).nomComercial
       : "";
     
-    const params = {
+    // Construir parámetros dinámicamente - solo incluir fechas si están definidas
+    const params: any = {
       page: this.currentPage,
       limit: this.pageSize,
-      fechaInicio: this.fechaInicio?.toISOString().split('T')[0],
-      fechaFin: this.fechaFin?.toISOString().split('T')[0],
-      fields: 'full' as 'minimal' | 'full',
-      sortBy: 'fecha',           // Ordenar por fecha de creación
-      sortOrder: 'desc' as 'asc' | 'desc'  // Descendente (más recientes primero)
+      fields: 'full' as 'minimal' | 'full'
     };
+
+    // Solo agregar filtros de fecha si están definidos por el usuario
+    if (this.fechaInicio) {
+      params.fechaInicio = this.getFechaInicioString();
+    }
+    if (this.fechaFin) {
+      params.fechaFin = this.getFechaFinString();
+    }
     
     console.log(`Cargando órdenes - Página ${this.currentPage}:`, params);
     
@@ -276,12 +277,9 @@ export class OrdenesDespachoV2Component implements OnInit {
    */
   clearFilters(): void {
     this.searchTerm = '';
-    const hoy = new Date();
-    const hace8Dias = new Date();
-    hace8Dias.setDate(hoy.getDate() - 8);
-    this.fechaInicio = hace8Dias;
-    this.fechaFin = hoy;
-    this.fechaFin.setHours(23, 59, 59, 999);
+    // NO establecer fechas - dejar sin filtro para mostrar órdenes recientes libremente
+    this.fechaInicio = null;
+    this.fechaFin = null;
     this.applyFilters();
   }
 

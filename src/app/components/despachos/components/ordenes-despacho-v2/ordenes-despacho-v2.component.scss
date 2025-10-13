@@ -1,160 +1,125 @@
 /* ========== HEADER SIMPLIFICADO ========== */
 .modern-header {
-  background: white;
-  color: #333;
   padding: 1rem 1.5rem;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  background: white;
   border-bottom: 1px solid #dee2e6;
 
-  .header-content {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-  }
-
-  .title-section {
-    .modal-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      color: #495057;
-
-      .badge {
-        font-size: 0.75rem;
-        border-radius: 12px;
-        padding: 0.25rem 0.5rem;
-        background-color: #2196f3;
-        color: white;
-      }
-    }
-
-    .subtitle {
-      margin: 0.25rem 0 0 0;
-      color: #6c757d;
-      font-size: 0.875rem;
-    }
-  }
-
-  /* Botón de cerrar comentado - ya no es modal
-  .btn-close-custom {
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
+  h5 {
+    font-weight: 600;
     color: #495057;
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s;
+    margin: 0;
 
-    &:hover {
-      background: #e9ecef;
-      color: #212529;
-    }
-
-    i {
-      font-size: 1rem;
+    .badge {
+      font-size: 0.75rem;
     }
   }
-  */
+
+  small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+  }
 }
 
-/* ========== SECCIÓN DE FILTROS ========== */
-.filters-section {
-  background: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  transition: all 0.3s ease;
+/* ========== AJUSTES PARA SHARED-FILTERS ========== */
+:host ::ng-deep {
+  app-shared-filters {
+    .minimalist-filters-container {
+      margin-bottom: 0;
 
-  &.collapsed .filters-content {
-    display: none;
-  }
+      .filter-bar-main {
+        padding: 0.75rem 1.5rem;
 
-  .filters-header {
-    padding: 1rem 2rem;
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    background: white;
-    border-bottom: 1px solid #e9ecef;
-    transition: all 0.2s;
+        .filter-bar-row {
+          gap: 0.75rem;
 
-    &:hover {
-      background: #f8f9fa;
-    }
+          .filter-inline-section {
+            gap: 0.5rem;
 
-    .filters-title {
-      font-weight: 600;
-      color: #495057;
-    }
-  }
+            .filter-inline-item {
+              &.search-box {
+                min-width: 200px;
 
-  .filters-content {
-    padding: 1.5rem 2rem;
-    background: white;
+                .p-inputgroup {
+                  .p-autocomplete-input,
+                  .search-input {
+                    height: 2rem;
+                    font-size: 0.875rem;
+                  }
 
-    .form-label {
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 0.5rem;
-    }
+                  .p-inputgroup-addon {
+                    height: 2rem;
+                    padding: 0.25rem 0.5rem;
+                  }
 
-    .search-input {
-      position: relative;
+                  button {
+                    height: 2rem;
+                    min-width: 2rem;
+                  }
+                }
 
-      i {
-        position: absolute;
-        left: 12px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #6c757d;
-        z-index: 2;
-      }
+                // Ocultar el hint para evitar desalineación
+                .search-hint {
+                  display: none !important;
+                }
 
-      .form-control {
-        padding-left: 40px;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-        transition: all 0.2s;
+                // También ocultar cualquier small que aparezca debajo del search-box
+                small.search-hint {
+                  display: none !important;
+                }
+              }
 
-        &:focus {
-          border-color: #2196f3;
-          box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
-        }
-      }
-    }
+              &.date-range-compact {
+                .p-calendar {
+                  .p-inputtext {
+                    height: 2rem;
+                    font-size: 0.875rem;
+                    padding: 0.25rem 0.5rem;
+                  }
+                }
 
-    .form-control {
-      border-radius: 8px;
-      border: 1px solid #dee2e6;
-      padding: 0.5rem 0.75rem;
-      transition: all 0.2s;
+                .p-dropdown {
+                  height: 2rem;
 
-      &:focus {
-        border-color: #2196f3;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-      }
-    }
+                  .p-dropdown-label {
+                    padding: 0.25rem 0.5rem;
+                    font-size: 0.875rem;
+                  }
+                }
+              }
+            }
+          }
 
-    .btn {
-      border-radius: 8px;
-      padding: 0.5rem 1rem;
-      font-weight: 600;
-      transition: all 0.2s;
+          .filter-actions-section {
+            gap: 0.5rem;
 
-      &.btn-primary {
-        background-color: #2196f3;
-        border-color: #2196f3;
+            .main-actions {
+              gap: 0.5rem;
 
-        &:hover {
-          background-color: #5a6fd8;
-          transform: translateY(-1px);
+              .p-button {
+                height: 2rem;
+                padding: 0.25rem 0.75rem;
+                font-size: 0.875rem;
+
+                .p-button-label {
+                  font-weight: 500;
+                }
+
+                .p-button-icon {
+                  font-size: 0.875rem;
+                }
+              }
+            }
+
+            button.p-button-rounded {
+              width: 2rem;
+              height: 2rem;
+              padding: 0;
+            }
+          }
         }
       }
     }

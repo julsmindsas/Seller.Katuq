@@ -1618,6 +1618,21 @@ export class CrearVentasComponent
     }
   }
 
+  // Método para obtener el label de la ciudad seleccionada (para badge de confirmación)
+  getCityLabel(value: string): string {
+    const ciudad = this.empresaActual?.ciudadess?.ciudadesEntrega?.find(
+      (c) => c.value === value
+    );
+    return ciudad ? ciudad.label : value;
+  }
+
+  // Método para delegar la búsqueda de productos al componente hijo
+  onProductSearch(event: any): void {
+    if (this.productos) {
+      this.productos.updateFilter(event);
+    }
+  }
+
   toggleWithGreeting(tooltip, greeting: string) {
     if (tooltip.isOpen()) {
       tooltip.close();

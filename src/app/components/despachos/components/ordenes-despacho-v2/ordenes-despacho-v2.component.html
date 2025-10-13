@@ -1,81 +1,29 @@
-<!-- Header moderno -->
+<!-- Header compacto -->
 <div class="modern-header">
-  <div class="header-content">
-    <div class="title-section">
-      <h4 class="modal-title">
-        <i class="pi pi-list-check me-2"></i>
-        {{ 'Órdenes de Despacho' | translate }}
-        <span class="badge bg-light text-dark ms-2">{{ totalRecords }}</span>
-      </h4>
-      <p class="subtitle">{{ 'Gestión optimizada con scroll infinito' | translate }}</p>
-    </div>
-  </div>
+  <h5 class="mb-0">
+    <i class="pi pi-list-check me-2"></i>
+    {{ 'Órdenes de Despacho' | translate }}
+    <span class="badge bg-primary ms-2">{{ totalRecords }}</span>
+  </h5>
+  <small class="text-muted">{{ 'Gestión optimizada con scroll infinito' | translate }}</small>
 </div>
 
-<!-- Filtros modernos -->
-<div class="filters-section" [ngClass]="{'collapsed': !showFilters}">
-  <div class="filters-header" (click)="toggleFilters()">
-    <span class="filters-title">
-      <i class="pi pi-filter me-2"></i>
-      {{ 'Filtros de Búsqueda' | translate }}
-    </span>
-    <i class="pi" [ngClass]="showFilters ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
-  </div>
-  
-  <div class="filters-content" *ngIf="showFilters">
-    <div class="row g-3">
-      <!-- Búsqueda general -->
-      <div class="col-md-4">
-        <label class="form-label">{{ 'Buscar' | translate }}</label>
-        <div class="search-input">
-          <i class="pi pi-search"></i>
-          <input type="text" 
-                 class="form-control"
-                 [(ngModel)]="searchTerm" 
-                 placeholder="{{ 'Nro. orden, fecha, transportador...' | translate }}"
-                 (keyup.enter)="applyFilters()">
-        </div>
-      </div>
-      
-      <!-- Fecha inicio -->
-      <div class="col-md-3">
-        <label class="form-label">{{ 'Desde' | translate }}</label>
-        <input type="date" 
-               class="form-control"
-               [value]="getFechaInicioString()"
-               (change)="onFechaInicioChange($event)"
-               [max]="getFechaFinString()">
-      </div>
-      
-      <!-- Fecha fin -->
-      <div class="col-md-3">
-        <label class="form-label">{{ 'Hasta' | translate }}</label>
-        <input type="date" 
-               class="form-control"
-               [value]="getFechaFinString()"
-               (change)="onFechaFinChange($event)">
-      </div>
-      
-      <!-- Acciones de filtro -->
-      <div class="col-md-2">
-        <label class="form-label">&nbsp;</label>
-        <div class="d-flex gap-2">
-          <button class="btn btn-primary btn-sm flex-fill" 
-                  (click)="applyFilters()"
-                  [disabled]="isLoading">
-            <i class="pi pi-search me-1"></i>
-            {{ 'Buscar' | translate }}
-          </button>
-          <button class="btn btn-outline-secondary btn-sm" 
-                  (click)="clearFilters()"
-                  [disabled]="isLoading">
-            <i class="pi pi-refresh"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Filtros compartidos de Katuq -->
+<app-shared-filters
+  [showDateFilters]="true"
+  [showStatusFilters]="false"
+  [showExportButton]="false"
+  [showColumnSelector]="false"
+  [searchPlaceholder]="'Nro. orden, fecha, transportador...'"
+  [filterButtonLabel]="'Buscar'"
+  [initialDateFrom]="fechaInicio || null"
+  [initialDateTo]="fechaFin || null"
+  (searchQueryChange)="searchTerm = $event"
+  (dateFromChange)="fechaInicio = $event"
+  (dateToChange)="fechaFin = $event"
+  (filterAction)="applyFilters()"
+  (clearAllFilters)="clearFilters()">
+</app-shared-filters>
 
 <!-- Toolbar de vista -->
 <div class="view-toolbar">

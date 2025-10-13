@@ -680,4 +680,14 @@ export class EcomerceProductsComponent
       }
     }
   }
+
+  /**
+   * Obtiene el label de la ciudad seleccionada para mostrar en el badge
+   * @param value Valor de la ciudad seleccionada
+   * @returns Label de la ciudad o el valor si no se encuentra
+   */
+  getCityLabel(value: string): string {
+    const ciudad = this.ciudadSelector.find(c => c.value === value);
+    return ciudad ? ciudad.label : value;
+  }
 }

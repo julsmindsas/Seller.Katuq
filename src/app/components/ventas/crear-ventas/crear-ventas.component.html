@@ -3,9 +3,10 @@
   <div class="row">
     <div class="col-sm-12">
       <div class="card">
-        <div class="card-header">
+        <div class="card-header wizard-integrated-header">
           <div class="row align-items-center">
-            <div class="col-md-6">
+            <!-- Columna izquierda: Info de la venta -->
+            <div class="col-lg-3 col-md-4 col-12 mb-2 mb-md-0">
               <div class="d-flex align-items-center">
                 <i class="fa fa-shopping-cart fs-4 text-primary me-2"></i>
                 <div>
@@ -16,44 +17,247 @@
                       <i class="fa fa-user me-1"></i>{{pedidoGral?.cliente.nombres_completos}}
                       {{pedidoGral?.cliente.apellidos_completos}}
                     </span>
-                    <!-- Tour Button -->
-                    <button class="btn btn-sm btn-info ms-2" (click)="startVentasTour()" title="Iniciar tour guiado de ventas">
-                      <i class="fa fa-route me-1"></i>Tour
-                    </button>
-                    <!-- Botón temporal para limpiar caché -->
-                    <button class="btn btn-sm btn-warning ms-2" (click)="limpiarCacheCompleto()" title="Limpiar caché y reiniciar">
-                      <i class="fa fa-broom me-1"></i>Reset
-                    </button>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="col-md-6">
-              <div class="warehouse-selector">
-                <div class="row align-items-center g-2">
-                  <div class="col-auto">
-                    <div class="select-header">
-                      <i class="fa fa-warehouse me-1"></i>
-                      <span class="warehouse-title">Bodega</span>
-                    </div>
+
+            <!-- Columna derecha: Wizard minimalista -->
+            <div class="col-lg-9 col-md-8 col-12" *ngIf="showSteper && pedidoGral">
+              <div class="wizard-minimal-nav">
+                <div class="wizard-steps-container">
+                  <!-- Step 1: Productos -->
+                  <div class="wizard-step"
+                       [class.current]="wizard?.currentStepIndex === 0"
+                       [class.done]="wizard?.currentStepIndex > 0"
+                       [class.pending]="wizard?.currentStepIndex < 0"
+                       [class.clickeable]="wizard?.currentStepIndex > 0"
+                       (click)="wizard?.currentStepIndex > 0 && wizard.goToStep(0)">
+                    <span class="step-check" *ngIf="wizard?.currentStepIndex > 0">✓</span>
+                    <span class="step-text">Productos</span>
                   </div>
-                  <div class="col">
-                    <div class="position-relative">
-                      <select class="form-select custom-select" id="bodegaSelect" (change)="onWarehouseChange($event)">
-                        <option value="">{{ "Seleccione una bodega" }}</option>
+
+                  <div class="wizard-separator">→</div>
+
+                  <!-- Step 2: Carrito -->
+                  <div class="wizard-step"
+                       [class.current]="wizard?.currentStepIndex === 1"
+                       [class.done]="wizard?.currentStepIndex > 1"
+                       [class.pending]="wizard?.currentStepIndex < 1"
+                       [class.clickeable]="wizard?.currentStepIndex > 1"
+                       (click)="wizard?.currentStepIndex > 1 && wizard.goToStep(1)">
+                    <span class="step-check" *ngIf="wizard?.currentStepIndex > 1">✓</span>
+                    <span class="step-text">Carrito</span>
+                  </div>
+
+                  <div class="wizard-separator">→</div>
+
+                  <!-- Step 3: Cliente -->
+                  <div class="wizard-step"
+                       [class.current]="wizard?.currentStepIndex === 2"
+                       [class.done]="wizard?.currentStepIndex > 2"
+                       [class.pending]="wizard?.currentStepIndex < 2"
+                       [class.clickeable]="wizard?.currentStepIndex > 2"
+                       (click)="wizard?.currentStepIndex > 2 && wizard.goToStep(2)">
+                    <span class="step-check" *ngIf="wizard?.currentStepIndex > 2">✓</span>
+                    <span class="step-text">Cliente</span>
+                  </div>
+
+                  <div class="wizard-separator">→</div>
+
+                  <!-- Step 4: Envío -->
+                  <div class="wizard-step"
+                       [class.current]="wizard?.currentStepIndex === 3"
+                       [class.done]="wizard?.currentStepIndex > 3"
+                       [class.pending]="wizard?.currentStepIndex < 3"
+                       [class.clickeable]="wizard?.currentStepIndex > 3"
+                       (click)="wizard?.currentStepIndex > 3 && wizard.goToStep(3)">
+                    <span class="step-check" *ngIf="wizard?.currentStepIndex > 3">✓</span>
+                    <span class="step-text">Envío</span>
+                  </div>
+
+                  <div class="wizard-separator">→</div>
+
+                  <!-- Step 5: Facturación -->
+                  <div class="wizard-step"
+                       [class.current]="wizard?.currentStepIndex === 4"
+                       [class.done]="wizard?.currentStepIndex > 4"
+                       [class.pending]="wizard?.currentStepIndex < 4"
+                       [class.clickeable]="wizard?.currentStepIndex > 4"
+                       (click)="wizard?.currentStepIndex > 4 && wizard.goToStep(4)">
+                    <span class="step-check" *ngIf="wizard?.currentStepIndex > 4">✓</span>
+                    <span class="step-text">Facturación</span>
+                  </div>
+
+                  <div class="wizard-separator">→</div>
+
+                  <!-- Step 6: Pago -->
+                  <div class="wizard-step"
+                       [class.current]="wizard?.currentStepIndex === 5"
+                       [class.done]="wizard?.currentStepIndex > 5"
+                       [class.pending]="wizard?.currentStepIndex < 5"
+                       [class.clickeable]="wizard?.currentStepIndex > 5"
+                       (click)="wizard?.currentStepIndex > 5 && wizard.goToStep(5)">
+                    <span class="step-check" *ngIf="wizard?.currentStepIndex > 5">✓</span>
+                    <span class="step-text">Pago</span>
+                  </div>
+
+                  <div class="wizard-separator">→</div>
+
+                  <!-- Step 7: Confirmación -->
+                  <div class="wizard-step"
+                       [class.current]="wizard?.currentStepIndex === 6"
+                       [class.done]="wizard?.currentStepIndex > 6"
+                       [class.pending]="wizard?.currentStepIndex < 6"
+                       [class.clickeable]="wizard?.currentStepIndex > 6"
+                       (click)="wizard?.currentStepIndex > 6 && wizard.goToStep(6)">
+                    <span class="step-check" *ngIf="wizard?.currentStepIndex > 6">✓</span>
+                    <span class="step-text">Confirmación</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BARRA UNIFICADA DE CONFIGURACIÓN DE VENTA -->
+        <div class="card mb-3 sales-config-bar" [class.collapsed]="wizard?.currentStepIndex > 0">
+          <div class="card-body p-3">
+            <div class="config-header mb-3">
+              <div class="d-flex align-items-center">
+                <i class="fa fa-cog fs-5 text-primary me-2"></i>
+                <h6 class="mb-0 fw-semibold">Configuración de Venta</h6>
+              </div>
+              <small class="text-muted">Seleccione la bodega, ciudad y busque productos</small>
+            </div>
+
+            <div class="row g-2 align-items-center flex-nowrap">
+              <!-- PASO 1: BODEGA -->
+              <div class="col-xl-3 col-lg-4 col-md-12">
+                <div class="config-step-card">
+                  <div class="step-indicator">
+                    <span class="step-number" [class.completed]="selectedWarehouse">1</span>
+                    <div class="step-line" [class.active]="selectedWarehouse"></div>
+                  </div>
+
+                  <div class="warehouse-selector-card h-100">
+                    <div class="selector-header">
+                      <div class="selector-icon">
+                        <i class="fa fa-warehouse"></i>
+                      </div>
+                      <div class="selector-label">
+                        <span class="label-text">Bodega de Despacho</span>
+                        <small class="label-hint">Origen del pedido</small>
+                      </div>
+                    </div>
+
+                    <div class="selector-body">
+                      <select class="form-select warehouse-select"
+                              id="bodegaSelect"
+                              (change)="onWarehouseChange($event)"
+                              [class.has-value]="selectedWarehouse">
+                        <option value="">Seleccionar bodega...</option>
                         <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
                           {{ bodega.nombre }} ({{ bodega.idBodega }})
                         </option>
                       </select>
-                      <i class="fa fa-warehouse select-icon"></i>
+                      <div class="select-icon-wrapper">
+                        <i class="fa fa-chevron-down"></i>
+                      </div>
                     </div>
                   </div>
-                  <div class="col-auto" *ngIf="selectedWarehouse">
-                    <span class="selected-warehouse">
-                      <i class="fa fa-check-circle me-1"></i><strong>{{ selectedWarehouse }}</strong>
-                    </span>
+                </div>
+              </div>
+
+              <!-- PASO 2: CIUDAD -->
+              <div class="col-xl-2 col-lg-3 col-md-6">
+                <div class="config-step-card">
+                  <div class="step-indicator">
+                    <span class="step-number"
+                          [class.completed]="selectedCity && selectedCity !== 'seleccione'"
+                          [class.disabled]="!selectedWarehouse">2</span>
+                    <div class="step-line" [class.active]="selectedCity && selectedCity !== 'seleccione'"></div>
+                  </div>
+
+                  <div class="city-selector-card h-100" [class.disabled-card]="!selectedWarehouse">
+                    <div class="selector-header">
+                      <div class="selector-icon">
+                        <i class="fa fa-map-marker-alt"></i>
+                      </div>
+                      <div class="selector-label">
+                        <span class="label-text">Ciudad de Entrega</span>
+                        <small class="label-hint">Destino del pedido</small>
+                      </div>
+                    </div>
+
+                    <div class="selector-body">
+                      <select (change)="onSelectCity($event)"
+                              class="form-select city-select"
+                              [class.has-value]="selectedCity && selectedCity !== 'seleccione'"
+                              [disabled]="!selectedWarehouse">
+                        <option value="seleccione">Seleccionar ciudad...</option>
+                        <option *ngFor="let ciudad of empresaActual.ciudadess.ciudadesEntrega"
+                                [value]="ciudad.value"
+                                [selected]="selectedCity === ciudad.value">
+                          {{ ciudad.label }}
+                        </option>
+                      </select>
+                      <div class="select-icon-wrapper">
+                        <i class="fa fa-chevron-down"></i>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- PASO 3: BÚSQUEDA -->
+              <div class="col-xl-7 col-lg-5 col-md-6">
+                <div class="config-step-card">
+                  <div class="step-indicator">
+                    <span class="step-number"
+                          [class.disabled]="!selectedCity || selectedCity === 'seleccione'">3</span>
+                    <div class="step-line" style="opacity: 0;"></div>
+                  </div>
+
+                  <div class="search-products-card h-100"
+                       [class.disabled-card]="!selectedCity || selectedCity === 'seleccione'">
+                    <div class="search-header">
+                      <div class="search-icon">
+                        <i class="fa fa-search"></i>
+                      </div>
+                      <div class="search-label">
+                        <span class="label-text">Buscar Productos</span>
+                        <small class="label-hint">Filtrar por nombre o referencia</small>
+                      </div>
+                    </div>
+
+                    <div class="search-body">
+                      <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0">
+                          <i class="fa fa-search text-muted"></i>
+                        </span>
+                        <input class="form-control border-start-0 ps-0"
+                               type="search"
+                               placeholder="Buscar productos..."
+                               (keyup)="onProductSearch($event)"
+                               [disabled]="!selectedCity || selectedCity === 'seleccione'">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensajes de estado -->
+            <div class="config-status mt-3" *ngIf="!selectedWarehouse || !selectedCity || selectedCity === 'seleccione'">
+              <div class="alert alert-info mb-0 py-2 px-3 d-flex align-items-center">
+                <i class="fa fa-info-circle me-2"></i>
+                <small>
+                  <span *ngIf="!selectedWarehouse">Seleccione una bodega para comenzar.</span>
+                  <span *ngIf="selectedWarehouse && (!selectedCity || selectedCity === 'seleccione')">
+                    Seleccione una ciudad de entrega para ver productos disponibles.
+                  </span>
+                </small>
               </div>
             </div>
           </div>

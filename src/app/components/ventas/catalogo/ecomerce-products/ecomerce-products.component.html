@@ -1,60 +1,6 @@
 <div class="container-fluid product-wrapper" [class.sidebaron]="openSidebar">
     <div class="product-grid">
         <div class="feature-products">
-            <div class="card mb-3">
-                <div class="card-body p-3">
-                    <div class="row align-items-center g-3">
-                        <div class="col-md-3">
-                            <div class="d-flex align-items-center">
-                                <div class="position-relative flex-grow-1">
-                                    <label class="form-label mb-1 small">
-                                        <i class="fa fa-map-marker-alt text-primary me-1"></i>
-                                        <span>{{ 'Ciudad de Entrega' | translate }}</span>
-                                    </label>
-                                    <select (change)="onCityChange($event)" class="form-select form-select-sm">
-                                        <option value="seleccione">{{ 'Seleccione ciudad' | translate }}</option>
-                                        <option *ngFor="let ciudad of ciudadSelector" [value]="ciudad.value" [selected]="selectedCity === ciudad.value">
-                                            {{ ciudad.label }}
-                                        </option>
-                                    </select>
-                                </div>
-                                <div *ngIf="selectedCity" class="ms-2 text-success">
-                                    <small><i class="fa fa-check-circle"></i></small>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label mb-1 small">
-                                <i class="fa fa-search text-primary me-1"></i>
-                                <span>{{ 'Buscar productos' | translate }}</span>
-                            </label>
-                            <div class="input-group input-group-sm">
-                                <input class="form-control" type="search"
-                                    placeholder="{{ 'Buscar..' | translate }}"
-                                    (keyup)='updateFilter($event)'>
-                                <span class="input-group-text"><i class="fa fa-search"></i></span>
-                            </div>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label mb-1 small">
-                                <i class="fa fa-th text-primary me-1"></i>
-                                <span>{{ 'Productos por página' | translate }}</span>
-                            </label>
-                            <select class="form-select form-select-sm"
-                                (change)="cambiarProductosPorPagina(+$event.target.value)">
-                                <option value="4">4</option>
-                                <option value="8" selected>8</option>
-                                <option value="12">12</option>
-                                <option value="16">16</option>
-                                <option value="24">24</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <div class="row">
                 <div class="col-md-6 products-total">
                     <div class="square-product-setting d-inline-block" (click)="toggleListView(false)">
@@ -313,64 +259,72 @@
             <div class="row">
                 <div [class]="'col-xl-'+col+' col-sm-'+col" [class.col-xl-12]="listView"
                     *ngFor="let producto of productosPaginados">
-                    <div class="card">
-                        <div class="product-box">
-                            <div class="product-img">
-                                <!-- <img class="img-fluid fixed-size"
-                                    [src]="producto.crearProducto.imagenesPrincipales[0]?.urls" alt=""> -->
-                                <img class="img-fluid fixed-size"
+                    <div class="card product-card-modern">
+                        <div class="product-box-modern">
+                            <div class="product-img-wrapper">
+                                <img class="img-fluid product-image-optimized"
                                     [src]="producto.crearProducto.imagenesPrincipales[0].urls"
                                     [alt]="producto.crearProducto.titulo" appImageOptimizer [quality]="0.3" [width]="300"
                                     [height]="300" [lazy]="true" loading="lazy" priority>
 
-                                <!-- Badge de disponibilidad -->
-                                <span class="badge stock-badge"
+                                <!-- Badge de disponibilidad discreto -->
+                                <span class="stock-badge-simple"
                                       [ngClass]="{
-                                        'bg-success': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 10,
-                                        'bg-warning': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 0 && producto.disponibilidad?.cantidadDisponible <= 10,
-                                        'bg-danger': producto.disponibilidad?.inventariable && (!producto.disponibilidad?.cantidadDisponible || producto.disponibilidad?.cantidadDisponible <= 0),
-                                        'bg-info': !producto.disponibilidad?.inventariable
+                                        'badge-success': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 10,
+                                        'badge-warning': producto.disponibilidad?.inventariable && producto.disponibilidad?.cantidadDisponible > 0 && producto.disponibilidad?.cantidadDisponible <= 10,
+                                        'badge-danger': producto.disponibilidad?.inventariable && (!producto.disponibilidad?.cantidadDisponible || producto.disponibilidad?.cantidadDisponible <= 0),
+                                        'badge-info': !producto.disponibilidad?.inventariable
                                       }">
                                     {{ producto.disponibilidad?.inventariable ?
-                                       'Disponible: ' + (producto.disponibilidad?.cantidadDisponible || 0) :
-                                       'No inventariable' }}
+                                       (producto.disponibilidad?.cantidadDisponible || 0) + ' unid.' :
+                                       'Bajo pedido' }}
                                 </span>
 
-                                <div class="product-hover">
-                                    <ul>
-                                        <li>
-                                            <!-- Cambiar el evento click para usar la nueva función comprarProducto -->
-                                            <button class="btn" type="button" (click)="comprarProducto(producto)">
-                                                <i class="icon-shopping-cart"></i>
-                                            </button>
-                                        </li>
-                                        <li>
-                                            <button class="btn" type="button" (click)="QuickView.openModal(producto)">
-                                                <i class="icon-eye"></i>
-                                            </button>
-                                        </li>
-                                    </ul>
+                                <!-- Overlay de acciones MODERNIZADO -->
+                                <div class="product-actions-overlay">
+                                    <button class="btn-action btn-action-primary"
+                                            type="button"
+                                            (click)="comprarProducto(producto)"
+                                            title="Agregar al carrito">
+                                        <i class="icon-shopping-cart"></i>
+                                        <span class="btn-action-label">Agregar</span>
+                                    </button>
+                                    <button class="btn-action btn-action-secondary"
+                                            type="button"
+                                            (click)="QuickView.openModal(producto)"
+                                            title="Vista rápida">
+                                        <i class="icon-eye"></i>
+                                        <span class="btn-action-label">Ver detalles</span>
+                                    </button>
                                 </div>
                             </div>
-                            <div class="product-details">
-                                <div class="rating">
-                                    <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i
-                                        class="fa fa-star"></i><i class="fa fa-star"></i>
+
+                            <!-- DETALLES DEL PRODUCTO REDISEÑADOS -->
+                            <div class="product-details-modern">
+                                <!-- Header con referencia y configuración -->
+                                <div class="product-meta">
+                                    <span class="product-reference">REF: {{producto.identificacion.referencia}}</span>
+                                    <span class="config-indicator"
+                                          *ngIf="producto.procesoComercial?.configProcesoComercialActivo"
+                                          title="Requiere configuración">
+                                        <i class="fa fa-cog"></i>
+                                    </span>
                                 </div>
-                                <h4 class="product-title" title="{{producto.crearProducto.titulo}}">
-                                    {{producto.crearProducto.titulo}}</h4>
-                                <p>{{producto.identificacion.referencia}}</p>
-                                <div class="product-price">
-                                    {{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}
-                                    <del>{{producto.precio.precioTotalVolumenConIva |
-                                        currency:'USD':'symbol':'1.0-0'}}</del>
-                                </div>
-                                <!-- Añadir indicador visual de si el producto requiere configuración -->
-                                <div class="product-config-indicator"
-                                    *ngIf="producto.procesoComercial?.configProcesoComercialActivo">
-                                    <small class="text-info">
-                                        <i class="fa fa-cog"></i> Requiere configuración
-                                    </small>
+
+                                <!-- Título optimizado -->
+                                <h4 class="product-title-modern"
+                                    title="{{producto.crearProducto.titulo}}">
+                                    {{producto.crearProducto.titulo}}
+                                </h4>
+
+                                <!-- Precio con mejor jerarquía -->
+                                <div class="product-pricing-modern">
+                                    <div class="price-main">
+                                        {{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}
+                                    </div>
+                                    <div class="price-discount" *ngIf="producto.precio.precioTotalVolumenConIva !== producto.precio.precioUnitarioConIva">
+                                        <del>{{producto.precio.precioTotalVolumenConIva | currency:'USD':'symbol':'1.0-0'}}</del>
+                                    </div>
                                 </div>
                             </div>
                         </div>

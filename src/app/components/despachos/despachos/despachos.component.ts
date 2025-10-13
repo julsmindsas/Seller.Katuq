@@ -3531,7 +3531,6 @@ export class DespachosComponent implements OnInit {
           this.nuevaOrdenEnvio = {
             id: "",
             nroShippingOrder: this.nroShippingOrder,
-            fecha: new Date().toISOString(),
             transportador: this.transportadorSeleccionado,
             company: companyName,
             pedidos: [],
@@ -3540,21 +3539,6 @@ export class DespachosComponent implements OnInit {
 
         this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados;
         this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
-
-        // DEBUG: Log del objeto que se enviará a dispatch
-        console.log("📦 ENVIANDO A DISPATCH:", JSON.stringify({
-          nroShippingOrder: this.nuevaOrdenEnvio.nroShippingOrder,
-          id: this.nuevaOrdenEnvio.id,
-          fecha: this.nuevaOrdenEnvio.fecha,
-          metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
-          transportador: this.nuevaOrdenEnvio.transportador,
-          company: this.nuevaOrdenEnvio.company,
-          pedidosCount: this.nuevaOrdenEnvio.pedidos?.length || 0,
-          pedidosData: this.nuevaOrdenEnvio.pedidos?.map(p => ({
-            nroPedido: p.nroPedido,
-            referencia: p.referencia
-          })) || []
-        }, null, 2));
 
         this.logisticaService
           .dispatchShippingOrder(this.nuevaOrdenEnvio)
@@ -3567,14 +3551,7 @@ export class DespachosComponent implements OnInit {
               const nroOrdenParaImprimir = this.nroShippingOrder;
               const transportadorParaImprimir = this.transportadorSeleccionado;
 
-              console.log("=== IMPRESIÓN AUTOMÁTICA TRAS DESPACHO ===");
-              console.log("Datos guardados para impresión:", {
-                pedidosSeleccionados: pedidosParaImprimir?.length || 0,
-                nroShippingOrder: nroOrdenParaImprimir,
-                transportadorSeleccionado: !!transportadorParaImprimir,
-                transportadorNombre: transportadorParaImprimir?.nombre || transportadorParaImprimir
-              });
-
+     
               // Cerrar el modal primero
               this.modalService.dismissAll();
 
@@ -6215,8 +6192,15 @@ export class DespachosComponent implements OnInit {
       hasMetrics: !!metrics
     });
 
+    // Ordenar: pedidos SIN shippingOrder primero (necesitan atención), CON shippingOrder al final
+    const sortedOrders = [...(orders || [])].sort((a, b) => {
+      const aHasShipping = a.shippingOrder ? 1 : 0;
+      const bHasShipping = b.shippingOrder ? 1 : 0;
+      return aHasShipping - bHasShipping;
+    });
+
     // Force change detection by creating new array reference
-    this.orders = [...(orders || [])];
+    this.orders = sortedOrders;
 
     // Debug: Log first few order IDs to verify data changes
     const firstOrderIds = this.orders.slice(0, 3).map(order => ({

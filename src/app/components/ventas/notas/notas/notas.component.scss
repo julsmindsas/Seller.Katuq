@@ -4,12 +4,12 @@
 
 // Estilos para el componente de notas
 .notes-card {
-  border-radius: 0.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 
   .card-header {
     background-color: #fff;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    border-bottom: 1px solid #e9ecef;
     padding: 1rem;
 
     i {
@@ -27,8 +27,8 @@
 
         .p-tabview-nav-link {
           padding: 0.75rem 1rem;
-          border-radius: 0.25rem 0.25rem 0 0;
-          transition: all 0.3s ease;
+          border-radius: 6px 6px 0 0;
+          transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
           &:not(.p-disabled):focus {
             box-shadow: none;
@@ -41,12 +41,12 @@
 
         &.p-highlight .p-tabview-nav-link {
           background-color: #f8f9fa;
-          border-color: #dee2e6;
-          color: var(--primary);
+          border-color: #e9ecef;
+          color: #4361ee;
           border-bottom-color: #f8f9fa;
 
           i {
-            color: var(--primary);
+            color: #4361ee;
           }
         }
       }
@@ -54,9 +54,9 @@
 
     .p-tabview-panels {
       background-color: #f8f9fa;
-      border: 1px solid #dee2e6;
+      border: 1px solid #e9ecef;
       border-top: 0;
-      border-radius: 0 0 0.25rem 0.25rem;
+      border-radius: 0 0 6px 6px;
       padding: 1.5rem;
     }
   }
@@ -69,8 +69,8 @@
     color: #6c757d;
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-    border: 1px solid #ced4da;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
   }
 }
 
@@ -87,7 +87,7 @@
 .notes-form {
   .note-input-container {
     background-color: #fff;
-    border-radius: 0.375rem;
+    border-radius: 8px;
     padding: 1rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
@@ -107,7 +107,7 @@
 
         &:focus {
           box-shadow: none;
-          border-color: #ced4da;
+          border-color: #e9ecef;
         }
       }
 
@@ -121,7 +121,7 @@
 
   // Nuevos estilos para formulario de producción
   .alert {
-    border-radius: 0.375rem;
+    border-radius: 8px;
     padding: 0.75rem 1rem;
 
     &.alert-success {
@@ -149,14 +149,14 @@
 // Estilo para el encabezado de notas de producto
 .product-note {
   background-color: #fff;
-  border-radius: 0.5rem;
+  border-radius: 12px;
   padding: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   border: 1px solid rgba(40, 167, 69, 0.2);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
     transform: translateY(-2px);
   }
 
@@ -195,7 +195,7 @@
         color: white;
         font-size: 0.75rem;
         padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
+        border-radius: 6px;
         animation: pulse 2s infinite;
       }
 
@@ -204,7 +204,7 @@
         color: white;
         font-size: 0.75rem;
         padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
+        border-radius: 6px;
       }
 
       &.bg-success {
@@ -212,7 +212,7 @@
         color: white;
         font-size: 0.75rem;
         padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
+        border-radius: 6px;
         animation: pulse 2s infinite;
       }
     }
@@ -223,7 +223,7 @@
 
     .input-group-text {
       background-color: #f8f9fa;
-      border-color: #ced4da;
+      border-color: #e9ecef;
       color: #495057;
 
       i {
@@ -232,8 +232,8 @@
     }
 
     textarea {
-      border-color: #ced4da;
-      transition: all 0.3s ease;
+      border-color: #e9ecef;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
       &:focus {
         border-color: #28a745;
@@ -247,7 +247,7 @@
     }
 
     .btn-outline-danger {
-      transition: all 0.3s ease;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
       &:hover {
         transform: scale(1.05);
@@ -270,7 +270,7 @@
   // Estilos para notas existentes
   .existing-notes {
     background-color: #f8f9fa;
-    border-radius: 0.375rem;
+    border-radius: 8px;
     padding: 1rem;
     border-left: 4px solid #17a2b8;
     margin-bottom: 1rem;
@@ -288,7 +288,7 @@
 
     .existing-note-item {
       background-color: white;
-      border-radius: 0.25rem;
+      border-radius: 6px;
       padding: 0.75rem;
       margin-bottom: 0.5rem;
       border: 1px solid #e9ecef;
@@ -322,7 +322,7 @@
         line-height: 1.4;
         background-color: #f8f9fa;
         padding: 0.5rem;
-        border-radius: 0.25rem;
+        border-radius: 6px;
         border-left: 3px solid #17a2b8;
       }
     }
@@ -335,7 +335,7 @@
     font-size: 0.9rem;
     margin-bottom: 0.75rem;
     padding-top: 0.5rem;
-    border-top: 1px dashed #dee2e6;
+    border-top: 1px dashed #e9ecef;
 
     i {
       color: #28a745;
@@ -345,7 +345,7 @@
   .add-note-section {
     padding: 1rem;
     background-color: rgba(40, 167, 69, 0.05);
-    border-radius: 0.375rem;
+    border-radius: 8px;
     border: 2px dashed #28a745;
     text-align: center;
     margin-top: 1rem;
@@ -381,7 +381,7 @@
     color: #495057;
     font-weight: 600;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid #e9ecef;
 
     i {
       color: #607d8b;
@@ -390,13 +390,13 @@
 
   table {
     background-color: #fff;
-    border-radius: 0.375rem;
+    border-radius: 8px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
     thead th {
       background-color: #f8f9fa;
       border-top: none;
-      border-bottom: 1px solid #dee2e6;
+      border-bottom: 1px solid #e9ecef;
       color: #495057;
       font-weight: 600;
       font-size: 0.875rem;
@@ -406,7 +406,7 @@
     tbody td {
       padding: 0.75rem 1rem;
       vertical-align: middle;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      border-bottom: 1px solid #e9ecef;
 
       .btn-sm {
         padding: 0.25rem 0.5rem;
@@ -423,10 +423,10 @@
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-radius: 0.75rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  border: 2px dashed #ced4da;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: 2px dashed #e9ecef;
 
   i {
     font-size: 3rem;
@@ -531,19 +531,19 @@
   margin-top: 0.75rem;
   padding: 0.75rem;
   background-color: #f8f9fa;
-  border-radius: 0.375rem;
+  border-radius: 8px;
   border: 1px solid #e9ecef;
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   &:hover {
     background-color: #e9ecef;
-    border-color: #ced4da;
+    border-color: #e9ecef;
   }
 
   .input-group {
     .input-group-text {
       background-color: #fff;
-      border-color: #ced4da;
+      border-color: #e9ecef;
       color: #6c757d;
 
       i {
@@ -552,8 +552,8 @@
     }
 
     input[type="file"] {
-      border-color: #ced4da;
-      transition: all 0.3s ease;
+      border-color: #e9ecef;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
       &:focus {
         border-color: #28a745;
@@ -565,9 +565,9 @@
         border-color: #28a745;
         color: white;
         padding: 0.375rem 0.75rem;
-        border-radius: 0.25rem;
+        border-radius: 6px;
         margin-right: 0.5rem;
-        transition: all 0.3s ease;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
         &:hover {
           background-color: #218838;
@@ -577,7 +577,7 @@
     }
 
     .btn-outline-secondary {
-      border-color: #ced4da;
+      border-color: #e9ecef;
       color: #6c757d;
 
       &:hover {
@@ -789,13 +789,13 @@
 .preview-item {
   position: relative;
   background: white;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
   overflow: hidden;
-  transition: all 0.2s ease;
-  
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
   &:hover {
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
     transform: translateY(-2px);
   }
 }
@@ -900,7 +900,7 @@
     align-items: center;
     justify-content: center;
     font-size: 0.7rem;
-    transition: all 0.2s ease;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     z-index: 10;
     
     &:hover {
@@ -997,7 +997,7 @@
     align-items: center;
     justify-content: center;
     font-size: 0.7rem;
-    transition: all 0.2s ease;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     z-index: 10;
     
     &:hover {
@@ -1061,7 +1061,7 @@
     align-items: center;
     justify-content: center;
     font-size: 0.7rem;
-    transition: all 0.2s ease;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     z-index: 10;
     
     &:hover {
@@ -1188,7 +1188,7 @@
   border: 1px solid #ffeaa7;
   background-color: #fff3cd;
   color: #856404;
-  border-radius: 6px;
+  border-radius: 8px;
   padding: 0.5rem 0.75rem;
   margin-top: 0.5rem;
   
