@@ -1491,22 +1491,23 @@ html {
 .empty-notes {
   padding: 3rem 1rem;
   background-color: var(--gray-50);
-  border-radius: var(--border-radius-sm);
+  border-radius: var(--border-radius-xl, 12px);
   border: 2px dashed var(--gray-300);
-  transition: var(--transition);
-  
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
   &:hover {
     border-color: var(--gray-400);
     background-color: rgba(67, 97, 238, 0.02);
   }
-  
+
   i {
-    font-size: 2.5rem;
-    color: var(--gray-300);
-    margin-bottom: 1rem;
-    transition: var(--transition);
+    font-size: 4rem;
+    color: var(--primary-color, #4361ee);
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   }
-  
+
   p {
     color: var(--gray-500);
     margin-bottom: 0;

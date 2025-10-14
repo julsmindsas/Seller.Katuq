@@ -9,7 +9,7 @@ import { LogisticaServiceV2 } from '../../../../../shared/services/despachos/log
 import { ShipmentPreparationService, BodegaAnalysis } from '../../../../../shared/services/despachos/shipment-preparation.service';
 import { EnviameHelperService } from '../services/enviame-helper.service';
 import { DaneCodesService } from '../../../../../shared/services/dane-codes.service';
-import { MunicipioDane } from '../../../../../shared/data/colombia-dane-codes';
+import { MunicipioDane, buscarMunicipio } from '../../../../../shared/data/colombia-dane-codes';
 import {
   EnviameRate,
   EnviameQuoteRequest,
@@ -917,6 +917,30 @@ export class EnviameRatesModalComponent implements OnInit {
       postalCode: pedidoData.bodegaData.postalCode
     };
 
+    // Fallback: Si municipioOrigen no está cargado, buscarlo ahora (soluciona timing de async preload)
+    if (!pedidoData.municipioOrigen && pedidoData.bodegaData.city) {
+      const municipios = buscarMunicipio(pedidoData.bodegaData.city);
+      if (municipios.length > 0) {
+        const municipiosConScore = municipios
+          .map(m => ({
+            municipio: m,
+            score: this.fuzzySearchCity(pedidoData.bodegaData.city, m.nombre)
+          }))
+          .filter(item => item.score > 40)
+          .sort((a, b) => b.score - a.score);
+
+        if (municipiosConScore.length > 0) {
+          pedidoData.municipioOrigen = municipiosConScore[0].municipio;
+          console.log(`✅ Municipio origen encontrado (fallback) para pedido:`, {
+            ciudad: pedidoData.bodegaData.city,
+            encontrado: pedidoData.municipioOrigen.nombre,
+            departamento: pedidoData.municipioOrigen.departamento,
+            score: municipiosConScore[0].score
+          });
+        }
+      }
+    }
+
     if (pedidoData.municipioOrigen) {
       originData.municipioCode = pedidoData.municipioOrigen.codigo;
       originData.municipioName = pedidoData.municipioOrigen.nombre;
@@ -930,6 +954,30 @@ export class EnviameRatesModalComponent implements OnInit {
       country: pedidoData.destinoData.country,
       postalCode: pedidoData.destinoData.postalCode
     };
+
+    // Fallback: Si municipioDestino no está cargado, buscarlo ahora (soluciona timing de async preload)
+    if (!pedidoData.municipioDestino && pedidoData.destinoData.city) {
+      const municipios = buscarMunicipio(pedidoData.destinoData.city);
+      if (municipios.length > 0) {
+        const municipiosConScore = municipios
+          .map(m => ({
+            municipio: m,
+            score: this.fuzzySearchCity(pedidoData.destinoData.city, m.nombre)
+          }))
+          .filter(item => item.score > 40)
+          .sort((a, b) => b.score - a.score);
+
+        if (municipiosConScore.length > 0) {
+          pedidoData.municipioDestino = municipiosConScore[0].municipio;
+          console.log(`✅ Municipio destino encontrado (fallback) para pedido:`, {
+            ciudad: pedidoData.destinoData.city,
+            encontrado: pedidoData.municipioDestino.nombre,
+            departamento: pedidoData.municipioDestino.departamento,
+            score: municipiosConScore[0].score
+          });
+        }
+      }
+    }
 
     if (pedidoData.municipioDestino) {
       destinationData.municipioCode = pedidoData.municipioDestino.codigo;
@@ -1233,7 +1281,10 @@ export class EnviameRatesModalComponent implements OnInit {
         address: formData.originAddress,
         city: formData.originCity,
         country: formData.originCountry,
-        postalCode: formData.originPostalCode
+        postalCode: formData.originPostalCode,
+        municipioCode: this.municipioSeleccionadoOrigen?.codigo,
+        municipioName: this.municipioSeleccionadoOrigen?.nombre,
+        placeCode: this.municipioSeleccionadoOrigen ? this.daneCodesService.getPlaceCode(this.municipioSeleccionadoOrigen.codigo) : undefined
       },
       destination: {
         address: formData.destinationAddress,
@@ -1241,6 +1292,9 @@ export class EnviameRatesModalComponent implements OnInit {
         department: this.municipioSeleccionadoDestino?.departamento || '',
         country: formData.destinationCountry,
         postalCode: formData.destinationPostalCode,
+        municipioCode: this.municipioSeleccionadoDestino?.codigo,
+        municipioName: this.municipioSeleccionadoDestino?.nombre,
+        placeCode: this.municipioSeleccionadoDestino ? this.daneCodesService.getPlaceCode(this.municipioSeleccionadoDestino.codigo) : undefined,
         recipient: {
           name: formData.recipientName,
           phone: formData.recipientPhone,
@@ -1327,13 +1381,20 @@ export class EnviameRatesModalComponent implements OnInit {
           address: pedidoData.bodegaData.address,
           city: pedidoData.bodegaData.city,
           country: pedidoData.bodegaData.country,
-          postalCode: pedidoData.bodegaData.postalCode
+          postalCode: pedidoData.bodegaData.postalCode,
+          municipioCode: pedidoData.municipioOrigen?.codigo,
+          municipioName: pedidoData.municipioOrigen?.nombre,
+          placeCode: pedidoData.municipioOrigen ? this.daneCodesService.getPlaceCode(pedidoData.municipioOrigen.codigo) : undefined
         },
         destination: {
           address: pedidoData.destinoData.address,
           city: pedidoData.destinoData.city,
+          department: pedidoData.municipioDestino?.departamento || '',
           country: pedidoData.destinoData.country,
           postalCode: pedidoData.destinoData.postalCode,
+          municipioCode: pedidoData.municipioDestino?.codigo,
+          municipioName: pedidoData.municipioDestino?.nombre,
+          placeCode: pedidoData.municipioDestino ? this.daneCodesService.getPlaceCode(pedidoData.municipioDestino.codigo) : undefined,
           recipient: {
             name: pedidoData.destinoData.recipient.name,
             phone: pedidoData.destinoData.recipient.phone,
