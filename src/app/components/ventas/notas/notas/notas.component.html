@@ -1,12 +1,4 @@
-<div class="card notes-card mb-4">
-  <div class="card-header">
-    <div class="d-flex align-items-center">
-      <i class="fa fa-sticky-note me-2"></i>
-      <h5 class="mb-0">Notas del Pedido</h5>
-    </div>
-  </div>
-  <div class="card-body">
-    <p-tabView>
+<p-tabView>
       <!-- NOTAS PRODUCCIÓN -->
       <p-tabPanel header="Producción" leftIcon="fa fa-cogs">
         <div *ngIf="!pedido?.carrito?.length && (!pedido?.notasPedido?.notasProduccion || pedido?.notasPedido?.notasProduccion.length === 0)" class="empty-notes text-center p-4">
@@ -698,5 +690,3 @@
         </div>
       </p-tabPanel>
     </p-tabView>
-  </div>
-</div>

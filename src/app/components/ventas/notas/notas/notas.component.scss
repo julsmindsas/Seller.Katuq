@@ -1,24 +1,52 @@
+/* =================================================================
+   NOTAS COMPONENT - ESTANDARIZADO CON SISTEMA DEL PASO 1 (CATÁLOGO)
+   Sistema de diseño: Border-radius 12px, transiciones suaves,
+   variables CSS, colores consistentes
+   ================================================================= */
+
 .fa {
   cursor: pointer !important;
 }
 
-// Estilos para el componente de notas
+/* =================================================================
+   CARD PRINCIPAL DE NOTAS
+   ================================================================= */
+
 .notes-card {
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  border: none;
+  border-radius: var(--border-radius-xl, 12px);
+  box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.04));
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  margin-bottom: 1rem;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-lg, 0 12px 28px rgba(0, 0, 0, 0.08));
+  }
 
   .card-header {
-    background-color: #fff;
-    border-bottom: 1px solid #e9ecef;
+    background-color: var(--gray-100, #f8f9fa);
+    border-bottom: 1px solid var(--gray-200, #e9ecef);
     padding: 1rem;
 
     i {
-      color: #607d8b;
+      color: var(--primary-color, #4361ee);
+      font-size: 1.25rem;
+    }
+
+    h5 {
+      font-size: var(--font-size-base, 1rem);
+      font-weight: var(--font-weight-semibold, 600);
+      color: var(--gray-800, #212529);
     }
   }
 }
 
-// Estilos para los tabs
+/* =================================================================
+   TABS PRIMENG - ESTANDARIZADO
+   ================================================================= */
+
 :host ::ng-deep {
   .p-tabview {
     .p-tabview-nav {
@@ -27,11 +55,17 @@
 
         .p-tabview-nav-link {
           padding: 0.75rem 1rem;
-          border-radius: 6px 6px 0 0;
+          border-radius: var(--border-radius, 8px) var(--border-radius, 8px) 0 0;
           transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+          font-size: var(--font-size-sm, 0.875rem);
+          font-weight: var(--font-weight-medium, 500);
 
           &:not(.p-disabled):focus {
             box-shadow: none;
+          }
+
+          &:hover:not(.p-highlight) {
+            background: rgba(var(--primary-rgb, 67, 97, 238), 0.05);
           }
 
           i {
@@ -40,123 +74,154 @@
         }
 
         &.p-highlight .p-tabview-nav-link {
-          background-color: #f8f9fa;
-          border-color: #e9ecef;
-          color: #4361ee;
-          border-bottom-color: #f8f9fa;
+          background-color: var(--gray-100, #f8f9fa);
+          border-color: var(--gray-200, #e9ecef);
+          color: var(--primary-color, #4361ee);
+          border-bottom-color: var(--gray-100, #f8f9fa);
 
           i {
-            color: #4361ee;
+            color: var(--primary-color, #4361ee);
           }
         }
       }
     }
 
     .p-tabview-panels {
-      background-color: #f8f9fa;
-      border: 1px solid #e9ecef;
+      background-color: var(--gray-50, #f8f9fa);
+      border: 1px solid var(--gray-200, #e9ecef);
       border-top: 0;
-      border-radius: 0 0 6px 6px;
+      border-radius: 0 0 var(--border-radius-xl, 12px) var(--border-radius-xl, 12px);
       padding: 1.5rem;
     }
   }
 }
 
-// Estilos para modo edición
-.existing-notes {
-  .readonly-indicator {
-    background-color: #e9ecef;
-    color: #6c757d;
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 6px;
-    border: 1px solid #e9ecef;
-  }
-}
+/* =================================================================
+   FORMULARIOS DE NOTAS
+   ================================================================= */
 
-.btn[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.alert-info {
-  border-left: 4px solid #17a2b8;
-}
-
-// Estilos para el formulario de notas
 .notes-form {
   .note-input-container {
-    background-color: #fff;
-    border-radius: 8px;
+    background: white;
+    border-radius: var(--border-radius, 8px);
     padding: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--box-shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    &:hover {
+      box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.04));
+    }
 
     .note-metadata {
-      color: #6c757d;
-      font-size: 0.875rem;
+      color: var(--gray-600, #6c757d);
+      font-size: var(--font-size-sm, 0.875rem);
+      font-weight: var(--font-weight-medium, 500);
+      margin-bottom: 0.5rem;
 
       i {
-        color: #6c757d;
+        color: var(--primary-color, #4361ee);
       }
     }
 
     .input-group {
-      textarea {
+      textarea,
+      input {
+        border: 1px solid var(--gray-300, #e9ecef);
+        border-radius: var(--border-radius, 8px);
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         resize: none;
-        border-right: none;
 
         &:focus {
-          box-shadow: none;
-          border-color: #e9ecef;
+          border-color: var(--primary-color, #4361ee);
+          box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 67, 97, 238), 0.15);
+          outline: none;
+        }
+
+        &::placeholder {
+          color: var(--gray-400, #adb5bd);
+          font-style: italic;
         }
       }
 
       button {
-        width: 50px;
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
+        min-width: 50px;
+        border-radius: var(--border-radius, 8px);
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.08));
+        }
       }
     }
   }
 
-  // Nuevos estilos para formulario de producción
+  // Alertas estilo Paso 1
   .alert {
-    border-radius: 8px;
-    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius, 8px);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: var(--font-size-sm, 0.875rem);
+    line-height: var(--line-height-normal, 1.5);
+    border-width: 1px;
+    border-style: solid;
+
+    i {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
 
     &.alert-success {
-      background-color: rgba(40, 167, 69, 0.1);
-      border-color: rgba(40, 167, 69, 0.2);
-      color: #155724;
+      background: rgba(var(--success-rgb, 6, 214, 160), 0.1);
+      border-color: var(--success-color, #06d6a0);
+      color: var(--success-dark, #155724);
 
       i {
-        color: #28a745;
+        color: var(--success-color, #06d6a0);
       }
     }
 
     &.alert-info {
-      background-color: rgba(23, 162, 184, 0.1);
-      border-color: rgba(23, 162, 184, 0.2);
-      color: #0c5460;
+      background: rgba(var(--primary-rgb, 67, 97, 238), 0.1);
+      border-color: var(--primary-color, #4361ee);
+      color: var(--primary-dark, #0c5460);
 
       i {
-        color: #17a2b8;
+        color: var(--primary-color, #4361ee);
+      }
+    }
+
+    &.alert-warning {
+      background: rgba(var(--warning-rgb, 255, 209, 102), 0.1);
+      border-color: var(--warning-color, #ffd166);
+      color: var(--warning-dark, #856404);
+
+      i {
+        color: var(--warning-color, #ffd166);
       }
     }
   }
 }
 
-// Estilo para el encabezado de notas de producto
+/* =================================================================
+   NOTAS DE PRODUCTO (PRODUCCIÓN)
+   ================================================================= */
+
 .product-note {
-  background-color: #fff;
-  border-radius: 12px;
+  background-color: white;
+  border-radius: var(--border-radius-xl, 12px);
   padding: 1.5rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border: 1px solid rgba(40, 167, 69, 0.2);
+  box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.04));
+  border: 1px solid var(--gray-200, #e9ecef);
   transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  margin-bottom: 1rem;
 
   &:hover {
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--box-shadow-lg, 0 12px 28px rgba(0, 0, 0, 0.08));
     transform: translateY(-2px);
   }
 
@@ -165,55 +230,44 @@
     justify-content: space-between;
     align-items: center;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid rgba(40, 167, 69, 0.2);
+    border-bottom: 2px solid var(--gray-200, #e9ecef);
     margin-bottom: 1rem;
 
     .date-label {
-      color: #6c757d;
-      font-size: 0.875rem;
-      font-weight: 500;
+      color: var(--gray-600, #6c757d);
+      font-size: var(--font-size-sm, 0.875rem);
+      font-weight: var(--font-weight-medium, 500);
 
       i {
-        color: #28a745;
+        color: var(--primary-color, #4361ee);
       }
     }
 
     .product-label {
-      font-weight: 600;
-      color: #2c3e50;
+      font-weight: var(--font-weight-semibold, 600);
+      color: var(--gray-800, #2c3e50);
       display: flex;
       align-items: center;
 
       i {
-        color: #28a745;
+        color: var(--primary-color, #4361ee);
       }
     }
 
     .badge {
-      &.bg-primary {
-        background-color: #28a745 !important;
+      font-size: var(--font-size-xs, 0.75rem);
+      padding: 0.25rem 0.5rem;
+      border-radius: var(--border-radius, 8px);
+
+      &.bg-primary,
+      &.bg-success {
+        background-color: var(--success-color, #06d6a0) !important;
         color: white;
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 6px;
-        animation: pulse 2s infinite;
       }
 
       &.bg-info {
-        background-color: #17a2b8 !important;
+        background-color: var(--secondary-color, #2ec4b6) !important;
         color: white;
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 6px;
-      }
-
-      &.bg-success {
-        background-color: #28a745 !important;
-        color: white;
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 6px;
-        animation: pulse 2s infinite;
       }
     }
   }
@@ -222,26 +276,26 @@
     margin-bottom: 0.75rem;
 
     .input-group-text {
-      background-color: #f8f9fa;
-      border-color: #e9ecef;
-      color: #495057;
+      background-color: var(--gray-100, #f8f9fa);
+      border-color: var(--gray-200, #e9ecef);
+      color: var(--gray-700, #495057);
 
       i {
-        color: #28a745;
+        color: var(--primary-color, #4361ee);
       }
     }
 
     textarea {
-      border-color: #e9ecef;
+      border-color: var(--gray-200, #e9ecef);
       transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
       &:focus {
-        border-color: #28a745;
-        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        border-color: var(--primary-color, #4361ee);
+        box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 67, 97, 238), 0.15);
       }
 
       &::placeholder {
-        color: #adb5bd;
+        color: var(--gray-400, #adb5bd);
         font-style: italic;
       }
     }
@@ -257,45 +311,55 @@
 
   .btn-outline-primary {
     background-color: transparent;
-    border-color: #28a745;
-    color: #28a745;
+    border-color: var(--primary-color, #4361ee);
+    color: var(--primary-color, #4361ee);
+    border-radius: var(--border-radius, 8px);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     &:hover {
-      background-color: #28a745;
-      border-color: #28a745;
+      background-color: var(--primary-color, #4361ee);
+      border-color: var(--primary-color, #4361ee);
       color: white;
+      transform: translateY(-2px);
+      box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.08));
     }
   }
 
-  // Estilos para notas existentes
+  // Notas existentes
   .existing-notes {
-    background-color: #f8f9fa;
-    border-radius: 8px;
+    background-color: var(--gray-50, #f8f9fa);
+    border-radius: var(--border-radius, 8px);
     padding: 1rem;
-    border-left: 4px solid #17a2b8;
+    border-left: 4px solid var(--secondary-color, #2ec4b6);
     margin-bottom: 1rem;
 
     .existing-notes-title {
-      color: #495057;
-      font-weight: 600;
-      font-size: 0.9rem;
+      color: var(--gray-700, #495057);
+      font-weight: var(--font-weight-semibold, 600);
+      font-size: var(--font-size-sm, 0.9rem);
       margin-bottom: 0.75rem;
 
       i {
-        color: #17a2b8;
+        color: var(--secondary-color, #2ec4b6);
       }
     }
 
     .existing-note-item {
       background-color: white;
-      border-radius: 6px;
+      border-radius: var(--border-radius, 8px);
       padding: 0.75rem;
       margin-bottom: 0.5rem;
-      border: 1px solid #e9ecef;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--gray-200, #e9ecef);
+      box-shadow: var(--box-shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
       &:last-child {
         margin-bottom: 0;
+      }
+
+      &:hover {
+        border-color: var(--primary-color, #4361ee);
+        box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.04));
       }
 
       .existing-note-header {
@@ -305,186 +369,703 @@
         margin-bottom: 0.5rem;
 
         .note-date {
-          font-size: 0.8rem;
-          color: #6c757d;
-          font-weight: 500;
+          font-size: var(--font-size-xs, 0.8rem);
+          color: var(--gray-600, #6c757d);
+          font-weight: var(--font-weight-medium, 500);
         }
 
         .btn-sm {
           padding: 0.2rem 0.4rem;
-          font-size: 0.7rem;
+          font-size: var(--font-size-xs, 0.7rem);
+          border-radius: var(--border-radius, 8px);
         }
       }
 
       .existing-note-content {
-        color: #495057;
-        font-size: 0.9rem;
+        color: var(--gray-700, #495057);
+        font-size: var(--font-size-sm, 0.9rem);
         line-height: 1.4;
-        background-color: #f8f9fa;
+        background-color: var(--gray-50, #f8f9fa);
         padding: 0.5rem;
-        border-radius: 6px;
-        border-left: 3px solid #17a2b8;
+        border-radius: var(--border-radius, 8px);
+        border-left: 3px solid var(--secondary-color, #2ec4b6);
       }
     }
   }
 
-  // Estilos para sección de nuevas notas
+  // Sección de nuevas notas
   .new-notes-title {
-    color: #28a745;
-    font-weight: 600;
-    font-size: 0.9rem;
+    color: var(--primary-color, #4361ee);
+    font-weight: var(--font-weight-semibold, 600);
+    font-size: var(--font-size-sm, 0.9rem);
     margin-bottom: 0.75rem;
     padding-top: 0.5rem;
-    border-top: 1px dashed #e9ecef;
+    border-top: 1px dashed var(--gray-300, #e9ecef);
 
     i {
-      color: #28a745;
+      color: var(--primary-color, #4361ee);
     }
   }
 
   .add-note-section {
     padding: 1rem;
-    background-color: rgba(40, 167, 69, 0.05);
-    border-radius: 8px;
-    border: 2px dashed #28a745;
+    background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.05);
+    border-radius: var(--border-radius, 8px);
+    border: 2px dashed var(--primary-color, #4361ee);
     text-align: center;
     margin-top: 1rem;
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+    &:hover {
+      background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.1);
+      border-color: var(--primary-dark, #3451c9);
+    }
 
     .btn-success {
-      background-color: #28a745;
-      border-color: #28a745;
+      background-color: var(--success-color, #06d6a0);
+      border-color: var(--success-color, #06d6a0);
+      border-radius: var(--border-radius, 8px);
 
       &:hover {
-        background-color: #218838;
-        border-color: #1e7e34;
+        background-color: var(--success-dark, #05b88b);
+        border-color: var(--success-dark, #05b88b);
+        transform: translateY(-2px);
+        box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.08));
       }
     }
   }
 }
 
-// Animación de pulso para el badge "Nuevo"
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(40, 167, 69, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
-  }
-}
+/* =================================================================
+   LISTA DE NOTAS Y TABLAS
+   ================================================================= */
 
-// Estilos para la lista de notas
 .notes-list {
   .list-header {
-    color: #495057;
-    font-weight: 600;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #e9ecef;
+    color: var(--gray-700, #495057);
+    font-size: var(--font-size-sm, 0.875rem);
+    font-weight: var(--font-weight-semibold, 600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--gray-200, #e9ecef);
+    margin-bottom: 1rem;
 
     i {
-      color: #607d8b;
+      color: var(--primary-color, #4361ee);
     }
   }
 
   table {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    background: white;
+    border-radius: var(--border-radius-xl, 12px);
+    box-shadow: var(--box-shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+    overflow: hidden;
 
     thead th {
-      background-color: #f8f9fa;
+      background: var(--gray-100, #f8f9fa);
       border-top: none;
-      border-bottom: 1px solid #e9ecef;
-      color: #495057;
-      font-weight: 600;
-      font-size: 0.875rem;
-      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--gray-200, #e9ecef);
+      color: var(--gray-700, #495057);
+      font-weight: var(--font-weight-bold, 700);
+      font-size: var(--font-size-xs, 0.8rem);
+      padding: 0.875rem 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
     }
 
-    tbody td {
-      padding: 0.75rem 1rem;
-      vertical-align: middle;
-      border-bottom: 1px solid #e9ecef;
+    tbody {
+      tr {
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
-      .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.75rem;
+        &:hover {
+          background: rgba(var(--primary-rgb, 67, 97, 238), 0.05);
+        }
+      }
+
+      td {
+        padding: 0.75rem 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--gray-100, #f8f9fa);
+
+        .btn-sm {
+          padding: 0.25rem 0.5rem;
+          font-size: var(--font-size-xs, 0.75rem);
+          border-radius: var(--border-radius, 8px);
+        }
       }
     }
   }
 }
 
-// Mensaje cuando no hay notas
+/* =================================================================
+   EMPTY STATES - ESTILO PASO 1
+   ================================================================= */
+
 .empty-notes {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 3rem 1rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  border: 2px dashed #e9ecef;
+  background: white;
+  border-radius: var(--border-radius-xl, 12px);
+  box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.04));
+  border: 2px dashed var(--gray-300, #e9ecef);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  &:hover {
+    border-color: var(--gray-400, #adb5bd);
+    background: rgba(var(--primary-rgb, 67, 97, 238), 0.02);
+  }
 
   i {
-    font-size: 3rem;
-    color: #28a745;
-    margin-bottom: 1rem;
-    animation: bounce 2s infinite;
+    font-size: 4rem;
+    color: var(--primary-color, #4361ee);
+    opacity: 0.3;
+    margin-bottom: 1.5rem;
+  }
+
+  h5 {
+    color: var(--gray-700, #495057);
+    font-weight: var(--font-weight-semibold, 600);
+    margin-bottom: 0.5rem;
   }
 
   p {
-    color: #495057;
-    margin-bottom: 0.5rem;
-    font-weight: 600;
-    font-size: 1.1rem;
+    color: var(--gray-500, #6c757d);
+    font-size: var(--font-size-sm, 0.875rem);
+    margin: 0;
   }
 
   small {
-    color: #6c757d;
+    color: var(--gray-500, #6c757d);
     text-align: center;
     line-height: 1.4;
   }
 }
 
-// Animación de rebote para el icono del carrito
-@keyframes bounce {
-  0%,
-  20%,
-  50%,
-  80%,
-  100% {
+/* =================================================================
+   BOTONES ESTANDARIZADOS
+   ================================================================= */
+
+.btn {
+  min-height: 40px;
+  padding: 0.5rem 1rem;
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-semibold, 600);
+  border-radius: var(--border-radius, 8px);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.08));
+  }
+
+  &:active:not(:disabled) {
     transform: translateY(0);
   }
-  40% {
-    transform: translateY(-10px);
+
+  &.btn-primary {
+    background: var(--primary-color, #4361ee);
+    border-color: var(--primary-color, #4361ee);
+    color: white;
+
+    &:hover {
+      background: var(--primary-dark, #3451c9);
+      border-color: var(--primary-dark, #3451c9);
+    }
   }
-  60% {
-    transform: translateY(-5px);
+
+  &.btn-success {
+    background: var(--success-color, #06d6a0);
+    border: none;
+
+    &:hover {
+      background: var(--success-dark, #05b88b);
+    }
+  }
+
+  &:disabled,
+  &[disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
   }
 }
 
-// Responsive
-@media (max-width: 767.98px) {
+/* =================================================================
+   CONTROLES DE SUBIDA DE ARCHIVOS
+   ================================================================= */
+
+.file-upload-container {
+  margin-top: 0.75rem;
+  padding: 0.75rem;
+  background-color: var(--gray-50, #f8f9fa);
+  border-radius: var(--border-radius, 8px);
+  border: 1px solid var(--gray-200, #e9ecef);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  &:hover {
+    background-color: var(--gray-100, #e9ecef);
+    border-color: var(--gray-300, #dee2e6);
+  }
+
+  .input-group {
+    .input-group-text {
+      background-color: white;
+      border-color: var(--gray-200, #e9ecef);
+      color: var(--gray-600, #6c757d);
+      border-right: none;
+
+      i {
+        color: var(--primary-color, #4361ee);
+      }
+    }
+
+    input[type="file"] {
+      border-color: var(--gray-200, #e9ecef);
+      border-left: none;
+      border-right: none;
+      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+      &:focus {
+        border-color: var(--primary-color, #4361ee);
+        box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 67, 97, 238), 0.15);
+        outline: none;
+      }
+    }
+
+    .btn-outline-secondary {
+      border-color: var(--gray-200, #e9ecef);
+      border-left: none;
+      color: var(--gray-600, #6c757d);
+
+      &:hover {
+        background-color: var(--gray-600, #6c757d);
+        border-color: var(--gray-600, #6c757d);
+        color: white;
+      }
+    }
+  }
+
+  small {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--gray-600, #6c757d);
+    font-size: var(--font-size-xs, 0.8rem);
+    line-height: 1.3;
+
+    i {
+      color: var(--secondary-color, #2ec4b6);
+    }
+  }
+}
+
+// Variantes de color por tipo de nota
+.file-upload-container {
+  &.produccion {
+    background-color: rgba(var(--success-rgb, 6, 214, 160), 0.05);
+    border-color: rgba(var(--success-rgb, 6, 214, 160), 0.2);
+
+    &:hover {
+      background-color: rgba(var(--success-rgb, 6, 214, 160), 0.1);
+    }
+
+    .input-group-text i {
+      color: var(--success-color, #06d6a0);
+    }
+  }
+
+  &.despacho {
+    background-color: rgba(var(--secondary-rgb, 46, 196, 182), 0.05);
+    border-color: rgba(var(--secondary-rgb, 46, 196, 182), 0.2);
+
+    &:hover {
+      background-color: rgba(var(--secondary-rgb, 46, 196, 182), 0.1);
+    }
+
+    .input-group-text i {
+      color: var(--secondary-color, #2ec4b6);
+    }
+  }
+
+  &.entrega {
+    background-color: rgba(var(--warning-rgb, 255, 209, 102), 0.05);
+    border-color: rgba(var(--warning-rgb, 255, 209, 102), 0.2);
+
+    &:hover {
+      background-color: rgba(var(--warning-rgb, 255, 209, 102), 0.1);
+    }
+
+    .input-group-text i {
+      color: var(--warning-color, #ffd166);
+    }
+  }
+
+  &.facturacion {
+    background-color: rgba(var(--danger-rgb, 239, 71, 111), 0.05);
+    border-color: rgba(var(--danger-rgb, 239, 71, 111), 0.2);
+
+    &:hover {
+      background-color: rgba(var(--danger-rgb, 239, 71, 111), 0.1);
+    }
+
+    .input-group-text i {
+      color: var(--danger-color, #ef476f);
+    }
+  }
+}
+
+/* =================================================================
+   VISTA PREVIA DE ARCHIVOS
+   ================================================================= */
+
+.file-preview-container {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--gray-50, #f8f9fa);
+  border-radius: var(--border-radius, 8px);
+  border: 1px solid var(--gray-200, #e9ecef);
+
+  .preview-title {
+    font-size: var(--font-size-sm, 0.9rem);
+    font-weight: var(--font-weight-semibold, 600);
+    color: var(--gray-700, #495057);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+
+    i {
+      margin-right: 0.5rem;
+      color: var(--primary-color, #4361ee);
+    }
+  }
+}
+
+.preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.preview-item {
+  position: relative;
+  background: white;
+  border-radius: var(--border-radius-xl, 12px);
+  border: 1px solid var(--gray-200, #e9ecef);
+  overflow: hidden;
+  box-shadow: var(--box-shadow-xs, 0 1px 3px rgba(0, 0, 0, 0.05));
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  &:hover {
+    box-shadow: var(--box-shadow-sm, 0 2px 12px rgba(0, 0, 0, 0.04));
+    transform: translateY(-2px);
+    border-color: var(--primary-color, #4361ee);
+  }
+}
+
+// Previsualización de imagen
+.image-preview {
+  position: relative;
+
+  .preview-image-container {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    background: var(--gray-100, #f8f9fa);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    .preview-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.7));
+      color: white;
+      padding: 0.5rem;
+      font-size: var(--font-size-xs, 0.75rem);
+
+      .file-name {
+        font-weight: var(--font-weight-semibold, 600);
+        display: block;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .file-size {
+        opacity: 0.8;
+        font-size: var(--font-size-xs, 0.7rem);
+      }
+    }
+  }
+
+  .file-info {
+    padding: 0.75rem;
+    background: white;
+
+    .file-name {
+      font-weight: var(--font-weight-semibold, 600);
+      color: var(--gray-700, #495057);
+      display: block;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      color: var(--gray-600, #6c757d);
+      font-size: var(--font-size-xs, 0.8rem);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      font-size: var(--font-size-xs, 0.7rem);
+      padding: 0.25rem 0.5rem;
+    }
+  }
+
+  .remove-file-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(var(--danger-rgb, 239, 71, 111), 0.9);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xs, 0.7rem);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 10;
+
+    &:hover {
+      background: var(--danger-color, #ef476f);
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Previsualización de video
+.video-preview {
+  position: relative;
+
+  .preview-video-container {
+    position: relative;
+    width: 100%;
+    height: 150px;
+    background: #000;
+    border-radius: var(--border-radius, 8px) var(--border-radius, 8px) 0 0;
+    overflow: hidden;
+
+    .preview-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-overlay {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+      color: white;
+      padding: 0.5rem;
+      font-size: var(--font-size-xs, 0.75rem);
+
+      .file-name {
+        font-weight: var(--font-weight-semibold, 600);
+        display: block;
+        margin-bottom: 0.25rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .file-size {
+        opacity: 0.8;
+        font-size: var(--font-size-xs, 0.7rem);
+      }
+    }
+  }
+
+  .file-info {
+    padding: 0.75rem;
+    background: white;
+
+    .file-name {
+      font-weight: var(--font-weight-semibold, 600);
+      color: var(--gray-700, #495057);
+      display: block;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      color: var(--gray-600, #6c757d);
+      font-size: var(--font-size-xs, 0.8rem);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      font-size: var(--font-size-xs, 0.7rem);
+      padding: 0.25rem 0.5rem;
+    }
+  }
+
+  .remove-file-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(var(--danger-rgb, 239, 71, 111), 0.9);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xs, 0.7rem);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 10;
+
+    &:hover {
+      background: var(--danger-color, #ef476f);
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Previsualización de otros archivos
+.file-preview {
+  padding: 1rem;
+  text-align: center;
+  background: white;
+
+  .file-icon {
+    font-size: 2.5rem;
+    color: var(--gray-600, #6c757d);
+    margin-bottom: 0.75rem;
+
+    i {
+      display: block;
+    }
+  }
+
+  .file-info {
+    .file-name {
+      font-weight: var(--font-weight-semibold, 600);
+      color: var(--gray-700, #495057);
+      display: block;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-size {
+      color: var(--gray-600, #6c757d);
+      font-size: var(--font-size-xs, 0.8rem);
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      font-size: var(--font-size-xs, 0.7rem);
+      padding: 0.25rem 0.5rem;
+    }
+  }
+
+  .remove-file-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(var(--danger-rgb, 239, 71, 111), 0.9);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-xs, 0.7rem);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 10;
+
+    &:hover {
+      background: var(--danger-color, #ef476f);
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Modo deshabilitado
+.disabled-section {
+  opacity: 0.6;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.readonly-indicator {
+  background-color: var(--gray-200, #e9ecef);
+  color: var(--gray-700, #6c757d);
+  font-size: var(--font-size-xs, 0.75rem);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--border-radius, 8px);
+  border: 1px solid var(--gray-300, #dee2e6);
+}
+
+/* =================================================================
+   RESPONSIVE
+   ================================================================= */
+
+@media (max-width: 768px) {
   :host ::ng-deep {
     .p-tabview .p-tabview-nav li .p-tabview-nav-link {
       padding: 0.5rem 0.75rem;
-      font-size: 0.875rem;
+      font-size: var(--font-size-sm, 0.875rem);
     }
   }
 
   .notes-list {
     table {
       thead th {
-        font-size: 0.75rem;
+        font-size: var(--font-size-xs, 0.75rem);
         padding: 0.5rem 0.75rem;
       }
 
       tbody td {
         padding: 0.5rem 0.75rem;
-        font-size: 0.875rem;
+        font-size: var(--font-size-sm, 0.875rem);
       }
     }
   }
@@ -498,17 +1079,11 @@
       gap: 0.5rem;
 
       .product-label {
-        font-size: 0.9rem;
+        font-size: var(--font-size-sm, 0.9rem);
       }
 
       .badge {
         align-self: flex-end;
-      }
-    }
-
-    .input-group {
-      textarea {
-        font-size: 0.875rem;
       }
     }
   }
@@ -520,700 +1095,26 @@
       font-size: 2rem;
     }
 
-    p {
+    h5 {
       font-size: 1rem;
     }
   }
-}
 
-// Estilos para controles de subida de archivos
-.file-upload-container {
-  margin-top: 0.75rem;
-  padding: 0.75rem;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-  &:hover {
-    background-color: #e9ecef;
-    border-color: #e9ecef;
-  }
-
-  .input-group {
-    .input-group-text {
-      background-color: #fff;
-      border-color: #e9ecef;
-      color: #6c757d;
-
-      i {
-        color: #28a745;
-      }
-    }
-
-    input[type="file"] {
-      border-color: #e9ecef;
-      transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-      &:focus {
-        border-color: #28a745;
-        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-      }
-
-      &::file-selector-button {
-        background-color: #28a745;
-        border-color: #28a745;
-        color: white;
-        padding: 0.375rem 0.75rem;
-        border-radius: 6px;
-        margin-right: 0.5rem;
-        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-        &:hover {
-          background-color: #218838;
-          border-color: #1e7e34;
-        }
-      }
-    }
-
-    .btn-outline-secondary {
-      border-color: #e9ecef;
-      color: #6c757d;
-
-      &:hover {
-        background-color: #6c757d;
-        border-color: #6c757d;
-        color: white;
-      }
-
-      i {
-        font-size: 0.875rem;
-      }
-    }
-  }
-
-  small {
-    display: block;
-    margin-top: 0.5rem;
-    color: #6c757d;
-    font-size: 0.8rem;
-    line-height: 1.3;
-
-    i {
-      color: #17a2b8;
-    }
-  }
-}
-
-// Estilos específicos para el modo de producción
-.product-note .file-upload-container {
-  background-color: rgba(40, 167, 69, 0.05);
-  border-color: rgba(40, 167, 69, 0.2);
-
-  &:hover {
-    background-color: rgba(40, 167, 69, 0.1);
-    border-color: rgba(40, 167, 69, 0.3);
-  }
-
-  .input-group-text i {
-    color: #28a745;
-  }
-
-  input[type="file"]::file-selector-button {
-    background-color: #28a745;
-    border-color: #28a745;
-
-    &:hover {
-      background-color: #218838;
-      border-color: #1e7e34;
-    }
-  }
-}
-
-// Estilos para diferentes tipos de pestañas
-.notes-form .file-upload-container {
-  // Despacho
-  &.despacho {
-    background-color: rgba(23, 162, 184, 0.05);
-    border-color: rgba(23, 162, 184, 0.2);
-
-    &:hover {
-      background-color: rgba(23, 162, 184, 0.1);
-      border-color: rgba(23, 162, 184, 0.3);
-    }
-
-    .input-group-text i {
-      color: #17a2b8;
-    }
-
-    input[type="file"]::file-selector-button {
-      background-color: #17a2b8;
-      border-color: #17a2b8;
-
-      &:hover {
-        background-color: #138496;
-        border-color: #117a8b;
-      }
-    }
-  }
-
-  // Entrega
-  &.entrega {
-    background-color: rgba(255, 193, 7, 0.05);
-    border-color: rgba(255, 193, 7, 0.2);
-
-    &:hover {
-      background-color: rgba(255, 193, 7, 0.1);
-      border-color: rgba(255, 193, 7, 0.3);
-    }
-
-    .input-group-text i {
-      color: #ffc107;
-    }
-
-    input[type="file"]::file-selector-button {
-      background-color: #ffc107;
-      border-color: #ffc107;
-      color: #212529;
-
-      &:hover {
-        background-color: #e0a800;
-        border-color: #d39e00;
-      }
-    }
-  }
-
-  // Facturación
-  &.facturacion {
-    background-color: rgba(220, 53, 69, 0.05);
-    border-color: rgba(220, 53, 69, 0.2);
-
-    &:hover {
-      background-color: rgba(220, 53, 69, 0.1);
-      border-color: rgba(220, 53, 69, 0.3);
-    }
-
-    .input-group-text i {
-      color: #dc3545;
-    }
-
-    input[type="file"]::file-selector-button {
-      background-color: #dc3545;
-      border-color: #dc3545;
-
-      &:hover {
-        background-color: #c82333;
-        border-color: #bd2130;
-      }
-    }
-  }
-}
-
-// Responsive para controles de archivo
-@media (max-width: 767.98px) {
-  .file-upload-container {
-    padding: 0.5rem;
-
-    .input-group {
-      input[type="file"] {
-        font-size: 0.875rem;
-      }
-
-      .btn-outline-secondary {
-        padding: 0.375rem 0.5rem;
-        font-size: 0.8rem;
-      }
-    }
-
-    small {
-      font-size: 0.75rem;
-    }
-  }
-}
-
-// Estilos para contenedor de archivos
-.file-upload-container {
-  margin-bottom: 1rem;
-  
-  .input-group {
-    .input-group-text {
-      border-right: none;
-    }
-    
-    .form-control {
-      border-left: none;
-      border-right: none;
-    }
-    
-    .btn {
-      border-left: none;
-    }
-  }
-  
-  small {
-    font-size: 0.75rem;
-  }
-}
-
-// Contenedor de vista previa
-.file-preview-container {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  
-  .preview-title {
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #495057;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    
-    i {
-      margin-right: 0.5rem;
-    }
-  }
-}
-
-// Grid de previsualización
-.preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
-
-// Item de previsualización
-.preview-item {
-  position: relative;
-  background: white;
-  border-radius: 12px;
-  border: 1px solid #e9ecef;
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-
-  &:hover {
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
-  }
-}
-
-// Previsualización de imagen - NUEVO DISEÑO
-.image-preview {
-  position: relative;
-  
-  .preview-image-container {
-    position: relative;
-    width: 100%;
-    height: 150px;
-    background: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    
-    .preview-image {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      // Eliminar todas las propiedades que causan difuminado
-      image-rendering: auto;
-      -webkit-image-rendering: auto;
-      -moz-image-rendering: auto;
-      -ms-image-rendering: auto;
-      backface-visibility: visible;
-      transform: none;
-      filter: none;
-      will-change: auto;
-      font-smoothing: auto;
-      text-rendering: auto;
-    }
-    
-    // Overlay para información
-    .image-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.7));
-      color: white;
-      padding: 0.5rem;
-      font-size: 0.75rem;
-      
-      .file-name {
-        font-weight: 600;
-        display: block;
-        margin-bottom: 0.25rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      
-      .file-size {
-        opacity: 0.8;
-        font-size: 0.7rem;
-      }
-    }
-  }
-  
-  .file-info {
-    padding: 0.75rem;
-    background: white;
-    
-    .file-name {
-      font-weight: 600;
-      color: #495057;
-      display: block;
-      margin-bottom: 0.25rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .file-size {
-      color: #6c757d;
-      font-size: 0.8rem;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    
-    .badge {
-      font-size: 0.7rem;
-      padding: 0.25rem 0.5rem;
-    }
-  }
-  
-  .remove-file-btn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(220, 53, 69, 0.9);
-    color: white;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 10;
-    
-    &:hover {
-      background: #dc3545;
-      transform: scale(1.1);
-    }
-  }
-}
-
-// Previsualización de video - NUEVO DISEÑO
-.video-preview {
-  position: relative;
-  
-  .preview-video-container {
-    position: relative;
-    width: 100%;
-    height: 150px;
-    background: #000;
-    border-radius: 8px 8px 0 0;
-    overflow: hidden;
-    
-    .preview-video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-    
-    // Overlay de información
-    .video-overlay {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: linear-gradient(transparent, rgba(0,0,0,0.8));
-      color: white;
-      padding: 0.5rem;
-      font-size: 0.75rem;
-      
-      .file-name {
-        font-weight: 600;
-        display: block;
-        margin-bottom: 0.25rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      
-      .file-size {
-        opacity: 0.8;
-        font-size: 0.7rem;
-      }
-    }
-  }
-  
-  .file-info {
-    padding: 0.75rem;
-    background: white;
-    
-    .file-name {
-      font-weight: 600;
-      color: #495057;
-      display: block;
-      margin-bottom: 0.25rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .file-size {
-      color: #6c757d;
-      font-size: 0.8rem;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    
-    .badge {
-      font-size: 0.7rem;
-      padding: 0.25rem 0.5rem;
-    }
-  }
-  
-  .remove-file-btn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(220, 53, 69, 0.9);
-    color: white;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 10;
-    
-    &:hover {
-      background: #dc3545;
-      transform: scale(1.1);
-    }
-  }
-}
-
-// Previsualización de otros archivos
-.file-preview {
-  padding: 1rem;
-  text-align: center;
-  background: white;
-  
-  .file-icon {
-    font-size: 2.5rem;
-    color: #6c757d;
-    margin-bottom: 0.75rem;
-    
-    i {
-      display: block;
-    }
-  }
-  
-  .file-info {
-    .file-name {
-      font-weight: 600;
-      color: #495057;
-      display: block;
-      margin-bottom: 0.25rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    
-    .file-size {
-      color: #6c757d;
-      font-size: 0.8rem;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-    
-    .badge {
-      font-size: 0.7rem;
-      padding: 0.25rem 0.5rem;
-    }
-  }
-  
-  .remove-file-btn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(220, 53, 69, 0.9);
-    color: white;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.7rem;
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 10;
-    
-    &:hover {
-      background: #dc3545;
-      transform: scale(1.1);
-    }
-  }
-}
-
-// Colores específicos por pestaña
-.file-upload-container {
-  &.produccion {
-    .input-group-text {
-      background: #d4edda;
-      color: #155724;
-      border-color: #c3e6cb;
-    }
-    
-    .form-control {
-      border-color: #c3e6cb;
-    }
-    
-    .btn-outline-secondary {
-      border-color: #c3e6cb;
-      color: #155724;
-      
-      &:hover {
-        background: #c3e6cb;
-        color: #155724;
-      }
-    }
-  }
-  
-  &.despacho {
-    .input-group-text {
-      background: #cce5ff;
-      color: #004085;
-      border-color: #b3d7ff;
-    }
-    
-    .form-control {
-      border-color: #b3d7ff;
-    }
-    
-    .btn-outline-secondary {
-      border-color: #b3d7ff;
-      color: #004085;
-      
-      &:hover {
-        background: #b3d7ff;
-        color: #004085;
-      }
-    }
-  }
-  
-  &.entrega {
-    .input-group-text {
-      background: #fff3cd;
-      color: #856404;
-      border-color: #ffeaa7;
-    }
-    
-    .form-control {
-      border-color: #ffeaa7;
-    }
-    
-    .btn-outline-secondary {
-      border-color: #ffeaa7;
-      color: #856404;
-      
-      &:hover {
-        background: #ffeaa7;
-        color: #856404;
-      }
-    }
-  }
-  
-  &.facturacion {
-    .input-group-text {
-      background: #f8d7da;
-      color: #721c24;
-      border-color: #f5c6cb;
-    }
-    
-    .form-control {
-      border-color: #f5c6cb;
-    }
-    
-    .btn-outline-secondary {
-      border-color: #f5c6cb;
-      color: #721c24;
-      
-      &:hover {
-        background: #f5c6cb;
-        color: #721c24;
-      }
-    }
-  }
-}
-
-// Responsive
-@media (max-width: 768px) {
   .preview-grid {
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: 0.75rem;
   }
-  
+
   .image-preview .preview-image-container,
   .video-preview .preview-video-container {
     height: 120px;
   }
-  
+
   .file-preview {
     padding: 0.75rem;
-    
+
     .file-icon {
       font-size: 2rem;
     }
-  }
-}
-
-// Estilos para mensajes de validación
-.alert-warning {
-  border: 1px solid #ffeaa7;
-  background-color: #fff3cd;
-  color: #856404;
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
-  margin-top: 0.5rem;
-  
-  small {
-    font-size: 0.8rem;
-    font-weight: 500;
-  }
-  
-  i {
-    margin-right: 0.25rem;
-  }
-}
-
-// Animación para el mensaje de advertencia
-.alert-warning {
-  animation: fadeInUp 0.3s ease-in-out;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }
