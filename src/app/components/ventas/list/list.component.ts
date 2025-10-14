@@ -5885,7 +5885,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ventasService.createOrder({ order: cloned, emailHtml: html }).subscribe({
             next: () => {
               this.toastrService.success('Pedido duplicado correctamente', 'Éxito');
-              this.refrescarDatos();
+              this.refrescarDatos(true); // Forzar refresco después de duplicar
             },
             error: () => {
               this.toastrService.error('No se pudo duplicar el pedido', 'Error');

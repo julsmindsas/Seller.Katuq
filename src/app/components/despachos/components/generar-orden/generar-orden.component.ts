@@ -62,7 +62,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     { field: "faltaPorPagar", header: "Valor a Cobrar", visible: true },
     { field: "enOrden", header: "Estado en Orden", visible: true },
     { field: "opciones", header: "Opciones", visible: true },
-    { field: "horarioEntrega", header: "Horario Entrega", visible: false },
+    { field: "horarioEntrega", header: "Horario Entrega", visible: true },
     { field: "formaEntrega", header: "Forma Entrega", visible: false },
     { field: "estadoProceso", header: "Estado", visible: false },
     { field: "accion", header: "Acción", visible: true },

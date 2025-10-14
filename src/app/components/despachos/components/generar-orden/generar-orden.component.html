@@ -161,6 +161,52 @@
                                             {{ "Acción" | translate }}
                                         </th>
                                     </tr>
+                                    <tr>
+                                        <ng-container *ngFor="let col of selectedColumns">
+                                            <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'">
+                                                <input
+                                                    *ngIf="col.field === 'nroPedido' || col.field === 'cliente' || col.field === 'ciudad' || col.field === 'direccionEntrega' || col.field === 'horarioEntrega' || col.field === 'estadoProceso' || col.field === 'formaEntrega'"
+                                                    pInputText
+                                                    type="text"
+                                                    class="p-column-filter"
+                                                    [placeholder]="'Filtrar ' + col.header"
+                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                    (input)="dt.filter($any($event.target).value, col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field, 'contains')" />
+                                                <input
+                                                    *ngIf="col.field === 'faltaPorPagar'"
+                                                    pInputText
+                                                    type="number"
+                                                    class="p-column-filter"
+                                                    placeholder="Filtrar valor"
+                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                    (input)="dt.filter($any($event.target).value, col.field, 'gte')" />
+                                            </th>
+                                            <th *ngIf="col.field === 'enOrden'">
+                                                <!-- No filter for this column -->
+                                            </th>
+                                        </ng-container>
+                                        <th class="fecha-entrega-column">
+                                            <input
+                                                pInputText
+                                                type="text"
+                                                class="p-column-filter"
+                                                placeholder="Filtrar fecha"
+                                                [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                (input)="dt.filter($any($event.target).value, 'fechaEntrega', 'contains')" />
+                                        </th>
+                                        <th *ngIf="isActionColumnVisible()" class="actions-col">
+                                            <button
+                                                pButton
+                                                type="button"
+                                                icon="pi pi-filter-slash"
+                                                class="p-button-outlined p-button-sm"
+                                                pTooltip="Limpiar filtros"
+                                                tooltipPosition="top"
+                                                (click)="dt.clear()"
+                                                [style]="{'width': '100%'}">
+                                            </button>
+                                        </th>
+                                    </tr>
                                 </ng-template>
 
                                 <ng-template pTemplate="body" let-pedido>
@@ -256,16 +302,67 @@
                         </div>
                         <div class="card-body">
                             <div class="table-responsive">
-                                <p-table [value]="pedidosSeleccionados" styleClass="p-datatable-sm p-datatable-compact">
+                                <p-table #dtSelected [value]="pedidosSeleccionados" styleClass="p-datatable-sm p-datatable-compact">
                                     <ng-template pTemplate="header">
                                         <tr>
                                             <th>{{ "Pedido" | translate }}</th>
                                             <th>{{ "Cliente" | translate }}</th>
                                             <th>{{ "Ciudad" | translate }}</th>
                                             <th class="fecha-entrega-column">{{ "Fecha de Entrega" | translate }}</th>
+                                            <th>{{ "Horario" | translate }}</th>
                                             <th>{{ "Valor" | translate }}</th>
                                             <th>{{ "Estado" | translate }}</th>
                                             <th class="actions-col">{{ "Acción" | translate }}</th>
+                                        </tr>
+                                        <tr>
+                                            <th>
+                                                <input pInputText type="text" class="p-column-filter"
+                                                    placeholder="Filtrar pedido"
+                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                    (input)="dtSelected.filter($any($event.target).value, 'nroPedido', 'contains')" />
+                                            </th>
+                                            <th>
+                                                <input pInputText type="text" class="p-column-filter"
+                                                    placeholder="Filtrar cliente"
+                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                    (input)="dtSelected.filter($any($event.target).value, 'clienteNombre', 'contains')" />
+                                            </th>
+                                            <th>
+                                                <input pInputText type="text" class="p-column-filter"
+                                                    placeholder="Filtrar ciudad"
+                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                    (input)="dtSelected.filter($any($event.target).value, 'ciudadNombre', 'contains')" />
+                                            </th>
+                                            <th class="fecha-entrega-column">
+                                                <input pInputText type="text" class="p-column-filter"
+                                                    placeholder="Filtrar fecha"
+                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                    (input)="dtSelected.filter($any($event.target).value, 'fechaEntrega', 'contains')" />
+                                            </th>
+                                            <th>
+                                                <input pInputText type="text" class="p-column-filter"
+                                                    placeholder="Filtrar horario"
+                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                    (input)="dtSelected.filter($any($event.target).value, 'horarioEntrega', 'contains')" />
+                                            </th>
+                                            <th>
+                                                <input pInputText type="number" class="p-column-filter"
+                                                    placeholder="Filtrar valor"
+                                                    [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                    (input)="dtSelected.filter($any($event.target).value, 'faltaPorPagar', 'gte')" />
+                                            </th>
+                                            <th>
+                                                <!-- No filter for status -->
+                                            </th>
+                                            <th class="actions-col">
+                                                <button pButton type="button" icon="pi pi-filter-slash"
+                                                    class="p-button-outlined p-button-sm"
+                                                    pTooltip="Limpiar filtros"
+                                                    tooltipPosition="top"
+                                                    (click)="dtSelected.clear()"
+                                                    [style]="{'width': '100%'}">
+                                                </button>
+                                            </th>
                                         </tr>
                                     </ng-template>
 
@@ -282,6 +379,12 @@
                                                 <span class="fecha-entrega" [class.urgente]="esEntregaUrgente(pedido)">
                                                     <i class="pi pi-calendar me-1"></i>
                                                     {{ formatDateCompact(pedido.fechaEntrega) || 'No asignada' }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info text-dark">
+                                                    <i class="pi pi-clock me-1"></i>
+                                                    {{ pedido.horarioEntrega || 'No especificado' }}
                                                 </span>
                                             </td>
                                             <td>{{ pedido.faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
@@ -307,7 +410,7 @@
 
                                     <ng-template pTemplate="footer">
                                         <tr class="footer-total">
-                                            <td colspan="4" class="text-end">
+                                            <td colspan="5" class="text-end">
                                                 <strong>{{ "Total:" | translate }}</strong>
                                             </td>
                                             <td>
