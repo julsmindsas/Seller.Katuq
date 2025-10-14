@@ -14,7 +14,9 @@ import {
   EnviameRate,
   EnviameQuoteRequest,
   EnviameRatesResponse,
-  PedidoQuoteData
+  PedidoQuoteData,
+  CreateShipmentRequest,
+  ShipmentItem
 } from '../models/enviame.interfaces';
 import { Pedido } from '../../../../ventas/modelo/pedido';
 
@@ -1260,22 +1262,18 @@ export class EnviameRatesModalComponent implements OnInit {
 
     const formData = this.quoteForm.value;
 
-    const shipmentPayload = {
-      companyId: this.companyId,
-      provider: 'enviame',
-      order: {
-        nroShippingOrder: this.order.nroShippingOrder,
-        fecha: this.order.fecha,
-        pedidos: this.order.pedidos
-      },
+    // Crear el item de envío con pedido incluido
+    const shipmentItem: ShipmentItem = {
+      pedido: this.order.pedidos && this.order.pedidos.length > 0 ? this.order.pedidos[0] : null,
       selectedService: {
         service: this.selectedRate.service,
         serviceCode: this.selectedRate.serviceCode,
         carrier: this.selectedRate.carrier,
         carrierCode: this.selectedRate.carrierCode,
         price: this.selectedRate.price,
-        basePrice: this.selectedRate.basePrice,
-        taxes: this.selectedRate.taxes
+        currency: this.selectedRate.currency || 'COP',
+        estimatedDays: this.selectedRate.estimatedDays,
+        estimatedTime: this.selectedRate.estimatedTime
       },
       origin: {
         address: formData.originAddress,
@@ -1314,7 +1312,21 @@ export class EnviameRatesModalComponent implements OnInit {
       options: {
         insuranceValue: formData.insurance ? formData.value : 0,
         cashOnDelivery: formData.cashOnDelivery,
-        signature: formData.signature,
+        signature: formData.signature
+      }
+    };
+
+    // Crear el payload unificado con array de shipments
+    const shipmentPayload: CreateShipmentRequest = {
+      companyId: this.companyId,
+      provider: 'enviame',
+      shippingOrder: {
+        nroShippingOrder: this.order.nroShippingOrder,
+        fecha: this.order.fecha,
+        metodoEnvio: 'enviame'
+      },
+      shipments: [shipmentItem],  // Siempre array, incluso para single
+      globalOptions: {
         normalizeResponse: false
       }
     };
@@ -1342,7 +1354,7 @@ export class EnviameRatesModalComponent implements OnInit {
   }
 
   /**
-   * Confirma y crea múltiples envíos (uno por pedido)
+   * Confirma y crea múltiples envíos en una sola petición unificada
    */
   onConfirmMultipleShipments(): void {
     // Verificar que todos tengan tarifa seleccionada
@@ -1354,28 +1366,23 @@ export class EnviameRatesModalComponent implements OnInit {
     // Guardar datos del pedido actual antes de confirmar
     this.savePedidoDataFromForm(this.currentPedidoIndex);
 
-    console.log('📦 Creando múltiples envíos...');
+    console.log('📦 Creando múltiples envíos en una sola petición...');
 
     this.creatingShipment = true;
 
-    // Crear array de observables para crear cada envío
-    const shipmentCreations = this.pedidosQuotesList.map((pedidoData, index) => {
-      const shipmentPayload = {
-        companyId: this.companyId,
-        provider: 'enviame',
-        order: {
-          nroShippingOrder: this.order.nroShippingOrder,
-          fecha: this.order.fecha,
-          pedidos: [pedidoData.pedido] // Solo este pedido
-        },
+    // Crear array de shipments con todos los pedidos
+    const shipmentItems: ShipmentItem[] = this.pedidosQuotesList.map((pedidoData) => {
+      return {
+        pedido: pedidoData.pedido, // Pedido completo incluido
         selectedService: {
           service: pedidoData.selectedRate!.service,
           serviceCode: pedidoData.selectedRate!.serviceCode,
           carrier: pedidoData.selectedRate!.carrier,
           carrierCode: pedidoData.selectedRate!.carrierCode,
           price: pedidoData.selectedRate!.price,
-          basePrice: pedidoData.selectedRate!.basePrice,
-          taxes: pedidoData.selectedRate!.taxes
+          currency: pedidoData.selectedRate!.currency || 'COP',
+          estimatedDays: pedidoData.selectedRate!.estimatedDays,
+          estimatedTime: pedidoData.selectedRate!.estimatedTime
         },
         origin: {
           address: pedidoData.bodegaData.address,
@@ -1410,83 +1417,60 @@ export class EnviameRatesModalComponent implements OnInit {
         options: {
           insuranceValue: this.quoteForm?.get('insurance')?.value ? pedidoData.packageData.value : 0,
           cashOnDelivery: this.quoteForm?.get('cashOnDelivery')?.value || false,
-          signature: this.quoteForm?.get('signature')?.value || false,
-          normalizeResponse: false
+          signature: this.quoteForm?.get('signature')?.value || false
         }
       };
-
-      return this.logisticaService.createShipment(shipmentPayload).pipe(
-        map((response) => ({
-          success: true,
-          pedidoIndex: index,
-          pedidoNro: pedidoData.pedido.nroPedido,
-          response
-        })),
-        catchError((error) => {
-          console.error(`❌ Error creando envío para pedido ${index + 1}:`, error);
-          return of({
-            success: false,
-            pedidoIndex: index,
-            pedidoNro: pedidoData.pedido.nroPedido,
-            error: error?.message || 'Error desconocido'
-          });
-        })
-      );
     });
 
-    // Ejecutar todas las creaciones en paralelo
-    forkJoin(shipmentCreations).subscribe({
-      next: (resultados) => {
+    // Crear el payload unificado con todos los shipments
+    const shipmentPayload: CreateShipmentRequest = {
+      companyId: this.companyId,
+      provider: 'enviame',
+      shippingOrder: {
+        nroShippingOrder: this.order.nroShippingOrder,
+        fecha: this.order.fecha,
+        metodoEnvio: 'enviame'
+      },
+      shipments: shipmentItems,  // Array con todos los envíos
+      globalOptions: {
+        normalizeResponse: false
+      }
+    };
+
+    console.log('📦 Payload unificado:', {
+      nroShippingOrder: shipmentPayload.shippingOrder.nroShippingOrder,
+      totalShipments: shipmentItems.length,
+      pedidos: shipmentItems.map(s => s.pedido?.nroPedido)
+    });
+
+    // Enviar UNA SOLA petición con todos los envíos
+    this.logisticaService.createShipment(shipmentPayload).subscribe({
+      next: (response) => {
         this.creatingShipment = false;
 
-        const exitosos = resultados.filter(r => r.success).length;
-        const fallidos = resultados.length - exitosos;
+        console.log('✅ Envíos creados exitosamente:', response);
 
-        console.log('✅ Creación de envíos completada:', {
-          exitosos,
-          fallidos,
-          total: resultados.length
+        this.toastr.success(
+          `${shipmentItems.length} envío(s) creado(s) exitosamente`,
+          'Envíos creados'
+        );
+
+        // Cerrar modal con resultado exitoso
+        this.dialogRef.close({
+          confirmed: true,
+          multiShipment: true,
+          shipmentsData: response
         });
-
-        if (exitosos === resultados.length) {
-          // Todos exitosos
-          this.toastr.success(
-            `${exitosos} envío(s) creado(s) exitosamente`,
-            'Envíos creados'
-          );
-
-          // Cerrar modal con resultado exitoso
-          this.dialogRef.close({
-            confirmed: true,
-            multiShipment: true,
-            shipmentsData: resultados.filter(r => r.success)
-          });
-        } else if (exitosos > 0) {
-          // Algunos exitosos, algunos fallidos
-          this.toastr.warning(
-            `${exitosos} envío(s) creado(s), ${fallidos} fallido(s)`,
-            'Creación parcial'
-          );
-
-          // Cerrar modal con resultado parcial
-          this.dialogRef.close({
-            confirmed: true,
-            multiShipment: true,
-            partial: true,
-            shipmentsData: resultados
-          });
-        } else {
-          // Todos fallaron
-          this.toastr.error(
-            'No se pudo crear ningún envío. Verifica los datos e intenta nuevamente.',
-            'Error al crear envíos'
-          );
-        }
       },
       error: (error) => {
         this.creatingShipment = false;
-        console.error('❌ Error general al crear envíos:', error);
-        this.toastr.error('Error al procesar los envíos', 'Error');
+        console.error('❌ Error al crear envíos:', error);
+
+        const errorMessage = error?.error?.message || error?.message || 'Error desconocido al crear los envíos';
+        this.toastr.error(
+          errorMessage,
+          'Error al crear envíos'
+        );
       }
     });
   }

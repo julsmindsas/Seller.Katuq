@@ -1,249 +1,268 @@
-<div class="minimalist-filters-container">
-  <!-- Barra de filtros principal - siempre visible -->
-  <div class="filter-bar-main">
-    <div class="filter-bar-row">
-      <!-- Sección izquierda: Filtros inline -->
-      <div class="filter-inline-section">
-        <!-- Búsqueda rápida con autocompletado -->
-        <div class="filter-inline-item search-box">
-          <div class="p-inputgroup autocomplete-wrapper">
-            <span class="p-inputgroup-addon">
-              <i class="pi" [ngClass]="isSearching ? 'pi-spin pi-spinner' : 'pi-search'"></i>
-            </span>
-            <p-autoComplete
-              #autoCompleteInput
-              [(ngModel)]="searchQuery"
-              [suggestions]="searchSuggestions"
-              (completeMethod)="onSearchComplete($event)"
-              (onSelect)="onSearchSelect($event)"
-              [field]="searchField"
-              [placeholder]="searchPlaceholder | translate"
-              [minLength]="3"
-              [forceSelection]="false"
-              [dropdown]="false"
-              [autofocus]="false"
-              styleClass="search-autocomplete"
-              inputStyleClass="p-inputtext-sm"
-              [style]="{'width': '100%', 'min-width': '250px'}"
-              appendTo="body"
-              (keydown.enter)="onSearchEnter($event)"
-              (input)="onInputChange($event)">
-              <ng-template let-item pTemplate="item">
-                <div class="autocomplete-item">
-                  <div class="item-main">
-                    <i class="pi pi-shopping-cart me-2"></i>
-                    <strong>{{ item.nroPedido }}</strong>
-                  </div>
-                  <div class="item-details" *ngIf="item.cliente">
-                    <small class="text-muted">
-                      <i class="pi pi-user me-1"></i>{{ item.cliente.nombres_completos }}
-                    </small>
-                  </div>
-                </div>
-              </ng-template>
-              <ng-template pTemplate="empty">
-                <div class="autocomplete-empty">
-                  <i class="pi pi-search text-muted"></i>
-                  <p class="mb-0">{{ 'No se encontraron pedidos' | translate }}</p>
-                  <small class="text-muted">{{ 'Intenta con otro número de pedido' | translate }}</small>
-                </div>
-              </ng-template>
-            </p-autoComplete>
-            <button *ngIf="searchQuery"
-              pButton
-              type="button"
-              icon="pi pi-times"
-              class="p-button-text p-button-sm p-button-danger"
-              (click)="clearSearch()"
-              pTooltip="{{ 'Limpiar búsqueda' | translate }}">
-            </button>
+<!-- FILTROS EN UNA SOLA FILA HORIZONTAL - SIN LABELS ARRIBA -->
+<div class="filters-inline-row">
+  <!-- BÚSQUEDA (180px max) -->
+  <div class="p-inputgroup filter-search">
+    <span class="p-inputgroup-addon">
+      <i class="pi" [ngClass]="isSearching ? 'pi-spin pi-spinner' : 'pi-search'"></i>
+    </span>
+    <p-autoComplete
+      #autoCompleteInput
+      [(ngModel)]="searchQuery"
+      [suggestions]="searchSuggestions"
+      (completeMethod)="onSearchComplete($event)"
+      (onSelect)="onSearchSelect($event)"
+      [field]="searchField"
+      [placeholder]="searchPlaceholder | translate"
+      [minLength]="3"
+      [forceSelection]="false"
+      [dropdown]="false"
+      [autofocus]="false"
+      styleClass="input-sm"
+      [style]="{'width': '180px'}"
+      appendTo="body"
+      (keydown.enter)="onSearchEnter($event)"
+      (input)="onInputChange($event)">
+      <ng-template let-item pTemplate="item">
+        <div class="autocomplete-item">
+          <div class="item-main">
+            <i class="pi pi-shopping-cart me-2"></i>
+            <strong>{{ item.nroPedido }}</strong>
           </div>
-          <small class="search-hint">
-            <i class="pi pi-info-circle me-1"></i>
-            {{ 'Escribe al menos 3 caracteres y presiona Enter para buscar' | translate }}
-          </small>
+          <div class="item-details" *ngIf="item.cliente">
+            <small class="text-muted">
+              <i class="pi pi-user me-1"></i>{{ item.cliente.nombres_completos }}
+            </small>
+          </div>
         </div>
-
-        <!-- Rango de fechas compacto -->
-        <div class="filter-inline-item date-range-compact" *ngIf="showDateFilters">
-          <p-calendar [(ngModel)]="fechaInicialDate" dateFormat="dd/mm/yy"
-            placeholder="{{ 'Desde' | translate }}"
-            [showIcon]="true" inputStyleClass="p-inputtext-sm"
-            appendTo="body" (onSelect)="onDateFromChange($event)"
-            (onClear)="onDateFromChange(null)"
-            [maxDate]="fechaFinalDate"
-            [showButtonBar]="true"
-            [readonlyInput]="false"
-            [showClear]="true"
-            [locale]="es"
-            [firstDayOfWeek]="1"
-            [monthNavigator]="true"
-            [yearNavigator]="true"
-            yearRange="2020:2030">
-          </p-calendar>
-          <span class="date-separator">→</span>
-          <p-calendar [(ngModel)]="fechaFinalDate" dateFormat="dd/mm/yy"
-            placeholder="{{ 'Hasta' | translate }}"
-            [showIcon]="true" inputStyleClass="p-inputtext-sm"
-            appendTo="body" (onSelect)="onDateToChange($event)"
-            (onClear)="onDateToChange(null)"
-            [minDate]="fechaInicialDate"
-            [showButtonBar]="true"
-            [readonlyInput]="false"
-            [showClear]="true"
-            [locale]="es"
-            [firstDayOfWeek]="1"
-            [monthNavigator]="true"
-            [yearNavigator]="true"
-            yearRange="2020:2030">
-          </p-calendar>
-          <!-- Presets de fecha -->
-          <p-dropdown [options]="datePresets" [(ngModel)]="selectedDatePreset"
-            optionLabel="label" optionValue="value" placeholder="Rápido"
-            styleClass="p-dropdown-sm date-preset-dropdown"
-            (onChange)="onDatePresetChange($event.value)" appendTo="body">
-          </p-dropdown>
+      </ng-template>
+      <ng-template pTemplate="empty">
+        <div class="autocomplete-empty">
+          <i class="pi pi-search text-muted"></i>
+          <p class="mb-0">{{ 'No se encontraron pedidos' | translate }}</p>
+          <small class="text-muted">{{ 'Intenta con otro número de pedido' | translate }}</small>
         </div>
-
-        <!-- Estados con dropdowns -->
-        <div class="filter-inline-item" *ngIf="showStatusFilters">
-          <p-dropdown [options]="estadosPagoOptions" [(ngModel)]="quickFilters.estadoPago"
-            optionLabel="label" optionValue="value"
-            placeholder="{{ 'Estado Pago' | translate }}"
-            styleClass="p-dropdown-sm" appendTo="body"
-            (onChange)="onEstadoPagoChange()">
-            <ng-template let-option pTemplate="item">
-              <div class="dropdown-item-with-badge">
-                <span [class]="'status-dot ' + getStatusClass(option.value, 'pago')"></span>
-                <span>{{ option.label }}</span>
-              </div>
-            </ng-template>
-          </p-dropdown>
-        </div>
-
-        <div class="filter-inline-item" *ngIf="showStatusFilters">
-          <p-dropdown [options]="estadosProcesoOptions" [(ngModel)]="quickFilters.estadoProceso"
-            optionLabel="label" optionValue="value"
-            placeholder="{{ 'Estado Proceso' | translate }}"
-            styleClass="p-dropdown-sm" appendTo="body"
-            (onChange)="onEstadoProcesoChange()">
-            <ng-template let-option pTemplate="item">
-              <div class="dropdown-item-with-badge">
-                <span [class]="'status-dot ' + getStatusClass(option.value, 'proceso')"></span>
-                <span>{{ option.label }}</span>
-              </div>
-            </ng-template>
-          </p-dropdown>
-        </div>
-      </div>
-
-      <!-- Sección derecha: Acciones y opciones -->
-      <div class="filter-actions-section">
-        <!-- Indicador de filtros activos -->
-        <div class="active-filters-badge" *ngIf="hasActiveFilters()">
-          <span class="badge rounded-pill bg-info text-white">
-            <i class="pi pi-filter-fill me-1"></i>
-            {{ getActiveFiltersCount() }}
-          </span>
-          <button type="button" class="btn-clear-filters"
-            (click)="clearAllFiltersHandler()"
-            pTooltip="{{ 'Limpiar todos los filtros' | translate }}">
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-
-        <!-- Botón de configuración avanzada -->
-        <button pButton type="button" icon="pi pi-cog"
-          class="p-button-sm p-button-text p-button-rounded"
-          (click)="toggleAdvancedFilters()"
-          pTooltip="{{ 'Configuración avanzada' | translate }}">
-        </button>
-
-        <!-- Acciones principales -->
-        <div class="main-actions">
-          <button pButton type="button" icon="pi pi-search"
-            [label]="filterButtonLabel | translate"
-            class="p-button-sm p-button-primary"
-            (click)="applyFilters()">
-          </button>
-          <button *ngIf="showExportButton"
-            pButton type="button" icon="pi pi-file-excel"
-            class="p-button-sm p-button-success"
-            [disabled]="exportDisabled"
-            [pTooltip]="exportButtonTooltip | translate"
-            (click)="exportData()">
-          </button>
-        </div>
-      </div>
-    </div>
+      </ng-template>
+    </p-autoComplete>
+    <button *ngIf="searchQuery"
+      type="button"
+      class="btn-clear-search"
+      (click)="clearSearch()"
+      pTooltip="{{ 'Limpiar búsqueda' | translate }}">
+      <i class="pi pi-times"></i>
+    </button>
   </div>
 
-  <!-- Panel de configuración avanzada (colapsible) -->
-  <div class="advanced-filters-panel" *ngIf="showAdvancedFilters" [@slideInOut]>
-    <div class="advanced-panel-content">
-      <!-- Tags de filtros activos -->
-      <div class="active-filters-tags" *ngIf="hasActiveFilters()">
-        <div class="tags-container">
-          <span class="filter-tag" *ngIf="fechaInicialDate">
-            <i class="pi pi-calendar me-1"></i>
-            {{ 'Desde: ' + formatDateForDisplay(fechaInicialDate) }}
-            <button class="tag-remove" (click)="clearDateFilter('inicial')">
-              <i class="pi pi-times"></i>
-            </button>
-          </span>
-          <span class="filter-tag" *ngIf="fechaFinalDate">
-            <i class="pi pi-calendar me-1"></i>
-            {{ 'Hasta: ' + formatDateForDisplay(fechaFinalDate) }}
-            <button class="tag-remove" (click)="clearDateFilter('final')">
-              <i class="pi pi-times"></i>
-            </button>
-          </span>
-          <span class="filter-tag" *ngIf="searchQuery">
-            <i class="pi pi-search me-1"></i>
-            {{ searchQuery }}
-            <button class="tag-remove" (click)="clearSearchFilter()">
-              <i class="pi pi-times"></i>
-            </button>
-          </span>
-          <span class="filter-tag" *ngIf="quickFilters.estadoPago !== 'all'">
-            <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoPago, 'pago')"></span>
-            {{ quickFilters.estadoPago }}
-            <button class="tag-remove" (click)="clearQuickFilter('estadoPago')">
-              <i class="pi pi-times"></i>
-            </button>
-          </span>
-          <span class="filter-tag" *ngIf="quickFilters.estadoProceso !== 'all'">
-            <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoProceso, 'proceso')"></span>
-            {{ quickFilters.estadoProceso }}
-            <button class="tag-remove" (click)="clearQuickFilter('estadoProceso')">
-              <i class="pi pi-times"></i>
-            </button>
-          </span>
-        </div>
-      </div>
+  <!-- FECHA INICIAL (130px) -->
+  <p-calendar
+    *ngIf="showDateFilters"
+    [(ngModel)]="fechaInicialDate"
+    dateFormat="dd/mm/yy"
+    placeholder="{{ 'Desde' | translate }}"
+    [showIcon]="true"
+    styleClass="input-sm"
+    [style]="{'width': '130px'}"
+    appendTo="body"
+    (onSelect)="onDateFromChange($event)"
+    (onClear)="onDateFromChange(null)"
+    [maxDate]="fechaFinalDate"
+    [showButtonBar]="true"
+    [readonlyInput]="false"
+    [showClear]="true"
+    [locale]="es"
+    [firstDayOfWeek]="1"
+    [monthNavigator]="true"
+    [yearNavigator]="true"
+    yearRange="2020:2030">
+  </p-calendar>
 
-      <!-- Configuración de columnas -->
-      <div class="config-section" *ngIf="showColumnSelector">
-        <div class="config-section-header">
-          <i class="pi pi-table me-2"></i>
-          <span>{{ 'Columnas visibles' | translate }}</span>
-        </div>
-        <div class="config-section-content">
-          <p-multiSelect [options]="displayedColumns"
-            [(ngModel)]="selectedColumns" optionLabel="header"
-            defaultLabel="{{ 'Seleccionar columnas' | translate }}"
-            selectedItemsLabel="{0} columnas"
-            styleClass="column-selector-compact"
-            [style]="{'width': '100%'}"
-            (onChange)="onColumnSelectionChange()"
-            appendTo="body">
-          </p-multiSelect>
-          <button pButton type="button" icon="pi pi-undo"
-            label="{{ 'Restaurar' | translate }}"
-            class="p-button-text p-button-sm mt-2"
-            (click)="resetColumnConfig()">
+  <!-- FECHA FINAL (130px) -->
+  <p-calendar
+    *ngIf="showDateFilters"
+    [(ngModel)]="fechaFinalDate"
+    dateFormat="dd/mm/yy"
+    placeholder="{{ 'Hasta' | translate }}"
+    [showIcon]="true"
+    styleClass="input-sm"
+    [style]="{'width': '130px'}"
+    appendTo="body"
+    (onSelect)="onDateToChange($event)"
+    (onClear)="onDateToChange(null)"
+    [minDate]="fechaInicialDate"
+    [showButtonBar]="true"
+    [readonlyInput]="false"
+    [showClear]="true"
+    [locale]="es"
+    [firstDayOfWeek]="1"
+    [monthNavigator]="true"
+    [yearNavigator]="true"
+    yearRange="2020:2030">
+  </p-calendar>
+
+  <!-- PRESETS DE FECHA (130px) -->
+  <p-dropdown
+    *ngIf="showDateFilters"
+    [options]="datePresets"
+    [(ngModel)]="selectedDatePreset"
+    optionLabel="label"
+    optionValue="value"
+    placeholder="{{ 'Rápido' | translate }}"
+    styleClass="input-sm"
+    [style]="{'width': '130px'}"
+    (onChange)="onDatePresetChange($event.value)"
+    appendTo="body">
+  </p-dropdown>
+
+  <!-- ESTADO PAGO (150px) -->
+  <p-dropdown
+    *ngIf="showStatusFilters"
+    [options]="estadosPagoOptions"
+    [(ngModel)]="quickFilters.estadoPago"
+    optionLabel="label"
+    optionValue="value"
+    placeholder="{{ 'Estado Pago' | translate }}"
+    styleClass="input-sm"
+    [style]="{'width': '150px'}"
+    appendTo="body"
+    (onChange)="onEstadoPagoChange()">
+    <ng-template let-option pTemplate="item">
+      <div class="dropdown-item-with-badge">
+        <span [class]="'status-dot ' + getStatusClass(option.value, 'pago')"></span>
+        <span>{{ option.label }}</span>
+      </div>
+    </ng-template>
+  </p-dropdown>
+
+  <!-- ESTADO PROCESO (150px) -->
+  <p-dropdown
+    *ngIf="showStatusFilters"
+    [options]="estadosProcesoOptions"
+    [(ngModel)]="quickFilters.estadoProceso"
+    optionLabel="label"
+    optionValue="value"
+    placeholder="{{ 'Estado Proceso' | translate }}"
+    styleClass="input-sm"
+    [style]="{'width': '150px'}"
+    appendTo="body"
+    (onChange)="onEstadoProcesoChange()">
+    <ng-template let-option pTemplate="item">
+      <div class="dropdown-item-with-badge">
+        <span [class]="'status-dot ' + getStatusClass(option.value, 'proceso')"></span>
+        <span>{{ option.label }}</span>
+      </div>
+    </ng-template>
+  </p-dropdown>
+
+  <!-- BOTÓN APLICAR FILTROS -->
+  <button
+    type="button"
+    class="btn-sm btn-primary"
+    (click)="applyFilters()">
+    <i class="pi pi-search"></i>
+    <span>{{ filterButtonLabel | translate }}</span>
+  </button>
+
+  <!-- BOTÓN EXPORTAR -->
+  <button
+    *ngIf="showExportButton"
+    type="button"
+    class="btn-sm btn-success"
+    [disabled]="exportDisabled"
+    [pTooltip]="exportButtonTooltip | translate"
+    (click)="exportData()">
+    <i class="pi pi-file-excel"></i>
+  </button>
+
+  <!-- BOTÓN CONFIGURACIÓN AVANZADA -->
+  <button
+    type="button"
+    class="btn-sm btn-secondary"
+    (click)="toggleAdvancedFilters()"
+    pTooltip="{{ 'Configuración avanzada' | translate }}">
+    <i class="pi pi-cog"></i>
+  </button>
+
+  <!-- CONTADOR DE FILTROS ACTIVOS + LIMPIAR -->
+  <div *ngIf="hasActiveFilters()" class="filter-counter-inline">
+    <span class="count-badge">{{ getActiveFiltersCount() }}</span>
+    <button
+      type="button"
+      class="btn-sm btn-clear"
+      (click)="clearAllFiltersHandler()"
+      pTooltip="{{ 'Limpiar todos los filtros' | translate }}">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+</div>
+
+<!-- Panel de configuración avanzada (colapsible) -->
+<div class="advanced-filters-panel" *ngIf="showAdvancedFilters" [@slideInOut]>
+  <div class="advanced-panel-content">
+    <!-- Tags de filtros activos -->
+    <div class="active-filters-tags" *ngIf="hasActiveFilters()">
+      <div class="tags-container">
+        <span class="filter-tag" *ngIf="fechaInicialDate">
+          <i class="pi pi-calendar me-1"></i>
+          {{ 'Desde: ' + formatDateForDisplay(fechaInicialDate) }}
+          <button class="tag-remove" (click)="clearDateFilter('inicial')">
+            <i class="pi pi-times"></i>
           </button>
-        </div>
+        </span>
+        <span class="filter-tag" *ngIf="fechaFinalDate">
+          <i class="pi pi-calendar me-1"></i>
+          {{ 'Hasta: ' + formatDateForDisplay(fechaFinalDate) }}
+          <button class="tag-remove" (click)="clearDateFilter('final')">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="filter-tag" *ngIf="searchQuery">
+          <i class="pi pi-search me-1"></i>
+          {{ searchQuery }}
+          <button class="tag-remove" (click)="clearSearchFilter()">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="filter-tag" *ngIf="quickFilters.estadoPago !== 'all'">
+          <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoPago, 'pago')"></span>
+          {{ quickFilters.estadoPago }}
+          <button class="tag-remove" (click)="clearQuickFilter('estadoPago')">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+        <span class="filter-tag" *ngIf="quickFilters.estadoProceso !== 'all'">
+          <span [class]="'status-dot ' + getStatusClass(quickFilters.estadoProceso, 'proceso')"></span>
+          {{ quickFilters.estadoProceso }}
+          <button class="tag-remove" (click)="clearQuickFilter('estadoProceso')">
+            <i class="pi pi-times"></i>
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <!-- Configuración de columnas -->
+    <div class="config-section" *ngIf="showColumnSelector">
+      <div class="config-section-header">
+        <i class="pi pi-table me-2"></i>
+        <span>{{ 'Columnas visibles' | translate }}</span>
+      </div>
+      <div class="config-section-content">
+        <p-multiSelect
+          [options]="displayedColumns"
+          [(ngModel)]="selectedColumns"
+          optionLabel="header"
+          defaultLabel="{{ 'Seleccionar columnas' | translate }}"
+          selectedItemsLabel="{0} columnas"
+          styleClass="column-selector-compact"
+          [style]="{'width': '100%'}"
+          (onChange)="onColumnSelectionChange()"
+          appendTo="body">
+        </p-multiSelect>
+        <button
+          type="button"
+          class="btn-sm btn-secondary mt-2"
+          (click)="resetColumnConfig()">
+          <i class="pi pi-undo me-1"></i>
+          <span>{{ 'Restaurar' | translate }}</span>
+        </button>
       </div>
     </div>
   </div>

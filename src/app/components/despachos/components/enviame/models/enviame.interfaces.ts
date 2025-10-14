@@ -315,3 +315,105 @@ export interface PedidoQuoteData {
   quotingStatus: 'pending' | 'loading' | 'success' | 'error';
   errorMessage?: string;
 }
+
+// ===== INTERFACES PARA CREACIÓN DE ENVÍOS UNIFICADOS =====
+
+/**
+ * Estructura unificada para crear envíos (single o multiple)
+ * Siempre usa array shipments[], incluso para un solo envío
+ */
+export interface CreateShipmentRequest {
+  companyId: string;
+  provider: string;
+  shippingOrder: {
+    nroShippingOrder: string;
+    fecha: string | Date;
+    metodoEnvio?: string;
+  };
+  shipments: ShipmentItem[];  // Siempre array, incluso para single
+  globalOptions?: ShipmentOptions;
+}
+
+/**
+ * Item individual de envío con pedido completo incluido
+ */
+export interface ShipmentItem {
+  pedido: any;  // Objeto completo del Pedido
+  selectedService: SelectedService;
+  origin: ShipmentLocation;
+  destination: ShipmentDestination;
+  package: ShipmentPackage;
+  options?: ShipmentOptions;
+}
+
+/**
+ * Servicio seleccionado de la cotización
+ */
+export interface SelectedService {
+  service: string;
+  serviceCode: string;
+  carrier: string;
+  carrierCode: string;
+  price: number;
+  currency: string;
+  estimatedDays: string;
+  estimatedTime: string;
+}
+
+/**
+ * Ubicación de origen
+ */
+export interface ShipmentLocation {
+  placeCode?: string;
+  municipioCode?: string;
+  municipioName?: string;
+  address: string;
+  city: string;
+  department?: string;
+  country: string;
+  postalCode?: string;
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+}
+
+/**
+ * Ubicación de destino con datos del destinatario
+ */
+export interface ShipmentDestination extends ShipmentLocation {
+  recipient: {
+    name: string;
+    phone: string;
+    email: string;
+    document?: string;
+    documentType?: string;
+  };
+}
+
+/**
+ * Información del paquete
+ */
+export interface ShipmentPackage {
+  weight: number;
+  dimensions?: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  value: number;
+  description: string;
+  quantity?: number;
+}
+
+/**
+ * Opciones adicionales de envío
+ */
+export interface ShipmentOptions {
+  insuranceValue?: number;
+  cashOnDelivery?: boolean;
+  signature?: boolean;
+  packaging?: string;
+  comments?: string;
+  normalizeResponse?: boolean;
+}

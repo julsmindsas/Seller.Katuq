@@ -42,19 +42,14 @@ export class VentasNotificationInterceptor {
   initialize(ventasService: VentasService): void {
     // Solo activar si el flag está habilitado
     if (!this.featureFlags.isEnabled('ENABLE_ADVANCED_NOTIFICATIONS')) {
-      console.log('🔕 VentasNotificationInterceptor deshabilitado por feature flag');
       return;
     }
 
-    console.log('🔔 Inicializando VentasNotificationInterceptor...');
-    
     // Interceptar el método editOrder sin modificarlo
     this.interceptEditOrder(ventasService);
-    
+
     // Interceptar updateOrderPaymentStatus
     this.interceptUpdateOrderPaymentStatus(ventasService);
-    
-    console.log('✅ VentasNotificationInterceptor inicializado');
   }
 
   /**
@@ -109,8 +104,6 @@ export class VentasNotificationInterceptor {
           tap({
             next: (response) => {
               // Las notificaciones de pago ya están implementadas en VentasService
-              // Solo agregamos logging adicional si es necesario
-              console.log(`💳 Estado de pago actualizado: ${numeroPedido} -> ${estadoPago}`);
             }
           })
         );
@@ -213,9 +206,8 @@ export class VentasNotificationInterceptor {
       priority: priority,
       channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME]
     };
-    
+
     this.notificationManager.triggerNotification(event);
-    console.log(`📦 Notificación de cambio de estado proceso: ${oldState} -> ${order.estadoProceso}`);
   }
 
   /**
@@ -223,8 +215,6 @@ export class VentasNotificationInterceptor {
    */
   private notifyPaymentStateChange(oldState: EstadoPago, order: Pedido): void {
     // VentasService ya maneja estas notificaciones
-    // Solo agregamos logging adicional
-    console.log(`💰 Cambio de estado de pago detectado: ${oldState} -> ${order.estadoPago}`);
   }
 
   /**
