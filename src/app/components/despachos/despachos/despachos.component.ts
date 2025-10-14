@@ -221,6 +221,8 @@ export class DespachosComponent implements OnInit {
   private destroy$ = new Subject<void>();
   isSearching: boolean = false;
   searchError: string | null = null;
+  searchDebounceTime: number = 300;
+  nroPedido: any;
   // Opciones para los dropdowns de filtros
   estadosPagoOptions: any[] = [];
   estadosProcesoOptions: any[] = [];
@@ -418,7 +420,10 @@ export class DespachosComponent implements OnInit {
     
     // Inicializar opciones de filtros avanzados
     this.initializeFilterOptions();
-    
+
+    // Configurar debounce para búsqueda
+    this.setupSearchDebounce();
+
     // Inicializar fechas por defecto al mismo día (hoy)
     this.initializeDefaultDates();
     
@@ -2007,16 +2012,61 @@ export class DespachosComponent implements OnInit {
 
   filtroGlobal(event: any) {
     const query = event.query;
+    // Mantener compatibilidad con código existente
+    this.performSearch(query);
+  }
+
+  /**
+   * Configura el debounce para la búsqueda
+   */
+  private setupSearchDebounce(): void {
+    this.searchSubject.pipe(
+      debounceTime(this.searchDebounceTime),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      console.log('🔍 Debounce ejecutado con query:', query);
+      this.performSearch(query);
+    });
+  }
+
+  /**
+   * Valida el formato del número de pedido
+   */
+  private validateOrderNumber(query: string): boolean {
+    if (!query || query.trim().length === 0) {
+      return false;
+    }
 
     // Validar longitud mínima de 3 caracteres
-    if (!query || query.trim().length < 3) {
+    if (query.trim().length < 3) {
       console.log('⚠️ Búsqueda requiere al menos 3 caracteres');
+      return false;
+    }
+
+    // Permitir caracteres más flexibles (letras, números, guiones, espacios, puntos)
+    const orderNumberPattern = /^[A-Za-z0-9\-_.\s]+$/;
+    return orderNumberPattern.test(query.trim());
+  }
+
+  /**
+   * Realiza la búsqueda con el servicio
+   */
+  private performSearch(query: string): void {
+    const trimmedQuery = query?.trim();
+
+    if (!this.validateOrderNumber(trimmedQuery)) {
       this.filteredOrderNumbers = [];
+      this.ordersByName = [];
+      this.isSearching = false;
+      this.searchError = null;
       return;
     }
 
     this.isSearching = true;
-    this.service.getOrderByName(query).then((res) => {
+    this.searchError = null;
+
+    this.service.getOrderByName(trimmedQuery).then((res) => {
       this.filteredOrderNumbers = res;
       this.ordersByName = res;
       this.isSearching = false;
@@ -2029,9 +2079,65 @@ export class DespachosComponent implements OnInit {
       }, 50);
     }).catch((err) => {
       console.log('⚠️ Error en búsqueda:', err);
+      this.searchError = 'Error al buscar pedido. Intente nuevamente.';
       this.filteredOrderNumbers = [];
+      this.ordersByName = [];
       this.isSearching = false;
     });
+  }
+
+  /**
+   * Maneja el cambio de búsqueda desde el componente compartido
+   */
+  onSharedSearchQueryChange(query: string): void {
+    this.searchQuery = query;
+    this.searchSubject.next(query);
+  }
+
+  /**
+   * Maneja el evento completeMethod del autocompletado
+   */
+  onSearchComplete(event: any): void {
+    const query = event.query || '';
+    console.log('🔍 Búsqueda autocompletado (Enter presionado):', query);
+
+    // Ejecutar búsqueda inmediatamente sin debounce cuando viene del Enter
+    if (query.trim().length >= 3) {
+      this.performSearch(query);
+    } else {
+      this.filteredOrderNumbers = [];
+      this.isSearching = false;
+    }
+  }
+
+  /**
+   * Maneja la selección de un pedido desde el autocompletado
+   */
+  onSearchSelect(event: any): void {
+    console.log('✅ Pedido seleccionado desde autocompletado:', event);
+    this.selectOrder(event);
+  }
+
+  /**
+   * Selecciona un pedido de las sugerencias
+   */
+  selectOrder(item: any): void {
+    if (!item || !item.nroPedido) {
+      this.toastr.warning('Pedido inválido seleccionado', 'Advertencia');
+      return;
+    }
+
+    // Establecer el valor del campo de búsqueda
+    this.searchQuery = item.nroPedido;
+    this.nroPedido = item;
+
+    // Ocultar sugerencias
+    this.filteredOrderNumbers = [];
+
+    // Mostrar solo el pedido seleccionado
+    this.orders = [item];
+
+    console.log('✅ Pedido seleccionado:', item.nroPedido);
   }
 
   initForms() {
@@ -6472,10 +6578,8 @@ export class DespachosComponent implements OnInit {
    */
   onSearchQueryChange(value: string): void {
     this.searchQuery = value;
-    // Aplicar filtro inmediatamente si hay texto
-    if (value.trim().length > 0) {
-      this.refrescar();
-    }
+    // Usar debounce para evitar llamadas excesivas
+    this.searchSubject.next(value);
   }
 
   /**
