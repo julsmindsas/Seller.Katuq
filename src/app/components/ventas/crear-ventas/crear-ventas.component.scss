@@ -102,24 +102,24 @@ html {
 
 .card {
   border: none;
-  border-radius: var(--border-radius);
-  box-shadow: var(--box-shadow);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   overflow: hidden;
-  transition: var(--transition);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   margin-bottom: 1rem;
 
   &:hover {
     transform: translateY(-2px);
-    box-shadow: var(--box-shadow-lg);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
 }
 
   .card-header {
     background-color: white;
-    border-bottom: 1px solid var(--gray-200);
+    border-bottom: 1px solid #e9ecef;
     padding: 1.25rem 1.5rem;
     
     .fc-secondary {
-      color: var(--primary-color);
+      color: #4361ee;
       font-weight: 600;
 }
 
@@ -135,23 +135,23 @@ html {
 
 /* Estilos de formularios */
 .form-control, .form-select {
-  border-radius: var(--border-radius-sm);
-  border: 1px solid var(--gray-300);
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
   padding: 0.6rem 1rem;
-  transition: var(--transition);
-  
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
   &:focus {
-    border-color: var(--primary-light);
+    border-color: #4361ee;
     box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
   }
 }
 
 .input-group {
   .input-group-text {
-    border-radius: var(--border-radius-sm);
-    background-color: var(--gray-100);
-    border: 1px solid var(--gray-300);
-    color: var(--gray-700);
+    border-radius: 6px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    color: #495057;
   }
   
   .btn {
@@ -168,36 +168,36 @@ html {
 
 /* Botones */
 .btn {
-  border-radius: var(--border-radius);
+  border-radius: 8px;
   padding: 0.6rem 1.2rem;
   font-weight: 500;
-  transition: var(--transition);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   display: inline-flex;
     align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  
+
   &:hover {
     transform: translateY(-2px);
-    box-shadow: var(--box-shadow);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
     }
-  
+
   &:active {
     transform: translateY(1px);
   }
-      
+
       i {
         font-size: 1rem;
       }
     }
 
 .btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+  background-color: #4361ee;
+  border-color: #4361ee;
 
   &:hover, &:active, &:focus {
-    background-color: var(--primary-dark);
-    border-color: var(--primary-dark);
+    background-color: #3a56d4;
+    border-color: #3a56d4;
   }
 }
 
@@ -273,16 +273,16 @@ html {
 
 .wizard-integrated-header {
   background-color: white;
-  border-bottom: 2px solid var(--gray-200);
+  border-bottom: 2px solid #e9ecef;
   padding: 0.875rem 1.5rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: box-shadow 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
   &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
   }
 
   @media (max-width: 991px) {
@@ -371,7 +371,7 @@ html {
      ========================================== */
   &.current {
     .step-text {
-      color: var(--primary-color);
+      color: #4361ee;
       font-weight: 700;
       font-size: 0.95rem;
       text-transform: uppercase;
@@ -385,7 +385,7 @@ html {
         left: 0;
         width: 100%;
         height: 3px;
-        background: linear-gradient(90deg, var(--primary-color), var(--primary-light));
+        background: linear-gradient(90deg, #4361ee, #738efc);
         border-radius: 2px;
         animation: stepPulse 2s ease-in-out infinite;
       }
@@ -980,15 +980,15 @@ html {
 /* Selector de bodega - Diseño ultra compacto */
 .warehouse-selector-card {
   background: #ffffff;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #e9ecef;
   border-radius: 8px;
   padding: 0.75rem;
-  transition: all 0.3s ease;
-  box-shadow: var(--box-shadow-xs);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 
   &:hover {
-    border-color: var(--primary-color);
-    box-shadow: 0 3px 8px rgba(var(--primary-rgb), 0.1);
+    border-color: #4361ee;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
   }
 
   .selector-header {

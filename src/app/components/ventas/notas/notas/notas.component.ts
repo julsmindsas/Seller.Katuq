@@ -272,7 +272,7 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
           const notasExistentes =
             this.pedido.notasPedido?.notasProduccion || [];
 
-          const carritoExistente = this.pedido.carrito || [];
+          // SOLUCIÓN: REEMPLAZAR en lugar de concatenar
           const nuevosProductos = productos.map((item) => ({
             producto: item.producto,
             configuracion: item.configuracion,
@@ -283,8 +283,8 @@ export class NotasComponent implements OnInit, AfterContentInit, OnChanges {
             disponibilidad: item.producto?.disponibilidad,
           }));
 
-          // Combinar carrito existente con nuevos productos
-          this.pedido.carrito = [...carritoExistente, ...nuevosProductos];
+          // Reemplazar completamente el carrito con los nuevos productos del singleton
+          this.pedido.carrito = nuevosProductos;
 
           // RESTAURAR las notas de producción existentes
           if (!this.pedido.notasPedido) {

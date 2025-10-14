@@ -1525,7 +1525,7 @@ export class EnviameRatesModalComponent implements OnInit {
         score: this.fuzzySearchCity(event.query, m.nombre),
         ...m
       }))
-      .filter(item => item.score > 30) // Filtrar resultados irrelevantes
+      .filter(item => item.score > 15) // Filtrar resultados irrelevantes
       .sort((a, b) => {
         // Priorizar la ciudad original si está en los resultados
         if (this.originalOriginCity) {
@@ -1535,7 +1535,7 @@ export class EnviameRatesModalComponent implements OnInit {
         }
         return b.score - a.score;
       })
-      .slice(0, 10); // Limitar a 10 resultados
+      .slice(0, 25); // Limitar a 25 resultados
 
       this.municipiosSugeridosOrigen = sugeridos;
       this.searchCache.set(cacheKey, sugeridos); // Guardar en caché
@@ -1573,7 +1573,7 @@ export class EnviameRatesModalComponent implements OnInit {
         score: this.fuzzySearchCity(event.query, m.nombre),
         ...m
       }))
-      .filter(item => item.score > 30) // Filtrar resultados irrelevantes
+      .filter(item => item.score > 15) // Filtrar resultados irrelevantes
       .sort((a, b) => {
         // Priorizar la ciudad original si está en los resultados
         if (this.originalDestinationCity) {
@@ -1583,7 +1583,7 @@ export class EnviameRatesModalComponent implements OnInit {
         }
         return b.score - a.score;
       })
-      .slice(0, 10); // Limitar a 10 resultados
+      .slice(0, 25); // Limitar a 25 resultados
 
       this.municipiosSugeridosDestino = sugeridos;
       this.searchCache.set(cacheKey, sugeridos); // Guardar en caché
