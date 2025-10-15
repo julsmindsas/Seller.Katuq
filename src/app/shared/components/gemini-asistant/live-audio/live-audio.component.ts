@@ -73,6 +73,7 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
     const audioSub = this.audioService.audioState$.subscribe(
       (audioState: AudioState) => {
         this.isRecording = audioState.isRecording;
+
         if (audioState.status) {
           this.status = audioState.status;
           this.addVisualLog(`🎤 ${audioState.status}`, 'info');
@@ -155,16 +156,27 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Alterna el estado de grabación del micrófono (VAD).
+   */
+  toggleRecording(): void {
+    if (this.isRecording) {
+      this.stopRecording();
+    } else {
+      this.startRecording();
+    }
+  }
+
   async startRecording(): Promise<void> {
     await this.audioService.startRecording((pcmData: Float32Array) => {
       this.geminiService.sendRealtimeInput(createBlob(pcmData));
     });
-    this.addVisualLog('🎤 Grabación iniciada', 'success');
+    this.addVisualLog('🎤 Escucha iniciada', 'success');
   }
 
   stopRecording(): void {
     this.audioService.stopRecording();
-    this.addVisualLog('⏹️ Grabación detenida', 'info');
+    this.addVisualLog('⏹️ Escucha detenida', 'info');
   }
 
   reset(): void {

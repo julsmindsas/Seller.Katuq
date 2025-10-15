@@ -26,7 +26,7 @@ export class AudioProcessingService {
 
   private audioStateSubject = new BehaviorSubject<AudioState>({
     isRecording: false,
-    status: 'Ready to record'
+    status: 'Listo para activar micrófono'
   });
 
   audioState$: Observable<AudioState> = this.audioStateSubject.asObservable();
@@ -54,7 +54,7 @@ export class AudioProcessingService {
     }
 
     this.inputAudioContext.resume();
-    this.updateStatus('Requesting microphone access...');
+    this.updateStatus('Solicitando acceso al micrófono...');
 
     try {
       this.mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -62,12 +62,12 @@ export class AudioProcessingService {
         video: false,
       });
 
-      this.updateStatus('Microphone access granted. Starting capture...');
+      this.updateStatus('Acceso al micrófono concedido. Capturando...');
 
       this.sourceNode = this.inputAudioContext.createMediaStreamSource(this.mediaStream);
       this.sourceNode.connect(this._inputNode);
 
-      const bufferSize = 256;
+      const bufferSize = 4096;
       this.scriptProcessorNode = this.inputAudioContext.createScriptProcessor(
         bufferSize,
         1,
@@ -76,7 +76,7 @@ export class AudioProcessingService {
 
       this.scriptProcessorNode.onaudioprocess = (audioProcessingEvent) => {
         if (!this.audioStateSubject.value.isRecording) return;
-
+        
         const inputBuffer = audioProcessingEvent.inputBuffer;
         const pcmData = inputBuffer.getChannelData(0);
         onAudioData(pcmData);
@@ -87,14 +87,14 @@ export class AudioProcessingService {
 
       this.updateAudioState({
         isRecording: true,
-        status: '🔴 Recording... Capturing PCM chunks.'
+        status: '🎤 Escuchando...'
       });
 
     } catch (err: any) {
-      console.error('Error starting recording:', err);
+      console.error('Error al iniciar la grabación:', err);
       this.updateAudioState({
         isRecording: false,
-        status: 'Error starting recording',
+        status: 'Error al iniciar la grabación',
         error: err.message
       });
       this.stopRecording();
@@ -106,11 +106,11 @@ export class AudioProcessingService {
       return;
     }
 
-    this.updateStatus('Stopping recording...');
+    this.updateStatus('Deteniendo escucha...');
 
     this.updateAudioState({
       isRecording: false,
-      status: 'Stopping recording...'
+      status: 'Deteniendo escucha...'
     });
 
     if (this.scriptProcessorNode && this.sourceNode && this.inputAudioContext) {
@@ -126,7 +126,7 @@ export class AudioProcessingService {
       this.mediaStream = null!;
     }
 
-    this.updateStatus('Recording stopped. Click Start to begin again.');
+    this.updateStatus('Micrófono desactivado. Activa para comenzar.');
   }
 
   async playAudioData(audioData: any): Promise<void> {
@@ -155,7 +155,7 @@ export class AudioProcessingService {
       this.nextStartTime = this.nextStartTime + audioBuffer.duration;
       this.sources.add(source);
     } catch (error) {
-      console.error('Error playing audio:', error);
+      console.error('Error al reproducir audio:', error);
     }
   }
 

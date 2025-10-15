@@ -75,6 +75,11 @@ export interface GeminiLiveConfig {
     voiceConfig: { prebuiltVoiceConfig: { voiceName: string } };
   };
   tools?: GeminiToolsConfig;
+  realtimeInputConfig?: {
+    automaticActivityDetection?: {
+      // No se necesita configuración adicional, solo habilitarlo.
+    }
+  };
 }
 
 // Interfaces para el sistema de ventas
@@ -165,7 +170,7 @@ export class GeminiAudioService {
     private inventarioService: InventarioService,
     private cartService: CartSingletonService,
     private ventasService: VentasService,
-    private inventoryToolsService: KatuqInventoryToolsService,
+    private katuqInventoryTools: KatuqInventoryToolsService,
     private maestroService: MaestroService
   ) {
     this.initClient();
@@ -729,9 +734,11 @@ export class GeminiAudioService {
   }
 
   async initSession(config?: GeminiLiveConfig): Promise<void> {
-    const model = config?.model || 'gemini-2.5-flash-preview-native-audio-dialog';
+    const model = config?.model || 'gemini-live-2.5-flash-preview';
     const systemInstruction = config?.systemInstruction ||
       "Eres un asistente de IA que responde en español, solo habla de que puedes hacer en el sistema como crear pedidos";
+
+    console.log(`🔌 [Gemini] Conectando con el modelo: ${model}`);
 
     console.log('🚀 Iniciando sesión Gemini Live...');
     console.log('📋 Configuración:', {
@@ -1996,43 +2003,43 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
   private async delegateToInventoryTools(toolName: string, args: any): Promise<DemoResponse> {
     try {
       // Sincronizar estado con el servicio de inventario
-      this.inventoryToolsService.setBodegaSeleccionada(this.bodegaSeleccionada);
-      this.inventoryToolsService.setProductosCatalogo(this.productosCatalogo);
-      this.inventoryToolsService.setEmpresaActual(this.empresaActual);
+      this.katuqInventoryTools.setBodegaSeleccionada(this.bodegaSeleccionada);
+      this.katuqInventoryTools.setProductosCatalogo(this.productosCatalogo);
+      this.katuqInventoryTools.setEmpresaActual(this.empresaActual);
 
       // Llamar al método correspondiente en el servicio de inventario
       let inventoryResponse: InventoryToolResponse;
       
       switch (toolName) {
         case 'getInventoryStatus':
-          inventoryResponse = await this.inventoryToolsService.getInventoryStatus(args);
+          inventoryResponse = await this.katuqInventoryTools.getInventoryStatus(args);
           break;
         case 'searchInventoryByCategory':
-          inventoryResponse = await this.inventoryToolsService.searchInventoryByCategory(args);
+          inventoryResponse = await this.katuqInventoryTools.searchInventoryByCategory(args);
           break;
         case 'getLowStockAlerts':
-          inventoryResponse = await this.inventoryToolsService.getLowStockAlerts(args);
+          inventoryResponse = await this.katuqInventoryTools.getLowStockAlerts(args);
           break;
         case 'getInventoryReport':
-          inventoryResponse = await this.inventoryToolsService.getInventoryReport(args);
+          inventoryResponse = await this.katuqInventoryTools.getInventoryReport(args);
           break;
         case 'checkProductAvailability':
-          inventoryResponse = await this.inventoryToolsService.checkProductAvailability(args);
+          inventoryResponse = await this.katuqInventoryTools.checkProductAvailability(args);
           break;
         case 'getInventoryMovements':
-          inventoryResponse = await this.inventoryToolsService.getInventoryMovements(args);
+          inventoryResponse = await this.katuqInventoryTools.getInventoryMovements(args);
           break;
         case 'getCategoryInventorySummary':
-          inventoryResponse = await this.inventoryToolsService.getCategoryInventorySummary(args);
+          inventoryResponse = await this.katuqInventoryTools.getCategoryInventorySummary(args);
           break;
         case 'getWarehouseInventoryComparison':
-          inventoryResponse = await this.inventoryToolsService.getWarehouseInventoryComparison(args);
+          inventoryResponse = await this.katuqInventoryTools.getWarehouseInventoryComparison(args);
           break;
         case 'getInventoryTrends':
-          inventoryResponse = await this.inventoryToolsService.getInventoryTrends(args);
+          inventoryResponse = await this.katuqInventoryTools.getInventoryTrends(args);
           break;
         case 'quickSearchProducts':
-          inventoryResponse = await this.inventoryToolsService.quickSearchProducts(args);
+          inventoryResponse = await this.katuqInventoryTools.quickSearchProducts(args);
           break;
         default:
           throw new Error(`Herramienta de inventario no reconocida: ${toolName}`);
@@ -2220,171 +2227,44 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
       try {
         console.log('📦 Cargando productos reales de la bodega:', this.bodegaSeleccionada.idBodega);
         
-        let productosReales: any[] = [];
+        // La llamada a getProductosBodega fue eliminada porque el endpoint no existe (error 404).
+        // Usamos directamente obtenerInventarioPorBodega que es el método correcto.
+        const response = await this.inventarioService.obtenerInventarioPorBodega(this.bodegaSeleccionada.idBodega).toPromise();
         
-        // Intentar primero con getProductosBodega
-        try {
-          console.log('📦 Intentando con getProductosBodega...');
-          productosReales = await this.inventarioService.getProductosBodega(this.bodegaSeleccionada.idBodega).toPromise() || [];
-          console.log('📦 Respuesta de getProductosBodega:', productosReales);
-        } catch (error) {
-          console.log('⚠️ getProductosBodega falló, intentando con obtenerInventarioPorBodega...');
-          try {
-            const inventario = await this.inventarioService.obtenerInventarioPorBodega(this.bodegaSeleccionada.idBodega).toPromise();
-            console.log('📦 Respuesta de obtenerInventarioPorBodega:', inventario);
-            
-            // Extraer productos del inventario
-            if (inventario && inventario.productos) {
-              productosReales = inventario.productos;
-            } else if (inventario && Array.isArray(inventario)) {
-              productosReales = inventario;
-            } else if (inventario && inventario.items) {
-              productosReales = inventario.items;
-            }
-          } catch (error2) {
-            console.log('⚠️ obtenerInventarioPorBodega también falló:', error2);
-            productosReales = [];
-          }
-        }
-        
-        if (productosReales && Array.isArray(productosReales) && productosReales.length > 0) {
-          console.log(`📦 Encontrados ${productosReales.length} productos en la bodega`);
-          
-          // Convertir productos reales al formato esperado usando la misma lógica que order-tools-registrar
-          this.productosCatalogo = productosReales.map((item: any) => {
-            console.log(`📦 Procesando item de inventario:`, item);
-            
-            // Extraer el producto del item de inventario
-            const producto = item.producto || item;
-            
-            // Mapear usando la misma lógica que order-tools-registrar
-            const productoMapeado = {
-              ...producto,
-              disponibilidad: {
-                ...producto?.disponibilidad,
-                cantidadDisponible: item.cantidad || producto?.disponibilidad?.cantidadDisponible || 0,
-              },
-              bodegaId: item.bodegaId || this.bodegaSeleccionada.idBodega,
-            };
-            
-            console.log(`📦 Producto mapeado:`, {
-              cd: productoMapeado.cd,
-              titulo: productoMapeado.crearProducto?.titulo,
-              precio: productoMapeado.precio?.precioUnitarioConIva,
-              stock: productoMapeado.disponibilidad?.cantidadDisponible,
-              categoria: productoMapeado.crearProducto?.categorias?.label || 'Sin categoría'
-            });
-            return productoMapeado;
-          });
-          
-          console.log(`✅ Se cargaron ${this.productosCatalogo.length} productos reales de la bodega`);
-          console.log('📦 Primeros 3 productos del catálogo:', this.productosCatalogo.slice(0, 3));
-          
+        const productosReales = response?.productos || [];
+
+        this.katuqInventoryTools.setProductosCatalogo(productosReales);
+
+        if (productosReales.length > 0) {
+          this.updateKatuqToolEvent('selectWarehouse', 'productsLoaded', { warehouseId: this.bodegaSeleccionada.idBodega, productCount: productosReales.length }, true, `Catálogo de ${productosReales.length} productos cargado.`);
+          return {
+            success: true,
+            message: `Bodega '${this.bodegaSeleccionada.nombre}' seleccionada y ${productosReales.length} productos cargados.`,
+            data: { bodega: this.bodegaSeleccionada, productos: productosReales }
+          };
         } else {
-          console.log('⚠️ No se encontraron productos en la bodega o respuesta inválida:', productosReales);
-          console.log('🔄 Usando productos demo como fallback');
-          this.productosCatalogo = this.generateMockProducts(20); // Menos productos demo
+          this.updateKatuqToolEvent('selectWarehouse', 'noProductsFound', { warehouseId: this.bodegaSeleccionada.idBodega }, false, 'No se encontraron productos en la bodega.');
+          return {
+            success: true, // La selección fue exitosa, aunque no haya productos
+            message: `Bodega '${this.bodegaSeleccionada.nombre}' seleccionada, pero no se encontraron productos.`,
+            data: { bodega: this.bodegaSeleccionada, productos: [] }
+          };
         }
-        
-      } catch (error: any) {
-        console.error('❌ Error cargando productos reales:', error);
-        console.log('🔄 Usando productos demo como fallback');
-        this.productosCatalogo = this.generateMockProducts(20);
-      }
-
-    this.pasoActual = 2;
-
-    // Actualizar estado visual
-    this.updateVisualStep('productos');
-    this.updateOrderStatus();
-
-    // Mostrar notificación
-    this.showToast(`Bodega "${this.bodegaSeleccionada.nombre}" seleccionada correctamente`, 'Bodega Configurada');
-
-    const response: DemoResponse = {
-      success: true,
-      data: {
-        selectedWarehouse: {
-          id: this.bodegaSeleccionada.idBodega,
-          name: this.bodegaSeleccionada.nombre,
-          address: this.bodegaSeleccionada.direccion
-        },
-        productsLoaded: this.productosCatalogo.length,
-        catalogPreview: this.productosCatalogo.slice(0, 3).map(p => ({
-          id: p.cd,
-          name: p.crearProducto?.titulo,
-          price: p.precio?.precioUnitarioConIva
-        }))
-      },
-      message: `¡Perfecto! Bodega "${this.bodegaSeleccionada.nombre}" seleccionada. Se cargaron ${this.productosCatalogo.length} productos disponibles.`,
-      visualUpdate: {
-        stepName: 'productos',
-        progress: 25,
-        nextActions: [
-          'Busca productos con searchProductsAdvanced',
-          'Agrega productos directamente con quickAddToCart'
-        ]
-      }
-    };
-
-      console.log('📤 Bodega real seleccionada:', response);
-    return response;
-
-    } catch (error: any) {
-      console.error('❌ Error seleccionando bodega real:', error);
-      
-      // Fallback a datos demo si hay error
-      const mockWarehouses = [
-        { idBodega: 'BOD001', nombre: 'Bodega Principal Bogotá', direccion: 'Av. El Dorado 123' },
-        { idBodega: 'BOD002', nombre: 'Bodega Norte', direccion: 'Calle 127 45-67' },
-        { idBodega: 'BOD003', nombre: 'Bodega Sur', direccion: 'Av. Boyacá 234-56' }
-      ];
-
-      this.bodegaSeleccionada = mockWarehouses.find(b => b.idBodega === warehouseId);
-
-      if (!this.bodegaSeleccionada) {
+      } catch (error) {
+        console.error('❌ Error al cargar productos de la bodega:', error);
+        this.updateKatuqToolEvent('selectWarehouse', 'fetchFailed', { warehouseId: this.bodegaSeleccionada.idBodega, error }, false, 'Error al cargar productos.');
         return {
           success: false,
-          message: `No se encontró la bodega con ID: ${warehouseId} (modo demo)`,
-          error: 'Bodega no encontrada',
-          visualUpdate: {
-            stepName: 'bodega',
-            progress: 5,
-            nextActions: ['Usa listWarehouses para ver las bodegas disponibles']
-          }
+          message: `Error al cargar productos para la bodega ${this.bodegaSeleccionada.nombre}.`,
+          error: (error as Error).message
         };
       }
-
-      // Continuar con datos demo
-      this.productosCatalogo = this.generateMockProducts(50);
-      this.pasoActual = 2;
-      this.updateVisualStep('productos');
-      this.updateOrderStatus();
-
+    } catch (error) {
+      console.error('❌ Error al seleccionar la bodega:', error);
       return {
-        success: true,
-        data: {
-          selectedWarehouse: {
-            id: this.bodegaSeleccionada.idBodega,
-            name: this.bodegaSeleccionada.nombre,
-            address: this.bodegaSeleccionada.direccion
-          },
-          productsLoaded: this.productosCatalogo.length,
-          catalogPreview: this.productosCatalogo.slice(0, 3).map(p => ({
-            id: p.cd,
-            name: p.crearProducto?.titulo,
-            price: p.precio?.precioUnitarioConIva
-          }))
-        },
-        message: `¡Perfecto! Bodega "${this.bodegaSeleccionada.nombre}" seleccionada (modo demo). Se cargaron ${this.productosCatalogo.length} productos disponibles.`,
-        visualUpdate: {
-          stepName: 'productos',
-          progress: 25,
-          nextActions: [
-            'Busca productos con searchProductsAdvanced',
-            'Agrega productos directamente con quickAddToCart'
-          ]
-        }
+        success: false,
+        message: 'Error general al seleccionar la bodega.',
+        error: (error as Error).message
       };
     }
   }
@@ -4546,5 +4426,20 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
   public notifyVisualLog(message: string, type: 'info' | 'success' | 'warning' | 'error' | 'system' = 'info', details?: string): void {
     console.log(`📊 [Visual] ${message}`);
     // Este método se puede usar para notificar logs al componente visual
+  }
+
+  /**
+   * Actualiza y emite un evento de herramienta Katuq.
+   */
+  private updateKatuqToolEvent(
+    toolName: string,
+    stepName: string,
+    data: any,
+    success: boolean,
+    message: string
+  ): void {
+    const event: KatuqToolEvent = { toolName, stepName, data, success, message };
+    this.katuqToolEventSubject.next(event);
+    console.log(`📢 [Event] Herramienta Katuq: ${toolName} - ${stepName} (${success ? 'Éxito' : 'Fallo'})`, event);
   }
 }

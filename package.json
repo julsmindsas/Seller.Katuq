@@ -81,6 +81,7 @@
     "primeicons": "^6.0.1",
     "primeng": "^14.2.3",
     "rxjs": "~7.8.2",
+    "siriwave": "^2.4.0",
     "sweetalert2": "^11.22.5",
     "three": "^0.180.0",
     "xlsx": "^0.18.5",
