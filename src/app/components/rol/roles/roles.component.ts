@@ -40,21 +40,36 @@ export class RolesComponent implements OnInit {
   }
 
   checkCompany(): void {
-    const currentCompanyString = sessionStorage.getItem('currentCompany');
+    const currentCompanyString = localStorage.getItem('currentCompany');
+    console.log('🏢 currentCompanyString (localStorage):', currentCompanyString);
+
     const currentCompany = currentCompanyString ? JSON.parse(currentCompanyString).nomComercial : null;
+    console.log('🏢 currentCompany parsed:', currentCompany);
+    console.log('🏢 Comparando con "Julsmind":', currentCompany === 'Julsmind');
+
     this.roleForm.get('empresa')?.setValue(currentCompany);
+
     if (currentCompany === 'Julsmind') {
       this.isJulsmind = true;
+      console.log('✅ isJulsmind establecido a true');
       this.loadEmpresas();
+    } else {
+      console.log('❌ Empresa no es Julsmind, no se cargará el selector');
+      console.log('💡 Valor actual de isJulsmind:', this.isJulsmind);
     }
   }
 
   loadEmpresas(): void {
+    console.log('📋 Cargando empresas...');
     this.maestroService.consultarEmpresas().subscribe({
       next: (response: any) => {
+        console.log('✅ Empresas cargadas:', response);
         this.empresas = response;
+        console.log('📊 Total de empresas:', this.empresas.length);
+        console.log('📊 Array empresas:', this.empresas);
       },
       error: (error) => {
+        console.error('❌ Error cargando empresas:', error);
         Swal.fire({
           title: 'Error!',
           text: 'Hubo un problema al cargar las empresas',
