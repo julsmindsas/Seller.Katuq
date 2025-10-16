@@ -174,11 +174,13 @@ export class SharedFiltersComponent implements OnInit {
    * Maneja cambios en el input para prevenir búsquedas automáticas
    */
   onInputChange(event: any): void {
-    // Solo actualizar el modelo, no disparar búsqueda
+    // Actualizar el modelo y emitir el cambio al componente padre
     const value = event.target?.value || '';
     if (typeof this.searchQuery === 'string') {
       this.searchQuery = value;
     }
+    // Emitir el cambio al componente padre para que searchTerm se actualice
+    this.searchQueryChange.emit(value);
   }
 
   /**

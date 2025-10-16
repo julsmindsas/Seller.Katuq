@@ -181,13 +181,14 @@ $radius: 6px;
   }
 
   &.btn-secondary {
-    background: transparent;
-    border: $border;
-    color: $text-secondary;
+    background: $text-primary;
+    border: $text-primary;
+    color: white;
 
     &:hover:not(:disabled) {
-      background: $bg-hover;
-      color: $text-primary;
+      background: lighten($text-primary, 10%);
+      border-color: lighten($text-primary, 10%);
+      color: white;
     }
   }
 

@@ -22,7 +22,8 @@
       "WebFetch(domain:www.datos.gov.co)",
       "WebFetch(domain:www.dian.gov.co)",
       "WebFetch(domain:es.wikipedia.org)",
-      "WebFetch(domain:www.social.com.co)"
+      "WebFetch(domain:www.social.com.co)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

@@ -137,6 +137,11 @@ export class OrdenesDespachoV2Component implements OnInit {
     if (this.fechaFin) {
       params.fechaFin = this.getFechaFinString();
     }
+
+    // Agregar término de búsqueda si existe
+    if (this.searchTerm && this.searchTerm.trim() !== '') {
+      params.searchText = this.searchTerm.trim();
+    }
     
     console.log(`Cargando órdenes - Página ${this.currentPage}:`, params);
     
@@ -160,19 +165,11 @@ export class OrdenesDespachoV2Component implements OnInit {
 
         // Filtrar por empresa como hace el método original
         let filteredOrders = response.data.filter((x: any) => x.company == companyName);
-        
-        // Aplicar filtro de búsqueda si existe
-        if (this.searchTerm) {
-          const searchTermLower = this.searchTerm.toLowerCase();
-          filteredOrders = filteredOrders.filter((order: any) => {
-            return (
-              (order.nroShippingOrder?.toString().includes(searchTermLower)) ||
-              (order.fecha?.toLowerCase().includes(searchTermLower)) ||
-              (order.transportador?.toLowerCase().includes(searchTermLower))
-            );
-          });
-        }
-        
+        console.log('📦 Órdenes recibidas del backend (filtradas por empresa):', filteredOrders.length);
+
+        // El backend ya filtró por searchText si se proporcionó
+        // No es necesario filtro client-side adicional
+
         // Procesar órdenes como en el método original
         filteredOrders.forEach((order: any) => {
           if (order.pedidos) {
@@ -261,14 +258,16 @@ export class OrdenesDespachoV2Component implements OnInit {
    * Aplicar filtros (reinicia la lista)
    */
   applyFilters(): void {
+    console.log('🔍 applyFilters() llamado');
     console.log('Aplicando filtros:', {
       searchTerm: this.searchTerm,
       fechaInicio: this.fechaInicio,
       fechaFin: this.fechaFin
     });
-    
+
     this.currentPage = 1;
     this.hasMore = true;
+    this.hasNextPage = true; // Reset also this flag
     this.loadInitialOrders();
   }
 

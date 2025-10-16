@@ -79,6 +79,7 @@ export class LogisticaServiceV2 extends BaseService {
         fechaFin?: string;
         estado?: string;
         transportador?: string;
+        searchText?: string;
     }): Observable<{
         data: any[];
         pagination: {
