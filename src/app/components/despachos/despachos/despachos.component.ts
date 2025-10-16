@@ -6430,6 +6430,17 @@ export class DespachosComponent implements OnInit {
       tipoFecha: "fechaEntrega"
     };
 
+    // Apply quick filters from metrics (breadcrumbs)
+    // If a specific estado de proceso was selected from the metrics, override the default array
+    if (this.quickFilters.estadoProceso !== 'all') {
+      baseFilter['estadoProceso'] = [this.quickFilters.estadoProceso as EstadoProceso];
+    }
+
+    // If a specific estado de pago was selected from the filters, override the default array
+    if (this.quickFilters.estadoPago !== 'all') {
+      baseFilter['estadosPago'] = [this.quickFilters.estadoPago as EstadoPago];
+    }
+
     // Add sorting parameters from LazyLoadEvent
     if (this.lastLazyLoadEvent) {
       if (this.lastLazyLoadEvent.sortField) {
