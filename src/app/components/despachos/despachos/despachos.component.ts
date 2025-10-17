@@ -38,6 +38,7 @@ import { UserLogged } from "../../../shared/models/User/UserLogged";
 import { UserLite } from "../../../shared/models/User/UserLite";
 import { DialogService } from "primeng/dynamicdialog";
 import { ObservacionesDetalleComponent } from "../components/observaciones-detalle/observaciones-detalle.component";
+import { EnviameRatesModalComponent } from "../components/enviame/rates-modal/enviame-rates-modal.component";
 
 import "jspdf-autotable";
 import { LogisticaServiceV2 } from "../../../shared/services/despachos/logistica.service.v2";
@@ -4607,6 +4608,10 @@ export class DespachosComponent implements OnInit {
       return;
     }
 
+    // 🔥 CAPTURAR el flag de abrirModalTransportadora ANTES de cualquier operación
+    const debeAbrirModalTransportadora = event.abrirModalTransportadora === true;
+    console.log('🚀 Flag abrirModalTransportadora:', debeAbrirModalTransportadora);
+
     // Determinar si es una nueva orden o una existente
     const esNuevaOrden = !this.nroShippingOrder || this.nroShippingOrder === "";
 
@@ -4681,7 +4686,7 @@ export class DespachosComponent implements OnInit {
 
     // Guardar siempre con createShippingOrder (sirve para crear y editar). No despachar automáticamente.
     if (esNuevaOrden) {
-      this.crearOrdenEnvio();
+      this.crearOrdenEnvio(debeAbrirModalTransportadora);
     } else {
       this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
         next: (response) => {
@@ -4699,12 +4704,24 @@ export class DespachosComponent implements OnInit {
             showConfirmButton: false,
           });
 
-          // Resetear flag de guardado en el componente hijo
-          if (this.generarOrdenComponent) {
-            this.generarOrdenComponent.resetSavingState();
-          }
-          if (this.editarOrdenComponent) {
-            this.editarOrdenComponent.resetSavingState();
+          // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
+          if (debeAbrirModalTransportadora) {
+            console.log('🚀 Abriendo modal de transportadora después de guardar orden...');
+
+            // ✅ SOLUCIÓN: Abrir el modal directamente desde el padre
+            // Esto evita depender de ViewChild references que pueden ser undefined
+            setTimeout(() => {
+              this.abrirModalEnviameDirectamente();
+            }, 100);
+          } else {
+            // Solo resetear y cerrar si NO se va a abrir modal de transportadora
+            if (this.generarOrdenComponent) {
+              this.generarOrdenComponent.resetSavingState();
+            }
+            if (this.editarOrdenComponent) {
+              this.editarOrdenComponent.resetSavingState();
+            }
+            this.modalService.dismissAll();
           }
 
           this.refrescarDatos();
@@ -4714,8 +4731,6 @@ export class DespachosComponent implements OnInit {
             console.log('Actualizando ordenes-despacho-v2 después de actualizar orden...');
             this.ordenesDespachoV2Component.loadInitialOrders();
           }
-
-          this.modalService.dismissAll();
         },
         error: (error) => {
           console.error("Error al actualizar la orden de envío:", error);
@@ -4872,8 +4887,9 @@ export class DespachosComponent implements OnInit {
   }
 
   // Método para crear una nueva orden de envío
-  private crearOrdenEnvio(): void {
+  private crearOrdenEnvio(debeAbrirModalTransportadora: boolean = false): void {
     console.log("Creando nueva orden de envío:", this.nuevaOrdenEnvio);
+    console.log('🚀 Flag abrirModalTransportadora en crearOrdenEnvio:', debeAbrirModalTransportadora);
 
     this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
       next: (response) => {
@@ -4893,15 +4909,27 @@ export class DespachosComponent implements OnInit {
           showConfirmButton: false,
         });
 
-        // Resetear flag de guardado en el componente hijo
-        if (this.generarOrdenComponent) {
-          this.generarOrdenComponent.resetSavingState();
-        }
-        if (this.editarOrdenComponent) {
-          this.editarOrdenComponent.resetSavingState();
+        // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
+        if (debeAbrirModalTransportadora) {
+          console.log('🚀 Abriendo modal de transportadora después de crear orden...');
+
+          // ✅ SOLUCIÓN: Abrir el modal directamente desde el padre
+          // Esto evita depender de ViewChild references que pueden ser undefined
+          setTimeout(() => {
+            this.abrirModalEnviameDirectamente();
+          }, 100);
+        } else {
+          // Solo resetear y cerrar si NO se va a abrir modal de transportadora
+          if (this.generarOrdenComponent) {
+            this.generarOrdenComponent.resetSavingState();
+          }
+          if (this.editarOrdenComponent) {
+            this.editarOrdenComponent.resetSavingState();
+          }
+          this.modalService.dismissAll();
         }
 
-        // Actualizar la lista de órdenes y cerrar el modal
+        // Actualizar la lista de órdenes
         this.refrescarDatos();
 
         // Actualizar también el componente ordenes-despacho-v2 si está presente
@@ -4909,8 +4937,6 @@ export class DespachosComponent implements OnInit {
           console.log('Actualizando ordenes-despacho-v2 después de crear orden...');
           this.ordenesDespachoV2Component.loadInitialOrders();
         }
-
-        this.modalService.dismissAll();
       },
       error: (error) => {
         console.error("Error al crear la orden de envío:", error);
@@ -4929,6 +4955,121 @@ export class DespachosComponent implements OnInit {
           "error",
         );
       },
+    });
+  }
+
+  /**
+   * Abre el modal de Enviame directamente desde el componente padre
+   * Esta solución evita depender de ViewChild references que pueden ser undefined
+   */
+  private abrirModalEnviameDirectamente(): void {
+    console.log('🚀 Abriendo modal de Enviame directamente desde el padre...');
+    console.log('📦 Número de orden:', this.nroShippingOrder);
+    console.log('📋 Pedidos seleccionados:', this.pedidosSeleccionados?.length);
+
+    // Construir datos de la orden para el modal
+    const orderData = {
+      nroShippingOrder: this.nroShippingOrder || this.nuevaOrdenEnvio?.nroShippingOrder || 'TEMP',
+      fecha: this.nuevaOrdenEnvio?.fecha || this.nuevaOrdenEnvio?.fechaEnvio || new Date(),
+      pedidos: this.pedidosSeleccionados || []
+    };
+
+    console.log('📊 Datos para modal Enviame:', orderData);
+
+    // Obtener companyId del localStorage
+    const getCompanyId = (): string => {
+      const directCompanyId = localStorage.getItem('currentCompanyId');
+      if (directCompanyId) {
+        return directCompanyId;
+      }
+
+      const currentCompany = localStorage.getItem('currentCompany');
+      if (currentCompany) {
+        try {
+          const company = JSON.parse(currentCompany);
+          return company.nomComercial || company.nombreComercio || company.razonSocial || company.nombre || 'default_company';
+        } catch (error) {
+          console.error('Error parsing currentCompany from localStorage:', error);
+        }
+      }
+
+      return 'default_company';
+    };
+
+    // Abrir el modal usando DialogService
+    const modalRef = this.dialogService.open(EnviameRatesModalComponent, {
+      data: {
+        order: orderData,
+        companyId: getCompanyId()
+      },
+      header: 'Cotizar y Despachar con Enviame.io',
+      width: '800px',
+      height: 'auto',
+      modal: true,
+      dismissableMask: false,
+      closeOnEscape: false,
+      styleClass: 'enviame-rates-compact-modal'
+    });
+
+    console.log('✅ Modal de Enviame abierto correctamente desde el padre');
+
+    // Resetear isSaving inmediatamente después de abrir el modal
+    if (this.generarOrdenComponent) {
+      this.generarOrdenComponent.isSaving = false;
+    }
+    if (this.editarOrdenComponent) {
+      this.editarOrdenComponent.isSaving = false;
+    }
+
+    // Manejar el cierre del modal
+    modalRef.onClose.subscribe((result) => {
+      console.log('🔄 Modal de Enviame cerrado, resultado:', result);
+
+      if (result && result.confirmed) {
+        console.log('✅ Proceso con Enviame completado:', result);
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Despacho Exitoso!',
+          html: `
+            <div class="text-start">
+              <p>La orden se ha procesado exitosamente con Enviame.io</p>
+              <div class="alert alert-success mt-3">
+                <i class="pi pi-check-circle me-2"></i>
+                <strong>Orden guardada y despachada correctamente</strong>
+              </div>
+            </div>
+          `,
+          confirmButtonText: 'Excelente'
+        }).then(() => {
+          // Cerrar el modal de generar-orden
+          this.modalService.dismissAll();
+          // Refrescar la lista de órdenes
+          this.refrescarDatos();
+
+          // Actualizar el componente ordenes-despacho-v2 para reflejar los cambios
+          if (this.ordenesDespachoV2Component) {
+            console.log('🔄 Actualizando ordenes-despacho-v2 después de completar con Enviame...');
+            this.ordenesDespachoV2Component.loadInitialOrders();
+          }
+        });
+      } else {
+        console.log('ℹ️ Usuario canceló o cerró el proceso con Enviame');
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Proceso Cancelado',
+          text: 'La orden fue guardada pero el despacho no se completó. Puedes continuar el proceso más tarde.',
+          confirmButtonText: 'Entendido'
+        });
+
+        // Actualizar el componente ordenes-despacho-v2 incluso si se canceló
+        // para reflejar cualquier cambio que se haya guardado
+        if (this.ordenesDespachoV2Component) {
+          console.log('🔄 Actualizando ordenes-despacho-v2 después de cancelar...');
+          this.ordenesDespachoV2Component.loadInitialOrders();
+        }
+      }
     });
   }
 

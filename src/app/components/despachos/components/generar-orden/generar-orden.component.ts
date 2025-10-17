@@ -60,7 +60,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     { field: "ciudad", header: "Ciudad", visible: true },
     { field: "direccionEntrega", header: "Dirección", visible: true },
     { field: "faltaPorPagar", header: "Valor a Cobrar", visible: true },
-    { field: "enOrden", header: "Estado en Orden", visible: true },
+    { field: "estadoPago", header: "Estado de Pago", visible: true },
     { field: "opciones", header: "Opciones", visible: true },
     { field: "horarioEntrega", header: "Horario Entrega", visible: true },
     { field: "formaEntrega", header: "Forma Entrega", visible: false },
@@ -853,6 +853,209 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
     this.onSaveAndDispatch.emit(ordenData);
     // Nota: isSaving se resetea cuando el componente padre responde
+  }
+
+  /**
+   * Método para guardar la orden y despachar con transportadora
+   * Usado cuando se crea una nueva orden con método de envío "transportadora"
+   */
+  guardarYDespacharConTransportadora(): void {
+    // Prevenir múltiples clics
+    if (this.isSaving || this.ordenEnvioForm.invalid || this.pedidosSeleccionados.length === 0) {
+      return;
+    }
+
+    // Validar que se haya seleccionado una transportadora
+    if (!this.selectedTransporter) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Transportadora no seleccionada',
+        text: 'Debes seleccionar una transportadora antes de despachar.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    this.isSaving = true;
+
+    // Si hay pedidos movidos, mostrar confirmación adicional
+    if (this.hayPedidosMovidos) {
+      const listaPedidosMovidos = Array.from(this.pedidosMovidos.entries())
+        .map(
+          ([nroPedido, ordenAnterior]) =>
+            `#${nroPedido} (desde orden ${ordenAnterior})`,
+        )
+        .join(", ");
+
+      Swal.fire({
+        title: "Confirmar cambios y despacho con transportadora",
+        html: `
+          <div class="text-start">
+            <p>Esta acción realizará los siguientes cambios:</p>
+            <ul>
+              <li><strong>Pedidos movidos:</strong> ${listaPedidosMovidos}</li>
+              <li>Estos pedidos serán removidos de sus órdenes anteriores</li>
+              <li>Se creará la orden con la transportadora: <strong>${this.getSelectedTransporterName()}</strong></li>
+              <li>Se abrirá el proceso de despacho con la transportadora</li>
+            </ul>
+            <div class="alert alert-info mt-3">
+              <i class="pi pi-info-circle me-2"></i>
+              Podrás completar el despacho con la transportadora en el siguiente paso.
+            </div>
+          </div>
+        `,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Sí, guardar y despachar",
+        cancelButtonText: "Cancelar",
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.ejecutarGuardarYDespacharConTransportadora();
+        } else {
+          this.isSaving = false; // Resetear si se cancela
+        }
+      });
+    } else {
+      this.ejecutarGuardarYDespacharConTransportadora();
+    }
+  }
+
+  /**
+   * Ejecuta el guardado y despacho con transportadora
+   */
+  private ejecutarGuardarYDespacharConTransportadora(): void {
+    const ordenData = {
+      ...this.ordenEnvioForm.value,
+      pedidos: this.pedidosSeleccionados,
+      transportadora: this.selectedTransporter,
+      pedidosMovidos: Array.from(this.pedidosMovidos.entries()).map(
+        ([nroPedido, ordenAnterior]) => ({
+          nroPedido,
+          ordenAnterior,
+        }),
+      ),
+      autoDispatch: true, // Flag para indicar que se debe despachar automáticamente
+      autoOpenTransporterFlow: true, // Flag para abrir el flujo de transportadora
+    };
+
+    // Guardar primero, luego abrir flujo de transportadora
+    this.onSave.emit(ordenData);
+
+    // Después de guardar, abrir el flujo de despacho según la transportadora
+    setTimeout(() => {
+      this.iniciarProcesoDespachoTransportadora();
+    }, 500);
+  }
+
+  /**
+   * Despachar una orden existente con transportadora
+   * Usado cuando la orden ya existe (modo edición)
+   */
+  despacharConTransportadora(): void {
+    // Validar que se haya seleccionado una transportadora
+    if (!this.selectedTransporter) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Transportadora no seleccionada',
+        text: 'Debes seleccionar una transportadora antes de despachar.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Confirmar antes de despachar
+    Swal.fire({
+      title: "Confirmar despacho con transportadora",
+      html: `
+        <div class="text-start">
+          <p>¿Estás seguro de que deseas despachar esta orden?</p>
+          <p class="text-muted">
+            <strong>Orden:</strong> ${this.nroShippingOrder}<br>
+            <strong>Transportadora:</strong> ${this.getSelectedTransporterName()}<br>
+            <strong>Pedidos:</strong> ${this.pedidosSeleccionados.length}
+          </p>
+          <div class="alert alert-info mt-3">
+            <i class="pi pi-info-circle me-2"></i>
+            Se abrirá el proceso de despacho con la transportadora seleccionada.
+          </div>
+        </div>
+      `,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, despachar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.iniciarProcesoDespachoTransportadora();
+      }
+    });
+  }
+
+  /**
+   * Inicia el proceso de despacho según la transportadora seleccionada
+   */
+  private iniciarProcesoDespachoTransportadora(): void {
+    if (!this.selectedTransporter) {
+      return;
+    }
+
+    // Si es Enviame, abrir el modal de cotización
+    if (this.selectedTransporter === 'enviame') {
+      this.openEnviameRatesModalForDispatch();
+    } else {
+      // Para otras transportadoras, mostrar mensaje informativo
+      Swal.fire({
+        icon: 'info',
+        title: 'Despacho con ' + this.getSelectedTransporterName(),
+        text: 'El proceso de despacho para esta transportadora se completará próximamente.',
+        confirmButtonText: 'Entendido'
+      });
+    }
+  }
+
+  /**
+   * Abrir modal de Enviame para despacho
+   */
+  private openEnviameRatesModalForDispatch(): void {
+    const orderData = {
+      nroShippingOrder: this.nroShippingOrder || 'TEMP',
+      fecha: this.ordenEnvioForm.get('fechaFin')?.value || new Date(),
+      pedidos: this.pedidosSeleccionados
+    };
+
+    const modalRef = this.dialogService.open(EnviameRatesModalComponent, {
+      data: {
+        order: orderData,
+        companyId: this.getCompanyId()
+      },
+      header: 'Despachar con Enviame.io',
+      width: '800px',
+      height: 'auto',
+      modal: true,
+      dismissableMask: false,
+      closeOnEscape: false,
+      styleClass: 'enviame-rates-compact-modal'
+    });
+
+    modalRef.onClose.subscribe((result) => {
+      if (result && result.confirmed) {
+        console.log('✅ Despacho con Enviame completado:', result);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Orden Despachada',
+          text: 'La orden se ha despachado exitosamente con Enviame.io',
+          timer: 2000,
+          showConfirmButton: false
+        });
+
+        // Emitir evento de despacho completado si es necesario
+        this.onDispatchOrder.emit();
+      } else {
+        console.log('❌ Usuario canceló el despacho con Enviame');
+        this.isSaving = false;
+      }
+    });
   }
 
   shouldDisplayPedido(pedido: any): boolean {
@@ -1676,6 +1879,44 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Inicia el proceso integrado de transportadora
+   * Este es el método principal que gestiona todo el flujo:
+   * 1. Valida pedidos y formulario
+   * 2. Abre modal de selección si no hay transportadora seleccionada
+   * 3. Si ya hay transportadora, confirma y procesa directamente
+   */
+  iniciarProcesoTransportadora(): void {
+    // Validaciones previas
+    if (this.ordenEnvioForm.invalid) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Formulario incompleto',
+        text: 'Por favor completa todos los campos requeridos antes de continuar.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    if (this.pedidosSeleccionados.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin pedidos seleccionados',
+        text: 'Debes agregar al menos un pedido antes de continuar.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Si ya hay una transportadora seleccionada, continuar con el proceso
+    if (this.selectedTransporter) {
+      this.procesarOrdenConTransportadora();
+    } else {
+      // Si no hay transportadora, abrir modal de selección
+      this.openTransporterModal();
+    }
+  }
+
+  /**
    * Abrir modal de selección de transportadora
    */
   openTransporterModal(): void {
@@ -1689,7 +1930,6 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.selectedTransporter = '';
     this.showTransporterModal = true;
   }
 
@@ -1703,45 +1943,234 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   /**
    * Confirmar selección de transportadora
+   * Ahora ejecuta el flujo completo: Guardar → Cotizar → Despachar
    */
   confirmTransporterSelection(): void {
     if (!this.selectedTransporter) {
       return;
     }
 
-    // Si es Enviame.io, mostrar modal de opciones específicas
-    if (this.selectedTransporter === 'enviame') {
-      this.showEnviameOptionsModal = true;
-      this.showTransporterModal = false;
-      return;
-    }
+    // Cerrar solo la vista del modal (sin borrar la selección)
+    this.showTransporterModal = false;
 
-    // Para otras transportadoras, guardar selección directamente
-    this.saveTransporterSelection();
+    // Ejecutar el proceso completo de orden con transportadora
+    this.procesarOrdenConTransportadora();
   }
 
   /**
-   * Guardar la transportadora seleccionada en el formulario
+   * Procesa la orden completa con la transportadora seleccionada
+   * Flujo: Validar → Confirmar → Guardar → Cotizar/Despachar
    */
-  private saveTransporterSelection(): void {
-    // Guardar el transportador en algún lugar del formulario o estado
-    // Por ahora solo mostramos confirmación
+  private procesarOrdenConTransportadora(): void {
+    // Validar que tengamos todo lo necesario
+    if (!this.selectedTransporter) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Transportadora no seleccionada',
+        text: 'Debes seleccionar una transportadora antes de continuar.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Prevenir múltiples clics
+    if (this.isSaving) {
+      return;
+    }
+
+    // Preparar mensaje de confirmación
+    const confirmTitle = this.hayPedidosMovidos
+      ? 'Confirmar cambios y despacho con transportadora'
+      : 'Confirmar despacho con transportadora';
+
+    let confirmHTML = `
+      <div class="text-start">
+        <p>Esta acción realizará los siguientes pasos:</p>
+        <ol>
+          <li>Guardar la orden de envío</li>
+          <li>Abrir proceso de cotización con <strong>${this.getSelectedTransporterName()}</strong></li>
+          <li>Completar el despacho de los pedidos</li>
+        </ol>
+    `;
+
+    // Si hay pedidos movidos, agregar información adicional
+    if (this.hayPedidosMovidos) {
+      const listaPedidosMovidos = Array.from(this.pedidosMovidos.entries())
+        .map(([nroPedido, ordenAnterior]) => `#${nroPedido} (desde orden ${ordenAnterior})`)
+        .join(", ");
+
+      confirmHTML += `
+        <hr>
+        <div class="alert alert-warning">
+          <strong>Pedidos que serán movidos:</strong><br>
+          ${listaPedidosMovidos}
+        </div>
+      `;
+    }
+
+    confirmHTML += `
+        <div class="alert alert-info mt-3">
+          <i class="pi pi-info-circle me-2"></i>
+          <strong>Pedidos seleccionados:</strong> ${this.pedidosSeleccionados.length}<br>
+          <strong>Transportadora:</strong> ${this.getSelectedTransporterName()}
+        </div>
+      </div>
+    `;
+
+    // Mostrar confirmación
     Swal.fire({
-      icon: 'success',
-      title: 'Transportadora Seleccionada',
-      text: `Has seleccionado: ${this.getSelectedTransporterName()}`,
-      timer: 2000,
-      showConfirmButton: false
+      title: confirmTitle,
+      html: confirmHTML,
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sí, continuar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#0d6efd",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ejecutarGuardarYAbrirFlujoTransportadora();
+      }
+    });
+  }
+
+  /**
+   * Ejecuta el guardado de la orden con transportadora
+   * Solo emite el evento - el padre debe llamar abrirModalTransportadora() después de guardar
+   */
+  private ejecutarGuardarYAbrirFlujoTransportadora(): void {
+    this.isSaving = true;
+
+    const ordenData = {
+      ...this.ordenEnvioForm.value,
+      pedidos: this.pedidosSeleccionados,
+      transportadora: this.selectedTransporter,
+      pedidosMovidos: Array.from(this.pedidosMovidos.entries()).map(
+        ([nroPedido, ordenAnterior]) => ({
+          nroPedido,
+          ordenAnterior,
+        }),
+      ),
+      // Flag para indicar al padre que debe abrir el modal de transportadora después de guardar
+      abrirModalTransportadora: true,
+    };
+
+    // Guardar la orden - el padre llamará abrirModalTransportadora() cuando termine
+    this.onSave.emit(ordenData);
+
+    console.log('⏳ Guardando orden con transportadora...');
+  }
+
+  /**
+   * Método público que el padre debe llamar después de guardar exitosamente
+   * para abrir el modal de transportadora
+   */
+  public abrirModalTransportadora(): void {
+    console.log('✅ Orden guardada, abriendo modal de transportadora...');
+    this.abrirFlujoTransportadora();
+  }
+
+  /**
+   * Abre el flujo específico de la transportadora seleccionada
+   */
+  private abrirFlujoTransportadora(): void {
+    if (!this.selectedTransporter) {
+      this.isSaving = false;
+      return;
+    }
+
+    // Si es Enviame, abrir modal de cotización
+    if (this.selectedTransporter === 'enviame') {
+      this.abrirModalEnviameParaCotizacion();
+    } else {
+      // Para otras transportadoras, mostrar mensaje informativo
+      Swal.fire({
+        icon: 'info',
+        title: 'Despacho con ' + this.getSelectedTransporterName(),
+        text: 'El proceso de cotización y despacho para esta transportadora se completará próximamente.',
+        confirmButtonText: 'Entendido'
+      }).then(() => {
+        this.isSaving = false;
+      });
+    }
+  }
+
+  /**
+   * Abre el modal de Enviame para cotización y despacho
+   */
+  private abrirModalEnviameParaCotizacion(): void {
+    console.log('🚀 Abriendo modal de cotización de Enviame...');
+    console.log('📦 Número de orden:', this.nroShippingOrder);
+    console.log('📋 Pedidos seleccionados:', this.pedidosSeleccionados.length);
+
+    const orderData = {
+      nroShippingOrder: this.nroShippingOrder || 'TEMP',
+      fecha: this.ordenEnvioForm.get('fechaFin')?.value || new Date(),
+      pedidos: this.pedidosSeleccionados
+    };
+
+    console.log('📊 Datos para modal Enviame:', orderData);
+
+    const modalRef = this.dialogService.open(EnviameRatesModalComponent, {
+      data: {
+        order: orderData,
+        companyId: this.getCompanyId()
+      },
+      header: 'Cotizar y Despachar con Enviame.io',
+      width: '800px',
+      height: 'auto',
+      modal: true,
+      dismissableMask: false,
+      closeOnEscape: false,
+      styleClass: 'enviame-rates-compact-modal'
     });
 
-    this.closeTransporterModal();
-    this.closeEnviameOptionsModal();
+    console.log('✅ Modal de Enviame abierto correctamente');
+
+    // ✅ Resetear isSaving INMEDIATAMENTE después de abrir el modal
+    // El usuario ya puede interactuar con el modal de cotización
+    this.isSaving = false;
+
+    modalRef.onClose.subscribe((result) => {
+      // Ya no es necesario resetear aquí, pero lo dejamos por seguridad
+      this.isSaving = false;
+
+      if (result && result.confirmed) {
+        console.log('✅ Proceso con Enviame completado:', result);
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Despacho Exitoso!',
+          html: `
+            <div class="text-start">
+              <p>La orden se ha procesado exitosamente con Enviame.io</p>
+              <div class="alert alert-success mt-3">
+                <i class="pi pi-check-circle me-2"></i>
+                <strong>Orden guardada y despachada correctamente</strong>
+              </div>
+            </div>
+          `,
+          confirmButtonText: 'Excelente'
+        }).then(() => {
+          // Cerrar el modal de generar-orden
+          this.closeModal();
+        });
+      } else {
+        console.log('❌ Usuario canceló el proceso con Enviame');
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Proceso Cancelado',
+          text: 'La orden fue guardada pero el despacho no se completó. Puedes continuar el proceso más tarde.',
+          confirmButtonText: 'Entendido'
+        });
+      }
+    });
   }
 
   /**
    * Obtener el nombre de la transportadora seleccionada
    */
-  private getSelectedTransporterName(): string {
+  getSelectedTransporterName(): string {
     const transporter = this.availableTransporters.find(
       t => (t.provider || t.type) === this.selectedTransporter
     );
@@ -1859,7 +2288,8 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   selectAlternativeTransporter(transporterId: string): void {
     this.selectedTransporter = transporterId;
     this.closeEnviameOptionsModal();
-    this.saveTransporterSelection();
+    // Iniciar el proceso completo con la transportadora seleccionada
+    this.procesarOrdenConTransportadora();
   }
 
   /**

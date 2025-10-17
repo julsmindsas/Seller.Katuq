@@ -20,18 +20,20 @@ export class PdfTemplateComponent implements OnInit {
     // Validar inputs requeridos
     if (!this.pedidos || this.pedidos.length === 0) {
       console.warn("PDF Template: No se proporcionaron pedidos");
-    } else {
-      console.log('📦 PDF Template recibió pedidos:', this.pedidos.length);
-      this.pedidos.forEach((p, i) => {
-        console.log(`Pedido ${i + 1}:`, {
-          nroPedido: p.nroPedido,
-          tieneNotasPedido: !!p.notasPedido,
-          notasDespachos: p.notasPedido?.notasDespachos?.length || 0,
-          notasEntregas: p.notasPedido?.notasEntregas?.length || 0,
-          observacionesEnvio: p.envio?.observaciones ? 'Sí' : 'No'
-        });
-      });
     }
+    // Logs comentados para reducir ruido en consola
+    // else {
+    //   console.log('📦 PDF Template recibió pedidos:', this.pedidos.length);
+    //   this.pedidos.forEach((p, i) => {
+    //     console.log(`Pedido ${i + 1}:`, {
+    //       nroPedido: p.nroPedido,
+    //       tieneNotasPedido: !!p.notasPedido,
+    //       notasDespachos: p.notasPedido?.notasDespachos?.length || 0,
+    //       notasEntregas: p.notasPedido?.notasEntregas?.length || 0,
+    //       observacionesEnvio: p.envio?.observaciones ? 'Sí' : 'No'
+    //     });
+    //   });
+    // }
   }
 
   getTransportadorNombre(): string {
@@ -132,31 +134,31 @@ export class PdfTemplateComponent implements OnInit {
    * Obtiene las notas de despacho del pedido
    */
   getNotasDespacho(pedido: Pedido): string {
-    console.log('🔍 getNotasDespacho - Pedido:', pedido.nroPedido);
-    console.log('🔍 notasPedido:', pedido.notasPedido);
-    console.log('🔍 notasDespachos array:', pedido.notasPedido?.notasDespachos);
+    // console.log('🔍 getNotasDespacho - Pedido:', pedido.nroPedido);
+    // console.log('🔍 notasPedido:', pedido.notasPedido);
+    // console.log('🔍 notasDespachos array:', pedido.notasPedido?.notasDespachos);
 
     // Verificación más robusta
     const notasPedido = pedido.notasPedido;
     if (!notasPedido) {
-      console.log('❌ pedido.notasPedido es null/undefined');
+      // console.log('❌ pedido.notasPedido es null/undefined');
       return "N/A";
     }
 
     const notasDespachos = notasPedido.notasDespachos;
     if (!notasDespachos || !Array.isArray(notasDespachos) || notasDespachos.length === 0) {
-      console.log('❌ notasDespachos vacío o inválido:', notasDespachos);
+      // console.log('❌ notasDespachos vacío o inválido:', notasDespachos);
       return "N/A";
     }
 
     const resultado = notasDespachos
       .map((nota, index) => {
-        console.log(`📝 Nota despacho ${index + 1}:`, nota);
+        // console.log(`📝 Nota despacho ${index + 1}:`, nota);
         return `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`;
       })
       .join(" | ");
 
-    console.log('✅ Resultado notasDespacho:', resultado);
+    // console.log('✅ Resultado notasDespacho:', resultado);
     return resultado;
   }
 
@@ -164,31 +166,31 @@ export class PdfTemplateComponent implements OnInit {
    * Obtiene las notas de entrega del pedido
    */
   getNotasEntrega(pedido: Pedido): string {
-    console.log('🔍 getNotasEntrega - Pedido:', pedido.nroPedido);
-    console.log('🔍 notasPedido:', pedido.notasPedido);
-    console.log('🔍 notasEntregas array:', pedido.notasPedido?.notasEntregas);
+    // console.log('🔍 getNotasEntrega - Pedido:', pedido.nroPedido);
+    // console.log('🔍 notasPedido:', pedido.notasPedido);
+    // console.log('🔍 notasEntregas array:', pedido.notasPedido?.notasEntregas);
 
     // Verificación más robusta
     const notasPedido = pedido.notasPedido;
     if (!notasPedido) {
-      console.log('❌ pedido.notasPedido es null/undefined');
+      // console.log('❌ pedido.notasPedido es null/undefined');
       return "N/A";
     }
 
     const notasEntregas = notasPedido.notasEntregas;
     if (!notasEntregas || !Array.isArray(notasEntregas) || notasEntregas.length === 0) {
-      console.log('❌ notasEntregas vacío o inválido:', notasEntregas);
+      // console.log('❌ notasEntregas vacío o inválido:', notasEntregas);
       return "N/A";
     }
 
     const resultado = notasEntregas
       .map((nota, index) => {
-        console.log(`📝 Nota entrega ${index + 1}:`, nota);
+        // console.log(`📝 Nota entrega ${index + 1}:`, nota);
         return `${nota.fecha ? new Date(nota.fecha).toLocaleDateString('es-CO') : 'Sin fecha'}: ${nota.nota || nota.descripcion || 'Sin descripción'}`;
       })
       .join(" | ");
 
-    console.log('✅ Resultado notasEntrega:', resultado);
+    // console.log('✅ Resultado notasEntrega:', resultado);
     return resultado;
   }
 

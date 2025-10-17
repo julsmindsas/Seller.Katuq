@@ -205,7 +205,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
    * Útil cuando hay problemas de inicialización
    */
   public reinicializarMapa(): void {
-    console.log('🔄 Reinicializando mapa completamente...');
+    // console.log('🔄 Reinicializando mapa completamente...');
 
     // Limpiar mapa existente
     if (this.mapa) {
@@ -253,12 +253,12 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
    * Refresca la ubicación del usuario y luego actualiza el mapa
    */
   public async refrescarUbicacionYMapa(): Promise<void> {
-    console.log('🔄 Refrescando ubicación del usuario...');
+    // console.log('🔄 Refrescando ubicación del usuario...');
 
     try {
       // Intentar obtener nueva ubicación del usuario
       await this.obtenerUbicacionUsuario();
-      console.log('✅ Ubicación actualizada');
+      // console.log('✅ Ubicación actualizada');
 
       // Agregar o actualizar marcador de ubicación del usuario
       this.agregarMarcadorUsuario();
@@ -301,7 +301,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
           this.inicializarMapa();
         }).catch(() => {
           // Si falla la geolocalización, inicializar mapa normal
-          console.log('Usando ubicación por defecto (Bogotá)');
+          // console.log('Usando ubicación por defecto (Bogotá)');
           this.inicializarMapa();
         });
       }
@@ -353,7 +353,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         return;
       }
 
-      console.log('📍 Solicitando ubicación del usuario...');
+      // console.log('📍 Solicitando ubicación del usuario...');
 
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -362,7 +362,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
             lng: position.coords.longitude
           };
           this.usandoUbicacionUsuario = true;
-          console.log(`✅ Ubicación obtenida: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
+          // console.log(`✅ Ubicación obtenida: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
           resolve();
         },
         (error) => {
@@ -422,7 +422,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         else if (maxRange < 0.1) zoom = 11;  // Disperso
         else zoom = 9;                       // Muy disperso
 
-        console.log(`🎯 Centro calculado desde pedidos: ${promedioLat.toFixed(4)}, ${promedioLng.toFixed(4)} (zoom: ${zoom})`);
+        // console.log(`🎯 Centro calculado desde pedidos: ${promedioLat.toFixed(4)}, ${promedioLng.toFixed(4)} (zoom: ${zoom})`);
         return {
           lat: promedioLat,
           lng: promedioLng,
@@ -433,7 +433,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
     // 2. Si no hay pedidos pero sí ubicación del usuario
     if (this.ubicacionUsuario && this.usandoUbicacionUsuario) {
-      console.log(`🌐 Centro desde ubicación del usuario: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
+      // console.log(`🌐 Centro desde ubicación del usuario: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
       return {
         lat: this.ubicacionUsuario.lat,
         lng: this.ubicacionUsuario.lng,
@@ -443,7 +443,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
     // 3. Usar centro configurado o Bogotá por defecto
     const centroConfig = this.configuracion.centroMapa || defaultCenter;
-    console.log(`🏢 Centro por defecto: ${centroConfig.lat}, ${centroConfig.lng}`);
+    // console.log(`🏢 Centro por defecto: ${centroConfig.lat}, ${centroConfig.lng}`);
     return {
       lat: centroConfig.lat,
       lng: centroConfig.lng,
@@ -518,7 +518,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       </div>
     `);
 
-    console.log(`📍 Marcador de usuario agregado en: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
+    // console.log(`📍 Marcador de usuario agregado en: ${this.ubicacionUsuario.lat}, ${this.ubicacionUsuario.lng}`);
   }
 
   private inicializarMapa(): void {
@@ -528,14 +528,14 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
     // Verificar si el mapa ya está inicializado
     if (this.mapa) {
-      console.log('🗺️ Mapa ya inicializado, omitiendo reinicialización');
+      // console.log('🗺️ Mapa ya inicializado, omitiendo reinicialización');
       return;
     }
 
     // Verificar si el contenedor ya tiene un mapa de Leaflet
     const contenedor = this.mapaContainer.nativeElement;
     if (contenedor._leaflet_id) {
-      console.log('🗺️ Contenedor ya tiene un mapa de Leaflet, limpiando...');
+      // console.log('🗺️ Contenedor ya tiene un mapa de Leaflet, limpiando...');
       // Limpiar el contenedor
       contenedor._leaflet_id = undefined;
       contenedor.innerHTML = '';
@@ -664,36 +664,36 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   private actualizarMarcadoresMensajeros(): void {
-    console.log('🗺️ [DEBUG] Actualizando marcadores de mensajeros...');
-    console.log('🗺️ [DEBUG] Mapa cargado:', !!this.mapa);
-    console.log('🗺️ [DEBUG] Leaflet cargado:', this.leafletCargado);
-    console.log('🗺️ [DEBUG] Capa mensajeros:', !!this.capaMensajeros);
-    console.log('🗺️ [DEBUG] Mostrar mensajeros:', this.mostrarMensajeros);
+    // console.log('🗺️ [DEBUG] Actualizando marcadores de mensajeros...');
+    // console.log('🗺️ [DEBUG] Mapa cargado:', !!this.mapa);
+    // console.log('🗺️ [DEBUG] Leaflet cargado:', this.leafletCargado);
+    // console.log('🗺️ [DEBUG] Capa mensajeros:', !!this.capaMensajeros);
+    // console.log('🗺️ [DEBUG] Mostrar mensajeros:', this.mostrarMensajeros);
 
     if (!this.mapa || !this.leafletCargado || !this.capaMensajeros) {
-      console.log('🗺️ [DEBUG] No se puede actualizar marcadores - falta inicialización');
+      // console.log('🗺️ [DEBUG] No se puede actualizar marcadores - falta inicialización');
       return;
     }
 
     this.capaMensajeros.clearLayers();
 
     if (!this.mostrarMensajeros) {
-      console.log('🗺️ [DEBUG] Mostrar mensajeros está desactivado');
+      // console.log('🗺️ [DEBUG] Mostrar mensajeros está desactivado');
       return;
     }
 
     const L = (window as any).L;
 
-    console.log(`🗺️ [DEBUG] Procesando ${this.mensajeros.length} mensajeros para marcadores`);
+    // console.log(`🗺️ [DEBUG] Procesando ${this.mensajeros.length} mensajeros para marcadores`);
 
     this.mensajeros.forEach((mensajero, index) => {
-      console.log(`🗺️ [DEBUG] Mensajero ${index + 1}:`, {
-        id: mensajero.id,
-        nombre: mensajero.nombre,
-        lat: mensajero.lat,
-        lng: mensajero.lng,
-        timestamp: mensajero.timestamp
-      });
+      // console.log(`🗺️ [DEBUG] Mensajero ${index + 1}:`, {
+      //   id: mensajero.id,
+      //   nombre: mensajero.nombre,
+      //   lat: mensajero.lat,
+      //   lng: mensajero.lng,
+      //   timestamp: mensajero.timestamp
+      // });
 
       if (mensajero.lat && mensajero.lng) {
         const iconoMensajero = L.divIcon({
@@ -721,16 +721,16 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         marcador.bindPopup(popupContent);
         this.capaMensajeros.addLayer(marcador);
 
-        console.log(`✅ [DEBUG] Marcador de mensajero creado exitosamente para: ${mensajero.nombre || mensajero.id} en [${mensajero.lat}, ${mensajero.lng}]`);
+        // console.log(`✅ [DEBUG] Marcador de mensajero creado exitosamente para: ${mensajero.nombre || mensajero.id} en [${mensajero.lat}, ${mensajero.lng}]`);
       } else {
-        console.log(`❌ [DEBUG] Mensajero ${mensajero.nombre || mensajero.id} no tiene coordenadas válidas:`, {
-          lat: mensajero.lat,
-          lng: mensajero.lng
-        });
+        // console.log(`❌ [DEBUG] Mensajero ${mensajero.nombre || mensajero.id} no tiene coordenadas válidas:`, {
+        //   lat: mensajero.lat,
+        //   lng: mensajero.lng
+        // });
       }
     });
 
-    console.log(`🗺️ [DEBUG] Actualización de marcadores completada. Total marcadores activos: ${this.mensajeros.filter(m => m.lat && m.lng).length}`);
+    // console.log(`🗺️ [DEBUG] Actualización de marcadores completada. Total marcadores activos: ${this.mensajeros.filter(m => m.lat && m.lng).length}`);
   }
 
   private crearContenidoPopup(ubicacion: UbicacionPedido): string {
@@ -936,7 +936,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
   // Evento cuando se hace click en un marcador
   private onMarcadorClick(ubicacion: UbicacionPedido): void {
     // Emitir evento o realizar acción específica
-    console.log('Pedido seleccionado:', ubicacion);
+    // console.log('Pedido seleccionado:', ubicacion);
   }
 
   // Métodos getter unificados (ahora usan métricas del Input)
@@ -992,27 +992,27 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
       this.mensajerosSubscription.unsubscribe();
     }
 
-    console.log('🔍 [DEBUG] Iniciando escucha de ubicaciones de mensajeros...');
-    console.log('🔍 [DEBUG] Nombre de empresa para filtrar:', this.companyName);
+    // console.log('🔍 [DEBUG] Iniciando escucha de ubicaciones de mensajeros...');
+    // console.log('🔍 [DEBUG] Nombre de empresa para filtrar:', this.companyName);
 
     const activeUsersRef = this.db.list('active_users');
     this.mensajerosSubscription = activeUsersRef.snapshotChanges().subscribe(snapshots => {
-      console.log('🔍 [DEBUG] Snapshots recibidos desde Firebase:', snapshots.length);
+      // console.log('🔍 [DEBUG] Snapshots recibidos desde Firebase:', snapshots.length);
 
       // Log de todas las claves recibidas para debugging
       const allKeys = snapshots.map(s => s.key);
-      console.log('🔍 [DEBUG] Todas las claves en Firebase active_users:', allKeys);
+      // console.log('🔍 [DEBUG] Todas las claves en Firebase active_users:', allKeys);
 
       this.mensajeros = snapshots
         .filter(snapshot => {
           if (!this.companyName) {
-            console.log('🔍 [DEBUG] No hay nombre de empresa configurado');
+            // console.log('🔍 [DEBUG] No hay nombre de empresa configurado');
             return false;
           }
           const key = snapshot.key as string;
           const keyParts = key.split('_');
 
-          console.log(`🔍 [DEBUG] Procesando clave: "${key}" -> partes:`, keyParts);
+          // console.log(`🔍 [DEBUG] Procesando clave: "${key}" -> partes:`, keyParts);
 
           // Nuevo filtro más flexible: buscar la empresa en cualquier parte de la clave
           const keyUpperCase = key.toUpperCase();
@@ -1030,10 +1030,10 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
           const match = hasCompanyMatch || hasKeyMatch;
 
-          console.log(`🔍 [DEBUG] Filtro flexible - Empresa: "${this.companyName}"`);
-          console.log(`🔍 [DEBUG] - ¿Coincidencia en partes?: ${hasCompanyMatch}`);
-          console.log(`🔍 [DEBUG] - ¿Coincidencia en clave?: ${hasKeyMatch}`);
-          console.log(`🔍 [DEBUG] - Resultado final: ${match}`);
+          // console.log(`🔍 [DEBUG] Filtro flexible - Empresa: "${this.companyName}"`);
+          // console.log(`🔍 [DEBUG] - ¿Coincidencia en partes?: ${hasCompanyMatch}`);
+          // console.log(`🔍 [DEBUG] - ¿Coincidencia en clave?: ${hasKeyMatch}`);
+          // console.log(`🔍 [DEBUG] - Resultado final: ${match}`);
 
           return match;
         })
@@ -1043,7 +1043,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
           const timestamp = data?.timestamp;
 
           if (!timestamp) {
-            console.log(`🕒 [DEBUG] Mensajero ${snapshot.key} no tiene timestamp`);
+            // console.log(`🕒 [DEBUG] Mensajero ${snapshot.key} no tiene timestamp`);
             return false;
           }
 
@@ -1057,12 +1057,12 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
           const hoursAgo = (today.getTime() - timestampDate.getTime()) / (1000 * 60 * 60);
 
-          console.log(`🕒 [DEBUG] Mensajero ${snapshot.key}:`);
-          console.log(`🕒 [DEBUG] - Timestamp: ${timestamp}`);
-          console.log(`🕒 [DEBUG] - Fecha timestamp: ${timestampDate.toLocaleDateString()}`);
-          console.log(`🕒 [DEBUG] - Fecha hoy: ${today.toLocaleDateString()}`);
-          console.log(`🕒 [DEBUG] - ¿Es de hoy?: ${isToday}`);
-          console.log(`🕒 [DEBUG] - Horas transcurridas: ${hoursAgo.toFixed(1)}`);
+          // console.log(`🕒 [DEBUG] Mensajero ${snapshot.key}:`);
+          // console.log(`🕒 [DEBUG] - Timestamp: ${timestamp}`);
+          // console.log(`🕒 [DEBUG] - Fecha timestamp: ${timestampDate.toLocaleDateString()}`);
+          // console.log(`🕒 [DEBUG] - Fecha hoy: ${today.toLocaleDateString()}`);
+          // console.log(`🕒 [DEBUG] - ¿Es de hoy?: ${isToday}`);
+          // console.log(`🕒 [DEBUG] - Horas transcurridas: ${hoursAgo.toFixed(1)}`);
 
           return isToday;
         })
@@ -1084,28 +1084,28 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
             ...data
           };
 
-          console.log('🔍 [DEBUG] Mensajero encontrado:', mensajero);
+          // console.log('🔍 [DEBUG] Mensajero encontrado:', mensajero);
           return mensajero;
         });
 
-      console.log(`🔍 [DEBUG] ====== RESUMEN DE FILTROS ======`);
-      console.log(`🔍 [DEBUG] - Total snapshots de Firebase: ${snapshots.length}`);
-      console.log(`🔍 [DEBUG] - Después de filtro empresa: ${snapshots.filter(s => {
-        if (!this.companyName) return false;
-        const key = s.key as string;
-        const keyParts = key.split('_');
-        const keyUpperCase = key.toUpperCase();
-        const companyNameUpper = this.companyName.toUpperCase();
-        const hasCompanyMatch = keyParts.some(part => {
-          const partUpper = part.toUpperCase();
-          return partUpper.includes(companyNameUpper) || companyNameUpper.includes(partUpper);
-        });
-        const hasKeyMatch = keyUpperCase.includes(companyNameUpper) ||
-                           companyNameUpper.includes(keyUpperCase.replace(/_/g, ' '));
-        return hasCompanyMatch || hasKeyMatch;
-      }).length}`);
-      console.log(`🔍 [DEBUG] - Después de filtro timestamp (hoy): ${this.mensajeros.length}`);
-      console.log('🔍 [DEBUG] - Mensajeros finales:', this.mensajeros);
+      // console.log(`🔍 [DEBUG] ====== RESUMEN DE FILTROS ======`);
+      // console.log(`🔍 [DEBUG] - Total snapshots de Firebase: ${snapshots.length}`);
+      // console.log(`🔍 [DEBUG] - Después de filtro empresa: ${snapshots.filter(s => {
+      //   if (!this.companyName) return false;
+      //   const key = s.key as string;
+      //   const keyParts = key.split('_');
+      //   const keyUpperCase = key.toUpperCase();
+      //   const companyNameUpper = this.companyName.toUpperCase();
+      //   const hasCompanyMatch = keyParts.some(part => {
+      //     const partUpper = part.toUpperCase();
+      //     return partUpper.includes(companyNameUpper) || companyNameUpper.includes(partUpper);
+      //   });
+      //   const hasKeyMatch = keyUpperCase.includes(companyNameUpper) ||
+      //                      companyNameUpper.includes(keyUpperCase.replace(/_/g, ' '));
+      //   return hasCompanyMatch || hasKeyMatch;
+      // }).length}`);
+      // console.log(`🔍 [DEBUG] - Después de filtro timestamp (hoy): ${this.mensajeros.length}`);
+      // console.log('🔍 [DEBUG] - Mensajeros finales:', this.mensajeros);
 
       this.actualizarMarcadoresMensajeros();
       this.cd.detectChanges(); // Forzar detección de cambios para el contador
@@ -1136,20 +1136,20 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
    */
   private dibujarZonasEntrega(): void {
     if (!this.mapa || !this.leafletCargado || !this.capaZonasEntrega) {
-      console.log('🗺️ [DEBUG] No se pueden dibujar zonas - falta inicialización del mapa');
+      // console.log('🗺️ [DEBUG] No se pueden dibujar zonas - falta inicialización del mapa');
       return;
     }
 
-    console.log('🗺️ [DEBUG] Dibujando zonas de entrega...');
-    console.log('🗺️ [DEBUG] Zonas disponibles:', this.configuracionZonas.zonas.length);
-    console.log('🗺️ [DEBUG] Mostrar zonas:', this.configuracionZonas.mostrarZonas && this.mostrarZonasEntrega);
+    // console.log('🗺️ [DEBUG] Dibujando zonas de entrega...');
+    // console.log('🗺️ [DEBUG] Zonas disponibles:', this.configuracionZonas.zonas.length);
+    // console.log('🗺️ [DEBUG] Mostrar zonas:', this.configuracionZonas.mostrarZonas && this.mostrarZonasEntrega);
 
     // Limpiar polígonos existentes
     this.capaZonasEntrega.clearLayers();
     this.poligonosZonas = [];
 
     if (!this.configuracionZonas.mostrarZonas || !this.mostrarZonasEntrega) {
-      console.log('🗺️ [DEBUG] Zonas de entrega están ocultas');
+      // console.log('🗺️ [DEBUG] Zonas de entrega están ocultas');
       return;
     }
 
@@ -1157,11 +1157,11 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
 
     this.configuracionZonas.zonas.forEach((zona, index) => {
       if (!zona.activa || zona.coordenadas.length < 3) {
-        console.log(`🗺️ [DEBUG] Zona "${zona.nombre}" no activa o sin suficientes coordenadas`);
+        // console.log(`🗺️ [DEBUG] Zona "${zona.nombre}" no activa o sin suficientes coordenadas`);
         return;
       }
 
-      console.log(`🗺️ [DEBUG] Dibujando zona: ${zona.nombre} con ${zona.coordenadas.length} coordenadas`);
+      // console.log(`🗺️ [DEBUG] Dibujando zona: ${zona.nombre} con ${zona.coordenadas.length} coordenadas`);
 
       // Convertir coordenadas al formato de Leaflet
       const coordenadasLeaflet = zona.coordenadas.map(coord => [coord.lat, coord.lng]);
@@ -1199,10 +1199,10 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
         poligono: poligono
       });
 
-      console.log(`✅ [DEBUG] Zona "${zona.nombre}" dibujada exitosamente`);
+      // console.log(`✅ [DEBUG] Zona "${zona.nombre}" dibujada exitosamente`);
     });
 
-    console.log(`🗺️ [DEBUG] Total zonas dibujadas: ${this.poligonosZonas.length}`);
+    // console.log(`🗺️ [DEBUG] Total zonas dibujadas: ${this.poligonosZonas.length}`);
   }
 
   /**
@@ -1262,7 +1262,7 @@ export class MapaUbicacionesComponent implements OnInit, AfterViewInit, OnDestro
    * Maneja el click en una zona
    */
   private onZonaClick(zona: ZonaEntrega): void {
-    console.log('🗺️ [DEBUG] Click en zona:', zona.nombre);
+    // console.log('🗺️ [DEBUG] Click en zona:', zona.nombre);
     // Aquí se puede agregar lógica adicional como filtrar pedidos de esa zona
   }
 

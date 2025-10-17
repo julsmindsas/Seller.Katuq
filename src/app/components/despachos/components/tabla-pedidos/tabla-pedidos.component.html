@@ -19,25 +19,25 @@
                             <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center p-2 table-header-actions">
                                 <h5 class="m-0 fw-bold mb-3 mb-md-0">{{ 'Pedidos para Despachar' | translate }}</h5>
                                 <div class="d-flex align-items-center gap-2">
-                                    <!-- Column Selector -->
-                                    <p-multiSelect [options]="displayedColumns" 
-                                        [(ngModel)]="selectedColumns" 
-                                        optionLabel="header" 
+                                    <!-- Column Selector - ✅ Responsive multiselect -->
+                                    <p-multiSelect [options]="displayedColumns"
+                                        [(ngModel)]="selectedColumns"
+                                        optionLabel="header"
                                         placeholder="{{ 'Ver Columnas' | translate }}"
                                         selectedItemsLabel="{0} columnas"
                                         styleClass="p-multiselect-sm"
-                                        [style]="{'min-width': '180px'}"
+                                        [style]="{'min-width.px': 180}"
                                         (onChange)="onColumnSelectionChange()">
                                     </p-multiSelect>
-                        
-                                    <!-- Action Buttons -->
-                                    <button pButton pRipple type="button" icon="pi pi-refresh" 
+
+                                    <!-- Action Buttons - ✅ Touch-friendly sizes -->
+                                    <button pButton pRipple type="button" icon="pi pi-refresh"
                                         pTooltip="{{ 'Actualizar Datos' | translate }}"
-                                        class="p-button-text p-button-secondary" 
+                                        class="p-button-text p-button-secondary"
                                         (click)="onRefresh()"></button>
-                                    <button pButton pRipple type="button" icon="pi pi-filter-slash" 
+                                    <button pButton pRipple type="button" icon="pi pi-filter-slash"
                                         pTooltip="{{ 'Limpiar Filtros' | translate }}"
-                                        class="p-button-text p-button-secondary" 
+                                        class="p-button-text p-button-secondary"
                                         (click)="onClear()"></button>
                                 </div>
                             </div>
@@ -98,18 +98,19 @@
                                                 </ng-template>
                                             </p-columnFilter>
                                             
-                                            <!-- Si es una columna con filtro de selección múltiple -->
+                                            <!-- Si es una columna con filtro de selección múltiple - ✅ Responsive filter -->
                                             <p-columnFilter *ngIf="['estadoPago', 'estadoProceso'].includes(col.field)"
-                                                [field]="col.field" 
-                                                matchMode="in" 
+                                                [field]="col.field"
+                                                matchMode="in"
                                                 display="menu"
                                                 [showMenu]="true">
                                                 <ng-template pTemplate="filter" let-value let-filter="filterCallback">
-                                                    <p-multiSelect [ngModel]="value" 
+                                                    <p-multiSelect [ngModel]="value"
                                                         [options]="col.field === 'estadoPago' ? estadosPago : estadosProcesos"
-                                                        placeholder="{{ 'Seleccione' | translate }}" 
+                                                        placeholder="{{ 'Seleccione' | translate }}"
                                                         (onChange)="filter($event.value)"
-                                                        style="width:100%; font-size:0.8em;">
+                                                        [style]="{'width': '100%', 'font-size': '0.875rem'}"
+                                                        styleClass="p-multiselect-sm">
                                                     </p-multiSelect>
                                                 </ng-template>
                                             </p-columnFilter>

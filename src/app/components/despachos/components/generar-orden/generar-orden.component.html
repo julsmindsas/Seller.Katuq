@@ -78,19 +78,6 @@
                         </div>
                     </div>
 
-                    <!-- SELECTOR DE TRANSPORTADORA (cuando aplica) -->
-                    <div class="config-compact-section" *ngIf="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'">
-                        <label class="config-compact-label">Transportadora</label>
-                        <button type="button"
-                                class="btn-compact btn-compact-outline"
-                                (click)="openTransporterModal()"
-                                [title]="selectedTransporter ? 'Cambiar transportadora' : 'Seleccionar transportadora'">
-                            <i class="pi pi-truck"></i>
-                            <span *ngIf="selectedTransporter">{{ getSelectedTransporterName() }}</span>
-                            <span *ngIf="!selectedTransporter">{{ "Seleccionar" | translate }}</span>
-                        </button>
-                    </div>
-
                 </div>
 
                 <!-- SECCIÓN: Pedidos disponibles -->
@@ -144,12 +131,12 @@
                                 <ng-template pTemplate="header">
                                     <tr>
                                         <ng-container *ngFor="let col of selectedColumns">
-                                            <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'"
+                                            <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'estadoPago'"
                                                 [pSortableColumn]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field">
                                                 {{ col.header | translate }}
                                                 <p-sortIcon [field]="col.field === 'cliente' ? 'clienteNombre' : col.field === 'ciudad' ? 'ciudadNombre' : col.field === 'direccionEntrega' ? 'direccionEntregaNombre' : col.field"></p-sortIcon>
                                             </th>
-                                            <th *ngIf="col.field === 'enOrden'">
+                                            <th *ngIf="col.field === 'estadoPago'">
                                                 {{ col.header | translate }}
                                             </th>
                                         </ng-container>
@@ -163,7 +150,7 @@
                                     </tr>
                                     <tr>
                                         <ng-container *ngFor="let col of selectedColumns">
-                                            <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'enOrden'">
+                                            <th *ngIf="col.field !== 'accion' && col.field !== 'opciones' && col.field !== 'estadoPago'">
                                                 <input
                                                     *ngIf="col.field === 'nroPedido' || col.field === 'cliente' || col.field === 'ciudad' || col.field === 'direccionEntrega' || col.field === 'horarioEntrega' || col.field === 'estadoProceso' || col.field === 'formaEntrega'"
                                                     pInputText
@@ -181,7 +168,7 @@
                                                     [style]="{'width': '100%', 'font-size': '0.875rem'}"
                                                     (input)="dt.filter($any($event.target).value, col.field, 'gte')" />
                                             </th>
-                                            <th *ngIf="col.field === 'enOrden'">
+                                            <th *ngIf="col.field === 'estadoPago'">
                                                 <!-- No filter for this column -->
                                             </th>
                                         </ng-container>
@@ -217,19 +204,9 @@
                                                     <ng-container *ngSwitchCase="'faltaPorPagar'">
                                                         {{ getNestedProperty(pedido, col.field) | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                     </ng-container>
-                                                    <ng-container *ngSwitchCase="'enOrden'">
-                                                        <div *ngIf="pedidoExisteEnOrden(pedido)" class="estado-orden-compact">
-                                                            <span class="badge-compact badge-compact-warning">
-                                                                Orden {{ getNumeroOrdenPedido(pedido) }}
-                                                            </span>
-                                                            <button type="button" class="btn-icon-compact"
-                                                                (click)="moverPedidoDeOrden(pedido)"
-                                                                title="Mover a esta orden">
-                                                                <i class="pi pi-arrow-right"></i>
-                                                            </button>
-                                                        </div>
-                                                        <span *ngIf="!pedidoExisteEnOrden(pedido)" class="badge-compact badge-compact-success">
-                                                            Disponible
+                                                    <ng-container *ngSwitchCase="'estadoPago'">
+                                                        <span class="badge" [ngClass]="getEstadoPagoClass(pedido.estadoPago)">
+                                                            {{ pedido.estadoPago }}
                                                         </span>
                                                     </ng-container>
                                                     <ng-container *ngSwitchDefault>
@@ -445,6 +422,19 @@
             </button>
 
             <div class="footer-actions-primary">
+                <!-- Botón Seleccionar Transportadora y Despachar (solo cuando método es transportadora) -->
+                <button pButton
+                    *ngIf="ordenEnvioForm.get('metodoEnvio')?.value === 'transportadora'"
+                    type="button"
+                    class="p-button-success btn-footer"
+                    [icon]="isSaving ? 'pi pi-spin pi-spinner' : 'pi pi-truck'"
+                    [label]="isSaving ? 'Procesando...' : (selectedTransporter ? getSelectedTransporterName() + ' - Continuar' : 'Seleccionar Transportadora y Despachar')"
+                    (click)="iniciarProcesoTransportadora()"
+                    [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0 || isSaving"
+                    [title]="selectedTransporter ? 'Continuar con ' + getSelectedTransporterName() : 'Seleccionar transportadora y despachar orden'">
+                </button>
+
+                <!-- Botón Guardar -->
                 <button pButton type="button"
                     class="p-button-primary btn-footer"
                     [icon]="isSaving ? 'pi pi-spin pi-spinner' : 'pi pi-save'"
@@ -453,6 +443,7 @@
                     (click)="guardarOrden()">
                 </button>
 
+                <!-- Guardar y Despachar con Mensajero Propio -->
                 <button pButton
                     *ngIf="!nroShippingOrder && ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
                     type="button"
@@ -473,6 +464,7 @@
                     (click)="imprimirOrden()">
                 </button>
 
+                <!-- Despachar con Mensajero Propio (modo edición) -->
                 <button pButton
                     *ngIf="nroShippingOrder && ordenEnvioForm.get('metodoEnvio')?.value === 'mensajeroPropio'"
                     type="button"
