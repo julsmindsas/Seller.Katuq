@@ -48,6 +48,9 @@ export class EcomerceProductsComponent
   @Input() selectedCity: string = "";
   @Output() citySelected = new EventEmitter<any>();
 
+  // Input para mostrar/ocultar el buscador
+  @Input() mostrarBuscador: boolean = false;
+
   openSidebar: boolean = false;
   col: string;
   listView: any;
@@ -537,6 +540,14 @@ export class EcomerceProductsComponent
     this.productos = productosFiltrados; // Para mantener compatibilidad
     this.paginaActual = 1;
     this.configurarPaginacion();
+  }
+
+  /**
+   * Método para buscar productos desde el input de búsqueda
+   * @param event Evento del input
+   */
+  onProductSearch(event: any): void {
+    this.updateFilter(event);
   }
 
   // Métodos nuevos para paginación

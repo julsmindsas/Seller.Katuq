@@ -1,5 +1,36 @@
 <div class="container-fluid product-wrapper" [class.sidebaron]="openSidebar">
     <div class="product-grid">
+        <!-- Buscador de productos (solo visible cuando mostrarBuscador es true) -->
+        <div *ngIf="mostrarBuscador" class="row mb-3">
+            <div class="col-12">
+                <div class="search-products-card h-100"
+                     [class.disabled-card]="!selectedCity || selectedCity === 'seleccione'">
+                    <div class="search-header">
+                        <div class="search-icon">
+                            <i class="fa fa-search"></i>
+                        </div>
+                        <div class="search-label">
+                            <span class="label-text">Buscar Productos</span>
+                            <small class="label-hint">Filtrar por nombre o referencia</small>
+                        </div>
+                    </div>
+
+                    <div class="search-body">
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">
+                                <i class="fa fa-search text-muted"></i>
+                            </span>
+                            <input class="form-control border-start-0 ps-0"
+                                   type="search"
+                                   placeholder="Buscar productos..."
+                                   (keyup)="onProductSearch($event)"
+                                   [disabled]="!selectedCity || selectedCity === 'seleccione'">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="feature-products">
             <div class="row">
                 <div class="col-md-6 products-total">

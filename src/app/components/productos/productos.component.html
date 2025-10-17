@@ -2,44 +2,61 @@
 
 <div class="container-fluid">
     <div class="row">
-        <div class="col-sm-12 p-3">
-            <br />
-            <div class="card">
+        <div class="col-sm-12">
+            <div class="card shadow-sm border-0 mb-4">
                 <div class="loader-box" *ngIf="cargando">
                     <div class="loader-8"></div>
                 </div>
 
-                <div class="row mt-2" style="margin-left: 20px">
-                    <div class="col-12">
-                        <p class="text-left fw-bold fc-secondary fs-24 m-0 p-0">{{ "Productos" | translate }}</p>
-                        <p class="text-left text-muted fs-18 m-0 p-0">{{ "Listado de productos creados." | translate }}</p>
+                <!-- Header Moderno del Módulo -->
+                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-1 fw-bold text-primary">
+                            <i class="icofont icofont-box me-2"></i>{{ "Gestión de Productos" | translate }}
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            {{ "Administra tu catálogo de productos" | translate }}
+                        </p>
+                    </div>
+                    <div class="d-none d-lg-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-primary btn-sm"
+                                (click)="crearProducto()">
+                            <i class="icofont icofont-plus"></i> {{ 'Crear Producto' | translate }}
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm"
+                                (click)="exportToExcel()">
+                            <i class="icofont icofont-file-excel"></i> {{ 'Exportar' | translate }}
+                        </button>
                     </div>
                 </div>
 
                 <div class="card-body p-4 custom-datatable">
-                    <div class="row col-12 mb-4">
-                        <div class="col-6">
-                            <input type="text" class="filter-ngx form-control mb-3" style="width: 100% !important"
-                                placeholder="{{ 'Escribe lo que quieres filtrar y luego pulsa enter para accionar' | translate }}" (keyup)="updateFilter($event)" />
+                    <!-- Barra de Búsqueda y Filtros Mejorada -->
+                    <div class="row mb-4">
+                        <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
+                            <div class="input-group search-input-group">
+                                <span class="input-group-text">
+                                    <i class="icofont icofont-search"></i>
+                                </span>
+                                <input type="text" class="form-control search-input"
+                                       placeholder="{{ 'Buscar producto (presiona Enter)...' | translate }}"
+                                       (keyup)="updateFilter($event)" />
+                            </div>
                         </div>
-                        <div class="col-6" style="text-align: end">
-                            <button class="btn btn-primary btn-previous mr-1" type="button" (click)="crearProducto()"
-                                ngbTooltip="{{ 'Crear Nuevo Producto' | translate }}">
-                                <i placement="top" ngbTooltip="Crear Nuevo Producto" style="
-                                        font-size: 18px;
-                                        color: white;
-                                        cursor: pointer;
-                                    " class="icofont icofont-plus"></i>&nbsp;
-                                <span style="color: white">{{ "Crear Producto" | translate }}</span>
+                        <div class="col-lg-6 col-md-12 d-lg-none text-center">
+                            <button type="button" class="btn btn-primary btn-sm me-2"
+                                    (click)="crearProducto()">
+                                <i class="icofont icofont-plus"></i> {{ 'Crear' | translate }}
                             </button>
-                            <button class="btn btn-success mr-1" style="color: white" (click)="exportToExcel()">
-                                <i class="icofont icofont-file-excel"></i>&nbsp;{{ "Excel" | translate }}
+                            <button type="button" class="btn btn-success btn-sm"
+                                    (click)="exportToExcel()">
+                                <i class="icofont icofont-file-excel"></i>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Filtros de Dropshipping -->
-                    <div class="row col-12 mb-3">
+                    <!-- Filtros de Dropshipping - OCULTOS -->
+                    <!-- <div class="row col-12 mb-3">
                         <div class="col-md-4">
                             <label class="form-label">{{ "Filtrar por Proveedor" | translate }}</label>
                             <select class="form-select" [(ngModel)]="selectedProveedor" (change)="onProveedorChange()">
@@ -52,8 +69,8 @@
                         <div class="col-md-4">
                             <label class="form-label">{{ "Solo Dropshipping" | translate }}</label>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" 
-                                       [(ngModel)]="mostrarSoloDropshipping" 
+                                <input class="form-check-input" type="checkbox"
+                                       [(ngModel)]="mostrarSoloDropshipping"
                                        (change)="onToggleDropshipping()"
                                        id="checkDropshipping">
                                 <label class="form-check-label" for="checkDropshipping">
@@ -64,13 +81,13 @@
                         <div class="col-md-4">
                             <label class="form-label">&nbsp;</label>
                             <div>
-                                <button class="btn btn-outline-secondary" (click)="limpiarFiltros()" 
+                                <button class="btn btn-outline-secondary" (click)="limpiarFiltros()"
                                         [disabled]="!selectedProveedor && !mostrarSoloDropshipping">
                                     <i class="icofont icofont-refresh"></i>&nbsp;{{ "Limpiar Filtros" | translate }}
                                 </button>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
 
                     <!-- La tabla de PrimeNG -->
                     <p-table #dt [value]="rows" [paginator]="true" [resizableColumns]="true" [scrollable]="true"
@@ -82,7 +99,7 @@
                         <ng-template pTemplate="header">
                             <tr>
                                 <!-- Imagen (sin ordenamiento) -->
-                                <th class="text-center">
+                                <th class="text-center" style="width: 80px;">
                                     {{ "Imagen" | translate }}
                                 </th>
 
@@ -96,46 +113,37 @@
                                     <p-sortIcon field="identificacion.referencia"></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="disponibilidad.cantidadDisponible" *ngIf="!isMobile">
-                                    {{ "Cantidad disponible" | translate }}
-                                    <p-sortIcon field="disponibilidad.cantidadDisponible"></p-sortIcon>
-                                </th>
-
                                 <th class="text-center" pSortableColumn="exposicion.activar" *ngIf="!isMobile">
-                                    {{ "Está activo" | translate }}
+                                    {{ "Estado" | translate }}
                                     <p-sortIcon field="exposicion.activar"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="exposicion.disponible" *ngIf="!isMobile">
-                                    {{ "Está disponible" | translate }}
+                                    {{ "Disponibilidad" | translate }}
                                     <p-sortIcon field="exposicion.disponible"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="crearProducto.paraProduccion" *ngIf="!isMobile">
-                                    {{ "Se produce" | translate }}
+                                    {{ "Producción" | translate }}
                                     <p-sortIcon field="crearProducto.paraProduccion"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="precio.precioUnitarioSinIva" *ngIf="!isMobile">
-                                    {{ "Precio unitario" | translate }}
+                                    {{ "Precio" | translate }}
                                     <p-sortIcon field="precio.precioUnitarioSinIva"></p-sortIcon>
                                 </th>
 
                                 <th class="text-center" pSortableColumn="date_edit" *ngIf="!isMobile">
-                                    {{ "Fecha editado" | translate }}
+                                    {{ "Última Edición" | translate }}
                                     <p-sortIcon field="date_edit"></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="precio.precioUnitarioIva" *ngIf="!isMobile">
-                                    {{ "IVA" | translate }}
-                                    <p-sortIcon field="precio.precioUnitarioIva"></p-sortIcon>
-                                </th>
-
-                                <th class="text-center" *ngIf="!isMobile">
+                                <!-- Columna Tipo - OCULTA -->
+                                <!-- <th class="text-center" *ngIf="!isMobile">
                                     {{ "Tipo" | translate }}
-                                </th>
+                                </th> -->
 
-                                <th class="text-center">
+                                <th class="text-center" style="width: 120px;">
                                     {{ "Acciones" | translate }}
                                 </th>
                             </tr>
@@ -145,118 +153,124 @@
                         <ng-template pTemplate="body" let-row>
                             <tr>
                                 <!-- Imagen -->
-                                <td>
-                                    <img *ngIf="
-                                            row.crearProducto
-                                                ?.imagenesPrincipales?.length >
-                                            0
-                                        " [src]="
-                                            row.crearProducto
-                                                ?.imagenesPrincipales[0]?.urls
-                                        " [alt]="row.crearProducto?.titulo" width="50" height="50"
-                                        style="cursor: pointer" (click)="viewProduct(row)" />
-                                    <img *ngIf="
-                                            row.crearProducto
-                                                ?.imagenesPrincipales?.length ==
-                                            0
-                                        " src="assets/img/placeholder.png" [alt]="row.crearProducto?.titulo" width="50"
-                                        height="50" />
+                                <td class="text-center">
+                                    <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
+                                         [src]="row.crearProducto?.imagenesPrincipales[0]?.urls"
+                                         [alt]="row.crearProducto?.titulo"
+                                         width="50"
+                                         height="50"
+                                         class="product-thumbnail"
+                                         style="cursor: pointer; border-radius: 8px; object-fit: cover;"
+                                         (click)="viewProduct(row)" />
+                                    <img *ngIf="row.crearProducto?.imagenesPrincipales?.length == 0"
+                                         src="assets/img/placeholder.png"
+                                         [alt]="row.crearProducto?.titulo"
+                                         width="50"
+                                         height="50"
+                                         style="border-radius: 8px; opacity: 0.5;" />
                                 </td>
 
                                 <!-- Título -->
-                                <td>{{ row.crearProducto?.titulo }}</td>
+                                <td>
+                                    <span class="fw-semibold">{{ row.crearProducto?.titulo }}</span>
+                                </td>
 
                                 <!-- Referencia (solo en desktop) -->
-                                <td *ngIf="!isMobile">
-                                    {{ row.identificacion?.referencia }}
+                                <td *ngIf="!isMobile" class="text-center">
+                                    <span class="text-muted">{{ row.identificacion?.referencia || 'N/A' }}</span>
                                 </td>
 
-                                <!-- Cantidad disponible (solo en desktop) -->
-                                <td *ngIf="!isMobile">
-                                    {{ row.disponibilidad?.cantidadDisponible }}
+                                <!-- Estado Activo (solo en desktop) -->
+                                <td *ngIf="!isMobile" class="text-center">
+                                    <span *ngIf="row.exposicion?.activar === true"
+                                          class="badge bg-success">
+                                        <i class="icofont icofont-check me-1"></i>{{ "Activo" | translate }}
+                                    </span>
+                                    <span *ngIf="row.exposicion?.activar === false || !row.exposicion?.activar"
+                                          class="badge bg-danger">
+                                        <i class="icofont icofont-close me-1"></i>{{ "Inactivo" | translate }}
+                                    </span>
                                 </td>
 
-                                <!-- Está activo (solo en desktop) -->
-                                <td *ngIf="!isMobile">
-                                    {{
-                                    row.exposicion?.activar === true
-                                    ? "Si"
-                                    : "No"
-                                    }}
-                                </td>
-
-                                <!-- Está disponible (solo en desktop) -->
-                                <td *ngIf="!isMobile">
-                                    {{
-                                    row.exposicion?.disponible === true
-                                    ? "Si"
-                                    : "No"
-                                    }}
+                                <!-- Disponibilidad (solo en desktop) -->
+                                <td *ngIf="!isMobile" class="text-center">
+                                    <span *ngIf="row.exposicion?.disponible === true"
+                                          class="badge bg-info">
+                                        <i class="icofont icofont-check-circled me-1"></i>{{ "Disponible" | translate }}
+                                    </span>
+                                    <span *ngIf="row.exposicion?.disponible === false || !row.exposicion?.disponible"
+                                          class="badge bg-secondary">
+                                        <i class="icofont icofont-minus-circle me-1"></i>{{ "No disponible" | translate }}
+                                    </span>
                                 </td>
 
                                 <!-- Se produce (solo en desktop) -->
-                                <td *ngIf="!isMobile">
-                                    {{
-                                    row.crearProducto?.paraProduccion
-                                    ? "Si"
-                                    : "No"
-                                    }}
+                                <td *ngIf="!isMobile" class="text-center">
+                                    <span *ngIf="row.crearProducto?.paraProduccion"
+                                          class="badge bg-warning text-dark">
+                                        <i class="icofont icofont-settings-alt me-1"></i>{{ "Sí" | translate }}
+                                    </span>
+                                    <span *ngIf="!row.crearProducto?.paraProduccion"
+                                          class="badge bg-light text-dark">
+                                        {{ "No" | translate }}
+                                    </span>
                                 </td>
 
                                 <!-- Precio unitario sin IVA (solo en desktop) -->
-                                <td *ngIf="!isMobile" style="text-align: right">
-                                    {{
-                                    row.precio?.precioUnitarioSinIva
-                                    | currency
-                                    : "USD"
-                                    : "symbol"
-                                    : "1.0-0"
-                                    }}
+                                <td *ngIf="!isMobile" class="text-end">
+                                    <span class="fw-bold text-primary">
+                                        {{ row.precio?.precioUnitarioSinIva | currency:'USD':'symbol':'1.0-0' }}
+                                    </span>
                                 </td>
 
                                 <!-- Fecha editado (solo en desktop) -->
-                                <td *ngIf="!isMobile">
-                                    {{ row.date_edit | date: "dd/MM/yyyy" }}
-                                </td>
-
-                                <!-- IVA (solo en desktop) -->
-                                <td *ngIf="!isMobile" style="text-align: right">
-                                    {{
-                                    row.precio?.precioUnitarioIva
-                                    | currency
-                                    : "USD"
-                                    : "symbol"
-                                    : "1.0-0"
-                                    }}
-                                </td>
-
-                                <!-- Tipo de producto (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-center">
-                                    <span *ngIf="!row.dropshippingConfig || !row.dropshippingConfig.enabled" 
-                                          class="badge badge-primary">
-                                        {{ "Tradicional" | translate }}
-                                    </span>
-                                    <span *ngIf="row.dropshippingConfig?.enabled" 
-                                          class="badge badge-info">
-                                        {{ "Dropshipping" | translate }}
-                                    </span>
+                                    <small class="text-muted">{{ row.date_edit | date: "dd/MM/yyyy" }}</small>
                                 </td>
+
+                                <!-- Tipo de producto - OCULTO -->
+                                <!-- <td *ngIf="!isMobile" class="text-center">
+                                    <span *ngIf="!row.dropshippingConfig || !row.dropshippingConfig.enabled"
+                                          class="badge badge-product-traditional">
+                                        <i class="icofont icofont-box me-1"></i>{{ "Tradicional" | translate }}
+                                    </span>
+                                    <span *ngIf="row.dropshippingConfig?.enabled"
+                                          class="badge badge-product-dropshipping">
+                                        <i class="icofont icofont-truck-loaded me-1"></i>{{ "Dropshipping" | translate }}
+                                    </span>
+                                </td> -->
 
                                 <!-- Acciones -->
-                                <td class="action-buttons">
-                                    <i placement="top" ngbTooltip="{{ 'Edit' | translate }}" 
-                                        class="icofont icofont-pencil-alt-5" (click)="editarProducto(row)"
-                                        title="Editar producto"></i>
-                                    <i placement="top" ngbTooltip="Configurar Dropshipping" 
-                                        class="icofont icofont-truck" (click)="configurarDropshipping(row)"
-                                        title="Configurar Dropshipping"
-                                        style="color: #17a2b8; margin-left: 8px;"></i>
-                                    <i placement="top" ngbTooltip="{{ 'Duplicar' | translate }}" 
-                                        class="icofont icofont-copy" (click)="duplicarProducto(row)"
-                                        title="Duplicar producto"></i>
-                                    <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}" 
-                                        class="icofont icofont-trash" (click)="eliminarProducto(row)"
-                                        title="Eliminar producto"></i>
+                                <td class="text-center action-buttons-table">
+                                    <button type="button"
+                                            class="btn btn-sm btn-action btn-action-info"
+                                            placement="top"
+                                            ngbTooltip="{{ 'Editar' | translate }}"
+                                            (click)="editarProducto(row)">
+                                        <i class="icofont icofont-pencil-alt-5"></i>
+                                    </button>
+                                    <!-- Botón Dropshipping - OCULTO -->
+                                    <!-- <button type="button"
+                                            class="btn btn-sm btn-action btn-action-purple"
+                                            placement="top"
+                                            ngbTooltip="{{ 'Dropshipping' | translate }}"
+                                            (click)="configurarDropshipping(row)">
+                                        <i class="icofont icofont-truck-loaded"></i>
+                                    </button> -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-action btn-action-success"
+                                            placement="top"
+                                            ngbTooltip="{{ 'Duplicar' | translate }}"
+                                            (click)="duplicarProducto(row)">
+                                        <i class="icofont icofont-copy"></i>
+                                    </button>
+                                    <button type="button"
+                                            class="btn btn-sm btn-action btn-action-danger"
+                                            placement="top"
+                                            ngbTooltip="{{ 'Eliminar' | translate }}"
+                                            (click)="eliminarProducto(row)">
+                                        <i class="icofont icofont-trash"></i>
+                                    </button>
                                 </td>
                             </tr>
                         </ng-template>
@@ -280,3 +294,12 @@
         </div>
     </div>
 </div>
+
+<!-- Botón de Acción Flotante (FAB) para Móvil -->
+<button type="button"
+        class="btn btn-primary btn-fab d-lg-none"
+        placement="left"
+        ngbTooltip="{{ 'Crear Producto' | translate }}"
+        (click)="crearProducto()">
+    <i class="icofont icofont-plus"></i>
+</button>

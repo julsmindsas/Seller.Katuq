@@ -1,76 +1,455 @@
-.cursor-pointer {
+// ===================================
+// HISTORIAL DE MOVIMIENTOS - ESTILOS
+// Diseño basado en el estándar Katuq/Despachos
+// ===================================
+
+// Variables
+$primary-color: #667eea;
+$success-color: #2dce89;
+$danger-color: #f5365c;
+$warning-color: #fb6340;
+$info-color: #11cdef;
+$border-radius: 8px;
+
+// ===================================
+// HEADER DEL MÓDULO
+// ===================================
+.module-header {
+    background: linear-gradient(to right, white, #fafafa);
+    transition: all 0.3s ease;
+
+    h5 {
+        font-size: 1.3rem;
+        color: #495057;
+
+        i {
+            font-size: 1.1rem;
+        }
+    }
+
+    p {
+        opacity: 0.85;
+    }
+}
+
+// ===================================
+// PANEL DE FILTROS
+// ===================================
+.card-header {
     cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    &:hover {
+        background-color: #e9ecef !important;
+    }
 }
 
-.cursor-pointer:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+// ===================================
+// MÉTRICAS BREADCRUMB (ESTILO KATUQ)
+// ===================================
+.metrics-breadcrumb-panel {
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.badge {
-    padding: 0.4em 0.65em;
-    font-size: 0.75em;
-    border-radius: 0.25rem;
+.metrics-scroll-container {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+
+    &::-webkit-scrollbar {
+        height: 4px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+        border-radius: 4px;
+    }
 }
 
-.bg-success {
-    background-color: #4caf50 !important;
-    color: white;
+.metric-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid #dee2e6;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+    user-select: none;
+
+    i {
+        font-size: 1rem;
+    }
+
+    .metric-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .metric-badge {
+        background: #e9ecef;
+        color: #495057;
+        padding: 0.125rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    &.active {
+        border-width: 2px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    // Estilos por tipo
+    &.metric-chip-primary.active {
+        border-color: #6c757d;
+        background: #f8f9fa;
+
+        .metric-label {
+            color: #6c757d;
+            font-weight: 600;
+        }
+
+        .metric-badge {
+            background: #6c757d;
+            color: white;
+        }
+    }
+
+    &.metric-chip-success {
+        i {
+            color: #28a745;
+        }
+
+        &.active {
+            border-color: #28a745;
+            background: #d4edda;
+
+            .metric-label {
+                color: #155724;
+                font-weight: 600;
+            }
+        }
+    }
+
+    &.metric-chip-danger {
+        i {
+            color: #dc3545;
+        }
+
+        &.active {
+            border-color: #dc3545;
+            background: #f8d7da;
+
+            .metric-label {
+                color: #721c24;
+                font-weight: 600;
+            }
+        }
+    }
 }
 
-.bg-danger {
-    background-color: #f44336 !important;
-    color: white;
+.separator {
+    color: #dee2e6;
+    font-weight: 300;
+    font-size: 1.25rem;
+    user-select: none;
 }
 
-.bg-secondary {
-    background-color: #757575 !important;
-    color: white;
-}
-
-.bg-light {
-    background-color: #f5f5f5 !important;
-    color: #333 !important;
-    border: 1px solid #ddd;
-}
-
-/* Estilos para las celdas expandibles */
-.expandable-cell {
-    position: relative;
-}
-
-.text-cell {
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    transition: all 0.2s ease-in-out;
-}
-
-.expandable-cell:hover .text-cell {
-    white-space: normal;
-    overflow: visible;
+// ===================================
+// TOOLBAR DE LA TABLA
+// ===================================
+.table-toolbar {
     background-color: #f8f9fa;
-    position: absolute;
-    z-index: 100;
-    padding: 5px;
-    border-radius: 4px;
+}
+
+.badge-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 24px;
+    padding: 0.25rem 0.5rem;
+    background-color: #cfe2ff;
+    color: #084298;
+    border: 1px solid #b6d4fe;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background-color: #b6d4fe;
+    }
+}
+
+// ===================================
+// CONTENEDOR DE LA TABLA
+// ===================================
+.table-container {
+    background: white;
+}
+
+// ===================================
+// BADGES MODERNOS (COLORES PASTEL)
+// ===================================
+.modern-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+
+    i {
+        font-size: 0.85rem;
+    }
+
+    // Ingreso - Verde pastel suave
+    &.badge-success {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+
+        i {
+            color: #28a745;
+        }
+
+        &:hover {
+            background-color: #c3e6cb;
+        }
+    }
+
+    // Salida - Rojo pastel suave
+    &.badge-danger {
+        background-color: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+
+        i {
+            color: #dc3545;
+        }
+
+        &:hover {
+            background-color: #f5c6cb;
+        }
+    }
+
+    // Secundario - Gris pastel
+    &.badge-secondary {
+        background-color: #e2e3e5;
+        color: #383d41;
+        border: 1px solid #d6d8db;
+
+        i {
+            color: #6c757d;
+        }
+
+        &:hover {
+            background-color: #d6d8db;
+        }
+    }
+
+    // Información - Azul pastel
+    &.badge-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+
+        i {
+            color: #17a2b8;
+        }
+
+        &:hover {
+            background-color: #bee5eb;
+        }
+    }
+
+    // Advertencia - Amarillo pastel
+    &.badge-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border: 1px solid #ffeeba;
+
+        i {
+            color: #ffc107;
+        }
+
+        &:hover {
+            background-color: #ffeeba;
+        }
+    }
+}
+
+// ===================================
+// SISTEMA DE ACCIONES (MENÚ CONTEXTUAL)
+// ===================================
+.btn-options {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #dee2e6;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background-color: #f8f9fa;
+        border-color: #2196F3;
+        transform: scale(1.05);
+    }
+
+    .pi {
+        font-size: 0.875rem;
+        color: #495057;
+    }
+}
+
+.list-actions {
+    position: fixed;
+    width: 200px;
+    background-color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 6px;
+    margin: 0;
+    padding: 0.25rem 0;
+    list-style: none;
+    z-index: 9999;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.95);
+    transition: all 0.15s ease;
     border: 1px solid #e9ecef;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    min-width: 200px;
-    max-width: 350px;
+
+    &.show {
+        opacity: 1;
+        visibility: visible;
+        transform: scale(1);
+    }
+
+    li {
+        padding: 0.6rem 1rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.15s;
+        color: #495057;
+
+        &:hover {
+            background-color: #f8f9fa;
+            color: #2196F3;
+
+            i {
+                color: #2196F3;
+            }
+        }
+
+        i {
+            margin-right: 0.75rem;
+            font-size: 0.9rem;
+            width: 1rem;
+            text-align: center;
+            transition: color 0.15s;
+        }
+
+        span {
+            font-weight: 500;
+        }
+
+        &.separator {
+            height: 1px;
+            background-color: #e9ecef;
+            margin: 0.25rem 0;
+            padding: 0;
+            cursor: default;
+
+            &:hover {
+                background-color: #e9ecef;
+                color: inherit;
+            }
+        }
+    }
 }
 
-/* Estilos para filas seleccionadas */
-.highlight-row {
-    background-color: rgba(115, 103, 240, 0.08) !important;
+// ===================================
+// ESTILOS DE LA TABLA PRIMENG
+// ===================================
+:host ::ng-deep {
+    // Tabla con scroll
+    .p-datatable-wrapper {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+    }
+
+    .p-datatable-scrollable-wrapper {
+        overflow: visible !important;
+    }
+
+    .p-datatable-scrollable-body {
+        overflow-x: auto !important;
+        overflow-y: auto !important;
+    }
+
+    .p-datatable-tbody {
+        > tr {
+            transition: background-color 0.15s ease;
+
+            // Hover sutil
+            &:hover {
+                background-color: rgba(0, 0, 0, 0.02) !important;
+            }
+
+            // Fila activa
+            &.row-active {
+                background-color: rgba(#2196F3, 0.05) !important;
+            }
+        }
+    }
+
+    // Asegurar que el scroll se vea
+    .p-datatable-scrollable-body::-webkit-scrollbar {
+        height: 8px;
+    }
+
+    .p-datatable-scrollable-body::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 4px;
+    }
+
+    .p-datatable-scrollable-body::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+
+        &:hover {
+            background: #555;
+        }
+    }
 }
 
-/* Estilos para filas expandidas */
+// ===================================
+// FILAS EXPANDIBLES (MODO DETALLADO)
+// ===================================
 .expanded-row {
     background-color: #fafafa;
     border-radius: 8px;
-    box-shadow: inset 0 0 5px rgba(0,0,0,0.05);
 }
 
 .detail-section {
@@ -79,6 +458,10 @@
     border: 1px solid #e9ecef;
     border-radius: 8px;
     background-color: white;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
 }
 
 .detail-title {
@@ -87,12 +470,20 @@
     margin-bottom: 1rem;
     border-bottom: 1px solid #eee;
     padding-bottom: 0.5rem;
+
+    i {
+        color: #667eea;
+    }
 }
 
 .detail-row {
     display: flex;
     margin-bottom: 0.5rem;
     padding: 0.25rem 0;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
 }
 
 .detail-label {
@@ -107,208 +498,135 @@
     flex-grow: 1;
 }
 
-/* Mensaje vacío */
-.empty-message {
-    text-align: center;
-    padding: 2rem;
+// ===================================
+// LOADER
+// ===================================
+.loader-box {
+    position: absolute;
+    inset: 0;
+    background: rgba(255,255,255,0.95);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: $border-radius;
 }
 
-.empty-message i {
-    font-size: 2rem;
-    color: #ccc;
-    margin-bottom: 1rem;
-}
-
-/* Ajustes para la tabla compact */
-:host ::ng-deep {
-    .p-datatable-sm .p-datatable-thead > tr > th {
-        padding: 0.6rem 0.5rem;
-        font-weight: 600;
-        color: #505050;
-    }
-    
-    .p-datatable-sm .p-datatable-tbody > tr > td {
-        padding: 0.6rem 0.5rem;
-        line-height: 1.3;
-    }
-    
-    .p-button-sm {
-        padding: 0.3rem 0.5rem;
-        font-size: 0.8rem;
-    }
-    
-    .p-datatable.p-datatable-gridlines .p-datatable-thead > tr > th {
-        border-width: 1px;
-    }
-    
-    .p-datatable.p-datatable-gridlines .p-datatable-tbody > tr > td {
-        border-width: 1px;
-    }
-    
-    .p-datatable-scrollable .p-datatable-wrapper {
-        border-radius: 0.25rem;
-    }
-    
-    .p-inputtext {
-        padding: 0.4rem 0.5rem;
-    }
-    
-    .p-paginator {
-        padding: 0.5rem;
-    }
-    
-    .p-button.p-button-icon-only.p-button-rounded.p-button-sm {
-        height: 2rem;
-        width: 2rem;
-    }
-    
-    // Evitar overflow horizontal en el contenedor principal
-    .card-body {
-        overflow-x: auto;
-        position: relative;
-        
-        .row {
-            min-width: 0;
-        }
-        
-        .col-12, .col-md-3, .col-md-6 {
-            min-width: 0;
-        }
-    }
-    
-    // Ajustes específicos para PrimeNG
-    .movimientos-table {
-        .p-datatable-wrapper {
-            max-height: 700px;
-        }
-        
-        .p-datatable-tbody > tr:focus {
-            outline: none !important;
-        }
-        
-        .p-datatable-tbody > tr:hover {
-            background-color: rgba(0, 0, 0, 0.04);
-        }
-        
-        .p-column-title {
-            font-weight: 600;
-        }
-        
-        .p-datatable-tbody > tr > td {
-            vertical-align: middle;
-        }
-        
-        // Colores para los estados
-        .text-success {
-            color: #4caf50 !important;
-        }
-        
-        .text-danger {
-            color: #f44336 !important;
-        }
-        
-        .text-warning {
-            color: #ff9800 !important;
-        }
-        
-        .text-info {
-            color: #2196f3 !important;
-        }
-    }
-}
-
-// Solución específica para dropdowns de PrimeNG
-:host ::ng-deep .p-dropdown {
+.loader-8 {
     position: relative;
-    width: 100%;
-    
-    .p-dropdown-label {
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    width: 40px;
+    height: 40px;
+
+    &:after {
+        content: '';
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 3px solid $primary-color;
+        border-right-color: transparent;
+        animation: rotate 1s infinite linear;
+        position: absolute;
     }
 }
 
-// Estilos globales para el panel del dropdown (se aplica a nivel del body)
-::ng-deep .p-dropdown-panel {
-    position: fixed !important;
-    z-index: 1100 !important;
-    max-width: 350px !important;
-    min-width: 200px !important;
-    
-    // Evitar que se salga de los bordes de la pantalla
-    left: auto !important;
-    right: auto !important;
-    
-    .p-dropdown-items {
-        max-height: 200px;
-        overflow-y: auto;
-    }
-    
-    .p-dropdown-filter-container {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        background: white;
-        border-bottom: 1px solid #e9ecef;
-    }
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
-// Asegurar que el contenedor principal no tenga overflow
-.container-fluid,
-.card {
-    overflow-x: visible !important;
-}
+// ===================================
+// RESPONSIVE DESIGN
+// ===================================
+@media (max-width: 768px) {
+    .module-header {
+        flex-direction: column;
+        align-items: flex-start !important;
 
-// Ajuste específico para las columnas de los filtros
-.row.g-2 {
-    margin-left: 0;
-    margin-right: 0;
-    
-    .col-12, .col-md-3, .col-md-6 {
-        padding-left: 0.5rem;
-        padding-right: 0.5rem;
-        
-        .p-dropdown {
+        > div:last-child {
             width: 100%;
+            justify-content: flex-end;
+            margin-top: 0.75rem;
         }
     }
-}
 
-.card {
-    margin-bottom: 1.5rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,.08);
-    border-radius: 0.5rem;
-    border: none;
-    
-    // Evitar overflow horizontal
-    overflow: hidden;
-}
+    .table-toolbar {
+        .d-flex {
+            flex-direction: column;
+            gap: 0.75rem;
 
-.card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid rgba(0,0,0,.125);
-    padding: 0.8rem 1rem;
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
-}
-
-.form-group {
-    margin-bottom: 1rem;
-}
-
-.p-button {
-    margin-right: 0.5rem;
-}
-
-.p-calendar {
-    width: 100%;
-}
-
-/* Reducir espacio entre filas para modo compact */
-@media (min-width: 768px) {
-    .compact-row td {
-        padding-top: 0.4rem !important;
-        padding-bottom: 0.4rem !important;
+            > div {
+                width: 100%;
+            }
+        }
     }
+
+    .metrics-scroll-container {
+        &::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+    }
+
+    .metric-chip {
+        padding: 0.5rem 0.75rem;
+        min-height: 44px;
+        flex-shrink: 0;
+
+        .metric-badge {
+            min-width: 28px;
+            height: 24px;
+            font-size: 0.8125rem;
+        }
+    }
+
+    .separator {
+        display: none;
+    }
+}
+
+@media (max-width: 576px) {
+    .module-header h5 {
+        font-size: 1.1rem;
+    }
+
+    .metric-chip {
+        font-size: 0.8rem;
+        gap: 0.35rem;
+    }
+}
+
+// ===================================
+// AJUSTES GENERALES
+// ===================================
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.gap-2 {
+    gap: 0.5rem !important;
+}
+
+// Shadows
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+// Border utilities
+.border-0 {
+    border: 0 !important;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #dee2e6 !important;
+}
+
+.border-top {
+    border-top: 1px solid #dee2e6 !important;
 }

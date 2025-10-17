@@ -98,24 +98,410 @@
     .p-datatable-tbody {
         tr {
             transition: background-color 0.2s ease;
-            
+
             &:hover {
                 background-color: rgba(0, 0, 0, 0.02);
             }
         }
-        
+
         td {
             vertical-align: middle;
-            
+
             img {
                 border-radius: 4px;
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
                 transition: transform 0.2s ease;
-                
+
                 &:hover {
                     transform: scale(1.05);
                 }
             }
+        }
+    }
+}
+
+// ============================================
+// ESTILOS MODERNOS ESTILO DESPACHOS
+// ============================================
+
+// Variables
+$primary-color: #2196F3;
+$success-color: #66BB6A;
+$info-color: #42A5F5;
+$warning-color: #FFA726;
+$danger-color: #FF5252;
+$secondary-color: #78909C;
+$border-radius: 8px;
+
+// Animaciones
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+// Estilo del encabezado del módulo
+.module-header {
+    background: linear-gradient(to right, white, #fafafa);
+    border-radius: $border-radius $border-radius 0 0;
+
+    h5 {
+        font-size: 1.3rem;
+
+        i {
+            font-size: 1.1rem;
+        }
+    }
+
+    p {
+        opacity: 0.8;
+        margin-left: 2rem;
+    }
+}
+
+// Loader mejorado
+.loader-box {
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: $border-radius;
+}
+
+.loader-box .loader-8 {
+    position: relative;
+    width: 40px;
+    height: 40px;
+}
+
+.loader-box .loader-8:after {
+    content: '';
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid $primary-color;
+    border-right-color: transparent;
+    animation: rotate 1s infinite linear;
+    position: absolute;
+}
+
+// Estilos para Botón de Acción Flotante (FAB)
+.btn-fab {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    z-index: 1050;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+
+    i {
+        font-size: 1.5rem;
+    }
+
+    &:hover {
+        transform: scale(1.1);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    }
+}
+
+// Badges modernos para productos (estilo breadcrumb chips)
+.badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1.5px solid transparent;
+    transition: all 0.2s ease;
+
+    i {
+        font-size: 0.7rem;
+        opacity: 0.9;
+    }
+
+    // Activo (verde estilo breadcrumb)
+    &.bg-success {
+        background-color: #e8f5e9 !important;
+        color: #2e7d32 !important;
+        border-color: #a5d6a7 !important;
+    }
+
+    // Inactivo (rojo estilo breadcrumb)
+    &.bg-danger {
+        background-color: #ffebee !important;
+        color: #c62828 !important;
+        border-color: #ef9a9a !important;
+    }
+
+    // Disponible (info/cyan estilo breadcrumb)
+    &.bg-info {
+        background-color: #e1f5fe !important;
+        color: #0277bd !important;
+        border-color: #81d4fa !important;
+    }
+
+    // Producción (warning/naranja estilo breadcrumb)
+    &.bg-warning {
+        background-color: #fff3e0 !important;
+        color: #ef6c00 !important;
+        border-color: #ffcc80 !important;
+    }
+
+    // No disponible (gris estilo breadcrumb)
+    &.bg-secondary {
+        background-color: #f5f5f5 !important;
+        color: #616161 !important;
+        border-color: #e0e0e0 !important;
+    }
+
+    // No produce (light)
+    &.bg-light {
+        background-color: #fafafa !important;
+        color: #757575 !important;
+        border: 1.5px solid #e0e0e0 !important;
+    }
+
+    // Hover effect
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+}
+
+// Badges específicos para tipos de producto
+.badge-product-traditional {
+    background-color: #e3f2fd;
+    color: #1976d2;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid #bbdefb;
+
+    i {
+        font-size: 0.7rem;
+    }
+}
+
+.badge-product-dropshipping {
+    background-color: #e1f5fe;
+    color: #0277bd;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid #b3e5fc;
+
+    i {
+        font-size: 0.7rem;
+    }
+}
+
+// Estilos para el input de búsqueda
+.search-input-group {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    &:focus-within {
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+
+    .input-group-text {
+        background: #f8f9fa;
+        border-right: none;
+
+        i {
+            font-size: 0.875rem;
+            color: #6c757d;
+        }
+    }
+
+    .search-input {
+        border-left: none;
+
+        &:focus {
+            border-color: #ced4da;
+            box-shadow: none;
+        }
+
+        &::placeholder {
+            color: #6c757d;
+            font-style: italic;
+        }
+    }
+}
+
+// Thumbnails de productos
+.product-thumbnail {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        transform: scale(1.1);
+    }
+}
+
+// Mejoras para botones de acción en tabla
+.action-buttons-table {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    align-items: center;
+
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        transition: all 0.2s ease;
+        background-color: transparent;
+
+        i {
+            font-size: 1rem;
+        }
+
+        &:hover {
+            transform: scale(1.15);
+        }
+
+        &.btn-action-info {
+            color: #17a2b8;
+
+            &:hover {
+                background-color: rgba(23, 162, 184, 0.1);
+            }
+        }
+
+        &.btn-action-purple {
+            color: #9c27b0;
+
+            &:hover {
+                background-color: rgba(156, 39, 176, 0.1);
+            }
+        }
+
+        &.btn-action-success {
+            color: #28a745;
+
+            &:hover {
+                background-color: rgba(40, 167, 69, 0.1);
+            }
+        }
+
+        &.btn-action-danger {
+            color: #dc3545;
+
+            &:hover {
+                background-color: rgba(220, 53, 69, 0.1);
+            }
+        }
+    }
+}
+
+// Card con sombra suave
+.card.shadow-sm {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    }
+}
+
+// Responsive
+@media (max-width: 768px) {
+    .module-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+
+        > div:last-child {
+            margin-top: 1rem;
+            width: 100%;
+        }
+    }
+
+    .btn-fab {
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+
+        i {
+            font-size: 1.3rem;
+        }
+    }
+
+    .btn-sm {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .action-buttons-table {
+        gap: 0.25rem;
+
+        .btn-action {
+            width: 28px;
+            height: 28px;
+
+            i {
+                font-size: 0.9rem;
+            }
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    .module-header h5 {
+        font-size: 1.1rem;
+    }
+
+    .badge {
+        font-size: 0.7rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    .search-input-group .search-input {
+        font-size: 0.8rem;
+    }
+
+    .btn-fab {
+        width: 48px;
+        height: 48px;
+
+        i {
+            font-size: 1.2rem;
         }
     }
 }
