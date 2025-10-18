@@ -11,6 +11,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { EnviameHelperService } from '../enviame/services/enviame-helper.service';
 import { TrackingDetailsModalComponent } from '../enviame/tracking-details/tracking-details-modal.component';
 import { EnviameCancelModalComponent } from '../enviame/cancel-modal/enviame-cancel-modal.component';
+import { EvidenciaEmpacadoModalComponent } from '../evidencia-empacado-modal/evidencia-empacado-modal.component';
 
 @Component({
   selector: 'app-tabla-pedidos',
@@ -46,6 +47,9 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   @Output() onEnviameTrackingDetails = new EventEmitter<Pedido>();
   @Output() onEnviameCancelShipment = new EventEmitter<Pedido>();
   @Output() onEnviameDownloadLabel = new EventEmitter<Pedido>();
+
+  // NEW - Evidencia empacado action
+  @Output() onUploadEvidenciaEmpacado = new EventEmitter<Pedido>();
 
   // NEW - Lazy loading output (2025.09.05)
   @Output() onLazyLoad = new EventEmitter<LazyLoadEvent>();
@@ -320,6 +324,20 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     items.push({ separator: true });
+
+    // Evidencia de Empacado - Available for Empacado and Despachado states
+    const canUploadEvidencia = pedido.estadoProceso === EstadoProceso.Empacado ||
+                                pedido.estadoProceso === EstadoProceso.Despachado ||
+                                pedido.estadoProceso === EstadoProceso.EnDespacho;
+
+    if (canUploadEvidencia) {
+      items.push({
+        label: 'Subir Evidencia',
+        icon: 'pi pi-camera',
+        command: () => this.openEvidenciaEmpacadoModal(pedido)
+      });
+      items.push({ separator: true });
+    }
 
     // Si está en SinProducir, solo puede cambiar a ProducidoTotalmente
     if (pedido.estadoProceso === EstadoProceso.SinProducir) {
@@ -639,5 +657,38 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       canTrack: !!trackingNumber,
       canDownloadLabel: !!trackingNumber
     };
+  }
+
+  // =====================================
+  // EVIDENCIA EMPACADO METHODS
+  // =====================================
+
+  /**
+   * Opens the evidencia empacado modal for uploading packing evidence photos
+   */
+  openEvidenciaEmpacadoModal(pedido: Pedido): void {
+    console.log('📸 TablaPedidos - Opening evidencia empacado modal for pedido:', pedido.nroPedido);
+
+    const ref = this.dialogService.open(EvidenciaEmpacadoModalComponent, {
+      header: `Evidencia de Empacado - Pedido ${pedido.nroPedido}`,
+      width: '900px',
+      modal: true,
+      closable: true,
+      data: {
+        pedido: pedido,
+        companyId: pedido.company || localStorage.getItem('x_idEmpresa') || localStorage.getItem('companyId')
+      }
+    });
+
+    ref.onClose.subscribe((result) => {
+      if (result && result.updated) {
+        console.log('✅ TablaPedidos - Evidencia empacado modal closed with update');
+        // Refresh order data
+        this.onRefreshData.emit(this.dt1);
+      }
+    });
+
+    // Emit event for parent component tracking
+    this.onUploadEvidenciaEmpacado.emit(pedido);
   }
 }

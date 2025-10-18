@@ -23,7 +23,16 @@
       "WebFetch(domain:www.dian.gov.co)",
       "WebFetch(domain:es.wikipedia.org)",
       "WebFetch(domain:www.social.com.co)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git checkout HEAD -- src/app/components/productos/)",
+      "Bash(pkill -9 -f \"ng serve\")",
+      "Bash(pkill -9 -f \"ng build\")",
+      "Bash(git checkout HEAD -- src/app/components/chat/ src/app/shared/components/floating-button/ src/app/shared/components/voice-agent/ src/app/shared/components/gemini-asistant/)",
+      "Bash(timeout 120 ng serve --port 4200)",
+      "Bash(lsof -ti:4200)",
+      "Bash(xargs kill -9)",
+      "Read(//private/tmp/**)",
+      "Bash(npm start)"
     ],
     "deny": [],
     "ask": []

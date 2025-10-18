@@ -37,6 +37,8 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { InputTextModule } from 'primeng/inputtext';
+import { DividerModule } from 'primeng/divider';
+import { ProgressBarModule } from 'primeng/progressbar';
 
 // Componentes
 import { TablaPedidosComponent } from "./components/tabla-pedidos/tabla-pedidos.component";
@@ -58,6 +60,7 @@ import { EnviameRatesModalComponent } from "./components/enviame/rates-modal/env
 import { EnviameCancelModalComponent } from "./components/enviame/cancel-modal/enviame-cancel-modal.component";
 import { TrackingDetailsModalComponent } from "./components/enviame/tracking-details/tracking-details-modal.component";
 import { EnviameHelperService } from "./components/enviame/services/enviame-helper.service";
+import { EvidenciaEmpacadoModalComponent } from "./components/evidencia-empacado-modal/evidencia-empacado-modal.component";
 
 // Servicios para códigos DANE
 import { DaneCodesService } from "../../shared/services/dane-codes.service";
@@ -99,6 +102,8 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     CheckboxModule,
     InputTextareaModule,
     InputTextModule,
+    DividerModule,
+    ProgressBarModule,
     NgbNavModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
@@ -130,6 +135,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     EnviameRatesModalComponent,
     EnviameCancelModalComponent,
     TrackingDetailsModalComponent,
+    EvidenciaEmpacadoModalComponent,
   ],
   exports: [DetalleEntregaComponent],
 })

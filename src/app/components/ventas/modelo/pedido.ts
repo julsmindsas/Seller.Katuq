@@ -64,6 +64,7 @@ export interface Pedido {
   // Propiedades de evidencia de entrega
   fotosEvidencia?: string[];
   fotoEvidencia?: string;
+  fotoEvidenciaEmpacado?: string[];
   signatureImage?: string;
   historialEstadoProceso?: HistorialEstadoProceso[];
   ultimaImpresion?: string; // Fecha/hora de la última impresión

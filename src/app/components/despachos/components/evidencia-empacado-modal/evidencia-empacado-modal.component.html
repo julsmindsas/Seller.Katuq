@@ -1,0 +1,177 @@
+<div class="evidencia-empacado-modal">
+  <!-- Header con información del pedido -->
+  <div class="pedido-info">
+    <div class="info-item">
+      <i class="pi pi-shopping-cart"></i>
+      <span><strong>Pedido:</strong> {{ pedido?.nroPedido }}</span>
+    </div>
+    <div class="info-item">
+      <i class="pi pi-user"></i>
+      <span><strong>Cliente:</strong> {{ pedido?.cliente?.nombres_completos }}</span>
+    </div>
+    <div class="info-item">
+      <i class="pi pi-info-circle"></i>
+      <span><strong>Estado:</strong> {{ pedido?.estadoProceso }}</span>
+    </div>
+  </div>
+
+  <p-divider></p-divider>
+
+  <!-- Instrucciones -->
+  <div class="instrucciones">
+    <i class="pi pi-info-circle text-primary"></i>
+    <span>Puedes subir hasta {{ MAX_FILES }} fotos de evidencia de empacado. Formatos permitidos: JPG, PNG, WEBP. Tamaño máximo: 5MB por archivo.</span>
+  </div>
+
+  <!-- Contador de fotos -->
+  <div class="foto-counter" [ngClass]="{'counter-warning': getTotalPhotos() >= MAX_FILES}">
+    <i class="pi pi-images"></i>
+    <span>Fotos: {{ getTotalPhotos() }} / {{ MAX_FILES }}</span>
+  </div>
+
+  <!-- Fotos existentes -->
+  <div class="existing-photos-section" *ngIf="existingPhotos.length > 0">
+    <h4 class="section-title">
+      <i class="pi pi-check-circle text-success"></i>
+      Fotos Guardadas ({{ existingPhotos.length }})
+    </h4>
+    <div class="photos-grid">
+      <div class="photo-card existing-photo" *ngFor="let photo of existingPhotos; let i = index">
+        <img [src]="photo"
+             alt="Evidencia existente {{ i + 1 }}"
+             (click)="showImageViewer(photo)"
+             style="cursor: pointer;" />
+        <div class="photo-overlay">
+          <button pButton pRipple type="button"
+                  icon="pi pi-eye"
+                  class="p-button-rounded p-button-info p-button-sm"
+                  (click)="showImageViewer(photo)"
+                  pTooltip="Ver imagen en tamaño completo"
+                  tooltipPosition="top">
+          </button>
+          <button pButton pRipple type="button"
+                  icon="pi pi-trash"
+                  class="p-button-rounded p-button-danger p-button-sm delete-permanent-btn"
+                  (click)="deleteExistingPhotoFromStorage(photo, i)"
+                  pTooltip="Eliminar permanentemente del servidor"
+                  tooltipPosition="top">
+          </button>
+        </div>
+        <div class="photo-badge">
+          <i class="pi pi-check"></i> Guardada
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selector de archivos -->
+  <div class="file-selector-section" *ngIf="canAddMore() && !uploading">
+    <button pButton pRipple type="button"
+            icon="pi pi-camera"
+            label="Seleccionar Fotos"
+            class="p-button-outlined p-button-primary selector-button"
+            [disabled]="processingFiles"
+            (click)="fileInput.click()">
+    </button>
+    <input #fileInput
+           type="file"
+           class="file-input-hidden"
+           accept="image/jpeg,image/jpg,image/png,image/webp"
+           multiple
+           (change)="onFileSelect($event)" />
+  </div>
+
+  <!-- Indicador de procesamiento de archivos -->
+  <div class="processing-indicator" *ngIf="processingFiles">
+    <div class="processing-content">
+      <i class="pi pi-spin pi-spinner processing-spinner"></i>
+      <span class="processing-text">Procesando {{ filesBeingProcessed }} foto(s)...</span>
+    </div>
+    <p class="processing-subtext">Generando vista previa de las imágenes seleccionadas</p>
+  </div>
+
+  <!-- Fotos nuevas seleccionadas (pendientes de subir) -->
+  <div class="new-photos-section" *ngIf="files.length > 0">
+    <h4 class="section-title">
+      <i class="pi pi-cloud-upload text-warning"></i>
+      Fotos Nuevas ({{ files.length }})
+    </h4>
+    <div class="photos-grid">
+      <div class="photo-card new-photo" *ngFor="let file of files; let i = index">
+        <img [src]="file.preview"
+             alt="Nueva foto {{ i + 1 }}"
+             (click)="showImageViewer(file.preview)"
+             style="cursor: pointer;" />
+        <div class="photo-overlay" *ngIf="!uploading">
+          <button pButton pRipple type="button"
+                  icon="pi pi-eye"
+                  class="p-button-rounded p-button-info p-button-sm"
+                  (click)="showImageViewer(file.preview)"
+                  pTooltip="Ver imagen en tamaño completo"
+                  tooltipPosition="top">
+          </button>
+          <button pButton pRipple type="button"
+                  icon="pi pi-times"
+                  class="p-button-rounded p-button-danger p-button-sm"
+                  (click)="removeFile(i)"
+                  pTooltip="Quitar de la lista"
+                  tooltipPosition="top">
+          </button>
+        </div>
+        <div class="photo-badge new-badge">
+          <i class="pi pi-clock"></i> Nueva
+        </div>
+
+        <!-- Barra de progreso individual -->
+        <div class="progress-container" *ngIf="uploading && file.progress > 0">
+          <p-progressBar [value]="file.progress"
+                         [showValue]="true"
+                         styleClass="custom-progress">
+          </p-progressBar>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progreso general -->
+  <div class="overall-progress" *ngIf="uploading && files.length > 0">
+    <h4 class="section-title">
+      <i class="pi pi-spin pi-spinner text-primary"></i>
+      Subiendo fotos...
+    </h4>
+    <p-progressBar [value]="overallProgress"
+                   [showValue]="true"
+                   styleClass="overall-progress-bar">
+    </p-progressBar>
+    <p class="progress-text">{{ overallProgress | number:'1.0-0' }}% completado</p>
+  </div>
+
+  <!-- Botones de acción -->
+  <div class="action-buttons">
+    <button pButton pRipple type="button"
+            label="Cancelar"
+            icon="pi pi-times"
+            class="p-button-text p-button-secondary"
+            (click)="cancelar()"
+            [disabled]="uploading">
+    </button>
+    <button pButton pRipple type="button"
+            label="Guardar Evidencias"
+            icon="pi pi-save"
+            class="p-button-primary"
+            (click)="guardar()"
+            [disabled]="uploading || (files.length === 0 && existingPhotos.length === 0)"
+            [loading]="uploading">
+    </button>
+  </div>
+</div>
+
+<!-- Lightbox / Image Viewer -->
+<div *ngIf="imageViewerVisible" class="image-viewer-overlay" (click)="hideImageViewer()">
+  <div class="image-viewer-content" (click)="$event.stopPropagation()">
+    <button class="image-viewer-close" (click)="hideImageViewer()">
+      <i class="pi pi-times"></i>
+    </button>
+    <img [src]="selectedImageUrl" class="image-viewer-image" alt="Vista de evidencia" />
+  </div>
+</div>
