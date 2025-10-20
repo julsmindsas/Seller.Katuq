@@ -72,6 +72,7 @@ export class ChatService {
   public sendMessage(chat) {
     this.chat.filter(chats => {
       if (chats.id == chat.receiver) {
+        // Agregar mensaje del usuario
         chats.message.push({ sender: chat.sender, time: today.toLowerCase(), text: chat.message });
         setTimeout(function () {
           const chatHistory = document.querySelector(".chat-history");
@@ -79,40 +80,68 @@ export class ChatService {
             chatHistory.scrollBy({ top: 200, behavior: 'smooth' });
           }
         }, 310)
-        // this.responseMessage(chat)
+
+        // Preparar usuario y mensaje asistente
+        const user = this.users.find(u => u.id === chat.receiver);
+        if (user) { user.typing = true; }
+
+        // Crear mensaje del asistente (inicialmente vacío)
+        const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+        let messageAddedToChat = false;
 
         // Intentar streaming SSE primero
         try {
           this.stopStreaming(chat.receiver);
-          const user = this.users.find(u => u.id === chat.receiver);
-          if (user) { user.typing = true; }
-          const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
-          this.chat.filter(chats => {
-            if (chats.id == chat.receiver) {
-              chats.message.push(assistantMsg);
-            }
-          });
+
+          console.log('[ChatService] Intentando streaming para:', chat.message);
 
           const sub = this.kai.streamProductRetriver(chat.message).subscribe({
             next: (chunk: string) => {
+              // Solo añadir mensaje al chat la primera vez que llega un chunk
+              if (!messageAddedToChat) {
+                this.chat.filter(c => {
+                  if (c.id == chat.receiver) {
+                    c.message.push(assistantMsg);
+                  }
+                });
+                messageAddedToChat = true;
+              }
+
               assistantMsg.text += chunk;
               document.querySelector(".chat-history")?.scrollBy({ top: 150, behavior: 'smooth' });
             },
-            error: (_err) => {
-              // Fallback a llamada normal si el stream falla
-              this.invokeOnceFallback(chat, assistantMsg, user);
+            error: (err) => {
+              console.warn('[ChatService] Streaming falló, usando fallback:', err);
+
+              // Si ya se añadió mensaje vacío, eliminarlo
+              if (messageAddedToChat) {
+                this.chat.filter(c => {
+                  if (c.id == chat.receiver) {
+                    const idx = c.message.indexOf(assistantMsg);
+                    if (idx > -1) {
+                      c.message.splice(idx, 1);
+                    }
+                  }
+                });
+                messageAddedToChat = false;
+              }
+
+              // Usar fallback con mensaje nuevo
+              const fallbackMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+              this.invokeOnceFallback(chat, fallbackMsg, user);
             },
             complete: () => {
+              console.log('[ChatService] Streaming completado');
               if (user) { user.typing = false; }
               this.activeStreamSubscriptions[chat.receiver] = null;
             }
           });
           this.activeStreamSubscriptions[chat.receiver] = sub as any;
-        } catch (_e) {
-          // Fallback si falla
-          const user = this.users.find(u => u.id === chat.receiver);
-          const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
-          this.invokeOnceFallback(chat, assistantMsg, user);
+        } catch (e) {
+          console.error('[ChatService] Error al iniciar streaming:', e);
+          // Fallback si falla al iniciar
+          const fallbackMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+          this.invokeOnceFallback(chat, fallbackMsg, user);
         }
       }
     })
@@ -134,17 +163,69 @@ export class ChatService {
   }
 
   private invokeOnceFallback(chat, assistantMsg, user?: any) {
-    this.kai.invokeKatuqAdvandceIntelligenceForProductRetriver(chat.message).subscribe(response => {
-      if (response) {
+    console.log('[ChatService] Ejecutando fallback para:', chat.message);
+
+    this.kai.invokeKatuqAdvandceIntelligenceForProductRetriver(chat.message).subscribe({
+      next: (response) => {
+        console.log('[ChatService] Respuesta del backend:', response);
+
+        // Validar que la respuesta existe y tiene contenido
+        if (!response) {
+          console.error('[ChatService] Respuesta vacía del backend');
+          assistantMsg.text = 'Lo siento, no recibí respuesta del servidor.';
+          if (user) { user.typing = false; }
+          return;
+        }
+
+        // Extraer el resultado del JSON
+        let resultText = '';
+
+        if (typeof response === 'string') {
+          // Si la respuesta es un string, usarla directamente
+          resultText = response;
+        } else if (response.result) {
+          // Si tiene el campo "result", extraerlo
+          resultText = response.result.toString();
+        } else if (response.message) {
+          // Algunos backends usan "message" en lugar de "result"
+          resultText = response.message.toString();
+        } else {
+          // Si no tiene campos conocidos, intentar stringify del objeto completo
+          console.warn('[ChatService] Respuesta en formato desconocido:', response);
+          resultText = JSON.stringify(response);
+        }
+
+        console.log('[ChatService] Texto extraído:', resultText.substring(0, 100) + '...');
+
+        // Añadir el mensaje al chat
         this.chat.filter(chats => {
           if (chats.id == chat.receiver) {
+            // Asignar el texto al mensaje asistente
+            assistantMsg.text = resultText.trim();
+
+            // Añadir el mensaje al historial
+            chats.message.push(assistantMsg);
+
             setTimeout(() => {
-              assistantMsg.text = (response.result || '').toString();
               if (user) { user.typing = false; }
               document.querySelector(".chat-history")?.scrollBy({ top: 250, behavior: 'smooth' });
             }, 300);
           }
-        })
+        });
+      },
+      error: (err) => {
+        console.error('[ChatService] Error al invocar backend:', err);
+
+        // Mensaje de error amigable
+        assistantMsg.text = 'Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta nuevamente.';
+
+        this.chat.filter(chats => {
+          if (chats.id == chat.receiver) {
+            chats.message.push(assistantMsg);
+          }
+        });
+
+        if (user) { user.typing = false; }
       }
     });
   }

@@ -50,12 +50,12 @@
           <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
         </div>
       <div class="message-bubble">
-          <!-- Mostrar siempre el texto directamente o render MD seguro -->
-          <div class="message-text" [innerHTML]="chat.text | markdown"></div>
-          
+          <!-- Mostrar el texto del mensaje con saltos de línea preservados -->
+          <div class="message-text" [style.white-space]="'pre-wrap'">{{ chat.text }}</div>
+
           <!-- Imagen si existe -->
           <img *ngIf="chat.image" [src]="chat.image" class="message-image" alt="Imagen de respuesta" onerror="this.src='assets/images/default-avatar.png'">
-          
+
           <div class="message-meta">
             <span class="message-time">{{ chat.time }}</span>
             <div class="message-actions">
