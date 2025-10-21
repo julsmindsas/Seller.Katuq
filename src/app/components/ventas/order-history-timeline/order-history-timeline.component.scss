@@ -1,0 +1,259 @@
+/**
+ * ========================================================================
+ * ESTILOS: Timeline de Historial de Estados de Pedidos
+ * ========================================================================
+ * Creado: 2025-10-21
+ * 
+ * Estilos NUEVOS - No modifica ningún estilo existente
+ */
+
+.order-history-timeline {
+  padding: 1rem 0;
+  max-height: 600px;
+  overflow-y: auto;
+
+  // Custom scrollbar
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+    
+    &:hover {
+      background: #94a3b8;
+    }
+  }
+}
+
+// Timeline Header
+.timeline-header {
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+
+  h6 {
+    font-weight: 600;
+    color: #334155;
+    margin: 0;
+  }
+}
+
+// Timeline Wrapper
+.timeline-wrapper {
+  position: relative;
+  padding-left: 2.5rem;
+  margin-top: 1.5rem;
+
+  // Línea vertical del timeline
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0.75rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, #e2e8f0 0%, #cbd5e1 50%, #e2e8f0 100%);
+  }
+}
+
+// Timeline Item
+.timeline-item {
+  position: relative;
+  padding-bottom: 2rem;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+
+  // Resaltar retrocesos
+  &.timeline-item-backward {
+    .timeline-content {
+      border-left: 3px solid #f59e0b;
+      background: linear-gradient(to right, #fef3c7 0%, transparent 100%);
+    }
+  }
+}
+
+// Timeline Marker (círculo)
+.timeline-marker {
+  position: absolute;
+  left: -2.5rem;
+  top: 0.25rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 3px solid white;
+  z-index: 2;
+
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+
+// Timeline Content
+.timeline-content {
+  background: white;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-left: 3px solid transparent;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+}
+
+// State Transition
+.state-transition {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.65rem;
+    font-weight: 500;
+  }
+}
+
+// Timeline Meta
+.timeline-meta {
+  font-size: 0.85rem;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+
+  strong {
+    color: #475569;
+  }
+
+  i {
+    opacity: 0.7;
+  }
+}
+
+// Timeline Metadata (expandible)
+.timeline-metadata {
+  font-size: 0.85rem;
+  animation: slideDown 0.3s ease;
+
+  .metadata-row {
+    display: flex;
+    align-items: baseline;
+    
+    strong {
+      min-width: 140px;
+      color: #475569;
+      font-size: 0.8rem;
+    }
+
+    span {
+      color: #64748b;
+      word-break: break-word;
+    }
+  }
+}
+
+// Badge Classes
+.badge-success {
+  background-color: #22c55e !important;
+  color: white;
+}
+
+.badge-warning {
+  background-color: #f59e0b !important;
+  color: white;
+}
+
+.badge-danger {
+  background-color: #ef4444 !important;
+  color: white;
+}
+
+.badge-secondary {
+  background-color: #6b7280 !important;
+  color: white;
+}
+
+// Loading State
+.timeline-loading {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Empty State
+.timeline-empty {
+  min-height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Animations
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .order-history-timeline {
+    max-height: 500px;
+  }
+
+  .timeline-wrapper {
+    padding-left: 2rem;
+  }
+
+  .timeline-marker {
+    width: 1.5rem;
+    height: 1.5rem;
+    left: -2rem;
+
+    i {
+      font-size: 0.6rem !important;
+    }
+  }
+
+  .timeline-content {
+    padding: 0.75rem;
+  }
+
+  .timeline-metadata {
+    .metadata-row {
+      flex-direction: column;
+      
+      strong {
+        min-width: auto;
+        margin-bottom: 0.25rem;
+      }
+    }
+  }
+}

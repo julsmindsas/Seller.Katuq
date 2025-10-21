@@ -34,6 +34,7 @@ import { MultiSelectModule } from "primeng/multiselect";
 import { PedidosUtilService } from "./service/pedidos.util.service";
 import { ToastModule } from "primeng/toast";
 import { TooltipModule } from "primeng/tooltip";
+import { DialogModule } from "primeng/dialog";
 import { AsentarpagomanualComponent } from "./asentarpagomanual/asentarpagomanual.component";
 import { AutoCompleteModule } from "primeng/autocomplete";
 import { ClientesListaComponent } from "./clientes/lista/clientes-lista.component";
@@ -63,7 +64,8 @@ import {
 } from "../../shared/services/ventas/pos-checkout.service";
 import { ReporteCierreComponent } from "./pos2/widgets/cash-closing/reporte-cierre/reporte-cierre.component";
 import { DespachosModule } from "../despachos/despachos.module";
-import { ListProduccionComponent } from './list/list-produccion.component';
+import { ListProduccionComponent } from "./list/list-produccion.component";
+import { OrderHistoryTimelineComponent } from "./order-history-timeline/order-history-timeline.component";
 
 @NgModule({
   imports: [
@@ -88,6 +90,7 @@ import { ListProduccionComponent } from './list/list-produccion.component';
     MultiSelectModule,
     ToastModule,
     TooltipModule,
+    DialogModule,
     HttpClientModule,
     VoiceInteractionModule,
     DespachosModule,
@@ -124,6 +127,7 @@ import { ListProduccionComponent } from './list/list-produccion.component';
     DireccionEstructuradaComponent,
     CustomerSectionComponent,
     CartSummaryComponent,
+    OrderHistoryTimelineComponent, // NUEVO: 2025-10-21 - Componente de timeline de historial
     PaymentSelectorComponent,
     ListProduccionComponent,
   ],

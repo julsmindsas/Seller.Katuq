@@ -533,4 +533,36 @@ export class VentasService extends BaseService {
     }
   }
 
+  /**
+   * ========================================================================
+   * NUEVO MÉTODO: Obtener historial de cambios de estado de una orden
+   * ========================================================================
+   * Creado: 2025-10-21
+   * Propósito: Consultar el historial completo de cambios de estado
+   * Endpoint: GET /v1/orders/:orderId/history
+   * 
+   * NO MODIFICA ningún método existente - Solo agrega funcionalidad nueva
+   * 
+   * @param orderId - ID de la orden (_id)
+   * @returns Observable con el historial de cambios
+   */
+  getOrderHistory(orderId: string): Observable<any> {
+    if (!orderId) {
+      throw new Error("orderId es requerido para obtener el historial");
+    }
+    
+    console.log(`📜 Consultando historial de orden: ${orderId}`);
+    
+    return this.get<any>(`/v1/orders/${orderId}/history`).pipe(
+      tap((response) => {
+        if (response.success) {
+          console.log(`✅ Historial obtenido: ${response.totalRecords} registros`);
+        } else {
+          console.warn("⚠️ No se pudo obtener el historial:", response.error);
+        }
+      })
+    );
+  }
+
+
 }

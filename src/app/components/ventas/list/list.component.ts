@@ -12,7 +12,13 @@ import {
   OnDestroy,
   ChangeDetectorRef,
 } from "@angular/core";
-import { trigger, state, style, transition, animate } from '@angular/animations';
+import {
+  trigger,
+  state,
+  style,
+  transition,
+  animate,
+} from "@angular/animations";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import {
   Carrito,
@@ -48,24 +54,30 @@ import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
-import { Subject, forkJoin } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { Subject, forkJoin } from "rxjs";
+import { debounceTime, distinctUntilChanged, takeUntil } from "rxjs/operators";
 
 @Component({
   selector: "app-list-orders",
   templateUrl: "./list.component.html",
   styleUrls: ["./list.component.scss"],
   animations: [
-    trigger('slideInOut', [
-      transition(':enter', [
-        style({ transform: 'translateY(-100%)', opacity: 0 }),
-        animate('200ms ease-in', style({ transform: 'translateY(0)', opacity: 1 }))
+    trigger("slideInOut", [
+      transition(":enter", [
+        style({ transform: "translateY(-100%)", opacity: 0 }),
+        animate(
+          "200ms ease-in",
+          style({ transform: "translateY(0)", opacity: 1 }),
+        ),
       ]),
-      transition(':leave', [
-        animate('200ms ease-out', style({ transform: 'translateY(-100%)', opacity: 0 }))
-      ])
-    ])
-  ]
+      transition(":leave", [
+        animate(
+          "200ms ease-out",
+          style({ transform: "translateY(-100%)", opacity: 0 }),
+        ),
+      ]),
+    ]),
+  ],
 })
 export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
@@ -124,7 +136,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   searchDebounceTime: number = 300;
 
   // Propiedades para búsqueda local adicional
-  localSearchQuery: string = '';
+  localSearchQuery: string = "";
   filteredOrders: Pedido[] = [];
   isLocalSearchActive: boolean = false;
   originalOrders: Pedido[] = [];
@@ -153,7 +165,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scrollStack.push(window.scrollY);
 
     // Capturar scroll de la tabla si existe
-    const tableElement = document.querySelector('.p-datatable-scrollable-body');
+    const tableElement = document.querySelector(".p-datatable-scrollable-body");
     if (tableElement) {
       this.tableScrollStack.push(tableElement.scrollTop);
     }
@@ -180,7 +192,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Restaurar scroll de la tabla si existe
         if (lastTableScroll !== undefined) {
-          const tableElement = document.querySelector('.p-datatable-scrollable-body');
+          const tableElement = document.querySelector(
+            ".p-datatable-scrollable-body",
+          );
           if (tableElement) {
             tableElement.scrollTop = lastTableScroll;
           }
@@ -232,16 +246,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       EstadoProcesoFiltros.ProducidoParcialmente,
       EstadoProcesoFiltros.ProducidoTotalmente,
       EstadoProcesoFiltros.Empacado,
-      EstadoProcesoFiltros.Despachado
+      EstadoProcesoFiltros.Despachado,
     ];
 
     const estadosGrupo2 = [
       EstadoProcesoFiltros.Entregado,
-      EstadoProcesoFiltros.Cerrado
+      EstadoProcesoFiltros.Cerrado,
     ];
 
-    return estadosGrupo1.includes(order.estadoProceso as unknown as EstadoProcesoFiltros) ||
-      estadosGrupo2.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+    return (
+      estadosGrupo1.includes(
+        order.estadoProceso as unknown as EstadoProcesoFiltros,
+      ) ||
+      estadosGrupo2.includes(
+        order.estadoProceso as unknown as EstadoProcesoFiltros,
+      )
+    );
   }
 
   /**
@@ -260,10 +280,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       EstadoProcesoFiltros.ProducidoParcialmente,
       EstadoProcesoFiltros.ProducidoTotalmente,
       EstadoProcesoFiltros.Empacado,
-      EstadoProcesoFiltros.Despachado
+      EstadoProcesoFiltros.Despachado,
     ];
 
-    return estadosGrupo1.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+    return estadosGrupo1.includes(
+      order.estadoProceso as unknown as EstadoProcesoFiltros,
+    );
   }
 
   /**
@@ -279,10 +301,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const estadosGrupo2 = [
       EstadoProcesoFiltros.Entregado,
-      EstadoProcesoFiltros.Cerrado
+      EstadoProcesoFiltros.Cerrado,
     ];
 
-    return estadosGrupo2.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+    return estadosGrupo2.includes(
+      order.estadoProceso as unknown as EstadoProcesoFiltros,
+    );
   }
 
   /**
@@ -308,8 +332,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Solo permitir eliminación en estados muy tempranos del proceso
     const estadosPermitidos = [
-      'Pendiente',           // Pedido recién creado
-      'SinProducir'          // Pedido confirmado pero sin iniciar producción
+      "Pendiente", // Pedido recién creado
+      "SinProducir", // Pedido confirmado pero sin iniciar producción
     ];
 
     return estadosPermitidos.includes(order.estadoProceso);
@@ -327,19 +351,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Verificar si el producto tiene propiedades críticas como null
     const producto = item.producto;
-    
+
     // Si el título del producto es null, es un producto fantasma
-    if (!producto.crearProducto?.titulo || producto.crearProducto.titulo === 'null') {
+    if (
+      !producto.crearProducto?.titulo ||
+      producto.crearProducto.titulo === "null"
+    ) {
       return true;
     }
 
     // Si la referencia es null, es un producto fantasma
-    if (!producto.identificacion?.referencia || producto.identificacion.referencia === 'null') {
+    if (
+      !producto.identificacion?.referencia ||
+      producto.identificacion.referencia === "null"
+    ) {
       return true;
     }
 
     // Si el precio es null o 0, podría ser un producto fantasma
-    if (!producto.precio?.precioUnitarioConIva || producto.precio.precioUnitarioConIva === 0) {
+    if (
+      !producto.precio?.precioUnitarioConIva ||
+      producto.precio.precioUnitarioConIva === 0
+    ) {
       return true;
     }
 
@@ -354,13 +387,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   getDeleteButtonTitle(item: Carrito, pedido: Pedido): string {
     if (this.isGhostProduct(item)) {
-      return 'Eliminar producto fantasma (producto con datos corruptos)';
+      return "Eliminar producto fantasma (producto con datos corruptos)";
     }
-    
+
     if (this.canDeleteProducts(pedido)) {
-      return 'Eliminar producto';
+      return "Eliminar producto";
     }
-    
+
     return `No se puede eliminar - Solo permitido en estados Pendiente o SinProducir. Estado actual: ${pedido.estadoProceso}`;
   }
 
@@ -445,12 +478,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const formaEntregaLower = order.formaEntrega.toLowerCase();
 
     // Bloquear si contiene "recoge"
-    if (formaEntregaLower.includes('recoge')) {
+    if (formaEntregaLower.includes("recoge")) {
       return false;
     }
 
     // Activar si contiene "domicilio"
-    if (formaEntregaLower.includes('domicilio')) {
+    if (formaEntregaLower.includes("domicilio")) {
       return true;
     }
 
@@ -525,7 +558,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       EstadoProcesoFiltros.Entregado,
       EstadoProcesoFiltros.Cerrado,
     ];
-    return !bloqueados.includes(order.estadoProceso as unknown as EstadoProcesoFiltros);
+    return !bloqueados.includes(
+      order.estadoProceso as unknown as EstadoProcesoFiltros,
+    );
   }
 
   /** Devuelve estados de pago disponibles según permisos (usuarios normales: Pendiente, PreAprobado) */
@@ -546,9 +581,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Solo administradores pueden asignar asesores
     return !!(
       this.UserLogged?.rol &&
-      (this.UserLogged.rol.toLowerCase() === 'administrador' ||
-        this.UserLogged.rol.toLowerCase() === 'admin' ||
-        this.UserLogged.rol.toLowerCase() === 'super administrador')
+      (this.UserLogged.rol.toLowerCase() === "administrador" ||
+        this.UserLogged.rol.toLowerCase() === "admin" ||
+        this.UserLogged.rol.toLowerCase() === "super administrador")
     );
   }
 
@@ -571,11 +606,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   indiceProductoSeleccionado: number;
   fechaInicial: string;
   fechaFinal: string;
-  
+
   // Propiedades para el código de descuento
-  codigoDescuentoIngresado: string = '';
+  codigoDescuentoIngresado: string = "";
   validandoDescuento: boolean = false;
-  errorCodigoDescuento: string = '';
+  errorCodigoDescuento: string = "";
   descuentoAplicado: any = null;
   pedidoSeleccionadoDescuento: Pedido;
   // Date objects for p-calendar components
@@ -587,7 +622,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   filteredOrderNumbers: any;
   ordenes: any;
   ordersByName: any;
-  searchQuery: string = '';
+  searchQuery: string = "";
   showSuggestions: boolean = false;
   UserLogged: UserLogged;
   allBillingZone: any;
@@ -791,35 +826,209 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Configuración de columnas específica para producción
   displayedColumnsProduccion: ColumnDefinition[] = [
-    { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
-    { field: "referencia", header: "Referencia", visible: true, type: "text", filterable: true },
-    { field: "ultimaImpresion", header: "Última impresión", visible: true, type: "date", filterable: false },
-    { field: "revisadoParaProduccion", header: "Revisado", visible: true, type: "date", filterable: true },
-    { field: "nroPedido", header: "# Pedido", visible: true, type: "text", filterable: true },
-    { field: "cantidad", header: "Cantidad", visible: true, type: "text", filterable: true },
-    { field: "cliente", header: "Cliente", visible: true, type: "text", filterable: true },
-    { field: "estadoPago", header: "Estado de Pago", visible: true, type: "status", filterable: true },
-    { field: "estadoProceso", header: "Estado de Proceso", visible: true, type: "status", filterable: true },
-    { field: "validacion", header: "Validación", visible: true, type: "status", filterable: true },
-    { field: "totalPedidoSinDescuento", header: "Valor Bruto", visible: true, type: "currency", filterable: true },
-    { field: "totalDescuento", header: "Descuento", visible: true, type: "currency", filterable: true },
-    { field: "totalEnvio", header: "Domicilio", visible: true, type: "currency", filterable: true },
-    { field: "subtotal", header: "Subtotal", visible: true, type: "currency", filterable: true },
-    { field: "totalImpuesto", header: "IVA", visible: true, type: "currency", filterable: true },
-    { field: "totalPedididoConDescuento", header: "Total", visible: true, type: "currency", filterable: true },
-    { field: "anticipo", header: "Anticipo", visible: true, type: "currency", filterable: true },
-    { field: "faltaPorPagar", header: "Falta por Pagar", visible: true, type: "currency", filterable: true },
-    { field: "fechaEntrega", header: "Fecha Entrega", visible: true, type: "date", filterable: true },
-    { field: "fechaCreacion", header: "Fecha de compra", visible: true, type: "date", filterable: true },
-    { field: "ciudad", header: "Ciudad", visible: true, type: "text", filterable: true },
-    { field: "zonaCobro", header: "Zona de Entrega", visible: true, type: "text", filterable: true },
-    { field: "formaEntrega", header: "Forma de Entrega", visible: true, type: "text", filterable: true },
-    { field: "horarioEntrega", header: "Horario de Entrega", visible: true, type: "text", filterable: true },
-    { field: "channel", header: "Canal", visible: true, type: "text", filterable: true },
-    { field: "vendedor", header: "Vendedor", visible: true, type: "text", filterable: true },
-    { field: "despachador", header: "Despachador", visible: false, type: "text", filterable: true },
-    { field: "transportador", header: "Transportador", visible: false, type: "text", filterable: true },
-    { field: "fechaYHorarioDespachado", header: "Fecha y Horario de Despachado", visible: false, type: "date", filterable: true }
+    {
+      field: "producto",
+      header: "Producto",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "referencia",
+      header: "Referencia",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "ultimaImpresion",
+      header: "Última impresión",
+      visible: true,
+      type: "date",
+      filterable: false,
+    },
+    {
+      field: "revisadoParaProduccion",
+      header: "Revisado",
+      visible: true,
+      type: "date",
+      filterable: true,
+    },
+    {
+      field: "nroPedido",
+      header: "# Pedido",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "cantidad",
+      header: "Cantidad",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "cliente",
+      header: "Cliente",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "estadoPago",
+      header: "Estado de Pago",
+      visible: true,
+      type: "status",
+      filterable: true,
+    },
+    {
+      field: "estadoProceso",
+      header: "Estado de Proceso",
+      visible: true,
+      type: "status",
+      filterable: true,
+    },
+    {
+      field: "validacion",
+      header: "Validación",
+      visible: true,
+      type: "status",
+      filterable: true,
+    },
+    {
+      field: "totalPedidoSinDescuento",
+      header: "Valor Bruto",
+      visible: true,
+      type: "currency",
+      filterable: true,
+    },
+    {
+      field: "totalDescuento",
+      header: "Descuento",
+      visible: true,
+      type: "currency",
+      filterable: true,
+    },
+    {
+      field: "totalEnvio",
+      header: "Domicilio",
+      visible: true,
+      type: "currency",
+      filterable: true,
+    },
+    {
+      field: "subtotal",
+      header: "Subtotal",
+      visible: true,
+      type: "currency",
+      filterable: true,
+    },
+    {
+      field: "totalImpuesto",
+      header: "IVA",
+      visible: true,
+      type: "currency",
+      filterable: true,
+    },
+    {
+      field: "totalPedididoConDescuento",
+      header: "Total",
+      visible: true,
+      type: "currency",
+      filterable: true,
+    },
+    {
+      field: "anticipo",
+      header: "Anticipo",
+      visible: true,
+      type: "currency",
+      filterable: true,
+    },
+    {
+      field: "faltaPorPagar",
+      header: "Falta por Pagar",
+      visible: true,
+      type: "currency",
+      filterable: true,
+    },
+    {
+      field: "fechaEntrega",
+      header: "Fecha Entrega",
+      visible: true,
+      type: "date",
+      filterable: true,
+    },
+    {
+      field: "fechaCreacion",
+      header: "Fecha de compra",
+      visible: true,
+      type: "date",
+      filterable: true,
+    },
+    {
+      field: "ciudad",
+      header: "Ciudad",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "zonaCobro",
+      header: "Zona de Entrega",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "formaEntrega",
+      header: "Forma de Entrega",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "horarioEntrega",
+      header: "Horario de Entrega",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "channel",
+      header: "Canal",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "vendedor",
+      header: "Vendedor",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "despachador",
+      header: "Despachador",
+      visible: false,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "transportador",
+      header: "Transportador",
+      visible: false,
+      type: "text",
+      filterable: true,
+    },
+    {
+      field: "fechaYHorarioDespachado",
+      header: "Fecha y Horario de Despachado",
+      visible: false,
+      type: "date",
+      filterable: true,
+    },
   ];
   selectedColumnsProduccion: ColumnDefinition[] = [];
 
@@ -835,54 +1044,88 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   };
 
   // Nuevas propiedades para el diseño minimalista
-  selectedDatePreset: string = '';
+  selectedDatePreset: string = "";
   datePresets = [
-    { label: 'Hoy', value: 'today' },
-    { label: 'Esta semana', value: 'week' },
-    { label: 'Este mes', value: 'month' },
-    { label: 'Semana pasada', value: 'lastWeek' },
-    { label: 'Mes pasado', value: 'lastMonth' }
+    { label: "Hoy", value: "today" },
+    { label: "Esta semana", value: "week" },
+    { label: "Este mes", value: "month" },
+    { label: "Semana pasada", value: "lastWeek" },
+    { label: "Mes pasado", value: "lastMonth" },
   ];
 
   // Spanish locale configuration for p-calendar
   es: any = {
     firstDayOfWeek: 1,
-    dayNames: ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'],
-    dayNamesShort: ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'],
-    dayNamesMin: ['D', 'L', 'M', 'X', 'J', 'V', 'S'],
-    monthNames: ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'],
-    monthNamesShort: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'],
-    today: 'Hoy',
-    clear: 'Limpiar',
-    dateFormat: 'dd/mm/yy',
-    weekHeader: 'Sm'
+    dayNames: [
+      "domingo",
+      "lunes",
+      "martes",
+      "miércoles",
+      "jueves",
+      "viernes",
+      "sábado",
+    ],
+    dayNamesShort: ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"],
+    dayNamesMin: ["D", "L", "M", "X", "J", "V", "S"],
+    monthNames: [
+      "enero",
+      "febrero",
+      "marzo",
+      "abril",
+      "mayo",
+      "junio",
+      "julio",
+      "agosto",
+      "septiembre",
+      "octubre",
+      "noviembre",
+      "diciembre",
+    ],
+    monthNamesShort: [
+      "ene",
+      "feb",
+      "mar",
+      "abr",
+      "may",
+      "jun",
+      "jul",
+      "ago",
+      "sep",
+      "oct",
+      "nov",
+      "dic",
+    ],
+    today: "Hoy",
+    clear: "Limpiar",
+    dateFormat: "dd/mm/yy",
+    weekHeader: "Sm",
   };
 
   // Opciones para los dropdowns de estado
   estadosPagoOptions = [
-    { label: 'Todos', value: 'all' },
-    { label: 'Aprobado', value: 'Aprobado' },
-    { label: 'Pendiente', value: 'Pendiente' },
-    { label: 'PreAprobado', value: 'PreAprobado' },
-    { label: 'Pospendiente', value: 'Pospendiente' },
-    { label: 'Rechazado', value: 'Rechazado' },
-    { label: 'Precancelado', value: 'Precancelado' },
-    { label: 'Cancelado', value: 'Cancelado' }
+    { label: "Todos", value: "all" },
+    { label: "Aprobado", value: "Aprobado" },
+    { label: "Pendiente", value: "Pendiente" },
+    { label: "PreAprobado", value: "PreAprobado" },
+    { label: "Pospendiente", value: "Pospendiente" },
+    { label: "Rechazado", value: "Rechazado" },
+    { label: "Precancelado", value: "Precancelado" },
+    { label: "Cancelado", value: "Cancelado" },
   ];
 
   estadosProcesoOptions = [
-    { label: 'Todos', value: 'all' },
-    { label: 'Sin Producir', value: 'SinProducir' },
-    { label: 'En Producción', value: 'EnProduccion' },
-    { label: 'Producido', value: 'Producido' },
-    { label: 'Producido Parcialmente', value: 'ProducidoParcialmente' },
-    { label: 'Producido Totalmente', value: 'ProducidoTotalmente' },
-    { label: 'Empacado', value: 'Empacado' },
-    { label: 'Para Despachar', value: 'ParaDespachar' },
-    { label: 'Despachado', value: 'Despachado' },
-    { label: 'Entregado', value: 'Entregado' },
-    { label: 'Rechazado', value: 'Rechazado' },
-    { label: 'Cerrado', value: 'Cerrado' }
+    { label: "Todos", value: "all" },
+    { label: "Sin Producir", value: "SinProducir" },
+    { label: "En Producción", value: "EnProduccion" },
+    { label: "Producido", value: "Producido" },
+    { label: "Producido Parcialmente", value: "ProducidoParcialmente" },
+    { label: "Producido Totalmente", value: "ProducidoTotalmente" },
+    { label: "Empacado", value: "Empacado" },
+    { label: "Para Despachar", value: "ParaDespachar" },
+    { label: "Despachado", value: "Despachado" },
+    { label: "Entregado", value: "Entregado" },
+    { label: "Rechazado", value: "Rechazado" },
+    { label: "Cerrado", value: "Cerrado" },
   ];
 
   constructor(
@@ -901,11 +1144,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private bodegaService: BodegaService,
     private toastrService: ToastrService,
     private loaderService: LoaderService,
-    private changeDetectorRef: ChangeDetectorRef
+    private changeDetectorRef: ChangeDetectorRef,
   ) {
-    console.log('🔧 Constructor - Registrando filtros personalizados...');
+    console.log("🔧 Constructor - Registrando filtros personalizados...");
     this.registerCustomFilters();
-    console.log('✅ Constructor - Filtros personalizados registrados');
+    console.log("✅ Constructor - Filtros personalizados registrados");
     this.setupSearchDebounce();
 
     const unaSemana = 7 * 24 * 60 * 60 * 1000;
@@ -933,14 +1176,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Configura el debounce para la búsqueda
    */
   private setupSearchDebounce(): void {
-    this.searchSubject.pipe(
-      debounceTime(this.searchDebounceTime),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$)
-    ).subscribe(query => {
-      console.log('Debounce ejecutado con query:', query);
-      this.performSearch(query);
-    });
+    this.searchSubject
+      .pipe(
+        debounceTime(this.searchDebounceTime),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((query) => {
+        console.log("Debounce ejecutado con query:", query);
+        this.performSearch(query);
+      });
   }
 
   /**
@@ -953,7 +1198,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Validar longitud mínima de 3 caracteres
     if (query.trim().length < 3) {
-      console.log('⚠️ Búsqueda requiere al menos 3 caracteres');
+      console.log("⚠️ Búsqueda requiere al menos 3 caracteres");
       return false;
     }
 
@@ -983,7 +1228,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.ventasService.getOrdersByNroPedido(trimmedQuery).subscribe({
       next: (res: any) => {
         // Asegurar que la respuesta sea un array
-        const results = Array.isArray(res) ? res : (res ? [res] : []);
+        const results = Array.isArray(res) ? res : res ? [res] : [];
         this.filteredOrderNumbers = results;
         this.ordersByName = results;
         this.isSearching = false;
@@ -991,7 +1236,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         // Si no hay resultados, mostrar array vacío (el template 'empty' se mostrará automáticamente)
         if (results.length === 0) {
-          console.log('ℹ️ No se encontraron pedidos para:', trimmedQuery);
+          console.log("ℹ️ No se encontraron pedidos para:", trimmedQuery);
         }
 
         // Mostrar el panel del autocomplete después de cargar los datos
@@ -1000,11 +1245,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.log('⚠️ Error en búsqueda principal:', err);
+        console.log("⚠️ Error en búsqueda principal:", err);
 
         // Verificar si el error es por "no encontrado"
-        const isNotFoundError = err?.error?.message?.includes('No se encontraron pedidos') ||
-                               err?.status === 404;
+        const isNotFoundError =
+          err?.error?.message?.includes("No se encontraron pedidos") ||
+          err?.status === 404;
 
         if (isNotFoundError) {
           // No es un error real, simplemente no hay resultados
@@ -1012,29 +1258,35 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ordersByName = [];
           this.isSearching = false;
           this.searchError = null;
-          console.log('ℹ️ No se encontraron pedidos (404)');
+          console.log("ℹ️ No se encontraron pedidos (404)");
         } else {
           // Fallback al servicio original si es un error real
-          this.service.getOrderByName(trimmedQuery).then((res: any) => {
-            const results = Array.isArray(res) ? res : (res ? [res] : []);
-            this.filteredOrderNumbers = results;
-            this.ordersByName = results;
-            this.isSearching = false;
-            this.searchError = null;
+          this.service
+            .getOrderByName(trimmedQuery)
+            .then((res: any) => {
+              const results = Array.isArray(res) ? res : res ? [res] : [];
+              this.filteredOrderNumbers = results;
+              this.ordersByName = results;
+              this.isSearching = false;
+              this.searchError = null;
 
-            // Mostrar el panel del autocomplete después de cargar los datos
-            if (this.sharedFilters && this.sharedFilters.showAutocompletePanel) {
-              this.sharedFilters.showAutocompletePanel();
-            }
-          }).catch((fallbackErr: any) => {
-            this.searchError = 'Error al buscar pedido. Intente nuevamente.';
-            this.filteredOrderNumbers = [];
-            this.ordersByName = [];
-            this.isSearching = false;
-            this.toastrService.error(this.searchError, 'Error de Búsqueda');
-          });
+              // Mostrar el panel del autocomplete después de cargar los datos
+              if (
+                this.sharedFilters &&
+                this.sharedFilters.showAutocompletePanel
+              ) {
+                this.sharedFilters.showAutocompletePanel();
+              }
+            })
+            .catch((fallbackErr: any) => {
+              this.searchError = "Error al buscar pedido. Intente nuevamente.";
+              this.filteredOrderNumbers = [];
+              this.ordersByName = [];
+              this.isSearching = false;
+              this.toastrService.error(this.searchError, "Error de Búsqueda");
+            });
         }
-      }
+      },
     });
   }
 
@@ -1046,7 +1298,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchQuery = query;
 
     // Validar entrada
-    if (!query || typeof query !== 'string') {
+    if (!query || typeof query !== "string") {
       this.filteredOrderNumbers = [];
       this.showSuggestions = false;
       return;
@@ -1072,7 +1324,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   selectOrder(item: any): void {
     if (!item || !item.nroPedido) {
-      this.toastrService.warning('Pedido inválido seleccionado', 'Advertencia');
+      this.toastrService.warning("Pedido inválido seleccionado", "Advertencia");
       return;
     }
 
@@ -1090,7 +1342,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Mostrar notificación de éxito
     this.toastrService.success(
       `Pedido #${item.nroPedido} cargado correctamente`,
-      'Pedido Encontrado'
+      "Pedido Encontrado",
     );
 
     // Limpiar errores de búsqueda
@@ -1102,7 +1354,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   clearSearchFilter(): void {
     this.nroPedido = null;
-    this.searchQuery = '';
+    this.searchQuery = "";
     this.filteredOrderNumbers = [];
     this.ordersByName = [];
     this.searchError = null;
@@ -1112,17 +1364,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.saveFiltersState();
 
     // Mostrar notificación
-    this.toastrService.info('Filtro de búsqueda limpiado', 'Filtro Limpiado');
+    this.toastrService.info("Filtro de búsqueda limpiado", "Filtro Limpiado");
   }
 
   /**
    * Obtiene el estado de búsqueda para mostrar en la UI
    */
-  getSearchStatus(): { isSearching: boolean; hasError: boolean; errorMessage: string | null } {
+  getSearchStatus(): {
+    isSearching: boolean;
+    hasError: boolean;
+    errorMessage: string | null;
+  } {
     return {
       isSearching: this.isSearching,
       hasError: !!this.searchError,
-      errorMessage: this.searchError
+      errorMessage: this.searchError,
     };
   }
 
@@ -1130,7 +1386,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Verifica si hay una búsqueda activa
    */
   hasActiveSearch(): boolean {
-    return this.isSearching || !!this.searchError || (this.filteredOrderNumbers && this.filteredOrderNumbers.length > 0);
+    return (
+      this.isSearching ||
+      !!this.searchError ||
+      (this.filteredOrderNumbers && this.filteredOrderNumbers.length > 0)
+    );
   }
 
   // ===== MÉTODOS PARA BÚSQUEDA LOCAL ADICIONAL =====
@@ -1139,7 +1399,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Inicializa la búsqueda local
    */
   initializeLocalSearch(): void {
-    this.localSearchQuery = '';
+    this.localSearchQuery = "";
     this.filteredOrders = [];
     this.isLocalSearchActive = false;
     this.originalOrders = [];
@@ -1185,27 +1445,36 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    this.filteredOrders = this.originalOrders.filter(order => {
+    this.filteredOrders = this.originalOrders.filter((order) => {
       // Buscar por número de pedido
-      if (order.nroPedido && order.nroPedido.toLowerCase().includes(searchTerm)) {
+      if (
+        order.nroPedido &&
+        order.nroPedido.toLowerCase().includes(searchTerm)
+      ) {
         return true;
       }
 
       // Buscar por nombre del cliente
-      if (order.cliente?.nombres_completos &&
-        order.cliente.nombres_completos.toLowerCase().includes(searchTerm)) {
+      if (
+        order.cliente?.nombres_completos &&
+        order.cliente.nombres_completos.toLowerCase().includes(searchTerm)
+      ) {
         return true;
       }
 
       // Buscar por documento del cliente
-      if (order.cliente?.documento &&
-        order.cliente.documento.toLowerCase().includes(searchTerm)) {
+      if (
+        order.cliente?.documento &&
+        order.cliente.documento.toLowerCase().includes(searchTerm)
+      ) {
         return true;
       }
 
       // Buscar por referencia
-      if (order.referencia &&
-        order.referencia.toLowerCase().includes(searchTerm)) {
+      if (
+        order.referencia &&
+        order.referencia.toLowerCase().includes(searchTerm)
+      ) {
         return true;
       }
 
@@ -1233,7 +1502,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Limpia la búsqueda local
    */
   clearLocalSearch(): void {
-    this.localSearchQuery = '';
+    this.localSearchQuery = "";
     this.isLocalSearchActive = false;
 
     // Restaurar los pedidos originales
@@ -1266,10 +1535,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   shouldShowLocalSearch(): boolean {
     // Mostrar si hay pedidos originales (sin filtrar) o si hay una búsqueda activa
     // También mostrar si se ha cargado al menos una vez (para mantener la barra visible)
-    return this.originalOrders.length > 0 ||
+    return (
+      this.originalOrders.length > 0 ||
       this.isLocalSearchActive ||
       this.localSearchQuery.trim().length > 0 ||
-      this.hasLoadedOrdersOnce;
+      this.hasLoadedOrdersOnce
+    );
   }
 
   // ===== MÉTODOS PARA INTEGRACIÓN CON SHARED FILTERS =====
@@ -1287,8 +1558,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Maneja el evento completeMethod del autocompletado
    */
   onSearchComplete(event: any): void {
-    const query = event.query || '';
-    console.log('🔍 Búsqueda autocompletado (Enter presionado):', query);
+    const query = event.query || "";
+    console.log("🔍 Búsqueda autocompletado (Enter presionado):", query);
 
     // Ejecutar búsqueda inmediatamente sin debounce cuando viene del Enter
     // Esto permite que el dropdown se muestre con los resultados
@@ -1304,7 +1575,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Maneja la selección de un pedido desde el autocompletado
    */
   onSearchSelect(event: any): void {
-    console.log('✅ Pedido seleccionado desde autocompletado:', event);
+    console.log("✅ Pedido seleccionado desde autocompletado:", event);
 
     // Llamar al método existente de selección
     this.selectOrder(event);
@@ -1315,7 +1586,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   onSharedDateFromChange(date: Date | null): void {
     this.fechaInicialDate = date;
-    this.fechaInicial = date ? date.toISOString().split('T')[0] : '';
+    this.fechaInicial = date ? date.toISOString().split("T")[0] : "";
     this.sharedFilterService.updateFilterState({ fechaInicial: date });
     this.onDateFromChange(date);
   }
@@ -1325,7 +1596,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   onSharedDateToChange(date: Date | null): void {
     this.fechaFinalDate = date;
-    this.fechaFinal = date ? date.toISOString().split('T')[0] : '';
+    this.fechaFinal = date ? date.toISOString().split("T")[0] : "";
     this.sharedFilterService.updateFilterState({ fechaFinal: date });
     this.onDateToChange(date);
   }
@@ -1375,19 +1646,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Maneja la limpieza de un filtro específico desde el componente compartido
    */
-  onSharedClearSpecificFilter(event: {type: string, value?: string}): void {
-    switch(event.type) {
-      case 'search':
+  onSharedClearSpecificFilter(event: { type: string; value?: string }): void {
+    switch (event.type) {
+      case "search":
         this.clearSearchFilter();
         break;
-      case 'date':
-        this.clearDateFilter(event.value as 'inicial' | 'final');
+      case "date":
+        this.clearDateFilter(event.value as "inicial" | "final");
         break;
-      case 'estadoPago':
-        this.clearQuickFilter('estadoPago');
+      case "estadoPago":
+        this.clearQuickFilter("estadoPago");
         break;
-      case 'estadoProceso':
-        this.clearQuickFilter('estadoProceso');
+      case "estadoProceso":
+        this.clearQuickFilter("estadoProceso");
         break;
     }
   }
@@ -1403,24 +1674,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Update the shared filter service with initial dates
     this.sharedFilterService.updateFilterState({
       fechaInicial: this.fechaInicialDate,
-      fechaFinal: this.fechaFinalDate
+      fechaFinal: this.fechaFinalDate,
     });
 
     // Suscribirse a los cambios del servicio de filtros compartido
-    this.sharedFilterService.filterState$.subscribe(state => {
+    this.sharedFilterService.filterState$.subscribe((state) => {
       this.searchQuery = state.searchQuery;
       // Only update dates if they are provided by the service
       if (state.fechaInicial !== undefined && state.fechaInicial !== null) {
         this.fechaInicialDate = state.fechaInicial;
-        this.fechaInicial = state.fechaInicial.toISOString().split('T')[0];
+        this.fechaInicial = state.fechaInicial.toISOString().split("T")[0];
       }
       if (state.fechaFinal !== undefined && state.fechaFinal !== null) {
         this.fechaFinalDate = state.fechaFinal;
-        this.fechaFinal = state.fechaFinal.toISOString().split('T')[0];
+        this.fechaFinal = state.fechaFinal.toISOString().split("T")[0];
       }
       this.quickFilters.estadoPago = state.estadoPago;
       this.quickFilters.estadoProceso = state.estadoProceso;
-      this.selectedDatePreset = state.selectedDatePreset || '';
+      this.selectedDatePreset = state.selectedDatePreset || "";
     });
 
     // Sync Date objects with string dates (dates should already be initialized)
@@ -1441,7 +1712,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           estado === EstadoProcesoFiltros.SinProducir ||
           estado === EstadoProcesoFiltros.EnProduccion ||
           estado === EstadoProcesoFiltros.ProducidoParcialmente ||
-          estado === EstadoProcesoFiltros.ProducidoTotalmente
+          estado === EstadoProcesoFiltros.ProducidoTotalmente,
       );
     }
     this.validaciones = [
@@ -1456,7 +1727,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Asegurar que las columnas estén en el orden correcto
     this.initializeColumns();
-
 
     // Cargar estado de filtros guardado
     this.loadFiltersState();
@@ -1492,13 +1762,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private calcularPrecioUnitarioSinIVA(itemCarrito: any): number {
     const producto = itemCarrito.producto;
     const cantidad = itemCarrito.cantidad;
-    
+
     if (!producto?.precio) {
       return 0;
     }
 
     const preciosVolumen = producto.precio.preciosVolumen || [];
-    
+
     // Si no hay precios por volumen, usar precio base
     if (preciosVolumen.length === 0) {
       return Number(producto.precio.precioUnitarioSinIva) || 0;
@@ -1521,11 +1791,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   checkPriceScale(pedido) {
     let totalPrecioSinIVADef = 0;
-    
+
     if (pedido && pedido.carrito) {
       pedido.carrito.forEach((itemCarrito) => {
         // Calcular precio base del producto con escalas de volumen
-        const precioUnitarioSinIVA = this.calcularPrecioUnitarioSinIVA(itemCarrito);
+        const precioUnitarioSinIVA =
+          this.calcularPrecioUnitarioSinIVA(itemCarrito);
         let totalPrecioSinIVA = precioUnitarioSinIVA * itemCarrito.cantidad;
 
         // Sumar precios de adiciones
@@ -1545,13 +1816,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         // Sumar precios de preferencias
-        if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
+        if (
+          itemCarrito.configuracion &&
+          itemCarrito.configuracion.preferencias
+        ) {
           itemCarrito.configuracion.preferencias.forEach((preferencia) => {
             totalPrecioSinIVA +=
               preferencia["valorUnitarioSinIva"] * itemCarrito.cantidad;
           });
         }
-        
+
         totalPrecioSinIVADef += totalPrecioSinIVA;
       });
     }
@@ -1565,13 +1839,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private calcularIVAUnitario(itemCarrito: any): number {
     const producto = itemCarrito.producto;
     const cantidad = itemCarrito.cantidad;
-    
+
     if (!producto?.precio) {
       return 0;
     }
 
     const preciosVolumen = producto.precio.preciosVolumen || [];
-    
+
     // Si no hay precios por volumen, usar IVA base
     if (preciosVolumen.length === 0) {
       return Number(producto.precio.valorIva) || 0;
@@ -1594,7 +1868,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   checkIVAPrice(pedido) {
     let totalPrecioIVADef = 0;
-    
+
     if (pedido && pedido.carrito) {
       pedido.carrito.forEach((itemCarrito) => {
         // Calcular IVA base del producto con escalas de volumen
@@ -1611,17 +1885,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   adicion["referencia"]["precioIva"] *
                   itemCarrito.cantidad;
               }
-            } catch (error) { }
+            } catch (error) {}
           });
         }
 
         // Sumar precios de preferencias
-        if (itemCarrito.configuracion && itemCarrito.configuracion.preferencias) {
+        if (
+          itemCarrito.configuracion &&
+          itemCarrito.configuracion.preferencias
+        ) {
           itemCarrito.configuracion.preferencias.forEach((preferencia) => {
             totalPrecioIVA += preferencia["valorIva"] * itemCarrito.cantidad;
           });
         }
-        
+
         totalPrecioIVADef += totalPrecioIVA;
       });
     }
@@ -1630,7 +1907,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private registerCustomFilters() {
-    console.log('🔧 registerCustomFilters - Iniciando registro...');
+    console.log("🔧 registerCustomFilters - Iniciando registro...");
 
     this.filterService.register(
       "horarioEntregaCustom",
@@ -1650,62 +1927,86 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         return result;
       },
     );
-    console.log('✅ Filtro horarioEntregaCustom registrado');
+    console.log("✅ Filtro horarioEntregaCustom registrado");
 
     this.filterService.register("customDate", (value, filter): boolean => {
-      console.log('🔍 FILTRO customDate - Valor:', value, 'Filtro:', filter);
+      console.log("🔍 FILTRO customDate - Valor:", value, "Filtro:", filter);
 
       if (filter === undefined || filter === null) {
-        console.log('✅ Filtro vacío, retornando true');
+        console.log("✅ Filtro vacío, retornando true");
         return true;
       }
 
       if (value === undefined || value === null) {
-        console.log('❌ Valor vacío, retornando false');
+        console.log("❌ Valor vacío, retornando false");
         return false;
       }
 
       // Convertir el valor de la tabla (que puede ser string o Date) a Date
       let valueDate: Date;
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         // Si es string, convertir desde formato dd/MM/yyyy
-        const parts = value.split('/');
+        const parts = value.split("/");
         if (parts.length === 3) {
-          valueDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
-          console.log('📅 Valor string convertido:', value, '->', valueDate);
+          valueDate = new Date(
+            parseInt(parts[2]),
+            parseInt(parts[1]) - 1,
+            parseInt(parts[0]),
+          );
+          console.log("📅 Valor string convertido:", value, "->", valueDate);
         } else {
           valueDate = new Date(value);
-          console.log('📅 Valor string genérico convertido:', value, '->', valueDate);
+          console.log(
+            "📅 Valor string genérico convertido:",
+            value,
+            "->",
+            valueDate,
+          );
         }
       } else {
         valueDate = new Date(value);
-        console.log('📅 Valor Date convertido:', value, '->', valueDate);
+        console.log("📅 Valor Date convertido:", value, "->", valueDate);
       }
 
       // Convertir el filtro (que viene del calendario) a Date
       const filterDate = new Date(filter);
-      console.log('📅 Filtro convertido:', filter, '->', filterDate);
+      console.log("📅 Filtro convertido:", filter, "->", filterDate);
 
       // Verificar si las fechas son válidas
       if (isNaN(valueDate.getTime()) || isNaN(filterDate.getTime())) {
-        console.log('❌ Fecha inválida detectada - Valor:', valueDate, 'Filtro:', filterDate);
+        console.log(
+          "❌ Fecha inválida detectada - Valor:",
+          valueDate,
+          "Filtro:",
+          filterDate,
+        );
         return false;
       }
 
       // Comparar solo la fecha (sin hora)
-      const valueDateOnly = new Date(valueDate.getFullYear(), valueDate.getMonth(), valueDate.getDate());
-      const filterDateOnly = new Date(filterDate.getFullYear(), filterDate.getMonth(), filterDate.getDate());
+      const valueDateOnly = new Date(
+        valueDate.getFullYear(),
+        valueDate.getMonth(),
+        valueDate.getDate(),
+      );
+      const filterDateOnly = new Date(
+        filterDate.getFullYear(),
+        filterDate.getMonth(),
+        filterDate.getDate(),
+      );
 
-      console.log('📅 Comparando fechas:', valueDateOnly, 'vs', filterDateOnly);
+      console.log("📅 Comparando fechas:", valueDateOnly, "vs", filterDateOnly);
 
       const result = valueDateOnly.getTime() === filterDateOnly.getTime();
-      console.log('✅ Resultado del filtro:', result);
+      console.log("✅ Resultado del filtro:", result);
 
       return result;
     });
-    console.log('✅ Filtro customDate registrado');
+    console.log("✅ Filtro customDate registrado");
 
-    console.log('🎯 registerCustomFilters - Todos los filtros registrados exitosamente');
+    console.log(
+      "🎯 registerCustomFilters - Todos los filtros registrados exitosamente",
+    );
   }
 
   // ✅ NUEVO: Flag para controlar refrescos automáticos
@@ -1714,48 +2015,48 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Método para debug del filtro de fecha
   onDateFilterSelect(event: any, filterCallback: Function) {
-    console.log('🗓️ EVENTO onSelect del calendario:', event);
-    console.log('🗓️ Tipo de evento:', typeof event);
-    console.log('🗓️ Valor del evento:', event);
-    console.log('🗓️ Filter callback:', filterCallback);
-    console.log('🗓️ Filter callback tipo:', typeof filterCallback);
+    console.log("🗓️ EVENTO onSelect del calendario:", event);
+    console.log("🗓️ Tipo de evento:", typeof event);
+    console.log("🗓️ Valor del evento:", event);
+    console.log("🗓️ Filter callback:", filterCallback);
+    console.log("🗓️ Filter callback tipo:", typeof filterCallback);
 
     try {
       // Llamar al callback original
-      console.log('🗓️ Ejecutando filterCallback...');
+      console.log("🗓️ Ejecutando filterCallback...");
       filterCallback(event);
-      console.log('🗓️ filterCallback ejecutado exitosamente');
+      console.log("🗓️ filterCallback ejecutado exitosamente");
     } catch (error) {
-      console.error('❌ Error al ejecutar filterCallback:', error);
+      console.error("❌ Error al ejecutar filterCallback:", error);
     }
   }
 
   // Método alternativo para probar el filtro
   testDateFilter(event: any) {
-    console.log('🧪 TEST - Evento del calendario:', event);
-    console.log('🧪 TEST - Tipo de evento:', typeof event);
+    console.log("🧪 TEST - Evento del calendario:", event);
+    console.log("🧪 TEST - Tipo de evento:", typeof event);
 
     if (event && event.target) {
-      console.log('🧪 TEST - Valor del input:', event.target.value);
+      console.log("🧪 TEST - Valor del input:", event.target.value);
     }
   }
 
   // Método para probar el filtro manualmente
   testFilter(filterCallback: Function) {
-    console.log('🧪 TEST FILTER - Iniciando prueba manual del filtro');
-    console.log('🧪 TEST FILTER - Filter callback:', filterCallback);
-    console.log('🧪 TEST FILTER - Tipo de callback:', typeof filterCallback);
+    console.log("🧪 TEST FILTER - Iniciando prueba manual del filtro");
+    console.log("🧪 TEST FILTER - Filter callback:", filterCallback);
+    console.log("🧪 TEST FILTER - Tipo de callback:", typeof filterCallback);
 
     try {
       // Crear una fecha de prueba
       const testDate = new Date();
-      console.log('🧪 TEST FILTER - Fecha de prueba:', testDate);
+      console.log("🧪 TEST FILTER - Fecha de prueba:", testDate);
 
       // Ejecutar el filtro con la fecha de prueba
       filterCallback(testDate);
-      console.log('🧪 TEST FILTER - Filtro ejecutado exitosamente');
+      console.log("🧪 TEST FILTER - Filtro ejecutado exitosamente");
     } catch (error) {
-      console.error('❌ TEST FILTER - Error al ejecutar filtro:', error);
+      console.error("❌ TEST FILTER - Error al ejecutar filtro:", error);
     }
   }
 
@@ -1767,8 +2068,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const tiempoDesdeUltimoRefresco = ahora - this.ultimoRefresco;
     const tiempoMinimoEntreRefrescos = 30 * 1000; // 30 segundos mínimo entre refrescos
 
-    if (!forceRefresh && tiempoDesdeUltimoRefresco < tiempoMinimoEntreRefrescos) {
-      console.log(`⏰ REFRESCO OMITIDO - Último refresco hace ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s (mínimo ${tiempoMinimoEntreRefrescos / 1000}s)`);
+    if (
+      !forceRefresh &&
+      tiempoDesdeUltimoRefresco < tiempoMinimoEntreRefrescos
+    ) {
+      console.log(
+        `⏰ REFRESCO OMITIDO - Último refresco hace ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s (mínimo ${tiempoMinimoEntreRefrescos / 1000}s)`,
+      );
       return;
     }
 
@@ -1780,11 +2086,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.refrescoEnProgreso = true;
     this.ultimoRefresco = ahora;
 
-    console.log(`🔄 INICIANDO REFRESCO - Forzado: ${forceRefresh}, Tiempo desde último: ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s`);
+    console.log(
+      `🔄 INICIANDO REFRESCO - Forzado: ${forceRefresh}, Tiempo desde último: ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s`,
+    );
 
     // Ensure dates are set with fallback to today
     if (!this.fechaInicial || !this.fechaFinal) {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       this.fechaInicial = this.fechaInicial || today;
       this.fechaFinal = this.fechaFinal || today;
     }
@@ -1797,10 +2105,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const filter: any = {
       fechaInicial: startDate.toISOString(),
       fechaFinal: endDate.toISOString(),
-      company: JSON.parse(localStorage.getItem("currentCompany")!)
-        .nomComercial,
+      company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
       tipoFecha: "fechaEntrega",
-      estadoProceso: ["Todos"] 
+      estadoProceso: ["Todos"],
       //se comenta mientras salimos del dia de amor y amistad PARA ALMARA - 17/09/2025
       /*this.isFromProduction
         ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente, EstadoProceso.ProducidoTotalmente, EstadoProceso.ParaDespachar]
@@ -1816,8 +2123,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.quickFilters.estadoProceso !== "all") {
       if (this.isFromProduction) {
         // For production view, still allow process filtering but maintain production states
-        const productionStates = [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente, EstadoProceso.ParaDespachar];
-        if (productionStates.includes(this.quickFilters.estadoProceso as EstadoProceso)) {
+        const productionStates = [
+          EstadoProceso.SinProducir,
+          EstadoProceso.EnProduccion,
+          EstadoProceso.ProducidoParcialmente,
+          EstadoProceso.ParaDespachar,
+        ];
+        if (
+          productionStates.includes(
+            this.quickFilters.estadoProceso as EstadoProceso,
+          )
+        ) {
           filter.estadoProceso = [this.quickFilters.estadoProceso];
         }
       } else {
@@ -1828,10 +2144,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // --- AJUSTE: Solo sobreescribir estadosPago por defecto si el filtro rápido está en 'all' ---
     if (this.quickFilters.estadoPago === "all") {
       if (this.isFromProduction) {
-        filter['estadosPago'] = ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente', 'Pospendiente'];
+        filter["estadosPago"] = [
+          "Pospendiente",
+          "PreAprobado",
+          "Aprobado",
+          "Pendiente",
+          "Pospendiente",
+        ];
       } else {
         // Para modo no producción, incluir todos los estados de pago posibles
-        filter['estadosPago'] = ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente', 'Pospendiente', 'Rechazado', 'Precancelado', 'Cancelado'];
+        filter["estadosPago"] = [
+          "Pospendiente",
+          "PreAprobado",
+          "Aprobado",
+          "Pendiente",
+          "Pospendiente",
+          "Rechazado",
+          "Precancelado",
+          "Cancelado",
+        ];
       }
     }
 
@@ -1839,24 +2170,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const posFilter = {
       fechaInicial: filter.fechaInicial,
       fechaFinal: filter.fechaFinal,
-      company: filter.company
+      company: filter.company,
     };
 
-    console.log('Payload para pedidos normales:', filter);
-    console.log('Payload para pedidos POS:', posFilter);
+    console.log("Payload para pedidos normales:", filter);
+    console.log("Payload para pedidos POS:", posFilter);
 
     // Obtener pedidos normales y pedidos del POS en paralelo
     forkJoin([
       this.ventasService.getOrdersByFilter(filter),
-      this.ventasService.getOrdersPOSByFilter(posFilter)
+      this.ventasService.getOrdersPOSByFilter(posFilter),
     ]).subscribe({
       next: ([normalOrders, posOrders]) => {
-        console.log('Pedidos normales:', normalOrders);
-        console.log('Pedidos POS:', posOrders);
+        console.log("Pedidos normales:", normalOrders);
+        console.log("Pedidos POS:", posOrders);
 
         // Combinar ambos tipos de pedidos
         const allOrders = [...(normalOrders || []), ...(posOrders || [])];
-        console.log('Total de pedidos combinados:', allOrders.length);
+        console.log("Total de pedidos combinados:", allOrders.length);
 
         // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
         this.orders = [];
@@ -1864,25 +2195,29 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         allOrders.forEach((order: any) => {
           // Recalcular montos base con consistencia
-          order.totalPedidoSinDescuento = Number(this.checkPriceScale(order) || 0);
+          order.totalPedidoSinDescuento = Number(
+            this.checkPriceScale(order) || 0,
+          );
           order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
           // Subtotal: productos sin IVA - descuento
           const descuento = Number(order.totalDescuento || 0);
-          order.subtotal = Number(order.totalPedidoSinDescuento || 0) - descuento;
+          order.subtotal =
+            Number(order.totalPedidoSinDescuento || 0) - descuento;
           // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
           const envio = Number(order.totalEnvio || 0);
-          order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto + envio;
+          order.totalPedididoConDescuento =
+            order.subtotal + order.totalImpuesto + envio;
 
           // Calcular anticipo basado en PagosAsentados si existen
           if (order.PagosAsentados && order.PagosAsentados.length > 0) {
             console.log(`🔍 PROCESANDO PAGOS - Pedido ${order.nroPedido}:`, {
               totalPagos: order.PagosAsentados.length,
-              pagos: order.PagosAsentados.map(p => ({
+              pagos: order.PagosAsentados.map((p) => ({
                 formaPago: p.formaPago,
                 estadoVerificacion: p.estadoVerificacion,
                 valor: p.valor || p.valorRegistrado,
-                numeroComprobante: p.numeroComprobante
-              }))
+                numeroComprobante: p.numeroComprobante,
+              })),
             });
 
             order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
@@ -1891,17 +2226,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               // Solo excluir pagos rechazados o cancelados
 
               // Verificar si el pago está en un estado válido para sumar
-              const estadoValido = pago.estadoVerificacion !== "Rechazado" &&
+              const estadoValido =
+                pago.estadoVerificacion !== "Rechazado" &&
                 pago.estadoVerificacion !== "Cancelado";
 
               if (estadoValido) {
                 // Considerar tanto valor como valorRegistrado
-                const valorPago = Number(pago.valor || pago.valorRegistrado || 0);
+                const valorPago = Number(
+                  pago.valor || pago.valorRegistrado || 0,
+                );
                 console.log(`💰 PAGO INCLUIDO - Pedido ${order.nroPedido}:`, {
                   formaPago: pago.formaPago,
                   estadoVerificacion: pago.estadoVerificacion,
                   valor: valorPago,
-                  numeroComprobante: pago.numeroComprobante
+                  numeroComprobante: pago.numeroComprobante,
                 });
                 return acc + valorPago;
               } else {
@@ -1910,7 +2248,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   estadoVerificacion: pago.estadoVerificacion,
                   valor: pago.valor || pago.valorRegistrado,
                   numeroComprobante: pago.numeroComprobante,
-                  razon: "Estado inválido"
+                  razon: "Estado inválido",
                 });
                 return acc;
               }
@@ -1919,14 +2257,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             console.log(`📊 RESUMEN CÁLCULO - Pedido ${order.nroPedido}:`, {
               anticipoCalculado: order.anticipo,
               faltaPorPagar: order.faltaPorPagar,
-              totalPedido: order.totalPedididoConDescuento
+              totalPedido: order.totalPedididoConDescuento,
             });
           } else if (order.anticipo == null || order.anticipo == undefined) {
             order.anticipo = 0;
           }
 
           // Calcular falta por pagar basado en el total y anticipo real
-          order.faltaPorPagar = Math.max(0, Number(order.totalPedididoConDescuento || 0) - Number(order.anticipo || 0));
+          order.faltaPorPagar = Math.max(
+            0,
+            Number(order.totalPedididoConDescuento || 0) -
+              Number(order.anticipo || 0),
+          );
 
           // 🔍 DEBUG: Log del estado de pago antes de procesar
           console.log(`💰 ESTADO DE PAGO - Pedido ${order.nroPedido}:`, {
@@ -1936,19 +2278,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             anticipo: order.anticipo,
             faltaPorPagar: order.faltaPorPagar,
             totalPedido: order.totalPedididoConDescuento,
-            pagosAsentados: order.PagosAsentados?.length || 0
+            pagosAsentados: order.PagosAsentados?.length || 0,
           });
 
           // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
           // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
-          const debeRecalcular = !order._estadoCalculadoEnFrontend ||
-            (order.estadoPago === "Precancelado" || order.estadoPago === "Cancelado");
+          const debeRecalcular =
+            !order._estadoCalculadoEnFrontend ||
+            order.estadoPago === "Precancelado" ||
+            order.estadoPago === "Cancelado";
 
           console.log(`🔍 VERIFICACIÓN ESTADO - Pedido ${order.nroPedido}:`, {
             _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
             _timestamp: order._timestamp,
             debeRecalcular: debeRecalcular,
-            estadoActual: order.estadoPago
+            estadoActual: order.estadoPago,
           });
 
           // Actualizar estado de pago basado en los cálculos reales
@@ -1961,7 +2305,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             // Regla: si la forma de entrega es "Recoge", el estado de pago debe ser siempre "Pendiente"
             const formaEntregaActual =
               (order.formaEntrega as string) ||
-              (order?.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega as string) ||
+              (order?.carrito?.[0]?.configuracion?.datosEntrega
+                ?.formaEntrega as string) ||
               "";
             const esRecoge =
               typeof formaEntregaActual === "string" &&
@@ -1987,20 +2332,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 order.estadoPago = "Pendiente";
               }
 
-              console.log(`🔄 ESTADO RECALCULADO - Pedido ${order.nroPedido}:`, {
-                estadoAnterior: order.estadoPago,
-                estadoNuevo: order.estadoPago,
-                razon: "Recalculado en refrescarDatos",
-                anticipo: order.anticipo,
-                faltaPorPagar: order.faltaPorPagar,
-                totalPedido: order.totalPedididoConDescuento
-              });
+              console.log(
+                `🔄 ESTADO RECALCULADO - Pedido ${order.nroPedido}:`,
+                {
+                  estadoAnterior: order.estadoPago,
+                  estadoNuevo: order.estadoPago,
+                  razon: "Recalculado en refrescarDatos",
+                  anticipo: order.anticipo,
+                  faltaPorPagar: order.faltaPorPagar,
+                  totalPedido: order.totalPedididoConDescuento,
+                },
+              );
             }
-          } else if (order._estadoCalculadoEnFrontend &&
+          } else if (
+            order._estadoCalculadoEnFrontend &&
             order.estadoPago !== "Precancelado" &&
-            order.estadoPago !== "Cancelado") {
-
-            // 🔒 PROTECCIÓN MEJORADA: Si el estado ya fue calculado en el frontend, 
+            order.estadoPago !== "Cancelado"
+          ) {
+            // 🔒 PROTECCIÓN MEJORADA: Si el estado ya fue calculado en el frontend,
             // verificar que sea consistente con los pagos actuales para evitar inconsistencias
 
             // Verificar si hay inconsistencias entre el estado y los pagos
@@ -2014,7 +2363,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
               // Solo corregir si la inconsistencia es muy clara (falta más del 10% del total)
-              const porcentajeFaltante = (faltaPorPagarReal / totalPedido) * 100;
+              const porcentajeFaltante =
+                (faltaPorPagarReal / totalPedido) * 100;
               if (porcentajeFaltante > 10) {
                 if (faltaPorPagarReal < totalPedido) {
                   order.estadoPago = "PreAprobado";
@@ -2022,14 +2372,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   order.estadoPago = "Pendiente";
                 }
                 estadoCorregido = true;
-                console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Aprobado → ${order.estadoPago} (falta ${porcentajeFaltante.toFixed(1)}%)`);
+                console.log(
+                  `⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Aprobado → ${order.estadoPago} (falta ${porcentajeFaltante.toFixed(1)}%)`,
+                );
               }
-            } else if (order.estadoPago === "PreAprobado" && faltaPorPagarReal <= 0) {
+            } else if (
+              order.estadoPago === "PreAprobado" &&
+              faltaPorPagarReal <= 0
+            ) {
               // Solo corregir si realmente no falta nada por pagar
               if (faltaPorPagarReal <= 0) {
                 order.estadoPago = "Aprobado";
                 estadoCorregido = true;
-                console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado PreAprobado → Aprobado (pago completo)`);
+                console.log(
+                  `⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado PreAprobado → Aprobado (pago completo)`,
+                );
               }
             } else if (order.estadoPago === "Pendiente" && anticipoReal > 0) {
               // Solo corregir si hay pagos significativos (más del 50% del total)
@@ -2041,7 +2398,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   order.estadoPago = "PreAprobado";
                 }
                 estadoCorregido = true;
-                console.log(`⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Pendiente → ${order.estadoPago} (pagado ${porcentajePagado.toFixed(1)}%)`);
+                console.log(
+                  `⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Pendiente → ${order.estadoPago} (pagado ${porcentajePagado.toFixed(1)}%)`,
+                );
               }
             }
 
@@ -2049,9 +2408,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               // ✅ NO SOBRESCRIBIR el estado si ya fue calculado en frontend y no hay inconsistencias críticas
               console.log(`🔒 ESTADO PRESERVADO - Pedido ${order.nroPedido}:`, {
                 estadoPreservado: order.estadoPago,
-                razon: "Ya calculado en frontend - Sin inconsistencias críticas",
+                razon:
+                  "Ya calculado en frontend - Sin inconsistencias críticas",
                 _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
-                _timestamp: order._timestamp
+                _timestamp: order._timestamp,
               });
             }
           }
@@ -2098,7 +2458,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             this.performLocalSearch(this.localSearchQuery);
           }
 
-          console.log(`✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados`);
+          console.log(
+            `✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados`,
+          );
           // Si hay una referencia a la tabla, forzar su actualización
           if (this.table) {
             this.table.reset();
@@ -2154,8 +2516,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         //     order.totalPedididoConDescuento=precioTotalProductosSinIva+order.totalEnvio-order.totalDescuento
 
         // })
-
-
       },
       error: (error) => {
         console.error("❌ ERROR EN REFRESCO:", error);
@@ -2169,7 +2529,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           text: "No se pudieron cargar los pedidos. Por favor, intente nuevamente.",
           confirmButtonText: "Reintentar",
         });
-      }
+      },
     });
   }
 
@@ -2276,17 +2636,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-            // Para Wompi, verificar que no esté pendiente
-            if (
-              pago.formaPago?.toLowerCase().includes("wompi") &&
-              pago.estadoVerificacion === "Pendiente"
-            ) {
-              return sum; // No sumar pagos de Wompi pendientes
-            }
-            // Considerar tanto valor como valorRegistrado
-            const valorPago = pago.valor || pago.valorRegistrado || 0;
-            return sum + valorPago;
-          }, 0)
+              // Para Wompi, verificar que no esté pendiente
+              if (
+                pago.formaPago?.toLowerCase().includes("wompi") &&
+                pago.estadoVerificacion === "Pendiente"
+              ) {
+                return sum; // No sumar pagos de Wompi pendientes
+              }
+              // Considerar tanto valor como valorRegistrado
+              const valorPago = pago.valor || pago.valorRegistrado || 0;
+              return sum + valorPago;
+            }, 0)
           : pedido.anticipo || 0;
       const faltaPorPagar =
         (pedido.totalPedididoConDescuento || 0) - anticipoReal;
@@ -2304,17 +2664,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-            // Para Wompi, verificar que no esté pendiente
-            if (
-              pago.formaPago?.toLowerCase().includes("wompi") &&
-              pago.estadoVerificacion === "Pendiente"
-            ) {
-              return sum; // No sumar pagos de Wompi pendientes
-            }
-            // Considerar tanto valor como valorRegistrado
-            const valorPago = pago.valor || pago.valorRegistrado || 0;
-            return sum + valorPago;
-          }, 0)
+              // Para Wompi, verificar que no esté pendiente
+              if (
+                pago.formaPago?.toLowerCase().includes("wompi") &&
+                pago.estadoVerificacion === "Pendiente"
+              ) {
+                return sum; // No sumar pagos de Wompi pendientes
+              }
+              // Considerar tanto valor como valorRegistrado
+              const valorPago = pago.valor || pago.valorRegistrado || 0;
+              return sum + valorPago;
+            }, 0)
           : pedido.anticipo || 0;
       return acc + anticipoReal;
     }, 0);
@@ -2362,19 +2722,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Helper para mostrar estados de proceso abreviados con tooltips
    * Utilizado para optimizar el espacio visual en la tabla
    */
-  getStatusDisplay(status: string): { short: string, full: string } {
-    const statusMap: { [key: string]: { short: string, full: string } } = {
-      'ProducidoTotalmente': { short: 'Prod. Total', full: 'Producido Totalmente' },
-      'ProducidoParcialmente': { short: 'Prod. Parcial', full: 'Producido Parcialmente' },
-      'SinProducir': { short: 'Sin Producir', full: 'Sin Producir' },
-      'EnProduccion': { short: 'En Prod.', full: 'En Producción' },
-      'ParaDespachar': { short: 'P. Despachar', full: 'Para Despachar' },
-      'Despachado': { short: 'Despachado', full: 'Despachado' },
-      'Entregado': { short: 'Entregado', full: 'Entregado' },
-      'Empacado': { short: 'Empacado', full: 'Empacado' },
-      'Producido': { short: 'Producido', full: 'Producido' },
-      'Rechazado': { short: 'Rechazado', full: 'Rechazado' },
-      'Cerrado': { short: 'Cerrado', full: 'Cerrado' }
+  getStatusDisplay(status: string): { short: string; full: string } {
+    const statusMap: { [key: string]: { short: string; full: string } } = {
+      ProducidoTotalmente: {
+        short: "Prod. Total",
+        full: "Producido Totalmente",
+      },
+      ProducidoParcialmente: {
+        short: "Prod. Parcial",
+        full: "Producido Parcialmente",
+      },
+      SinProducir: { short: "Sin Producir", full: "Sin Producir" },
+      EnProduccion: { short: "En Prod.", full: "En Producción" },
+      ParaDespachar: { short: "P. Despachar", full: "Para Despachar" },
+      Despachado: { short: "Despachado", full: "Despachado" },
+      Entregado: { short: "Entregado", full: "Entregado" },
+      Empacado: { short: "Empacado", full: "Empacado" },
+      Producido: { short: "Producido", full: "Producido" },
+      Rechazado: { short: "Rechazado", full: "Rechazado" },
+      Cerrado: { short: "Cerrado", full: "Cerrado" },
     };
     return statusMap[status] || { short: status, full: status };
   }
@@ -2383,15 +2749,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Helper para mostrar estados de pago abreviados con tooltips
    * Utilizado para optimizar el espacio visual en la tabla
    */
-  getPaymentStatusDisplay(status: string): { short: string, full: string } {
-    const statusMap: { [key: string]: { short: string, full: string } } = {
-      'Pospendiente': { short: 'Pendiente', full: 'Pospendiente' },
-      'Pendiente': { short: 'Pendiente', full: 'Pendiente' },
-      'PreAprobado': { short: 'Pre-Aprob.', full: 'Pre-Aprobado' },
-      'Aprobado': { short: 'Aprobado', full: 'Aprobado' },
-      'Rechazado': { short: 'Rechazado', full: 'Rechazado' },
-      'Cancelado': { short: 'Cancelado', full: 'Cancelado' },
-      'Precancelado': { short: 'Pre-Cancel', full: 'Pre-Cancelado' }
+  getPaymentStatusDisplay(status: string): { short: string; full: string } {
+    const statusMap: { [key: string]: { short: string; full: string } } = {
+      Pospendiente: { short: "Pendiente", full: "Pospendiente" },
+      Pendiente: { short: "Pendiente", full: "Pendiente" },
+      PreAprobado: { short: "Pre-Aprob.", full: "Pre-Aprobado" },
+      Aprobado: { short: "Aprobado", full: "Aprobado" },
+      Rechazado: { short: "Rechazado", full: "Rechazado" },
+      Cancelado: { short: "Cancelado", full: "Cancelado" },
+      Precancelado: { short: "Pre-Cancel", full: "Pre-Cancelado" },
     };
     return statusMap[status] || { short: status, full: status };
   }
@@ -2410,7 +2776,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   getRevisadosCount(): number {
     return this.getFilteredOrders().filter(
-      (pedido) => pedido.revisadoParaProduccion && pedido.revisadoParaProduccion !== '',
+      (pedido) =>
+        pedido.revisadoParaProduccion && pedido.revisadoParaProduccion !== "",
     ).length;
   }
 
@@ -2419,7 +2786,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   getNoRevisadosCount(): number {
     return this.getFilteredOrders().filter(
-      (pedido) => !pedido.revisadoParaProduccion || pedido.revisadoParaProduccion === '',
+      (pedido) =>
+        !pedido.revisadoParaProduccion || pedido.revisadoParaProduccion === "",
     ).length;
   }
 
@@ -2433,7 +2801,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   getPendientesPagoCount(): number {
     return this.getFilteredOrders().filter(
-      (pedido) => pedido.estadoPago === 'Pendiente' || pedido.estadoPago === 'Pospendiente',
+      (pedido) =>
+        pedido.estadoPago === "Pendiente" ||
+        pedido.estadoPago === "Pospendiente",
     ).length;
   }
 
@@ -2446,7 +2816,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     hoy.setHours(0, 0, 0, 0);
 
     return this.getFilteredOrders().filter((pedido) => {
-      if (pedido.estadoPago !== 'Aprobado') {
+      if (pedido.estadoPago !== "Aprobado") {
         return false;
       }
 
@@ -2515,7 +2885,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     return this.getFilteredOrders().filter((pedido) => {
       // Solo pedidos no completados (no Entregado, no Rechazado, no Cerrado)
-      const estadosNoCompletados = ['SinProducir', 'EnProduccion', 'ProducidoParcialmente', 'ProducidoTotalmente', 'Empacado', 'ParaDespachar', 'Despachado'];
+      const estadosNoCompletados = [
+        "SinProducir",
+        "EnProduccion",
+        "ProducidoParcialmente",
+        "ProducidoTotalmente",
+        "Empacado",
+        "ParaDespachar",
+        "Despachado",
+      ];
 
       if (!estadosNoCompletados.includes(pedido.estadoProceso)) {
         return false;
@@ -2538,13 +2916,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Pedidos con saldo por pagar después de anticipo
    */
   getAnticiposPendientesCount(): number {
-    return this.getFilteredOrders().filter(
-      (pedido) => {
-        const tieneAnticipo = pedido.anticipo && pedido.anticipo > 0;
-        const tieneSaldoPendiente = pedido.faltaPorPagar && pedido.faltaPorPagar > 0;
-        return tieneAnticipo && tieneSaldoPendiente;
-      },
-    ).length;
+    return this.getFilteredOrders().filter((pedido) => {
+      const tieneAnticipo = pedido.anticipo && pedido.anticipo > 0;
+      const tieneSaldoPendiente =
+        pedido.faltaPorPagar && pedido.faltaPorPagar > 0;
+      return tieneAnticipo && tieneSaldoPendiente;
+    }).length;
   }
 
   /**
@@ -2566,31 +2943,40 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.table.clear();
     }
 
-    if (estado === 'all') {
+    if (estado === "all") {
       // Limpiar todos los filtros de estado
-      this.quickFilters.estadoProceso = 'all';
-    } else if (estado === 'revisados') {
+      this.quickFilters.estadoProceso = "all";
+    } else if (estado === "revisados") {
       // Filtro de revisados
-      this.toastrService.info('Filtro de revisados - Próximamente', 'Información');
+      this.toastrService.info(
+        "Filtro de revisados - Próximamente",
+        "Información",
+      );
       return;
-    } else if (estado === 'noRevisados') {
+    } else if (estado === "noRevisados") {
       // Filtro de no revisados
-      this.toastrService.info('Filtro de no revisados - Próximamente', 'Información');
+      this.toastrService.info(
+        "Filtro de no revisados - Próximamente",
+        "Información",
+      );
       return;
-    } else if (estado === 'pendientesPago') {
+    } else if (estado === "pendientesPago") {
       // Filtrar pedidos pendientes de pago
       if (this.table) {
-        this.table.filter(['Pendiente', 'Pospendiente'], 'estadoPago', 'in');
+        this.table.filter(["Pendiente", "Pospendiente"], "estadoPago", "in");
       }
-      this.toastrService.info(`Filtrando ${this.getPendientesPagoCount()} pedidos pendientes de pago`, 'Filtro Aplicado');
+      this.toastrService.info(
+        `Filtrando ${this.getPendientesPagoCount()} pedidos pendientes de pago`,
+        "Filtro Aplicado",
+      );
       return;
-    } else if (estado === 'aprobadosHoy') {
+    } else if (estado === "aprobadosHoy") {
       // Filtrar pedidos aprobados hoy
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
 
       const pedidosAprobadosHoy = this.orders.filter((pedido) => {
-        if (pedido.estadoPago !== 'Aprobado') return false;
+        if (pedido.estadoPago !== "Aprobado") return false;
         if (!pedido.fechaCreacion) return false;
 
         const fechaPedido = new Date(pedido.fechaCreacion);
@@ -2601,12 +2987,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Aplicar filtro combinado: estado de pago y fecha
       if (this.table) {
-        this.table.filter('Aprobado', 'estadoPago', 'equals');
+        this.table.filter("Aprobado", "estadoPago", "equals");
       }
 
-      this.toastrService.success(`Mostrando ${pedidosAprobadosHoy.length} pedidos aprobados hoy`, 'Filtro Aplicado');
+      this.toastrService.success(
+        `Mostrando ${pedidosAprobadosHoy.length} pedidos aprobados hoy`,
+        "Filtro Aplicado",
+      );
       return;
-    } else if (estado === 'urgentes') {
+    } else if (estado === "urgentes") {
       // Filtrar pedidos urgentes (entrega hoy o mañana, no completados)
       const hoy = new Date();
       hoy.setHours(0, 0, 0, 0);
@@ -2614,7 +3003,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       manana.setDate(manana.getDate() + 1);
 
       // Definir estados no completados fuera del filter para reutilizar
-      const estadosNoCompletados = ['SinProducir', 'EnProduccion', 'ProducidoParcialmente', 'ProducidoTotalmente', 'Empacado', 'ParaDespachar', 'Despachado'];
+      const estadosNoCompletados = [
+        "SinProducir",
+        "EnProduccion",
+        "ProducidoParcialmente",
+        "ProducidoTotalmente",
+        "Empacado",
+        "ParaDespachar",
+        "Despachado",
+      ];
 
       const pedidosUrgentes = this.orders.filter((pedido) => {
         if (!estadosNoCompletados.includes(pedido.estadoProceso)) return false;
@@ -2627,30 +3024,45 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       });
 
       if (this.table) {
-        this.table.filter(estadosNoCompletados, 'estadoProceso', 'in');
+        this.table.filter(estadosNoCompletados, "estadoProceso", "in");
       }
 
-      this.toastrService.warning(`${pedidosUrgentes.length} pedidos urgentes requieren atención inmediata`, 'Pedidos Urgentes', { timeOut: 5000 });
+      this.toastrService.warning(
+        `${pedidosUrgentes.length} pedidos urgentes requieren atención inmediata`,
+        "Pedidos Urgentes",
+        { timeOut: 5000 },
+      );
       return;
-    } else if (estado === 'anticipoPendiente') {
+    } else if (estado === "anticipoPendiente") {
       // Filtrar pedidos con anticipo pendiente
       const pedidosConAnticipo = this.orders.filter((pedido) => {
-        return pedido.anticipo && pedido.anticipo > 0 && pedido.faltaPorPagar && pedido.faltaPorPagar > 0;
+        return (
+          pedido.anticipo &&
+          pedido.anticipo > 0 &&
+          pedido.faltaPorPagar &&
+          pedido.faltaPorPagar > 0
+        );
       });
 
       // Mostrar solo estos pedidos usando un filtro custom
-      this.toastrService.info(`Mostrando ${pedidosConAnticipo.length} pedidos con saldo pendiente`, 'Filtro Aplicado');
+      this.toastrService.info(
+        `Mostrando ${pedidosConAnticipo.length} pedidos con saldo pendiente`,
+        "Filtro Aplicado",
+      );
 
       // No hay un campo directo para filtrar, se debe implementar lógica personalizada
       // Por ahora solo notificar
       return;
-    } else if (estado === 'conDescuento') {
+    } else if (estado === "conDescuento") {
       // Filtrar pedidos con descuento
       const pedidosConDescuento = this.orders.filter(
         (pedido) => pedido.totalDescuento && pedido.totalDescuento > 0,
       );
 
-      this.toastrService.info(`Mostrando ${pedidosConDescuento.length} pedidos con descuento aplicado`, 'Filtro Aplicado');
+      this.toastrService.info(
+        `Mostrando ${pedidosConDescuento.length} pedidos con descuento aplicado`,
+        "Filtro Aplicado",
+      );
       return;
     } else {
       // Aplicar filtro por estado de proceso (estados estándar)
@@ -2745,14 +3157,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Total subtotal de pedidos filtrados
    */
   getFilteredCalculateSubtotal(): number {
-    return this.getFilteredOrders().reduce(
-      (acc, pedido: any) => {
-        // El subtotal debe incluir el valor del domicilio
-        const subtotalConDomicilio = (pedido.subtotal || 0) + (pedido.totalEnvio || 0);
-        return acc + subtotalConDomicilio;
-      },
-      0,
-    );
+    return this.getFilteredOrders().reduce((acc, pedido: any) => {
+      // El subtotal debe incluir el valor del domicilio
+      const subtotalConDomicilio =
+        (pedido.subtotal || 0) + (pedido.totalEnvio || 0);
+      return acc + subtotalConDomicilio;
+    }, 0);
   }
 
   /**
@@ -2791,17 +3201,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-            // Para Wompi, verificar que no esté pendiente
-            if (
-              pago.formaPago?.toLowerCase().includes("wompi") &&
-              pago.estadoVerificacion === "Pendiente"
-            ) {
-              return sum; // No sumar pagos de Wompi pendientes
-            }
-            // Considerar tanto valor como valorRegistrado
-            const valorPago = pago.valor || pago.valorRegistrado || 0;
-            return sum + valorPago;
-          }, 0)
+              // Para Wompi, verificar que no esté pendiente
+              if (
+                pago.formaPago?.toLowerCase().includes("wompi") &&
+                pago.estadoVerificacion === "Pendiente"
+              ) {
+                return sum; // No sumar pagos de Wompi pendientes
+              }
+              // Considerar tanto valor como valorRegistrado
+              const valorPago = pago.valor || pago.valorRegistrado || 0;
+              return sum + valorPago;
+            }, 0)
           : pedido.anticipo || 0;
       return acc + anticipoReal;
     }, 0);
@@ -2816,17 +3226,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-            // Para Wompi, verificar que no esté pendiente
-            if (
-              pago.formaPago?.toLowerCase().includes("wompi") &&
-              pago.estadoVerificacion === "Pendiente"
-            ) {
-              return sum; // No sumar pagos de Wompi pendientes
-            }
-            // Considerar tanto valor como valorRegistrado
-            const valorPago = pago.valor || pago.valorRegistrado || 0;
-            return sum + valorPago;
-          }, 0)
+              // Para Wompi, verificar que no esté pendiente
+              if (
+                pago.formaPago?.toLowerCase().includes("wompi") &&
+                pago.estadoVerificacion === "Pendiente"
+              ) {
+                return sum; // No sumar pagos de Wompi pendientes
+              }
+              // Considerar tanto valor como valorRegistrado
+              const valorPago = pago.valor || pago.valorRegistrado || 0;
+              return sum + valorPago;
+            }, 0)
           : pedido.anticipo || 0;
       const faltaPorPagar =
         (pedido.totalPedididoConDescuento || 0) - anticipoReal;
@@ -2847,7 +3257,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // ✅ Ahora generar PDF con pedido ACTUALIZADO
     this.htmlModal = this.paymentService.getHtmlContent(
-      pedidoActualizado,  // ← Pedido con valores actualizados
+      pedidoActualizado, // ← Pedido con valores actualizados
       this.isFromProduction,
     );
 
@@ -2858,11 +3268,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.ventasService.editOrder(order).subscribe({
         next: () => {
           // Opcional: mostrar notificación de éxito
-          this.toastrService.success('Fecha de impresión registrada', 'Pedido actualizado');
+          this.toastrService.success(
+            "Fecha de impresión registrada",
+            "Pedido actualizado",
+          );
         },
         error: () => {
-          this.toastrService.error('No se pudo actualizar la fecha de impresión', 'Error');
-        }
+          this.toastrService.error(
+            "No se pudo actualizar la fecha de impresión",
+            "Error",
+          );
+        },
       });
     }
     this.modalService
@@ -2876,7 +3292,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       .result.then(
         (result) => {
           // ✅ FIX: Restaurar posición del body antes de hacer scroll
-          document.body.style.top = '';
+          document.body.style.top = "";
           this.htmlModal = null;
           const last = this.scrollStack.pop();
           if (last !== undefined) {
@@ -2887,7 +3303,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         },
         (reason) => {
           // ✅ FIX: Restaurar posición del body antes de hacer scroll
-          document.body.style.top = '';
+          document.body.style.top = "";
           const last = this.scrollStack.pop();
           if (last !== undefined) {
             setTimeout(() => {
@@ -2919,13 +3335,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Actualizar valores usando el servicio
     this.actualizarValoresPedido(pedidoActualizado);
 
-    console.log('📊 PDF - Pedido actualizado antes de generar:', {
+    console.log("📊 PDF - Pedido actualizado antes de generar:", {
       nroPedido: pedidoActualizado.nroPedido,
       formaEntrega: pedidoActualizado.formaEntrega,
       totalPedidoSinDescuento: pedidoActualizado.totalPedidoSinDescuento,
       totalEnvio: pedidoActualizado.totalEnvio,
       totalDescuento: pedidoActualizado.totalDescuento,
-      totalPedididoConDescuento: pedidoActualizado.totalPedididoConDescuento
+      totalPedididoConDescuento: pedidoActualizado.totalPedididoConDescuento,
     });
 
     return pedidoActualizado;
@@ -2941,19 +3357,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    console.log('🔄 SINCRONIZACIÓN - Estado inicial:', {
+    console.log("🔄 SINCRONIZACIÓN - Estado inicial:", {
       nroPedido: pedido.nroPedido,
       formaEntregaPedido: pedido.formaEntrega,
-      formaEntregaCarrito: pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega,
-      totalEnvio: pedido.totalEnvio
+      formaEntregaCarrito:
+        pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega,
+      totalEnvio: pedido.totalEnvio,
     });
 
     // Obtener la forma de entrega más reciente del carrito
     const formasEntregaCarrito = pedido.carrito
-      .map(item => item.configuracion?.datosEntrega?.formaEntrega)
-      .filter(forma => forma && forma.trim() !== '');
+      .map((item) => item.configuracion?.datosEntrega?.formaEntrega)
+      .filter((forma) => forma && forma.trim() !== "");
 
-    let formaEntregaFinal = '';
+    let formaEntregaFinal = "";
 
     // Si hay formas de entrega en el carrito, usar la primera no vacía
     if (formasEntregaCarrito.length > 0) {
@@ -2963,45 +3380,57 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       pedido.formaEntrega = formaEntregaFinal;
 
       // Asegurar que todos los items del carrito tengan la misma forma de entrega
-      pedido.carrito.forEach(item => {
+      pedido.carrito.forEach((item) => {
         if (item.configuracion?.datosEntrega) {
           item.configuracion.datosEntrega.formaEntrega = formaEntregaFinal;
         }
       });
 
-      console.log('🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde carrito:', {
-        nroPedido: pedido.nroPedido,
-        formaEntrega: formaEntregaFinal,
-        itemsActualizados: pedido.carrito.length
-      });
+      console.log(
+        "🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde carrito:",
+        {
+          nroPedido: pedido.nroPedido,
+          formaEntrega: formaEntregaFinal,
+          itemsActualizados: pedido.carrito.length,
+        },
+      );
     }
     // Si el pedido tiene forma de entrega pero el carrito no, sincronizar hacia el carrito
     else if (pedido.formaEntrega) {
       formaEntregaFinal = pedido.formaEntrega;
 
-      pedido.carrito.forEach(item => {
+      pedido.carrito.forEach((item) => {
         if (item.configuracion?.datosEntrega) {
           item.configuracion.datosEntrega.formaEntrega = pedido.formaEntrega;
         }
       });
 
-      console.log('🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde pedido:', {
-        nroPedido: pedido.nroPedido,
-        formaEntrega: pedido.formaEntrega,
-        itemsActualizados: pedido.carrito.length
-      });
+      console.log(
+        "🔄 SINCRONIZACIÓN - Forma de entrega sincronizada desde pedido:",
+        {
+          nroPedido: pedido.nroPedido,
+          formaEntrega: pedido.formaEntrega,
+          itemsActualizados: pedido.carrito.length,
+        },
+      );
     }
 
     // 🚚 MANEJO DEL COSTO DE ENVÍO según la forma de entrega
-    if (formaEntregaFinal && formaEntregaFinal.toLowerCase().includes('recoge')) {
+    if (
+      formaEntregaFinal &&
+      formaEntregaFinal.toLowerCase().includes("recoge")
+    ) {
       // Si es "recoge en tienda", el costo de envío debe ser 0
       if (pedido.totalEnvio && pedido.totalEnvio > 0) {
-        console.log('🚚 SINCRONIZACIÓN - Cambiando costo de envío a 0 para recoge en tienda:', {
-          nroPedido: pedido.nroPedido,
-          formaEntrega: formaEntregaFinal,
-          totalEnvioAnterior: pedido.totalEnvio,
-          totalEnvioNuevo: 0
-        });
+        console.log(
+          "🚚 SINCRONIZACIÓN - Cambiando costo de envío a 0 para recoge en tienda:",
+          {
+            nroPedido: pedido.nroPedido,
+            formaEntrega: formaEntregaFinal,
+            totalEnvioAnterior: pedido.totalEnvio,
+            totalEnvioNuevo: 0,
+          },
+        );
 
         pedido.totalEnvio = 0;
 
@@ -3010,11 +3439,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    console.log('🔄 SINCRONIZACIÓN - Estado final:', {
+    console.log("🔄 SINCRONIZACIÓN - Estado final:", {
       nroPedido: pedido.nroPedido,
       formaEntregaPedido: pedido.formaEntrega,
-      formaEntregaCarrito: pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega,
-      totalEnvio: pedido.totalEnvio
+      formaEntregaCarrito:
+        pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega,
+      totalEnvio: pedido.totalEnvio,
     });
   }
 
@@ -3034,21 +3464,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const totalEnvio = Number(pedido.totalEnvio) || 0;
 
     // Calcular total final
-    const totalFinal = subtotalSinEnvio + totalEnvio + totalImpuesto - totalDescuento;
+    const totalFinal =
+      subtotalSinEnvio + totalEnvio + totalImpuesto - totalDescuento;
 
     // Actualizar propiedades del pedido
     pedido.totalPedidoSinDescuento = subtotalSinEnvio + totalEnvio;
     pedido.totalPedididoConDescuento = totalFinal;
     pedido.faltaPorPagar = totalFinal - (Number(pedido.anticipo) || 0);
 
-    console.log('🧮 RECÁLCULO - Totales actualizados:', {
+    console.log("🧮 RECÁLCULO - Totales actualizados:", {
       nroPedido: pedido.nroPedido,
       subtotalSinEnvio,
       totalEnvio,
       totalDescuento,
       totalImpuesto,
       totalFinal,
-      faltaPorPagar: pedido.faltaPorPagar
+      faltaPorPagar: pedido.faltaPorPagar,
     });
   }
 
@@ -3111,7 +3542,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   imprimirToPdf() {
     const htmlPdfEl = document.getElementById("htmlPdf");
     if (!htmlPdfEl) {
-      this.toastrService.error('No hay contenido para imprimir', 'Error');
+      this.toastrService.error("No hay contenido para imprimir", "Error");
       return;
     }
     let printContents = htmlPdfEl.innerHTML;
@@ -3146,13 +3577,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     document.body.classList.remove("modal-open");
     this.loaderService.hide();
 
-    const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+    const newWindow = window.open(
+      "",
+      "_blank",
+      "width=800,height=600,scrollbars=yes,resizable=yes",
+    );
     if (newWindow) {
       newWindow.document.write(`
         <!DOCTYPE html>
         <html>
         <head>
-          <title>Pedido ${this.pedidoSeleccionado?.nroPedido || 'PDF'}</title>
+          <title>Pedido ${this.pedidoSeleccionado?.nroPedido || "PDF"}</title>
           <style>
             body {
               font-family: Arial, sans-serif;
@@ -3210,7 +3645,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeOptionsModal();
 
     this.scrollStack.push(window.scrollY);
-    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
+    this.clienteSeleccionado = order.cliente ?? ({} as Cliente);
     this.pedidoSeleccionado = order;
     this.initForms(this.clienteSeleccionado);
     setTimeout(() => {
@@ -3220,7 +3655,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         centered: true,
         fullscreen: false,
         ariaLabelledBy: "modal-basic-title",
-        backdrop: 'static', // 🔒 NUEVO: Prevenir cierre al hacer clic fuera del modal
+        backdrop: "static", // 🔒 NUEVO: Prevenir cierre al hacer clic fuera del modal
         keyboard: false, // 🔒 NUEVO: Prevenir cierre con tecla ESC
       });
       setTimeout(() => {
@@ -3306,9 +3741,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private editOrder(order: Pedido) {
     if (order.carrito && order.carrito.length > 0) {
-      const fechaEntrega = order.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega;
-      const horarioEntrega = order.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega;
-      const formaEntrega = order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega;
+      const fechaEntrega =
+        order.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega;
+      const horarioEntrega =
+        order.carrito?.[0]?.configuracion?.datosEntrega?.horarioEntrega;
+      const formaEntrega =
+        order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega;
 
       if (
         fechaEntrega &&
@@ -3332,7 +3770,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         order.formaEntrega = formaEntrega;
       } else if (order.formaEntrega) {
         // Si el pedido tiene forma de entrega pero el carrito no, sincronizar hacia el carrito
-        order.carrito.forEach(item => {
+        order.carrito.forEach((item) => {
           if (item.configuracion?.datosEntrega && order.formaEntrega) {
             item.configuracion.datosEntrega.formaEntrega = order.formaEntrega;
           }
@@ -3341,14 +3779,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Log del payload que se envía al servicio
-    console.log('📤 PAYLOAD EDIT ORDER:', {
+    console.log("📤 PAYLOAD EDIT ORDER:", {
       nroPedido: order.nroPedido,
       formaEntrega: order.formaEntrega,
-      carritoFormaEntrega: order.carrito?.map(item => ({
+      carritoFormaEntrega: order.carrito?.map((item) => ({
         referencia: item.producto?.identificacion?.referencia,
-        formaEntrega: item.configuracion?.datosEntrega?.formaEntrega
+        formaEntrega: item.configuracion?.datosEntrega?.formaEntrega,
       })),
-      payloadCompleto: order
+      payloadCompleto: order,
     });
 
     this.ventasService.editOrder(order).subscribe((data) => {
@@ -3513,7 +3951,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeOptionsModal();
 
     this.scrollStack.push(window.scrollY);
-    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
+    this.clienteSeleccionado = order.cliente ?? ({} as Cliente);
     this.pedidoSeleccionado = order;
 
     // Buscar datos actualizados del cliente usando búsqueda activa
@@ -3522,21 +3960,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.maestroService.getClientByDocument(data).subscribe({
         next: (res: any) => {
           // Usar datos actualizados de la base de datos
-          this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(res.datosEntrega);
+          this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(
+            res.datosEntrega,
+          );
           this.initForms(this.clienteSeleccionado);
           this.openEntregaModal(content, order);
         },
         error: (error) => {
-          console.warn('Error al buscar cliente, usando datos del pedido:', error);
+          console.warn(
+            "Error al buscar cliente, usando datos del pedido:",
+            error,
+          );
           // Fallback: usar datos del pedido si hay error en la búsqueda
-          this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(order.cliente?.datosEntrega);
+          this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(
+            order.cliente?.datosEntrega,
+          );
           this.initForms(this.clienteSeleccionado);
           this.openEntregaModal(content, order);
-        }
+        },
       });
     } else {
       // Fallback: usar datos del pedido si no hay documento
-      this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(order.cliente?.datosEntrega);
+      this.datosEntregaDelCliente = this.convertirDatosEntregaAArray(
+        order.cliente?.datosEntrega,
+      );
       this.initForms(this.clienteSeleccionado);
       this.openEntregaModal(content, order);
     }
@@ -3548,10 +3995,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   mostrarDetalleEntrega(order: Pedido) {
     // Verificar que el pedido esté en estado "Entregado"
-    if (order.estadoProceso !== 'Entregado') {
+    if (order.estadoProceso !== "Entregado") {
       this.toastrService.warning(
-        'Esta opción solo está disponible para pedidos entregados',
-        'Estado inválido'
+        "Esta opción solo está disponible para pedidos entregados",
+        "Estado inválido",
       );
       return;
     }
@@ -3560,40 +4007,49 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pedidoEntregaData = {
       ...order,
       // Datos adicionales que podrían venir del backend
-      quienRecibio: order.quienRecibio || 'No especificado',
-      parentesco: order.parentesco || 'No especificado',
+      quienRecibio: order.quienRecibio || "No especificado",
+      parentesco: order.parentesco || "No especificado",
       telefono: order.envio?.celular || order.cliente?.numero_celular_comprador,
       fechaRecepcion: order.fechaEntrega || new Date().toISOString(),
-      observacionesEntrega: order.notasPedido?.notasEntregas?.[0]?.descripcion || '',
+      observacionesEntrega:
+        order.notasPedido?.notasEntregas?.[0]?.descripcion || "",
       // Acceso a datos reales de evidencia de entrega
       fotosEvidencia: order.fotosEvidencia || [], // Array de fotos de evidencia
-      fotoEvidencia: order.fotoEvidencia || '', // Foto individual de evidencia  
-      signatureImage: order.signatureImage || '', // Firma digital
-      calificacion: 0
+      fotoEvidencia: order.fotoEvidencia || "", // Foto individual de evidencia
+      signatureImage: order.signatureImage || "", // Firma digital
+      calificacion: 0,
     };
 
     // Debug: Verificar datos y fotos de evidencia
-    console.log('📸 Debug fotos evidencia - Original order:', {
+    console.log("📸 Debug fotos evidencia - Original order:", {
       fotosEvidencia: order.fotosEvidencia,
       fotoEvidencia: order.fotoEvidencia,
-      signatureImage: order.signatureImage
+      signatureImage: order.signatureImage,
     });
-    console.log('📸 Debug fotos evidencia - Processed data:', {
+    console.log("📸 Debug fotos evidencia - Processed data:", {
       fotosEvidencia: this.pedidoEntregaData?.fotosEvidencia,
       fotoEvidencia: this.pedidoEntregaData?.fotoEvidencia,
       signatureImage: this.pedidoEntregaData?.signatureImage,
-      hayFotos: (this.pedidoEntregaData?.fotosEvidencia?.length || 0) > 0 || !!this.pedidoEntregaData?.fotoEvidencia
+      hayFotos:
+        (this.pedidoEntregaData?.fotosEvidencia?.length || 0) > 0 ||
+        !!this.pedidoEntregaData?.fotoEvidencia,
     });
-    console.log('Datos del pedido de entrega:', this.pedidoEntregaData);
-    console.log('Mostrando modal con detalleEntregaVisible:', true);
+    console.log("Datos del pedido de entrega:", this.pedidoEntregaData);
+    console.log("Mostrando modal con detalleEntregaVisible:", true);
 
     // Mostrar el modal
     this.detalleEntregaVisible = true;
 
     // Debug adicional después de 100ms para verificar que el cambio se propague
     setTimeout(() => {
-      console.log('Estado después de 100ms - detalleEntregaVisible:', this.detalleEntregaVisible);
-      console.log('Estado después de 100ms - pedidoEntregaData:', this.pedidoEntregaData);
+      console.log(
+        "Estado después de 100ms - detalleEntregaVisible:",
+        this.detalleEntregaVisible,
+      );
+      console.log(
+        "Estado después de 100ms - pedidoEntregaData:",
+        this.pedidoEntregaData,
+      );
     }, 100);
   }
 
@@ -3611,7 +4067,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   onImageClick(imageUrl: string) {
     // TODO: Implementar modal de imagen en tamaño completo si es necesario
-    console.log('Imagen clickeada:', imageUrl);
+    console.log("Imagen clickeada:", imageUrl);
   }
 
   editDatosFacturacion(content, order: Pedido) {
@@ -3624,7 +4080,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeOptionsModal();
 
     this.scrollStack.push(window.scrollY);
-    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
+    this.clienteSeleccionado = order.cliente ?? ({} as Cliente);
     this.pedidoSeleccionado = order;
     this.initForms(this.clienteSeleccionado);
     this.modalService
@@ -3679,7 +4135,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
     this.scrollStack.push(window.scrollY);
-    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
+    this.clienteSeleccionado = order.cliente ?? ({} as Cliente);
     this.pedidoSeleccionado = order;
     this.initForms(this.clienteSeleccionado);
     this.modalService
@@ -3779,7 +4235,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // edutar Notas
   editarEstadoPago(content, order: Pedido) {
     this.scrollStack.push(window.scrollY);
-    this.clienteSeleccionado = order.cliente ?? {} as Cliente;
+    this.clienteSeleccionado = order.cliente ?? ({} as Cliente);
     this.pedidoSeleccionado = order;
 
     // Guardar valores originales antes de abrir el modal
@@ -3859,32 +4315,38 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param item - El item del carrito que contiene la configuración
    * @param preferencia - La preferencia específica a eliminar
    */
-  deleteImageFromOrderPreference(pedido: Pedido, item: any, preferencia: any): void {
+  deleteImageFromOrderPreference(
+    pedido: Pedido,
+    item: any,
+    preferencia: any,
+  ): void {
     // Confirmar eliminación
     Swal.fire({
-      title: '¿Eliminar imagen?',
+      title: "¿Eliminar imagen?",
       text: `¿Estás seguro de que quieres eliminar la imagen de "${preferencia.titulo}"?`,
-      icon: 'warning',
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: '#d33',
-      cancelButtonColor: '#3085d6',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
         // Buscar la preferencia en la configuración del item
         const preferencias = item.configuracion?.preferencias || [];
-        const index = preferencias.findIndex((p: any) => 
-          p.titulo === preferencia.titulo && p.subtitulo === preferencia.subtitulo
+        const index = preferencias.findIndex(
+          (p: any) =>
+            p.titulo === preferencia.titulo &&
+            p.subtitulo === preferencia.subtitulo,
         );
 
         if (index !== -1) {
           // Eliminar la imagen de la preferencia
           preferencias[index] = {
             ...preferencias[index],
-            imagen: 'assets/images/other-images/sinimagen.webp',
-            subtitulo: '',
-            titulo: preferencias[index].titulo // Mantener el título original
+            imagen: "assets/images/other-images/sinimagen.webp",
+            subtitulo: "",
+            titulo: preferencias[index].titulo, // Mantener el título original
           };
 
           // Actualizar el pedido
@@ -3892,14 +4354,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // Mostrar confirmación
           Swal.fire({
-            title: 'Imagen eliminada',
-            text: 'La imagen ha sido eliminada correctamente.',
-            icon: 'success',
+            title: "Imagen eliminada",
+            text: "La imagen ha sido eliminada correctamente.",
+            icon: "success",
             timer: 2000,
-            showConfirmButton: false
+            showConfirmButton: false,
           });
 
-          console.log(`🗑️ Imagen eliminada de la preferencia: ${preferencia.titulo}`);
+          console.log(
+            `🗑️ Imagen eliminada de la preferencia: ${preferencia.titulo}`,
+          );
         }
       }
     });
@@ -3913,23 +4377,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private updateOrderConfiguration(pedido: Pedido, item: any): void {
     // Aquí puedes implementar la lógica para actualizar el pedido
     // Por ejemplo, llamar al servicio de ventas para actualizar el pedido
-    console.log('🔄 Actualizando configuración del pedido:', {
+    console.log("🔄 Actualizando configuración del pedido:", {
       pedidoId: pedido._id,
-      itemConfiguracion: item.configuracion
+      itemConfiguracion: item.configuracion,
     });
 
     // Opcional: Actualizar el pedido en el servidor
     // this.ventasService.updateOrder(pedido).subscribe(...)
   }
 
-  confProductToCart(content, carritoConfiguracion: Carrito, order: Pedido, indiceProducto?: number) {
+  confProductToCart(
+    content,
+    carritoConfiguracion: Carrito,
+    order: Pedido,
+    indiceProducto?: number,
+  ) {
     // Evitar warning de aria-hidden con foco persistente en botones bajo app-root
     try {
       const active = document.activeElement as HTMLElement | null;
-      if (active && typeof active.blur === 'function') {
+      if (active && typeof active.blur === "function") {
         active.blur();
       }
-    } catch { }
+    } catch {}
     if (!this.canModifyProducts(order)) {
       this.toastrService.warning(
         `No se pueden modificar productos. El pedido está en estado: ${order.estadoProceso}`,
@@ -3948,11 +4417,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Establecer el producto seleccionado desde la configuración del carrito
     this.productoSeleccionado = carritoConfiguracion?.producto;
 
-    console.log('🔄 Abriendo modal de configuración:', {
+    console.log("🔄 Abriendo modal de configuración:", {
       configuracion: carritoConfiguracion,
       producto: this.productoSeleccionado,
       indiceProducto: this.indiceProductoSeleccionado,
-      preferencias: carritoConfiguracion?.configuracion?.preferencias?.length || 0
+      preferencias:
+        carritoConfiguracion?.configuracion?.preferencias?.length || 0,
     });
     this.modalService
       .open(content, {
@@ -3978,9 +4448,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               window.scrollTo({ top: last });
             }, 0);
           }
-          if (
-            configuracionResult == "Cross click"
-          ) {
+          if (configuracionResult == "Cross click") {
             return;
           }
           // Solo actualizar el carrito si se configuró correctamente el producto
@@ -3990,11 +4458,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             configuracionResult?.configuracion // Verificar que tiene configuración válida
           ) {
             // Usar el índice específico del producto que se está editando
-            if (this.indiceProductoSeleccionado >= 0 && this.indiceProductoSeleccionado < order.carrito.length) {
-              console.log('✅ Actualizando producto en índice:', this.indiceProductoSeleccionado);
-              order.carrito[this.indiceProductoSeleccionado] = configuracionResult;
+            if (
+              this.indiceProductoSeleccionado >= 0 &&
+              this.indiceProductoSeleccionado < order.carrito.length
+            ) {
+              console.log(
+                "✅ Actualizando producto en índice:",
+                this.indiceProductoSeleccionado,
+              );
+              order.carrito[this.indiceProductoSeleccionado] =
+                configuracionResult;
             } else {
-              console.error('❌ Índice de producto inválido:', this.indiceProductoSeleccionado);
+              console.error(
+                "❌ Índice de producto inválido:",
+                this.indiceProductoSeleccionado,
+              );
             }
           }
           const tieneDomicilio = (order.carrito ?? []).some((car) => {
@@ -4026,18 +4504,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           }
 
           // Sincronizar forma de entrega antes de actualizar valores
-          console.log('🔄 CONFIGURACIÓN - Antes de sincronizar:', {
+          console.log("🔄 CONFIGURACIÓN - Antes de sincronizar:", {
             nroPedido: order.nroPedido,
             formaEntregaPedido: order.formaEntrega,
-            formaEntregaCarrito: order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega
+            formaEntregaCarrito:
+              order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega,
           });
 
           this.sincronizarFormaEntrega(order);
 
-          console.log('🔄 CONFIGURACIÓN - Después de sincronizar:', {
+          console.log("🔄 CONFIGURACIÓN - Después de sincronizar:", {
             nroPedido: order.nroPedido,
             formaEntregaPedido: order.formaEntrega,
-            formaEntregaCarrito: order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega
+            formaEntregaCarrito:
+              order.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega,
           });
 
           // Recalcular totales dependientes del valor de envío, descuentos, etc.
@@ -4089,12 +4569,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // Solo agregar al carrito si se configuró correctamente el producto
           if (order.carrito && configuracionResult?.producto) {
             // Verificar que al menos tenga producto válido
-            if (configuracionResult.producto.identificacion?.referencia || 
-                configuracionResult.producto.crearProducto?.cd) {
+            if (
+              configuracionResult.producto.identificacion?.referencia ||
+              configuracionResult.producto.crearProducto?.cd
+            ) {
               order.carrito.push(configuracionResult);
-              console.log('✅ Producto agregado a recompra:', configuracionResult);
+              console.log(
+                "✅ Producto agregado a recompra:",
+                configuracionResult,
+              );
             } else {
-              console.error('❌ Producto sin referencia válida:', configuracionResult);
+              console.error(
+                "❌ Producto sin referencia válida:",
+                configuracionResult,
+              );
             }
           }
 
@@ -4122,8 +4610,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Limpiar datos anteriores
-    this.codigoDescuentoIngresado = '';
-    this.errorCodigoDescuento = '';
+    this.codigoDescuentoIngresado = "";
+    this.errorCodigoDescuento = "";
     this.descuentoAplicado = null;
     this.pedidoSeleccionadoDescuento = pedido;
 
@@ -4161,68 +4649,67 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   validarYAplicarDescuento(pedido: Pedido) {
     if (!this.codigoDescuentoIngresado) {
-      this.errorCodigoDescuento = 'Por favor ingrese un código de cupón';
+      this.errorCodigoDescuento = "Por favor ingrese un código de cupón";
       return;
     }
 
     this.validandoDescuento = true;
-    this.errorCodigoDescuento = '';
+    this.errorCodigoDescuento = "";
 
     // Usar el mismo servicio que usa el carrito de venta asistida
-    this.ventasService.validateCupon({ code: this.codigoDescuentoIngresado }).subscribe({
-      next: (value) => {
-        this.validandoDescuento = false;
-        
-        if (!value || value.length === 0) {
-          this.errorCodigoDescuento = 'Cupón no válido';
-          return;
-        }
+    this.ventasService
+      .validateCupon({ code: this.codigoDescuentoIngresado })
+      .subscribe({
+        next: (value) => {
+          this.validandoDescuento = false;
 
-        // Aplicar el descuento al pedido
-        const porcentajeDescuento = parseFloat(value[0]?.valor) || 0;
-        const totalSinDescuento = this.getTotalProductPriceInCart(pedido);
-        const valorDescuento = (totalSinDescuento * porcentajeDescuento) / 100;
-
-        // Actualizar el pedido
-        pedido.cuponAplicado = this.codigoDescuentoIngresado;
-        pedido.porceDescuento = porcentajeDescuento;
-        pedido.totalDescuento = valorDescuento;
-        pedido.totalPedididoConDescuento = totalSinDescuento - valorDescuento;
-
-        // Mostrar información del descuento aplicado
-        this.descuentoAplicado = {
-          codigo: this.codigoDescuentoIngresado,
-          porcentaje: porcentajeDescuento,
-          valor: valorDescuento
-        };
-
-        // Actualizar el pedido en la base de datos
-        this.editOrder(pedido);
-
-        this.toastrService.success(
-          `Cupón "${this.codigoDescuentoIngresado}" aplicado exitosamente. Descuento: $${valorDescuento.toLocaleString()}`,
-          "Descuento Aplicado",
-          {
-            timeOut: 5000,
-            progressBar: true,
-            positionClass: "toast-bottom-right",
+          if (!value || value.length === 0) {
+            this.errorCodigoDescuento = "Cupón no válido";
+            return;
           }
-        );
-      },
-      error: (err) => {
-        this.validandoDescuento = false;
-        this.errorCodigoDescuento = 'Ocurrió un error al validar el cupón';
-        this.toastrService.error(
-          'Error al validar el cupón',
-          'Error',
-          {
+
+          // Aplicar el descuento al pedido
+          const porcentajeDescuento = parseFloat(value[0]?.valor) || 0;
+          const totalSinDescuento = this.getTotalProductPriceInCart(pedido);
+          const valorDescuento =
+            (totalSinDescuento * porcentajeDescuento) / 100;
+
+          // Actualizar el pedido
+          pedido.cuponAplicado = this.codigoDescuentoIngresado;
+          pedido.porceDescuento = porcentajeDescuento;
+          pedido.totalDescuento = valorDescuento;
+          pedido.totalPedididoConDescuento = totalSinDescuento - valorDescuento;
+
+          // Mostrar información del descuento aplicado
+          this.descuentoAplicado = {
+            codigo: this.codigoDescuentoIngresado,
+            porcentaje: porcentajeDescuento,
+            valor: valorDescuento,
+          };
+
+          // Actualizar el pedido en la base de datos
+          this.editOrder(pedido);
+
+          this.toastrService.success(
+            `Cupón "${this.codigoDescuentoIngresado}" aplicado exitosamente. Descuento: $${valorDescuento.toLocaleString()}`,
+            "Descuento Aplicado",
+            {
+              timeOut: 5000,
+              progressBar: true,
+              positionClass: "toast-bottom-right",
+            },
+          );
+        },
+        error: (err) => {
+          this.validandoDescuento = false;
+          this.errorCodigoDescuento = "Ocurrió un error al validar el cupón";
+          this.toastrService.error("Error al validar el cupón", "Error", {
             timeOut: 4000,
             progressBar: true,
             positionClass: "toast-bottom-right",
-          }
-        );
-      },
-    });
+          });
+        },
+      });
   }
 
   /**
@@ -4238,7 +4725,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     return pedido.carrito.reduce((total, item) => {
       const precioUnitario = item.producto?.precio?.precioUnitarioConIva || 0;
       const cantidad = item.cantidad || 0;
-      return total + (precioUnitario * cantidad);
+      return total + precioUnitario * cantidad;
     }, 0);
   }
 
@@ -4258,11 +4745,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // Mostrar mensaje de éxito
           this.toastrService.success(
             `Pedido ${pedido.nroPedido} eliminado exitosamente`,
-            "Pedido Eliminado"
+            "Pedido Eliminado",
           );
 
           // Remover el pedido de la lista local
-          const index = this.orders.findIndex(order => order._id === pedido._id);
+          const index = this.orders.findIndex(
+            (order) => order._id === pedido._id,
+          );
           if (index !== -1) {
             this.orders.splice(index, 1);
           }
@@ -4274,15 +4763,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           console.error("❌ Error al eliminar pedido:", error);
           this.toastrService.error(
             `Error al eliminar el pedido ${pedido.nroPedido}. Inténtalo nuevamente.`,
-            "Error al Eliminar"
+            "Error al Eliminar",
           );
-        }
+        },
       });
     } catch (error) {
       console.error("❌ Error inesperado al eliminar pedido:", error);
       this.toastrService.error(
         "Ocurrió un error inesperado al eliminar el pedido",
-        "Error"
+        "Error",
       );
     }
   }
@@ -4302,25 +4791,32 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       confirmButtonText: "Sí, eliminar pedido",
       cancelButtonText: "Cancelar",
       allowOutsideClick: false,
-      allowEscapeKey: false
+      allowEscapeKey: false,
     }).then((result) => {
       if (result.isConfirmed) {
         try {
-          console.log(`🗑️ Eliminando pedido sin productos: ${pedido.nroPedido}`);
+          console.log(
+            `🗑️ Eliminando pedido sin productos: ${pedido.nroPedido}`,
+          );
 
           // Eliminar el pedido del backend
           this.ventasService.deleteOrder(pedido).subscribe({
             next: (response) => {
-              console.log("✅ Pedido sin productos eliminado exitosamente:", response);
+              console.log(
+                "✅ Pedido sin productos eliminado exitosamente:",
+                response,
+              );
 
               // Mostrar mensaje de éxito
               this.toastrService.success(
                 `Pedido ${pedido.nroPedido} eliminado automáticamente por no tener productos`,
-                "Pedido Eliminado"
+                "Pedido Eliminado",
               );
 
               // Remover el pedido de la lista local
-              const index = this.orders.findIndex(order => order._id === pedido._id);
+              const index = this.orders.findIndex(
+                (order) => order._id === pedido._id,
+              );
               if (index !== -1) {
                 this.orders.splice(index, 1);
               }
@@ -4329,25 +4825,31 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               this.refrescarDatos();
             },
             error: (error) => {
-              console.error("❌ Error al eliminar pedido sin productos:", error);
+              console.error(
+                "❌ Error al eliminar pedido sin productos:",
+                error,
+              );
               this.toastrService.error(
                 `Error al eliminar el pedido ${pedido.nroPedido}. Inténtalo nuevamente.`,
-                "Error al Eliminar"
+                "Error al Eliminar",
               );
-            }
+            },
           });
         } catch (error) {
-          console.error("❌ Error inesperado al eliminar pedido sin productos:", error);
+          console.error(
+            "❌ Error inesperado al eliminar pedido sin productos:",
+            error,
+          );
           this.toastrService.error(
             "Ocurrió un error inesperado al eliminar el pedido",
-            "Error"
+            "Error",
           );
         }
       } else {
         // Si el usuario cancela, mostrar mensaje informativo
         this.toastrService.info(
           `El pedido ${pedido.nroPedido} se mantendrá en el sistema pero no tendrá productos. Considera agregar productos o eliminarlo manualmente.`,
-          "Pedido Mantenido"
+          "Pedido Mantenido",
         );
       }
     });
@@ -4374,7 +4876,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.toastrService.info(
         "Eliminando producto fantasma (producto con datos corruptos). Se está saltando la restricción de estado para limpiar el pedido.",
         "Eliminación Especial",
-        { timeOut: 5000 }
+        { timeOut: 5000 },
       );
     }
 
@@ -4399,7 +4901,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private confirmarEliminacionUltimoProducto(item: Carrito, pedido: Pedido) {
     Swal.fire({
       title: "⚠️ Último Producto del Pedido",
-      text: `Al eliminar "${item.producto?.crearProducto?.titulo || 'este producto'}" el pedido ${pedido.nroPedido} se quedará sin productos. Los pedidos sin productos no están permitidos en el sistema. ¿Deseas eliminar el producto y el pedido completo?`,
+      text: `Al eliminar "${item.producto?.crearProducto?.titulo || "este producto"}" el pedido ${pedido.nroPedido} se quedará sin productos. Los pedidos sin productos no están permitidos en el sistema. ¿Deseas eliminar el producto y el pedido completo?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -4407,7 +4909,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       confirmButtonText: "Sí, eliminar producto y pedido",
       cancelButtonText: "Cancelar",
       allowOutsideClick: false,
-      allowEscapeKey: false
+      allowEscapeKey: false,
     }).then((result) => {
       if (result.isConfirmed) {
         try {
@@ -4415,18 +4917,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           const index = pedido.carrito?.findIndex(
             (carritoItem) =>
               carritoItem.producto?.identificacion?.referencia ===
-              item.producto?.identificacion?.referencia
+              item.producto?.identificacion?.referencia,
           );
 
           if (index !== -1 && index !== undefined) {
             // Eliminar el producto del carrito
             pedido.carrito?.splice(index, 1);
 
-            console.log(`🗑️ Último producto eliminado del pedido ${pedido.nroPedido}:`, {
-              producto: item.producto?.crearProducto?.titulo,
-              referencia: item.producto?.identificacion?.referencia,
-              cantidad: item.cantidad
-            });
+            console.log(
+              `🗑️ Último producto eliminado del pedido ${pedido.nroPedido}:`,
+              {
+                producto: item.producto?.crearProducto?.titulo,
+                referencia: item.producto?.identificacion?.referencia,
+                cantidad: item.cantidad,
+              },
+            );
 
             // Recalcular todos los valores del pedido
             pedido = this.actualizarValoresPedido(pedido);
@@ -4436,8 +4941,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // Mostrar mensaje de éxito
             this.toastrService.success(
-              `Producto "${item.producto?.crearProducto?.titulo || 'eliminado'}" removido del pedido exitosamente`,
-              "Producto Eliminado"
+              `Producto "${item.producto?.crearProducto?.titulo || "eliminado"}" removido del pedido exitosamente`,
+              "Producto Eliminado",
             );
 
             // Ahora eliminar el pedido completo directamente ya que está vacío
@@ -4445,14 +4950,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           } else {
             this.toastrService.error(
               "No se pudo encontrar el producto en el pedido",
-              "Error al Eliminar"
+              "Error al Eliminar",
             );
           }
         } catch (error) {
           console.error("Error al eliminar último producto del pedido:", error);
           this.toastrService.error(
             "Ocurrió un error al eliminar el producto",
-            "Error"
+            "Error",
           );
         }
       }
@@ -4467,7 +4972,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private confirmarEliminacionProducto(item: Carrito, pedido: Pedido) {
     Swal.fire({
       title: "¿Eliminar producto?",
-      text: `¿Estás seguro de que quieres eliminar "${item.producto?.crearProducto?.titulo || 'este producto'}" del pedido?`,
+      text: `¿Estás seguro de que quieres eliminar "${item.producto?.crearProducto?.titulo || "este producto"}" del pedido?`,
       icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -4481,18 +4986,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           const index = pedido.carrito?.findIndex(
             (carritoItem) =>
               carritoItem.producto?.identificacion?.referencia ===
-              item.producto?.identificacion?.referencia
+              item.producto?.identificacion?.referencia,
           );
 
           if (index !== -1 && index !== undefined) {
             // Eliminar el producto del carrito
             pedido.carrito?.splice(index, 1);
 
-            console.log(`🗑️ Producto eliminado del pedido ${pedido.nroPedido}:`, {
-              producto: item.producto?.crearProducto?.titulo,
-              referencia: item.producto?.identificacion?.referencia,
-              cantidad: item.cantidad
-            });
+            console.log(
+              `🗑️ Producto eliminado del pedido ${pedido.nroPedido}:`,
+              {
+                producto: item.producto?.crearProducto?.titulo,
+                referencia: item.producto?.identificacion?.referencia,
+                cantidad: item.cantidad,
+              },
+            );
 
             // Recalcular todos los valores del pedido
             pedido = this.actualizarValoresPedido(pedido);
@@ -4502,20 +5010,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // Mostrar mensaje de éxito
             this.toastrService.success(
-              `Producto "${item.producto?.crearProducto?.titulo || 'eliminado'}" removido del pedido exitosamente`,
-              "Producto Eliminado"
+              `Producto "${item.producto?.crearProducto?.titulo || "eliminado"}" removido del pedido exitosamente`,
+              "Producto Eliminado",
             );
           } else {
             this.toastrService.error(
               "No se pudo encontrar el producto en el pedido",
-              "Error al Eliminar"
+              "Error al Eliminar",
             );
           }
         } catch (error) {
           console.error("Error al eliminar producto del pedido:", error);
           this.toastrService.error(
             "Ocurrió un error al eliminar el producto",
-            "Error"
+            "Error",
           );
         }
       }
@@ -4542,24 +5050,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (tieneDomicilio && order.envio?.zonaCobro) {
       try {
-        costoEnvioNuevo = Number(this.pedidoUtilService.getShippingCost(this.allBillingZone));
+        costoEnvioNuevo = Number(
+          this.pedidoUtilService.getShippingCost(this.allBillingZone),
+        );
         order.totalEnvio = costoEnvioNuevo;
 
-        console.log('🚚 ACTUALIZAR VALORES - Envío domicilio detectado:', {
+        console.log("🚚 ACTUALIZAR VALORES - Envío domicilio detectado:", {
           costoAnterior: costoEnvioAnterior,
           costoNuevo: costoEnvioNuevo,
-          formaEntrega: 'Domicilio',
-          zonaCobro: order.envio.zonaCobro
+          formaEntrega: "Domicilio",
+          zonaCobro: order.envio.zonaCobro,
         });
       } catch (e) {
-        console.warn('No se pudo calcular el costo de envío:', e);
+        console.warn("No se pudo calcular el costo de envío:", e);
         order.totalEnvio = 0;
         costoEnvioNuevo = 0;
       }
     } else {
       // Recoge en tienda o sin zona de cobro
       if (order.totalEnvio !== 0) {
-        console.log('🚚 ACTUALIZAR VALORES - Envío removido (recoge en tienda)');
+        console.log(
+          "🚚 ACTUALIZAR VALORES - Envío removido (recoge en tienda)",
+        );
       }
       order.totalEnvio = 0;
       costoEnvioNuevo = 0;
@@ -4572,12 +5084,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // 2. Sumar envío al subtotal
     order.totalPedidoSinDescuento = subtotalProductos + (order.totalEnvio || 0);
 
-    console.log('💰 ACTUALIZAR VALORES - Cálculo del subtotal:', {
+    console.log("💰 ACTUALIZAR VALORES - Cálculo del subtotal:", {
       subtotalProductos,
       totalEnvio: order.totalEnvio,
       subtotalFinal: order.totalPedidoSinDescuento,
       cambioEnvio: costoEnvioAnterior !== costoEnvioNuevo,
-      formaEntrega: order.carrito?.map(c => c.configuracion?.datosEntrega?.formaEntrega)
+      formaEntrega: order.carrito?.map(
+        (c) => c.configuracion?.datosEntrega?.formaEntrega,
+      ),
     });
 
     // Recalcular total con descuentos (el envío ya está incluido en el subtotal)
@@ -4587,8 +5101,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Recalcular falta por pagar si hay anticipos
     if (order.PagosAsentados && order.PagosAsentados.length > 0) {
       const anticipoReal = order.PagosAsentados.reduce((sum, pago) => {
-        if (pago.formaPago?.toLowerCase().includes("wompi") &&
-          pago.estadoVerificacion === "Pendiente") {
+        if (
+          pago.formaPago?.toLowerCase().includes("wompi") &&
+          pago.estadoVerificacion === "Pendiente"
+        ) {
           return sum; // No sumar pagos de Wompi pendientes
         }
         const valorPago = pago.valor || pago.valorRegistrado || 0;
@@ -4596,7 +5112,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }, 0);
 
       order.anticipo = anticipoReal;
-      order.faltaPorPagar = Math.max(0, order.totalPedididoConDescuento - anticipoReal);
+      order.faltaPorPagar = Math.max(
+        0,
+        order.totalPedididoConDescuento - anticipoReal,
+      );
     }
 
     return order;
@@ -4651,115 +5170,130 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Cargar la lista de usuarios para mostrar como opciones de asesores
-    this.maestroService.consultarUsuarios().subscribe((usuarios: any) => {
-      console.log(`🔍 DEBUG ASIGNACIÓN ASESOR - Empresa: ${empresaPedido}`);
-      console.log(`📊 Total usuarios obtenidos: ${usuarios.length}`);
-      
-      // ✅ CORREGIDO: Filtrar usuarios activos de la empresa específica
-      // Incluir TODOS los usuarios activos de la empresa, no solo roles específicos
-      const usuariosEmpresa = usuarios.filter((usuario: any) => {
-        const esActivo = usuario.activo;
-        const esDeEmpresa = (usuario.empresa === empresaPedido || usuario.company === empresaPedido);
-        
-        console.log(`👤 Usuario: ${usuario.nombre} ${usuario.apellido}`, {
-          activo: esActivo,
-          empresa: usuario.empresa,
-          company: usuario.company,
-          roles: usuario.roles,
-          esDeEmpresa: esDeEmpresa
+    this.maestroService.consultarUsuarios().subscribe(
+      (usuarios: any) => {
+        console.log(`🔍 DEBUG ASIGNACIÓN ASESOR - Empresa: ${empresaPedido}`);
+        console.log(`📊 Total usuarios obtenidos: ${usuarios.length}`);
+
+        // ✅ CORREGIDO: Filtrar usuarios activos de la empresa específica
+        // Incluir TODOS los usuarios activos de la empresa, no solo roles específicos
+        const usuariosEmpresa = usuarios.filter((usuario: any) => {
+          const esActivo = usuario.activo;
+          const esDeEmpresa =
+            usuario.empresa === empresaPedido ||
+            usuario.company === empresaPedido;
+
+          console.log(`👤 Usuario: ${usuario.nombre} ${usuario.apellido}`, {
+            activo: esActivo,
+            empresa: usuario.empresa,
+            company: usuario.company,
+            roles: usuario.roles,
+            esDeEmpresa: esDeEmpresa,
+          });
+
+          return esActivo && esDeEmpresa;
         });
-        
-        return esActivo && esDeEmpresa;
-      });
 
-      console.log(`✅ Usuarios filtrados por empresa: ${usuariosEmpresa.length}`);
+        console.log(
+          `✅ Usuarios filtrados por empresa: ${usuariosEmpresa.length}`,
+        );
 
-      if (usuariosEmpresa.length === 0) {
+        if (usuariosEmpresa.length === 0) {
+          Swal.fire({
+            title: "Error",
+            text: `No hay usuarios disponibles en la empresa ${empresaPedido}.`,
+            icon: "error",
+            confirmButtonColor: "#3085d6",
+            confirmButtonText: "Aceptar",
+          });
+          return;
+        }
+
+        // ✅ CORREGIDO: Usar todos los usuarios de la empresa como asesores disponibles
+        const asesoresDisponibles = usuariosEmpresa;
+
+        // Crear opciones para el select
+        const options = asesoresDisponibles.map((asesor: any) => ({
+          value: asesor.cd,
+          label: `${asesor.nombre} ${asesor.apellido} (${asesor.email})`,
+        }));
+
+        // Agregar opción para el asesor actual si existe
+        if (order.asesorAsignado && order.asesorAsignado.nit !== "9999") {
+          const asesorActual = asesoresDisponibles.find(
+            (a: any) => a.nit === order.asesorAsignado?.nit,
+          );
+          if (asesorActual) {
+            options.unshift({
+              value: asesorActual.cd,
+              label: `${asesorActual.nombre} ${asesorActual.apellido} (${asesorActual.email}) - ACTUAL`,
+            });
+          }
+        }
+
+        Swal.fire({
+          title: "Asignar Asesor",
+          text: `Selecciona el asesor que deseas asignar a este pedido de ${empresaPedido}:`,
+          input: "select",
+          inputOptions: options.reduce((acc, option) => {
+            acc[option.value] = option.label;
+            return acc;
+          }, {} as any),
+          inputValue:
+            order.asesorAsignado?.nit !== "9999"
+              ? asesoresDisponibles.find(
+                  (a: any) => a.nit === order.asesorAsignado?.nit,
+                )?.cd
+              : "",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Asignar Asesor",
+          cancelButtonText: "Cancelar",
+          inputValidator: (value) => {
+            if (!value) {
+              return "Debes seleccionar un asesor";
+            }
+            return null;
+          },
+        }).then((result) => {
+          if (result.isConfirmed && result.value) {
+            const asesorSeleccionado = asesoresDisponibles.find(
+              (a: any) => a.cd === result.value,
+            );
+
+            if (asesorSeleccionado) {
+              const userLite: UserLite = {
+                name: `${asesorSeleccionado.nombre} ${asesorSeleccionado.apellido}`,
+                email: asesorSeleccionado.email,
+                nit: asesorSeleccionado.nit,
+              };
+
+              order.asesorAsignado = userLite;
+              this.editOrder(order);
+
+              Swal.fire({
+                title: "Asesor Asignado",
+                text: `El asesor ${userLite.name} ha sido asignado exitosamente al pedido.`,
+                icon: "success",
+                confirmButtonColor: "#3085d6",
+                confirmButtonText: "Aceptar",
+              });
+            }
+          }
+        });
+      },
+      (error) => {
+        console.error("Error al cargar usuarios:", error);
         Swal.fire({
           title: "Error",
-          text: `No hay usuarios disponibles en la empresa ${empresaPedido}.`,
+          text: "No se pudo cargar la lista de asesores. Intenta nuevamente.",
           icon: "error",
           confirmButtonColor: "#3085d6",
           confirmButtonText: "Aceptar",
         });
-        return;
-      }
-
-      // ✅ CORREGIDO: Usar todos los usuarios de la empresa como asesores disponibles
-      const asesoresDisponibles = usuariosEmpresa;
-
-      // Crear opciones para el select
-      const options = asesoresDisponibles.map((asesor: any) => ({
-        value: asesor.cd,
-        label: `${asesor.nombre} ${asesor.apellido} (${asesor.email})`
-      }));
-
-      // Agregar opción para el asesor actual si existe
-      if (order.asesorAsignado && order.asesorAsignado.nit !== "9999") {
-        const asesorActual = asesoresDisponibles.find((a: any) => a.nit === order.asesorAsignado?.nit);
-        if (asesorActual) {
-          options.unshift({
-            value: asesorActual.cd,
-            label: `${asesorActual.nombre} ${asesorActual.apellido} (${asesorActual.email}) - ACTUAL`
-          });
-        }
-      }
-
-      Swal.fire({
-        title: "Asignar Asesor",
-        text: `Selecciona el asesor que deseas asignar a este pedido de ${empresaPedido}:`,
-        input: 'select',
-        inputOptions: options.reduce((acc, option) => {
-          acc[option.value] = option.label;
-          return acc;
-        }, {} as any),
-        inputValue: order.asesorAsignado?.nit !== "9999" ?
-          asesoresDisponibles.find((a: any) => a.nit === order.asesorAsignado?.nit)?.cd : '',
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Asignar Asesor",
-        cancelButtonText: "Cancelar",
-        inputValidator: (value) => {
-          if (!value) {
-            return 'Debes seleccionar un asesor';
-          }
-          return null;
-        }
-      }).then((result) => {
-        if (result.isConfirmed && result.value) {
-          const asesorSeleccionado = asesoresDisponibles.find((a: any) => a.cd === result.value);
-
-          if (asesorSeleccionado) {
-            const userLite: UserLite = {
-              name: `${asesorSeleccionado.nombre} ${asesorSeleccionado.apellido}`,
-              email: asesorSeleccionado.email,
-              nit: asesorSeleccionado.nit,
-            };
-
-            order.asesorAsignado = userLite;
-            this.editOrder(order);
-
-            Swal.fire({
-              title: "Asesor Asignado",
-              text: `El asesor ${userLite.name} ha sido asignado exitosamente al pedido.`,
-              icon: "success",
-              confirmButtonColor: "#3085d6",
-              confirmButtonText: "Aceptar",
-            });
-          }
-        }
-      });
-    }, (error) => {
-      console.error('Error al cargar usuarios:', error);
-      Swal.fire({
-        title: "Error",
-        text: "No se pudo cargar la lista de asesores. Intenta nuevamente.",
-        icon: "error",
-        confirmButtonColor: "#3085d6",
-        confirmButtonText: "Aceptar",
-      });
-    });
+      },
+    );
   }
 
   buscarPorFechas(table?: Table): void {
@@ -4768,10 +5302,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       tipoFecha: "fechaCreacion",
-      company: JSON.parse(localStorage.getItem("currentCompany")!)
-        .nomComercial,
+      company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
       estadoProceso: this.isFromProduction
-        ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente]
+        ? [
+            EstadoProceso.SinProducir,
+            EstadoProceso.EnProduccion,
+            EstadoProceso.ProducidoParcialmente,
+          ]
         : ["Todos"],
     };
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
@@ -4872,15 +5409,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   exportarExcel(): void {
     // Transformar los datos para la exportación
-    const datosExportar = this.orders.map(pedido => ({
+    const datosExportar = this.orders.map((pedido) => ({
       ...pedido,
-      asesorAsignado: pedido.asesorAsignado?.name || '',
-      cliente: pedido.cliente?.nombres_completos || '',
-      despachador: pedido.despachador?.name || '',
-      entregado: pedido.entregado?.name || '',
-      channel: pedido.channel?.name || 'Regular'
+      asesorAsignado: pedido.asesorAsignado?.name || "",
+      cliente: pedido.cliente?.nombres_completos || "",
+      despachador: pedido.despachador?.name || "",
+      entregado: pedido.entregado?.name || "",
+      channel: pedido.channel?.name || "Regular",
     }));
-    
+
     const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosExportar);
     const workbook: XLSX.WorkBook = {
       Sheets: { Pedidos: worksheet },
@@ -5188,11 +5725,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.displayedColumnsProduccion = parsed;
         }
       } catch (e) {
-        console.error("Error parsing saved production columns configuration", e);
+        console.error(
+          "Error parsing saved production columns configuration",
+          e,
+        );
       }
     }
     // Inicializar columnas seleccionadas de producción
-    this.selectedColumnsProduccion = this.displayedColumnsProduccion.filter((col) => col.visible);
+    this.selectedColumnsProduccion = this.displayedColumnsProduccion.filter(
+      (col) => col.visible,
+    );
   }
 
   saveColumnConfigurationProduccion(): void {
@@ -5216,35 +5758,193 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   resetColumnConfigProduccion(): void {
     this.displayedColumnsProduccion = [
-      { field: "producto", header: "Producto", visible: true, type: "text", filterable: true },
-      { field: "referencia", header: "Referencia", visible: true, type: "text", filterable: true },
-      { field: "ultimaImpresion", header: "Última impresión", visible: true, type: "date", filterable: false },
-      { field: "revisadoParaProduccion", header: "Revisado", visible: true, type: "date", filterable: true },
-      { field: "nroPedido", header: "# Pedido", visible: true, type: "text", filterable: true },
-      { field: "cantidad", header: "Cantidad", visible: true, type: "text", filterable: true },
-      { field: "cliente", header: "Cliente", visible: true, type: "text", filterable: true },
-      { field: "estadoPago", header: "Estado de Pago", visible: true, type: "status", filterable: true },
-      { field: "estadoProceso", header: "Estado de Proceso", visible: true, type: "status", filterable: true },
-      { field: "validacion", header: "Validación", visible: true, type: "status", filterable: true },
-      { field: "totalPedidoSinDescuento", header: "Valor Bruto", visible: true, type: "currency", filterable: true },
-      { field: "totalDescuento", header: "Descuento", visible: true, type: "currency", filterable: true },
-      { field: "totalEnvio", header: "Domicilio", visible: true, type: "currency", filterable: true },
-      { field: "subtotal", header: "Subtotal", visible: true, type: "currency", filterable: true },
-      { field: "totalImpuesto", header: "IVA", visible: true, type: "currency", filterable: true },
-      { field: "totalPedididoConDescuento", header: "Total", visible: true, type: "currency", filterable: true },
-      { field: "anticipo", header: "Anticipo", visible: true, type: "currency", filterable: true },
-      { field: "faltaPorPagar", header: "Falta por Pagar", visible: true, type: "currency", filterable: true },
-      { field: "fechaEntrega", header: "Fecha Entrega", visible: true, type: "date", filterable: true },
-      { field: "fechaCreacion", header: "Fecha de compra", visible: true, type: "date", filterable: true },
-      { field: "ciudad", header: "Ciudad", visible: true, type: "text", filterable: true },
-      { field: "zonaCobro", header: "Zona de Entrega", visible: true, type: "text", filterable: true },
-      { field: "formaEntrega", header: "Forma de Entrega", visible: true, type: "text", filterable: true },
-      { field: "horarioEntrega", header: "Horario de Entrega", visible: true, type: "text", filterable: true },
-      { field: "channel", header: "Canal", visible: true, type: "text", filterable: true },
-      { field: "vendedor", header: "Vendedor", visible: true, type: "text", filterable: true }
+      {
+        field: "producto",
+        header: "Producto",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "referencia",
+        header: "Referencia",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "ultimaImpresion",
+        header: "Última impresión",
+        visible: true,
+        type: "date",
+        filterable: false,
+      },
+      {
+        field: "revisadoParaProduccion",
+        header: "Revisado",
+        visible: true,
+        type: "date",
+        filterable: true,
+      },
+      {
+        field: "nroPedido",
+        header: "# Pedido",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "cantidad",
+        header: "Cantidad",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "cliente",
+        header: "Cliente",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "estadoPago",
+        header: "Estado de Pago",
+        visible: true,
+        type: "status",
+        filterable: true,
+      },
+      {
+        field: "estadoProceso",
+        header: "Estado de Proceso",
+        visible: true,
+        type: "status",
+        filterable: true,
+      },
+      {
+        field: "validacion",
+        header: "Validación",
+        visible: true,
+        type: "status",
+        filterable: true,
+      },
+      {
+        field: "totalPedidoSinDescuento",
+        header: "Valor Bruto",
+        visible: true,
+        type: "currency",
+        filterable: true,
+      },
+      {
+        field: "totalDescuento",
+        header: "Descuento",
+        visible: true,
+        type: "currency",
+        filterable: true,
+      },
+      {
+        field: "totalEnvio",
+        header: "Domicilio",
+        visible: true,
+        type: "currency",
+        filterable: true,
+      },
+      {
+        field: "subtotal",
+        header: "Subtotal",
+        visible: true,
+        type: "currency",
+        filterable: true,
+      },
+      {
+        field: "totalImpuesto",
+        header: "IVA",
+        visible: true,
+        type: "currency",
+        filterable: true,
+      },
+      {
+        field: "totalPedididoConDescuento",
+        header: "Total",
+        visible: true,
+        type: "currency",
+        filterable: true,
+      },
+      {
+        field: "anticipo",
+        header: "Anticipo",
+        visible: true,
+        type: "currency",
+        filterable: true,
+      },
+      {
+        field: "faltaPorPagar",
+        header: "Falta por Pagar",
+        visible: true,
+        type: "currency",
+        filterable: true,
+      },
+      {
+        field: "fechaEntrega",
+        header: "Fecha Entrega",
+        visible: true,
+        type: "date",
+        filterable: true,
+      },
+      {
+        field: "fechaCreacion",
+        header: "Fecha de compra",
+        visible: true,
+        type: "date",
+        filterable: true,
+      },
+      {
+        field: "ciudad",
+        header: "Ciudad",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "zonaCobro",
+        header: "Zona de Entrega",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "formaEntrega",
+        header: "Forma de Entrega",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "horarioEntrega",
+        header: "Horario de Entrega",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "channel",
+        header: "Canal",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
+      {
+        field: "vendedor",
+        header: "Vendedor",
+        visible: true,
+        type: "text",
+        filterable: true,
+      },
     ];
     // Asegurar que selectedColumnsProduccion mantenga la nueva configuración
-    this.selectedColumnsProduccion = this.displayedColumnsProduccion.filter((col) => col.visible);
+    this.selectedColumnsProduccion = this.displayedColumnsProduccion.filter(
+      (col) => col.visible,
+    );
     this.saveColumnConfigurationProduccion();
   }
 
@@ -5321,8 +6021,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.refrescarDatos();
     this.saveFiltersState();
   }
-
-
 
   // Métodos para rangos de fecha predefinidos
   setDateRange(range: string): void {
@@ -5531,8 +6229,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  onPrintProduct(event: { pedido: any, producto: any }) {
-    console.log('Imprimir producto:', event.producto, 'del pedido:', event.pedido);
+  onPrintProduct(event: { pedido: any; producto: any }) {
+    console.log(
+      "Imprimir producto:",
+      event.producto,
+      "del pedido:",
+      event.pedido,
+    );
     // Aquí puedes llamar a la lógica de impresión específica por producto
   }
 
@@ -5551,7 +6254,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   onDatePresetChange(value: string): void {
     if (value) {
       this.setDateRange(value);
-      this.selectedDatePreset = '';
+      this.selectedDatePreset = "";
     }
   }
 
@@ -5583,42 +6286,55 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Formatea una fecha para mostrar en los tags de filtros
    */
   formatDateForDisplay(dateString: string | Date): string {
-    if (!dateString) return '';
-    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
-    return date.toLocaleDateString('es-CO', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
+    if (!dateString) return "";
+    const date =
+      typeof dateString === "string" ? new Date(dateString) : dateString;
+    return date.toLocaleDateString("es-CO", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
     });
   }
 
   /**
    * Obtiene la clase CSS para un estado específico
    */
-  getStatusClass(status: string, type: 'pago' | 'proceso'): string {
-    if (type === 'pago') {
+  getStatusClass(status: string, type: "pago" | "proceso"): string {
+    if (type === "pago") {
       switch (status) {
-        case 'Aprobado': return 'status-success';
-        case 'Pendiente':
-        case 'Pospendiente': return 'status-warning';
-        case 'PreAprobado': return 'status-info';
-        case 'Rechazado':
-        case 'Precancelado':
-        case 'Cancelado': return 'status-danger';
-        default: return 'status-secondary';
+        case "Aprobado":
+          return "status-success";
+        case "Pendiente":
+        case "Pospendiente":
+          return "status-warning";
+        case "PreAprobado":
+          return "status-info";
+        case "Rechazado":
+        case "Precancelado":
+        case "Cancelado":
+          return "status-danger";
+        default:
+          return "status-secondary";
       }
     } else {
       switch (status) {
-        case 'Entregado': return 'status-success';
-        case 'Despachado':
-        case 'ParaDespachar': return 'status-warning';
-        case 'EnProduccion':
-        case 'ProducidoParcialmente':
-        case 'ProducidoTotalmente': return 'status-info';
-        case 'Empacado': return 'status-primary';
-        case 'Rechazado': return 'status-danger';
-        case 'Cerrado': return 'status-dark';
-        default: return 'status-secondary';
+        case "Entregado":
+          return "status-success";
+        case "Despachado":
+        case "ParaDespachar":
+          return "status-warning";
+        case "EnProduccion":
+        case "ProducidoParcialmente":
+        case "ProducidoTotalmente":
+          return "status-info";
+        case "Empacado":
+          return "status-primary";
+        case "Rechazado":
+          return "status-danger";
+        case "Cerrado":
+          return "status-dark";
+        default:
+          return "status-secondary";
       }
     }
   }
@@ -5628,10 +6344,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private stringToDate(dateString: string): Date {
     if (!dateString) return null;
-    const parts = dateString.split('-');
+    const parts = dateString.split("-");
     if (parts.length === 3) {
       // Create date at noon to avoid timezone issues
-      return new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 12, 0, 0);
+      return new Date(
+        parseInt(parts[0]),
+        parseInt(parts[1]) - 1,
+        parseInt(parts[2]),
+        12,
+        0,
+        0,
+      );
     }
     return null;
   }
@@ -5640,10 +6363,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Convert Date object to string (YYYY-MM-DD)
    */
   private dateToString(date: Date): string {
-    if (!date) return '';
+    if (!date) return "";
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
     return `${year}-${month}-${day}`;
   }
 
@@ -5662,8 +6385,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Handle clear event
     if (!date) {
       this.fechaInicialDate = null;
-      this.fechaInicial = '';
-      this.selectedDatePreset = '';
+      this.fechaInicial = "";
+      this.selectedDatePreset = "";
       this.saveFiltersState();
       return;
     }
@@ -5685,7 +6408,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Clear date preset when manually selecting dates
-    this.selectedDatePreset = '';
+    this.selectedDatePreset = "";
 
     this.saveFiltersState();
   }
@@ -5697,8 +6420,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Handle clear event
     if (!date) {
       this.fechaFinalDate = null;
-      this.fechaFinal = '';
-      this.selectedDatePreset = '';
+      this.fechaFinal = "";
+      this.selectedDatePreset = "";
       this.saveFiltersState();
       return;
     }
@@ -5720,22 +6443,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // Clear date preset when manually selecting dates
-    this.selectedDatePreset = '';
+    this.selectedDatePreset = "";
 
     this.saveFiltersState();
   }
 
-  onOptionsProduccion(event: { pedido: any, producto: any }) {
+  onOptionsProduccion(event: { pedido: any; producto: any }) {
     this.selectedOrder = event.pedido;
     this.productoSeleccionado = event.producto;
     this.openOptionsModal(event.pedido, event.producto);
   }
 
   checkIfUserIsBrenda(): boolean {
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    const userData = JSON.parse(localStorage.getItem("user") || "{}");
     const allowedEmails = [
-      'brendazora@almara.com.co',
-      'gerencia@almara.com.co'
+      "brendazora@almara.com.co",
+      "gerencia@almara.com.co",
     ];
     return allowedEmails.includes(userData.email);
   }
@@ -5751,21 +6474,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Si está en EnProduccion, ProducidoParcialmente o ProducidoTotalmente, mantener el estado actual
 
     // Agregar texto "Revisado" en lugar de fecha
-    order.revisadoParaProduccion = 'Revisado';
+    order.revisadoParaProduccion = "Revisado";
 
     // Guardar cambios
     this.ventasService.editOrder(order).subscribe({
       next: () => {
-        const mensaje = order.estadoProceso === EstadoProceso.EnProduccion ?
-          'Pedido marcado como revisado y enviado a producción' :
-          'Pedido marcado como revisado';
-        this.toastrService.success(mensaje, 'Éxito');
+        const mensaje =
+          order.estadoProceso === EstadoProceso.EnProduccion
+            ? "Pedido marcado como revisado y enviado a producción"
+            : "Pedido marcado como revisado";
+        this.toastrService.success(mensaje, "Éxito");
         this.refrescarDatos();
       },
       error: (error) => {
-        console.error('Error al marcar como revisado:', error);
-        this.toastrService.error('Error al marcar como revisado', 'Error');
-      }
+        console.error("Error al marcar como revisado:", error);
+        this.toastrService.error("Error al marcar como revisado", "Error");
+      },
     });
   }
 
@@ -5773,28 +6497,33 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!order || !order.revisadoParaProduccion) return;
 
     // Confirmar acción
-    if (confirm('¿Está seguro de quitar la revisión de este pedido?')) {
+    if (confirm("¿Está seguro de quitar la revisión de este pedido?")) {
       // Quitar revisión - dejar en blanco
-      order.revisadoParaProduccion = '';
+      order.revisadoParaProduccion = "";
 
       // Mantener el estado de proceso actual - NO modificar estadoProceso
 
       // Guardar cambios
       this.ventasService.editOrder(order).subscribe({
         next: () => {
-          this.toastrService.success('Revisión removida correctamente', 'Éxito');
+          this.toastrService.success(
+            "Revisión removida correctamente",
+            "Éxito",
+          );
           this.refrescarDatos();
         },
         error: (error) => {
-          console.error('Error al quitar revisión:', error);
-          this.toastrService.error('Error al quitar revisión', 'Error');
-        }
+          console.error("Error al quitar revisión:", error);
+          this.toastrService.error("Error al quitar revisión", "Error");
+        },
       });
     }
   }
 
   isOrderRevisado(order: Pedido): boolean {
-    return order?.revisadoParaProduccion && order.revisadoParaProduccion !== '' ? true : false;
+    return order?.revisadoParaProduccion && order.revisadoParaProduccion !== ""
+      ? true
+      : false;
   }
 
   /**
@@ -5803,21 +6532,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   duplicarPedido(order: Pedido): void {
     if (!order) {
-      this.toastrService.error('Pedido inválido', 'Error');
+      this.toastrService.error("Pedido inválido", "Error");
       return;
     }
 
     // Mostrar confirmación antes de duplicar
     Swal.fire({
-      title: '¿Duplicar pedido?',
+      title: "¿Duplicar pedido?",
       text: `¿Está seguro de que desea duplicar el pedido ${order.nroPedido}?`,
-      icon: 'question',
+      icon: "question",
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Sí, duplicar',
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Sí, duplicar",
+      cancelButtonText: "Cancelar",
+      reverseButtons: true,
     }).then((result) => {
       if (result.isConfirmed) {
         this.procesarDuplicacion(order);
@@ -5830,8 +6559,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private procesarDuplicacion(order: Pedido): void {
     try {
-      const empresaActual = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      const companyNom: string = empresaActual?.nomComercial || (order.company as unknown as string) || '';
+      const empresaActual = JSON.parse(
+        localStorage.getItem("currentCompany") || "{}",
+      );
+      const companyNom: string =
+        empresaActual?.nomComercial ||
+        (order.company as unknown as string) ||
+        "";
 
       // Clonar profundamente el pedido seleccionado
       const cloned: Pedido = JSON.parse(JSON.stringify(order));
@@ -5840,10 +6574,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       delete (cloned as any)._id;
       delete (cloned as any).transaccionId;
       delete (cloned as any).shippingOrder;
-      (cloned as any).nroShippingOrder = '';
-      cloned.referencia = '';
-      cloned.nroFactura = '';
-      cloned.fechaFactura = '';
+      (cloned as any).nroShippingOrder = "";
+      cloned.referencia = "";
+      cloned.nroFactura = "";
+      cloned.fechaFactura = "";
       cloned.fechaCreacion = new Date().toISOString();
       cloned.company = companyNom as any;
 
@@ -5853,16 +6587,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       cloned.PagosAsentados = [];
       cloned.anticipo = 0;
       cloned.faltaPorPagar = undefined as any;
-      (cloned as any).empacador = '';
+      (cloned as any).empacador = "";
       (cloned as any).despachador = undefined;
       (cloned as any).entregado = undefined;
       (cloned as any).transportador = undefined;
-      (cloned as any).fechaYHorarioDespachado = '';
-      (cloned as any).fechaHoraEmpacado = '';
+      (cloned as any).fechaYHorarioDespachado = "";
+      (cloned as any).fechaHoraEmpacado = "";
       cloned.validacion = false;
 
       // Mantener las notas del pedido original (ya no se limpian)
-      
+
       // Mantener las notas de producción de productos individuales en el carrito
 
       // Recalcular totales
@@ -5871,33 +6605,54 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       cloned.totalImpuesto = this.pedidoUtilService.checkIVAPrice();
       cloned.totalEnvio = cloned.totalEnvio || 0;
       cloned.totalDescuento = cloned.totalDescuento || 0;
-      cloned.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(Number(cloned.totalEnvio || 0));
+      cloned.totalPedididoConDescuento = this.pedidoUtilService.getTotalToPay(
+        Number(cloned.totalEnvio || 0),
+      );
 
       // Obtener el siguiente consecutivo y crear el pedido duplicado
       this.ventasService.getNextRef(companyNom).subscribe({
         next: (res: any) => {
-          const texto = companyNom?.toString?.() || '';
+          const texto = companyNom?.toString?.() || "";
           const ultimasLetras = texto.substring(Math.max(0, texto.length - 3));
-          const nextConsecutive = (res?.nextConsecutive ?? res ?? 0).toString().padStart(6, '0');
+          const nextConsecutive = (res?.nextConsecutive ?? res ?? 0)
+            .toString()
+            .padStart(6, "0");
           cloned.nroPedido = `${ultimasLetras}-${nextConsecutive}`;
 
-          const html = this.paymentService.getHtmlContent(cloned, this.isFromProduction);
-          this.ventasService.createOrder({ order: cloned, emailHtml: html }).subscribe({
-            next: () => {
-              this.toastrService.success('Pedido duplicado correctamente', 'Éxito');
-              this.refrescarDatos(true); // Forzar refresco después de duplicar
-            },
-            error: () => {
-              this.toastrService.error('No se pudo duplicar el pedido', 'Error');
-            },
-          });
+          const html = this.paymentService.getHtmlContent(
+            cloned,
+            this.isFromProduction,
+          );
+          this.ventasService
+            .createOrder({ order: cloned, emailHtml: html })
+            .subscribe({
+              next: () => {
+                this.toastrService.success(
+                  "Pedido duplicado correctamente",
+                  "Éxito",
+                );
+                this.refrescarDatos(true); // Forzar refresco después de duplicar
+              },
+              error: () => {
+                this.toastrService.error(
+                  "No se pudo duplicar el pedido",
+                  "Error",
+                );
+              },
+            });
         },
         error: () => {
-          this.toastrService.error('No se pudo obtener el consecutivo para el nuevo pedido', 'Error');
+          this.toastrService.error(
+            "No se pudo obtener el consecutivo para el nuevo pedido",
+            "Error",
+          );
         },
       });
     } catch (e) {
-      this.toastrService.error('Ocurrió un error al duplicar el pedido', 'Error');
+      this.toastrService.error(
+        "Ocurrió un error al duplicar el pedido",
+        "Error",
+      );
     }
   }
 
@@ -5910,24 +6665,107 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Verifica las preferencias del carrito antes de abrir el modal
    */
   private verifyCartPreferences(carritoConfiguracion: Carrito): void {
-    console.log('🔍 Verificando preferencias del carrito:', {
+    console.log("🔍 Verificando preferencias del carrito:", {
       carrito: carritoConfiguracion,
       configuracion: carritoConfiguracion?.configuracion,
       preferencias: carritoConfiguracion?.configuracion?.preferencias,
-      cantidadPreferencias: carritoConfiguracion?.configuracion?.preferencias?.length || 0
+      cantidadPreferencias:
+        carritoConfiguracion?.configuracion?.preferencias?.length || 0,
     });
 
     if (carritoConfiguracion?.configuracion?.preferencias) {
-      carritoConfiguracion.configuracion.preferencias.forEach((pref: any, index: number) => {
-        console.log(`📋 Preferencia ${index + 1} del carrito:`, {
-          titulo: pref.titulo,
-          tipo: pref.tipo,
-          subtitulo: pref.subtitulo,
-          valorUnitarioSinIva: pref.valorUnitarioSinIva
-        });
-      });
+      carritoConfiguracion.configuracion.preferencias.forEach(
+        (pref: any, index: number) => {
+          console.log(`📋 Preferencia ${index + 1} del carrito:`, {
+            titulo: pref.titulo,
+            tipo: pref.tipo,
+            subtitulo: pref.subtitulo,
+            valorUnitarioSinIva: pref.valorUnitarioSinIva,
+          });
+        },
+      );
     } else {
-      console.warn('⚠️ No hay preferencias en la configuración del carrito');
+      console.warn("⚠️ No hay preferencias en la configuración del carrito");
     }
+  }
+
+  // ========================================================================
+  // NUEVO: Sistema de Historial de Estados
+  // ========================================================================
+  // Creado: 2025-10-21
+  // NO MODIFICA ninguna funcionalidad existente - Solo agrega nueva
+
+  // Propiedades para el modal de historial
+  showHistoryModal: boolean = false;
+  currentOrderHistory: any[] = [];
+  loadingHistory: boolean = false;
+  currentOrderForHistory: Pedido | null = null;
+  historyError: string | null = null;
+
+  /**
+   * Abre el modal de historial de una orden
+   * @param pedido - Pedido del cual ver el historial
+   */
+  verHistorialPedido(pedido: Pedido): void {
+    if (!pedido || !pedido._id) {
+      this.toastrService.error(
+        "No se puede ver el historial de este pedido",
+        "Error",
+      );
+      return;
+    }
+
+    console.log("📜 Abriendo historial para pedido:", pedido.nroPedido);
+
+    this.currentOrderForHistory = pedido;
+    this.currentOrderHistory = [];
+    this.historyError = null;
+    this.showHistoryModal = true;
+    this.loadingHistory = true;
+
+    // Consultar historial
+    this.ventasService.getOrderHistory(pedido._id).subscribe({
+      next: (response) => {
+        this.loadingHistory = false;
+
+        if (response.success) {
+          this.currentOrderHistory = response.history || [];
+          console.log(
+            `✅ Historial cargado: ${this.currentOrderHistory.length} registros`,
+          );
+
+          if (this.currentOrderHistory.length === 0) {
+            this.toastrService.info(
+              "No hay cambios de estado registrados para este pedido",
+              "Sin historial",
+            );
+          }
+        } else {
+          this.historyError =
+            response.error || "No se pudo cargar el historial";
+          this.toastrService.error(this.historyError, "Error");
+        }
+      },
+      error: (error) => {
+        this.loadingHistory = false;
+        console.error("❌ Error cargando historial:", error);
+        this.historyError =
+          error.error?.error || error.message || "Error desconocido";
+        this.toastrService.error(
+          "No se pudo cargar el historial del pedido",
+          "Error",
+        );
+      },
+    });
+  }
+
+  /**
+   * Cierra el modal de historial
+   */
+  cerrarHistorialModal(): void {
+    this.showHistoryModal = false;
+    this.currentOrderForHistory = null;
+    this.currentOrderHistory = [];
+    this.historyError = null;
   }
 }

@@ -1,70 +1,73 @@
-import { NgModule } from '@angular/core';
-import { DashboardComponent } from './dashboard/dashboard.component';
-import { ProduccionModuleRoutingModule } from './produccion-routing.module';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgxHotkeysModule } from '@balticcode/ngx-hotkeys';
-import { GalleryModule } from '@ks89/angular-modal-gallery';
-import { NgSelectModule } from '@ng-select/ng-select';
-import { NgxDatatableModule } from '@swimlane/ngx-datatable';
-import { ArchwizardModule } from 'angular-archwizard';
-import { NgxStarRatingModule } from 'ngx-star-rating';
-import { CalendarModule } from 'primeng/calendar';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { SliderModule } from 'primeng/slider';
-import { TableModule } from 'primeng/table';
-import { TabViewModule } from 'primeng/tabview';
-import { ToastModule } from 'primeng/toast';
-import { TreeSelectModule } from 'primeng/treeselect';
-import { VentasRoutingModule } from '../ventas/ventas-routing.module';
-import { VentasModule } from '../ventas/ventas.module';
-import { SharedModule } from '../../shared/shared.module';
-import { CheckboxModule } from 'primeng/checkbox';
-import { CerrararticuloComponent } from './dashboard/cerrararticulo/cerrararticulo.component';
-import { DropdownModule } from 'primeng/dropdown';
-import { ProcesoTrackingComponent } from './dashboard/tracking/proceso-tracking.component';
-import { TimelineModule } from 'primeng/timeline';
-import { CerrarProductoComponent } from './dashboard/cerrarproducto/cerrarproducto.component';
-import { HttpClientModule } from '@angular/common/http';
-import { ProduccionService } from '../../shared/services/produccion/produccion.service';
-import { ProduccionNewService } from '../../shared/services/produccion/produccion-new.service';
-import { ProduccionDirectService } from '../../shared/services/produccion/produccion-direct.service';
-import { OrderByPipe } from 'src/app/shared/pipes/order-by.pipe';
-import { TooltipModule } from 'primeng/tooltip';
+import { NgModule } from "@angular/core";
+import { DashboardComponent } from "./dashboard/dashboard.component";
+import { ProduccionModuleRoutingModule } from "./produccion-routing.module";
+import { CommonModule } from "@angular/common";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { NgxHotkeysModule } from "@balticcode/ngx-hotkeys";
+import { GalleryModule } from "@ks89/angular-modal-gallery";
+import { NgSelectModule } from "@ng-select/ng-select";
+import { NgxDatatableModule } from "@swimlane/ngx-datatable";
+import { ArchwizardModule } from "angular-archwizard";
+import { NgxStarRatingModule } from "ngx-star-rating";
+import { CalendarModule } from "primeng/calendar";
+import { MultiSelectModule } from "primeng/multiselect";
+import { SliderModule } from "primeng/slider";
+import { TableModule } from "primeng/table";
+import { TabViewModule } from "primeng/tabview";
+import { ToastModule } from "primeng/toast";
+import { TreeSelectModule } from "primeng/treeselect";
+import { SharedModule } from "../../shared/shared.module";
+import { VentasModule } from "../ventas/ventas.module";
+import { CheckboxModule } from "primeng/checkbox";
+import { CerrararticuloComponent } from "./dashboard/cerrararticulo/cerrararticulo.component";
+import { DropdownModule } from "primeng/dropdown";
+import { ProcesoTrackingComponent } from "./dashboard/tracking/proceso-tracking.component";
+import { TimelineModule } from "primeng/timeline";
+import { CerrarProductoComponent } from "./dashboard/cerrarproducto/cerrarproducto.component";
+import { HttpClientModule } from "@angular/common/http";
+import { ProduccionService } from "../../shared/services/produccion/produccion.service";
+import { ProduccionNewService } from "../../shared/services/produccion/produccion-new.service";
+import { ProduccionDirectService } from "../../shared/services/produccion/produccion-direct.service";
+import { OrderByPipe } from "src/app/shared/pipes/order-by.pipe";
+import { TooltipModule } from "primeng/tooltip";
 
 @NgModule({
-    imports: [ProduccionModuleRoutingModule,
-        NgSelectModule,
-        CommonModule,
-        SharedModule,
-        DropdownModule,
-        VentasModule,
-        VentasRoutingModule,
-        NgxDatatableModule,
-        TabViewModule,
-        CheckboxModule,
-        ArchwizardModule,
-        TreeSelectModule,
-        SliderModule,
-        GalleryModule,
-        FormsModule,
-        ReactiveFormsModule,
-        TabViewModule,
-        CalendarModule,
-        FormsModule,
-        NgxHotkeysModule.forRoot(),
-        NgxStarRatingModule,
-        TableModule,
-        TooltipModule,
-        MultiSelectModule,
-        
-        TimelineModule,
-        ToastModule],
-    exports: [DashboardComponent],
-    declarations: [DashboardComponent,
-        CerrararticuloComponent, ProcesoTrackingComponent,
-        CerrarProductoComponent, OrderByPipe],
-    providers: [
-    ],
+  imports: [
+    ProduccionModuleRoutingModule,
+    NgSelectModule,
+    CommonModule,
+    SharedModule,
+    VentasModule,
+    DropdownModule,
+    NgxDatatableModule,
+    TabViewModule,
+    CheckboxModule,
+    ArchwizardModule,
+    TreeSelectModule,
+    SliderModule,
+    GalleryModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TabViewModule,
+    CalendarModule,
+    FormsModule,
+    NgxHotkeysModule.forRoot(),
+    NgxStarRatingModule,
+    TableModule,
+    TooltipModule,
+    MultiSelectModule,
+
+    TimelineModule,
+    ToastModule,
+  ],
+  exports: [DashboardComponent],
+  declarations: [
+    DashboardComponent,
+    CerrararticuloComponent,
+    ProcesoTrackingComponent,
+    CerrarProductoComponent,
+    OrderByPipe,
+  ],
+  providers: [],
 })
-export class ProduccionModule { }
+export class ProduccionModule {}

@@ -1,0 +1,146 @@
+<!--
+  ========================================================================
+  TEMPLATE: Timeline de Historial de Estados de Pedidos
+  ========================================================================
+  Creado: 2025-10-21
+  
+  Template NUEVO - No modifica ningún template existente
+-->
+
+<div class="order-history-timeline">
+  
+  <!-- Loading State -->
+  <div *ngIf="loading" class="timeline-loading">
+    <div class="text-center py-4">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></i>
+      <p class="mt-3 text-muted">Cargando historial...</p>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && timelineEvents.length === 0" class="timeline-empty">
+    <div class="text-center py-5">
+      <i class="pi pi-history" style="font-size: 3rem; color: #cbd5e1;"></i>
+      <h6 class="mt-3 text-muted">No hay historial disponible</h6>
+      <p class="text-muted small">Esta orden no tiene cambios de estado registrados.</p>
+    </div>
+  </div>
+
+  <!-- Timeline -->
+  <div *ngIf="!loading && timelineEvents.length > 0" class="timeline-container">
+    
+    <div class="timeline-header mb-3">
+      <h6 class="mb-1">
+        <i class="pi pi-clock me-2"></i>
+        Historial de Cambios
+      </h6>
+      <small class="text-muted">{{ timelineEvents.length }} {{ timelineEvents.length === 1 ? 'cambio registrado' : 'cambios registrados' }}</small>
+    </div>
+
+    <div class="timeline-wrapper">
+      <div *ngFor="let event of timelineEvents; let i = index" 
+           class="timeline-item"
+           [class.timeline-item-backward]="event.isBackward"
+           [class.timeline-item-first]="event.isFirst"
+           [class.timeline-item-last]="event.isLast">
+        
+        <!-- Timeline Marker -->
+        <div class="timeline-marker" [style.background-color]="event.color">
+          <i [class]="event.icon" style="font-size: 0.8rem; color: white;"></i>
+        </div>
+
+        <!-- Timeline Content -->
+        <div class="timeline-content">
+          
+          <!-- Header -->
+          <div class="timeline-content-header">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <!-- Estado anterior → nuevo -->
+                <div class="state-transition mb-2">
+                  <span class="badge bg-secondary">{{ event.previousStatus }}</span>
+                  <i class="pi pi-arrow-right mx-2" style="font-size: 0.7rem;"></i>
+                  <span class="badge bg-primary">{{ event.newStatus }}</span>
+                </div>
+
+                <!-- Tipo de transición -->
+                <div class="mb-2">
+                  <span class="badge" [ngClass]="getBadgeClass(event.transitionType)">
+                    {{ getTransitionLabel(event.transitionType) }}
+                  </span>
+                  <span *ngIf="event.isBackward" class="badge badge-warning ms-2">
+                    <i class="pi pi-exclamation-triangle me-1"></i>
+                    Retroceso Detectado
+                  </span>
+                </div>
+
+                <!-- Usuario y fecha -->
+                <div class="timeline-meta">
+                  <small class="text-muted">
+                    <i class="pi pi-user me-1"></i>
+                    <strong>{{ getUserLabel(event.userEmail) }}</strong>
+                  </small>
+                  <span class="mx-2">•</span>
+                  <small class="text-muted">
+                    <i class="pi pi-calendar me-1"></i>
+                    <span *ngIf="useRelativeTime && event.relativeDate" 
+                          [pTooltip]="event.date" 
+                          tooltipPosition="top">
+                      {{ event.relativeDate }}
+                    </span>
+                    <span *ngIf="!useRelativeTime || !event.relativeDate">
+                      {{ event.date }}
+                    </span>
+                  </small>
+                </div>
+              </div>
+
+              <!-- Botón expandir metadata -->
+              <button *ngIf="showMetadata && hasMetadata(event)" 
+                      class="btn btn-sm btn-link p-0 ms-2"
+                      (click)="toggleMetadata(event.id)"
+                      [pTooltip]="isExpanded(event.id) ? 'Ocultar detalles' : 'Ver detalles'"
+                      tooltipPosition="left">
+                <i [class]="isExpanded(event.id) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Metadata Expandible -->
+          <div *ngIf="showMetadata && isExpanded(event.id) && hasMetadata(event)" 
+               class="timeline-metadata mt-3 p-3 bg-light rounded">
+            <h6 class="mb-3 text-muted" style="font-size: 0.85rem;">
+              <i class="pi pi-info-circle me-2"></i>
+              Detalles del Cambio
+            </h6>
+
+            <!-- Source -->
+            <div class="metadata-row mb-2" *ngIf="event.source">
+              <strong>Origen:</strong>
+              <span class="ms-2 font-monospace small">{{ event.source }}</span>
+            </div>
+
+            <!-- Metadata adicional -->
+            <div *ngFor="let key of getMetadataKeys(event.metadata)" class="metadata-row mb-2">
+              <strong>{{ formatMetadataKey(key) }}:</strong>
+              <span class="ms-2">{{ formatMetadataValue(event.metadata[key]) }}</span>
+            </div>
+
+            <!-- Changes -->
+            <div *ngIf="event.changes && getMetadataKeys(event.changes).length > 0" 
+                 class="mt-3 pt-3 border-top">
+              <h6 class="mb-2 text-muted" style="font-size: 0.8rem;">Otros Cambios:</h6>
+              <div *ngFor="let key of getMetadataKeys(event.changes)" class="metadata-row mb-2">
+                <strong>{{ formatMetadataKey(key) }}:</strong>
+                <span class="ms-2">{{ formatMetadataValue(event.changes[key]) }}</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
