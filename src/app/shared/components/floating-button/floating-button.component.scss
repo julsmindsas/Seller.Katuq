@@ -1,12 +1,11 @@
-// Variables de diseño
-$primary-color: #3f51b5;
-$secondary-color: #ff4081;
-$tertiary-color: #4caf50;
+// Importar variables de Katuq
+@import '../../../../assets/scss/utils/variables';
+
+// Variables de diseño específicas del componente
 $live-audio-color: #9c27b0; // Color específico para Live Audio
-$light-color: #ffffff;
-$dark-color: #333333;
 $shadow-standard: 0 3px 8px rgba(0, 0, 0, 0.2);
 $shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.25);
+$shadow-enhanced: 0 4px 12px rgba(0, 0, 0, 0.15);
 $radius-standard: 12px;
 $transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
 
@@ -78,7 +77,7 @@ a {
     height: 72px;
     border-radius: 50%;
     background-color: $primary-color;
-    color: $light-color;
+    color: $white;
     border: none;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25); /* Sombra mejorada */
     display: flex;
@@ -145,7 +144,7 @@ a {
         height: 16px;
         background-color: $secondary-color;
         border-radius: 50%;
-        border: 2px solid $light-color;
+        border: 2px solid $white;
         animation: pulse 2s infinite;
     }
     
@@ -178,7 +177,7 @@ a {
     top: 50%;
     transform: translateY(-50%);
     background-color: rgba(0, 0, 0, 0.8);
-    color: $light-color;
+    color: $white;
     padding: 8px 12px;
     border-radius: 4px;
     font-size: 14px;
@@ -221,7 +220,7 @@ a {
 }
 
 .options-panel {
-    background-color: $light-color;
+    background-color: $white;
     overflow: hidden;
     
     .options-header {
@@ -229,13 +228,15 @@ a {
         justify-content: space-between;
         align-items: center;
         padding: 15px 20px;
-        background: linear-gradient(135deg, $primary-color, darken($primary-color, 15%));
-        color: $light-color;
+        background: $primary-color;
+        color: $white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         
         .close-options-btn {
             background: transparent;
             border: none;
-            color: $light-color;
+            color: $white;
             cursor: pointer;
             width: 30px;
             height: 30px;
@@ -341,7 +342,7 @@ a {
 .minimized-chat-bubble {
     display: flex;
     align-items: center;
-    background-color: $light-color;
+    background-color: $white;
     border-radius: 30px;
     padding: 0 15px;
     box-shadow: $shadow-standard;
@@ -399,7 +400,7 @@ a {
     width: 380px; // Ancho fijo para escritorio
     height: 560px; // Altura fija para una mejor experiencia
     max-height: 80vh; // Límite máximo para pantallas pequeñas
-    background-color: $light-color;
+    background-color: $white;
     border-radius: 12px; // Redondeado completo
     overflow: hidden; // Oculta el contenido que se desborda
     box-shadow: 0 5px 25px rgba(0, 0, 0, 0.25); // Sombra más pronunciada
@@ -448,8 +449,10 @@ a {
         justify-content: space-between;
         align-items: center;
         padding: 15px 20px;
-        background: linear-gradient(135deg, $primary-color, darken($primary-color, 15%));
-        color: $light-color;
+        background: $primary-color;
+        color: $white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         flex-shrink: 0; // Evita que el header se comprima
         
         .chat-title {
@@ -499,7 +502,7 @@ a {
     bottom: 80px;
     right: 20px;
     width: 320px;
-    background-color: $light-color;
+    background-color: $white;
     border-radius: $radius-standard;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
@@ -521,8 +524,10 @@ a {
         justify-content: space-between;
         align-items: center;
         padding: 12px 15px;
-        background: linear-gradient(135deg, $tertiary-color, darken($tertiary-color, 15%));
-        color: $light-color;
+        background: $success-color;
+        color: $white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
         
         &.draggable {
             cursor: move;
@@ -548,7 +553,7 @@ a {
                 width: 26px;
                 height: 26px;
                 border-radius: 50%;
-                color: $light-color;
+                color: $white;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -922,9 +927,10 @@ a {
     right: 20px;
     width: 400px;
     height: 300px;
-    background: linear-gradient(135deg, #100c14 0%, #1a1625 100%);
+    background: $dark-color;
     border-radius: $radius-standard;
-    box-shadow: $shadow-standard;
+    box-shadow: $shadow-enhanced;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     z-index: 999;
     display: flex;
     flex-direction: column;
@@ -935,7 +941,7 @@ a {
         top: 10px;
         right: 10px;
         background: $live-audio-color;
-        color: $light-color;
+        color: $white;
         border: none;
         border-radius: 50%;
         width: 30px;
