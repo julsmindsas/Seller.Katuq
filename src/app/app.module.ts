@@ -20,6 +20,10 @@ import { AppComponent } from './app.component';
 import { LoginModule } from '../app/auth/login/login.module';
 import { ServiceWorkerModule } from '@angular/service-worker';
 import { TreeTableModule } from 'primeng/treetable';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
+import { BadgeModule } from 'primeng/badge';
 import { AngularFirestoreModule } from '@angular/fire/compat/firestore';
 import { AngularFireModule } from '@angular/fire/compat';
 import { HttpInterceptor2 } from '../app/shared/services/interceptor/http.interceptor';
@@ -92,6 +96,10 @@ export function HttpLoaderFactory(http: HttpClient) {
     NgIdleKeepaliveModule.forRoot(),
     LoginModule,
     TreeTableModule,
+    ButtonModule,
+    TooltipModule,
+    SkeletonModule,
+    BadgeModule,
     AngularFireModule.initializeApp(environment.firebase),
     ToastrModule.forRoot(),
     TranslateModule.forRoot({

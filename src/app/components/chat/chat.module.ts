@@ -6,9 +6,12 @@ import { EmojiModule } from '@ctrl/ngx-emoji-mart/ngx-emoji';
 import { SharedModule } from '../../shared/shared.module';
 import { MarkdownPipe } from '../../shared/pipes/markdown.pipe';
 import { ChatRoutingModule } from './chat-routing.module';
-import { ChatComponent } from './chat/chat.component';
 
-// import { ChatComponent } from './chat/chat.component';
+// PrimeNG Modules
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
+import { SkeletonModule } from 'primeng/skeleton';
+import { BadgeModule } from 'primeng/badge';
 
 @NgModule({
   declarations: [MarkdownPipe],
@@ -19,7 +22,12 @@ import { ChatComponent } from './chat/chat.component';
     ChatRoutingModule,
     PickerModule,
     EmojiModule,
-    SharedModule
+    SharedModule,
+    // PrimeNG
+    ButtonModule,
+    TooltipModule,
+    SkeletonModule,
+    BadgeModule
   ],
   exports: [MarkdownPipe]
 })

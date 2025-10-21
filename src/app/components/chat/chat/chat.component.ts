@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, Input, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewChecked, ChangeDetectorRef, Input, Output, EventEmitter, AfterViewInit, OnDestroy } from '@angular/core';
 import { ChatUsers } from '../../../shared/models/chat/chat.model';
 import { ChatService } from '../../../shared/services/chat.service';
 import { NgForm } from '@angular/forms';
@@ -35,6 +35,7 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
   // Variables de la clase
   @ViewChild('chatHistoryContainer') private chatHistoryContainer: ElementRef;
   @Input() isFloating: boolean = false;
+  @Output() closeRequested = new EventEmitter<void>();
   private shouldScrollToBottom: boolean = true;
   public userHasScrolled: boolean = false;
   private scrollThreshold: number = 100; // Para determinar cercanía al final del chat
@@ -455,5 +456,12 @@ export class ChatComponent implements OnInit, AfterViewChecked, AfterViewInit, O
     this.userHasScrolled = false;
     this.shouldScrollToBottom = true;
     this.scrollToBottom();
+  }
+
+  /**
+   * Emite evento para cerrar el chat cuando está en modo flotante
+   */
+  public onClose(): void {
+    this.closeRequested.emit();
   }
 }

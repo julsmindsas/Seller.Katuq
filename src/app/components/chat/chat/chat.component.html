@@ -1,30 +1,53 @@
 <div class="chat-container" [ngClass]="{'floating-mode': isFloating, 'dark-mode': isDarkMode}">
-  <!-- Encabezado del Chat -->
-  <header class="chat-header">
-    <div class="header-content">
+  <!-- Encabezado del Chat con patrón module-header -->
+  <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+    <div class="d-flex align-items-center gap-3">
       <div class="avatar-container">
-        <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
+        <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'" style="width: 48px; height: 48px; border-radius: 50%;">
       </div>
-      <div class="header-info">
-        <h4 class="assistant-name">KAI <span class="assistant-badge">LLM</span>
-          <span class="status-indicator" [ngClass]="{'online': chatUser?.online, 'typing': chatUser?.typing}"></span>
-        </h4>
-        <p class="assistant-status">{{ chatUser?.typing ? 'Escribiendo...' : 'En línea' }}</p>
+      <div>
+        <h5 class="mb-1 fw-bold text-primary">
+          <i class="pi pi-comments me-2"></i>KAI
+          <span class="p-badge p-badge-sm ms-2">LLM</span>
+        </h5>
+        <p class="text-muted small mb-0">
+          <span *ngIf="chatUser?.typing" class="text-info">
+            <i class="pi pi-spin pi-spinner me-1"></i>Escribiendo...
+          </span>
+          <span *ngIf="!chatUser?.typing">
+            <i class="pi pi-circle-fill me-1" style="font-size: 0.5rem; color: #22c55e;"></i>Disponible 24/7 para ayudarte
+          </span>
+        </p>
       </div>
     </div>
-    
-    <div class="header-actions">
-      <button class="action-button toggle-theme" (click)="toggleDarkMode()" aria-label="Cambiar tema">
-        <i class="fa" [ngClass]="isDarkMode ? 'fa-sun-o' : 'fa-moon-o'"></i>
-      </button>
-      <button class="action-button stop" *ngIf="isGenerating" (click)="onStopGeneration()" aria-label="Detener generación">
-        <i class="fa fa-stop"></i>
-      </button>
-      <button *ngIf="isFloating" class="action-button close" aria-label="Cerrar chat">
-        <i class="fa fa-times"></i>
-      </button>
+
+    <div class="d-flex align-items-center gap-2">
+      <button pButton
+              type="button"
+              [icon]="isDarkMode ? 'pi pi-sun' : 'pi pi-moon'"
+              class="p-button-secondary p-button-text p-button-sm"
+              (click)="toggleDarkMode()"
+              pTooltip="Cambiar tema"
+              tooltipPosition="bottom"></button>
+      <button pButton
+              *ngIf="isGenerating"
+              type="button"
+              icon="pi pi-stop-circle"
+              label="Detener"
+              class="p-button-danger p-button-sm"
+              (click)="onStopGeneration()"
+              pTooltip="Detener generación de KAI"
+              tooltipPosition="bottom"></button>
+      <button pButton
+              *ngIf="isFloating"
+              type="button"
+              icon="pi pi-times"
+              class="p-button-text p-button-sm"
+              (click)="onClose()"
+              pTooltip="Cerrar chat"
+              tooltipPosition="bottom"></button>
     </div>
-  </header>
+  </div>
 
   <!-- Cuerpo de Mensajes (con scroll) -->
   <section class="messages-area" #chatHistoryContainer (scroll)="onChatScroll()">
@@ -59,26 +82,38 @@
           <div class="message-meta">
             <span class="message-time">{{ chat.time }}</span>
             <div class="message-actions">
-              <button class="msg-action" (click)="copyMessage(chat.text)" title="Copiar"><i class="fa fa-copy"></i></button>
-              <button class="msg-action" (click)="regenerate(chat)" title="Regenerar"><i class="fa fa-refresh"></i></button>
+              <button pButton
+                      type="button"
+                      icon="pi pi-copy"
+                      class="p-button-text p-button-sm msg-action"
+                      (click)="copyMessage(chat.text)"
+                      pTooltip="Copiar mensaje"
+                      tooltipPosition="top"></button>
+              <button pButton
+                      type="button"
+                      icon="pi pi-refresh"
+                      class="p-button-text p-button-sm msg-action"
+                      (click)="regenerate(chat)"
+                      pTooltip="Regenerar respuesta"
+                      tooltipPosition="top"></button>
             </div>
           </div>
         </div>
       </div>
     </ng-container>
 
-    <!-- Indicador de escritura -->
-    <div class="message-row assistant-message typing-indicator" *ngIf="chatUser?.typing">
+    <!-- Indicador de escritura con Skeleton de PrimeNG -->
+    <div class="message-row assistant-message" *ngIf="chatUser?.typing" [@messageAnimation]>
       <div class="avatar-container small">
         <img src="assets/images/kai/kai.gif" alt="KAI" class="avatar-img" onerror="this.src='assets/images/default-avatar.png'">
       </div>
-      <div class="message-bubble typing">
-        <div class="dots-container">
-          <div class="dot"></div>
-          <div class="dot"></div>
-          <div class="dot"></div>
-        </div>
-        <span class="typing-text">Pensando...</span>
+      <div class="message-bubble p-3">
+        <p-skeleton width="100%" height="1rem" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="85%" height="1rem" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="70%" height="1rem"></p-skeleton>
+        <span class="typing-text text-muted small mt-2 d-block">
+          <i class="pi pi-spin pi-spinner me-1"></i>Pensando...
+        </span>
       </div>
     </div>
   </section>
@@ -118,38 +153,48 @@
 
     <form #chatForm="ngForm" (ngSubmit)="sendMessage(chatForm)" class="input-form">
       <div class="input-wrapper">
-        <!-- Adjuntar archivo -->
-        <button type="button" class="attach-button" (click)="triggerFilePicker()" aria-label="Adjuntar imagen">
-          <i class="fa fa-paperclip"></i>
-        </button>
+        <!-- Adjuntar archivo con tooltip -->
+        <button pButton
+                type="button"
+                icon="pi pi-paperclip"
+                class="p-button-text p-button-sm attach-button"
+                (click)="triggerFilePicker()"
+                pTooltip="Adjuntar imagen"
+                tooltipPosition="top"
+                aria-label="Adjuntar imagen"></button>
         <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" hidden />
 
-        <textarea 
-          class="message-input" 
-          [class.error]="error" 
-          placeholder="Escribe un mensaje..." 
-          [(ngModel)]="chatText" 
-          name="message" 
-          rows="1" 
+        <textarea
+          class="message-input"
+          [class.error]="error"
+          placeholder="Escribe un mensaje..."
+          [(ngModel)]="chatText"
+          name="message"
+          rows="1"
           (input)="autoResize($event)"
           (keydown.enter)="handleEnter($event, chatForm)"
-          (paste)="onPaste($event)" 
+          (paste)="onPaste($event)"
           aria-label="Mensaje">
         </textarea>
 
-        <button type="button" class="emoji-button" (click)="toggleEmojiPicker()" aria-label="Emoji picker">
-          <i class="fa fa-smile-o"></i>
-        </button>
+        <button pButton
+                type="button"
+                icon="pi pi-face-smile"
+                class="p-button-text p-button-sm emoji-button"
+                (click)="toggleEmojiPicker()"
+                pTooltip="Insertar emoji"
+                tooltipPosition="top"
+                aria-label="Selector de emoji"></button>
       </div>
 
-      <button 
-        type="submit" 
-        class="send-button" 
-        [disabled]="!canSend()" 
-        [ngClass]="{'disabled': !canSend()}"
-        aria-label="Enviar mensaje">
-        <i class="fa fa-paper-plane"></i>
-      </button>
+      <button pButton
+              type="submit"
+              icon="pi pi-send"
+              class="p-button-primary send-button"
+              [disabled]="!canSend()"
+              pTooltip="Enviar mensaje (Enter)"
+              tooltipPosition="top"
+              aria-label="Enviar mensaje"></button>
     </form>
 
     <!-- Emoji picker -->

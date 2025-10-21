@@ -178,8 +178,7 @@
 
     <!-- Contenedor del chat con estructura flexbox -->
     <div *ngIf="authService.isLoggedIn" class="floating-chat-container">
-      <app-chat [isFloating]="true" class="floating-chat" (newMessage)="onNewMessage($event)"
-        (saveConversation)="saveConversation($event)">
+      <app-chat [isFloating]="true" class="floating-chat" (closeRequested)="closeChat($event)">
       </app-chat>
     </div>
   </div>
