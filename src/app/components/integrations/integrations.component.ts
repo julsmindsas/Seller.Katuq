@@ -531,6 +531,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'aliaddo_fulfillment':
         this.integrationForm = this.createAliaddoFulfillmentForm();
         break;
+      case 'siigo':
+        this.integrationForm = this.createSiigoForm();
+        break;
       default:
         this.integrationForm = this.createShopifyForm();
         break;
@@ -596,6 +599,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'aliaddo_fulfillment':
         this.integrationForm = this.createAliaddoFulfillmentForm();
+        break;
+      case 'siigo':
+        this.integrationForm = this.createSiigoForm();
         break;
       default:
         this.integrationForm = this.createShopifyForm();
@@ -848,6 +854,40 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       // Webhook (optional for future)
       webhookUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
       webhookSecret: ['']
+    });
+  }
+
+  createSiigoForm(): FormGroup {
+    return this.fb.group({
+      name: ['Siigo', Validators.required],
+      enabled: [true],
+      environment: ['production'],
+      // Credenciales requeridas
+      username: ['', [Validators.required, Validators.minLength(5)]],
+      accessKey: ['', [Validators.required, Validators.minLength(10)]],
+      // Configuración básica
+      partnerId: ['Katuq'],
+      testMode: [false],
+      // Configuración de bodega y centros de costo
+      defaultWarehouse: [''],
+      defaultCostCenter: [''],
+      // Configuración de documentos y precios
+      documentTypeId: [''],
+      defaultPriceList: [1, [Validators.min(1)]],
+      defaultTaxRate: [19, [Validators.min(0), Validators.max(100)]],
+      // Opciones de automatización
+      enableAutoInvoicing: [false],
+      autoSyncInventory: [false],
+      syncFrequency: ['manual'],
+      // Mapeo de cuentas contables (opcional - se maneja en Advanced Options)
+      accountGroup: [''],
+      incomeAccount: [''],
+      costAccount: [''],
+      inventoryAccount: [''],
+      discountAccount: [''],
+      // Opciones avanzadas
+      webhookUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+      notifyErrors: [true]
     });
   }
 
@@ -1473,6 +1513,73 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             tooltip: 'Número de reintentos en caso de fallo'
           }
         ];
+      case 'siigo':
+        return [
+          {
+            id: 'partnerId',
+            label: 'Partner ID',
+            type: 'text',
+            placeholder: 'Katuq',
+            icon: 'fa-handshake',
+            tooltip: 'Identificador del partner en Siigo (usualmente "Katuq")'
+          },
+          {
+            id: 'defaultWarehouse',
+            label: 'Bodega por Defecto',
+            type: 'text',
+            placeholder: 'Código de bodega',
+            icon: 'fa-warehouse',
+            tooltip: 'Código de la bodega predeterminada para inventario'
+          },
+          {
+            id: 'defaultCostCenter',
+            label: 'Centro de Costo',
+            type: 'text',
+            placeholder: 'Código de centro de costo',
+            icon: 'fa-building',
+            tooltip: 'Código del centro de costo predeterminado'
+          },
+          {
+            id: 'documentTypeId',
+            label: 'Tipo de Documento',
+            type: 'text',
+            placeholder: 'ID del tipo de documento',
+            icon: 'fa-file-invoice',
+            tooltip: 'ID del tipo de documento para facturas (ej: 1 para Factura de Venta)'
+          },
+          {
+            id: 'accountGroup',
+            label: 'Grupo de Cuenta',
+            type: 'text',
+            placeholder: 'Código de grupo contable',
+            icon: 'fa-folder',
+            tooltip: 'Código del grupo de cuenta contable para productos'
+          },
+          {
+            id: 'incomeAccount',
+            label: 'Cuenta de Ingresos',
+            type: 'text',
+            placeholder: 'Código de cuenta de ingresos',
+            icon: 'fa-dollar-sign',
+            tooltip: 'Código de la cuenta contable para ingresos'
+          },
+          {
+            id: 'costAccount',
+            label: 'Cuenta de Costos',
+            type: 'text',
+            placeholder: 'Código de cuenta de costos',
+            icon: 'fa-money-bill-wave',
+            tooltip: 'Código de la cuenta contable para costos'
+          },
+          {
+            id: 'inventoryAccount',
+            label: 'Cuenta de Inventario',
+            type: 'text',
+            placeholder: 'Código de cuenta de inventario',
+            icon: 'fa-boxes',
+            tooltip: 'Código de la cuenta contable para inventario'
+          }
+        ];
       default:
         return [];
     }
@@ -1496,7 +1603,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'epayco': 'https://docs.epayco.co/',
       'paypal': 'https://developer.paypal.com/docs/api/overview/',
       'stripe': 'https://stripe.com/docs/api',
-      'mercadopago': 'https://www.mercadopago.com.co/developers'
+      'mercadopago': 'https://www.mercadopago.com.co/developers',
+      'siigo': 'https://siigoapi.docs.apiary.io'
     };
     return urls[integrationType] || null;
   }
@@ -1513,7 +1621,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'paypal': 'PayPal',
       'stripe': 'Stripe',
       'mercadopago': 'Mercado Pago',
-      'partners_logistics': 'Partners Logística'
+      'partners_logistics': 'Partners Logística',
+      'siigo': 'Siigo'
     };
     return names[this.selectedIntegrationType] || this.selectedIntegrationType;
   }

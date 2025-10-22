@@ -1,12 +1,11 @@
 <div [ngClass]="{'modal-content': isModalMode}">
-  <div *ngIf="isModalMode" class="modern-modal-header">
-    <div class="header-content">
-      <div class="header-icon">
+  <div *ngIf="isModalMode" class="modern-modal-header-compact">
+    <div class="header-content-compact">
+      <div class="header-icon-compact">
         <i class="fa fa-puzzle-piece"></i>
       </div>
-      <div class="header-text">
-        <h2 class="header-title">{{editingIntegrationId ? 'Editar' : 'Configurar'}} Integración</h2>
-        <p class="header-subtitle">Conecta tu tienda con herramientas poderosas</p>
+      <div class="header-text-compact">
+        <h2 class="header-title-compact">{{editingIntegrationId ? 'Editar' : 'Configurar'}} Integración</h2>
       </div>
     </div>
     <button type="button" class="modern-close-btn" aria-label="Close" (click)="cancel()">
@@ -36,12 +35,12 @@
       </div>
 
       <!-- Integration Type Selection -->
-      <div class="card platform-selection">
+      <div class="card platform-selection-compact">
         <h3><i class="fa fa-plug"></i> Seleccione plataforma a integrar</h3>
-        <div class="integration-list">
-          <div *ngFor="let type of integrationTypes" class="integration-card"
+        <div class="integration-list-compact">
+          <div *ngFor="let type of integrationTypes" class="integration-card-compact"
             [ngClass]="{'active': selectedIntegrationType === type.id}" (click)="onSelectIntegrationType(type.id)">
-            <div class="integration-icon">
+            <div class="integration-icon-compact">
               <i class="fa" [ngClass]="{
               'fa-shopping-bag': type.id === 'shopify',
               'fa-credit-card': type.id === 'wompi' || type.id === 'epayco',
@@ -49,8 +48,8 @@
               'fa-handshake': type.id === 'partners_logistics'
             }"></i>
             </div>
-            <div class="integration-name">{{type.name}}</div>
-            <div class="integration-type">
+            <div class="integration-name-compact">{{type.name}}</div>
+            <div class="integration-type-compact">
               {{type.id === 'shopify' ? 'Tienda online' :
                 type.id === 'partners_logistics' ? 'Logística y envíos' :
                 'Pasarela de pago'}}
@@ -59,24 +58,22 @@
         </div>
       </div>
 
-      <!-- Plugin Store Header -->
-      <div class="plugin-store-header">
+      <!-- Plugin Store Header Compacto -->
+      <div class="plugin-store-header-compact">
         <div class="store-title">
           <h3><i class="fa fa-store"></i> Tienda de Integraciones</h3>
-          <p>Selecciona las herramientas que necesitas para hacer crecer tu negocio</p>
+          <p>Explora y configura las integraciones disponibles</p>
         </div>
         <div class="store-search">
           <div class="search-box-modern">
-            <span class="p-input-icon-left">
-              <i class="fa fa-search"></i>
-              <input pInputText type="text" placeholder="Buscar integración..." #searchInput [(ngModel)]="searchTerm">
-            </span>
+            <i class="fa fa-search"></i>
+            <input type="text" placeholder="Buscar..." #searchInput [(ngModel)]="searchTerm">
           </div>
         </div>
       </div>
 
-      <!-- Modern Category Pills -->
-      <div class="modern-category-pills">
+      <!-- Category Pills Compacto -->
+      <div class="category-pills-compact">
         <div class="pills-container">
           <button *ngFor="let category of categories" class="category-pill" [class.active]="selectedCategory === category"
             (click)="selectCategory(category)">
@@ -86,10 +83,10 @@
         </div>
       </div>
 
-      <!-- Plugin Store Grid -->
-      <div class="plugin-store-grid">
+      <!-- Plugin Store Grid Compacto -->
+      <div class="plugin-store-grid-compact">
         <div class="grid-container">
-          <div *ngFor="let integration of availableIntegrations[selectedCategory]" class="plugin-card"
+          <div *ngFor="let integration of availableIntegrations[selectedCategory]" class="plugin-card-compact"
             [class.selected]="selectedIntegrationType === integration.id"
             [class.inactive]="!integration.active"
             (click)="integration.active && onSelectIntegrationType(integration.id)">
@@ -1657,6 +1654,292 @@
           <div class="integration-info-box">
             <i class="fa fa-lightbulb"></i>
             <span><strong>Tip:</strong> Para probar la integración, usa el ambiente de Pruebas con un token de test proporcionado por Aliaddo.</span>
+          </div>
+        </ng-container>
+
+        <!-- ===== SIIGO - SOFTWARE CONTABLE COLOMBIANO ===== -->
+        <ng-container *ngIf="selectedIntegrationType === 'siigo'">
+          <!-- Credenciales Siigo -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-key me-2"></i>Credenciales Siigo
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="siigoUsername">
+                    <i class="fa fa-user"></i> Usuario / Email: <span class="field-required">*</span>
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-user prefix-icon"></i>
+                    <input type="text" id="siigoUsername" formControlName="username" placeholder="tu-email@empresa.com" autocomplete="off">
+                  </div>
+                  <div *ngIf="integrationForm.get('username')?.invalid && integrationForm.get('username')?.touched" class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i> El usuario es requerido (mínimo 5 caracteres)
+                  </div>
+                  <small class="form-text text-muted">Email o usuario registrado en Siigo</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="siigoAccessKey">
+                    <i class="fa fa-key"></i> Access Key: <span class="field-required">*</span>
+                  </label>
+                  <div class="input-with-icon password-field">
+                    <i class="fa fa-key prefix-icon"></i>
+                    <input [type]="showApiSecret ? 'text' : 'password'" id="siigoAccessKey" formControlName="accessKey" placeholder="Tu Access Key de Siigo" autocomplete="off">
+                    <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiSecretVisibility()"></i>
+                  </div>
+                  <div *ngIf="integrationForm.get('accessKey')?.invalid && integrationForm.get('accessKey')?.touched" class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i> El Access Key es requerido (mínimo 10 caracteres)
+                  </div>
+                  <small class="form-text text-muted">Access Key proporcionada por Siigo para la API</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="siigoPartnerId">
+                    <i class="fa fa-handshake"></i> Partner ID:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-handshake prefix-icon"></i>
+                    <input type="text" id="siigoPartnerId" formControlName="partnerId" readonly class="readonly-input">
+                  </div>
+                  <small class="form-text text-muted">ID del partner asignado por Siigo (Katuq)</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="siigoTestMode">
+                    <i class="fa fa-flask"></i> Modo de Prueba:
+                  </label>
+                  <div class="toggle-container">
+                    <label class="switch">
+                      <input type="checkbox" formControlName="testMode" id="siigoTestMode">
+                      <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" [ngClass]="{'active': integrationForm.get('testMode')?.value, 'inactive': !integrationForm.get('testMode')?.value}">
+                      {{ integrationForm.get('testMode')?.value ? 'Sandbox Activado' : 'Producción' }}
+                    </span>
+                  </div>
+                  <small class="form-text text-muted">Usa el ambiente de pruebas de Siigo (Sandbox)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuración Contable -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-calculator me-2"></i>Configuración Contable
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="siigoDefaultWarehouse">
+                    <i class="fa fa-warehouse"></i> Bodega Predeterminada:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-warehouse prefix-icon"></i>
+                    <input type="text" id="siigoDefaultWarehouse" formControlName="defaultWarehouse" placeholder="Bodega Principal" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">Bodega principal para sincronización de inventario</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="siigoDefaultCostCenter">
+                    <i class="fa fa-sitemap"></i> Centro de Costo:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-sitemap prefix-icon"></i>
+                    <input type="text" id="siigoDefaultCostCenter" formControlName="defaultCostCenter" placeholder="Centro 001" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">Centro de costo predeterminado para transacciones</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="siigoDocumentTypeId">
+                    <i class="fa fa-file-invoice"></i> Tipo de Documento:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-file-invoice prefix-icon"></i>
+                    <input type="text" id="siigoDocumentTypeId" formControlName="documentTypeId" placeholder="FV - Factura de Venta" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">Tipo de documento para facturas de venta</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="siigoDefaultPriceList">
+                    <i class="fa fa-tag"></i> Lista de Precios:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-tag prefix-icon"></i>
+                    <input type="number" id="siigoDefaultPriceList" formControlName="defaultPriceList" min="1" placeholder="1" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">ID de la lista de precios a utilizar</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="siigoDefaultTaxRate">
+                    <i class="fa fa-percent"></i> Tasa de IVA (%):
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-percent prefix-icon"></i>
+                    <input type="number" id="siigoDefaultTaxRate" formControlName="defaultTaxRate" min="0" max="100" placeholder="19" autocomplete="off">
+                  </div>
+                  <div *ngIf="integrationForm.get('defaultTaxRate')?.invalid && integrationForm.get('defaultTaxRate')?.touched" class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i> La tasa de IVA debe estar entre 0 y 100
+                  </div>
+                  <small class="form-text text-muted">Porcentaje de IVA para productos (19% en Colombia)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Opciones de Automatización -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-magic me-2"></i>Automatización
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="siigoAutoInvoicing">
+                  <i class="fa fa-file-invoice-dollar"></i> Facturación Automática:
+                </label>
+                <div class="toggle-container">
+                  <label class="switch">
+                    <input type="checkbox" formControlName="enableAutoInvoicing" id="siigoAutoInvoicing">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('enableAutoInvoicing')?.value, 'inactive': !integrationForm.get('enableAutoInvoicing')?.value}">
+                    {{ integrationForm.get('enableAutoInvoicing')?.value ? 'Activado' : 'Desactivado' }}
+                  </span>
+                </div>
+                <small class="form-text text-muted">Generar facturas automáticamente en Siigo al crear pedidos</small>
+              </div>
+
+              <div class="form-group">
+                <label for="siigoAutoSync">
+                  <i class="fa fa-sync"></i> Sincronización Automática de Inventario:
+                </label>
+                <div class="toggle-container">
+                  <label class="switch">
+                    <input type="checkbox" formControlName="autoSyncInventory" id="siigoAutoSync">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('autoSyncInventory')?.value, 'inactive': !integrationForm.get('autoSyncInventory')?.value}">
+                    {{ integrationForm.get('autoSyncInventory')?.value ? 'Activado' : 'Desactivado' }}
+                  </span>
+                </div>
+                <small class="form-text text-muted">Sincronizar productos automáticamente con Siigo</small>
+              </div>
+
+              <div class="form-group" *ngIf="integrationForm.get('autoSyncInventory')?.value">
+                <label for="siigoSyncFrequency">
+                  <i class="fa fa-clock"></i> Frecuencia de Sincronización:
+                </label>
+                <div class="input-with-icon">
+                  <i class="fa fa-clock prefix-icon"></i>
+                  <select id="siigoSyncFrequency" formControlName="syncFrequency" class="form-control">
+                    <option value="manual">Manual</option>
+                    <option value="hourly">Cada hora</option>
+                    <option value="daily">Diariamente</option>
+                    <option value="weekly">Semanalmente</option>
+                  </select>
+                </div>
+                <small class="form-text text-muted">Con qué frecuencia sincronizar el inventario</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mapeo de Cuentas Contables -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-book me-2"></i>Mapeo de Cuentas Contables
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info mb-3">
+                <i class="fa fa-info-circle"></i>
+                <span><strong>Nota:</strong> Ingresa los códigos de las cuentas contables según el Plan Único de Cuentas (PUC) colombiano.</span>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="siigoAccountGroup">
+                    <i class="fa fa-layer-group"></i> Grupo de Cuentas:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-layer-group prefix-icon"></i>
+                    <input type="text" id="siigoAccountGroup" formControlName="accountGroup" placeholder="Ej: Comercio" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">Grupo contable para clasificación</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="siigoIncomeAccount">
+                    <i class="fa fa-arrow-up"></i> Cuenta de Ingresos:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-arrow-up prefix-icon"></i>
+                    <input type="text" id="siigoIncomeAccount" formControlName="incomeAccount" placeholder="4135" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">Cuenta de ingresos (4xxx)</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="siigoCostAccount">
+                    <i class="fa fa-arrow-down"></i> Cuenta de Costos:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-arrow-down prefix-icon"></i>
+                    <input type="text" id="siigoCostAccount" formControlName="costAccount" placeholder="6135" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">Cuenta de costos (6xxx)</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="siigoInventoryAccount">
+                    <i class="fa fa-boxes"></i> Cuenta de Inventario:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-boxes prefix-icon"></i>
+                    <input type="text" id="siigoInventoryAccount" formControlName="inventoryAccount" placeholder="1435" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">Cuenta de inventario (1xxx)</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="siigoDiscountAccount">
+                    <i class="fa fa-percentage"></i> Cuenta de Descuentos:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-percentage prefix-icon"></i>
+                    <input type="text" id="siigoDiscountAccount" formControlName="discountAccount" placeholder="4175" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">Cuenta de descuentos (4xxx)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-lightbulb"></i>
+            <span><strong>Tip:</strong> Asegúrate de tener una cuenta activa en Siigo y las credenciales API correctas. Para obtener tu Access Key, ingresa a la configuración de tu cuenta en Siigo.</span>
           </div>
         </ng-container>
 

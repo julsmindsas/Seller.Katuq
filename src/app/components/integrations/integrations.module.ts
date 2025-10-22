@@ -10,6 +10,10 @@ import { DropdownModule } from 'primeng/dropdown';
 import { PasswordModule } from 'primeng/password';
 import { InputSwitchModule } from 'primeng/inputswitch';
 import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { CheckboxModule } from 'primeng/checkbox';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { ToastModule } from 'primeng/toast';
 import { SharedModule } from '../../shared/shared.module';
 
 import { IntegrationsComponent } from './integrations.component';
@@ -50,6 +54,10 @@ const routes: Routes = [
     PasswordModule,
     InputSwitchModule,
     ButtonModule,
+    CardModule,
+    CheckboxModule,
+    ProgressBarModule,
+    ToastModule,
     RouterModule.forChild(routes),
     NgbModule,
     SharedModule

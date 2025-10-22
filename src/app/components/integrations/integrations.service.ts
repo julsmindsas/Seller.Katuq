@@ -786,6 +786,168 @@ export class IntegrationsService {
     this.invalidateAllCache();
   }
 
+  // ===== MÉTODOS ESPECÍFICOS PARA SIIGO =====
+
+  /**
+   * Probar conexión con Siigo sin guardar configuración
+   */
+  testSiigoConnection(config: any): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(
+      `${environment.urlApi}/v1/accounting/siigo/test`,
+      config,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Cargar configuración de Siigo
+   */
+  loadSiigoConfig(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/integration/config/siigo`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Guardar configuración de Siigo
+   */
+  saveSiigoConfig(config: any): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/integration/config`,
+      {
+        provider: 'siigo',
+        config: config,
+        companyId: this.currentCompanyId
+      },
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Sincronizar productos con Siigo
+   */
+  syncSiigoProducts(options: any): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/siigo/products/sync`,
+      options,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener centros de costo de Siigo
+   */
+  getSiigoCostCenters(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/cost-centers`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener tipos de documento de Siigo
+   */
+  getSiigoDocumentTypes(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/document-types`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener tipos de pago de Siigo
+   */
+  getSiigoPaymentTypes(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/payment-types`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener impuestos de Siigo
+   */
+  getSiigoTaxes(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/taxes`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener listas de precios de Siigo
+   */
+  getSiigoPriceLists(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/price-lists`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener grupos de cuentas de Siigo
+   */
+  getSiigoAccountGroups(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/account-groups`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener bodegas de Siigo
+   */
+  getSiigoWarehouses(): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/warehouses`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Crear producto en Siigo
+   */
+  createSiigoProduct(productData: any): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/siigo/products`,
+      productData,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Actualizar producto en Siigo
+   */
+  updateSiigoProduct(productId: string, productData: any): Observable<any> {
+    return this.http.put<any>(
+      `${environment.urlApi}/v1/accounting/siigo/products/${productId}`,
+      productData,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Crear factura en Siigo
+   */
+  createSiigoInvoice(invoiceData: any): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/siigo/invoices`,
+      invoiceData,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener factura de Siigo
+   */
+  getSiigoInvoice(invoiceId: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/invoices/${invoiceId}`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
   // Método para obtener las integraciones disponibles por categoría
   getAvailableIntegrations(): {
     [category: string]: Array<{
