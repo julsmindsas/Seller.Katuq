@@ -51,8 +51,8 @@
             </div>
             <div class="integration-name">{{type.name}}</div>
             <div class="integration-type">
-              {{type.id === 'shopify' ? 'Tienda online' : 
-                type.id === 'partners_logistics' ? 'Logística y envíos' : 
+              {{type.id === 'shopify' ? 'Tienda online' :
+                type.id === 'partners_logistics' ? 'Logística y envíos' :
                 'Pasarela de pago'}}
             </div>
           </div>
@@ -91,7 +91,8 @@
         <div class="grid-container">
           <div *ngFor="let integration of availableIntegrations[selectedCategory]" class="plugin-card"
             [class.selected]="selectedIntegrationType === integration.id"
-            (click)="onSelectIntegrationType(integration.id)">
+            [class.inactive]="!integration.active"
+            (click)="integration.active && onSelectIntegrationType(integration.id)">
 
             <div class="plugin-header">
               <div class="plugin-logo">
@@ -100,10 +101,11 @@
                 <i class="fa fallback-icon" [ngClass]="getIntegrationIcon(integration.id)" style="display: none;"></i>
               </div>
               <div class="plugin-badges">
+                <span class="badge badge-coming-soon" *ngIf="!integration.active">Próximamente</span>
                 <span class="badge badge-popular"
-                  *ngIf="['shopify', 'wompi', 'paypal'].includes(integration.id)">Popular</span>
+                  *ngIf="integration.active && ['shopify', 'wompi', 'paypal'].includes(integration.id)">Popular</span>
                 <span class="badge badge-recommended"
-                  *ngIf="['stripe', 'woocommerce'].includes(integration.id)">Recomendado</span>
+                  *ngIf="integration.active && ['stripe', 'woocommerce'].includes(integration.id)">Recomendado</span>
               </div>
             </div>
 
@@ -113,7 +115,7 @@
             </div>
 
             <div class="plugin-footer">
-              <div class="plugin-rating">
+              <div class="plugin-rating" *ngIf="integration.active">
                 <i class="fa fa-star"></i>
                 <i class="fa fa-star"></i>
                 <i class="fa fa-star"></i>
@@ -121,11 +123,17 @@
                 <i class="fa fa-star-o"></i>
                 <span class="rating-text">4.2</span>
               </div>
-              <button class="install-btn" *ngIf="selectedIntegrationType !== integration.id">
+              <div class="plugin-rating" *ngIf="!integration.active">
+                <span class="coming-soon-text"><i class="fa fa-clock-o"></i> Disponible pronto</span>
+              </div>
+              <button class="install-btn" *ngIf="integration.active && selectedIntegrationType !== integration.id">
                 <i class="fa fa-plus"></i> Configurar
               </button>
-              <button class="selected-btn" *ngIf="selectedIntegrationType === integration.id">
+              <button class="selected-btn" *ngIf="integration.active && selectedIntegrationType === integration.id">
                 <i class="fa fa-check"></i> Seleccionado
+              </button>
+              <button class="disabled-btn" *ngIf="!integration.active" disabled>
+                <i class="fa fa-lock"></i> No disponible
               </button>
             </div>
           </div>
@@ -267,10 +275,10 @@
                 </label>
                 <div class="input-group">
                   <span class="input-group-text"><i class="fa fa-tag"></i></span>
-                  <input type="text" 
-                         class="form-control" 
-                         id="name" 
-                         formControlName="name" 
+                  <input type="text"
+                         class="form-control"
+                         id="name"
+                         formControlName="name"
                          placeholder="Nombre descriptivo para identificar esta integración"
                          [class.is-invalid]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
                 </div>
@@ -290,9 +298,9 @@
                     </span>
                     <div class="form-control d-flex align-items-center">
                       <div class="form-check form-switch mb-0">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               id="integration-enabled" 
+                        <input class="form-check-input"
+                               type="checkbox"
+                               id="integration-enabled"
                                formControlName="enabled">
                         <label class="form-check-label fw-semibold ms-2" for="integration-enabled">
                           {{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}
@@ -513,10 +521,10 @@
                   </label>
                   <div class="input-group">
                     <span class="input-group-text"><i class="fa fa-tag"></i></span>
-                    <input type="text" 
-                           class="form-control" 
-                           id="name" 
-                           formControlName="name" 
+                    <input type="text"
+                           class="form-control"
+                           id="name"
+                           formControlName="name"
                            placeholder="Nombre descriptivo para identificar esta integración"
                            [class.is-invalid]="integrationForm.get('name')?.invalid && integrationForm.get('name')?.touched">
                   </div>
@@ -536,9 +544,9 @@
                       </span>
                       <div class="form-control d-flex align-items-center">
                         <div class="form-check form-switch mb-0">
-                          <input class="form-check-input" 
-                                 type="checkbox" 
-                                 id="integration-enabled" 
+                          <input class="form-check-input"
+                                 type="checkbox"
+                                 id="integration-enabled"
                                  formControlName="enabled">
                           <label class="form-check-label fw-semibold ms-2" for="integration-enabled">
                             {{ integrationForm.get('enabled')?.value ? 'Activo' : 'Inactivo' }}
@@ -569,9 +577,9 @@
                   </label>
                   <div class="input-group">
                     <span class="input-group-text bg-light"><i class="fa fa-user text-muted"></i></span>
-                    <input type="text" 
-                           class="form-control" 
-                           id="clientId" 
+                    <input type="text"
+                           class="form-control"
+                           id="clientId"
                            formControlName="clientId"
                            placeholder="Ingresa tu Client ID"
                            [class.is-invalid]="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched">
@@ -587,9 +595,9 @@
                   </label>
                   <div class="input-group">
                     <span class="input-group-text bg-light"><i class="fa fa-key text-muted"></i></span>
-                    <input [type]="showPublicKey ? 'text' : 'password'" 
-                           class="form-control" 
-                           id="publicKey" 
+                    <input [type]="showPublicKey ? 'text' : 'password'"
+                           class="form-control"
+                           id="publicKey"
                            formControlName="publicKey"
                            placeholder="Ingresa tu Public Key"
                            [class.is-invalid]="integrationForm.get('publicKey')?.invalid && integrationForm.get('publicKey')?.touched">
@@ -602,16 +610,16 @@
                   </div>
                 </div>
 
-                <!-- Segunda fila: Private Key y P_Key -->  
+                <!-- Segunda fila: Private Key y P_Key -->
                 <div class="col-xl-6 col-lg-12 col-md-6">
                   <label for="privateKey" class="form-label fw-semibold">
                     <i class="fa fa-lock me-2 text-primary"></i>Private Key <span class="text-danger">*</span>
                   </label>
                   <div class="input-group">
                     <span class="input-group-text bg-light"><i class="fa fa-lock text-muted"></i></span>
-                    <input [type]="showPrivateKey ? 'text' : 'password'" 
-                           class="form-control" 
-                           id="privateKey" 
+                    <input [type]="showPrivateKey ? 'text' : 'password'"
+                           class="form-control"
+                           id="privateKey"
                            formControlName="privateKey"
                            placeholder="Ingresa tu Private Key"
                            [class.is-invalid]="integrationForm.get('privateKey')?.invalid && integrationForm.get('privateKey')?.touched">
@@ -626,18 +634,18 @@
 
                 <div class="col-xl-6 col-lg-12 col-md-6">
                   <label for="p_key" class="form-label fw-semibold">
-                    <i class="fa fa-key me-2 text-primary"></i>P_Key 
+                    <i class="fa fa-key me-2 text-primary"></i>P_Key
                     <small class="text-muted">(opcional)</small>
                   </label>
                   <div class="input-group">
                     <span class="input-group-text bg-light"><i class="fa fa-key text-muted"></i></span>
-                    <input type="text" 
-                           class="form-control" 
-                           id="p_key" 
+                    <input type="text"
+                           class="form-control"
+                           id="p_key"
                            formControlName="p_key"
                            placeholder="Clave adicional (opcional)">
                     <span class="input-group-text bg-light">
-                      <i class="fa fa-question-circle text-info" 
+                      <i class="fa fa-question-circle text-info"
                          title="Clave adicional proporcionada por ePayco para funcionalidades específicas"></i>
                     </span>
                   </div>
@@ -1366,7 +1374,7 @@
             </div>
             <small class="form-text text-muted">Clave secreta para validar las notificaciones de webhook (recomendado)</small>
           </div>
-          
+
           <div class="integration-info-box">
             <i class="fa fa-lightbulb"></i>
             <span><strong>Tip:</strong> Para probar la integración, puedes usar el ambiente de Stage con credenciales de prueba proporcionadas por Enviame.</span>
@@ -1483,6 +1491,172 @@
               </div>
               <small class="form-text text-muted">Recibir notificaciones por email en caso de errores</small>
             </div>
+          </div>
+        </ng-container>
+
+        <!-- Aliaddo Fulfillment Fields -->
+        <ng-container *ngIf="selectedIntegrationType === 'aliaddo_fulfillment'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>Configure la integración con Aliaddo Fulfillment para sincronizar inventario externo y gestionar órdenes de manera automática.</span>
+            <a href="https://app.aliaddo.net/docs" target="_blank" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver documentación
+            </a>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-lock me-2"></i>Configuración de API
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="apiToken">
+                  <i class="fa fa-key"></i> Token de API:
+                  <span class="field-required">*</span>
+                </label>
+                <div class="input-with-icon password-field">
+                  <i class="fa fa-key prefix-icon"></i>
+                  <input [type]="showApiKey ? 'text' : 'password'" id="apiToken" formControlName="apiToken" placeholder="Ingresa tu token de Aliaddo" autocomplete="off">
+                  <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
+                </div>
+                <div *ngIf="integrationForm.get('apiToken')?.invalid && integrationForm.get('apiToken')?.touched" class="text-danger">
+                  <i class="fa fa-exclamation-triangle"></i> El token es obligatorio (mínimo 20 caracteres)
+                </div>
+                <small class="form-text text-muted">Obtén tu token desde: Aliaddo Dashboard → Mis datos → Integración</small>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="apiUrl">
+                    <i class="fa fa-globe"></i> URL de API:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-link prefix-icon"></i>
+                    <input type="text" id="apiUrl" formControlName="apiUrl" placeholder="https://app.aliaddo.net/v1" autocomplete="off">
+                  </div>
+                  <small class="form-text text-muted">URL base del servicio API de Aliaddo</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="environment">
+                    <i class="fa fa-server"></i> Ambiente:
+                  </label>
+                  <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
+                    <option value="production">Producción</option>
+                    <option value="test">Pruebas</option>
+                  </select>
+                  <small class="form-text text-muted">Ambiente del servicio a utilizar</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-warehouse me-2"></i>Configuración de Bodega
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="form-group">
+                <label for="defaultWarehouseId">
+                  <i class="fa fa-warehouse"></i> Bodega por Defecto:
+                </label>
+                <div class="input-with-icon">
+                  <i class="fa fa-warehouse prefix-icon"></i>
+                  <input type="text" id="defaultWarehouseId" formControlName="defaultWarehouseId" placeholder="ID de bodega (opcional)" autocomplete="off">
+                </div>
+                <small class="form-text text-muted">ID de la bodega predeterminada para operaciones de fulfillment</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-cog me-2"></i>Configuración Avanzada
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="timeout">
+                    <i class="fa fa-clock"></i> Timeout (segundos):
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-hourglass-half prefix-icon"></i>
+                    <input type="number" id="timeout" formControlName="timeout" min="5" max="300" placeholder="30" autocomplete="off">
+                  </div>
+                  <div *ngIf="integrationForm.get('timeout')?.invalid && integrationForm.get('timeout')?.touched" class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i> El timeout debe estar entre 5 y 300 segundos
+                  </div>
+                  <small class="form-text text-muted">Tiempo máximo de espera para respuestas API</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="retryAttempts">
+                    <i class="fa fa-redo"></i> Intentos de Reintento:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-repeat prefix-icon"></i>
+                    <input type="number" id="retryAttempts" formControlName="retryAttempts" min="1" max="10" placeholder="3" autocomplete="off">
+                  </div>
+                  <div *ngIf="integrationForm.get('retryAttempts')?.invalid && integrationForm.get('retryAttempts')?.touched" class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i> Los reintentos deben estar entre 1 y 10
+                  </div>
+                  <small class="form-text text-muted">Número de reintentos en caso de fallo de conexión</small>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="enableAutoSync">
+                  <i class="fa fa-sync"></i> Sincronización Automática:
+                </label>
+                <div class="toggle-container">
+                  <label class="switch">
+                    <input type="checkbox" formControlName="enableAutoSync" id="enableAutoSync">
+                    <span class="slider"></span>
+                  </label>
+                  <span class="toggle-label" [ngClass]="{'active': integrationForm.get('enableAutoSync')?.value, 'inactive': !integrationForm.get('enableAutoSync')?.value}">
+                    {{ integrationForm.get('enableAutoSync')?.value ? 'Activado' : 'Desactivado' }}
+                  </span>
+                </div>
+                <small class="form-text text-muted">Habilitar sincronización automática de inventario con Aliaddo</small>
+              </div>
+
+              <div class="form-group">
+                <label for="webhookUrl">
+                  <i class="fa fa-link"></i> URL del Webhook (Opcional):
+                </label>
+                <div class="input-with-icon">
+                  <i class="fa fa-bell prefix-icon"></i>
+                  <input type="url" id="webhookUrl" formControlName="webhookUrl" placeholder="https://tutienda.com/webhooks/aliaddo" autocomplete="off">
+                </div>
+                <div *ngIf="integrationForm.get('webhookUrl')?.invalid && integrationForm.get('webhookUrl')?.touched" class="text-danger">
+                  <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para el webhook
+                </div>
+                <small class="form-text text-muted">URL donde recibirás notificaciones de cambios de estado</small>
+              </div>
+
+              <div class="form-group">
+                <label for="webhookSecret">
+                  <i class="fa fa-shield-alt"></i> Secret del Webhook (Opcional):
+                </label>
+                <div class="input-with-icon password-field">
+                  <i class="fa fa-key prefix-icon"></i>
+                  <input [type]="showApiSecret ? 'text' : 'password'" id="webhookSecret" formControlName="webhookSecret" placeholder="Secret para validar webhooks" autocomplete="off">
+                  <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiSecretVisibility()"></i>
+                </div>
+                <small class="form-text text-muted">Clave secreta para validar las notificaciones de webhook (recomendado)</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-lightbulb"></i>
+            <span><strong>Tip:</strong> Para probar la integración, usa el ambiente de Pruebas con un token de test proporcionado por Aliaddo.</span>
           </div>
         </ng-container>
 
@@ -1690,15 +1864,15 @@
               </button>
             </div>
             <div class="d-flex gap-3">
-              <button type="button" 
-                      class="btn btn-info" 
+              <button type="button"
+                      class="btn btn-info"
                       (click)="testConnection()"
                       [disabled]="integrationForm.invalid || isTesting">
                 <i class="fa me-2" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
                 {{isTesting ? 'Probando...' : 'Probar conexión'}}
               </button>
-              <button type="submit" 
-                      class="btn btn-primary btn-lg px-4" 
+              <button type="submit"
+                      class="btn btn-primary btn-lg px-4"
                       [disabled]="integrationForm.invalid || isSaving">
                 <i class="fa me-2" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
                 {{isSaving ? 'Guardando...' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar integración')}}
@@ -1780,4 +1954,4 @@
       </div>
     </div>
   </div>
-</div> 
+</div>

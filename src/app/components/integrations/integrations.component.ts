@@ -528,6 +528,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'partners_logistics':
         this.integrationForm = this.createPartnersLogisticsForm();
         break;
+      case 'aliaddo_fulfillment':
+        this.integrationForm = this.createAliaddoFulfillmentForm();
+        break;
       default:
         this.integrationForm = this.createShopifyForm();
         break;
@@ -590,6 +593,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'partners_logistics':
         this.integrationForm = this.createPartnersLogisticsForm();
+        break;
+      case 'aliaddo_fulfillment':
+        this.integrationForm = this.createAliaddoFulfillmentForm();
         break;
       default:
         this.integrationForm = this.createShopifyForm();
@@ -822,6 +828,26 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       timeout: [30],
       retryAttempts: [3],
       notifyErrors: [true]
+    });
+  }
+
+  createAliaddoFulfillmentForm(): FormGroup {
+    return this.fb.group({
+      name: ['Aliaddo Fulfillment', Validators.required],
+      enabled: [true],
+      // API Configuration
+      apiToken: ['', [Validators.required, Validators.minLength(20)]],
+      apiUrl: ['https://app.aliaddo.net/v1', Validators.required],
+      environment: ['production', Validators.required],
+      // Warehouse Configuration
+      defaultWarehouseId: ['', []],
+      // Advanced Settings
+      timeout: [30, [Validators.min(5), Validators.max(300)]],
+      retryAttempts: [3, [Validators.min(1), Validators.max(10)]],
+      enableAutoSync: [true],
+      // Webhook (optional for future)
+      webhookUrl: ['', [Validators.pattern(/^https?:\/\/.+/)]],
+      webhookSecret: ['']
     });
   }
 
@@ -1062,8 +1088,21 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           notifyErrors: formData.notifyErrors
         };
         break;
+      case 'aliaddo_fulfillment':
+        credentials = {
+          apiToken: formData.apiToken,
+          apiUrl: formData.apiUrl,
+          environment: formData.environment,
+          defaultWarehouseId: formData.defaultWarehouseId,
+          timeout: formData.timeout,
+          retryAttempts: formData.retryAttempts,
+          enableAutoSync: formData.enableAutoSync,
+          webhookUrl: formData.webhookUrl,
+          webhookSecret: formData.webhookSecret
+        };
+        break;
     }
-    
+
     return credentials;
   }
   

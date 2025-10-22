@@ -270,6 +270,9 @@ export class IntegrationFormValidatorService {
       case 'enviame':
         this.validateEnviameForm(formValue, result);
         break;
+      case 'aliaddo_fulfillment':
+        this.validateAliaddoFulfillmentForm(formValue, result);
+        break;
       default:
         this.validateGenericForm(formValue, result);
     }
@@ -470,7 +473,7 @@ export class IntegrationFormValidatorService {
       if (webhookError) {
         result.errors!['webhookUrl'] = 'La URL del webhook debe ser una URL válida (https://...)';
       }
-      
+
       // Verificar que sea HTTPS para seguridad
       if (!formValue.webhookUrl.startsWith('https://')) {
         result.warnings!.push('Se recomienda usar HTTPS para la URL del webhook por seguridad');
@@ -517,6 +520,33 @@ export class IntegrationFormValidatorService {
 
     if (formValue.country === 'CL' && !formValue.carrier_code) {
       result.suggestions!.push('Para Chile, considera configurar un carrier específico como STARKEN o BLUEXPRESS');
+    }
+  }
+
+  private validateAliaddoFulfillmentForm(formValue: any, result: ValidationResult): void {
+    // Validar API token format
+    if (formValue.apiToken && formValue.apiToken.length < 20) {
+      result.errors!['apiToken'] = 'El token debe tener al menos 20 caracteres';
+    }
+
+    // Validar API URL
+    if (formValue.apiUrl && !formValue.apiUrl.startsWith('https://')) {
+      result.warnings!.push('Se recomienda usar HTTPS para la URL de la API');
+    }
+
+    // Validar timeout
+    if (formValue.timeout && (formValue.timeout < 5 || formValue.timeout > 300)) {
+      result.errors!['timeout'] = 'El timeout debe estar entre 5 y 300 segundos';
+    }
+
+    // Validar retry attempts
+    if (formValue.retryAttempts && (formValue.retryAttempts < 1 || formValue.retryAttempts > 10)) {
+      result.errors!['retryAttempts'] = 'Los intentos de reintento deben estar entre 1 y 10';
+    }
+
+    // Success message
+    if (Object.keys(result.errors!).length === 0) {
+      result.suggestions!.push('Configuración válida. Asegúrate de tener el token correcto desde tu panel de Aliaddo');
     }
   }
 

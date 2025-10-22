@@ -1,55 +1,39 @@
 <div class="container-fluid integrations-list">
-  <!-- Dashboard widgets de integración -->
-  <div class="row integration-dashboard mb-4">
-    <div class="col-md-3 col-sm-6">
-      <div class="stat-card">
-        <div class="stat-card-body">
-          <div class="stat-icon bg-primary">
-            <i class="fa fa-plug"></i>
-          </div>
-          <div class="stat-content">
-            <h4>{{getTotalIntegrationsCount()}}</h4>
-            <p>Total Integraciones</p>
-          </div>
+  <!-- Dashboard widgets compacto -->
+  <div class="row integration-dashboard-compact mb-3">
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+      <div class="stat-card-compact">
+        <i class="fa fa-plug stat-icon-compact bg-primary"></i>
+        <div class="stat-content-compact">
+          <span class="stat-number">{{getTotalIntegrationsCount()}}</span>
+          <span class="stat-label">Total</span>
         </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="stat-card">
-        <div class="stat-card-body">
-          <div class="stat-icon bg-success">
-            <i class="fa fa-check-circle"></i>
-          </div>
-          <div class="stat-content">
-            <h4>{{getActiveIntegrationsCount()}}</h4>
-            <p>Integraciones Activas</p>
-          </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+      <div class="stat-card-compact">
+        <i class="fa fa-check-circle stat-icon-compact bg-success"></i>
+        <div class="stat-content-compact">
+          <span class="stat-number">{{getActiveIntegrationsCount()}}</span>
+          <span class="stat-label">Activas</span>
         </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="stat-card">
-        <div class="stat-card-body">
-          <div class="stat-icon bg-warning">
-            <i class="fa fa-exclamation-triangle"></i>
-          </div>
-          <div class="stat-content">
-            <h4>{{getErroredIntegrationsCount()}}</h4>
-            <p>Con Errores</p>
-          </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+      <div class="stat-card-compact">
+        <i class="fa fa-exclamation-triangle stat-icon-compact bg-warning"></i>
+        <div class="stat-content-compact">
+          <span class="stat-number">{{getErroredIntegrationsCount()}}</span>
+          <span class="stat-label">Con Errores</span>
         </div>
       </div>
     </div>
-    <div class="col-md-3 col-sm-6">
-      <div class="stat-card">
-        <div class="stat-card-body">
-          <div class="stat-icon bg-info">
-            <i class="fa fa-bolt"></i>
-          </div>
-          <div class="stat-content">
-            <h4>{{getRecentTransactionsCount()}}</h4>
-            <p>Trans. Recientes (24h)</p>
-          </div>
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-2">
+      <div class="stat-card-compact">
+        <i class="fa fa-bolt stat-icon-compact bg-info"></i>
+        <div class="stat-content-compact">
+          <span class="stat-number">{{getRecentTransactionsCount()}}</span>
+          <span class="stat-label">Trans. 24h</span>
         </div>
       </div>
     </div>
@@ -58,28 +42,27 @@
   <div class="row">
     <div class="col-12">
       <div class="card">
-        <div class="card-header">
-          <div class="d-flex justify-content-between align-items-center">
-            <h5 class="card-title mb-0">
+        <div class="card-header-compact">
+          <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <h5 class="card-title-compact mb-0">
               <i class="fa fa-puzzle-piece"></i> Integraciones
             </h5>
-            <div class="header-actions">
-              <div *ngIf="uiHelper.isAnyLoading()" class="loading-indicator">
+            <div class="header-actions-compact">
+              <div *ngIf="uiHelper.isAnyLoading()" class="loading-indicator-compact">
                 <i class="fa fa-spinner fa-spin"></i>
-                <span>Procesando...</span>
               </div>
-              
-              <div class="btn-group mr-2">
-                <button class="btn btn-outline-primary" [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')">
+
+              <div class="btn-group btn-group-sm mr-1">
+                <button class="btn btn-outline-secondary btn-sm" [ngClass]="{'active': viewMode === 'grid'}" (click)="setViewMode('grid')" title="Vista Grid">
                   <i class="fa fa-th-large"></i>
                 </button>
-                <button class="btn btn-outline-primary" [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')">
+                <button class="btn btn-outline-secondary btn-sm" [ngClass]="{'active': viewMode === 'list'}" (click)="setViewMode('list')" title="Vista Lista">
                   <i class="fa fa-list"></i>
                 </button>
               </div>
-              <div ngbDropdown class="d-inline-block mr-2">
-                <button class="btn btn-primary" id="addIntegrationDropdown" ngbDropdownToggle>
-                  <i class="fa fa-plus"></i> Nueva integración
+              <div ngbDropdown class="d-inline-block mr-1">
+                <button class="btn btn-primary btn-sm" id="addIntegrationDropdown" ngbDropdownToggle>
+                  <i class="fa fa-plus"></i> <span class="d-none d-md-inline">Nueva</span>
                 </button>
                 <div ngbDropdownMenu aria-labelledby="addIntegrationDropdown">
                   <h6 class="dropdown-header">Selecciona una categoría</h6>
@@ -90,52 +73,47 @@
                   </button>
                 </div>
               </div>
-              <button class="btn btn-light" (click)="openTutorial()">
+              <button class="btn btn-light btn-sm" (click)="openTutorial()" title="Ayuda">
                 <i class="fa fa-question-circle"></i>
               </button>
             </div>
           </div>
         </div>
-        
-        <div class="card-body">
-          <!-- Filtros avanzados -->
-          <div class="advanced-filters mb-4">
-            <div class="row">
-              <div class="col-md-4">
-                <div class="input-group">
-                  <div class="input-group-prepend">
-                    <span class="input-group-text">
-                      <i class="fa fa-search"></i>
-                    </span>
-                  </div>
-                  <input type="text" class="form-control" placeholder="Buscar integración..." 
+
+        <div class="card-body-compact">
+          <!-- Filtros compactos -->
+          <div class="filters-compact mb-3">
+            <div class="row g-2">
+              <div class="col-lg-5 col-md-12">
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text">
+                    <i class="fa fa-search"></i>
+                  </span>
+                  <input type="text" class="form-control form-control-sm" placeholder="Buscar..."
                     [ngModel]="searchTerm" (ngModelChange)="onSearchChange($event)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
-                  <div class="input-group-append" *ngIf="searchTerm">
-                    <button class="btn btn-outline-secondary" type="button" (click)="onSearchChange('')">
-                      <i class="fa fa-times"></i>
-                    </button>
-                  </div>
+                  <button class="btn btn-outline-secondary btn-sm" type="button" (click)="onSearchChange('')" *ngIf="searchTerm">
+                    <i class="fa fa-times"></i>
+                  </button>
                 </div>
               </div>
-              <div class="col-md-3">
-                <select class="form-control" [ngModel]="filterCategory" (ngModelChange)="onCategoryChange($event)">
-                  <option [ngValue]="null">Todas las categorías</option>
+              <div class="col-lg-3 col-md-6 col-sm-6">
+                <select class="form-select form-select-sm form-control form-control-sm" [ngModel]="filterCategory" (ngModelChange)="onCategoryChange($event)">
+                  <option [ngValue]="null">Todas</option>
                   <option *ngFor="let category of categories" [value]="category">
                     {{ getCategoryLabel(category) }}
                   </option>
                 </select>
               </div>
-              <div class="col-md-3">
-                <select class="form-control" [ngModel]="filterStatus" (ngModelChange)="onStatusFilterChange($event)">
-                  <option value="all">Todos los estados</option>
+              <div class="col-lg-2 col-md-4 col-sm-4">
+                <select class="form-select form-select-sm form-control form-control-sm" [ngModel]="filterStatus" (ngModelChange)="onStatusFilterChange($event)">
+                  <option value="all">Todos</option>
                   <option value="active">Activas</option>
                   <option value="inactive">Inactivas</option>
-                  <option value="error">Con errores</option>
                 </select>
               </div>
-              <div class="col-md-2">
-                <button class="btn btn-outline-primary btn-block" (click)="resetFilters()">
-                  <i class="fa fa-refresh"></i> Limpiar
+              <div class="col-lg-2 col-md-2 col-sm-2">
+                <button class="btn btn-outline-secondary btn-sm w-100" (click)="resetFilters()" title="Limpiar filtros">
+                  <i class="fa fa-refresh"></i> <span class="d-none d-lg-inline">Limpiar</span>
                 </button>
               </div>
             </div>
@@ -148,13 +126,13 @@
               <p class="mt-3">🔄 Cargando integraciones...</p>
             </div>
           </div>
-          
+
           <!-- Error -->
           <div *ngIf="errorMessage && !loading" class="alert alert-danger">
             <i class="fa fa-exclamation-circle mr-2"></i> {{ errorMessage }}
             <button type="button" class="btn btn-sm btn-danger float-right" (click)="loadIntegrations()">Reintentar</button>
           </div>
-          
+
           <!-- Empty State / Catalog -->
           <div *ngIf="!loading && !errorMessage && integrations.length === 0" class="empty-state-catalog">
               <div class="empty-state-header">
@@ -164,7 +142,7 @@
                   <h2>Empieza a Integrar</h2>
                   <p class="text-muted">Aún no has configurado ninguna integración. Explora nuestro catálogo para conectar tu negocio.</p>
               </div>
-          
+
               <div *ngFor="let category of categories" class="category-section" [hidden]="!availableIntegrations[category] || availableIntegrations[category].length === 0">
                   <div class="category-header">
                       <h5>
@@ -175,8 +153,8 @@
                   <div class="available-integrations-grid">
                       <div *ngFor="let integration of availableIntegrations[category]" class="available-card" (click)="configureIntegration(integration, category, $event)">
                           <div class="available-card-header">
-                              <img [src]="uiHelper.getLogo(integration.id) || integration.logo" 
-                                   [alt]="integration.name" 
+                              <img [src]="uiHelper.getLogo(integration.id) || integration.logo"
+                                   [alt]="integration.name"
                                    class="available-logo"
                                    (error)="uiHelper.onImgError($event, integration.id)">
                               <div class="available-card-name">
@@ -194,7 +172,7 @@
                   </div>
               </div>
           </div>
-          
+
           <!-- Grid View -->
           <div *ngIf="!loading && integrations.length > 0 && viewMode === 'grid'" class="integration-grid">
             <div *ngFor="let category of categories" class="integration-category" [hidden]="!shouldShowCategory(category)">
@@ -208,21 +186,21 @@
                   <i class="fa fa-plus"></i> Añadir
                 </button>
               </div>
-              
+
               <div class="row">
                 <div *ngFor="let integration of getFilteredIntegrationsByCategory(category); trackBy: trackByIntegration" class="col-md-6 col-xl-4 mb-4">
-                  <div class="integration-card-v2" 
+                  <div class="integration-card-v2"
                        [ngClass]="{
-                         'is-active': integration.enabled, 
-                         'is-inactive': !integration.enabled, 
+                         'is-active': integration.enabled,
+                         'is-inactive': !integration.enabled,
                          'has-error': hasError(integration),
                          'is-featured': isFeatured(integration)
                        }"
                        (click)="openIntegrationConfig(integration)">
-                  
+
                     <!-- Card Border Accent -->
                     <div class="card-accent" [style.background]="uiHelper.getCategoryColor(integration.type)"></div>
-                  
+
                     <!-- Card Header -->
                     <div class="card-header-v2">
                       <div class="logo-wrapper">
@@ -244,7 +222,7 @@
                       </div>
                       <div class="status-light" [ngClass]="integration.enabled ? 'is-active' : 'is-inactive'" [title]="integration.enabled ? 'Activo' : 'Inactivo'"></div>
                     </div>
-                  
+
                     <!-- Card Body -->
                     <div class="card-body-v2">
                       <div class="info-grid">
@@ -270,7 +248,7 @@
                         </div>
                       </div>
                     </div>
-                  
+
                     <!-- Card Footer with Actions -->
                     <div class="card-footer-v2">
                       <div class="action-group">
@@ -329,7 +307,7 @@
                       ⚠️ No hay integraciones que coincidan con los filtros actuales
                     </td>
                   </tr>
-                  
+
                   <tr *ngFor="let integration of getSortedAndFilteredIntegrations(); trackBy: trackByIntegration" (click)="openIntegrationConfig(integration)" class="integration-row">
                     <td data-label="Nombre">
                       <div class="integration-name-cell">
@@ -400,7 +378,7 @@
               </table>
             </div>
           </div>
-          
+
           <!-- Empty Search Results -->
           <div *ngIf="!loading && searchTerm && getSortedAndFilteredIntegrations().length === 0" class="text-center py-4">
             <div class="empty-search">
@@ -414,50 +392,7 @@
           </div>
         </div>
       </div>
-      
-      <!-- Sección de sugerencias mejorada -->
-      <div class="card mt-4">
-        <div class="card-header">
-          <h5 class="card-title mb-0">
-            <i class="fa fa-lightbulb-o"></i> Recomendaciones personalizadas
-          </h5>
-        </div>
-        <div class="card-body">
-          <div class="row">
-            <div *ngFor="let category of getTopCategories(3)" class="col-md-4">
-              <div class="suggested-category">
-                <h6>
-                  <i class="fa" [ngClass]="getCategoryIcon(category)"></i>
-                  {{ getCategoryLabel(category) }}
-                </h6>
-                <div class="suggested-items">
-                  <div *ngFor="let integration of getTopSuggestionsForCategory(category, 3)" class="suggested-item" (click)="configureIntegration(integration, category, $event)">
-                    <img *ngIf="integration.logo" 
-                         [src]="integration.logo" 
-                         [alt]="integration.name" 
-                         class="suggested-logo"
-                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <div class="integration-icon-sm" [style.display]="integration.logo ? 'none' : 'flex'">
-                      <i class="fa" [ngClass]="uiHelper.getIntegrationIcon(integration.id)"></i>
-                    </div>
-                    <div class="suggested-info">
-                      <strong>{{ integration.name }}</strong>
-                      <small>{{ integration.description }}</small>
-                    </div>
-                    <span class="badge badge-primary" *ngIf="isFeatured(integration)">Destacado</span>
-                    <button class="btn btn-sm btn-primary add-btn">
-                      <i class="fa fa-plus"></i> Configurar
-                    </button>
-                  </div>
-                </div>
-                <a href="javascript:void(0)" (click)="openIntegrationConfigByCategory(category)" class="see-all">
-                  Ver todas <i class="fa fa-angle-right"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+
     </div>
   </div>
 </div>
