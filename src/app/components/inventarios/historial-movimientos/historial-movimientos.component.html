@@ -338,7 +338,7 @@
                                     <div class="d-flex align-items-center">
                                         <i class="pi pi-building text-primary me-2"></i>
                                         <span class="text-truncate" style="max-width: 140px">
-                                            {{movimiento.bodega.nombre}}
+                                            {{movimiento.bodegaDoc?.nombre || movimiento.bodega?.nombre || 'N/A'}}
                                         </span>
                                     </div>
                                 </td>
@@ -491,7 +491,7 @@
                                                     </div>
                                                     <div class="detail-row">
                                                         <span class="detail-label">Bodega:</span>
-                                                        <span class="detail-value">{{movimiento.bodega.nombre}}</span>
+                                                        <span class="detail-value">{{movimiento.bodegaDoc?.nombre || movimiento.bodega?.nombre || 'N/A'}}</span>
                                                     </div>
                                                     <div class="detail-row">
                                                         <span class="detail-label">Orden:</span>
