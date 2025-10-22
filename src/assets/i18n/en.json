@@ -727,5 +727,9 @@
   "Escribe un mensaje...": "Type a message...",
   "Analiticas": "Analytics",
   "Form Layout": "Form Layout",
-  "Nombre interno": "Internal name"
+  "Nombre interno": "Internal name",
+  "Orden de Venta": "Sales Order",
+  "Generar orden de venta profesional": "Generate professional sales order",
+  "Imprimir PDF": "Print PDF",
+  "Generar documento del pedido": "Generate order document"
 }

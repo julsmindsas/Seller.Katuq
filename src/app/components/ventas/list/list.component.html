@@ -1508,6 +1508,18 @@
                         </div>
                     </button>
 
+                    <!-- Orden de Venta -->
+                    <button class="option-btn" type="button"
+                        (click)="generarOrdenVenta(selectedOrder); closeOptionsModal()">
+                        <div class="option-icon orden-venta-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fa fa-file-text-o"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Orden de Venta' | translate }}</span>
+                            <small class="option-description">{{ 'Generar orden de venta profesional' | translate }}</small>
+                        </div>
+                    </button>
+
                     <!-- Producción (solo si isFromProduction) -->
                     <button *ngIf="isFromProduction" class="option-btn" type="button"
                         (click)="produceOrder(selectedOrder); closeOptionsModal()">
@@ -1910,6 +1922,13 @@
   </ng-template>
 
 </p-dialog>
+
+<!-- Hidden PDF Template for Orden de Venta (configurado para portrait) -->
+<div #ordenVentaContainer style="position: absolute; left: -9999px; top: -9999px; width: 100%; visibility: hidden;">
+  <app-orden-venta #ordenVentaTemplate
+    [pedido]="pedidoParaOrdenVenta">
+  </app-orden-venta>
+</div>
 
 <!-- Estilos inline para el modal (no afecta estilos existentes) -->
 <style>

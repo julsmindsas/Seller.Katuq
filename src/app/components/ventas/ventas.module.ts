@@ -66,6 +66,7 @@ import { ReporteCierreComponent } from "./pos2/widgets/cash-closing/reporte-cier
 import { DespachosModule } from "../despachos/despachos.module";
 import { ListProduccionComponent } from "./list/list-produccion.component";
 import { OrderHistoryTimelineComponent } from "./order-history-timeline/order-history-timeline.component";
+import { OrdenVentaComponent } from "./orden-venta/orden-venta.component";
 
 @NgModule({
   imports: [
@@ -130,6 +131,7 @@ import { OrderHistoryTimelineComponent } from "./order-history-timeline/order-hi
     OrderHistoryTimelineComponent, // NUEVO: 2025-10-21 - Componente de timeline de historial
     PaymentSelectorComponent,
     ListProduccionComponent,
+    OrdenVentaComponent, // NUEVO: 2025-10-21 - Componente de orden de venta profesional
   ],
   exports: [
     CrearVentasComponent,

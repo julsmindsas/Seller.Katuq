@@ -56,6 +56,7 @@ import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerc
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
 import { Subject, forkJoin } from "rxjs";
 import { debounceTime, distinctUntilChanged, takeUntil } from "rxjs/operators";
+import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 
 @Component({
   selector: "app-list-orders",
@@ -84,6 +85,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("entrega", { static: false }) entrega: PedidoEntregaComponent;
   @ViewChild("htmlPdf", { static: true }) htmlPdf: ElementRef;
   @ViewChild("sharedFilters", { static: false }) sharedFilters: any;
+  @ViewChild("ordenVentaTemplate", { static: false }) ordenVentaTemplate: any;
+  @ViewChild("ordenVentaContainer", { static: false }) ordenVentaContainer: ElementRef;
 
   @ViewChild("fechaInicialCtrl", { static: false })
   fechaInicialCtrl: ElementRef;
@@ -100,6 +103,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   clienteSeleccionado: Cliente;
   formulario: any;
   pedidoSeleccionado: Pedido;
+  pedidoParaOrdenVenta: Pedido | null = null; // Pedido para el componente de orden de venta
   datosEntregaDelCliente: any[] = [];
   estadosPago = Object.values(EstadoPago);
   ciudadSeleccionada: any;
@@ -3319,6 +3323,127 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // No refrescar aquí con timeout arbitrario
     // El componente padre debe llamar a refrescarDatos() cuando termine
+  }
+
+  /**
+   * Genera una Orden de Venta profesional para el pedido seleccionado
+   * MODIFICADO: Ahora genera el PDF directamente del DOM (igual que despachos)
+   * @param order - El pedido para el cual generar la orden de venta
+   */
+  async generarOrdenVenta(order: Pedido): Promise<void> {
+    if (!order) {
+      this.toastrService.error('No se ha seleccionado un pedido', 'Error');
+      return;
+    }
+
+    if (!this.ordenVentaContainer) {
+      this.toastrService.error('El contenedor de orden de venta no está disponible', 'Error');
+      console.error('❌ ordenVentaContainer ViewChild no está disponible');
+      return;
+    }
+
+    // Actualizar el pedido antes de generar la orden
+    const pedidoActualizado = this.actualizarPedidoParaPDF(order);
+
+    // Actualizar la propiedad que alimenta el componente renderizado
+    this.pedidoParaOrdenVenta = pedidoActualizado;
+
+    // Esperar un ciclo de Angular para que se actualice el componente
+    setTimeout(async () => {
+      try {
+        console.log('📄 Generando PDF de orden de venta...');
+
+        // Importar html2pdf dinámicamente
+        const html2pdf = (await import("html2pdf.js")).default;
+
+        // Obtener el elemento del DOM
+        const element = this.ordenVentaContainer.nativeElement;
+
+        // Hacer el elemento visible temporalmente para la captura (como despachos)
+        const originalVisibility = element.style.visibility;
+        const originalPosition = element.style.position;
+        element.style.visibility = 'visible';
+        element.style.position = 'static';
+
+        console.log('📸 Elemento visible para captura');
+
+        // Configuración del PDF optimizada para portrait
+        const options = {
+          margin: [10, 10, 10, 10], // Márgenes apropiados para vertical
+          filename: `orden-venta-${pedidoActualizado.nroPedido || 'sin-numero'}.pdf`,
+          image: {
+            type: "jpeg",
+            quality: 0.95
+          },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff",
+            logging: false,
+            letterRendering: true,
+            windowWidth: document.body.clientWidth, // Usar ancho del documento
+            windowHeight: document.body.clientHeight // Usar alto del documento
+          },
+          jsPDF: {
+            unit: "mm",
+            format: "a4",
+            orientation: "portrait",
+            compress: true
+          },
+          pagebreak: {
+            mode: ['avoid-all', 'css', 'legacy'],
+            before: '.page-break-before',
+            after: '.page-break-after',
+            avoid: ['tr', 'img']
+          }
+        };
+
+        // Generar PDF
+        await html2pdf()
+          .from(element)
+          .set(options)
+          .toPdf()
+          .get("pdf")
+          .then((pdf: any) => {
+            // Restaurar visibilidad original
+            element.style.visibility = originalVisibility;
+            element.style.position = originalPosition;
+            console.log('🔄 Visibilidad restaurada');
+
+            // Abrir PDF en nueva ventana
+            const blob = pdf.output("blob");
+            const blobUrl = URL.createObjectURL(blob);
+
+            setTimeout(() => {
+              URL.revokeObjectURL(blobUrl);
+            }, 30000);
+
+            window.open(blobUrl, "_blank");
+
+            console.log('✅ PDF de orden de venta generado exitosamente');
+            this.toastrService.success('PDF generado exitosamente', 'Éxito');
+          })
+          .catch((err: any) => {
+            // Restaurar visibilidad en caso de error
+            element.style.visibility = originalVisibility;
+            element.style.position = originalPosition;
+            throw err;
+          });
+
+      } catch (error) {
+        console.error('❌ Error al generar PDF de orden de venta:', error);
+        this.toastrService.error('Error al generar el PDF', 'Error');
+      }
+    }, 200); // Dar tiempo para que Angular actualice el template
+  }
+
+  /**
+   * Obtiene el nombre de la empresa actual
+   */
+  getNombreEmpresa(): string {
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+    return userInfo?.companyInformation?.companyName || 'KATUQ';
   }
 
   /**

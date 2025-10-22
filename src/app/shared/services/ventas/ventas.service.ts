@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, ApplicationRef, createComponent, Injector, EnvironmentInjector } from '@angular/core';
 import { BaseService } from '../base.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Producto } from '../../models/productos/Producto';
@@ -7,6 +7,7 @@ import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 // Importar interfaces para paginación optimizada
 import { PaginatedOrdersResponse, PaginatedOrdersRequest } from '../../../components/despachos/interfaces/paginated-orders.interface';
@@ -63,10 +64,14 @@ export class VentasService extends BaseService {
     httpClient: HttpClient,
     private notificationManager: NotificationManagerService,
     private notificationInterceptor: VentasNotificationInterceptor,
-    private featureFlags: FeatureFlagsService
+    private featureFlags: FeatureFlagsService,
+    private modalService: NgbModal,
+    private appRef: ApplicationRef,
+    private injector: Injector,
+    private environmentInjector: EnvironmentInjector
   ) {
     super(httpClient);
-    
+
     // Inicializar interceptor de notificaciones de forma segura
     // Solo se activa si el feature flag está habilitado
     setTimeout(() => {
@@ -562,6 +567,77 @@ export class VentasService extends BaseService {
         }
       })
     );
+  }
+
+  /**
+   * Genera y descarga directamente el PDF de una orden de venta para un pedido específico
+   * Este método puede ser llamado desde cualquier módulo (ventas, despachos, producción, etc.)
+   *
+   * @param pedido - El pedido del cual generar la orden de venta
+   *
+   * @example
+   * ```typescript
+   * // Desde cualquier componente
+   * this.ventasService.generarOrdenVenta(pedidoSeleccionado);
+   * ```
+   */
+  public async generarOrdenVenta(pedido: Pedido): Promise<void> {
+    if (!pedido) {
+      console.error('❌ No se puede generar orden de venta: pedido no proporcionado');
+      return;
+    }
+
+    console.log('📄 Generando PDF de orden de venta para pedido:', pedido.nroPedido);
+
+    try {
+      // Importar el componente de forma dinámica
+      const module = await import('../../../components/ventas/orden-venta/orden-venta.component');
+      const OrdenVentaComponent = module.OrdenVentaComponent;
+
+      // Crear el componente dinámicamente
+      const componentRef = createComponent(OrdenVentaComponent, {
+        environmentInjector: this.environmentInjector,
+        elementInjector: this.injector
+      });
+
+      // Configurar el pedido en el componente
+      componentRef.instance.pedido = pedido;
+
+      // Crear un contenedor oculto en el DOM
+      const container = document.createElement('div');
+      container.style.position = 'fixed';
+      container.style.top = '-9999px';
+      container.style.left = '-9999px';
+      container.style.visibility = 'hidden';
+      container.style.pointerEvents = 'none';
+      document.body.appendChild(container);
+
+      // Agregar el componente al DOM
+      container.appendChild(componentRef.location.nativeElement);
+      this.appRef.attachView(componentRef.hostView);
+
+      console.log('⏳ Esperando a que el componente se renderice...');
+
+      // Esperar a que Angular renderice el componente completamente
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      console.log('📥 Generando PDF...');
+
+      // Llamar al método descargarPDF del componente
+      await componentRef.instance.descargarPDF();
+
+      // Limpiar después de un momento
+      setTimeout(() => {
+        this.appRef.detachView(componentRef.hostView);
+        componentRef.destroy();
+        document.body.removeChild(container);
+        console.log('✅ Componente limpiado del DOM');
+      }, 1000);
+
+    } catch (error) {
+      console.error('❌ Error al generar orden de venta:', error);
+      alert('Error al generar el PDF. Por favor, intente nuevamente.');
+    }
   }
 
 

@@ -32,7 +32,8 @@
       "Bash(lsof -ti:4200)",
       "Bash(xargs kill -9)",
       "Read(//private/tmp/**)",
-      "Bash(npm start)"
+      "Bash(npm start)",
+      "Bash(ng build:*)"
     ],
     "deny": [],
     "ask": []

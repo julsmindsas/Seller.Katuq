@@ -1,0 +1,145 @@
+<!-- Contenedor principal para PDF vertical A4 -->
+<div class="orden-venta-pdf-wrapper" #ordenVentaContentRef>
+
+  <!-- Header con logo y datos de empresa -->
+  <div class="pdf-header">
+    <div class="empresa-info">
+      <!-- Imagen temporal removida mientras se configura Firebase
+      <img
+        [src]="getLogoUrl()"
+        (error)="onLogoError($event)"
+        alt="Logo"
+        class="logo-empresa"> -->
+      <div class="empresa-datos">
+        <h1 class="empresa-nombre">{{ nombreEmpresa }}</h1>
+        <p class="empresa-nit">NIT: {{ nitEmpresaFormateado }}</p>
+        <p class="empresa-contacto">{{ telefonoEmpresa }} | {{ emailEmpresa }}</p>
+      </div>
+    </div>
+    <div class="documento-info">
+      <h2 class="documento-titulo">ORDEN DE VENTA</h2>
+      <div class="documento-numero">#{{ pedido?.nroPedido || 'Sin número' }}</div>
+      <div class="documento-fecha">{{ (pedido?.fechaCreacion || fechaEmision) | date:'dd/MM/yyyy' }}</div>
+    </div>
+  </div>
+
+  <!-- Información del cliente -->
+  <div class="cliente-section">
+    <h3 class="section-title">INFORMACIÓN DEL CLIENTE</h3>
+    <div class="cliente-grid">
+      <div class="cliente-item">
+        <span class="label">Cliente:</span>
+        <span class="value">{{ nombreCliente }}</span>
+      </div>
+      <div class="cliente-item">
+        <span class="label">Documento:</span>
+        <span class="value">{{ pedido?.cliente?.documento || 'N/A' }}</span>
+      </div>
+      <div class="cliente-item">
+        <span class="label">Teléfono:</span>
+        <span class="value">{{ pedido?.cliente?.numero_celular_comprador || 'N/A' }}</span>
+      </div>
+      <div class="cliente-item">
+        <span class="label">Email:</span>
+        <span class="value">{{ pedido?.cliente?.correo_electronico_comprador || 'N/A' }}</span>
+      </div>
+      <div class="cliente-item full-width" *ngIf="direccionEnvio">
+        <span class="label">Dirección:</span>
+        <span class="value">{{ direccionEnvio }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de productos -->
+  <div class="productos-section">
+    <h3 class="section-title">DETALLE DE PRODUCTOS</h3>
+    <table class="productos-tabla">
+      <thead>
+        <tr>
+          <th class="col-item">#</th>
+          <th class="col-codigo">Código</th>
+          <th class="col-descripcion">Descripción</th>
+          <th class="col-cantidad">Cant.</th>
+          <th class="col-unitario">P. Unit.</th>
+          <th class="col-total">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of pedido?.carrito; let i = index">
+          <td class="col-item">{{ i + 1 }}</td>
+          <td class="col-codigo">{{ getReferencia(item) }}</td>
+          <td class="col-descripcion">{{ getNombreProducto(item) }}</td>
+          <td class="col-cantidad">{{ item.cantidad || 0 }}</td>
+          <td class="col-unitario">{{ getPrecioUnitario(item) | currency:'COP':'':'1.0-0' }}</td>
+          <td class="col-total">{{ calcularTotalProducto(item) | currency:'COP':'':'1.0-0' }}</td>
+        </tr>
+        <tr *ngIf="!pedido?.carrito || pedido.carrito.length === 0">
+          <td colspan="6" class="sin-productos">No hay productos en esta orden</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Resumen de totales -->
+  <div class="totales-section">
+    <div class="totales-container">
+      <div class="total-line" *ngIf="subtotalSinImpuestos > 0">
+        <span class="total-label">Subtotal:</span>
+        <span class="total-value">{{ subtotalSinImpuestos | currency:'COP':'':'1.0-0' }}</span>
+      </div>
+      <div class="total-line" *ngIf="totalDescuentos > 0">
+        <span class="total-label">Descuento:</span>
+        <span class="total-value descuento">-{{ totalDescuentos | currency:'COP':'':'1.0-0' }}</span>
+      </div>
+      <div class="total-line" *ngIf="totalImpuestos > 0">
+        <span class="total-label">IVA:</span>
+        <span class="total-value">{{ totalImpuestos | currency:'COP':'':'1.0-0' }}</span>
+      </div>
+      <div class="total-line" *ngIf="totalEnvio > 0">
+        <span class="total-label">Envío:</span>
+        <span class="total-value">{{ totalEnvio | currency:'COP':'':'1.0-0' }}</span>
+      </div>
+      <div class="total-line total-final">
+        <span class="total-label">TOTAL A PAGAR:</span>
+        <span class="total-value">{{ totalFinal | currency:'COP':'':'1.0-0' }}</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Footer con logo Katuq -->
+  <div class="pdf-footer">
+    <!-- Logo temporal removido mientras se configura Firebase
+    <img [src]="logoKatuq" alt="Powered by Katuq" class="logo-katuq"> -->
+    <p class="footer-text">Generado con Katuq | {{ fechaEmision | date:'dd/MM/yyyy HH:mm' }}</p>
+  </div>
+
+</div>
+
+<!-- Botones de acción (solo visible en modal, no en PDF) -->
+<div class="modal-actions" *ngIf="activeModal">
+  <button type="button" class="btn btn-secondary" (click)="cerrar()">
+    <i class="fa fa-times"></i> Cerrar
+  </button>
+  <button type="button" class="btn btn-primary" (click)="descargarPDF()" [disabled]="generandoPDF">
+    <i class="fa fa-download" *ngIf="!generandoPDF"></i>
+    <i class="fa fa-spinner fa-spin" *ngIf="generandoPDF"></i>
+    {{ generandoPDF ? 'Generando PDF...' : 'Descargar PDF' }}
+  </button>
+</div>
+
+<!-- Indicador de progreso mejorado -->
+<div class="pdf-loading" *ngIf="generandoPDF">
+  <div class="loading-content">
+    <div class="spinner-container">
+      <i class="fa fa-file-pdf-o fa-3x pdf-icon"></i>
+      <div class="spinner-circle"></div>
+    </div>
+    <h3>Generando PDF</h3>
+    <div class="progress-bar">
+      <div class="progress-fill" [style.width.%]="pdfProgress"></div>
+    </div>
+    <p class="progress-text">{{ pdfProgress }}%</p>
+    <p class="progress-message">{{ currentProgressMessage }}</p>
+  </div>
+</div>

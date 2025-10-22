@@ -689,5 +689,9 @@
     "Ciudad": "Ciudad",
     "Ciudades de origen": "Ciudades de origen",
     "Ciudades de entrega": "Ciudades de entrega",
-    "Guardar": "Guardar" 
+    "Guardar": "Guardar",
+    "Orden de Venta": "Orden de Venta",
+    "Generar orden de venta profesional": "Generar orden de venta profesional",
+    "Imprimir PDF": "Imprimir PDF",
+    "Generar documento del pedido": "Generar documento del pedido"
 }
