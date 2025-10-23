@@ -24,21 +24,19 @@
           <app-languages></app-languages>
         </li>
         <li>
-          <span class="header-search" role="button" tabindex="0" aria-label="Abrir búsqueda" (click)="searchToggle()"
-                (keydown.enter)="searchToggle()" (keydown.space)="$event.preventDefault(); searchToggle()">
+          <button class="header-search" type="button" aria-label="Abrir búsqueda" (click)="searchToggle()">
             <app-feather-icons [icon]="'search'"></app-feather-icons>
-          </span>
+          </button>
         </li>
 
         <!-- <li class="onhover-dropdown">
           <app-bookmark></app-bookmark>
         </li> -->
         <li>
-          <div class="mode" role="button" tabindex="0" (click)="layoutToggle()" [attr.aria-pressed]="dark" aria-label="Cambiar tema"
-               (keydown.enter)="layoutToggle()" (keydown.space)="$event.preventDefault(); layoutToggle()">
-            <i class="fa fa-moon-o" *ngIf="!dark"></i>
-            <i class="fa fa-lightbulb-o" *ngIf="dark"></i>
-          </div>
+          <button class="mode" type="button" (click)="layoutToggle()" [attr.aria-pressed]="dark" aria-label="Cambiar tema">
+            <i class="fa fa-moon-o" *ngIf="!dark" aria-hidden="true"></i>
+            <i class="fa fa-lightbulb-o" *ngIf="dark" aria-hidden="true"></i>
+          </button>
         </li>
         <li class="cart-nav onhover-dropdown" aria-label="Carrito">
           <app-cart></app-cart>

@@ -144,31 +144,24 @@
   z-index: 0;
 }
 
-@media(max-width:678px) {
-  .imagenCard {
-    max-width: 60%;
-    top: 20px;
-  }
+/* ✅ MOBILE-FIRST: Bootstrap standard breakpoints */
+.imagenCard {
+  // Mobile first (< 576px)
+  max-width: 50%;
 
-  .img-fluid {
-    top: 20px;
-  }
-}
-
-@media(max-width:900px) {
-  .imagenCard {
+  @media (min-width: 576px) {
     max-width: 45%;
   }
-}
 
-@media(max-width:1200px) {
-  .imagenCard {
+  @media (min-width: 768px) {
     max-width: 38%;
   }
-}
 
-@media(max-width:1600px) {
-  .imagenCard {
+  @media (min-width: 992px) {
+    max-width: 30%;
+  }
+
+  @media (min-width: 1200px) {
     max-width: 25%;
   }
 }
@@ -249,4 +242,256 @@
 p {
   position: relative;
   z-index: 1;
+}
+
+/* ===================================
+   ✅ MOBILE UX OPTIMIZATIONS
+   =================================== */
+
+/* Mobile-optimized button styles (WCAG 2.1 compliant - 44x44px minimum) */
+.btn-mobile-optimized {
+  // Mobile first: 44x44px touch targets
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 20px;
+  font-size: 16px; // Prevents iOS zoom on focus
+  border-radius: 8px;
+  transition: transform 0.15s ease-out, background-color 0.15s ease-out;
+  will-change: transform;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  // Desktop: can be smaller
+  @media (min-width: 768px) {
+    min-height: 36px;
+    min-width: auto;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+/* Mobile-optimized icon button (for edit icon, etc.) */
+.btn-icon-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: transform 0.15s ease-out, background-color 0.15s ease-out;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
+  }
+
+  i {
+    font-size: 18px;
+  }
+
+  @media (min-width: 768px) {
+    min-width: 36px;
+    min-height: 36px;
+    padding: 8px;
+
+    i {
+      font-size: 16px;
+    }
+  }
+}
+
+/* Responsive spacing - mobile first */
+.container-fluid {
+  // Mobile: reduce excessive spacing
+  &.mt-5 {
+    @media (max-width: 767px) {
+      margin-top: 1rem !important;
+    }
+  }
+
+  &.p-t-30 {
+    @media (max-width: 767px) {
+      padding-top: 1rem !important;
+    }
+  }
+
+  &.m-t-35 {
+    @media (max-width: 767px) {
+      margin-top: 1.5rem !important;
+    }
+  }
+
+  &.mt-50 {
+    @media (max-width: 767px) {
+      margin-top: 2rem !important;
+    }
+  }
+}
+
+/* ===================================
+   ✅ TABLE RESPONSIVE OPTIMIZATION (CSS-only)
+   =================================== */
+
+/* CRM Table - Mobile responsive using CSS only (no template changes) */
+.crm-table {
+  @media (max-width: 991px) {
+    table, thead, tbody, th, td, tr {
+      display: block;
+    }
+
+    thead tr {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+    }
+
+    tr {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+
+      &.client-row {
+        position: relative;
+      }
+    }
+
+    td {
+      border: none;
+      position: relative;
+      padding: 10px 10px 10px 45%;
+      text-align: right;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      border-bottom: 1px solid #f3f4f6;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 10px;
+        width: 40%;
+        padding-right: 10px;
+        white-space: nowrap;
+        font-weight: 600;
+        color: #6b7280;
+        font-size: 14px;
+        text-align: left;
+      }
+    }
+
+    th[scope="row"] {
+      display: none; // Hide row numbers on mobile
+    }
+
+    // Action buttons - make them full width and stacked
+    td:last-child {
+      .btn-group {
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        flex-wrap: wrap;
+
+        .btn {
+          flex: 1;
+          min-width: 44px;
+          min-height: 44px;
+          font-size: 14px;
+          padding: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+
+          i {
+            font-size: 16px;
+          }
+        }
+      }
+    }
+  }
+
+  // Ensure action buttons have proper touch targets on all screens
+  .btn-group .btn {
+    @media (max-width: 991px) {
+      min-width: 44px !important;
+      min-height: 44px !important;
+      padding: 12px !important;
+    }
+  }
+}
+
+/* Search input - remove fixed min-width on mobile */
+.search-container input[type="text"] {
+  @media (max-width: 767px) {
+    min-width: 100% !important; // Override inline styles
+    width: 100% !important;
+  }
+}
+
+/* Pagination - touch-optimized for mobile */
+.pagination {
+  @media (max-width: 767px) {
+    .page-link {
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      padding: 8px;
+    }
+
+    .page-item {
+      // Hide page numbers on very small screens, keep only nav arrows
+      &:not(:first-child):not(:last-child):not(:nth-child(2)):not(:nth-last-child(2)) {
+        display: none;
+      }
+    }
+  }
+}
+
+/* Improve social-follow columns for mobile */
+.social-details .social-follow {
+  @media (max-width: 767px) {
+    column-count: 1 !important;
+    column-gap: 15px;
+  }
+
+  @media (min-width: 768px) and (max-width: 991px) {
+    column-count: 2;
+    column-gap: 20px;
+  }
+}
+
+/* Welcome card text width - responsive */
+.welcome-card p {
+  @media (max-width: 767px) {
+    width: 100% !important; // Override fixed 80%
+  }
 }

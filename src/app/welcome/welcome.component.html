@@ -40,8 +40,10 @@
                             <h5 class="mb-1 ml-2">
                                 <a href="social-app.html" style="color: white">Bienvenido/a</a>
                             </h5>
-                            <span class="f-18"><i class="fa fa-edit ml-2"
-                                    routerLink="/usuarios/editarUsuario"></i></span>
+                            <button class="btn-icon-mobile ml-2" routerLink="/usuarios/editarUsuario"
+                                    type="button" aria-label="Editar perfil">
+                                <i class="fa fa-edit"></i>
+                            </button>
                         </div>
                         <br />
                         <span class="f-light">{{ userActive.name }} -
@@ -77,7 +79,7 @@
 
 <div class="container-fluid m-t-35">
     <div class="row widget-grid">
-        <div class="col-md-4 col-sm-6 box-col-4">
+        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
             <div class="card bc-secondary card-body-item shadow-2">
                 <div class="card-body">
                     <div class="imagenCard">
@@ -92,7 +94,7 @@
                                     Lista y crea tus productos con IA
                                 </p>
                                 <div>
-                                    <a class="btn btn-outline-white" routerLink="/productos">Ver más</a>
+                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/productos">Ver más</a>
                                 </div>
                             </div>
                         </div>
@@ -127,7 +129,7 @@
             </div>
         </div>
 
-        <div class="col-md-4 col-sm-6 box-col-4">
+        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
             <div class="card bc-secondary card-body-item shadow-2">
                 <div class="card-body">
                     <div class="imagenCard">
@@ -141,7 +143,7 @@
                                     Crea una venta asistida con K.A.I.
                                 </p>
                                 <div>
-                                    <a class="btn btn-outline-white" routerLink="/ventas/crear-ventas">Ver más</a>
+                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/ventas/crear-ventas">Ver más</a>
                                 </div>
                             </div>
                         </div>
@@ -176,7 +178,7 @@
             </div>
         </div>
 
-        <div class="col-md-4 col-sm-6 box-col-4">
+        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
             <div class="card bc-secondary card-body-item shadow-2">
                 <div class="card-body">
                     <div class="imagenCard">
@@ -190,7 +192,7 @@
                                     Punto de venta flexible y rápido.
                                 </p>
                                 <div>
-                                    <a class="btn btn-outline-white" routerLink="/ventas/pos2">Ver más</a>
+                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/ventas/pos2">Ver más</a>
                                 </div>
                             </div>
                         </div>
@@ -224,7 +226,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6 box-col-4">
+        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
             <div class="card bc-secondary card-body-item shadow-2">
                 <div class="card-body">
                     <div class="media">
@@ -235,7 +237,7 @@
                                     Gestiona tus clientes y sus datos.
                                 </p>
                                 <div>
-                                    <a class="btn btn-outline-white" routerLink="/ventas/clienteslista">Ver más</a>
+                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/ventas/clienteslista">Ver más</a>
                                 </div>
                             </div>
                         </div>
@@ -273,7 +275,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6 box-col-4">
+        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
             <div class="card bc-secondary card-body-item shadow-2">
                 <div class="card-body">
                     <div class="media">
@@ -284,7 +286,7 @@
                                     Visualiza el 360 de tus pedidos.
                                 </p>
                                 <div>
-                                    <a class="btn btn-outline-white" routerLink="/ventas/pedidos">Ver más</a>
+                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/ventas/pedidos">Ver más</a>
                                 </div>
                             </div>
                         </div>
@@ -321,7 +323,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4 col-sm-6 box-col-4">
+        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
             <div class="card bc-secondary shadow-2">
                 <div class="card-body">
                     <div class="media">
@@ -332,7 +334,7 @@
                                     Analiza tus métricas con K.A.I.
                                 </p>
                                 <div>
-                                    <a class="btn btn-outline-white" routerLink="/dashboards">Ver más</a>
+                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/dashboards">Ver más</a>
                                     <button class="btn btn-outline-light ms-2" (click)="startDashboardTour()" title="Tour del Dashboard">
                                         <i class="fa fa-route"></i>
                                     </button>
