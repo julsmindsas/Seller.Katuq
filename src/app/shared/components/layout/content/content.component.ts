@@ -71,6 +71,8 @@ export class ContentComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sidebarStateSubscription = this.layout.sidebarState$.subscribe(state => {
       this.sidebarState = state;
       this.updateContentLayout(state);
+      // Mantener NavService en sync para bindings existentes
+      this.navServices.collapseSidebar = state.isCollapsed;
     });
   }
 
@@ -113,17 +115,24 @@ export class ContentComponent implements OnInit, AfterViewInit, OnDestroy {
       'sidebar-auto-hidden',
       'sidebar-collapsed',
       'sidebar-compact',
-      'sidebar-auto-collapse'
+      'sidebar-auto-collapse',
+      'sidebar-temporarily-expanded'
     );
 
     // Aplicar clases según el nuevo estado
     if (state.isAutoCollapseEnabled) {
       // En auto-collapse, el área de trabajo siempre está expandida
       wrapperElement.classList.add('sidebar-auto-collapse');
+      if (state.isTemporarilyExpanded) {
+        wrapperElement.classList.add('sidebar-temporarily-expanded');
+      }
     } else if (state.isAutoHideEnabled && !state.isVisible) {
       wrapperElement.classList.add('sidebar-auto-hidden');
     } else if (state.isCollapsed) {
       wrapperElement.classList.add('sidebar-collapsed');
+    } else {
+      // Expandido por click
+      wrapperElement.classList.add('sidebar-temporarily-expanded');
     }
 
     if (state.isCompactMode) {

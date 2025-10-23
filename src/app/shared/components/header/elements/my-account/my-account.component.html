@@ -9,6 +9,9 @@
 </div>
 <ul class="profile-dropdown onhover-show-div" [class.active]="openAccount">
   <li><a href="/usuarios/editarUsuario"><app-feather-icons [icon]="'user'"></app-feather-icons><span>{{'Cuenta' }} </span></a></li>
+  <li><a routerLink="/empresas"><app-feather-icons [icon]="'briefcase'"></app-feather-icons><span>Configuración de empresa</span></a></li>
+  <li><a routerLink="/usuarios"><app-feather-icons [icon]="'users'"></app-feather-icons><span>Usuarios</span></a></li>
+  <li><a routerLink="/rol"><app-feather-icons [icon]="'shield'"></app-feather-icons><span>Roles</span></a></li>
   <!-- <li><a href="#"><app-feather-icons [icon]="'mail'"></app-feather-icons><span>Inbox</span></a></li>
   <li><a href="#"><app-feather-icons [icon]="'file-text'"></app-feather-icons><span>Taskboard</span></a></li>
   <li><a href="#"><app-feather-icons [icon]="'settings'"></app-feather-icons><span>Settings</span></a></li> -->

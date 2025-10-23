@@ -33,6 +33,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   @HostListener('mouseenter')
   onMouseEnter() {
     // Solo activar si está en modo colapso tradicional (no auto-collapse)
+    console.log('Sidebar mouseenter - collapseMenu:', this.collapseMenu, 'isAutoCollapseEnabled:', this.isAutoCollapseEnabled, 'isMobile:', this.isMobile(), 'isTemporarilyExpanded:', this.isTemporarilyExpanded);
     if (this.collapseMenu && !this.isAutoCollapseEnabled && !this.isMobile()) {
       // Limpiar cualquier timeout pendiente de colapso
       if (this.hoverExpandTimeout) {
@@ -40,25 +41,212 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.hoverExpandTimeout = null;
       }
 
-      // MEJORA: Expandir INSTANTÁNEAMENTE sin delay
+      // Expandir INSTANTÁNEAMENTE sin delay
       this.isTemporarilyExpanded = true;
       this.isMouseInsideSidebar = true;
+
+      // Marcar visualmente para que el header se ajuste
+      const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
+      if (wrapper) {
+        wrapper.classList.add('sidebar-temporarily-expanded');
+        console.log('Added class sidebar-temporarily-expanded to page-wrapper');
+        // Forzar actualización del layout
+        wrapper.style.display = 'block';
+      }
+
+      const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
+      if (sidebar) {
+        this.renderer.addClass(sidebar, 'temporarily-expanded');
+        console.log('Added class temporarily-expanded to sidebar-container');
+      }
+
+      // Marcar header directamente (modo Dubai)
+      const headerEl = document.querySelector('.page-header') as HTMLElement;
+      if (headerEl) {
+        headerEl.classList.add('temporarily-expanded');
+        console.log('Added class temporarily-expanded to page-header');
+        // Forzar reflow para que CSS se aplique inmediatamente
+        headerEl.offsetHeight;
+
+        // Debug: mostrar estado actual de clases CSS
+        const wrapperClassName = wrapper?.className || 'undefined';
+        const sidebarClassName = sidebar?.className || 'undefined';
+        const headerClassName = headerEl.className;
+        const computedMargin = getComputedStyle(headerEl).marginLeft;
+
+        console.log('Current CSS classes on page-wrapper:', wrapperClassName);
+        console.log('Current CSS classes on sidebar-container:', sidebarClassName);
+        console.log('Current CSS classes on page-header:', headerClassName);
+        console.log('Computed margin-left of header:', computedMargin);
+
+        // Verificar si hay clases del tema Dubai
+        const bodyClassName = document.body.className;
+        console.log('Current body classes (theme):', bodyClassName);
+        const compactWrapper = document.querySelector('.compact-wrapper');
+        console.log('Has compact-wrapper:', !!compactWrapper);
+
+        // Verificar si las reglas CSS específicas están siendo aplicadas
+        const style = getComputedStyle(headerEl);
+        console.log('All computed styles for header:');
+        console.log('- margin-left:', style.marginLeft);
+        console.log('- width:', style.width);
+        console.log('- transform:', style.transform);
+        console.log('- position:', style.position);
+        console.log('- z-index:', style.zIndex);
+        console.log('- left:', style.left);
+        console.log('- right:', style.right);
+
+        // Verificar si hay estilos inline o reglas CSS que están sobreescribiendo
+        console.log('Checking for inline styles and CSS conflicts...');
+        console.log('- inline styles:', headerEl.getAttribute('style'));
+        console.log('- header style property:', headerEl.style.cssText);
+
+        // Verificar si hay alguna regla CSS específica que esté aplicando 90px
+        const allStyles = getComputedStyle(headerEl);
+        console.log('All CSS properties that contain "margin":');
+        for (let i = 0; i < allStyles.length; i++) {
+          const prop = allStyles[i];
+          if (prop.includes('margin')) {
+            console.log(`- ${prop}: ${allStyles.getPropertyValue(prop)}`);
+          }
+        }
+
+        // Verificar si hay reglas CSS que podrían estar sobreescribiendo
+        console.log('Header parent computed styles:');
+        const parentStyle = getComputedStyle(headerEl.parentElement!);
+        console.log('- parent margin-left:', parentStyle.marginLeft);
+        console.log('- parent width:', parentStyle.width);
+        console.log('- parent position:', parentStyle.position);
+
+        // Verificar si hay algún elemento que esté sobreescribiendo el margin
+        console.log('Checking for CSS specificity conflicts...');
+        console.log('Header classes:', headerEl.className);
+        console.log('Parent classes:', headerEl.parentElement?.className);
+        console.log('Grandparent classes:', headerEl.parentElement?.parentElement?.className);
+
+        // Verificar computed styles del wrapper
+        if (wrapper) {
+          const wrapperStyle = getComputedStyle(wrapper);
+          console.log('Page wrapper computed styles:');
+          console.log('- margin-left:', wrapperStyle.marginLeft);
+          console.log('- width:', wrapperStyle.width);
+          console.log('- position:', wrapperStyle.position);
+
+          // Verificar si nuestras reglas específicas están siendo aplicadas
+          console.log('Checking if our CSS rules are being applied...');
+          const computedStyle = getComputedStyle(headerEl);
+          const marginLeftValue = computedStyle.marginLeft;
+
+          // Si el margin-left es 260px, nuestras reglas están funcionando
+          if (marginLeftValue === '260px') {
+            console.log('✅ SUCCESS: Header margin-left is 260px - our CSS rules are working!');
+          } else if (marginLeftValue === '90px') {
+            console.log('❌ PROBLEM: Header margin-left is still 90px - global CSS rules are overriding ours');
+            console.log('This means we need even higher CSS specificity');
+          } else {
+            console.log('⚠️  WARNING: Header margin-left is', marginLeftValue, '- unexpected value');
+          }
+        }
+      }
     }
   }
 
   @HostListener('mouseleave')
   onMouseLeave() {
     // Solo aplicar si está temporalmente expandido
+    console.log('Sidebar mouseleave - collapseMenu:', this.collapseMenu, 'isTemporarilyExpanded:', this.isTemporarilyExpanded, 'isAutoCollapseEnabled:', this.isAutoCollapseEnabled, 'isMobile:', this.isMobile());
     if (this.collapseMenu && this.isTemporarilyExpanded && !this.isAutoCollapseEnabled && !this.isMobile()) {
       this.isMouseInsideSidebar = false;
 
-      // ✅ OPTIMIZADO: Delay reducido a 300ms para mejor responsividad
+      // Delay reducido a 300ms para mejor responsividad
       this.hoverExpandTimeout = setTimeout(() => {
         // No colapsar si hay un submenú abierto o el mouse volvió a entrar
         if (!this.hasOpenSubmenu() && !this.isMouseInsideSidebar) {
           this.isTemporarilyExpanded = false;
+          // Remover marcas visuales
+          const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
+          if (wrapper) {
+            wrapper.classList.remove('sidebar-temporarily-expanded');
+            console.log('Removed class sidebar-temporarily-expanded from page-wrapper');
+            wrapper.style.display = 'block';
+          }
+
+          const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
+          if (sidebar) {
+            this.renderer.removeClass(sidebar, 'temporarily-expanded');
+            console.log('Removed class temporarily-expanded from sidebar-container');
+          }
+
+          const headerEl = document.querySelector('.page-header') as HTMLElement;
+          if (headerEl) {
+            headerEl.classList.remove('temporarily-expanded');
+            console.log('Removed class temporarily-expanded from page-header');
+            // Forzar reflow para que CSS se aplique inmediatamente
+            headerEl.offsetHeight;
+
+            // Debug: mostrar estado actual de clases CSS después de remover
+            const wrapperClassNameAfter = wrapper?.className || 'undefined';
+            const sidebarClassNameAfter = sidebar?.className || 'undefined';
+            const headerClassNameAfter = headerEl.className;
+            const computedMarginAfter = getComputedStyle(headerEl).marginLeft;
+
+            console.log('Current CSS classes on page-wrapper after remove:', wrapperClassNameAfter);
+            console.log('Current CSS classes on sidebar-container after remove:', sidebarClassNameAfter);
+            console.log('Current CSS classes on page-header after remove:', headerClassNameAfter);
+            console.log('Computed margin-left of header after remove:', computedMarginAfter);
+
+            // Verificar si las reglas CSS se removieron correctamente
+            const styleAfter = getComputedStyle(headerEl);
+            console.log('All computed styles for header after remove:');
+            console.log('- margin-left:', styleAfter.marginLeft);
+            console.log('- width:', styleAfter.width);
+            console.log('- transform:', styleAfter.transform);
+            console.log('- position:', styleAfter.position);
+            console.log('- z-index:', styleAfter.zIndex);
+            console.log('- left:', styleAfter.left);
+            console.log('- right:', styleAfter.right);
+
+            // Verificar estilos inline después de remover
+            console.log('Checking for inline styles after remove...');
+            console.log('- inline styles:', headerEl.getAttribute('style'));
+            console.log('- header style property:', headerEl.style.cssText);
+
+            // Verificar todas las propiedades de margin después de remover
+            const allStylesAfter = getComputedStyle(headerEl);
+            console.log('All CSS properties that contain "margin" after remove:');
+            for (let i = 0; i < allStylesAfter.length; i++) {
+              const prop = allStylesAfter[i];
+              if (prop.includes('margin')) {
+                console.log(`- ${prop}: ${allStylesAfter.getPropertyValue(prop)}`);
+              }
+            }
+
+            // Verificar jerarquía de elementos después de remover
+            console.log('Header classes after remove:', headerEl.className);
+            console.log('Parent classes after remove:', headerEl.parentElement?.className);
+            console.log('Grandparent classes after remove:', headerEl.parentElement?.parentElement?.className);
+
+            // Verificar computed styles del wrapper después de remover
+            if (wrapper) {
+              const wrapperStyleAfter = getComputedStyle(wrapper);
+              console.log('Page wrapper computed styles after remove:');
+              console.log('- margin-left:', wrapperStyleAfter.marginLeft);
+              console.log('- width:', wrapperStyleAfter.width);
+              console.log('- position:', wrapperStyleAfter.position);
+            }
+
+            // Verificar si el colapso funcionó correctamente
+            const marginAfter = getComputedStyle(headerEl).marginLeft;
+            if (marginAfter === '70px') {
+              console.log('✅ SUCCESS: Header margin-left is 70px after collapse - CSS rules working correctly!');
+            } else if (marginAfter === '90px') {
+              console.log('⚠️  WARNING: Header margin-left is 90px after collapse - global rules still overriding');
+            } else {
+              console.log('❓ UNKNOWN: Header margin-left is', marginAfter, 'after collapse');
+            }
+          }
         }
-      }, this.collapseDelayMs); // Configurable: 300ms
+      }, this.collapseDelayMs); // 300ms
     }
   }
 
@@ -200,6 +388,113 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   private isMouseInSidebar: boolean = false;
   private animationFrameId: number | null = null;
 
+  // Método de debug público para verificar estado del hover
+  public debugHoverState() {
+    console.log('=== DEBUG HOVER STATE ===');
+    console.log('collapseMenu:', this.collapseMenu);
+    console.log('isAutoCollapseEnabled:', this.isAutoCollapseEnabled);
+    console.log('isMobile():', this.isMobile());
+    console.log('isTemporarilyExpanded:', this.isTemporarilyExpanded);
+    console.log('LayoutService state:', this.layout.getSidebarState());
+
+    const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
+    const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
+    const headerEl = document.querySelector('.page-header') as HTMLElement;
+
+    console.log('page-wrapper classes:', wrapper?.className || 'undefined');
+    console.log('sidebar-container classes:', sidebar?.className || 'undefined');
+    console.log('page-header classes:', headerEl?.className || 'undefined');
+    console.log('header computed margin-left:', headerEl ? getComputedStyle(headerEl).marginLeft : 'undefined');
+    console.log('=========================');
+  }
+
+  // Método público para forzar hover manualmente
+  public forceHoverExpand() {
+    console.log('Forcing hover expand...');
+    this.onMouseEnter();
+    setTimeout(() => {
+      console.log('Hover expand applied, checking result:');
+      this.debugHoverState();
+    }, 100);
+  }
+
+  // Método público para forzar colapso manualmente
+  public forceHoverCollapse() {
+    console.log('Forcing hover collapse...');
+    this.onMouseLeave();
+    setTimeout(() => {
+      console.log('Hover collapse applied, checking result:');
+      this.debugHoverState();
+    }, 400);
+  }
+
+  // Método para verificar qué reglas CSS están siendo aplicadas
+  public debugCSSRules() {
+    console.log('=== DEBUG CSS RULES ===');
+    const headerEl = document.querySelector('.page-header') as HTMLElement;
+    if (headerEl) {
+      const style = getComputedStyle(headerEl);
+
+      // Verificar si nuestras reglas específicas se están aplicando
+      console.log('Header computed styles:');
+      console.log('- margin-left:', style.marginLeft);
+      console.log('- width:', style.width);
+      console.log('- left:', style.left);
+      console.log('- position:', style.position);
+      console.log('- transform:', style.transform);
+
+      // Verificar specificity de las clases aplicadas
+      console.log('Applied CSS classes:', headerEl.className);
+
+      // Verificar si hay reglas CSS que están sobreescribiendo
+      const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
+      if (wrapper) {
+        console.log('Page wrapper classes:', wrapper.className);
+        const wrapperStyle = getComputedStyle(wrapper);
+        console.log('Page wrapper computed margin-left:', wrapperStyle.marginLeft);
+      }
+
+      // Verificar specificity de selectores
+      console.log('Checking CSS specificity...');
+      const allSelectors = [
+        '.page-header.close_icon.temporarily-expanded',
+        '.compact-wrapper .page-header.temporarily-expanded.close_icon',
+        '.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon',
+        '.page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.close_icon',
+        ':host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon'
+      ];
+
+      allSelectors.forEach(selector => {
+        const elements = document.querySelectorAll(selector);
+        console.log(`Selector "${selector}": ${elements.length} matches`);
+      });
+    }
+    console.log('=========================');
+  }
+
+  // Método para verificar el estado actual del header
+  public checkCurrentHeaderState() {
+    console.log('=== CURRENT HEADER STATE ===');
+    const headerEl = document.querySelector('.page-header') as HTMLElement;
+    if (headerEl) {
+      const style = getComputedStyle(headerEl);
+      console.log('Header classes:', headerEl.className);
+      console.log('Header computed margin-left:', style.marginLeft);
+      console.log('Header computed width:', style.width);
+      console.log('Header computed position:', style.position);
+      console.log('Header computed transform:', style.transform);
+      console.log('Header computed z-index:', style.zIndex);
+
+      const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
+      if (wrapper) {
+        console.log('Page wrapper classes:', wrapper.className);
+        const wrapperStyle = getComputedStyle(wrapper);
+        console.log('Page wrapper computed margin-left:', wrapperStyle.marginLeft);
+      }
+    }
+    console.log('============================');
+  }
+
   ngOnInit(): void {
     this.loadPlanFromLocalStorage();
     this.securityService.getCompanyInformationLogged$().subscribe((companyInformation: CompanyInformation | null) => {
@@ -252,6 +547,18 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Configurar eventos táctiles para móviles
   // Inicializar estado del sidebar
   private initializeSidebarState(): void {
+    // Inicializar LayoutService con el estado actual de NavService
+    const currentCollapsedState = this.navServices.collapseSidebar;
+    this.layout.updateSidebarState({
+      isCollapsed: currentCollapsedState,
+      isAutoHideEnabled: false,
+      isAutoCollapseEnabled: false,
+      isVisible: true,
+      isPinned: false,
+      isHovering: false,
+      isTemporarilyExpanded: false
+    });
+
     if (this.isMobile()) {
       // En móvil: siempre empezar colapsado
       this.collapseMenu = true;
@@ -266,6 +573,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.collapseMenu = false;
         this.navServices.collapseSidebar = false;
       }
+
+      // Sincronizar LayoutService con el estado final
+      this.layout.updateSidebarState({ isCollapsed: this.collapseMenu });
     }
   }
 
@@ -424,9 +734,20 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     let isHeaderSection = false;
     
     // Recorrer cada ítem
+    const shouldHide = (mi: Menu): boolean => {
+      const path = (mi.path || '').toLowerCase();
+      const title = (mi.title || '').toLowerCase();
+      // Ocultar rutas y títulos de Empresa/Usuarios/Roles
+      if (path.includes('/empresas') || path.includes('/usuarios') || path.includes('/rol')) return true;
+      if (title.includes('empresa') || title.includes('usuario') || title.includes('rol')) return true;
+      return false;
+    };
+
     menuItems.forEach(item => {
       // Ignorar items nulos
       if (!item) return;
+      // Filtrar items que deben ocultarse del sidebar
+      if (shouldHide(item)) return;
       
       // Si es un encabezado, crear nueva sección con el encabezado anterior (si existe)
       if (item.headTitle1) {
@@ -453,7 +774,17 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         if (currentTitle === null && currentItems.length === 0) {
           isHeaderSection = false;
         }
-        
+        // Si el item tiene hijos, filtrarlos también
+        if (item.children && item.children.length) {
+          item.children = item.children.filter(ch => !shouldHide(ch));
+          // Filtrado en nietos
+          item.children.forEach(ch => {
+            if (ch.children && ch.children.length) {
+              ch.children = ch.children.filter(gn => !shouldHide(gn));
+            }
+          });
+        }
+
         // Añadir el ítem a la sección actual
         currentItems.push(item);
       }
@@ -639,9 +970,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     this.isToggling = true;
 
-    // Cambiar estado
-    this.collapseMenu = !this.collapseMenu;
+    // Cambiar estado via LayoutService
+    this.layout.toggleCollapse();
+    this.collapseMenu = this.layout.getSidebarState().isCollapsed;
     this.navServices.collapseSidebar = this.collapseMenu;
+
+    // Actualizar ContentComponent para que refleje el cambio inmediatamente
+    this.updateContentMargin();
 
     // Resetear estado temporal cuando se hace click manual
     this.isTemporarilyExpanded = false;
@@ -2625,6 +2960,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.isSidebarVisible = state.isVisible;
       this.isPinned = state.isPinned;
       this.isHovering = state.isHovering;
+      // Mantener sincronizado el estado de colapso para plantillas y hover-zone
+      this.collapseMenu = state.isCollapsed;
 
       // Aplicar clases CSS correspondientes
       this.updateSidebarClasses();
@@ -2648,6 +2985,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Listener para mostrar sidebar en hover
     this.hoverZoneListener = this.renderer.listen(hoverZone, 'mouseenter', () => {
+      // Forzar expansión temporal visual del header/sidebar cuando está colapsado
+      if (this.collapseMenu && !this.isAutoCollapseEnabled && !this.isMobile()) {
+        console.log('Hover zone ACTIVATING - calling onMouseEnter()');
+        this.onMouseEnter();
+      } else {
+        // Debug: log para verificar si la condición se cumple
+        console.log('Hover zone mouseenter - collapseMenu:', this.collapseMenu, 'isAutoCollapseEnabled:', this.isAutoCollapseEnabled, 'isMobile:', this.isMobile(), 'isTemporarilyExpanded:', this.isTemporarilyExpanded);
+      }
       if (this.isAutoHideEnabled && !this.isSidebarVisible) {
         // Limpiar timeout de ocultar si existe
         if (this.hideTimeout) {
@@ -2663,6 +3008,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     // Listener para ocultar sidebar cuando el mouse sale
+    this.renderer.listen(hoverZone, 'mouseleave', () => {
+      console.log('Hover zone mouseleave - collapseMenu:', this.collapseMenu, 'isTemporarilyExpanded:', this.isTemporarilyExpanded, 'isAutoCollapseEnabled:', this.isAutoCollapseEnabled, 'isMobile:', this.isMobile());
+      if (this.collapseMenu && this.isTemporarilyExpanded && !this.isAutoCollapseEnabled && !this.isMobile()) {
+        console.log('Hover zone DEACTIVATING - calling onMouseLeave()');
+        this.onMouseLeave();
+      }
+    });
+
     const sidebarElement = this.elementRef.nativeElement;
     this.renderer.listen(sidebarElement, 'mouseleave', () => {
       if (this.isAutoHideEnabled && this.isHovering) {
@@ -2722,6 +3075,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.renderer.removeClass(sidebarElement, 'sidebar-hovering');
     this.renderer.removeClass(sidebarElement, 'auto-collapse-enabled');
     this.renderer.removeClass(sidebarElement, 'auto-collapse-expanded');
+    this.renderer.removeClass(sidebarElement, 'temporarily-expanded');
 
     // Aplicar clases para auto-collapse
     if (this.isAutoCollapseEnabled) {
@@ -2744,6 +3098,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (this.isHovering) {
         this.renderer.addClass(sidebarElement, 'sidebar-hovering');
       }
+    }
+
+    // Marcar temporalmente expandido para ajustar el header por CSS
+    if (this.collapseMenu && this.isTemporarilyExpanded && !this.isMobile()) {
+      this.renderer.addClass(sidebarElement, 'temporarily-expanded');
+      document.querySelector('.page-wrapper')?.classList.add('sidebar-temporarily-expanded');
+    } else {
+      document.querySelector('.page-wrapper')?.classList.remove('sidebar-temporarily-expanded');
     }
 
     // Actualizar el contenido principal

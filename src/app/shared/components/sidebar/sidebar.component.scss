@@ -298,7 +298,7 @@ body.dark-only {
   box-shadow: var(--sidebar-shadow);
   display: flex;
   flex-direction: column;
-  z-index: var(--z-sidebar); // ✅ Bajo el header (1024 < 1025)
+  z-index: var(--z-sidebar); // Bajo el header (1024 < 1025)
   transform: translateX(0);
   transition: transform var(--transition-fast), width var(--transition-fast);
   font-family: var(--font-family);

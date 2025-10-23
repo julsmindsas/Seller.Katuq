@@ -210,9 +210,299 @@ body.dark-only {
   transition: margin-left 0.15s ease-out, width 0.15s ease-out;
 }
 
+// Override directo para tema Dubai y otros temas con wrapper compact
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header,
+.compact-wrapper .page-header.temporarily-expanded,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+.compact-wrapper .page-header.temporarily-expanded.close_icon {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+}
+
+// Forzar override más específico para Dubai con máxima prioridad
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+body:has(.sidebar-container.temporarily-expanded) .compact-wrapper .page-header.close_icon,
+.compact-wrapper .page-header.temporarily-expanded.close_icon,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+}
+
+// Máxima especificidad para forzar el override sobre las reglas globales
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+body:has(.sidebar-container.temporarily-expanded) .compact-wrapper .page-header.close_icon,
+body:has(.sidebar-container.temporarily-expanded) .compact-wrapper .page-header.temporarily-expanded {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+  /* Override any global styles */
+  transform: none !important;
+  position: relative !important;
+  z-index: 1025 !important;
+}
+
+// Override específico para el wrapper completo del componente
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+  /* Override any global layout styles */
+  box-shadow: none !important;
+  border: none !important;
+}
+
+// Máxima prioridad absoluta para sobreescribir TODAS las reglas globales
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out !important;
+  /* Override all possible global styles */
+  transform: none !important;
+  position: sticky !important;
+  z-index: 1025 !important;
+  display: block !important;
+  visibility: visible !important;
+  /* Override any layout or sidebar specific styles */
+  margin: 0 !important;
+  padding: 0 !important;
+  box-sizing: border-box !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: auto !important;
+}
+
+// Override ultra específico para sobreescribir la regla global .page-header que aplica margin-left: 90px
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded,
+.page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header,
+.page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.close_icon,
+.page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.temporarily-expanded {
+  margin-left: 260px !important;
+  margin-right: 0 !important;
+  width: calc(100% - 260px) !important;
+  /* Override the specific global rule that applies margin-left: 90px */
+  margin-left: 260px !important;
+  transition: all 0.15s ease-out !important;
+  /* Override any other conflicting styles */
+  transform: none !important;
+  position: sticky !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+}
+
+// Override ultra específico para forzar el margin-left
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded {
+  margin-left: 260px !important;
+  margin-right: 0 !important;
+  width: calc(100% - 260px) !important;
+  /* Override the global 90px rule specifically */
+  margin-left: 260px !important;
+  transition: all 0.15s ease-out !important;
+}
+
+// Override con el contexto completo del componente Angular para máxima especificidad
+.page-wrapper.ng-tns-c127-1.compact-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+.page-wrapper.ng-tns-c127-1.compact-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+.page-wrapper.ng-tns-c127-1.compact-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out !important;
+  /* Override any Angular component styles */
+  margin: 0 !important;
+  transform: none !important;
+  position: sticky !important;
+}
+
+// Override directo por ID de componente Angular si existe
+:host ::ng-deep .page-header.temporarily-expanded.close_icon {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out !important;
+}
+
+// Máxima especificidad usando el contexto completo del componente Angular para sobreescribir la regla global .page-header
+:host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header,
+:host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+:host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+:host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out !important;
+  /* Override the global .page-header rule specifically */
+  margin-left: 260px !important;
+  margin-right: 0 !important;
+  /* Override any other conflicting styles */
+  transform: none !important;
+  position: sticky !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  z-index: 9999 !important;
+}
+
+// Máxima especificidad usando el contexto completo del componente Angular
+:host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+:host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+:host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out !important;
+  /* Override with maximum specificity */
+  margin: 0 0 0 260px !important;
+  transform: none !important;
+  position: sticky !important;
+  left: 260px !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: auto !important;
+  display: block !important;
+  visibility: visible !important;
+  z-index: 1025 !important;
+}
+
+// Override usando el contexto completo del componente Angular con máxima prioridad
+:host(.page-header).temporarily-expanded.close_icon,
+:host(.page-header).close_icon.temporarily-expanded,
+.page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.close_icon,
+.page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.temporarily-expanded {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out !important;
+  /* Override any possible global rule */
+  margin: 0 0 0 260px !important;
+  transform: none !important;
+  position: sticky !important;
+  left: 260px !important;
+}
+
+// Override con la máxima especificidad posible para sobreescribir cualquier regla global
+html body.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+html body.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+html body.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  margin-right: 0 !important;
+  width: calc(100% - 260px) !important;
+  /* Override ALL possible global styles */
+  margin: 0 0 0 260px !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  transform: none !important;
+  position: sticky !important;
+  left: 260px !important;
+  right: 0 !important;
+  top: 0 !important;
+  bottom: auto !important;
+  display: block !important;
+  visibility: visible !important;
+  z-index: 9999 !important;
+  transition: all 0.15s ease-out !important;
+}
+
+// Override específico para sobreescribir la regla global .page-header que aplica margin-left: 90px
+html body.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header,
+html body.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+html body.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+html body.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  margin-right: 0 !important;
+  width: calc(100% - 260px) !important;
+  /* Override the specific global rule that applies margin-left: 90px */
+  margin-left: 260px !important;
+  margin-right: 0 !important;
+  width: calc(100% - 260px) !important;
+  transition: all 0.15s ease-out !important;
+  /* Override any layout or sidebar specific styles */
+  transform: none !important;
+  position: sticky !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  z-index: 9999 !important;
+}
+
+// Override específico usando left para elementos con position sticky
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded {
+  left: 260px !important;
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: left 0.15s ease-out, margin-left 0.15s ease-out, width 0.15s ease-out !important;
+  /* Override position sticky behavior */
+  position: sticky !important;
+  transform: none !important;
+}
+
+// Override final con la máxima especificidad absoluta para sobreescribir la regla global
+html body.compact-wrapper .page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header,
+html body.compact-wrapper .page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.close_icon,
+html body.compact-wrapper .page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.temporarily-expanded,
+html body.compact-wrapper .page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.close_icon.temporarily-expanded {
+  margin-left: 260px !important;
+  margin-right: 0 !important;
+  width: calc(100% - 260px) !important;
+  /* Override the global .page-header rule that applies margin-left: 90px */
+  margin-left: 260px !important;
+  margin-right: 0 !important;
+  width: calc(100% - 260px) !important;
+  transition: all 0.15s ease-out !important;
+  /* Override any possible conflicting styles */
+  transform: none !important;
+  position: sticky !important;
+  left: 0 !important;
+  right: 0 !important;
+  top: 0 !important;
+  display: block !important;
+  visibility: visible !important;
+  z-index: 99999 !important;
+}
+
 // Selector para detectar cuando el sidebar está temporalmente expandido
 // El sidebar tiene la clase .temporarily-expanded cuando se hace hover estando colapsado
 @media (min-width: 992px) {
+  // Forzar override cuando el sidebar está colapsado pero temporalmente expandido por hover
+  .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon,
+  body:has(.sidebar-container.temporarily-expanded) .page-wrapper .page-header.close_icon,
+  .page-wrapper.sidebar-temporarily-expanded .page-header.temporarily-expanded {
+    margin-left: 260px !important;
+    width: calc(100% - 260px) !important;
+    transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+  }
+
+  // Ajuste por clases en page-wrapper: colapsado vs expandido temporal
+  .page-wrapper.sidebar-collapsed .page-header,
+  body:has(.sidebar-container.collapsed:not(.temporarily-expanded)) .page-wrapper .page-header {
+    margin-left: 70px !important;
+    width: calc(100% - 70px) !important;
+    transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+  }
+
+  .page-wrapper.sidebar-temporarily-expanded .page-header,
+  .page-wrapper:not(.sidebar-collapsed) .page-header,
+  body:has(.sidebar-container.temporarily-expanded) .page-wrapper .page-header {
+    margin-left: 260px !important;
+    width: calc(100% - 260px) !important;
+    transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+  }
+
   // BACKUP: Detectar cuando existe un sidebar con temporarily-expanded en la página
   body:has(.sidebar-container.temporarily-expanded) .page-header {
     margin-left: 260px !important; // Ancho completo del sidebar expandido

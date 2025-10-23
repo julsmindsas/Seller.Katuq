@@ -98,7 +98,8 @@ export class LayoutService {
       isAutoHideEnabled: newAutoHideState,
       isVisible: newAutoHideState ? false : true, // Si auto-hide activo, ocultar inicialmente
       isPinned: false, // Sin funcionalidad de pin
-      isCollapsed: newAutoHideState ? false : currentState.isCollapsed // Desactivar colapso si auto-hide activo
+      isCollapsed: newAutoHideState ? false : currentState.isCollapsed, // Desactivar colapso si auto-hide activo
+      isTemporarilyExpanded: false
     });
   }
 

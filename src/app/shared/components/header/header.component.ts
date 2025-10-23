@@ -81,8 +81,21 @@ export class HeaderComponent implements OnInit, OnDestroy {
     document.body.style.backgroundColor = this.dark ? 'black' : 'white';
   }
 
+  // Método para aplicar marca de expansión temporal desde fuera
+  public setTemporarilyExpandedHeader(isExpanded: boolean) {
+    const headerEl = document.querySelector('.page-header');
+    if (!headerEl) return;
+    if (isExpanded) {
+      headerEl.classList.add('temporarily-expanded');
+    } else {
+      headerEl.classList.remove('temporarily-expanded');
+    }
+  }
+
   sidebarToggle() {
-    this.navServices.collapseSidebar = !this.navServices.collapseSidebar;
+    // Sincronizar con LayoutService (estado único)
+    this.layout.toggleCollapse();
+    this.navServices.collapseSidebar = this.layout.getSidebarState().isCollapsed;
     this.navServices.megaMenu = false;
     this.navServices.levelMenu = false;
   }

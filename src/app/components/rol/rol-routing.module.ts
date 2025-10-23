@@ -6,7 +6,7 @@ import { RolesComponent } from './roles/roles.component';
 
 const routes: Routes = [
   {
-    path: 'rol',
+    path: '',
     component: RolComponent
   },
   {

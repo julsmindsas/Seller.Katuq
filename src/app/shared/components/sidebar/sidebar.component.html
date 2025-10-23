@@ -84,15 +84,7 @@
         <i class="fa" [ngClass]="collapseMenu ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
       </button>
 
-      <!-- Botón de Auto-Hide -->
-      <button class="control-btn auto-hide-btn"
-              (click)="toggleAutoHide()"
-              [attr.aria-label]="isAutoHideEnabled ? 'Auto-ocultar activado (el menú se oculta automáticamente)' : 'Activar auto-ocultar (el menú se ocultará cuando no lo uses)'"
-              [title]="isAutoHideEnabled ? 'Auto-ocultar activado' : 'Activar auto-ocultar'"
-              [class.active]="isAutoHideEnabled"
-              *ngIf="!collapseMenu && !isMobile()">
-        <i class="fa" [ngClass]="isAutoHideEnabled ? 'fa-eye' : 'fa-eye-slash'"></i>
-      </button>
+      <!-- Botón de Auto-Hide desactivado en desktop -->
     </div>
   </header>
 
