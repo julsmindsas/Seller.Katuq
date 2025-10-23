@@ -1,6 +1,6 @@
 .sizelogoHeader {
     width: auto;
-    height: 36px; // Consistente con sidebar logo height
+    height: 32px; // Consistente con sidebar logo height
     max-width: 180px;
     display: block;
     margin: 0;
@@ -20,21 +20,21 @@
 /* Responsive adjustments - Consistente con sidebar breakpoints */
 @media (max-width: 1199px) {
     .sizelogoHeader {
-        height: 32px;
+        height: 30px;
         max-width: 160px;
     }
 }
 
 @media (max-width: 991px) {
     .sizelogoHeader {
-        height: 28px;
+        height: 26px;
         max-width: 140px;
     }
 }
 
 @media (max-width: 767px) {
     .sizelogoHeader {
-        height: 24px;
+        height: 22px;
         max-width: 120px;
     }
 }

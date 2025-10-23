@@ -1,39 +1,39 @@
 /* Header Component Styles - MEJORADO VISUALMENTE */
 .page-header {
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: var(--z-header, 1025);
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); // ✨ Gradiente sutil
-  backdrop-filter: blur(12px); // Mayor blur
-  border-bottom: 2px solid #e5e7eb; // Border más notorio
-  min-height: 70px; // ✨ Más alto (60px → 70px)
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12),
-              0 1px 3px rgba(0, 0, 0, 0.08); // ✨ Sombra más profunda
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e5e7eb;
+  min-height: 60px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08),
+              0 1px 2px rgba(0, 0, 0, 0.04);
   font-family: var(--font-family, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
 
-  transition: background-color 0.3s ease,
-              border-color 0.3s ease,
-              box-shadow 0.3s ease;
+  // ✅ Transiciones optimizadas para margin-left y width
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out, opacity 0.2s ease;
 
   .header-wrapper {
-    padding: 12px 24px; // ✨ Más espacioso (8px→12px, 16px→24px)
+    padding: 8px 16px;
     align-items: center;
 
-    // ✨ Logo móvil mejorado
     .header-logo-wrapper {
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 12px;
 
       .logo-wrapper {
-        padding: 8px 16px;
+        padding: 6px 12px;
         background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
-        border-radius: 12px;
+        border-radius: 10px;
         border: 1px solid rgba(99, 102, 241, 0.15);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 
         img {
-          max-height: 36px;
-          transition: transform 0.2s ease;
+          max-height: 32px;
+          // ✅ Solo transform para performance
+          transition: transform 0.15s ease-out;
 
           &:hover {
             transform: scale(1.05);
@@ -45,20 +45,21 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 42px;
-        height: 42px;
+        width: 38px;
+        height: 38px;
         background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
         border: 1px solid rgba(99, 102, 241, 0.15);
-        border-radius: 10px;
+        border-radius: 8px;
         cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        // ✅ Solo transform y opacity para mejor performance
+        transition: transform 0.15s ease-out, opacity 0.15s ease-out;
 
         &:hover {
           background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
           border-color: rgba(99, 102, 241, 0.3);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+          box-shadow: 0 3px 8px rgba(99, 102, 241, 0.15);
         }
 
         &:active {
@@ -67,8 +68,8 @@
 
         ::ng-deep app-feather-icons svg {
           color: #6366f1;
-          width: 20px;
-          height: 20px;
+          width: 18px;
+          height: 18px;
         }
       }
     }
@@ -76,17 +77,16 @@
     .left-header {
       display: flex;
       align-items: center;
-      min-height: 46px;
-      padding-right: 24px;
-      border-right: 2px solid #e5e7eb; // ✨ Separador visual
-      margin-right: 24px;
+      min-height: 42px;
+      padding-right: 16px;
+      margin-right: 16px;
     }
 
     .nav-right {
       .nav-menus {
         display: flex;
         align-items: center;
-        gap: 12px; // ✨ Más espacio entre items (4px → 12px)
+        gap: 8px; // ✨ Más espacio entre items (4px → 12px)
         margin: 0;
         padding: 0;
         list-style: none;
@@ -94,45 +94,48 @@
         li {
           display: flex;
           align-items: center;
-          
+
           .header-search,
           .mode {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 42px; // ✨ Más grande (32px → 42px)
-            height: 42px;
-            border-radius: 10px; // ✨ Más redondeado (6px → 10px)
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%); // ✨ Gradiente
-            border: 1px solid rgba(99, 102, 241, 0.15); // ✨ Border sutil
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05); // ✨ Sombra sutil
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            // ✅ Solo transform y opacity - GPU accelerated
+            transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+            will-change: transform;
 
             &:hover {
               background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
               border-color: rgba(99, 102, 241, 0.3);
-              transform: translateY(-2px) scale(1.05); // ✨ Efecto lift
-              box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+              transform: translateY(-2px) scale(1.05);
+              box-shadow: 0 3px 8px rgba(99, 102, 241, 0.15);
             }
 
             &:active {
               transform: translateY(0) scale(0.98);
-              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
             }
 
             svg, i {
-              font-size: 18px; // ✨ Más grande (14px → 18px)
-              color: #6366f1; // ✨ Color primary
-              transition: color 0.3s ease;
+              font-size: 16px;
+              color: #6366f1;
+              // ✅ Sin transición (evita repaint)
             }
           }
 
           .language-nav {
             cursor: pointer;
-            padding: var(--item-padding-y, 8px) var(--item-padding-x, 12px);
+            padding: var(--item-padding-y, 6px) var(--item-padding-x, 10px);
             border-radius: var(--radius-sm, 6px);
-            transition: all var(--transition-ultrafast, 0.1s) ease-out;
+            // ✅ Solo opacity
+            transition: opacity 0.1s ease-out;
 
             &:hover {
               background: rgba(0, 0, 0, 0.05);
@@ -147,42 +150,45 @@
 /* Dark theme - MEJORADO VISUALMENTE */
 body.dark-only {
   .page-header {
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%); // ✨ Gradiente oscuro
-    border-bottom: 2px solid #374151; // ✨ Border más notorio
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6),
-                0 1px 4px rgba(0, 0, 0, 0.4); // ✨ Sombra más profunda
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+    border-bottom: 1px solid #374151;
+    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.5),
+                0 1px 3px rgba(0, 0, 0, 0.3);
 
     .header-wrapper {
       .left-header {
-        border-right-color: #374151; // ✨ Separador dark
+        border-right-color: #374151;
       }
 
       .nav-right .nav-menus li {
         .header-search,
         .mode {
-          background: linear-gradient(135deg, rgba(129, 140, 248, 0.15) 0%, rgba(167, 139, 250, 0.15) 100%); // ✨ Gradiente purple
+          background: linear-gradient(135deg, rgba(129, 140, 248, 0.15) 0%, rgba(167, 139, 250, 0.15) 100%);
           border: 1px solid rgba(129, 140, 248, 0.25);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+          // ✅ Solo transform para performance
+          transition: transform 0.15s ease-out, opacity 0.15s ease-out;
 
           &:hover {
             background: linear-gradient(135deg, rgba(129, 140, 248, 0.25) 0%, rgba(167, 139, 250, 0.25) 100%);
             border-color: rgba(129, 140, 248, 0.4);
             transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 16px rgba(129, 140, 248, 0.3);
+            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.25);
           }
 
           &:active {
             transform: translateY(0) scale(0.98);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
           }
 
           svg, i {
-            color: #a5b4fc; // ✨ Purple claro
+            color: #a5b4fc;
           }
         }
 
         .language-nav {
-          transition: background-color 0.2s ease, color 0.3s ease;
+          // ✅ Solo opacity para mejor performance
+          transition: opacity 0.15s ease-out;
 
           &:hover {
             background: rgba(255, 255, 255, 0.08);
@@ -194,11 +200,39 @@ body.dark-only {
   }
 }
 
+/* ✅ SOLUCIÓN: Desplazar header cuando sidebar se expande temporalmente con hover */
+// Esto hace que el header se comporte igual que cuando se quita el colapso permanentemente
+
+// NUEVA SOLUCIÓN: Usar la clase que agregamos directamente al page-wrapper
+.page-wrapper.sidebar-temporarily-expanded .page-header {
+  margin-left: 260px !important;
+  width: calc(100% - 260px) !important;
+  transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+}
+
+// Selector para detectar cuando el sidebar está temporalmente expandido
+// El sidebar tiene la clase .temporarily-expanded cuando se hace hover estando colapsado
+@media (min-width: 992px) {
+  // BACKUP: Detectar cuando existe un sidebar con temporarily-expanded en la página
+  body:has(.sidebar-container.temporarily-expanded) .page-header {
+    margin-left: 260px !important; // Ancho completo del sidebar expandido
+    width: calc(100% - 260px) !important;
+    transition: margin-left 0.15s ease-out, width 0.15s ease-out;
+  }
+
+  // Cuando el sidebar NO está temporalmente expandido pero está colapsado
+  body:has(.sidebar-container.collapsed:not(.temporarily-expanded)) .page-header {
+    margin-left: 70px !important; // Ancho del sidebar colapsado
+    width: calc(100% - 70px) !important;
+    transition: margin-left 0.1s ease-out, width 0.1s ease-out;
+  }
+}
+
 /* Responsive - Consistente con sidebar breakpoints */
 @media (max-width: 991px) {
   .page-header {
     min-height: 56px;
-    z-index: calc(var(--z-header, 1025) + 1); // Ligeramente más alto en tablets
+    z-index: var(--z-header); // ✅ Mismo z-index, sin cálculos
 
     .header-wrapper {
       padding: var(--spacing-sm, 6px) var(--spacing-lg, 12px);
@@ -233,12 +267,21 @@ body.dark-only {
   }
 }
 
+/* NUEVO: Estilo para contraer el header cuando el sidebar se expande */
+@media (min-width: 992px) {
+  .page-header.sidebar-hovered {
+    transition: width 0.2s ease-out, margin-left 0.2s ease-out;
+    width: calc(100% - 50px); // Se contrae un poco
+    margin-left: 20px; // Se desplaza para dar espacio
+  }
+}
+
 /* Tour Navigation Button Styles */
 .tour-nav {
   margin-right: 8px;
   display: flex !important;
   align-items: center;
-  
+
   .tour-btn {
     font-size: 11px !important;
     padding: 6px 10px !important;
@@ -246,7 +289,7 @@ body.dark-only {
     border: none !important;
     font-weight: 600 !important;
     transition: all 0.2s ease !important;
-    
+
     &:hover {
       transform: scale(1.05);
     }
