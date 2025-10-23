@@ -1154,8 +1154,8 @@ $primary-color: #459BD1;
       width: calc(100% - 260px);
 
       &.close_icon {
-        margin-left: 90px;
-        width: calc(100% - 90px);
+        margin-left: 53px;
+        width: calc(100% - 53px);
       }
 
       .header-wrapper {
@@ -1299,12 +1299,12 @@ $primary-color: #459BD1;
 
             ~.page-body,
             ~footer {
-              margin-left: 92px;
+              margin-left: 53px;
               transition: 0.5s;
             }
 
             ~.footer-fix {
-              width: calc(100% - 90px);
+              width: calc(100% - 53px);
             }
 
             .sidebar-main {

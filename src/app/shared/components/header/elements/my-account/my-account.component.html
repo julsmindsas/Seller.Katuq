@@ -1,4 +1,5 @@
-<div class="d-flex profile-media" (click)="toggleAccount()">
+<div class="d-flex profile-media" (click)="toggleAccount()" role="button" aria-haspopup="true" [attr.aria-expanded]="openAccount" aria-controls="account-dropdown" tabindex="0"
+     (keydown.enter)="toggleAccount()" (keydown.space)="$event.preventDefault(); toggleAccount()">
   <img class="b-r-10" [src]="user.image ? user.image : 'assets/images/user/user.png'" alt="profile" style="max-height: 40px; width: auto;">
   <div class="media-body">
     <span>{{user.name}}</span><i class="middle fa fa-angle-down"></i>
@@ -7,7 +8,7 @@
     </p>
   </div>
 </div>
-<ul class="profile-dropdown onhover-show-div" [class.active]="openAccount">
+<ul class="profile-dropdown onhover-show-div" [class.active]="openAccount" id="account-dropdown" role="menu" aria-label="Opciones de cuenta">
   <li><a href="/usuarios/editarUsuario"><app-feather-icons [icon]="'user'"></app-feather-icons><span>{{'Cuenta' }} </span></a></li>
   <li><a routerLink="/empresas"><app-feather-icons [icon]="'briefcase'"></app-feather-icons><span>Configuración de empresa</span></a></li>
   <li><a routerLink="/usuarios"><app-feather-icons [icon]="'users'"></app-feather-icons><span>Usuarios</span></a></li>
@@ -15,6 +16,6 @@
   <!-- <li><a href="#"><app-feather-icons [icon]="'mail'"></app-feather-icons><span>Inbox</span></a></li>
   <li><a href="#"><app-feather-icons [icon]="'file-text'"></app-feather-icons><span>Taskboard</span></a></li>
   <li><a href="#"><app-feather-icons [icon]="'settings'"></app-feather-icons><span>Settings</span></a></li> -->
-  <li><a (click)="logOut()"><app-feather-icons [icon]="'log-in'"></app-feather-icons><span>{{'Cerrar
+  <li><a (click)="logOut()" role="menuitem"><app-feather-icons [icon]="'log-in'"></app-feather-icons><span>{{'Cerrar
         sesión' }}</span></a></li>
 </ul>

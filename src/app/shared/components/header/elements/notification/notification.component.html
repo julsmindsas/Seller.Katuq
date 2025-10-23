@@ -1,19 +1,19 @@
-<div class="notification-box" (click)="toggleNotificationMobile()">
+<div class="notification-box" (click)="toggleNotificationMobile()" role="button" aria-haspopup="true" [attr.aria-expanded]="openNotification" aria-controls="notification-dropdown" tabindex="0"
+     (keydown.enter)="toggleNotificationMobile()" (keydown.space)="$event.preventDefault(); toggleNotificationMobile()">
   <app-feather-icons [icon]="'bell'"></app-feather-icons>
-  <span class="badge rounded-pill badge-primary">{{notifications?.length ??
-    '0'}}</span>
+  <span class="badge rounded-pill badge-primary" *ngIf="(notifications?.length ?? 0) > 0">{{notifications?.length}}</span>
 </div>
-<ul class="notification-dropdown onhover-show-div" [class.active]="openNotification">
+<ul class="notification-dropdown onhover-show-div" [class.active]="openNotification" id="notification-dropdown" role="menu" aria-label="Lista de notificaciones">
   <li>
     <app-feather-icons [icon]="'bell'"></app-feather-icons>
     <h6 class="f-18 mb-0">Notificaciones</h6>
   </li>
-  <li *ngFor="let notification of notifications">
+  <li *ngFor="let notification of notifications" role="none">
     <p>
       <i class="fa fa-circle-o me-3 font-{{notification.type}}"></i>{{notification.message}}<span
         class="pull-right">{{notification.timestamp | date:'shortTime'}}</span>
       <span> {{notification?.details}}</span>
-      <button *ngIf="notification.type == 'function'"
+      <button *ngIf="notification.type == 'function'" type="button" role="menuitem"
         (click)="actionNotification(notification)">{{notification.btnName}}</button>
     </p>
   </li>

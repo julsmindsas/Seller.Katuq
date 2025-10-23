@@ -1,0 +1,84 @@
+// Estilos del selector de idioma
+.translate_wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  min-height: 32px;
+
+  .current_lang {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 4px;
+    min-width: 38px;
+    height: 32px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+
+    .lang {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      color: #2d3748;
+
+      .lang-txt { font-weight: 600; font-size: 11px; }
+    }
+  }
+
+  .more_lang {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 180px;
+    padding: 8px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    display: none;
+    z-index: 1050;
+
+    &.active { display: block; }
+
+    button.lang {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 0;
+      background: transparent;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: left;
+
+      &:hover {
+        background: rgba(99,102,241,0.08);
+      }
+
+      .lang-txt { font-size: 13px; font-weight: 500; }
+    }
+  }
+}
+
+// Dark mode
+body.dark-only {
+  .translate_wrapper {
+    .more_lang {
+      background: #1f2937;
+      border-color: #374151;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+
+      button.lang:hover { background: rgba(129,140,248,0.12); }
+    }
+  }
+}
+
+

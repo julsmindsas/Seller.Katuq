@@ -6,7 +6,7 @@
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid #e5e7eb;
-  min-height: 60px;
+  min-height: 52px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08),
               0 1px 2px rgba(0, 0, 0, 0.04);
   font-family: var(--font-family, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
@@ -15,7 +15,7 @@
   transition: margin-left 0.15s ease-out, width 0.15s ease-out, opacity 0.2s ease;
 
   .header-wrapper {
-    padding: 8px 16px;
+    padding: 4px 10px;
     align-items: center;
 
     .header-logo-wrapper {
@@ -31,7 +31,7 @@
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 
         img {
-          max-height: 32px;
+          max-height: 28px;
           // ✅ Solo transform para performance
           transition: transform 0.15s ease-out;
 
@@ -45,8 +45,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 38px;
-        height: 38px;
+        width: 32px;
+        height: 32px;
         background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
         border: 1px solid rgba(99, 102, 241, 0.15);
         border-radius: 8px;
@@ -68,8 +68,8 @@
 
         ::ng-deep app-feather-icons svg {
           color: #6366f1;
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
         }
       }
     }
@@ -78,15 +78,15 @@
       display: flex;
       align-items: center;
       min-height: 42px;
-      padding-right: 16px;
-      margin-right: 16px;
+      padding-right: 6px;
+      margin-right: 6px;
     }
 
     .nav-right {
       .nav-menus {
         display: flex;
         align-items: center;
-        gap: 8px; // ✨ Más espacio entre items (4px → 12px)
+        gap: 2px; // Espaciado compacto
         margin: 0;
         padding: 0;
         list-style: none;
@@ -94,54 +94,80 @@
         li {
           display: flex;
           align-items: center;
+          justify-content: center;
+          padding: 0;
+          margin: 0;
+          height: 32px;
+          min-width: 32px;
+
+          > * {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+          }
 
           .header-search,
           .mode {
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 38px;
-            height: 38px;
+            width: 32px;
+            height: 32px;
             border-radius: 8px;
             cursor: pointer;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
-            border: 1px solid rgba(99, 102, 241, 0.15);
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-            // ✅ Solo transform y opacity - GPU accelerated
+            background: transparent;
+            border: none;
+            box-shadow: none;
             transition: transform 0.15s ease-out, opacity 0.15s ease-out;
             will-change: transform;
 
             &:hover {
-              background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-              border-color: rgba(99, 102, 241, 0.3);
+              background: rgba(99, 102, 241, 0.12);
               transform: translateY(-2px) scale(1.05);
-              box-shadow: 0 3px 8px rgba(99, 102, 241, 0.15);
             }
 
             &:active {
               transform: translateY(0) scale(0.98);
-              box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
             }
 
             svg, i {
               font-size: 16px;
               color: #6366f1;
-              // ✅ Sin transición (evita repaint)
             }
           }
 
-          .language-nav {
-            cursor: pointer;
-            padding: var(--item-padding-y, 6px) var(--item-padding-x, 10px);
-            border-radius: var(--radius-sm, 6px);
-            // ✅ Solo opacity
-            transition: opacity 0.1s ease-out;
+          &.language-nav {
+            min-width: 38px;
+            padding: 0 4px;
+            border-radius: 8px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+            transition: transform 0.15s ease-out;
 
             &:hover {
-              background: rgba(0, 0, 0, 0.05);
+              background: rgba(99, 102, 241, 0.12);
+              transform: translateY(-2px) scale(1.05);
+            }
+
+            &:active {
+              transform: translateY(0) scale(0.98);
+            }
+
+            ::ng-deep app-languages .translate_wrapper {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 0;
+              background: transparent;
+              width: 100%;
             }
           }
         }
+
+        // Estandarizar tamaño de íconos dentro del header
+        ::ng-deep app-feather-icons svg { width: 16px; height: 16px; }
       }
     }
   }
@@ -490,8 +516,8 @@ html body.compact-wrapper .page-wrapper.ng-tns-c127-1.sidebar-temporarily-expand
   // Ajuste por clases en page-wrapper: colapsado vs expandido temporal
   .page-wrapper.sidebar-collapsed .page-header,
   body:has(.sidebar-container.collapsed:not(.temporarily-expanded)) .page-wrapper .page-header {
-    margin-left: 70px !important;
-    width: calc(100% - 70px) !important;
+    margin-left: 53px !important;
+    width: calc(100% - 53px) !important;
     transition: margin-left 0.15s ease-out, width 0.15s ease-out;
   }
 
@@ -512,8 +538,8 @@ html body.compact-wrapper .page-wrapper.ng-tns-c127-1.sidebar-temporarily-expand
 
   // Cuando el sidebar NO está temporalmente expandido pero está colapsado
   body:has(.sidebar-container.collapsed:not(.temporarily-expanded)) .page-header {
-    margin-left: 70px !important; // Ancho del sidebar colapsado
-    width: calc(100% - 70px) !important;
+    margin-left: 53px !important; // Ancho del sidebar colapsado
+    width: calc(100% - 53px) !important;
     transition: margin-left 0.1s ease-out, width 0.1s ease-out;
   }
 }
@@ -521,7 +547,7 @@ html body.compact-wrapper .page-wrapper.ng-tns-c127-1.sidebar-temporarily-expand
 /* Responsive - Consistente con sidebar breakpoints */
 @media (max-width: 991px) {
   .page-header {
-    min-height: 56px;
+    min-height: 50px;
     z-index: var(--z-header); // ✅ Mismo z-index, sin cálculos
 
     .header-wrapper {
@@ -548,7 +574,7 @@ html body.compact-wrapper .page-wrapper.ng-tns-c127-1.sidebar-temporarily-expand
 
 @media (max-width: 767px) {
   .page-header {
-    min-height: 52px;
+    min-height: 48px;
 
     .header-wrapper {
       padding: 4px 8px;

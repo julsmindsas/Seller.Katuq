@@ -1,10 +1,11 @@
-<div class="cart-box" (click)="toggleCart()">
+<div class="cart-box" (click)="toggleCart()" role="button" aria-haspopup="true" [attr.aria-expanded]="openCart" aria-controls="cart-dropdown" tabindex="0"
+     (keydown.enter)="toggleCart()" (keydown.space)="$event.preventDefault(); toggleCart()">
   <app-feather-icons [icon]="'shopping-cart'"></app-feather-icons>
-  <span class="badge rounded-pill badge-primary">{{cartData?.length ?? 0}}</span>
+<span class="badge rounded-pill badge-primary" *ngIf="(cartData?.length ?? 0) > 0">{{cartData?.length}}</span>
 </div>
-<ul class="cart-dropdown onhover-show-div" [class.active]="openCart">
-  <li>
-    <h6 class="mb-0 f-20">Carrito</h6>
+<ul class="cart-dropdown onhover-show-div" [class.active]="openCart" id="cart-dropdown" role="menu" aria-label="Carrito de compras">
+  <li style="padding: 8px 0 6px 0 !important;">
+    <h6 class="mb-0" style="font-size: 16px; font-weight: 600;">Carrito</h6>
     <app-feather-icons [icon]="'shopping-cart'"></app-feather-icons>
   </li>
   <li class="mt-0" *ngFor="let item of cartData">
@@ -62,9 +63,9 @@
       </div>
     </div>
   </li> -->
-  <li>
+  <li style="padding: 6px 0 4px 0 !important;">
     <div class="total">
-      <h6 class="mb-2 mt-0 text-muted">Order Total : <span class="f-right f-20">{{totalCarrito | currency}}</span></h6>
+      <h6 class="mb-0 mt-0 text-muted" style="font-size: 14px;">Total: <span class="f-right" style="font-size: 16px; font-weight: 600;">{{totalCarrito | currency}}</span></h6>
     </div>
   </li>
   <!-- <li>

@@ -1,14 +1,15 @@
-<div class="translate_wrapper" [class.active]="navServices.language">
-  <div class="current_lang">
-    <div class="lang">
-      <i class="flag-icon flag-icon-{{selectedLanguage.icon}}"></i><span
-        class="lang-txt">{{selectedLanguage.code}}</span>
-    </div>
-  </div>
+<div class="translate_wrapper" [class.active]="navServices.language" id="languages-menu" role="menu" aria-label="Selector de idioma">
+  <button class="current_lang" type="button" aria-haspopup="true" [attr.aria-expanded]="navServices.language">
+    <span class="lang">
+      <i class="flag-icon flag-icon-{{selectedLanguage.icon}}" aria-hidden="true"></i>
+      <span class="lang-txt">{{selectedLanguage.code}}</span>
+    </span>
+  </button>
   <div class="more_lang" [class.active]="navServices.language">
-    <div class="lang selected" data-value="en" (click)="changeLanguage(lang)" *ngFor="let lang of languages">
-      <i class="flag-icon flag-icon-{{lang.icon}}"></i>
+    <button class="lang selected" type="button" role="menuitem" data-value="en" (click)="changeLanguage(lang)" *ngFor="let lang of languages"
+            [attr.aria-label]="'Cambiar a ' + lang.language">
+      <i class="flag-icon flag-icon-{{lang.icon}}" aria-hidden="true"></i>
       <span class="lang-txt">{{lang.language}}<span *ngIf="lang.type">({{lang.type}})</span></span>
-    </div>
+    </button>
   </div>
 </div>

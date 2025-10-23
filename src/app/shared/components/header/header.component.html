@@ -1,5 +1,5 @@
 <!-- Page Header Start-->
-<div class="page-header" [class.close_icon]="navServices.collapseSidebar" >
+<div class="page-header" [class.close_icon]="navServices.collapseSidebar" role="banner" aria-label="Encabezado principal">
   <div class="header-wrapper row m-0">
     <app-search></app-search>
     <div class="header-logo-wrapper col-auto d-lg-none px-0">
@@ -13,17 +13,19 @@
         <app-feather-icons [icon]="'align-center'" class="status_toggle middle"></app-feather-icons>
       </div>
     </div>
-    <div class="left-header col horizontal-wrapper ps-0">
+    <div class="left-header col horizontal-wrapper ps-0" aria-label="Información de la empresa">
       <!-- <app-mega-menu></app-mega-menu> -->
       <app-company-information></app-company-information>
     </div>
     <div class="nav-right col-8 pull-right right-header p-0">
       <ul class="nav-menus">
-        <li class="language-nav" (click)="languageToggle()">
+        <li class="language-nav" (click)="languageToggle()" role="button" tabindex="0" aria-haspopup="true" [attr.aria-expanded]="navServices.language" aria-controls="languages-menu"
+            (keydown.enter)="languageToggle()" (keydown.space)="$event.preventDefault(); languageToggle()">
           <app-languages></app-languages>
         </li>
         <li>
-          <span class="header-search" (click)="searchToggle()">
+          <span class="header-search" role="button" tabindex="0" aria-label="Abrir búsqueda" (click)="searchToggle()"
+                (keydown.enter)="searchToggle()" (keydown.space)="$event.preventDefault(); searchToggle()">
             <app-feather-icons [icon]="'search'"></app-feather-icons>
           </span>
         </li>
@@ -32,22 +34,24 @@
           <app-bookmark></app-bookmark>
         </li> -->
         <li>
-          <div class="mode" (click)="layoutToggle()">
+          <div class="mode" role="button" tabindex="0" (click)="layoutToggle()" [attr.aria-pressed]="dark" aria-label="Cambiar tema"
+               (keydown.enter)="layoutToggle()" (keydown.space)="$event.preventDefault(); layoutToggle()">
             <i class="fa fa-moon-o" *ngIf="!dark"></i>
             <i class="fa fa-lightbulb-o" *ngIf="dark"></i>
           </div>
         </li>
-        <li class="cart-nav onhover-dropdown">
+        <li class="cart-nav onhover-dropdown" aria-label="Carrito">
           <app-cart></app-cart>
         </li>
-        <li class="onhover-dropdown">
+        <li class="onhover-dropdown" aria-label="Notificaciones">
           <app-notification-center></app-notification-center>
         </li>
         <!-- <li class="onhover-dropdown">
           <app-message-box></app-message-box>
         </li> -->
         <li class="maximize">
-          <a class="text-dark" href="javascript:void(0)" (click)="toggleFullScreen()">
+          <a class="text-dark" href="javascript:void(0)" (click)="toggleFullScreen()" role="button" aria-label="Pantalla completa"
+             (keydown.enter)="toggleFullScreen()" (keydown.space)="$event.preventDefault(); toggleFullScreen()" tabindex="0">
             <app-feather-icons [icon]="'maximize'"></app-feather-icons>
           </a>
         </li>
@@ -57,7 +61,7 @@
             🎯 Tours
           </button>
         </li> -->
-        <li class="profile-nav onhover-dropdown p-0">
+        <li class="profile-nav onhover-dropdown p-0" aria-label="Mi cuenta">
           <app-my-account></app-my-account>
         </li>
       </ul>
