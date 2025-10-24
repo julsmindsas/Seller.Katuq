@@ -3821,25 +3821,47 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const inicializar = () => {
       intentos++;
 
-      if (
-        this.clientes &&
-        this.clientes.documentoBusqueda &&
-        this.clientes.documentoBusqueda.nativeElement &&
-        this.clienteSeleccionado?.documento
-      ) {
+      // Verificar si el componente clientes existe
+      if (this.clientes && this.clienteSeleccionado?.documento) {
         console.log(
           "🎯 Inicializando componente clientes con documento:",
           this.clienteSeleccionado.documento,
         );
 
-        // Setear el documento en el campo de búsqueda
-        this.clientes.documentoBusqueda.nativeElement.value =
-          this.clienteSeleccionado.documento;
+        // Intentar establecer el documento en el campo de búsqueda si existe
+        if (
+          this.clientes.documentoBusqueda &&
+          this.clientes.documentoBusqueda.nativeElement
+        ) {
+          this.clientes.documentoBusqueda.nativeElement.value =
+            this.clienteSeleccionado.documento;
 
-        // Llamar directamente al método buscar del componente
-        this.clientes.buscar();
+          // Establecer el tipo de búsqueda
+          this.clientes.tipoBusqueda = "CC-NIT";
 
-        console.log("✅ Componente clientes inicializado correctamente");
+          // Llamar al método buscar
+          this.clientes.buscar();
+          console.log("✅ Componente clientes inicializado con búsqueda");
+        } else {
+          // Si los elementos de búsqueda no están disponibles,
+          // usar el método alternativo cargarDatosCliente
+          console.log(
+            "⚠️ Elementos de búsqueda no disponibles, usando carga directa",
+          );
+
+          // Asignar el cliente directamente al componente
+          this.clientes.clienteEdit = this.clienteSeleccionado;
+          this.clientes.isEdit = true;
+
+          // Llamar al método de carga directa si existe
+          if (typeof this.clientes.cargarDatosCliente === "function") {
+            this.clientes.cargarDatosCliente();
+            console.log("✅ Cliente cargado directamente");
+          } else {
+            // Si el método no existe aún, intentar buscar
+            this.clientes.buscar();
+          }
+        }
       } else if (intentos < maxIntentos) {
         console.log(
           `⏳ Intento ${intentos}/${maxIntentos} - Esperando inicialización del componente clientes...`,
@@ -3858,6 +3880,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           clienteSeleccionado: !!this.clienteSeleccionado,
           documento: this.clienteSeleccionado?.documento,
         });
+
+        // Como último recurso, intentar asignar los datos directamente
+        if (this.clientes && this.clienteSeleccionado) {
+          this.clientes.clienteEdit = this.clienteSeleccionado;
+          this.clientes.isEdit = true;
+          console.log(
+            "⚠️ Datos del cliente asignados directamente como último recurso",
+          );
+        }
       }
     };
 

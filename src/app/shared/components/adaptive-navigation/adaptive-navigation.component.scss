@@ -130,7 +130,7 @@
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 120px;
+  width: 140px;
   height: 60px;
   background: #f8f9fa;
   border-radius: 16px 16px 0 0;
@@ -142,6 +142,11 @@
   -webkit-touch-callout: none; /* Prevent Safari callout */
   -webkit-user-select: none; /* Prevent text selection */
   user-select: none;
+
+  // Age-specific width
+  .age-senior & {
+    width: 160px;
+  }
   
   @media (prefers-color-scheme: dark) {
     background: #1c1c1e;
@@ -157,13 +162,13 @@
     display: flex;
     justify-content: center;
     padding: 8px 0 4px;
-    
+
     .handle-bar {
-      width: 24px;
-      height: 4px;
+      width: 36px;
+      height: 6px;
       background: rgba(0, 0, 0, 0.3);
       border-radius: 2px;
-      
+
       @media (prefers-color-scheme: dark) {
         background: rgba(255, 255, 255, 0.3);
       }
@@ -241,8 +246,8 @@
     padding: 0 24px 16px;
     
     .back-btn {
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       border: none;
       background: rgba(0, 0, 0, 0.08);
       border-radius: 50%;
@@ -251,9 +256,9 @@
       justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
-      
+
       i {
-        font-size: 14px;
+        font-size: 16px;
         color: #666;
       }
       
@@ -293,8 +298,8 @@
     }
     
     .close-cards-btn {
-      width: 32px;
-      height: 32px;
+      width: 44px;
+      height: 44px;
       border: none;
       background: rgba(0, 0, 0, 0.08);
       border-radius: 50%;
@@ -303,9 +308,9 @@
       justify-content: center;
       cursor: pointer;
       transition: all 0.2s ease;
-      
+
       i {
-        font-size: 14px;
+        font-size: 16px;
         color: #666;
       }
       
@@ -593,15 +598,15 @@
       align-items: center;
       justify-content: center;
       margin-right: 16px;
-      
+
       @media (prefers-color-scheme: dark) {
         background: #3a3a3c;
       }
-      
+
       i {
-        font-size: 8px;
+        font-size: 18px;
         color: #666;
-        
+
         @media (prefers-color-scheme: dark) {
           color: #999;
         }

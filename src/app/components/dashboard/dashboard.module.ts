@@ -20,6 +20,8 @@ import { ToastModule } from "primeng/toast";
 import { TreeSelectModule } from "primeng/treeselect";
 import { AnaliticaService } from "../../shared/services/dashboard/analiticas.services";
 import { AnalyticsService } from "../../shared/services/dashboard/analytics.service";
+import { NgxEchartsModule } from 'ngx-echarts';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   imports: [
@@ -43,6 +45,10 @@ import { AnalyticsService } from "../../shared/services/dashboard/analytics.serv
     TableModule,
     MultiSelectModule,
     ToastModule,
+    DragDropModule,
+    NgxEchartsModule.forRoot({
+      echarts: () => import('echarts')
+    })
   ],
   providers: [
   ],

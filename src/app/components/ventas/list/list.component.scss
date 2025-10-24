@@ -1365,6 +1365,71 @@ $filter-border-color: #e0e0e0;
   }
 }
 
+// Responsive paginator para móviles
+:host ::ng-deep .responsive-paginator {
+  .p-paginator {
+    padding: 0.5rem 0.5rem;
+    flex-wrap: wrap;
+
+    .p-paginator-left-content,
+    .p-paginator-right-content {
+      margin: 0.25rem 0;
+    }
+
+    .p-paginator-current {
+      font-size: 0.75rem;
+      margin-right: 0.5rem;
+    }
+
+    .p-paginator-rpp-options {
+      display: none;
+
+      @media (min-width: 576px) {
+        display: block;
+      }
+    }
+
+    .p-paginator-pages {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+
+      @media (max-width: 360px) {
+        .p-paginator-page {
+          min-width: 1.75rem;
+          height: 1.75rem;
+          font-size: 0.65rem;
+          padding: 0.1rem;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .p-paginator-page {
+          min-width: 2rem;
+          height: 2rem;
+          font-size: 0.75rem;
+        }
+      }
+    }
+
+    .p-paginator-first,
+    .p-paginator-prev,
+    .p-paginator-next,
+    .p-paginator-last {
+      min-width: 2rem;
+      height: 2rem;
+      padding: 0.35rem 0.5rem;
+      font-size: 0.85rem;
+
+      @media (max-width: 576px) {
+        min-width: 1.75rem;
+        height: 1.75rem;
+        padding: 0.25rem 0.35rem;
+      }
+    }
+  }
+}
+
 // Estilo para controles multiselect
 :host ::ng-deep .p-multiselect-panel .p-multiselect-items .p-multiselect-item {
   font-size: 0.85rem;
@@ -2813,14 +2878,48 @@ $filter-border-color: #e0e0e0;
   }
 }
 
-// Responsive para la fila de resumen
-@media (max-width: 768px) {
+// Responsive para la fila de resumen - Tablets y más pequeño
+@media (max-width: 992px) {
   :host ::ng-deep .p-datatable .summary-row {
     .summary-cell {
-      padding: 0.5rem 0.25rem !important;
+      padding: 0.5rem 0.3rem !important;
     }
 
     .summary-content {
+      gap: 0.2rem;
+
+      .summary-label {
+        font-size: 0.65rem;
+      }
+
+      .summary-value {
+        font-size: 0.8rem;
+
+        &.total-value {
+          font-size: 0.95rem;
+        }
+      }
+    }
+
+    .mini-badge {
+      min-width: 18px;
+      height: 18px;
+      font-size: 0.6rem !important;
+      padding: 0.08rem 0.25rem !important;
+    }
+  }
+}
+
+// Responsive para tablets pequeños
+@media (max-width: 768px) {
+  :host ::ng-deep .p-datatable .summary-row {
+    .summary-cell {
+      padding: 0.4rem 0.25rem !important;
+    }
+
+    .summary-content {
+      gap: 0.15rem;
+
       .summary-label {
         font-size: 0.6rem;
       }
@@ -2837,27 +2936,72 @@ $filter-border-color: #e0e0e0;
     .mini-badge {
       min-width: 16px;
       height: 16px;
-      font-size: 0.6rem !important;
+      font-size: 0.55rem !important;
       padding: 0.05rem 0.2rem !important;
     }
   }
 }
 
-@media (max-width: 576px) {
+// Responsive para dispositivos móviles pequeños (< 576px)
+@media (max-width: 575px) {
   :host ::ng-deep .p-datatable .summary-row {
+    background: linear-gradient(135deg, #f0f2f5 0%, #e8eaed 100%) !important;
+    padding: 0.25rem 0 !important;
+
+    .summary-cell {
+      padding: 0.35rem 0.2rem !important;
+      border-right-width: 0.5px !important;
+    }
+
     .summary-content {
       gap: 0.1rem;
 
       .summary-label {
         font-size: 0.55rem;
         line-height: 1.1;
+        font-weight: 600;
       }
 
       .summary-value {
         font-size: 0.7rem;
+        line-height: 1.2;
 
         &.total-value {
           font-size: 0.8rem;
+          font-weight: 800;
+        }
+      }
+    }
+
+    .mini-badge {
+      min-width: 15px;
+      height: 15px;
+      font-size: 0.5rem !important;
+      padding: 0.05rem 0.15rem !important;
+    }
+  }
+}
+
+// Extra small devices (< 360px)
+@media (max-width: 359px) {
+  :host ::ng-deep .p-datatable .summary-row {
+    .summary-cell {
+      padding: 0.3rem 0.15rem !important;
+    }
+
+    .summary-content {
+      gap: 0.08rem;
+
+      .summary-label {
+        font-size: 0.5rem;
+        letter-spacing: 0;
+      }
+
+      .summary-value {
+        font-size: 0.65rem;
+
+        &.total-value {
+          font-size: 0.75rem;
         }
       }
 
@@ -4048,5 +4192,665 @@ $filter-border-color: #e0e0e0;
   &:hover {
     max-width: 180px;
     padding: 0.3rem 0.6rem !important;
+  }
+}
+
+/* ==========================================
+   MOBILE OPTIMIZATION - VENTAS LIST
+   Touch targets, input font sizes, spacing
+   ========================================== */
+
+@media (max-width: 768px) {
+  /* Fix 1: Table Opciones buttons - min-height and min-width */
+  .btn-outline-primary.btn-sm {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  /* Fix 2: Table Duplicar buttons - min-height and min-width */
+  .btn-outline-success.btn-sm {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 0.5rem 0.75rem !important;
+  }
+
+  /* Fix 3: Row toggle/expand button - PrimeNG button-sm */
+  .p-button.p-button-sm {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Fix 4: Modal close button */
+  .btn-close {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    padding: 0.5rem !important;
+  }
+
+  /* Fix 5: Modal footer cancel button */
+  .btn.btn-secondary.btn-sm {
+    min-height: 44px !important;
+    padding: 10px 20px !important;
+  }
+
+  /* Fix 6: Option buttons in mobile context */
+  .option-btn {
+    padding: 14px 16px !important;
+    min-height: 48px !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* Fix 7: Local search clear button */
+  .btn-outline-secondary.btn-sm {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Fix 8: Local search input - prevent iOS zoom */
+  .form-control.form-control-sm {
+    font-size: 16px !important;
+  }
+
+  /* Fix 9: All filter inputs prevent iOS zoom */
+  .p-inputtext {
+    font-size: 16px !important;
+  }
+
+  input[type="text"] {
+    font-size: 16px !important;
+  }
+
+  input[type="email"] {
+    font-size: 16px !important;
+  }
+
+  input[type="number"] {
+    font-size: 16px !important;
+  }
+}
+
+@media (max-width: 576px) {
+  /* Extra small screen adjustments */
+  .btn-outline-primary.btn-sm,
+  .btn-outline-success.btn-sm,
+  .btn-outline-secondary.btn-sm,
+  .btn.btn-secondary.btn-sm,
+  .btn-close {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  .option-btn {
+    padding: 12px 14px !important;
+    min-height: 44px !important;
+  }
+
+  /* Ensure inputs remain readable on tiny screens */
+  .form-control,
+  .p-inputtext,
+  input[type="text"],
+  input[type="email"],
+  input[type="number"] {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* =====================================================
+   MOBILE DATA & CONTROLS OPTIMIZATION (768px and below)
+   ===================================================== */
+
+@media (max-width: 768px) {
+  /* === SECTION 1: HIDE UNNECESSARY CONTROLS === */
+
+  /* Export buttons - hide completely */
+  [exportButtonTooltip],
+  [export-action],
+  .export-button,
+  .export-action {
+    display: none !important;
+  }
+
+  /* Column selector - hide completely */
+  [showColumnSelector],
+  .column-selector-btn,
+  .p-datatable-globalfilter-container {
+    display: none !important;
+  }
+
+  /* Status filters section - hide if exists */
+  .status-filter-section {
+    display: none !important;
+  }
+
+  /* === SECTION 2: HIDE METRICS BREADCRUMB PANEL === */
+
+  .metrics-breadcrumb-panel {
+    display: none !important;
+  }
+
+  /* === SECTION 3: HIDE 19 NON-ESSENTIAL COLUMNS === */
+
+  /* Financial columns (7 columns) */
+  .col-valorBruto,
+  .col-descuento,
+  .col-domicilio,
+  .col-subtotal,
+  .col-totalImpuesto,
+  .col-anticipo,
+  .col-faltaPorPagar {
+    display: none !important;
+  }
+
+  /* Address columns (5 columns) */
+  .col-ciudad,
+  .col-zonaCobro,
+  .col-formaEntrega,
+  .col-horarioEntrega,
+  .col-fechaYHorarioDespachado {
+    display: none !important;
+  }
+
+  /* Operational columns (7 columns) */
+  .col-channel,
+  .col-vendedor,
+  .col-ultimaImpresion,
+  .col-despachador,
+  .col-transportador,
+  .col-referencia,
+  .col-validacion {
+    display: none !important;
+  }
+
+  /* === SECTION 4: OPTIMIZE 8 ESSENTIAL COLUMNS FOR MOBILE === */
+
+  /* Reduce padding and font size for compact table */
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem 0.25rem !important;
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  /* Essential column widths */
+  .col-detalles {
+    width: 40px;
+    min-width: 40px;
+    padding: 0.5rem 0.2rem !important;
+  }
+
+  .col-nroPedido {
+    min-width: 80px;
+    word-break: break-word;
+  }
+
+  .col-cliente {
+    min-width: 120px;
+    word-break: break-word;
+  }
+
+  /* Total amount - right aligned */
+  .total-cell,
+  .col-total {
+    min-width: 90px;
+    text-align: right;
+    font-weight: 500;
+  }
+
+  /* Status badges - ensure visibility */
+  .col-estadoPago,
+  .col-estadoProceso {
+    min-width: 100px;
+
+    .p-badge {
+      font-size: 0.75rem;
+      padding: 0.4rem 0.6rem !important;
+    }
+  }
+
+  /* Delivery date column */
+  .fecha-cell,
+  .col-fechaEntrega {
+    min-width: 90px;
+    word-break: break-word;
+  }
+
+  /* Options button - maintain touch target */
+  .options-cell {
+    width: 80px !important;
+    padding: 0.5rem 0.25rem !important;
+    text-align: center;
+
+    button {
+      min-width: 44px !important;
+      min-height: 44px !important;
+      padding: 8px 6px !important;
+    }
+  }
+
+  /* Expand button - maintain touch target */
+  .p-datatable .p-datatable-tbody > tr > td:first-child button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  /* Table header styling */
+  .p-datatable .p-datatable-thead > tr > th {
+    background-color: #f8f9fa !important;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Prevent horizontal scroll - ensure table fits */
+  .p-datatable {
+    width: 100% !important;
+    overflow-x: auto !important;
+
+    &.p-datatable-scrollable {
+      .p-datatable-wrapper {
+        overflow-x: auto !important;
+      }
+    }
+  }
+
+  /* Badge optimizations for mobile */
+  .p-badge {
+    display: inline-block;
+    white-space: nowrap;
+  }
+
+  /* Ensure row height is consistent */
+  .p-datatable .p-datatable-tbody > tr {
+    height: auto;
+  }
+
+  .p-datatable .p-datatable-tbody > tr > td {
+    vertical-align: middle;
+  }
+}
+
+/* === EXTRA SMALL SCREENS (576px and below) === */
+
+@media (max-width: 576px) {
+  /* Further compact sizing for very small screens */
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.2rem !important;
+  }
+
+  /* Adjust column widths for extra small */
+  .col-nroPedido {
+    min-width: 70px;
+    font-size: 0.75rem;
+  }
+
+  .col-cliente {
+    min-width: 100px;
+    font-size: 0.75rem;
+  }
+
+  .total-cell,
+  .col-total {
+    min-width: 80px;
+    font-size: 0.8rem;
+  }
+
+  .col-estadoPago,
+  .col-estadoProceso {
+    min-width: 90px;
+
+    .p-badge {
+      font-size: 0.65rem;
+      padding: 0.3rem 0.5rem !important;
+    }
+  }
+
+  .fecha-cell,
+  .col-fechaEntrega {
+    min-width: 80px;
+    font-size: 0.75rem;
+  }
+
+  /* Keep buttons touch-friendly even on extra small screens */
+  .options-cell button,
+  .p-datatable .p-datatable-tbody > tr > td:first-child button {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  /* Hide expand button text if any, keep icon only */
+  .p-datatable .p-datatable-tbody > tr > td:first-child button span {
+    font-size: 0.875rem;
+  }
+}
+
+/* === MOBILE OPTIMIZATION (992px and below - Hide metrics panel) === */
+@media (max-width: 992px) {
+  /* Hide metrics panel on tablets and smaller */
+  .metrics-breadcrumb-panel {
+    display: none;
+  }
+
+  /* Optimize padding and margins for small screens */
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.5rem 0.3rem !important;
+    font-size: 0.65rem;
+  }
+
+  /* Compact form styling for mobile filters */
+  .local-search-container {
+    margin-bottom: 1rem !important;
+
+    .form-label {
+      font-size: 0.75rem !important;
+    }
+
+    .form-control {
+      font-size: 0.65rem !important;
+      padding: 0.375rem 0.5rem !important;
+      height: 32px !important;
+    }
+
+    .btn-sm {
+      padding: 0.25rem 0.5rem !important;
+      font-size: 0.65rem !important;
+      height: 32px !important;
+    }
+  }
+
+  /* Mobile-optimized button styling */
+  .options-cell {
+    button {
+      padding: 0.4rem 0.25rem !important;
+      min-height: 36px !important;
+      min-width: 36px !important;
+      font-size: 0.7rem;
+
+      &.d-sm-none {
+        display: none !important;
+      }
+
+      i {
+        font-size: 0.875rem;
+      }
+    }
+  }
+
+  /* Badge optimization for mobile */
+  .modern-badge {
+    font-size: 0.65rem !important;
+    padding: 0.25rem 0.4rem !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    .status-icon {
+      font-size: 0.65rem;
+      margin-right: 0.25rem;
+    }
+  }
+
+  /* Row expansion cards - optimized for mobile */
+  .products-expansion-card {
+    margin: 0 !important;
+    border: 1px solid #e9ecef !important;
+
+    .card-header {
+      padding: 0.75rem !important;
+      background-color: #f8f9fa !important;
+
+      .card-title {
+        font-size: 0.75rem !important;
+      }
+
+      .badge {
+        font-size: 0.65rem !important;
+        padding: 0.25rem 0.5rem !important;
+      }
+    }
+
+    .card-body {
+      padding: 0.75rem !important;
+    }
+  }
+
+  /* Product item styling in expansion */
+  .product-item-row {
+    margin-bottom: 0.75rem !important;
+    padding: 0.75rem !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 4px !important;
+    display: flex !important;
+    gap: 0.75rem !important;
+    align-items: flex-start !important;
+
+    .product-image {
+      flex-shrink: 0;
+
+      .product-thumb {
+        width: 50px !important;
+        height: 50px !important;
+        object-fit: cover;
+        border-radius: 4px;
+      }
+    }
+
+    .product-details {
+      flex: 1;
+      min-width: 0;
+
+      .product-name {
+        font-size: 0.75rem !important;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+        line-height: 1.2;
+        word-break: break-word;
+      }
+
+      .product-meta {
+        font-size: 0.65rem !important;
+        color: #6c757d;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+    }
+  }
+
+  /* Currency display on mobile */
+  .td-money {
+    font-size: 0.75rem !important;
+    font-weight: 600;
+  }
+
+  .total-cell {
+    .total-amount {
+      font-size: 0.8rem !important;
+      font-weight: 700;
+      color: #2196f3;
+    }
+  }
+
+  /* Client name truncation on mobile */
+  .cliente-cell {
+    .cliente-info {
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      display: inline-block;
+      font-size: 0.75rem;
+      cursor: pointer;
+
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  /* Date formatting on mobile */
+  .fecha-cell {
+    font-size: 0.7rem !important;
+    font-family: 'Courier New', monospace;
+  }
+
+  /* Ensure estado badges are compact */
+  .estado-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .frozen-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.6rem;
+      color: #6c757d;
+
+      .frozen-icon {
+        font-size: 0.7rem;
+      }
+
+      .frozen-text {
+        display: none;
+
+        @media (min-width: 768px) {
+          display: inline;
+        }
+      }
+    }
+  }
+}
+
+/* === TABLET OPTIMIZATION (768px - 992px) === */
+@media (min-width: 768px) and (max-width: 992px) {
+  .p-datatable .p-datatable-thead > tr > th,
+  .p-datatable .p-datatable-tbody > tr > td {
+    font-size: 0.7rem;
+    padding: 0.5rem 0.3rem !important;
+  }
+
+  .modern-badge {
+    font-size: 0.7rem !important;
+  }
+
+  .options-cell button {
+    padding: 0.4rem 0.3rem !important;
+    min-height: 38px !important;
+    min-width: 38px !important;
+  }
+}
+
+/* === SMALL PHONES (320px - 576px) === */
+@media (max-width: 576px) {
+  /* Ultra-compact layout for small phones */
+  .metrics-breadcrumb-panel {
+    display: none !important;
+  }
+
+  .p-datatable {
+    font-size: 0.6rem !important;
+
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td {
+      padding: 0.35rem 0.2rem !important;
+      font-size: 0.6rem !important;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .p-datatable-tbody > tr > td {
+      vertical-align: middle;
+    }
+  }
+
+  /* Ultra-small badge sizing */
+  .modern-badge {
+    font-size: 0.6rem !important;
+    padding: 0.2rem 0.35rem !important;
+
+    .status-icon {
+      font-size: 0.55rem !important;
+      margin-right: 0.15rem;
+    }
+  }
+
+  /* Minimal button sizing */
+  .options-cell {
+    button {
+      padding: 0.3rem 0.2rem !important;
+      min-height: 32px !important;
+      min-width: 32px !important;
+      font-size: 0.6rem;
+
+      i {
+        font-size: 0.75rem;
+      }
+    }
+  }
+
+  /* Hide all text labels on extra small screens, keep icons only */
+  .d-md-inline {
+    display: none !important;
+  }
+
+  /* Compact expansion card styling */
+  .products-expansion-card {
+    .card-header {
+      padding: 0.5rem !important;
+
+      .card-title {
+        font-size: 0.65rem !important;
+      }
+    }
+
+    .card-body {
+      padding: 0.5rem !important;
+    }
+  }
+
+  .product-item-row {
+    margin-bottom: 0.5rem !important;
+    padding: 0.5rem !important;
+    gap: 0.5rem !important;
+
+    .product-image .product-thumb {
+      width: 40px !important;
+      height: 40px !important;
+    }
+
+    .product-details {
+      .product-name {
+        font-size: 0.65rem !important;
+      }
+
+      .product-meta {
+        font-size: 0.6rem !important;
+      }
+    }
+  }
+
+  /* Client info on small screens */
+  .cliente-cell {
+    .cliente-info {
+      max-width: 80px;
+      font-size: 0.65rem;
+    }
+  }
+
+  /* Currency display ultra-compact */
+  .td-money {
+    font-size: 0.65rem !important;
+  }
+
+  .total-cell .total-amount {
+    font-size: 0.7rem !important;
   }
 }

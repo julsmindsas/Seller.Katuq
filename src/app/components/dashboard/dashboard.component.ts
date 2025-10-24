@@ -1,13 +1,14 @@
 import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
-import * as ApexCharts from 'apexcharts';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { forkJoin, interval, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { VentasService } from '../../shared/services/ventas/ventas.service';
 import { KatuqintelligenceService } from '../../shared/services/katuqintelligence/katuqintelligence.service';
 import { AnalyticsService } from '../../shared/services/dashboard/analytics.service';
 import { TourService } from '../../shared/services/tour.service';
-import { 
-  DashboardCoreResponse, 
+import { EChartsOption } from 'echarts';
+import {
+  DashboardCoreResponse,
   DashboardDetailsResponse,
   FlujoEstadosResponse,
   TiemposProcesamientoResponse,
@@ -87,12 +88,21 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   fechaInicial: string;
   fechaFinal: string;
 
-  // === Charts ===
-  chartVentasMes: ApexCharts | null = null;
-  chartMasVendidos: ApexCharts | null = null;
-  chartMenosVendidos: ApexCharts | null = null;
-  chartCategorias: ApexCharts | null = null;
-  chartMetodosPago: ApexCharts | null = null;
+  // === ECharts Options ===
+  ventasChartOption: EChartsOption = {};
+  topProductosChartOption: EChartsOption = {};
+  menosVendidosChartOption: EChartsOption = {};
+  categoriasChartOption: EChartsOption = {};
+  metodosPagoChartOption: EChartsOption = {};
+
+  // === Drag & Drop Widget Management ===
+  chartWidgets = [
+    { id: 'ventas', title: 'Tendencia de Ventas', icon: 'chart-area', color: '#0078d4' },
+    { id: 'topProductos', title: 'Top 10 Productos', icon: 'trophy-star', color: '#107c10' },
+    { id: 'menosVendidos', title: 'Productos con Oportunidad', icon: 'exclamation-triangle', color: '#ffb900' },
+    { id: 'categorias', title: 'Distribución por Categorías', icon: 'chart-pie', color: '#00b7c3' },
+    { id: 'metodosPago', title: 'Métodos de Pago', icon: 'credit-card', color: '#8764b8' }
+  ];
 
   // === K.A.I. Analysis (mantener funcionalidad existente) ===
   ventasMesCheck = false;
@@ -160,9 +170,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.verificarConfiguracionEndpoints();
     this.configurarModulosPorRol();
     this.cargarPreferenciasAcordeon();
-    // ✅ CAMBIO: No cargar datos automáticamente al inicializar
-    // Los datos se cargarán a demanda cuando el usuario lo solicite
-    // this.cargarDatos();
+    this.loadWidgetOrder();
+    // Cargar datos al inicializar el dashboard
+    this.cargarDatos();
     this.initializeRealTimeUpdates();
   }
 
@@ -177,7 +187,39 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
-    this.destroyAllCharts();
+  }
+
+  // === Drag & Drop Handler ===
+  dropWidget(event: CdkDragDrop<any[]>): void {
+    moveItemInArray(this.chartWidgets, event.previousIndex, event.currentIndex);
+    // Save widget order to localStorage
+    this.saveWidgetOrder();
+  }
+
+  private saveWidgetOrder(): void {
+    try {
+      const order = this.chartWidgets.map(w => w.id);
+      localStorage.setItem('dashboard_widget_order', JSON.stringify(order));
+    } catch (error) {
+      console.warn('Could not save widget order:', error);
+    }
+  }
+
+  private loadWidgetOrder(): void {
+    try {
+      const savedOrder = localStorage.getItem('dashboard_widget_order');
+      if (savedOrder) {
+        const order = JSON.parse(savedOrder);
+        const reordered = order.map((id: string) =>
+          this.chartWidgets.find(w => w.id === id)
+        ).filter(Boolean);
+        if (reordered.length === this.chartWidgets.length) {
+          this.chartWidgets = reordered;
+        }
+      }
+    } catch (error) {
+      console.warn('Could not load widget order:', error);
+    }
   }
 
   private initializeDates(): void {
@@ -469,148 +511,95 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const chartContainer = document.querySelector("#chart3");
-    if (!chartContainer) {
-      console.error('Contenedor #chart3 no encontrado para gráfico de ventas');
-      // Reintentar en 500ms más
-      setTimeout(() => this.renderVentasChart(), 500);
-      return;
-    }
-
     const categories = Object.keys(this.topVentasPorDia);
     const seriesData = categories.map(key => this.topVentasPorDia[key]?.totalVentas || 0);
 
-    if (this.chartVentasMes) {
-      this.chartVentasMes.destroy();
-      this.chartVentasMes = null;
-    }
-
-    const options = {
-      chart: {
-        type: 'area',
-        height: 350,
-        toolbar: { 
-          show: true,
-          tools: {
-            download: true,
-            zoom: true,
-            zoomin: true,
-            zoomout: true,
-            pan: true,
-            reset: true
+    this.ventasChartOption = {
+      textStyle: {
+        color: '#1f2937',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        textStyle: {
+          color: '#1f2937',
+          fontSize: 13
+        },
+        formatter: (params: any) => {
+          const data = params[0];
+          return `<strong>${data.name}</strong><br/>Ventas: $${data.value.toLocaleString('es-CO')}`;
+        }
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: categories.reverse(),
+        axisLine: {
+          lineStyle: {
+            color: '#e2e8f0'
           }
         },
-        animations: { 
-          enabled: true, 
-          easing: 'easeinout', 
-          speed: 1200,
-          animateGradually: {
-            enabled: true,
-            delay: 150
+        axisLabel: {
+          color: '#64748b',
+          fontSize: 11
+        }
+      },
+      yAxis: {
+        type: 'value',
+        axisLine: {
+          show: false
+        },
+        splitLine: {
+          lineStyle: {
+            color: '#e2e8f0',
+            type: 'dashed'
           }
         },
-        background: 'transparent'
+        axisLabel: {
+          color: '#64748b',
+          fontSize: 11,
+          formatter: (value: number) => '$' + Math.floor(value / 1000) + 'K'
+        }
       },
       series: [{
-        name: 'Total Ventas',
-        data: seriesData,
-      }],
-      xaxis: {
-        categories,
-        reversed: true,
-        labels: { 
-          style: { 
-            colors: '#64748b',
-            fontSize: '12px',
-            fontWeight: 500
+        name: 'Ventas',
+        type: 'line',
+        smooth: true,
+        symbol: 'circle',
+        symbolSize: 6,
+        lineStyle: {
+          color: '#0078d4',
+          width: 3
+        },
+        itemStyle: {
+          color: '#0078d4'
+        },
+        areaStyle: {
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(0, 120, 212, 0.3)' },
+              { offset: 1, color: 'rgba(0, 120, 212, 0.05)' }
+            ]
           }
         },
-        axisBorder: {
-          show: false
-        },
-        axisTicks: {
-          show: false
-        }
-      },
-      yaxis: {
-        labels: {
-          formatter: (value: number) => '$' + Math.floor(value / 1000) + 'K',
-          style: { 
-            colors: '#64748b',
-            fontSize: '12px',
-            fontWeight: 500
-          }
-        }
-      },
-      stroke: { 
-        curve: 'smooth', 
-        width: 4,
-        lineCap: 'round'
-      },
-      fill: {
-        type: 'gradient',
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.8,
-          opacityTo: 0.1,
-          stops: [0, 90, 100],
-          colorStops: [
-            {
-              offset: 0,
-              color: COLORES_DEFAULT.primary,
-              opacity: 0.8
-            },
-            {
-              offset: 100,
-              color: COLORES_DEFAULT.secondary,
-              opacity: 0.1
-            }
-          ]
-        }
-      },
-      colors: [COLORES_DEFAULT.primary],
-      tooltip: { 
-        theme: 'light',
-        style: {
-          fontSize: '14px',
-          fontFamily: 'Inter, sans-serif'
-        },
-        y: { 
-          formatter: (value: number) => '$' + value.toLocaleString('es-CO'),
-          title: {
-            formatter: () => 'Ventas: '
-          }
-        },
-        marker: {
-          show: true
-        }
-      },
-      grid: { 
-        borderColor: '#e2e8f0', 
-        strokeDashArray: 3,
-      xaxis: {
-          lines: {
-            show: false
-          }
-        },
-        yaxis: {
-          lines: {
-            show: true
-          }
-        }
-      },
-      dataLabels: {
-        enabled: false
-      }
+        data: seriesData.reverse()
+      }]
     };
 
-    try {
-      this.chartVentasMes = new ApexCharts(chartContainer, options);
-      this.chartVentasMes.render();
-      console.log('✅ Gráfico de ventas renderizado exitosamente');
-    } catch (error) {
-      console.error('❌ Error renderizando gráfico de ventas:', error);
-    }
+    console.log('✅ Gráfico de ventas configurado con ECharts');
   }
 
   private renderDetailCharts(): void {
@@ -622,153 +611,153 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private renderTopProductsCharts(): void {
     // Productos Más Vendidos
     if (this.topProductsMasVendidos.length > 0) {
-      const chart2Container = document.querySelector('#chart2');
-      if (!chart2Container) {
-        console.error('Contenedor #chart2 no encontrado para gráfico de productos más vendidos');
-        return;
-      }
+      const productNames = this.topProductsMasVendidos.map(p => p.nombre || p.referencia || 'Sin nombre');
+      const productData = this.topProductsMasVendidos.map(p => p.cantidadVendida || 0);
 
-      if (this.chartMasVendidos) {
-        this.chartMasVendidos.destroy();
-        this.chartMasVendidos = null;
-      }
-
-      try {
-        this.chartMasVendidos = new ApexCharts(chart2Container, {
-          chart: { 
-            type: 'bar', 
-            height: 350, 
-            toolbar: { 
-              show: true,
-              tools: {
-                download: true,
-                zoom: false,
-                pan: false
-              }
-            },
-            animations: {
-              enabled: true,
-              easing: 'easeinout',
-              speed: 800,
-              animateGradually: {
-                enabled: true,
-                delay: 150
-              }
-            }
+      this.topProductosChartOption = {
+        textStyle: {
+          color: '#1f2937',
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
           },
-          colors: [COLORES_DEFAULT.tertiary, COLORES_DEFAULT.primary, COLORES_DEFAULT.secondary],
-          series: [{
-            name: 'Unidades Vendidas',
-            data: this.topProductsMasVendidos.map(p => p.cantidadVendida || 0),
-          }],
-          xaxis: {
-            categories: this.topProductsMasVendidos.map(p => p.nombre || p.referencia || 'Sin nombre'),
-        labels: {
-              show: true,
-              rotate: -45,
-              style: {
-                colors: '#64748b',
-                fontSize: '11px',
-                fontWeight: 500
-              },
-              maxHeight: 60
-            },
-            axisBorder: {
-              show: false
-            },
-            axisTicks: {
-              show: false
-        }
-      },
-      yaxis: {
-        labels: {
-              style: {
-                colors: '#64748b',
-                fontSize: '12px',
-                fontWeight: 500
-              }
-            }
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          textStyle: {
+            color: '#1f2937',
+            fontSize: 13
           },
-          plotOptions: { 
-            bar: { 
-              borderRadius: 8, 
-              distributed: true,
-              horizontal: false,
-              columnWidth: '75%',
-              borderRadiusApplication: 'end'
-        }
-      },
-      tooltip: {
-            theme: 'light',
-            style: {
-              fontSize: '14px',
-              fontFamily: 'Inter, sans-serif'
-            },
-            y: {
-              formatter: (value: number) => value + ' unidades',
-              title: {
-                formatter: () => 'Vendidas: '
-              }
-        }
-      },
-      grid: {
-            borderColor: '#e2e8f0',
-            strokeDashArray: 3,
-            yaxis: {
-              lines: {
-                show: true
-              }
-            },
-            xaxis: {
-              lines: {
-                show: false
-              }
-            }
-          },
-          dataLabels: {
-            enabled: false
+          formatter: (params: any) => {
+            const data = params[0];
+            return `<strong>${data.name}</strong><br/>Unidades: ${data.value}`;
           }
-        });
-        this.chartMasVendidos.render();
-        console.log('✅ Gráfico de productos más vendidos renderizado');
-      } catch (error) {
-        console.error('❌ Error renderizando gráfico de productos más vendidos:', error);
-      }
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '15%',
+          top: '3%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: productNames,
+          axisLine: {
+            lineStyle: {
+              color: '#e2e8f0'
+            }
+          },
+          axisLabel: {
+            color: '#64748b',
+            fontSize: 10,
+            rotate: 45,
+            interval: 0
+          }
+        },
+        yAxis: {
+          type: 'value',
+          axisLine: {
+            show: false
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#e2e8f0',
+              type: 'dashed'
+            }
+          },
+          axisLabel: {
+            color: '#64748b',
+            fontSize: 11
+          }
+        },
+        series: [{
+          name: 'Unidades Vendidas',
+          type: 'bar',
+          barWidth: '60%',
+          itemStyle: {
+            color: '#107c10',
+            borderRadius: [4, 4, 0, 0]
+          },
+          emphasis: {
+            itemStyle: {
+              color: '#0b5c0c'
+            }
+          },
+          data: productData
+        }]
+      };
+
+      console.log('✅ Gráfico de productos más vendidos configurado');
     }
 
     // Productos Menos Vendidos
     if (this.topProductosMenosVendidos.length > 0) {
-      const chart1Container = document.querySelector('#chart1');
-      if (!chart1Container) {
-        console.error('Contenedor #chart1 no encontrado para gráfico de productos menos vendidos');
-        return;
-      }
+      const productNames = this.topProductosMenosVendidos.map(p => p.nombre || p.referencia || 'Sin nombre');
+      const productData = this.topProductosMenosVendidos.map(p => p.cantidadVendida || 0);
 
-      if (this.chartMenosVendidos) {
-        this.chartMenosVendidos.destroy();
-        this.chartMenosVendidos = null;
-      }
-
-      try {
-        this.chartMenosVendidos = new ApexCharts(chart1Container, {
-          chart: { type: 'bar', height: 200, toolbar: { show: false } },
-          colors: [COLORES_DEFAULT.quaternary],
-          series: [{
-            name: 'Menos Vendidos',
-            data: this.topProductosMenosVendidos.map(p => p.cantidadVendida || 0),
-          }],
-          xaxis: {
-            categories: this.topProductosMenosVendidos.map(p => p.nombre || p.referencia || 'Sin nombre'),
-            labels: { show: false }
+      this.menosVendidosChartOption = {
+        textStyle: {
+          color: '#1f2937',
+          fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+        },
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
           },
-          plotOptions: { bar: { borderRadius: 4, distributed: true } },
-          tooltip: { theme: 'dark' },
-        });
-        this.chartMenosVendidos.render();
-        console.log('✅ Gráfico de productos menos vendidos renderizado');
-      } catch (error) {
-        console.error('❌ Error renderizando gráfico de productos menos vendidos:', error);
-      }
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderColor: '#e2e8f0',
+          borderWidth: 1,
+          textStyle: {
+            color: '#1f2937',
+            fontSize: 13
+          }
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          top: '3%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: productNames,
+          show: false
+        },
+        yAxis: {
+          type: 'value',
+          axisLine: {
+            show: false
+          },
+          splitLine: {
+            lineStyle: {
+              color: '#e2e8f0',
+              type: 'dashed'
+            }
+          },
+          axisLabel: {
+            color: '#64748b',
+            fontSize: 11
+          }
+        },
+        series: [{
+          name: 'Unidades',
+          type: 'bar',
+          barWidth: '50%',
+          itemStyle: {
+            color: '#ffb900',
+            borderRadius: [4, 4, 0, 0]
+          },
+          data: productData
+        }]
+      };
+
+      console.log('✅ Gráfico de productos menos vendidos configurado');
     }
   }
 
@@ -778,125 +767,71 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const container = document.querySelector('#chart4');
-    if (!container) {
-      console.warn('Contenedor #chart4 no encontrado para gráfico de categorías');
-      return;
-    }
+    const chartData = this.detailsData.categorias.map(c => ({
+      name: c.categoria,
+      value: c.porcentaje
+    }));
 
-    if (this.chartCategorias) {
-      this.chartCategorias.destroy();
-      this.chartCategorias = null;
-    }
-
-    const options = {
-      chart: {
-        type: 'donut', 
-        height: 350,
-        animations: {
-          enabled: true,
-          easing: 'easeinout',
-          speed: 800,
-          animateGradually: {
-            enabled: true,
-            delay: 150
-          }
-        }
-      },
-      series: this.detailsData.categorias.map(c => c.porcentaje),
-      labels: this.detailsData.categorias.map(c => c.categoria),
-      colors: [
-        COLORES_DEFAULT.primary,
-        COLORES_DEFAULT.secondary,
-        COLORES_DEFAULT.tertiary,
-        COLORES_DEFAULT.quaternary,
-        COLORES_DEFAULT.quinquenary
-      ],
-      legend: { 
-        position: 'bottom',
-        fontSize: '13px',
-        fontFamily: 'Inter, sans-serif',
-        fontWeight: 500,
-        labels: {
-          colors: '#64748b'
-        }
-      },
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '60%',
-            labels: {
-              show: true,
-            name: {
-                show: true,
-                fontSize: '16px',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 600,
-                color: '#1f2937',
-                offsetY: -10
-            },
-            value: {
-                show: true,
-                fontSize: '24px',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 700,
-                color: '#1f2937',
-                offsetY: 16,
-                formatter: (val: string) => val + '%'
-              },
-              total: {
-                show: true,
-                showAlways: false,
-                label: 'Total',
-                fontSize: '14px',
-                fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
-                color: '#64748b',
-                formatter: () => '100%'
-              }
-            }
-          }
-        }
+    this.categoriasChartOption = {
+      textStyle: {
+        color: '#1f2937',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
       },
       tooltip: {
-        theme: 'light',
-        style: {
-          fontSize: '14px',
-          fontFamily: 'Inter, sans-serif'
+        trigger: 'item',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        textStyle: {
+          color: '#1f2937',
+          fontSize: 13
         },
-        y: {
-          formatter: (value: number, { dataPointIndex }: any) => {
-            const categoria = this.detailsData!.categorias[dataPointIndex];
-            return `$${categoria.ventas.toLocaleString('es-CO')} (${categoria.cantidad} productos)`;
-          }
+        formatter: (params: any) => {
+          const categoria = this.detailsData!.categorias[params.dataIndex];
+          return `<strong>${params.name}</strong><br/>` +
+                 `Ventas: $${categoria.ventas.toLocaleString('es-CO')}<br/>` +
+                 `Productos: ${categoria.cantidad}<br/>` +
+                 `Porcentaje: ${params.percent.toFixed(1)}%`;
         }
       },
-      dataLabels: {
-        enabled: true,
-        style: {
-          fontSize: '12px',
-          fontFamily: 'Inter, sans-serif',
-          fontWeight: 600,
-          colors: ['#ffffff']
-        },
-        dropShadow: {
-          enabled: true,
-          top: 1,
-          left: 1,
-          blur: 1,
-          color: '#000',
-          opacity: 0.45
+      legend: {
+        orient: 'horizontal',
+        bottom: '0%',
+        textStyle: {
+          color: '#1f2937',
+          fontSize: 11
         }
-      }
+      },
+      series: [{
+        name: 'Categorías',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        avoidLabelOverlap: false,
+        itemStyle: {
+          borderRadius: 4,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false,
+          position: 'center'
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 16,
+            fontWeight: 'bold'
+          }
+        },
+        labelLine: {
+          show: false
+        },
+        data: chartData,
+        color: ['#0078d4', '#107c10', '#ffb900', '#d13438', '#00b7c3', '#8764b8']
+      }]
     };
 
-    try {
-      this.chartCategorias = new ApexCharts(container, options);
-      this.chartCategorias.render();
-      console.log('✅ Gráfico de categorías renderizado exitosamente');
-    } catch (error) {
-      console.error('❌ Error renderizando gráfico de categorías:', error);
-    }
+    console.log('✅ Gráfico de categorías configurado');
   }
 
   private renderMetodosPagoChart(): void {
@@ -905,40 +840,72 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const container = document.querySelector('#chart5');
-    if (!container) {
-      console.warn('Contenedor #chart5 no encontrado para gráfico de métodos de pago');
-      return;
-    }
+    const chartData = this.detailsData.metodosPago.map(m => ({
+      name: m.metodo,
+      value: m.porcentaje
+    }));
 
-    if (this.chartMetodosPago) {
-      this.chartMetodosPago.destroy();
-      this.chartMetodosPago = null;
-    }
-
-    const options = {
-      chart: { type: 'pie', height: 250 },
-      series: this.detailsData.metodosPago.map(m => m.porcentaje),
-      labels: this.detailsData.metodosPago.map(m => m.metodo),
-      colors: Object.values(COLORES_DEFAULT),
-      legend: { position: 'right' },
+    this.metodosPagoChartOption = {
+      textStyle: {
+        color: '#1f2937',
+        fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      },
       tooltip: {
-        y: {
-          formatter: (value: number, { dataPointIndex }: any) => {
-            const metodo = this.detailsData!.metodosPago[dataPointIndex];
-            return `${metodo.cantidad} transacciones (${value.toFixed(1)}%)`;
-          }
+        trigger: 'item',
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderColor: '#e2e8f0',
+        borderWidth: 1,
+        textStyle: {
+          color: '#1f2937',
+          fontSize: 13
+        },
+        formatter: (params: any) => {
+          const metodo = this.detailsData!.metodosPago[params.dataIndex];
+          return `<strong>${params.name}</strong><br/>` +
+                 `Transacciones: ${metodo.cantidad}<br/>` +
+                 `Porcentaje: ${params.percent.toFixed(1)}%`;
         }
-      }
+      },
+      legend: {
+        orient: 'vertical',
+        right: '10%',
+        top: 'center',
+        textStyle: {
+          color: '#1f2937',
+          fontSize: 11
+        }
+      },
+      series: [{
+        name: 'Métodos de Pago',
+        type: 'pie',
+        radius: '65%',
+        center: ['40%', '50%'],
+        itemStyle: {
+          borderRadius: 4,
+          borderColor: '#fff',
+          borderWidth: 2
+        },
+        label: {
+          show: false
+        },
+        emphasis: {
+          label: {
+            show: true,
+            fontSize: 14,
+            fontWeight: 'bold'
+          },
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.2)'
+          }
+        },
+        data: chartData,
+        color: ['#0078d4', '#107c10', '#ffb900', '#d13438', '#00b7c3', '#8764b8']
+      }]
     };
 
-    try {
-      this.chartMetodosPago = new ApexCharts(container, options);
-      this.chartMetodosPago.render();
-      console.log('✅ Gráfico de métodos de pago renderizado exitosamente');
-    } catch (error) {
-      console.error('❌ Error renderizando gráfico de métodos de pago:', error);
-    }
+    console.log('✅ Gráfico de métodos de pago configurado');
   }
 
   private renderAllChartsLegacy(): void {
@@ -946,15 +913,6 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.renderVentasChart();
       this.renderTopProductsCharts();
     }, 300);
-  }
-
-  private destroyAllCharts(): void {
-    [this.chartVentasMes, this.chartMasVendidos, this.chartMenosVendidos, 
-     this.chartCategorias, this.chartMetodosPago].forEach(chart => {
-      if (chart) {
-        chart.destroy();
-      }
-    });
   }
 
   /**

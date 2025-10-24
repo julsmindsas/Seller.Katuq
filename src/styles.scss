@@ -625,3 +625,98 @@ label {
 .alert {
   font-size: 0.7rem !important;
 }
+
+/* ============================================
+   MOBILE-FIRST OPTIMIZATIONS - Quick Wins
+   ============================================ */
+
+/* Prevent iOS zoom on input focus (CRITICAL) */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select,
+  .p-inputtext,
+  .p-inputnumber-input,
+  .p-dropdown .p-dropdown-label,
+  .p-multiselect .p-multiselect-label,
+  .p-calendar input {
+    font-size: 16px !important; /* iOS won't zoom if >=16px */
+  }
+}
+
+/* Global touch targets for mobile (44x44px minimum) */
+@media (max-width: 768px) {
+  .btn,
+  .p-button,
+  button,
+  a.nav-link,
+  .p-dropdown,
+  .p-multiselect {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Better touch spacing */
+  .p-button + .p-button,
+  .btn + .btn {
+    margin-left: 8px !important;
+  }
+}
+
+/* Responsive modals - full screen on mobile */
+@media (max-width: 576px) {
+  .modal-dialog:not(.modal-fullscreen) {
+    margin: 0.5rem !important;
+    max-width: calc(100% - 1rem) !important;
+  }
+
+  .p-dialog {
+    width: 95vw !important;
+    max-height: 90vh !important;
+  }
+}
+
+/* Fix iOS body scroll locking */
+body.modal-open {
+  -webkit-overflow-scrolling: touch;
+  touch-action: none;
+}
+
+/* Global responsive images */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Mobile utility classes */
+@media (max-width: 768px) {
+  .mobile-p-2 { padding: 0.5rem !important; }
+  .mobile-p-3 { padding: 1rem !important; }
+  .mobile-mb-2 { margin-bottom: 0.5rem !important; }
+  .mobile-mt-2 { margin-top: 0.5rem !important; }
+
+  /* Reduce card padding on mobile */
+  .card .card-body {
+    padding: 0.75rem !important;
+  }
+
+  /* Stack form groups tighter on mobile */
+  .form-group,
+  .mb-3 {
+    margin-bottom: 0.75rem !important;
+  }
+}
+
+/* Touch-friendly spacing for interactive elements */
+@media (max-width: 768px) {
+  .p-datatable .p-datatable-tbody > tr > td {
+    padding: 0.75rem 0.5rem !important; /* More vertical space for touch */
+  }
+
+  /* Better tap targets for checkboxes/radios */
+  .p-checkbox,
+  .p-radiobutton {
+    width: 24px !important;
+    height: 24px !important;
+  }
+}

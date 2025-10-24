@@ -1,0 +1,24 @@
+/* ============================================
+   FOOTER - MOBILE-OPTIMIZED
+   ============================================ */
+
+.footer-copyright {
+  padding: 16px 8px;
+  font-size: 0.875rem;
+
+  p {
+    margin-bottom: 0;
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 576px) {
+  .footer-copyright {
+    padding: 12px 4px;
+    font-size: 0.75rem;
+
+    p {
+      font-size: 0.75rem;
+    }
+  }
+}

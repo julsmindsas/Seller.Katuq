@@ -15,12 +15,12 @@ import { CrearClienteModalComponent } from './crear-cliente-modal/crear-cliente-
 })
 export class ClientesComponent implements OnInit, AfterViewInit {
 
-  @ViewChild('buscarPor') buscarPor: ElementRef
   @ViewChild('documentoBusqueda') documentoBusqueda: ElementRef
   @ViewChild('whatsapp') whatsapp: ElementRef
 
   @Input() clienteEdit: any;
   formulario: any;
+  tipoBusqueda: string = 'CC-NIT'; // Valor por defecto para el dropdown de búsqueda
   formularioFacturacionElectronica: any;
   formularioFacturacion: any;
   formularioEntrega: any;
@@ -96,6 +96,24 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
   async ngAfterViewInit(): Promise<void> {
     try {
+      // Si ya tenemos clienteEdit desde el @Input, usarlo directamente
+      if (this.clienteEdit && this.isEdit) {
+        console.log('Cargando cliente desde @Input:', this.clienteEdit);
+        // Dar más tiempo para que los ViewChild se inicialicen
+        setTimeout(() => {
+          if (this.documentoBusqueda && this.documentoBusqueda.nativeElement) {
+            this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
+            // Asegurar que el tipo de búsqueda esté establecido
+            if (!this.tipoBusqueda) {
+              this.tipoBusqueda = 'CC-NIT';
+            }
+            this.buscar();
+          }
+        }, 500); // Aumentar el tiempo de espera
+        return;
+      }
+
+      // Si no, intentar cargar desde IndexedDB
       // Verificar y cargar isEdit desde IndexedDB
       if (this.isEdit === null || this.isEdit === undefined || this.isEdit === false) {
         const isEditFromStore = await this.dataStore.get<boolean>('isEdit');
@@ -104,7 +122,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           await this.dataStore.remove('isEdit'); // Limpiar después de usar
         }
       }
-  
+
       // Verificar y cargar cliente desde IndexedDB
       if (!this.clienteEdit) {
         const clienteFromStore = await this.dataStore.get<any>('cliente');
@@ -113,11 +131,20 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           await this.dataStore.remove('cliente'); // Limpiar después de usar
         }
       }
-  
+
       // Si estamos en modo edición y tenemos datos del cliente
       if (this.isEdit && this.clienteEdit) {
-        this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
-        this.buscar();
+        console.log('Cargando cliente desde IndexedDB:', this.clienteEdit);
+        setTimeout(() => {
+          if (this.documentoBusqueda && this.documentoBusqueda.nativeElement) {
+            this.documentoBusqueda.nativeElement.value = this.clienteEdit.documento;
+            // Asegurar que el tipo de búsqueda esté establecido
+            if (!this.tipoBusqueda) {
+              this.tipoBusqueda = 'CC-NIT';
+            }
+            this.buscar();
+          }
+        }, 500); // Aumentar tiempo de espera
       }
     } catch (error) {
       console.error('Error al cargar datos desde IndexedDB:', error);
@@ -206,13 +233,87 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     }
   }
 
+  // Método auxiliar para cargar datos del cliente en modo edición
+  cargarDatosCliente() {
+    if (!this.clienteEdit || !this.clienteEdit.documento) {
+      console.warn('⚠️ No hay cliente para cargar');
+      return;
+    }
+
+    // Cargar los datos del cliente directamente desde el servidor
+    const data = { documento: this.clienteEdit.documento };
+
+    this.service.getClientByDocument(data).subscribe((res: any) => {
+      if (res && res.company) {
+        try {
+          this.formulario.patchValue(res);
+
+          // Establecer valores específicos del formulario
+          this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
+          this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
+          this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
+          this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
+          this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
+          this.formulario.controls['apellidos_completos'].setValue(res.apellidos_completos);
+          this.formulario.controls['nombres_completos'].setValue(res.nombres_completos);
+          this.formulario.controls['documento'].setValue(res.documento);
+          this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
+          this.formulario.controls['estado'].setValue(res.estado);
+
+          this.activarNotas = false;
+          this.verNotas();
+
+          this.datos = res;
+          this.formularioFacturacion.patchValue(res.datosFacturacionElectronica);
+          this.formularioEntrega.patchValue(res.datosEntrega);
+          this.identificarDepto();
+          this.identificarCiu();
+          this.identificarDepto1();
+          this.identificarCiu1();
+          this.encontrado = true;
+
+          if (this.formulario.value.estado == 'bloqueado') {
+            this.bloqueado = true;
+          }
+
+          console.log('✅ Cliente cargado exitosamente en modo edición');
+        } catch (error) {
+          console.error('❌ Error cargando datos del cliente:', error);
+        }
+      }
+    }, error => {
+      console.error('❌ Error obteniendo cliente del servidor:', error);
+    });
+  }
+
   buscar() {
+    // Validar que el campo de búsqueda exista
+    if (!this.documentoBusqueda || !this.documentoBusqueda.nativeElement) {
+      console.warn('⚠️ Campo de búsqueda no está inicializado');
+      // Si estamos en modo edición y tenemos un cliente, cargar directamente
+      if (this.isEdit && this.clienteEdit) {
+        this.cargarDatosCliente();
+      }
+      return;
+    }
+
+    // Validar que se haya ingresado algo en el campo de búsqueda
+    if (!this.documentoBusqueda.nativeElement.value || this.documentoBusqueda.nativeElement.value.trim() === '') {
+      Swal.fire({
+        title: 'Campo vacío',
+        text: 'Por favor ingrese un documento para buscar',
+        icon: 'warning',
+        confirmButtonText: 'Ok'
+      });
+      return;
+    }
 
     this.bloqueado = false
     this.formulario.reset()
     this.formularioEntrega.reset()
     this.formularioFacturacion.reset()
-    if (this.buscarPor.nativeElement.value == "CC-NIT") {
+
+    if (this.tipoBusqueda == "CC-NIT") {
 
       const data = {
         documento: this.documentoBusqueda.nativeElement.value
@@ -971,17 +1072,43 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['notas'].setValue(res.notas)
       this.formulario.controls['estado'].setValue(res.estado)
       this.service.editClient(this.formulario.value).subscribe(r => {
+        // Si estamos en modo edición (desde el modal de list.component)
         if (this.isEdit) {
-          this.modalService.dismissAll(this.formulario.value);
+          // Obtener el cliente actualizado completo para devolverlo al modal
+          this.service.getClientByDocument(data).subscribe((clienteActualizado: any) => {
+            console.log('✅ Cliente actualizado obtenido:', clienteActualizado);
+            // Cerrar el modal pasando el cliente completo actualizado
+            this.modalService.dismissAll(clienteActualizado);
 
+            // Mostrar mensaje de éxito
+            Swal.fire({
+              title: 'Editado!',
+              text: 'Cliente actualizado con éxito',
+              icon: 'success',
+              confirmButtonText: 'Ok'
+            });
+          }, error => {
+            console.error('❌ Error obteniendo cliente actualizado:', error);
+            // En caso de error, cerrar con los datos del formulario
+            this.modalService.dismissAll(this.formulario.value);
+
+            Swal.fire({
+              title: 'Editado!',
+              text: 'Cliente actualizado (con advertencia)',
+              icon: 'warning',
+              confirmButtonText: 'Ok'
+            });
+          });
+        } else {
+          // Si no estamos en modo edición, mostrar mensaje de éxito normal
+          console.log(r)
+          Swal.fire({
+            title: 'Editado!',
+            text: 'Usuario editado con exito',
+            icon: 'success',
+            confirmButtonText: 'Ok'
+          });
         }
-        console.log(r)
-        Swal.fire({
-          title: 'Editado!',
-          text: 'Usuario editado con exito',
-          icon: 'success',
-          confirmButtonText: 'Ok'
-        });
       });
 
     })

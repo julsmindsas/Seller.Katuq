@@ -85,6 +85,7 @@ export class CrearClienteModalComponent implements OnInit {
       ],
       indicativo_celular_whatsapp: ["57"],
       numero_celular_whatsapp: [""],
+      whatsappSameAsPhone: [false],
       estado: ["activo"],
     });
 

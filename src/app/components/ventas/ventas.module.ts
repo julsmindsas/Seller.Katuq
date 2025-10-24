@@ -35,6 +35,19 @@ import { PedidosUtilService } from "./service/pedidos.util.service";
 import { ToastModule } from "primeng/toast";
 import { TooltipModule } from "primeng/tooltip";
 import { DialogModule } from "primeng/dialog";
+import { TagModule } from "primeng/tag";
+import { ButtonModule } from "primeng/button";
+import { InputTextModule } from "primeng/inputtext";
+import { SkeletonModule } from "primeng/skeleton";
+import { MessageModule } from "primeng/message";
+import { AccordionModule } from "primeng/accordion";
+import { DataViewModule } from "primeng/dataview";
+import { TabMenuModule } from "primeng/tabmenu";
+import { ToggleButtonModule } from "primeng/togglebutton";
+import { InputTextareaModule } from "primeng/inputtextarea";
+import { InputMaskModule } from "primeng/inputmask";
+import { CardModule } from "primeng/card";
+import { MenuModule } from "primeng/menu";
 import { AsentarpagomanualComponent } from "./asentarpagomanual/asentarpagomanual.component";
 import { AutoCompleteModule } from "primeng/autocomplete";
 import { ClientesListaComponent } from "./clientes/lista/clientes-lista.component";
@@ -92,9 +105,22 @@ import { OrdenVentaComponent } from "./orden-venta/orden-venta.component";
     ToastModule,
     TooltipModule,
     DialogModule,
+    TagModule,
+    ButtonModule,
+    InputTextModule,
+    SkeletonModule,
+    MessageModule,
     HttpClientModule,
     VoiceInteractionModule,
     DespachosModule,
+    AccordionModule,
+    DataViewModule,
+    TabMenuModule,
+    ToggleButtonModule,
+    InputTextareaModule,
+    InputMaskModule,
+    CardModule,
+    MenuModule,
   ],
   declarations: [
     PedidoFacturacionComponent,

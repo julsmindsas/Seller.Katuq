@@ -28,7 +28,7 @@
                                         [paginator]="true"
                                     currentPageReportTemplate="{{'Mostrando {first} a {last} de {totalRecords} pedidos' | translate}}"
                                     [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
-                                        styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
+                                        styleClass="p-datatable p-datatable-gridlines p-datatable-striped responsive-paginator"
                                         [tableStyle]="{ 'min-width': '14rem', 'padding':'2px' }"
                                         style="font-size: 0.65em; table-layout: fixed;">
                                     <!-- CAPTION: Filtros compartidos -->
@@ -130,7 +130,7 @@
                                         </div>
 
                                         <!-- Panel de Métricas Estilo Breadcrumb (Solo para vista de todos los pedidos) - Compacto -->
-                                        <div *ngIf="!isFromProduction" class="metrics-breadcrumb-panel bg-white border-top border-bottom py-1 px-2 mt-2">
+                                        <div *ngIf="!isFromProduction" class="metrics-breadcrumb-panel bg-white border-top border-bottom py-1 px-2 mt-2 d-none d-lg-block">
                                         <div class="d-flex flex-wrap align-items-center gap-2">
                                             <!-- Total Pedidos -->
                                             <div class="metric-chip metric-chip-primary"
@@ -290,8 +290,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Fecha Entrega -->
-                                            <th *ngIf="isColumnVisible('fechaEntrega')" class="text-center" pSortableColumn="fechaEntrega"
+                                            <!-- Columna Fecha Entrega (mostrar en sm+) -->
+                                            <th *ngIf="isColumnVisible('fechaEntrega')" class="text-center d-none d-sm-table-cell" pSortableColumn="fechaEntrega"
                                                 style="width: 7rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Fecha entrega' | translate }}
                                                 <p-sortIcon field="fechaEntrega"></p-sortIcon>
@@ -348,8 +348,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Validación -->
-                                            <th *ngIf="isColumnVisible('validacion') && !isFromProduction" class="text-center" pSortableColumn="validacion"
+                                            <!-- Columna Validación (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('validacion') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="validacion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Validación' | translate }}
                                                 <p-sortIcon field="validacion"></p-sortIcon>
@@ -378,8 +378,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Valor Bruto -->
-                                            <th *ngIf="isColumnVisible('valorBruto') && !isFromProduction" class="text-center" pSortableColumn="totalPedidoSinDescuento"
+                                            <!-- Columna Valor Bruto (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('valorBruto') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="totalPedidoSinDescuento"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Valor Bruto' | translate }}
                                                 <p-sortIcon field="totalPedidoSinDescuento"></p-sortIcon>
@@ -389,8 +389,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Descuento -->
-                                            <th *ngIf="isColumnVisible('descuento') && !isFromProduction" class="text-center" pSortableColumn="totalDescuento"
+                                            <!-- Columna Descuento (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('descuento') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="totalDescuento"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Descuento' | translate }}
                                                 <p-sortIcon field="totalDescuento"></p-sortIcon>
@@ -400,8 +400,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Domicilio -->
-                                            <th *ngIf="isColumnVisible('domicilio') && !isFromProduction" class="text-center" pSortableColumn="totalEnvio"
+                                            <!-- Columna Domicilio (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('domicilio') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="totalEnvio"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Domicilio' | translate }}
                                                 <p-sortIcon field="totalEnvio"></p-sortIcon>
@@ -411,8 +411,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Subtotal -->
-                                            <th *ngIf="isColumnVisible('subtotal') && !isFromProduction" class="text-center" pSortableColumn="subtotal"
+                                            <!-- Columna Subtotal (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('subtotal') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="subtotal"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Subtotal' | translate }}
                                                 <p-sortIcon field="subtotal"></p-sortIcon>
@@ -422,8 +422,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna IVA -->
-                                            <th *ngIf="isColumnVisible('iva') && !isFromProduction" class="text-center" pSortableColumn="totalImpuesto"
+                                            <!-- Columna IVA (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('iva') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="totalImpuesto"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'IVA' | translate }}
                                                 <p-sortIcon field="totalImpuesto"></p-sortIcon>
@@ -444,8 +444,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Anticipo -->
-                                            <th *ngIf="isColumnVisible('anticipo') && !isFromProduction" class="text-center" pSortableColumn="anticipo"
+                                            <!-- Columna Anticipo (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('anticipo') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="anticipo"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Anticipo' | translate }}
                                                 <p-sortIcon field="anticipo"></p-sortIcon>
@@ -455,8 +455,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Falta por Pagar -->
-                                            <th *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" class="text-center" pSortableColumn="faltaPorPagar"
+                                            <!-- Columna Falta por Pagar (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="faltaPorPagar"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Falta por Pagar' | translate }}
                                                 <p-sortIcon field="faltaPorPagar"></p-sortIcon>
@@ -466,8 +466,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Fecha de compra -->
-                                            <th *ngIf="isColumnVisible('fechaCreacion')" class="text-center" pSortableColumn="fechaCreacion"
+                                            <!-- Columna Fecha de compra (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('fechaCreacion')" class="text-center d-none d-lg-table-cell" pSortableColumn="fechaCreacion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Fecha de compra' | translate }}
                                                 <p-sortIcon field="fechaCreacion"></p-sortIcon>
@@ -485,8 +485,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Ciudad -->
-                                            <th *ngIf="isColumnVisible('ciudad') && !isFromProduction" class="text-center" pSortableColumn="envio.ciudad"
+                                            <!-- Columna Ciudad (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('ciudad') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="envio.ciudad"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Ciudad' | translate }}
                                                 <p-sortIcon field="envio.ciudad"></p-sortIcon>
@@ -496,8 +496,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Zona de Entrega -->
-                                            <th *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" class="text-center" pSortableColumn="envio.zonaCobro"
+                                            <!-- Columna Zona de Entrega (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="envio.zonaCobro"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Zona de Entrega' | translate }}
                                                 <p-sortIcon field="envio.zonaCobro"></p-sortIcon>
@@ -507,8 +507,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Forma de Entrega -->
-                                            <th *ngIf="isColumnVisible('formaEntrega')" class="text-center" pSortableColumn="formaEntrega"
+                                            <!-- Columna Forma de Entrega (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('formaEntrega')" class="text-center d-none d-lg-table-cell" pSortableColumn="formaEntrega"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Forma de Entrega' | translate }}
                                                 <p-sortIcon field="formaEntrega"></p-sortIcon>
@@ -518,8 +518,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Horario de Entrega -->
-                                            <th *ngIf="isColumnVisible('horarioEntrega')" class="text-center" pSortableColumn="horarioEntrega"
+                                            <!-- Columna Horario de Entrega (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('horarioEntrega')" class="text-center d-none d-lg-table-cell" pSortableColumn="horarioEntrega"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Horario de Entrega' | translate }}
                                                 <p-sortIcon field="horarioEntrega"></p-sortIcon>
@@ -529,8 +529,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Canal -->
-                                            <th *ngIf="isColumnVisible('channel')" class="text-center" pSortableColumn="channel.name"
+                                            <!-- Columna Canal (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('channel')" class="text-center d-none d-lg-table-cell" pSortableColumn="channel.name"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Canal' | translate }}
                                                 <p-sortIcon field="channel.name"></p-sortIcon>
@@ -540,8 +540,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Vendedor -->
-                                            <th *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="text-center" pSortableColumn="asesorAsignado.name"
+                                            <!-- Columna Vendedor (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="asesorAsignado.name"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Vendedor' | translate }}
                                                 <p-sortIcon field="asesorAsignado.name"></p-sortIcon>
@@ -551,15 +551,15 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Fecha Última Impresión -->
-                                            <th *ngIf="isColumnVisible('ultimaImpresion')" class="text-center" pSortableColumn="ultimaImpresion"
+                                            <!-- Columna Fecha Última Impresión (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('ultimaImpresion')" class="text-center d-none d-lg-table-cell" pSortableColumn="ultimaImpresion"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Última impresión' | translate }}
                                                 <p-sortIcon field="ultimaImpresion"></p-sortIcon>
                                             </th>
 
-                                            <!-- Columna Despachador -->
-                                            <th *ngIf="isColumnVisible('despachador') && !isFromProduction" class="text-center" pSortableColumn="despachador.name"
+                                            <!-- Columna Despachador (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('despachador') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="despachador.name"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Despachador' | translate }}
                                                 <p-sortIcon field="despachador.name"></p-sortIcon>
@@ -569,8 +569,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Transportador -->
-                                            <th *ngIf="isColumnVisible('transportador') && !isFromProduction" class="text-center" pSortableColumn="transportador"
+                                            <!-- Columna Transportador (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('transportador') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="transportador"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Transportador' | translate }}
                                                 <p-sortIcon field="transportador"></p-sortIcon>
@@ -580,8 +580,8 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Fecha y Horario de Despachado -->
-                                            <th *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction" class="text-center" pSortableColumn="fechaYHorarioDespachado"
+                                            <!-- Columna Fecha y Horario de Despachado (ocultar en móvil) -->
+                                            <th *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="fechaYHorarioDespachado"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
                                                 {{ 'Fecha y Horario de Despachado' | translate }}
                                                 <p-sortIcon field="fechaYHorarioDespachado"></p-sortIcon>
@@ -619,8 +619,8 @@
                                                 <span class="pedido-number">{{ pedido.nroPedido }}</span>
                                             </td>
 
-                                            <!-- Columna Fecha Entrega -->
-                                            <td *ngIf="isColumnVisible('fechaEntrega')" class="fecha-cell"
+                                            <!-- Columna Fecha Entrega (mostrar en sm+) -->
+                                            <td *ngIf="isColumnVisible('fechaEntrega')" class="fecha-cell d-none d-sm-table-cell"
                                                 style="width: 7rem;">
                                                 {{
                                                 convertFechaEntregaString(pedido.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega)
@@ -701,9 +701,9 @@
                                                 </div>
                                             </td>
 
-                                            <!-- Columna Validación -->
+                                            <!-- Columna Validación (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('validacion') && !isFromProduction"
-                                                class="estado-cell text-center">
+                                                class="estado-cell text-center d-none d-lg-table-cell">
                                                 <span class="modern-badge validation-badge" [ngClass]="{
                                                     'badge-success': pedido.validacion == true,
                                                     'badge-secondary': pedido.validacion == false
@@ -726,33 +726,33 @@
                                                 </span>
                                             </td>
 
-                                            <!-- Columna Valor Bruto -->
+                                            <!-- Columna Valor Bruto (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction"
-                                                class="td-money text-nowrap money-cell">
+                                                class="td-money text-nowrap money-cell d-none d-lg-table-cell">
                                                 {{ pedido?.totalPedidoSinDescuento | currency }}
                                             </td>
 
-                                            <!-- Columna Descuento -->
+                                            <!-- Columna Descuento (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('descuento') && !isFromProduction"
-                                                class="td-money text-nowrap">
+                                                class="td-money text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido?.totalDescuento | currency }}
                                             </td>
 
-                                            <!-- Columna Domicilio -->
+                                            <!-- Columna Domicilio (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('domicilio') && !isFromProduction"
-                                                class="td-money text-nowrap">
+                                                class="td-money text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido?.totalEnvio | currency }}
                                             </td>
 
-                                            <!-- Columna Subtotal -->
+                                            <!-- Columna Subtotal (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('subtotal') && !isFromProduction"
-                                                class="td-money text-nowrap">
+                                                class="td-money text-nowrap d-none d-lg-table-cell">
                                                 {{ getSubtotalConDomicilio(pedido) | currency }}
                                             </td>
 
-                                            <!-- Columna IVA -->
+                                            <!-- Columna IVA (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('iva') && !isFromProduction"
-                                                class="td-money text-nowrap">
+                                                class="td-money text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido?.totalImpuesto | currency }}
                                             </td>
 
@@ -763,70 +763,70 @@
                                                     currency }}</span>
                                             </td>
 
-                                            <!-- Columna Anticipo -->
+                                            <!-- Columna Anticipo (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('anticipo') && !isFromProduction"
-                                                class="td-money text-nowrap">
+                                                class="td-money text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido?.anticipo | currency }}
                                             </td>
 
-                                            <!-- Columna Falta por Pagar -->
+                                            <!-- Columna Falta por Pagar (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction"
-                                                class="td-money text-nowrap">
+                                                class="td-money text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido?.faltaPorPagar | currency }}
                                             </td>
 
-                                            <!-- Columna Fecha de compra -->
-                                            <td *ngIf="isColumnVisible('fechaCreacion')" class="text-nowrap fecha-cell">
+                                            <!-- Columna Fecha de compra (ocultar en móvil) -->
+                                            <td *ngIf="isColumnVisible('fechaCreacion')" class="text-nowrap fecha-cell d-none d-lg-table-cell">
                                                 {{ pedido.fechaCreacion | date: 'dd/MM/yyyy' }}
                                             </td>
 
-                                            <!-- Columna Ciudad -->
+                                            <!-- Columna Ciudad (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('ciudad') && !isFromProduction"
-                                                class="text-nowrap">{{ pedido.envio?.ciudad }}</td>
+                                                class="text-nowrap d-none d-lg-table-cell">{{ pedido.envio?.ciudad }}</td>
 
-                                            <!-- Columna Zona de Entrega -->
+                                            <!-- Columna Zona de Entrega (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('zonaCobro') && !isFromProduction"
-                                                class="text-nowrap">{{ pedido.envio?.zonaCobro }}</td>
+                                                class="text-nowrap d-none d-lg-table-cell">{{ pedido.envio?.zonaCobro }}</td>
 
-                                            <!-- Columna Forma de Entrega -->
-                                            <td *ngIf="isColumnVisible('formaEntrega')" class="text-nowrap">{{
+                                            <!-- Columna Forma de Entrega (ocultar en móvil) -->
+                                            <td *ngIf="isColumnVisible('formaEntrega')" class="text-nowrap d-none d-lg-table-cell">{{
                                                 pedido.carrito[0]?.configuracion?.datosEntrega?.formaEntrega }}</td>
 
-                                            <!-- Columna Horario de Entrega -->
-                                            <td *ngIf="isColumnVisible('horarioEntrega')" class="text-nowrap">{{
+                                            <!-- Columna Horario de Entrega (ocultar en móvil) -->
+                                            <td *ngIf="isColumnVisible('horarioEntrega')" class="text-nowrap d-none d-lg-table-cell">{{
                                                 pedido.carrito[0]?.configuracion?.datosEntrega?.horarioEntrega }}</td>
 
-                                            <!-- Columna Canal -->
-                                            <td *ngIf="isColumnVisible('channel')" class="text-nowrap">{{
+                                            <!-- Columna Canal (ocultar en móvil) -->
+                                            <td *ngIf="isColumnVisible('channel')" class="text-nowrap d-none d-lg-table-cell">{{
                                                 pedido.channel?.name || 'Regular' }}</td>
 
-                                            <!-- Columna Vendedor -->
+                                            <!-- Columna Vendedor (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('vendedor') && !isFromProduction"
-                                                class="text-nowrap">
+                                                class="text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido.asesorAsignado?.name }}
                                             </td>
 
-                                            <!-- Columna Fecha Última Impresión -->
-                                            <td *ngIf="isColumnVisible('ultimaImpresion')" class="text-nowrap">
+                                            <!-- Columna Fecha Última Impresión (ocultar en móvil) -->
+                                            <td *ngIf="isColumnVisible('ultimaImpresion')" class="text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido.ultimaImpresion ? (pedido.ultimaImpresion | date: 'dd/MM/yyyy
                                                 HH:mm') : '-' }}
                                             </td>
 
-                                            <!-- Columna Despachador -->
+                                            <!-- Columna Despachador (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('despachador') && !isFromProduction"
-                                                class="text-nowrap">
+                                                class="text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido.despachador?.name }}
                                             </td>
 
-                                            <!-- Columna Transportador -->
+                                            <!-- Columna Transportador (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('transportador') && !isFromProduction"
-                                                class="text-nowrap">
+                                                class="text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido.transportador }}
                                             </td>
 
-                                            <!-- Columna Fecha y Horario de Despachado -->
+                                            <!-- Columna Fecha y Horario de Despachado (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction"
-                                                class="text-nowrap">
+                                                class="text-nowrap d-none d-lg-table-cell">
                                                 {{ pedido.fechaYHorarioDespachado ? (pedido.fechaYHorarioDespachado | date: 'dd-MM-yyyy HH:mm') : '-' }}
                                             </td>
                                         </tr>
@@ -1053,7 +1053,7 @@
 
                                 <!-- Columna Validación -->
                                 <td *ngIf="isColumnVisible('validacion') && !isFromProduction"
-                                    class="summary-cell text-center">
+                                    class="summary-cell text-center d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Validados' | translate }}</div>
                                         <div class="summary-value text-success">{{ getValidacionCount() }}</div>
@@ -1061,7 +1061,7 @@
                                 </td>
 
                                 <!-- Columna Cliente -->
-                                <td *ngIf="isColumnVisible('cliente') && !isFromProduction" class="summary-cell">
+                                <td *ngIf="isColumnVisible('cliente') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Clientes Únicos' | translate }}</div>
                                         <div class="summary-value">{{ getClientesUnicos() }}</div>
@@ -1070,7 +1070,7 @@
 
                                 <!-- Columna Valor Bruto -->
                                 <td *ngIf="isColumnVisible('valorBruto') && !isFromProduction"
-                                    class="summary-cell summary-money">
+                                    class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Bruto' | translate }}</div>
                                         <div class="summary-value money-value">{{ getFilteredCalculateValorBruto() |
@@ -1080,7 +1080,7 @@
 
                                 <!-- Columna Descuento -->
                                 <td *ngIf="isColumnVisible('descuento') && !isFromProduction"
-                                    class="summary-cell summary-money">
+                                    class="summary-cell summary-money d-none d-sm-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Desc.' | translate }}</div>
                                         <div class="summary-value money-value text-warning">{{
@@ -1090,7 +1090,7 @@
 
                                 <!-- Columna Domicilio -->
                                 <td *ngIf="isColumnVisible('domicilio') && !isFromProduction"
-                                    class="summary-cell summary-money">
+                                    class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Envío' | translate }}</div>
                                         <div class="summary-value money-value">{{ getFilteredCalculateEnvio() | currency
@@ -1100,7 +1100,7 @@
 
                                 <!-- Columna Subtotal -->
                                 <td *ngIf="isColumnVisible('subtotal') && !isFromProduction"
-                                    class="summary-cell summary-money">
+                                    class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Subtotal' | translate }}</div>
                                         <div class="summary-value money-value">{{ getFilteredCalculateSubtotal() |
@@ -1110,7 +1110,7 @@
 
                                 <!-- Columna IVA -->
                                 <td *ngIf="isColumnVisible('iva') && !isFromProduction"
-                                    class="summary-cell summary-money">
+                                    class="summary-cell summary-money d-none d-sm-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total IVA' | translate }}</div>
                                         <div class="summary-value money-value">{{ getFilteredCalculateTotalImpuestos() |
@@ -1130,7 +1130,7 @@
 
                                 <!-- Columna Anticipo -->
                                 <td *ngIf="isColumnVisible('anticipo') && !isFromProduction"
-                                    class="summary-cell summary-money">
+                                    class="summary-cell summary-money d-none d-sm-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Anticipo' | translate }}</div>
                                         <div class="summary-value money-value text-info">{{
@@ -1140,7 +1140,7 @@
 
                                 <!-- Columna Falta por Pagar -->
                                 <td *ngIf="isColumnVisible('faltaPorPagar') && !isFromProduction"
-                                    class="summary-cell summary-money">
+                                    class="summary-cell summary-money d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Total Pendiente' | translate }}</div>
                                         <div class="summary-value money-value text-danger">{{
@@ -1149,12 +1149,12 @@
                                 </td>
 
                                 <!-- Columna Fecha de compra -->
-                                <td *ngIf="isColumnVisible('fechaCreacion')" class="summary-cell">
+                                <td *ngIf="isColumnVisible('fechaCreacion')" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
                                 <!-- Columna Ciudad -->
-                                <td *ngIf="isColumnVisible('ciudad') && !isFromProduction" class="summary-cell">
+                                <td *ngIf="isColumnVisible('ciudad') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Ciudades' | translate }}</div>
                                         <div class="summary-value">{{ getCiudadesUnicas() }}</div>
@@ -1162,27 +1162,27 @@
                                 </td>
 
                                 <!-- Columna Zona de Entrega -->
-                                <td *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" class="summary-cell">
+                                <td *ngIf="isColumnVisible('zonaCobro') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
                                 <!-- Columna Forma de Entrega -->
-                                <td *ngIf="isColumnVisible('formaEntrega')" class="summary-cell">
+                                <td *ngIf="isColumnVisible('formaEntrega')" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
                                 <!-- Columna Horario de Entrega -->
-                                <td *ngIf="isColumnVisible('horarioEntrega')" class="summary-cell">
+                                <td *ngIf="isColumnVisible('horarioEntrega')" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
                                 <!-- Columna Canal -->
-                                <td *ngIf="isColumnVisible('channel')" class="summary-cell">
+                                <td *ngIf="isColumnVisible('channel')" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
                                 <!-- Columna Vendedor -->
-                                <td *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="summary-cell">
+                                <td *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <div class="summary-content">
                                         <div class="summary-label">{{ 'Vendedores' | translate }}</div>
                                         <div class="summary-value">{{ getVendedoresUnicos() }}</div>
@@ -1190,22 +1190,22 @@
                                 </td>
 
                                 <!-- Columna Fecha Última Impresión -->
-                                <td *ngIf="isColumnVisible('ultimaImpresion')" class="summary-cell">
+                                <td *ngIf="isColumnVisible('ultimaImpresion')" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
                                 <!-- Columna Despachador -->
-                                <td *ngIf="isColumnVisible('despachador') && !isFromProduction" class="summary-cell">
+                                <td *ngIf="isColumnVisible('despachador') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
                                 <!-- Columna Transportador -->
-                                <td *ngIf="isColumnVisible('transportador') && !isFromProduction" class="summary-cell">
+                                <td *ngIf="isColumnVisible('transportador') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
                                 <!-- Columna Fecha y Horario de Despachado -->
-                                <td *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction" class="summary-cell">
+                                <td *ngIf="isColumnVisible('fechaYHorarioDespachado') && !isFromProduction" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
                             </tr>

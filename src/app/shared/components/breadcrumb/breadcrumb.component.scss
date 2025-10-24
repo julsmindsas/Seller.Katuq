@@ -1,0 +1,67 @@
+/* ============================================
+   BREADCRUMB - MOBILE-OPTIMIZED
+   ============================================ */
+
+.page-title {
+  .row {
+    gap: 8px;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+
+  .breadcrumb {
+    font-size: 0.875rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
+
+    .breadcrumb-item {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+
+      a {
+        display: flex;
+        align-items: center;
+        min-width: 44px;
+        min-height: 44px;
+        justify-content: center;
+      }
+
+      app-feather-icons {
+        min-width: 20px;
+        min-height: 20px;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .page-title {
+    h3 {
+      font-size: 1.25rem;
+    }
+
+    .breadcrumb {
+      font-size: 0.75rem;
+      margin-top: 0;
+
+      .breadcrumb-item {
+        white-space: nowrap;
+      }
+    }
+
+    // Stack title and breadcrumb on mobile
+    .col-6 {
+      flex: 0 0 100%;
+      max-width: 100%;
+
+      &:first-child {
+        margin-bottom: 0.5rem;
+      }
+    }
+  }
+}

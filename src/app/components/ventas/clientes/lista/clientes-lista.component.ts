@@ -22,6 +22,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     @ViewChild('dt') dt: Table;
 
     clientes: any[] = [];
+    clientesOriginales: any[] = []; // Guardamos los datos originales sin filtrar
     cargando: boolean = true;
     formFiltros: FormGroup;
     totalRecords: number = 0;
@@ -95,17 +96,27 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     applyEstadoFilter(estado: 'todos' | 'activo' | 'inactivo'): void {
         this.selectedEstadoFilter = estado;
 
+        // Actualizar el valor en el formulario
+        this.formFiltros.patchValue({ estado: estado === 'todos' ? null : estado });
+
+        // Aplicar filtrado local
         if (estado === 'todos') {
-            this.dt.filter(null, 'estado', 'contains');
+            this.clientes = [...this.clientesOriginales];
         } else {
-            this.dt.filter(estado, 'estado', 'contains');
+            this.clientes = this.clientesOriginales.filter(c => c.estado === estado);
         }
+
+        this.totalRecords = this.clientes.length;
+
+        // Guardar preferencia
+        this.saveFilters();
     }
 
     cargarClientes(): void {
         this.cargando = true;
         this.clienteService.obtenerClientes().subscribe({
             next: (clientes: any) => {
+                this.clientesOriginales = clientes; // Guardar datos originales
                 this.clientes = clientes;
                 this.totalRecords = clientes.length;
                 this.cargando = false;
@@ -125,8 +136,68 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     buscarClientes(): void {
         if (this.formFiltros.valid) {
             this.saveFilters();
-            // La búsqueda se realiza a nivel de cliente (front-end)
-            // ya que los datos están cargados en memoria
+            this.aplicarFiltros();
+        }
+    }
+
+    // Aplicar filtros locales a los datos
+    private aplicarFiltros(): void {
+        const filtros = this.formFiltros.value;
+
+        let clientesFiltrados = [...this.clientesOriginales];
+
+        // Filtro por nombre/cliente
+        if (filtros.cliente && filtros.cliente.trim()) {
+            const nombreLower = filtros.cliente.toLowerCase();
+            clientesFiltrados = clientesFiltrados.filter(c =>
+                (c.nombres_completos || '').toLowerCase().includes(nombreLower) ||
+                (c.apellidos_completos || '').toLowerCase().includes(nombreLower)
+            );
+        }
+
+        // Filtro por documento
+        if (filtros.documento && filtros.documento.trim()) {
+            const docLower = filtros.documento.toLowerCase();
+            clientesFiltrados = clientesFiltrados.filter(c =>
+                (c.documento || '').toLowerCase().includes(docLower) ||
+                (c.tipo_documento_comprador || '').toLowerCase().includes(docLower)
+            );
+        }
+
+        // Filtro por email
+        if (filtros.email && filtros.email.trim()) {
+            const emailLower = filtros.email.toLowerCase();
+            clientesFiltrados = clientesFiltrados.filter(c =>
+                (c.correo_electronico_comprador || '').toLowerCase().includes(emailLower)
+            );
+        }
+
+        // Filtro por estado
+        if (filtros.estado) {
+            clientesFiltrados = clientesFiltrados.filter(c =>
+                c.estado === filtros.estado
+            );
+        }
+
+        // Aplicar resultados filtrados
+        this.clientes = clientesFiltrados;
+        this.totalRecords = clientesFiltrados.length;
+
+        // Mostrar mensaje si no hay resultados
+        if (this.clientes.length === 0) {
+            this.messageService.add({
+                severity: 'info',
+                summary: 'Sin resultados',
+                detail: 'No se encontraron clientes que coincidan con los filtros',
+                life: 3000
+            });
+        } else {
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Búsqueda completada',
+                detail: `Se encontraron ${this.clientes.length} cliente(s)`,
+                life: 2000
+            });
         }
     }
 
@@ -140,8 +211,19 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         this.selectedCliente = null;
         this.selectedEstadoFilter = 'todos';
+        this.globalFilterValue = '';
         localStorage.removeItem('clientesLista_filtros');
-        this.cargarClientes();
+
+        // Restaurar todos los clientes
+        this.clientes = [...this.clientesOriginales];
+        this.totalRecords = this.clientesOriginales.length;
+
+        this.messageService.add({
+            severity: 'info',
+            summary: 'Filtros limpios',
+            detail: 'Se muestran todos los clientes nuevamente',
+            life: 2000
+        });
     }
 
     openCrearModal(): void {

@@ -1,381 +1,382 @@
-// ==============================================
-// KATUQ CREAR CLIENTE MODAL - STYLES
-// ==============================================
-@import '../clientes-variables';
+// ===================================
+// CREAR CLIENTE MODAL - ESTILOS KATUQ
+// Diseño moderno y profesional
+// ===================================
 
-// ==============================================
-// MODAL OVERRIDES
-// ==============================================
-::ng-deep {
-  .modal {
-    &.show {
-      display: flex !important;
+// Variables de color
+$primary: #667eea;
+$primary-light: #f0f2ff;
+$border-color: #e9ecef;
+$text-dark: #333;
+$text-muted: #6c757d;
+$success: #28a745;
+$danger: #dc3545;
+$bg-light: #f8f9fa;
+
+// ===================================
+// MODAL CONTAINER
+// ===================================
+.cliente-modal {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: none;
+
+  ::ng-deep .p-dropdown {
+    width: 100%;
+
+    .p-dropdown-trigger {
+      background-color: $primary;
+      color: white;
+    }
+  }
+
+  ::ng-deep .p-inputtext {
+    border: 1px solid $border-color !important;
+
+    &:focus {
+      border-color: $primary !important;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1) !important;
+    }
+  }
+
+  ::ng-deep .p-checkbox .p-checkbox-box {
+    border-color: $border-color;
+
+    &.p-highlight {
+      background-color: $primary;
+      border-color: $primary;
+    }
+  }
+}
+
+// ===================================
+// MODAL HEADER - MODERNO
+// ===================================
+.modal-header-modern {
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 2px solid $border-color;
+  padding: 2rem;
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+
+    .header-title {
+      display: flex;
+      gap: 1.5rem;
+      align-items: flex-start;
+      flex: 1;
+
+      i {
+        font-size: 2rem;
+        color: $primary;
+        margin-top: 0.25rem;
+      }
+
+      div {
+        h5 {
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: $text-dark;
+          margin: 0 0 0.5rem 0;
+        }
+
+        p {
+          font-size: 0.875rem;
+          color: $text-muted;
+          margin: 0;
+        }
+      }
+    }
+
+    .btn-close-modern {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      color: $text-muted;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      display: flex;
       align-items: center;
       justify-content: center;
-    }
 
-    .modal-dialog {
-      max-width: 900px;
-      margin: $clientes-spacing-lg;
-
-      @include clientes-responsive('tablet') {
-        max-width: 100%;
-        margin: $clientes-spacing-sm;
+      &:hover {
+        background-color: rgba($primary, 0.1);
+        color: $primary;
       }
     }
-
-    .modal-content {
-      border: none;
-      border-radius: $clientes-border-radius-lg;
-      box-shadow: $clientes-shadow-lg;
-      overflow: hidden;
-    }
-
-    .modal-header {
-      background: $clientes-white;
-      border-bottom: 2px solid $clientes-border-light;
-      padding: $clientes-spacing-lg;
-
-      .modal-title {
-        color: $clientes-dark;
-        font-size: $clientes-font-size-heading;
-        font-weight: $clientes-font-weight-semibold;
-        display: flex;
-        align-items: center;
-        gap: $clientes-spacing-sm;
-
-        i {
-          color: $clientes-primary;
-        }
-      }
-
-      .btn-close {
-        padding: $clientes-spacing-md;
-        opacity: 0.5;
-        transition: $clientes-transition-fast;
-
-        &:hover {
-          opacity: 1;
-          transform: rotate(90deg);
-        }
-      }
-    }
-
-    .modal-body {
-      padding: $clientes-spacing-xl;
-      background: $clientes-bg-lighter;
-      max-height: calc(100vh - 200px);
-      overflow-y: auto;
-
-      @include clientes-responsive('tablet') {
-        padding: $clientes-spacing-md;
-      }
-    }
-
-    .modal-footer {
-      background: $clientes-white;
-      border-top: 2px solid $clientes-border-light;
-      padding: $clientes-spacing-md $clientes-spacing-lg;
-      display: flex;
-      justify-content: flex-end;
-      gap: $clientes-spacing-sm;
-    }
-  }
-
-  .modal-backdrop {
-    background: rgba($clientes-dark, 0.5);
-    backdrop-filter: blur(2px);
   }
 }
 
-// ==============================================
-// CUSTOMER CARD IN MODAL
-// ==============================================
-.customer-card {
-  background: $clientes-white;
-  border: 1px solid $clientes-border-light;
-  border-radius: $clientes-border-radius-lg;
-  box-shadow: $clientes-shadow-sm;
-  margin: 0;
+// ===================================
+// MODAL BODY - MODERNO
+// ===================================
+.modal-body-modern {
+  background-color: #fafbfc;
+  padding: 2rem;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
 
-  .card-header {
-    background: $clientes-white;
-    padding: $clientes-spacing-lg;
-    border-bottom: 1px solid $clientes-border-light;
-
-    h3, h4 {
-      color: $clientes-dark;
-      font-size: $clientes-font-size-title;
-      font-weight: $clientes-font-weight-semibold;
-      margin: 0;
-    }
-
-    p {
-      color: $clientes-grey;
-      font-size: $clientes-font-size-small;
-      margin-top: $clientes-spacing-xs;
-    }
+  &::-webkit-scrollbar {
+    width: 8px;
   }
 
-  .card-body {
-    padding: $clientes-spacing-lg;
-    background: $clientes-white;
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba($text-muted, 0.2);
+    border-radius: 4px;
+
+    &:hover {
+      background-color: rgba($text-muted, 0.4);
+    }
   }
 }
 
-// ==============================================
-// FORM SECTIONS IN MODAL
-// ==============================================
-.form-section {
-  background: $clientes-white;
-  padding: $clientes-spacing-lg;
-  border-radius: $clientes-border-radius;
-  border: 1px solid $clientes-border-light;
-  margin-bottom: $clientes-spacing-lg;
-  transition: $clientes-transition-base;
+// ===================================
+// FORM SECTIONS
+// ===================================
+.form-section-modern {
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  transition: all 0.3s ease;
 
   &:last-child {
     margin-bottom: 0;
   }
 
   &:hover {
-    box-shadow: $clientes-shadow-sm;
-    border-color: $clientes-primary;
+    border-color: $primary;
+    box-shadow: 0 4px 12px rgba($primary, 0.08);
   }
 
-  @include clientes-responsive('tablet') {
-    padding: $clientes-spacing-md;
-  }
-}
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid $primary;
 
-.section-title {
-  color: $clientes-dark;
-  font-size: $clientes-font-size-title;
-  font-weight: $clientes-font-weight-semibold;
-  padding-bottom: $clientes-spacing-sm;
-  margin-bottom: $clientes-spacing-lg;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: $clientes-spacing-sm;
+    i {
+      font-size: 1.25rem;
+      color: $primary;
+    }
 
-  &:after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 60px;
-    height: 3px;
-    background: $clientes-primary;
-    border-radius: $clientes-border-radius-pill;
-  }
-
-  i {
-    color: $clientes-primary;
-    font-size: 1.2rem;
+    h6 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: $text-dark;
+    }
   }
 }
 
-// ==============================================
-// FORM CONTROLS IN MODAL
-// ==============================================
-.form-group {
-  margin-bottom: $clientes-spacing-md;
-}
-
-.form-label {
-  color: $clientes-dark-light;
-  font-size: $clientes-font-size-small;
-  font-weight: $clientes-font-weight-medium;
-  margin-bottom: $clientes-spacing-xs;
+// ===================================
+// FORM LABELS & INPUTS
+// ===================================
+.form-label-modern {
   display: block;
-  text-transform: none;
-  letter-spacing: 0.3px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: $text-dark;
+  margin-bottom: 0.6rem;
 
   .required {
-    color: $clientes-error;
-    margin-left: $clientes-spacing-xs;
-  }
-}
-
-.form-control,
-.form-select {
-  height: $clientes-input-height;
-  padding: 0 $clientes-spacing-md;
-  font-size: $clientes-font-size-base;
-  font-family: $clientes-font-primary;
-  background: $clientes-white;
-  border: 1px solid $clientes-border;
-  border-radius: $clientes-border-radius-sm;
-  transition: $clientes-transition-fast;
-  width: 100%;
-
-  &:focus {
-    outline: none;
-    border-color: $clientes-primary;
-    box-shadow: 0 0 0 3px rgba($clientes-primary, 0.1);
-    background: $clientes-white;
-  }
-
-  &:disabled,
-  &[readonly] {
-    background: $clientes-bg-light;
-    color: $clientes-grey;
-    cursor: not-allowed;
-  }
-
-  &::placeholder {
-    color: $clientes-grey-light;
-    font-size: $clientes-font-size-small;
-  }
-
-  &.is-invalid {
-    border-color: $clientes-error;
-
-    &:focus {
-      border-color: $clientes-error;
-      box-shadow: 0 0 0 3px rgba($clientes-error, 0.1);
-    }
-  }
-
-  &.is-valid {
-    border-color: $clientes-success;
-
-    &:focus {
-      border-color: $clientes-success;
-      box-shadow: 0 0 0 3px rgba($clientes-success, 0.1);
-    }
-  }
-}
-
-.form-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%236c757d' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right $clientes-spacing-sm center;
-  background-size: 16px 12px;
-  padding-right: 2.5rem;
-}
-
-.form-text {
-  color: $clientes-grey-light;
-  font-size: $clientes-font-size-small;
-  margin-top: $clientes-spacing-xs;
-  display: block;
-}
-
-.invalid-feedback,
-.valid-feedback {
-  font-size: $clientes-font-size-small;
-  margin-top: $clientes-spacing-xs;
-  display: block;
-}
-
-.invalid-feedback {
-  color: $clientes-error;
-}
-
-.valid-feedback {
-  color: $clientes-success;
-}
-
-// ==============================================
-// CHECKBOXES AND RADIO BUTTONS
-// ==============================================
-.form-check {
-  padding-left: 1.25rem;
-  margin-bottom: $clientes-spacing-sm;
-
-  .form-check-input {
-    width: 14px;
-    height: 14px;
-    margin-top: 0.2rem;
-    border: 1px solid $clientes-border;
-    transition: $clientes-transition-fast;
-
-    &:checked {
-      background-color: $clientes-primary;
-      border-color: $clientes-primary;
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 2px rgba($clientes-primary, 0.1);
-      border-color: $clientes-primary;
-    }
-  }
-
-  .form-check-label {
-    font-size: $clientes-font-size-base;
-    color: $clientes-dark-light;
+    color: $danger;
     margin-left: 0.25rem;
   }
 }
 
-// Override any checkbox styles
-input[type="checkbox"],
-input[type="radio"] {
-  width: 14px !important;
-  height: 14px !important;
-  cursor: pointer;
+// PrimeNG Input customization
+::ng-deep {
+  .p-inputtext {
+    border: 1px solid $border-color !important;
+    border-radius: 6px;
+    height: 40px;
+    transition: all 0.2s ease;
+    padding: 0 0.75rem !important;
+
+    &:focus {
+      border-color: $primary !important;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1) !important;
+    }
+
+    &:disabled {
+      background-color: #f0f0f0;
+      color: $text-muted;
+    }
+  }
+
+  .p-dropdown {
+    border-radius: 6px;
+    border: 1px solid $border-color;
+    height: 40px;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: $primary !important;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1) !important;
+    }
+
+    &.country-code {
+      max-width: 120px;
+      flex-shrink: 0;
+
+      .p-dropdown-label {
+        padding: 0 0.75rem;
+      }
+    }
+
+    .p-dropdown-trigger {
+      width: 40px;
+    }
+  }
 }
 
-// ==============================================
-// SEARCH BOX IN MODAL
-// ==============================================
-.search-box {
-  margin-bottom: $clientes-spacing-lg;
+// Error message styling
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: $danger;
+  margin-top: 0.5rem;
 
-  .input-group {
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+// ===================================
+// PHONE INPUT GROUP
+// ===================================
+.phone-input-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+
+  ::ng-deep .p-dropdown {
+    flex-shrink: 0;
+
+    &.country-code {
+      max-width: 110px;
+    }
+  }
+
+  ::ng-deep .p-inputtext {
+    flex: 1;
+  }
+}
+
+// ===================================
+// WHATSAPP SECTION
+// ===================================
+.whatsapp-section {
+  padding: 1rem;
+  background-color: $primary-light;
+  border-radius: 6px;
+  border-left: 4px solid $primary;
+
+  .checkbox-group {
     display: flex;
-    border-radius: $clientes-border-radius;
-    overflow: hidden;
-    box-shadow: $clientes-shadow-sm;
-    background: $clientes-white;
-    border: 1px solid $clientes-border;
-    transition: $clientes-transition-base;
+    align-items: center;
+    gap: 0.75rem;
 
-    &:focus-within {
-      box-shadow: $clientes-shadow-md;
-      border-color: $clientes-primary;
-    }
+    .form-check-input {
+      width: 18px;
+      height: 18px;
+      border: 2px solid $border-color;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin: 0;
 
-    .form-select {
-      max-width: 140px;
-      border: none;
-      border-right: 1px solid $clientes-border-light;
-      background: $clientes-bg-light;
-      font-size: $clientes-font-size-small;
-      font-weight: $clientes-font-weight-medium;
+      &:checked {
+        background-color: $primary;
+        border-color: $primary;
+      }
 
       &:focus {
-        box-shadow: none;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba($primary, 0.1);
+        border-color: $primary;
       }
-    }
-
-    .form-control {
-      border: none;
-      flex: 1;
-      padding: 0 $clientes-spacing-md;
-
-      &:focus {
-        box-shadow: none;
-      }
-
-      &::placeholder {
-        color: $clientes-grey-light;
-      }
-    }
-
-    .btn {
-      border: none;
-      border-radius: 0;
-      padding: 0 $clientes-spacing-lg;
-      background: $clientes-primary;
-      color: $clientes-white;
-      transition: $clientes-transition-fast;
 
       &:hover {
-        background: $clientes-primary-dark;
+        border-color: $primary;
+      }
+    }
+
+    .form-label-modern {
+      margin-bottom: 0;
+      font-weight: 500;
+      cursor: pointer;
+    }
+  }
+}
+
+// ===================================
+// MODAL FOOTER - MODERNO
+// ===================================
+.modal-footer-modern {
+  background: white;
+  border-top: 2px solid $border-color;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+
+  ::ng-deep {
+    .p-button {
+      height: 40px;
+      padding: 0 1.5rem;
+      font-weight: 600;
+      border-radius: 6px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      &.p-button-primary {
+        background-color: $primary;
+        border-color: $primary;
+
+        &:hover:not(:disabled) {
+          background-color: darken($primary, 10%);
+          border-color: darken($primary, 10%);
+          box-shadow: 0 4px 12px rgba($primary, 0.3);
+          transform: translateY(-2px);
+        }
+
+        &:disabled {
+          background-color: #ccc;
+          border-color: #ccc;
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+
+      &.p-button-secondary {
+        background-color: transparent;
+        color: $text-muted;
+        border: 1px solid $border-color;
+
+        &:hover:not(:disabled) {
+          background-color: $bg-light;
+          border-color: $primary;
+          color: $primary;
+        }
       }
 
       i {
@@ -385,335 +386,119 @@ input[type="radio"] {
   }
 }
 
-// ==============================================
-// TABLES IN MODAL
-// ==============================================
-.table {
-  font-size: $clientes-font-size-small;
-  margin-bottom: 0;
+// ===================================
+// RESPONSIVE DESIGN
+// ===================================
+@media (max-width: 768px) {
+  .modal-header-modern {
+    padding: 1.5rem;
 
-  thead {
-    background: $clientes-bg-light;
+    .header-content {
+      flex-direction: column;
+      gap: 1rem;
 
-    th {
-      font-weight: $clientes-font-weight-semibold;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.5px;
-      color: $clientes-grey;
-      padding: $clientes-spacing-sm $clientes-spacing-md;
-      border-bottom: 2px solid $clientes-border-light;
-      white-space: nowrap;
-    }
-  }
-
-  tbody {
-    tr {
-      transition: $clientes-transition-fast;
-
-      &:hover {
-        background: $clientes-table-row-hover;
-      }
-
-      td {
-        padding: $clientes-spacing-sm $clientes-spacing-md;
-        border-bottom: 1px solid $clientes-border-light;
-        vertical-align: middle;
-        color: $clientes-dark-light;
+      .btn-close-modern {
+        align-self: flex-end;
       }
     }
   }
 
-  &.table-sm {
-    font-size: $clientes-font-size-small;
-
-    th, td {
-      padding: $clientes-spacing-xs $clientes-spacing-sm;
-    }
-  }
-}
-
-// ==============================================
-// NAVIGATION TABS IN MODAL
-// ==============================================
-.nav-tabs {
-  border-bottom: 2px solid $clientes-border-light;
-  margin-bottom: $clientes-spacing-lg;
-
-  .nav-link {
-    color: $clientes-grey;
-    font-weight: $clientes-font-weight-medium;
-    font-size: $clientes-font-size-base;
-    padding: $clientes-spacing-sm $clientes-spacing-md;
-    border: none;
-    border-radius: 0;
-    position: relative;
-    transition: $clientes-transition-fast;
-    background: transparent;
-    cursor: pointer;
-
-    &:hover:not(.active) {
-      color: $clientes-dark-light;
-      background: $clientes-bg-light;
-    }
-
-    &.active {
-      color: $clientes-primary;
-      background: transparent;
-
-      &:after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: $clientes-primary;
-      }
-    }
-
-    i {
-      margin-right: $clientes-spacing-xs;
-    }
-  }
-}
-
-// ==============================================
-// BUTTONS IN MODAL
-// ==============================================
-.btn {
-  height: $clientes-button-height;
-  padding: 0 $clientes-spacing-lg;
-  font-size: $clientes-font-size-base;
-  font-weight: $clientes-font-weight-medium;
-  font-family: $clientes-font-primary;
-  border-radius: $clientes-border-radius-sm;
-  transition: $clientes-transition-base;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: $clientes-spacing-xs;
-  border: 1px solid transparent;
-  cursor: pointer;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  .modal-body-modern {
+    padding: 1.5rem;
   }
 
-  &.btn-primary {
-    background: $clientes-primary;
-    color: $clientes-white;
-    border-color: $clientes-primary;
+  .form-section-modern {
+    padding: 1rem;
+  }
 
-    &:hover:not(:disabled) {
-      background: $clientes-primary-dark;
-      border-color: $clientes-primary-dark;
-      transform: translateY(-2px);
-      box-shadow: $clientes-shadow-md;
-    }
+  .modal-footer-modern {
+    padding: 1rem 1.5rem;
+    flex-wrap: wrap;
 
-    &:active:not(:disabled) {
-      transform: translateY(0);
+    ::ng-deep .p-button {
+      flex: 1;
+      min-width: 120px;
     }
   }
 
-  &.btn-secondary {
-    background: $clientes-grey-light;
-    color: $clientes-white;
-    border-color: $clientes-grey-light;
-
-    &:hover:not(:disabled) {
-      background: $clientes-grey;
-      border-color: $clientes-grey;
-      transform: translateY(-2px);
-      box-shadow: $clientes-shadow-md;
-    }
-  }
-
-  &.btn-success {
-    background: $clientes-success;
-    color: $clientes-white;
-    border-color: $clientes-success;
-
-    &:hover:not(:disabled) {
-      background: $clientes-success-dark;
-      border-color: $clientes-success-dark;
-      transform: translateY(-2px);
-      box-shadow: $clientes-shadow-md;
-    }
-  }
-
-  &.btn-danger {
-    background: $clientes-error;
-    color: $clientes-white;
-    border-color: $clientes-error;
-
-    &:hover:not(:disabled) {
-      background: $clientes-error-dark;
-      border-color: $clientes-error-dark;
-      transform: translateY(-2px);
-      box-shadow: $clientes-shadow-md;
-    }
-  }
-
-  &.btn-light {
-    background: $clientes-bg-light;
-    color: $clientes-dark-light;
-    border-color: $clientes-border;
-
-    &:hover:not(:disabled) {
-      background: $clientes-white;
-      border-color: $clientes-primary;
-      color: $clientes-primary;
-      transform: translateY(-2px);
-      box-shadow: $clientes-shadow-sm;
-    }
-  }
-
-  &.btn-outline-primary {
-    background: transparent;
-    color: $clientes-primary;
-    border-color: $clientes-primary;
-
-    &:hover:not(:disabled) {
-      background: $clientes-primary;
-      color: $clientes-white;
-      transform: translateY(-2px);
-      box-shadow: $clientes-shadow-md;
-    }
-  }
-
-  &.btn-sm {
-    height: $clientes-button-height-sm;
-    padding: 0 $clientes-spacing-md;
-    font-size: $clientes-font-size-small;
-  }
-
-  &.btn-lg {
-    height: $clientes-button-height-lg;
-    padding: 0 $clientes-spacing-xl;
-    font-size: $clientes-font-size-large;
-  }
-
-  i {
-    font-size: 1rem;
-  }
-}
-
-// ==============================================
-// ALERTS IN MODAL
-// ==============================================
-.alert {
-  padding: $clientes-spacing-md;
-  border-radius: $clientes-border-radius;
-  border: 1px solid transparent;
-  font-size: $clientes-font-size-base;
-  margin-bottom: $clientes-spacing-md;
-
-  &.alert-success {
-    background: rgba($clientes-success, 0.1);
-    border-color: rgba($clientes-success, 0.2);
-    color: $clientes-success-dark;
-  }
-
-  &.alert-danger {
-    background: rgba($clientes-error, 0.1);
-    border-color: rgba($clientes-error, 0.2);
-    color: $clientes-error-dark;
-  }
-
-  &.alert-warning {
-    background: rgba($clientes-warning, 0.1);
-    border-color: rgba($clientes-warning, 0.2);
-    color: $clientes-warning-dark;
-  }
-
-  &.alert-info {
-    background: rgba($clientes-primary, 0.1);
-    border-color: rgba($clientes-primary, 0.2);
-    color: $clientes-primary-dark;
-  }
-}
-
-// ==============================================
-// LOADING STATES IN MODAL
-// ==============================================
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba($clientes-white, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  border-radius: $clientes-border-radius-lg;
-}
-
-.spinner-border {
-  width: 2rem;
-  height: 2rem;
-  border-width: 0.2rem;
-  border-color: $clientes-primary;
-  border-right-color: transparent;
-}
-
-// ==============================================
-// RESPONSIVE ADJUSTMENTS
-// ==============================================
-@include clientes-responsive('tablet') {
-  .form-section {
-    padding: $clientes-spacing-md;
-    margin-bottom: $clientes-spacing-md;
-  }
-
-  .section-title {
-    font-size: $clientes-font-size-large;
-  }
-
-  .modal-body {
-    padding: $clientes-spacing-md;
-  }
-
-  .btn {
-    width: 100%;
-    margin-bottom: $clientes-spacing-xs;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  .modal-footer {
+  .phone-input-group {
     flex-direction: column;
-    align-items: stretch;
+
+    ::ng-deep .p-dropdown.country-code {
+      width: 100%;
+      max-width: none;
+    }
   }
 }
 
-@include clientes-responsive('mobile') {
-  .modal-dialog {
-    margin: 0;
-    max-width: 100%;
-    height: 100vh;
-  }
+@media (max-width: 576px) {
+  .modal-header-modern {
+    .header-title {
+      gap: 1rem;
 
-  .modal-content {
-    height: 100%;
-    border-radius: 0;
-  }
+      i {
+        font-size: 1.5rem;
+      }
 
-  .modal-body {
-    max-height: calc(100vh - 120px);
-  }
-
-  .table {
-    font-size: 0.75rem;
-
-    th, td {
-      padding: $clientes-spacing-xs;
+      div h5 {
+        font-size: 1.25rem;
+      }
     }
   }
+
+  .modal-footer-modern {
+    ::ng-deep .p-button {
+      width: 100%;
+      margin-bottom: 0.5rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
+// ===================================
+// MODAL OVERLAY
+// ===================================
+::ng-deep .modal {
+  &.show {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-dialog {
+    max-width: 800px;
+    margin: 1rem;
+
+    @media (max-width: 576px) {
+      margin: 0;
+      max-width: 100%;
+      height: 100vh;
+    }
+  }
+
+  .modal-backdrop {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+  }
+}
+
+// ===================================
+// ANIMATIONS
+// ===================================
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.cliente-modal {
+  animation: slideIn 0.3s ease-out;
 }

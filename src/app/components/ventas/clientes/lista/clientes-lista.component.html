@@ -12,7 +12,7 @@
                 <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap">
                     <div class="mb-2 mb-md-0">
                         <h5 class="mb-1 fw-bold text-primary">
-                            <i class="pi pi-users me-2"></i>{{ "Clientes" | translate }}
+                            {{ "Clientes" | translate }}
                         </h5>
                         <p class="text-muted small mb-0">
                             {{ "Consulta, filtra y gestiona tus clientes" | translate }}
@@ -32,11 +32,6 @@
                                 (click)="exportarExcel()"
                                 [disabled]="clientes.length === 0"
                                 pTooltip="{{ 'Exportar todos los clientes a Excel' | translate }}"></button>
-                        <button pButton type="button"
-                                icon="pi pi-refresh"
-                                class="p-button-secondary p-button-sm"
-                                (click)="cargarClientes()"
-                                pTooltip="{{ 'Actualizar datos' | translate }}"></button>
                     </div>
                 </div>
 
@@ -44,7 +39,6 @@
                 <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 cursor-pointer"
                      (click)="toggleFiltros()">
                     <h6 class="m-0">
-                        <i class="pi pi-filter me-2"></i>
                         {{ "Filtros de búsqueda" | translate }}
                     </h6>
                     <i [class]="mostrarFiltros ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
@@ -56,52 +50,43 @@
                             <!-- Cliente -->
                             <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="pi pi-user me-1"></i>{{ "Cliente" | translate }}
+                                    {{ "Cliente" | translate }}
                                 </label>
-                                <span class="p-input-icon-left w-100">
-                                    <i class="pi pi-search"></i>
-                                    <input pInputText
-                                           type="text"
-                                           formControlName="cliente"
-                                           placeholder="{{ 'Buscar cliente' | translate }}"
-                                           class="w-100" />
-                                </span>
+                                <input pInputText
+                                       type="text"
+                                       formControlName="cliente"
+                                       placeholder="{{ 'Buscar cliente' | translate }}"
+                                       class="w-100" />
                             </div>
 
                             <!-- Documento -->
                             <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="pi pi-id-card me-1"></i>{{ "Documento" | translate }}
+                                    {{ "Documento" | translate }}
                                 </label>
-                                <span class="p-input-icon-left w-100">
-                                    <i class="pi pi-search"></i>
-                                    <input pInputText
-                                           type="text"
-                                           formControlName="documento"
-                                           placeholder="{{ 'Documento' | translate }}"
-                                           class="w-100" />
-                                </span>
+                                <input pInputText
+                                       type="text"
+                                       formControlName="documento"
+                                       placeholder="{{ 'Documento' | translate }}"
+                                       class="w-100" />
                             </div>
 
                             <!-- Email -->
                             <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="pi pi-envelope me-1"></i>{{ "Email" | translate }}
+                                    {{ "Email" | translate }}
                                 </label>
-                                <span class="p-input-icon-left w-100">
-                                    <i class="pi pi-search"></i>
-                                    <input pInputText
-                                           type="text"
-                                           formControlName="email"
-                                           placeholder="{{ 'Email' | translate }}"
-                                           class="w-100" />
-                                </span>
+                                <input pInputText
+                                       type="text"
+                                       formControlName="email"
+                                       placeholder="{{ 'Email' | translate }}"
+                                       class="w-100" />
                             </div>
 
                             <!-- Estado -->
                             <div class="col-12 col-md-6 col-lg-3">
                                 <label class="form-label fw-semibold">
-                                    <i class="pi pi-check me-1"></i>{{ "Estado" | translate }}
+                                    {{ "Estado" | translate }}
                                 </label>
                                 <p-dropdown [options]="estadoOptions"
                                             formControlName="estado"
@@ -177,7 +162,6 @@
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <div class="d-flex align-items-center gap-2">
                             <h6 class="m-0">
-                                <i class="pi pi-list me-2"></i>
                                 {{ "Resultados" | translate }}
                             </h6>
                             <span class="badge-count">{{totalRecords}}</span>
@@ -185,14 +169,11 @@
 
                         <div class="d-flex align-items-center gap-2">
                             <!-- Buscador global -->
-                            <span class="p-input-icon-left">
-                                <i class="pi pi-search"></i>
-                                <input pInputText type="text"
-                                       placeholder="{{ 'Buscar...' | translate }}"
-                                       [value]="globalFilterValue"
-                                       (input)="onGlobalFilter($event)"
-                                       class="p-inputtext-sm" />
-                            </span>
+                            <input pInputText type="text"
+                                   placeholder="{{ 'Buscar...' | translate }}"
+                                   [value]="globalFilterValue"
+                                   (input)="onGlobalFilter($event)"
+                                   class="p-inputtext-sm" />
 
                             <!-- Botones de vista -->
                             <button pButton icon="pi pi-list"
@@ -274,51 +255,33 @@
 
                                 <!-- Cliente -->
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <i class="pi pi-user text-primary me-2"></i>
-                                        <span class="text-truncate" style="max-width: 160px"
-                                              [pTooltip]="cliente.nombres_completos">
-                                            {{cliente.nombres_completos || 'Sin nombre'}}
-                                        </span>
-                                    </div>
+                                    <span class="text-truncate" style="max-width: 160px"
+                                          [pTooltip]="cliente.nombres_completos">
+                                        {{cliente.nombres_completos || 'Sin nombre'}}
+                                    </span>
                                 </td>
 
                                 <!-- Documento -->
                                 <td>
-                                    <span class="modern-badge badge-secondary">
-                                        <i class="pi pi-id-card"></i>
-                                        {{cliente.documento || 'N/A'}}
-                                    </span>
+                                    {{cliente.documento || 'N/A'}}
                                 </td>
 
                                 <!-- Email -->
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <i class="pi pi-envelope text-primary me-2"></i>
-                                        <span class="text-truncate" style="max-width: 160px"
-                                              [pTooltip]="cliente.correo_electronico_comprador">
-                                            {{cliente.correo_electronico_comprador || 'N/A'}}
-                                        </span>
-                                    </div>
+                                    <span class="text-truncate" style="max-width: 160px"
+                                          [pTooltip]="cliente.correo_electronico_comprador">
+                                        {{cliente.correo_electronico_comprador || 'N/A'}}
+                                    </span>
                                 </td>
 
                                 <!-- Celular -->
                                 <td>
-                                    <div class="d-flex align-items-center">
-                                        <i class="pi pi-phone text-primary me-2"></i>
-                                        <span>{{cliente.numero_celular_comprador || 'N/A'}}</span>
-                                    </div>
+                                    {{cliente.numero_celular_comprador || 'N/A'}}
                                 </td>
 
                                 <!-- Estado -->
                                 <td>
-                                    <span class="modern-badge" [ngClass]="getEstadoClass(cliente.estado)">
-                                        <i class="pi" [ngClass]="{
-                                            'pi-check-circle': cliente.estado === 'activo',
-                                            'pi-times-circle': cliente.estado === 'inactivo'
-                                        }"></i>
-                                        {{cliente.estado | titlecase}}
-                                    </span>
+                                    {{cliente.estado | titlecase}}
                                 </td>
 
                                 <!-- Acciones -->
@@ -344,7 +307,7 @@
                                         </li>
                                         <li class="separator"></li>
                                         <li (click)="exportarCliente(cliente)">
-                                            <i class="pi pi-file-excel text-success"></i>
+                                            <i class="pi pi-download"></i>
                                             <span>{{ "Exportar" | translate }}</span>
                                         </li>
                                     </ul>
@@ -362,7 +325,6 @@
                                             <div class="col-md-6">
                                                 <div class="detail-section">
                                                     <h6 class="detail-title">
-                                                        <i class="pi pi-info-circle me-2"></i>
                                                         {{ "Información del Cliente" | translate }}
                                                     </h6>
                                                     <div class="detail-row">
@@ -392,9 +354,7 @@
                                                     <div class="detail-row">
                                                         <span class="detail-label">{{ "Estado:" | translate }}</span>
                                                         <span class="detail-value">
-                                                            <span class="modern-badge" [ngClass]="getEstadoClass(cliente.estado)">
-                                                                {{cliente.estado | titlecase}}
-                                                            </span>
+                                                            {{cliente.estado | titlecase}}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -404,7 +364,6 @@
                                             <div class="col-md-6">
                                                 <div class="detail-section">
                                                     <h6 class="detail-title">
-                                                        <i class="pi pi-file me-2"></i>
                                                         {{ "Información de Facturación" | translate }}
                                                     </h6>
                                                     <div class="detail-row" *ngIf="cliente.datosFacturacionElectronica && cliente.datosFacturacionElectronica.length > 0; else noFacturacion">

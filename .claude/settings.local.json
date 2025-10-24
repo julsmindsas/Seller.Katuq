@@ -33,7 +33,10 @@
       "Bash(xargs kill -9)",
       "Read(//private/tmp/**)",
       "Bash(npm start)",
-      "Bash(ng build:*)"
+      "Bash(ng build:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run start:4gb:*)"
     ],
     "deny": [],
     "ask": []

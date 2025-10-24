@@ -621,3 +621,235 @@ input[type="checkbox"] {
     }
   }
 }
+
+// ==============================================
+// MODERN STYLES - KATUQ DESIGN
+// ==============================================
+
+.module-header {
+  background: linear-gradient(to right, white, #fafafa);
+  transition: all 0.3s ease;
+
+  h5 {
+    font-size: 1.3rem;
+    color: #495057;
+
+    i {
+      font-size: 1.1rem;
+    }
+  }
+
+  p {
+    opacity: 0.85;
+  }
+}
+
+.search-section {
+  background-color: #f8f9fa;
+
+  label {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+  }
+
+  ::ng-deep {
+    .p-dropdown {
+      border-radius: 6px;
+      border: 1px solid #e9ecef;
+      height: 40px;
+      transition: all 0.2s ease;
+
+      &:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+      }
+    }
+
+    .p-inputtext {
+      border: 1px solid #e9ecef !important;
+      border-radius: 6px;
+      height: 40px;
+      padding: 0 0.75rem !important;
+      transition: all 0.2s ease;
+
+      &:focus {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+      }
+    }
+  }
+}
+
+.form-container {
+  background-color: #fafbfc;
+  padding: 1.5rem !important;
+}
+
+.form-section-modern {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+
+  &:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.08);
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #667eea;
+
+    i {
+      font-size: 1.1rem;
+      color: #667eea;
+    }
+
+    h6 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+}
+
+.form-label-modern {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.4rem;
+
+  .required {
+    color: #dc3545;
+    margin-left: 0.25rem;
+  }
+}
+
+// Ajustar espaciado de inputs en el formulario
+.form-section-modern {
+  .row.g-3 {
+    --bs-gutter-x: 0.75rem;
+    --bs-gutter-y: 0.75rem;
+  }
+}
+
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #dc3545;
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+.estado-toggle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  ::ng-deep {
+    .p-inputswitch {
+      height: 28px;
+    }
+  }
+}
+
+// ==============================================
+// PHONE INPUT GROUP
+// ==============================================
+.phone-input-group {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+
+  ::ng-deep {
+    .p-dropdown {
+      flex-shrink: 0;
+
+      &.country-code {
+        max-width: 110px;
+      }
+    }
+
+    .p-inputtext {
+      flex: 1;
+    }
+  }
+}
+
+// ==============================================
+// WHATSAPP SECTION
+// ==============================================
+.whatsapp-section {
+  padding: 1rem;
+  background-color: #f0f2ff;
+  border-radius: 6px;
+  border-left: 4px solid #667eea;
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .form-check-input {
+      width: 18px;
+      height: 18px;
+      border: 2px solid #e9ecef;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin: 0;
+
+      &:checked {
+        background-color: #667eea;
+        border-color: #667eea;
+      }
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        border-color: #667eea;
+      }
+
+      &:hover {
+        border-color: #667eea;
+      }
+    }
+
+    .form-label-modern {
+      margin-bottom: 0;
+      font-weight: 500;
+      cursor: pointer;
+    }
+  }
+}
+
+::ng-deep {
+  .p-inputtext,
+  .p-inputtext-sm {
+    border: 1px solid #e9ecef !important;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: #667eea !important;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+    }
+
+    &:disabled {
+      background-color: #f0f0f0;
+      color: #6c757d;
+    }
+  }
+}
