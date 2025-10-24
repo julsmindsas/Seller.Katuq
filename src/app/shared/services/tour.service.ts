@@ -75,7 +75,8 @@ export class TourService {
     }
 
     if (this.hasCompletedTour(tourName)) {
-      console.log(`Tour ${tourName} ya completado, iniciando de nuevo...`);
+      console.log(`✓ Tour ${tourName} ya completado, no se mostrará de nuevo.`);
+      return;
     }
 
     this.currentTour = tourName;
