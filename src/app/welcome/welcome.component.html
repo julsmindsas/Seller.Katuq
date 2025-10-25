@@ -377,8 +377,8 @@
     </div>
 </div>
 
-<!-- Tours Guiados Section -->
-<div class="container-fluid mt-4 mb-4">
+<!-- Tours Guiados Section - HIDDEN -->
+<div class="container-fluid mt-4 mb-4" *ngIf="false">
     <div class="row justify-content-center">
         <div class="col-md-10">
             <div class="card tour-section shadow-lg border-0">
@@ -390,7 +390,6 @@
                 </div>
                 <div class="card-body p-5">
                     <div class="row g-4">
-                        <!-- Main Navigation Tour - NUEVO -->
                         <div class="col-md-6 col-lg-3">
                             <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
                                 <div class="tour-icon mb-3">
@@ -404,7 +403,6 @@
                             </div>
                         </div>
 
-                        <!-- Dashboard Tour -->
                         <div class="col-md-6 col-lg-3">
                             <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
                                 <div class="tour-icon mb-3">
@@ -418,7 +416,6 @@
                             </div>
                         </div>
 
-                        <!-- Ventas Tour -->
                         <div class="col-md-6 col-lg-3">
                             <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
                                 <div class="tour-icon mb-3">
@@ -432,7 +429,6 @@
                             </div>
                         </div>
 
-                        <!-- Inventarios Tour -->
                         <div class="col-md-6 col-lg-3">
                             <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
                                 <div class="tour-icon mb-3">
@@ -446,7 +442,6 @@
                             </div>
                         </div>
 
-                        <!-- POS Tour -->
                         <div class="col-md-6 col-lg-3">
                             <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
                                 <div class="tour-icon mb-3">
@@ -460,7 +455,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row mt-4">
                         <div class="col-12 text-center">
                             <p class="text-muted mb-0">
@@ -475,15 +470,8 @@
     </div>
 </div>
 
-<div class="container-fluid mt-50">
-    <div class="row">
-        <div class="col-sm-12">
-            <p class="firma">CRM</p>
-        </div>
-    </div>
-</div>
-
-<div class="container-fluid m-t-35" id="crmClienteStartco" *ngIf="currentCompany.nomComercial === 'ALMARA FELICIDAD'">
+<!-- CRM Section - HIDDEN -->
+<div class="container-fluid m-t-35" id="crmClienteStartco" *ngIf="false">
     <div class="row">
         <div class="col-sm-12">
             <div class="card shadow-2 crm-card">
@@ -700,8 +688,8 @@
     </div>
 </div>
 
-<!-- Message Modal -->
-<ng-template #messageModal let-modal>
+<!-- Message Modal - CRM - HIDDEN -->
+<ng-template #messageModal let-modal *ngIf="false">
   <div class="modal-header">
     <h5 class="modal-title">Mensaje de {{selectedClient?.nombre}}</h5>
     <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
