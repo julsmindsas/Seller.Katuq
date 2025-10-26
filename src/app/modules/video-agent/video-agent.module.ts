@@ -8,6 +8,9 @@ import { DropdownModule } from "primeng/dropdown";
 import { SidebarModule } from "primeng/sidebar";
 import { TooltipModule } from "primeng/tooltip";
 import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { TagModule } from "primeng/tag";
+import { ToastModule } from "primeng/toast";
+import { InputTextModule } from "primeng/inputtext";
 
 // Routing
 import { VideoAgentRoutingModule } from "./video-agent-routing.module";
@@ -16,6 +19,7 @@ import { VideoAgentRoutingModule } from "./video-agent-routing.module";
 import { AgentSessionComponent } from "./components/agent-session/agent-session.component";
 import { AgentResultComponent } from "./components/agent-result/agent-result.component";
 import { AudioPulseComponent } from "./components/audio-pulse/audio-pulse.component";
+import { AppointmentsListComponent } from "./components/appointments-list/appointments-list.component";
 
 // Services are providedIn: 'root', so no need to provide them here
 
@@ -24,6 +28,7 @@ import { AudioPulseComponent } from "./components/audio-pulse/audio-pulse.compon
     AgentSessionComponent,
     AgentResultComponent,
     AudioPulseComponent,
+    AppointmentsListComponent,
   ],
   imports: [
     CommonModule,
@@ -35,6 +40,9 @@ import { AudioPulseComponent } from "./components/audio-pulse/audio-pulse.compon
     SidebarModule,
     TooltipModule,
     ProgressSpinnerModule,
+    TagModule,
+    ToastModule,
+    InputTextModule,
   ],
 })
 export class VideoAgentModule {}

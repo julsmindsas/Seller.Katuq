@@ -20,10 +20,30 @@
 
     <!-- Componente Visual Mejorado con Logs -->
     <div class="visual-logs-container">
-      <app-visual 
-        [inputNode]="inputNode" 
+      <app-visual
+        [inputNode]="inputNode"
         [outputNode]="outputNode">
       </app-visual>
+    </div>
+
+    <!-- VU Meters (AudioPulse indicators) -->
+    <div class="vu-meters" style="position: absolute; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 15px; z-index: 100;">
+      <div class="vu-meter-container" style="background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; text-align: center;">
+        <label style="color: white; font-size: 12px; margin-bottom: 5px; display: block;">Entrada (Micrófono)</label>
+        <app-audio-pulse
+          [volume]="inputVolume"
+          [active]="isRecording"
+          size="small">
+        </app-audio-pulse>
+      </div>
+      <div class="vu-meter-container" style="background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; text-align: center;">
+        <label style="color: white; font-size: 12px; margin-bottom: 5px; display: block;">Salida (Respuesta)</label>
+        <app-audio-pulse
+          [volume]="outputVolume"
+          [active]="true"
+          size="small">
+        </app-audio-pulse>
+      </div>
     </div>
 
     <!-- Controls Overlay -->

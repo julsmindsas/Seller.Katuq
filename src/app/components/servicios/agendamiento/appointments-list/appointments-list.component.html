@@ -1,0 +1,338 @@
+<div class="appointments-container">
+  <p-toast></p-toast>
+
+  <!-- Header -->
+  <div class="appointments-header">
+    <div class="header-title">
+      <h2>
+        <i class="pi pi-calendar"></i>
+        Agenda de Citas
+      </h2>
+      <p-tag
+        [value]="currentMode"
+        [severity]="currentMode === 'DEMO' ? 'warning' : 'success'"
+        [icon]="currentMode === 'DEMO' ? 'pi pi-bolt' : 'pi pi-check-circle'">
+      </p-tag>
+    </div>
+
+    <div class="header-actions">
+      <button pButton
+              type="button"
+              label="Cambiar Modo"
+              icon="pi pi-refresh"
+              class="p-button-sm p-button-outlined"
+              (click)="toggleMode()"
+              [pTooltip]="'Cambiar a ' + (currentMode === 'DEMO' ? 'PRODUCTION' : 'DEMO')">
+      </button>
+
+      <button pButton
+              type="button"
+              label="Exportar"
+              icon="pi pi-download"
+              class="p-button-sm p-button-outlined"
+              (click)="exportAppointments()">
+      </button>
+
+      <button pButton
+              type="button"
+              label="Limpiar Todo"
+              icon="pi pi-trash"
+              class="p-button-sm p-button-danger p-button-outlined"
+              (click)="clearAllAppointments()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-icon">
+        <i class="pi pi-calendar"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">Total Citas</span>
+      </div>
+    </div>
+
+    <div class="stat-card confirmed">
+      <div class="stat-icon">
+        <i class="pi pi-check-circle"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.confirmed }}</span>
+        <span class="stat-label">Confirmadas</span>
+      </div>
+    </div>
+
+    <div class="stat-card pending">
+      <div class="stat-icon">
+        <i class="pi pi-clock"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.pending }}</span>
+        <span class="stat-label">Pendientes</span>
+      </div>
+    </div>
+
+    <div class="stat-card completed">
+      <div class="stat-icon">
+        <i class="pi pi-verified"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.completed }}</span>
+        <span class="stat-label">Completadas</span>
+      </div>
+    </div>
+
+    <div class="stat-card cancelled">
+      <div class="stat-icon">
+        <i class="pi pi-times-circle"></i>
+      </div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.cancelled }}</span>
+        <span class="stat-label">Canceladas</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-section">
+    <div class="filter-group">
+      <label>Estado</label>
+      <p-dropdown
+        [(ngModel)]="selectedStatus"
+        [options]="[
+          { label: 'Todas', value: 'all' },
+          { label: 'Confirmadas', value: 'confirmed' },
+          { label: 'Pendientes', value: 'pending' },
+          { label: 'Completadas', value: 'completed' },
+          { label: 'Canceladas', value: 'cancelled' }
+        ]"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="onStatusChange()"
+        [style]="{'width': '200px'}">
+      </p-dropdown>
+    </div>
+
+    <div class="filter-group search-group">
+      <label>Buscar</label>
+      <span class="p-input-icon-left">
+        <i class="pi pi-search"></i>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="searchText"
+          (input)="onSearchChange()"
+          placeholder="Nombre, confirmación, dispositivo..."
+          style="width: 300px">
+      </span>
+    </div>
+  </div>
+
+  <!-- Lista de Citas -->
+  <div class="appointments-list" *ngIf="!loading">
+
+    <!-- Sin resultados -->
+    <div class="empty-state" *ngIf="filteredAppointments.length === 0">
+      <i class="pi pi-calendar-times"></i>
+      <h3>No hay citas</h3>
+      <p>{{ searchText || selectedStatus !== 'all' ? 'No se encontraron citas con los filtros aplicados' : 'Aún no hay citas agendadas' }}</p>
+    </div>
+
+    <!-- Cards de Citas -->
+    <div class="appointment-card" *ngFor="let appointment of filteredAppointments">
+
+      <!-- Header del card -->
+      <div class="card-header">
+        <div class="card-header-left">
+          <h3>
+            {{ appointment.customerName }}
+            <p-tag
+              *ngIf="isDemoAppointment(appointment)"
+              value="DEMO"
+              severity="warning"
+              icon="pi pi-bolt"
+              [style]="{'margin-left': '8px'}">
+            </p-tag>
+          </h3>
+          <span class="confirmation-number">
+            <i class="pi pi-ticket"></i>
+            {{ appointment.confirmationNumber }}
+          </span>
+        </div>
+
+        <div class="card-header-right">
+          <p-tag
+            [value]="getStatusLabel(appointment.status)"
+            [severity]="getStatusSeverity(appointment.status)"
+            [icon]="'pi pi-' + (appointment.status === 'confirmed' ? 'check' : appointment.status === 'cancelled' ? 'times' : 'clock')">
+          </p-tag>
+        </div>
+      </div>
+
+      <!-- Contenido del card -->
+      <div class="card-body">
+        <div class="info-grid">
+
+          <!-- Fecha y Hora -->
+          <div class="info-item">
+            <i class="pi pi-calendar"></i>
+            <div class="info-content">
+              <label>Fecha</label>
+              <span>{{ formatDate(appointment.appointmentDate) }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <i class="pi pi-clock"></i>
+            <div class="info-content">
+              <label>Horario</label>
+              <span>{{ appointment.appointmentTime }}</span>
+            </div>
+          </div>
+
+          <!-- Contacto -->
+          <div class="info-item">
+            <i class="pi pi-phone"></i>
+            <div class="info-content">
+              <label>Teléfono</label>
+              <span>{{ appointment.phone }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <i class="pi pi-envelope"></i>
+            <div class="info-content">
+              <label>Email</label>
+              <span>{{ appointment.email }}</span>
+            </div>
+          </div>
+
+          <!-- Servicio -->
+          <div class="info-item">
+            <i class="pi pi-wrench"></i>
+            <div class="info-content">
+              <label>Tipo de Servicio</label>
+              <span>{{ getServiceTypeLabel(appointment.serviceType) }}</span>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <i class="pi pi-mobile"></i>
+            <div class="info-content">
+              <label>Dispositivo</label>
+              <span>{{ appointment.deviceInfo }}</span>
+            </div>
+          </div>
+
+          <!-- Ubicación -->
+          <div class="info-item full-width">
+            <i class="pi pi-map-marker"></i>
+            <div class="info-content">
+              <label>Dirección</label>
+              <span>{{ appointment.address }}, {{ appointment.city }}</span>
+            </div>
+          </div>
+
+          <!-- Operador Asignado -->
+          <div class="info-item full-width operador-asignado" *ngIf="appointment.operadorAsignado">
+            <i class="pi pi-user"></i>
+            <div class="info-content">
+              <label>Técnico Asignado</label>
+              <div class="operador-details">
+                <span class="operador-nombre">👷 {{ appointment.operadorAsignado.nombre }}</span>
+                <span class="operador-contacto">
+                  📱 {{ appointment.operadorAsignado.telefono }}
+                  <span class="separator">•</span>
+                  ✉️ {{ appointment.operadorAsignado.email }}
+                </span>
+                <span class="operador-distancia" *ngIf="appointment.operadorAsignado.distancia">
+                  📍 A {{ appointment.operadorAsignado.distancia }} km de distancia
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Problema -->
+          <div class="info-item full-width">
+            <i class="pi pi-info-circle"></i>
+            <div class="info-content">
+              <label>Descripción del Problema</label>
+              <span>{{ appointment.issueSummary }}</span>
+            </div>
+          </div>
+
+          <!-- Costo Estimado -->
+          <div class="info-item" *ngIf="appointment.estimatedCost">
+            <i class="pi pi-dollar"></i>
+            <div class="info-content">
+              <label>Costo Estimado</label>
+              <span>{{ appointment.estimatedCost }}</span>
+            </div>
+          </div>
+
+          <!-- Notas Especiales -->
+          <div class="info-item full-width" *ngIf="appointment.specialNotes">
+            <i class="pi pi-comment"></i>
+            <div class="info-content">
+              <label>Notas</label>
+              <span>{{ appointment.specialNotes }}</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Footer del card con acciones -->
+      <div class="card-footer">
+        <div class="card-footer-left">
+          <small class="created-at">
+            <i class="pi pi-calendar-plus"></i>
+            Creada: {{ formatDate(appointment.createdAt.split('T')[0]) }}
+          </small>
+        </div>
+
+        <div class="card-footer-right">
+          <button
+            pButton
+            type="button"
+            label="Ver Detalles"
+            icon="pi pi-eye"
+            class="p-button-sm p-button-text"
+            disabled>
+          </button>
+
+          <button
+            pButton
+            type="button"
+            label="Re-agendar"
+            icon="pi pi-refresh"
+            class="p-button-sm p-button-text"
+            disabled
+            *ngIf="appointment.status !== 'cancelled' && appointment.status !== 'completed'">
+          </button>
+
+          <button
+            pButton
+            type="button"
+            label="Cancelar"
+            icon="pi pi-times"
+            class="p-button-sm p-button-danger p-button-text"
+            (click)="cancelAppointment(appointment)"
+            *ngIf="appointment.status !== 'cancelled' && appointment.status !== 'completed'">
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <p-progressSpinner></p-progressSpinner>
+    <p>Cargando citas...</p>
+  </div>
+
+</div>

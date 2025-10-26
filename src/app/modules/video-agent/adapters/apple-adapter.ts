@@ -17,6 +17,18 @@ export class AppleAdapter implements IAgentAdapter {
   readonly name = "Apple Diagnostics";
   readonly description = "Technical support assistant for Apple devices";
 
+  // 🎯 MODO DEMO: cambiar a false para producción
+  private readonly DEMO_MODE = true;
+
+  // Datos recolectados durante la conversación
+  private sessionData: {
+    customerName?: string;
+    deviceInfo?: string;
+    issueSummary?: string;
+    serviceType?: string;
+    coordinates?: { latitude: number; longitude: number };
+  } = {};
+
   /**
    * System instruction personalizado para Apple
    */
@@ -87,7 +99,30 @@ export class AppleAdapter implements IAgentAdapter {
 
 **Scheduling Workflow (when SERVICE is needed):**
 
-When you determine professional repair is needed, follow this conversational flow:
+🎯 **DEMO MODE (for demos and testing):**
+When in demo mode, use simplified workflow:
+
+1. **After \`provide_solution\` with SERVICE type:**
+   - Inform user that professional repair is recommended
+   - Explain why (e.g., "The screen is cracked and needs replacement")
+   - Ask: "What's your name for the appointment?"
+
+2. **Auto-schedule for tomorrow:**
+   - Use ONLY \`collect_customer_info\` with just the name
+   - Example: "Perfect! I'm scheduling your appointment for tomorrow at 10:00 AM. You'll receive confirmation shortly."
+   - Location will be auto-detected
+   - Date: Automatically tomorrow
+   - Time: 10:00 - 12:00 (default)
+   - No validation needed
+   - No back-and-forth about availability
+
+3. **Keep it simple:**
+   - Only ask for name
+   - Auto-confirm immediately
+   - Provide confirmation number
+   - Done in 2 conversational exchanges
+
+📋 **PRODUCTION MODE (for real appointments):**
 
 1. **After \`provide_solution\` with SERVICE type:**
    - Inform user that professional repair is recommended
@@ -122,7 +157,7 @@ When you determine professional repair is needed, follow this conversational flo
 **Important Notes:**
 - Be conversational, not robotic
 - Don't overwhelm with too many questions at once
-- Validate phone (10 digits) and email format
+- Validate phone (10 digits) and email format (PRODUCTION only)
 - If user declines scheduling, respect their decision
 - Always provide appointment confirmation details`;
   }
@@ -302,29 +337,32 @@ When you determine professional repair is needed, follow this conversational flo
       {
         name: "collect_customer_info",
         description:
-          "Collect customer information for service scheduling. Use this after determining SERVICE is needed.",
+          "Collect customer information for service scheduling. Use this after determining SERVICE is needed. IN DEMO MODE: Only ask for full_name, all other fields are auto-filled.",
         parameters: {
           type: "object",
           properties: {
             full_name: {
               type: "string",
-              description: "Customer full name",
+              description:
+                "Customer full name (REQUIRED in both demo and production mode)",
             },
             phone: {
               type: "string",
-              description: "Customer phone number (10 digits)",
+              description:
+                "Customer phone number - optional in demo mode, will be auto-filled",
             },
             email: {
               type: "string",
-              description: "Customer email address",
+              description:
+                "Customer email address - optional in demo mode, will be auto-filled",
             },
             has_location_permission: {
               type: "boolean",
               description:
-                "Whether user granted location permission for auto-fill address",
+                "Whether user granted location permission - auto-granted in demo mode",
             },
           },
-          required: ["full_name", "phone", "email"],
+          required: ["full_name"],
         },
       },
       {
@@ -445,12 +483,36 @@ When you determine professional repair is needed, follow this conversational flo
         resultType = "INFO";
         confidence = 100;
         summary = `Customer information collected: ${functionCall.full_name || "N/A"}`;
-        details = {
-          ...functionCall,
-          step: "customer_info_collected",
-          processed_at: new Date().toISOString(),
-        };
-        console.log("📋 Customer info collected:", details);
+
+        // Guardar datos de sesión
+        this.sessionData.customerName = functionCall.full_name;
+
+        // 🎯 MODO DEMO: Auto-agendar inmediatamente
+        if (this.DEMO_MODE) {
+          const tomorrow = new Date();
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const appointmentDate = tomorrow.toISOString().split("T")[0];
+
+          details = {
+            ...functionCall,
+            step: "auto_schedule_demo",
+            auto_scheduled: true,
+            appointment_date: appointmentDate,
+            appointment_time: "10:00 - 12:00",
+            confirmation_number: this.generateConfirmationNumber(),
+            processed_at: new Date().toISOString(),
+          };
+
+          console.log("🎯 DEMO MODE: Auto-scheduling appointment", details);
+        } else {
+          // Modo producción: solo recolectar info
+          details = {
+            ...functionCall,
+            step: "customer_info_collected",
+            processed_at: new Date().toISOString(),
+          };
+          console.log("📋 Customer info collected:", details);
+        }
         break;
 
       case "get_available_time_slots":
@@ -483,6 +545,14 @@ When you determine professional repair is needed, follow this conversational flo
         const solutionType = functionCall.solution_type;
         confidence = functionCall.confidence || 50;
 
+        // Guardar información de servicio para agendamiento
+        if (solutionType === "SERVICE") {
+          this.sessionData.serviceType =
+            this.mapIssueToServiceType(functionCall);
+          this.sessionData.issueSummary =
+            functionCall.service_reason || "Service required";
+        }
+
         switch (solutionType) {
           case "DIY":
             resultType = "DIY";
@@ -506,6 +576,19 @@ When you determine professional repair is needed, follow this conversational flo
           ...functionCall,
           processed_at: new Date().toISOString(),
         };
+        break;
+
+      case "analyze_device":
+        // Guardar información del dispositivo
+        this.sessionData.deviceInfo =
+          `${functionCall.device_type || "Apple Device"} ${functionCall.model || ""}`.trim();
+        resultType = "INFO";
+        summary = `Device analyzed: ${this.sessionData.deviceInfo}`;
+        details = {
+          ...functionCall,
+          processed_at: new Date().toISOString(),
+        };
+        console.log("📱 Device analyzed:", details);
         break;
 
       default:
@@ -569,12 +652,30 @@ When you determine professional repair is needed, follow this conversational flo
    * Genera número de confirmación único
    */
   private generateConfirmationNumber(): string {
-    const prefix = "APL";
+    const prefix = this.DEMO_MODE ? "DEMO" : "APL";
     const timestamp = Date.now().toString().slice(-8);
     const random = Math.floor(Math.random() * 1000)
       .toString()
       .padStart(3, "0");
     return `${prefix}-${timestamp}-${random}`;
+  }
+
+  /**
+   * Mapea el tipo de problema al tipo de servicio
+   */
+  private mapIssueToServiceType(functionCall: any): string {
+    // Intentar extraer del service_reason o del issue_category
+    const reason = (functionCall.service_reason || "").toLowerCase();
+
+    if (reason.includes("screen") || reason.includes("display")) {
+      return "screen_repair";
+    } else if (reason.includes("battery")) {
+      return "battery_replacement";
+    } else if (reason.includes("water")) {
+      return "water_damage";
+    } else {
+      return "diagnostic";
+    }
   }
 
   /**
@@ -586,6 +687,30 @@ When you determine professional repair is needed, follow this conversational flo
 
     // Manejar pasos específicos del flujo de agendamiento
     switch (step) {
+      case "auto_schedule_demo":
+        // 🎯 MODO DEMO: Cita auto-agendada, ir directo a confirmación
+        return {
+          action: "SCHEDULE_SERVICE",
+          data: {
+            reason: `🎯 DEMO: Auto-scheduled appointment`,
+            urgency: "medium",
+            estimatedCost: "To be quoted",
+            serviceType: this.sessionData.serviceType || "Apple Device Repair",
+            appointmentDate: details.appointment_date,
+            appointmentTime: details.appointment_time,
+            confirmationNumber: details.confirmation_number,
+            customerName: details.full_name,
+            phone: "Demo - Auto-detected",
+            email: "demo@katuq.com",
+            deviceInfo: this.sessionData.deviceInfo || "Apple Device",
+            issueSummary: this.sessionData.issueSummary || "Diagnostic needed",
+            address: "Auto-detected location",
+            specialNotes: "🎯 DEMO MODE - Auto-scheduled for tomorrow 10:00 AM",
+            isDemoMode: true,
+          },
+          priority: "high",
+        };
+
       case "customer_info_collected":
         return {
           action: "SHOW_INFO",
@@ -627,6 +752,7 @@ When you determine professional repair is needed, follow this conversational flo
             issueSummary: details.issue_summary,
             address: details.address,
             specialNotes: details.special_notes,
+            isDemoMode: this.DEMO_MODE,  // Agregar flag para guardar en localStorage
           },
           priority: "high",
         };

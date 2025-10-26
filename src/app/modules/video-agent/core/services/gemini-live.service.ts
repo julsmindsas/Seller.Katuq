@@ -212,54 +212,83 @@ export class GeminiLiveService {
     console.log("📊 Adapter result:", result);
     console.log("🎯 Next action:", action);
 
-    // Enviar respuesta de la función al servidor como STRING
-    // Gemini espera que la respuesta sea un string, no un objeto
-    const responseMessage = `Analysis completed: ${result.summary}. Confidence: ${result.confidence}%. Type: ${result.type}.`;
-
+    // Enviar respuesta de la función al servidor
+    // Gemini Live API requiere: id, name, y response (objeto)
     this.sendFunctionResponse(
-      functionCall.id || functionCall.name,
-      responseMessage,
+      functionCall.id,
+      functionCall.name,
+      result,
     );
   }
 
   /**
    * Envía respuesta de función ejecutada
+   * Formato según documentación oficial de Google Live API:
+   * - id: string (requerido)
+   * - name: string (requerido)
+   * - response: object (requerido)
    */
-  private sendFunctionResponse(functionId: string, result: any): void {
+  private sendFunctionResponse(functionId: string, functionName: string, result: any): void {
     if (!this.session) {
       console.warn("⚠️ Cannot send function response, no session");
       return;
     }
 
-    // Convertir result a Record<string, unknown>
-    let responseData: Record<string, unknown>;
+    // Construir objeto de respuesta con valores primitivos
+    // El API acepta objetos simples con campos de tipo string, number, boolean
+    let responseData: Record<string, string | number | boolean>;
 
     if (typeof result === "string") {
-      try {
-        // Si es string, intentar parsear como JSON
-        responseData = JSON.parse(result);
-      } catch {
-        // Si no es JSON válido, envolver en objeto
-        responseData = { result };
-      }
+      responseData = { result: result };
+    } else if (typeof result === "number" || typeof result === "boolean") {
+      responseData = { result: result };
     } else if (typeof result === "object" && result !== null) {
-      // Si ya es objeto, usar directamente
-      responseData = result;
+      // Para AdapterResult, extraer campos primitivos
+      const summary = result.summary || result.message || "Function executed successfully";
+      const confidence = result.confidence || 100;
+      const type = result.type || "INFO";
+
+      responseData = {
+        success: true,
+        message: String(summary),
+        confidence: Number(confidence),
+        result_type: String(type),
+      };
+
+      // Agregar detalles específicos si existen (solo primitivos)
+      if (result.details) {
+        const details = result.details;
+        if (details.device_type) responseData.device_type = String(details.device_type);
+        if (details.model) responseData.model = String(details.model);
+        if (details.issue_description) responseData.issue = String(details.issue_description);
+        if (details.solution_type) responseData.solution_type = String(details.solution_type);
+        if (details.urgency) responseData.urgency = String(details.urgency);
+        if (details.estimated_time) responseData.estimated_time = String(details.estimated_time);
+        if (details.customer_name) responseData.customer_name = String(details.customer_name);
+      }
     } else {
-      // Para otros tipos (number, boolean, etc), envolver
-      responseData = { result };
+      responseData = { result: String(result) };
     }
 
     try {
+      console.log("📤 Sending function response:", {
+        id: functionId,
+        name: functionName,
+        response: responseData,
+      });
+
+      // Formato según documentación oficial: id, name, response
       this.session.sendToolResponse({
         functionResponses: [
           {
             id: functionId,
-            response: responseData,
+            name: functionName,  // Campo requerido que nos faltaba
+            response: responseData,  // Objeto con valores primitivos
           },
         ],
       });
-      console.log("✅ Function response sent:", functionId);
+
+      console.log("✅ Function response sent successfully");
     } catch (error) {
       console.error("❌ Error sending function response:", error);
       // No propagar el error para que no rompa la sesión

@@ -13,11 +13,15 @@ import { createBlob } from '../utils';
 })
 export class LiveAudioComponent implements OnInit, OnDestroy {
   @ViewChild(VisualComponent) visualComponent!: VisualComponent;
-  
+
   isRecording = false;
   status = '';
   error = '';
   currentKatuqToolEvent: KatuqToolEvent | null = null;
+
+  // Propiedades para VU meters (AudioPulse components)
+  inputVolume: number = 0;
+  outputVolume: number = 0;
 
   get inputNode() {
     return this.audioService.inputNode;
@@ -91,8 +95,8 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
       (audioData) => {
         if (audioData) {
           if (audioData.interrupted) {
-            this.audioService.stopAllAudio();
-            this.addVisualLog('⏹️ Audio interrumpido', 'warning');
+            // NO detener audio - dejar que termine naturalmente (como video-agent)
+            this.addVisualLog('ℹ️ Interrupción detectada (audio continúa)', 'info');
           } else if (audioData.data) {
             this.audioService.playAudioData(audioData);
             this.addVisualLog('🔊 Reproduciendo audio de respuesta', 'info');
@@ -145,6 +149,22 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
       }
     );
     this.subscriptions.push(textResponseSub);
+
+    // Subscribe to input volume (VU meter for microphone)
+    const inputVolumeSub = this.audioService.inputVolume$.subscribe(
+      (volume) => {
+        this.inputVolume = volume;
+      }
+    );
+    this.subscriptions.push(inputVolumeSub);
+
+    // Subscribe to output volume (VU meter for speaker)
+    const outputVolumeSub = this.audioService.outputVolume$.subscribe(
+      (volume) => {
+        this.outputVolume = volume;
+      }
+    );
+    this.subscriptions.push(outputVolumeSub);
   }
 
   /**

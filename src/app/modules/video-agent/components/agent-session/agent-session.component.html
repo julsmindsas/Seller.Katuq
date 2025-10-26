@@ -29,10 +29,21 @@
 
   <!-- Instrucciones Paso a Paso (solo antes de iniciar) -->
   <div class="instructions-card" *ngIf="!sessionActive && companyConfig">
-    <h2>
-      <i class="pi pi-info-circle"></i>
-      ¿Cómo funciona?
-    </h2>
+    <div class="instructions-header">
+      <h2>
+        <i class="pi pi-info-circle"></i>
+        ¿Cómo funciona?
+      </h2>
+      <!-- Botón para ver agenda -->
+      <button pButton
+              type="button"
+              icon="pi pi-calendar"
+              label="Ver mis citas"
+              class="p-button-outlined p-button-sm btn-appointments"
+              routerLink="/video-agent/appointments"
+              pTooltip="Ver citas agendadas">
+      </button>
+    </div>
     <div class="instruction-steps">
       <div class="instruction-step" *ngFor="let instruction of companyConfig.ui.instructionsForElderly; let i = index">
         <div class="step-number">{{ i + 1 }}</div>

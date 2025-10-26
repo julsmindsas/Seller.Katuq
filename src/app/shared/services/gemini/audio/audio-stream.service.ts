@@ -1,6 +1,8 @@
 import { Injectable } from "@angular/core";
 import { BehaviorSubject, Subject } from "rxjs";
 import { DEFAULT_STREAM_CONFIG } from "../models/agent-config.interface";
+import { audioRecordingWorkletCode } from "../../../worklets/gemini/audio-recording.worklet";
+import { volMeterWorkletCode } from "../../../worklets/gemini/vol-meter.worklet";
 
 /**
  * Service para captura y streaming de audio

@@ -108,12 +108,23 @@
 
     .visual-logs-container {
       position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 500px;
-      height: 600px;
+      top: 100px;
+      left: 20px;
+      width: 600px;
+      max-width: calc(100vw - 40px);
+      height: auto;
+      max-height: calc(100vh - 220px);
       z-index: 10;
       pointer-events: auto;
+
+      // Asegurar que el contenido del visual component sea visible
+      ::ng-deep .visual-container {
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      }
     }
 
     .controls-overlay {
@@ -238,9 +249,24 @@
     }
 
     .main-content {
-      // Ocultar panel de logs en móvil para mejor performance
+      // Ajustar panel de logs en móvil para mejor performance
       .visual-logs-container {
-        display: none;
+        top: 70px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        max-width: calc(100vw - 20px);
+        max-height: calc(50vh);
+
+        // Hacer el canvas más pequeño en móvil
+        ::ng-deep canvas {
+          width: 250px !important;
+          height: 250px !important;
+        }
+
+        ::ng-deep .logs-content {
+          max-height: 200px !important;
+        }
       }
 
       .controls-overlay {

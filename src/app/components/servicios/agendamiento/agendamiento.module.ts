@@ -1,30 +1,37 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { RouterModule, Routes } from '@angular/router';
+import { NgModule } from "@angular/core";
+import { CommonModule } from "@angular/common";
+import { FormsModule, ReactiveFormsModule } from "@angular/forms";
+import { RouterModule, Routes } from "@angular/router";
 
 // PrimeNG
-import { ButtonModule } from 'primeng/button';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputTextareaModule } from 'primeng/inputtextarea';
-import { CalendarModule } from 'primeng/calendar';
-import { DropdownModule } from 'primeng/dropdown';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { ButtonModule } from "primeng/button";
+import { InputTextModule } from "primeng/inputtext";
+import { InputTextareaModule } from "primeng/inputtextarea";
+import { CalendarModule } from "primeng/calendar";
+import { DropdownModule } from "primeng/dropdown";
+import { ProgressSpinnerModule } from "primeng/progressspinner";
+import { TagModule } from "primeng/tag";
+import { ToastModule } from "primeng/toast";
+import { MessagesModule } from "primeng/messages";
+import { TooltipModule } from "primeng/tooltip";
 
-// Component
-import { AgendamientoComponent } from './agendamiento.component';
+// Components
+import { AgendamientoComponent } from "./agendamiento.component";
+import { AppointmentsListComponent } from "./appointments-list/appointments-list.component";
 
 const routes: Routes = [
   {
-    path: '',
-    component: AgendamientoComponent
-  }
+    path: "",
+    component: AgendamientoComponent,
+  },
+  {
+    path: "citas",
+    component: AppointmentsListComponent,
+  },
 ];
 
 @NgModule({
-  declarations: [
-    AgendamientoComponent
-  ],
+  declarations: [AgendamientoComponent, AppointmentsListComponent],
   imports: [
     CommonModule,
     FormsModule,
@@ -36,7 +43,11 @@ const routes: Routes = [
     InputTextareaModule,
     CalendarModule,
     DropdownModule,
-    ProgressSpinnerModule
-  ]
+    ProgressSpinnerModule,
+    TagModule,
+    ToastModule,
+    MessagesModule,
+    TooltipModule,
+  ],
 })
-export class AgendamientoModule { }
+export class AgendamientoModule {}

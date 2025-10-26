@@ -4,6 +4,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { LiveAudioComponent } from './live-audio.component';
 import { Visual3dComponent } from '../visual3d/visual3d.component';
 import { VisualComponent } from '../visual/visual.component';
+import { GeminiAudioModule } from '../../../components/gemini/gemini-audio.module';
 
 const routes: Routes = [
   {
@@ -20,7 +21,8 @@ const routes: Routes = [
   ],
   imports: [
     CommonModule,
-    RouterModule.forChild(routes)
+    RouterModule.forChild(routes),
+    GeminiAudioModule  // Importar para usar AudioPulseComponent
   ]
 })
 export class LiveAudioModule { }

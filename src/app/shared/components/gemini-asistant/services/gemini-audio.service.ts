@@ -734,7 +734,7 @@ export class GeminiAudioService {
   }
 
   async initSession(config?: GeminiLiveConfig): Promise<void> {
-    const model = config?.model || 'gemini-live-2.5-flash-preview';
+    const model = config?.model || 'models/gemini-2.5-flash-native-audio-preview-09-2025';
     const systemInstruction = config?.systemInstruction ||
       "Eres un asistente de IA que responde en español, solo habla de que puedes hacer en el sistema como crear pedidos";
 
@@ -1115,7 +1115,7 @@ export class GeminiAudioService {
    */
   async initSessionWithKatuqTools(): Promise<void> {
     const config: GeminiLiveConfig = {
-      model: 'gemini-live-2.5-flash-preview',
+      model: 'models/gemini-2.5-flash-native-audio-preview-09-2025',
       systemInstruction: `Eres un asistente de voz inteligente del sistema Katuq Seller, especializado en la gestión de inventario y ventas e inventarios de productos.
 
 CAPACIDADES PRINCIPALES:

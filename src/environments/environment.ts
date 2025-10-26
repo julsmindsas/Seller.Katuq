@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.10.26.2 - 26 de Octubre 2025 (Beta)",
+  version: "2025.10.26.6 - 26 de Octubre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -39,4 +39,20 @@ export const environment = {
   },
   // GEMINI_API_KEY is injected at runtime via window['GEMINI_API_KEY']
   GEMINI_API_KEY: "AIzaSyC5vOSF1nCIm3_gIEOmiu8owhMcc3BpJyY", //s(typeof window !== 'undefined' && window['GEMINI_API_KEY']) ? window['GEMINI_API_KEY'] : '',
+
+  // 🎯 VIDEO AGENT CONFIGURATION
+  videoAgent: {
+    // DEMO MODE: Solo pide nombre, auto-agenda para mañana sin validaciones
+    // PRODUCTION MODE: Validaciones completas, slots disponibles, confirmación por email
+    mode: "DEMO" as "DEMO" | "PRODUCTION",
+
+    // Auto-detect location in demo mode
+    autoDetectLocation: true,
+
+    // Default appointment settings (DEMO mode)
+    defaultAppointment: {
+      time: "10:00 - 12:00",
+      daysAhead: 1, // Tomorrow
+    },
+  },
 };

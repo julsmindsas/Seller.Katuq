@@ -76,16 +76,16 @@ export const COMPANY_CONFIGS: { [key: string]: CompanyConfig } = {
     branding: {
       primaryColor: "#000000",
       secondaryColor: "#A6AAAE",
-      companyName: "Apple Support",
+      companyName: "Soporte Apple",
       logo: "assets/logos/apple-logo.png",
     },
     ui: {
       welcomeMessage:
-        "Hello! I'm your Apple Support assistant. Show me your device and tell me what's wrong.",
+        "¡Hola! Soy tu asistente de Soporte Apple. Muéstrame tu dispositivo y cuéntame qué problema tienes.",
       instructionsForElderly: [
-        "1. Show your iPhone, iPad, or Mac to the camera",
-        "2. Tell me what problem you're experiencing",
-        "3. I'll help you fix it or schedule a repair",
+        "Muestra tu iPhone, iPad o Mac a la cámara",
+        "Cuéntame qué problema estás experimentando",
+        "Te ayudaré a solucionarlo o agendaré una reparación",
       ],
       fontSize: "extra-large",
       highContrast: true,

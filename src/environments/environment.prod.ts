@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.10.26.2 - 26 de Octubre 2025 (Beta)",
+  version: "2025.10.26.6 - 26 de Octubre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -9,32 +9,48 @@ export const environment = {
     storageBucket: "julsmind-katuq.appspot.com",
     messagingSenderId: "262274219539",
     appId: "1:262274219539:web:bd63a33f16779c7d4689e6",
-    measurementId: "G-LFYSZ78R7F"
+    measurementId: "G-LFYSZ78R7F",
   },
-  urlPermitidas: 'https://sellercenter.katuq.com',
+  urlPermitidas: "https://sellercenter.katuq.com",
   // urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app', // API Google Cloud Functions
-  urlApi: 'https://api.katuq.com', // API AWS
-  wsVoiceServiceUrl: 'wss://api.tuservidor.com/voice-websocket',
-  voiceWsUrl: 'wss://tu-servidor-ejemplo.com',
+  urlApi: "https://api.katuq.com", // API AWS
+  wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
+  voiceWsUrl: "wss://tu-servidor-ejemplo.com",
   wompi: {
-    prod_intrity: 'test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD',
-    public_key_test: 'pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy',
-    public_key: 'pub_prod_cN70rb6aXdHMiBWj9fwY26Xyh1Oz5PUf',
-    event: 'test_events_AaaZdg5VB8tngBhZkogbXmDpbT9nWMH5',
-    redirectURL: 'https://sellercenter.katuq.com/payment-callback',
-    redirectURLTest: 'http://localhost:4200/payment-callback',
+    prod_intrity: "test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD",
+    public_key_test: "pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy",
+    public_key: "pub_prod_cN70rb6aXdHMiBWj9fwY26Xyh1Oz5PUf",
+    event: "test_events_AaaZdg5VB8tngBhZkogbXmDpbT9nWMH5",
+    redirectURL: "https://sellercenter.katuq.com/payment-callback",
+    redirectURLTest: "http://localhost:4200/payment-callback",
   },
   useModelBig: false,
   geocoding: {
     openRouteService: {
-      apiKey: 'AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I',
-      endpoint: "openroute-proxy"
+      apiKey: "AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I",
+      endpoint: "openroute-proxy",
     },
     googleMaps: {
-      apiKey: 'AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I',
-      endpoint: "gmaps-proxy"
-    }
+      apiKey: "AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I",
+      endpoint: "gmaps-proxy",
+    },
   },
-  GEMINI_API_KEY: 'AIzaSyAHT5s0bFQBG5a_vJGQWjC5OUIw0ZQPy_U',
+  GEMINI_API_KEY: "AIzaSyAHT5s0bFQBG5a_vJGQWjC5OUIw0ZQPy_U",
+
+  // 🎯 VIDEO AGENT CONFIGURATION
+  videoAgent: {
+    // DEMO MODE: Solo pide nombre, auto-agenda para mañana sin validaciones
+    // PRODUCTION MODE: Validaciones completas, slots disponibles, confirmación por email
+    mode: "PRODUCTION" as "DEMO" | "PRODUCTION",
+
+    // Auto-detect location in demo mode
+    autoDetectLocation: false,
+
+    // Default appointment settings (DEMO mode)
+    defaultAppointment: {
+      time: "10:00 - 12:00",
+      daysAhead: 1, // Tomorrow
+    },
+  },
 };

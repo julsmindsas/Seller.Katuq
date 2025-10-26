@@ -175,10 +175,23 @@
         0 0 0 1px rgba(0, 0, 0, 0.02);
     border: 1px solid rgba(0, 0, 0, 0.05);
 
+    .instructions-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.25rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+
+        .btn-appointments {
+            flex-shrink: 0;
+        }
+    }
+
     h2 {
         font-size: 1.125rem;
         font-weight: 600;
-        margin: 0 0 1.25rem 0;
+        margin: 0;
         display: flex;
         align-items: center;
         gap: 0.625rem;
@@ -1045,6 +1058,23 @@
 
         i {
             font-size: 1.75rem !important;
+        }
+    }
+}
+
+/* ==============================================
+   RESPONSIVE INSTRUCTIONS HEADER
+   ============================================== */
+
+@media (max-width: 640px) {
+    .instructions-card {
+        .instructions-header {
+            flex-direction: column;
+            align-items: flex-start;
+
+            .btn-appointments {
+                width: 100%;
+            }
         }
     }
 }

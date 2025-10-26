@@ -379,6 +379,24 @@ export class NavService implements OnDestroy {
       ],
     },
     {
+      title: "Agendamiento",
+      icon: "calendar",
+      type: "sub",
+      active: false,
+      children: [
+        {
+          path: "servicios/agendamiento",
+          title: "Solicitar servicio",
+          type: "link",
+        },
+        {
+          path: "servicios/agendamiento/citas",
+          title: "Ver citas agendadas",
+          type: "link",
+        },
+      ],
+    },
+    {
       title: "Logística",
       icon: "map-pin",
       type: "sub",

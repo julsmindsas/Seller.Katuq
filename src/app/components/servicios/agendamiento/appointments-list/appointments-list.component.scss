@@ -1,0 +1,474 @@
+.appointments-container {
+    padding: 1.5rem;
+    max-width: 1400px;
+    margin: 0 auto;
+    background: #f8f9fa;
+    min-height: 100vh;
+}
+
+// ========== HEADER ==========
+.appointments-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    gap: 1rem;
+    flex-wrap: wrap;
+
+    .header-title {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        h2 {
+            margin: 0;
+            font-size: 1.75rem;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            i {
+                color: #3b82f6;
+            }
+        }
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+}
+
+// ========== ESTADÍSTICAS ==========
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid;
+    transition: all 0.2s;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-value {
+        font-size: 1.75rem;
+        font-weight: 700;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    // Variantes de color
+    &.total {
+        border-left-color: #3b82f6;
+        .stat-icon {
+            background: #dbeafe;
+            color: #3b82f6;
+        }
+        .stat-value {
+            color: #3b82f6;
+        }
+    }
+
+    &.confirmed {
+        border-left-color: #10b981;
+        .stat-icon {
+            background: #d1fae5;
+            color: #10b981;
+        }
+        .stat-value {
+            color: #10b981;
+        }
+    }
+
+    &.pending {
+        border-left-color: #f59e0b;
+        .stat-icon {
+            background: #fef3c7;
+            color: #f59e0b;
+        }
+        .stat-value {
+            color: #f59e0b;
+        }
+    }
+
+    &.completed {
+        border-left-color: #6366f1;
+        .stat-icon {
+            background: #e0e7ff;
+            color: #6366f1;
+        }
+        .stat-value {
+            color: #6366f1;
+        }
+    }
+
+    &.cancelled {
+        border-left-color: #ef4444;
+        .stat-icon {
+            background: #fee2e2;
+            color: #ef4444;
+        }
+        .stat-value {
+            color: #ef4444;
+        }
+    }
+}
+
+// ========== FILTROS ==========
+.filters-section {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    gap: 2rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.875rem;
+        }
+
+        &.search-group {
+            flex: 1;
+            min-width: 250px;
+        }
+    }
+}
+
+// ========== LISTA DE CITAS ==========
+.appointments-list {
+    display: grid;
+    gap: 1.25rem;
+}
+
+// ========== CARD DE CITA ==========
+.appointment-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s;
+    border: 1px solid #e2e8f0;
+
+    &:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        transform: translateY(-2px);
+    }
+
+    // Header del Card
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        gap: 1rem;
+
+        .card-header-left {
+            h3 {
+                margin: 0 0 0.25rem 0;
+                font-size: 1.25rem;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+
+            .confirmation-number {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                font-size: 0.875rem;
+                opacity: 0.9;
+                font-weight: 500;
+            }
+        }
+    }
+
+    // Body del Card
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.25rem;
+    }
+
+    .info-item {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-start;
+
+        &.full-width {
+            grid-column: 1 / -1;
+        }
+
+        &.operador-asignado {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #0ea5e9;
+            margin-top: 0.5rem;
+
+            i {
+                color: #0ea5e9;
+            }
+
+            .operador-details {
+                display: flex;
+                flex-direction: column;
+                gap: 0.5rem;
+
+                .operador-nombre {
+                    font-size: 1.05rem;
+                    font-weight: 700;
+                    color: #0c4a6e;
+                }
+
+                .operador-contacto {
+                    font-size: 0.875rem;
+                    color: #475569;
+
+                    .separator {
+                        margin: 0 0.5rem;
+                        opacity: 0.5;
+                    }
+                }
+
+                .operador-distancia {
+                    font-size: 0.875rem;
+                    color: #0369a1;
+                    font-weight: 600;
+                    background: rgba(14, 165, 233, 0.1);
+                    padding: 0.25rem 0.75rem;
+                    border-radius: 12px;
+                    display: inline-block;
+                    margin-top: 0.25rem;
+                }
+            }
+        }
+
+        i {
+            font-size: 1.25rem;
+            color: #3b82f6;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .info-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+
+            label {
+                font-size: 0.75rem;
+                font-weight: 600;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            span {
+                font-size: 0.95rem;
+                color: #1e293b;
+                font-weight: 500;
+                word-break: break-word;
+            }
+        }
+    }
+
+    // Footer del Card
+    .card-footer {
+        padding: 1rem 1.5rem;
+        background: #f8fafc;
+        border-top: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+
+        .card-footer-left {
+            .created-at {
+                color: #64748b;
+                font-size: 0.875rem;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+
+                i {
+                    color: #94a3b8;
+                }
+            }
+        }
+
+        .card-footer-right {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+    }
+}
+
+// ========== ESTADOS VACÍOS ==========
+.empty-state,
+.loading-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+
+    h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+        color: #475569;
+    }
+
+    p {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.95rem;
+    }
+}
+
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+// ========== RESPONSIVE ==========
+@media (max-width: 768px) {
+    .appointments-container {
+        padding: 1rem;
+    }
+
+    .appointments-header {
+        flex-direction: column;
+        align-items: flex-start;
+
+        .header-actions {
+            width: 100%;
+
+            button {
+                flex: 1;
+            }
+        }
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .filters-section {
+        flex-direction: column;
+        align-items: stretch;
+
+        .filter-group {
+            width: 100%;
+
+            &.search-group {
+                min-width: unset;
+
+                input {
+                    width: 100% !important;
+                }
+            }
+
+            ::ng-deep .p-dropdown {
+                width: 100% !important;
+            }
+        }
+    }
+
+    .appointment-card {
+        .card-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .card-footer {
+            flex-direction: column;
+            align-items: flex-start;
+
+            .card-footer-right {
+                width: 100%;
+
+                button {
+                    flex: 1;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .appointment-card .card-header h3 {
+        font-size: 1.1rem;
+    }
+}
