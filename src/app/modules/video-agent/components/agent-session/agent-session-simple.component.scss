@@ -1,0 +1,576 @@
+/**
+ * UI SIMPLIFICADA Y LIMPIA para Video Agent
+ * - Minimalista pero accesible
+ * - Textos grandes pero sin exagerar
+ * - Espaciado limpio
+ * - Colores suaves
+ */
+
+// Variables CSS dinámicas
+:root {
+    --company-primary: #667eea;
+    --company-secondary: #764ba2;
+}
+
+// Container simple
+.agent-session-container-elderly {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: #f7fafc;
+    padding: 1.5rem;
+    gap: 1.5rem;
+
+    @media (max-width: 768px) {
+        padding: 1rem;
+        gap: 1rem;
+    }
+}
+
+// Header minimalista
+.session-header-elderly {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .company-branding {
+        .company-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--company-primary);
+            margin: 0 0 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+
+            i {
+                font-size: 2rem;
+            }
+        }
+
+        .welcome-message {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin: 0;
+            font-weight: 500;
+        }
+    }
+
+    .connection-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 20px;
+        font-size: 1rem;
+        font-weight: 600;
+
+        &.connected {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        &.disconnected {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        i {
+            font-size: 1.25rem;
+        }
+    }
+}
+
+// Instrucciones simples
+.instructions-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+    h2 {
+        font-size: 1.5rem;
+        color: #2d3748;
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        i {
+            color: var(--company-primary);
+        }
+    }
+
+    .instruction-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .instruction-step {
+        display: flex;
+        gap: 1rem;
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--company-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .step-text {
+            font-size: 1.1rem;
+            color: #4a5568;
+            margin: 0;
+            line-height: 1.6;
+            padding-top: 0.25rem;
+        }
+    }
+}
+
+// Error banner simple
+.error-banner-elderly {
+    background: #fed7d7;
+    border-left: 4px solid #fc8181;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    i {
+        font-size: 1.5rem;
+        color: #c53030;
+    }
+
+    p {
+        font-size: 1.1rem;
+        color: #742a2a;
+        margin: 0;
+    }
+}
+
+// Contenido simple (grid 2 columnas)
+.session-content-elderly {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 1.5rem;
+    flex: 1;
+    min-height: 0;
+
+    @media (max-width: 1024px) {
+        grid-template-columns: 1fr;
+    }
+}
+
+// Video limpio
+.video-section-elderly {
+    position: relative;
+
+    .video-frame {
+        background: #1a202c;
+        border-radius: 12px;
+        overflow: hidden;
+        height: 100%;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    .video-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #718096;
+
+        i {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin: 0;
+        }
+    }
+
+    .streaming-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: rgba(252, 129, 129, 0.95);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        .recording-pulse {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+    }
+
+    .camera-switch-btn {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        padding: 0.75rem 1.25rem !important;
+        font-size: 1rem !important;
+        font-weight: 600 !important;
+
+        i {
+            margin-right: 0.5rem;
+        }
+    }
+}
+
+// Chat limpio
+.chat-section-elderly {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    min-height: 0;
+
+    .chat-title {
+        font-size: 1.1rem;
+        color: #2d3748;
+        margin: 0 0 0.75rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+
+        i {
+            color: var(--company-primary);
+            font-size: 1.25rem;
+        }
+    }
+
+    .messages-container-elderly {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        &::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 3px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+
+            &:hover {
+                background: #a0aec0;
+            }
+        }
+    }
+
+    .chat-empty {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #a0aec0;
+
+        i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            font-size: 0.95rem;
+            margin: 0;
+
+            &.hint {
+                font-size: 0.85rem;
+                color: #cbd5e0;
+            }
+        }
+    }
+
+    .message-bubble-elderly {
+        display: flex;
+        gap: 0.5rem;
+
+        &.user {
+            flex-direction: row-reverse;
+
+            .message-icon {
+                background: var(--company-primary);
+            }
+
+            .message-content-elderly {
+                background: #ebf4ff;
+                border-left: 3px solid var(--company-primary);
+            }
+        }
+
+        &.agent {
+            .message-icon {
+                background: #48bb78;
+            }
+
+            .message-content-elderly {
+                background: #f0fff4;
+                border-left: 3px solid #48bb78;
+            }
+        }
+
+        .message-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+
+            i {
+                font-size: 1rem;
+                color: white;
+            }
+        }
+
+        .message-content-elderly {
+            flex: 1;
+            padding: 0.625rem 0.75rem;
+            border-radius: 8px;
+
+            .message-sender {
+                font-size: 0.7rem;
+                font-weight: 700;
+                color: #718096;
+                margin-bottom: 0.25rem;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .message-text-elderly {
+                font-size: 0.925rem;
+                color: #2d3748;
+                line-height: 1.4;
+                margin-bottom: 0.25rem;
+            }
+
+            .message-time-elderly {
+                font-size: 0.7rem;
+                color: #a0aec0;
+            }
+        }
+    }
+
+    .audio-status-bar {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: linear-gradient(
+            135deg,
+            var(--company-primary) 0%,
+            var(--company-secondary) 100%
+        );
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        .pulse-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: white;
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .status-text {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+
+            i {
+                font-size: 1.25rem;
+            }
+        }
+
+        .volume-bar {
+            width: 80px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+
+            .volume-fill {
+                height: 100%;
+                background: white;
+                transition: width 0.1s ease;
+            }
+        }
+    }
+}
+
+// Controles simples
+.main-controls-elderly {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+
+    .audio-meters-elderly {
+        display: flex;
+        gap: 2rem;
+
+        .meter-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+
+            .meter-label {
+                font-size: 0.9rem;
+                font-weight: 700;
+                color: #4a5568;
+                text-transform: uppercase;
+            }
+
+            .meter-status {
+                font-size: 0.85rem;
+                font-weight: 600;
+                padding: 0.25rem 0.75rem;
+                border-radius: 12px;
+                background: #edf2f7;
+                color: #4a5568;
+            }
+        }
+    }
+
+    .btn-main-elderly {
+        width: 100%;
+        max-width: 400px;
+        padding: 1.25rem 2rem !important;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        border-radius: 12px !important;
+        border: none !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        transition: all 0.2s ease !important;
+
+        &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+        }
+
+        i {
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+
+        &.btn-start {
+            background: #48bb78 !important;
+            color: white !important;
+        }
+
+        &.btn-stop {
+            background: #fc8181 !important;
+            color: white !important;
+        }
+    }
+
+    .contact-info-elderly {
+        text-align: center;
+
+        .contact-text {
+            font-size: 1.05rem;
+            color: #4a5568;
+            margin: 0;
+
+            i {
+                color: var(--company-primary);
+                margin-right: 0.5rem;
+            }
+
+            strong {
+                color: var(--company-primary);
+                font-weight: 700;
+            }
+        }
+    }
+}
+
+// Animación simple
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+// Sidebar simple
+::ng-deep .result-sidebar-elderly {
+    .p-sidebar-header {
+        background: var(--company-primary);
+        color: white;
+        padding: 1.5rem;
+
+        .sidebar-title-elderly {
+            font-size: 1.5rem;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+    }
+
+    .p-sidebar-content {
+        padding: 1.5rem;
+    }
+}

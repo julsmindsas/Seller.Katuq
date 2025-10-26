@@ -1,177 +1,240 @@
-<div class="agent-session-container">
-  <!-- Header -->
-  <div class="session-header">
-    <div class="header-content">
-      <h2 class="session-title">
+<div class="agent-session-container-elderly"
+     [class.high-contrast]="companyConfig?.ui?.highContrast"
+     [class.session-active-mode]="sessionActive"
+     [attr.data-font-size]="companyConfig?.ui?.fontSize">
+
+  <!-- Header Simplificado para Mayores -->
+  <div class="session-header-elderly">
+    <div class="company-branding" *ngIf="companyConfig">
+      <h1 class="company-title">
         <i class="pi pi-video"></i>
-        Video Diagnóstico
-      </h2>
-
-      <!-- Selector de industria -->
-      <div class="industry-selector" *ngIf="!sessionActive">
-        <label for="industry">Tipo de asistente:</label>
-        <p-dropdown
-          id="industry"
-          [(ngModel)]="selectedIndustry"
-          [options]="availableIndustries"
-          (onChange)="onIndustryChange()"
-          [disabled]="sessionActive"
-          placeholder="Selecciona tipo"
-          styleClass="w-full"
-        >
-          <ng-template let-industry pTemplate="item">
-            <div class="industry-option">
-              <i class="pi" [ngClass]="{
-                'pi-shopping-bag': industry === 'appliance',
-                'pi-car': industry === 'automotive',
-                'pi-heart': industry === 'healthcare',
-                'pi-info-circle': industry === 'general'
-              }"></i>
-              <span>{{ industry === 'appliance' ? 'Electrodomésticos' : industry }}</span>
-            </div>
-          </ng-template>
-        </p-dropdown>
-      </div>
+        {{ companyConfig.branding.companyName }}
+        <img src="assets/images/logo/Katuq/katuq_dark.svg" alt="Powered by Katuq" class="katuq-logo-header" />
+      </h1>
+      <p class="welcome-message">{{ companyConfig.ui.welcomeMessage }}</p>
     </div>
 
-    <!-- Estado de conexión -->
-    <div class="connection-status">
-      <div class="status-indicator" [ngClass]="{
-        'connected': isConnected,
-        'disconnected': !isConnected
-      }">
-        <span class="status-dot"></span>
-        <span class="status-text">
-          {{ isConnected ? 'Conectado' : 'Desconectado' }}
-        </span>
+    <!-- Estado de Conexión MUY VISIBLE -->
+    <div class="connection-badge" [ngClass]="{
+      'connected': isConnected,
+      'disconnected': !isConnected
+    }">
+      <i class="pi" [ngClass]="{
+        'pi-check-circle': isConnected,
+        'pi-times-circle': !isConnected
+      }"></i>
+      <span>{{ isConnected ? 'CONECTADO' : 'DESCONECTADO' }}</span>
+    </div>
+  </div>
+
+  <!-- Instrucciones Paso a Paso (solo antes de iniciar) -->
+  <div class="instructions-card" *ngIf="!sessionActive && companyConfig">
+    <h2>
+      <i class="pi pi-info-circle"></i>
+      ¿Cómo funciona?
+    </h2>
+    <div class="instruction-steps">
+      <div class="instruction-step" *ngFor="let instruction of companyConfig.ui.instructionsForElderly; let i = index">
+        <div class="step-number">{{ i + 1 }}</div>
+        <p class="step-text">{{ instruction }}</p>
       </div>
     </div>
   </div>
 
-  <!-- Error Message -->
-  <div class="error-banner" *ngIf="errorMessage">
+  <!-- Error Banner MUY VISIBLE -->
+  <div class="error-banner-elderly" *ngIf="errorMessage">
     <i class="pi pi-exclamation-triangle"></i>
-    <span>{{ errorMessage }}</span>
+    <p>{{ errorMessage }}</p>
   </div>
 
-  <!-- Main Content -->
-  <div class="session-content">
-    <!-- Video Preview -->
-    <div class="video-section">
-      <div class="video-preview-container" #videoPreview>
+  <!-- Contenido Principal -->
+  <div class="session-content-elderly" *ngIf="sessionActive">
+
+    <!-- Video Preview GRANDE -->
+    <div class="video-section-elderly">
+      <div class="video-frame" #videoPreview>
         <div class="video-placeholder" *ngIf="!isVideoStreaming">
-          <i class="pi pi-video"></i>
-          <p>Vista de cámara</p>
+          <i class="pi pi-camera"></i>
+          <p>ESPERANDO CÁMARA...</p>
         </div>
       </div>
 
-      <!-- Camera Controls -->
-      <div class="video-controls" *ngIf="sessionActive">
-        <button
-          pButton
-          type="button"
-          icon="pi pi-refresh"
-          class="p-button-rounded p-button-secondary"
-          (click)="switchCamera()"
-          pTooltip="Cambiar cámara"
-          tooltipPosition="top"
-        ></button>
-
-        <div class="streaming-indicator" *ngIf="isVideoStreaming">
-          <span class="recording-dot"></span>
-          <span>Transmitiendo video</span>
-        </div>
+      <!-- Indicador de Transmisión -->
+      <div class="streaming-badge" *ngIf="isVideoStreaming">
+        <span class="recording-pulse"></span>
+        <span class="badge-text">TRANSMITIENDO</span>
       </div>
+
+      <!-- Botón Cambiar Cámara -->
+      <button
+        pButton
+        type="button"
+        class="camera-switch-btn"
+        (click)="switchCameraWithHaptic()"
+        *ngIf="isVideoStreaming"
+      >
+        <i class="pi pi-refresh"></i>
+        CAMBIAR CÁMARA
+      </button>
     </div>
 
-    <!-- Messages Panel -->
-    <div class="messages-section">
-      <div class="messages-container">
+    <!-- Chat/Conversación GRANDE -->
+    <div class="chat-section-elderly">
+      <h3 class="chat-title">
+        <i class="pi pi-comments"></i>
+        CONVERSACIÓN
+      </h3>
+
+      <div class="messages-container-elderly">
+        <!-- Placeholder cuando no hay mensajes -->
+        <div class="chat-empty" *ngIf="messages.length === 0">
+          <i class="pi pi-microphone"></i>
+          <p>Empieza a hablar...</p>
+          <p class="hint">Tu conversación aparecerá aquí</p>
+        </div>
+
+        <!-- Mensajes -->
         <div
           *ngFor="let message of messages"
-          class="message"
+          class="message-bubble-elderly"
           [ngClass]="message.role"
         >
-          <div class="message-avatar">
+          <div class="message-icon">
             <i class="pi" [ngClass]="{
               'pi-user': message.role === 'user',
               'pi-android': message.role === 'agent'
             }"></i>
           </div>
-          <div class="message-content">
-            <div class="message-text">{{ message.text }}</div>
-            <div class="message-time">
+          <div class="message-content-elderly">
+            <div class="message-sender">
+              {{ message.role === 'user' ? 'TÚ' : 'ASISTENTE' }}
+            </div>
+            <div class="message-text-elderly">{{ message.text }}</div>
+            <div class="message-time-elderly">
               {{ message.timestamp | date:'shortTime' }}
             </div>
           </div>
         </div>
+      </div>
 
-        <div class="message-placeholder" *ngIf="messages.length === 0">
-          <i class="pi pi-comments"></i>
-          <p>La conversación aparecerá aquí</p>
+      <!-- Indicador de Audio MUY VISIBLE -->
+      <div class="audio-status-bar" *ngIf="isAudioRecording">
+        <div class="pulse-indicator"></div>
+        <div class="status-text">
+          <i class="pi pi-microphone"></i>
+          <span>ESCUCHANDO...</span>
+        </div>
+        <div class="volume-bar">
+          <div class="volume-fill" [style.width.%]="inputVolume * 100"></div>
         </div>
       </div>
 
-      <!-- Audio indicator -->
-      <div class="audio-indicator" *ngIf="isAudioRecording">
-        <span class="recording-dot"></span>
-        <span>Escuchando...</span>
+      <!-- Chat Input Area (for future use) -->
+      <div class="chat-input-area" *ngIf="sessionActive">
+        <input
+          type="text"
+          placeholder="Escribe un mensaje..."
+          class="chat-input-field"
+          disabled
+        />
+        <button class="chat-send-btn" disabled>
+          <i class="pi pi-send"></i>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Session Controls -->
-  <div class="session-controls">
-    <!-- Audio Volume Indicators -->
-    <div class="audio-indicators" *ngIf="sessionActive">
-      <div class="audio-indicator-item">
-        <label>Entrada:</label>
+  <!-- Controles Principales MUY GRANDES -->
+  <div class="main-controls-elderly">
+
+    <!-- Indicadores de Audio (solo cuando sesión activa) -->
+    <div class="audio-meters-elderly" *ngIf="sessionActive">
+      <div class="meter-item">
+        <div class="meter-label">MICRÓFONO</div>
         <app-audio-pulse
           [volume]="inputVolume"
           [active]="isAudioRecording"
+          class="pulse-large"
         ></app-audio-pulse>
+        <div class="meter-status">
+          {{ isAudioRecording ? 'ACTIVO' : 'INACTIVO' }}
+        </div>
       </div>
 
-      <div class="audio-indicator-item">
-        <label>Salida:</label>
+      <div class="meter-item">
+        <div class="meter-label">RESPUESTA</div>
         <app-audio-pulse
           [volume]="outputVolume"
           [active]="isAudioPlaying"
+          class="pulse-large"
         ></app-audio-pulse>
+        <div class="meter-status">
+          {{ isAudioPlaying ? 'HABLANDO' : 'SILENCIO' }}
+        </div>
       </div>
     </div>
 
+    <!-- Botón INICIAR fijo en el footer (cuando NO hay sesión activa) -->
     <button
       *ngIf="!sessionActive"
       pButton
       type="button"
-      label="Iniciar Diagnóstico"
-      icon="pi pi-play"
-      class="p-button-lg p-button-success"
-      (click)="startSession()"
+      class="btn-main-elderly btn-start"
+      (click)="startSessionWithHaptic()"
       [loading]="isLoading"
-    ></button>
+      [disabled]="isLoading"
+    >
+      <i class="pi pi-play-circle"></i>
+      <span class="btn-text">INICIAR DIAGNÓSTICO</span>
+    </button>
 
-    <button
-      *ngIf="sessionActive"
-      pButton
-      type="button"
-      label="Finalizar Sesión"
-      icon="pi pi-stop"
-      class="p-button-lg p-button-danger"
-      (click)="endSession()"
-    ></button>
+    <!-- Información de Contacto -->
+    <div class="contact-info-elderly" *ngIf="companyConfig?.contact && sessionActive">
+      <p class="contact-text">
+        <i class="pi pi-phone"></i>
+        ¿Necesitas ayuda? Llama al
+        <strong>{{ companyConfig.contact.phone }}</strong>
+      </p>
+    </div>
+
+    <!-- Katuq Logo Footer -->
+    <div class="katuq-footer-logo">
+      <span class="powered-by">Powered by</span>
+      <img src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq" />
+    </div>
   </div>
 
-  <!-- Result Panel (Sidebar) -->
+  <!-- FAB Draggable - FINALIZAR TRANSMISIÓN (solo cuando sesión activa) -->
+  <button
+    *ngIf="sessionActive"
+    #fabButton
+    pButton
+    type="button"
+    class="fab-stop-elderly"
+    [class.dragging]="isDragging"
+    (touchstart)="onFabTouchStart($event)"
+    (touchmove)="onFabTouchMove($event)"
+    (touchend)="onFabTouchEnd($event)"
+    (mousedown)="onFabMouseDown($event)"
+    [style.left.px]="fabPosition.x"
+    [style.top.px]="fabPosition.y"
+  >
+    <i class="pi pi-stop-circle"></i>
+    <span class="fab-text">FINALIZAR</span>
+  </button>
+
+  <!-- Panel de Resultados (Sidebar) -->
   <p-sidebar
     [(visible)]="showResultPanel"
     position="right"
-    [style]="{ width: '400px' }"
-    styleClass="result-sidebar"
+    [style]="{ width: '90%', maxWidth: '600px' }"
+    styleClass="result-sidebar-elderly"
   >
     <ng-template pTemplate="header">
-      <h3>Resultado del Diagnóstico</h3>
+      <h2 class="sidebar-title-elderly">
+        <i class="pi pi-check-circle"></i>
+        DIAGNÓSTICO COMPLETO
+      </h2>
     </ng-template>
 
     <app-agent-result

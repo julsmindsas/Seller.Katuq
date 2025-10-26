@@ -7,4 +7,5 @@
 
 <router-outlet></router-outlet>
 
-<app-floating-button></app-floating-button>
+<!-- Solo mostrar el floating button si NO estamos en una ruta pública Y el usuario está autenticado -->
+<app-floating-button *ngIf="!isPublicRoute && authService.isLoggedIn"></app-floating-button>

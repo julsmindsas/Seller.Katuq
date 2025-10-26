@@ -95,7 +95,12 @@
               "src/assets/images/favicon.png",
               "src/assets/images/dashboard/katuqIA.png",
               "src/assets",
-              "src/manifest.webmanifest"
+              "src/manifest.webmanifest",
+              {
+                "glob": "**/*.worklet.js",
+                "input": "src/app/shared/worklets/gemini/",
+                "output": "assets/worklets/gemini/"
+              }
             ],
             "styles": [
               "src/styles.scss",

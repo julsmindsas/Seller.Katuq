@@ -114,9 +114,58 @@
         </div>
       </div>
 
-      <!-- Dirección -->
+      <!-- Dirección con Geolocalización -->
       <div class="form-section">
-        <h3><i class="pi pi-map-marker"></i> Dirección del Servicio</h3>
+        <div class="section-header-with-action">
+          <h3><i class="pi pi-map-marker"></i> Dirección del Servicio</h3>
+
+          <!-- Geolocation Button -->
+          <button
+            pButton
+            type="button"
+            label="Detectar Ubicación"
+            icon="pi pi-map"
+            class="p-button-sm p-button-outlined"
+            (click)="requestLocation()"
+            [loading]="isLoadingLocation"
+            [disabled]="isLoadingLocation"
+          ></button>
+        </div>
+
+        <!-- Location Status Messages -->
+        <div class="location-status" *ngIf="isLoadingLocation || currentLocation || locationError">
+          <p-message
+            *ngIf="isLoadingLocation"
+            severity="info"
+            text="Obteniendo tu ubicación..."
+            [style]="{'width': '100%', 'margin-bottom': '1rem'}"
+          ></p-message>
+
+          <p-message
+            *ngIf="currentLocation && !isLoadingLocation"
+            severity="success"
+            [style]="{'width': '100%', 'margin-bottom': '1rem'}"
+          >
+            <div class="location-success">
+              <span>📍 Ubicación detectada</span>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-times"
+                class="p-button-text p-button-sm p-button-rounded"
+                (click)="clearAutoLocation()"
+                pTooltip="Limpiar ubicación detectada"
+              ></button>
+            </div>
+          </p-message>
+
+          <p-message
+            *ngIf="locationError && !isLoadingLocation"
+            severity="warn"
+            [text]="locationError"
+            [style]="{'width': '100%', 'margin-bottom': '1rem'}"
+          ></p-message>
+        </div>
 
         <div class="form-grid">
           <div class="form-field full-width">
@@ -129,6 +178,10 @@
               rows="2"
               [class.p-invalid]="direccion?.invalid && direccion?.touched"
             ></textarea>
+            <small class="p-info" *ngIf="currentLocation">
+              <i class="pi pi-info-circle"></i>
+              Dirección auto-detectada. Puedes editarla si es necesario.
+            </small>
             <small class="p-error" *ngIf="direccion?.invalid && direccion?.touched">
               La dirección es requerida
             </small>

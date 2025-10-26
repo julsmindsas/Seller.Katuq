@@ -1,0 +1,130 @@
+.audio-pulse {
+  width: 48px;
+  height: 48px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+
+  // Anillo de pulso
+  .pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #667eea;
+    border-radius: 50%;
+    transition: transform 0.1s ease, border-color 0.2s ease;
+    box-sizing: border-box;
+  }
+
+  // Dot central
+  .pulse-dot {
+    width: 14px;
+    height: 14px;
+    background: #667eea;
+    border-radius: 50%;
+    z-index: 1;
+    transition: background 0.2s ease, transform 0.3s ease;
+  }
+
+  // Onda de pulso animada
+  .pulse-wave {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 2px solid #667eea;
+    border-radius: 50%;
+    opacity: 0;
+    animation: pulse-wave 1.5s ease-out infinite;
+  }
+
+  // Estados
+  &.active {
+    .pulse-ring {
+      border-color: currentColor;
+    }
+
+    .pulse-dot {
+      transform: scale(1.1);
+    }
+  }
+
+  &.hover {
+    cursor: pointer;
+
+    .pulse-dot {
+      transform: scale(1.2);
+    }
+  }
+
+  &:not(.active) {
+    .pulse-ring {
+      border-color: #94a3b8;
+    }
+
+    .pulse-dot {
+      background: #94a3b8;
+    }
+  }
+}
+
+// Animación de onda de pulso
+@keyframes pulse-wave {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0.4;
+  }
+
+  100% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+}
+
+// Variaciones de tamaño
+.audio-pulse.small {
+  width: 32px;
+  height: 32px;
+
+  .pulse-dot {
+    width: 10px;
+    height: 10px;
+  }
+}
+
+.audio-pulse.large {
+  width: 64px;
+  height: 64px;
+
+  .pulse-dot {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Tema oscuro
+.dark-theme .audio-pulse {
+  .pulse-ring {
+    border-color: #818cf8;
+  }
+
+  .pulse-dot {
+    background: #818cf8;
+  }
+
+  &:not(.active) {
+    .pulse-ring {
+      border-color: #64748b;
+    }
+
+    .pulse-dot {
+      background: #64748b;
+    }
+  }
+}

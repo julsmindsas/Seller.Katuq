@@ -212,8 +212,14 @@ export class GeminiLiveService {
     console.log("📊 Adapter result:", result);
     console.log("🎯 Next action:", action);
 
-    // Enviar respuesta de la función al servidor
-    this.sendFunctionResponse(functionCall.id || functionCall.name, result);
+    // Enviar respuesta de la función al servidor como STRING
+    // Gemini espera que la respuesta sea un string, no un objeto
+    const responseMessage = `Analysis completed: ${result.summary}. Confidence: ${result.confidence}%. Type: ${result.type}.`;
+
+    this.sendFunctionResponse(
+      functionCall.id || functionCall.name,
+      responseMessage,
+    );
   }
 
   /**
@@ -225,14 +231,39 @@ export class GeminiLiveService {
       return;
     }
 
-    this.session.sendToolResponse({
-      functionResponses: [
-        {
-          id: functionId,
-          response: { result },
-        },
-      ],
-    });
+    // Convertir result a Record<string, unknown>
+    let responseData: Record<string, unknown>;
+
+    if (typeof result === "string") {
+      try {
+        // Si es string, intentar parsear como JSON
+        responseData = JSON.parse(result);
+      } catch {
+        // Si no es JSON válido, envolver en objeto
+        responseData = { result };
+      }
+    } else if (typeof result === "object" && result !== null) {
+      // Si ya es objeto, usar directamente
+      responseData = result;
+    } else {
+      // Para otros tipos (number, boolean, etc), envolver
+      responseData = { result };
+    }
+
+    try {
+      this.session.sendToolResponse({
+        functionResponses: [
+          {
+            id: functionId,
+            response: responseData,
+          },
+        ],
+      });
+      console.log("✅ Function response sent:", functionId);
+    } catch (error) {
+      console.error("❌ Error sending function response:", error);
+      // No propagar el error para que no rompa la sesión
+    }
   }
 
   /**

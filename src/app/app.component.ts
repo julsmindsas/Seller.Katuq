@@ -1,7 +1,7 @@
-import { Component, PLATFORM_ID, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, PLATFORM_ID, Inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { LoadingBarService } from '@ngx-loading-bar/core';
-import { map, delay, withLatestFrom, takeUntil } from 'rxjs/operators';
+import { map, delay, withLatestFrom, takeUntil, filter } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
 import { SwUpdate } from '@angular/service-worker';
 import Swal from 'sweetalert2';
@@ -9,7 +9,7 @@ import { env } from 'process';
 import { environment } from './../environments/environment';
 import { Idle } from '@ng-idle/core';
 import { Keepalive } from '@ng-idle/keepalive';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
 import { NotificationService } from './shared/services/notification.service'
 import { NotificationrlService } from './shared/services/notificationrl.service'
 import { NotificationManagerService } from './shared/services/notifications/notification-manager.service'
@@ -41,6 +41,22 @@ export class AppComponent implements OnInit, OnDestroy {
   newTickets: any[];
   private destroy$ = new Subject<void>();
 
+  // Lista de rutas donde NO se debe mostrar el floating button
+  // Incluye rutas públicas y rutas de experiencia inmersiva (fullscreen)
+  private readonly PUBLIC_ROUTES = [
+    '/login',
+    '/authentication',
+    '/nuevo-registro',
+    '/change-password',
+    '/terms-conditions',
+    '/privacy-policy',
+    '/video-agent',
+    '/live-audio'
+  ];
+
+  // Propiedad para verificar si estamos en una ruta donde NO debe mostrarse el floating button
+  public isPublicRoute: boolean = false;
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private notificationService: NotificationService,
@@ -50,14 +66,15 @@ export class AppComponent implements OnInit, OnDestroy {
     private keepalive: Keepalive,
     private router: Router,
     private toastrService: ToastrService,
-    private authService: AuthService,
+    public authService: AuthService,
     public layout: LayoutService,
     public ngpService: NgpThemeService,
     private idleInterruptService: IdleInterruptService,
-    private loader: LoadingBarService, 
-    translate: TranslateService, 
+    private loader: LoadingBarService,
+    translate: TranslateService,
     private updates: SwUpdate,
-    private errorHandlerService: ErrorHandlerService
+    private errorHandlerService: ErrorHandlerService,
+    private cdr: ChangeDetectorRef
   ) {
     // Initialize loader
     this.loaders = this.loader.progress$.pipe(
@@ -197,6 +214,19 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+
+    // Verificar ruta inicial
+    this.checkPublicRoute();
+
+    // Suscribirse a cambios de ruta para actualizar isPublicRoute
+    this.router.events
+      .pipe(
+        filter(event => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.checkPublicRoute();
+      });
 
     // Configurar manejadores de error global para debugging
     if (!environment.production) {
@@ -354,13 +384,37 @@ export class AppComponent implements OnInit, OnDestroy {
     this.toastrService.info(`Perfil de inactividad cambiado a: ${profile}`, 'Configuración');
   }
 
+  /**
+   * Verifica si la ruta actual es una ruta pública
+   * donde NO se debe mostrar el floating button
+   */
+  private checkPublicRoute(): void {
+    const currentUrl = this.router.url;
+    const wasPublic = this.isPublicRoute;
+    this.isPublicRoute = this.PUBLIC_ROUTES.some(route =>
+      currentUrl.startsWith(route)
+    );
+
+    // Log de depuración
+    if (wasPublic !== this.isPublicRoute || !environment.production) {
+      console.log('🔍 [FloatingButton] Verificación de ruta:', {
+        currentUrl,
+        isPublicRoute: this.isPublicRoute,
+        shouldShowButton: !this.isPublicRoute
+      });
+    }
+
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
+  }
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
-    
+
     // Cleanup idle interrupt sources
     this.idleInterruptService.cleanup();
-    
+
     // Stop idle watching
     this.idle.stop();
   }

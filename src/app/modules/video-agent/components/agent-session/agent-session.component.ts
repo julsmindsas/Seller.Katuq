@@ -5,6 +5,7 @@ import {
   ViewChild,
   ElementRef,
 } from "@angular/core";
+import { ActivatedRoute, Router } from "@angular/router";
 import { Subject } from "rxjs";
 import { takeUntil } from "rxjs/operators";
 import { GeminiLiveService } from "../../core/services/gemini-live.service";
@@ -12,11 +13,16 @@ import { VideoStreamService } from "../../core/services/video-stream.service";
 import { AudioStreamService } from "../../core/services/audio-stream.service";
 import { AdapterRegistryService } from "../../core/services/adapter-registry.service";
 import { HacebAdapter } from "../../adapters/haceb-adapter";
+import { AppleAdapter } from "../../adapters/apple-adapter";
 import {
   AgentIndustry,
   AdapterResult,
 } from "../../core/models/agent-adapter.interface";
 import { ServerMessage } from "../../core/models/agent-config.interface";
+import {
+  CompanyConfig,
+  getCompanyConfig,
+} from "../../core/models/company-config.interface";
 
 /**
  * Componente principal para sesiones de Video Agent
@@ -25,7 +31,11 @@ import { ServerMessage } from "../../core/models/agent-config.interface";
 @Component({
   selector: "app-agent-session",
   templateUrl: "./agent-session.component.html",
-  styleUrls: ["./agent-session.component.scss"],
+  styleUrls: [
+    "./agent-session.component.scss",
+    "./agent-session-simple.component.scss",
+    "./agent-session-mobile.component.scss", // Mobile-first styles (highest priority)
+  ],
 })
 export class AgentSessionComponent implements OnInit, OnDestroy {
   @ViewChild("videoPreview", { static: false })
@@ -60,10 +70,25 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
   errorMessage = "";
   cameraFacingMode: "user" | "environment" = "environment";
 
+  // Configuración de empresa
+  companyConfig!: CompanyConfig;
+
+  // FAB Draggable State
+  @ViewChild("fabButton", { static: false })
+  fabButton!: ElementRef<HTMLButtonElement>;
+  fabPosition = { x: 0, y: 0 };
+  isDragging = false;
+  private dragStartPos = { x: 0, y: 0 };
+  private touchStartPos = { x: 0, y: 0 };
+  private dragThreshold = 10; // pixels to distinguish click from drag
+  private hasMoved = false;
+
   // Cleanup
   private destroy$ = new Subject<void>();
 
   constructor(
+    private route: ActivatedRoute,
+    private router: Router,
     private geminiService: GeminiLiveService,
     private videoService: VideoStreamService,
     private audioService: AudioStreamService,
@@ -71,9 +96,52 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.loadCompanyConfig();
     this.initializeAdapters();
     this.setupSubscriptions();
     this.checkDeviceCapabilities();
+    this.setupMobileOptimizations();
+    this.initializeFabPosition();
+    this.handleFabOrientationChange();
+  }
+
+  /**
+   * Carga configuración según parámetro de URL
+   */
+  private loadCompanyConfig(): void {
+    // Obtener parámetro 'company' de URL
+    // Ejemplo: /video-agent?company=haceb
+    const companyParam = this.route.snapshot.queryParamMap.get("company");
+    this.companyConfig = getCompanyConfig(companyParam || undefined);
+
+    console.log("🏢 Company config loaded:", this.companyConfig.name);
+
+    // Aplicar estilos de branding
+    this.applyBranding();
+  }
+
+  /**
+   * Aplica colores de branding dinámicamente
+   */
+  private applyBranding(): void {
+    const root = document.documentElement;
+    root.style.setProperty(
+      "--company-primary",
+      this.companyConfig.branding.primaryColor,
+    );
+    root.style.setProperty(
+      "--company-secondary",
+      this.companyConfig.branding.secondaryColor,
+    );
+
+    // Aplicar tamaño de fuente
+    const fontSizeClass = `font-size-${this.companyConfig.ui.fontSize}`;
+    document.body.classList.add(fontSizeClass);
+
+    // Aplicar high contrast si está habilitado
+    if (this.companyConfig.ui.highContrast) {
+      document.body.classList.add("high-contrast-mode");
+    }
   }
 
   ngOnDestroy(): void {
@@ -86,9 +154,13 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
    * Inicializa y registra adapters disponibles
    */
   private initializeAdapters(): void {
-    // Registrar Haceb adapter
-    const hacebAdapter = new HacebAdapter();
-    this.adapterRegistry.registerAdapter(hacebAdapter, true, 100);
+    // Registrar Haceb adapter (comentado temporalmente)
+    // const hacebAdapter = new HacebAdapter();
+    // this.adapterRegistry.registerAdapter(hacebAdapter, true, 100);
+
+    // Registrar Apple adapter para testing
+    const appleAdapter = new AppleAdapter();
+    this.adapterRegistry.registerAdapter(appleAdapter, true, 90);
 
     // TODO: Registrar otros adapters aquí (automotive, healthcare, etc.)
 
@@ -328,6 +400,37 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
           if (adapter) {
             this.currentResult = adapter.processResult(part.functionCall);
             this.showResultPanel = true;
+
+            // CRITICAL FIX: Determinar siguiente acción y ejecutarla
+            const nextAction = adapter.getNextAction(this.currentResult);
+            console.log("🎯 Next action determined:", nextAction);
+
+            // Si la acción es SCHEDULE_SERVICE, navegar a agendamiento
+            if (nextAction.action === "SCHEDULE_SERVICE") {
+              console.log("📅 Scheduling service - navigating to agendamiento");
+
+              // Guardar información del servicio en sessionStorage
+              const pendingService = {
+                serviceType: nextAction.data.serviceType || "Reparación",
+                reason: nextAction.data.reason || "Requiere servicio técnico",
+                urgency: nextAction.data.urgency || "medium",
+                estimatedCost: nextAction.data.estimatedCost || "A cotizar",
+                diagnosticResult: this.currentResult,
+                timestamp: new Date().toISOString(),
+              };
+
+              sessionStorage.setItem(
+                "pendingService",
+                JSON.stringify(pendingService),
+              );
+              console.log(
+                "💾 Pending service saved to sessionStorage:",
+                pendingService,
+              );
+
+              // Navegar a página de agendamiento
+              this.router.navigate(["/servicios/agendamiento"]);
+            }
           }
         }
       });
@@ -387,5 +490,333 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
    */
   closeResultPanel(): void {
     this.showResultPanel = false;
+  }
+
+  /**
+   * Configuraciones específicas para móvil
+   */
+  private setupMobileOptimizations(): void {
+    // Prevenir zoom en iOS cuando se hace doble tap
+    this.preventDoubleTapZoom();
+
+    // Detectar orientación y ajustar layout
+    this.handleOrientationChange();
+
+    // Listener para cambios de orientación
+    window.addEventListener("orientationchange", () => {
+      this.handleOrientationChange();
+    });
+
+    // Prevenir pull-to-refresh en iOS durante sesión activa
+    document.body.addEventListener(
+      "touchmove",
+      (e) => {
+        if (this.sessionActive && window.scrollY === 0) {
+          e.preventDefault();
+        }
+      },
+      { passive: false },
+    );
+
+    console.log("📱 Mobile optimizations enabled");
+  }
+
+  /**
+   * Previene el zoom por doble tap en iOS
+   */
+  private preventDoubleTapZoom(): void {
+    let lastTouchEnd = 0;
+    document.addEventListener(
+      "touchend",
+      (event) => {
+        const now = Date.now();
+        if (now - lastTouchEnd <= 300) {
+          event.preventDefault();
+        }
+        lastTouchEnd = now;
+      },
+      false,
+    );
+  }
+
+  /**
+   * Maneja cambios de orientación
+   */
+  private handleOrientationChange(): void {
+    const orientation =
+      window.screen.orientation?.type ||
+      (window.innerWidth > window.innerHeight ? "landscape" : "portrait");
+
+    console.log("📱 Orientation changed:", orientation);
+
+    // Si está en landscape y la sesión está activa, ajustar video
+    if (orientation.includes("landscape") && this.sessionActive) {
+      // El CSS ya maneja esto, pero podemos agregar lógica adicional aquí
+      this.attachVideoPreview(); // Reattach para ajustar dimensiones
+    }
+  }
+
+  /**
+   * Vibración háptica para feedback táctil (solo móviles)
+   */
+  private hapticFeedback(type: "light" | "medium" | "heavy" = "light"): void {
+    if ("vibrate" in navigator) {
+      const patterns = {
+        light: 10,
+        medium: 20,
+        heavy: 30,
+      };
+      navigator.vibrate(patterns[type]);
+    }
+  }
+
+  /**
+   * Override del método startSession con feedback háptico
+   */
+  async startSessionWithHaptic(): Promise<void> {
+    this.hapticFeedback("medium");
+    await this.startSession();
+  }
+
+  /**
+   * Override del método endSession con feedback háptico
+   */
+  async endSessionWithHaptic(): Promise<void> {
+    this.hapticFeedback("heavy");
+    await this.endSession();
+  }
+
+  /**
+   * Override del método switchCamera con feedback háptico
+   */
+  async switchCameraWithHaptic(): Promise<void> {
+    this.hapticFeedback("light");
+    await this.switchCamera();
+  }
+
+  /* ==============================================
+     FAB DRAGGABLE METHODS
+     ============================================== */
+
+  /**
+   * Inicializa la posición del FAB desde localStorage o por defecto
+   */
+  private initializeFabPosition(): void {
+    const savedPosition = localStorage.getItem("fabPosition");
+
+    if (savedPosition) {
+      this.fabPosition = JSON.parse(savedPosition);
+    } else {
+      // Posición por defecto: abajo a la derecha
+      this.fabPosition = {
+        x: window.innerWidth - 90,
+        y: window.innerHeight - 90,
+      };
+    }
+
+    // Asegurar que está dentro de los límites
+    this.constrainFabPosition();
+  }
+
+  /**
+   * Touch Start - Inicia el drag
+   */
+  onFabTouchStart(event: TouchEvent): void {
+    if (this.isLoading) return;
+
+    const touch = event.touches[0];
+    this.dragStartPos = { x: touch.clientX, y: touch.clientY };
+    this.touchStartPos = { x: this.fabPosition.x, y: this.fabPosition.y };
+    this.hasMoved = false;
+    this.isDragging = false;
+
+    // NO prevenir el evento aquí para que el click funcione
+  }
+
+  /**
+   * Touch Move - Arrastra el FAB
+   */
+  onFabTouchMove(event: TouchEvent): void {
+    if (this.isLoading) return;
+
+    const touch = event.touches[0];
+    const deltaX = touch.clientX - this.dragStartPos.x;
+    const deltaY = touch.clientY - this.dragStartPos.y;
+
+    // Detectar si se movió más allá del threshold
+    if (
+      Math.abs(deltaX) > this.dragThreshold ||
+      Math.abs(deltaY) > this.dragThreshold
+    ) {
+      this.hasMoved = true;
+      this.isDragging = true;
+      // Solo prevenir eventos si realmente se está arrastrando
+      event.preventDefault();
+    }
+
+    if (this.hasMoved) {
+      this.fabPosition = {
+        x: this.touchStartPos.x + deltaX,
+        y: this.touchStartPos.y + deltaY,
+      };
+
+      // Haptic feedback sutil durante drag
+      if (Math.abs(deltaX) % 50 === 0 || Math.abs(deltaY) % 50 === 0) {
+        this.hapticFeedback("light");
+      }
+    }
+  }
+
+  /**
+   * Touch End - Finaliza el drag
+   */
+  onFabTouchEnd(event: TouchEvent): void {
+    if (this.isLoading) return;
+
+    if (this.isDragging && this.hasMoved) {
+      // Snap a los bordes
+      this.snapFabToEdge();
+      // Guardar posición
+      this.saveFabPosition();
+      // Haptic feedback
+      this.hapticFeedback("medium");
+      // Prevenir click si se arrastró
+      event.preventDefault();
+      event.stopPropagation();
+    } else {
+      // Es un tap/click, ejecutar acción (FINALIZAR sesión)
+      this.endSessionWithHaptic();
+    }
+
+    this.isDragging = false;
+    this.hasMoved = false;
+  }
+
+  /**
+   * Mouse Down - Para soporte desktop
+   */
+  onFabMouseDown(event: MouseEvent): void {
+    if (this.isLoading) return;
+
+    this.dragStartPos = { x: event.clientX, y: event.clientY };
+    this.touchStartPos = { x: this.fabPosition.x, y: this.fabPosition.y };
+    this.hasMoved = false;
+    this.isDragging = false;
+
+    const mouseMoveHandler = (e: MouseEvent) => {
+      const deltaX = e.clientX - this.dragStartPos.x;
+      const deltaY = e.clientY - this.dragStartPos.y;
+
+      if (
+        Math.abs(deltaX) > this.dragThreshold ||
+        Math.abs(deltaY) > this.dragThreshold
+      ) {
+        this.hasMoved = true;
+        this.isDragging = true;
+      }
+
+      if (this.hasMoved) {
+        this.fabPosition = {
+          x: this.touchStartPos.x + deltaX,
+          y: this.touchStartPos.y + deltaY,
+        };
+      }
+    };
+
+    const mouseUpHandler = () => {
+      if (this.isDragging && this.hasMoved) {
+        this.snapFabToEdge();
+        this.saveFabPosition();
+      } else if (!this.hasMoved) {
+        // Es un click, ejecutar acción (FINALIZAR sesión)
+        this.endSessionWithHaptic();
+      }
+
+      this.isDragging = false;
+      this.hasMoved = false;
+
+      document.removeEventListener("mousemove", mouseMoveHandler);
+      document.removeEventListener("mouseup", mouseUpHandler);
+    };
+
+    document.addEventListener("mousemove", mouseMoveHandler);
+    document.addEventListener("mouseup", mouseUpHandler);
+
+    event.preventDefault();
+  }
+
+  /**
+   * Snap del FAB al borde más cercano
+   */
+  private snapFabToEdge(): void {
+    const padding = 16;
+    const fabSize = 72;
+    const maxX = window.innerWidth - fabSize - padding;
+    const maxY = window.innerHeight - fabSize - padding;
+
+    // Determinar borde más cercano
+    const distanceToLeft = this.fabPosition.x;
+    const distanceToRight = window.innerWidth - this.fabPosition.x;
+    const distanceToTop = this.fabPosition.y;
+    const distanceToBottom = window.innerHeight - this.fabPosition.y;
+
+    const minDistance = Math.min(
+      distanceToLeft,
+      distanceToRight,
+      distanceToTop,
+      distanceToBottom,
+    );
+
+    // Snap al borde más cercano
+    if (minDistance === distanceToLeft) {
+      this.fabPosition.x = padding;
+    } else if (minDistance === distanceToRight) {
+      this.fabPosition.x = maxX;
+    }
+
+    if (minDistance === distanceToTop) {
+      this.fabPosition.y = padding;
+    } else if (minDistance === distanceToBottom) {
+      this.fabPosition.y = maxY;
+    }
+
+    // Asegurar dentro de límites
+    this.constrainFabPosition();
+  }
+
+  /**
+   * Limita la posición del FAB dentro de los límites de la pantalla
+   */
+  private constrainFabPosition(): void {
+    const padding = 16;
+    const fabSize = 72;
+    const maxX = window.innerWidth - fabSize - padding;
+    const maxY = window.innerHeight - fabSize - padding;
+
+    this.fabPosition.x = Math.max(padding, Math.min(this.fabPosition.x, maxX));
+    this.fabPosition.y = Math.max(padding, Math.min(this.fabPosition.y, maxY));
+  }
+
+  /**
+   * Guarda la posición del FAB en localStorage
+   */
+  private saveFabPosition(): void {
+    localStorage.setItem("fabPosition", JSON.stringify(this.fabPosition));
+  }
+
+  /**
+   * Maneja cambios de orientación para reposicionar el FAB
+   */
+  private handleFabOrientationChange(): void {
+    window.addEventListener("orientationchange", () => {
+      setTimeout(() => {
+        this.constrainFabPosition();
+        this.saveFabPosition();
+      }, 300);
+    });
+
+    window.addEventListener("resize", () => {
+      this.constrainFabPosition();
+    });
   }
 }

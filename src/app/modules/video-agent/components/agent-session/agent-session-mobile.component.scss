@@ -1,0 +1,1284 @@
+/**
+ * Mobile-First Styles for Video Agent
+ * Optimized for touch interactions and vertical screens
+ */
+
+/* ==============================================
+   MOBILE-FIRST BASE LAYOUT
+   ============================================== */
+
+.agent-session-container-elderly {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: -webkit-fill-available; /* iOS fix */
+    background: #f8f9fa; /* Fondo plano, sin gradiente */
+    position: relative;
+    overflow-x: hidden;
+
+    /* Remove default padding on mobile */
+    padding: 0;
+
+    /* Space for fixed footer button only when session is NOT active */
+    &:not(.session-active-mode) {
+        padding-bottom: 64px;
+    }
+
+    /* Katuq brand colors */
+    --katuq-primary: #459bd1;
+    --katuq-secondary: #4555d1;
+    --katuq-tertiary: #00a5d2;
+    --katuq-success: #51bb25;
+    --katuq-danger: #dc3545;
+
+    /* Use CSS custom properties for dynamic colors */
+    --primary-color: var(--company-primary, var(--katuq-primary));
+    --secondary-color: var(--company-secondary, var(--katuq-secondary));
+}
+
+/* ==============================================
+   HEADER - MODERN GLASSMORPHISM DESIGN
+   ============================================== */
+
+.session-header-elderly {
+    /* Glassmorphism Effect */
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    padding: 0.875rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+
+    /* Ultra-subtle shadow */
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+
+    /* Thin accent line at bottom */
+    border-bottom: 1px solid rgba(69, 155, 209, 0.15);
+
+    .company-branding {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+
+        .company-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+            color: #1a1a1a;
+            letter-spacing: -0.02em;
+
+            i {
+                font-size: 1.5rem;
+                color: var(--katuq-primary);
+            }
+
+            .katuq-logo-header {
+                height: 16px; /* Small logo */
+                margin-left: 0.5rem;
+                opacity: 0.7;
+                vertical-align: middle;
+            }
+        }
+
+        .welcome-message {
+            display: none; /* Hide on mobile for cleaner look */
+        }
+    }
+
+    .connection-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 24px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        &.connected {
+            background: rgba(81, 187, 37, 0.12);
+            color: #51bb25;
+            border: 1px solid rgba(81, 187, 37, 0.2);
+
+            i {
+                font-size: 0.625rem;
+                animation: pulse-success 2s infinite;
+            }
+        }
+
+        &.disconnected {
+            background: rgba(220, 53, 69, 0.12);
+            color: #dc3545;
+            border: 1px solid rgba(220, 53, 69, 0.2);
+
+            i {
+                font-size: 0.625rem;
+            }
+        }
+    }
+}
+
+/* Show welcome message on tablet+ */
+@media (min-width: 640px) {
+    .session-header-elderly {
+        padding: 1rem 1.25rem;
+
+        .company-branding {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.375rem;
+
+            .company-title {
+                font-size: 1.375rem;
+
+                .katuq-logo-header {
+                    height: 20px; /* Slightly larger on tablet */
+                    margin-left: 0.75rem;
+                }
+            }
+
+            .welcome-message {
+                display: block;
+                font-size: 0.875rem;
+                margin: 0;
+                color: #6c757d;
+                line-height: 1.4;
+            }
+        }
+
+        .connection-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1.25rem;
+        }
+    }
+}
+
+/* ==============================================
+   INSTRUCTIONS - MODERN CARD DESIGN
+   ============================================== */
+
+.instructions-card {
+    background: white;
+    margin: 1rem;
+    padding: 1.25rem;
+    border-radius: 20px;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        0 0 0 1px rgba(0, 0, 0, 0.02);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+
+    h2 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin: 0 0 1.25rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        color: #1a1a1a;
+        letter-spacing: -0.01em;
+
+        i {
+            font-size: 1.25rem;
+            color: var(--katuq-primary);
+            opacity: 0.9;
+        }
+    }
+
+    .instruction-steps {
+        display: flex;
+        flex-direction: column;
+        gap: 0.875rem;
+
+        .instruction-step {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.875rem;
+            padding: 0.75rem;
+            background: rgba(69, 155, 209, 0.03);
+            border-radius: 12px;
+            border-left: 3px solid var(--katuq-primary);
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba(69, 155, 209, 0.06);
+                transform: translateX(2px);
+            }
+
+            .step-number {
+                flex-shrink: 0;
+                width: 28px;
+                height: 28px;
+                background: var(--katuq-primary);
+                color: white;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.875rem;
+                font-weight: 700;
+                box-shadow: 0 2px 4px rgba(69, 155, 209, 0.2);
+            }
+
+            .step-text {
+                flex: 1;
+                margin: 0;
+                font-size: 0.9375rem;
+                line-height: 1.5;
+                padding-top: 0.25rem;
+                color: #495057;
+            }
+        }
+    }
+}
+
+/* ==============================================
+   ERROR BANNER - HIGHLY VISIBLE
+   ============================================== */
+
+.error-banner-elderly {
+    background: #dc3545;
+    color: white;
+    padding: 1rem 1rem;
+    margin: 1rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    animation: shake 0.5s;
+
+    i {
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    p {
+        margin: 0;
+        line-height: 1.4;
+    }
+}
+
+/* ==============================================
+   SESSION CONTENT - VERTICAL MOBILE LAYOUT
+   ============================================== */
+
+.session-content-elderly {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+
+    /* Ensure proper height calculation */
+    min-height: 0; /* Critical for flex children to shrink properly */
+
+    /* Default height (session NOT active - with footer) */
+    height: calc(100vh - 58px - 64px); /* viewport - header - footer button */
+
+    /* Full height when session is active (no footer) */
+    .session-active-mode & {
+        height: calc(100vh - 58px); /* viewport - header only */
+    }
+}
+
+/* ==============================================
+   VIDEO SECTION - OPTIMIZED FOR VERTICAL SCREENS
+   ============================================== */
+
+.video-section-elderly {
+    position: relative;
+    background: #000;
+    flex-shrink: 0; /* Prevent video from shrinking */
+
+    /* Adjusted for better mobile chat visibility */
+    height: 35vh; /* Reduced from 45vh to leave more room for chat */
+    min-height: 240px; /* Reduced from 280px */
+    max-height: 380px; /* Reduced from 450px */
+
+    .video-frame {
+        width: 100%;
+        height: 100%;
+        position: relative;
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .video-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.6);
+
+            i {
+                font-size: 4rem;
+                margin-bottom: 1rem;
+            }
+
+            p {
+                margin: 0;
+                font-size: 1.125rem;
+                font-weight: 500;
+            }
+        }
+    }
+
+    /* Streaming Badge - Top Right */
+    .streaming-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(220, 53, 69, 0.95);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        font-weight: 700;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+        .recording-pulse {
+            width: 10px;
+            height: 10px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse-recording 1.5s infinite;
+        }
+    }
+
+    /* Camera Switch Button - Bottom Right */
+    .camera-switch-btn {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: 2px solid white;
+        border-radius: 12px;
+        padding: 0.75rem 1.25rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+        /* Large touch target */
+        min-width: 48px;
+        min-height: 48px;
+
+        i {
+            font-size: 1.125rem;
+        }
+
+        &:active {
+            transform: scale(0.95);
+        }
+    }
+}
+
+/* ==============================================
+   CHAT SECTION - MOBILE OPTIMIZED
+   ============================================== */
+
+.chat-section-elderly {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    overflow: hidden;
+
+    /* Ensure chat is always visible with more space now */
+    min-height: 320px; /* Increased from 280px due to compact footer */
+    max-height: calc(65vh - 40px); /* 65% minus header height */
+
+    /* Round top corners only */
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+
+    /* Add safe area for iOS devices */
+    padding-bottom: env(safe-area-inset-bottom);
+
+    .chat-title {
+        font-size: 1.125rem;
+        font-weight: 700;
+        margin: 0;
+        padding: 1rem 1rem 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--primary-color);
+        border-bottom: 2px solid #f1f3f5;
+
+        i {
+            font-size: 1.25rem;
+        }
+    }
+
+    .messages-container-elderly {
+        flex: 1;
+        overflow-y: auto; /* Always scrollable */
+        overflow-x: hidden;
+        padding: 0.75rem; /* Reduced from 1rem */
+        display: flex;
+        flex-direction: column;
+        gap: 0.625rem; /* Reduced from 0.75rem */
+
+        /* Force scrollable behavior */
+        height: 0; /* Critical: allows flex child to shrink and scroll */
+        min-height: 200px; /* Minimum visible area */
+
+        /* Smooth scrolling on iOS */
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+
+        /* Custom scrollbar for mobile */
+        &::-webkit-scrollbar {
+            width: 4px; /* Slightly thicker for visibility */
+        }
+
+        &::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        &::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 2px;
+
+            &:hover {
+                background: rgba(0, 0, 0, 0.3);
+            }
+        }
+
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #adb5bd;
+            text-align: center;
+            padding: 2rem 1rem;
+
+            i {
+                font-size: 3.5rem;
+                margin-bottom: 1rem;
+                opacity: 0.5;
+            }
+
+            p {
+                margin: 0.25rem 0;
+                font-size: 1rem;
+
+                &.hint {
+                    font-size: 0.875rem;
+                    opacity: 0.7;
+                }
+            }
+        }
+    }
+
+    /* Audio Status Bar */
+    .audio-status-bar {
+        padding: 0.875rem 1rem;
+        background: var(--katuq-success);
+        color: white;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0;
+    }
+
+    /* Chat Input Area (for future use) */
+    .chat-input-area {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: #f8f9fa;
+        border-top: 1px solid rgba(0, 0, 0, 0.08);
+        flex-shrink: 0;
+
+        .chat-input-field {
+            flex: 1;
+            height: 40px;
+            padding: 0 1rem;
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            border-radius: 20px;
+            font-size: 0.875rem;
+            background: white;
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                background: #f1f3f5;
+            }
+
+            &::placeholder {
+                color: #adb5bd;
+            }
+        }
+
+        .chat-send-btn {
+            width: 40px;
+            height: 40px;
+            min-width: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--katuq-primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+
+            i {
+                font-size: 1rem;
+            }
+
+            &:disabled {
+                opacity: 0.4;
+                cursor: not-allowed;
+            }
+
+            &:not(:disabled):active {
+                transform: scale(0.95);
+            }
+        }
+
+        .pulse-indicator {
+            width: 12px;
+            height: 12px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse-success 1.5s infinite;
+        }
+
+        .status-text {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+
+            i {
+                font-size: 1.125rem;
+            }
+        }
+
+        .volume-bar {
+            width: 60px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            overflow: hidden;
+
+            .volume-fill {
+                height: 100%;
+                background: white;
+                transition: width 0.1s ease;
+            }
+        }
+    }
+}
+
+/* ==============================================
+   MESSAGE BUBBLES - MOBILE OPTIMIZED
+   ============================================== */
+
+.message-bubble-elderly {
+    display: flex;
+    gap: 0.625rem;
+    animation: slideUp 0.3s ease-out;
+
+    &.user {
+        flex-direction: row-reverse;
+
+        .message-content-elderly {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+        }
+
+        .message-icon {
+            background: var(--primary-color);
+        }
+    }
+
+    &.agent {
+        .message-content-elderly {
+            background: #f1f3f5;
+            color: #212529;
+            border-radius: 18px 18px 18px 4px;
+        }
+
+        .message-icon {
+            background: var(--secondary-color);
+        }
+    }
+
+    .message-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        flex-shrink: 0;
+
+        i {
+            font-size: 1.125rem;
+        }
+    }
+
+    .message-content-elderly {
+        max-width: calc(100% - 52px); /* Full width minus icon and gaps */
+        padding: 0.75rem 1rem;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+
+        .message-sender {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.375rem;
+            opacity: 0.8;
+        }
+
+        .message-text-elderly {
+            font-size: 0.875rem; /* Reduced from 1rem */
+            line-height: 1.45;
+            margin-bottom: 0.25rem;
+        }
+
+        .message-time-elderly {
+            font-size: 0.6875rem; /* Reduced from 0.75rem */
+            opacity: 0.6;
+        }
+    }
+}
+
+/* ==============================================
+   MAIN CONTROLS - ULTRA-MINIMAL MOBILE DESIGN
+   ============================================== */
+
+.main-controls-elderly {
+    background: white;
+    padding: 0; /* Remove all padding */
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+
+    /* Stick to absolute bottom */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+
+    /* Hide footer when session is active (only FAB visible) */
+    .session-active-mode & {
+        display: none;
+    }
+
+    .audio-meters-elderly {
+        display: none; /* Hide meters to save space, show only when active */
+
+        &.show-meters {
+            display: flex;
+            justify-content: space-around;
+            gap: 0.5rem;
+            margin-bottom: 0.625rem;
+            padding: 0.5rem;
+            background: rgba(69, 155, 209, 0.05);
+            border-radius: 10px;
+            border: 1px solid rgba(69, 155, 209, 0.1);
+
+            .meter-item {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 0.25rem;
+
+                .meter-label {
+                    font-size: 0.625rem;
+                    font-weight: 700;
+                    text-transform: uppercase;
+                    letter-spacing: 0.3px;
+                    color: #6c757d;
+                }
+
+                .meter-status {
+                    display: none; /* Hide status text to save vertical space */
+                }
+
+                app-audio-pulse {
+                    transform: scale(0.8); /* Smaller VU meters */
+                }
+            }
+        }
+    }
+
+    /* Main Action Button - FULL WIDTH TALL */
+    .btn-main-elderly {
+        width: 100%;
+        height: 64px; /* TALL button for better touch */
+        min-height: 64px;
+        border-radius: 0; /* Sharp corners to fill space */
+        padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
+        font-size: 1.0625rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        border: none;
+        box-shadow: none; /* No shadow, clean look */
+        transition: all 0.15s ease;
+        margin: 0; /* No margins */
+
+        i {
+            font-size: 1.5rem; /* Larger icon */
+        }
+
+        .btn-text {
+            font-size: 1.0625rem;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+
+        &.btn-start {
+            background: var(--katuq-success);
+            color: white;
+
+            &:hover {
+                background: darken(#51bb25, 5%);
+            }
+
+            &:active {
+                transform: scale(0.98);
+                background: darken(#51bb25, 8%);
+            }
+        }
+
+        &.btn-stop {
+            background: var(--katuq-danger);
+            color: white;
+
+            &:hover {
+                background: darken(#dc3545, 5%);
+            }
+
+            &:active {
+                transform: scale(0.98);
+                background: darken(#dc3545, 8%);
+            }
+        }
+
+        &:disabled {
+            opacity: 0.6;
+            transform: none !important;
+        }
+    }
+
+    .contact-info-elderly {
+        display: none !important; /* HIDDEN on mobile to save space */
+    }
+
+    /* Katuq Logo in Footer - HIDDEN ON MOBILE */
+    .katuq-footer-logo {
+        display: none !important; /* HIDDEN on mobile to maximize content area */
+    }
+}
+
+/* Show logo and contact only on tablet+ (640px+) */
+@media (min-width: 640px) {
+    .main-controls-elderly {
+        padding: 0.875rem 1.25rem;
+
+        .contact-info-elderly {
+            display: block !important;
+            margin-top: 0.75rem;
+            text-align: center;
+
+            .contact-text {
+                margin: 0;
+                font-size: 0.8125rem;
+                color: #6c757d;
+                line-height: 1.4;
+
+                i {
+                    color: var(--katuq-primary);
+                    margin-right: 0.25rem;
+                }
+
+                strong {
+                    color: var(--katuq-primary);
+                    font-weight: 600;
+                }
+            }
+        }
+
+        .katuq-footer-logo {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+            img {
+                height: 24px;
+                opacity: 0.7;
+            }
+
+            .powered-by {
+                font-size: 0.6875rem;
+                color: #adb5bd;
+                margin-right: 0.5rem;
+                font-weight: 500;
+            }
+        }
+    }
+}
+
+/* ==============================================
+   RESULT SIDEBAR - MOBILE FULL WIDTH
+   ============================================== */
+
+::ng-deep .result-sidebar-elderly {
+    .p-sidebar {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .p-sidebar-header {
+        background: var(--katuq-primary);
+        padding: 1.25rem 1rem;
+
+        .sidebar-title-elderly {
+            color: white;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+
+            i {
+                font-size: 1.5rem;
+            }
+        }
+    }
+
+    .p-sidebar-content {
+        padding: 1rem;
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+}
+
+/* ==============================================
+   ANIMATIONS
+   ============================================== */
+
+@keyframes pulse-success {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.15);
+    }
+}
+
+@keyframes pulse-recording {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* ==============================================
+   LANDSCAPE MODE OPTIMIZATIONS
+   ============================================== */
+
+@media (orientation: landscape) and (max-height: 500px) {
+    .video-section-elderly {
+        height: 60vh;
+        max-height: none;
+    }
+
+    .chat-section-elderly {
+        .messages-container-elderly {
+            max-height: 25vh;
+        }
+    }
+
+    .instructions-card {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+}
+
+/* ==============================================
+   TABLET OPTIMIZATIONS (768px+)
+   ============================================== */
+
+@media (min-width: 768px) {
+    .agent-session-container-elderly {
+        padding: 1rem;
+    }
+
+    .session-content-elderly {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .video-section-elderly {
+        height: auto;
+        min-height: 400px;
+        max-height: 600px;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .chat-section-elderly {
+        border-radius: 16px;
+    }
+
+    .main-controls-elderly {
+        grid-column: 1 / -1;
+    }
+}
+
+/* ==============================================
+   HIGH CONTRAST MODE
+   ============================================== */
+
+.high-contrast {
+    .session-header-elderly {
+        border-bottom: 3px solid #000;
+    }
+
+    .message-content-elderly {
+        border: 2px solid #000;
+    }
+
+    .btn-main-elderly {
+        border: 3px solid #000;
+    }
+}
+
+/* ==============================================
+   FONT SIZE VARIATIONS
+   ============================================== */
+
+[data-font-size="extra-large"] {
+    .company-title {
+        font-size: 1.75rem !important;
+    }
+
+    .welcome-message {
+        font-size: 1rem !important;
+    }
+
+    .message-text-elderly {
+        font-size: 1.125rem !important;
+    }
+
+    .btn-main-elderly {
+        font-size: 1.25rem !important;
+        height: 72px;
+
+        i {
+            font-size: 1.75rem !important;
+        }
+    }
+}
+
+/* ==============================================
+   PULL-TO-REFRESH INDICATOR (Optional Enhancement)
+   ============================================== */
+
+.pull-to-refresh {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    padding: 0.5rem 1rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    transition: transform 0.3s;
+
+    &.visible {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* ==============================================
+   FAB DRAGGABLE BUTTON
+   ============================================== */
+
+.fab-stop-elderly {
+    position: fixed;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+
+    /* Gradient background for depth */
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+
+    color: white;
+    border: none;
+
+    /* Elevated shadow with glow */
+    box-shadow:
+        0 4px 12px rgba(220, 53, 69, 0.5),
+        0 8px 24px rgba(220, 53, 69, 0.3),
+        0 0 0 0 rgba(220, 53, 69, 0.4);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    z-index: 1000;
+    cursor: move;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+
+    /* Inner glow effect */
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 4px;
+        border-radius: 50%;
+        background: radial-gradient(
+            circle at 30% 30%,
+            rgba(255, 255, 255, 0.3),
+            transparent 60%
+        );
+        pointer-events: none;
+    }
+
+    /* Smooth transitions */
+    transition:
+        transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        background 0.3s ease;
+
+    i {
+        font-size: 1.75rem;
+        margin-bottom: 0.125rem;
+    }
+
+    .fab-text {
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1;
+    }
+
+    /* Hover state (desktop) */
+    &:hover:not(.dragging):not(:disabled) {
+        transform: scale(1.1) translateY(-2px);
+        background: linear-gradient(135deg, #e84855 0%, #d32f3f 100%);
+        box-shadow:
+            0 8px 20px rgba(220, 53, 69, 0.6),
+            0 16px 40px rgba(220, 53, 69, 0.4),
+            0 0 0 8px rgba(220, 53, 69, 0.1);
+    }
+
+    /* Active/Pressed state */
+    &:active:not(.dragging):not(:disabled) {
+        transform: scale(0.92);
+        box-shadow:
+            0 2px 8px rgba(220, 53, 69, 0.4),
+            0 4px 16px rgba(220, 53, 69, 0.2);
+    }
+
+    /* Dragging state */
+    &.dragging {
+        transform: scale(1.2) rotate(5deg);
+        background: linear-gradient(135deg, #ff4757 0%, #e84855 100%);
+        box-shadow:
+            0 12px 28px rgba(220, 53, 69, 0.7),
+            0 24px 48px rgba(220, 53, 69, 0.5),
+            0 0 0 12px rgba(220, 53, 69, 0.15);
+        opacity: 0.95;
+        cursor: grabbing;
+        transition: none; /* Remove transitions during drag */
+
+        /* Enhanced glow while dragging */
+        &::after {
+            background: radial-gradient(
+                circle at 30% 30%,
+                rgba(255, 255, 255, 0.5),
+                transparent 50%
+            );
+        }
+    }
+
+    /* Disabled state */
+    &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        box-shadow:
+            0 2px 8px rgba(220, 53, 69, 0.2),
+            0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Loading state (PrimeNG) */
+    &.p-button-loading {
+        cursor: wait;
+
+        .fab-text {
+            display: none; /* Hide text when loading */
+        }
+    }
+
+    /* Pulsing animation when idle - More dramatic */
+    @keyframes fab-pulse-stop {
+        0%,
+        100% {
+            box-shadow:
+                0 4px 12px rgba(220, 53, 69, 0.5),
+                0 8px 24px rgba(220, 53, 69, 0.3),
+                0 0 0 0 rgba(220, 53, 69, 0.4);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow:
+                0 8px 20px rgba(220, 53, 69, 0.7),
+                0 16px 40px rgba(220, 53, 69, 0.5),
+                0 0 0 8px rgba(220, 53, 69, 0.2);
+            transform: scale(1.05);
+        }
+    }
+
+    &:not(.dragging):not(:disabled) {
+        animation: fab-pulse-stop 2.5s ease-in-out infinite;
+    }
+}
+
+/* Drag hint indicator - Ripple effect */
+.fab-stop-elderly::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    background: transparent;
+    border: 3px dashed rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.fab-stop-elderly.dragging::before {
+    opacity: 1;
+    animation:
+        rotate-dashed 4s linear infinite,
+        ripple-expand 1.5s ease-out infinite;
+}
+
+/* Ripple expansion animation */
+@keyframes ripple-expand {
+    0% {
+        inset: -8px;
+        opacity: 1;
+    }
+    100% {
+        inset: -20px;
+        opacity: 0;
+    }
+}
+
+@keyframes rotate-dashed {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) {
+    .fab-stop-elderly {
+        width: 80px;
+        height: 80px;
+
+        i {
+            font-size: 2rem;
+        }
+
+        .fab-text {
+            font-size: 0.6875rem;
+        }
+    }
+}
+
+/* High contrast mode */
+.high-contrast .fab-stop-elderly {
+    border: 3px solid #000;
+
+    &::before {
+        border-color: #000;
+    }
+}

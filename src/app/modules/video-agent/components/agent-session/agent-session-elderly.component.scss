@@ -1,0 +1,644 @@
+/**
+ * Estilos para UI de Video Agent optimizada para PERSONAS MAYORES
+ * - Textos grandes
+ * - Alto contraste
+ * - Iconos claros
+ * - Espaciado generoso
+ * - Colores dinámicos por empresa
+ */
+
+// Variables CSS dinámicas (se setean desde TypeScript)
+:root {
+  --company-primary: #667eea;
+  --company-secondary: #764ba2;
+  --font-size-base: 18px;
+  --spacing-base: 1.5rem;
+}
+
+// Modificadores de tamaño de fuente
+.font-size-normal {
+  --font-size-base: 16px;
+  --font-size-large: 20px;
+  --font-size-xl: 28px;
+}
+
+.font-size-large {
+  --font-size-base: 20px;
+  --font-size-large: 26px;
+  --font-size-xl: 36px;
+}
+
+.font-size-extra-large {
+  --font-size-base: 24px;
+  --font-size-large: 32px;
+  --font-size-xl: 48px;
+}
+
+// Modo high contrast
+.high-contrast-mode {
+  --text-primary: #000000;
+  --text-secondary: #1a1a1a;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+  --border-color: #333333;
+}
+
+// Container principal
+.agent-session-container-elderly {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--company-primary) 0%, var(--company-secondary) 100%);
+  padding: var(--spacing-base);
+  gap: var(--spacing-base);
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+    gap: 1rem;
+  }
+}
+
+// Header para mayores
+.session-header-elderly {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+  @media (max-width: 768px) {
+    padding: 1.5rem;
+  }
+
+  .company-branding {
+    text-align: center;
+    margin-bottom: 1.5rem;
+
+    .company-title {
+      font-size: var(--font-size-xl);
+      font-weight: 800;
+      color: var(--company-primary);
+      margin: 0 0 1rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+
+      i {
+        font-size: 3rem;
+      }
+    }
+
+    .welcome-message {
+      font-size: var(--font-size-large);
+      color: #2d3748;
+      margin: 0;
+      line-height: 1.6;
+      font-weight: 500;
+    }
+  }
+
+  .connection-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    border-radius: 50px;
+    font-size: var(--font-size-large);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+
+    &.connected {
+      background: #48bb78;
+      color: white;
+    }
+
+    &.disconnected {
+      background: #fc8181;
+      color: white;
+    }
+
+    i {
+      font-size: 2rem;
+    }
+  }
+}
+
+// Tarjeta de instrucciones
+.instructions-card {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  h2 {
+    font-size: var(--font-size-xl);
+    color: var(--company-primary);
+    margin: 0 0 2rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    i {
+      font-size: 2.5rem;
+    }
+  }
+
+  .instruction-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .instruction-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.5rem;
+
+    .step-number {
+      flex-shrink: 0;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--company-primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    .step-text {
+      flex: 1;
+      font-size: var(--font-size-large);
+      color: #2d3748;
+      margin: 0;
+      line-height: 1.6;
+      padding-top: 0.75rem;
+    }
+  }
+}
+
+// Banner de error muy visible
+.error-banner-elderly {
+  background: #fed7d7;
+  border: 3px solid #fc8181;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+
+  i {
+    font-size: 2.5rem;
+    color: #c53030;
+    flex-shrink: 0;
+  }
+
+  p {
+    font-size: var(--font-size-large);
+    color: #742a2a;
+    margin: 0;
+    font-weight: 600;
+  }
+}
+
+// Contenido de la sesión
+.session-content-elderly {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-base);
+  flex: 1;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Sección de video
+.video-section-elderly {
+  position: relative;
+
+  .video-frame {
+    background: #1a202c;
+    border-radius: 16px;
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  .video-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #a0aec0;
+
+    i {
+      font-size: 5rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: var(--font-size-large);
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  .streaming-badge {
+    position: absolute;
+    top: 1.5rem;
+    left: 1.5rem;
+    background: #fc8181;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+    font-size: var(--font-size-base);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    .recording-pulse {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+  }
+
+  .camera-switch-btn {
+    position: absolute;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    padding: 1rem 2rem !important;
+    font-size: var(--font-size-large) !important;
+    font-weight: 700 !important;
+    border-radius: 12px !important;
+
+    i {
+      font-size: 1.5rem;
+      margin-right: 0.5rem;
+    }
+  }
+}
+
+// Sección de chat
+.chat-section-elderly {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  .chat-title {
+    font-size: var(--font-size-xl);
+    color: var(--company-primary);
+    margin: 0 0 1.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+
+    i {
+      font-size: 2rem;
+    }
+  }
+
+  .messages-container-elderly {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-right: 0.5rem;
+
+    // Scrollbar personalizado
+    &::-webkit-scrollbar {
+      width: 12px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 10px;
+
+      &:hover {
+        background: #a0aec0;
+      }
+    }
+  }
+
+  .chat-empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: #a0aec0;
+    text-align: center;
+
+    i {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: var(--font-size-large);
+      margin: 0.5rem 0;
+
+      &.hint {
+        font-size: var(--font-size-base);
+        color: #cbd5e0;
+      }
+    }
+  }
+
+  .message-bubble-elderly {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+
+    &.user {
+      flex-direction: row-reverse;
+
+      .message-icon {
+        background: var(--company-primary);
+      }
+
+      .message-content-elderly {
+        background: #ebf8ff;
+        border: 2px solid var(--company-primary);
+      }
+    }
+
+    &.agent {
+      .message-icon {
+        background: #48bb78;
+      }
+
+      .message-content-elderly {
+        background: #f0fff4;
+        border: 2px solid #48bb78;
+      }
+    }
+
+    .message-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+
+      i {
+        font-size: 2rem;
+        color: white;
+      }
+    }
+
+    .message-content-elderly {
+      flex: 1;
+      padding: 1.5rem;
+      border-radius: 16px;
+
+      .message-sender {
+        font-size: var(--font-size-base);
+        font-weight: 800;
+        color: #2d3748;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .message-text-elderly {
+        font-size: var(--font-size-large);
+        color: #1a202c;
+        line-height: 1.6;
+        margin-bottom: 0.75rem;
+      }
+
+      .message-time-elderly {
+        font-size: calc(var(--font-size-base) * 0.85);
+        color: #718096;
+        font-weight: 500;
+      }
+    }
+  }
+
+  .audio-status-bar {
+    margin-top: 1.5rem;
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    .pulse-indicator {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fc8181;
+      animation: pulse 1s ease-in-out infinite;
+    }
+
+    .status-text {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: white;
+      font-size: var(--font-size-large);
+      font-weight: 700;
+
+      i {
+        font-size: 2rem;
+      }
+    }
+
+    .volume-bar {
+      height: 16px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      overflow: hidden;
+
+      .volume-fill {
+        height: 100%;
+        background: #48bb78;
+        transition: width 0.1s ease;
+      }
+    }
+  }
+}
+
+// Controles principales
+.main-controls-elderly {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+
+  .audio-meters-elderly {
+    display: flex;
+    gap: 3rem;
+    justify-content: center;
+    width: 100%;
+
+    @media (max-width: 640px) {
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .meter-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+
+      .meter-label {
+        font-size: var(--font-size-large);
+        font-weight: 800;
+        color: #2d3748;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .pulse-large {
+        transform: scale(1.5);
+      }
+
+      .meter-status {
+        font-size: var(--font-size-base);
+        font-weight: 700;
+        padding: 0.5rem 1.5rem;
+        border-radius: 50px;
+        background: #edf2f7;
+        color: #2d3748;
+      }
+    }
+  }
+
+  .btn-main-elderly {
+    width: 100%;
+    max-width: 500px;
+    padding: 2rem 3rem !important;
+    font-size: var(--font-size-xl) !important;
+    font-weight: 800 !important;
+    border-radius: 16px !important;
+    border: none !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+    transition: all 0.3s ease !important;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    &:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    i {
+      font-size: 3rem;
+      margin-right: 1rem;
+    }
+
+    .btn-text {
+      display: inline-block;
+    }
+
+    &.btn-start {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%) !important;
+      color: white !important;
+    }
+
+    &.btn-stop {
+      background: linear-gradient(135deg, #fc8181 0%, #f56565 100%) !important;
+      color: white !important;
+    }
+  }
+
+  .contact-info-elderly {
+    text-align: center;
+
+    .contact-text {
+      font-size: var(--font-size-large);
+      color: #2d3748;
+      margin: 0;
+
+      i {
+        color: var(--company-primary);
+        font-size: 1.5rem;
+        vertical-align: middle;
+        margin-right: 0.5rem;
+      }
+
+      strong {
+        color: var(--company-primary);
+        font-weight: 800;
+        font-size: calc(var(--font-size-large) * 1.2);
+      }
+    }
+  }
+}
+
+// Animaciones
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.1);
+  }
+}
+
+// Sidebar de resultados
+::ng-deep .result-sidebar-elderly {
+  .p-sidebar-header {
+    background: var(--company-primary);
+    color: white;
+    padding: 2rem;
+
+    .sidebar-title-elderly {
+      font-size: var(--font-size-xl);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+
+      i {
+        font-size: 2.5rem;
+      }
+    }
+  }
+
+  .p-sidebar-content {
+    padding: 2rem;
+    font-size: var(--font-size-large);
+  }
+}
