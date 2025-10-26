@@ -1,0 +1,171 @@
+<div class="agent-result" [ngClass]="getResultClass()">
+  <!-- Header -->
+  <div class="result-header">
+    <div class="result-icon">
+      <i class="pi" [ngClass]="getResultIcon()"></i>
+    </div>
+    <h3 class="result-title">{{ result.summary }}</h3>
+  </div>
+
+  <!-- Confidence Badge -->
+  <div class="result-badges">
+    <span class="confidence-badge" [ngClass]="getConfidenceBadge().class">
+      <i class="pi pi-chart-line"></i>
+      {{ getConfidenceBadge().label }} ({{ result.confidence }}%)
+    </span>
+
+    <span class="priority-badge" [ngClass]="priorityBadge.class" *ngIf="action">
+      <i class="pi pi-flag"></i>
+      {{ priorityBadge.label }}
+    </span>
+  </div>
+
+  <!-- DIY Section -->
+  <div class="result-section" *ngIf="isDIY">
+    <div class="section-header">
+      <i class="pi pi-check-circle"></i>
+      <h4>Puedes resolverlo tú mismo</h4>
+    </div>
+
+    <!-- Estimated Time -->
+    <div class="info-card" *ngIf="estimatedTime !== 'N/A'">
+      <i class="pi pi-clock"></i>
+      <div>
+        <strong>Tiempo estimado:</strong>
+        <span>{{ estimatedTime }}</span>
+      </div>
+    </div>
+
+    <!-- Tools Needed -->
+    <div class="info-card" *ngIf="toolsNeeded.length > 0">
+      <i class="pi pi-briefcase"></i>
+      <div>
+        <strong>Herramientas necesarias:</strong>
+        <ul class="tools-list">
+          <li *ngFor="let tool of toolsNeeded">{{ tool }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Steps -->
+    <div class="steps-container" *ngIf="diySteps.length > 0">
+      <h5><i class="pi pi-list"></i> Pasos a seguir:</h5>
+      <div class="steps-list">
+        <div class="step" *ngFor="let step of diySteps; let i = index">
+          <div class="step-number">{{ i + 1 }}</div>
+          <div class="step-content">{{ step }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preventive Tips -->
+    <div class="tips-container" *ngIf="preventiveTips.length > 0">
+      <h5><i class="pi pi-lightbulb"></i> Tips preventivos:</h5>
+      <ul class="tips-list">
+        <li *ngFor="let tip of preventiveTips">{{ tip }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- SERVICE Section -->
+  <div class="result-section" *ngIf="isService">
+    <div class="section-header">
+      <i class="pi pi-wrench"></i>
+      <h4>Servicio técnico requerido</h4>
+    </div>
+
+    <!-- Reason -->
+    <div class="info-card">
+      <i class="pi pi-info-circle"></i>
+      <div>
+        <strong>Motivo:</strong>
+        <p>{{ serviceReason }}</p>
+      </div>
+    </div>
+
+    <!-- Urgency -->
+    <div class="info-card">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div>
+        <strong>Urgencia:</strong>
+        <span class="urgency-badge" [ngClass]="'urgency-' + urgency">
+          {{ urgency === 'urgente' ? 'URGENTE' : urgency | titlecase }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Estimated Cost -->
+    <div class="info-card" *ngIf="estimatedCost">
+      <i class="pi pi-dollar"></i>
+      <div>
+        <strong>Costo estimado:</strong>
+        <span>{{ estimatedCost }}</span>
+      </div>
+    </div>
+
+    <!-- Schedule Button -->
+    <button
+      pButton
+      type="button"
+      label="Agendar Servicio Técnico"
+      icon="pi pi-calendar-plus"
+      class="p-button-lg p-button-success schedule-btn"
+      (click)="navigateToScheduling()"
+    ></button>
+  </div>
+
+  <!-- ESCALATE Section -->
+  <div class="result-section" *ngIf="isEscalate">
+    <div class="section-header">
+      <i class="pi pi-phone"></i>
+      <h4>Requiere atención especializada</h4>
+    </div>
+
+    <div class="info-card">
+      <i class="pi pi-info-circle"></i>
+      <div>
+        <p>Este caso necesita ser evaluado por un especialista. Nuestro equipo se pondrá en contacto contigo pronto.</p>
+      </div>
+    </div>
+
+    <button
+      pButton
+      type="button"
+      label="Contactar Soporte"
+      icon="pi pi-phone"
+      class="p-button-lg p-button-warning"
+    ></button>
+  </div>
+
+  <!-- INFO Section -->
+  <div class="result-section" *ngIf="!isDIY && !isService && !isEscalate">
+    <div class="section-header">
+      <i class="pi pi-info-circle"></i>
+      <h4>Información</h4>
+    </div>
+
+    <div class="info-card">
+      <div>
+        <p>{{ result.summary }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metadata -->
+  <div class="result-metadata" *ngIf="result.metadata">
+    <small>
+      <i class="pi pi-calendar"></i>
+      {{ result.metadata.timestamp | date:'medium' }}
+    </small>
+  </div>
+
+  <!-- Close Button -->
+  <button
+    pButton
+    type="button"
+    label="Cerrar"
+    icon="pi pi-times"
+    class="p-button-text p-button-secondary close-btn"
+    (click)="close()"
+  ></button>
+</div>

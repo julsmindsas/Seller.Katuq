@@ -1,0 +1,264 @@
+<div class="agendamiento-container">
+  <!-- Success Message -->
+  <div class="success-overlay" *ngIf="showSuccessMessage">
+    <div class="success-card">
+      <i class="pi pi-check-circle"></i>
+      <h2>¡Solicitud Enviada!</h2>
+      <p>Tu solicitud de servicio técnico ha sido registrada exitosamente.</p>
+      <p>Nos pondremos en contacto contigo pronto.</p>
+      <div class="success-spinner">
+        <p-progressSpinner strokeWidth="4"></p-progressSpinner>
+        <span>Redirigiendo...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="agendamiento-content" *ngIf="!showSuccessMessage">
+    <!-- Header -->
+    <div class="page-header">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-arrow-left"
+        class="p-button-text p-button-secondary"
+        (click)="onCancel()"
+      ></button>
+
+      <div class="header-text">
+        <h1>
+          <i class="pi pi-calendar-plus"></i>
+          Agendar Servicio Técnico
+        </h1>
+        <p>Completa la información para agendar tu servicio</p>
+      </div>
+    </div>
+
+    <!-- Diagnostic Info (if available) -->
+    <div class="diagnostic-info" *ngIf="pendingService">
+      <div class="info-card">
+        <div class="info-header">
+          <i class="pi pi-info-circle"></i>
+          <h3>Información del diagnóstico</h3>
+        </div>
+        <div class="info-content">
+          <div class="info-row">
+            <strong>Tipo de servicio:</strong>
+            <span>{{ pendingService.serviceType }}</span>
+          </div>
+          <div class="info-row">
+            <strong>Urgencia:</strong>
+            <span class="urgency-badge" [ngClass]="'urgency-' + pendingService.urgency">
+              {{ pendingService.urgency | titlecase }}
+            </span>
+          </div>
+          <div class="info-row" *ngIf="pendingService.estimatedCost">
+            <strong>Costo estimado:</strong>
+            <span>{{ pendingService.estimatedCost }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="agendamientoForm" (ngSubmit)="onSubmit()" class="agendamiento-form">
+      <!-- Datos del Cliente -->
+      <div class="form-section">
+        <h3><i class="pi pi-user"></i> Datos del Cliente</h3>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="nombreCompleto">Nombre Completo *</label>
+            <input
+              id="nombreCompleto"
+              type="text"
+              pInputText
+              formControlName="nombreCompleto"
+              placeholder="Ej: Juan Pérez"
+              [class.p-invalid]="nombreCompleto?.invalid && nombreCompleto?.touched"
+            />
+            <small class="p-error" *ngIf="nombreCompleto?.invalid && nombreCompleto?.touched">
+              El nombre es requerido
+            </small>
+          </div>
+
+          <div class="form-field">
+            <label for="telefono">Teléfono *</label>
+            <input
+              id="telefono"
+              type="tel"
+              pInputText
+              formControlName="telefono"
+              placeholder="3001234567"
+              [class.p-invalid]="telefono?.invalid && telefono?.touched"
+            />
+            <small class="p-error" *ngIf="telefono?.invalid && telefono?.touched">
+              Ingresa un teléfono válido (10 dígitos)
+            </small>
+          </div>
+
+          <div class="form-field full-width">
+            <label for="correo">Correo Electrónico *</label>
+            <input
+              id="correo"
+              type="email"
+              pInputText
+              formControlName="correo"
+              placeholder="correo@ejemplo.com"
+              [class.p-invalid]="correo?.invalid && correo?.touched"
+            />
+            <small class="p-error" *ngIf="correo?.invalid && correo?.touched">
+              Ingresa un correo válido
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dirección -->
+      <div class="form-section">
+        <h3><i class="pi pi-map-marker"></i> Dirección del Servicio</h3>
+
+        <div class="form-grid">
+          <div class="form-field full-width">
+            <label for="direccion">Dirección Completa *</label>
+            <textarea
+              id="direccion"
+              pInputTextarea
+              formControlName="direccion"
+              placeholder="Calle 123 #45-67, Apto 301"
+              rows="2"
+              [class.p-invalid]="direccion?.invalid && direccion?.touched"
+            ></textarea>
+            <small class="p-error" *ngIf="direccion?.invalid && direccion?.touched">
+              La dirección es requerida
+            </small>
+          </div>
+
+          <div class="form-field">
+            <label for="ciudad">Ciudad *</label>
+            <input
+              id="ciudad"
+              type="text"
+              pInputText
+              formControlName="ciudad"
+              placeholder="Ej: Bogotá"
+              [class.p-invalid]="ciudad?.invalid && ciudad?.touched"
+            />
+            <small class="p-error" *ngIf="ciudad?.invalid && ciudad?.touched">
+              La ciudad es requerida
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agendamiento -->
+      <div class="form-section">
+        <h3><i class="pi pi-calendar"></i> Fecha y Hora Preferida</h3>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="fechaPreferida">Fecha *</label>
+            <p-calendar
+              id="fechaPreferida"
+              formControlName="fechaPreferida"
+              [minDate]="availableDates[0]"
+              [maxDate]="availableDates[availableDates.length - 1]"
+              dateFormat="dd/mm/yy"
+              placeholder="Selecciona una fecha"
+              [showIcon]="true"
+              [class.p-invalid]="fechaPreferida?.invalid && fechaPreferida?.touched"
+            ></p-calendar>
+            <small class="p-error" *ngIf="fechaPreferida?.invalid && fechaPreferida?.touched">
+              Selecciona una fecha
+            </small>
+          </div>
+
+          <div class="form-field">
+            <label for="horarioPreferido">Horario *</label>
+            <p-dropdown
+              id="horarioPreferido"
+              formControlName="horarioPreferido"
+              [options]="availableTimeSlots"
+              placeholder="Selecciona horario"
+              [class.p-invalid]="horarioPreferido?.invalid && horarioPreferido?.touched"
+            ></p-dropdown>
+            <small class="p-error" *ngIf="horarioPreferido?.invalid && horarioPreferido?.touched">
+              Selecciona un horario
+            </small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información del Servicio -->
+      <div class="form-section">
+        <h3><i class="pi pi-wrench"></i> Información del Servicio</h3>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="tipoServicio">Tipo de Servicio *</label>
+            <input
+              id="tipoServicio"
+              type="text"
+              pInputText
+              formControlName="tipoServicio"
+              placeholder="Ej: Reparación de nevera"
+              [class.p-invalid]="tipoServicio?.invalid && tipoServicio?.touched"
+            />
+            <small class="p-error" *ngIf="tipoServicio?.invalid && tipoServicio?.touched">
+              El tipo de servicio es requerido
+            </small>
+          </div>
+
+          <div class="form-field full-width">
+            <label for="descripcionProblema">Descripción del Problema *</label>
+            <textarea
+              id="descripcionProblema"
+              pInputTextarea
+              formControlName="descripcionProblema"
+              placeholder="Describe el problema con el electrodoméstico"
+              rows="4"
+              [class.p-invalid]="descripcionProblema?.invalid && descripcionProblema?.touched"
+            ></textarea>
+            <small class="p-error" *ngIf="descripcionProblema?.invalid && descripcionProblema?.touched">
+              La descripción es requerida
+            </small>
+          </div>
+
+          <div class="form-field full-width">
+            <label for="observaciones">Observaciones Adicionales</label>
+            <textarea
+              id="observaciones"
+              pInputTextarea
+              formControlName="observaciones"
+              placeholder="Cualquier información adicional que consideres importante"
+              rows="3"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          pButton
+          type="button"
+          label="Cancelar"
+          icon="pi pi-times"
+          class="p-button-lg p-button-text p-button-secondary"
+          (click)="onCancel()"
+          [disabled]="isLoading"
+        ></button>
+
+        <button
+          pButton
+          type="submit"
+          label="Agendar Servicio"
+          icon="pi pi-check"
+          class="p-button-lg p-button-success"
+          [loading]="isLoading"
+          [disabled]="agendamientoForm.invalid"
+        ></button>
+      </div>
+    </form>
+  </div>
+</div>

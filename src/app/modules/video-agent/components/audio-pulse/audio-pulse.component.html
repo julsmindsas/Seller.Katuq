@@ -1,0 +1,19 @@
+<div class="audio-pulse"
+     [class.active]="active"
+     [class.hover]="hover"
+     [attr.data-volume]="volume">
+
+  <!-- Anillo de pulso exterior -->
+  <div class="pulse-ring"
+       [style.transform]="'scale(' + pulseScale + ')'"
+       [style.border-color]="pulseColor">
+  </div>
+
+  <!-- Dot central -->
+  <div class="pulse-dot"
+       [style.background]="pulseColor">
+  </div>
+
+  <!-- Ondas de pulso animadas (solo cuando activo) -->
+  <div class="pulse-wave" *ngIf="active"></div>
+</div>

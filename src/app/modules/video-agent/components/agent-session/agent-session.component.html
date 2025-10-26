@@ -1,0 +1,183 @@
+<div class="agent-session-container">
+  <!-- Header -->
+  <div class="session-header">
+    <div class="header-content">
+      <h2 class="session-title">
+        <i class="pi pi-video"></i>
+        Video Diagnóstico
+      </h2>
+
+      <!-- Selector de industria -->
+      <div class="industry-selector" *ngIf="!sessionActive">
+        <label for="industry">Tipo de asistente:</label>
+        <p-dropdown
+          id="industry"
+          [(ngModel)]="selectedIndustry"
+          [options]="availableIndustries"
+          (onChange)="onIndustryChange()"
+          [disabled]="sessionActive"
+          placeholder="Selecciona tipo"
+          styleClass="w-full"
+        >
+          <ng-template let-industry pTemplate="item">
+            <div class="industry-option">
+              <i class="pi" [ngClass]="{
+                'pi-shopping-bag': industry === 'appliance',
+                'pi-car': industry === 'automotive',
+                'pi-heart': industry === 'healthcare',
+                'pi-info-circle': industry === 'general'
+              }"></i>
+              <span>{{ industry === 'appliance' ? 'Electrodomésticos' : industry }}</span>
+            </div>
+          </ng-template>
+        </p-dropdown>
+      </div>
+    </div>
+
+    <!-- Estado de conexión -->
+    <div class="connection-status">
+      <div class="status-indicator" [ngClass]="{
+        'connected': isConnected,
+        'disconnected': !isConnected
+      }">
+        <span class="status-dot"></span>
+        <span class="status-text">
+          {{ isConnected ? 'Conectado' : 'Desconectado' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <div class="error-banner" *ngIf="errorMessage">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Main Content -->
+  <div class="session-content">
+    <!-- Video Preview -->
+    <div class="video-section">
+      <div class="video-preview-container" #videoPreview>
+        <div class="video-placeholder" *ngIf="!isVideoStreaming">
+          <i class="pi pi-video"></i>
+          <p>Vista de cámara</p>
+        </div>
+      </div>
+
+      <!-- Camera Controls -->
+      <div class="video-controls" *ngIf="sessionActive">
+        <button
+          pButton
+          type="button"
+          icon="pi pi-refresh"
+          class="p-button-rounded p-button-secondary"
+          (click)="switchCamera()"
+          pTooltip="Cambiar cámara"
+          tooltipPosition="top"
+        ></button>
+
+        <div class="streaming-indicator" *ngIf="isVideoStreaming">
+          <span class="recording-dot"></span>
+          <span>Transmitiendo video</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages Panel -->
+    <div class="messages-section">
+      <div class="messages-container">
+        <div
+          *ngFor="let message of messages"
+          class="message"
+          [ngClass]="message.role"
+        >
+          <div class="message-avatar">
+            <i class="pi" [ngClass]="{
+              'pi-user': message.role === 'user',
+              'pi-android': message.role === 'agent'
+            }"></i>
+          </div>
+          <div class="message-content">
+            <div class="message-text">{{ message.text }}</div>
+            <div class="message-time">
+              {{ message.timestamp | date:'shortTime' }}
+            </div>
+          </div>
+        </div>
+
+        <div class="message-placeholder" *ngIf="messages.length === 0">
+          <i class="pi pi-comments"></i>
+          <p>La conversación aparecerá aquí</p>
+        </div>
+      </div>
+
+      <!-- Audio indicator -->
+      <div class="audio-indicator" *ngIf="isAudioRecording">
+        <span class="recording-dot"></span>
+        <span>Escuchando...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session Controls -->
+  <div class="session-controls">
+    <!-- Audio Volume Indicators -->
+    <div class="audio-indicators" *ngIf="sessionActive">
+      <div class="audio-indicator-item">
+        <label>Entrada:</label>
+        <app-audio-pulse
+          [volume]="inputVolume"
+          [active]="isAudioRecording"
+        ></app-audio-pulse>
+      </div>
+
+      <div class="audio-indicator-item">
+        <label>Salida:</label>
+        <app-audio-pulse
+          [volume]="outputVolume"
+          [active]="isAudioPlaying"
+        ></app-audio-pulse>
+      </div>
+    </div>
+
+    <button
+      *ngIf="!sessionActive"
+      pButton
+      type="button"
+      label="Iniciar Diagnóstico"
+      icon="pi pi-play"
+      class="p-button-lg p-button-success"
+      (click)="startSession()"
+      [loading]="isLoading"
+    ></button>
+
+    <button
+      *ngIf="sessionActive"
+      pButton
+      type="button"
+      label="Finalizar Sesión"
+      icon="pi pi-stop"
+      class="p-button-lg p-button-danger"
+      (click)="endSession()"
+    ></button>
+  </div>
+
+  <!-- Result Panel (Sidebar) -->
+  <p-sidebar
+    [(visible)]="showResultPanel"
+    position="right"
+    [style]="{ width: '400px' }"
+    styleClass="result-sidebar"
+  >
+    <ng-template pTemplate="header">
+      <h3>Resultado del Diagnóstico</h3>
+    </ng-template>
+
+    <app-agent-result
+      *ngIf="currentResult"
+      [result]="currentResult"
+      (closePanel)="closeResultPanel()"
+    ></app-agent-result>
+  </p-sidebar>
+</div>

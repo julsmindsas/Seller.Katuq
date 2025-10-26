@@ -81,6 +81,28 @@ const routes: Routes = [
       }
     ]
   },
+  // Video Agent - Full screen diagnostic system
+  {
+    path: 'video-agent',
+    component: BlankComponent,
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./modules/video-agent/video-agent.module').then(m => m.VideoAgentModule)
+      }
+    ]
+  },
+  // Service Scheduling
+  {
+    path: 'servicios/agendamiento',
+    component: BlankComponent,
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/servicios/agendamiento/agendamiento.module').then(m => m.AgendamientoModule)
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,
