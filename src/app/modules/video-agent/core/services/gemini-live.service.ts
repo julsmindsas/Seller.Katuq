@@ -50,6 +50,10 @@ export class GeminiLiveService {
   private errorSubject = new Subject<string>();
   public error$ = this.errorSubject.asObservable();
 
+  // Next Action del adapter (para que el componente procese acciones como guardar citas)
+  private nextActionSubject = new Subject<any>();
+  public nextAction$ = this.nextActionSubject.asObservable();
+
   // Estado de la sesión
   private sessionActive = false;
 
@@ -211,6 +215,9 @@ export class GeminiLiveService {
 
     console.log("📊 Adapter result:", result);
     console.log("🎯 Next action:", action);
+
+    // Emitir nextAction para que el componente lo procese (ej: guardar citas)
+    this.nextActionSubject.next(action);
 
     // Enviar respuesta de la función al servidor
     // Gemini Live API requiere: id, name, y response (objeto)

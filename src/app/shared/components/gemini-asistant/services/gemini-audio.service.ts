@@ -644,10 +644,14 @@ export class GeminiAudioService {
           // Procesar la herramienta directamente aquí (patrón oficial)
           try {
             const response = await this.handleKatuqToolResponse(toolCall);
+
+            // Simplificar respuesta a solo valores primitivos (requerido por Gemini Native Audio)
+            const simplifiedResponse = this.simplifyToolResponse(response);
+
             functionResponses.push({
               id: functionCall.id,
               name: functionCall.name,
-              response: response
+              response: simplifiedResponse
             });
             console.log('✅ [Turn] Herramienta procesada:', functionCall.name);
           } catch (error) {
@@ -655,7 +659,10 @@ export class GeminiAudioService {
             functionResponses.push({
               id: functionCall.id,
               name: functionCall.name,
-              response: { error: 'Error procesando herramienta' }
+              response: {
+                success: false,
+                error: 'Error procesando herramienta'
+              }
             });
           }
         }
@@ -1983,6 +1990,50 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
       this.emitKatuqToolEvent(name, null, false, `Error ejecutando ${name}: ${error}`);
       return errorResponse;
     }
+  }
+
+  /**
+   * Simplifica la respuesta de herramienta a solo valores primitivos
+   * Requerido por Gemini Native Audio API que no acepta objetos complejos/anidados
+   */
+  private simplifyToolResponse(response: any): Record<string, string | number | boolean> {
+    // Si ya es un tipo primitivo, envolverlo
+    if (typeof response === 'string') {
+      return { result: response };
+    }
+    if (typeof response === 'number' || typeof response === 'boolean') {
+      return { result: response };
+    }
+
+    // Si es objeto, extraer solo campos primitivos
+    if (typeof response === 'object' && response !== null) {
+      const simplified: Record<string, string | number | boolean> = {
+        success: Boolean(response.success ?? true),
+        message: String(response.message || 'Operation completed')
+      };
+
+      // Agregar campos adicionales si son primitivos
+      if (response.error && typeof response.error === 'string') {
+        simplified.error = response.error;
+      }
+
+      // Si hay data, intentar extraer información útil como strings
+      if (response.data) {
+        // Si data tiene count/length
+        if (typeof response.data === 'object') {
+          if (Array.isArray(response.data)) {
+            simplified.count = response.data.length;
+          } else if (response.data.count !== undefined) {
+            simplified.count = Number(response.data.count);
+          }
+        }
+      }
+
+      return simplified;
+    }
+
+    // Fallback
+    return { result: String(response) };
   }
 
   // Método para emitir eventos de herramientas de Katuq

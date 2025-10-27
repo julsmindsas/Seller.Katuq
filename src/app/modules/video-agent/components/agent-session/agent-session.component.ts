@@ -24,6 +24,7 @@ import {
   getCompanyConfig,
 } from "../../core/models/company-config.interface";
 import { AgendamientoService } from "../../../../shared/services/agendamiento.service";
+import { GeolocationService, GeoAddress } from "../../core/services/geolocation.service";
 
 /**
  * Componente principal para sesiones de Video Agent
@@ -95,6 +96,7 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     private audioService: AudioStreamService,
     private adapterRegistry: AdapterRegistryService,
     private agendamientoService: AgendamientoService,
+    private geolocationService: GeolocationService,
   ) {}
 
   ngOnInit(): void {
@@ -265,6 +267,13 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
       .subscribe((error) => {
         this.showError(error);
       });
+
+    // NextAction del adapter (para procesar acciones como guardar citas)
+    this.geminiService.nextAction$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((nextAction) => {
+        this.handleNextAction(nextAction);
+      });
   }
 
   /**
@@ -301,6 +310,25 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
 
       if (!adapter) {
         throw new Error("No se pudo cargar el adapter seleccionado");
+      }
+
+      // 📍 Capturar geolocalización con dirección formateada al iniciar diagnóstico
+      try {
+        console.log("📍 Capturing geolocation with address...");
+        const location: GeoAddress = await this.geolocationService.getCurrentLocation();
+        console.log("✅ Geolocation captured:", location);
+
+        // Pasar coordenadas y dirección al adapter (si soporta setCoordinates)
+        if (adapter.setCoordinates) {
+          adapter.setCoordinates(
+            location.coordinates.latitude,
+            location.coordinates.longitude,
+            location.formatted  // Dirección formateada desde API de Maps
+          );
+        }
+      } catch (geoError) {
+        console.warn("⚠️ Could not capture geolocation:", geoError);
+        // No bloquear la sesión si falla la geolocalización
       }
 
       // Conectar a Gemini Live
@@ -385,125 +413,112 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
 
   /**
    * Maneja respuestas del servidor
+   * NOTA: El procesamiento de function calls ahora se hace en gemini-live.service
+   * que emite nextAction$ procesado por handleNextAction()
    */
   private handleServerResponse(response: ServerMessage): void {
-    // Aquí puedes procesar respuestas específicas
+    // Log para debugging
     console.log("📥 Server response:", response);
+    // El servicio gemini-live.service procesa los function calls y emite nextAction$
+    // No procesamos aquí para evitar duplicación
+  }
 
-    // Si hay resultado de diagnóstico, mostrarlo
-    if (response.serverContent?.modelTurn?.parts) {
-      const parts = response.serverContent.modelTurn.parts;
+  /**
+   * Maneja acciones del adapter (ej: guardar citas)
+   */
+  private handleNextAction(nextAction: any): void {
+    console.log("🎯 [handleNextAction] Processing next action:", nextAction);
+    console.log("🔍 DEBUG - Action type:", nextAction.action);
+    console.log("🔍 DEBUG - Has data?:", !!nextAction.data);
+    console.log("🔍 DEBUG - isDemoMode?:", nextAction.data?.isDemoMode);
 
-      parts.forEach((part) => {
-        if (part.functionCall) {
-          // Procesar con adapter
-          const adapter = this.adapterRegistry.currentAdapter;
+    // Si la acción es SCHEDULE_SERVICE, procesar según modo
+    if (nextAction.action === "SCHEDULE_SERVICE") {
+      console.log("📅 Scheduling service with data:", nextAction.data);
 
-          if (adapter) {
-            this.currentResult = adapter.processResult(part.functionCall);
-            this.showResultPanel = true;
+      // ✅ VALIDACIÓN: Solo guardar si hay nombre de cliente
+      if (!nextAction.data.customerName || nextAction.data.customerName.trim() === "" || nextAction.data.customerName === "Demo User") {
+        console.warn("⚠️ Cannot save appointment without customer name. Skipping...");
+        return;
+      }
 
-            // CRITICAL FIX: Determinar siguiente acción y ejecutarla
-            const nextAction = adapter.getNextAction(this.currentResult);
-            console.log("🎯 Next action determined:", nextAction);
+      // 🎯 MODO DEMO: Auto-guardar appointment directamente
+      if (nextAction.data.isDemoMode) {
+        console.log(
+          "🎯 DEMO MODE: Auto-saving appointment to localStorage",
+        );
 
-            // Si la acción es SCHEDULE_SERVICE, procesar según modo
-            if (nextAction.action === "SCHEDULE_SERVICE") {
-              console.log("📅 Scheduling service with data:", nextAction.data);
+        const appointment = {
+          id: `APPT-${Date.now()}`,
+          confirmationNumber:
+            nextAction.data.confirmationNumber || `DEMO-${Date.now()}`,
+          customerName: nextAction.data.customerName,
+          phone: nextAction.data.phone || "Auto-detected",
+          email: nextAction.data.email || "demo@katuq.com",
+          appointmentDate: nextAction.data.appointmentDate,
+          appointmentTime: nextAction.data.appointmentTime,
+          serviceType: nextAction.data.serviceType || "diagnostic",
+          deviceInfo: nextAction.data.deviceInfo || "Apple Device",
+          issueSummary:
+            nextAction.data.issueSummary || "Diagnostic needed",
+          address: nextAction.data.address || "Dirección no proporcionada",  // Dirección formateada desde Maps API
+          city: "Bogotá", // Ciudad por defecto para DEMO
+          estimatedCost:
+            nextAction.data.estimatedCost || "Por determinar",
+          urgency: nextAction.data.urgency || "medium",
+          status: "confirmed" as const,
+          createdAt: new Date().toISOString(),
+          specialNotes:
+            nextAction.data.specialNotes ||
+            "🎯 DEMO MODE - Auto-agendado desde video agent",
+          // Metadatos adicionales (opcionales, no afectan funcionamiento)
+          companyId: this.companyConfig?.id || "demo",
+          companyName: this.companyConfig?.name || "Demo Company",
+        };
 
-              // 🎯 MODO DEMO: Auto-guardar appointment directamente
-              if (nextAction.data.isDemoMode) {
-                console.log(
-                  "🎯 DEMO MODE: Auto-saving appointment to localStorage",
-                );
+        // Guardar usando el AgendamientoService para que notifique a todos los suscriptores
+        // El servicio maneja la persistencia en localStorage y actualiza el BehaviorSubject
+        this.agendamientoService
+          .createDemoAppointment(
+            appointment.customerName,
+            appointment.deviceInfo,
+            appointment.issueSummary,
+            nextAction.data.coordinates, // 📍 Incluir coordenadas capturadas al inicio
+          )
+          .then((savedAppointment) => {
+            console.log(
+              "✅ Appointment saved via AgendamientoService:",
+              savedAppointment,
+            );
+            console.log(
+              "📋 Total appointments:",
+              this.agendamientoService.getAppointments().length,
+            );
 
-                const appointment = {
-                  id: `APPT-${Date.now()}`,
-                  confirmationNumber:
-                    nextAction.data.confirmationNumber || `DEMO-${Date.now()}`,
-                  customerName: nextAction.data.customerName || "Demo User",
-                  phone: nextAction.data.phone || "Auto-detected",
-                  email: nextAction.data.email || "demo@katuq.com",
-                  appointmentDate: nextAction.data.appointmentDate,
-                  appointmentTime: nextAction.data.appointmentTime,
-                  serviceType: nextAction.data.serviceType || "diagnostic",
-                  deviceInfo: nextAction.data.deviceInfo || "Apple Device",
-                  issueSummary:
-                    nextAction.data.issueSummary || "Diagnostic needed",
-                  address: nextAction.data.address || "Auto-detected location",
-                  city: "Bogotá", // Ciudad por defecto para DEMO
-                  estimatedCost:
-                    nextAction.data.estimatedCost || "Por determinar",
-                  urgency: nextAction.data.urgency || "medium",
-                  status: "confirmed" as const,
-                  createdAt: new Date().toISOString(),
-                  specialNotes:
-                    nextAction.data.specialNotes ||
-                    "🎯 DEMO MODE - Auto-agendado desde video agent",
-                  // Metadatos adicionales (opcionales, no afectan funcionamiento)
-                  companyId: this.companyConfig?.id || "demo",
-                  companyName: this.companyConfig?.name || "Demo Company",
-                };
+            // Mostrar notificación de éxito
+            this.addMessage(
+              "agent",
+              `✅ ¡Cita confirmada! Número de confirmación: ${savedAppointment.confirmationNumber}. Fecha: ${savedAppointment.appointmentDate} a las ${savedAppointment.appointmentTime}. Puedes ver los detalles en "Ver mis citas".`,
+            );
+          })
+          .catch((error) => {
+            console.error("❌ Error saving appointment:", error);
+            this.addMessage(
+              "agent",
+              "❌ Error al guardar la cita. Por favor intenta nuevamente.",
+            );
+          });
+      } else {
+        // 🌐 MODO PRODUCCIÓN: Enviar a API backend
+        console.log("🌐 TODO: Enviar appointment a API backend:", nextAction.data);
+        // TODO: Implementar llamada al backend cuando esté disponible
+        // this.appointmentApiService.createAppointment(nextAction.data).then(...)
 
-                // Guardar usando el AgendamientoService para que notifique a todos los suscriptores
-                // El servicio maneja la persistencia en localStorage y actualiza el BehaviorSubject
-                this.agendamientoService
-                  .createDemoAppointment(
-                    appointment.customerName,
-                    appointment.deviceInfo,
-                    appointment.issueSummary,
-                    undefined, // coordinates - podría agregarse con geolocalización
-                  )
-                  .then((savedAppointment) => {
-                    console.log(
-                      "✅ Appointment saved via AgendamientoService:",
-                      savedAppointment,
-                    );
-                    console.log(
-                      "📋 Total appointments:",
-                      this.agendamientoService.getAppointments().length,
-                    );
-
-                    // Mostrar notificación de éxito
-                    this.addMessage(
-                      "agent",
-                      `✅ ¡Cita confirmada! Número de confirmación: ${savedAppointment.confirmationNumber}. Fecha: ${savedAppointment.appointmentDate} a las ${savedAppointment.appointmentTime}. Puedes ver los detalles en "Ver mis citas".`,
-                    );
-                  })
-                  .catch((error) => {
-                    console.error("❌ Error saving appointment:", error);
-                    this.addMessage(
-                      "agent",
-                      "❌ Error al guardar la cita. Por favor intenta nuevamente.",
-                    );
-                  });
-              } else {
-                // 📋 MODO PRODUCCIÓN: Guardar en sessionStorage y navegar
-                const pendingService = {
-                  serviceType: nextAction.data.serviceType || "Reparación",
-                  reason: nextAction.data.reason || "Requiere servicio técnico",
-                  urgency: nextAction.data.urgency || "medium",
-                  estimatedCost: nextAction.data.estimatedCost || "A cotizar",
-                  diagnosticResult: this.currentResult,
-                  timestamp: new Date().toISOString(),
-                };
-
-                sessionStorage.setItem(
-                  "pendingService",
-                  JSON.stringify(pendingService),
-                );
-                console.log(
-                  "💾 Pending service saved to sessionStorage:",
-                  pendingService,
-                );
-
-                // Navegar a página de agendamiento
-                this.router.navigate(["/servicios/agendamiento"]);
-              }
-            }
-          }
-        }
-      });
+        this.addMessage(
+          "agent",
+          "⚠️ Modo backend no implementado aún. Contacta al administrador.",
+        );
+      }
     }
   }
 

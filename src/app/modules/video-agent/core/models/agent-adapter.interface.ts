@@ -33,6 +33,11 @@ export interface IAgentAdapter {
    * Configuración adicional opcional
    */
   getAdapterConfig?(): Record<string, any>;
+
+  /**
+   * Establece coordenadas de geolocalización y dirección formateada (opcional)
+   */
+  setCoordinates?(latitude: number, longitude: number, address?: string): void;
 }
 
 /**

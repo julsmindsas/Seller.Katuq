@@ -27,6 +27,7 @@ export class AppleAdapter implements IAgentAdapter {
     issueSummary?: string;
     serviceType?: string;
     coordinates?: { latitude: number; longitude: number };
+    address?: string;  // Dirección formateada desde API de Maps
   } = {};
 
   /**
@@ -688,27 +689,16 @@ When in demo mode, use simplified workflow:
     // Manejar pasos específicos del flujo de agendamiento
     switch (step) {
       case "auto_schedule_demo":
-        // 🎯 MODO DEMO: Cita auto-agendada, ir directo a confirmación
+        // 🎯 MODO DEMO: Cita auto-agendada, NO guardar aún (solo preparar datos)
         return {
-          action: "SCHEDULE_SERVICE",
+          action: "SHOW_INFO",  // Cambiar a SHOW_INFO para no guardar todavía
           data: {
-            reason: `🎯 DEMO: Auto-scheduled appointment`,
-            urgency: "medium",
-            estimatedCost: "To be quoted",
-            serviceType: this.sessionData.serviceType || "Apple Device Repair",
+            message: `Información recopilada. Preparando agenda...`,
             appointmentDate: details.appointment_date,
             appointmentTime: details.appointment_time,
-            confirmationNumber: details.confirmation_number,
             customerName: details.full_name,
-            phone: "Demo - Auto-detected",
-            email: "demo@katuq.com",
-            deviceInfo: this.sessionData.deviceInfo || "Apple Device",
-            issueSummary: this.sessionData.issueSummary || "Diagnostic needed",
-            address: "Auto-detected location",
-            specialNotes: "🎯 DEMO MODE - Auto-scheduled for tomorrow 10:00 AM",
-            isDemoMode: true,
           },
-          priority: "high",
+          priority: "medium",
         };
 
       case "customer_info_collected":
@@ -750,8 +740,9 @@ When in demo mode, use simplified workflow:
             email: details.email,
             deviceInfo: details.device_info,
             issueSummary: details.issue_summary,
-            address: details.address,
+            address: details.address || this.sessionData.address,  // Priorizar dirección del agente, sino usar auto-detectada
             specialNotes: details.special_notes,
+            coordinates: this.sessionData.coordinates,  // Incluir coordenadas capturadas
             isDemoMode: this.DEMO_MODE,  // Agregar flag para guardar en localStorage
           },
           priority: "high",
@@ -786,6 +777,7 @@ When in demo mode, use simplified workflow:
               serviceType: "Apple Device Repair",
               warrantyCovered: details.warranty_covered || false,
               dataBackupNeeded: details.data_backup_needed || false,
+              isDemoMode: this.DEMO_MODE,  // Flag para localStorage vs API backend
             },
             priority: this.determinePriority(details.urgency),
           };
@@ -822,6 +814,20 @@ When in demo mode, use simplified workflow:
       },
       priority: "low",
     };
+  }
+
+  /**
+   * Establece coordenadas de geolocalización y dirección formateada
+   */
+  setCoordinates(latitude: number, longitude: number, address?: string): void {
+    this.sessionData.coordinates = { latitude, longitude };
+    if (address) {
+      this.sessionData.address = address;
+    }
+    console.log("📍 Location set in AppleAdapter:", {
+      coordinates: this.sessionData.coordinates,
+      address: this.sessionData.address
+    });
   }
 
   /**
