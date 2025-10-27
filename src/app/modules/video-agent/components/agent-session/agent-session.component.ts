@@ -25,6 +25,7 @@ import {
 } from "../../core/models/company-config.interface";
 import { AgendamientoService } from "../../../../shared/services/agendamiento.service";
 import { GeolocationService, GeoAddress } from "../../core/services/geolocation.service";
+import { ToastrService } from "ngx-toastr";
 
 /**
  * Componente principal para sesiones de Video Agent
@@ -97,6 +98,7 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     private adapterRegistry: AdapterRegistryService,
     private agendamientoService: AgendamientoService,
     private geolocationService: GeolocationService,
+    private toastr: ToastrService,
   ) {}
 
   ngOnInit(): void {
@@ -493,6 +495,18 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
             console.log(
               "📋 Total appointments:",
               this.agendamientoService.getAppointments().length,
+            );
+
+            // Mostrar toast de confirmación
+            this.toastr.success(
+              `Número de confirmación: ${savedAppointment.confirmationNumber}`,
+              '¡Cita creada exitosamente!',
+              {
+                timeOut: 4000,
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toast-bottom-right'
+              }
             );
 
             // Mostrar notificación de éxito

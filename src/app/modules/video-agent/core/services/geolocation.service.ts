@@ -80,9 +80,27 @@ export class GeolocationService {
 
   /**
    * Obtiene la dirección formateada a partir de coordenadas
-   * Usa Nominatim (OpenStreetMap) para reverse geocoding
+   * Usa Nominatim (OpenStreetMap) - No requiere API key
    */
   async getAddressFromCoordinates(coords: GeoCoordinates): Promise<GeoAddress> {
+    try {
+      console.log('🗺️ Obteniendo dirección con Nominatim (OpenStreetMap)...');
+      return await this.getAddressFromNominatim(coords);
+    } catch (error) {
+      console.error('❌ Error obteniendo dirección:', error);
+      throw new Error('No se pudo obtener la dirección');
+    }
+  }
+
+  // MÉTODOS DE GOOGLE MAPS COMENTADOS - Requieren habilitar Maps JavaScript API en Google Cloud Console
+  // Para habilitar: Ve a https://console.cloud.google.com/ → APIs & Services → Library
+  // Busca "Maps JavaScript API" y "Geocoding API" y actívalas
+  // Luego descomenta los métodos getAddressFromGoogleMaps() y loadGoogleMapsAPI() abajo
+
+  /**
+   * Reverse geocoding con Nominatim (fallback)
+   */
+  private async getAddressFromNominatim(coords: GeoCoordinates): Promise<GeoAddress> {
     try {
       const url = `${this.NOMINATIM_URL}?lat=${coords.latitude}&lon=${coords.longitude}&format=json&addressdetails=1&accept-language=es`;
 
@@ -112,13 +130,14 @@ export class GeolocationService {
         coordinates: coords
       };
 
-      console.log('🏠 Address obtained:', geoAddress);
+      console.log('🏠 Nominatim address obtained:', geoAddress);
       return geoAddress;
     } catch (error) {
-      console.error('❌ Error getting address:', error);
-      throw new Error('No se pudo obtener la dirección');
+      console.error('❌ Error getting address from Nominatim:', error);
+      throw new Error('No se pudo obtener la dirección de Nominatim');
     }
   }
+
 
   /**
    * Obtiene ubicación completa (coordenadas + dirección)

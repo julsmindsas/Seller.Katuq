@@ -27,10 +27,12 @@ export class HttpInterceptor2 implements HttpInterceptor {
   ) {}
 
   intercept(request: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
-    // Verificar si es una ruta pública (diagnóstico/encuesta)
+    // Verificar si es una ruta pública (diagnóstico/encuesta/video-agent/agendamiento)
     const isPublicRoute = request.url.includes('/diagnostics/saveSurveyResponse') ||
                          request.url.includes('/diagnostico') ||
-                         window.location.pathname.includes('/nuevo-registro');
+                         window.location.pathname.includes('/nuevo-registro') ||
+                         window.location.pathname.includes('/video-agent') ||
+                         window.location.pathname.includes('/servicios/agendamiento');
 
     return this.handleAccess(request, next)
       .pipe(
