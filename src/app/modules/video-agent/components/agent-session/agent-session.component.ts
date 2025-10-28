@@ -564,9 +564,16 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Agrega mensaje al historial
+   * Agrega mensaje al historial (con deduplicación)
    */
   private addMessage(role: "user" | "agent", text: string): void {
+    // 🛡️ Evitar duplicados: Si el último mensaje es igual (mismo role y texto), no agregar
+    const lastMessage = this.messages[this.messages.length - 1];
+    if (lastMessage && lastMessage.role === role && lastMessage.text === text) {
+      console.log("🚫 Duplicate message detected, skipping:", text.substring(0, 50));
+      return;
+    }
+
     this.messages.push({
       role,
       text,
