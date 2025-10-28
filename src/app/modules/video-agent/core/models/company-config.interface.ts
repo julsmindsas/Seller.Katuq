@@ -39,35 +39,33 @@ export interface CompanyConfig {
  * Configuraciones predefinidas por empresa
  */
 export const COMPANY_CONFIGS: { [key: string]: CompanyConfig } = {
-  // Comentado temporalmente para testing con Apple
-  /*
-  'haceb': {
-    id: 'haceb',
-    name: 'Haceb',
-    industry: 'appliance',
+  haceb: {
+    id: "haceb",
+    name: "Haceb",
+    industry: "appliance",
     branding: {
-      primaryColor: '#E31E24',
-      secondaryColor: '#1A1A1A',
-      companyName: 'Haceb',
-      logo: 'assets/logos/haceb-logo.png'
+      primaryColor: "#E31E24",
+      secondaryColor: "#1A1A1A",
+      companyName: "Haceb",
+      logo: "assets/logos/haceb-logo.png",
     },
     ui: {
-      welcomeMessage: '¡Hola! Soy tu asistente de Haceb. Te ayudaré a diagnosticar tu electrodoméstico.',
+      welcomeMessage:
+        "¡Hola! Soy tu asistente de Haceb. Te ayudaré a diagnosticar tu electrodoméstico.",
       instructionsForElderly: [
-        '1. Acerca la cámara al electrodoméstico',
-        '2. Cuéntame qué problema tiene',
-        '3. Te diré si puedes resolverlo tú mismo'
+        "1. Acerca la cámara al electrodoméstico",
+        "2. Cuéntame qué problema tiene",
+        "3. Te diré si puedes resolverlo tú mismo",
       ],
-      fontSize: 'extra-large',
-      highContrast: true
+      fontSize: "extra-large",
+      highContrast: true,
     },
-    adapterType: 'HacebAdapter',
+    adapterType: "HacebAdapter",
     contact: {
-      phone: '018000-123456',
-      scheduleUrl: '/servicios/agendamiento'
-    }
+      phone: "#466",
+      scheduleUrl: "/servicios/agendamiento",
+    },
   },
-  */
 
   apple: {
     id: "apple",

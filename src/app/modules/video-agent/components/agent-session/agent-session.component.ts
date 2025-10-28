@@ -103,7 +103,7 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.loadCompanyConfig();
-    this.initializeAdapters();
+    this.initializeAdapters(); // Debe llamarse después de loadCompanyConfig
     this.setupSubscriptions();
     this.checkDeviceCapabilities();
     this.setupMobileOptimizations();
@@ -160,11 +160,11 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
    * Inicializa y registra adapters disponibles
    */
   private initializeAdapters(): void {
-    // Registrar Haceb adapter (comentado temporalmente)
-    // const hacebAdapter = new HacebAdapter();
-    // this.adapterRegistry.registerAdapter(hacebAdapter, true, 100);
+    // Registrar Haceb adapter
+    const hacebAdapter = new HacebAdapter();
+    this.adapterRegistry.registerAdapter(hacebAdapter, true, 100);
 
-    // Registrar Apple adapter para testing
+    // Registrar Apple adapter
     const appleAdapter = new AppleAdapter();
     this.adapterRegistry.registerAdapter(appleAdapter, true, 90);
 
@@ -173,8 +173,29 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     // Obtener industrias disponibles
     this.availableIndustries = this.adapterRegistry.getAvailableIndustries();
 
-    // Establecer adapter por defecto
-    this.adapterRegistry.setCurrentAdapter(this.selectedIndustry);
+    // 🎯 Seleccionar adapter correcto según company config
+    // Como Haceb y Apple son ambos APPLIANCE industry, necesitamos seleccionar
+    // manualmente el adapter correcto basado en companyConfig.adapterType
+    let selectedAdapter: any = null;
+
+    if (this.companyConfig.adapterType === 'HacebAdapter') {
+      selectedAdapter = hacebAdapter;
+      console.log('🎯 Selecting Haceb adapter based on company config');
+    } else if (this.companyConfig.adapterType === 'AppleAdapter') {
+      selectedAdapter = appleAdapter;
+      console.log('🎯 Selecting Apple adapter based on company config');
+    } else {
+      // Fallback: usar industry
+      this.adapterRegistry.setCurrentAdapter(this.selectedIndustry);
+      console.log('✅ Adapters initialized (fallback to industry):', this.availableIndustries);
+      return;
+    }
+
+    // Establecer el adapter seleccionado directamente
+    if (selectedAdapter) {
+      this.adapterRegistry['currentAdapterSubject'].next(selectedAdapter);
+      console.log(`✅ Adapter set: ${selectedAdapter.name}`);
+    }
 
     console.log("✅ Adapters initialized:", this.availableIndustries);
   }
@@ -306,13 +327,16 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
       this.messages = [];
       this.currentResult = null;
 
-      // Establecer adapter seleccionado
-      this.adapterRegistry.setCurrentAdapter(this.selectedIndustry);
+      // 🎯 NO sobrescribir adapter - ya fue seleccionado en initializeAdapters() según companyConfig
+      // this.adapterRegistry.setCurrentAdapter(this.selectedIndustry); // ❌ NO HACER ESTO
       const adapter = this.adapterRegistry.currentAdapter;
 
       if (!adapter) {
         throw new Error("No se pudo cargar el adapter seleccionado");
       }
+
+      console.log(`🎯 Starting session with adapter: ${adapter.name}`);
+
 
       // 📍 Capturar geolocalización con dirección formateada al iniciar diagnóstico
       try {

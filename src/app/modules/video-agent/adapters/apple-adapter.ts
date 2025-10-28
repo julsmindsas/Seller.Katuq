@@ -98,30 +98,51 @@ export class AppleAdapter implements IAgentAdapter {
 - \`diagnose_issue\`: Diagnose specific problem
 - \`provide_solution\`: Give DIY solution or recommend Genius Bar appointment
 
+⚠️ **CRITICAL RULE - VISUAL EVIDENCE REQUIRED:**
+
+**NEVER schedule an appointment without visual evidence of the device:**
+- ❌ DO NOT schedule if user only ASKS for appointment verbally
+- ❌ DO NOT schedule if user says "I need an appointment" without showing anything
+- ❌ DO NOT schedule if just describing the problem without seeing it
+- ✅ DO schedule ONLY after:
+  1. Seeing the device on camera
+  2. Having called \`analyze_device\` with what you saw
+  3. Having called \`diagnose_issue\` with the observed problem
+  4. Having called \`provide_solution\` with SERVICE type
+
+**If user requests appointment without showing the device:**
+- Say: "To schedule an appointment, I first need to see your device and diagnose the issue. Please show me your iPhone/iPad/Mac and tell me what's happening."
+- DO NOT call any scheduling tools until you see the device
+
 **Scheduling Workflow (when SERVICE is needed):**
 
 🎯 **DEMO MODE (for demos and testing):**
-When in demo mode, use simplified workflow:
+⚠️ IMPORTANT: Follow this workflow EXACTLY in the specified order.
 
 1. **After \`provide_solution\` with SERVICE type:**
    - Inform user that professional repair is recommended
    - Explain why (e.g., "The screen is cracked and needs replacement")
-   - Ask: "What's your name for the appointment?"
+   - Mention estimated cost if available
+   - Say EXACTLY: "To schedule your appointment, I need your name. What's your full name?"
+   - **WAIT** for the user's response with their name
+   - **NEVER assume, invent, or use generic names like "Demo User", "Test", "User"**
 
-2. **Auto-schedule for tomorrow:**
-   - Use ONLY \`collect_customer_info\` with just the name
-   - Example: "Perfect! I'm scheduling your appointment for tomorrow at 10:00 AM. You'll receive confirmation shortly."
-   - Location will be auto-detected
+2. **When the user provides their name:**
+   - Call IMMEDIATELY \`collect_customer_info\` with the EXACT name they provided
+   - Say: "Perfect [exact name]! I'm scheduling your appointment for tomorrow at 10:00 AM. You'll receive confirmation shortly."
+   - Location: Will be auto-detected
    - Date: Automatically tomorrow
    - Time: 10:00 - 12:00 (default)
-   - No validation needed
+   - No further validation needed
    - No back-and-forth about availability
 
-3. **Keep it simple:**
-   - Only ask for name
-   - Auto-confirm immediately
-   - Provide confirmation number
-   - Done in 2 conversational exchanges
+3. **Strict rules for DEMO:**
+   - ✅ ALWAYS ask for the name explicitly
+   - ✅ ALWAYS use the real name the user tells you
+   - ❌ NEVER invent or assume names
+   - ❌ NEVER use "Demo User", "Test User", "Customer", etc.
+   - ❌ NEVER skip asking for the name
+   - Done in 2 exchanges: (1) Ask for name, (2) Confirm appointment
 
 📋 **PRODUCTION MODE (for real appointments):**
 
@@ -338,7 +359,7 @@ When in demo mode, use simplified workflow:
       {
         name: "collect_customer_info",
         description:
-          "Collect customer information for service scheduling. Use this after determining SERVICE is needed. IN DEMO MODE: Only ask for full_name, all other fields are auto-filled.",
+          "⚠️ IMPORTANT: Call this tool ONLY AFTER the user has given you their name EXPLICITLY in the conversation. IN DEMO MODE: Use only the real full_name that the user verbally provided. NEVER invent, assume, or use generic names (Demo User, Test, Customer, etc.). Other fields are auto-filled in demo mode.",
         parameters: {
           type: "object",
           properties: {
@@ -481,9 +502,41 @@ When in demo mode, use simplified workflow:
     // Procesar según el nombre de la función
     switch (functionName) {
       case "collect_customer_info":
+        // ⚠️ VALIDATION: Verify that the name is not generic or empty
+        const invalidNames = ['demo', 'test', 'usuario', 'user', 'cliente', 'customer', 'prueba'];
+        const nameProvided = functionCall.full_name?.trim().toLowerCase();
+
+        if (!nameProvided || nameProvided.length < 2) {
+          return {
+            type: "INFO",
+            summary: "❌ Name not provided",
+            confidence: 0,
+            details: {
+              step: "name_required",
+              message: "Please provide your real name to continue with the appointment. I can't schedule without your name.",
+              error: "NAME_REQUIRED"
+            }
+          };
+        }
+
+        // Check for generic names
+        if (invalidNames.some(inv => nameProvided.includes(inv))) {
+          return {
+            type: "INFO",
+            summary: "❌ Generic name detected",
+            confidence: 0,
+            details: {
+              step: "name_required",
+              message: "I need your real name to schedule the appointment. Please tell me your full name.",
+              error: "GENERIC_NAME",
+              provided_name: functionCall.full_name
+            }
+          };
+        }
+
         resultType = "INFO";
         confidence = 100;
-        summary = `Customer information collected: ${functionCall.full_name || "N/A"}`;
+        summary = `Customer information collected: ${functionCall.full_name}`;
 
         // Guardar datos de sesión
         this.sessionData.customerName = functionCall.full_name;
@@ -689,16 +742,28 @@ When in demo mode, use simplified workflow:
     // Manejar pasos específicos del flujo de agendamiento
     switch (step) {
       case "auto_schedule_demo":
-        // 🎯 MODO DEMO: Cita auto-agendada, NO guardar aún (solo preparar datos)
+        // 🎯 MODO DEMO: Cita auto-agendada, GUARDAR INMEDIATAMENTE
         return {
-          action: "SHOW_INFO",  // Cambiar a SHOW_INFO para no guardar todavía
+          action: "SCHEDULE_SERVICE",
           data: {
-            message: `Información recopilada. Preparando agenda...`,
+            reason: `Appointment confirmed`,
+            urgency: "medium",
+            estimatedCost: "To be quoted",
+            serviceType: this.sessionData.serviceType || "Apple Device Repair",
             appointmentDate: details.appointment_date,
             appointmentTime: details.appointment_time,
+            confirmationNumber: details.confirmation_number,
             customerName: details.full_name,
+            phone: "Auto-detected",
+            email: "demo@katuq.com",
+            deviceInfo: this.sessionData.deviceInfo || "Apple Device",
+            issueSummary: this.sessionData.issueSummary || "Diagnostic needed",
+            address: this.sessionData.address || "Auto-detected address",
+            specialNotes: "🎯 DEMO MODE - Auto-scheduled from video agent",
+            coordinates: this.sessionData.coordinates,
+            isDemoMode: this.DEMO_MODE,
           },
-          priority: "medium",
+          priority: "high",
         };
 
       case "customer_info_collected":
