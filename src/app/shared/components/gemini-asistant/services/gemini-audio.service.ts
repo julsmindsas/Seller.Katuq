@@ -6,6 +6,7 @@ import { environment } from '../../../../../environments/environment';
 // Importaciones para herramientas especializadas
 import { KatuqInventoryToolsService, InventoryToolResponse } from './katuq-inventory-tools.service';
 import { SphereVisualService } from './sphere-visual.service';
+import { AudioStreamerService } from '../../../services/gemini/audio/audio-streamer.service';
 
 // Importaciones para sistema de ventas (solo las necesarias para coordinación)
 import { VentasService } from '../../../services/ventas/ventas.service';
@@ -137,9 +138,9 @@ export class GeminiAudioService {
   private textResponseSubject = new BehaviorSubject<string>('');
   private katuqToolEventSubject = new BehaviorSubject<KatuqToolEvent | null>(null);
 
-  // Sistema de turnos según documentación oficial
-  private responseQueue: LiveServerMessage[] = [];
-  private isProcessingTurn = false;
+  // ❌ OBSOLETO: Sistema de turnos reemplazado por procesamiento inmediato
+  // private responseQueue: LiveServerMessage[] = [];
+  // private isProcessingTurn = false;
 
   connectionStatus$: Observable<ConnectionStatus> = this.connectionStatusSubject.asObservable();
   audioData$: Observable<any> = this.audioDataSubject.asObservable();
@@ -171,10 +172,16 @@ export class GeminiAudioService {
     private cartService: CartSingletonService,
     private ventasService: VentasService,
     private katuqInventoryTools: KatuqInventoryToolsService,
-    private maestroService: MaestroService
+    private maestroService: MaestroService,
+    private audioStreamer: AudioStreamerService
   ) {
     this.initClient();
     this.initSalesSystem();
+
+    // Inicializar audio streamer
+    this.audioStreamer.initialize().catch((err) => {
+      console.error("❌ Error initializing AudioStreamer:", err);
+    });
   }
 
   /**
@@ -191,9 +198,10 @@ export class GeminiAudioService {
   }
 
   /**
-   * Espera por un mensaje en la cola de respuestas
-   * Optimizado para menor latencia
+   * ❌ OBSOLETO: Reemplazado por procesamiento inmediato en handleServerMessage
+   * Este método era parte del sistema de turnos que introducía latencia
    */
+  /* COMENTADO - YA NO SE USA
   private async waitMessage(): Promise<LiveServerMessage> {
     let done = false;
     let message: LiveServerMessage | undefined = undefined;
@@ -202,27 +210,141 @@ export class GeminiAudioService {
       if (message) {
         done = true;
       } else {
-        // Reducir polling de 100ms a 10ms para respuesta más rápida
         await new Promise((resolve) => setTimeout(resolve, 10));
       }
     }
     return message!;
   }
+  */
 
   /**
-   * Maneja un turno completo (mensajes hasta que se complete)
-   * Optimizado con timeout para evitar bloqueos
+   * ✨ NUEVO: Procesa mensajes inmediatamente (patrón video-agent)
+   * Sin queuing, sin esperar turnComplete - procesamiento en tiempo real
    */
+  private handleServerMessage(message: LiveServerMessage): void {
+    try {
+      // Procesar parts del modelo
+      if (message.serverContent?.modelTurn) {
+        const parts = message.serverContent.modelTurn.parts || [];
+
+        parts.forEach((part: any) => {
+          // 💬 Texto - emitir inmediatamente
+          if (part.text) {
+            console.log("💬 Server text:", part.text.substring(0, 100));
+            this.textResponseSubject.next(part.text);
+          }
+
+          // 🔊 Audio - enviar a AudioStreamer para playback sin glitches
+          if (part.inlineData?.mimeType?.startsWith("audio/")) {
+            console.log("🔊 Server audio received");
+            const audioData = this.base64ToUint8Array(part.inlineData.data);
+            this.audioStreamer.addPCM16(audioData);
+            // ❌ REMOVED: Retrocompatibilidad causaba doble reproducción
+            // this.audioDataSubject.next(part.inlineData);
+          }
+
+          // 🔧 Function call - procesar inmediatamente
+          if (part.functionCall) {
+            console.log("🔧 Function call:", part.functionCall.name);
+            this.handleFunctionCallImmediate(part.functionCall);
+          }
+        });
+      }
+
+      // Procesar tool calls en formato alternativo
+      if (message.toolCall && message.toolCall.functionCalls) {
+        message.toolCall.functionCalls.forEach((fc: any) => {
+          console.log("🔧 Tool call (alt format):", fc.name);
+          this.handleFunctionCallImmediate(fc);
+        });
+      }
+
+      // Manejar interrupciones
+      if (message.serverContent?.interrupted) {
+        console.log("⏸️ Interruption detected");
+        this.audioDataSubject.next({ interrupted: true });
+      }
+    } catch (error) {
+      console.error("❌ Error processing server message:", error);
+    }
+  }
+
+  /**
+   * ✨ NUEVO: Maneja function calls inmediatamente (sin batch processing)
+   */
+  private async handleFunctionCallImmediate(functionCall: any): Promise<void> {
+    try {
+      console.log("🔧 Processing function immediately:", functionCall.name);
+
+      // Crear toolCall para compatibilidad
+      const toolCall: ToolCall = {
+        name: functionCall.name || '',
+        args: functionCall.args || {},
+        id: functionCall.id || ''
+      };
+
+      // Notificar al componente
+      this.toolCallSubject.next(toolCall);
+
+      // Procesar con handler existente
+      const response = await this.handleKatuqToolResponse(toolCall);
+
+      // Simplificar respuesta para Gemini API
+      const simplifiedResponse = this.simplifyToolResponse(response);
+
+      // Enviar respuesta INMEDIATAMENTE (no esperar batch)
+      console.log("📤 Sending function response immediately");
+      this.session?.sendToolResponse({
+        functionResponses: [{
+          id: functionCall.id,
+          name: functionCall.name,
+          response: simplifiedResponse
+        }]
+      });
+
+      console.log("✅ Function response sent");
+    } catch (error) {
+      console.error("❌ Error handling function call:", error);
+
+      // Enviar error response
+      if (this.session) {
+        this.session.sendToolResponse({
+          functionResponses: [{
+            id: functionCall.id,
+            name: functionCall.name,
+            response: { error: String(error), success: false }
+          }]
+        });
+      }
+    }
+  }
+
+  /**
+   * ✨ NUEVO: Convierte Base64 a Uint8Array
+   */
+  private base64ToUint8Array(base64: string): Uint8Array {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+  }
+
+  /**
+   * ❌ OBSOLETO: Reemplazado por procesamiento inmediato en handleServerMessage
+   * Este método introducía latencia de hasta 5 segundos esperando turnComplete
+   */
+  /* COMENTADO - YA NO SE USA
   private async handleTurn(): Promise<LiveServerMessage[]> {
     const turns: LiveServerMessage[] = [];
     let done = false;
     const startTime = Date.now();
-    const maxTurnTime = 5000; // 5 segundos máximo por turno
+    const maxTurnTime = 5000;
 
     while (!done) {
-      // Verificar timeout
       if (Date.now() - startTime > maxTurnTime) {
-        console.warn('⚠️ [Turn] Timeout de turno alcanzado, completando con mensajes actuales');
+        console.warn('⚠️ [Turn] Timeout de turno alcanzado');
         done = true;
         break;
       }
@@ -230,54 +352,15 @@ export class GeminiAudioService {
       const message = await this.waitMessage();
       turns.push(message);
 
-      console.log('🔄 [Turn] ==================== MENSAJE RECIBIDO ====================');
-      console.log('🔄 [Turn] Tipo de mensaje:', this.getMessageType(message));
-      console.log('🔄 [Turn] ¿Tiene serverContent?:', !!message.serverContent);
-      console.log('🔄 [Turn] ¿Tiene toolCall?:', !!message.toolCall);
-      console.log('🔄 [Turn] turnComplete:', message.serverContent?.turnComplete);
-
-      if (message.toolCall) {
-        console.log('🛠️ [Turn] ✅ TOOL CALL DETECTADO:');
-        console.log('🛠️ [Turn] Function calls:', JSON.stringify(message.toolCall, null, 2));
-      } else {
-        console.log('⚠️ [Turn] ❌ NO HAY TOOL CALL - El modelo solo respondió con texto/audio');
-      }
-
-      if (message.serverContent?.modelTurn) {
-        console.log('💬 [Turn] Model turn parts:', message.serverContent.modelTurn.parts?.length || 0);
-      }
-
-      console.log('🔄 [Turn] Resumen:', {
-        hasServerContent: !!message.serverContent,
-        turnComplete: message.serverContent?.turnComplete,
-        hasToolCall: !!message.toolCall,
-        messageType: this.getMessageType(message)
-      });
-      console.log('🔄 [Turn] ================================================================');
-
-      // Optimizar detección de turnos completos
       if (message.serverContent?.turnComplete === true) {
-        console.log('✅ [Turn] Turno completado por turnComplete flag');
         done = true;
       } else if (message.toolCall) {
-        console.log('🛠️ [Turn] Turno completado por toolCall');
         done = true;
-      } else if (message.serverContent?.modelTurn?.parts) {
-        // Si recibimos contenido del modelo, verificar si parece completo
-        const hasText = message.serverContent.modelTurn.parts.some(part => part.text);
-        const hasAudio = message.serverContent.modelTurn.parts.some(part => part.inlineData);
-        if (hasText || hasAudio) {
-          // Esperar un momento muy breve para ver si hay más mensajes
-          await new Promise(resolve => setTimeout(resolve, 25));
-          if (this.responseQueue.length === 0) {
-            console.log('⚡ [Turn] Turno completado por contenido aparentemente final');
-            done = true;
-          }
-        }
       }
     }
     return turns;
   }
+  */
 
   /**
    * Determina el tipo de mensaje para logging
@@ -595,8 +678,10 @@ export class GeminiAudioService {
   }
 
   /**
-   * Procesa los turnos recibidos manteniendo la funcionalidad existente
+   * ❌ OBSOLETO: Reemplazado por handleFunctionCallImmediate y handleServerMessage
+   * Este método hacía batch processing de function calls, introduciendo latencia
    */
+  /* COMENTADO - YA NO SE USA
   private async processTurns(turns: LiveServerMessage[]): Promise<void> {
     console.log(`🔄 [Turn] Procesando ${turns.length} mensajes en el turno`);
 
@@ -684,6 +769,7 @@ export class GeminiAudioService {
 
     console.log('✅ [Turn] Procesamiento de turno completado');
   }
+  */
 
   /**
    * Construye la configuración de herramientas según el modelo
@@ -771,6 +857,12 @@ export class GeminiAudioService {
         voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Orus'} },
         languageCode: 'es-US'
       },
+      // 🧠 Configuración de pensamiento extendido
+      // El modelo razonará antes de responder para mejorar la calidad de las respuestas
+      thinkingConfig: {
+        thinkingBudget: 1024,     // 1024 tokens para razonar (0-24576)
+        includeThoughts: true     // ✅ ACTIVADO: Mostrar pensamientos en logs para debugging
+      },
       ...(tools.length > 0 && { tools }) // Solo agregar tools si hay herramientas configuradas
     };
     
@@ -808,43 +900,11 @@ export class GeminiAudioService {
               message: 'Connected to Gemini Live API'
             });
           },
-          onmessage: async (message: LiveServerMessage) => {
-            console.log('📨 [Message] Mensaje recibido del servidor:', this.getMessageType(message));
-
-            // Procesamiento inmediato para ciertos tipos de mensajes
-            const messageType = this.getMessageType(message);
-            
-            if (messageType === 'interrupted') {
-              // Procesar interrupciones inmediatamente
-              console.log('⏸️ [Message] Interrupción procesada inmediatamente');
-              this.audioDataSubject.next({ interrupted: true });
-              return;
-            }
-
-            // Agregar el mensaje a la cola para procesamiento por turnos
-            this.responseQueue.push(message);
-
-            // Si no estamos procesando un turno, iniciar el procesamiento
-            if (!this.isProcessingTurn) {
-              this.isProcessingTurn = true;
-
-              try {
-                console.log('🔄 [Message] Iniciando procesamiento de turno...');
-                const turns = await this.handleTurn();
-                await this.processTurns(turns);
-              } catch (error) {
-                console.error('❌ [Message] Error procesando turno:', error);
-                this.connectionStatusSubject.next({
-                  status: 'error',
-                  message: `Turn processing error: ${error instanceof Error ? error.message : 'Unknown error'}`
-                });
-              } finally {
-                this.isProcessingTurn = false;
-                console.log('✅ [Message] Procesamiento de turno finalizado');
-              }
-            } else {
-              console.log('⏳ [Message] Turno ya en procesamiento, mensaje agregado a cola');
-            }
+          onmessage: (message: LiveServerMessage) => {
+            // ✨ NUEVO: Procesamiento inmediato (patrón video-agent)
+            // Sin queuing, sin turnos, sin latencia
+            console.log('📨 Message received:', this.getMessageType(message));
+            this.handleServerMessage(message);
           },
           onerror: (e: ErrorEvent) => {
             this.connectionStatusSubject.next({
@@ -1123,7 +1183,19 @@ export class GeminiAudioService {
   async initSessionWithKatuqTools(): Promise<void> {
     const config: GeminiLiveConfig = {
       model: 'models/gemini-2.5-flash-native-audio-preview-09-2025',
-      systemInstruction: `Eres un asistente de voz inteligente del sistema Katuq Seller, especializado en la gestión de inventario y ventas e inventarios de productos.
+      systemInstruction: `🚨 REGLA #1 - OBLIGATORIO - LEE ESTO PRIMERO 🚨
+
+DEBES USAR HERRAMIENTAS (FUNCTION CALLS) PARA TODAS LAS OPERACIONES.
+NUNCA RESPONDAS SOLO CON TEXTO CUANDO EXISTE UNA HERRAMIENTA DISPONIBLE.
+
+Si el usuario pide algo, PRIMERO piensa: "¿Hay una herramienta para esto?" → SI LA HAY: ÚSALA INMEDIATAMENTE.
+
+❌ PROHIBIDO: Responder "Claro, voy a buscar..." sin ejecutar la función
+✅ CORRECTO: EJECUTAR la función primero, luego responder con los resultados
+
+=========================================================================
+
+Eres un asistente de voz inteligente del sistema Katuq Seller, especializado en la gestión de inventario y ventas.
 
 CAPACIDADES PRINCIPALES:
 - Gestión completa de ventas paso a paso con feedback visual esférico
@@ -1150,10 +1222,6 @@ MODO DEMO - DATOS SIMPLIFICADOS:
 - Usa formato de moneda colombiano: $50.000, $1.200.000, etc.
 - Di "pesos" o "pesos colombianos" cuando menciones precios
 - Ejemplos: "El total es cincuenta mil pesos", "Son dos millones de pesos"
-
-⚠️ IMPORTANTE: USO OBLIGATORIO DE HERRAMIENTAS ⚠️
-
-DEBES usar las herramientas (function calls) para TODAS las operaciones. NUNCA respondas solo con texto cuando existe una herramienta disponible.
 
 GUÍA DE USO DE HERRAMIENTAS POR PASO:
 
@@ -1758,9 +1826,10 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
   }
 
   closeSession(): void {
-    // Limpiar estado de turnos
-    this.responseQueue = [];
-    this.isProcessingTurn = false;
+    // ✨ NUEVO: Ya no hay queue ni turn processing
+
+    // Detener audio streamer
+    this.audioStreamer.stop();
 
     if (this.session) {
       this.session.close();
@@ -1782,9 +1851,7 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
   async reconnectSession(): Promise<void> {
     console.log('🔄 Reintentando conexión...');
     try {
-      // Limpiar estado de turnos antes de reconectar
-      this.responseQueue = [];
-      this.isProcessingTurn = false;
+      // ✨ NUEVO: Ya no hay estado de turnos que limpiar
 
       await this.initSession();
       console.log('✅ Reconexión exitosa');
@@ -2017,15 +2084,43 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
         simplified.error = response.error;
       }
 
-      // Si hay data, intentar extraer información útil como strings
+      // ✅ MEJORADO: Crear resumen legible en lugar de JSON gigante
       if (response.data) {
-        // Si data tiene count/length
         if (typeof response.data === 'object') {
-          if (Array.isArray(response.data)) {
-            simplified.count = response.data.length;
-          } else if (response.data.count !== undefined) {
-            simplified.count = Number(response.data.count);
+          try {
+            // Crear resumen legible según el tipo de datos
+            const summary = this.createDataSummary(response.data);
+
+            // Si el resumen es corto (< 1500 chars), usarlo
+            if (summary.length < 1500) {
+              simplified.data_summary = summary;
+            } else {
+              // Si es muy largo, truncar
+              simplified.data_summary = summary.substring(0, 1500) + '... (truncado)';
+            }
+
+            // Agregar info básica
+            if (response.data.total !== undefined) {
+              simplified.total = Number(response.data.total);
+            }
+            if (response.data.count !== undefined) {
+              simplified.count = Number(response.data.count);
+            }
+          } catch (e) {
+            console.warn('⚠️ No se pudo crear resumen de data:', e);
+            // Fallback: extraer info básica
+            if (Array.isArray(response.data)) {
+              simplified.count = response.data.length;
+            } else if (response.data.count !== undefined) {
+              simplified.count = Number(response.data.count);
+            } else if (response.data.total !== undefined) {
+              simplified.total = Number(response.data.total);
+            }
           }
+        } else if (typeof response.data === 'string') {
+          simplified.data = response.data;
+        } else if (typeof response.data === 'number') {
+          simplified.data_value = response.data;
         }
       }
 
@@ -2034,6 +2129,60 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
 
     // Fallback
     return { result: String(response) };
+  }
+
+  /**
+   * Crea un resumen legible de los datos para el modelo
+   */
+  private createDataSummary(data: any): string {
+    // Para arrays de productos
+    if (data.products && Array.isArray(data.products)) {
+      const productsList = data.products
+        .slice(0, 10) // Máximo 10 productos
+        .map((p: any) => `- ${p.nombre || 'Sin nombre'}: $${p.precio || 0} (Stock: ${p.stock || 0})`)
+        .join('\n');
+
+      const more = data.products.length > 10 ? `\n... y ${data.products.length - 10} productos más` : '';
+      return `Productos encontrados:\n${productsList}${more}`;
+    }
+
+    // Para arrays de bodegas
+    if (data.warehouses && Array.isArray(data.warehouses)) {
+      const warehousesList = data.warehouses
+        .map((w: any) => `- ${w.nombre || w.name}: ${w.ubicacion || w.location || 'Sin ubicación'}`)
+        .join('\n');
+
+      return `Bodegas disponibles:\n${warehousesList}`;
+    }
+
+    // Para items del carrito
+    if (data.items && Array.isArray(data.items)) {
+      const itemsList = data.items
+        .map((i: any) => `- ${i.nombre}: ${i.cantidad}x $${i.precioUnitario} = $${i.subtotal}`)
+        .join('\n');
+
+      return `Carrito:\n${itemsList}\nTotal: $${data.total || 0}`;
+    }
+
+    // Para clientes
+    if (data.cliente || data.customer) {
+      const cliente = data.cliente || data.customer;
+      return `Cliente: ${cliente.nombre || cliente.nombres_completos || 'Sin nombre'}\nDocumento: ${cliente.documento || 'No especificado'}\nEmail: ${cliente.correo_electronico_comprador || cliente.email || 'No especificado'}`;
+    }
+
+    // Para resultados de búsqueda de clientes
+    if (data.clientes && Array.isArray(data.clientes)) {
+      const clientesList = data.clientes
+        .slice(0, 5) // Máximo 5 clientes
+        .map((c: any) => `- ${c.nombres_completos || c.nombre}: ${c.documento}`)
+        .join('\n');
+
+      const more = data.clientes.length > 5 ? `\n... y ${data.clientes.length - 5} clientes más` : '';
+      return `Clientes encontrados:\n${clientesList}${more}`;
+    }
+
+    // Fallback: JSON compacto
+    return JSON.stringify(data);
   }
 
   // Método para emitir eventos de herramientas de Katuq

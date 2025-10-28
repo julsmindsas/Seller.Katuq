@@ -97,6 +97,12 @@ export class GeminiLiveService {
           },
         },
       },
+      // 🧠 Configuración de pensamiento extendido
+      // El modelo razonará antes de responder para mejorar diagnósticos
+      thinkingConfig: {
+        thinkingBudget: 1024,     // 1024 tokens para razonar (0-24576)
+        includeThoughts: false    // No mostrar pensamientos internos al usuario
+      },
       systemInstruction: {
         parts: [
           {
