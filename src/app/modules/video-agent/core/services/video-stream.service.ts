@@ -3,8 +3,10 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { DEFAULT_STREAM_CONFIG } from '../models/agent-config.interface';
 
 /**
- * Service para captura y streaming de video a 1 fps
- * Optimizado según Gemini Live API specs: 768x768 @ 1fps JPEG
+ * Service para captura y streaming de video a 2 fps
+ * Optimizado para Gemini Live API: 768x768 @ 2fps JPEG (calidad 0.6)
+ * Usa requestAnimationFrame para captura suave y sincronizada
+ * Nota: El modelo procesa a 1fps pero recibir más frames mejora la latencia
  */
 @Injectable({
   providedIn: 'root'
@@ -15,6 +17,8 @@ export class VideoStreamService {
   private canvas: HTMLCanvasElement | null = null;
   private ctx: CanvasRenderingContext2D | null = null;
   private captureInterval: any = null;
+  private animationFrameId: number | null = null;
+  private lastFrameTime: number = 0;
 
   // Configuración de captura
   private readonly config = DEFAULT_STREAM_CONFIG.video;
@@ -95,16 +99,29 @@ export class VideoStreamService {
   }
 
   /**
-   * Inicia captura de frames a 1 fps
+   * Inicia captura de frames usando requestAnimationFrame para mejor sincronización
    */
   private startFrameCapture(): void {
-    const interval = 1000 / this.fps; // 1000ms para 1fps
+    const interval = 1000 / this.fps; // 500ms para 2fps
+    this.lastFrameTime = performance.now();
 
-    this.captureInterval = setInterval(() => {
-      this.captureFrame();
-    }, interval);
+    const captureLoop = (timestamp: number) => {
+      const elapsed = timestamp - this.lastFrameTime;
 
-    console.log(`📸 Frame capture started: ${this.fps} fps (${interval}ms interval)`);
+      // Capturar solo cuando haya transcurrido el intervalo necesario
+      if (elapsed >= interval) {
+        this.captureFrame();
+        this.lastFrameTime = timestamp;
+      }
+
+      // Continuar el loop si no se ha detenido
+      if (this.animationFrameId !== null) {
+        this.animationFrameId = requestAnimationFrame(captureLoop);
+      }
+    };
+
+    this.animationFrameId = requestAnimationFrame(captureLoop);
+    console.log(`📸 Frame capture started: ${this.fps} fps (${interval}ms interval) usando requestAnimationFrame`);
   }
 
   /**
@@ -140,8 +157,8 @@ export class VideoStreamService {
         0, 0, this.config.width, this.config.height // destination (768x768)
       );
 
-      // Convertir a JPEG base64
-      const base64Image = this.canvas.toDataURL('image/jpeg', 0.8);
+      // Convertir a JPEG base64 con compresión optimizada (0.6 para reducir tamaño ~30%)
+      const base64Image = this.canvas.toDataURL('image/jpeg', 0.6);
 
       // Remover prefijo "data:image/jpeg;base64,"
       const base64Data = base64Image.split(',')[1];
@@ -159,7 +176,13 @@ export class VideoStreamService {
    * Detiene la captura de video
    */
   stopCapture(): void {
-    // Detener interval
+    // Detener requestAnimationFrame
+    if (this.animationFrameId !== null) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = null;
+    }
+
+    // Detener interval (retrocompatibilidad)
     if (this.captureInterval) {
       clearInterval(this.captureInterval);
       this.captureInterval = null;
@@ -216,7 +239,7 @@ export class VideoStreamService {
       return null;
     }
 
-    const base64Image = this.canvas.toDataURL('image/jpeg', 0.8);
+    const base64Image = this.canvas.toDataURL('image/jpeg', 0.6);
     return base64Image.split(',')[1];
   }
 

@@ -89,7 +89,8 @@ export class GeminiLiveService {
     const toolDeclarations = adapter.getToolDeclarations();
     const config: any = {
       responseModalities: [Modality.AUDIO],
-      mediaResolution: MediaResolution.MEDIA_RESOLUTION_MEDIUM,
+      // LOW para procesamiento más rápido, MEDIUM para balance calidad/velocidad
+      mediaResolution: MediaResolution.MEDIA_RESOLUTION_LOW,
       speechConfig: {
         voiceConfig: {
           prebuiltVoiceConfig: {
