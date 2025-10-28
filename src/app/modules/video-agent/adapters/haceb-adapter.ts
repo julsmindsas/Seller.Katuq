@@ -29,6 +29,7 @@ export class HacebAdapter implements IAgentAdapter {
     serviceType?: string;
     coordinates?: { latitude: number; longitude: number };
     address?: string; // Dirección formateada desde geolocalización
+    city?: string; // Ciudad desde geolocalización
   } = {};
 
   /**
@@ -810,6 +811,7 @@ export class HacebAdapter implements IAgentAdapter {
             deviceInfo: this.sessionData.deviceInfo || "Electrodoméstico Haceb",
             issueSummary: this.sessionData.issueSummary || "Diagnóstico necesario",
             address: this.sessionData.address || "Dirección auto-detectada",
+            city: this.sessionData.city || "Ciudad no detectada",  // Ciudad desde geolocalización
             specialNotes: "🎯 DEMO MODE - Auto-agendado desde video agent",
             coordinates: this.sessionData.coordinates,
             isDemoMode: this.DEMO_MODE,
@@ -841,6 +843,19 @@ export class HacebAdapter implements IAgentAdapter {
         };
 
       case "appointment_confirmed":
+        // 🎯 En MODO DEMO, ya se guardó en auto_schedule_demo, NO guardar de nuevo
+        if (this.DEMO_MODE) {
+          return {
+            action: "SHOW_INFO",
+            data: {
+              message: `Cita ya confirmada anteriormente. Número: ${details.confirmation_number}`,
+              confirmationNumber: details.confirmation_number,
+            },
+            priority: "low",
+          };
+        }
+
+        // 📋 MODO PRODUCCIÓN: Guardar cita confirmada
         return {
           action: "SCHEDULE_SERVICE",
           data: {
@@ -932,16 +947,20 @@ export class HacebAdapter implements IAgentAdapter {
   }
 
   /**
-   * Establece coordenadas de geolocalización y dirección formateada
+   * Establece coordenadas de geolocalización, dirección formateada y ciudad
    */
-  setCoordinates(latitude: number, longitude: number, address?: string): void {
+  setCoordinates(latitude: number, longitude: number, address?: string, city?: string): void {
     this.sessionData.coordinates = { latitude, longitude };
     if (address) {
       this.sessionData.address = address;
     }
+    if (city) {
+      this.sessionData.city = city;
+    }
     console.log("📍 Location set in HacebAdapter:", {
       coordinates: this.sessionData.coordinates,
       address: this.sessionData.address,
+      city: this.sessionData.city,
     });
   }
 

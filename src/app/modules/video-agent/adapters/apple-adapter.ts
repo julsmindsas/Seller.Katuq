@@ -27,6 +27,7 @@ export class AppleAdapter implements IAgentAdapter {
     issueSummary?: string;
     serviceType?: string;
     coordinates?: { latitude: number; longitude: number };
+    city?: string; // City from geolocation
     address?: string;  // Dirección formateada desde API de Maps
   } = {};
 
@@ -759,6 +760,7 @@ export class AppleAdapter implements IAgentAdapter {
             deviceInfo: this.sessionData.deviceInfo || "Apple Device",
             issueSummary: this.sessionData.issueSummary || "Diagnostic needed",
             address: this.sessionData.address || "Auto-detected address",
+            city: this.sessionData.city || "City not detected",  // City from geolocation
             specialNotes: "🎯 DEMO MODE - Auto-scheduled from video agent",
             coordinates: this.sessionData.coordinates,
             isDemoMode: this.DEMO_MODE,
@@ -790,6 +792,19 @@ export class AppleAdapter implements IAgentAdapter {
         };
 
       case "appointment_confirmed":
+        // 🎯 In DEMO MODE, already saved in auto_schedule_demo, DO NOT save again
+        if (this.DEMO_MODE) {
+          return {
+            action: "SHOW_INFO",
+            data: {
+              message: `Appointment already confirmed. Number: ${details.confirmation_number}`,
+              confirmationNumber: details.confirmation_number,
+            },
+            priority: "low",
+          };
+        }
+
+        // 📋 PRODUCTION MODE: Save confirmed appointment
         return {
           action: "SCHEDULE_SERVICE",
           data: {
@@ -884,14 +899,18 @@ export class AppleAdapter implements IAgentAdapter {
   /**
    * Establece coordenadas de geolocalización y dirección formateada
    */
-  setCoordinates(latitude: number, longitude: number, address?: string): void {
+  setCoordinates(latitude: number, longitude: number, address?: string, city?: string): void {
     this.sessionData.coordinates = { latitude, longitude };
     if (address) {
       this.sessionData.address = address;
     }
+    if (city) {
+      this.sessionData.city = city;
+    }
     console.log("📍 Location set in AppleAdapter:", {
       coordinates: this.sessionData.coordinates,
-      address: this.sessionData.address
+      address: this.sessionData.address,
+      city: this.sessionData.city
     });
   }
 

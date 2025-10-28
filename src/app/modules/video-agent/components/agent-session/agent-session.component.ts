@@ -344,12 +344,13 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
         const location: GeoAddress = await this.geolocationService.getCurrentLocation();
         console.log("✅ Geolocation captured:", location);
 
-        // Pasar coordenadas y dirección al adapter (si soporta setCoordinates)
+        // Pasar coordenadas, dirección y ciudad al adapter (si soporta setCoordinates)
         if (adapter.setCoordinates) {
           adapter.setCoordinates(
             location.coordinates.latitude,
             location.coordinates.longitude,
-            location.formatted  // Dirección formateada desde API de Maps
+            location.formatted,  // Dirección formateada desde API de Maps
+            location.city  // Ciudad desde geolocalización
           );
         }
       } catch (geoError) {
@@ -488,7 +489,7 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
           issueSummary:
             nextAction.data.issueSummary || "Diagnostic needed",
           address: nextAction.data.address || "Dirección no proporcionada",  // Dirección formateada desde Maps API
-          city: "Bogotá", // Ciudad por defecto para DEMO
+          city: nextAction.data.city || "Ciudad no detectada",  // Ciudad desde geolocalización
           estimatedCost:
             nextAction.data.estimatedCost || "Por determinar",
           urgency: nextAction.data.urgency || "medium",
@@ -510,6 +511,8 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
             appointment.deviceInfo,
             appointment.issueSummary,
             nextAction.data.coordinates, // 📍 Incluir coordenadas capturadas al inicio
+            nextAction.data.address,     // 🏠 Dirección formateada desde Maps API
+            nextAction.data.city         // 🌆 Ciudad desde geolocalización
           )
           .then((savedAppointment) => {
             console.log(

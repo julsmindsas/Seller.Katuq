@@ -61,6 +61,8 @@ export class AgendamientoService {
     deviceInfo: string,
     issueSummary: string,
     coordinates?: { latitude: number; longitude: number },
+    address?: string,
+    city?: string,
   ): Promise<AppointmentData> {
     // Generar fecha para mañana
     const tomorrow = new Date();
@@ -91,10 +93,8 @@ export class AgendamientoService {
       serviceType: "diagnostic",
       deviceInfo,
       issueSummary,
-      address: coordinates
-        ? "Ubicación detectada automáticamente"
-        : "Sin ubicación",
-      city: "Bogotá",
+      address: address || (coordinates ? "Ubicación detectada automáticamente" : "Sin ubicación"),
+      city: city || "Ciudad no detectada",
       coordinates,
       estimatedCost: "Por determinar",
       specialNotes: "🎯 DEMO MODE - Agendamiento automático",
@@ -221,6 +221,8 @@ export class AgendamientoService {
         data.deviceInfo || "iPhone",
         data.issueSummary || "Diagnóstico general",
         data.coordinates,
+        data.address,
+        data.city,
       );
     } else {
       return this.createProductionAppointment(data);
