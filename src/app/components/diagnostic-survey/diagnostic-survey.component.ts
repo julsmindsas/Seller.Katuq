@@ -1,16 +1,20 @@
-import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms'; // Se agregó Validators
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
 import { KatuqQuickStartService, DiagnosticResponse } from '../../shared/services/quickstart/katuq-quickstart.service';
 import { ContextualQuestionsService, ContextualQuestion } from '../../shared/services/quickstart/contextual-questions.service';
+import { Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-diagnostic-survey',
     templateUrl: './diagnostic-survey.component.html',
     styleUrls: ['./diagnostic-survey.component.scss']
 })
-export class DiagnosticSurveyComponent implements OnInit {
+export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
+    private subscriptions: Subscription[] = [];
+    private readonly STORAGE_KEY = 'katuq_diagnostic_progress';
+    private autoSaveTimeout: any;
 
     surveyData = {
         "formTitle": "Diagnóstico Rápido para tu Negocio Digital",
@@ -142,6 +146,7 @@ export class DiagnosticSurveyComponent implements OnInit {
 
     mainForm: FormGroup; // Formulario principal
     isProcessing: boolean = false; // nueva bandera para animación de procesamiento
+    showAutoSaveIndicator: boolean = false; // Indicador de guardado automático
 
     // Registro simplificado: solo 4 campos esenciales
     registrationQuestions = [
@@ -169,7 +174,158 @@ export class DiagnosticSurveyComponent implements OnInit {
         });
     }
 
-    ngOnInit() { }
+    ngOnInit() {
+        this.loadProgress();
+        this.setupAutoSave();
+        
+        // Escuchar cambios en el formulario para autoguardado
+        const registrationForm = this.mainForm.get('registration');
+        if (registrationForm) {
+            const formSubscription = registrationForm.valueChanges.subscribe(() => {
+                this.debouncedSave();
+            });
+            this.subscriptions.push(formSubscription);
+        }
+    }
+
+    ngOnDestroy() {
+        // Limpiar todas las suscripciones
+        this.subscriptions.forEach(sub => sub.unsubscribe());
+        this.subscriptions = [];
+        
+        // Guardar progreso final antes de destruir
+        this.saveProgress();
+        
+        // Limpiar timeout de autoguardado
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+        }
+    }
+
+    /**
+     * Guarda el progreso del usuario en localStorage
+     */
+    private saveProgress(): void {
+        try {
+            const progress = {
+                responses: this.responses,
+                contextualResponses: this.contextualResponses,
+                registrationData: this.mainForm.get('registration')?.value,
+                currentStep: this.currentStep,
+                currentSectionIndex: this.currentSectionIndex,
+                currentQuestionIndex: this.currentQuestionIndex,
+                currentContextualIndex: this.currentContextualIndex,
+                registrationIndex: this.registrationIndex,
+                timestamp: new Date().toISOString()
+            };
+            localStorage.setItem(this.STORAGE_KEY, JSON.stringify(progress));
+        } catch (error) {
+            console.warn('No se pudo guardar el progreso:', error);
+        }
+    }
+
+    /**
+     * Carga el progreso guardado del localStorage
+     */
+    private loadProgress(): void {
+        try {
+            const saved = localStorage.getItem(this.STORAGE_KEY);
+            if (saved) {
+                const progress = JSON.parse(saved);
+                
+                // Restaurar respuestas
+                if (progress.responses) {
+                    this.responses = progress.responses;
+                }
+                
+                // Restaurar respuestas contextuales
+                if (progress.contextualResponses) {
+                    this.contextualResponses = progress.contextualResponses;
+                }
+                
+                // Restaurar datos de registro
+                if (progress.registrationData) {
+                    this.mainForm.get('registration')?.patchValue(progress.registrationData);
+                }
+                
+                // Restaurar índices de navegación
+                if (progress.currentSectionIndex !== undefined) {
+                    this.currentSectionIndex = progress.currentSectionIndex;
+                }
+                if (progress.currentQuestionIndex !== undefined) {
+                    this.currentQuestionIndex = progress.currentQuestionIndex;
+                }
+                if (progress.currentContextualIndex !== undefined) {
+                    this.currentContextualIndex = progress.currentContextualIndex;
+                }
+                if (progress.registrationIndex !== undefined) {
+                    this.registrationIndex = progress.registrationIndex;
+                }
+                
+                // Restaurar paso actual (con validación)
+                if (progress.currentStep && this.isValidStep(progress.currentStep)) {
+                    this.currentStep = progress.currentStep;
+                }
+
+                // Si había preguntas contextuales, cargarlas
+                if (this.currentStep === 'contextual' && this.contextualQuestions.length === 0) {
+                    this.contextualQuestions = this.contextualQuestionsService.getContextualQuestions(this.responses, 2);
+                }
+            }
+        } catch (error) {
+            console.warn('No se pudo cargar el progreso guardado:', error);
+            // Si hay error al cargar, limpiar el localStorage corrupto
+            localStorage.removeItem(this.STORAGE_KEY);
+        }
+    }
+
+    /**
+     * Valida que el paso sea válido
+     */
+    private isValidStep(step: string): boolean {
+        const validSteps: string[] = ['questionnaire', 'contextual', 'introduction', 'registration', 'summary', 'quickstart-success'];
+        return validSteps.includes(step);
+    }
+
+    /**
+     * Configura el autoguardado con debounce
+     */
+    private setupAutoSave(): void {
+        // Se guarda automáticamente en selectOption, selectContextualOption, y cambios en formulario
+    }
+
+    /**
+     * Guarda progreso con debounce para evitar escrituras excesivas
+     */
+    private debouncedSave(): void {
+        if (this.autoSaveTimeout) {
+            clearTimeout(this.autoSaveTimeout);
+        }
+        this.autoSaveTimeout = setTimeout(() => {
+            this.saveProgress();
+            // Mostrar indicador de guardado
+            this.showAutoSaveIndicator = true;
+            setTimeout(() => {
+                this.showAutoSaveIndicator = false;
+            }, 2000); // Ocultar después de 2 segundos
+        }, 1000); // Guardar después de 1 segundo de inactividad
+    }
+
+    /**
+     * Limpia el progreso guardado (usar después de envío exitoso)
+     */
+    private clearProgress(): void {
+        localStorage.removeItem(this.STORAGE_KEY);
+    }
+
+    /**
+     * Listener para prevenir salida accidental
+     */
+    @HostListener('window:beforeunload', ['$event'])
+    beforeUnloadHandler(event: any): void {
+        // Guardar progreso antes de salir
+        this.saveProgress();
+    }
 
     // Métodos helper para validación de campos
     getFieldError(fieldName: string): string | null {
@@ -240,6 +396,8 @@ export class DiagnosticSurveyComponent implements OnInit {
 
     selectOption(option: string) {
         this.responses[this.currentQuestion.id] = option;
+        this.debouncedSave(); // Guardar progreso
+        
         // Si no es la última pregunta, se avanza automáticamente;
         // en caso contrario, se detiene y se deja que el usuario haga clic en "Siguiente paso".
         if (!(this.currentSectionIndex === this.surveyData.sections.length - 1 &&
@@ -273,6 +431,7 @@ export class DiagnosticSurveyComponent implements OnInit {
             // Terminó el cuestionario principal, evaluar preguntas contextuales
             this.evaluateContextualQuestions();
         }
+        this.debouncedSave(); // Guardar progreso después de cambiar de pregunta
     }
 
     evaluateContextualQuestions() {
@@ -328,8 +487,37 @@ export class DiagnosticSurveyComponent implements OnInit {
     }
 
     async submitResponses() {
+        // Validar que todas las preguntas estén respondidas
+        const unansweredQuestions = this.surveyData.sections.flatMap(section => 
+            section.questions.filter(q => !this.responses[q.id])
+        );
+        
+        if (unansweredQuestions.length > 0) {
+            alert(`Por favor, responde todas las preguntas antes de continuar. Faltan ${unansweredQuestions.length} pregunta(s).`);
+            this.currentStep = 'questionnaire';
+            // Ir a la primera pregunta sin respuesta
+            const firstUnanswered = unansweredQuestions[0];
+            const sectionIndex = this.surveyData.sections.findIndex(s => 
+                s.questions.some(q => q.id === firstUnanswered.id)
+            );
+            if (sectionIndex !== -1) {
+                this.currentSectionIndex = sectionIndex;
+                this.currentQuestionIndex = this.surveyData.sections[sectionIndex].questions.findIndex(q => q.id === firstUnanswered.id);
+            }
+            return;
+        }
+
         // Realiza trim de los inputs antes de enviarlos
         this.trimRegistrationValues();
+        
+        // Validar datos de registro
+        if (!this.mainForm.get('registration')?.valid) {
+            alert('Por favor, completa todos los campos del registro correctamente.');
+            this.currentStep = 'registration';
+            this.registrationIndex = 0;
+            return;
+        }
+        
         const responsesArray: { questionId: string; question: string; answer: string }[] = [];
         this.surveyData.sections.forEach(section => {
             section.questions.forEach(q => responsesArray.push({
@@ -344,9 +532,9 @@ export class DiagnosticSurveyComponent implements OnInit {
             // Iniciar Quick Start directamente (el service se encarga de guardar el diagnóstico)
             await this.startQuickStart(null, registrationData, responsesArray);
             
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error en el proceso de configuración automática", error);
-            // En caso de error, mostrar proceso tradicional
+            // En caso de error, mostrar proceso tradicional con mejor mensaje
             this.submissionSuccess = true;
             const empresa = this.mainForm.get('registration.nombre')?.value || 'tu empresa';
             this.welcomeMessage = `${empresa}`;
@@ -359,9 +547,10 @@ export class DiagnosticSurveyComponent implements OnInit {
         this.currentStep = 'quickstart-success';
         
         // Suscribirse al status del Quick Start
-        this.quickStartService.quickStartStatus$.subscribe(status => {
+        const statusSubscription = this.quickStartService.quickStartStatus$.subscribe(status => {
             this.quickStartMessage = status.message;
         });
+        this.subscriptions.push(statusSubscription);
 
         // Preparar datos para Quick Start (incluir respuestas contextuales)
         const allResponses = { ...this.responses, ...this.contextualResponses };
@@ -393,6 +582,9 @@ export class DiagnosticSurveyComponent implements OnInit {
                 this.welcomeMessage = registrationData.nombre;
                 this.nextSteps = quickStartResult.nextSteps || [];
                 this.quickStartMessage = quickStartResult.message || "¡Tu comercio está configurado y listo!";
+                
+                // Limpiar progreso guardado después de éxito
+                this.clearProgress();
                 
                 // Redirigir después de mostrar éxito
                 setTimeout(() => {
@@ -448,7 +640,11 @@ export class DiagnosticSurveyComponent implements OnInit {
         if (this.currentStep === 'questionnaire') {
             // Evitar avanzar si no se ha seleccionado una opción
             if (!this.responses[this.currentQuestion.id]) {
-                alert("Por favor, seleccione una opción para continuar");
+                // Usar una notificación más amigable (podría reemplazarse por un servicio de notificaciones)
+                const message = "Por favor, selecciona una opción para continuar";
+                // Mostrar feedback visual en lugar de alert
+                console.warn(message);
+                // Opcional: podrías añadir aquí una notificación toast
                 return;
             }
             if (this.currentSectionIndex === this.surveyData.sections.length - 1 &&
@@ -461,6 +657,7 @@ export class DiagnosticSurveyComponent implements OnInit {
             // Inicia el registro paso a paso.
             this.currentStep = 'registration';
             this.registrationIndex = 0;
+            this.debouncedSave(); // Guardar progreso
             // Opcional: si se desea limpiar el primer campo cuando se entra, se puede llamar reset().
             // Pero cuidado: hacerlo luego borra el valor ingresado.
             // this.mainForm.get('registration.' + this.registrationQuestions[0].formControl)?.reset();
@@ -479,6 +676,7 @@ export class DiagnosticSurveyComponent implements OnInit {
                 this.confirmFinish();
                 this.currentStep = 'summary';
             }
+            this.debouncedSave(); // Guardar progreso después de avanzar en registro
         }
     }
 
@@ -512,6 +710,7 @@ export class DiagnosticSurveyComponent implements OnInit {
 
     selectContextualOption(option: string) {
         this.contextualResponses[this.currentContextualQuestion.id] = option;
+        this.debouncedSave(); // Guardar progreso
         
         // Avanzar automáticamente a la siguiente pregunta contextual
         setTimeout(() => {
@@ -526,6 +725,7 @@ export class DiagnosticSurveyComponent implements OnInit {
             // Terminaron las preguntas contextuales, ir al registro
             this.currentStep = 'introduction';
         }
+        this.debouncedSave(); // Guardar progreso
     }
 
     backContextualQuestion() {
@@ -557,5 +757,32 @@ export class DiagnosticSurveyComponent implements OnInit {
             case 'summary': return this.contextualQuestions.length > 0 ? 4 : 3;
             default: return 1;
         }
+    }
+
+    /**
+     * Calcula el número total de preguntas
+     */
+    getTotalQuestions(): number {
+        return this.surveyData.sections.reduce((total, section) => total + section.questions.length, 0);
+    }
+
+    /**
+     * Calcula el número de la pregunta actual (1-indexed)
+     */
+    getCurrentQuestionNumber(): number {
+        let count = 0;
+        for (let i = 0; i < this.currentSectionIndex; i++) {
+            count += this.surveyData.sections[i].questions.length;
+        }
+        return count + this.currentQuestionIndex + 1;
+    }
+
+    /**
+     * Calcula el progreso total como porcentaje
+     */
+    getTotalProgress(): number {
+        const total = this.getTotalQuestions();
+        const current = this.getCurrentQuestionNumber();
+        return Math.round((current / total) * 100);
     }
 }

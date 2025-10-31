@@ -36,6 +36,65 @@
     bottom: 20px; // Posición desde abajo
     right: 10px;  // Posición desde la derecha
     max-height: 50px; // Tamaño base reducido
+    z-index: 1;
+}
+
+/* Indicador de guardado automático */
+.autosave-indicator {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(40, 167, 69, 0.95);
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Geometr415L', sans-serif;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 10000;
+    animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-out 1.7s forwards;
+    pointer-events: none;
+}
+
+.autosave-icon {
+    font-size: 1.1rem;
+}
+
+.autosave-text {
+    font-weight: 500;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+/* Responsive para indicador de guardado */
+@media screen and (max-width: 768px) {
+    .autosave-indicator {
+        top: 10px;
+        right: 10px;
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
 }
 
 /* Formulario sin bordes y con layout alineado a la izquierda */
@@ -145,74 +204,153 @@
 }
 */
 
-/* Opciones */
+/* Opciones - Botones mejorados con mejor contraste */
 .option-button {
     margin: 10px 5px;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    background-color: #9020FF;
+    padding: 14px 24px;
+    border: 2px solid #9020FF;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #9020FF 0%, #7B1FA2 100%);
     color: white;
+    font-weight: 500;
     cursor: pointer;
-    transition: transform 0.2s, background-color 0.2s;
+    transition: all 0.3s ease;
     font-family: 'Geometr415L', sans-serif;
+    font-size: 1rem;
+    box-shadow: 0 2px 8px rgba(144, 32, 255, 0.3);
+    min-width: 120px;
+    text-align: center;
 }
 
 .option-button:hover {
-    transform: scale(1.1);
+    transform: translateY(-2px) scale(1.02);
+    background: linear-gradient(135deg, #A435FF 0%, #8E24AA 100%);
+    box-shadow: 0 4px 12px rgba(144, 32, 255, 0.5);
+    border-color: #A435FF;
+}
+
+.option-button:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 6px rgba(144, 32, 255, 0.4);
+}
+
+.option-button:focus {
+    outline: 2px solid rgba(144, 32, 255, 0.5);
+    outline-offset: 2px;
 }
 
 /* Resalta la opción seleccionada con un efecto más claro */
 .option-button.selected {
-    background-color: lighten(#9020FF, 15%);
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-    transition: background-color 0.3s;
+    background: linear-gradient(135deg, #00FFCC 0%, #00D4AA 100%);
+    border-color: #00FFCC;
+    color: #0C0042;
+    font-weight: 600;
+    box-shadow: 0 4px 16px rgba(0, 255, 204, 0.5);
+    transform: scale(1.05);
 }
 
-/* Navegación */
+.option-button.selected:hover {
+    background: linear-gradient(135deg, #1AFFD9 0%, #00E8C2 100%);
+    border-color: #1AFFD9;
+    transform: translateY(-2px) scale(1.07);
+}
+
+/* Navegación - Botones mejorados */
 .navigation-buttons {
-    margin-top: 20px;
+    margin-top: 30px;
     display: flex;
     gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .next-button {
-    background-color: #9020FF;
-    padding: 8px 20px;
-    /* Se reduce el padding */
-    font-size: 1.25rem;
+    background: linear-gradient(135deg, #9020FF 0%, #7B1FA2 100%);
+    color: white;
+    padding: 14px 32px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 2px solid #9020FF;
+    border-radius: 8px;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.3s ease;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+    box-shadow: 0 4px 12px rgba(144, 32, 255, 0.4);
+    min-width: 140px;
 }
 
-.next-button:hover:not(.disabled) {
-    background-color: lighten(#9020FF, 10%);
-    transform: translateY(-1px);
+.next-button:hover:not(.disabled):not(:disabled) {
+    background: linear-gradient(135deg, #A435FF 0%, #8E24AA 100%);
+    border-color: #A435FF;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(144, 32, 255, 0.5);
+}
+
+.next-button:active:not(.disabled):not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(144, 32, 255, 0.4);
+}
+
+.next-button:focus {
+    outline: 2px solid rgba(144, 32, 255, 0.5);
+    outline-offset: 2px;
 }
 
 .next-button.disabled,
 .next-button:disabled {
-    background-color: #ccc;
-    color: #999;
+    background: #cccccc;
+    color: #666666;
+    border-color: #cccccc;
     cursor: not-allowed;
     opacity: 0.6;
     transform: none;
+    box-shadow: none;
 }
 
 .next-button.disabled:hover,
 .next-button:disabled:hover {
-    background-color: #ccc;
+    background: #cccccc;
+    border-color: #cccccc;
     transform: none;
+    box-shadow: none;
 }
 
 .back-button {
-    background-color: #007BFF;
-    /* Nuevo color */
+    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    color: white;
+    padding: 14px 32px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border: 2px solid #6c757d;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+    min-width: 140px;
 }
 
 .back-button:hover {
-    background-color: lighten(#007BFF, 10%);
+    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    border-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(108, 117, 125, 0.4);
+}
+
+.back-button:active {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(108, 117, 125, 0.3);
+}
+
+.back-button:focus {
+    outline: 2px solid rgba(108, 117, 125, 0.5);
+    outline-offset: 2px;
 }
 
 /* Reglas responsive */
@@ -226,9 +364,15 @@
     }
 
     .survey-form p,
-    .survey-form label,
-    .option-button {
+    .survey-form label {
         font-size: 0.9rem; // Antes: 1rem
+    }
+
+    .option-button {
+        font-size: 0.95rem;
+        padding: 12px 18px;
+        min-width: 100px;
+        margin: 8px 4px;
     }
 
     .welcome-text {
@@ -241,7 +385,14 @@
 
     .navigation-buttons {
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
+    }
+
+    .next-button,
+    .back-button {
+        width: 100%;
+        padding: 12px 24px;
+        font-size: 1rem;
     }
 }
 
@@ -282,13 +433,22 @@
     }
 
     .option-button {
-        font-size: 1rem;
-        padding: 8px 10px;
+        font-size: 0.95rem;
+        padding: 12px 16px;
+        min-width: 90px;
+        margin: 6px 3px;
     }
 
     .navigation-buttons {
         flex-direction: column;
         gap: 10px;
+    }
+
+    .next-button,
+    .back-button {
+        width: 100%;
+        padding: 12px 20px;
+        font-size: 0.95rem;
     }
 }
 
@@ -537,13 +697,22 @@
     }
 
     .option-button {
-        font-size: 1rem;
-        padding: 8px 10px;
+        font-size: 0.9rem;
+        padding: 12px 16px;
+        min-width: 85px;
+        margin: 5px 2px;
     }
 
     .navigation-buttons {
         flex-direction: column;
         gap: 10px;
+    }
+
+    .next-button,
+    .back-button {
+        width: 100%;
+        padding: 12px 18px;
+        font-size: 0.9rem;
     }
 }
 
@@ -638,51 +807,78 @@
     border-bottom: none;
 }
 
-/* Botones de acción rápida */
+/* Botones de acción rápida - Mejorados */
 .quick-actions {
     display: flex;
     justify-content: center;
     gap: 15px;
     margin: 30px 0;
+    flex-wrap: wrap;
 }
 
 .cta-button {
-    padding: 15px 30px;
-    border: none;
-    border-radius: 8px;
+    padding: 16px 32px;
+    border: 2px solid transparent;
+    border-radius: 10px;
     font-family: 'Geometr415BlkBTBlack', sans-serif;
     font-size: 1.1rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
     text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 180px;
+    min-width: 200px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .cta-button.primary {
     background: linear-gradient(135deg, #9020FF 0%, #7B1FA2 100%);
     color: white;
-    box-shadow: 0 4px 15px rgba(144, 32, 255, 0.3);
+    border-color: #9020FF;
+    box-shadow: 0 4px 15px rgba(144, 32, 255, 0.4);
 }
 
 .cta-button.primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(144, 32, 255, 0.4);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(144, 32, 255, 0.5);
     background: linear-gradient(135deg, #A435FF 0%, #8E24AA 100%);
+    border-color: #A435FF;
+}
+
+.cta-button.primary:active {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(144, 32, 255, 0.4);
+}
+
+.cta-button.primary:focus {
+    outline: 3px solid rgba(144, 32, 255, 0.5);
+    outline-offset: 2px;
 }
 
 .cta-button.secondary {
-    background: #f8f9fa;
+    background: white;
     color: #9020FF;
     border: 2px solid #9020FF;
+    box-shadow: 0 4px 12px rgba(144, 32, 255, 0.2);
 }
 
 .cta-button.secondary:hover {
-    background: #9020FF;
+    background: linear-gradient(135deg, #9020FF 0%, #7B1FA2 100%);
     color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(144, 32, 255, 0.4);
+}
+
+.cta-button.secondary:active {
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(144, 32, 255, 0.3);
+}
+
+.cta-button.secondary:focus {
+    outline: 3px solid rgba(144, 32, 255, 0.5);
+    outline-offset: 2px;
 }
 
 /* Error del Quick Start */
@@ -838,6 +1034,55 @@
     .progress-steps::before {
         left: 37.5px;
         right: 37.5px;
+    }
+}
+
+/* ===== ESTILOS PARA INDICADOR DE PROGRESO DE PREGUNTAS ===== */
+
+.question-progress {
+    margin: 20px 0 30px 0;
+    padding: 15px 0;
+}
+
+.question-progress .progress-text {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 10px;
+    font-family: 'Geometr415L', sans-serif;
+    text-align: center;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #9020FF 0%, #7B1FA2 100%);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    box-shadow: 0 2px 4px rgba(144, 32, 255, 0.2);
+}
+
+/* Responsive para indicador de progreso */
+@media screen and (max-width: 768px) {
+    .question-progress {
+        margin: 15px 0 20px 0;
+        padding: 10px 0;
+    }
+    
+    .question-progress .progress-text {
+        font-size: 0.85rem;
+        margin-bottom: 8px;
+    }
+    
+    .progress-bar-container {
+        height: 6px;
     }
 }
 

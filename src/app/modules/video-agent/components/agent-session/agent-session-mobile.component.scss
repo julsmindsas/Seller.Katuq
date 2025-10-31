@@ -4,14 +4,36 @@
  */
 
 /* ==============================================
+   Z-INDEX MANAGEMENT SYSTEM
+   Consistent layering for mobile overlays
+   ============================================== */
+
+:root {
+    /* Base layers */
+    --z-base: 0;                    /* Normal content */
+    --z-header: 100;                /* Sticky header */
+    --z-status-panel: 99;           /* Status panel (just below header) */
+    --z-sidebar: 200;               /* Steps sidebar on tablet+ */
+    --z-fab: 10000;                 /* FAB button - HIGHEST PRIORITY FOR VISIBILITY */
+    --z-modal: 1000;                /* PrimeNG modals/dialogs */
+    --z-toast: 1100;                /* Toast notifications */
+    --z-overlay-loading: 9998;      /* Loading overlays */
+    --z-overlay-confirmation: 9999; /* Confirmation overlays (highest) */
+}
+
+/* ==============================================
    MOBILE-FIRST BASE LAYOUT
    ============================================== */
 
 .agent-session-container-elderly {
     display: flex;
     flex-direction: column;
+
+    /* Use dynamic viewport height for better mobile browser support */
     min-height: 100vh;
-    min-height: -webkit-fill-available; /* iOS fix */
+    min-height: 100dvh; /* Dynamic viewport height (accounts for browser chrome) */
+    min-height: -webkit-fill-available; /* iOS Safari fallback */
+
     background: #f8f9fa; /* Fondo plano, sin gradiente */
     position: relative;
     overflow-x: hidden;
@@ -19,9 +41,26 @@
     /* Remove default padding on mobile */
     padding: 0;
 
+    /* When session is active - use full screen, no white space */
+    &.session-active-mode {
+        background: #1a1a1a; /* Dark background for video - NO WHITE! */
+        padding: 0 !important;
+        padding-top: env(safe-area-inset-top); /* Keep only top safe area for notch */
+        padding-bottom: 0 !important; /* FORCE no bottom padding */
+        margin: 0;
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden; /* Prevent any scrolling */
+    }
+
+    /* Add safe area insets for notched devices */
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+
     /* Space for fixed footer button only when session is NOT active */
     &:not(.session-active-mode) {
-        padding-bottom: 64px;
+        padding-bottom: 0; /* FIX: Remove padding - button is already fixed at bottom */
     }
 
     /* Katuq brand colors */
@@ -41,21 +80,18 @@
    ============================================== */
 
 .session-header-elderly {
-    /* Glassmorphism Effect */
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    /* SIMPLIFIED: Clean white header */
+    background: white;
 
-    padding: 0.875rem 1rem;
+    padding: 0.75rem 1rem; /* Slightly smaller padding */
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: var(--z-header);
 
-    /* Ultra-subtle shadow */
-    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+    /* Clean shadow */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-    /* Thin accent line at bottom */
-    border-bottom: 1px solid rgba(69, 155, 209, 0.15);
+    /* No border - cleaner look */
 
     .company-branding {
         display: flex;
@@ -95,7 +131,8 @@
         display: inline-flex;
         align-items: center;
         gap: 0.375rem;
-        padding: 0.375rem 0.75rem;
+        padding: 0.5rem 0.875rem; /* Increased for better touch target */
+        min-height: 36px; /* Ensure adequate height */
         border-radius: 24px;
         font-size: 0.75rem;
         font-weight: 700;
@@ -167,8 +204,8 @@
 
 .instructions-card {
     background: white;
-    margin: 1rem;
-    padding: 1.25rem;
+    margin: 0.5rem; /* REDUCED: More space for content */
+    padding: 1rem; /* REDUCED: Tighter padding on mobile */
     border-radius: 20px;
     box-shadow:
         0 2px 8px rgba(0, 0, 0, 0.04),
@@ -257,28 +294,63 @@
    ============================================== */
 
 .error-banner-elderly {
-    background: #dc3545;
-    color: white;
-    padding: 1rem 1rem;
-    margin: 1rem;
-    border-radius: 12px;
+    /* CRITICAL ERROR OVERLAY - MUST BE SUPER VISIBLE FOR ELDERLY */
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1000; /* Above everything */
+
+    background: #ffffff;
+    border: 4px solid #dc3545;
+    color: #dc3545;
+
+    padding: 2rem;
+    margin: 0;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.75rem;
-    font-size: 1rem;
-    font-weight: 500;
-    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+    text-align: center;
+    gap: 1rem;
+
+    width: 90%;
+    max-width: 400px;
+
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.6;
+
     animation: shake 0.5s;
 
     i {
-        font-size: 1.5rem;
+        font-size: 3rem;
         flex-shrink: 0;
+        margin-bottom: 0.5rem;
     }
 
     p {
         margin: 0;
         line-height: 1.4;
+        font-size: 1.25rem;
+        white-space: pre-line; /* Respect line breaks in message */
     }
+}
+
+/* Shake animation for critical errors */
+@keyframes shake {
+    0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+    10% { transform: translate(-48%, -50%) rotate(-1deg); }
+    20% { transform: translate(-52%, -50%) rotate(1deg); }
+    30% { transform: translate(-48%, -50%) rotate(0deg); }
+    40% { transform: translate(-52%, -50%) rotate(1deg); }
+    50% { transform: translate(-48%, -50%) rotate(-1deg); }
+    60% { transform: translate(-52%, -50%) rotate(0deg); }
+    70% { transform: translate(-48%, -50%) rotate(1deg); }
+    80% { transform: translate(-50%, -50%) rotate(-1deg); }
+    90% { transform: translate(-48%, -50%) rotate(0deg); }
 }
 
 /* ==============================================
@@ -289,18 +361,27 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    padding: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0; /* REMOVED: No padding to maximize space */
+    gap: 0.75rem; /* ADDED: Clean spacing between elements */
 
     /* Ensure proper height calculation */
     min-height: 0; /* Critical for flex children to shrink properly */
 
-    /* Default height (session NOT active - with footer) */
-    height: calc(100vh - 58px - 64px); /* viewport - header - footer button */
+    /* SIMPLIFIED: Use simpler height calculation for mobile */
+    height: auto;
+    min-height: 300px; /* REDUCED: More reasonable minimum */
 
-    /* Full height when session is active (no footer) */
+    /* FULL SCREEN when session is active */
     .session-active-mode & {
-        height: calc(100vh - 58px); /* viewport - header only */
+        position: relative; /* Important for absolute video positioning */
+        padding: 0;
+        height: calc(100vh - 72px); /* Full viewport minus header */
+        height: calc(100dvh - 72px); /* Dynamic viewport for mobile browsers */
+        gap: 0; /* No gap when active for full video */
+        background: transparent; /* No background when active */
+        overflow: hidden; /* Prevent scrolling */
     }
 }
 
@@ -310,13 +391,56 @@
 
 .video-section-elderly {
     position: relative;
-    background: #000;
-    flex-shrink: 0; /* Prevent video from shrinking */
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    flex-shrink: 0;
+    border-radius: 12px;
+    margin: 0.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 
-    /* Adjusted for better mobile chat visibility */
-    height: 35vh; /* Reduced from 45vh to leave more room for chat */
-    min-height: 240px; /* Reduced from 280px */
-    max-height: 380px; /* Reduced from 450px */
+    /* OPTIMIZED: Better proportions for mobile */
+    height: 40vh; /* ADJUSTED: 40% is better balance */
+    min-height: 280px; /* Good minimum for small phones */
+    max-height: 420px; /* Reasonable maximum */
+
+    /* Fallback for browsers without dvh */
+    @supports not (height: 100dvh) {
+        height: 40vh;
+    }
+
+    /* Ensure video is visible on small screens */
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+
+    /* FULL SCREEN when session is active - TRUE IMMERSIVE MODE! */
+    .session-active-mode & {
+        /* FIXED POSITIONING: Break out of parent container */
+        position: fixed !important;
+        top: 60px; /* Minimal header only */
+        left: 0;
+        right: 0;
+        bottom: 0;
+
+        /* Remove all constraints */
+        margin: 0 !important;
+        border-radius: 0 !important;
+        height: auto !important;
+        min-height: unset !important;
+        max-height: unset !important;
+        width: 100vw !important;
+
+        /* Cinematic black background */
+        background: #000 !important;
+
+        /* Layer properly */
+        z-index: 10;
+
+        /* Account for safe areas */
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
 
     .video-frame {
         width: 100%;
@@ -336,18 +460,41 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            color: rgba(255, 255, 255, 0.6);
+            background: linear-gradient(135deg, rgba(69, 155, 209, 0.1) 0%, rgba(69, 85, 209, 0.1) 100%);
+            color: #ffffff;
 
             i {
-                font-size: 4rem;
+                font-size: 3.5rem; /* Slightly smaller for mobile */
                 margin-bottom: 1rem;
+                color: var(--katuq-primary);
+                background: rgba(255, 255, 255, 0.2);
+                padding: 1.5rem;
+                border-radius: 50%;
+                animation: pulse 2s ease-in-out infinite;
             }
 
             p {
-                margin: 0;
+                margin: 0.25rem 0;
                 font-size: 1.125rem;
-                font-weight: 500;
+                font-weight: 600;
+                text-align: center;
+                padding: 0 1rem;
+
+                &:first-of-type {
+                    font-size: 1.25rem;
+                    color: #ffffff;
+                }
+
+                &:last-of-type {
+                    font-size: 0.9375rem;
+                    color: rgba(255, 255, 255, 0.8);
+                }
             }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
         }
     }
 
@@ -358,11 +505,12 @@
         right: 1rem;
         background: rgba(220, 53, 69, 0.95);
         color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
+        padding: 0.625rem 1.125rem; /* Increased for visibility */
+        min-height: 40px; /* Ensure adequate height */
+        border-radius: 24px;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.625rem;
         font-size: 0.875rem;
         font-weight: 700;
         backdrop-filter: blur(8px);
@@ -386,7 +534,7 @@
         color: white;
         border: 2px solid white;
         border-radius: 12px;
-        padding: 0.75rem 1.25rem;
+        padding: 0.875rem 1.25rem; /* Increased padding for touch */
         font-size: 0.875rem;
         font-weight: 600;
         display: flex;
@@ -395,16 +543,88 @@
         backdrop-filter: blur(8px);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
-        /* Large touch target */
+        /* Prevent double-tap zoom and improve touch response */
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+
+        /* WCAG AAA touch target: 48x48px minimum */
         min-width: 48px;
         min-height: 48px;
+
+        /* Smooth transition for active state - NO hover to prevent flickering */
+        transition: transform 0.1s ease-out, opacity 0.1s ease-out;
+
+        /* Add safe tap area (makes actual tappable area larger) */
+        &::before {
+            content: '';
+            position: absolute;
+            inset: -8px; /* Extends tappable area by 8px in all directions */
+            pointer-events: none; /* Don't interfere with clicks */
+        }
 
         i {
             font-size: 1.125rem;
         }
 
+        .btn-label {
+            display: inline;
+        }
+
         &:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
+            opacity: 0.8;
+        }
+
+        /* Hover removed to prevent mobile flickering */
+    }
+
+    /* Video Guide Overlay - Instrucciones superpuestas */
+    .video-guide-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(4px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        z-index: 10;
+        animation: fadeIn 0.5s ease;
+
+        .guide-content {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            max-width: 90%;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+
+            i {
+                font-size: 2.5rem;
+                color: var(--katuq-primary);
+                display: block;
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+
+            .guide-title {
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: var(--katuq-primary);
+                text-align: center;
+                margin: 0 0 1rem 0;
+                text-transform: uppercase;
+            }
+
+            .guide-text {
+                font-size: 1rem;
+                line-height: 1.6;
+                margin: 0.5rem 0;
+                color: #495057;
+                font-weight: 500;
+            }
         }
     }
 }
@@ -510,7 +730,7 @@
         }
     }
 
-    /* Audio Status Bar */
+    /* Audio Status Bar - Mejorado con más contexto */
     .audio-status-bar {
         padding: 0.875rem 1rem;
         background: var(--katuq-success);
@@ -520,6 +740,46 @@
         gap: 0.75rem;
         box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
         flex-shrink: 0;
+        font-size: 0.875rem;
+        font-weight: 600;
+
+        &.assistant-speaking {
+            background: var(--katuq-primary);
+            animation: pulse-bar 1.5s ease-in-out infinite;
+        }
+
+        .pulse-indicator {
+            &.speaking {
+                background: white;
+                animation: pulse-speaking 1s infinite;
+            }
+        }
+
+        .volume-fill {
+            &.speaking {
+                background: white;
+            }
+        }
+    }
+
+    @keyframes pulse-bar {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.85;
+        }
+    }
+
+    @keyframes pulse-speaking {
+        0%, 100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.3);
+            opacity: 0.7;
+        }
     }
 
     /* Chat Input Area (for future use) */
@@ -704,17 +964,14 @@
     padding: 0; /* Remove all padding */
     box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
 
-    /* Stick to absolute bottom */
+    /* Stick to absolute bottom - CRITICAL FOR VISIBILITY */
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    z-index: 50;
+    z-index: 500; /* HIGH PRIORITY - Must be visible above everything */
 
-    /* Hide footer when session is active (only FAB visible) */
-    .session-active-mode & {
-        display: none;
-    }
+    /* NO MORE WHITE SPACE AT BOTTOM WHEN SESSION ACTIVE */
 
     .audio-meters-elderly {
         display: none; /* Hide meters to save space, show only when active */
@@ -755,26 +1012,65 @@
         }
     }
 
-    /* Main Action Button - FULL WIDTH TALL */
+    /* Main Action Button - IMPROVED DESIGN */
     .btn-main-elderly {
-        width: 100%;
-        height: 64px; /* TALL button for better touch */
-        min-height: 64px;
-        border-radius: 0; /* Sharp corners to fill space */
-        padding-bottom: env(safe-area-inset-bottom); /* iOS safe area */
-        font-size: 1.0625rem;
+        width: calc(100% - 1rem); /* Small margin for better look */
+        height: 80px; /* TALLER for easier tapping */
+        min-height: 80px;
+        border-radius: 16px; /* Rounded for friendlier look */
+        margin: 0.5rem;
+        margin-bottom: max(0.5rem, env(safe-area-inset-bottom));
+        padding: 0 1.5rem;
+        font-size: 1.125rem;
         font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 0.75rem;
+        gap: 1rem;
         border: none;
-        box-shadow: none; /* No shadow, clean look */
-        transition: all 0.15s ease;
-        margin: 0; /* No margins */
+        box-shadow: 0 4px 20px rgba(69, 155, 209, 0.3);
+        transition: all 0.2s ease;
+        background: linear-gradient(135deg, var(--katuq-primary) 0%, var(--katuq-tertiary) 100%);
+
+        &:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 24px rgba(69, 155, 209, 0.4);
+        }
+
+        &:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 12px rgba(69, 155, 209, 0.3);
+        }
+
+        .btn-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
 
         i {
-            font-size: 1.5rem; /* Larger icon */
+            font-size: 2rem; /* Larger icon */
+        }
+
+        .btn-text-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.125rem;
+
+            .btn-text-main {
+                font-size: 1.125rem;
+                letter-spacing: 0.5px;
+                font-weight: 700;
+                line-height: 1.2;
+            }
+
+            .btn-text-sub {
+                font-size: 0.75rem;
+                opacity: 0.85;
+                font-weight: 500;
+                letter-spacing: 0.3px;
+            }
         }
 
         .btn-text {
@@ -788,12 +1084,12 @@
             color: white;
 
             &:hover {
-                background: darken(#51bb25, 5%);
+                background: #47a621;
             }
 
             &:active {
                 transform: scale(0.98);
-                background: darken(#51bb25, 8%);
+                background: #419a1e;
             }
         }
 
@@ -802,12 +1098,12 @@
             color: white;
 
             &:hover {
-                background: darken(#dc3545, 5%);
+                background: #c92a3a;
             }
 
             &:active {
                 transform: scale(0.98);
-                background: darken(#dc3545, 8%);
+                background: #bd2738;
             }
         }
 
@@ -980,8 +1276,8 @@
     }
 
     .instructions-card {
-        margin: 0.5rem;
-        padding: 1rem;
+        margin: 0.25rem; /* CRITICAL: Minimal margin on small screens */
+        padding: 0.75rem; /* Tighter on small screens */
     }
 }
 
@@ -1015,6 +1311,22 @@
     .main-controls-elderly {
         grid-column: 1 / -1;
     }
+}
+
+/* ==============================================
+   SESSION ACTIVE MODE - HIDE FOOTER COMPLETELY
+   ============================================== */
+
+.session-active-mode .main-controls-elderly,
+.session-active-mode .katuq-footer-logo,
+.session-active-mode .contact-info-elderly {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
 }
 
 /* ==============================================
@@ -1106,32 +1418,41 @@
 
 .fab-stop-elderly {
     position: fixed;
-    width: 72px;
-    height: 72px;
+    width: 120px; /* HUGE for maximum visibility */
+    height: 120px;
     border-radius: 50%;
 
-    /* Gradient background for depth */
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    /* HIGH CONTRAST RED with pulsing animation */
+    background: linear-gradient(135deg, #ff0000 0%, #dc143c 100%);
+    animation: pulse-fab 2s ease-in-out infinite;
 
     color: white;
-    border: none;
+    border: 5px solid #ffffff; /* THICK WHITE BORDER for maximum contrast */
+    outline: 3px solid #ff0000; /* Extra red outline */
 
-    /* Elevated shadow with glow */
+    /* MASSIVE SHADOW for depth and visibility */
     box-shadow:
-        0 4px 12px rgba(220, 53, 69, 0.5),
-        0 8px 24px rgba(220, 53, 69, 0.3),
-        0 0 0 0 rgba(220, 53, 69, 0.4);
+        0 0 0 8px rgba(255, 0, 0, 0.2),
+        0 8px 25px rgba(255, 0, 0, 0.6),
+        0 15px 40px rgba(255, 0, 0, 0.4),
+        0 2px 10px rgba(0, 0, 0, 0.5);
 
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.25rem;
-    z-index: 1000;
+    gap: 0.375rem;
+
+    /* MAXIMUM Z-INDEX for absolute visibility */
+    z-index: var(--z-fab);
+
     cursor: move;
     user-select: none;
     -webkit-user-select: none;
     touch-action: none;
+
+    /* Ensure FAB respects safe areas - prevent hiding behind notches/indicators */
+    /* This is handled by TypeScript positioning logic, but add fallback padding */
 
     /* Inner glow effect */
     &::after {
@@ -1154,27 +1475,23 @@
         background 0.3s ease;
 
     i {
-        font-size: 1.75rem;
-        margin-bottom: 0.125rem;
+        font-size: 3rem; /* HUGE icon */
+        margin-bottom: 0.25rem;
+        filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
     }
 
     .fab-text {
-        font-size: 0.625rem;
-        font-weight: 700;
+        font-size: 0.875rem; /* BIGGER text */
+        font-weight: 900;
         text-transform: uppercase;
         letter-spacing: 0.5px;
-        line-height: 1;
+        line-height: 1.2;
+        text-align: center;
+        max-width: 90px; /* Wrap text if needed */
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
-    /* Hover state (desktop) */
-    &:hover:not(.dragging):not(:disabled) {
-        transform: scale(1.1) translateY(-2px);
-        background: linear-gradient(135deg, #e84855 0%, #d32f3f 100%);
-        box-shadow:
-            0 8px 20px rgba(220, 53, 69, 0.6),
-            0 16px 40px rgba(220, 53, 69, 0.4),
-            0 0 0 8px rgba(220, 53, 69, 0.1);
-    }
+    /* Hover removed to prevent mobile flickering */
 
     /* Active/Pressed state */
     &:active:not(.dragging):not(:disabled) {
@@ -1310,5 +1627,214 @@
 
     &::before {
         border-color: #000;
+    }
+}
+
+/* ==============================================
+   FAB HINT - Ayuda visual inicial
+   ============================================== */
+
+.fab-hint {
+    position: fixed;
+    bottom: 100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.85);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    z-index: calc(var(--z-fab) + 10); /* Just above FAB */
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    animation: fadeInBounce 0.8s ease, fadeOut 0.5s ease 4.5s forwards;
+    backdrop-filter: blur(8px);
+    max-width: 90%;
+    text-align: center;
+
+    i {
+        font-size: 1.5rem;
+        color: #ffc107;
+        animation: pointing 1.5s ease-in-out infinite;
+    }
+
+    span {
+        line-height: 1.4;
+    }
+}
+
+@keyframes fadeInBounce {
+    0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    60% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-5px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
+@keyframes pointing {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* PULSE animation for FAB button */
+@keyframes pulse-fab {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow:
+            0 0 0 8px rgba(255, 0, 0, 0.2),
+            0 8px 25px rgba(255, 0, 0, 0.6),
+            0 15px 40px rgba(255, 0, 0, 0.4),
+            0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+    50% {
+        transform: scale(1.08);
+        box-shadow:
+            0 0 0 12px rgba(255, 0, 0, 0.3),
+            0 10px 30px rgba(255, 0, 0, 0.7),
+            0 20px 50px rgba(255, 0, 0, 0.5),
+            0 4px 15px rgba(0, 0, 0, 0.6);
+    }
+}
+
+/* ==============================================
+   NEW FAB - FIXED POSITION (NO DRAGGING)
+   ============================================== */
+
+.fab-end-call {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 999999;
+
+    /* LARGE SIZE for elderly users */
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+
+    /* HIGH CONTRAST RED */
+    background: #ff0000;
+    border: 4px solid #fff;
+    box-shadow: 
+        0 0 0 8px rgba(255, 0, 0, 0.2),
+        0 8px 24px rgba(0, 0, 0, 0.4);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+
+    /* Prevent accidental zoom */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+
+    /* Account for safe area */
+    bottom: max(24px, env(safe-area-inset-bottom));
+    right: max(24px, env(safe-area-inset-right));
+
+    i {
+        font-size: 2.5rem;
+        color: #fff;
+    }
+
+    .fab-label {
+        font-size: 0.75rem;
+        font-weight: 900;
+        color: #fff;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* GENTLE PULSING ANIMATION */
+    animation: pulse-gentle 3s infinite;
+
+    /* STRONG PRESS FEEDBACK */
+    &:active:not(:disabled) {
+        transform: scale(0.88);
+        box-shadow: 
+            0 0 0 4px rgba(255, 0, 0, 0.3),
+            0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* DISABLED state */
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+}
+
+@keyframes pulse-gentle {
+    0%, 100% {
+        box-shadow: 
+            0 0 0 8px rgba(255, 0, 0, 0.2),
+            0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+    50% {
+        box-shadow: 
+            0 0 0 12px rgba(255, 0, 0, 0.3),
+            0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+}
+
+/* Responsive sizing */
+@media (max-width: 374px) {
+    .fab-end-call {
+        width: 72px;
+        height: 72px;
+
+        i {
+            font-size: 2rem;
+        }
+
+        .fab-label {
+            font-size: 0.625rem;
+        }
+    }
+}
+
+@media (min-width: 640px) {
+    .fab-end-call {
+        width: 96px;
+        height: 96px;
+        bottom: 32px;
+        right: 32px;
+
+        i {
+            font-size: 3rem;
+        }
+
+        .fab-label {
+            font-size: 0.875rem;
+        }
     }
 }

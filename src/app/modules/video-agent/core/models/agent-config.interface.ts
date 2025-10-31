@@ -71,7 +71,7 @@ export interface FunctionCall {
  */
 export interface StreamConfig {
   video: {
-    fps: number; // 2 fps para mejor latencia (modelo procesa a 1 fps)
+    fps: number; // 1 fps sincronizado con modelo
     width: number; // 768 óptimo
     height: number; // 768 óptimo
     mimeType: string; // 'image/jpeg'
@@ -86,7 +86,7 @@ export interface StreamConfig {
 
 export const DEFAULT_STREAM_CONFIG: StreamConfig = {
   video: {
-    fps: 2, // Aumentado a 2 FPS para frames más recientes (modelo procesa a 1 FPS)
+    fps: 1, // 1 FPS sincronizado con modelo para respuestas más naturales
     width: 768,
     height: 768,
     mimeType: 'image/jpeg'

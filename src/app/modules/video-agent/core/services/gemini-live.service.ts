@@ -98,10 +98,10 @@ export class GeminiLiveService {
           },
         },
       },
-      // 🧠 Configuración de pensamiento extendido
-      // El modelo razonará antes de responder para mejorar diagnósticos
+      // 🧠 Configuración de pensamiento - REDUCIDO para respuestas más rápidas
+      // Menor budget = menor latencia, especialmente importante para usuarios mayores
       thinkingConfig: {
-        thinkingBudget: 1024,     // 1024 tokens para razonar (0-24576)
+        thinkingBudget: 0,        // 0 para respuestas inmediatas (0-24576)
         includeThoughts: false    // No mostrar pensamientos internos al usuario
       },
       systemInstruction: {

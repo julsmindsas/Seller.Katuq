@@ -26,6 +26,7 @@ import {
 import { AgendamientoService } from "../../../../shared/services/agendamiento.service";
 import { GeolocationService, GeoAddress } from "../../core/services/geolocation.service";
 import { ToastrService } from "ngx-toastr";
+import { AudioFeedbackService } from "../../core/services/audio-feedback.service";
 
 /**
  * Componente principal para sesiones de Video Agent
@@ -35,9 +36,11 @@ import { ToastrService } from "ngx-toastr";
   selector: "app-agent-session",
   templateUrl: "./agent-session.component.html",
   styleUrls: [
-    "./agent-session.component.scss",
-    "./agent-session-simple.component.scss",
-    "./agent-session-mobile.component.scss", // Mobile-first styles (highest priority)
+    // "./agent-session.component.scss", // DISABLED: Conflicts with elderly styles
+    // "./agent-session-simple.component.scss", // DISABLED: Not needed for elderly UI
+    "./agent-session-mobile.component.scss", // Mobile-first styles (CRITICAL)
+    "./agent-session-elderly-enhanced.scss", // Enhanced UI for elderly (PRIORITY)
+    "./agent-session-elderly-ultra.scss", // ULTRA-enhanced for 70+ users (MAXIMUM VISIBILITY)
   ],
 })
 export class AgentSessionComponent implements OnInit, OnDestroy {
@@ -72,19 +75,21 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
   isLoading = false;
   errorMessage = "";
   cameraFacingMode: "user" | "environment" = "environment";
+  showSessionEndedOverlay = false;
+
+  // Elderly-specific enhancements
+  isElderlyMode = true; // Enable by default for 70+ users
+  autoZoomEnabled = true; // Auto-zoom camera for better visibility
+  simplifiedUI = true; // Hide complex UI elements
+  largeTextMode = true; // Force larger text sizes
+  highContrastMode = false; // Can be toggled for vision problems
+  voiceGuidanceEnabled = true; // Audio instructions for each step
 
   // Configuración de empresa
   companyConfig!: CompanyConfig;
 
-  // FAB Draggable State
-  @ViewChild("fabButton", { static: false })
-  fabButton!: ElementRef<HTMLButtonElement>;
-  fabPosition = { x: 0, y: 0 };
-  isDragging = false;
-  private dragStartPos = { x: 0, y: 0 };
-  private touchStartPos = { x: 0, y: 0 };
-  private dragThreshold = 10; // pixels to distinguish click from drag
-  private hasMoved = false;
+  // FAB State - SIMPLIFIED (no dragging)
+  // FAB is now in fixed position: bottom-right corner
 
   // Cleanup
   private destroy$ = new Subject<void>();
@@ -99,6 +104,7 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     private agendamientoService: AgendamientoService,
     private geolocationService: GeolocationService,
     private toastr: ToastrService,
+    private audioFeedback: AudioFeedbackService,
   ) {}
 
   ngOnInit(): void {
@@ -107,8 +113,8 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     this.setupSubscriptions();
     this.checkDeviceCapabilities();
     this.setupMobileOptimizations();
-    this.initializeFabPosition();
-    this.handleFabOrientationChange();
+    // FAB is now in fixed position (CSS-based), no initialization needed
+    this.setupElderlyEnhancements(); // NEW: Elderly-specific setup
   }
 
   /**
@@ -235,7 +241,8 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     this.videoService.frame$
       .pipe(takeUntil(this.destroy$))
       .subscribe((frameBase64) => {
-        if (this.isConnected) {
+        // 🛡️ FIX: Verificar sessionActive para prevenir envío después de finalizar
+        if (this.isConnected && this.sessionActive) {
           this.geminiService.sendVideoFrame(frameBase64);
         }
       });
@@ -244,7 +251,8 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     this.audioService.audioChunk$
       .pipe(takeUntil(this.destroy$))
       .subscribe((chunkBase64) => {
-        if (this.isConnected) {
+        // 🛡️ FIX: Verificar sessionActive para prevenir envío después de finalizar
+        if (this.isConnected && this.sessionActive) {
           this.geminiService.sendAudioChunk(chunkBase64);
         }
       });
@@ -261,6 +269,11 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((recording) => {
         this.isAudioRecording = recording;
+
+        // 🔊 Beep cuando empieza a grabar (detecta voz)
+        if (recording && this.sessionActive) {
+          this.audioFeedback.playVoiceDetected();
+        }
       });
 
     // Volumen de entrada (micrófono)
@@ -275,6 +288,11 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((playing) => {
         this.isAudioPlaying = playing;
+
+        // 🔊 Beep cuando el asistente empieza a hablar
+        if (playing && this.sessionActive) {
+          this.audioFeedback.playAssistantSpeaking();
+        }
       });
 
     // Volumen de salida (respuesta de Gemini)
@@ -327,6 +345,8 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
       this.messages = [];
       this.currentResult = null;
 
+      // FAB is now in fixed CSS position, no initialization needed
+
       // 🎯 NO sobrescribir adapter - ya fue seleccionado en initializeAdapters() según companyConfig
       // this.adapterRegistry.setCurrentAdapter(this.selectedIndustry); // ❌ NO HACER ESTO
       const adapter = this.adapterRegistry.currentAdapter;
@@ -373,6 +393,9 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
       this.sessionActive = true;
       this.isLoading = false;
 
+      // 🔊 Reproducir beep de inicio
+      this.audioFeedback.playSessionStart();
+
       this.addMessage(
         "agent",
         "¡Hola! Soy tu asistente de diagnóstico. Muéstrame el electrodoméstico y cuéntame qué problema tiene.",
@@ -390,14 +413,27 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
    * Finaliza la sesión actual
    */
   async endSession(): Promise<void> {
+    // 🛡️ FIX: Establecer sessionActive a false INMEDIATAMENTE para bloquear frames/audio
     this.sessionActive = false;
+    console.log("🛑 Session ending, sessionActive set to false");
 
-    // Detener servicios
+    // Detener servicios (el orden importa)
     this.videoService.stopCapture();
     this.audioService.stopRecording();
+
+    // Esperar a que Gemini desconecte completamente
     await this.geminiService.disconnect();
 
-    console.log("🛑 Session ended");
+    // 🔊 Reproducir beep de finalización
+    this.audioFeedback.playSessionEnd();
+
+    // 💬 Mostrar overlay grande de confirmación
+    this.showSessionEndedOverlay = true;
+    setTimeout(() => {
+      this.showSessionEndedOverlay = false;
+    }, 3000); // 3 segundos
+
+    console.log("✅ Session ended successfully");
   }
 
   /**
@@ -590,13 +626,102 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Muestra error en UI
+   * Muestra error en UI - ULTRA-MEJORADO PARA PERSONAS MAYORES
    */
   private showError(message: string): void {
-    this.errorMessage = message;
-    setTimeout(() => {
-      this.errorMessage = "";
-    }, 5000);
+    // Traducir mensajes de error técnicos a español simple y claro
+    let userFriendlyMessage = message;
+    let instructions = "";
+    let isPermissionError = false;
+
+    if (message.includes('Permission denied') || message.includes('NotAllowedError')) {
+      userFriendlyMessage = '📷 NECESITO PERMISO';
+      instructions = 'Para usar la cámara y micrófono:\n\n' +
+                    '1. Busca el mensaje de permiso\n' +
+                    '2. Toca "PERMITIR" o "ACEPTAR"\n' +
+                    '3. Luego toca el botón verde de abajo';
+      isPermissionError = true;
+    } else if (message.includes('NotFoundError') || message.includes('No se detectó')) {
+      userFriendlyMessage = '⚠️ NO ENCUENTRO LA CÁMARA';
+      instructions = 'Posibles soluciones:\n\n' +
+                    '1. Revisa que la cámara esté conectada\n' +
+                    '2. Reinicia el teléfono\n' +
+                    '3. Vuelve a intentar';
+    } else if (message.includes('NotReadableError')) {
+      userFriendlyMessage = '🔄 CÁMARA OCUPADA';
+      instructions = 'Otra aplicación está usando la cámara:\n\n' +
+                    '1. Cierra otras aplicaciones\n' +
+                    '2. Espera 5 segundos\n' +
+                    '3. Toca el botón verde de nuevo';
+    } else if (message.includes('Error al iniciar')) {
+      userFriendlyMessage = '❌ SIN CONEXIÓN';
+      instructions = 'Verifica tu internet:\n\n' +
+                    '1. Activa el WiFi o datos móviles\n' +
+                    '2. Espera que aparezca la señal\n' +
+                    '3. Vuelve a intentar';
+    } else {
+      userFriendlyMessage = '⚠️ ALGO SALIÓ MAL';
+      instructions = 'Por favor:\n\n' +
+                    '1. Espera un momento\n' +
+                    '2. Toca el botón verde de nuevo\n' +
+                    '3. Si no funciona, llama al soporte';
+    }
+
+    // Combine message with instructions
+    this.errorMessage = userFriendlyMessage + '\n\n' + instructions;
+    this.isLoading = false; // CRITICAL: Always stop loading on error
+
+    // Voice announce the error for elderly users
+    if (this.isElderlyMode && this.voiceGuidanceEnabled) {
+      this.announceToUser(userFriendlyMessage + '. ' + instructions.replace(/\n/g, '. '));
+    }
+
+    // Show helpful toast with action button for permission errors
+    if (isPermissionError && this.isElderlyMode) {
+      this.toastr.warning(
+        'Toca aquí para ver cómo dar permisos',
+        'AYUDA CON PERMISOS',
+        {
+          timeOut: 0, // Don't auto-hide
+          closeButton: true,
+          tapToDismiss: true,
+          positionClass: 'toast-top-center',
+          toastClass: 'toast-elderly-help',
+          enableHtml: true,
+        }
+      ).onTap.subscribe(() => {
+        // Open help modal or guide
+        this.showPermissionGuide();
+      });
+    }
+
+    // Para errores críticos, no auto-limpiar el mensaje
+    const isCriticalError = message.includes('Permission denied') ||
+                           message.includes('NotFoundError') ||
+                           message.includes('No se detectó');
+
+    if (!isCriticalError) {
+      setTimeout(() => {
+        this.errorMessage = "";
+      }, 15000); // 15 segundos para errores normales (más tiempo para elderly)
+    }
+    // Para errores críticos, el mensaje permanece hasta que el usuario lo resuelva
+  }
+
+  /**
+   * Show permission guide for elderly users
+   */
+  private showPermissionGuide(): void {
+    // This would open a modal or overlay with step-by-step visual guide
+    // For now, just announce instructions
+    const guide = "Para dar permisos: Primero, busca el mensaje que apareció arriba. " +
+                 "Segundo, toca donde dice Permitir o Aceptar. " +
+                 "Tercero, cuando veas que dice Permitido, toca el botón verde grande.";
+
+    this.announceToUser(guide);
+
+    // You could also implement a visual guide modal here
+    console.log("📱 Permission guide requested for elderly user");
   }
 
   /**
@@ -652,6 +777,165 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     );
 
     console.log("📱 Mobile optimizations enabled");
+  }
+
+  /**
+   * ELDERLY ENHANCEMENTS: Setup optimizations for 70+ users
+   */
+  private setupElderlyEnhancements(): void {
+    console.log("👵 Setting up elderly enhancements...");
+
+    // 1. Check if elderly mode is requested via URL param
+    const elderlyParam = this.route.snapshot.queryParamMap.get("elderly");
+    if (elderlyParam === "true" || elderlyParam === "1") {
+      this.isElderlyMode = true;
+    }
+
+    // 2. Apply elderly-specific CSS classes to body
+    if (this.isElderlyMode) {
+      document.body.classList.add("elderly-mode");
+      document.body.classList.add("font-size-extra-large");
+    }
+
+    // 3. Enable high contrast if requested
+    const highContrastParam = this.route.snapshot.queryParamMap.get("highContrast");
+    if (highContrastParam === "true" || highContrastParam === "1") {
+      this.highContrastMode = true;
+      document.body.classList.add("high-contrast-mode");
+    }
+
+    // 4. Set larger default font size for elderly
+    if (this.isElderlyMode) {
+      const root = document.documentElement;
+      root.style.setProperty("--base-font-size", "18px"); // Larger base font
+      root.style.setProperty("--min-touch-target", "60px"); // Larger touch targets
+    }
+
+    // 5. Disable complex animations for better focus
+    if (this.isElderlyMode && this.simplifiedUI) {
+      this.disableComplexAnimations();
+    }
+
+    // 6. Setup voice guidance announcements
+    if (this.voiceGuidanceEnabled) {
+      this.setupVoiceGuidance();
+    }
+
+    // 7. Add extra visual cues
+    this.addElderlyVisualCues();
+
+    // 8. Optimize camera for elderly users
+    this.optimizeCameraForElderly();
+
+    console.log("✅ Elderly enhancements applied:", {
+      elderlyMode: this.isElderlyMode,
+      highContrast: this.highContrastMode,
+      simplifiedUI: this.simplifiedUI,
+      largeText: this.largeTextMode,
+      voiceGuidance: this.voiceGuidanceEnabled,
+    });
+  }
+
+  /**
+   * Disable complex animations that might confuse elderly users
+   */
+  private disableComplexAnimations(): void {
+    const style = document.createElement("style");
+    style.innerHTML = `
+      * {
+        animation-duration: 0.3s !important;
+        transition-duration: 0.3s !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  /**
+   * Setup voice guidance for elderly users
+   */
+  private setupVoiceGuidance(): void {
+    // Use browser's speech synthesis for voice guidance
+    if ("speechSynthesis" in window) {
+      // Announce important state changes
+      this.geminiService.isConnected$.pipe(takeUntil(this.destroy$)).subscribe((connected) => {
+        if (connected && this.sessionActive) {
+          this.announceToUser("Conectado. Ya puedes hablar y mostrar el electrodoméstico.");
+        }
+      });
+
+      // Announce when recording starts
+      this.audioService.isRecording$.pipe(takeUntil(this.destroy$)).subscribe((recording) => {
+        if (recording && this.sessionActive && this.voiceGuidanceEnabled) {
+          this.announceToUser("Te estoy escuchando. Habla claro.");
+        }
+      });
+    }
+  }
+
+  /**
+   * Announce message to user using speech synthesis
+   */
+  private announceToUser(message: string): void {
+    if (!this.voiceGuidanceEnabled || !("speechSynthesis" in window)) {
+      return;
+    }
+
+    const utterance = new SpeechSynthesisUtterance(message);
+    utterance.lang = "es-ES"; // Spanish
+    utterance.rate = 0.8; // Slower speech for elderly
+    utterance.pitch = 1.0;
+    utterance.volume = 1.0;
+
+    // Cancel any ongoing speech and speak new message
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  }
+
+  /**
+   * Add extra visual cues for elderly users
+   */
+  private addElderlyVisualCues(): void {
+    // Add pulsing animation to important buttons
+    const style = document.createElement("style");
+    style.innerHTML = `
+      .elderly-mode .btn-main-elderly {
+        animation: elderly-pulse 2s ease-in-out infinite !important;
+      }
+
+      @keyframes elderly-pulse {
+        0%, 100% {
+          box-shadow: 0 0 0 0 rgba(0, 200, 81, 0.7);
+        }
+        50% {
+          box-shadow: 0 0 0 20px rgba(0, 200, 81, 0);
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  /**
+   * Optimize camera settings for elderly users
+   */
+  private optimizeCameraForElderly(): void {
+    // When starting video, apply elderly-friendly settings
+    const originalStartCapture = this.videoService.startCapture.bind(this.videoService);
+
+    this.videoService.startCapture = async (facingMode?: "user" | "environment") => {
+      const result = await originalStartCapture(facingMode);
+
+      // After camera starts, apply optimizations
+      if (this.isElderlyMode && this.autoZoomEnabled) {
+        const videoElement = this.videoService.getVideoElement();
+        if (videoElement) {
+          // Apply CSS zoom for better visibility
+          videoElement.style.transform = "scale(1.2)"; // 20% zoom
+          videoElement.style.transformOrigin = "center center";
+        }
+      }
+
+      return result;
+    };
   }
 
   /**
@@ -715,6 +999,12 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
    * Override del método endSession con feedback háptico
    */
   async endSessionWithHaptic(): Promise<void> {
+    // 🛡️ FIX: Prevenir doble llamada (importante en Android con touch events)
+    if (!this.sessionActive) {
+      console.warn("⚠️ Session already ended, ignoring duplicate call");
+      return;
+    }
+
     this.hapticFeedback("heavy");
     await this.endSession();
   }
@@ -732,224 +1022,61 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
      ============================================== */
 
   /**
-   * Inicializa la posición del FAB desde localStorage o por defecto
+   * Get safe area inset value in pixels
+   * MOBILE-CRITICAL: Prevents elements from hiding behind notches/home indicators
+   * KEPT: This utility method is still useful for other components
    */
-  private initializeFabPosition(): void {
-    const savedPosition = localStorage.getItem("fabPosition");
-
-    if (savedPosition) {
-      this.fabPosition = JSON.parse(savedPosition);
-    } else {
-      // Posición por defecto: abajo a la derecha
-      this.fabPosition = {
-        x: window.innerWidth - 90,
-        y: window.innerHeight - 90,
-      };
-    }
-
-    // Asegurar que está dentro de los límites
-    this.constrainFabPosition();
-  }
-
-  /**
-   * Touch Start - Inicia el drag
-   */
-  onFabTouchStart(event: TouchEvent): void {
-    if (this.isLoading) return;
-
-    const touch = event.touches[0];
-    this.dragStartPos = { x: touch.clientX, y: touch.clientY };
-    this.touchStartPos = { x: this.fabPosition.x, y: this.fabPosition.y };
-    this.hasMoved = false;
-    this.isDragging = false;
-
-    // NO prevenir el evento aquí para que el click funcione
-  }
-
-  /**
-   * Touch Move - Arrastra el FAB
-   */
-  onFabTouchMove(event: TouchEvent): void {
-    if (this.isLoading) return;
-
-    const touch = event.touches[0];
-    const deltaX = touch.clientX - this.dragStartPos.x;
-    const deltaY = touch.clientY - this.dragStartPos.y;
-
-    // Detectar si se movió más allá del threshold
-    if (
-      Math.abs(deltaX) > this.dragThreshold ||
-      Math.abs(deltaY) > this.dragThreshold
-    ) {
-      this.hasMoved = true;
-      this.isDragging = true;
-      // Solo prevenir eventos si realmente se está arrastrando
-      event.preventDefault();
-    }
-
-    if (this.hasMoved) {
-      this.fabPosition = {
-        x: this.touchStartPos.x + deltaX,
-        y: this.touchStartPos.y + deltaY,
-      };
-
-      // Haptic feedback sutil durante drag
-      if (Math.abs(deltaX) % 50 === 0 || Math.abs(deltaY) % 50 === 0) {
-        this.hapticFeedback("light");
+  private getSafeAreaInset(side: 'top' | 'right' | 'bottom' | 'left'): number {
+    try {
+      // Ensure document.body exists
+      if (!document || !document.body) {
+        return 16; // Default safe padding
       }
+
+      // Try to get computed safe area value from CSS env() variable
+      const testDiv = document.createElement('div');
+      testDiv.style.position = 'fixed';
+      testDiv.style.padding = `env(safe-area-inset-${side})`;
+      testDiv.style.visibility = 'hidden';
+      testDiv.style.pointerEvents = 'none';
+
+      // Append to body
+      document.body.appendChild(testDiv);
+
+      // Get computed style
+      const computedStyle = window.getComputedStyle(testDiv);
+      const computedPadding = computedStyle.getPropertyValue('padding-' + side);
+
+      // Clean up - check if still a child before removing
+      if (testDiv.parentNode === document.body) {
+        document.body.removeChild(testDiv);
+      }
+
+      const pixels = parseInt(computedPadding) || 0;
+
+      // Fallback: Add minimum padding if safe area not detected
+      return Math.max(pixels, 16); // Minimum 16px padding
+    } catch (error) {
+      console.warn('Could not detect safe area inset:', error);
+      return 16; // Default safe padding on error
     }
   }
 
-  /**
-   * Touch End - Finaliza el drag
-   */
-  onFabTouchEnd(event: TouchEvent): void {
-    if (this.isLoading) return;
+  /* ==============================================
+     FAB METHODS - SIMPLIFIED (NO DRAGGING)
+     ============================================== */
 
-    if (this.isDragging && this.hasMoved) {
-      // Snap a los bordes
-      this.snapFabToEdge();
-      // Guardar posición
-      this.saveFabPosition();
-      // Haptic feedback
+  /**
+   * End session - Called when FAB button is clicked
+   * Now with confirmation dialog for safety
+   */
+  async endSessionWithConfirmation(): Promise<void> {
+    // Show confirmation dialog before ending
+    const userConfirmed = confirm('¿Estás seguro que deseas terminar la llamada?');
+
+    if (userConfirmed) {
       this.hapticFeedback("medium");
-      // Prevenir click si se arrastró
-      event.preventDefault();
-      event.stopPropagation();
-    } else {
-      // Es un tap/click, ejecutar acción (FINALIZAR sesión)
-      this.endSessionWithHaptic();
+      await this.endSession();
     }
-
-    this.isDragging = false;
-    this.hasMoved = false;
-  }
-
-  /**
-   * Mouse Down - Para soporte desktop
-   */
-  onFabMouseDown(event: MouseEvent): void {
-    if (this.isLoading) return;
-
-    this.dragStartPos = { x: event.clientX, y: event.clientY };
-    this.touchStartPos = { x: this.fabPosition.x, y: this.fabPosition.y };
-    this.hasMoved = false;
-    this.isDragging = false;
-
-    const mouseMoveHandler = (e: MouseEvent) => {
-      const deltaX = e.clientX - this.dragStartPos.x;
-      const deltaY = e.clientY - this.dragStartPos.y;
-
-      if (
-        Math.abs(deltaX) > this.dragThreshold ||
-        Math.abs(deltaY) > this.dragThreshold
-      ) {
-        this.hasMoved = true;
-        this.isDragging = true;
-      }
-
-      if (this.hasMoved) {
-        this.fabPosition = {
-          x: this.touchStartPos.x + deltaX,
-          y: this.touchStartPos.y + deltaY,
-        };
-      }
-    };
-
-    const mouseUpHandler = () => {
-      if (this.isDragging && this.hasMoved) {
-        this.snapFabToEdge();
-        this.saveFabPosition();
-      } else if (!this.hasMoved) {
-        // Es un click, ejecutar acción (FINALIZAR sesión)
-        this.endSessionWithHaptic();
-      }
-
-      this.isDragging = false;
-      this.hasMoved = false;
-
-      document.removeEventListener("mousemove", mouseMoveHandler);
-      document.removeEventListener("mouseup", mouseUpHandler);
-    };
-
-    document.addEventListener("mousemove", mouseMoveHandler);
-    document.addEventListener("mouseup", mouseUpHandler);
-
-    event.preventDefault();
-  }
-
-  /**
-   * Snap del FAB al borde más cercano
-   */
-  private snapFabToEdge(): void {
-    const padding = 16;
-    const fabSize = 72;
-    const maxX = window.innerWidth - fabSize - padding;
-    const maxY = window.innerHeight - fabSize - padding;
-
-    // Determinar borde más cercano
-    const distanceToLeft = this.fabPosition.x;
-    const distanceToRight = window.innerWidth - this.fabPosition.x;
-    const distanceToTop = this.fabPosition.y;
-    const distanceToBottom = window.innerHeight - this.fabPosition.y;
-
-    const minDistance = Math.min(
-      distanceToLeft,
-      distanceToRight,
-      distanceToTop,
-      distanceToBottom,
-    );
-
-    // Snap al borde más cercano
-    if (minDistance === distanceToLeft) {
-      this.fabPosition.x = padding;
-    } else if (minDistance === distanceToRight) {
-      this.fabPosition.x = maxX;
-    }
-
-    if (minDistance === distanceToTop) {
-      this.fabPosition.y = padding;
-    } else if (minDistance === distanceToBottom) {
-      this.fabPosition.y = maxY;
-    }
-
-    // Asegurar dentro de límites
-    this.constrainFabPosition();
-  }
-
-  /**
-   * Limita la posición del FAB dentro de los límites de la pantalla
-   */
-  private constrainFabPosition(): void {
-    const padding = 16;
-    const fabSize = 72;
-    const maxX = window.innerWidth - fabSize - padding;
-    const maxY = window.innerHeight - fabSize - padding;
-
-    this.fabPosition.x = Math.max(padding, Math.min(this.fabPosition.x, maxX));
-    this.fabPosition.y = Math.max(padding, Math.min(this.fabPosition.y, maxY));
-  }
-
-  /**
-   * Guarda la posición del FAB en localStorage
-   */
-  private saveFabPosition(): void {
-    localStorage.setItem("fabPosition", JSON.stringify(this.fabPosition));
-  }
-
-  /**
-   * Maneja cambios de orientación para reposicionar el FAB
-   */
-  private handleFabOrientationChange(): void {
-    window.addEventListener("orientationchange", () => {
-      setTimeout(() => {
-        this.constrainFabPosition();
-        this.saveFabPosition();
-      }, 300);
-    });
-
-    window.addEventListener("resize", () => {
-      this.constrainFabPosition();
-    });
   }
 }

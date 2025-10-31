@@ -1,6 +1,13 @@
 <div class="survey-container">
   <!-- Logo posicionado en la esquina superior izquierda -->
   <img class="survey-logo" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq Logo">
+  
+  <!-- Indicador de guardado automático -->
+  <div class="autosave-indicator" *ngIf="showAutoSaveIndicator" role="status" aria-live="polite">
+    <span class="autosave-icon">💾</span>
+    <span class="autosave-text">Progreso guardado</span>
+  </div>
+  
   <div class="survey-form animate-fancy">
     <!-- Mostrar mensaje de éxito del Quick Start -->
     <div *ngIf="currentStep === 'quickstart-success'">
@@ -103,22 +110,54 @@
     <!-- Secciones según currentStep -->
     <div *ngIf="!submissionSuccess">
       <!-- Paso 1: Cuestionario -->
-      <div *ngIf="currentStep === 'questionnaire'">
+      <div *ngIf="currentStep === 'questionnaire'" role="main" aria-label="Cuestionario de diagnóstico">
         <h1>{{ surveyData.formTitle }}</h1>
         <h3 class="subtitle">{{ surveyData.formDescription }}</h3>
         <h3>{{ currentSection.sectionTitle }}</h3>
+        
+        <!-- Indicador de progreso de preguntas -->
+        <div class="question-progress" aria-label="Progreso del cuestionario" role="progressbar" 
+             [attr.aria-valuenow]="getTotalProgress()" 
+             [attr.aria-valuemin]="0" 
+             [attr.aria-valuemax]="100">
+          <div class="progress-text">
+            Pregunta {{ getCurrentQuestionNumber() }} de {{ getTotalQuestions() }}
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar-fill" [style.width.%]="getTotalProgress()"></div>
+          </div>
+        </div>
+        
         <div class="question">
-          <p>{{ currentQuestion.question }}</p>
-          <div class="options">
-            <button *ngFor="let option of currentQuestion.options" (click)="selectOption(option)" class="option-button"
-              [ngClass]="{'selected': responses[currentQuestion.id] === option}">
+          <p role="heading" aria-level="2">{{ currentQuestion.question }}</p>
+          <div class="options" role="radiogroup" [attr.aria-label]="currentQuestion.question">
+            <button *ngFor="let option of currentQuestion.options; let i = index" 
+                    (click)="selectOption(option)" 
+                    class="option-button"
+                    [ngClass]="{'selected': responses[currentQuestion.id] === option}"
+                    [attr.aria-checked]="responses[currentQuestion.id] === option"
+                    [attr.aria-posinset]="i + 1"
+                    [attr.aria-setsize]="currentQuestion.options.length"
+                    [attr.tabindex]="responses[currentQuestion.id] === option ? 0 : -1"
+                    (keydown.enter)="selectOption(option)"
+                    (keydown.space)="selectOption(option); $event.preventDefault()"
+                    type="button">
               {{ option }}
             </button>
           </div>
         </div>
         <div class="navigation-buttons">
-          <button *ngIf="canGoBack()" class="back-button" (click)="backQuestion()">{{ 'Volver' | translate }}</button>
-          <button class="next-button" (click)="moveNextStep()">
+          <button *ngIf="canGoBack()" 
+                  class="back-button" 
+                  (click)="backQuestion()"
+                  type="button"
+                  aria-label="Pregunta anterior">
+            {{ 'Volver' | translate }}
+          </button>
+          <button class="next-button" 
+                  (click)="moveNextStep()"
+                  type="button"
+                  [attr.aria-label]="isLastQuestion() ? 'Ir al siguiente paso' : 'Siguiente pregunta'">
             {{ isLastQuestion() ? ('Siguiente paso' | translate) : '→' }}
           </button>
         </div>

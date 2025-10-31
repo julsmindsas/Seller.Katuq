@@ -1,6 +1,10 @@
 <div class="agent-session-container-elderly"
      [class.high-contrast]="companyConfig?.ui?.highContrast"
      [class.session-active-mode]="sessionActive"
+     [class.state-listening]="isAudioRecording && !isAudioPlaying"
+     [class.state-speaking]="isAudioPlaying"
+     [class.state-processing]="!isAudioPlaying && isConnected && isAudioRecording"
+     [class.state-idle]="!isAudioRecording && !isAudioPlaying && sessionActive"
      [attr.data-font-size]="companyConfig?.ui?.fontSize">
 
   <!-- Header Simplificado para Mayores -->
@@ -52,142 +56,151 @@
     </div>
   </div>
 
-  <!-- Error Banner MUY VISIBLE -->
-  <div class="error-banner-elderly" *ngIf="errorMessage">
+  <!-- Error Banner ULTRA VISIBLE con botón de acción -->
+  <div class="error-banner-elderly" *ngIf="errorMessage" (click)="errorMessage = ''">
     <i class="pi pi-exclamation-triangle"></i>
     <p>{{ errorMessage }}</p>
+    <button pButton type="button"
+            class="btn-retry-elderly"
+            icon="pi pi-refresh"
+            label="VOLVER A INTENTAR"
+            (click)="startSessionWithHaptic(); $event.stopPropagation();"
+            *ngIf="!sessionActive">
+    </button>
   </div>
 
-  <!-- Contenido Principal -->
-  <div class="session-content-elderly" *ngIf="sessionActive">
+  <!-- Panel de Estado PERSISTENTE (SIEMPRE VISIBLE) -->
+  <div class="status-panel-persistent" *ngIf="sessionActive">
+    <div class="status-item" [class.active]="isVideoStreaming">
+      <i class="pi pi-video"></i>
+      <span>{{ isVideoStreaming ? 'CÁMARA ACTIVA' : 'CÁMARA INACTIVA' }}</span>
+    </div>
+    <div class="status-item" [class.active]="isAudioRecording">
+      <i class="pi pi-microphone"></i>
+      <span>{{ isAudioRecording ? 'ESCUCHÁNDOTE' : 'MICRÓFONO INACTIVO' }}</span>
+    </div>
+    <div class="status-item" [class.active]="!isAudioPlaying && isConnected && isAudioRecording" [class.thinking]="!isAudioPlaying && isConnected">
+      <i class="pi pi-spin pi-spinner" *ngIf="!isAudioPlaying && isConnected && isAudioRecording"></i>
+      <i class="pi pi-clock" *ngIf="!(!isAudioPlaying && isConnected && isAudioRecording)"></i>
+      <span>{{ !isAudioPlaying && isConnected && isAudioRecording ? 'PROCESANDO...' : 'EN ESPERA' }}</span>
+    </div>
+    <div class="status-item" [class.active]="isAudioPlaying">
+      <i class="pi pi-volume-up"></i>
+      <span>{{ isAudioPlaying ? 'ASISTENTE HABLANDO' : 'ASISTENTE SILENCIOSO' }}</span>
+    </div>
+  </div>
 
-    <!-- Video Preview GRANDE -->
-    <div class="video-section-elderly">
+  <!-- Contenido Principal - SIEMPRE VISIBLE -->
+  <div class="session-content-elderly">
+
+    <!-- Video Preview Placeholder ANTES de iniciar sesión -->
+    <div class="video-section-elderly" *ngIf="!sessionActive">
+      <div class="video-frame">
+        <div class="video-placeholder">
+          <i class="pi pi-video"></i>
+          <p>PRESIONA "INICIAR DIAGNÓSTICO"</p>
+          <p style="font-size: 0.875rem; margin-top: 0.5rem; opacity: 0.8;">La cámara se activará aquí</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Preview ACTIVO durante la sesión -->
+    <div class="video-section-elderly" *ngIf="sessionActive">
       <div class="video-frame" #videoPreview>
         <div class="video-placeholder" *ngIf="!isVideoStreaming">
           <i class="pi pi-camera"></i>
           <p>ESPERANDO CÁMARA...</p>
         </div>
+
+        <!-- Guía Visual Superpuesta MEJORADA (primeros 20 segundos o hasta que hable) -->
+        <div class="video-guide-overlay" *ngIf="isVideoStreaming && messages.length === 0 && sessionActive">
+          <div class="guide-content">
+            <i class="pi pi-video animated-icon"></i>
+            <p class="guide-title">CÁMARA LISTA ✅</p>
+            <div class="guide-steps">
+              <p class="guide-text">
+                <span class="step-number-inline">1</span>
+                <strong>MUESTRA</strong> el electrodoméstico completo
+              </p>
+              <p class="guide-text">
+                <span class="step-number-inline">2</span>
+                <strong>HABLA</strong> claro sobre el problema
+              </p>
+              <p class="guide-text">
+                <span class="step-number-inline">3</span>
+                <strong>ESPERA</strong> la respuesta del asistente
+              </p>
+            </div>
+            <p class="guide-hint">Esta guía desaparecerá cuando empieces a hablar</p>
+          </div>
+        </div>
       </div>
 
-      <!-- Indicador de Transmisión -->
+      <!-- Indicador de Transmisión MÁS DESCRIPTIVO -->
       <div class="streaming-badge" *ngIf="isVideoStreaming">
         <span class="recording-pulse"></span>
-        <span class="badge-text">TRANSMITIENDO</span>
+        <span class="badge-text">EN VIVO - Te estamos viendo</span>
       </div>
 
-      <!-- Botón Cambiar Cámara -->
+      <!-- Botón Cambiar Cámara MÁS DESCRIPTIVO -->
       <button
         pButton
         type="button"
         class="camera-switch-btn"
         (click)="switchCameraWithHaptic()"
         *ngIf="isVideoStreaming"
+        pTooltip="Cambia entre cámara trasera y frontal"
+        tooltipPosition="left"
       >
         <i class="pi pi-refresh"></i>
-        CAMBIAR CÁMARA
+        <span class="btn-label">CAMBIAR CÁMARA</span>
       </button>
     </div>
 
-    <!-- Chat/Conversación GRANDE -->
-    <div class="chat-section-elderly">
-      <h3 class="chat-title">
-        <i class="pi pi-comments"></i>
-        CONVERSACIÓN
+    <!-- Sidebar de Pasos (SIMPLIFICADO) -->
+    <div class="steps-sidebar-elderly" *ngIf="sessionActive">
+      <h3 class="steps-title">
+        <i class="pi pi-list"></i>
+        PASOS A SEGUIR
       </h3>
 
-      <div class="messages-container-elderly">
-        <!-- Placeholder cuando no hay mensajes -->
-        <div class="chat-empty" *ngIf="messages.length === 0">
-          <i class="pi pi-microphone"></i>
-          <p>Empieza a hablar...</p>
-          <p class="hint">Tu conversación aparecerá aquí</p>
-        </div>
-
-        <!-- Mensajes -->
-        <div
-          *ngFor="let message of messages"
-          class="message-bubble-elderly"
-          [ngClass]="message.role"
-        >
-          <div class="message-icon">
-            <i class="pi" [ngClass]="{
-              'pi-user': message.role === 'user',
-              'pi-android': message.role === 'agent'
-            }"></i>
-          </div>
-          <div class="message-content-elderly">
-            <div class="message-sender">
-              {{ message.role === 'user' ? 'TÚ' : 'ASISTENTE' }}
-            </div>
-            <div class="message-text-elderly">{{ message.text }}</div>
-            <div class="message-time-elderly">
-              {{ message.timestamp | date:'shortTime' }}
-            </div>
-          </div>
+      <div class="step-item" [class.active]="isVideoStreaming" [class.completed]="isVideoStreaming">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <p class="step-text">Apunta la cámara al electrodoméstico</p>
+          <i class="pi pi-check-circle step-check" *ngIf="isVideoStreaming"></i>
         </div>
       </div>
 
-      <!-- Indicador de Audio MUY VISIBLE -->
-      <div class="audio-status-bar" *ngIf="isAudioRecording">
-        <div class="pulse-indicator"></div>
-        <div class="status-text">
-          <i class="pi pi-microphone"></i>
-          <span>ESCUCHANDO...</span>
-        </div>
-        <div class="volume-bar">
-          <div class="volume-fill" [style.width.%]="inputVolume * 100"></div>
+      <div class="step-item" [class.active]="isAudioRecording && messages.length > 0" [class.completed]="messages.length > 0">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <p class="step-text">Habla claro y describe el problema</p>
+          <i class="pi pi-check-circle step-check" *ngIf="messages.length > 0"></i>
         </div>
       </div>
 
-      <!-- Chat Input Area (for future use) -->
-      <div class="chat-input-area" *ngIf="sessionActive">
-        <input
-          type="text"
-          placeholder="Escribe un mensaje..."
-          class="chat-input-field"
-          disabled
-        />
-        <button class="chat-send-btn" disabled>
-          <i class="pi pi-send"></i>
-        </button>
+      <div class="step-item" [class.active]="isAudioPlaying" [class.completed]="false">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <p class="step-text">Escucha al asistente con atención</p>
+        </div>
+      </div>
+
+      <div class="step-item">
+        <div class="step-number">4</div>
+        <div class="step-content">
+          <p class="step-text">Presiona el botón rojo para terminar</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- Controles Principales MUY GRANDES -->
-  <div class="main-controls-elderly">
+  <!-- Controles Principales MUY GRANDES (HIDDEN DURING SESSION) -->
+  <div class="main-controls-elderly" *ngIf="!sessionActive">
 
-    <!-- Indicadores de Audio (solo cuando sesión activa) -->
-    <div class="audio-meters-elderly" *ngIf="sessionActive">
-      <div class="meter-item">
-        <div class="meter-label">MICRÓFONO</div>
-        <app-audio-pulse
-          [volume]="inputVolume"
-          [active]="isAudioRecording"
-          class="pulse-large"
-        ></app-audio-pulse>
-        <div class="meter-status">
-          {{ isAudioRecording ? 'ACTIVO' : 'INACTIVO' }}
-        </div>
-      </div>
-
-      <div class="meter-item">
-        <div class="meter-label">RESPUESTA</div>
-        <app-audio-pulse
-          [volume]="outputVolume"
-          [active]="isAudioPlaying"
-          class="pulse-large"
-        ></app-audio-pulse>
-        <div class="meter-status">
-          {{ isAudioPlaying ? 'HABLANDO' : 'SILENCIO' }}
-        </div>
-      </div>
-    </div>
-
-    <!-- Botón INICIAR fijo en el footer (cuando NO hay sesión activa) -->
+    <!-- Botón INICIAR MÁS DESCRIPTIVO -->
     <button
-      *ngIf="!sessionActive"
       pButton
       type="button"
       class="btn-main-elderly btn-start"
@@ -195,44 +208,60 @@
       [loading]="isLoading"
       [disabled]="isLoading"
     >
-      <i class="pi pi-play-circle"></i>
-      <span class="btn-text">INICIAR DIAGNÓSTICO</span>
+      <div class="btn-content">
+        <i class="pi pi-play-circle"></i>
+        <div class="btn-text-container">
+          <span class="btn-text-main">INICIAR DIAGNÓSTICO</span>
+          <span class="btn-text-sub">Presiona aquí para comenzar</span>
+        </div>
+      </div>
     </button>
 
-    <!-- Información de Contacto -->
-    <div class="contact-info-elderly" *ngIf="companyConfig?.contact && sessionActive">
-      <p class="contact-text">
-        <i class="pi pi-phone"></i>
-        ¿Necesitas ayuda? Llama al
-        <strong>{{ companyConfig.contact.phone }}</strong>
-      </p>
-    </div>
-
-    <!-- Katuq Logo Footer -->
+    <!-- Katuq Logo Footer (solo se muestra antes de iniciar) -->
     <div class="katuq-footer-logo">
       <span class="powered-by">Powered by</span>
       <img src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq" />
     </div>
   </div>
 
-  <!-- FAB Draggable - FINALIZAR TRANSMISIÓN (solo cuando sesión activa) -->
+  <!-- FAB FIXED POSITION - TERMINAR LLAMADA -->
   <button
     *ngIf="sessionActive"
-    #fabButton
     pButton
     type="button"
-    class="fab-stop-elderly"
-    [class.dragging]="isDragging"
-    (touchstart)="onFabTouchStart($event)"
-    (touchmove)="onFabTouchMove($event)"
-    (touchend)="onFabTouchEnd($event)"
-    (mousedown)="onFabMouseDown($event)"
-    [style.left.px]="fabPosition.x"
-    [style.top.px]="fabPosition.y"
+    class="fab-end-call"
+    (click)="endSessionWithConfirmation()"
+    [disabled]="isLoading"
+    pTooltip="Presiona para terminar la llamada"
+    tooltipPosition="left"
   >
-    <i class="pi pi-stop-circle"></i>
-    <span class="fab-text">FINALIZAR</span>
+    <i class="pi pi-phone-slash"></i>
+    <span class="fab-label">TERMINAR</span>
   </button>
+
+  <!-- Hint inicial para el FAB (solo primeros 5 segundos) -->
+  <div class="fab-hint" *ngIf="sessionActive && messages.length === 0">
+    <i class="pi pi-hand-pointer"></i>
+    <span>Presiona el botón rojo para terminar</span>
+  </div>
+
+  <!-- OVERLAY GRANDE: Iniciando Sesión -->
+  <div class="confirmation-overlay" *ngIf="isLoading && !sessionActive">
+    <div class="overlay-content">
+      <i class="pi pi-spin pi-spinner"></i>
+      <h2>INICIANDO...</h2>
+      <p>Preparando cámara y micrófono</p>
+    </div>
+  </div>
+
+  <!-- OVERLAY GRANDE: Sesión Terminada -->
+  <div class="confirmation-overlay success" *ngIf="showSessionEndedOverlay">
+    <div class="overlay-content">
+      <i class="pi pi-check-circle"></i>
+      <h2>¡LLAMADA TERMINADA!</h2>
+      <p>Gracias por usar nuestro servicio</p>
+    </div>
+  </div>
 
   <!-- Panel de Resultados (Sidebar) -->
   <p-sidebar

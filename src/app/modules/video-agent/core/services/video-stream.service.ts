@@ -3,10 +3,10 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { DEFAULT_STREAM_CONFIG } from '../models/agent-config.interface';
 
 /**
- * Service para captura y streaming de video a 2 fps
- * Optimizado para Gemini Live API: 768x768 @ 2fps JPEG (calidad 0.6)
+ * Service para captura y streaming de video a 1 fps
+ * Optimizado para Gemini Live API: 768x768 @ 1fps JPEG (calidad 0.6)
  * Usa requestAnimationFrame para captura suave y sincronizada
- * Nota: El modelo procesa a 1fps pero recibir más frames mejora la latencia
+ * Sincronizado con la velocidad de procesamiento del modelo
  */
 @Injectable({
   providedIn: 'root'
@@ -176,7 +176,11 @@ export class VideoStreamService {
    * Detiene la captura de video
    */
   stopCapture(): void {
-    // Detener requestAnimationFrame
+    // 🛡️ FIX: Establecer streaming = false PRIMERO para bloquear nuevos frames
+    // Esto previene race conditions en Android donde frames pendientes se emiten
+    this.isStreamingSubject.next(false);
+
+    // Detener requestAnimationFrame INMEDIATAMENTE
     if (this.animationFrameId !== null) {
       cancelAnimationFrame(this.animationFrameId);
       this.animationFrameId = null;
@@ -200,8 +204,7 @@ export class VideoStreamService {
       this.mediaStream = null;
     }
 
-    this.isStreamingSubject.next(false);
-    console.log('🛑 Video capture stopped');
+    console.log('✅ Video capture stopped completely');
   }
 
   /**

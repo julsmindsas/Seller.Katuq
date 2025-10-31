@@ -193,16 +193,21 @@ export class AudioStreamService {
    * Detiene la grabación de audio
    */
   stopRecording(): void {
-    // Desconectar y limpiar worklets
+    // 🛡️ FIX: Establecer recording = false PRIMERO para bloquear nuevos chunks
+    // Esto previene race conditions donde worklet messages pendientes se procesan
+    this.isRecordingSubject.next(false);
+    this.volumeSubject.next(0);
+
+    // Desconectar message handlers INMEDIATAMENTE para ignorar mensajes pendientes
     if (this.recordingWorklet) {
-      this.recordingWorklet.disconnect();
       this.recordingWorklet.port.onmessage = null;
+      this.recordingWorklet.disconnect();
       this.recordingWorklet = null;
     }
 
     if (this.vuMeterWorklet) {
-      this.vuMeterWorklet.disconnect();
       this.vuMeterWorklet.port.onmessage = null;
+      this.vuMeterWorklet.disconnect();
       this.vuMeterWorklet = null;
     }
 
@@ -224,9 +229,7 @@ export class AudioStreamService {
       this.mediaStream = null;
     }
 
-    this.isRecordingSubject.next(false);
-    this.volumeSubject.next(0);
-    console.log("🛑 Audio recording stopped");
+    console.log("✅ Audio recording stopped completely");
   }
 
   /**
