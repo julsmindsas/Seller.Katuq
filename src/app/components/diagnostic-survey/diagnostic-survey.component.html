@@ -86,7 +86,7 @@
       </div>
     </div>
     <!-- Barra de progreso general -->
-    <div *ngIf="!submissionSuccess && currentStep !== 'quickstart-success'" class="main-progress-container">
+    <div *ngIf="!submissionSuccess && currentStep !== 'quickstart-success' && currentStep !== 'welcome'" class="main-progress-container">
       <div class="progress-steps">
         <div class="step" [ngClass]="{'active': currentStep === 'questionnaire', 'completed': getStepNumber() > 1}">
           <span class="step-number">1</span>
@@ -109,10 +109,77 @@
 
     <!-- Secciones según currentStep -->
     <div *ngIf="!submissionSuccess">
+      <!-- Paso 0: Página de Bienvenida/Landing -->
+      <div *ngIf="currentStep === 'welcome'" class="welcome-landing" role="main" aria-label="Bienvenida al diagnóstico">
+        <div class="welcome-content">
+          <h1 class="welcome-title">🎯 Configura tu Negocio Digital en {{ estimatedTimeMinutes }} Minutos</h1>
+          <p class="welcome-subtitle">Descubre cómo optimizar tu negocio con nuestra plataforma inteligente</p>
+          
+          <!-- Señales sociales -->
+          <div class="social-proof">
+            <div class="social-proof-item">
+              <span class="social-proof-number">{{ totalCompaniesConfigured | number }}</span>
+              <span class="social-proof-label">empresas ya configuradas</span>
+            </div>
+            <div class="social-proof-divider"></div>
+            <div class="social-proof-item">
+              <span class="social-proof-icon">⚡</span>
+              <span class="social-proof-label">Configuración automática</span>
+            </div>
+            <div class="social-proof-divider"></div>
+            <div class="social-proof-item">
+              <span class="social-proof-icon">🔒</span>
+              <span class="social-proof-label">100% seguro</span>
+            </div>
+          </div>
+
+          <!-- Beneficios principales -->
+          <div class="benefits-list">
+            <div class="benefit-item">
+              <span class="benefit-icon">✅</span>
+              <span class="benefit-text">Diagnóstico personalizado para tu sector</span>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">✅</span>
+              <span class="benefit-text">Configuración automática de módulos</span>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">✅</span>
+              <span class="benefit-text">Recomendaciones basadas en IA</span>
+            </div>
+            <div class="benefit-item">
+              <span class="benefit-icon">✅</span>
+              <span class="benefit-text">Listo para empezar de inmediato</span>
+            </div>
+          </div>
+
+          <!-- Testimonial breve -->
+          <div class="testimonial-box">
+            <p class="testimonial-text">"En menos de {{ estimatedTimeMinutes }} minutos tuve mi negocio configurado y funcionando. ¡Increíble!"</p>
+            <p class="testimonial-author">— Cliente satisfecho</p>
+          </div>
+
+          <!-- Tiempo estimado -->
+          <div class="time-estimate">
+            <span class="time-icon">⏱️</span>
+            <span class="time-text">Tiempo estimado: {{ estimatedTimeMinutes }} minutos</span>
+          </div>
+
+          <!-- CTA principal -->
+          <div class="welcome-cta">
+            <button class="cta-button primary large" (click)="startDiagnostic()" type="button">
+              🚀 Comenzar Diagnóstico
+            </button>
+            <p class="cta-subtext">Es gratis y solo te tomará unos minutos</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Paso 1: Cuestionario -->
       <div *ngIf="currentStep === 'questionnaire'" role="main" aria-label="Cuestionario de diagnóstico">
         <h1>{{ surveyData.formTitle }}</h1>
         <h3 class="subtitle">{{ surveyData.formDescription }}</h3>
+        <p class="motivational-message">💡 <strong>Estamos analizando tu negocio</strong> para darte recomendaciones personalizadas</p>
         <h3>{{ currentSection.sectionTitle }}</h3>
         
         <!-- Indicador de progreso de preguntas -->
@@ -122,6 +189,7 @@
              [attr.aria-valuemax]="100">
           <div class="progress-text">
             Pregunta {{ getCurrentQuestionNumber() }} de {{ getTotalQuestions() }}
+            <span class="time-remaining" *ngIf="getEstimatedTimeRemaining() > 0">• Aprox. {{ getEstimatedTimeRemaining() }} min restantes</span>
           </div>
           <div class="progress-bar-container">
             <div class="progress-bar-fill" [style.width.%]="getTotalProgress()"></div>
@@ -205,10 +273,12 @@
 
       <!-- Paso Introductorio para Registro -->
       <div *ngIf="currentStep === 'introduction'" class="introduction-step">
-        <h2>{{ '¡Excelente trabajo!' | translate }}</h2>
+        <h2>{{ '¡Excelente trabajo!' | translate }} 🎉</h2>
+        <p class="intro-motivational">Has completado el diagnóstico. Estamos casi listos para configurar tu comercio.</p>
         <p style="font-size:1.8rem;">
           {{ 'Ahora, para continuar, ingresa los datos básicos de tu empresa. Si eres persona natural, utiliza tus datos personales.' | translate }}
         </p>
+        <p class="intro-reassuring">🔒 <strong>Tu información está segura</strong> y solo será usada para configurar tu cuenta.</p>
         <div class="navigation-buttons">
           <button type="button" class="next-button" (click)="moveNextStep()">{{ 'Continuar al registro' | translate }}</button>
         </div>
@@ -217,6 +287,7 @@
       <!-- Paso de Registro: mostrar un input por cada pregunta de forma step by step -->
       <div *ngIf="currentStep === 'registration'" [formGroup]="mainForm.get('registration')">
         <h2>{{ 'Información Básica de tu Empresa' | translate }}</h2>
+        <p class="registration-help">Cada dato nos ayuda a personalizar mejor tu experiencia</p>
         <!-- Nombre empresa -->
         <ng-container *ngIf="registrationIndex === 0">
           <div class="survey-question">
@@ -329,7 +400,8 @@
 
       <!-- Paso 3: Resumen de Respuestas -->
       <div *ngIf="currentStep === 'summary'">
-        <h1>{{ 'Resumen de respuestas' | translate }}</h1>
+        <h1>{{ 'Resumen de respuestas' | translate }} ✨</h1>
+        <p class="summary-motivational">¡Estás a un paso de obtener tu configuración personalizada!</p>
         <div class="summary-container" [innerHTML]="summaryHTML"></div>
         <div class="navigation-buttons">
           <button class="back-button" (click)="editResponses()">{{ 'Revisar respuestas' | translate }}</button>

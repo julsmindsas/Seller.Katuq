@@ -18,7 +18,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
     surveyData = {
         "formTitle": "Diagnóstico Rápido para tu Negocio Digital",
-        "formDescription": "Solo 8 preguntas esenciales para crear la configuración perfecta para tu negocio.",
+        "formDescription": "Descubre cómo optimizar tu negocio con respuestas personalizadas basadas en tu sector y necesidades.",
         "sections": [
             {
                 "sectionTitle": "Diagnóstico Esencial",
@@ -130,7 +130,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     summaryHTML: string = "";
     submissionSuccess: boolean = false;
     welcomeMessage: string = "";
-    currentStep: 'questionnaire' | 'contextual' | 'introduction' | 'registration' | 'summary' | 'quickstart-success' = 'questionnaire';
+    currentStep: 'welcome' | 'questionnaire' | 'contextual' | 'introduction' | 'registration' | 'summary' | 'quickstart-success' = 'welcome';
     
     // Variables para Quick Start
     quickStartInProgress: boolean = false;
@@ -147,6 +147,12 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     mainForm: FormGroup; // Formulario principal
     isProcessing: boolean = false; // nueva bandera para animación de procesamiento
     showAutoSaveIndicator: boolean = false; // Indicador de guardado automático
+
+    // Variables para página de bienvenida y marketing
+    totalCompaniesConfigured: number = 15247; // Puede venir de API
+    estimatedTimeMinutes: number = 5;
+    showCelebration: boolean = false;
+    milestonesReached: number[] = [];
 
     // Registro simplificado: solo 4 campos esenciales
     registrationQuestions = [
@@ -230,6 +236,12 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     private loadProgress(): void {
         try {
             const saved = localStorage.getItem(this.STORAGE_KEY);
+            // Si no hay progreso guardado, asegurarse de empezar en welcome
+            if (!saved) {
+                this.currentStep = 'welcome';
+                return;
+            }
+            
             if (saved) {
                 const progress = JSON.parse(saved);
                 
@@ -264,7 +276,10 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
                 
                 // Restaurar paso actual (con validación)
                 if (progress.currentStep && this.isValidStep(progress.currentStep)) {
-                    this.currentStep = progress.currentStep;
+                    // Si estaba en welcome, no restaurar (siempre mostrar bienvenida si es nueva sesión)
+                    if (progress.currentStep !== 'welcome') {
+                        this.currentStep = progress.currentStep;
+                    }
                 }
 
                 // Si había preguntas contextuales, cargarlas
@@ -283,7 +298,7 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
      * Valida que el paso sea válido
      */
     private isValidStep(step: string): boolean {
-        const validSteps: string[] = ['questionnaire', 'contextual', 'introduction', 'registration', 'summary', 'quickstart-success'];
+        const validSteps: string[] = ['welcome', 'questionnaire', 'contextual', 'introduction', 'registration', 'summary', 'quickstart-success'];
         return validSteps.includes(step);
     }
 
@@ -750,13 +765,33 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
 
     getStepNumber(): number {
         switch(this.currentStep) {
+            case 'welcome': return 0;
             case 'questionnaire': return 1;
             case 'contextual': return 2;
             case 'introduction': return this.contextualQuestions.length > 0 ? 3 : 2;
             case 'registration': return this.contextualQuestions.length > 0 ? 3 : 2;
             case 'summary': return this.contextualQuestions.length > 0 ? 4 : 3;
-            default: return 1;
+            default: return 0;
         }
+    }
+
+    /**
+     * Método para iniciar el diagnóstico desde la página de bienvenida
+     */
+    startDiagnostic(): void {
+        this.currentStep = 'questionnaire';
+        this.debouncedSave();
+    }
+
+    /**
+     * Obtiene tiempo estimado restante en minutos
+     */
+    getEstimatedTimeRemaining(): number {
+        const totalQuestions = this.getTotalQuestions();
+        const currentQuestion = this.getCurrentQuestionNumber();
+        const questionsRemaining = totalQuestions - currentQuestion;
+        const avgTimePerQuestion = this.estimatedTimeMinutes / totalQuestions;
+        return Math.max(1, Math.ceil(questionsRemaining * avgTimePerQuestion));
     }
 
     /**

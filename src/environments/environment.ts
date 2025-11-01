@@ -13,9 +13,9 @@ export const environment = {
   },
   urlPermitidas:
     "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
-  //urlApi: "http://localhost:3300", // API Local,
+  urlApi: "http://localhost:3300", // API Local,
   //urlApi: "https://us-central1-katuq-new.cloudfunctions.net/api", // API GCP
-  urlApi: "https://api.katuq.com", // API AWS
+  //urlApi: "https://api.katuq.com", // API AWS
   wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
   voiceWsUrl: "wss://api.katuq.com/voice-websocket",
   wompi: {

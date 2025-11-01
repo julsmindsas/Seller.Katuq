@@ -489,7 +489,7 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "rol/rol", title: "Roles y permisos", type: "link" },
+        { path: "rol", title: "Roles y permisos", type: "link" },
         { path: "usuarios", title: "Usuarios", type: "link" },
       ],
     },

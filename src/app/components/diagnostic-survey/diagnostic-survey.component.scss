@@ -25,9 +25,13 @@
     z-index: 9999;
     background: #fff;
     display: flex;
-    align-items: center;
-    justify-content: center; // Centrado completo horizontal y vertical
-    padding: 0; // Se elimina cualquier padding adicional
+    align-items: flex-start; // Cambiar a flex-start para permitir scroll
+    justify-content: center;
+    padding: 0;
+    overflow-y: auto; // Permitir scroll
+    overflow-x: hidden; // Evitar scroll horizontal
+    -webkit-overflow-scrolling: touch; // Smooth scroll en iOS
+    overscroll-behavior: contain; // Prevenir scroll bounce en algunos navegadores
 }
 
 /* Logo en parte inferior derecha */
@@ -106,6 +110,501 @@
     text-align: left;
     font-family: 'Geometr415L', sans-serif;
     font-size: 0.9rem; /* Aumentado de 0.8rem */
+    min-height: 100vh; // Permitir que el contenido sea más alto que la pantalla
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; // Alinear al inicio para permitir scroll
+}
+
+/* ===== ESTILOS PARA PÁGINA DE BIENVENIDA/LANDING ===== */
+
+.welcome-landing {
+    animation: fadeInSlide 0.8s ease-out;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.welcome-content {
+    text-align: center;
+}
+
+.welcome-title {
+    font-size: 2.5rem;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+    color: #0C0042;
+    margin-bottom: 15px;
+    line-height: 1.2;
+}
+
+.welcome-subtitle {
+    font-size: 1.3rem;
+    color: #666;
+    margin-bottom: 40px;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+/* Señales sociales */
+.social-proof {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin: 30px 0;
+    padding: 20px;
+    background: rgba(144, 32, 255, 0.05);
+    border-radius: 12px;
+    flex-wrap: wrap;
+}
+
+.social-proof-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.social-proof-number {
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: 'Geometr415BlkBTBlack', sans-serif;
+    color: #9020FF;
+}
+
+.social-proof-icon {
+    font-size: 2rem;
+}
+
+.social-proof-label {
+    font-size: 0.9rem;
+    color: #666;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.social-proof-divider {
+    width: 1px;
+    height: 40px;
+    background: rgba(144, 32, 255, 0.2);
+}
+
+/* Lista de beneficios */
+.benefits-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin: 40px 0;
+    text-align: left;
+}
+
+.benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    background: rgba(144, 32, 255, 0.03);
+    border-radius: 8px;
+    border-left: 3px solid #9020FF;
+    transition: transform 0.2s ease;
+}
+
+.benefit-item:hover {
+    transform: translateX(5px);
+    background: rgba(144, 32, 255, 0.08);
+}
+
+.benefit-icon {
+    font-size: 1.5rem;
+}
+
+.benefit-text {
+    font-size: 1rem;
+    color: #0C0042;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+/* Testimonial */
+.testimonial-box {
+    margin: 40px 0;
+    padding: 25px;
+    background: linear-gradient(135deg, rgba(144, 32, 255, 0.1) 0%, rgba(0, 255, 204, 0.1) 100%);
+    border-radius: 12px;
+    border-left: 4px solid #9020FF;
+}
+
+.testimonial-text {
+    font-size: 1.1rem;
+    font-style: italic;
+    color: #0C0042;
+    margin-bottom: 10px;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.testimonial-author {
+    font-size: 0.9rem;
+    color: #666;
+    text-align: right;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+/* Tiempo estimado */
+.time-estimate {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 30px 0;
+    padding: 12px 20px;
+    background: rgba(0, 255, 204, 0.1);
+    border-radius: 20px;
+    display: inline-flex;
+}
+
+.time-icon {
+    font-size: 1.3rem;
+}
+
+.time-text {
+    font-size: 1rem;
+    color: #0C0042;
+    font-weight: 500;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+/* CTA de bienvenida */
+.welcome-cta {
+    margin-top: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.cta-button.large {
+    padding: 18px 40px;
+    font-size: 1.3rem;
+    min-width: 250px;
+    cursor: pointer;
+    z-index: 10;
+    position: relative;
+}
+
+.cta-subtext {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    color: #666;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+/* Responsive para página de bienvenida - Tablet */
+@media screen and (max-width: 768px) {
+    .welcome-landing {
+        padding: 30px 15px;
+        max-width: 100%;
+    }
+
+    .welcome-title {
+        font-size: 1.8rem;
+        margin-bottom: 12px;
+        line-height: 1.3;
+    }
+
+    .welcome-subtitle {
+        font-size: 1rem;
+        margin-bottom: 30px;
+    }
+
+    .social-proof {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+        margin: 20px 0;
+    }
+
+    .social-proof-item {
+        gap: 4px;
+    }
+
+    .social-proof-number {
+        font-size: 1.8rem;
+    }
+
+    .social-proof-icon {
+        font-size: 1.8rem;
+    }
+
+    .social-proof-label {
+        font-size: 0.85rem;
+    }
+
+    .social-proof-divider {
+        width: 100%;
+        height: 1px;
+    }
+
+    .benefits-list {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        margin: 30px 0;
+    }
+
+    .benefit-item {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .benefit-icon {
+        font-size: 1.3rem;
+    }
+
+    .benefit-text {
+        font-size: 0.95rem;
+    }
+
+    .testimonial-box {
+        margin: 30px 0;
+        padding: 20px;
+    }
+
+    .testimonial-text {
+        font-size: 1rem;
+    }
+
+    .testimonial-author {
+        font-size: 0.85rem;
+    }
+
+    .time-estimate {
+        margin: 25px 0;
+        padding: 10px 18px;
+    }
+
+    .time-icon {
+        font-size: 1.1rem;
+    }
+
+    .time-text {
+        font-size: 0.9rem;
+    }
+
+    .welcome-cta {
+        margin-top: 30px;
+    }
+
+    .cta-button.large {
+        width: 100%;
+        min-width: auto;
+        padding: 16px 24px;
+        font-size: 1.1rem;
+    }
+
+    .cta-subtext {
+        font-size: 0.85rem;
+        margin-top: 12px;
+    }
+}
+
+/* Responsive para móviles pequeños */
+@media screen and (max-width: 480px) {
+    .welcome-landing {
+        padding: 20px 10px;
+    }
+
+    .welcome-title {
+        font-size: 1.5rem;
+        margin-bottom: 10px;
+        line-height: 1.2;
+        padding: 0 10px;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 25px;
+        padding: 0 10px;
+    }
+
+    .social-proof {
+        padding: 12px;
+        margin: 15px 0;
+        gap: 12px;
+        border-radius: 10px;
+    }
+
+    .social-proof-number {
+        font-size: 1.5rem;
+    }
+
+    .social-proof-icon {
+        font-size: 1.5rem;
+    }
+
+    .social-proof-label {
+        font-size: 0.8rem;
+        text-align: center;
+    }
+
+    .benefits-list {
+        gap: 10px;
+        margin: 20px 0;
+    }
+
+    .benefit-item {
+        padding: 10px;
+        gap: 8px;
+        border-radius: 6px;
+    }
+
+    .benefit-icon {
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .benefit-text {
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    .testimonial-box {
+        margin: 20px 0;
+        padding: 15px;
+        border-radius: 10px;
+    }
+
+    .testimonial-text {
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .testimonial-author {
+        font-size: 0.8rem;
+        margin-top: 8px;
+    }
+
+    .time-estimate {
+        margin: 20px 0;
+        padding: 8px 15px;
+        border-radius: 15px;
+    }
+
+    .time-icon {
+        font-size: 1rem;
+    }
+
+    .time-text {
+        font-size: 0.85rem;
+    }
+
+    .welcome-cta {
+        margin-top: 25px;
+        padding: 0 10px;
+    }
+
+    .cta-button.large {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 1rem;
+        border-radius: 8px;
+    }
+
+    .cta-subtext {
+        font-size: 0.8rem;
+        margin-top: 10px;
+        padding: 0 10px;
+    }
+}
+
+/* Optimización para orientación landscape en móviles */
+@media screen and (max-width: 768px) and (orientation: landscape) {
+    .welcome-landing {
+        padding: 15px 10px;
+    }
+
+    .welcome-title {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+
+    .welcome-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 20px;
+    }
+
+    .social-proof {
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 10px;
+        margin: 15px 0;
+    }
+
+    .social-proof-divider {
+        width: 1px;
+        height: 30px;
+    }
+
+    .benefits-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        margin: 20px 0;
+    }
+
+    .testimonial-box {
+        margin: 20px 0;
+        padding: 15px;
+    }
+}
+
+/* Mensajes motivacionales y de valor */
+.motivational-message {
+    padding: 15px;
+    background: rgba(144, 32, 255, 0.1);
+    border-left: 4px solid #9020FF;
+    border-radius: 8px;
+    margin: 20px 0;
+    font-size: 1rem;
+    color: #0C0042;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.intro-motivational {
+    font-size: 1.2rem;
+    color: #666;
+    margin: 15px 0;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.intro-reassuring {
+    padding: 12px;
+    background: rgba(0, 255, 204, 0.1);
+    border-radius: 8px;
+    margin: 15px 0;
+    font-size: 1rem;
+    color: #0C0042;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.registration-help {
+    font-size: 0.95rem;
+    color: #666;
+    margin: 10px 0 20px 0;
+    font-style: italic;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.summary-motivational {
+    font-size: 1.1rem;
+    color: #9020FF;
+    margin: 15px 0;
+    font-weight: 500;
+    font-family: 'Geometr415L', sans-serif;
+}
+
+.time-remaining {
+    color: #666;
+    font-size: 0.85rem;
+    margin-left: 10px;
+    font-family: 'Geometr415L', sans-serif;
 }
 
 /* Tamaño de tipografía ajustado para mayor legibilidad */
@@ -399,8 +898,12 @@
 @media screen and (max-width: 768px) {
     .survey-container {
         width: 100%;
-        height: auto;
-        padding: 10px;
+        height: 100vh;
+        min-height: 100vh;
+        padding: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
     }
 
     .survey-logo {
@@ -412,8 +915,9 @@
 
     .survey-form {
         width: 100%;
-        padding: 10px;
+        padding: 15px 10px;
         font-size: 1.2rem;
+        min-height: auto; // Permitir que crezca según contenido
     }
 
     .survey-form h1 {
@@ -661,8 +1165,18 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        height: auto;
-        padding: 10px;
+        height: 100vh; // Mantener 100vh para permitir scroll
+        min-height: 100vh;
+        padding: 0;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .survey-form {
+        min-height: auto; // Permitir que crezca según contenido
+        padding-top: 20px;
+        padding-bottom: 20px;
     }
 
     // El formulario (paso a paso) se coloca primero

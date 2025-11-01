@@ -48,6 +48,11 @@ export class MyAccountComponent implements OnInit {
       path: 'rol',
       icon: 'shield',
       label: 'Roles'
+    },
+    {
+      path: 'rol/rol',
+      icon: 'shield',
+      label: 'Roles'
     }
   ];
 
@@ -74,7 +79,13 @@ export class MyAccountComponent implements OnInit {
       const authorizedMenuItems = JSON.parse(
         localStorage.getItem('authorizedMenuItems') || '[]'
       );
-      this.authorizedPaths = authorizedMenuItems.map((item: any) => item.path);
+      this.authorizedPaths = authorizedMenuItems.map((item: any) => {
+        if (item.path === 'rol/rol') {
+          return 'rol';
+        }
+        return item.path;
+      });
+
     } catch (error) {
       console.error('Error parsing authorizedMenuItems from localStorage', error);
       this.authorizedPaths = [];
