@@ -77,6 +77,7 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   // Estados y configuraciones
   isMobile = false;
   isJulsmind = false;
+  isAdminUser = false;
   
   // Filtros
   filtros: FiltrosAvanzados = {
@@ -116,6 +117,10 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   ) {
     const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
+
+    // Verificar si el usuario es el administrador autorizado para eliminar empresas
+    const user = JSON.parse(localStorage.getItem("user") || '{}');
+    this.isAdminUser = user.email === 'dgarciah@julsmind.com';
 
     // Observar cambios en el tamaño de la pantalla
     this.breakpointObserver.observe([
@@ -429,6 +434,75 @@ export class EmpresasComponent implements OnInit, OnDestroy {
           severity: 'error',
           summary: 'Error',
           detail: `No se pudo ${accion} la empresa`
+        });
+      }
+    });
+  }
+
+  // Eliminar empresa y todos sus datos relacionados (solo para dgarciah@julsmind.com)
+  eliminarEmpresa(empresa: Empresa): void {
+    const nombreEmpresa = empresa.nomComercial || empresa.nombre;
+
+    // Confirmación con mensaje de advertencia muy claro
+    const confirmacion = confirm(
+      `⚠️ ADVERTENCIA: Esta acción eliminará PERMANENTEMENTE la empresa "${nombreEmpresa}" y TODOS sus datos relacionados:\n\n` +
+      `- Usuarios de la empresa\n` +
+      `- Roles y permisos\n` +
+      `- Bodegas\n` +
+      `- Productos\n` +
+      `- Pedidos\n` +
+      `- Clientes\n` +
+      `- Toda otra información asociada\n\n` +
+      `Esta acción NO se puede deshacer.\n\n` +
+      `¿Está completamente seguro de que desea eliminar "${nombreEmpresa}"?`
+    );
+
+    if (!confirmacion) {
+      return;
+    }
+
+    // Segunda confirmación para estar seguros
+    const confirmacionFinal = confirm(
+      `⚠️ ÚLTIMA CONFIRMACIÓN:\n\n` +
+      `Por favor confirme que desea eliminar "${nombreEmpresa}" (NIT: ${empresa.nit})\n\n` +
+      `Esta es su última oportunidad para cancelar.`
+    );
+
+    if (!confirmacionFinal) {
+      return;
+    }
+
+    // Mostrar mensaje de procesamiento
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Procesando',
+      detail: `Eliminando empresa "${nombreEmpresa}" y todos sus datos...`,
+      life: 5000
+    });
+
+    // Llamar al servicio de eliminación
+    this.service.deleteCompany(empresa.nit).subscribe({
+      next: (response: any) => {
+        console.log('Empresa eliminada exitosamente:', response);
+
+        // Mostrar mensaje de éxito
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Eliminación Exitosa',
+          detail: `La empresa "${nombreEmpresa}" y todos sus datos han sido eliminados permanentemente.`,
+          life: 5000
+        });
+
+        // Recargar datos para reflejar el cambio
+        this.cargarDatos();
+      },
+      error: (err) => {
+        console.error('Error al eliminar la empresa:', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: err.error?.message || `No se pudo eliminar la empresa "${nombreEmpresa}". Por favor, intente nuevamente.`,
+          life: 5000
         });
       }
     });

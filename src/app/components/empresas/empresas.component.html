@@ -308,12 +308,22 @@
                       <span class="ms-1">{{ 'Detalles' | translate }}</span>
                     </button>
 
-                    <button 
-                      class="btn btn-outline-warning btn-sm" 
+                    <button
+                      class="btn btn-outline-warning btn-sm"
                       (click)="toggleEstado(empresa)"
                       [title]="empresa.activo ? ('Desactivar empresa' | translate) : ('Activar empresa' | translate)">
                       <i class="icofont" [ngClass]="empresa.activo ? 'icofont-ban' : 'icofont-check-circled'"></i>
                       <span *ngIf="isMobile" class="ms-1">{{ empresa.activo ? ('Desactivar' | translate) : ('Activar' | translate) }}</span>
+                    </button>
+
+                    <!-- Botón de eliminar - Solo visible para dgarciah@julsmind.com -->
+                    <button
+                      class="btn btn-outline-danger btn-sm"
+                      *ngIf="isAdminUser"
+                      (click)="eliminarEmpresa(empresa)"
+                      [title]="'Eliminar empresa y todos sus datos' | translate">
+                      <i class="icofont icofont-trash"></i>
+                      <span *ngIf="isMobile" class="ms-1">{{ 'Eliminar' | translate }}</span>
                     </button>
                   </div>
                 </td>

@@ -159,6 +159,9 @@ export class MaestroService {
   public editCompany(company: any) {
     return this.http.post(this.urlBase + '/v1/companies/edit', company, this.httpOptions);
   }
+  public deleteCompany(nit: string) {
+    return this.http.post(this.urlBase + '/v1/companies/delete', { nit }, this.httpOptions);
+  }
   public createProduct(product: any) {
     return this.http.post(this.urlBase + '/v1/productos/create', product, this.httpOptions);
   }
