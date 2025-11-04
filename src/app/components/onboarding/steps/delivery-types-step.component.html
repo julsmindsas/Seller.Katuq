@@ -1,0 +1,160 @@
+<div class="step-container">
+  <div class="step-intro">
+    <p class="intro-text">
+      Define los tipos de entrega disponibles según la velocidad y características del envío.
+    </p>
+  </div>
+
+  <p-card class="templates-card">
+    <ng-template pTemplate="header">
+      <div class="card-header"><i class="pi pi-th-large"></i><span>Plantillas Rápidas</span></div>
+    </ng-template>
+    <div class="templates-grid">
+      <button *ngFor="let template of predefinedTemplates" pButton type="button" [label]="template.nombreExterno"
+              icon="pi pi-clock" class="p-button-outlined template-button" (click)="useTemplate(template)"></button>
+    </div>
+    <small class="field-help">Haz clic en una plantilla para cargar sus datos</small>
+  </p-card>
+
+  <p-card class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header"><i class="pi pi-clock"></i>
+        <span>{{ editingIndex !== null ? 'Editar Tipo de Entrega' : 'Agregar Tipo de Entrega' }}</span></div>
+    </ng-template>
+    <form [formGroup]="deliveryTypeForm">
+      <div class="form-grid">
+        <div class="form-field col-12 md:col-6">
+          <label for="nombreInterno" class="required">Nombre Interno *</label>
+          <input id="nombreInterno" type="text" pInputText formControlName="nombreInterno"
+                 placeholder="Ej: estandar, express"
+                 [class.p-invalid]="hasError('nombreInterno', 'required') || hasError('nombreInterno', 'minlength')" />
+          <small class="p-error" *ngIf="hasError('nombreInterno', 'required') || hasError('nombreInterno', 'minlength')">
+            {{ getErrorMessage('nombreInterno') }}</small>
+          <small class="field-help">Nombre para uso interno del sistema</small>
+        </div>
+
+        <div class="form-field col-12 md:col-6">
+          <label for="nombreExterno" class="required">Nombre Externo *</label>
+          <input id="nombreExterno" type="text" pInputText formControlName="nombreExterno"
+                 placeholder="Ej: Estándar, Express"
+                 [class.p-invalid]="hasError('nombreExterno', 'required') || hasError('nombreExterno', 'minlength')" />
+          <small class="p-error" *ngIf="hasError('nombreExterno', 'required') || hasError('nombreExterno', 'minlength')">
+            {{ getErrorMessage('nombreExterno') }}</small>
+          <small class="field-help">Nombre que verán los clientes</small>
+        </div>
+
+        <div class="form-field col-12">
+          <label for="descripcion" class="required">Descripción *</label>
+          <textarea id="descripcion" pInputTextarea formControlName="descripcion" rows="2"
+                    placeholder="Breve descripción del tipo de entrega" [autoResize]="true"
+                    [class.p-invalid]="hasError('descripcion', 'required')"></textarea>
+          <small class="p-error" *ngIf="hasError('descripcion', 'required')">
+            {{ getErrorMessage('descripcion') }}</small>
+        </div>
+
+        <div class="form-field col-12 md:col-6">
+          <label for="formaEntrega" class="required">Formas de Entrega *</label>
+          <p-multiSelect
+            inputId="formaEntrega"
+            [options]="formasEntrega"
+            formControlName="formaEntrega"
+            optionLabel="nombre"
+            optionValue="nombre"
+            placeholder="Selecciona una o varias formas"
+            [showClear]="true"
+            [filter]="true"
+            filterPlaceholder="Buscar..."
+            display="chip"
+            [class.p-invalid]="hasError('formaEntrega', 'required')">
+          </p-multiSelect>
+          <small class="p-error" *ngIf="hasError('formaEntrega', 'required')">
+            {{ getErrorMessage('formaEntrega') }}</small>
+          <small class="field-help">Asocia las formas de entrega que aplican</small>
+        </div>
+
+        <div class="form-field col-12 md:col-6">
+          <label for="posicion" class="required">Posición *</label>
+          <p-inputNumber
+            inputId="posicion"
+            formControlName="posicion"
+            [min]="1"
+            [showButtons]="true"
+            placeholder="Ej: 1, 2, 3..."
+            [class.p-invalid]="hasError('posicion', 'required') || hasError('posicion', 'min')">
+          </p-inputNumber>
+          <small class="p-error" *ngIf="hasError('posicion', 'required') || hasError('posicion', 'min')">
+            {{ getErrorMessage('posicion') }}</small>
+          <small class="field-help">Orden en que aparecerá en la lista</small>
+        </div>
+
+        <div class="form-field col-12">
+          <div class="checkbox-field">
+            <p-checkbox inputId="activo" formControlName="activo" [binary]="true" label="Activo"></p-checkbox>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button *ngIf="editingIndex !== null" pButton type="button" label="Cancelar" icon="pi pi-times"
+                class="p-button-secondary p-button-outlined" (click)="cancelEdit()"></button>
+        <button pButton type="button" [label]="editingIndex !== null ? 'Actualizar Tipo' : 'Agregar a Lista'"
+                [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'" class="p-button-success"
+                [disabled]="deliveryTypeForm.invalid" (click)="addDeliveryType()"></button>
+      </div>
+    </form>
+  </p-card>
+
+  <p-card *ngIf="deliveryTypesList.length > 0" class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header"><i class="pi pi-list"></i>
+        <span>Tipos de Entrega Configurados ({{ deliveryTypesList.length }})</span></div>
+    </ng-template>
+    <p-table [value]="deliveryTypesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre Externo</th>
+          <th>Nombre Interno</th>
+          <th>Formas de Entrega</th>
+          <th style="width: 80px">Posición</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 140px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-type let-i="rowIndex">
+        <tr>
+          <td><strong>{{ type.nombreExterno }}</strong></td>
+          <td>{{ type.nombreInterno }}</td>
+          <td>
+            <span *ngFor="let forma of type.formaEntrega; let last = last">
+              {{ forma }}<span *ngIf="!last">, </span>
+            </span>
+            <span *ngIf="!type.formaEntrega || type.formaEntrega.length === 0">-</span>
+          </td>
+          <td class="text-center">{{ type.posicion }}</td>
+          <td>
+            <span class="badge" [class.badge-active]="type.activo" [class.badge-inactive]="!type.activo">
+              {{ type.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm p-button-info"
+                      pTooltip="Editar" (click)="editDeliveryType(i)"></button>
+              <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
+                      pTooltip="Eliminar" (click)="removeDeliveryType(i)"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <div class="step-actions mt-4">
+    <button pButton type="button" label="Guardar y Continuar" icon="pi pi-check" iconPos="right"
+            class="p-button-success p-button-lg" [disabled]="deliveryTypesList.length === 0 || isSaving"
+            [loading]="isSaving" (click)="onComplete()"></button>
+    <p class="form-status" *ngIf="deliveryTypesList.length === 0">
+      <i class="pi pi-info-circle"></i>Agrega al menos un tipo de entrega para continuar</p>
+    <p class="form-status success" *ngIf="deliveryTypesList.length > 0">
+      <i class="pi pi-check-circle"></i>{{ deliveryTypesList.length }} tipo(s) configurado(s) - ¡Listo!</p>
+  </div>
+</div>

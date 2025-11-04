@@ -6,6 +6,7 @@ import { full } from "./shared/routes/full.routes";
 import { content } from "./shared/routes/routes";
 import { LoginComponent } from '../app/auth/login/login.component'
 import { AdminGuard } from './shared/guard/admin.guard';
+import { SubscriptionGuard } from './shared/guards/subscription.guard';
 import { BlankComponent } from './shared/components/layout/blank/blank.component';
 import { ChangePasswordComponent } from './components/change-password/change-password.component';
 import { PageNotFoundComponent } from './shared/components/page-not-found/page-not-found.component';
@@ -13,6 +14,8 @@ import { PageNotFoundComponent } from './shared/components/page-not-found/page-n
 import { TermsConditionsComponent } from './components/terms-conditions/terms-conditions.component';
 // Importar el componente de política de privacidad
 import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-policy.component';
+// Importar el componente de callback de suscripción
+import { SubscriptionCallbackComponent } from './components/subscription-callback/subscription-callback.component';
 
 const routes: Routes = [
 
@@ -46,6 +49,17 @@ const routes: Routes = [
     ]
   },
   {
+    path: 'onboarding',
+    component: BlankComponent,
+    // canActivate: [AdminGuard], // Removido temporalmente para testing
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/onboarding/onboarding.module').then(m => m.OnboardingModule)
+      }
+    ]
+  },
+  {
     path: 'change-password',
     component: ChangePasswordComponent
     // Opcional: agregar guard para que esta ruta se muestre solo si la contraseña es estándar
@@ -64,6 +78,11 @@ const routes: Routes = [
     path: 'privacy-policy',
     component: PrivacyPolicyComponent
   },
+  // Ruta para callback de suscripción (después de pago en Wompi)
+  {
+    path: 'subscription-callback',
+    component: SubscriptionCallbackComponent
+  },
   // Test route for notification system (development only)
   {
     path: 'notification-test',
@@ -73,7 +92,8 @@ const routes: Routes = [
   {
     path: 'live-audio',
     component: BlankComponent,
-    canActivate: [AdminGuard],
+    canActivate: [AdminGuard, SubscriptionGuard],
+    data: { requiresPremium: true },
     children: [
       {
         path: '',
@@ -100,6 +120,18 @@ const routes: Routes = [
       {
         path: '',
         loadChildren: () => import('./components/servicios/agendamiento/agendamiento.module').then(m => m.AgendamientoModule)
+      }
+    ]
+  },
+  // Pricing page
+  {
+    path: 'pricing',
+    component: ContentComponent,
+    canActivate: [AdminGuard],
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/pricing/pricing.module').then(m => m.PricingModule)
       }
     ]
   },

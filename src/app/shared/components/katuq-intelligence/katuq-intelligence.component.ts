@@ -76,6 +76,9 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import Swal from 'sweetalert2';
 import { KatuqintelligenceService } from '../../services/katuqintelligence/katuqintelligence.service';
+import { SubscriptionService } from '../../services/subscription.service';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-katuqintelligence',
@@ -97,13 +100,33 @@ export class KatuqIntelligenceComponent implements OnInit {
 
   @Output() katuqIntelligenceResponse = new EventEmitter();
 
+  // Observable para mostrar uso disponible
+  usageInfo$: Observable<{ remaining: number; limit: number; isPremium: boolean }>;
+
   private katuqIntelligenceService: KatuqintelligenceService;
 
-  constructor(katuqIntelligenceService: KatuqintelligenceService) {
+  constructor(
+    katuqIntelligenceService: KatuqintelligenceService,
+    private subscriptionService: SubscriptionService
+  ) {
     this.katuqIntelligenceService = katuqIntelligenceService;
   }
 
   ngOnInit(): void {
+    // Suscribirse a cambios de uso de productos IA
+    this.usageInfo$ = this.subscriptionService.usage$.pipe(
+      map(usage => {
+        if (!usage) {
+          return { remaining: 0, limit: 0, isPremium: false };
+        }
+        const productsUsage = usage.ai.products;
+        return {
+          remaining: productsUsage.remaining,
+          limit: productsUsage.limit,
+          isPremium: productsUsage.limit === -1
+        };
+      })
+    );
   }
 
   IA(): void {

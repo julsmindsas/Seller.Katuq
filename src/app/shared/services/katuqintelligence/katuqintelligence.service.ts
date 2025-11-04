@@ -2,20 +2,49 @@ import { Injectable } from '@angular/core';
 import { BaseService } from '../base.service';
 import { HttpClient } from '@angular/common/http';
 import { query } from '@angular/animations';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { AILimitsService } from '../ai-limits.service';
+import { SubscriptionService } from '../subscription.service';
 
 @Injectable({
     providedIn: 'root'
 })
 export class KatuqintelligenceService extends BaseService {
 
-    constructor(public http: HttpClient) {
+    constructor(
+        public http: HttpClient,
+        private aiLimitsService: AILimitsService,
+        private subscriptionService: SubscriptionService
+    ) {
         super(http);
     }
 
     invokeKatuqIntelligence(propmt: any) {
-        return this.post<any>('/v1/katuqintelligence/ia', propmt);
+        // Validación sincrónica antes de llamar al backend
+        const canUse = this.aiLimitsService.canUseAIFeature('products');
+
+        if (!canUse) {
+            this.aiLimitsService.showUpgradeModal('products');
+            return throwError(() => new Error('Feature bloqueada en plan Freemium'));
+        }
+
+        return this.post<any>('/v1/katuqintelligence/ia', propmt).pipe(
+            tap(() => {
+                // Refrescar estadísticas de uso después de generación exitosa
+                // Agregar delay de 2 segundos para asegurar que backend terminó de guardar
+                setTimeout(() => {
+                    this.subscriptionService.refresh();
+                }, 2000);
+            }),
+            catchError(error => {
+                if (error.error?.error === 'AI_PRODUCTS_LIMIT_REACHED') {
+                    this.aiLimitsService.showUpgradeModal('products', error.error.message);
+                }
+                return throwError(() => error);
+            })
+        );
     }
 
     invokeKatuqAdvandceIntelligenceForProductRetriver(propmt: any) {
@@ -30,7 +59,25 @@ export class KatuqintelligenceService extends BaseService {
     }
 
     getAnalitycsGraphs(body: any){
-        return this.post<any>('/v1/katuqintelligence/kai/analitycs', body);
+        const canUse = this.aiLimitsService.canUseAIFeature('products');
+
+        if (!canUse) {
+            this.aiLimitsService.showUpgradeModal('products');
+            return throwError(() => new Error('Feature bloqueada en plan Freemium'));
+        }
+
+        return this.post<any>('/v1/katuqintelligence/kai/analitycs', body).pipe(
+            tap(() => {
+                // Refrescar estadísticas de uso después de generación exitosa
+                this.subscriptionService.refresh();
+            }),
+            catchError(error => {
+                if (error.error?.error === 'AI_PRODUCTS_LIMIT_REACHED') {
+                    this.aiLimitsService.showUpgradeModal('products', error.error.message);
+                }
+                return throwError(() => error);
+            })
+        );
     }
 
     /**

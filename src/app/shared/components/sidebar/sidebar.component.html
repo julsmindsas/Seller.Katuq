@@ -397,20 +397,23 @@
   </div>
 
   <!-- Plan Card -->
-  <div class="plan-card-container" 
-       *appRoleBasedVisibility="['Katuq', 'Administrador']"
+  <div class="plan-card-container"
        [class.collapsed]="collapseMenu || isCompactMode">
     
     <div class="plan-card-header">
       <div class="plan-title">
         <i class="fa fa-star"></i>
         <small>Mi Plan</small>
-        <div class="plan-badge">{{currentPlan.type}}</div>
+        <div class="plan-badge"
+             [class.premium]="currentPlan.type === 'Premium'"
+             [class.freemium]="currentPlan.type === 'Freemium'">
+          {{currentPlan.type}}
+        </div>
       </div>
       
       <div *ngIf="isPlanCardCollapsed" class="plan-balance">
         <i class="fa fa-credit-card"></i>
-        <span>${{currentPlan.walletBalance.toFixed(2)}}</span>
+        <span>${{(currentPlan.walletBalance || 0).toFixed(2)}}</span>
       </div>
       
       <button (click)="togglePlanCard()" 
@@ -423,49 +426,160 @@
     <div class="plan-card-content" 
          [class.collapsed]="isPlanCardCollapsed">
       
-      <div class="credit-card">
+      <div class="credit-card"
+           [class.premium-card]="currentPlan.type === 'Premium'"
+           [class.freemium-card]="currentPlan.type === 'Freemium'">
+
+        <!-- Card Header -->
         <div class="card-header-section">
-          <div class="card-chip"></div>
-          <div class="plan-badge premium">{{currentPlan.type}}</div>
+          <div class="card-chip">
+            <i class="fa fa-microchip"></i>
+          </div>
+          <div class="plan-badge-card"
+               [class.premium]="currentPlan.type === 'Premium'"
+               [class.freemium]="currentPlan.type === 'Freemium'">
+            <i class="fa" [ngClass]="currentPlan.type === 'Premium' ? 'fa-crown' : 'fa-star'"></i>
+            {{currentPlan.type}}
+          </div>
         </div>
 
+        <!-- Balance Section -->
         <div class="card-balance-section">
-          <div class="balance-label">Saldo Disponible</div>
+          <div class="balance-label">
+            <i class="fa fa-wallet"></i>
+            Saldo Disponible
+          </div>
           <div class="balance-amount">
             <span class="currency">$</span>
-            <span class="amount">{{currentPlan.walletBalance.toFixed(2)}}</span>
+            <span class="amount">{{(currentPlan.walletBalance || 0).toFixed(2)}}</span>
+            <span class="currency-code">COP</span>
           </div>
         </div>
 
-        <div class="card-details-section">
-          <div class="detail-item">
-            <div class="detail-label">Vencimiento</div>
-            <div class="detail-value">{{currentPlan.renewalDate}}</div>
+        <!-- Premium: Mensaje de ilimitado -->
+        <div class="premium-unlimited-section" *ngIf="currentPlan.type === 'Premium'">
+          <div class="unlimited-badge">
+            <i class="fa fa-infinity"></i>
+            <span>Todo Ilimitado</span>
           </div>
-          <div class="detail-item">
-            <div class="detail-label">Consumo</div>
-            <div class="detail-value">{{currentPlan.progress}}%</div>
+          <div class="premium-features">
+            <div class="premium-feature-item">
+              <i class="fa fa-check-circle"></i>
+              <span>Pedidos ilimitados</span>
+            </div>
+            <div class="premium-feature-item">
+              <i class="fa fa-check-circle"></i>
+              <span>IA sin restricciones</span>
+            </div>
+            <div class="premium-feature-item">
+              <i class="fa fa-check-circle"></i>
+              <span>Todas las funciones</span>
+            </div>
+          </div>
+
+          <!-- Fecha de próximo cobro -->
+          <div class="billing-info">
+            <i class="fa fa-calendar-alt"></i>
+            <div class="billing-text">
+              <span class="billing-label">Próximo cobro</span>
+              <span class="billing-date">{{currentPlan.renewalDate}}</span>
+            </div>
           </div>
         </div>
 
-        <div class="usage-bar-container">
-          <div class="usage-bar">
-            <div class="usage-progress" [style.width.%]="currentPlan.progress"></div>
-          </div>
-          <div class="days-left">
-            <i class="fa fa-calendar"></i>
-            <span>{{getDaysLeft()}} días restantes</span>
-          </div>
-        </div>
+        <!-- Freemium: Stats y Progress -->
+        <ng-container *ngIf="currentPlan.type === 'Freemium'">
+          <!-- Usage Stats Grid -->
+          <div class="usage-stats-grid">
+            <div class="stat-item">
+              <div class="stat-icon orders">
+                <i class="fa fa-shopping-cart"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Pedidos</div>
+                <div class="stat-value">
+                  {{currentPlan.usage.orders.current}}<span class="stat-limit">/{{currentPlan.usage.orders.limit}}</span>
+                </div>
+              </div>
+            </div>
 
-        <div class="card-actions">
-          <button class="action-btn upgrade" (click)="openPlanModal(); $event.stopPropagation();">
-            <i class="fa fa-arrow-up"></i>
-            <span>Mejorar Plan</span>
+            <div class="stat-item">
+              <div class="stat-icon chat">
+                <i class="fa fa-comments"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Chat IA</div>
+                <div class="stat-value">
+                  {{currentPlan.usage.chatAI.current}}<span class="stat-limit">/{{currentPlan.usage.chatAI.limit}}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="stat-item">
+              <div class="stat-icon products">
+                <i class="fa fa-box"></i>
+              </div>
+              <div class="stat-content">
+                <div class="stat-label">Productos IA</div>
+                <div class="stat-value">
+                  {{currentPlan.usage.productsAI.current}}<span class="stat-limit">/{{currentPlan.usage.productsAI.limit}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Progress Section -->
+          <div class="progress-section">
+            <div class="progress-header">
+              <span class="progress-label">
+                <i class="fa fa-chart-line"></i>
+                Uso del Mes
+              </span>
+              <span class="progress-percentage">{{currentPlan.progress}}%</span>
+            </div>
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill"
+                     [style.width.%]="currentPlan.progress"
+                     [class.low]="currentPlan.progress < 50"
+                     [class.medium]="currentPlan.progress >= 50 && currentPlan.progress < 80"
+                     [class.high]="currentPlan.progress >= 80">
+                  <span class="progress-glow"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Fecha de reseteo para Freemium -->
+          <div class="billing-info freemium-reset">
+            <i class="fa fa-sync-alt"></i>
+            <div class="billing-text">
+              <span class="billing-label">Reseteo de límites</span>
+              <span class="billing-date">{{currentPlan.renewalDate}} ({{currentPlan.daysLeft}} días)</span>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Action Buttons -->
+        <div class="card-actions-modern">
+          <button class="modern-btn primary"
+                  *ngIf="currentPlan.type === 'Freemium'"
+                  (click)="openPlanModal(); $event.stopPropagation();">
+            <i class="fa fa-rocket"></i>
+            <span>Actualizar a Premium</span>
           </button>
-          <button class="action-btn view-details">
-            <i class="fa fa-info-circle"></i>
-            <span>Ver Detalles</span>
+
+          <button class="modern-btn secondary"
+                  *ngIf="currentPlan.type === 'Premium'"
+                  (click)="openPlanModal(); $event.stopPropagation();">
+            <i class="fa fa-sliders-h"></i>
+            <span>Gestionar</span>
+          </button>
+
+          <button class="modern-btn outline"
+                  (click)="viewSubscriptionDetails(); $event.stopPropagation();">
+            <i class="fa fa-chart-pie"></i>
+            <span>Detalles</span>
           </button>
         </div>
       </div>
@@ -475,7 +589,7 @@
 </aside>
 
 <!-- Botón flotante para expandir cuando está colapsado (solo móviles) -->
-<button class="sidebar-toggle-btn" 
+<button class="sidebar-toggle-btn"
         *ngIf="collapseMenu && isMobile()"
         (click)="toggleSidebarMobile($event)"
         [attr.aria-label]="'Expandir menú'"
@@ -483,10 +597,17 @@
   <i class="fa fa-bars" aria-hidden="true"></i>
 </button>
 
-<!-- Plan Selector Modal -->
-<app-plan-selector 
+<!-- Upgrade Modal -->
+<app-upgrade-modal
+  [(visible)]="showPlanModal"
+  (onClose)="closePlanModal()">
+</app-upgrade-modal>
+
+<!-- Plan Selector Modal - DEPRECADO: Reemplazado por upgrade-modal con sistema híbrido de pago
+<app-plan-selector
   *ngIf="showPlanModal"
   [empresaData]="companyInformation"
-  (closed)="closePlanModal()" 
+  (closed)="closePlanModal()"
   (planSelected)="onPlanSelected($event)">
 </app-plan-selector>
+-->

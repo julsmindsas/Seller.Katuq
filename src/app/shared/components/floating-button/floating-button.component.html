@@ -38,7 +38,7 @@
           </div>
         </div>
 
-        <div class="option-item" (click)="selectMode('voice', $event)"
+        <div class="option-item" *ngIf="isPremiumUser" (click)="selectMode('voice', $event)"
           [ngClass]="{'selected': selectedMode === 'voice'}">
           <div class="option-icon">
             <i class="fa fa-microphone"></i>
@@ -49,7 +49,7 @@
           </div>
         </div>
 
-        <div class="option-item" (click)="selectMode('live-audio', $event)"
+        <div class="option-item" *ngIf="isPremiumUser" (click)="selectMode('live-audio', $event)"
           [ngClass]="{'selected': selectedMode === 'live-audio'}">
           <div class="option-icon">
             <i class="fa fa-podcast"></i>

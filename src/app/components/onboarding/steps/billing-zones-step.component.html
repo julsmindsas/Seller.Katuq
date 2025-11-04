@@ -1,0 +1,262 @@
+<div class="step-container">
+  <!-- Header Info -->
+  <div class="step-intro">
+    <p class="intro-text">
+      Configura las zonas de cobro y tarifas de envío para tu negocio. Define diferentes
+      costos de envío según la ubicación geográfica de tus clientes.
+    </p>
+  </div>
+
+  <!-- Predefined Templates -->
+  <p-card class="templates-card">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-th-large"></i>
+        <span>Plantillas Rápidas</span>
+      </div>
+    </ng-template>
+
+    <div class="templates-grid">
+      <button
+        *ngFor="let template of predefinedTemplates"
+        pButton
+        type="button"
+        class="p-button-outlined template-button"
+        (click)="useTemplate(template)">
+        <div class="template-content">
+          <i class="pi pi-map-marker"></i>
+          <div class="template-info">
+            <span class="template-name">{{ template.nombreZonaCobro }}</span>
+            <span class="template-cost">{{ formatCurrency(template.valorZonaCobro) }}</span>
+          </div>
+        </div>
+      </button>
+    </div>
+    <small class="field-help">Haz clic en una plantilla para cargar sus datos en el formulario</small>
+  </p-card>
+
+  <!-- Add/Edit Zone Form -->
+  <p-card class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-map"></i>
+        <span>{{ editingIndex !== null ? 'Editar Zona de Cobro' : 'Agregar Zona de Cobro' }}</span>
+      </div>
+    </ng-template>
+
+    <form [formGroup]="zoneForm">
+      <div class="form-grid">
+        <!-- Ciudad -->
+        <div class="form-field col-12 md:col-6">
+          <label for="ciudad" class="required">Ciudad *</label>
+          <p-dropdown
+            inputId="ciudad"
+            [options]="availableCities"
+            formControlName="ciudad"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecciona una ciudad"
+            [showClear]="true"
+            [filter]="true"
+            filterPlaceholder="Buscar..."
+            [class.p-invalid]="hasError('ciudad', 'required')">
+          </p-dropdown>
+          <small class="p-error" *ngIf="hasError('ciudad', 'required')">
+            {{ getErrorMessage('ciudad') }}
+          </small>
+          <small class="field-help">Ciudad donde aplica esta zona de cobro</small>
+        </div>
+
+        <!-- Nombre de la Zona -->
+        <div class="form-field col-12 md:col-6">
+          <label for="nombreZonaCobro" class="required">Nombre de la Zona *</label>
+          <input
+            id="nombreZonaCobro"
+            type="text"
+            pInputText
+            formControlName="nombreZonaCobro"
+            placeholder="Ej: Zona Norte, Zona Sur"
+            [class.p-invalid]="hasError('nombreZonaCobro', 'required') || hasError('nombreZonaCobro', 'minlength')" />
+          <small class="p-error" *ngIf="hasError('nombreZonaCobro', 'required') || hasError('nombreZonaCobro', 'minlength')">
+            {{ getErrorMessage('nombreZonaCobro') }}
+          </small>
+        </div>
+
+        <!-- Valor de Envío -->
+        <div class="form-field col-12 md:col-6">
+          <label for="valorZonaCobro" class="required">Valor de Envío (COP) *</label>
+          <p-inputNumber
+            inputId="valorZonaCobro"
+            formControlName="valorZonaCobro"
+            mode="currency"
+            currency="COP"
+            locale="es-CO"
+            [min]="0"
+            placeholder="0"
+            styleClass="w-100"
+            [class.p-invalid]="hasError('valorZonaCobro', 'required') || hasError('valorZonaCobro', 'min')">
+          </p-inputNumber>
+          <small class="p-error" *ngIf="hasError('valorZonaCobro', 'required') || hasError('valorZonaCobro', 'min')">
+            {{ getErrorMessage('valorZonaCobro') }}
+          </small>
+        </div>
+
+        <!-- Impuesto -->
+        <div class="form-field col-12 md:col-6">
+          <label for="impuestoZonaCobro" class="required">Impuesto (%) *</label>
+          <p-inputNumber
+            inputId="impuestoZonaCobro"
+            formControlName="impuestoZonaCobro"
+            [min]="0"
+            [max]="100"
+            suffix="%"
+            placeholder="19"
+            styleClass="w-100"
+            [class.p-invalid]="hasError('impuestoZonaCobro', 'required') || hasError('impuestoZonaCobro', 'min') || hasError('impuestoZonaCobro', 'max')">
+          </p-inputNumber>
+          <small class="p-error" *ngIf="hasError('impuestoZonaCobro', 'required') || hasError('impuestoZonaCobro', 'min') || hasError('impuestoZonaCobro', 'max')">
+            {{ getErrorMessage('impuestoZonaCobro') }}
+          </small>
+          <small class="field-help">Porcentaje de impuesto aplicable al envío</small>
+        </div>
+
+        <!-- Activo -->
+        <div class="form-field col-12">
+          <div class="checkbox-field">
+            <p-checkbox
+              inputId="activo"
+              formControlName="activo"
+              [binary]="true"
+              label="Activo">
+            </p-checkbox>
+            <small class="field-help">Las zonas activas estarán disponibles en el proceso de envío</small>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          *ngIf="editingIndex !== null"
+          pButton
+          type="button"
+          label="Cancelar"
+          icon="pi pi-times"
+          class="p-button-secondary p-button-outlined"
+          (click)="cancelEdit()">
+        </button>
+        <button
+          pButton
+          type="button"
+          [label]="editingIndex !== null ? 'Actualizar Zona' : 'Agregar a Lista'"
+          [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
+          class="p-button-success"
+          [disabled]="zoneForm.invalid"
+          (click)="addZone()">
+        </button>
+      </div>
+    </form>
+  </p-card>
+
+  <!-- Zones List -->
+  <p-card *ngIf="zonesList.length > 0" class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-list"></i>
+        <span>Zonas de Cobro Configuradas ({{ zonesList.length }})</span>
+      </div>
+    </ng-template>
+
+    <p-table [value]="zonesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Ciudad</th>
+          <th>Zona</th>
+          <th>Valor Envío</th>
+          <th>Impuesto</th>
+          <th>Total</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 140px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-zone let-i="rowIndex">
+        <tr>
+          <td>{{ zone.ciudad }}</td>
+          <td>
+            <strong>{{ zone.nombreZonaCobro }}</strong>
+          </td>
+          <td>
+            <span class="cost-badge">{{ formatCurrency(zone.valorZonaCobro) }}</span>
+          </td>
+          <td>
+            <span class="badge-tax">{{ zone.impuestoZonaCobro }}%</span>
+          </td>
+          <td>
+            <strong>{{ formatCurrency(zone.total || zone.valorZonaCobro) }}</strong>
+          </td>
+          <td>
+            <span class="badge" [class.badge-active]="zone.activo" [class.badge-inactive]="!zone.activo">
+              {{ zone.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-info"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="editZone(i)">
+              </button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="removeZone(i)">
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">
+            <div class="empty-message">
+              <i class="pi pi-inbox"></i>
+              <p>No hay zonas de cobro configuradas aún</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <!-- Complete Button -->
+  <div class="step-actions mt-4">
+    <button
+      pButton
+      type="button"
+      label="Guardar y Continuar"
+      icon="pi pi-check"
+      iconPos="right"
+      class="p-button-success p-button-lg"
+      [disabled]="zonesList.length === 0 || isSaving"
+      [loading]="isSaving"
+      (click)="onComplete()">
+    </button>
+
+    <p class="form-status" *ngIf="zonesList.length === 0">
+      <i class="pi pi-info-circle"></i>
+      Agrega al menos una zona de cobro para continuar
+    </p>
+    <p class="form-status success" *ngIf="zonesList.length > 0">
+      <i class="pi pi-check-circle"></i>
+      {{ zonesList.length }} zona(s) de cobro configurada(s) - ¡Listo para continuar!
+    </p>
+  </div>
+</div>

@@ -1,0 +1,83 @@
+<div class="mapping-card" [ngClass]="getCardBorderClass()">
+
+  <!-- Card Header -->
+  <div class="card-header">
+    <div class="field-info">
+      <!-- Required Indicator -->
+      <div class="field-title-row">
+        <i *ngIf="field.isRequired" class="pi pi-star-fill required-icon" pTooltip="Campo obligatorio"></i>
+        <h4 class="field-name">{{ field.katuqLabel }}</h4>
+      </div>
+
+      <!-- Manual Adjustment Badge -->
+      <p-chip
+        *ngIf="field.isManuallyAdjusted"
+        label="Ajustado manualmente"
+        icon="pi pi-pencil"
+        styleClass="manual-chip">
+      </p-chip>
+    </div>
+
+    <!-- Confidence Badge -->
+    <div class="confidence-badge" [ngClass]="getConfidenceBadgeClass()">
+      <i class="pi" [ngClass]="getConfidenceIcon()"></i>
+      <span class="confidence-text">{{ field.confidence }}%</span>
+    </div>
+  </div>
+
+  <!-- Source Column Dropdown -->
+  <div class="dropdown-section">
+    <label class="dropdown-label">Columna de Origen</label>
+    <p-dropdown
+      [(ngModel)]="field.sourceColumn"
+      [options]="availableColumns"
+      [filter]="true"
+      [disabled]="disabled"
+      placeholder="Selecciona una columna"
+      appendTo="body"
+      filterPlaceholder="Buscar columna..."
+      (onChange)="onColumnChange($event.value)"
+      styleClass="mobile-dropdown">
+      <ng-template pTemplate="selectedItem">
+        <div class="dropdown-selected-item">
+          <i class="pi pi-table"></i>
+          <span>{{ field.sourceColumn }}</span>
+        </div>
+      </ng-template>
+      <ng-template let-option pTemplate="item">
+        <div class="dropdown-item">
+          <i class="pi pi-table"></i>
+          <span>{{ option.label }}</span>
+        </div>
+      </ng-template>
+    </p-dropdown>
+  </div>
+
+  <!-- Confidence Level Indicator -->
+  <div class="confidence-indicator">
+    <span class="confidence-label">Confianza:</span>
+    <span class="confidence-level" [ngClass]="getConfidenceBadgeClass()">
+      {{ getConfidenceLevel() }}
+    </span>
+  </div>
+
+  <!-- Reasoning Section (Expandable) -->
+  <div class="reasoning-section">
+    <button
+      type="button"
+      class="reasoning-toggle"
+      (click)="toggleReasoning()"
+      [attr.aria-expanded]="isReasoningExpanded">
+      <i class="pi" [ngClass]="isReasoningExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+      <span>{{ isReasoningExpanded ? 'Ocultar' : 'Ver' }} razonamiento de KAI</span>
+    </button>
+
+    <div class="reasoning-content" *ngIf="isReasoningExpanded" [@expandCollapse]>
+      <div class="reasoning-text">
+        <i class="pi pi-sparkles"></i>
+        <p>{{ field.reasoning }}</p>
+      </div>
+    </div>
+  </div>
+
+</div>

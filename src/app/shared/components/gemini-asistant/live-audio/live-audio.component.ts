@@ -5,6 +5,7 @@ import { GeminiAudioService, ConnectionStatus, KatuqToolEvent } from '../service
 import { AudioProcessingService, AudioState } from '../services/audio-processing.service';
 import { VisualComponent } from '../visual/visual.component';
 import { createBlob } from '../utils';
+import { AILimitsService } from '../../../services/ai-limits.service';
 
 @Component({
   selector: 'app-live-audio',
@@ -36,14 +37,35 @@ export class LiveAudioComponent implements OnInit, OnDestroy {
   constructor(
     private geminiService: GeminiAudioService,
     private audioService: AudioProcessingService,
-    private router: Router
+    private router: Router,
+    private aiLimitsService: AILimitsService
   ) { }
 
   ngOnInit(): void {
     this.initSubscriptions();
-    console.log('🎤 [LiveAudio] Iniciando componente con herramientas Katuq...');
-    // Inicializar con herramientas de Katuq en lugar de sesión básica
-    this.geminiService.initSessionWithKatuqTools();
+    console.log('🎤 [LiveAudio] Verificando límites de IA antes de iniciar sesión...');
+
+    // Verificar límites de IA de voz antes de iniciar
+    this.aiLimitsService.checkAILimit('voice').subscribe({
+      next: (result) => {
+        if (!result.allowed) {
+          console.warn('❌ [LiveAudio] Límite de IA de voz alcanzado');
+          this.error = 'Has alcanzado el límite de uso de voz en tu plan actual';
+          this.aiLimitsService.showUpgradeModal('voice');
+          this.router.navigate(['/pricing']);
+          return;
+        }
+
+        console.log('✅ [LiveAudio] Límite verificado - Iniciando sesión con herramientas Katuq...');
+        // Inicializar con herramientas de Katuq
+        this.geminiService.initSessionWithKatuqTools();
+      },
+      error: (err) => {
+        console.error('❌ [LiveAudio] Error verificando límites:', err);
+        // En caso de error, permitir el acceso (fail-open)
+        this.geminiService.initSessionWithKatuqTools();
+      }
+    });
   }
 
   ngOnDestroy(): void {

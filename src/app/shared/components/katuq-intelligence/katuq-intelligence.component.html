@@ -1,9 +1,26 @@
-<img *ngIf="buttonStyle == 'circle'" title="{{titleInput}}"
-    src="../../../../assets/images/logo/Katuq/katuq-intelligence/katuqintelligence.svg" alt="{{titleInput}}"
-    class="ai-button-image" (click)="IA()" style="cursor: pointer !important;" />
+<div class="kai-container">
+  <img *ngIf="buttonStyle == 'circle'" title="{{titleInput}}"
+      src="../../../../assets/images/logo/Katuq/katuq-intelligence/katuqintelligence.svg" alt="{{titleInput}}"
+      class="ai-button-image" (click)="IA()" style="cursor: pointer !important;" />
 
-<button *ngIf="buttonStyle == 'button'" title="{{titleInput}}" class="btn-ia" (click)="IA()">
-    Generate
-    <img src="../../../../assets/images/logo/Katuq/katuq-intelligence/katuqintelligence.svg" alt="{{titleInput}}"
-        class="ai-button-image" />
-</button>
+  <button *ngIf="buttonStyle == 'button'" title="{{titleInput}}" class="btn-ia" (click)="IA()">
+      Generate
+      <img src="../../../../assets/images/logo/Katuq/katuq-intelligence/katuqintelligence.svg" alt="{{titleInput}}"
+          class="ai-button-image" />
+  </button>
+
+  <!-- Badge de uso disponible -->
+  <span *ngIf="usageInfo$ | async as usage" class="usage-badge"
+        [ngClass]="{
+          'premium': usage.isPremium,
+          'warning': !usage.isPremium && usage.remaining <= 3 && usage.remaining > 0,
+          'critical': !usage.isPremium && usage.remaining === 0
+        }">
+    <ng-container *ngIf="usage.isPremium; else freemiumBadge">
+      Ilimitado
+    </ng-container>
+    <ng-template #freemiumBadge>
+      {{ usage.remaining }} / {{ usage.limit }}
+    </ng-template>
+  </span>
+</div>

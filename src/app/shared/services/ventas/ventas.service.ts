@@ -4,10 +4,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Producto } from '../../models/productos/Producto';
 import { Pedido, EstadoPago, EstadoProceso } from '../../../components/ventas/modelo/pedido';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { SubscriptionService } from '../subscription.service';
+import { AILimitsService } from '../ai-limits.service';
 
 // Importar interfaces para paginación optimizada
 import { PaginatedOrdersResponse, PaginatedOrdersRequest } from '../../../components/despachos/interfaces/paginated-orders.interface';
@@ -68,7 +70,9 @@ export class VentasService extends BaseService {
     private modalService: NgbModal,
     private appRef: ApplicationRef,
     private injector: Injector,
-    private environmentInjector: EnvironmentInjector
+    private environmentInjector: EnvironmentInjector,
+    private subscriptionService: SubscriptionService,
+    private aiLimitsService: AILimitsService
   ) {
     super(httpClient);
 
@@ -103,10 +107,27 @@ export class VentasService extends BaseService {
 
   createOrder(orderTemplate: any) {
     return this.post<any>('/v1/orders/create', orderTemplate).pipe(
+      catchError((error) => {
+        // Interceptar error de límite de pedidos
+        if (error.error?.error === 'ORDER_LIMIT_REACHED') {
+          this.aiLimitsService.showUpgradeModal('orders', error.error.message);
+
+          console.warn('[VentasService] Límite de pedidos alcanzado:', {
+            currentOrders: error.error.currentOrders,
+            limit: error.error.limit,
+            resetDate: error.error.resetDate
+          });
+        }
+
+        return throwError(() => error);
+      }),
       tap((response) => {
         if (response && response.success) {
           // Disparar notificación de nuevo pedido
           this.triggerOrderCreatedNotification(response.order || orderTemplate);
+
+          // Recargar estadísticas de uso
+          this.subscriptionService.getUsageStats().subscribe();
         }
       })
     );

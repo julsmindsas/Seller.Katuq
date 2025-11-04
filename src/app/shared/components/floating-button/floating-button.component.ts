@@ -7,6 +7,7 @@ import { DOCUMENT } from '@angular/common';
 // Importar el servicio de agente de voz original
 import { VoiceAgentService, VoiceAgentConfig, VisualStep } from '../../services/voice-agent.service';
 import { ToolAdapter, TOOL_ADAPTER } from '../../services/tools/tool-adapter';
+import { SubscriptionService } from '../../services/subscription.service';
 
 @Component({
   selector: 'app-floating-button',
@@ -40,6 +41,7 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   public useModelBig: any;
   public isLoggedIn = false;
   public chatMaximized: boolean = false;
+  public isPremiumUser: boolean = false;
 
   constructor(
     public authService: AuthService,
@@ -49,7 +51,8 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
     private router: Router,
     @Inject(DOCUMENT) private document: Document,
     @Inject(TOOL_ADAPTER) private toolAdapter: ToolAdapter,
-    private voiceAgentService: VoiceAgentService
+    private voiceAgentService: VoiceAgentService,
+    private subscriptionService: SubscriptionService
   ) {
     this.useModelBig = environment.useModelBig;
 
@@ -117,6 +120,11 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
 
     // Suscribirse a eventos del agente de voz
     this.setupVoiceAgentSubscriptions();
+
+    // Suscribirse a cambios del plan de suscripción
+    this.subscriptionService.subscription$.subscribe(subscription => {
+      this.isPremiumUser = subscription?.plan === 'premium';
+    });
   }
 
   // Configurar suscripciones al agente de voz
@@ -181,15 +189,28 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   // Método simplificado para iniciar el modo de voz usando el servicio
   async startVoiceMode(event: MouseEvent) {
     event.stopPropagation();
-    console.log('🎤 Iniciando modo de voz con VoiceAgentService');
-    
+    console.log('🎤 Verificando acceso a modo de voz');
+
+    // Verificar si el usuario tiene plan premium
+    const subscription = this.subscriptionService.getSubscriptionSync();
+
+    if (subscription?.plan !== 'premium') {
+      console.warn('⚠️ Modo de voz requiere plan Premium');
+      if (confirm('El modo de voz requiere el plan Premium.\n\n¿Deseas ver los planes disponibles?')) {
+        this.router.navigate(['/pricing']);
+      }
+      return;
+    }
+
+    console.log('✅ Acceso permitido - Iniciando modo de voz con VoiceAgentService');
+
     try {
       // Iniciar sesión de voz
       await this.voiceAgentService.startVoiceSession(this.voiceAgentConfig);
-      
+
       // Activar el modo de escucha
       this.isListening = true;
-      
+
     } catch (error: any) {
       console.error('Error al iniciar la sesión de voz:', error);
     }
@@ -413,16 +434,29 @@ export class FloatingButtonComponent implements OnInit, OnDestroy {
   // Método para iniciar el modo live-audio
   startLiveAudioMode(event: MouseEvent) {
     event.stopPropagation();
-    console.log('🎵 Iniciando modo Live Audio en pantalla completa');
-    
+    console.log('🎵 Verificando acceso a Live Audio');
+
+    // Verificar si el usuario tiene plan premium
+    const subscription = this.subscriptionService.getSubscriptionSync();
+
+    if (subscription?.plan !== 'premium') {
+      console.warn('⚠️ Live Audio requiere plan Premium');
+      if (confirm('Live Audio requiere el plan Premium.\n\n¿Deseas ver los planes disponibles?')) {
+        this.router.navigate(['/pricing']);
+      }
+      return;
+    }
+
+    console.log('✅ Acceso permitido - Iniciando Live Audio en pantalla completa');
+
     // Cerrar otros paneles
     this.optionsPanelVisible = false;
     this.chatFormVisible = false;
     this.chatMinimized = false;
-    
+
     // Navegar a la ruta de live-audio en pantalla completa
     this.router.navigate(['/live-audio']);
-    
+
     this.saveState();
   }
 

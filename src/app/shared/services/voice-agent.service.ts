@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { ToolAdapter, TOOL_ADAPTER } from './tools/tool-adapter';
 import { AvatarCanvasService, AvatarState } from './avatar-canvas.service';
+import { AILimitsService } from './ai-limits.service';
 
 // Interfaces para los eventos del agente de voz
 export interface VoiceAgentConfig {
@@ -67,11 +68,24 @@ export class VoiceAgentService implements OnDestroy {
   constructor(
     private httpClient: HttpClient,
     @Inject(TOOL_ADAPTER) private toolAdapter: ToolAdapter,
-    private avatarService: AvatarCanvasService
+    private avatarService: AvatarCanvasService,
+    private aiLimitsService: AILimitsService
   ) {}
 
   async startVoiceSession(config?: VoiceAgentConfig): Promise<void> {
     try {
+      // 1. VALIDAR LÍMITE ANTES DE LLAMAR AL BACKEND
+      const canUse = this.aiLimitsService.canUseAIFeature('voice');
+
+      if (!canUse) {
+        this.aiLimitsService.showUpgradeModal('voice', 'La IA de voz no está disponible en el plan Freemium');
+        this.updateState({
+          isProcessing: false,
+          errorMessage: 'La IA de voz requiere plan Premium'
+        });
+        return;
+      }
+
       this.updateState({ isProcessing: true, errorMessage: null });
 
       // Obtener token ephemeral de la API
@@ -85,11 +99,11 @@ export class VoiceAgentService implements OnDestroy {
       // Iniciar cronómetro
       this.startCallTimer();
 
-      this.updateState({ 
-        isConnected: true, 
-        isListening: true, 
+      this.updateState({
+        isConnected: true,
+        isListening: true,
         isProcessing: false,
-        currentText: 'Escuchando...' 
+        currentText: 'Escuchando...'
       });
 
       // Actualizar estado del avatar
@@ -97,10 +111,21 @@ export class VoiceAgentService implements OnDestroy {
 
     } catch (error: any) {
       console.error('Error al iniciar sesión de voz:', error);
-      this.updateState({ 
-        isProcessing: false,
-        errorMessage: `Error: ${error.message}` 
-      });
+
+      // Interceptar error de backend si es límite de IA
+      if (error.error?.error === 'AI_VOICE_BLOCKED') {
+        this.aiLimitsService.showUpgradeModal('voice', error.error.message);
+        this.updateState({
+          isProcessing: false,
+          errorMessage: error.error.message
+        });
+      } else {
+        this.updateState({
+          isProcessing: false,
+          errorMessage: `Error: ${error.message}`
+        });
+      }
+
       throw error;
     }
   }

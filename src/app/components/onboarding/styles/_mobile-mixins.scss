@@ -1,0 +1,608 @@
+/**
+ * Mobile Mixins and Utilities for Katuq Onboarding
+ *
+ * Este archivo contiene mixins, variables y utilidades para
+ * optimización móvil del sistema de onboarding.
+ *
+ * @author Claude Code
+ * @date 2025-01-04
+ */
+
+// =============================================================================
+// BREAKPOINTS
+// =============================================================================
+
+$mobile-small: 320px;
+$mobile-medium: 375px;
+$mobile-large: 425px;
+$tablet: 768px;
+$desktop: 1024px;
+$desktop-large: 1440px;
+
+// =============================================================================
+// TOUCH TARGETS
+// =============================================================================
+
+$touch-target-min: 44px;        // iOS minimum
+$touch-target-comfortable: 48px; // Recomendado
+$touch-target-large: 56px;       // Para acciones principales
+
+// =============================================================================
+// SPACING SCALE (Mobile-Optimized)
+// =============================================================================
+
+$spacing-xs: 8px;
+$spacing-sm: 12px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// =============================================================================
+// Z-INDEX LAYERS
+// =============================================================================
+
+$z-header: 100;
+$z-sidebar-overlay: 200;
+$z-modal: 300;
+$z-bottom-nav: 150;
+$z-sticky-footer: 100;
+
+// =============================================================================
+// MIXINS - RESPONSIVE
+// =============================================================================
+
+/**
+ * Media query para mobile small (320px+)
+ */
+@mixin mobile-small {
+  @media (max-width: $mobile-large - 1) {
+    @content;
+  }
+}
+
+/**
+ * Media query para mobile (hasta tablet)
+ */
+@mixin mobile {
+  @media (max-width: $tablet - 1) {
+    @content;
+  }
+}
+
+/**
+ * Media query para tablet
+ */
+@mixin tablet {
+  @media (min-width: $tablet) and (max-width: $desktop - 1) {
+    @content;
+  }
+}
+
+/**
+ * Media query para tablet y superiores
+ */
+@mixin tablet-up {
+  @media (min-width: $tablet) {
+    @content;
+  }
+}
+
+/**
+ * Media query para desktop
+ */
+@mixin desktop {
+  @media (min-width: $desktop) {
+    @content;
+  }
+}
+
+/**
+ * Media query para desktop large
+ */
+@mixin desktop-large {
+  @media (min-width: $desktop-large) {
+    @content;
+  }
+}
+
+// =============================================================================
+// MIXINS - TOUCH TARGETS
+// =============================================================================
+
+/**
+ * Asegura touch target mínimo (44x44px)
+ */
+@mixin touch-target {
+  min-width: $touch-target-min;
+  min-height: $touch-target-min;
+  position: relative;
+
+  // Expande el área clickeable si el contenido es más pequeño
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    min-width: $touch-target-min;
+    min-height: $touch-target-min;
+  }
+}
+
+/**
+ * Touch target cómodo (48x48px)
+ */
+@mixin touch-target-comfortable {
+  min-width: $touch-target-comfortable;
+  min-height: $touch-target-comfortable;
+}
+
+/**
+ * Touch target grande para acciones principales (56x56px)
+ */
+@mixin touch-target-large {
+  min-width: $touch-target-large;
+  min-height: $touch-target-large;
+}
+
+// =============================================================================
+// MIXINS - MOBILE LAYOUTS
+// =============================================================================
+
+/**
+ * Container móvil con padding optimizado
+ */
+@mixin mobile-container {
+  padding-left: $spacing-md;
+  padding-right: $spacing-md;
+
+  @include mobile-small {
+    padding-left: $spacing-sm;
+    padding-right: $spacing-sm;
+  }
+}
+
+/**
+ * Card móvil con sombra y bordes redondeados
+ */
+@mixin mobile-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+
+  @include mobile {
+    border-radius: 8px;
+  }
+}
+
+/**
+ * Sticky footer móvil
+ */
+@mixin mobile-sticky-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  border-top: 2px solid var(--surface-border);
+  padding: $spacing-md;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+  z-index: $z-sticky-footer;
+
+  @include tablet-up {
+    position: static;
+    border-top: none;
+    box-shadow: none;
+    padding: $spacing-lg 0;
+  }
+}
+
+/**
+ * Grid responsive mobile-first
+ */
+@mixin mobile-grid($columns: 1, $gap: $spacing-md) {
+  display: grid;
+  gap: $gap;
+  grid-template-columns: repeat($columns, 1fr);
+
+  @include mobile {
+    grid-template-columns: 1fr;
+    gap: $spacing-sm;
+  }
+}
+
+/**
+ * Flex responsive mobile-first
+ */
+@mixin mobile-flex($direction: row, $gap: $spacing-md) {
+  display: flex;
+  flex-direction: $direction;
+  gap: $gap;
+
+  @include mobile {
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+}
+
+// =============================================================================
+// MIXINS - MOBILE TYPOGRAPHY
+// =============================================================================
+
+/**
+ * Título móvil optimizado
+ */
+@mixin mobile-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+
+  @include mobile {
+    font-size: 1.25rem;
+  }
+}
+
+/**
+ * Subtítulo móvil
+ */
+@mixin mobile-subtitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+
+  @include mobile {
+    font-size: 1rem;
+  }
+}
+
+/**
+ * Texto body móvil
+ */
+@mixin mobile-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+
+  @include mobile {
+    font-size: 0.875rem;
+  }
+}
+
+/**
+ * Texto small móvil
+ */
+@mixin mobile-small-text {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+
+  @include mobile {
+    font-size: 0.75rem;
+  }
+}
+
+// =============================================================================
+// MIXINS - MOBILE INTERACTIONS
+// =============================================================================
+
+/**
+ * Tap highlight para iOS
+ */
+@mixin tap-highlight($color: rgba(0, 0, 0, 0.1)) {
+  -webkit-tap-highlight-color: $color;
+}
+
+/**
+ * Remove tap highlight
+ */
+@mixin no-tap-highlight {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/**
+ * Touch scroll con momentum en iOS
+ */
+@mixin smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/**
+ * Disable user select (para evitar selección accidental)
+ */
+@mixin no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/**
+ * Transición suave optimizada para móvil
+ */
+@mixin mobile-transition($property: all, $duration: 0.3s) {
+  transition: $property $duration ease;
+  will-change: $property;
+}
+
+// =============================================================================
+// MIXINS - MOBILE SCROLLING
+// =============================================================================
+
+/**
+ * Scroll horizontal móvil
+ */
+@mixin mobile-horizontal-scroll {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; // Firefox
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome, Safari
+  }
+
+  > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+}
+
+/**
+ * Scroll vertical con padding bottom para evitar overlap con bottom nav
+ */
+@mixin mobile-scroll-with-bottom-nav($bottom-nav-height: 80px) {
+  @include mobile {
+    padding-bottom: calc($bottom-nav-height + $spacing-md);
+  }
+}
+
+// =============================================================================
+// MIXINS - MOBILE FORMS
+// =============================================================================
+
+/**
+ * Input móvil optimizado
+ */
+@mixin mobile-input {
+  min-height: $touch-target-comfortable;
+  font-size: 16px; // Evita zoom en iOS
+  padding: $spacing-sm $spacing-md;
+  border-radius: 8px;
+  width: 100%;
+
+  @include mobile {
+    padding: $spacing-sm;
+  }
+}
+
+/**
+ * Botón móvil optimizado
+ */
+@mixin mobile-button {
+  @include touch-target-comfortable;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: $spacing-sm $spacing-lg;
+  border-radius: 8px;
+
+  @include mobile {
+    width: 100%;
+    padding: $spacing-sm $spacing-md;
+  }
+}
+
+/**
+ * Botón primario móvil
+ */
+@mixin mobile-button-primary {
+  @include mobile-button;
+  @include touch-target-large;
+
+  @include mobile {
+    font-size: 1.0625rem;
+  }
+}
+
+// =============================================================================
+// MIXINS - MOBILE MODALS & OVERLAYS
+// =============================================================================
+
+/**
+ * Modal móvil fullscreen
+ */
+@mixin mobile-modal-fullscreen {
+  @include mobile {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+}
+
+/**
+ * Bottom sheet móvil
+ */
+@mixin mobile-bottom-sheet {
+  @include mobile {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
+    animation: slide-up 0.3s ease;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// =============================================================================
+// UTILITY CLASSES
+// =============================================================================
+
+/**
+ * Hide on mobile
+ */
+.hide-mobile {
+  @include mobile {
+    display: none !important;
+  }
+}
+
+/**
+ * Show only on mobile
+ */
+.show-mobile {
+  display: none !important;
+
+  @include mobile {
+    display: block !important;
+  }
+}
+
+/**
+ * Full width on mobile
+ */
+.mobile-full-width {
+  @include mobile {
+    width: 100% !important;
+  }
+}
+
+/**
+ * Stack on mobile
+ */
+.mobile-stack {
+  @include mobile {
+    flex-direction: column !important;
+
+    > * {
+      width: 100% !important;
+    }
+  }
+}
+
+/**
+ * Padding mobile
+ */
+.mobile-padding {
+  @include mobile {
+    padding: $spacing-md;
+  }
+}
+
+/**
+ * Margin bottom for mobile scroll (evita overlap con bottom nav)
+ */
+.mobile-scroll-padding {
+  @include mobile-scroll-with-bottom-nav;
+}
+
+// =============================================================================
+// MIXINS - MOBILE SAFE AREAS (Para iPhone X+)
+// =============================================================================
+
+/**
+ * Safe area insets para iOS
+ */
+@mixin safe-area-inset-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+@mixin safe-area-inset-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@mixin safe-area-inset-left {
+  padding-left: env(safe-area-inset-left);
+}
+
+@mixin safe-area-inset-right {
+  padding-right: env(safe-area-inset-right);
+}
+
+/**
+ * Safe area completa
+ */
+@mixin safe-area-insets {
+  @include safe-area-inset-top;
+  @include safe-area-inset-bottom;
+  @include safe-area-inset-left;
+  @include safe-area-inset-right;
+}
+
+// =============================================================================
+// MIXINS - MOBILE LOADING STATES
+// =============================================================================
+
+/**
+ * Skeleton loading móvil
+ */
+@mixin mobile-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--surface-200) 25%,
+    var(--surface-100) 50%,
+    var(--surface-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// =============================================================================
+// MIXINS - MOBILE LISTS & TABLES
+// =============================================================================
+
+/**
+ * Lista móvil optimizada (evita tablas)
+ */
+@mixin mobile-list-item {
+  @include mobile-card;
+  padding: $spacing-md;
+  margin-bottom: $spacing-sm;
+
+  @include mobile {
+    padding: $spacing-sm;
+  }
+}
+
+/**
+ * Table responsive (horizontal scroll)
+ */
+@mixin mobile-table-scroll {
+  @include mobile {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+  }
+}
+
+// =============================================================================
+// EXPORT
+// =============================================================================
+
+// Este archivo puede ser importado en cualquier componente SCSS:
+// @import '../styles/mobile-mixins';

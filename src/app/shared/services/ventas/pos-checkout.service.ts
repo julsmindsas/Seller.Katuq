@@ -15,6 +15,8 @@ import {
   EstadoProceso,
   Pedido,
 } from "../../../components/ventas/modelo/pedido";
+import { IntegrationsService } from "../../../components/integrations/integrations.service";
+import { environment } from "../../../../environments/environment";
 
 // Crear un token para PosCheckoutService
 export const POS_CHECKOUT_SERVICE = new InjectionToken<PosCheckoutService>(
@@ -24,7 +26,7 @@ export const POS_CHECKOUT_SERVICE = new InjectionToken<PosCheckoutService>(
 @Injectable({
   providedIn: "root",
   useFactory: posCheckoutServiceFactory,
-  deps: [NgbModal, PosValidationService, PosOrderCreatorService, CartService],
+  deps: [NgbModal, PosValidationService, PosOrderCreatorService, CartService, IntegrationsService],
 })
 export class PosCheckoutService {
   // Observables para el estado del checkout
@@ -41,6 +43,7 @@ export class PosCheckoutService {
     private validationService: PosValidationService,
     public orderCreatorService: PosOrderCreatorService,
     private cartService: CartService,
+    private integrationsService: IntegrationsService,
   ) {
     // Cargar la bodega desde localStorage al iniciar
     this.loadWarehouseFromStorage();
@@ -270,50 +273,93 @@ export class PosCheckoutService {
   }
 
   /**
-   * Inicia el pago con Wompi
+   * Inicia el pago con Wompi (usando credenciales dinámicas del comercio)
    */
-  iniciarPagoConWompi(pedido: Pedido): Promise<boolean> {
-    return new Promise((resolve, reject) => {
+  async iniciarPagoConWompi(pedido: Pedido): Promise<boolean> {
+    try {
+      // 1. Obtener publicKey dinámicamente del comercio
+      let wompiPublicKey: string;
+      let credentialSource: string;
+
+      // Obtener company ID actual
+      const currentCompanyStr = localStorage.getItem("currentCompany");
+      const companyId = currentCompanyStr ? JSON.parse(currentCompanyStr)?.nit : 'unknown';
+
+      console.log('🔑 [POS-Wompi] Iniciando flujo de pago para empresa:', companyId);
+
       try {
-        // Configuración del widget de Wompi
-        const amountInCents = Math.round(
-          (pedido?.totalPedididoConDescuento ?? 0) * 100,
-        );
+        const wompiConfig = await this.integrationsService
+          .getIntegration('wompi')
+          .toPromise();
 
-        // Clave pública de Wompi (debería venir de environment)
-        const wompiPublicKey = "pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy";
-        const wompiProdPublicKey = "pub_prod_cN70rb6aXdHMiBWj9fwY26Xyh1Oz5PUf";
+        console.log('📦 [POS-Wompi] Respuesta completa del backend:', wompiConfig);
+        console.log('📦 [POS-Wompi] wompiConfig.enabled:', wompiConfig?.enabled);
+        console.log('📦 [POS-Wompi] wompiConfig.config:', wompiConfig?.config);
+        console.log('📦 [POS-Wompi] wompiConfig.config?.publicKey:', wompiConfig?.config?.publicKey);
 
-        // Usar el número de pedido como referencia
-        const reference = pedido.nroPedido || `order-${new Date().getTime()}`;
+        if (wompiConfig && wompiConfig.enabled && wompiConfig.config && wompiConfig.config.publicKey) {
+          wompiPublicKey = wompiConfig.config.publicKey;
+          credentialSource = 'company-config';
+          console.log('✅ [POS-Wompi] Usando credenciales del comercio');
+          console.log('   - Company ID:', companyId);
+          console.log('   - Provider:', wompiConfig.provider || 'wompi');
+          console.log('   - Public Key:', wompiConfig.config.publicKey?.substring(0, 30) + '...');
+          console.log('   - Enabled:', wompiConfig.enabled);
+        } else {
+          const reason = !wompiConfig ? 'No config returned' :
+                        !wompiConfig.enabled ? 'Config disabled' :
+                        !wompiConfig.config ? 'No config object' :
+                        !wompiConfig.config.publicKey ? 'No publicKey in config' :
+                        'Unknown';
+          throw new Error(`Configuración de Wompi no encontrada o deshabilitada: ${reason}`);
+        }
+      } catch (error) {
+        // Fallback a claves de plataforma desde environment
+        wompiPublicKey = environment.wompi.public_key;
+        credentialSource = 'platform-fallback';
+        console.warn('⚠️ [POS-Wompi] Usando Wompi de plataforma (fallback)');
+        console.warn('   - Company ID:', companyId);
+        console.warn('   - Reason:', error.message);
+        console.warn('   - Fallback Source: environment.wompi.public_key');
+        console.warn('   - Fallback Key:', wompiPublicKey.substring(0, 30) + '...');
+      }
 
-        // Configurar datos del cliente para el formulario de pago
-        const customerData = {
-          fullName: pedido.cliente?.nombres_completos || "",
-          phoneNumber: pedido.cliente?.numero_celular_comprador || "",
-          phoneNumberPrefix:
-            pedido.cliente?.indicativo_celular_comprador || "57",
-          email: pedido.cliente?.correo_electronico_comprador || "",
-        };
-        const redirectUrl = window.location.origin + "/payment-callback";
-        // Inicializar el widget de Wompi
-        const checkout = new window["WidgetCheckout"]({
-          currency: "COP",
-          amountInCents: amountInCents,
-          reference: reference,
-          publicKey: wompiProdPublicKey,
-          redirectUrl: redirectUrl, // Debería venir de environment
-          taxInCents: {
-            vat: Math.round((pedido?.totalImpuesto ?? 0) * 100),
-            consumption: 0,
-          },
-          signature: {
-            integrity: pedido?.pagoInformation?.integridad || "",
-          },
-          customerData: customerData,
-        });
+      // 2. Configurar el widget con la clave obtenida
+      const amountInCents = Math.round(
+        (pedido?.totalPedididoConDescuento ?? 0) * 100,
+      );
 
-        // Abrir el widget y manejar la respuesta
+      const reference = pedido.nroPedido || `order-${new Date().getTime()}`;
+
+      const customerData = {
+        fullName: pedido.cliente?.nombres_completos || "",
+        phoneNumber: pedido.cliente?.numero_celular_comprador || "",
+        phoneNumberPrefix:
+          pedido.cliente?.indicativo_celular_comprador || "57",
+        email: pedido.cliente?.correo_electronico_comprador || "",
+      };
+
+      const redirectUrl = window.location.origin + "/payment-callback";
+
+      // 3. Inicializar el widget de Wompi con publicKey dinámico
+      const checkout = new window["WidgetCheckout"]({
+        currency: "COP",
+        amountInCents: amountInCents,
+        reference: reference,
+        publicKey: wompiPublicKey,  // ✅ Dinámico
+        redirectUrl: redirectUrl,
+        taxInCents: {
+          vat: Math.round((pedido?.totalImpuesto ?? 0) * 100),
+          consumption: 0,
+        },
+        signature: {
+          integrity: pedido?.pagoInformation?.integridad || "",
+        },
+        customerData: customerData,
+      });
+
+      // 4. Abrir el widget y manejar la respuesta
+      return new Promise<boolean>((resolve, reject) => {
         checkout.open(
           (result) => {
             const { transaction } = result;
@@ -357,11 +403,11 @@ export class PosCheckoutService {
             reject(error);
           },
         );
-      } catch (error) {
-        console.error("Error al inicializar el widget de Wompi:", error);
-        reject(error);
-      }
-    });
+      });
+    } catch (error) {
+      console.error("Error al inicializar el widget de Wompi:", error);
+      return Promise.reject(error);
+    }
   }
 
   /**
@@ -396,11 +442,13 @@ export function posCheckoutServiceFactory(
   validationService: PosValidationService,
   orderCreatorService: PosOrderCreatorService,
   cartService: CartService,
+  integrationsService: IntegrationsService,
 ) {
   return new PosCheckoutService(
     modal,
     validationService,
     orderCreatorService,
     cartService,
+    integrationsService,
   );
 }

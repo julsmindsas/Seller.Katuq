@@ -1,0 +1,269 @@
+<div class="step-container mobile-import-step">
+
+  <!-- Step Introduction -->
+  <div class="step-intro">
+    <p class="intro-text">
+      Importa tus clientes existentes desde un archivo Excel o JSON. Este paso es opcional,
+      puedes agregar clientes manualmente más tarde.
+    </p>
+  </div>
+
+  <!-- Template Download Section (Desktop) -->
+  <div class="template-section hide-mobile">
+    <p-card class="template-card">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <i class="pi pi-download"></i>
+          <span>Plantilla de Importación</span>
+        </div>
+      </ng-template>
+
+      <div class="template-info">
+        <p>Descarga la plantilla, complétala con tus datos y súbela para importar.</p>
+        <button
+          pButton
+          type="button"
+          label="Descargar Plantilla CSV"
+          icon="pi pi-download"
+          class="p-button-outlined"
+          (click)="downloadTemplate()">
+        </button>
+      </div>
+
+      <p-divider></p-divider>
+
+      <div class="required-fields">
+        <h4>Campos de la Plantilla</h4>
+        <div class="fields-grid">
+          <div
+            *ngFor="let col of templateColumns"
+            class="field-item"
+            [class.required-field]="col.required">
+            <i class="pi" [ngClass]="col.required ? 'pi-star-fill' : 'pi-circle'"></i>
+            <div class="field-info">
+              <strong>{{ col.header }}</strong>
+              <small>{{ col.example }}</small>
+            </div>
+          </div>
+        </div>
+        <small class="field-help mt-2">
+          <i class="pi pi-info-circle"></i>
+          Los campos marcados con <i class="pi pi-star-fill"></i> son obligatorios
+        </small>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Template Download Button (Mobile Compact) -->
+  <div class="mobile-template-button show-mobile">
+    <button
+      pButton
+      type="button"
+      label="Descargar Plantilla CSV"
+      icon="pi pi-download"
+      class="p-button-outlined p-button-lg"
+      (click)="downloadTemplate()">
+    </button>
+  </div>
+
+  <!-- Mobile File Upload Component -->
+  <div class="file-upload-section">
+    <app-mobile-file-upload
+      [acceptedFormats]="acceptedFormats"
+      [maxFileSize]="maxFileSize"
+      [disabled]="isUploading || isAnalyzingColumns"
+      (fileSelected)="onMobileFileSelected($event)"
+      (fileCleared)="clearFile()">
+    </app-mobile-file-upload>
+  </div>
+
+  <!-- KAI Analysis Loading State -->
+  <div *ngIf="isAnalyzingColumns" class="analysis-loading">
+    <div class="loading-card">
+      <i class="pi pi-spin pi-spinner loading-icon"></i>
+      <h3 class="loading-title">KAI está analizando tu archivo</h3>
+      <p class="loading-text">
+        El asistente inteligente está mapeando las columnas automáticamente.
+        Esto puede tomar unos segundos...
+      </p>
+    </div>
+  </div>
+
+  <!-- Column Mapping Cards (Mobile) -->
+  <div *ngIf="showMappingPreview && !isAnalyzingColumns && mappingFields.length > 0" class="mapping-section">
+
+    <!-- Section Header -->
+    <div class="mapping-header">
+      <h3 class="mapping-title">
+        <i class="pi pi-sparkles"></i>
+        Mapeo de Columnas
+      </h3>
+      <p class="mapping-subtitle">
+        KAI sugirió estos mapeos. Puedes ajustarlos si es necesario.
+      </p>
+    </div>
+
+    <!-- Mapping Stats (Mobile) -->
+    <div class="mapping-stats show-mobile">
+      <div class="stat-chip">
+        <i class="pi pi-check-circle"></i>
+        <span>{{ getMappedCount() }} mapeados</span>
+      </div>
+      <div class="stat-chip required" *ngIf="hasUnmappedRequired()">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>{{ getRequiredCount() - getMappedRequiredCount() }} requeridos faltantes</span>
+      </div>
+      <div class="stat-chip adjusted" *ngIf="getAdjustedCount() > 0">
+        <i class="pi pi-pencil"></i>
+        <span>{{ getAdjustedCount() }} ajustados</span>
+      </div>
+    </div>
+
+    <!-- Mapping Cards Grid -->
+    <div class="mapping-cards-grid">
+      <app-column-mapping-card
+        *ngFor="let field of mappingFields"
+        [field]="field"
+        [availableColumns]="availableColumns"
+        [disabled]="isUploading"
+        (mappingChanged)="onCardMappingChanged($event)">
+      </app-column-mapping-card>
+    </div>
+
+    <!-- Unmapped Required Warning -->
+    <div *ngIf="hasUnmappedRequired()" class="warning-message">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div class="warning-content">
+        <strong>Campos requeridos sin mapear</strong>
+        <p>Algunos campos obligatorios no tienen columna asignada. Por favor asigna las columnas necesarias antes de importar.</p>
+      </div>
+    </div>
+
+    <!-- Desktop Legacy Table (Hidden on Mobile) -->
+    <div class="hide-mobile">
+      <app-column-mapping-preview
+        [mappingResult]="mappingResult"
+        [sourceColumns]="sourceColumns"
+        [type]="'customer'"
+        (mappingsAdjusted)="onMappingsAdjusted($event)"
+        (mappingsConfirmed)="onMappingsConfirmed($event)">
+      </app-column-mapping-preview>
+    </div>
+  </div>
+
+  <!-- Import Result -->
+  <div *ngIf="importResult && !importResult.errors" class="import-result">
+    <div class="result-card">
+      <div class="result-summary">
+        <div class="result-item success">
+          <i class="pi pi-check-circle"></i>
+          <div>
+            <strong>{{ importResult.success }}</strong>
+            <span>Importados exitosamente</span>
+          </div>
+        </div>
+        <div class="result-item error" *ngIf="importResult.failed > 0">
+          <i class="pi pi-times-circle"></i>
+          <div>
+            <strong>{{ importResult.failed }}</strong>
+            <span>Fallidos</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="importResult.errors && importResult.errors.length > 0" class="errors-list">
+        <h4>Errores Detectados</h4>
+        <ul>
+          <li *ngFor="let error of importResult.errors.slice(0, 5)">{{ error }}</li>
+        </ul>
+        <small *ngIf="importResult.errors.length > 5">
+          ...y {{ importResult.errors.length - 5 }} errores más
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Card -->
+  <p-card class="info-card">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-info-circle"></i>
+        <span>Información Importante</span>
+      </div>
+    </ng-template>
+
+    <ul class="info-list">
+      <li><i class="pi pi-sparkles"></i> KAI analizará automáticamente las columnas de tu archivo</li>
+      <li><i class="pi pi-check"></i> Los clientes duplicados (mismo documento) se actualizarán</li>
+      <li><i class="pi pi-check"></i> Puedes importar tantos archivos como necesites</li>
+      <li><i class="pi pi-check"></i> Este paso es opcional, puedes omitirlo y agregar clientes manualmente después</li>
+    </ul>
+  </p-card>
+
+  <!-- Sticky Footer (Mobile) -->
+  <div class="mobile-sticky-footer show-mobile" *ngIf="showMappingPreview && !importResult">
+    <div class="footer-summary">
+      <div class="summary-chips">
+        <p-chip
+          [label]="getMappedCount() + ' mapeados'"
+          icon="pi pi-check"
+          styleClass="summary-chip">
+        </p-chip>
+        <p-chip
+          *ngIf="hasUnmappedRequired()"
+          [label]="(getRequiredCount() - getMappedRequiredCount()) + ' faltantes'"
+          icon="pi pi-exclamation-triangle"
+          styleClass="summary-chip warning">
+        </p-chip>
+      </div>
+    </div>
+
+    <div class="footer-actions">
+      <button
+        pButton
+        type="button"
+        label="Importar Clientes"
+        icon="pi pi-upload"
+        class="p-button-success p-button-lg"
+        [disabled]="!canImport()"
+        [loading]="isUploading"
+        (click)="importCustomers()">
+      </button>
+      <button
+        pButton
+        type="button"
+        label="Omitir Paso"
+        icon="pi pi-forward"
+        class="p-button-text"
+        [disabled]="isUploading"
+        (click)="skipStep()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Desktop Action Buttons -->
+  <div class="form-actions hide-mobile" *ngIf="!importResult">
+    <button
+      pButton
+      type="button"
+      label="Importar Clientes"
+      icon="pi pi-upload"
+      class="p-button-success"
+      [disabled]="!canImport()"
+      [loading]="isUploading"
+      (click)="importCustomers()"
+      pTooltip="Confirma el mapeo de columnas antes de importar"
+      [tooltipDisabled]="canImport()">
+    </button>
+    <button
+      pButton
+      type="button"
+      label="Omitir Paso"
+      icon="pi pi-forward"
+      class="p-button-text"
+      [disabled]="isUploading"
+      (click)="skipStep()">
+    </button>
+  </div>
+
+</div>

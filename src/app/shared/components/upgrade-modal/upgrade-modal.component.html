@@ -1,0 +1,131 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [closable]="true"
+  [closeOnEscape]="true"
+  (onHide)="closeModal()"
+  styleClass="upgrade-modal"
+  [style]="{'width': '90vw', 'max-width': '900px'}">
+
+  <ng-template pTemplate="header">
+    <div class="modal-header-content">
+      <i class="fa fa-rocket header-icon"></i>
+      <div>
+        <h3>Actualizar a Premium</h3>
+        <p class="header-subtitle">Desbloquea todas las funcionalidades de Katuq</p>
+      </div>
+    </div>
+  </ng-template>
+
+  <div class="pricing-container">
+    <!-- Premium Features Banner -->
+    <div class="features-banner">
+      <h4><i class="fa fa-star"></i> Beneficios Premium</h4>
+      <div class="features-grid">
+        <div class="feature-item">
+          <i class="fa fa-infinity"></i>
+          <span>Pedidos ilimitados</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa fa-brain"></i>
+          <span>IA sin restricciones</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa fa-warehouse"></i>
+          <span>Múltiples bodegas</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa fa-truck"></i>
+          <span>Dropshipping</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa fa-link"></i>
+          <span>Integraciones avanzadas</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa fa-headset"></i>
+          <span>Soporte prioritario</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div class="pricing-cards">
+      <div *ngFor="let option of pricingOptions"
+           class="pricing-card"
+           [class.selected]="selectedPeriod === option.period"
+           [class.recommended]="option.recommended"
+           (click)="selectPeriod(option.period)">
+
+        <div class="recommended-badge" *ngIf="option.recommended">
+          <i class="fa fa-star"></i> Recomendado
+        </div>
+
+        <div class="card-header">
+          <h4>{{ option.label }}</h4>
+          <div class="discount-tag" *ngIf="option.discount">
+            {{ option.discount }}
+          </div>
+        </div>
+
+        <div class="card-pricing">
+          <div class="main-price">
+            {{ formatPrice(option.price) }}
+          </div>
+          <div class="price-per-month" *ngIf="option.period !== 'monthly'">
+            {{ formatPrice(option.pricePerMonth) }}/mes
+          </div>
+        </div>
+
+        <div class="select-indicator">
+          <i class="fa" [class.fa-circle-o]="selectedPeriod !== option.period"
+                        [class.fa-check-circle]="selectedPeriod === option.period"></i>
+          <span>{{ selectedPeriod === option.period ? 'Seleccionado' : 'Seleccionar' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info Section -->
+    <div class="info-section">
+      <i class="fa fa-info-circle"></i>
+      <p *ngIf="checkingFirstTime">
+        <i class="fa fa-spinner fa-spin"></i> Verificando tipo de usuario...
+      </p>
+      <p *ngIf="!checkingFirstTime && isFirstTime">
+        🎉 Como es tu primera vez, usarás nuestro sistema de pago embebido para una experiencia más fluida.
+        Tu suscripción se activará automáticamente al confirmar el pago.
+      </p>
+      <p *ngIf="!checkingFirstTime && !isFirstTime">
+        Al hacer clic en "Continuar al Pago" serás redirigido a Wompi para completar tu pago de forma segura.
+        Tu suscripción se renovará automáticamente al confirmar el pago.
+      </p>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="modal-footer-actions">
+      <button
+        type="button"
+        pButton
+        label="Cancelar"
+        icon="fa fa-times"
+        class="p-button-text p-button-secondary"
+        (click)="closeModal()"
+        [disabled]="loading">
+      </button>
+
+      <button
+        type="button"
+        pButton
+        label="Continuar al Pago"
+        icon="fa fa-arrow-right"
+        class="p-button-primary"
+        [loading]="loading"
+        [disabled]="!selectedPeriod || loading"
+        (click)="confirmUpgrade()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

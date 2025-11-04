@@ -1,0 +1,98 @@
+<div class="pricing-container p-4">
+  <div class="text-center mb-5">
+    <h1>Elige el plan perfecto para tu negocio</h1>
+    <p class="text-muted">Actualiza en cualquier momento, sin compromisos</p>
+  </div>
+
+  <!-- Widget de uso de IA -->
+  <div class="row justify-content-center mb-4">
+    <div class="col-md-10">
+      <app-usage-widget></app-usage-widget>
+    </div>
+  </div>
+
+  <div class="row justify-content-center">
+    <!-- Freemium Plan -->
+    <div class="col-md-5 mb-4">
+      <p-card styleClass="plan-card" [ngClass]="{'current-plan': currentPlan === 'freemium'}">
+        <div class="plan-header text-center">
+          <h3>{{ plans.freemium.name }}</h3>
+          <div class="plan-price">
+            <span class="currency">$</span>
+            <span class="amount">{{ plans.freemium.price | number }}</span>
+            <span class="period"> {{ plans.freemium.currency }}</span>
+          </div>
+          <p class="text-muted">Perfecto para empezar</p>
+        </div>
+
+        <div class="plan-features mt-4">
+          <ul class="list-unstyled">
+            <li *ngFor="let feature of plans.freemium.features" class="mb-2" [ngClass]="{'disabled': !feature.enabled}">
+              <i class="pi" [ngClass]="feature.icon"></i>
+              <span>{{ feature.text }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="plan-action mt-4">
+          <button
+            pButton
+            [label]="plans.freemium.buttonText"
+            [ngClass]="plans.freemium.buttonClass"
+            [disabled]="currentPlan === 'freemium' || loading"
+            [loading]="loading && currentPlan !== 'freemium'"
+            (click)="upgradeToPlan('freemium')"
+            class="w-100">
+          </button>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Premium Plan -->
+    <div class="col-md-5 mb-4">
+      <p-card styleClass="plan-card premium" [ngClass]="{'current-plan': currentPlan === 'premium'}">
+        <div class="plan-badge">Recomendado</div>
+
+        <div class="plan-header text-center">
+          <h3>{{ plans.premium.name }}</h3>
+          <div class="plan-price">
+            <span class="currency">$</span>
+            <span class="amount">{{ plans.premium.price | number }}</span>
+            <span class="period">{{ plans.premium.period }}</span>
+          </div>
+          <p class="text-muted">Todo lo que necesitas para crecer</p>
+        </div>
+
+        <div class="plan-features mt-4">
+          <ul class="list-unstyled">
+            <li *ngFor="let feature of plans.premium.features" class="mb-2">
+              <i class="pi pi-check"></i>
+              <span>{{ feature.text }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="plan-action mt-4">
+          <button
+            pButton
+            [label]="plans.premium.buttonText"
+            [ngClass]="plans.premium.buttonClass"
+            [disabled]="currentPlan === 'premium' || loading"
+            [loading]="loading && currentPlan !== 'premium'"
+            (click)="upgradeToPlan('premium')"
+            class="w-100">
+          </button>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <div class="row mt-4">
+    <div class="col-12 text-center">
+      <button pButton label="Volver al Dashboard" icon="pi pi-arrow-left" class="p-button-text" routerLink="/dashboard"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de actualización a Premium con sistema híbrido -->
+<app-upgrade-modal [(visible)]="showUpgradeModal"></app-upgrade-modal>

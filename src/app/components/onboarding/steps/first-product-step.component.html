@@ -1,0 +1,204 @@
+<div class="step-container">
+  <!-- Header Info -->
+  <div class="step-intro optional-step">
+    <div class="intro-header">
+      <i class="pi pi-box"></i>
+      <h3>Crea tu Primer Producto (Opcional)</h3>
+    </div>
+    <p class="intro-text">
+      Este paso es opcional. Puedes crear tu primer producto ahora para comenzar a vender inmediatamente,
+      o puedes omitir este paso y agregar productos más tarde desde el módulo de inventario.
+    </p>
+  </div>
+
+  <!-- Product Form -->
+  <p-card class="product-card">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-shopping-bag"></i>
+        <span>Información del Producto</span>
+      </div>
+    </ng-template>
+
+    <form [formGroup]="productForm">
+      <div class="form-layout">
+        <!-- Left Column - Product Details -->
+        <div class="product-details">
+          <div class="form-grid">
+            <!-- Nombre -->
+            <div class="form-field col-12">
+              <label for="nombre" class="required">Nombre del Producto *</label>
+              <input
+                id="nombre"
+                type="text"
+                pInputText
+                formControlName="nombre"
+                placeholder="Ej: Camiseta Polo Premium"
+                [class.p-invalid]="hasError('nombre', 'required') || hasError('nombre', 'minlength')" />
+              <small class="p-error" *ngIf="hasError('nombre', 'required') || hasError('nombre', 'minlength')">
+                {{ getErrorMessage('nombre') }}
+              </small>
+            </div>
+
+            <!-- Referencia y Precio -->
+            <div class="form-field col-md-6 col-12">
+              <label for="referencia" class="required">Referencia / SKU *</label>
+              <input
+                id="referencia"
+                type="text"
+                pInputText
+                formControlName="referencia"
+                placeholder="Ej: CAM-001"
+                [class.p-invalid]="hasError('referencia', 'required') || hasError('referencia', 'minlength')" />
+              <small class="p-error" *ngIf="hasError('referencia', 'required') || hasError('referencia', 'minlength')">
+                {{ getErrorMessage('referencia') }}
+              </small>
+            </div>
+
+            <div class="form-field col-md-6 col-12">
+              <label for="precio" class="required">Precio de Venta (COP) *</label>
+              <p-inputNumber
+                id="precio"
+                formControlName="precio"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [min]="0"
+                placeholder="0"
+                styleClass="w-100"
+                [class.p-invalid]="hasError('precio', 'required') || hasError('precio', 'min')">
+              </p-inputNumber>
+              <small class="p-error" *ngIf="hasError('precio', 'required') || hasError('precio', 'min')">
+                {{ getErrorMessage('precio') }}
+              </small>
+            </div>
+
+            <!-- Stock -->
+            <div class="form-field col-12">
+              <label for="stock">Stock Inicial</label>
+              <p-inputNumber
+                id="stock"
+                formControlName="stock"
+                [showButtons]="true"
+                buttonLayout="horizontal"
+                [step]="1"
+                [min]="0"
+                decrementButtonClass="p-button-secondary"
+                incrementButtonClass="p-button-secondary"
+                incrementButtonIcon="pi pi-plus"
+                decrementButtonIcon="pi pi-minus"
+                placeholder="0"
+                styleClass="w-100">
+              </p-inputNumber>
+              <small class="field-help">Cantidad inicial disponible en inventario</small>
+            </div>
+
+            <!-- Descripción -->
+            <div class="form-field col-12">
+              <label for="descripcion">Descripción del Producto</label>
+              <textarea
+                id="descripcion"
+                pInputTextarea
+                formControlName="descripcion"
+                rows="4"
+                placeholder="Describe las características principales de tu producto..."
+                [autoResize]="true">
+              </textarea>
+              <small class="field-help">Agrega detalles que ayuden a tus clientes a conocer mejor el producto</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column - Image Upload -->
+        <div class="product-image">
+          <div class="image-upload-section">
+            <label>Imagen del Producto (Opcional)</label>
+
+            <div class="image-preview" *ngIf="imagePreview">
+              <img [src]="imagePreview" alt="Vista previa del producto" />
+              <button
+                pButton
+                type="button"
+                icon="pi pi-times"
+                class="p-button-rounded p-button-danger remove-image-btn"
+                pTooltip="Eliminar imagen"
+                (click)="removeImage()">
+              </button>
+            </div>
+
+            <div class="upload-placeholder" *ngIf="!imagePreview">
+              <p-fileUpload
+                mode="basic"
+                name="productImage"
+                accept="image/*"
+                [maxFileSize]="5000000"
+                [auto]="true"
+                chooseLabel="Seleccionar Imagen"
+                chooseIcon="pi pi-upload"
+                (onSelect)="onImageUpload($event)">
+              </p-fileUpload>
+              <div class="upload-info">
+                <i class="pi pi-image"></i>
+                <p>Sube una imagen de tu producto</p>
+                <small>JPG, PNG o GIF (máx. 5MB)</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Preview Card -->
+          <div class="product-preview" *ngIf="isFormComplete">
+            <h4>Vista Previa</h4>
+            <div class="preview-card">
+              <div class="preview-image">
+                <img *ngIf="imagePreview" [src]="imagePreview" alt="Producto" />
+                <i *ngIf="!imagePreview" class="pi pi-image placeholder-icon"></i>
+              </div>
+              <div class="preview-content">
+                <h5>{{ productForm.value.nombre || 'Nombre del Producto' }}</h5>
+                <p class="preview-ref">REF: {{ productForm.value.referencia || 'SKU' }}</p>
+                <p class="preview-price">{{ formatCurrency(productForm.value.precio || 0) }}</p>
+                <p class="preview-stock">
+                  <i class="pi pi-box"></i>
+                  Stock: {{ productForm.value.stock || 0 }} unidades
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </p-card>
+
+  <!-- Action Buttons -->
+  <div class="step-actions mt-4">
+    <button
+      pButton
+      type="button"
+      label="Omitir Este Paso"
+      icon="pi pi-arrow-right"
+      iconPos="right"
+      class="p-button-secondary p-button-outlined p-button-lg"
+      (click)="onSkip()">
+    </button>
+
+    <button
+      pButton
+      type="button"
+      label="Guardar y Continuar"
+      icon="pi pi-check"
+      iconPos="right"
+      class="p-button-success p-button-lg"
+      [disabled]="productForm.invalid || isSaving"
+      [loading]="isSaving"
+      (click)="onSave()">
+    </button>
+  </div>
+
+  <div class="step-hint">
+    <i class="pi pi-info-circle"></i>
+    <p>
+      <strong>Consejo:</strong> Puedes agregar más productos y configurar detalles avanzados
+      (categorías, variantes, imágenes adicionales) desde el módulo de Inventario.
+    </p>
+  </div>
+</div>

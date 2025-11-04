@@ -53,6 +53,7 @@ import { LiveAudioModule } from './shared/components/gemini-asistant/live-audio/
 // Importar componentes
 import { TermsConditionsComponent } from './components/terms-conditions/terms-conditions.component';
 import { PrivacyPolicyComponent } from './components/privacy-policy/privacy-policy.component';
+import { SubscriptionCallbackComponent } from './components/subscription-callback/subscription-callback.component';
 
 // Importar servicios
 import { AnalyticsService } from './services/analytics.service';
@@ -79,7 +80,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     FloatingButtonComponent,
     ChatFormComponent,
     TermsConditionsComponent,
-    PrivacyPolicyComponent
+    PrivacyPolicyComponent,
+    SubscriptionCallbackComponent
   ],
   exports: [
   ],

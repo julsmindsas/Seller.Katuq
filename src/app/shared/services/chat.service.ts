@@ -4,6 +4,7 @@ import { map } from 'rxjs/operators';
 import { ChatDB } from '../../shared/data/chat';
 import { chat, ChatUsers } from '../models/chat/chat.model';
 import { KatuqintelligenceService } from './katuqintelligence/katuqintelligence.service';
+import { AILimitsService } from './ai-limits.service';
 
 var today = new Date().toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
 
@@ -18,7 +19,10 @@ export class ChatService {
   private activeStreams: { [receiverId: number]: any } = {};
   private activeStreamSubscriptions: { [receiverId: number]: { unsubscribe: () => void } | null } = {};
 
-  constructor(private kai: KatuqintelligenceService) {
+  constructor(
+    private kai: KatuqintelligenceService,
+    private aiLimitsService: AILimitsService
+  ) {
     this.chat = ChatDB.chat
     this.users = ChatDB.chatUser
   }
@@ -70,28 +74,63 @@ export class ChatService {
 
   // Send Message to user
   public sendMessage(chat) {
-    this.chat.filter(chats => {
-      if (chats.id == chat.receiver) {
-        // Agregar mensaje del usuario
-        chats.message.push({ sender: chat.sender, time: today.toLowerCase(), text: chat.message });
-        setTimeout(function () {
-          const chatHistory = document.querySelector(".chat-history");
-          if (chatHistory) {
-            chatHistory.scrollBy({ top: 200, behavior: 'smooth' });
+    // 1. Verificar límite antes de enviar
+    this.aiLimitsService.checkAILimit('chat').subscribe(limitCheck => {
+      if (!limitCheck.allowed) {
+        // Límite alcanzado - mostrar mensaje de error en el chat
+        this.chat.filter(chats => {
+          if (chats.id == chat.receiver) {
+            chats.message.push({
+              sender: chat.sender,
+              time: today.toLowerCase(),
+              text: chat.message
+            });
+
+            // Mensaje de error del sistema
+            chats.message.push({
+              sender: chat.receiver,
+              time: today.toLowerCase(),
+              text: `⚠️ Has alcanzado el límite de ${limitCheck.limit} mensajes de chat IA por día. Actualiza a Premium para chat ilimitado.`
+            });
+
+            setTimeout(() => {
+              document.querySelector(".chat-history")?.scrollBy({ top: 250, behavior: 'smooth' });
+            }, 310);
           }
-        }, 310)
+        });
 
-        // Preparar usuario y mensaje asistente
-        const user = this.users.find(u => u.id === chat.receiver);
-        if (user) { user.typing = true; }
+        // Mostrar modal de upgrade
+        this.aiLimitsService.showUpgradeModal(
+          'chat',
+          `Has alcanzado el límite de ${limitCheck.limit} mensajes de chat IA por día`
+        );
 
-        // Crear mensaje del asistente (inicialmente vacío)
-        const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
-        let messageAddedToChat = false;
+        return;
+      }
 
-        // Intentar streaming SSE primero
-        try {
-          this.stopStreaming(chat.receiver);
+      // 2. Continuar con envío normal si el límite no se alcanzó
+      this.chat.filter(chats => {
+        if (chats.id == chat.receiver) {
+          // Agregar mensaje del usuario
+          chats.message.push({ sender: chat.sender, time: today.toLowerCase(), text: chat.message });
+          setTimeout(function () {
+            const chatHistory = document.querySelector(".chat-history");
+            if (chatHistory) {
+              chatHistory.scrollBy({ top: 200, behavior: 'smooth' });
+            }
+          }, 310)
+
+          // Preparar usuario y mensaje asistente
+          const user = this.users.find(u => u.id === chat.receiver);
+          if (user) { user.typing = true; }
+
+          // Crear mensaje del asistente (inicialmente vacío)
+          const assistantMsg = { sender: chat.receiver, time: today.toLowerCase(), text: '' };
+          let messageAddedToChat = false;
+
+          // Intentar streaming SSE primero
+          try {
+            this.stopStreaming(chat.receiver);
 
           console.log('[ChatService] Intentando streaming para:', chat.message);
 
@@ -144,7 +183,8 @@ export class ChatService {
           this.invokeOnceFallback(chat, fallbackMsg, user);
         }
       }
-    })
+    });
+    }); // Cerrar el subscribe de checkAILimit
   }
 
   public stopStreaming(receiverId: number): void {
@@ -216,8 +256,14 @@ export class ChatService {
       error: (err) => {
         console.error('[ChatService] Error al invocar backend:', err);
 
-        // Mensaje de error amigable
-        assistantMsg.text = 'Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta nuevamente.';
+        // Interceptar error de límite del backend
+        if (err.error?.error === 'AI_CHAT_LIMIT_REACHED') {
+          this.aiLimitsService.showUpgradeModal('chat', err.error.message);
+          assistantMsg.text = `⚠️ ${err.error.message}. Actualiza a Premium para chat ilimitado.`;
+        } else {
+          // Mensaje de error amigable
+          assistantMsg.text = 'Lo siento, ocurrió un error al procesar tu mensaje. Por favor, intenta nuevamente.';
+        }
 
         this.chat.filter(chats => {
           if (chats.id == chat.receiver) {

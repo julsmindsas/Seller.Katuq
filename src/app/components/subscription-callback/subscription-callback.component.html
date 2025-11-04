@@ -1,0 +1,105 @@
+<div class="callback-container">
+  <div class="callback-card">
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-section">
+      <div class="spinner-wrapper">
+        <i class="fa fa-spinner fa-spin"></i>
+      </div>
+      <h2>Verificando tu pago...</h2>
+      <p>Por favor espera mientras confirmamos tu suscripción.</p>
+    </div>
+
+    <!-- Success State -->
+    <div *ngIf="!loading && success" class="result-section success">
+      <div class="icon-wrapper success-icon">
+        <i class="fa fa-check-circle"></i>
+      </div>
+      <h2>¡Pago Exitoso!</h2>
+      <p class="message">{{ message }}</p>
+
+      <div class="success-features">
+        <h4>Ya puedes disfrutar de:</h4>
+        <div class="features-list">
+          <div class="feature-item">
+            <i class="fa fa-check"></i>
+            <span>Pedidos ilimitados</span>
+          </div>
+          <div class="feature-item">
+            <i class="fa fa-check"></i>
+            <span>IA sin restricciones</span>
+          </div>
+          <div class="feature-item">
+            <i class="fa fa-check"></i>
+            <span>Múltiples bodegas</span>
+          </div>
+          <div class="feature-item">
+            <i class="fa fa-check"></i>
+            <span>Integraciones avanzadas</span>
+          </div>
+          <div class="feature-item">
+            <i class="fa fa-check"></i>
+            <span>Dropshipping</span>
+          </div>
+          <div class="feature-item">
+            <i class="fa fa-check"></i>
+            <span>Soporte prioritario</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="subscriptionId" class="subscription-info">
+        <p><strong>ID de Suscripción:</strong> {{ subscriptionId }}</p>
+      </div>
+
+      <button
+        pButton
+        type="button"
+        label="Ir al Dashboard"
+        icon="fa fa-home"
+        class="p-button-lg p-button-primary"
+        (click)="goToDashboard()">
+      </button>
+    </div>
+
+    <!-- Pending/Error State -->
+    <div *ngIf="!loading && !success" class="result-section pending">
+      <div class="icon-wrapper pending-icon">
+        <i class="fa fa-clock"></i>
+      </div>
+      <h2>Pago Pendiente</h2>
+      <p class="message">{{ message }}</p>
+
+      <div class="info-box">
+        <i class="fa fa-info-circle"></i>
+        <p>
+          El procesamiento puede tomar algunos minutos. Recibirás un correo electrónico
+          cuando tu suscripción se active. Si el problema persiste, contacta a soporte.
+        </p>
+      </div>
+
+      <div *ngIf="subscriptionId" class="subscription-info">
+        <p><strong>ID de Suscripción:</strong> {{ subscriptionId }}</p>
+      </div>
+
+      <div class="action-buttons">
+        <button
+          pButton
+          type="button"
+          label="Verificar Estado"
+          icon="fa fa-sync"
+          class="p-button-lg p-button-secondary"
+          (click)="retryCheck()">
+        </button>
+
+        <button
+          pButton
+          type="button"
+          label="Ir al Dashboard"
+          icon="fa fa-home"
+          class="p-button-lg p-button-text"
+          (click)="goToDashboard()">
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

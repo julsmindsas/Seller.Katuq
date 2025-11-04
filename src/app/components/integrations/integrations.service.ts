@@ -100,25 +100,23 @@ export class IntegrationsService {
   // Nueva URL base según API V2
   private apiUrl = `${environment.urlApi}/v1/integration/config`;
 
-  // Company ID requerido para multi-tenancy
-  private currentCompanyId: string = "";
-
   constructor(
     private http: HttpClient,
     private stateService: IntegrationStateService,
     private cacheService: IntegrationCacheService,
   ) {
-    // TODO: Obtener company ID del usuario actual o contexto
-    this.currentCompanyId = this.getCurrentCompanyId();
+    // Company ID now fetched dynamically on each request
   }
 
   /**
    * Obtiene el ID de la empresa actual del contexto o localStorage
+   * Se llama dinámicamente en cada request para obtener el company ID actual
    */
   private getCurrentCompanyId(): string {
     // Primero verificar si existe currentCompanyId directamente
     const directCompanyId = localStorage.getItem("currentCompanyId");
     if (directCompanyId) {
+      console.log('🆔 [getCurrentCompanyId] Using direct ID:', directCompanyId);
       return directCompanyId;
     }
 
@@ -128,28 +126,30 @@ export class IntegrationsService {
       try {
         const company = JSON.parse(currentCompany);
         // Intentar diferentes campos que pueden contener el ID de la empresa
-        return (
-          company.nomComercial ||
-          company.nombreComercio ||
-          company.razonSocial ||
-          company.nombre ||
-          "default_company"
-        );
+        const id = company.nomComercial ||
+                   company.nombreComercio ||
+                   company.razonSocial ||
+                   company.nombre ||
+                   "default_company";
+        console.log('🆔 [getCurrentCompanyId] Extracted from company object:', id);
+        return id;
       } catch (error) {
         console.error("Error parsing currentCompany from localStorage:", error);
       }
     }
 
+    console.warn('⚠️ [getCurrentCompanyId] No company found, using default');
     return "default_company";
   }
 
   /**
    * Genera headers requeridos por la API V2
+   * Company ID se obtiene dinámicamente en cada llamada
    */
   private getApiHeaders(): { [key: string]: string } {
     return {
       "Content-Type": "application/json",
-      company: this.currentCompanyId,
+      company: this.getCurrentCompanyId(),  // ✅ Dynamic company ID
     };
   }
 
@@ -225,17 +225,43 @@ export class IntegrationsService {
   }
 
   getIntegration(provider: string): Observable<Integration> {
+    const companyId = this.getCurrentCompanyId();
+    console.log(`🔍 [IntegrationsService] Fetching ${provider} for company: ${companyId}`);
+
     return this.cacheService.get(
-      `integration:${provider}`,
+      `integration:${provider}:${companyId}`,  // ✅ Cache key includes company
       () =>
         this.http
-          .get<{ success: boolean; data: Integration; metadata?: any }>(
+          .get<{ success: boolean; config: any; metadata?: any }>(
             `${this.apiUrl}/${provider}`,
             {
               headers: this.getApiHeaders(),
             },
           )
-          .pipe(map((response) => response.data)),
+          .pipe(
+            map((response) => {
+              // Mapear respuesta del backend a estructura frontend
+              const backendConfig = response.config;
+              return {
+                id: backendConfig.id,
+                provider: backendConfig.provider,
+                type: backendConfig.provider,  // Legacy compatibility
+                name: backendConfig.provider,
+                enabled: backendConfig.status === 'active',  // ✅ Mapear status a enabled
+                config: backendConfig.config,  // Contiene publicKey, etc.
+                createdAt: backendConfig.createdAt,
+                updatedAt: backendConfig.updatedAt,
+                category: 'payment' as IntegrationCategory,  // Asumir payment por defecto
+                credentials: backendConfig.config  // Legacy compatibility
+              } as Integration;
+            }),
+            tap((integration) => {
+              console.log(`✅ [IntegrationsService] ${provider} fetched successfully for ${companyId}`);
+              console.log(`   - Enabled: ${integration.enabled}`);
+              console.log(`   - Has config: ${!!integration.config}`);
+              console.log(`   - Has publicKey: ${!!integration.config?.publicKey}`);
+            })
+          ),
       10 * 60 * 1000, // 10 minutos TTL para integraciones individuales
     );
   }
@@ -778,9 +804,9 @@ export class IntegrationsService {
 
   /**
    * Actualizar company ID (útil para cambio de contexto)
+   * Company ID se lee dinámicamente de localStorage, no se cachea
    */
   setCompanyId(companyId: string): void {
-    this.currentCompanyId = companyId;
     localStorage.setItem("currentCompanyId", companyId);
     // Invalidar cache al cambiar de empresa
     this.invalidateAllCache();
@@ -818,7 +844,7 @@ export class IntegrationsService {
       {
         provider: 'siigo',
         config: config,
-        companyId: this.currentCompanyId
+        companyId: this.getCurrentCompanyId()
       },
       { headers: this.getApiHeaders() }
     );

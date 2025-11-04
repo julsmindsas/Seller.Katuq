@@ -29,6 +29,14 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
   ) {}
 
   ngOnInit(): void {
+    // Debug logging para verificar contexto de empresa
+    const currentCompanyStr = localStorage.getItem("currentCompany");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    console.log("🏢 [POS Init] Current Company from localStorage:",
+      currentCompanyStr ? JSON.parse(currentCompanyStr) : null);
+    console.log("👤 [POS Init] User Company:", user.company);
+
     // Limpiar datos al inicializar el POS para empezar siempre con estado limpio
     this.limpiarDatos();
   }

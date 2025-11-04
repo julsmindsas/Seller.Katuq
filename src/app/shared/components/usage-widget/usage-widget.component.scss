@@ -1,0 +1,173 @@
+.usage-widget {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+
+  &.premium-widget {
+    border: 2px solid gold;
+    background: linear-gradient(135deg, #fff9e6 0%, #ffffff 100%);
+  }
+}
+
+.card-header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+
+  h4 {
+    margin: 0;
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  &.premium {
+    color: gold;
+
+    h4 {
+      color: #f39c12;
+    }
+
+    i {
+      color: gold;
+      font-size: 1.5rem;
+    }
+  }
+}
+
+.usage-item {
+  .usage-label {
+    font-weight: 500;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      color: var(--primary-color, #007bff);
+    }
+  }
+
+  .usage-value {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+  }
+
+  small {
+    font-size: 0.85rem;
+    color: #6c757d;
+
+    i {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.blocked-features {
+  background-color: #f8f9fa;
+  padding: 1rem;
+  border-radius: 6px;
+  border-left: 3px solid #dc3545;
+
+  strong {
+    color: #dc3545;
+  }
+
+  .feature-badge {
+    display: inline-block;
+    background-color: #e9ecef;
+    color: #6c757d;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    margin-right: 0.5rem;
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+
+    i {
+      margin-right: 0.25rem;
+      font-size: 0.75rem;
+    }
+  }
+}
+
+.premium-content {
+  padding: 2rem 1rem;
+
+  .premium-icon {
+    font-size: 4rem;
+    color: gold;
+    animation: pulse 2s infinite;
+  }
+
+  h4 {
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  .premium-features {
+    text-align: left;
+    max-width: 300px;
+    margin: 0 auto;
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      color: #495057;
+
+      i {
+        color: var(--green-500, #28a745);
+        font-size: 1.2rem;
+      }
+    }
+  }
+}
+
+// Progress bar custom styles
+::ng-deep {
+  .p-progressbar-danger .p-progressbar-value {
+    background-color: var(--red-500, #dc3545);
+  }
+
+  .p-progressbar-warning .p-progressbar-value {
+    background-color: var(--yellow-500, #ffc107);
+  }
+
+  .p-progressbar-success .p-progressbar-value {
+    background-color: var(--green-500, #28a745);
+  }
+}
+
+// Animation
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+// Responsive
+@media (max-width: 768px) {
+  .usage-widget {
+    margin-bottom: 1rem;
+  }
+
+  .card-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .usage-label {
+    font-size: 0.9rem;
+  }
+
+  .usage-value {
+    font-size: 1rem;
+  }
+}

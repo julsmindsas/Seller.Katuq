@@ -1,6 +1,7 @@
 import { Routes } from "@angular/router";
 import { AuthGuard } from "../guards/auth.guard"; // Importar el guard
 import { AdminGuard } from "../guard/admin.guard"; // Importar AdminGuard
+import { SubscriptionGuard } from "../guards/subscription.guard"; // Importar SubscriptionGuard
 
 export const content: Routes = [
   {
@@ -154,7 +155,8 @@ export const content: Routes = [
       import("../../components/produccion/produccion.module").then(
         (m) => m.ProduccionModule,
       ),
-    canActivate: [AuthGuard], // Agregar el guard
+    canActivate: [AuthGuard, SubscriptionGuard],
+    data: { requiresPremium: true },
   },
   {
     path: "despachos",
@@ -231,7 +233,8 @@ export const content: Routes = [
       import("../../components/integrations/integrations.module").then(
         (m) => m.IntegrationsModule,
       ),
-    canActivate: [AuthGuard],
+    canActivate: [AuthGuard, SubscriptionGuard],
+    data: { requiresPremium: true },
   },
   {
     path: "prospectos",

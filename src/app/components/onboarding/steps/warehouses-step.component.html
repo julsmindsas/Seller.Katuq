@@ -1,0 +1,296 @@
+<div class="step-container">
+  <!-- Header Info -->
+  <div class="step-intro">
+    <p class="intro-text">
+      Configura al menos una bodega para gestionar tu inventario. Las bodegas te permiten
+      organizar y controlar el stock de tus productos en diferentes ubicaciones.
+    </p>
+  </div>
+
+  <!-- Add/Edit Warehouse Form -->
+  <p-card>
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-warehouse"></i>
+        <span>{{ editingIndex !== null ? 'Editar Bodega' : 'Agregar Bodega' }}</span>
+      </div>
+    </ng-template>
+
+    <form [formGroup]="warehouseForm">
+      <div class="form-grid">
+        <!-- Nombre -->
+        <div class="form-field col-md-6 col-12">
+          <label for="nombre" class="required">Nombre de la Bodega *</label>
+          <input
+            id="nombre"
+            type="text"
+            pInputText
+            formControlName="nombre"
+            placeholder="Ej: Bodega Principal"
+            (blur)="onNombreChange()"
+            [class.p-invalid]="hasError('nombre', 'required') || hasError('nombre', 'minlength')" />
+          <small class="p-error" *ngIf="hasError('nombre', 'required') || hasError('nombre', 'minlength')">
+            {{ getErrorMessage('nombre') }}
+          </small>
+        </div>
+
+        <!-- ID Bodega -->
+        <div class="form-field col-md-6 col-12">
+          <label for="idBodega" class="required">ID de Bodega *</label>
+          <input
+            id="idBodega"
+            type="text"
+            pInputText
+            formControlName="idBodega"
+            placeholder="BOD-PRINCIPAL"
+            [class.p-invalid]="hasError('idBodega', 'required') || hasError('idBodega', 'pattern')" />
+          <small class="field-help">Formato: BOD-XXX (ej: BOD-PRINCIPAL)</small>
+          <small class="p-error" *ngIf="hasError('idBodega', 'required') || hasError('idBodega', 'pattern')">
+            {{ getErrorMessage('idBodega') }}
+          </small>
+        </div>
+
+        <!-- Tipo -->
+        <div class="form-field col-md-6 col-12">
+          <label for="tipo" class="required">Tipo de Bodega *</label>
+          <p-dropdown
+            id="tipo"
+            formControlName="tipo"
+            [options]="tipoOptions"
+            placeholder="Selecciona el tipo"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-100">
+          </p-dropdown>
+          <small class="field-help">Física: inventario real | Transaccional: movimientos virtuales</small>
+        </div>
+
+        <!-- País -->
+        <div class="form-field col-md-4 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
+          <label for="pais" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
+            País {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+          </label>
+          <p-dropdown
+            id="pais"
+            formControlName="pais"
+            [options]="paises"
+            placeholder="Selecciona el país"
+            [filter]="true"
+            [showClear]="true"
+            [loading]="cargandoPaises"
+            styleClass="w-100"
+            [class.p-invalid]="hasError('pais', 'required')">
+          </p-dropdown>
+          <small class="p-error" *ngIf="hasError('pais', 'required')">
+            {{ getErrorMessage('pais') }}
+          </small>
+        </div>
+
+        <!-- Departamento -->
+        <div class="form-field col-md-4 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
+          <label for="departamento" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
+            Departamento {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+          </label>
+          <p-dropdown
+            id="departamento"
+            formControlName="departamento"
+            [options]="departamentos"
+            placeholder="Selecciona el departamento"
+            [filter]="true"
+            [showClear]="true"
+            [loading]="cargandoDepartamentos"
+            [disabled]="!warehouseForm.get('pais')?.value"
+            styleClass="w-100"
+            [class.p-invalid]="hasError('departamento', 'required')">
+          </p-dropdown>
+          <small class="p-error" *ngIf="hasError('departamento', 'required')">
+            {{ getErrorMessage('departamento') }}
+          </small>
+        </div>
+
+        <!-- Ciudad -->
+        <div class="form-field col-md-4 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
+          <label for="ciudad" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
+            Ciudad {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+          </label>
+          <p-dropdown
+            id="ciudad"
+            formControlName="ciudad"
+            [options]="ciudades"
+            placeholder="Selecciona la ciudad"
+            [filter]="true"
+            [showClear]="true"
+            [loading]="cargandoCiudades"
+            [disabled]="!warehouseForm.get('departamento')?.value"
+            styleClass="w-100"
+            [class.p-invalid]="hasError('ciudad', 'required')">
+          </p-dropdown>
+          <small class="p-error" *ngIf="hasError('ciudad', 'required')">
+            {{ getErrorMessage('ciudad') }}
+          </small>
+        </div>
+
+        <!-- Dirección -->
+        <div class="form-field col-md-8 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
+          <label for="direccion" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
+            Dirección {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+          </label>
+          <input
+            id="direccion"
+            type="text"
+            pInputText
+            formControlName="direccion"
+            placeholder="Calle 123 #45-67"
+            [class.p-invalid]="hasError('direccion', 'required')" />
+          <small class="p-error" *ngIf="hasError('direccion', 'required')">
+            {{ getErrorMessage('direccion') }}
+          </small>
+        </div>
+
+        <!-- Coordenadas -->
+        <div class="form-field col-md-4 col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
+          <label for="coordenadas" [class.required]="warehouseForm.get('tipo')?.value === 'Física'">
+            Coordenadas GPS {{ warehouseForm.get('tipo')?.value === 'Física' ? '*' : '' }}
+          </label>
+          <input
+            id="coordenadas"
+            type="text"
+            pInputText
+            formControlName="coordenadas"
+            placeholder="4.7110, -74.0721"
+            [class.p-invalid]="hasError('coordenadas', 'required')" />
+          <small class="field-help">Haz clic en el mapa para seleccionar</small>
+          <small class="p-error" *ngIf="hasError('coordenadas', 'required')">
+            {{ getErrorMessage('coordenadas') }}
+          </small>
+        </div>
+
+        <!-- Mapa Leaflet -->
+        <div class="form-field col-12" *ngIf="warehouseForm.get('tipo')?.value === 'Física'">
+          <label>Selecciona la ubicación en el mapa</label>
+          <div #mapContainer style="height: 400px; width: 100%; border: 1px solid #ddd; border-radius: 4px; margin-top: 8px;"></div>
+          <small class="field-help">Haz clic en el mapa para establecer las coordenadas de la bodega</small>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          *ngIf="editingIndex !== null"
+          pButton
+          type="button"
+          label="Cancelar"
+          icon="pi pi-times"
+          class="p-button-secondary p-button-outlined"
+          (click)="cancelEdit()">
+        </button>
+        <button
+          pButton
+          type="button"
+          [label]="editingIndex !== null ? 'Actualizar Bodega' : 'Agregar a Lista'"
+          [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
+          class="p-button-success"
+          [disabled]="warehouseForm.invalid"
+          (click)="addWarehouse()">
+        </button>
+      </div>
+    </form>
+  </p-card>
+
+  <!-- Warehouses List -->
+  <p-card *ngIf="warehousesList.length > 0" class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-list"></i>
+        <span>Bodegas Configuradas ({{ warehousesList.length }})</span>
+      </div>
+    </ng-template>
+
+    <p-table [value]="warehousesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre</th>
+          <th>ID</th>
+          <th>Tipo</th>
+          <th>Ciudad</th>
+          <th>Dirección</th>
+          <th style="width: 140px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-warehouse let-i="rowIndex">
+        <tr>
+          <td>
+            <strong>{{ warehouse.nombre }}</strong>
+          </td>
+          <td>
+            <span class="badge-id">{{ warehouse.idBodega }}</span>
+          </td>
+          <td>
+            <span class="badge" [class.badge-fisica]="warehouse.tipo === 'Física'"
+                  [class.badge-transaccional]="warehouse.tipo === 'Transaccional'">
+              {{ warehouse.tipo }}
+            </span>
+          </td>
+          <td>{{ warehouse.ciudad || '-' }}</td>
+          <td>{{ warehouse.direccion || '-' }}</td>
+          <td>
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-info"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="editWarehouse(i)">
+              </button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="removeWarehouse(i)">
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center">
+            <div class="empty-message">
+              <i class="pi pi-inbox"></i>
+              <p>No hay bodegas configuradas aún</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <!-- Complete Button -->
+  <div class="step-actions mt-4">
+    <button
+      pButton
+      type="button"
+      label="Guardar y Continuar"
+      icon="pi pi-check"
+      iconPos="right"
+      class="p-button-success p-button-lg"
+      [disabled]="warehousesList.length === 0 || isSaving"
+      [loading]="isSaving"
+      (click)="onComplete()">
+    </button>
+
+    <p class="form-status" *ngIf="warehousesList.length === 0">
+      <i class="pi pi-info-circle"></i>
+      Agrega al menos una bodega para continuar
+    </p>
+    <p class="form-status success" *ngIf="warehousesList.length > 0">
+      <i class="pi pi-check-circle"></i>
+      {{ warehousesList.length }} bodega(s) configurada(s) - ¡Listo para continuar!
+    </p>
+  </div>
+</div>

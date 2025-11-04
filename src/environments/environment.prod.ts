@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.10.28.2 - 28 de Octubre 2025 (Beta)",
+  version: "2025.11.04.11 - 4 de Noviembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -18,12 +18,17 @@ export const environment = {
   wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
   voiceWsUrl: "wss://tu-servidor-ejemplo.com",
   wompi: {
+    // Credenciales para pagos de pedidos normales
     prod_intrity: "test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD",
     public_key_test: "pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy",
     public_key: "pub_prod_cN70rb6aXdHMiBWj9fwY26Xyh1Oz5PUf",
     event: "test_events_AaaZdg5VB8tngBhZkogbXmDpbT9nWMH5",
     redirectURL: "https://sellercenter.katuq.com/payment-callback",
     redirectURLTest: "http://localhost:4200/payment-callback",
+
+    // Credenciales PRODUCCIÓN para suscripciones (Premium/Freemium)
+    subscriptions_public_key: "pub_prod_icTT5EBXwo2EoRZX0lLMlLd1EZtdYV1a",
+    subscriptions_integrity: "prod_integrity_MsZnM6nMy3gPVAcMOC23LAuVeWT3rHqc",
   },
   useModelBig: false,
   geocoding: {

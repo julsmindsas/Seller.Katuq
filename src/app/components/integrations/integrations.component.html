@@ -443,42 +443,38 @@
 
           <div class="field-row">
             <div class="field-col form-group">
-              <label for="eventKey">
-                <i class="fa fa-bell"></i> Event Key:
-              </label>
-              <div class="input-with-icon">
-                <i class="fa fa-key prefix-icon"></i>
-                <input type="text" id="eventKey" formControlName="eventKey" placeholder="evt_test_abcdef..." autocomplete="off">
-              </div>
-              <small class="form-text text-muted">Clave para validar webhooks (opcional)</small>
-            </div>
-
-            <div class="field-col form-group">
-              <label for="integrityKey">
-                <i class="fa fa-shield-alt"></i> Integrity Key:
+              <label for="eventsSecret">
+                <i class="fa fa-bell"></i> Events Secret:
+                <span class="field-required">*</span>
               </label>
               <div class="input-with-icon password-field">
                 <i class="fa fa-key prefix-icon"></i>
-                <input type="password" id="integrityKey" formControlName="integrityKey" autocomplete="off">
+                <input type="password" id="eventsSecret" formControlName="eventsSecret" placeholder="prod_events_..." autocomplete="off">
                 <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
               </div>
-              <small class="form-text text-muted">Clave para validar la integridad (opcional)</small>
+              <div *ngIf="integrationForm.get('eventsSecret')?.invalid && integrationForm.get('eventsSecret')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Events Secret es requerido
+              </div>
+              <small class="form-text text-muted">Para validar webhooks de Wompi</small>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label for="redirectUrl">
-              <i class="fa fa-reply"></i> URL de redirección:
-            </label>
-            <div class="input-with-icon">
-              <i class="fa fa-globe prefix-icon"></i>
-              <input type="text" id="redirectUrl" formControlName="redirectUrl"
-                placeholder="https://mitienda.com/payment-callback" autocomplete="off">
-              <button type="button" class="btn-copy suffix-icon" title="Copiar URL">
-                <i class="fa fa-copy"></i>
-              </button>
+            <div class="field-col form-group">
+              <label for="integritySecret">
+                <i class="fa fa-shield-alt"></i> Integrity Secret:
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon password-field">
+                <i class="fa fa-key prefix-icon"></i>
+                <input type="password" id="integritySecret" formControlName="integritySecret" placeholder="prod_integrity_..." autocomplete="off">
+                <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
+              </div>
+              <div *ngIf="integrationForm.get('integritySecret')?.invalid && integrationForm.get('integritySecret')?.touched"
+                class="text-danger">
+                <i class="fa fa-exclamation-triangle"></i> Integrity Secret es requerido
+              </div>
+              <small class="form-text text-muted">Para firmar el widget de checkout</small>
             </div>
-            <small class="form-text text-muted">URL a la que Wompi redirigirá después del pago</small>
           </div>
         </ng-container>
 

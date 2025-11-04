@@ -1,0 +1,250 @@
+<div class="step-container">
+  <!-- Header Info -->
+  <div class="step-intro">
+    <p class="intro-text">
+      Comencemos con la información básica de tu negocio. Esta información se utilizará
+      para configurar tu tienda y generar documentos oficiales.
+    </p>
+  </div>
+
+  <!-- Form -->
+  <form [formGroup]="companyForm" class="company-form">
+
+    <!-- Información Legal -->
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <i class="pi pi-building"></i>
+          <span>Información Legal</span>
+        </div>
+      </ng-template>
+
+      <div class="form-grid">
+        <!-- Nombre Legal -->
+        <div class="form-field col-12">
+          <label for="nombre" class="required">Razón Social o Nombre Legal *</label>
+          <input
+            id="nombre"
+            type="text"
+            pInputText
+            formControlName="nombre"
+            placeholder="Ej: Comercializadora ABC S.A.S"
+            [class.p-invalid]="hasError('nombre', 'required') || hasError('nombre', 'minlength')" />
+          <small class="p-error" *ngIf="hasError('nombre', 'required') || hasError('nombre', 'minlength')">
+            {{ getErrorMessage('nombre') }}
+          </small>
+        </div>
+
+        <!-- Nombre Comercial -->
+        <div class="form-field col-12">
+          <label for="nomComercial">Nombre Comercial (Opcional)</label>
+          <input
+            id="nomComercial"
+            type="text"
+            pInputText
+            formControlName="nomComercial"
+            placeholder="Ej: ABC Store" />
+          <small class="field-help">El nombre con el que tus clientes te conocen</small>
+        </div>
+
+        <!-- NIT -->
+        <div class="form-field col-md-6 col-12">
+          <label for="nit" class="required">NIT o Documento de Identificación *</label>
+          <input
+            id="nit"
+            type="text"
+            pInputText
+            formControlName="nit"
+            placeholder="123456789"
+            [class.p-invalid]="hasError('nit', 'required') || hasError('nit', 'pattern')" />
+          <small class="p-error" *ngIf="hasError('nit', 'required') || hasError('nit', 'pattern')">
+            {{ getErrorMessage('nit') }}
+          </small>
+        </div>
+
+        <!-- Tipo de Empresa -->
+        <div class="form-field col-md-6 col-12">
+          <label for="tipoEmpresa" class="required">Tipo de Empresa *</label>
+          <p-dropdown
+            id="tipoEmpresa"
+            formControlName="tipoEmpresa"
+            [options]="tipoEmpresaOptions"
+            placeholder="Selecciona el tipo"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="false"
+            styleClass="w-100">
+          </p-dropdown>
+        </div>
+
+        <!-- Sector -->
+        <div class="form-field col-12">
+          <label for="sector" class="required">Sector o Industria *</label>
+          <p-dropdown
+            id="sector"
+            formControlName="sector"
+            [options]="sectorOptions"
+            placeholder="Selecciona tu sector"
+            optionLabel="label"
+            optionValue="value"
+            [filter]="true"
+            filterBy="label"
+            styleClass="w-100">
+          </p-dropdown>
+          <small class="field-help">Esto nos ayuda a personalizar tu experiencia</small>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Información de Contacto -->
+    <p-card class="mt-3">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <i class="pi pi-phone"></i>
+          <span>Información de Contacto</span>
+        </div>
+      </ng-template>
+
+      <div class="form-grid">
+        <!-- Email -->
+        <div class="form-field col-md-6 col-12">
+          <label for="email" class="required">Email de Contacto *</label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            placeholder="contacto@tuempresa.com"
+            [class.p-invalid]="hasError('email', 'required') || hasError('email', 'email')" />
+          <small class="p-error" *ngIf="hasError('email', 'required') || hasError('email', 'email')">
+            {{ getErrorMessage('email') }}
+          </small>
+        </div>
+
+        <!-- Teléfono -->
+        <div class="form-field col-md-6 col-12">
+          <label for="telefono" class="required">Teléfono *</label>
+          <input
+            id="telefono"
+            type="tel"
+            pInputText
+            formControlName="telefono"
+            placeholder="3001234567"
+            [class.p-invalid]="hasError('telefono', 'required') || hasError('telefono', 'pattern')" />
+          <small class="p-error" *ngIf="hasError('telefono', 'required') || hasError('telefono', 'pattern')">
+            {{ getErrorMessage('telefono') }}
+          </small>
+        </div>
+
+        <!-- Sitio Web -->
+        <div class="form-field col-12">
+          <label for="sitioWeb">Sitio Web (Opcional)</label>
+          <input
+            id="sitioWeb"
+            type="url"
+            pInputText
+            formControlName="sitioWeb"
+            placeholder="https://www.tuempresa.com"
+            [class.p-invalid]="hasError('sitioWeb', 'pattern')" />
+          <small class="p-error" *ngIf="hasError('sitioWeb', 'pattern')">
+            {{ getErrorMessage('sitioWeb') }}
+          </small>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Ubicación -->
+    <p-card class="mt-3">
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <i class="pi pi-map-marker"></i>
+          <span>Ubicación</span>
+        </div>
+      </ng-template>
+
+      <div class="form-grid">
+        <!-- País -->
+        <div class="form-field col-md-4 col-12">
+          <label for="pais" class="required">País *</label>
+          <p-dropdown
+            id="pais"
+            formControlName="pais"
+            [options]="paisOptions"
+            placeholder="Selecciona"
+            optionLabel="label"
+            optionValue="value"
+            [showClear]="false"
+            styleClass="w-100">
+          </p-dropdown>
+        </div>
+
+        <!-- Ciudad -->
+        <div class="form-field col-md-4 col-12">
+          <label for="ciudad" class="required">Ciudad *</label>
+          <p-dropdown
+            id="ciudad"
+            formControlName="ciudad"
+            [options]="ciudadesColombiaOptions"
+            placeholder="Selecciona tu ciudad"
+            optionLabel="label"
+            optionValue="value"
+            [filter]="true"
+            filterBy="label"
+            styleClass="w-100">
+          </p-dropdown>
+        </div>
+
+        <!-- Dirección -->
+        <div class="form-field col-md-8 col-12">
+          <label for="direccion" class="required">Dirección *</label>
+          <input
+            id="direccion"
+            type="text"
+            pInputText
+            formControlName="direccion"
+            placeholder="Calle 123 #45-67"
+            [class.p-invalid]="hasError('direccion', 'required')" />
+          <small class="p-error" *ngIf="hasError('direccion', 'required')">
+            {{ getErrorMessage('direccion') }}
+          </small>
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-field col-12">
+          <label for="descripcion">Descripción de tu Negocio (Opcional)</label>
+          <textarea
+            id="descripcion"
+            pInputTextarea
+            formControlName="descripcion"
+            rows="3"
+            placeholder="Cuéntanos brevemente sobre tu negocio..."
+            [autoResize]="true">
+          </textarea>
+          <small class="field-help">Esta descripción se puede usar en tu tienda online</small>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Action Buttons -->
+    <div class="step-actions mt-4">
+      <button
+        pButton
+        type="button"
+        label="Guardar y Continuar"
+        icon="pi pi-check"
+        class="p-button-success p-button-lg"
+        [disabled]="!isFormValid()"
+        (click)="onComplete()">
+      </button>
+
+      <p class="form-status" *ngIf="!isFormValid()">
+        <i class="pi pi-info-circle"></i>
+        Completa todos los campos requeridos para continuar
+      </p>
+      <p class="form-status success" *ngIf="isFormValid()">
+        <i class="pi pi-check-circle"></i>
+        ¡Listo! Puedes continuar al siguiente paso
+      </p>
+    </div>
+  </form>
+</div>

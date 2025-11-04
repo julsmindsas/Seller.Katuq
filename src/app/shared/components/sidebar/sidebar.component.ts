@@ -6,7 +6,9 @@ import { environment } from '../../../../environments/environment';
 import { SecurityService } from '../../services/security/security.service';
 import { CompanyInformation } from '../../models/User/CompanyInformation';
 import { NotificationManagerService } from '../../services/notifications/notification-manager.service';
-import { Subscription } from 'rxjs';
+import { Subject, Subscription } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { SubscriptionService } from '../../services/subscription.service';
 // Asegúrate de que PlanSelectorComponent esté importado si aún no lo está
 // import { PlanSelectorComponent } from '../plan-selector/plan-selector.component';
 
@@ -265,11 +267,21 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public showPlanModal: boolean = false;
   public currentPlan: any = {
-    type: 'Completo',
-    progress: 75,
-    renewalDate: '15/08/2025',
-    walletBalance: 0
+    type: 'Freemium',
+    status: 'active',
+    progress: 0,
+    renewalDate: '',
+    walletBalance: 0,
+    usage: {
+      orders: { current: 0, limit: 15 },
+      chatAI: { current: 0, limit: 10 },
+      productsAI: { current: 0, limit: 10 },
+      voice: { enabled: false },
+      video: { enabled: false }
+    },
+    daysLeft: 0
   };
+  private destroy$ = new Subject<void>();
   public iconSidebar;
   // public menuItems: Menu[]; // Ya no usaremos esto directamente en el template
   public url: any;
@@ -338,7 +350,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     private securityService: SecurityService,
     private renderer: Renderer2,
     private elementRef: ElementRef,
-    private notificationManager: NotificationManagerService
+    private notificationManager: NotificationManagerService,
+    private subscriptionService: SubscriptionService
   ) {
     this.navServices.items.subscribe(menuItems => {
       this.processMenuItems(menuItems); // Procesar items para crear secciones
@@ -496,7 +509,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.loadPlanFromLocalStorage();
+    this.loadSubscriptionData();
     this.securityService.getCompanyInformationLogged$().subscribe((companyInformation: CompanyInformation | null) => {
       if (!companyInformation) {
         companyInformation = this.securityService.getCompanyInformationLogged();
@@ -877,61 +890,125 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.calculateWidth((event.target as Window).innerWidth);
   }
   openPlanModal() {
+    console.log('🚀 Abriendo modal de upgrade...');
     this.showPlanModal = true;
-    document.body.style.overflow = 'hidden';
+  }
+
+  viewSubscriptionDetails() {
+    console.log('📊 Mostrando detalles de uso...');
+    // Por ahora, redirigir a pricing donde se ve todo
+    // En el futuro puede ser una página dedicada de detalles
+    this.router.navigate(['/pricing']);
   }
 
   closePlanModal() {
     this.showPlanModal = false;
     document.body.style.overflow = '';
+    // Refrescar datos de suscripción al cerrar el modal
+    this.subscriptionService.refresh();
   }
 
-  private loadPlanFromLocalStorage(): void {
-    const defaultPlan = { type: 'Plan Básico', progress: 0, renewalDate: 'No definida', walletBalance: 0 };
+  private loadSubscriptionData(): void {
+    console.log('📊 Cargando datos de suscripción...');
+
+    // Cargar estado de suscripción
+    this.subscriptionService.subscription$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(subscription => {
+      if (subscription) {
+        console.log('✅ Suscripción cargada:', subscription);
+        this.currentPlan.type = subscription.plan === 'premium' ? 'Premium' : 'Freemium';
+        this.currentPlan.status = subscription.status;
+
+        if (subscription.limits?.orders?.resetDate) {
+          this.currentPlan.renewalDate = this.formatDate(subscription.limits.orders.resetDate);
+          this.currentPlan.daysLeft = this.calculateDaysUntilReset(subscription.limits.orders.resetDate);
+        }
+      }
+    });
+
+    // Cargar estadísticas de uso
+    this.subscriptionService.usage$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(usage => {
+      if (usage) {
+        console.log('📈 Uso cargado:', usage);
+        this.currentPlan.usage = {
+          orders: {
+            current: usage.orders?.current || 0,
+            limit: usage.orders?.limit || 15
+          },
+          chatAI: {
+            current: usage.ai?.chat?.used || 0,
+            limit: usage.ai?.chat?.limit || 10
+          },
+          productsAI: {
+            current: usage.ai?.products?.used || 0,
+            limit: usage.ai?.products?.limit || 10
+          },
+          voice: {
+            enabled: (usage.ai?.voice?.limit || 0) > 0
+          },
+          video: {
+            enabled: (usage.ai?.video?.limit || 0) > 0
+          }
+        };
+
+        this.currentPlan.progress = this.calculateOverallProgress(usage);
+      }
+    });
+
+    // Trigger initial load
+    this.subscriptionService.loadSubscriptionStatus().subscribe({
+      next: () => console.log('✅ Estado de suscripción cargado'),
+      error: (err) => console.error('❌ Error cargando suscripción:', err)
+    });
+
+    this.subscriptionService.getUsageStats().subscribe({
+      next: () => console.log('✅ Estadísticas de uso cargadas'),
+      error: (err) => console.error('❌ Error cargando uso:', err)
+    });
+  }
+
+  private calculateOverallProgress(usage: any): number {
+    const metrics = [];
+
+    // Solo calcular % de features habilitadas
+    if (usage.orders?.limit > 0 && usage.orders?.limit !== -1) {
+      metrics.push((usage.orders.current / usage.orders.limit) * 100);
+    }
+    if (usage.ai?.chat?.limit > 0 && usage.ai?.chat?.limit !== -1) {
+      metrics.push((usage.ai.chat.used / usage.ai.chat.limit) * 100);
+    }
+    if (usage.ai?.products?.limit > 0 && usage.ai?.products?.limit !== -1) {
+      metrics.push((usage.ai.products.used / usage.ai.products.limit) * 100);
+    }
+
+    if (metrics.length === 0) return 0;
+
+    const average = metrics.reduce((a, b) => a + b, 0) / metrics.length;
+    return Math.min(100, Math.round(average));
+  }
+
+  private calculateDaysUntilReset(resetDate: any): number {
     try {
-      const currentCompanyStr = sessionStorage.getItem('currentCompany');
-      if (!currentCompanyStr) { this.currentPlan = defaultPlan; return; }
-      const currentCompany = JSON.parse(currentCompanyStr);
-      if (!currentCompany || typeof currentCompany !== 'object') { this.currentPlan = defaultPlan; return; }
-      const plan = currentCompany.plan;
-      if (!plan || typeof plan !== 'object') { this.currentPlan = defaultPlan; return; }
-      this.currentPlan = {
-        type: this.getPlanName(plan.nombre),
-        progress: this.calculatePlanProgress(plan.fechaInicio, plan.fechaFin),
-        renewalDate: this.formatRenewalDate(plan.fechaFin, plan.fechaUltimoPago),
-        walletBalance: this.calculateWalletBalance(plan.precio)
-      };
-    } catch (error) { console.error('Error loading plan:', error); this.currentPlan = defaultPlan; }
+      const today = new Date();
+      const reset = new Date(resetDate);
+      const diffTime = reset.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return diffDays > 0 ? diffDays : 0;
+    } catch (e) {
+      return 0;
+    }
   }
 
-  private getPlanName(planName: any): string {
-    const validNames = ['Early Adopters', 'Plan Básico', 'Plan Avanzado', 'Plan Empresarial'];
-    return typeof planName === 'string' && validNames.includes(planName) ? planName : 'Plan Básico';
-  }
-
-  private calculatePlanProgress(startDate: string, endDate: string): number {
-    if (!startDate || !endDate) return 0;
+  private formatDate(date: any): string {
     try {
-      const start = new Date(startDate); const end = new Date(endDate); const today = new Date();
-      if (today >= end) return 100; if (today <= start) return 0;
-      const totalDuration = end.getTime() - start.getTime(); const elapsedDuration = today.getTime() - start.getTime();
-      return Math.round((elapsedDuration / totalDuration) * 100);
-    } catch (e) { return 0; }
-  }
-
-  private formatRenewalDate(endDate: any, lastPaymentDate: any): string {
-    try {
-      const dateToUse = endDate || lastPaymentDate; if (!dateToUse) return 'No definida';
-      const date = new Date(dateToUse);
-      return date.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    } catch { return 'No definida'; }
-  }
-
-  private calculateWalletBalance(price: any): number {
-    try {
-      if (price === '0' || price === 0) return 0;
-      const balance = parseFloat(price); return isNaN(balance) ? 0 : balance;
-    } catch { return 0; }
+      const d = new Date(date);
+      return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    } catch {
+      return 'No definida';
+    }
   }
 
   onPlanSelected(planData: any) {
@@ -3212,6 +3289,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   ngOnDestroy(): void {
     // Limpiar suscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
+
     if (this.notificationSubscription) {
       this.notificationSubscription.unsubscribe();
     }

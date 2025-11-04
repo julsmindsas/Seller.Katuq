@@ -1,0 +1,139 @@
+<p-card *ngIf="!loading && usage && !isPremium" styleClass="usage-widget">
+  <ng-template pTemplate="header">
+    <div class="card-header-content">
+      <h4>Uso del Plan Freemium</h4>
+      <button pButton icon="pi pi-refresh" class="p-button-text p-button-sm" (click)="refresh()" [loading]="loading"></button>
+    </div>
+  </ng-template>
+
+  <!-- Pedidos -->
+  <div class="usage-item mb-4">
+    <div class="d-flex justify-content-between mb-2 align-items-center">
+      <span class="usage-label">
+        <i class="pi pi-shopping-cart"></i> Pedidos este mes
+      </span>
+      <span class="usage-value">{{ usage.orders.current }} / {{ usage.orders.limit }}</span>
+    </div>
+    <p-progressBar
+      [value]="getOrdersPercentage()"
+      [showValue]="false"
+      [styleClass]="getProgressBarClass(getOrdersPercentage())">
+    </p-progressBar>
+    <small class="text-muted d-block mt-1">
+      <i class="pi pi-calendar"></i> Resetea: {{ usage.orders.resetDate | date:'dd/MM/yyyy' }}
+    </small>
+  </div>
+
+  <!-- Chat IA -->
+  <div class="usage-item mb-4">
+    <div class="d-flex justify-content-between mb-2 align-items-center">
+      <span class="usage-label">
+        <i class="pi pi-comments"></i> Chat IA hoy
+      </span>
+      <span class="usage-value">{{ usage.ai.chat.used }} / {{ usage.ai.chat.limit }}</span>
+    </div>
+    <p-progressBar
+      [value]="getChatPercentage()"
+      [showValue]="false"
+      [styleClass]="getProgressBarClass(getChatPercentage())">
+    </p-progressBar>
+    <small class="text-muted d-block mt-1">
+      <i class="pi pi-clock"></i> Resetea: {{ usage.resetTime }}
+    </small>
+  </div>
+
+  <!-- Productos IA -->
+  <div class="usage-item mb-4">
+    <div class="d-flex justify-content-between mb-2 align-items-center">
+      <span class="usage-label">
+        <i class="pi pi-box"></i> Productos IA hoy
+      </span>
+      <span class="usage-value">{{ usage.ai.products.used }} / {{ usage.ai.products.limit }}</span>
+    </div>
+    <p-progressBar
+      [value]="getProductsPercentage()"
+      [showValue]="false"
+      [styleClass]="getProgressBarClass(getProductsPercentage())">
+    </p-progressBar>
+    <small class="text-muted d-block mt-1">
+      <i class="pi pi-clock"></i> Resetea: {{ usage.resetTime }}
+    </small>
+  </div>
+
+  <!-- Features bloqueadas -->
+  <div class="blocked-features mb-3">
+    <p class="mb-2"><strong>Features bloqueadas:</strong></p>
+    <div class="feature-badge">
+      <i class="pi pi-lock"></i> IA de Voz
+    </div>
+    <div class="feature-badge">
+      <i class="pi pi-lock"></i> IA de Video
+    </div>
+    <div class="feature-badge">
+      <i class="pi pi-lock"></i> Producción
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="text-center">
+      <button
+        pButton
+        label="Actualizar a Premium"
+        icon="pi pi-star"
+        routerLink="/pricing"
+        class="p-button-success w-100">
+      </button>
+    </div>
+  </ng-template>
+</p-card>
+
+<!-- Plan Premium -->
+<p-card *ngIf="!loading && isPremium" styleClass="usage-widget premium-widget">
+  <ng-template pTemplate="header">
+    <div class="card-header-content premium">
+      <h4>Plan Premium</h4>
+      <i class="pi pi-star"></i>
+    </div>
+  </ng-template>
+
+  <div class="text-center premium-content">
+    <i class="pi pi-star premium-icon"></i>
+    <h4 class="mt-3 mb-2">Uso Ilimitado</h4>
+    <p class="text-muted">Disfruta de todas las features sin límites</p>
+
+    <div class="premium-features mt-4">
+      <div class="feature-item">
+        <i class="pi pi-check-circle"></i>
+        <span>Pedidos ilimitados</span>
+      </div>
+      <div class="feature-item">
+        <i class="pi pi-check-circle"></i>
+        <span>Chat e IA sin restricciones</span>
+      </div>
+      <div class="feature-item">
+        <i class="pi pi-check-circle"></i>
+        <span>Todas las integraciones</span>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="text-center">
+      <button
+        pButton
+        label="Ver Detalles del Plan"
+        icon="pi pi-info-circle"
+        routerLink="/pricing"
+        class="p-button-outlined w-100">
+      </button>
+    </div>
+  </ng-template>
+</p-card>
+
+<!-- Loading State -->
+<p-card *ngIf="loading" styleClass="usage-widget">
+  <div class="text-center p-4">
+    <p-progressSpinner styleClass="w-4rem h-4rem"></p-progressSpinner>
+    <p class="mt-3 text-muted">Cargando estadísticas...</p>
+  </div>
+</p-card>

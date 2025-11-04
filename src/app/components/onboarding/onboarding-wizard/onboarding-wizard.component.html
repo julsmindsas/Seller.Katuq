@@ -1,0 +1,466 @@
+<!-- Loading State -->
+<div *ngIf="isLoading" class="onboarding-loading">
+  <div class="loading-content">
+    <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: var(--primary-color);"></i>
+    <p class="mt-3">Cargando configuración...</p>
+  </div>
+</div>
+
+<!-- Main Onboarding Wizard -->
+<div *ngIf="!isLoading && onboardingState" class="onboarding-wizard">
+
+  <!-- Mobile Header -->
+  <div class="mobile-wizard-header show-mobile">
+    <button
+      pButton
+      type="button"
+      icon="pi pi-bars"
+      class="p-button-text p-button-rounded"
+      (click)="toggleSidebar()"
+      [pTooltip]="sidebarVisible ? 'Cerrar menú' : 'Abrir menú'"
+      tooltipPosition="bottom">
+    </button>
+
+    <div class="header-content">
+      <div class="step-name">{{ getCurrentStepName() }}</div>
+      <div class="step-progress">
+        <span class="step-counter">Paso {{ currentStep?.number || 0 }} de {{ totalSteps }}</span>
+        <div class="progress-bar-mini">
+          <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sidebar Vertical (Desktop) / PrimeNG Sidebar (Mobile) -->
+  <p-sidebar
+    [(visible)]="sidebarVisible"
+    [modal]="isMobileView"
+    [dismissible]="isMobileView"
+    [showCloseIcon]="isMobileView"
+    [position]="'left'"
+    [styleClass]="'onboarding-sidebar-overlay'"
+    *ngIf="isMobileView">
+    <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
+  </p-sidebar>
+
+  <div class="onboarding-sidebar hide-mobile" *ngIf="!isMobileView">
+    <ng-container *ngTemplateOutlet="sidebarContent"></ng-container>
+  </div>
+
+  <!-- Sidebar Content Template -->
+  <ng-template #sidebarContent>
+    <!-- Header -->
+    <div class="sidebar-header">
+      <h3 class="sidebar-title">Configuración Inicial</h3>
+      <p class="sidebar-subtitle">{{ onboardingState.companyName || 'Tu Comercio' }}</p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-section">
+      <div class="progress-info">
+        <span class="progress-text">Progreso</span>
+        <span class="progress-count">{{ completedStepsCount }}/{{ totalSteps }}</span>
+      </div>
+      <p-progressBar
+        [value]="progressPercentage"
+        [showValue]="false"
+        styleClass="custom-progress">
+      </p-progressBar>
+    </div>
+
+    <p-divider></p-divider>
+
+    <!-- Steps List -->
+    <div class="steps-list">
+      <div
+        *ngFor="let step of allSteps"
+        class="step-item"
+        [ngClass]="getStepClass(step)"
+        [class.step-disabled]="!isStepAvailable(step)"
+        (click)="isStepAvailable(step) && goToStep(step.id)"
+        [pTooltip]="!isStepAvailable(step) ? 'Completa los pasos anteriores primero' : ''"
+        tooltipPosition="right">
+
+        <div class="step-number">
+          <span *ngIf="step.status !== StepStatus.COMPLETED && step.status !== StepStatus.IN_PROGRESS">
+            {{ step.number }}
+          </span>
+          <i *ngIf="step.status === StepStatus.COMPLETED" class="pi pi-check"></i>
+          <i *ngIf="step.status === StepStatus.IN_PROGRESS" class="pi pi-spin pi-spinner"></i>
+        </div>
+
+        <div class="step-info">
+          <div class="step-title">
+            {{ step.title }}
+            <span *ngIf="!step.isRequired" class="optional-badge">Opcional</span>
+          </div>
+          <div class="step-time">
+            <i class="pi pi-clock"></i>
+            {{ step.estimatedTime }} min
+          </div>
+        </div>
+
+        <div class="step-icon-main">
+          <i class="pi" [ngClass]="step.icon"></i>
+        </div>
+
+        <div *ngIf="step.hasAISuggestion" class="step-ai-badge" pTooltip="Tiene sugerencias de IA">
+          <i class="pi pi-sparkles"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Postpone Button -->
+    <div class="sidebar-footer">
+      <button
+        pButton
+        type="button"
+        label="Posponer Configuración"
+        icon="pi pi-clock"
+        class="p-button-text p-button-sm w-100"
+        (click)="postponeOnboarding()">
+      </button>
+    </div>
+  </ng-template>
+
+  <!-- Main Content Area -->
+  <div class="onboarding-content" [class.mobile-view]="isMobileView">
+
+    <!-- Step Header -->
+    <div class="step-header" *ngIf="currentStep">
+      <div class="step-header-main">
+        <div class="step-badge">
+          Paso {{ currentStep.number }} de {{ totalSteps }}
+        </div>
+        <h2 class="step-title">
+          <i class="pi" [ngClass]="currentStep.icon"></i>
+          {{ currentStep.title }}
+        </h2>
+        <p class="step-description">{{ currentStep.description }}</p>
+      </div>
+
+      <!-- AI Suggestions Banner -->
+      <div *ngIf="currentStep.hasAISuggestion && currentAISuggestion" class="ai-suggestions-banner">
+        <div class="ai-banner-content">
+          <div class="ai-banner-icon">
+            <i class="pi pi-sparkles"></i>
+          </div>
+          <div class="ai-banner-text">
+            <strong>Sugerencias Inteligentes Disponibles</strong>
+            <p>Basadas en tu sector: {{ currentAISuggestion.reasoning || 'Configuración recomendada' }}</p>
+          </div>
+          <button
+            pButton
+            type="button"
+            label="Ver Sugerencias"
+            icon="pi pi-eye"
+            class="p-button-sm p-button-outlined"
+            (click)="showAISuggestions = !showAISuggestions">
+          </button>
+        </div>
+
+        <!-- AI Suggestions Panel -->
+        <div *ngIf="showAISuggestions" class="ai-suggestions-panel">
+          <div class="ai-suggestions-header">
+            <h4>Configuración Sugerida</h4>
+            <p-chip
+              label="Confianza: {{ (currentAISuggestion.confidence * 100) | number:'1.0-0' }}%"
+              [style]="{'background-color': 'var(--green-100)', 'color': 'var(--green-800)'}">
+            </p-chip>
+          </div>
+
+          <div class="ai-suggestions-data">
+            <pre>{{ currentAISuggestion.suggestedData | json }}</pre>
+          </div>
+
+          <div class="ai-suggestions-actions">
+            <button
+              pButton
+              type="button"
+              label="Aplicar Sugerencias"
+              icon="pi pi-check"
+              class="p-button-success"
+              (click)="applyAISuggestion()">
+            </button>
+            <button
+              pButton
+              type="button"
+              label="Configurar Manualmente"
+              class="p-button-text"
+              (click)="showAISuggestions = false">
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Banner de Configuración Completa -->
+    <div *ngIf="showSuccessBanner && isReviewMode" class="success-banner animate-fade-in">
+      <div class="banner-content">
+        <div class="banner-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="banner-text">
+          <h3>¡Tu Empresa Está Configurada! 🎉</h3>
+          <p>
+            Hemos detectado que tu empresa ya tiene toda la configuración básica lista.
+            Puedes revisarla paso a paso o finalizar directamente para empezar a vender.
+          </p>
+        </div>
+        <button
+          pButton
+          type="button"
+          label="Finalizar y Empezar a Vender"
+          icon="pi pi-arrow-right"
+          iconPos="right"
+          class="p-button-success p-button-lg finish-direct-btn"
+          [disabled]="!canFinishDirectly()"
+          [loading]="isSaving"
+          (click)="finishDirectly()">
+        </button>
+      </div>
+
+      <button
+        pButton
+        type="button"
+        icon="pi pi-times"
+        class="p-button-text p-button-rounded p-button-plain close-banner-btn"
+        (click)="showSuccessBanner = false"
+        pTooltip="Cerrar aviso">
+      </button>
+    </div>
+
+    <!-- Step Content -->
+    <div class="step-content">
+      <!-- Step 1: Company Info -->
+      <app-company-info-step
+        *ngIf="currentStep?.id === StepId.COMPANY_INFO"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-company-info-step>
+
+      <!-- Step 2: Roles Setup -->
+      <app-roles-step
+        *ngIf="currentStep?.id === StepId.ROLES_SETUP"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-roles-step>
+
+      <!-- Step 3: Users Setup -->
+      <app-generic-step
+        *ngIf="currentStep?.id === StepId.USERS_SETUP"
+        [stepId]="currentStep.id"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-generic-step>
+
+      <!-- Step 4: Warehouses -->
+      <app-warehouses-step
+        *ngIf="currentStep?.id === StepId.WAREHOUSES"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-warehouses-step>
+
+      <!-- Step 5: Payment Methods -->
+      <app-payment-methods-step
+        *ngIf="currentStep?.id === StepId.PAYMENT_METHODS"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-payment-methods-step>
+
+      <!-- Step 6: Delivery Methods -->
+      <app-delivery-methods-step
+        *ngIf="currentStep?.id === StepId.DELIVERY_METHODS"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-delivery-methods-step>
+
+      <!-- Step 7: Delivery Types -->
+      <app-delivery-types-step
+        *ngIf="currentStep?.id === StepId.DELIVERY_TYPES"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-delivery-types-step>
+
+      <!-- Step 8: Delivery Times -->
+      <app-delivery-times-step
+        *ngIf="currentStep?.id === StepId.DELIVERY_TIMES"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-delivery-times-step>
+
+      <!-- Step 9: Categories -->
+      <app-categories-step
+        *ngIf="currentStep?.id === StepId.CATEGORIES"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-categories-step>
+
+      <!-- Step 10: Billing Zones -->
+      <app-billing-zones-step
+        *ngIf="currentStep?.id === StepId.BILLING_ZONES"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-billing-zones-step>
+
+      <!-- Step 11: Addons (Keep Generic) -->
+      <app-generic-step
+        *ngIf="currentStep?.id === StepId.ADDONS"
+        [stepId]="currentStep.id"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-generic-step>
+
+      <!-- Step 12: First Product -->
+      <app-first-product-step
+        *ngIf="currentStep?.id === StepId.FIRST_PRODUCT"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-first-product-step>
+
+      <!-- Step 13: Import Customers -->
+      <app-import-customers-step
+        *ngIf="currentStep?.id === StepId.IMPORT_CUSTOMERS"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-import-customers-step>
+
+      <!-- Step 14: Import Products -->
+      <app-import-products-step
+        *ngIf="currentStep?.id === StepId.IMPORT_PRODUCTS"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-import-products-step>
+
+      <!-- Step 15: Sequences -->
+      <app-sequences-step
+        *ngIf="currentStep?.id === StepId.SEQUENCES"
+        [initialData]="currentStepData"
+        [aiSuggestion]="currentAISuggestion"
+        (dataChange)="saveStepProgress($event)"
+        (stepComplete)="markStepComplete($event)">
+      </app-sequences-step>
+    </div>
+
+    <!-- Navigation Footer - Desktop -->
+    <div class="step-footer hide-mobile">
+      <div class="footer-actions-left">
+        <button
+          pButton
+          type="button"
+          label="Anterior"
+          icon="pi pi-arrow-left"
+          class="p-button-outlined"
+          [disabled]="!canGoPrevious() || isSaving"
+          (click)="goToPreviousStep()">
+        </button>
+
+        <button
+          *ngIf="currentStep && !currentStep.isRequired"
+          pButton
+          type="button"
+          label="Omitir Paso"
+          icon="pi pi-forward"
+          class="p-button-text"
+          [disabled]="isSaving"
+          (click)="skipStep()">
+        </button>
+      </div>
+
+      <div class="footer-actions-right">
+        <button
+          pButton
+          type="button"
+          [label]="currentStep?.number === totalSteps ? (isReviewMode ? 'Revisar y Finalizar' : 'Finalizar') : 'Siguiente'"
+          [icon]="currentStep?.number === totalSteps ? 'pi pi-check' : 'pi pi-arrow-right'"
+          iconPos="right"
+          [class.p-button-success]="currentStep?.number === totalSteps"
+          [disabled]="!canGoNext() || isSaving"
+          [loading]="isSaving"
+          (click)="goToNextStep()">
+        </button>
+      </div>
+    </div>
+
+    <!-- Saving Indicator -->
+    <div *ngIf="isSaving" class="saving-indicator">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Guardando...</span>
+    </div>
+  </div>
+
+  <!-- Mobile Bottom Navigation Bar -->
+  <div class="mobile-bottom-nav show-mobile">
+    <div class="mobile-nav-actions">
+      <!-- Botón Anterior -->
+      <button
+        pButton
+        type="button"
+        icon="pi pi-arrow-left"
+        label="Anterior"
+        class="p-button-outlined mobile-nav-btn"
+        [disabled]="!canGoPrevious() || isSaving"
+        (click)="goToPreviousStep()">
+      </button>
+
+      <!-- Botón Omitir (solo si el paso es opcional) -->
+      <button
+        *ngIf="currentStep && !currentStep.isRequired"
+        pButton
+        type="button"
+        icon="pi pi-forward"
+        class="p-button-text mobile-nav-btn-skip"
+        [disabled]="isSaving"
+        [pTooltip]="'Omitir este paso'"
+        tooltipPosition="top"
+        (click)="skipStep()">
+      </button>
+
+      <!-- Botón Siguiente/Finalizar -->
+      <button
+        pButton
+        type="button"
+        [label]="currentStep?.number === totalSteps ? 'Finalizar' : 'Siguiente'"
+        [icon]="currentStep?.number === totalSteps ? 'pi pi-check' : 'pi pi-arrow-right'"
+        iconPos="right"
+        [class.p-button-success]="currentStep?.number === totalSteps"
+        class="mobile-nav-btn mobile-nav-btn-primary"
+        [disabled]="!canGoNext() || isSaving"
+        [loading]="isSaving"
+        (click)="goToNextStep()">
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Messages -->
+<p-toast position="top-right"></p-toast>

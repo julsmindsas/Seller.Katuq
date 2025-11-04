@@ -1376,6 +1376,19 @@ body.dark-only {
     font-size: 10px;
     font-weight: 500;
     text-transform: uppercase;
+
+    &.premium {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+      font-weight: 600;
+    }
+
+    &.freemium {
+      background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+      color: #2c3e50;
+      font-weight: 600;
+    }
   }
 
   .plan-balance {
@@ -1418,8 +1431,8 @@ body.dark-only {
 }
 
 .plan-card-content {
-  max-height: 200px;
-  padding: var(--spacing-lg);
+  max-height: 450px;
+  padding: 12px;
   transition: all var(--transition-normal);
   overflow: hidden;
 
@@ -1429,72 +1442,511 @@ body.dark-only {
   }
 
   .credit-card {
-    background: #f3f4f6;
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    border-radius: 12px;
+    padding: 14px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 
-    .card-header-section,
-    .card-balance-section,
-    .card-details-section,
-    .usage-bar-container {
-      margin-bottom: var(--spacing-md);
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 48px rgba(0, 0, 0, 0.16);
     }
 
-    .balance-amount {
-      .currency {
-        font-size: 12px;
-        color: var(--text-secondary);
-        margin-right: 2px;
+    // Gradientes por tipo de plan
+    &.premium-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+
+      .balance-label,
+      .stat-label,
+      .progress-label,
+      .reset-info {
+        color: rgba(255, 255, 255, 0.9);
       }
 
-      .amount {
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--text-primary);
+      .stat-value,
+      .balance-amount .amount,
+      .progress-percentage {
+        color: white;
+      }
+
+      .card-chip {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+
+      .stat-icon {
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+      }
+
+      .progress-bar-bg {
+        background: rgba(255, 255, 255, 0.2);
       }
     }
 
-    .usage-bar {
-      height: 6px;
-      background: var(--bg-hover);
-      border-radius: 3px;
-      overflow: hidden;
+    &.freemium-card {
+      background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+      color: #2c3e50;
 
-      .usage-progress {
-        height: 100%;
-        background: var(--primary-color);
-        transition: width var(--transition-normal);
+      .card-chip {
+        background: rgba(255, 255, 255, 0.4);
+        color: #2c3e50;
+      }
+
+      .stat-icon {
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      .progress-bar-bg {
+        background: rgba(255, 255, 255, 0.4);
       }
     }
 
-    .card-actions {
+    // Card Header
+    .card-header-section {
       display: flex;
-      gap: var(--spacing-sm);
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
 
-      .action-btn {
-        flex: 1;
-        padding: 8px;
-        border: 1px solid var(--sidebar-border);
-        border-radius: var(--radius-sm);
-        background: white;
-        color: var(--text-primary);
-        font-size: 11px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
+      .card-chip {
+        width: 32px;
+        height: 26px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        backdrop-filter: blur(10px);
+      }
 
-        &:hover {
-          background: var(--primary-color);
+      .plan-badge-card {
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        text-transform: uppercase;
+
+        &.premium {
+          background: rgba(255, 255, 255, 0.25);
           color: white;
-          border-color: var(--primary-color);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        &.freemium {
+          background: rgba(255, 255, 255, 0.6);
+          color: #2c3e50;
         }
 
         i {
-          margin-right: 4px;
           font-size: 10px;
         }
       }
     }
+
+    // Balance Section
+    .card-balance-section {
+      margin-bottom: 12px;
+
+      .balance-label {
+        font-size: 9px;
+        font-weight: 600;
+        opacity: 0.8;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        i {
+          font-size: 10px;
+        }
+      }
+
+      .balance-amount {
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+
+        .currency {
+          font-size: 12px;
+          font-weight: 600;
+          opacity: 0.8;
+        }
+
+        .amount {
+          font-size: 22px;
+          font-weight: 700;
+          line-height: 1;
+        }
+
+        .currency-code {
+          font-size: 9px;
+          font-weight: 600;
+          opacity: 0.6;
+          margin-left: 2px;
+        }
+      }
+    }
+
+    // Premium Unlimited Section
+    .premium-unlimited-section {
+      margin-bottom: 12px;
+      text-align: center;
+
+      .unlimited-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        margin-bottom: 12px;
+        backdrop-filter: blur(10px);
+
+        i {
+          font-size: 20px;
+          animation: pulse 2s infinite;
+        }
+
+        span {
+          font-size: 13px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+      }
+
+      .premium-features {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-bottom: 12px;
+
+        .premium-feature-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 10px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 8px;
+          font-size: 10px;
+
+          i {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px;
+          }
+
+          span {
+            opacity: 0.9;
+          }
+        }
+      }
+
+      .billing-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+
+        i {
+          font-size: 16px;
+          color: rgba(255, 255, 255, 0.9);
+        }
+
+        .billing-text {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          flex: 1;
+
+          .billing-label {
+            font-size: 9px;
+            opacity: 0.7;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+
+          .billing-date {
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 1;
+          }
+        }
+      }
+    }
+
+    // Billing info para Freemium (fuera del freemium-card ya que puede estar anidado)
+    .freemium-card .billing-info.freemium-reset {
+      background: rgba(44, 62, 80, 0.2);
+      border: 1px solid rgba(44, 62, 80, 0.3);
+
+      i {
+        color: #2c3e50;
+      }
+
+      .billing-text {
+        .billing-label {
+          color: #2c3e50;
+          opacity: 0.7;
+        }
+
+        .billing-date {
+          color: #2c3e50;
+        }
+      }
+    }
+
+    // Usage Stats Grid
+    .usage-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        backdrop-filter: blur(10px);
+        transition: all 0.2s ease;
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.15);
+          transform: translateX(2px);
+        }
+
+        .stat-icon {
+          width: 28px;
+          height: 28px;
+          border-radius: 8px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 12px;
+          flex-shrink: 0;
+
+          &.orders {
+            background: rgba(52, 211, 153, 0.2);
+            color: #10b981;
+          }
+
+          &.chat {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+          }
+
+          &.products {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+          }
+        }
+
+        .stat-content {
+          flex: 1;
+
+          .stat-label {
+            font-size: 8px;
+            font-weight: 600;
+            opacity: 0.8;
+            margin-bottom: 1px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+          }
+
+          .stat-value {
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+
+            .stat-limit {
+              font-size: 10px;
+              opacity: 0.6;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+
+    // Progress Section
+    .progress-section {
+      margin-bottom: 12px;
+
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+
+        .progress-label {
+          font-size: 9px;
+          font-weight: 600;
+          opacity: 0.8;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+
+          i {
+            font-size: 9px;
+          }
+        }
+
+        .progress-percentage {
+          font-size: 11px;
+          font-weight: 700;
+        }
+      }
+
+      .progress-bar-wrapper {
+        margin-bottom: 6px;
+
+        .progress-bar-bg {
+          height: 6px;
+          border-radius: 8px;
+          overflow: hidden;
+          position: relative;
+
+          .progress-bar-fill {
+            height: 100%;
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+
+            &.low {
+              background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            }
+
+            &.medium {
+              background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%);
+            }
+
+            &.high {
+              background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+            }
+
+            .progress-glow {
+              position: absolute;
+              top: 0;
+              right: 0;
+              width: 20%;
+              height: 100%;
+              background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4));
+              animation: shimmer 2s infinite;
+            }
+          }
+        }
+      }
+
+      .reset-info {
+        font-size: 8px;
+        opacity: 0.7;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        i {
+          font-size: 8px;
+        }
+      }
+    }
+
+    // Modern Action Buttons
+    .card-actions-modern {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+
+      .modern-btn {
+        padding: 7px 10px;
+        border-radius: 8px;
+        font-size: 9px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        border: none;
+        letter-spacing: 0.2px;
+
+        i {
+          font-size: 10px;
+        }
+
+        &:hover {
+          transform: translateY(-2px);
+        }
+
+        &.primary {
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          color: white;
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+
+          &:hover {
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+          }
+        }
+
+        &.secondary {
+          background: rgba(255, 255, 255, 0.25);
+          color: white;
+          backdrop-filter: blur(10px);
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.35);
+          }
+        }
+
+        &.outline {
+          background: transparent;
+          color: inherit;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+
+          &:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+          }
+        }
+      }
+
+      // Si hay 3 botones, que ocupe toda la columna el tercero
+      & > :nth-child(3) {
+        grid-column: 1 / -1;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
   }
 }
 

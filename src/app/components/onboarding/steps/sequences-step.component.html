@@ -1,0 +1,86 @@
+<div class="step-container">
+  <div class="step-intro">
+    <p class="intro-text">
+      Configura los consecutivos de numeración para tus pedidos. Los consecutivos aseguran que cada pedido tenga un número único e incremental.
+    </p>
+  </div>
+
+  <p-card class="configuration-card mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header"><i class="pi pi-list-check"></i><span>Configuración de Consecutivos</span></div>
+    </ng-template>
+
+    <div class="consecutivos-grid">
+      <!-- Pedidos Web -->
+      <div class="consecutivo-option" [class.selected]="enableOrders">
+        <div class="option-header">
+          <p-checkbox
+            [(ngModel)]="enableOrders"
+            [binary]="true"
+            inputId="enableOrders"
+            [disabled]="isSaving">
+          </p-checkbox>
+          <label for="enableOrders" class="option-label">
+            <i [class]="tiposInfo.orders.icon"></i>
+            <span>{{ tiposInfo.orders.label }}</span>
+          </label>
+        </div>
+
+        <div class="option-description">
+          {{ tiposInfo.orders.descripcion }}
+        </div>
+
+        <div class="option-preview">
+          <strong>Formato:</strong>
+          <code>{{ tiposInfo.orders.ejemplo }}</code>
+        </div>
+      </div>
+
+      <!-- Pedidos POS -->
+      <div class="consecutivo-option" [class.selected]="enableOrdersPOS">
+        <div class="option-header">
+          <p-checkbox
+            [(ngModel)]="enableOrdersPOS"
+            [binary]="true"
+            inputId="enableOrdersPOS"
+            [disabled]="isSaving">
+          </p-checkbox>
+          <label for="enableOrdersPOS" class="option-label">
+            <i [class]="tiposInfo.ordersPOS.icon"></i>
+            <span>{{ tiposInfo.ordersPOS.label }}</span>
+          </label>
+        </div>
+
+        <div class="option-description">
+          {{ tiposInfo.ordersPOS.descripcion }}
+        </div>
+
+        <div class="option-preview">
+          <strong>Formato:</strong>
+          <code>{{ tiposInfo.ordersPOS.ejemplo }}</code>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-message mt-3" [class.error]="!isValid()">
+      <i [class]="isValid() ? 'pi pi-info-circle' : 'pi pi-exclamation-triangle'"></i>
+      <span>{{ getHelpMessage() }}</span>
+    </div>
+  </p-card>
+
+  <div class="step-actions mt-4">
+    <button pButton type="button" label="Guardar y Continuar" icon="pi pi-check" iconPos="right"
+            class="p-button-success p-button-lg"
+            [disabled]="!isValid() || isSaving"
+            [loading]="isSaving"
+            (click)="onComplete()"></button>
+
+    <p class="form-status" *ngIf="!isValid()">
+      <i class="pi pi-exclamation-triangle"></i>Debes seleccionar al menos un tipo de consecutivo para continuar
+    </p>
+
+    <p class="form-status success" *ngIf="isValid()">
+      <i class="pi pi-check-circle"></i>Configuración lista - Los consecutivos iniciarán en 1
+    </p>
+  </div>
+</div>

@@ -1,0 +1,177 @@
+<div class="step-container">
+  <div class="step-intro">
+    <p class="intro-text">
+      Define los tiempos estimados de entrega que ofrecerás. Esto ayuda a tus clientes a planificar sus compras.
+    </p>
+  </div>
+
+  <p-card class="templates-card">
+    <ng-template pTemplate="header">
+      <div class="card-header"><i class="pi pi-th-large"></i><span>Plantillas Rápidas</span></div>
+    </ng-template>
+    <div class="templates-grid">
+      <button *ngFor="let template of predefinedTemplates" pButton type="button" [label]="template.nombreExterno"
+              icon="pi pi-calendar" class="p-button-outlined template-button" (click)="useTemplate(template)"></button>
+    </div>
+    <small class="field-help">Haz clic en una plantilla para cargar sus datos</small>
+  </p-card>
+
+  <p-card class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header"><i class="pi pi-calendar"></i>
+        <span>{{ editingIndex !== null ? 'Editar Tiempo de Entrega' : 'Agregar Tiempo de Entrega' }}</span></div>
+    </ng-template>
+    <form [formGroup]="deliveryTimeForm">
+      <div class="form-grid">
+        <div class="form-field col-12 md:col-6">
+          <label for="nombreInterno" class="required">Nombre Interno *</label>
+          <input id="nombreInterno" type="text" pInputText formControlName="nombreInterno"
+                 placeholder="Ej: 24_horas, 2_3_dias"
+                 [class.p-invalid]="hasError('nombreInterno', 'required') || hasError('nombreInterno', 'minlength')" />
+          <small class="p-error" *ngIf="hasError('nombreInterno', 'required') || hasError('nombreInterno', 'minlength')">
+            {{ getErrorMessage('nombreInterno') }}</small>
+          <small class="field-help">Nombre para uso interno del sistema</small>
+        </div>
+
+        <div class="form-field col-12 md:col-6">
+          <label for="nombreExterno" class="required">Nombre Externo *</label>
+          <input id="nombreExterno" type="text" pInputText formControlName="nombreExterno"
+                 placeholder="Ej: 24 horas, 2-3 días"
+                 [class.p-invalid]="hasError('nombreExterno', 'required') || hasError('nombreExterno', 'minlength')" />
+          <small class="p-error" *ngIf="hasError('nombreExterno', 'required') || hasError('nombreExterno', 'minlength')">
+            {{ getErrorMessage('nombreExterno') }}</small>
+          <small class="field-help">Nombre que verán los clientes</small>
+        </div>
+
+        <div class="form-field col-12">
+          <label for="descripcion" class="required">Descripción *</label>
+          <textarea id="descripcion" pInputTextarea formControlName="descripcion" rows="2"
+                    placeholder="Breve descripción del tiempo de entrega" [autoResize]="true"
+                    [class.p-invalid]="hasError('descripcion', 'required')"></textarea>
+          <small class="p-error" *ngIf="hasError('descripcion', 'required')">
+            {{ getErrorMessage('descripcion') }}</small>
+        </div>
+
+        <div class="form-field col-12 md:col-4">
+          <label for="minDias" class="required">Días Mínimos *</label>
+          <p-inputNumber
+            inputId="minDias"
+            formControlName="minDias"
+            [min]="1"
+            [showButtons]="true"
+            placeholder="Ej: 1, 2, 3..."
+            [class.p-invalid]="hasError('minDias', 'required') || hasError('minDias', 'min')">
+          </p-inputNumber>
+          <small class="p-error" *ngIf="hasError('minDias', 'required') || hasError('minDias', 'min')">
+            {{ getErrorMessage('minDias') }}</small>
+          <small class="field-help">Días mínimos estimados para la entrega</small>
+        </div>
+
+        <div class="form-field col-12 md:col-4">
+          <label for="posicion" class="required">Posición *</label>
+          <p-inputNumber
+            inputId="posicion"
+            formControlName="posicion"
+            [min]="1"
+            [showButtons]="true"
+            placeholder="Ej: 1, 2, 3..."
+            [class.p-invalid]="hasError('posicion', 'required') || hasError('posicion', 'min')">
+          </p-inputNumber>
+          <small class="p-error" *ngIf="hasError('posicion', 'required') || hasError('posicion', 'min')">
+            {{ getErrorMessage('posicion') }}</small>
+          <small class="field-help">Orden en que aparecerá en la lista</small>
+        </div>
+
+        <div class="form-field col-12 md:col-4">
+          <label for="ciudad" class="required">Ciudades *</label>
+          <p-multiSelect
+            inputId="ciudad"
+            [options]="ciudades"
+            formControlName="ciudad"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecciona ciudades"
+            [showClear]="true"
+            [filter]="true"
+            filterPlaceholder="Buscar..."
+            display="chip"
+            [class.p-invalid]="hasError('ciudad', 'required')">
+          </p-multiSelect>
+          <small class="p-error" *ngIf="hasError('ciudad', 'required')">
+            {{ getErrorMessage('ciudad') }}</small>
+          <small class="field-help">Ciudades donde aplica este tiempo</small>
+        </div>
+
+        <div class="form-field col-12">
+          <div class="checkbox-field">
+            <p-checkbox inputId="activo" formControlName="activo" [binary]="true" label="Activo"></p-checkbox>
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button *ngIf="editingIndex !== null" pButton type="button" label="Cancelar" icon="pi pi-times"
+                class="p-button-secondary p-button-outlined" (click)="cancelEdit()"></button>
+        <button pButton type="button" [label]="editingIndex !== null ? 'Actualizar Tiempo' : 'Agregar a Lista'"
+                [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'" class="p-button-success"
+                [disabled]="deliveryTimeForm.invalid" (click)="addDeliveryTime()"></button>
+      </div>
+    </form>
+  </p-card>
+
+  <p-card *ngIf="deliveryTimesList.length > 0" class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header"><i class="pi pi-list"></i>
+        <span>Tiempos de Entrega Configurados ({{ deliveryTimesList.length }})</span></div>
+    </ng-template>
+    <p-table [value]="deliveryTimesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nombre Externo</th>
+          <th>Nombre Interno</th>
+          <th>Días Mínimos</th>
+          <th>Ciudades</th>
+          <th style="width: 80px">Posición</th>
+          <th style="width: 100px">Estado</th>
+          <th style="width: 140px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-time let-i="rowIndex">
+        <tr>
+          <td><strong>{{ time.nombreExterno }}</strong></td>
+          <td>{{ time.nombreInterno }}</td>
+          <td><span class="badge-days">{{ time.minDias }} días</span></td>
+          <td>
+            <span *ngFor="let ciudad of time.ciudad; let last = last">
+              {{ ciudad }}<span *ngIf="!last">, </span>
+            </span>
+            <span *ngIf="!time.ciudad || time.ciudad.length === 0">-</span>
+          </td>
+          <td class="text-center">{{ time.posicion }}</td>
+          <td>
+            <span class="badge" [class.badge-active]="time.activo" [class.badge-inactive]="!time.activo">
+              {{ time.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button pButton type="button" icon="pi pi-pencil" class="p-button-text p-button-sm p-button-info"
+                      pTooltip="Editar" (click)="editDeliveryTime(i)"></button>
+              <button pButton type="button" icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger"
+                      pTooltip="Eliminar" (click)="removeDeliveryTime(i)"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <div class="step-actions mt-4">
+    <button pButton type="button" label="Guardar y Continuar" icon="pi pi-check" iconPos="right"
+            class="p-button-success p-button-lg" [disabled]="deliveryTimesList.length === 0 || isSaving"
+            [loading]="isSaving" (click)="onComplete()"></button>
+    <p class="form-status" *ngIf="deliveryTimesList.length === 0">
+      <i class="pi pi-info-circle"></i>Agrega al menos un tiempo de entrega para continuar</p>
+    <p class="form-status success" *ngIf="deliveryTimesList.length > 0">
+      <i class="pi pi-check-circle"></i>{{ deliveryTimesList.length }} tiempo(s) configurado(s) - ¡Listo!</p>
+  </div>
+</div>

@@ -1,0 +1,194 @@
+<div class="step-container">
+  <!-- Header Info -->
+  <div class="step-intro">
+    <p class="intro-text">
+      Configura los roles y permisos para los usuarios de tu sistema. Define qué acciones
+      puede realizar cada tipo de usuario en la plataforma. Al menos un rol es requerido para continuar.
+    </p>
+  </div>
+
+  <!-- Predefined Templates -->
+  <p-card class="templates-card">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-th-large"></i>
+        <span>Plantillas Rápidas</span>
+      </div>
+    </ng-template>
+
+    <div class="templates-grid">
+      <button
+        *ngFor="let template of predefinedTemplates"
+        pButton
+        type="button"
+        [label]="template.rol"
+        icon="pi pi-user"
+        class="p-button-outlined template-button"
+        (click)="useTemplate(template)">
+      </button>
+    </div>
+    <small class="field-help">Haz clic en una plantilla para cargar sus datos en el formulario</small>
+  </p-card>
+
+  <!-- Add/Edit Role Form -->
+  <p-card class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-users"></i>
+        <span>{{ editingIndex !== null ? 'Editar Rol' : 'Agregar Rol' }}</span>
+      </div>
+    </ng-template>
+
+    <form [formGroup]="roleForm">
+      <div class="form-grid">
+        <!-- Nombre del Rol -->
+        <div class="form-field col-12">
+          <label for="rol" class="required">Nombre del Rol *</label>
+          <input
+            id="rol"
+            type="text"
+            pInputText
+            formControlName="rol"
+            placeholder="Ej: Administrador, Vendedor, Bodeguero"
+            [class.p-invalid]="hasError('rol', 'required') || hasError('rol', 'minlength')" />
+          <small class="p-error" *ngIf="hasError('rol', 'required') || hasError('rol', 'minlength')">
+            {{ getErrorMessage('rol') }}
+          </small>
+        </div>
+
+        <!-- Permisos -->
+        <div class="form-field col-12">
+          <label for="permissions" class="required">Permisos *</label>
+          <div class="permissions-list">
+            <div *ngFor="let permission of availablePermissions" class="permission-item">
+              <p-checkbox
+                [value]="permission.value"
+                [formControl]="roleForm.get('permissions')"
+                [inputId]="permission.value"
+                [label]="permission.label">
+              </p-checkbox>
+            </div>
+          </div>
+          <small class="p-error" *ngIf="hasError('permissions', 'required')">
+            {{ getErrorMessage('permissions') }}
+          </small>
+          <small class="field-help">Selecciona al menos un permiso para este rol</small>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button
+          *ngIf="editingIndex !== null"
+          pButton
+          type="button"
+          label="Cancelar"
+          icon="pi pi-times"
+          class="p-button-secondary p-button-outlined"
+          (click)="cancelEdit()">
+        </button>
+        <button
+          pButton
+          type="button"
+          [label]="editingIndex !== null ? 'Actualizar Rol' : 'Agregar a Lista'"
+          [icon]="editingIndex !== null ? 'pi pi-check' : 'pi pi-plus'"
+          class="p-button-success"
+          [disabled]="roleForm.invalid"
+          (click)="addRole()">
+        </button>
+      </div>
+    </form>
+  </p-card>
+
+  <!-- Roles List -->
+  <p-card *ngIf="rolesList.length > 0" class="mt-3">
+    <ng-template pTemplate="header">
+      <div class="card-header">
+        <i class="pi pi-list"></i>
+        <span>Roles Configurados ({{ rolesList.length }})</span>
+      </div>
+    </ng-template>
+
+    <p-table [value]="rolesList" styleClass="p-datatable-sm" responsiveLayout="scroll">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Rol</th>
+          <th>Permisos</th>
+          <th style="width: 140px">Acciones</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-role let-i="rowIndex">
+        <tr>
+          <td>
+            <strong>{{ role.rol }}</strong>
+          </td>
+          <td>
+            <div class="permissions-badges">
+              <span
+                *ngFor="let permLabel of getPermissionLabels(role.permissions)"
+                class="permission-badge">
+                {{ permLabel }}
+              </span>
+            </div>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-pencil"
+                class="p-button-text p-button-sm p-button-info"
+                pTooltip="Editar"
+                tooltipPosition="top"
+                (click)="editRole(i)">
+              </button>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-danger"
+                pTooltip="Eliminar"
+                tooltipPosition="top"
+                (click)="removeRole(i)">
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="3" class="text-center">
+            <div class="empty-message">
+              <i class="pi pi-inbox"></i>
+              <p>No hay roles configurados aún</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <!-- Complete Button -->
+  <div class="step-actions mt-4">
+    <button
+      pButton
+      type="button"
+      label="Guardar y Continuar"
+      icon="pi pi-check"
+      iconPos="right"
+      class="p-button-success p-button-lg"
+      [disabled]="rolesList.length === 0 || isSaving"
+      [loading]="isSaving"
+      (click)="onComplete()">
+    </button>
+
+    <p class="form-status" *ngIf="rolesList.length === 0">
+      <i class="pi pi-info-circle"></i>
+      Agrega al menos un rol para continuar
+    </p>
+    <p class="form-status success" *ngIf="rolesList.length > 0">
+      <i class="pi pi-check-circle"></i>
+      {{ rolesList.length }} rol(es) configurado(s) - ¡Listo para continuar!
+    </p>
+  </div>
+</div>

@@ -6,6 +6,7 @@ import { TranslateService } from "@ngx-translate/core";
 import Swal from "sweetalert2";
 import { NavService } from "../nav.service";
 import { InitializationService } from "../initialization.service";
+import { OnboardingService } from "../../../components/onboarding/services/onboarding.service";
 import { BehaviorSubject } from 'rxjs';
 
 export interface User {
@@ -32,7 +33,8 @@ export class AuthService implements OnInit {
     public toster: ToastrService,
     private translate: TranslateService,
     private navServices: NavService,
-    private initializationService: InitializationService
+    private initializationService: InitializationService,
+    private onboardingService: OnboardingService
   ) { }
 
   ngOnInit(): void { }
@@ -64,7 +66,7 @@ export class AuthService implements OnInit {
     });
   }
 
-  private handleSignInSuccess(result: any): void {
+  private async handleSignInSuccess(result: any): Promise<void> {
     if (result.error) {
       this.showLoader = false; // Desactivar indicador de carga
       this.showErrorAlert("¡ Datos incorrectos !");
@@ -74,7 +76,7 @@ export class AuthService implements OnInit {
     if (result.token) {
       this.SetUserData(result.token);
       this.setMenu(result.menu);
-      
+
       if (result.lang) {
         this.setLanguage(result.lang);
       }
@@ -102,8 +104,26 @@ export class AuthService implements OnInit {
         // Redirigir a la página de administración de Julsmind
         this.router.navigate(["/dashboards"]);
       } else {
-        // Redirigir a la página de bienvenida para otros roles
-        this.router.navigate(["/welcome"]);
+        // Para usuarios regulares, verificar estado de onboarding
+        try {
+          const onboardingCompleted = await this.onboardingService.checkOnboardingStatus(result.email);
+
+          if (!onboardingCompleted) {
+            // Usuario nuevo o con onboarding incompleto
+            console.log('🎯 Usuario sin onboarding completado, redirigiendo a /onboarding');
+            this.router.navigate(["/onboarding"]);
+            this.services.getEmpresaByName({ company: result.company });
+            return;
+          }
+
+          // Usuario con onboarding completado
+          console.log('✅ Usuario con onboarding completado, redirigiendo a /welcome');
+          this.router.navigate(["/welcome"]);
+        } catch (error) {
+          console.error('❌ Error verificando estado de onboarding:', error);
+          // En caso de error, permitir acceso a welcome
+          this.router.navigate(["/welcome"]);
+        }
       }
 
       this.services.getEmpresaByName({ company: result.company });

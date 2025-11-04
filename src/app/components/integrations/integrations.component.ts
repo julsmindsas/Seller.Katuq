@@ -695,11 +695,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return this.fb.group({
       name: ['Wompi', Validators.required],
       enabled: [true],
-      publicKey: ['', Validators.required],
-      privateKey: ['', Validators.required],
-      eventKey: [''],
-      integrityKey: [''],
-      redirectUrl: ['']
+      publicKey: ['', Validators.required],           // Widget frontend
+      privateKey: ['', Validators.required],          // API backend
+      eventsSecret: ['', Validators.required],        // Webhooks (homologado)
+      integritySecret: ['', Validators.required],     // Firmar widget (homologado)
+      testMode: [false],                              // Toggle test/prod
+      currency: ['COP']                               // Default COP
     });
   }
 
@@ -1016,10 +1017,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         credentials = {
           publicKey: formData.publicKey,
           privateKey: formData.privateKey,
-          eventKey: formData.eventKey,
-          integrityKey: formData.integrityKey,
-          redirectUrl: formData.redirectUrl,
-          environment: this.isTestMode ? 'test' : 'production'
+          eventsSecret: formData.eventsSecret,       // Homologado
+          integritySecret: formData.integritySecret, // Homologado
+          testMode: formData.testMode || false,      // Boolean explícito
+          currency: formData.currency || 'COP'       // Default COP
         };
         break;
       case 'epayco':

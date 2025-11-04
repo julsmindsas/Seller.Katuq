@@ -67,6 +67,10 @@ import { NotificationPreferencesService } from './services/notifications/notific
 // Shared Filters Component
 import { SharedFiltersComponent } from './components/filters/shared-filters.component';
 import { FilterService } from './services/filters/filter.service';
+// Usage Widget Component
+import { UsageWidgetComponent } from './components/usage-widget/usage-widget.component';
+// Upgrade Modal Component
+import { UpgradeModalComponent } from './components/upgrade-modal/upgrade-modal.component';
 // PrimeNG Modules for filters
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
@@ -75,6 +79,10 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { InputTextModule } from 'primeng/inputtext';
 import { AutoCompleteModule } from 'primeng/autocomplete';
+import { CardModule } from 'primeng/card';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { DialogModule } from 'primeng/dialog';
 
 @NgModule({
   declarations: [
@@ -116,7 +124,11 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
     // Notification Center
     NotificationCenterComponent,
     // Shared Filters Component
-    SharedFiltersComponent
+    SharedFiltersComponent,
+    // Usage Widget Component
+    UsageWidgetComponent,
+    // Upgrade Modal Component
+    UpgradeModalComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],
@@ -137,7 +149,11 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
     ButtonModule,
     TooltipModule,
     InputTextModule,
-    AutoCompleteModule
+    AutoCompleteModule,
+    CardModule,
+    ProgressBarModule,
+    ProgressSpinnerModule,
+    DialogModule
   ],
   providers: [
     NavService,
@@ -188,7 +204,11 @@ import { AutoCompleteModule } from 'primeng/autocomplete';
     // Notification Center
     NotificationCenterComponent,
     // Shared Filters Component
-    SharedFiltersComponent
+    SharedFiltersComponent,
+    // Usage Widget Component
+    UsageWidgetComponent,
+    // Upgrade Modal Component
+    UpgradeModalComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],
