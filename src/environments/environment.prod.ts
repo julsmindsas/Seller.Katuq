@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.11.04.11 - 4 de Noviembre 2025 (Beta)",
+  version: "2025.11.04.12 - 4 de Noviembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -14,7 +14,8 @@ export const environment = {
   urlPermitidas: "https://sellercenter.katuq.com",
   // urlApi: 'http://127.0.0.1:5001/julsmind-katuq/us-central1/api',
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app', // API Google Cloud Functions
-  urlApi: "https://api.katuq.com", // API AWS
+  urlApi2: "https://api.katuq.com", // API AWS laighsail,
+  urlApi: "https://back.katuq.com", // API AWS EC2,
   wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
   voiceWsUrl: "wss://tu-servidor-ejemplo.com",
   wompi: {
