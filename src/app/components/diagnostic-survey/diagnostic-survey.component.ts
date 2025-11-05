@@ -627,10 +627,15 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy {
     redirectToMainSystem() {
         // Para QuickStart exitoso, mostrar instrucciones para ingresar
         // o redirigir al login con las credenciales creadas
-        this.router.navigate(['/login'], { 
-            queryParams: { 
-                message: 'Tu comercio ha sido configurado exitosamente. Usa las credenciales proporcionadas para ingresar.' 
-            } 
+
+        // ✅ FIX: Limpiar también el estado de onboarding anterior para evitar conflictos
+        localStorage.removeItem('katuq_onboarding_state');
+        console.log('🧹 localStorage limpiado: katuq_onboarding_state');
+
+        this.router.navigate(['/login'], {
+            queryParams: {
+                message: 'Tu comercio ha sido configurado exitosamente. Usa las credenciales proporcionadas para ingresar.'
+            }
         });
     }
 

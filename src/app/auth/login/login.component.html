@@ -1,134 +1,105 @@
-<div class="container-fluid p-0">
-  <div class="row login-row">
-    <div class="col-md-7 p-0">
-      <!-- <div class="login-image"> -->
-      <!-- Si deseas mantener la imagen, sino puedes omitir esta línea -->
-      <!-- <img src="assets/images/login/login_image.jpg" alt="Login Image" class="img-fluid"> -->
-      <!-- </div> -->
-      <div class="login-content">
-        <div>
-          <!-- <div>
-            <a class="logo" routerLink='/'>
-              <img class="img-fluid for-light" src="assets/images/logo/Katuq/katuq_dark.svg" alt="login page" style="max-width: 60%; max-height: 60%;">
-              <img class="img-fluid for-dark" src="assets/images/logo/Katuq/katuq_light.svg" alt="login page">
-            </a>
-          </div> -->
-          <div class="login-main-mobile">
-            <form class="theme-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-              <h3>{{ 'Ingresa a tu cuenta' | translate }}</h3>
-              <p>{{ 'Ingresa tu correo y tu contraseña' | translate }}</p>
-              <div class="form-group">
-                <label class="col-form-label" style="font-size: 30px;">{{ 'Correo Electrónico' | translate }}</label>
-                <input class="form-control" type="email" required="" placeholder="{{ 'app@yourmail.com' | translate }}"
-                  formControlName="email">
-                <div *ngIf="loginForm.controls.email.touched && loginForm.controls.email.errors?.required"
-                  class="text text-danger mt-1">
-                  {{ 'Correo es requerido' | translate }}
-                </div>
-                <div *ngIf="loginForm.controls.email.touched && loginForm.controls.email.errors?.email"
-                  class="text text-danger mt-1">
-                  {{ 'Correo inválido' | translate }}
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-form-label">{{ 'Contraseña' | translate }}</label>
-                <input class="form-control" [type]="show ? 'text' : 'password'" formControlName="password" required=""
-                  placeholder="{{ '*********' | translate }}">
-                <div class="show-hide" (click)="showPassword()" *ngIf="!show"><span class="show"></span></div>
-                <div class="show-hide" (click)="showPassword()" *ngIf="show"><span class="hide"></span></div>
-                <div *ngIf="loginForm.controls.password.touched && loginForm.controls.password.errors?.required"
-                  class="text text-danger  mt-1">
-                  {{ 'Contraseña es requerida' | translate }}
-                </div>
-              </div>
-              <div class="form-group mb-0">
-                <button class="btn btn-primary d-block w-100 fs-18" data-callback='onSubmit' data-action='submit'
-                  type="submit" id="loginButtonMobile" [disabled]="!loginForm.valid" mat-raised-button color="primary"
-                  (click)="onSubmit()">
-                  <span class="text-white-color">
-                    {{ 'Ingresar' | translate }}
-                  </span>
-                </button>
-                <div class="text-center mt-3 mb-3">
-                  <a [routerLink]="'/authentication/forgot-password'" class="forgot-password-link fs-16">
-                    {{ '¿Olvidaste tu contraseña?' | translate }}
-                  </a>
-                </div>
-                <div class="text-center mt-3">
-                  <p class="mb-2 fs-16">{{ '¿No tienes una cuenta?' | translate }}</p>
-                  <button class="btn btn-outline-primary d-block w-100 fs-18" type="button" [routerLink]="'/nuevo-registro'">
-                    {{ 'Registrarse' | translate }}
-                  </button>
-                </div>
-                <h5 class="text-center mt-5">Versión: {{version}}</h5>
-              </div>
-            </form>
+<div class="login-container">
+  <!-- Brand Section - Background image (Desktop only) -->
+  <div class="login-brand-section">
+    <!-- Background image is set in CSS -->
+  </div>
+
+  <!-- Form Section - Always visible, responsive -->
+  <div class="login-form-section">
+    <div class="login-form-wrapper">
+      <!-- Logo -->
+      <div class="login-logo">
+        <img class="img-fluid for-light" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq" />
+        <img class="img-fluid for-dark" src="assets/images/logo/Katuq/katuq_light.svg" alt="Katuq" />
+      </div>
+
+      <!-- Header -->
+      <h1 class="login-title">{{ 'Ingresa a tu cuenta' | translate }}</h1>
+      <p class="login-subtitle">{{ 'Ingresa tu correo y tu contraseña' | translate }}</p>
+
+      <!-- Login Form -->
+      <form class="theme-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+        <!-- Email Field -->
+        <div class="form-group-katuq">
+          <label class="form-label-katuq">{{ 'Correo Electrónico' | translate }}</label>
+          <input
+            class="form-control-katuq"
+            type="email"
+            formControlName="email"
+            placeholder="{{ 'app@yourmail.com' | translate }}"
+            [class.is-invalid]="loginForm.controls.email.touched && loginForm.controls.email.invalid"
+          />
+          <div *ngIf="loginForm.controls.email.touched && loginForm.controls.email.errors?.required" class="text-danger mt-1">
+            {{ 'Correo es requerido' | translate }}
+          </div>
+          <div *ngIf="loginForm.controls.email.touched && loginForm.controls.email.errors?.email" class="text-danger mt-1">
+            {{ 'Correo inválido' | translate }}
           </div>
         </div>
-      </div>
-    </div>
-    <div class="col-md-5 p-0">
-      <div class="login-content">
-        <div>
-          <!-- <div>
-            <a class="logo" routerLink='/'>
-              <img class="img-fluid for-light" src="assets/images/logo/Katuq/katuq_dark.svg" alt="login page" style="max-width: 60%; max-height: 60%;">
-              <img class="img-fluid for-dark" src="assets/images/logo/Katuq/katuq_light.svg" alt="login page">
-            </a>
-          </div> -->
-          <div class="login-main">
-            <form class="theme-form" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-              <h2>{{ 'Ingresa a tu cuenta' | translate }}</h2>
-              <p class="fs-18">{{ 'Ingresa tu correo y tu contraseña' | translate }}</p>
-              <div class="form-group">
-                <label class="col-form-label fs-18">{{ 'Correo Electrónico' | translate }}</label>
-                <input class="form-control fs-20" type="email" required="" placeholder="{{ 'app@yourmail.com' | translate }}"
-                  formControlName="email">
-                <div *ngIf="loginForm.controls.email.touched && loginForm.controls.email.errors?.required"
-                  class="text text-danger mt-1">
-                  {{ 'Correo es requerido' | translate }}
-                </div>
-                <div *ngIf="loginForm.controls.email.touched && loginForm.controls.email.errors?.email"
-                  class="text text-danger mt-1">
-                  {{ 'Correo inválido' | translate }}
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="col-form-label fs-18">{{ 'Contraseña' | translate }}</label>
-                <input class="form-control fs-20" [type]="show ? 'text' : 'password'" formControlName="password" required=""
-                  placeholder="{{ '*********' | translate }}">
-                <div class="show-hide fs-12" (click)="showPassword()" *ngIf="!show"><span class="show"></span></div>
-                <div class="show-hide fs-12" (click)="showPassword()" *ngIf="show"><span class="hide"></span></div>
-                <div *ngIf="loginForm.controls.password.touched && loginForm.controls.password.errors?.required"
-                  class="text text-danger mt-1">
-                  {{ 'Contraseña es requerida' | translate }}
-                </div>
-              </div>
-              <div class="form-group mb-0">
-                <button class="btn btn-primary d-block w-100 fs-18" data-callback='onSubmit' data-action='submit'
-                  type="submit" id="loginButton" [disabled]="!loginForm.valid" mat-raised-button color="primary"
-                  (click)="onSubmit()">
-                  <span class="text-white-color">
-                    {{ 'Ingresar' | translate }}
-                  </span>
-                </button>
-                <div class="text-center mt-3 mb-3">
-                  <a [routerLink]="'/authentication/forgot-password'" class="forgot-password-link fs-16">
-                    {{ '¿Olvidaste tu contraseña?' | translate }}
-                  </a>
-                </div>
-                <div class="text-center mt-3">
-                  <p class="mb-2 fs-16">{{ '¿No tienes una cuenta?' | translate }}</p>
-                  <button class="btn btn-outline-primary d-block w-100 fs-18" type="button" [routerLink]="'/nuevo-registro'">
-                    {{ 'Registrarse' | translate }}
-                  </button>
-                </div>
-                <h5 class="text-center mt-5">Versión: {{version}}</h5>
-              </div>
-            </form>
+
+        <!-- Password Field -->
+        <div class="form-group-katuq">
+          <label class="form-label-katuq">{{ 'Contraseña' | translate }}</label>
+          <div style="position: relative;">
+            <input
+              class="form-control-katuq"
+              [type]="show ? 'text' : 'password'"
+              formControlName="password"
+              placeholder="{{ '*********' | translate }}"
+              [class.is-invalid]="loginForm.controls.password.touched && loginForm.controls.password.invalid"
+            />
+            <div class="show-hide" (click)="showPassword()" *ngIf="!show">
+              <span class="show"></span>
+            </div>
+            <div class="show-hide" (click)="showPassword()" *ngIf="show">
+              <span class="hide"></span>
+            </div>
+          </div>
+          <div *ngIf="loginForm.controls.password.touched && loginForm.controls.password.errors?.required" class="text-danger mt-1">
+            {{ 'Contraseña es requerida' | translate }}
           </div>
         </div>
-      </div>
+
+        <!-- Login Button -->
+        <button
+          class="btn-katuq-primary w-100 mt-4"
+          type="submit"
+          [disabled]="!loginForm.valid"
+        >
+          {{ 'Ingresar' | translate }}
+        </button>
+
+        <!-- Forgot Password Button (styled as link) -->
+        <div class="text-center mt-3">
+          <button
+            type="button"
+            class="btn-katuq-link"
+            [routerLink]="'/authentication/forgot-password'"
+          >
+            {{ '¿Olvidaste tu contraseña?' | translate }}
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="divider">
+          <span>{{ 'o' | translate }}</span>
+        </div>
+
+        <!-- Register Section -->
+        <div class="text-center">
+          <p class="helper-text mb-2">{{ '¿No tienes una cuenta?' | translate }}</p>
+          <button
+            class="btn-katuq-secondary w-100"
+            type="button"
+            [routerLink]="'/nuevo-registro'"
+          >
+            {{ 'Registrarse' | translate }}
+          </button>
+        </div>
+
+        <!-- Version -->
+        <p class="version-text text-center">{{ 'Versión' | translate }}: {{version}}</p>
+      </form>
     </div>
   </div>
 </div>

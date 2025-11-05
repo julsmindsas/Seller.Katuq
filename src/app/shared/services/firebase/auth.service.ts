@@ -208,10 +208,10 @@ export class AuthService implements OnInit {
 
   SignOut(): void {
     this.showLoader = false;
-    
+
     // Resetear servicios de inicialización
     this.initializationService.resetInitialization();
-    
+
     // Limpiar datos de localStorage (currentCompany migrado de sessionStorage)
     localStorage.removeItem('user');
     localStorage.removeItem('currentCompany');
@@ -219,7 +219,11 @@ export class AuthService implements OnInit {
     localStorage.removeItem('company');
     localStorage.removeItem('warehousePOS');
     localStorage.removeItem('warehouse');
-    
+
+    // ✅ FIX: Limpiar estado de onboarding y diagnostic survey para evitar conflictos en próximo login
+    localStorage.removeItem('katuq_onboarding_state');
+    localStorage.removeItem('katuq_diagnostic_progress');
+
     this.router.navigateByUrl('/login');
   }
 

@@ -1,102 +1,659 @@
-.loader--text {
-  top: 200%;
-  left: 0;
-  right: 0;
-  margin: auto;
-}
-.loader--text:after {
-  content: "Loading";
-  font-weight: bold;
-  animation-name: loading-text;
-  animation-duration: 3s;
-  animation-iteration-count: infinite;
+// ==========================================
+// KATUQ LOGIN - MODERN UI/UX DESIGN
+// ==========================================
+
+// ==========================================
+// 1. VARIABLES - Katuq Brand Palette
+// ==========================================
+$katuq-primary: #8b5cf6; // Purple principal
+$katuq-primary-dark: #7c3aed; // Purple hover
+$katuq-primary-light: #a78bfa; // Purple light
+$katuq-secondary: #00e5cc; // Cyan acento
+$katuq-secondary-dark: #00b8a9; // Cyan hover
+$katuq-accent: #e536ff; // Magenta acento
+$katuq-dark: #0f172a; // Dark text
+$katuq-gray: #64748b; // Gray secondary text
+$katuq-gray-light: #cbd5e1; // Gray borders
+$katuq-background: #f8fafc; // Background light
+$katuq-error: #ef4444; // Error red
+$katuq-success: #10b981; // Success green
+
+// Spacing System (8px base)
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+$spacing-3xl: 64px;
+
+// Transitions
+$transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-base: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$transition-slow: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+// Typography
+$font-family-primary:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+
+// ==========================================
+// 2. LAYOUT - Container & Responsive
+// ==========================================
+.login-container {
+    min-height: 100vh;
+    display: flex;
+    background: #ffffff;
+
+    @media (max-width: 992px) {
+        flex-direction: column;
+    }
 }
 
-@keyframes loader {
-  15% {
-    transform: translateX(0);
-  }
-  45% {
-    transform: translateX(230px);
-  }
-  65% {
-    transform: translateX(230px);
-  }
-  95% {
-    transform: translateX(0);
-  }
-}
-@keyframes loading-text {
-  0% {
-    content: "Loading";
-  }
-  25% {
-    content: "Loading.";
-  }
-  50% {
-    content: "Loading..";
-  }
-  75% {
-    content: "Loading...";
-  }
+// Left Side - Brand Image (Desktop only)
+.login-brand-section {
+    flex: 1;
+    background-image: url("/assets/images/login/login-logo.svg");
+    background-position: center center;
+    background-size: cover;
+    background-repeat: no-repeat;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-2xl;
+    min-height: 100vh;
+
+    // Gradient overlay for better legibility
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            135deg,
+            rgba(15, 23, 42, 0.3) 0%,
+            rgba(139, 92, 246, 0.2) 100%
+        );
+        z-index: 1;
+    }
+
+    @media (max-width: 992px) {
+        display: none; // Hide on mobile
+    }
 }
 
-// Forgot password link styles
-.forgot-password-link {
-  color: #6c757d;
-  text-decoration: none;
-  font-size: 0.9rem;
-  font-weight: 400;
-  transition: all 0.3s ease;
-  display: inline-block;
-  position: relative;
-  padding: 0.25rem 0;
-  
-  &:hover {
-    color: #007bff;
-    text-decoration: none;
-    transform: translateY(-1px);
-  }
-  
-  &:focus {
-    outline: 2px solid #007bff;
-    outline-offset: 2px;
-    color: #007bff;
-  }
-  
-  &::after {
-    content: '';
-    position: absolute;
-    width: 0;
-    height: 1px;
-    bottom: 0;
-    left: 50%;
-    background-color: #007bff;
-    transition: all 0.3s ease;
-    transform: translateX(-50%);
-  }
-  
-  &:hover::after {
+// Right Side - Form Section
+.login-form-section {
+    flex: 0 0 480px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: $spacing-2xl;
+    background: #ffffff;
+    position: relative;
+
+    // Tablet - Show image background but lighter
+    @media (max-width: 992px) and (min-width: 768px) {
+        flex: 1;
+        max-width: 100%;
+        background: linear-gradient(
+            135deg,
+            rgba(139, 92, 246, 0.95) 0%,
+            rgba(100, 70, 200, 0.95) 50%,
+            rgba(0, 229, 204, 0.95) 100%
+        );
+
+        // Pattern overlay for texture
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(
+                    circle at 20% 30%,
+                    rgba(255, 255, 255, 0.1) 0%,
+                    transparent 50%
+                ),
+                radial-gradient(
+                    circle at 80% 70%,
+                    rgba(255, 255, 255, 0.05) 0%,
+                    transparent 50%
+                );
+            pointer-events: none;
+        }
+
+        // Add white card for form
+        .login-form-wrapper {
+            background: rgba(255, 255, 255, 0.98);
+            padding: $spacing-2xl;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            backdrop-filter: blur(10px);
+        }
+    }
+
+    // Mobile - Gradient with more color
+    @media (max-width: 767px) {
+        flex: 1;
+        max-width: 100%;
+        background: linear-gradient(
+            135deg,
+            #e0e7ff 0%,
+            // Lavender light
+            #dbeafe 35%,
+            // Sky blue light
+            #f3e8ff 65%,
+            // Purple light
+            #d1fae5 100% // Emerald light
+        );
+
+        // Add pattern overlay with Katuq colors
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(
+                    circle at 20% 20%,
+                    rgba(139, 92, 246, 0.08) 0%,
+                    transparent 50%
+                ),
+                radial-gradient(
+                    circle at 80% 80%,
+                    rgba(0, 229, 204, 0.08) 0%,
+                    transparent 50%
+                ),
+                radial-gradient(
+                    circle at 50% 50%,
+                    rgba(229, 54, 255, 0.05) 0%,
+                    transparent 60%
+                );
+            pointer-events: none;
+        }
+    }
+
+    @media (max-width: 576px) {
+        padding: $spacing-lg;
+    }
+}
+
+.login-form-wrapper {
     width: 100%;
-  }
+    max-width: 400px;
+    animation: fadeInUp 0.6s $transition-base;
+    position: relative;
+    z-index: 2;
 }
 
-// Mobile specific styles
-.login-main-mobile .forgot-password-link {
-  font-size: 1rem;
-  color: #495057;
+// ==========================================
+// 3. LOGO & BRANDING
+// ==========================================
+.login-logo {
+    text-align: center;
+    margin-bottom: $spacing-xl;
+
+    img {
+        max-width: 180px;
+        height: auto;
+
+        @media (max-width: 576px) {
+            max-width: 150px;
+        }
+    }
 }
 
-// Desktop specific styles  
-.login-main .forgot-password-link {
-  font-size: 1rem;
-  color: #495057;
+// ==========================================
+// 4. TYPOGRAPHY
+// ==========================================
+.login-title {
+    font-family: $font-family-primary;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+    color: $katuq-dark;
+    margin-bottom: 8px;
+    text-align: center;
+
+    @media (max-width: 768px) {
+        font-size: 28px;
+    }
 }
 
-// Responsive adjustments
-@media (max-width: 768px) {
-  .forgot-password-link {
-    font-size: 0.9rem;
-    padding: 0.5rem 0;
-  }
+.login-subtitle {
+    font-family: $font-family-primary;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: $katuq-gray;
+    margin-bottom: $spacing-xl;
+    text-align: center;
+
+    @media (max-width: 768px) {
+        font-size: 15px;
+        margin-bottom: $spacing-lg;
+    }
+}
+
+// ==========================================
+// 5. FORM STYLES
+// ==========================================
+.form-group-katuq {
+    margin-bottom: $spacing-lg;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.form-label-katuq {
+    font-size: 14px;
+    font-weight: 600;
+    color: $katuq-dark;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.form-control-katuq {
+    font-size: 16px;
+    font-weight: 400;
+    color: $katuq-dark;
+    border: 2px solid $katuq-gray-light;
+    border-radius: 10px;
+    padding: 12px 16px;
+    transition: all $transition-base;
+    width: 100%;
+    font-family: $font-family-primary;
+
+    &:focus {
+        border-color: $katuq-primary;
+        box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+        outline: none;
+        transform: scale(1.01);
+    }
+
+    &::placeholder {
+        color: #94a3b8;
+    }
+
+    // Filled state
+    &:not(:placeholder-shown) {
+        background-color: rgba(139, 92, 246, 0.02);
+    }
+
+    // Error state
+    &.is-invalid {
+        border-color: $katuq-error;
+
+        &:focus {
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+        }
+    }
+
+    // Success state
+    &.is-valid {
+        border-color: $katuq-success;
+    }
+
+    @media (max-width: 768px) {
+        font-size: 16px; // 16px prevents zoom on iOS
+    }
+}
+
+// Password toggle icon
+.show-hide {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: opacity $transition-fast;
+    cursor: pointer;
+    z-index: 10;
+
+    &:hover {
+        opacity: 0.7;
+    }
+}
+
+// Error message
+.error-message {
+    color: $katuq-error;
+    font-size: 13px;
+    font-weight: 500;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.text-danger {
+    color: $katuq-error;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+// ==========================================
+// 6. BUTTON SYSTEM
+// ==========================================
+
+// Primary Button (Ingresar)
+.btn-katuq-primary {
+    background: linear-gradient(
+        135deg,
+        $katuq-primary 0%,
+        $katuq-primary-dark 100%
+    );
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    transition: all $transition-base;
+    cursor: pointer;
+    font-family: $font-family-primary;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover:not(:disabled):not(.is-loading) {
+        background: linear-gradient(
+            135deg,
+            $katuq-primary-dark 0%,
+            $katuq-primary 100%
+        );
+        box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+        transform: translateY(-2px);
+    }
+
+    &:active:not(:disabled):not(.is-loading) {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+    }
+
+    &:disabled {
+        background: $katuq-gray-light;
+        box-shadow: none;
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    &:focus-visible {
+        outline: 3px solid rgba(139, 92, 246, 0.4);
+        outline-offset: 2px;
+    }
+
+    // Loading state
+    &.is-loading {
+        position: relative;
+        color: transparent;
+        pointer-events: none;
+
+        &::after {
+            content: "";
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #ffffff;
+            animation: spinner 0.8s linear infinite;
+        }
+    }
+}
+
+// Secondary Button (Registrarse)
+.btn-katuq-secondary {
+    background: transparent;
+    color: $katuq-primary;
+    border: 2px solid $katuq-primary;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all $transition-base;
+    cursor: pointer;
+    font-family: $font-family-primary;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+        background: $katuq-primary;
+        color: #ffffff;
+        border-color: $katuq-primary;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+        transform: translateY(-2px);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+
+    &:focus-visible {
+        outline: 3px solid rgba(139, 92, 246, 0.4);
+        outline-offset: 2px;
+    }
+}
+
+// Link Button (¿Olvidaste tu contraseña?)
+.btn-katuq-link {
+    background: transparent;
+    color: $katuq-gray;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all $transition-base;
+    position: relative;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    font-family: $font-family-primary;
+
+    &::before {
+        content: "";
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(
+            90deg,
+            $katuq-secondary 0%,
+            $katuq-accent 100%
+        );
+        transition: all $transition-base;
+        transform: translateX(-50%);
+    }
+
+    &:hover {
+        color: $katuq-primary;
+        background: rgba(139, 92, 246, 0.05);
+        text-decoration: none;
+
+        &::before {
+            width: calc(100% - 32px);
+        }
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba(139, 92, 246, 0.4);
+        outline-offset: 2px;
+        color: $katuq-primary;
+    }
+}
+
+// Width utilities
+.w-100 {
+    width: 100%;
+}
+
+// ==========================================
+// 7. HELPER ELEMENTS
+// ==========================================
+.helper-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: $katuq-gray;
+    margin: 0;
+}
+
+.version-text {
+    font-size: 12px;
+    font-weight: 400;
+    color: $katuq-gray;
+    margin-top: $spacing-xl;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: $spacing-lg 0;
+
+    span {
+        padding: 0 $spacing-md;
+        color: $katuq-gray;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    &::before,
+    &::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: $katuq-gray-light;
+    }
+}
+
+// ==========================================
+// 8. ANIMATIONS
+// ==========================================
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spinner {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes shake {
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-4px);
+    }
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(4px);
+    }
+}
+
+.shake {
+    animation: shake 0.5s;
+}
+
+// ==========================================
+// 9. ACCESSIBILITY
+// ==========================================
+*:focus-visible {
+    outline: 3px solid rgba(139, 92, 246, 0.4);
+    outline-offset: 2px;
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
+// ==========================================
+// 10. UTILITY CLASSES
+// ==========================================
+.text-center {
+    text-align: center;
+}
+
+.mt-1 {
+    margin-top: $spacing-xs;
+}
+.mt-2 {
+    margin-top: $spacing-sm;
+}
+.mt-3 {
+    margin-top: $spacing-md;
+}
+.mt-4 {
+    margin-top: $spacing-lg;
+}
+.mt-5 {
+    margin-top: $spacing-xl;
+}
+
+.mb-0 {
+    margin-bottom: 0;
+}
+.mb-1 {
+    margin-bottom: $spacing-xs;
+}
+.mb-2 {
+    margin-bottom: $spacing-sm;
+}
+.mb-3 {
+    margin-bottom: $spacing-md;
+}
+.mb-4 {
+    margin-bottom: $spacing-lg;
+}
+.mb-5 {
+    margin-bottom: $spacing-xl;
+}
+
+.d-block {
+    display: block;
+}
+
+// ==========================================
+// 11. LEGACY SUPPORT (Backward compatibility)
+// ==========================================
+// Keep existing classes for smooth transition
+.forgot-password-link {
+    @extend .btn-katuq-link;
+}
+
+.login-main-mobile,
+.login-main {
+    // Deprecated - will be removed in future versions
+    // Use .login-form-wrapper instead
 }

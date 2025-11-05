@@ -614,24 +614,39 @@ export class OnboardingService {
 
   /**
    * Verifica si el usuario ha completado el onboarding
+   * FIX: Backend es la fuente de verdad, localStorage solo como fallback
    */
   async checkOnboardingStatus(userEmail: string): Promise<boolean> {
     try {
-      // Primero verificar en localStorage
-      const localState = this.loadStateFromStorage();
-      if (localState?.isCompleted) {
-        return true;
-      }
-
-      // Verificar en backend
+      // ✅ PRIMERO: Verificar en backend (fuente de verdad)
       const response: any = await this.http.get(
         `${this.urlBase}/v1/users/onboarding/status?email=${userEmail}`,
         this.httpOptions
       ).toPromise();
 
-      return response?.onboardingCompleted || false;
+      const backendCompleted = response?.onboardingCompleted || false;
+
+      // ✅ SEGUNDO: Sincronizar localStorage con backend
+      const localState = this.loadStateFromStorage();
+      if (localState && localState.isCompleted !== backendCompleted) {
+        console.log(`🔄 Sincronizando localStorage con backend: ${backendCompleted}`);
+        localState.isCompleted = backendCompleted;
+        this.onboardingState$.next(localState);
+        this.saveStateToStorage();
+      }
+
+      return backendCompleted;
+
     } catch (error) {
-      console.error('Error verificando estado de onboarding:', error);
+      console.error('❌ Error verificando estado de onboarding:', error);
+
+      // Fallback: Si falla el backend, usar localStorage
+      const localState = this.loadStateFromStorage();
+      if (localState?.isCompleted) {
+        console.warn('⚠️ Usando localStorage como fallback');
+        return true;
+      }
+
       return false;
     }
   }
