@@ -1,15 +1,56 @@
+// ==========================================
+// KATUQ WELCOME - COLOR SYSTEM STANDARDIZATION
+// ==========================================
+
+// Katuq Brand Palette (Estandarizado con Login)
+$katuq-primary: #8b5cf6; // Purple principal
+$katuq-primary-dark: #7c3aed; // Purple hover
+$katuq-primary-light: #a78bfa; // Purple light
+$katuq-primary-lighter: #c4b5fd; // Purple extra light
+$katuq-secondary: #00e5cc; // Cyan acento
+$katuq-secondary-dark: #00b8a9; // Cyan hover
+$katuq-accent: #e536ff; // Magenta acento
+$katuq-dark: #0f172a; // Dark text
+$katuq-gray: #64748b; // Gray secondary text
+$katuq-gray-light: #cbd5e1; // Gray borders
+$katuq-background: #f8fafc; // Background light
+$katuq-white: #ffffff; // White
+
 // Estilos mínimos para el componente de bienvenida
 .welcome-page {
   padding: 20px;
+}
+
+// ✅ ESTANDARIZADO: Cards de acceso directo con gradiente purple extra claro
+.bc-secondary {
+  background: linear-gradient(135deg, $katuq-primary-lighter 0%, $katuq-primary-light 100%) !important;
+  background-image: linear-gradient(135deg, $katuq-primary-lighter 0%, $katuq-primary-light 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(196, 181, 253, 0.35) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(196, 181, 253, 0.45) !important;
+    transform: translateY(-2px) !important;
+  }
+}
+
+// ✅ ESTANDARIZADO: Welcome card con fondo extra claro
+.backColorSwitch {
+  background: linear-gradient(135deg, $katuq-primary-lighter 0%, $katuq-primary-light 100%) !important;
+  background-image: linear-gradient(135deg, $katuq-primary-lighter 0%, $katuq-primary-light 100%) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 12px rgba(196, 181, 253, 0.35) !important;
 }
 
 // Tour Section Styles
 .tour-section {
   border-radius: 15px;
   overflow: hidden;
-  
+
   .card-header {
-    background: linear-gradient(135deg, var(--primary-color, #459BD1) 0%, #5BA8DD 100%);
+    background: linear-gradient(135deg, $katuq-primary-lighter 0%, $katuq-primary-light 100%);
   }
 }
 
@@ -55,6 +96,7 @@
   position: relative;
   max-width: 100%;
   font-size: 25px;
+  color: $katuq-dark;
 }
 
 .firma:before {
@@ -62,7 +104,7 @@
   display: block;
   width: 30%;
   height: 1px;
-  background: rgb(56, 56, 56);
+  background: $katuq-gray-light;
   position: absolute;
   left: 20px;
   top: 50%;
@@ -73,22 +115,32 @@
   display: block;
   width: 30%;
   height: 1px;
-  background: rgb(56, 56, 56);
+  background: $katuq-gray-light;
   position: absolute;
   right: 20px;
   top: 50%;
 }
 
 .font-black {
-  color: #fff;
+  color: #fff !important; // Mantener blanco para contraste con fondo azul
 }
 
+// ✅ ESTANDARIZADO: Card de perfil con gradiente Katuq extra claro
 .social-profile {
-  background:var(--secondary-color); // #3eb5d5; //linear-gradient(103.75deg, #33B1EE -13.9%, var(--theme-deafult) 79.68%);
-  color: #fff;
+  background: linear-gradient(135deg, $katuq-primary-lighter 0%, $katuq-secondary 100%);
+  color: $katuq-white;
   text-align: center;
   background-repeat: no-repeat;
   background-size: cover;
+  border: 1px solid $katuq-gray-light;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(196, 181, 253, 0.35);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px);
+  }
 }
 
 
@@ -186,14 +238,30 @@
   z-index: 0;
 }
 
+// ✅ ESTANDARIZADO: Botones con sistema Katuq
 .btn-outline-white {
-  border: 1px solid white;
-  color: white;
+  background: $katuq-white;
+  color: $katuq-primary;
+  border: 2px solid $katuq-white;
+  border-radius: 10px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.15);
 
-  &:hover,
-  &:focus {
-    color: black;
-    background: white;
+  &:hover {
+    background: rgba(255, 255, 255, 0.95);
+    color: $katuq-primary-dark;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    border-color: $katuq-white;
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(255, 255, 255, 0.2);
   }
 }
 
@@ -230,7 +298,7 @@
 
 .text-p {
   z-index: 1;
-  color: black;
+  color: #ffffff !important; // Texto blanco para contraste con fondo azul
   font-size: 15px;
 }
 
@@ -248,31 +316,33 @@ p {
    ✅ MOBILE UX OPTIMIZATIONS
    =================================== */
 
-/* Mobile-optimized button styles (WCAG 2.1 compliant - 44x44px minimum) */
+/* ✅ ESTANDARIZADO: Botones optimizados móvil (WCAG 2.1 compliant - 44x44px minimum) */
 .btn-mobile-optimized {
   // Mobile first: 44x44px touch targets
   min-height: 44px;
   min-width: 44px;
-  padding: 12px 20px;
-  font-size: 16px; // Prevents iOS zoom on focus
-  border-radius: 8px;
-  transition: transform 0.15s ease-out, background-color 0.15s ease-out;
+  padding: 10px 20px;
+  font-size: 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
 
   &:hover {
-    transform: scale(1.05);
+    transform: translateY(-2px);
   }
 
   &:active {
-    transform: scale(0.95);
+    transform: translateY(0);
   }
 
-  // Desktop: can be smaller
+  // Desktop: can be adjusted
   @media (min-width: 768px) {
-    min-height: 36px;
+    min-height: 40px;
     min-width: auto;
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 12px 20px;
+    font-size: 15px;
   }
 }
 
@@ -493,5 +563,146 @@ p {
 .welcome-card p {
   @media (max-width: 767px) {
     width: 100% !important; // Override fixed 80%
+  }
+}
+
+/* ===================================
+   ✅ MOBILE OPTIMIZATION (manteniendo diseño actual)
+   =================================== */
+
+@media (max-width: 767px) {
+  // Optimizar espaciado entre cards en móvil
+  .widget-grid .box-col-4 {
+    margin-bottom: 20px;
+  }
+
+  // Reducir altura mínima de cards en móvil
+  .card-body-item .card-body {
+    min-height: auto;
+    padding: 16px;
+  }
+
+  // Optimizar imágenes para móvil
+  .imagenCard {
+    max-width: 45% !important;
+    right: 8px;
+  }
+
+  // Ajustar tipografía para móvil
+  .greeting-user {
+    h4 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+  }
+
+  // Optimizar botones para touch (WCAG 2.1 - min 44x44px)
+  .btn-mobile-optimized,
+  .btn-outline-white {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+  }
+
+  // Reducir espaciado superior en móvil
+  .container-fluid.mt-5,
+  .container-fluid.mt-50 {
+    margin-top: 1.5rem !important;
+  }
+
+  .container-fluid.m-t-35 {
+    margin-top: 1rem !important;
+  }
+
+  // Optimizar welcome card para móvil
+  .welcome-card {
+    .card-body {
+      padding: 20px 16px !important;
+    }
+
+    h4 {
+      font-size: 18px !important;
+    }
+
+    p {
+      font-size: 14px !important;
+    }
+
+    .welcome-img {
+      height: 140px !important;
+      right: 8px !important;
+      top: auto !important;
+      bottom: 0 !important;
+    }
+  }
+
+  // Optimizar social profile card para móvil
+  .social-profile {
+    .card-body {
+      padding: 20px 16px !important;
+    }
+
+    .social-img-wrap {
+      margin-bottom: 16px;
+    }
+
+    h5 {
+      font-size: 16px !important;
+    }
+  }
+
+  // Optimizar título "Accesos directos"
+  .firma {
+    font-size: 20px;
+    margin: 32px 0 24px 0;
+
+    &:before,
+    &:after {
+      width: 25%;
+    }
+  }
+
+  // Reducir tamaño de clockbox en móvil
+  .clockbox {
+    width: 60px !important;
+    height: 60px !important;
+
+    svg {
+      width: 60px !important;
+      height: 60px !important;
+    }
+  }
+}
+
+// Tablet (768px - 991px)
+@media (min-width: 768px) and (max-width: 991px) {
+  .imagenCard {
+    max-width: 40% !important;
+  }
+
+  .greeting-user {
+    h4 {
+      font-size: 19px;
+    }
+
+    p {
+      font-size: 14px;
+    }
+  }
+
+  .clockbox {
+    width: 70px !important;
+    height: 70px !important;
+
+    svg {
+      width: 70px !important;
+      height: 70px !important;
+    }
   }
 }
