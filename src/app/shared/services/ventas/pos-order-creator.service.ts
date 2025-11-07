@@ -131,20 +131,17 @@ export class PosOrderCreatorService {
         
         // Asignar asesor
         this.assignUserToOrder(pedido);
-        
-        // Preparar contenido HTML para email
-        const htmlSanizado = this.paymentService.getHtmlContent(pedido);
-        
+
         // Cambiar estado de productos que no se producen
         this.updateProductStates(pedido);
-        
+
         // Asegurar fechaEntrega para filtro en lista de pedidos
         if (!pedido.fechaEntrega) {
           pedido.fechaEntrega = new Date().toISOString();
         }
 
-        // Crear el pedido
-        this.ventasService.createOrder({ order: pedido, emailHtml: htmlSanizado }).subscribe({
+        // Crear el pedido SIN el emailHtml (se enviará después con el número correcto)
+        this.ventasService.createOrder({ order: pedido }).subscribe({
           next: (res: any) => {
             // Usar la referencia que viene en res.order.referencia
             const orderFromResponse = res.order;
@@ -152,7 +149,10 @@ export class PosOrderCreatorService {
               orderFromResponse.nroFactura = orderFromResponse.referencia;
               orderFromResponse.nroPedido = orderFromResponse.referencia;
             }
-            
+
+            // AHORA generar y enviar el email con el número de pedido CORRECTO
+            this.sendConfirmationEmail(orderFromResponse);
+
             // Procesar factura electrónica si es necesario
             if (pedido.generarFacturaElectronica) {
               this.processElectronicInvoice(pedido, orderFromResponse);
@@ -182,6 +182,33 @@ export class PosOrderCreatorService {
       nit: user.nit
     };
     pedido.asesorAsignado = userLite;
+  }
+
+  /**
+   * Envía el email de confirmación con el número de pedido correcto
+   */
+  private sendConfirmationEmail(order: any): void {
+    try {
+      // Generar HTML con el número de pedido CORRECTO que viene del backend
+      const htmlWithCorrectNumber = this.paymentService.getHtmlContent(order);
+
+      // Enviar email de confirmación
+      this.ventasService.enviarCorreoConfirmacionPedido({
+        order: order,
+        emailHtml: htmlWithCorrectNumber
+      }).subscribe({
+        next: () => {
+          console.log('✅ Email de confirmación enviado con número de pedido:', order.nroPedido);
+        },
+        error: (err) => {
+          console.error('❌ Error enviando email de confirmación:', err);
+          // No mostramos alerta al usuario porque el pedido ya fue creado exitosamente
+          // Solo registramos el error en consola para debugging
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error generando HTML para email:', error);
+    }
   }
 
   /**

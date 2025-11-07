@@ -26,12 +26,11 @@ $theme-body-sub-title-color: rgba($theme-body-font-color, 0.7);
 $body-color: #f8f8f8;
 
 // Theme colors variables
-// $primary-color: #659A85;//#ff5699; //#a554df;
-// $secondary-color: #85659A; //#ed5555; //#3eb5d5;
-// $tertiary-color: #9A8565;
-$primary-color: #459BD1;
-$secondary-color: #4555D1;
-$tertiary-color: #00a5d2;
+// Old: #659A85, #85659A, #9A8565
+// Old 2: #459BD1 (blue) → New: #a78bfa (purple light Katuq)
+$primary-color: #a78bfa; // Purple light Katuq
+$secondary-color: #4555D1; // Mantener original
+$tertiary-color: #00a5d2; // Mantener original
 
 $primary-light-color: rgba($primary-color, 0.2);
 $secondary-light-color: rgba($secondary-color, 0.2);

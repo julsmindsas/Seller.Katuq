@@ -53,18 +53,53 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Carga los datos de la empresa desde sessionStorage
+   * Carga los datos de la empresa desde sessionStorage o localStorage
+   * Implementa fallback para asegurar que siempre haya datos disponibles
    */
   private cargarDatosEmpresa(): void {
-    const empresaStr = sessionStorage.getItem('currentCompany');
-    if (empresaStr) {
-      try {
-        this.empresaActual = JSON.parse(empresaStr);
-      } catch (error) {
-        console.error('Error al parsear datos de empresa:', error);
-        this.empresaActual = {};
-      }
+    // Try both storages for company data - fallback strategy
+    let empresaStr = sessionStorage.getItem('currentCompany') ||
+                     localStorage.getItem('currentCompany');
+
+    if (!empresaStr) {
+      console.error('❌ [Tirilla] No company data found in any storage');
+      this.mostrarErrorDatosEmpresa();
+      return;
     }
+
+    try {
+      this.empresaActual = JSON.parse(empresaStr);
+
+      // Validate critical fields
+      if (!this.empresaActual.nomComercial && !this.empresaActual.razonSocial) {
+        console.error('❌ [Tirilla] Company data incomplete - missing name');
+        this.mostrarErrorDatosEmpresa();
+      } else {
+        console.log('✅ [Tirilla] Company data loaded successfully:', {
+          name: this.empresaActual.nomComercial || this.empresaActual.razonSocial,
+          nit: this.empresaActual.nit,
+          hasLogo: !!this.empresaActual.logo
+        });
+      }
+    } catch (error) {
+      console.error('❌ [Tirilla] Error parsing company data:', error);
+      this.mostrarErrorDatosEmpresa();
+    }
+  }
+
+  /**
+   * Muestra datos de empresa por defecto cuando hay errores
+   */
+  private mostrarErrorDatosEmpresa(): void {
+    console.warn('⚠️ [Tirilla] Using placeholder data for missing company info');
+    this.empresaActual = {
+      nomComercial: 'EMPRESA',
+      razonSocial: 'EMPRESA',
+      nit: 'N/A',
+      direccion: 'No disponible',
+      email: 'No disponible',
+      telefono: 'No disponible'
+    };
   }
 
   /**
@@ -90,10 +125,25 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit {
   }
 
   /**
-   * Obtiene el NIT formateado de la empresa
+   * Obtiene el NIT formateado de la empresa con formato colombiano (900.123.456-7)
    */
   get nitEmpresaFormateado(): string {
-    return this.empresaActual?.nit || 'No disponible';
+    if (!this.empresaActual?.nit) {
+      return 'No disponible';
+    }
+
+    const nit = this.empresaActual.nit.toString().trim();
+    const dv = this.empresaActual.digitoVerificacion;
+
+    // Format: 900.123.456-7 (Colombian standard)
+    if (nit.length >= 9) {
+      // Add dots every 3 digits from right to left
+      const formatted = nit.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      return dv ? `${formatted}-${dv}` : formatted;
+    }
+
+    // For shorter NITs, just add DV if available
+    return dv ? `${nit}-${dv}` : nit;
   }
 
   /**
@@ -230,18 +280,59 @@ export class FacturaTirillaComponent implements OnInit, AfterViewInit {
    */
   get numeroFacturaPrincipal(): string {
     // Si hay factura electrónica generada, mostrar ese número
-    if (this.pedido?.nroFactura && 
-        this.pedido.nroFactura !== this.pedido?.referencia && 
+    if (this.pedido?.nroFactura &&
+        this.pedido.nroFactura !== this.pedido?.referencia &&
         this.pedido.nroFactura !== this.pedido?.nroPedido) {
       return this.pedido.nroFactura;
     }
-    
+
     // Si hay referencia del servicio, usar esa
     if (this.pedido?.referencia) {
       return this.pedido.referencia;
     }
-    
+
     // Como última opción, usar el número de pedido
     return this.pedido?.nroPedido || 'N/A';
+  }
+
+  /**
+   * Obtiene la URL del logo de la empresa
+   */
+  get empresaLogo(): string {
+    return this.empresaActual?.logo || '';
+  }
+
+  /**
+   * Verifica si se debe mostrar el logo (existe y no está vacío)
+   */
+  get mostrarLogo(): boolean {
+    return !!this.empresaLogo && this.empresaLogo.trim() !== '';
+  }
+
+  /**
+   * Obtiene la información de la bodega/warehouse
+   */
+  get bodegaInfo(): string {
+    // Try to get warehouse info from pedido
+    if (this.pedido?.bodegaId) {
+      return `Bodega: ${this.pedido.bodegaId}`;
+    }
+
+    // Try to get from localStorage as fallback
+    const warehousePOS = localStorage.getItem('warehousePOS');
+    if (warehousePOS) {
+      try {
+        const warehouse = JSON.parse(warehousePOS);
+        if (warehouse?.nombre) {
+          return `Bodega: ${warehouse.nombre}`;
+        } else if (warehouse?.idBodega) {
+          return `Bodega: ${warehouse.idBodega}`;
+        }
+      } catch (error) {
+        console.warn('⚠️ [Tirilla] Error parsing warehouse data:', error);
+      }
+    }
+
+    return '';
   }
 }

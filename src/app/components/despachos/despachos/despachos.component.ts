@@ -4706,12 +4706,15 @@ export class DespachosComponent implements OnInit {
 
           // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
           if (debeAbrirModalTransportadora) {
-            console.log('🚀 Abriendo modal de transportadora después de guardar orden...');
+            console.log('🚀 Llamando al método del hijo para abrir modal de transportadora...');
 
-            // ✅ SOLUCIÓN: Abrir el modal directamente desde el padre
-            // Esto evita depender de ViewChild references que pueden ser undefined
             setTimeout(() => {
-              this.abrirModalEnviameDirectamente();
+              // Llamar al método público del hijo que tiene la lógica correcta
+              if (this.generarOrdenComponent) {
+                this.generarOrdenComponent.abrirModalTransportadora();
+              } else if (this.editarOrdenComponent) {
+                this.editarOrdenComponent.abrirModalTransportadora();
+              }
             }, 100);
           } else {
             // Solo resetear y cerrar si NO se va a abrir modal de transportadora
@@ -4911,12 +4914,15 @@ export class DespachosComponent implements OnInit {
 
         // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
         if (debeAbrirModalTransportadora) {
-          console.log('🚀 Abriendo modal de transportadora después de crear orden...');
+          console.log('🚀 Llamando al método del hijo para abrir modal de transportadora...');
 
-          // ✅ SOLUCIÓN: Abrir el modal directamente desde el padre
-          // Esto evita depender de ViewChild references que pueden ser undefined
           setTimeout(() => {
-            this.abrirModalEnviameDirectamente();
+            // Llamar al método público del hijo que tiene la lógica correcta
+            if (this.generarOrdenComponent) {
+              this.generarOrdenComponent.abrirModalTransportadora();
+            } else if (this.editarOrdenComponent) {
+              this.editarOrdenComponent.abrirModalTransportadora();
+            }
           }, 100);
         } else {
           // Solo resetear y cerrar si NO se va a abrir modal de transportadora

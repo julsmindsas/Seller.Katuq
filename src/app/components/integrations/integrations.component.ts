@@ -65,8 +65,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   
   savedIntegrations: Integration[] = [];
   editingIntegrationId: string | null = null;
-  
-  isTestMode = true;
+
   isSaving = false;
   isTesting = false;
   
@@ -553,6 +552,13 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     
     // Reconfigurar validación para el nuevo formulario
     this.setupFormValidation();
+
+    // Establecer modo de pruebas como default para nuevas integraciones (más seguro)
+    if (this.integrationForm.get('testMode')) {
+      this.integrationForm.patchValue({
+        testMode: true
+      });
+    }
   }
 
   editIntegration(integration: Integration): void {
@@ -626,8 +632,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Reiniciar la bandera de modo de pruebas; el backend ya no envía información sensible.
-    this.isTestMode = false;
+    // Establecer modo de pruebas por defecto al editar (más seguro). El usuario puede cambiarlo manualmente.
+    if (this.integrationForm.get('testMode')) {
+      this.integrationForm.patchValue({
+        testMode: true
+      });
+    }
   }
 
   testExistingIntegration(integration: Integration): void {
@@ -1029,7 +1039,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           privateKey: formData.privateKey,
           clientId: formData.clientId,
           p_key: formData.p_key,
-          environment: this.isTestMode ? 'test' : 'production'
+          environment: formData.testMode ? 'test' : 'production'
         };
         break;
       case 'paypal':
@@ -1037,7 +1047,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           clientId: formData.clientId,
           clientSecret: formData.clientSecret,
           merchantId: formData.merchantId,
-          environment: this.isTestMode ? 'sandbox' : 'production'
+          environment: formData.testMode ? 'sandbox' : 'production'
         };
         break;
       case 'stripe':
@@ -1046,7 +1056,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           secretKey: formData.secretKey,
           webhookSecret: formData.webhookSecret,
           accountId: formData.accountId,
-          environment: this.isTestMode ? 'test' : 'live'
+          environment: formData.testMode ? 'test' : 'live'
         };
         break;
       case 'payu':
@@ -1056,7 +1066,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           merchantId: formData.merchantId,
           accountId: formData.accountId,
           publicKey: formData.publicKey,
-          environment: this.isTestMode ? 'test' : 'production'
+          environment: formData.testMode ? 'test' : 'production'
         };
         break;
       case 'mercadopago':
@@ -1066,7 +1076,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           clientId: formData.clientId,
           clientSecret: formData.clientSecret,
           webhookUrl: formData.webhookUrl,
-          environment: this.isTestMode ? 'sandbox' : 'production'
+          environment: formData.testMode ? 'sandbox' : 'production'
         };
         break;
       case 'woocommerce':
@@ -1177,10 +1187,6 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         this.statusMessage = null;
       }
     }, 5000);
-  }
-  
-  toggleEnvironment(): void {
-    this.isTestMode = !this.isTestMode;
   }
 
   cancel(): void {

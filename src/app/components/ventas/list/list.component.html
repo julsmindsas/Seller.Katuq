@@ -616,7 +616,17 @@
                                             <!-- Columna # Pedido -->
                                             <td *ngIf="isColumnVisible('nroPedido')" class="pedido-number-cell"
                                                 style="width: 8rem;">
-                                                <span class="pedido-number">{{ pedido.nroPedido }}</span>
+                                                <div class="pedido-number-container">
+                                                    <!-- Número principal de Katuq -->
+                                                    <span class="pedido-number">{{ pedido.nroPedido }}</span>
+
+                                                    <!-- Número externo (WooCommerce/Shopify) -->
+                                                    <span *ngIf="getExternalOrderNumber(pedido)"
+                                                          class="external-order-number"
+                                                          [title]="'Orden de ' + getIntegrationPlatform(pedido)">
+                                                        {{ getExternalOrderNumber(pedido) }}
+                                                    </span>
+                                                </div>
                                             </td>
 
                                             <!-- Columna Fecha Entrega (mostrar en sm+) -->

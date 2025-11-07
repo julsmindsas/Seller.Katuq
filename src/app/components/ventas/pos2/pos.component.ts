@@ -37,6 +37,14 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
       currentCompanyStr ? JSON.parse(currentCompanyStr) : null);
     console.log("👤 [POS Init] User Company:", user.company);
 
+    // Sync company data to both storages for receipt compatibility
+    if (currentCompanyStr) {
+      sessionStorage.setItem("currentCompany", currentCompanyStr);
+      console.log("✅ [POS Init] Company data synced to sessionStorage for receipt");
+    } else {
+      console.warn("⚠️ [POS Init] No company data found in localStorage - receipt may have incomplete info");
+    }
+
     // Limpiar datos al inicializar el POS para empezar siempre con estado limpio
     this.limpiarDatos();
   }

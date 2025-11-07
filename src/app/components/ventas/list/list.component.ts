@@ -591,6 +591,51 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
+  /**
+   * Obtiene el número de orden externa de WooCommerce o Shopify
+   * @param pedido Pedido a verificar
+   * @returns Número de orden con prefijo (ej: "WC-1001") o null
+   */
+  getExternalOrderNumber(pedido: Pedido): string | null {
+    if (!pedido.integrations) {
+      return null;
+    }
+    if (pedido.integrations.woocommerce?.orderNumber) {
+      return `WC-${pedido.integrations.woocommerce.orderNumber}`;
+    }
+    if (pedido.integrations.shopify?.orderNumber) {
+      return `SH-${pedido.integrations.shopify.orderNumber}`;
+    }
+    return null;
+  }
+
+  /**
+   * Verifica si el pedido tiene integración externa
+   * @param pedido Pedido a verificar
+   * @returns true si tiene integración con WooCommerce o Shopify
+   */
+  hasExternalIntegration(pedido: Pedido): boolean {
+    return this.getExternalOrderNumber(pedido) !== null;
+  }
+
+  /**
+   * Obtiene el nombre de la plataforma de integración
+   * @param pedido Pedido a verificar
+   * @returns Nombre de la plataforma ("WooCommerce" o "Shopify") o null
+   */
+  getIntegrationPlatform(pedido: Pedido): string | null {
+    if (!pedido.integrations) {
+      return null;
+    }
+    if (pedido.integrations.woocommerce?.orderNumber) {
+      return 'WooCommerce';
+    }
+    if (pedido.integrations.shopify?.orderNumber) {
+      return 'Shopify';
+    }
+    return null;
+  }
+
   confirmDeleteOrder(order: any) {
     if (confirm(`¿Está seguro de eliminar el pedido #${order.nroPedido}?`)) {
       this.deleteOrder(order);

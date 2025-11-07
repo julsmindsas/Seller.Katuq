@@ -34,9 +34,10 @@ body {
 // $tertiary-color: #45D1C0;
 
 :root {
-    --primary-color: #459BD1; //#00a5d2; //#a554df;//#ff5699;
-    --primary-light-color: rgba(--primary-color, 0.2);
-    --primary-dark-color: #002c3f;
+    // Purple Light Katuq System
+    --primary-color: #a78bfa; // Purple light
+    --primary-light-color: #c4b5fd; // Purple extra light
+    --primary-dark-color: #8b5cf6; // Purple principal
 
     --secondary-color: #4555D1; //#00a5d2;
     --secondary-light-color: rgba(--secondary-color, 0.2);
@@ -63,7 +64,8 @@ body {
     --main-linear-gradient: linear-gradient(45deg, rgba(32, 85, 106, 1) 22%, rgba(81, 130, 152, 1) 68%);
 
 
-    --theme-default: #ff5699; //#7366FF;
+    --theme-default: #a78bfa; // Purple light Katuq
+    --theme-deafult: #a78bfa; // Purple light Katuq (typo compatibility)
     --theme-secondary: #00a5d2; //#838383;
     --light-background: rgba(242, 243, 247, .7);
     --body-font-color: #2F2F3B;

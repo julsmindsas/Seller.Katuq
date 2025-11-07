@@ -241,22 +241,22 @@
         </div>
       </div>
 
-      <!-- Environment Toggle for Payment Integrations -->
-      <div *ngIf="['wompi', 'epayco', 'paypal'].includes(selectedIntegrationType)" class="environment-toggle">
-        <span [ngClass]="{'text-muted': !isTestMode}">Producción</span>
-        <label class="switch">
-          <input type="checkbox" [checked]="isTestMode" (change)="toggleEnvironment()">
-          <span class="slider"></span>
-        </label>
-        <span [ngClass]="{'text-muted': isTestMode}">Pruebas</span>
-        <div class="environment-info">
-          <i class="fa fa-info-circle"></i>
-          <span *ngIf="isTestMode">Modo de pruebas: Las transacciones no serán reales</span>
-          <span *ngIf="!isTestMode">Modo de producción: Las transacciones serán procesadas</span>
-        </div>
-      </div>
-
       <form [formGroup]="integrationForm" (ngSubmit)="onSubmit()" autocomplete="off" class="integration-form">
+
+        <!-- Environment Toggle for Payment Integrations - DENTRO del form -->
+        <div *ngIf="['wompi', 'epayco', 'paypal'].includes(selectedIntegrationType)" class="environment-toggle mb-3">
+          <span [ngClass]="{'text-muted': !integrationForm.get('testMode')?.value}">Producción</span>
+          <label class="switch">
+            <input type="checkbox" formControlName="testMode">
+            <span class="slider"></span>
+          </label>
+          <span [ngClass]="{'text-muted': integrationForm.get('testMode')?.value}">Pruebas</span>
+          <div class="environment-info">
+            <i class="fa fa-info-circle"></i>
+            <span *ngIf="integrationForm.get('testMode')?.value">Modo de pruebas: Las transacciones no serán reales</span>
+            <span *ngIf="!integrationForm.get('testMode')?.value">Modo de producción: Las transacciones serán procesadas</span>
+          </div>
+        </div>
         <!-- Configuración General -->
         <div class="card mb-4">
           <div class="card-header bg-light">
@@ -398,9 +398,9 @@
           </div>
 
           <div class="environment-badge">
-            <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
-              <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
-              {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+            <span class="badge" [ngClass]="integrationForm.get('testMode')?.value ? 'badge-warning' : 'badge-success'">
+              <i class="fa" [ngClass]="integrationForm.get('testMode')?.value ? 'fa-flask' : 'fa-check-circle'"></i>
+              {{integrationForm.get('testMode')?.value ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
             </span>
           </div>
 
@@ -493,9 +493,9 @@
           </div>
 
           <div class="mb-4 text-center">
-            <span class="badge fs-6 px-3 py-2" [ngClass]="isTestMode ? 'bg-warning text-dark' : 'bg-success'">
-              <i class="fa me-2" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
-              {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+            <span class="badge fs-6 px-3 py-2" [ngClass]="integrationForm.get('testMode')?.value ? 'bg-warning text-dark' : 'bg-success'">
+              <i class="fa me-2" [ngClass]="integrationForm.get('testMode')?.value ? 'fa-flask' : 'fa-check-circle'"></i>
+              {{integrationForm.get('testMode')?.value ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
             </span>
           </div>
 
@@ -723,9 +723,9 @@
           </div>
 
           <div class="environment-badge">
-            <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
-              <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
-              {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+            <span class="badge" [ngClass]="integrationForm.get('testMode')?.value ? 'badge-warning' : 'badge-success'">
+              <i class="fa" [ngClass]="integrationForm.get('testMode')?.value ? 'fa-flask' : 'fa-check-circle'"></i>
+              {{integrationForm.get('testMode')?.value ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
             </span>
           </div>
 
@@ -804,9 +804,9 @@
           </div>
 
           <div class="environment-badge">
-            <span class="badge" [ngClass]="isTestMode ? 'badge-warning' : 'badge-success'">
-              <i class="fa" [ngClass]="isTestMode ? 'fa-flask' : 'fa-check-circle'"></i>
-              {{isTestMode ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
+            <span class="badge" [ngClass]="integrationForm.get('testMode')?.value ? 'badge-warning' : 'badge-success'">
+              <i class="fa" [ngClass]="integrationForm.get('testMode')?.value ? 'fa-flask' : 'fa-check-circle'"></i>
+              {{integrationForm.get('testMode')?.value ? 'Ambiente de Pruebas' : 'Ambiente de Producción'}}
             </span>
           </div>
 

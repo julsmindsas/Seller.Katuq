@@ -7,6 +7,7 @@ import { content } from "./shared/routes/routes";
 import { LoginComponent } from '../app/auth/login/login.component'
 import { AdminGuard } from './shared/guard/admin.guard';
 import { SubscriptionGuard } from './shared/guards/subscription.guard';
+import { OnboardingGuard } from './shared/guards/onboarding.guard';
 import { BlankComponent } from './shared/components/layout/blank/blank.component';
 import { ChangePasswordComponent } from './components/change-password/change-password.component';
 import { PageNotFoundComponent } from './shared/components/page-not-found/page-not-found.component';
@@ -51,7 +52,7 @@ const routes: Routes = [
   {
     path: 'onboarding',
     component: BlankComponent,
-    // canActivate: [AdminGuard], // Removido temporalmente para testing
+    canActivate: [AdminGuard, OnboardingGuard], // Solo administradores pueden acceder
     children: [
       {
         path: '',

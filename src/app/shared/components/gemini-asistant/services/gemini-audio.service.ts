@@ -3551,7 +3551,7 @@ Siempre usa las herramientas para obtener datos reales. Proporciona retroaliment
 
       // Procesar la venta usando VentasService real
       console.log('🚀 [PROCESS SALE] Enviando pedido a VentasService.createOrder...');
-      const ventaResult = await this.ventasService.createOrder(orderTemplate).toPromise();
+      const ventaResult = await this.ventasService.createOrder({ order: orderTemplate }).toPromise();
       console.log('📥 [PROCESS SALE] Respuesta de VentasService:', JSON.stringify(ventaResult, null, 2));
       
       if (ventaResult && ventaResult.success !== false) {

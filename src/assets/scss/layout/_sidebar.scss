@@ -88,10 +88,10 @@
 $sidebar-bg: #ffffff;
 $sidebar-text: #2c3e50;
 $sidebar-hover: rgba(69, 155, 209, 0.05);
-$sidebar-active: rgba(69, 155, 209, 0.08);
+$sidebar-active: rgba(167, 139, 250, 0.08); // Purple light
 $sidebar-border: #e9ecef;
 $sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.02);
-$primary-color: #459BD1;
+$primary-color: #a78bfa; // Purple light Katuq
 
 .page-wrapper {
   position: relative;
@@ -3329,7 +3329,7 @@ $primary-color: #459BD1;
       left: 0;
       width: 2px;
       height: 100%;
-      background: linear-gradient(to bottom, #459BD1, #6BB4E0);
+      background: linear-gradient(to bottom, #c4b5fd, #a78bfa); // Purple gradient
       border-radius: 2px 0 0 2px;
     }
 

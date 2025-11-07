@@ -70,6 +70,26 @@ export interface Pedido {
   ultimaImpresion?: string; // Fecha/hora de la última impresión
   revisadoParaProduccion?: string; // Fecha/hora de revisión para producción
   shippment?: Shippment;
+  // Integración con plataformas e-commerce
+  integrations?: {
+    woocommerce?: {
+      orderId?: number;
+      orderNumber?: string;
+      status?: string;
+      currency?: string;
+      paymentMethod?: string;
+      paymentMethodTitle?: string;
+      dateCreated?: string;
+    };
+    shopify?: {
+      orderId?: number;
+      orderNumber?: string;
+      status?: string;
+      currency?: string;
+      paymentMethod?: string;
+      dateCreated?: string;
+    };
+  };
 }
 
 export interface Shippment {

@@ -398,6 +398,7 @@
 
   <!-- Plan Card -->
   <div class="plan-card-container"
+       *ngIf="isAdminUser"
        [class.collapsed]="collapseMenu || isCompactMode">
     
     <div class="plan-card-header">

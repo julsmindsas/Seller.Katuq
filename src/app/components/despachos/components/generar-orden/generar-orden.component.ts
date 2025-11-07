@@ -2078,15 +2078,35 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Si es Enviame, abrir modal de cotización
-    if (this.selectedTransporter === 'enviame') {
-      this.abrirModalEnviameParaCotizacion();
+    // Buscar la integración seleccionada para verificar si requiere modal de cotización
+    const selectedIntegration = this.availableTransporters.find(
+      t => (t.provider || t.type) === this.selectedTransporter
+    );
+
+    // Validar que la integración tenga isModalRate = true antes de abrir modal
+    if (selectedIntegration?.isModalRate === true) {
+      // Si requiere modal de cotización (como Enviame)
+      if (this.selectedTransporter === 'enviame') {
+        this.abrirModalEnviameParaCotizacion();
+      } else {
+        // Otras integraciones con modal de cotización en el futuro
+        console.warn(`Integración ${this.selectedTransporter} requiere modal de cotización pero no está implementado aún`);
+        Swal.fire({
+          icon: 'info',
+          title: 'Despacho con ' + this.getSelectedTransporterName(),
+          text: 'El proceso de cotización y despacho para esta transportadora se completará próximamente.',
+          confirmButtonText: 'Entendido'
+        }).then(() => {
+          this.isSaving = false;
+        });
+      }
     } else {
-      // Para otras transportadoras, mostrar mensaje informativo
+      // Para integraciones sin modal de cotización (isModalRate = false, null, o undefined)
+      console.log(`Integración ${this.selectedTransporter} no requiere modal de cotización (isModalRate: ${selectedIntegration?.isModalRate})`);
       Swal.fire({
         icon: 'info',
         title: 'Despacho con ' + this.getSelectedTransporterName(),
-        text: 'El proceso de cotización y despacho para esta transportadora se completará próximamente.',
+        text: 'Esta transportadora no requiere cotización previa. El despacho se procesará directamente.',
         confirmButtonText: 'Entendido'
       }).then(() => {
         this.isSaving = false;

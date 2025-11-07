@@ -40,6 +40,8 @@ export interface Integration {
     modifiedBy: string;
     encrypted?: string[];
   };
+  // Indica si la integración requiere modal de cotización antes de despacho
+  isModalRate?: boolean;
 }
 
 // Nuevas interfaces para validación

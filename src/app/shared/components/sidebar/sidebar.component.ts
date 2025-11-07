@@ -297,6 +297,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public isCollapsed: boolean = false;
   public collapseMenu: boolean = false;
   public isPlanCardCollapsed: boolean = false;
+  public isAdminUser: boolean = false;
   
   // Nuevas propiedades
   public isCompactMode: boolean = false;
@@ -522,6 +523,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.isPlanCardCollapsed = savedState === 'true';
     }
 
+    // Verificar permisos de administrador para Plan Card
+    this.isAdminUser = this.checkIfUserIsAdmin();
+
     // Configurar estado inicial basado en tamaño de pantalla
     this.initializeSidebarState();
 
@@ -589,6 +593,52 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Sincronizar LayoutService con el estado final
       this.layout.updateSidebarState({ isCollapsed: this.collapseMenu });
+    }
+  }
+
+  /**
+   * Verifica si el usuario actual tiene permisos de administrador
+   * @returns true si el usuario es administrador, false en caso contrario
+   */
+  private checkIfUserIsAdmin(): boolean {
+    try {
+      // Leer usuario desde localStorage
+      const userStr = localStorage.getItem('user');
+
+      if (!userStr) {
+        console.log('[Plan Card Access] No user found in localStorage');
+        return false;
+      }
+
+      // Parsear el objeto usuario
+      const user = JSON.parse(userStr);
+
+      if (!user || !user.rol) {
+        console.log('[Plan Card Access] User object or role not found', user);
+        return false;
+      }
+
+      const userRole = user.rol;
+      console.log('[Plan Card Access] User role detected:', userRole);
+
+      // Verificar si es Super Administrador (case sensitive)
+      if (userRole === 'Super Administrador') {
+        console.log('[Plan Card Access] User is Super Administrador - Access GRANTED');
+        return true;
+      }
+
+      // Verificar si contiene "admin" (case insensitive)
+      if (userRole.toLowerCase().includes('admin')) {
+        console.log('[Plan Card Access] User role contains "admin" - Access GRANTED');
+        return true;
+      }
+
+      console.log('[Plan Card Access] User is not an administrator - Access DENIED');
+      return false;
+
+    } catch (error) {
+      console.error('[Plan Card Access] Error checking user role:', error);
+      return false;
     }
   }
 

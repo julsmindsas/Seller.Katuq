@@ -105,7 +105,7 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/cupones/validatecupon', cupon);
   }
 
-  createOrder(orderTemplate: any) {
+  createOrder(orderTemplate: { order: Pedido; emailHtml?: any }) {
     return this.post<any>('/v1/orders/create', orderTemplate).pipe(
       catchError((error) => {
         // Interceptar error de límite de pedidos
@@ -124,7 +124,7 @@ export class VentasService extends BaseService {
       tap((response) => {
         if (response && response.success) {
           // Disparar notificación de nuevo pedido
-          this.triggerOrderCreatedNotification(response.order || orderTemplate);
+          this.triggerOrderCreatedNotification(response.order || orderTemplate.order);
 
           // Recargar estadísticas de uso
           this.subscriptionService.getUsageStats().subscribe();

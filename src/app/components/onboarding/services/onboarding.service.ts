@@ -106,15 +106,55 @@ export class OnboardingService {
   }
 
   /**
+   * Espera a que los datos de empresa estén disponibles en storage
+   * FIX: Retry logic para evitar race conditions
+   */
+  private async waitForCompanyData(maxRetries: number = 10, delayMs: number = 300): Promise<any> {
+    for (let i = 0; i < maxRetries; i++) {
+      const company = this.getCompanyFromStorage();
+      if (company?.nit || company?.nomComercial || company?.NIT) {
+        console.log(`✅ Empresa encontrada en storage (intento ${i + 1}/${maxRetries})`);
+        return company;
+      }
+
+      console.log(`⏳ Esperando empresa en storage (intento ${i + 1}/${maxRetries})...`);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+
+    console.warn(`⚠️ Empresa no disponible después de ${maxRetries} intentos`);
+    return null;
+  }
+
+  /**
+   * Obtiene empresa desde storage (sessionStorage o localStorage)
+   */
+  private getCompanyFromStorage(): any {
+    try {
+      let company = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
+      if (!company?.nit && !company?.nomComercial) {
+        company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      }
+      return company;
+    } catch (error) {
+      console.error('Error parsing company from storage:', error);
+      return null;
+    }
+  }
+
+  /**
    * Carga datos existentes de la empresa y marca pasos como completados
    */
   private async loadExistingData(state: OnboardingState): Promise<void> {
     try {
-      // FIX #1: Buscar en ambos storages (sessionStorage y localStorage)
-      let company = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
-      if (!company?.nit && !company?.nomComercial) {
-        company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-        console.log('📦 Empresa cargada desde localStorage:', company.nomComercial || company.nombre);
+      // FIX #1: Usar retry logic para esperar a que los datos estén disponibles
+      let company = await this.waitForCompanyData();
+
+      // Si después del retry no hay datos, intentar una vez más desde storage
+      if (!company || (!company.nit && !company.nomComercial && !company.NIT)) {
+        company = this.getCompanyFromStorage();
+        if (company?.nit || company?.nomComercial) {
+          console.log('📦 Empresa cargada desde storage:', company.nomComercial || company.nombre);
+        }
       }
 
       // NUEVO: Si no hay en storage, buscar en Firestore por usuario

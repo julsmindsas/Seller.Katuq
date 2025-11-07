@@ -100,33 +100,50 @@ export class AuthService implements OnInit {
       if (isSuperAdmin) {
         // Redirigir a la página principal de superadmin
         this.router.navigate(["/superadmin/clientes"]);
+        this.services.getEmpresaByName({ company: result.company });
       } else if (isJulsmindAdmin) {
         // Redirigir a la página de administración de Julsmind
         this.router.navigate(["/dashboards"]);
+        this.services.getEmpresaByName({ company: result.company });
       } else {
-        // Para usuarios regulares, verificar estado de onboarding
-        try {
-          const onboardingCompleted = await this.onboardingService.checkOnboardingStatus(result.email);
+        // Para usuarios regulares, diferenciar entre Administrador y otros roles
+        const isAdmin = result.rol === 'Administrador';
 
-          if (!onboardingCompleted) {
-            // Usuario nuevo o con onboarding incompleto
-            console.log('🎯 Usuario sin onboarding completado, redirigiendo a /onboarding');
-            this.router.navigate(["/onboarding"]);
+        if (isAdmin) {
+          // ADMINISTRADORES: Verificar estado de onboarding
+          try {
+            // ✅ FIX: Cargar empresa PRIMERO para evitar race condition
+            await this.loadCompanyData(result.company, result.email);
+
+            const onboardingCompleted = await this.onboardingService.checkOnboardingStatus(result.email);
+
+            if (!onboardingCompleted) {
+              // Usuario nuevo o con onboarding incompleto
+              console.log('🎯 Administrador sin onboarding completado, redirigiendo a /onboarding');
+              this.router.navigate(["/onboarding"]);
+              return;
+            }
+
+            // Usuario con onboarding completado
+            console.log('✅ Administrador con onboarding completado, redirigiendo a /welcome');
+            this.router.navigate(["/welcome"]);
+          } catch (error) {
+            console.error('❌ Error verificando estado de onboarding:', error);
+            // En caso de error, cargar empresa de forma async y permitir acceso a welcome
             this.services.getEmpresaByName({ company: result.company });
-            return;
+            this.router.navigate(["/welcome"]);
           }
+        } else {
+          // OTROS ROLES (Vendedor, Cajero, Operador, etc.): Ir directo a welcome
+          console.log(`👤 Usuario con rol "${result.rol}" - redirigiendo a /welcome`);
 
-          // Usuario con onboarding completado
-          console.log('✅ Usuario con onboarding completado, redirigiendo a /welcome');
-          this.router.navigate(["/welcome"]);
-        } catch (error) {
-          console.error('❌ Error verificando estado de onboarding:', error);
-          // En caso de error, permitir acceso a welcome
+          // Cargar empresa sin esperar (no bloquea navegación)
+          this.services.getEmpresaByName({ company: result.company });
+
+          // Ir directo a welcome
           this.router.navigate(["/welcome"]);
         }
       }
-
-      this.services.getEmpresaByName({ company: result.company });
     } else {
       this.showLoader = false; // Desactivar indicador de carga
       this.showErrorAlert("¡ Datos incorrectos !");
@@ -225,6 +242,74 @@ export class AuthService implements OnInit {
     localStorage.removeItem('katuq_diagnostic_progress');
 
     this.router.navigateByUrl('/login');
+  }
+
+  /**
+   * Carga los datos de la empresa y espera a que se complete
+   * FIX: Soluciona race condition al cargar empresa ANTES de redirigir a onboarding
+   */
+  private loadCompanyData(companyName: string, userEmail: string): Promise<void> {
+    console.log(`📥 Cargando datos de empresa: ${companyName}`);
+
+    return new Promise((resolve, reject) => {
+      // Llamar al método existente que ya maneja la lógica de guardado
+      // Este método retorna un Subscription y maneja internamente el guardado
+      const subscription = this.services.getEmpresaByName({ company: companyName });
+
+      // Dar tiempo para que la suscripción interna se complete
+      // Verificar en intervalos si los datos ya están disponibles
+      let attempts = 0;
+      const maxAttempts = 20; // 2 segundos máximo (20 * 100ms)
+
+      const checkInterval = setInterval(() => {
+        attempts++;
+        const companyData = this.getCompanyFromStorage();
+
+        if (companyData && (companyData.nit || companyData.NIT || companyData.nomComercial)) {
+          clearInterval(checkInterval);
+
+          // Asegurar que esté en ambos storages para compatibilidad
+          sessionStorage.setItem('currentCompany', JSON.stringify(companyData));
+
+          console.log('✅ Empresa cargada correctamente:', companyData.nomComercial || companyData.nombre);
+          resolve();
+        } else if (attempts >= maxAttempts) {
+          clearInterval(checkInterval);
+          console.warn('⚠️ Timeout esperando datos de empresa');
+          reject(new Error('Timeout loading company data'));
+        }
+      }, 100);
+    });
+  }
+
+  /**
+   * Obtiene los datos de la empresa desde storage
+   */
+  private getCompanyFromStorage(): any {
+    try {
+      // Primero intentar desde sessionStorage
+      let company = sessionStorage.getItem('currentCompany');
+      if (company && company !== 'undefined' && company !== 'null') {
+        const parsed = JSON.parse(company);
+        if (parsed && (parsed.nit || parsed.NIT)) {
+          return parsed;
+        }
+      }
+
+      // Si no está en sessionStorage, intentar localStorage
+      company = localStorage.getItem('currentCompany');
+      if (company && company !== 'undefined' && company !== 'null') {
+        const parsed = JSON.parse(company);
+        if (parsed && (parsed.nit || parsed.NIT)) {
+          return parsed;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error('Error parsing company from storage:', error);
+      return null;
+    }
   }
 
   // Constantes para la validación de sesión
