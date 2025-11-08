@@ -98,27 +98,30 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
         // Iniciar el widget de Wompi
         this.checkoutService.iniciarPagoConWompi(pedido).then(pagoExitoso => {
           if (pagoExitoso) {
-            // Actualizar el estado del pedido a Aprobado
-            this.actualizarEstadoPedido(pedido.nroPedido, EstadoPago.Aprobado);
+            // ✅ INFORMATIVO: El widget se completó, pero el webhook actualizará el estado
+            console.log("✅ [Wompi Widget] Pago iniciado exitosamente. El webhook actualizará el estado.");
             Swal.fire({
-              title: "¡Pago aprobado!",
-              text: "El pago ha sido procesado exitosamente.",
-              icon: "success",
+              title: "Procesando pago",
+              text: "El pago está siendo procesado. Recibirás confirmación en unos momentos.",
+              icon: "info",
               confirmButtonText: "Ok",
             });
+
+            // Limpiar el estado de procesamiento
+            this.limpiarDatosDespuesDeVenta();
           } else {
-            // Actualizar el estado del pedido a Rechazado
-            this.actualizarEstadoPedido(pedido.nroPedido, EstadoPago.Rechazado);
+            // El usuario canceló o cerró el widget
+            console.log("ℹ️ [Wompi Widget] Pago no completado por el usuario.");
             Swal.fire({
-              title: "Pago no completado",
-              text: "No se pudo completar el pago. El pedido ha sido guardado con estado pendiente.",
+              title: "Pago cancelado",
+              text: "El proceso de pago fue cancelado. El pedido se guardó con estado pendiente.",
               icon: "warning",
               confirmButtonText: "Ok",
             });
           }
           this.processingPayment = false;
         }).catch(error => {
-          console.error("Error en el proceso de pago:", error);
+          console.error("❌ [Wompi Widget] Error en el proceso de pago:", error);
           Swal.fire({
             title: "Error en el pago",
             text: "Ocurrió un error durante el proceso de pago.",
@@ -215,75 +218,9 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Actualiza el estado del pedido después del pago
-   * ✅ FIX: Envía email SOLO cuando pago es aprobado, con número correcto del backend
-   */
-  private actualizarEstadoPedido(numeroPedido: string, estadoPago: EstadoPago): void {
-    console.log(`🔄 [Wompi] Actualizando estado de pago: ${estadoPago}`);
+  // ✅ ELIMINADO: actualizarEstadoPedido - El webhook es el único responsable de actualizar estados
 
-    // Obtener el pedido actual
-    const pedido = this.checkoutService.pedido$.getValue();
-    if (!pedido) {
-      console.error("❌ [Wompi] No hay un pedido actual para actualizar");
-      return;
-    }
 
-    // Actualizar el estado de pago
-    pedido.estadoPago = estadoPago;
-
-    // Editar el pedido en el servidor
-    this.ventasService.editOrder(pedido).subscribe({
-      next: (res: any) => {
-        console.log(`✅ [Wompi] Estado actualizado exitosamente a: ${estadoPago}`);
-
-        // Obtener el pedido actualizado de la respuesta del backend
-        // Esto asegura que tenemos el número de pedido correcto asignado por el servidor
-        const updatedOrder = res.order || pedido;
-
-        // Asegurar que tenemos el número de pedido correcto
-        if (updatedOrder.referencia && !updatedOrder.nroPedido) {
-          updatedOrder.nroPedido = updatedOrder.referencia;
-        }
-
-        // Actualizar el pedido en el servicio de checkout con los datos frescos del backend
-        this.checkoutService.pedido$.next(updatedOrder);
-
-        // ✅ SOLO enviar email cuando el pago es APROBADO
-        if (estadoPago === EstadoPago.Aprobado) {
-          console.log(`📧 [Wompi] Enviando email de confirmación con número: ${updatedOrder.nroPedido || updatedOrder.referencia}`);
-
-          // Generar email HTML con el pedido actualizado que contiene el número correcto del backend
-          const htmlConNumeroCorrect = this.paymentService.getHtmlContent(updatedOrder);
-
-          // Enviar correo de confirmación
-          this.ventasService.enviarCorreoConfirmacionPedido({
-            order: updatedOrder,
-            emailHtml: htmlConNumeroCorrect
-          }).subscribe({
-            next: () => {
-              console.log("✅ [Wompi] Email de confirmación enviado exitosamente");
-            },
-            error: (emailError) => {
-              console.error("⚠️ [Wompi] Error al enviar email (no crítico):", emailError);
-            }
-          });
-
-          // Manejar pedido exitoso (incluye mostrar factura y limpiar datos)
-          this.checkoutService.orderCreatorService.handleSuccessfulOrder(updatedOrder);
-
-          // Limpiar datos adicionales del checkout
-          this.limpiarDatosDespuesDeVenta();
-        } else {
-          console.log(`ℹ️ [Wompi] Estado ${estadoPago} - No se envía email al cliente`);
-        }
-      },
-      error: (err: any) => {
-        console.error("❌ [Wompi] Error al actualizar el pedido:", err);
-      }
-    });
-  }
-  
   /**
    * Limpia datos específicos del checkout después de una venta exitosa
    */

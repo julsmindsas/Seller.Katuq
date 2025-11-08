@@ -223,7 +223,7 @@
       white-space: nowrap;
 
       &.primary {
-        background-color: #007bff;
+        background-color: #a78bfa;
         color: white;
         
         &:hover {
@@ -343,7 +343,7 @@
     width: 100%;
     height: 100%;
     border: none;
-    background-color: #007bff;
+    background-color: #a78bfa;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -954,8 +954,8 @@
     border-radius: 0.2rem;
     
     &.btn-primary {
-      background-color: #0d6efd;
-      border-color: #0d6efd;
+      background-color: #8b5cf6;
+      border-color: #8b5cf6;
       
       &:hover {
         background-color: #0b5ed7;
@@ -1045,7 +1045,7 @@
         margin-left: 0.5rem;
         
         &[title*="Reintentar"] {
-          color: #0d6efd;
+          color: #8b5cf6;
           
           &:hover {
             color: #0b5ed7;

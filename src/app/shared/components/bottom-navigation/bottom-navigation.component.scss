@@ -133,7 +133,7 @@
     --item-color-rgb: 108, 117, 125; // Default gray
 
     &[style*="--item-color: #a78bfa"] { --item-color-rgb: 167, 139, 250; } // Purple light
-    &[style*="--item-color: #459BD1"] { --item-color-rgb: 167, 139, 250; } // Legacy
+    &[style*="--item-color: #a78bfa"] { --item-color-rgb: 167, 139, 250; } // Legacy
     &[style*="--item-color: #28a745"] { --item-color-rgb: 40, 167, 69; }
     &[style*="--item-color: #fd7e14"] { --item-color-rgb: 253, 126, 20; }
     &[style*="--item-color: #6f42c1"] { --item-color-rgb: 111, 66, 193; }

@@ -38,7 +38,8 @@
       "Bash(npm install:*)",
       "Bash(npm run start:4gb:*)",
       "Bash(timeout 120 npx ng build:*)",
-      "WebFetch(domain:x.com)"
+      "WebFetch(domain:x.com)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []

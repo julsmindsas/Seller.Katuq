@@ -59,7 +59,7 @@
     }
     
     &.estado-transito {
-      background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+      background: linear-gradient(135deg, #c4b5fd 0%, #20c997 100%);
       color: white;
     }
     
@@ -69,7 +69,7 @@
     }
     
     &.estado-ruta {
-      background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+      background: linear-gradient(135deg, #a78bfa 0%, #6610f2 100%);
       color: white;
     }
     
@@ -101,7 +101,7 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: linear-gradient(to bottom, #007bff, #e9ecef);
+      background: linear-gradient(to bottom, #a78bfa, #e9ecef);
     }
     
     .timeline-item {
@@ -119,7 +119,7 @@
         width: 1rem;
         height: 1rem;
         border-radius: 50%;
-        background: #007bff;
+        background: #a78bfa;
         border: 3px solid white;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
@@ -128,7 +128,7 @@
         background: #f8f9fa;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 3px solid #007bff;
+        border-left: 3px solid #a78bfa;
         
         .evento-fecha {
           font-size: 0.8rem;
@@ -149,7 +149,7 @@
           color: #6c757d;
           
           i {
-            color: #007bff;
+            color: #a78bfa;
           }
         }
       }

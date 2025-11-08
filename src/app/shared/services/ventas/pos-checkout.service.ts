@@ -341,7 +341,15 @@ export class PosCheckoutService {
 
       const redirectUrl = window.location.origin + "/payment-callback";
 
-      // 3. Inicializar el widget de Wompi con publicKey dinámico
+      // 3. Validar que exista la firma de integridad
+      const integritySignature = pedido?.pagoInformation?.integridad;
+      if (!integritySignature || integritySignature.trim() === "") {
+        console.error("❌ [POS-Wompi] Firma de integridad faltante en el pedido");
+        throw new Error("No se puede procesar el pago: falta la firma de seguridad");
+      }
+      console.log("✅ [POS-Wompi] Firma de integridad validada");
+
+      // 4. Inicializar el widget de Wompi con publicKey dinámico
       const checkout = new window["WidgetCheckout"]({
         currency: "COP",
         amountInCents: amountInCents,
@@ -353,7 +361,7 @@ export class PosCheckoutService {
           consumption: 0,
         },
         signature: {
-          integrity: pedido?.pagoInformation?.integridad || "",
+          integrity: integritySignature, // ✅ Validado previamente, nunca vacío
         },
         customerData: customerData,
       });
@@ -367,7 +375,7 @@ export class PosCheckoutService {
             if (transaction.status === "APPROVED") {
               // Almacenar los datos de la transacción en el pedido
               pedido.transaccionId = transaction.id;
-              pedido.estadoPago = EstadoPago.Aprobado;
+              // ✅ REMOVIDO: pedido.estadoPago - El webhook actualizará el estado
               pedido.PagosAsentados = [
                 {
                   fechaHoraAprobacionRechazo: new Date().toISOString(),
@@ -390,7 +398,7 @@ export class PosCheckoutService {
 
               resolve(true); // Pago exitoso
             } else {
-              pedido.estadoPago = EstadoPago.Rechazado;
+              // ✅ REMOVIDO: pedido.estadoPago - El webhook actualizará el estado
 
               // Actualizar el pedido en el Observable
               this.pedido$.next(pedido);

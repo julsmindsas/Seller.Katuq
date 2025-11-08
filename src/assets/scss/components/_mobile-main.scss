@@ -68,7 +68,7 @@
           font-size: 0.8rem;
           
           &.active {
-            color: #007bff;
+            color: #a78bfa;
           }
           
           .nav-icon {
@@ -181,7 +181,7 @@
     .btn:focus,
     .form-control:focus,
     .form-select:focus {
-      outline: 2px solid #007bff;
+      outline: 2px solid #a78bfa;
       outline-offset: 2px;
     }
   }
@@ -215,7 +215,7 @@
       position: fixed;
       top: 10px;
       right: 10px;
-      background: #007bff;
+      background: #a78bfa;
       color: white;
       padding: 0.25rem 0.5rem;
       border-radius: 4px;

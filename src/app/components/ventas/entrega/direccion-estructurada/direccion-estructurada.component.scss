@@ -81,7 +81,7 @@
 
 /* Estilos especiales para la alerta de dirección que se está editando */
 .modal-body > .alert-info {
-  border-left: 4px solid #17a2b8;
+  border-left: 4px solid #c4b5fd;
   font-size: 0.9rem;
   
   strong {
@@ -180,8 +180,8 @@
   }
   
   .btn-primary {
-    background-color: #0d6efd;
-    border-color: #0d6efd;
+    background-color: #8b5cf6;
+    border-color: #8b5cf6;
     
     &:hover:not(:disabled) {
       background-color: #0b5ed7;
@@ -264,7 +264,7 @@
 }
 
 .urban-form {
-  border-left: 4px solid #007bff;
+  border-left: 4px solid #a78bfa;
   
   .form-label {
     color: #004085;

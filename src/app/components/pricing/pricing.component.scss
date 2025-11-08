@@ -30,7 +30,7 @@ h1 {
   }
 
   &.premium {
-    border: 2px solid var(--primary-color, #007bff);
+    border: 2px solid var(--primary-color, #a78bfa);
     box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
   }
 
@@ -85,7 +85,7 @@ h1 {
   .amount {
     font-size: 3.5rem;
     font-weight: bold;
-    color: var(--primary-color, #007bff);
+    color: var(--primary-color, #a78bfa);
     line-height: 1;
   }
 

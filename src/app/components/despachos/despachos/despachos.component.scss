@@ -483,7 +483,7 @@ $border-radius: 8px;
 
 .optimizacion-badge {
   background-color: rgba(29, 95, 255, 0.15);
-  color: #0d6efd;
+  color: #8b5cf6;
   border-radius: 50%;
   padding: 0.15rem;
   display: inline-flex;
@@ -530,12 +530,12 @@ $border-radius: 8px;
     }
     &.estado-info {
       background-color: rgba(23, 162, 184, 0.15);
-      color: #17a2b8;
+      color: #c4b5fd;
       border: 1px solid rgba(23, 162, 184, 0.3);
     }
     &.estado-primary {
       background-color: rgba(13, 110, 253, 0.15);
-      color: #0d6efd;
+      color: #8b5cf6;
       border: 1px solid rgba(13, 110, 253, 0.3);
     }
     &.estado-warning {
@@ -614,7 +614,7 @@ $border-radius: 8px;
 
       &:hover {
         background-color: #f8f9fa;
-        color: #0d6efd;
+        color: #8b5cf6;
       }
     }
 
@@ -647,7 +647,7 @@ $border-radius: 8px;
 
         &:hover {
           background-color: #f8f9fa;
-          color: #0d6efd;
+          color: #8b5cf6;
         }
       }
     }
@@ -704,7 +704,7 @@ $border-radius: 8px;
     transition: all 0.3s ease;
 
     &:hover {
-      border-color: #0d6efd;
+      border-color: #8b5cf6;
       background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
     }
 
@@ -729,7 +729,7 @@ $border-radius: 8px;
     border: 1px solid #e9ecef !important;
 
     &:hover {
-      border-color: #0d6efd !important;
+      border-color: #8b5cf6 !important;
       box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
     }
 
@@ -738,7 +738,7 @@ $border-radius: 8px;
     }
 
     .fw-bold {
-      color: #0d6efd;
+      color: #8b5cf6;
       font-size: 0.9rem;
     }
 
@@ -786,7 +786,7 @@ $border-radius: 8px;
       font-weight: 700 !important;
 
       &.text-info {
-        color: #17a2b8 !important;
+        color: #c4b5fd !important;
       }
 
       &.text-warning {
@@ -794,7 +794,7 @@ $border-radius: 8px;
       }
 
       &.text-primary {
-        color: #0d6efd !important;
+        color: #8b5cf6 !important;
       }
 
       &.text-success {
@@ -835,7 +835,7 @@ $border-radius: 8px;
       color: #495057 !important;
 
       &.text-info {
-        color: #17a2b8 !important;
+        color: #c4b5fd !important;
       }
 
       &.text-warning {
@@ -843,7 +843,7 @@ $border-radius: 8px;
       }
 
       &.text-primary {
-        color: #0d6efd !important;
+        color: #8b5cf6 !important;
       }
 
       &.text-success {
@@ -866,7 +866,7 @@ $border-radius: 8px;
       border-left-color: #0dcaf0;
 
       .stat-icon {
-        background: linear-gradient(45deg, #0dcaf0, #17a2b8);
+        background: linear-gradient(45deg, #0dcaf0, #c4b5fd);
       }
     }
 
@@ -1056,7 +1056,7 @@ $border-radius: 8px;
       }
 
       &.bg-primary {
-        background: linear-gradient(45deg, #007bff, #0056b3);
+        background: linear-gradient(45deg, #a78bfa, #0056b3);
       }
     }
   }
@@ -1195,14 +1195,14 @@ $border-radius: 8px;
         left: 0;
         width: 100%;
         height: 3px;
-        background: #0d6efd;
+        background: #8b5cf6;
         transform: scaleX(0);
         transition: transform 0.3s ease-out;
       }
     }
 
     li.p-highlight .p-tabview-nav-link {
-      color: #0d6efd;
+      color: #8b5cf6;
 
       &::after {
         transform: scaleX(1);
@@ -1302,7 +1302,7 @@ $border-radius: 8px;
               
               &:focus-within {
                 box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-                border-color: #0d6efd;
+                border-color: #8b5cf6;
               }
               
               .p-inputgroup-addon {
@@ -1326,7 +1326,7 @@ $border-radius: 8px;
                 height: 2.25rem; // Misma altura que p-inputtext-sm
                 
                 &:focus {
-                  border-color: #0d6efd;
+                  border-color: #8b5cf6;
                   box-shadow: none;
                 }
                 
@@ -1624,7 +1624,7 @@ $border-radius: 8px;
       height: 2.25rem;
 
       &:focus {
-        border-color: #0d6efd;
+        border-color: #8b5cf6;
         box-shadow: none;
       }
 

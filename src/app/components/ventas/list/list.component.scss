@@ -101,7 +101,7 @@ $filter-border-color: #e0e0e0;
           transition: all 0.2s ease;
 
           &:focus {
-            border-color: #007bff;
+            border-color: #a78bfa;
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
             outline: none;
           }
@@ -122,7 +122,7 @@ $filter-border-color: #e0e0e0;
           transition: all 0.2s ease;
 
           &:hover {
-            color: #007bff;
+            color: #a78bfa;
             background-color: rgba(0, 123, 255, 0.05);
           }
 
@@ -155,7 +155,7 @@ $filter-border-color: #e0e0e0;
       }
 
       .date-separator {
-        color: #007bff;
+        color: #a78bfa;
         font-size: 1rem;
         font-weight: 500;
         padding: 0 0.125rem;
@@ -171,7 +171,7 @@ $filter-border-color: #e0e0e0;
           transition: all 0.2s ease;
 
           &:hover {
-            border-color: #007bff;
+            border-color: #a78bfa;
           }
 
           .p-dropdown-label {
@@ -648,7 +648,7 @@ $filter-border-color: #e0e0e0;
   }
 
   &.badge-info {
-    background: linear-gradient(135deg, #17a2b8 0%, #3498db 100%);
+    background: linear-gradient(135deg, #c4b5fd 0%, #3498db 100%);
     color: white;
     border: 1px solid rgba(23, 162, 184, 0.2);
 
@@ -1499,7 +1499,7 @@ $filter-border-color: #e0e0e0;
   font-size: 0.875rem;
 
   .p-datepicker-header {
-    background-color: #007bff;
+    background-color: #a78bfa;
     color: white;
     border: none;
     padding: 0.75rem;
@@ -1547,7 +1547,7 @@ $filter-border-color: #e0e0e0;
         }
 
         &.p-highlight {
-          background-color: #007bff;
+          background-color: #a78bfa;
           color: white;
         }
       }
@@ -1555,7 +1555,7 @@ $filter-border-color: #e0e0e0;
 
     .p-datepicker-today span {
       font-weight: bold;
-      border: 1px solid #007bff;
+      border: 1px solid #a78bfa;
     }
   }
 
@@ -2356,7 +2356,7 @@ $filter-border-color: #e0e0e0;
   cursor: pointer;
 
   &:hover {
-    border-color: #007bff;
+    border-color: #a78bfa;
     background: #f8f9ff;
     transform: translateY(-1px);
     box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
@@ -3295,7 +3295,7 @@ $filter-border-color: #e0e0e0;
   transition: all 0.2s ease;
   
   &:hover {
-    border-color: #007bff;
+    border-color: #a78bfa;
     box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
   }
 }
@@ -3411,7 +3411,7 @@ $filter-border-color: #e0e0e0;
       
       i {
         font-size: 0.9em;
-        color: #007bff;
+        color: #a78bfa;
         margin-right: 0.3rem;
       }
     }
@@ -3495,7 +3495,7 @@ $filter-border-color: #e0e0e0;
           white-space: nowrap;
           
           i {
-            color: #007bff;
+            color: #a78bfa;
             margin-right: 0.15rem;
             font-size: 0.9em;
           }
@@ -3544,8 +3544,8 @@ $filter-border-color: #e0e0e0;
         background-color: #f8f9fa;
         
         &.active {
-          background-color: #007bff;
-          border-color: #007bff;
+          background-color: #a78bfa;
+          border-color: #a78bfa;
           color: white;
         }
         
@@ -3566,7 +3566,7 @@ $filter-border-color: #e0e0e0;
       padding: 0.5rem;
       background: #f8f9fa;
       border-radius: 3px;
-      border-left: 2px solid #007bff;
+      border-left: 2px solid #a78bfa;
     }
     
     .config-subsection {

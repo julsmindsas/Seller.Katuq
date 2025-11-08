@@ -408,10 +408,10 @@ $radius: 6px;
             &.status-pending { background: $accent-warning; }
             &.status-approved { background: $accent-success; }
             &.status-rejected { background: $accent-danger; }
-            &.status-in-progress { background: #17a2b8; }
+            &.status-in-progress { background: #c4b5fd; }
             &.status-produced { background: #20c997; }
             &.status-packed { background: #6f42c1; }
-            &.status-shipped { background: #007bff; }
+            &.status-shipped { background: #a78bfa; }
             &.status-delivered { background: $accent-success; }
           }
 
@@ -487,10 +487,10 @@ $radius: 6px;
     &.status-pending { background: $accent-warning; }
     &.status-approved { background: $accent-success; }
     &.status-rejected { background: $accent-danger; }
-    &.status-in-progress { background: #17a2b8; }
+    &.status-in-progress { background: #c4b5fd; }
     &.status-produced { background: #20c997; }
     &.status-packed { background: #6f42c1; }
-    &.status-shipped { background: #007bff; }
+    &.status-shipped { background: #a78bfa; }
     &.status-delivered { background: $accent-success; }
   }
 }
