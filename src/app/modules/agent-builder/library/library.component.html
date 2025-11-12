@@ -1,0 +1,103 @@
+<div class="agent-library">
+  <!-- Header -->
+  <div class="library-header">
+    <div class="header-content">
+      <h2>
+        <i class="pi pi-users"></i>
+        Mis Agentes IA
+      </h2>
+      <p class="subtitle">Gestiona y ejecuta tus asistentes inteligentes</p>
+    </div>
+    <button
+      pButton
+      label="Crear Nuevo Agente"
+      icon="pi pi-plus"
+      class="p-button-lg create-button"
+      (click)="createNewAgent()">
+    </button>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters-section" *ngIf="agents.length > 0">
+    <div class="filter-group">
+      <label>
+        <i class="pi pi-filter"></i>
+        Filtrar por departamento:
+      </label>
+      <p-dropdown
+        [(ngModel)]="filterDepartment"
+        [options]="departments"
+        optionLabel="label"
+        optionValue="value"
+        (onChange)="onDepartmentFilterChange()"
+        styleClass="department-filter">
+        <ng-template let-dept pTemplate="item">
+          <div class="department-option">
+            <i [class]="'pi ' + dept.icon" [style.color]="dept.color"></i>
+            <span>{{ dept.label }}</span>
+          </div>
+        </ng-template>
+        <ng-template let-dept pTemplate="selectedItem">
+          <div class="department-option" *ngIf="dept">
+            <i [class]="'pi ' + dept.icon" [style.color]="dept.color"></i>
+            <span>{{ dept.label }}</span>
+          </div>
+        </ng-template>
+      </p-dropdown>
+    </div>
+
+    <div class="agents-count">
+      <i class="pi pi-check-circle"></i>
+      <span>{{ filteredAgents.length }} agente<span *ngIf="filteredAgents.length !== 1">s</span></span>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando agentes...</p>
+  </div>
+
+  <!-- Agents Grid -->
+  <div class="agents-grid" *ngIf="!isLoading && filteredAgents.length > 0">
+    <app-agent-card
+      *ngFor="let agent of filteredAgents"
+      [agent]="agent"
+      (execute)="executeAgent($event)"
+      (delete)="deleteAgent($event)"
+      (toggleStatus)="toggleAgentStatus($event)">
+    </app-agent-card>
+  </div>
+
+  <!-- Empty State - No Agents -->
+  <div class="empty-state" *ngIf="!isLoading && agents.length === 0">
+    <div class="empty-icon">
+      <i class="pi pi-sparkles"></i>
+    </div>
+    <h4>No tienes agentes creados</h4>
+    <p>Crea tu primer agente inteligente para comenzar a automatizar tareas</p>
+    <button
+      pButton
+      label="Crear Primer Agente"
+      icon="pi pi-plus"
+      class="p-button-lg p-button-rounded"
+      (click)="createNewAgent()">
+    </button>
+  </div>
+
+  <!-- Empty State - No Filtered Results -->
+  <div class="empty-state" *ngIf="!isLoading && agents.length > 0 && filteredAgents.length === 0">
+    <div class="empty-icon">
+      <i class="pi pi-filter-slash"></i>
+    </div>
+    <h4>No hay agentes en este departamento</h4>
+    <p>Intenta cambiar el filtro o crear un nuevo agente</p>
+  </div>
+</div>
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog
+  [style]="{width: '450px'}"
+  [baseZIndex]="10000"
+  rejectButtonStyleClass="p-button-text">
+</p-confirmDialog>

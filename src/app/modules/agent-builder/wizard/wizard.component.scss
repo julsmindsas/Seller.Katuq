@@ -1,0 +1,163 @@
+.agent-builder-wizard {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  position: relative;
+
+  .wizard-header {
+    background: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+
+    h2 {
+      font-weight: 700;
+      color: #667eea;
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+
+      i {
+        margin-right: 0.5rem;
+        animation: sparkle 2s ease-in-out infinite;
+      }
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 0;
+    }
+  }
+
+  .wizard-content {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 15px;
+    min-height: 450px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 20px;
+    z-index: 1000;
+
+    .loading-spinner {
+      text-align: center;
+
+      i {
+        color: #667eea;
+        margin-bottom: 1rem;
+        display: block;
+      }
+
+      p {
+        font-size: 1.2rem;
+        color: #333;
+        font-weight: 600;
+      }
+    }
+  }
+
+  ::ng-deep .p-steps {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+
+    .p-steps-item {
+      flex: 1;
+
+      &.p-highlight {
+        .p-steps-number {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .p-steps-title {
+          color: #667eea;
+          font-weight: 600;
+        }
+      }
+
+      .p-steps-number {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-width: 2px;
+        transition: all 0.3s ease;
+      }
+
+      .p-steps-title {
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        transition: all 0.3s ease;
+      }
+
+      &.p-disabled {
+        opacity: 0.5;
+      }
+    }
+  }
+
+  @keyframes sparkle {
+    0%, 100% {
+      transform: scale(1) rotate(0deg);
+    }
+    25% {
+      transform: scale(1.1) rotate(5deg);
+    }
+    50% {
+      transform: scale(1) rotate(0deg);
+    }
+    75% {
+      transform: scale(1.1) rotate(-5deg);
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .agent-builder-wizard {
+    padding: 1rem;
+
+    .wizard-header {
+      padding: 1.5rem;
+
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+
+    .wizard-content {
+      padding: 1.5rem;
+      min-height: 400px;
+    }
+
+    ::ng-deep .p-steps {
+      padding: 1rem;
+
+      .p-steps-item {
+        .p-steps-number {
+          width: 35px;
+          height: 35px;
+          font-size: 1rem;
+        }
+
+        .p-steps-title {
+          font-size: 0.75rem;
+        }
+      }
+    }
+  }
+}

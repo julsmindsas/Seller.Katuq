@@ -1,0 +1,100 @@
+<div class="step-container">
+  <h4 class="step-title">
+    <i class="pi pi-file-edit text-primary"></i>
+    System Prompt
+  </h4>
+  <p class="step-subtitle">Define el comportamiento y personalidad de tu agente</p>
+
+  <!-- Prompt Templates -->
+  <div class="templates-section mb-4">
+    <label class="form-label">Plantillas Sugeridas</label>
+    <div class="templates-grid">
+      <div
+        *ngFor="let template of promptTemplates"
+        class="template-card"
+        (click)="useTemplate(template.value)">
+        <div class="template-icon" [style.background]="template.color">
+          <i [class]="'pi ' + template.icon"></i>
+        </div>
+        <span class="template-label">{{ template.label }}</span>
+        <i class="pi pi-copy template-action"></i>
+      </div>
+    </div>
+    <small class="text-muted d-block mt-2">
+      <i class="pi pi-info-circle"></i>
+      Haz clic en una plantilla para usarla como base
+    </small>
+  </div>
+
+  <!-- Prompt Editor -->
+  <div class="prompt-editor mb-4">
+    <label class="form-label required">Instrucciones del Sistema</label>
+    <textarea
+      pInputTextarea
+      [(ngModel)]="agentConfig.systemPrompt"
+      (ngModelChange)="onInputChange()"
+      placeholder="Eres un asistente experto en...&#10;&#10;Tu objetivo es...&#10;&#10;Debes responder de forma..."
+      rows="10"
+      class="w-100"
+      [class.is-invalid]="!agentConfig.systemPrompt && touched">
+    </textarea>
+    <div class="prompt-footer">
+      <small class="text-muted">
+        <i class="pi pi-info-circle"></i>
+        Define claramente el rol, objetivos y estilo de comunicación del agente
+      </small>
+      <small class="char-count" [class.text-success]="getCharacterCount() >= 100">
+        {{ getCharacterCount() }} caracteres
+        <i class="pi pi-check-circle" *ngIf="getCharacterCount() >= 100"></i>
+      </small>
+    </div>
+    <div class="invalid-feedback" *ngIf="!agentConfig.systemPrompt && touched">
+      El system prompt es requerido
+    </div>
+  </div>
+
+  <!-- Best Practices -->
+  <div class="best-practices">
+    <h6>
+      <i class="pi pi-lightbulb"></i>
+      Mejores Prácticas
+    </h6>
+    <ul>
+      <li>
+        <i class="pi pi-check-circle text-success"></i>
+        Define claramente el rol y responsabilidades del agente
+      </li>
+      <li>
+        <i class="pi pi-check-circle text-success"></i>
+        Especifica el tono de comunicación (formal, amigable, técnico)
+      </li>
+      <li>
+        <i class="pi pi-check-circle text-success"></i>
+        Establece limitaciones y alcance de las respuestas
+      </li>
+      <li>
+        <i class="pi pi-check-circle text-success"></i>
+        Incluye ejemplos de cómo debe responder en casos específicos
+      </li>
+    </ul>
+  </div>
+
+  <div class="step-actions">
+    <button
+      pButton
+      label="Atrás"
+      icon="pi pi-arrow-left"
+      class="p-button-secondary p-button-lg"
+      (click)="onBack()">
+    </button>
+    <button
+      pButton
+      label="Siguiente"
+      icon="pi pi-arrow-right"
+      iconPos="right"
+      class="p-button-lg"
+      [disabled]="!isValid()"
+      (click)="onNext()">
+    </button>
+  </div>
+</div>

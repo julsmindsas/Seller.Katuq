@@ -1,0 +1,26 @@
+<div class="message-bubble" [ngClass]="getMessageClass()">
+  <div class="bubble" [ngClass]="getDepartmentClass()">
+    <!-- Message Header -->
+    <div class="message-header">
+      <div class="avatar" [style.background-color]="getAvatarColor()">
+        {{ getAvatarInitials() }}
+      </div>
+      <div class="speaker-info">
+        <span class="speaker-name">{{ getSpeakerDisplayName() }}</span>
+        <span *ngIf="isA2AMessage() && message.targetDepartment" class="a2a-arrow">
+          → {{ getTargetDepartmentName() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Message Content -->
+    <div class="message-content">
+      {{ message.message }}
+    </div>
+
+    <!-- Timestamp -->
+    <div *ngIf="showTimestamp" class="message-timestamp">
+      {{ getFormattedTimestamp() }}
+    </div>
+  </div>
+</div>

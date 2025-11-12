@@ -1,0 +1,133 @@
+<div class="step-container">
+  <h4 class="step-title">
+    <i class="pi pi-check-circle text-primary"></i>
+    Revisar y Crear
+  </h4>
+  <p class="step-subtitle">Verifica la configuración de tu agente antes de crearlo</p>
+
+  <div class="review-card">
+    <!-- Agent Header -->
+    <div class="agent-header">
+      <div class="agent-icon" [style.background]="getDepartmentColor()">
+        <i [class]="getDepartmentIcon()"></i>
+      </div>
+      <div class="agent-title">
+        <h3>{{ agentConfig.agentName }}</h3>
+        <span class="department-badge" [style.background]="getDepartmentColor()">
+          {{ getDepartmentLabel() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Agent Details -->
+    <div class="review-section">
+      <h6 class="section-title">
+        <i class="pi pi-info-circle"></i>
+        Información General
+      </h6>
+      <div class="detail-row">
+        <span class="detail-label">Nombre:</span>
+        <span class="detail-value">{{ agentConfig.agentName }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Departamento:</span>
+        <span class="detail-value">{{ getDepartmentLabel() }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">Modelo:</span>
+        <span class="detail-value">{{ getModelLabel() }}</span>
+      </div>
+      <div class="detail-row" *ngIf="agentConfig.description">
+        <span class="detail-label">Descripción:</span>
+        <span class="detail-value">{{ agentConfig.description }}</span>
+      </div>
+    </div>
+
+    <!-- System Prompt -->
+    <div class="review-section">
+      <h6 class="section-title">
+        <i class="pi pi-file-edit"></i>
+        System Prompt
+      </h6>
+      <div class="prompt-preview">
+        {{ agentConfig.systemPrompt }}
+      </div>
+      <small class="text-muted">
+        {{ agentConfig.systemPrompt?.length || 0 }} caracteres
+      </small>
+    </div>
+
+    <!-- Selected Tools -->
+    <div class="review-section">
+      <h6 class="section-title">
+        <i class="pi pi-wrench"></i>
+        Herramientas Seleccionadas ({{ agentConfig.selectedTools?.length || 0 }})
+      </h6>
+      <div class="tools-list">
+        <p-chip
+          *ngFor="let tool of agentConfig.selectedTools"
+          [label]="tool"
+          icon="pi pi-cog"
+          styleClass="tool-chip">
+        </p-chip>
+      </div>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="summary-stats">
+      <div class="stat-card">
+        <i class="pi pi-check-circle"></i>
+        <div class="stat-info">
+          <span class="stat-value">Listo</span>
+          <small>Estado</small>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="pi pi-wrench"></i>
+        <div class="stat-info">
+          <span class="stat-value">{{ agentConfig.selectedTools?.length || 0 }}</span>
+          <small>Herramientas</small>
+        </div>
+      </div>
+      <div class="stat-card">
+        <i class="pi pi-sparkles"></i>
+        <div class="stat-info">
+          <span class="stat-value">{{ getModelLabel().includes('Flash') ? 'Flash' : 'Pro' }}</span>
+          <small>Modelo</small>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Box -->
+  <div class="info-box">
+    <i class="pi pi-info-circle"></i>
+    <div>
+      <strong>Antes de crear tu agente:</strong>
+      <p class="mb-0 mt-1">
+        Asegúrate de que el system prompt y las herramientas seleccionadas sean las correctas.
+        Una vez creado, podrás editar la configuración desde la librería de agentes.
+      </p>
+    </div>
+  </div>
+
+  <div class="step-actions">
+    <button
+      pButton
+      label="Atrás"
+      icon="pi pi-arrow-left"
+      class="p-button-secondary p-button-lg"
+      [disabled]="isLoading"
+      (click)="onBack()">
+    </button>
+    <button
+      pButton
+      label="Crear Agente"
+      icon="pi pi-check"
+      iconPos="right"
+      class="p-button-lg p-button-success"
+      [loading]="isLoading"
+      (click)="onCreate()">
+    </button>
+  </div>
+</div>

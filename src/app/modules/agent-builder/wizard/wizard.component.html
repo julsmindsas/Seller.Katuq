@@ -1,0 +1,61 @@
+<div class="agent-builder-wizard">
+  <div class="wizard-header">
+    <h2 class="text-center mb-3">
+      <i class="pi pi-sparkles text-primary"></i>
+      Crear Agente IA
+    </h2>
+    <p class="text-center text-muted">
+      Crea tu asistente inteligente en 4 simples pasos
+    </p>
+  </div>
+
+  <p-steps
+    [model]="steps"
+    [(activeIndex)]="activeStep"
+    [readonly]="false"
+    styleClass="mb-5">
+  </p-steps>
+
+  <div class="wizard-content">
+    <!-- Step 1: Basic Info -->
+    <app-step-basic-info
+      *ngIf="activeStep === 0"
+      [(agentConfig)]="agentConfig"
+      (next)="nextStep()">
+    </app-step-basic-info>
+
+    <!-- Step 2: System Prompt -->
+    <app-step-prompt
+      *ngIf="activeStep === 1"
+      [(agentConfig)]="agentConfig"
+      (next)="nextStep()"
+      (back)="prevStep()">
+    </app-step-prompt>
+
+    <!-- Step 3: Tools Selection -->
+    <app-step-tools
+      *ngIf="activeStep === 2"
+      [(agentConfig)]="agentConfig"
+      [toolCatalog]="toolCatalog"
+      (next)="nextStep()"
+      (back)="prevStep()">
+    </app-step-tools>
+
+    <!-- Step 4: Review & Create -->
+    <app-step-review
+      *ngIf="activeStep === 3"
+      [agentConfig]="agentConfig"
+      [isLoading]="isLoading"
+      (back)="prevStep()"
+      (create)="createAgent()">
+    </app-step-review>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="loading-spinner">
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem;"></i>
+      <p>Creando tu agente...</p>
+    </div>
+  </div>
+</div>

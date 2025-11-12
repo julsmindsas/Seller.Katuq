@@ -1,0 +1,106 @@
+<div class="agent-card" [class]="getGradientClass()">
+  <!-- Card Border Gradient -->
+  <div class="card-border"></div>
+
+  <!-- Card Header -->
+  <div class="card-header">
+    <div class="agent-icon" [style.background]="getDepartmentColor()">
+      <i [class]="getDepartmentIcon()"></i>
+    </div>
+    <span class="agent-status" [class.active]="agent.status === 'active'" [class.inactive]="agent.status === 'inactive'">
+      <i [class]="agent.status === 'active' ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+      {{ agent.status === 'active' ? 'Activo' : 'Inactivo' }}
+    </span>
+  </div>
+
+  <!-- Card Body -->
+  <div class="card-body">
+    <div class="agent-title-section">
+      <h4 class="agent-name">{{ agent.agentName }}</h4>
+      <span class="department-badge" [style.background]="getDepartmentColor()">
+        {{ getDepartmentLabel() }}
+      </span>
+    </div>
+
+    <p class="agent-description">
+      {{ agent.description || 'Sin descripción disponible' }}
+    </p>
+
+    <!-- Agent Stats -->
+    <div class="agent-stats">
+      <div class="stat">
+        <div class="stat-icon">
+          <i class="pi pi-bolt"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getExecutionsCount() }}</span>
+          <small>Ejecuciones</small>
+        </div>
+      </div>
+      <div class="stat">
+        <div class="stat-icon">
+          <i class="pi pi-wrench"></i>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value">{{ getToolsCount() }}</span>
+          <small>Herramientas</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Last Executed -->
+    <div class="last-executed">
+      <i class="pi pi-clock"></i>
+      <span>Última ejecución: {{ getLastExecuted() }}</span>
+    </div>
+
+    <!-- Selected Tools -->
+    <div class="agent-tools">
+      <p-chip
+        *ngFor="let tool of getVisibleTools()"
+        [label]="tool"
+        styleClass="tool-chip">
+      </p-chip>
+      <p-chip
+        *ngIf="getRemainingToolsCount() > 0"
+        [label]="'+' + getRemainingToolsCount()"
+        styleClass="tool-chip-more">
+      </p-chip>
+    </div>
+  </div>
+
+  <!-- Card Footer -->
+  <div class="card-footer">
+    <button
+      pButton
+      label="Ejecutar"
+      icon="pi pi-play"
+      class="p-button-sm p-button-rounded execute-button"
+      [disabled]="agent.status !== 'active'"
+      (click)="onExecute()">
+    </button>
+    <div class="footer-actions">
+      <button
+        pButton
+        icon="pi pi-power-off"
+        class="p-button-sm p-button-rounded p-button-text"
+        [class.p-button-success]="agent.status === 'inactive'"
+        [class.p-button-warning]="agent.status === 'active'"
+        pTooltip="Cambiar estado"
+        tooltipPosition="top"
+        (click)="onToggleStatus()">
+      </button>
+      <button
+        pButton
+        icon="pi pi-trash"
+        class="p-button-sm p-button-rounded p-button-text p-button-danger"
+        pTooltip="Eliminar agente"
+        tooltipPosition="top"
+        (click)="onDelete()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Holographic Effect Overlay -->
+  <div class="holographic-overlay"></div>
+</div>

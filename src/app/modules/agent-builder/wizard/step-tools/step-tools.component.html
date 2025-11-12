@@ -1,0 +1,116 @@
+<div class="step-container">
+  <h4 class="step-title">
+    <i class="pi pi-wrench text-primary"></i>
+    Selecciona Herramientas
+  </h4>
+  <p class="step-subtitle">Elige las capacidades que tendrá tu agente</p>
+
+  <!-- Tools Header -->
+  <div class="tools-header">
+    <div class="selected-count">
+      <i class="pi pi-check-circle"></i>
+      <span>{{ getSelectedCount() }} herramienta<span *ngIf="getSelectedCount() !== 1">s</span> seleccionada<span *ngIf="getSelectedCount() !== 1">s</span></span>
+    </div>
+    <div class="header-actions">
+      <button
+        pButton
+        label="Seleccionar Todas"
+        icon="pi pi-check-square"
+        class="p-button-sm p-button-outlined"
+        (click)="selectAllTools()"
+        [disabled]="filteredTools.length === 0">
+      </button>
+      <button
+        pButton
+        label="Limpiar"
+        icon="pi pi-times"
+        class="p-button-sm p-button-outlined p-button-danger"
+        (click)="clearAllTools()"
+        [disabled]="getSelectedCount() === 0">
+      </button>
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="tools-filters mb-4">
+    <div class="search-box">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()"
+        placeholder="Buscar herramientas..."
+        class="w-100">
+    </div>
+
+    <div class="category-pills">
+      <button
+        *ngFor="let category of categories"
+        class="category-pill"
+        [class.active]="selectedCategory === category.value"
+        (click)="onCategoryChange(category.value)">
+        <i [class]="'pi ' + category.icon"></i>
+        <span>{{ category.label }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Tools Grid -->
+  <div class="tools-grid" *ngIf="filteredTools.length > 0">
+    <div
+      *ngFor="let tool of filteredTools"
+      class="tool-card"
+      [class.selected]="isToolSelected(tool.name)"
+      (click)="toggleTool(tool.name)">
+
+      <div class="tool-icon">
+        <i [class]="'pi ' + (tool.icon || 'pi-cog')"></i>
+      </div>
+
+      <div class="tool-info">
+        <h6>{{ tool.name }}</h6>
+        <small>{{ tool.description }}</small>
+        <span class="tool-category" *ngIf="tool.category">
+          {{ tool.category }}
+        </span>
+      </div>
+
+      <div class="tool-check" *ngIf="isToolSelected(tool.name)">
+        <i class="pi pi-check"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="filteredTools.length === 0">
+    <i class="pi pi-inbox"></i>
+    <h6>No se encontraron herramientas</h6>
+    <p>Intenta cambiar los filtros o el término de búsqueda</p>
+  </div>
+
+  <!-- Validation Warning -->
+  <div class="validation-warning" *ngIf="getSelectedCount() === 0">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>Debes seleccionar al menos una herramienta para continuar</span>
+  </div>
+
+  <div class="step-actions">
+    <button
+      pButton
+      label="Atrás"
+      icon="pi pi-arrow-left"
+      class="p-button-secondary p-button-lg"
+      (click)="onBack()">
+    </button>
+    <button
+      pButton
+      label="Siguiente"
+      icon="pi pi-arrow-right"
+      iconPos="right"
+      class="p-button-lg"
+      [disabled]="!isValid()"
+      (click)="onNext()">
+    </button>
+  </div>
+</div>

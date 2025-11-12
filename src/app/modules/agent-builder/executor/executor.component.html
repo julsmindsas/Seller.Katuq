@@ -1,0 +1,142 @@
+<div class="executor-container">
+  <!-- Back Button -->
+  <button
+    pButton
+    label="Volver"
+    icon="pi pi-arrow-left"
+    class="p-button-text mb-3"
+    (click)="goBack()">
+  </button>
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="isLoadingAgent">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando agente...</p>
+  </div>
+
+  <!-- Main Content -->
+  <div class="executor-content" *ngIf="!isLoadingAgent && agent">
+    <!-- Agent Header -->
+    <div class="executor-header">
+      <div class="agent-icon" [style.background]="getDepartmentColor()">
+        <i [class]="getDepartmentIcon()"></i>
+      </div>
+      <div class="agent-info">
+        <h3>{{ agent.agentName }}</h3>
+        <div class="agent-meta">
+          <span class="department-badge" [style.background]="getDepartmentColor()">
+            {{ getDepartmentLabel() }}
+          </span>
+          <span class="status-badge" [class.active]="agent.status === 'active'">
+            <i [class]="agent.status === 'active' ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+            {{ agent.status === 'active' ? 'Activo' : 'Inactivo' }}
+          </span>
+        </div>
+        <p class="agent-description text-muted" *ngIf="agent.description">
+          {{ agent.description }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Chat Container -->
+    <div class="chat-container">
+      <!-- Chat Messages -->
+      <div class="chat-messages" #chatMessages>
+        <!-- Empty State -->
+        <div *ngIf="messages.length === 0" class="empty-state">
+          <i class="pi pi-comments"></i>
+          <h5>Inicia una conversación</h5>
+          <p>Escribe una tarea para que el agente comience a trabajar</p>
+          <small class="text-muted">
+            <i class="pi pi-lightbulb"></i>
+            Los agentes se comunicarán entre departamentos para resolver tareas complejas
+          </small>
+        </div>
+
+        <!-- Messages List -->
+        <app-message-bubble
+          *ngFor="let msg of messages; trackBy: trackByMessageId"
+          [message]="msg"
+          [showTimestamp]="true">
+        </app-message-bubble>
+
+        <!-- Typing Indicator -->
+        <div *ngIf="isExecuting" class="typing-indicator">
+          <div class="typing-dots">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>Agentes trabajando...</p>
+        </div>
+      </div>
+
+      <!-- Chat Input -->
+      <div class="chat-input-container">
+        <textarea
+          [(ngModel)]="currentTask"
+          placeholder="Describe la tarea para el agente... (Shift + Enter para nueva línea, Enter para enviar)"
+          (keyup.enter)="!$event.shiftKey && executeTask()"
+          [disabled]="isExecuting || agent.status !== 'active'"
+          rows="2"
+          class="chat-input">
+        </textarea>
+        <button
+          pButton
+          icon="pi pi-send"
+          (click)="executeTask()"
+          [disabled]="isExecuting || !currentTask.trim() || agent.status !== 'active'"
+          class="send-button"
+          pTooltip="Enviar"
+          tooltipPosition="top">
+        </button>
+      </div>
+
+      <!-- Chat Actions -->
+      <div class="chat-actions" *ngIf="messages.length > 0">
+        <button
+          pButton
+          label="Limpiar Chat"
+          icon="pi pi-trash"
+          class="p-button-text p-button-secondary p-button-sm"
+          (click)="clearChat()"
+          [disabled]="messages.length === 0">
+        </button>
+      </div>
+    </div>
+
+    <!-- Execution History -->
+    <div class="history-panel" *ngIf="executionHistory.length > 0">
+      <h4 class="panel-title">
+        <i class="pi pi-history"></i>
+        Historial de Ejecuciones
+        <span class="badge">{{ executionHistory.length }}</span>
+      </h4>
+
+      <div class="loading-history" *ngIf="isLoadingHistory">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Cargando historial...</span>
+      </div>
+
+      <div class="history-list" *ngIf="!isLoadingHistory">
+        <div class="history-item" *ngFor="let execution of executionHistory; let i = index">
+          <div class="history-header">
+            <div class="history-meta">
+              <span class="execution-number">#{{ executionHistory.length - i }}</span>
+              <i class="pi pi-calendar"></i>
+              <span>{{ formatDate(execution.executedAt!) }}</span>
+            </div>
+            <div class="history-time" *ngIf="execution.executionTime">
+              <i class="pi pi-clock"></i>
+              <span>{{ formatExecutionTime(execution.executionTime) }}</span>
+            </div>
+          </div>
+          <div class="history-task">
+            <strong>Tarea:</strong>
+            <p>{{ execution.task }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,113 @@
+<div class="step-container">
+  <h4 class="step-title">
+    <i class="pi pi-info-circle text-primary"></i>
+    Información Básica
+  </h4>
+  <p class="step-subtitle">Configura los datos principales de tu agente</p>
+
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <label class="form-label required">Nombre del Agente</label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="agentConfig.agentName"
+        (ngModelChange)="onInputChange()"
+        placeholder="ej: salesBooster"
+        class="w-100"
+        [class.is-invalid]="!agentConfig.agentName && touched">
+      <small class="text-muted d-block mt-1">
+        <i class="pi pi-info-circle"></i>
+        Nombre único para identificar tu agente
+      </small>
+      <div class="invalid-feedback" *ngIf="!agentConfig.agentName && touched">
+        El nombre del agente es requerido
+      </div>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <label class="form-label required">Departamento</label>
+      <p-dropdown
+        [(ngModel)]="agentConfig.department"
+        (ngModelChange)="onInputChange()"
+        [options]="departments"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona departamento"
+        styleClass="w-100"
+        [class.is-invalid]="!agentConfig.department && touched">
+        <ng-template let-dept pTemplate="item">
+          <div class="department-option">
+            <i [class]="'pi ' + dept.icon" [style.color]="dept.color"></i>
+            <span>{{ dept.label }}</span>
+          </div>
+        </ng-template>
+        <ng-template let-dept pTemplate="selectedItem">
+          <div class="department-option" *ngIf="dept">
+            <i [class]="'pi ' + dept.icon" [style.color]="dept.color"></i>
+            <span>{{ dept.label }}</span>
+          </div>
+        </ng-template>
+      </p-dropdown>
+      <small class="text-muted d-block mt-1">
+        <i class="pi pi-info-circle"></i>
+        Define el área de aplicación del agente
+      </small>
+      <div class="invalid-feedback" *ngIf="!agentConfig.department && touched">
+        Debes seleccionar un departamento
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-12 mb-4">
+      <label class="form-label">Descripción</label>
+      <textarea
+        pInputTextarea
+        [(ngModel)]="agentConfig.description"
+        (ngModelChange)="onInputChange()"
+        placeholder="¿Qué hace este agente? ¿Cuál es su propósito?"
+        rows="4"
+        class="w-100">
+      </textarea>
+      <small class="text-muted d-block mt-1">
+        <i class="pi pi-info-circle"></i>
+        Describe brevemente las funciones principales del agente (opcional)
+      </small>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 mb-4">
+      <label class="form-label">Modelo IA</label>
+      <p-dropdown
+        [(ngModel)]="agentConfig.model"
+        (ngModelChange)="onInputChange()"
+        [options]="[
+          { label: 'Gemini 2.5 Flash (Rápido)', value: 'gemini-2.5-flash' },
+          { label: 'Gemini 2.5 Pro (Avanzado)', value: 'gemini-2.5-pro' }
+        ]"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Selecciona modelo"
+        styleClass="w-100">
+      </p-dropdown>
+      <small class="text-muted d-block mt-1">
+        <i class="pi pi-info-circle"></i>
+        Flash es más rápido, Pro es más potente
+      </small>
+    </div>
+  </div>
+
+  <div class="step-actions">
+    <button
+      pButton
+      label="Siguiente"
+      icon="pi pi-arrow-right"
+      iconPos="right"
+      class="p-button-lg"
+      [disabled]="!isValid()"
+      (click)="onNext()">
+    </button>
+  </div>
+</div>

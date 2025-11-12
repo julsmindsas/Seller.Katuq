@@ -1,0 +1,232 @@
+.step-container {
+  .step-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      font-size: 1.8rem;
+    }
+  }
+
+  .step-subtitle {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.75rem;
+    display: block;
+
+    &.required::after {
+      content: ' *';
+      color: #dc3545;
+    }
+  }
+
+  .templates-section {
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+
+      .template-card {
+        position: relative;
+        padding: 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+        background: white;
+
+        &:hover {
+          border-color: #667eea;
+          transform: translateY(-3px);
+          box-shadow: 0 5px 15px rgba(102, 126, 234, 0.2);
+
+          .template-action {
+            opacity: 1;
+          }
+        }
+
+        .template-icon {
+          width: 50px;
+          height: 50px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 1.5rem;
+          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .template-label {
+          font-weight: 600;
+          color: #333;
+          text-align: center;
+          font-size: 0.9rem;
+        }
+
+        .template-action {
+          position: absolute;
+          top: 0.5rem;
+          right: 0.5rem;
+          color: #667eea;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+      }
+    }
+  }
+
+  .prompt-editor {
+    position: relative;
+
+    textarea {
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      resize: vertical;
+    }
+
+    .prompt-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.5rem;
+
+      .char-count {
+        font-weight: 600;
+        color: #999;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+
+        &.text-success {
+          color: #52c41a;
+        }
+
+        i {
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+
+  .best-practices {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+
+    h6 {
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        font-size: 1.2rem;
+      }
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      li {
+        padding: 0.5rem 0;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        color: #555;
+
+        i {
+          margin-top: 0.25rem;
+          font-size: 1rem;
+        }
+      }
+    }
+  }
+
+  .is-invalid {
+    border-color: #dc3545 !important;
+  }
+
+  .invalid-feedback {
+    display: block;
+    color: #dc3545;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  .step-actions {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+
+    button {
+      min-width: 150px;
+    }
+  }
+
+  ::ng-deep {
+    .p-inputtextarea {
+      font-size: 1rem;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 2px solid #e0e0e0;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: #667eea;
+      }
+
+      &:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .step-container {
+    .step-title {
+      font-size: 1.25rem;
+    }
+
+    .templates-section {
+      .templates-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .step-actions {
+      flex-direction: column;
+
+      button {
+        width: 100%;
+      }
+    }
+  }
+}
