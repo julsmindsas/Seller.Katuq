@@ -175,60 +175,98 @@
         </div>
       </div>
 
+      <!-- Paso 0.5: Video Explicativo ANTES del cuestionario -->
+      <div *ngIf="currentStep === 'video'" role="main" aria-label="Video explicativo" class="video-intro-step">
+        <div class="video-intro-container">
+          <!-- Header con títulos (se oculta en mobile) -->
+          <div class="video-intro-header">
+            <h2 class="video-intro-title">Antes de comenzar...</h2>
+            <p class="video-intro-subtitle">Mira este breve video (15 segundos)</p>
+
+            <!-- Botón visible solo en desktop debajo del texto -->
+            <div class="video-intro-actions">
+              <button class="skip-video-btn-large" (click)="skipVideoAndStart()" type="button">
+                Saltar video →
+              </button>
+            </div>
+          </div>
+
+          <!-- Video wrapper -->
+          <div class="video-wrapper-intro">
+            <video
+              #diagnosticVideo
+              class="diagnostic-video"
+              (ended)="onVideoEnded()"
+              autoplay
+              muted
+              playsinline
+              controls>
+              <source src="https://firebasestorage.googleapis.com/v0/b/katuq-new.firebasestorage.app/o/videos%2Fnuevoregistro%2Fdiagnostic-explainer-15s-es.mp4?alt=media&token=683755b3-75d3-43a9-a2db-bb6e5ddd8cfc" type="video/mp4">
+              <p>Tu navegador no soporta video HTML5</p>
+            </video>
+
+            <!-- Botón overlay para mobile (posicionado absolutamente sobre el video) -->
+            <button class="skip-video-btn-large skip-video-mobile" (click)="skipVideoAndStart()" type="button">
+              Saltar video →
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Paso 1: Cuestionario -->
       <div *ngIf="currentStep === 'questionnaire'" role="main" aria-label="Cuestionario de diagnóstico">
         <h1>{{ surveyData.formTitle }}</h1>
         <h3 class="subtitle">{{ surveyData.formDescription }}</h3>
         <p class="motivational-message">💡 <strong>Estamos analizando tu negocio</strong> para darte recomendaciones personalizadas</p>
         <h3>{{ currentSection.sectionTitle }}</h3>
-        
-        <!-- Indicador de progreso de preguntas -->
-        <div class="question-progress" aria-label="Progreso del cuestionario" role="progressbar" 
-             [attr.aria-valuenow]="getTotalProgress()" 
-             [attr.aria-valuemin]="0" 
-             [attr.aria-valuemax]="100">
-          <div class="progress-text">
-            Pregunta {{ getCurrentQuestionNumber() }} de {{ getTotalQuestions() }}
-            <span class="time-remaining" *ngIf="getEstimatedTimeRemaining() > 0">• Aprox. {{ getEstimatedTimeRemaining() }} min restantes</span>
-          </div>
-          <div class="progress-bar-container">
-            <div class="progress-bar-fill" [style.width.%]="getTotalProgress()"></div>
-          </div>
-        </div>
-        
-        <div class="question">
-          <p role="heading" aria-level="2">{{ currentQuestion.question }}</p>
-          <div class="options" role="radiogroup" [attr.aria-label]="currentQuestion.question">
-            <button *ngFor="let option of currentQuestion.options; let i = index" 
-                    (click)="selectOption(option)" 
-                    class="option-button"
-                    [ngClass]="{'selected': responses[currentQuestion.id] === option}"
-                    [attr.aria-checked]="responses[currentQuestion.id] === option"
-                    [attr.aria-posinset]="i + 1"
-                    [attr.aria-setsize]="currentQuestion.options.length"
-                    [attr.tabindex]="responses[currentQuestion.id] === option ? 0 : -1"
-                    (keydown.enter)="selectOption(option)"
-                    (keydown.space)="selectOption(option); $event.preventDefault()"
-                    type="button">
-              {{ option }}
-            </button>
-          </div>
-        </div>
-        <div class="navigation-buttons">
-          <button *ngIf="canGoBack()" 
-                  class="back-button" 
-                  (click)="backQuestion()"
-                  type="button"
-                  aria-label="Pregunta anterior">
-            {{ 'Volver' | translate }}
-          </button>
-          <button class="next-button" 
-                  (click)="moveNextStep()"
-                  type="button"
-                  [attr.aria-label]="isLastQuestion() ? 'Ir al siguiente paso' : 'Siguiente pregunta'">
-            {{ isLastQuestion() ? ('Siguiente paso' | translate) : '→' }}
-          </button>
-        </div>
+
+            <!-- Indicador de progreso de preguntas -->
+            <div class="question-progress" aria-label="Progreso del cuestionario" role="progressbar"
+                 [attr.aria-valuenow]="getTotalProgress()"
+                 [attr.aria-valuemin]="0"
+                 [attr.aria-valuemax]="100">
+              <div class="progress-text">
+                Pregunta {{ getCurrentQuestionNumber() }} de {{ getTotalQuestions() }}
+                <span class="time-remaining" *ngIf="getEstimatedTimeRemaining() > 0">• Aprox. {{ getEstimatedTimeRemaining() }} min restantes</span>
+              </div>
+              <div class="progress-bar-container">
+                <div class="progress-bar-fill" [style.width.%]="getTotalProgress()"></div>
+              </div>
+            </div>
+
+            <div class="question">
+              <p role="heading" aria-level="2">{{ currentQuestion.question }}</p>
+              <div class="options" role="radiogroup" [attr.aria-label]="currentQuestion.question">
+                <button *ngFor="let option of currentQuestion.options; let i = index"
+                        (click)="selectOption(option)"
+                        class="option-button"
+                        [ngClass]="{'selected': responses[currentQuestion.id] === option}"
+                        [attr.aria-checked]="responses[currentQuestion.id] === option"
+                        [attr.aria-posinset]="i + 1"
+                        [attr.aria-setsize]="currentQuestion.options.length"
+                        [attr.tabindex]="responses[currentQuestion.id] === option ? 0 : -1"
+                        (keydown.enter)="selectOption(option)"
+                        (keydown.space)="selectOption(option); $event.preventDefault()"
+                        type="button">
+                  {{ option }}
+                </button>
+              </div>
+            </div>
+            <div class="navigation-buttons">
+              <button *ngIf="canGoBack()"
+                      class="back-button"
+                      (click)="backQuestion()"
+                      type="button"
+                      aria-label="Pregunta anterior">
+                {{ 'Volver' | translate }}
+              </button>
+              <button class="next-button"
+                      (click)="moveNextStep()"
+                      type="button"
+                      [attr.aria-label]="isLastQuestion() ? 'Ir al siguiente paso' : 'Siguiente pregunta'">
+                {{ isLastQuestion() ? ('Siguiente paso' | translate) : '→' }}
+              </button>
+            </div>
       </div>
 
       <!-- Preguntas Contextuales (opcional) -->

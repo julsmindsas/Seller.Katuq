@@ -39,7 +39,9 @@
       "Bash(npm run start:4gb:*)",
       "Bash(timeout 120 npx ng build:*)",
       "WebFetch(domain:x.com)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "WebFetch(domain:firebase.google.com)",
+      "WebFetch(domain:genkit.dev)"
     ],
     "deny": [],
     "ask": []
