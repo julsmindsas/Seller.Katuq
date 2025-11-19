@@ -41,7 +41,15 @@
       "WebFetch(domain:x.com)",
       "Bash(tree:*)",
       "WebFetch(domain:firebase.google.com)",
-      "WebFetch(domain:genkit.dev)"
+      "WebFetch(domain:genkit.dev)",
+      "Bash(node -c:*)",
+      "Bash(npm run dev:*)",
+      "Bash(lsof:*)",
+      "Bash(npm run start-express:*)",
+      "Bash(python3:*)",
+      "Bash(timeout 10 npm run start-express)",
+      "Bash(npm run:*)",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "ask": []

@@ -6782,12 +6782,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       cloned.fechaCreacion = new Date().toISOString();
       cloned.company = companyNom as any;
 
+      // Limpiar campos de facturación electrónica
+      (cloned as any).pdfUrlInvoice = "";
+      (cloned as any).generarFacturaElectronica = undefined;
+
       // Reiniciar estados y datos de seguimiento/logística
       cloned.estadoPago = EstadoPago.Pendiente;
       cloned.estadoProceso = EstadoProceso.SinProducir;
       cloned.PagosAsentados = [];
       cloned.anticipo = 0;
       cloned.faltaPorPagar = undefined as any;
+
+      // Limpiar campos adicionales de pagos
+      (cloned as any).pagoRecibido = undefined;
+      (cloned as any).cambioEntregado = undefined;
+      (cloned as any).pagoInformation = undefined;
+
       (cloned as any).empacador = "";
       (cloned as any).despachador = undefined;
       (cloned as any).entregado = undefined;
@@ -6796,9 +6806,41 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       (cloned as any).fechaHoraEmpacado = "";
       cloned.validacion = false;
 
+      // Limpiar campos de producción
+      (cloned as any).revisadoParaProduccion = undefined;
+      (cloned as any).ultimaImpresion = undefined;
+      (cloned as any).historialEstadoProceso = [];
+      (cloned as any).preAprobadoManual = undefined;
+
+      // Limpiar campos de entrega y evidencias
+      (cloned as any).fotosEvidencia = [];
+      (cloned as any).fotoEvidencia = "";
+      (cloned as any).fotoEvidenciaEmpacado = [];
+      (cloned as any).signatureImage = "";
+      (cloned as any).quienRecibio = "";
+      (cloned as any).parentesco = "";
+      (cloned as any).providerShipment = "";
+      (cloned as any).notasEntregaMensajero = "";
+
+      // Limpiar campos de tracking y shipping
+      (cloned as any).shippment = undefined;
+      (cloned as any)._estadoCalculadoEnFrontend = undefined;
+
+      // Limpiar integraciones externas (WooCommerce, Shopify)
+      (cloned as any).integrations = undefined;
+
       // Mantener las notas del pedido original (ya no se limpian)
 
       // Mantener las notas de producción de productos individuales en el carrito
+
+      // Resetear estados de proceso por producto en el carrito
+      if (cloned.carrito && Array.isArray(cloned.carrito)) {
+        cloned.carrito.forEach((item: any) => {
+          if (item.estadoProcesoProducto) {
+            item.estadoProcesoProducto = EstadoProceso.SinProducir;
+          }
+        });
+      }
 
       // Recalcular totales
       this.pedidoUtilService.pedido = cloned as any;

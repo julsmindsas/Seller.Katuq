@@ -1,0 +1,375 @@
+ARQUITECTURA VISUAL - AGENT BUILDER WIZARD
+===========================================
+
+1. ESTRUCTURA DEL MÓDULO
+=======================
+
+┌─────────────────────────────────────────────────────────────────────┐
+│                     AGENT-BUILDER MODULE                            │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                     │
+│  ROUTING LAYER:                                                    │
+│  /library ──> LibraryComponent (Listado de agentes)               │
+│  /wizard  ──> WizardComponent (Crear nuevo)                       │
+│  /executor/:id ──> ExecutorComponent (Ejecutar)                   │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+
+
+2. WIZARD COMPONENT - 4 PASOS SECUENCIALES
+============================================
+
+        ┌──────────────────────────────────────────────────┐
+        │           WIZARD COMPONENT                        │
+        │  (Principal - Orquesta los 4 pasos)             │
+        └──────────────────────────────────────────────────┘
+                            |
+            ┌───────────────┼───────────────┐
+            ↓               ↓               ↓               ↓
+        ┌────────┐      ┌────────┐     ┌────────┐     ┌────────┐
+        │ PASO 1 │      │ PASO 2 │     │ PASO 3 │     │ PASO 4 │
+        │ BÁSICO │      │ PROMPT │     │ TOOLS  │     │ REVIEW │
+        ├────────┤      ├────────┤     ├────────┤     ├────────┤
+        │ Nombre │      │ System │     │Selecta │     │ Resumen│
+        │Depto   │      │ Prompt │     │Tools   │     │ Crear  │
+        │Descrip │      │Plantil │     │Filter  │     │Validar │
+        └────────┘      └────────┘     └────────┘     └────────┘
+          Input:          Input:         Input:          Input:
+       BasicInfo       PromptText      ToolCatalog      AgentConfig
+
+
+3. FLUJO DE CARGA DE TOOLS (PASO 3)
+====================================
+
+    ┌─────────────────────────────────────────────────────┐
+    │         WIZARD COMPONENT.ngOnInit()                 │
+    └─────────────────────────────────────────────────────┘
+                         |
+                         |  loadToolCatalog()
+                         ↓
+    ┌─────────────────────────────────────────────────────┐
+    │    TOOL-CATALOG-SERVICE.getToolCatalog()           │
+    │    GET /v1/agent-builder/catalog/tools             │
+    └─────────────────────────────────────────────────────┘
+                         |
+                         |  Response: { success, data: [...] }
+                         ↓
+    ┌─────────────────────────────────────────────────────┐
+    │    transformToCatalog(rawTools)                     │
+    │                                                      │
+    │    Transforma:                                      │
+    │    [                                                │
+    │      {name, description, department},              │
+    │      ...                                            │
+    │    ]                                                │
+    │                                                      │
+    │    A:                                               │
+    │    {                                                │
+    │      sales: [...],                                 │
+    │      logistics: [...],                             │
+    │      inventory: [...],                             │
+    │      general: [...]                                │
+    │    }                                                │
+    │                                                      │
+    │    Enriquece cada tool con:                        │
+    │    + icon (PrimeNG class)                          │
+    │    + category (data-access|analytics|...)         │
+    │    + isEnabled: true                               │
+    │                                                      │
+    └─────────────────────────────────────────────────────┘
+                         |
+                         ↓
+    ┌─────────────────────────────────────────────────────┐
+    │    WizardComponent.toolCatalog = catalog            │
+    └─────────────────────────────────────────────────────┘
+                         |
+                         |  [toolCatalog]="toolCatalog"
+                         ↓
+    ┌─────────────────────────────────────────────────────┐
+    │    STEP-TOOLS COMPONENT (@Input)                   │
+    │                                                      │
+    │    @Input() toolCatalog: ToolCatalog              │
+    │    @Input() agentConfig: Partial<Agent>           │
+    │                                                      │
+    └─────────────────────────────────────────────────────┘
+
+
+4. STEP-TOOLS COMPONENT - SELECCIÓN
+====================================
+
+    ngOnInit()
+        |
+        ├─> loadAvailableTools()
+        |   |
+        |   ├─> const dept = agentConfig.department  // 'sales'
+        |   |
+        |   ├─> const deptTools = toolCatalog['sales']     // [10 tools]
+        |   |
+        |   ├─> const genTools = toolCatalog.general       // [3 tools]
+        |   |
+        |   └─> availableTools = [...deptTools, ...genTools]  // [13 tools]
+        |
+        └─> filterTools()
+            |
+            ├─> Por categoría (if selectedCategory != 'all')
+            |   filteredTools = availableTools.filter(t => t.category == selectedCategory)
+            |
+            └─> Por búsqueda (if searchQuery.trim() != '')
+                filteredTools = filteredTools.filter(t => 
+                    t.name.includes(query) || t.description.includes(query)
+                )
+    
+    TEMPLATE RENDERING:
+    
+    ┌─────────────────────────────────────────┐
+    │  Header: "2 herramientas seleccionadas" │
+    │  [Seleccionar Todas] [Limpiar]          │
+    └─────────────────────────────────────────┘
+    
+    ┌──────────────────────────┬──────────────────────────┐
+    │ Búsqueda: [______search_____]                      │
+    │ Categorías: [Todas][Acceso][Análisis][Auto][Comun]│
+    └──────────────────────────┴──────────────────────────┘
+    
+    ┌──────────────┬──────────────┬──────────────┐
+    │ Tool Card 1  │ Tool Card 2  │ Tool Card 3  │
+    │              │              │              │
+    │ [icon]       │ [icon]       │ [icon]       │
+    │ getTotalSales│ getProducts  │ getOrders    │
+    │ Obtiene...   │ Obtiene...   │ Obtiene...   │
+    │ [data-access]│ [analytics]  │ [data-access]│
+    │ [check green]│              │              │
+    └──────────────┴──────────────┴──────────────┘
+    
+    ┌─────────────────────────────────────────────────┐
+    │ ADVERTENCIA: Selecciona al menos 1 herramienta │
+    └─────────────────────────────────────────────────┘
+    
+    ┌──────────────────┬──────────────────┐
+    │ [Atrás]          │ [Siguiente (dis)]│
+    └──────────────────┴──────────────────┘
+
+
+5. FLUJO DE SELECCIÓN Y PERSISTENCIA
+====================================
+
+    USER CLICK ON TOOL CARD
+            |
+            ↓
+    toggleTool('getTotalSales')
+            |
+            ├─> if (toolName NOT in selectedTools)
+            |   ├─> selectedTools.push('getTotalSales')
+            |   └─> Update UI: add green check
+            |
+            └─> else
+                ├─> selectedTools.splice(index, 1)
+                └─> Update UI: remove green check
+    
+    
+    onInputChange()
+            |
+            ↓
+    agentConfigChange.emit(agentConfig)
+            |
+            |  [(agentConfig)]="agentConfig"  (two-way binding)
+            |
+            ↓
+    WizardComponent.agentConfig UPDATED
+            |
+            ├─> agentConfig = {
+            |       agentName: "Asistente Ventas",
+            |       department: "sales",
+            |       systemPrompt: "Eres un asistente...",
+            |       selectedTools: [
+            |         "getTotalSales",
+            |         "getCustomers"
+            |       ],
+            |       model: "gemini-2.5-flash"
+            |   }
+            |
+            └─> Data ready to persist
+
+
+6. CREACIÓN DEL AGENTE (Paso 4 → Backend)
+===========================================
+
+    USER CLICK "CREAR AGENTE"
+            |
+            ↓
+    WizardComponent.createAgent()
+            |
+            ├─> Validate agentConfig ✓
+            |
+            ├─> Create request:
+            |   {
+            |     agentName: "Asistente Ventas",
+            |     department: "sales",
+            |     systemPrompt: "Eres un asistente...",
+            |     selectedTools: ["getTotalSales", "getCustomers"],
+            |     description: "...",
+            |     model: "gemini-2.5-flash"
+            |   }
+            |
+            └─> agentService.createAgent(request)
+                    |
+                    ↓
+                POST /v1/agent-builder/create
+                    |
+                    ├─ Body: CreateAgentRequest (JSON)
+                    |
+                    └─ Response: { success, agent, message }
+                            |
+                            ├─> if success
+                            |   ├─ Notification: "Agente creado"
+                            |   └─ Navigate: /agent-builder/library
+                            |
+                            └─> if error
+                                └─ Notification: "Error"
+
+
+7. INTERFAZ DE DATOS - TOOL CATALOG
+====================================
+
+    BACKEND RESPONSE:
+    ┌──────────────────────────────────┐
+    │ {                                │
+    │   "success": true,               │
+    │   "data": [                      │
+    │     {                            │
+    │       "name": "getTotalSales",   │
+    │       "description": "Obtiene...",
+    │       "department": "sales",     │
+    │       "parameters": ["startDate"]│
+    │     },                           │
+    │     {                            │
+    │       "name": "getProductStock", │
+    │       "description": "Verifica...",
+    │       "department": "inventory"  │
+    │     },                           │
+    │     ...                          │
+    │   ]                              │
+    │ }                                │
+    └──────────────────────────────────┘
+            |
+            |  transformToCatalog()
+            ↓
+    FRONTEND ToolCatalog:
+    ┌────────────────────────────────────────────┐
+    │ {                                          │
+    │   "sales": [                               │
+    │     {                                      │
+    │       name: "getTotalSales",               │
+    │       description: "Obtiene...",           │
+    │       department: "sales",                 │
+    │       icon: "pi-dollar",                   │
+    │       category: "data-access",             │
+    │       isEnabled: true,                     │
+    │       parameters: ["startDate"]            │
+    │     },                                     │
+    │     ...                                    │
+    │   ],                                       │
+    │   "logistics": [...],                      │
+    │   "inventory": [...],                      │
+    │   "general": [                             │
+    │     {                                      │
+    │       name: "send_email",                  │
+    │       description: "Enviar correo...",     │
+    │       department: "general",               │
+    │       icon: "pi-envelope",                 │
+    │       category: "communication",           │
+    │       isEnabled: true                      │
+    │     }                                      │
+    │   ]                                        │
+    │ }                                          │
+    └────────────────────────────────────────────┘
+
+
+8. AGRUPACIÓN POR DEPARTAMENTO
+==============================
+
+    SELECCIÓN: department = "sales"
+            |
+            ↓
+    loadAvailableTools() {
+        const deptTools = toolCatalog["sales"] ||= [];  // Get sales tools
+        const genTools = toolCatalog.general ||= [];    // Get general tools
+        
+        availableTools = [
+            ... deptTools,   // 10 sales tools
+            ... genTools     // 3 general tools (for everyone)
+        ];  // Total: 13 tools
+    }
+    
+    VISTA AL USUARIO:
+    - Tools de Ventas (10): getTotalSales, getCustomers, ...
+    - Tools Generales (3): send_email, generate_report, ...
+    - Total visible: 13 tools
+    
+    
+    SI SELECCIONA: department = "inventory"
+            |
+            ↓
+    loadAvailableTools() {
+        const deptTools = toolCatalog["inventory"] ||= [];  // Get inventory tools
+        const genTools = toolCatalog.general ||= [];        // Get general tools
+        
+        availableTools = [
+            ... deptTools,   // 5 inventory tools
+            ... genTools     // 3 general tools
+        ];  // Total: 8 tools
+    }
+    
+    VISTA AL USUARIO:
+    - Tools de Inventario (5): getProductStock, checkLowStock, ...
+    - Tools Generales (3): send_email, generate_report, ...
+    - Total visible: 8 tools
+
+
+9. DÓNDE AGREGAR COLABORACIÓN
+==============================
+
+    OPCIÓN 1: NUEVO PASO (RECOMENDADO)
+    ==================================
+    
+    Current:
+    ┌─────────┬─────────┬─────────┬─────────┐
+    │ PASO 1  │ PASO 2  │ PASO 3  │ PASO 4  │
+    │ Básico  │ Prompt  │ Tools   │ Review  │
+    └─────────┴─────────┴─────────┴─────────┘
+    
+    New:
+    ┌─────────┬─────────┬─────────┬─────────┬──────────────┐
+    │ PASO 1  │ PASO 2  │ PASO 3  │ PASO 4  │ PASO 5 (NEW) │
+    │ Básico  │ Prompt  │ Tools   │ Review  │ Colaboración │
+    └─────────┴─────────┴─────────┴─────────┴──────────────┘
+                                                |
+                                        step-collaboration/
+                                        ├─ .component.ts
+                                        ├─ .component.html
+                                        ├─ .component.scss
+    
+    CAMBIOS NECESARIOS:
+    1. Crear /wizard/step-collaboration/
+    2. wizard.component.ts:
+       - Agregar paso 5 a steps[]
+       - Agregar HTML *ngIf="activeStep === 4"
+    3. agent.model.ts:
+       - Agregar propiedades de colaboración
+    4. step-collaboration.component.ts:
+       - Implementar lógica de colaboración
+       - Emitir agentConfigChange
+    
+    
+    OPCIÓN 2: MODAL POSTERIOR
+    =========================
+    
+    Después de crear agente:
+    /wizard → /library → Click "Configurar"
+            |                    ↓
+            |          Modal de Colaboración
+            |
+            └─ Menos disruptivo
+            └─ Pero menos flujo
+
+

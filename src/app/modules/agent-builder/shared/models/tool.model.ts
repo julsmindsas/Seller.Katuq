@@ -10,7 +10,7 @@ export interface Tool {
   parameters?: string[]; // Changed from ToolParameter[] to string[] to match backend response
 }
 
-export type ToolCategory = 'data-access' | 'analytics' | 'automation' | 'communication' | 'utility';
+export type ToolCategory = 'data-access' | 'analytics' | 'automation' | 'communication' | 'collaboration' | 'utility';
 
 export interface ToolParameter {
   name: string;
@@ -24,6 +24,7 @@ export interface ToolCatalog {
   sales: Tool[];
   logistics: Tool[];
   inventory: Tool[];
+  collaboration?: Tool[];
   general: Tool[];
 }
 

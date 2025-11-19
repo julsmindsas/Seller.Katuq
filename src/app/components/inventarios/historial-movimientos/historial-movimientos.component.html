@@ -318,7 +318,7 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <i class="pi pi-box text-primary me-2"></i>
-                                        <span class="text-truncate" style="max-width: 210px"
+                                        <span class="text-truncate" style="max-width: 230px"
                                               [pTooltip]="movimiento.producto?.crearProducto?.titulo">
                                             {{movimiento.producto?.crearProducto?.titulo || 'Sin producto'}}
                                         </span>
@@ -327,7 +327,8 @@
 
                                 <!-- Código -->
                                 <td>
-                                    <span class="modern-badge badge-secondary">
+                                    <span class="modern-badge badge-secondary"
+                                          [pTooltip]="movimiento.producto?.identificacion?.referencia || 'N/A'">
                                         <i class="pi pi-tag"></i>
                                         {{movimiento.producto?.identificacion?.referencia || 'N/A'}}
                                     </span>
@@ -337,7 +338,8 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <i class="pi pi-building text-primary me-2"></i>
-                                        <span class="text-truncate" style="max-width: 140px">
+                                        <span class="text-truncate" style="max-width: 160px"
+                                              [pTooltip]="movimiento.bodegaDoc?.nombre || movimiento.bodega?.nombre || 'N/A'">
                                             {{movimiento.bodegaDoc?.nombre || movimiento.bodega?.nombre || 'N/A'}}
                                         </span>
                                     </div>
@@ -345,7 +347,8 @@
 
                                 <!-- Tipo -->
                                 <td>
-                                    <span class="modern-badge" [ngClass]="getTipoMovimientoClass(movimiento.tipo)">
+                                    <span class="modern-badge" [ngClass]="getTipoMovimientoClass(movimiento.tipo)"
+                                          [pTooltip]="'Tipo de movimiento: ' + movimiento.tipo">
                                         <i class="pi" [ngClass]="{
                                             'pi-arrow-down': movimiento.tipo.includes('INGRESO'),
                                             'pi-arrow-up': movimiento.tipo.includes('SALIDA')
@@ -366,7 +369,7 @@
 
                                 <!-- Observaciones -->
                                 <td>
-                                    <span class="text-truncate d-inline-block" style="max-width: 180px"
+                                    <span class="text-truncate d-inline-block" style="max-width: 190px"
                                           [pTooltip]="movimiento.observaciones">
                                         {{movimiento.observaciones || 'N/A'}}
                                     </span>
@@ -374,7 +377,8 @@
 
                                 <!-- Orden Compra -->
                                 <td>
-                                    <span *ngIf="movimiento.ordenCompraId" class="modern-badge badge-info">
+                                    <span *ngIf="movimiento.ordenCompraId" class="modern-badge badge-info"
+                                          [pTooltip]="'Orden de Compra: ' + movimiento.ordenCompraId">
                                         <i class="pi pi-file-o"></i>
                                         {{movimiento.ordenCompraId}}
                                     </span>
@@ -385,7 +389,8 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         <i class="pi pi-user text-primary me-2"></i>
-                                        <span class="text-truncate" style="max-width: 140px">
+                                        <span class="text-truncate" style="max-width: 160px"
+                                              [pTooltip]="movimiento.usuario">
                                             {{movimiento.usuario}}
                                         </span>
                                     </div>
@@ -520,3 +525,199 @@
         </div>
     </div>
 </div>
+
+<!-- MODAL: Detalles del Movimiento -->
+<p-dialog [(visible)]="modalDetalleVisible" [modal]="true" [style]="{width: '700px'}"
+          header="Detalles del Movimiento" [draggable]="false" [resizable]="false">
+    <div *ngIf="movimientoParaModal" class="p-4">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Fecha</p>
+                <p class="fw-bold">{{movimientoParaModal.fecha._seconds * 1000 | date:'dd/MM/yyyy HH:mm'}}</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Tipo de Movimiento</p>
+                <span class="modern-badge" [ngClass]="getTipoMovimientoClass(movimientoParaModal.tipo)">
+                    <i class="pi" [ngClass]="{
+                        'pi-arrow-down': movimientoParaModal.tipo.includes('INGRESO'),
+                        'pi-arrow-up': movimientoParaModal.tipo.includes('SALIDA')
+                    }"></i>
+                    {{movimientoParaModal.tipo}}
+                </span>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Producto</p>
+                <p class="fw-bold">{{movimientoParaModal.producto?.crearProducto?.titulo || movimientoParaModal.productDoc?.titulo || 'N/A'}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Código</p>
+                <p class="fw-bold">{{movimientoParaModal.producto?.identificacion?.referencia || 'N/A'}}</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Cantidad</p>
+                <p class="fw-bold" [ngClass]="{
+                    'text-success': movimientoParaModal.tipo.includes('INGRESO'),
+                    'text-danger': movimientoParaModal.tipo.includes('SALIDA')
+                }">{{movimientoParaModal.cantidad}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Bodega</p>
+                <p class="fw-bold">{{movimientoParaModal.bodegaDoc?.nombre || movimientoParaModal.bodega?.nombre || 'N/A'}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3" *ngIf="movimientoParaModal.observaciones">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Observaciones</p>
+                <p>{{movimientoParaModal.observaciones}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3" *ngIf="movimientoParaModal.ordenCompraId">
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Orden de Compra</p>
+                <p class="fw-bold">{{movimientoParaModal.ordenCompraId}}</p>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Usuario</p>
+                <p>{{movimientoParaModal.usuario}}</p>
+            </div>
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <button pButton label="Cerrar" icon="pi pi-times" class="p-button-text" (click)="modalDetalleVisible = false"></button>
+    </ng-template>
+</p-dialog>
+
+<!-- MODAL: Información del Producto -->
+<p-dialog [(visible)]="modalProductoVisible" [modal]="true" [style]="{width: '600px'}"
+          header="Información del Producto" [draggable]="false" [resizable]="false">
+    <div *ngIf="movimientoParaModal" class="p-4">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Nombre del Producto</p>
+                <h5 class="mb-0">{{movimientoParaModal.producto?.crearProducto?.titulo || movimientoParaModal.productDoc?.titulo || 'N/A'}}</h5>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Código/Referencia</p>
+                <p class="fw-bold">{{movimientoParaModal.producto?.identificacion?.referencia || 'N/A'}}</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Tipo de Producto</p>
+                <p>{{movimientoParaModal.producto?.identificacion?.tipoProducto || 'N/A'}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3" *ngIf="movimientoParaModal.producto?.identificacion?.marca">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Marca</p>
+                <p>{{movimientoParaModal.producto.identificacion.marca}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3" *ngIf="movimientoParaModal.productDoc?.descripcion">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Descripción</p>
+                <p>{{movimientoParaModal.productDoc.descripcion}}</p>
+            </div>
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <button pButton label="Cerrar" icon="pi pi-times" class="p-button-text" (click)="modalProductoVisible = false"></button>
+    </ng-template>
+</p-dialog>
+
+<!-- MODAL: Información de la Bodega -->
+<p-dialog [(visible)]="modalBodegaVisible" [modal]="true" [style]="{width: '600px'}"
+          header="Información de la Bodega" [draggable]="false" [resizable]="false">
+    <div *ngIf="movimientoParaModal" class="p-4">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Nombre de la Bodega</p>
+                <h5 class="mb-0">{{movimientoParaModal.bodegaDoc?.nombre || movimientoParaModal.bodega?.nombre || 'N/A'}}</h5>
+            </div>
+        </div>
+
+        <div class="row mb-3" *ngIf="movimientoParaModal.bodegaDoc?.direccion">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Dirección</p>
+                <p>{{movimientoParaModal.bodegaDoc.direccion}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6" *ngIf="movimientoParaModal.bodegaDoc?.ciudad">
+                <p class="mb-1 text-muted small">Ciudad</p>
+                <p>{{movimientoParaModal.bodegaDoc.ciudad}}</p>
+            </div>
+            <div class="col-md-6" *ngIf="movimientoParaModal.bodegaDoc?.departamento">
+                <p class="mb-1 text-muted small">Departamento</p>
+                <p>{{movimientoParaModal.bodegaDoc.departamento}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3" *ngIf="movimientoParaModal.bodegaDoc?.tipo">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Tipo de Bodega</p>
+                <p>{{movimientoParaModal.bodegaDoc.tipo}}</p>
+            </div>
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <button pButton label="Cerrar" icon="pi pi-times" class="p-button-text" (click)="modalBodegaVisible = false"></button>
+    </ng-template>
+</p-dialog>
+
+<!-- MODAL: Información de la Orden de Compra -->
+<p-dialog [(visible)]="modalOrdenVisible" [modal]="true" [style]="{width: '600px'}"
+          header="Información de la Orden de Compra" [draggable]="false" [resizable]="false">
+    <div *ngIf="movimientoParaModal" class="p-4">
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Número de Orden</p>
+                <h5 class="mb-0">#{{movimientoParaModal.ordenCompraId}}</h5>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <p class="mb-1 text-muted small">Producto Asociado</p>
+                <p>{{movimientoParaModal.producto?.crearProducto?.titulo || movimientoParaModal.productDoc?.titulo || 'N/A'}}</p>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Cantidad</p>
+                <p class="fw-bold">{{movimientoParaModal.cantidad}}</p>
+            </div>
+            <div class="col-md-6">
+                <p class="mb-1 text-muted small">Fecha</p>
+                <p>{{movimientoParaModal.fecha._seconds * 1000 | date:'dd/MM/yyyy'}}</p>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <i class="pi pi-info-circle me-2"></i>
+            Para ver detalles completos de la orden, contacta al módulo de compras.
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <button pButton label="Cerrar" icon="pi pi-times" class="p-button-text" (click)="modalOrdenVisible = false"></button>
+    </ng-template>
+</p-dialog>

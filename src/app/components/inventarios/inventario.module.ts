@@ -24,6 +24,8 @@ import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { DialogModule } from 'primeng/dialog';
+import { TooltipModule } from 'primeng/tooltip';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 
 @NgModule({
@@ -46,7 +48,9 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
         CalendarModule,
         DropdownModule,
         ButtonModule,
-        InputTextModule
+        InputTextModule,
+        DialogModule,
+        TooltipModule
     ],
     declarations: [
         InventarioCatalogoComponent,

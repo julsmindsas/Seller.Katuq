@@ -15,6 +15,7 @@ import { NotificationService } from '../../../shared/services/notification.servi
 export class WizardComponent implements OnInit {
   steps: MenuItem[] = [];
   activeStep: number = 0;
+  isEditMode: boolean = false;
 
   agentConfig: Partial<Agent> = {
     agentName: '',
@@ -40,11 +41,22 @@ export class WizardComponent implements OnInit {
     private toolCatalogService: ToolCatalogService,
     private notificationService: NotificationService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
+    this.checkEditMode();
     this.initializeSteps();
     this.loadToolCatalog();
+  }
+
+  checkEditMode(): void {
+    const state = history.state;
+    if (state && state.agentToEdit) {
+      this.isEditMode = true;
+      const agent = state.agentToEdit;
+      this.agentConfig = { ...agent };
+      console.log('[WizardComponent] Edit mode activated for:', agent.agentName);
+    }
   }
 
   initializeSteps(): void {
@@ -62,7 +74,7 @@ export class WizardComponent implements OnInit {
         icon: 'pi pi-wrench'
       },
       {
-        label: 'Revisar y Crear',
+        label: this.isEditMode ? 'Revisar y Actualizar' : 'Revisar y Crear',
         icon: 'pi pi-check-circle'
       }
     ];
@@ -126,27 +138,50 @@ export class WizardComponent implements OnInit {
 
     this.isLoading = true;
 
-    const createRequest: CreateAgentRequest = {
-      agentName: this.agentConfig.agentName!,
-      department: this.agentConfig.department!,
-      systemPrompt: this.agentConfig.systemPrompt!,
-      selectedTools: this.agentConfig.selectedTools!,
-      description: this.agentConfig.description,
-      model: this.agentConfig.model
-    };
+    if (this.isEditMode) {
+      const updateRequest = {
+        department: this.agentConfig.department,
+        systemPrompt: this.agentConfig.systemPrompt,
+        selectedTools: this.agentConfig.selectedTools,
+        description: this.agentConfig.description,
+        model: this.agentConfig.model
+      };
 
-    this.agentService.createAgent(createRequest).subscribe({
-      next: (response) => {
-        this.isLoading = false;
-        this.notificationService.success('Éxito', 'Agente creado exitosamente');
-        this.router.navigate(['/agent-builder/library']);
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('Error creating agent:', error);
-        this.notificationService.error('Error', 'Error al crear el agente. Por favor intenta nuevamente.');
-      }
-    });
+      this.agentService.updateAgent(this.agentConfig.agentName!, updateRequest).subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          this.notificationService.success('Éxito', 'Agente actualizado exitosamente');
+          this.router.navigate(['/agent-builder/library']);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Error updating agent:', error);
+          this.notificationService.error('Error', 'Error al actualizar el agente.');
+        }
+      });
+    } else {
+      const createRequest: CreateAgentRequest = {
+        agentName: this.agentConfig.agentName!,
+        department: this.agentConfig.department!,
+        systemPrompt: this.agentConfig.systemPrompt!,
+        selectedTools: this.agentConfig.selectedTools!,
+        description: this.agentConfig.description,
+        model: this.agentConfig.model
+      };
+
+      this.agentService.createAgent(createRequest).subscribe({
+        next: (response) => {
+          this.isLoading = false;
+          this.notificationService.success('Éxito', 'Agente creado exitosamente');
+          this.router.navigate(['/agent-builder/library']);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          console.error('Error creating agent:', error);
+          this.notificationService.error('Error', 'Error al crear el agente. Por favor intenta nuevamente.');
+        }
+      });
+    }
   }
 
   validateAgent(): boolean {

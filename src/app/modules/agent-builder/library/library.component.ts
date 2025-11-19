@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { ConfirmationService } from 'primeng/api';
 import { Agent, DepartmentType } from '../shared/models/agent.model';
 import { DepartmentOption } from '../shared/models/tool.model';
 import { AgentService } from '../shared/services/agent.service';
 import { ToolCatalogService } from '../shared/services/tool-catalog.service';
 import { NotificationService } from '../../../shared/services/notification.service';
-import { ConfirmationService } from 'primeng/api';
 
 @Component({
   selector: 'app-library',
@@ -16,7 +16,11 @@ import { ConfirmationService } from 'primeng/api';
 export class LibraryComponent implements OnInit {
   agents: Agent[] = [];
   filteredAgents: Agent[] = [];
+
+  // Filters
   filterDepartment: DepartmentType | 'all' = 'all';
+  searchTerm: string = '';
+
   departments: DepartmentOption[] = [];
   isLoading: boolean = false;
 
@@ -26,7 +30,7 @@ export class LibraryComponent implements OnInit {
     private notificationService: NotificationService,
     private confirmationService: ConfirmationService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.loadDepartments();
@@ -34,71 +38,91 @@ export class LibraryComponent implements OnInit {
   }
 
   loadDepartments(): void {
-    this.departments = [
-      { label: 'Todos', value: 'all' as any, icon: 'pi-th-large', color: '#667eea' },
-      ...this.toolCatalogService.getDepartmentOptions()
-    ];
+    this.departments = this.toolCatalogService.getDepartmentOptions();
   }
 
   loadAgents(): void {
     this.isLoading = true;
-
     this.agentService.listAgents().subscribe({
       next: (response) => {
-        this.isLoading = false;
         this.agents = response.agents || [];
         this.filterAgents();
+        this.isLoading = false;
       },
       error: (error) => {
-        this.isLoading = false;
         console.error('Error loading agents:', error);
-        this.notificationService.error('Error', 'Error al cargar los agentes');
-        // For development, show empty state
-        this.agents = [];
-        this.filteredAgents = [];
+        this.notificationService.error('Error', 'Could not load agents');
+        this.isLoading = false;
       }
     });
   }
 
-  filterAgents(): void {
-    if (this.filterDepartment === 'all') {
-      this.filteredAgents = [...this.agents];
-    } else {
-      this.filteredAgents = this.agents.filter(
-        agent => agent.department === this.filterDepartment
-      );
-    }
+  setDepartment(dept: DepartmentType | 'all'): void {
+    this.filterDepartment = dept;
+    this.filterAgents();
   }
 
-  onDepartmentFilterChange(): void {
+  filterAgents(): void {
+    let result = [...this.agents];
+
+    // Department Filter
+    if (this.filterDepartment !== 'all') {
+      result = result.filter(agent => agent.department === this.filterDepartment);
+    }
+
+    // Search Filter
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase();
+      result = result.filter(agent =>
+        agent.agentName.toLowerCase().includes(term) ||
+        (agent.description && agent.description.toLowerCase().includes(term))
+      );
+    }
+
+    this.filteredAgents = result;
+  }
+
+  clearFilters(): void {
+    this.searchTerm = '';
+    this.filterDepartment = 'all';
     this.filterAgents();
   }
 
   executeAgent(agent: Agent): void {
     if (!agent.id) return;
-    this.router.navigate(['/agent-builder/executor', agent.id]);
+    this.router.navigate(['/agent-builder/general-chat'], { state: { selectedAgentId: agent.agentName } });
+  }
+
+  editAgent(agent: Agent): void {
+    this.router.navigate(['/agent-builder/wizard'], { state: { agentToEdit: agent } });
+  }
+
+
+  createNewAgent(): void {
+    this.router.navigate(['/agent-builder/wizard']);
+  }
+
+  goToGeneralChat(): void {
+    this.router.navigate(['/agent-builder/general-chat']);
   }
 
   deleteAgent(agent: Agent): void {
     this.confirmationService.confirm({
-      message: `¿Estás seguro de que deseas eliminar el agente "${agent.agentName}"?`,
-      header: 'Confirmar Eliminación',
+      message: `Are you sure you want to delete "${agent.agentName}"?`,
+      header: 'Delete Agent',
       icon: 'pi pi-exclamation-triangle',
-      acceptLabel: 'Sí, eliminar',
-      rejectLabel: 'Cancelar',
-      acceptButtonStyleClass: 'p-button-danger',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-danger p-button-text',
+      rejectButtonStyleClass: 'p-button-text',
       accept: () => {
         if (!agent.id) return;
-
         this.agentService.deleteAgent(agent.id).subscribe({
-          next: (response) => {
-            this.notificationService.success('Éxito', 'Agente eliminado exitosamente');
-            this.loadAgents(); // Reload agents list
+          next: () => {
+            this.notificationService.success('Success', 'Agent deleted');
+            this.loadAgents();
           },
-          error: (error) => {
-            console.error('Error deleting agent:', error);
-            this.notificationService.error('Error', 'Error al eliminar el agente');
-          }
+          error: () => this.notificationService.error('Error', 'Could not delete agent')
         });
       }
     });
@@ -106,24 +130,13 @@ export class LibraryComponent implements OnInit {
 
   toggleAgentStatus(agent: Agent): void {
     if (!agent.id) return;
-
     this.agentService.toggleAgentStatus(agent.id).subscribe({
       next: (response) => {
-        const newStatus = response.agent.status;
-        const message = newStatus === 'active'
-          ? 'Agente activado'
-          : 'Agente desactivado';
-        this.notificationService.success('Éxito', message);
-        this.loadAgents(); // Reload to get updated data
+        const status = response.agent.status === 'active' ? 'activated' : 'deactivated';
+        this.notificationService.success('Success', `Agent ${status}`);
+        this.loadAgents();
       },
-      error: (error) => {
-        console.error('Error toggling agent status:', error);
-        this.notificationService.error('Error', 'Error al cambiar el estado del agente');
-      }
+      error: () => this.notificationService.error('Error', 'Could not update status')
     });
-  }
-
-  createNewAgent(): void {
-    this.router.navigate(['/agent-builder/wizard']);
   }
 }

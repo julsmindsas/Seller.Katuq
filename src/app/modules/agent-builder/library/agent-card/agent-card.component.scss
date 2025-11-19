@@ -1,344 +1,163 @@
-.agent-card {
-  position: relative;
-  border-radius: 20px;
+$google-blue: #1a73e8;
+$google-green: #34a853;
+$google-red: #ea4335;
+$google-grey-100: #f1f3f4;
+$google-grey-300: #dadce0;
+$google-grey-600: #5f6368;
+$google-grey-800: #202124;
+
+.google-card {
   background: white;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid $google-grey-300;
+  border-radius: 16px;
+  padding: 20px;
+  transition: all 0.2s ease;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-
-    .holographic-overlay {
-      opacity: 0.3;
-    }
-
-    .card-border {
-      opacity: 1;
-    }
+    box-shadow: 0 4px 12px rgba(60, 64, 67, 0.15);
+    border-color: transparent;
+    transform: translateY(-2px);
   }
 
-  // Card Border Gradient
-  .card-border {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 6px;
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
-  }
-
-  &.gradient-sales .card-border {
-    background: linear-gradient(90deg, #f093fb 0%, #f5576c 100%);
-  }
-
-  &.gradient-logistics .card-border {
-    background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
-  }
-
-  &.gradient-inventory .card-border {
-    background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
-  }
-
-  &.gradient-default .card-border {
-    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
-  }
-
-  // Holographic Effect
-  .holographic-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.1) 25%,
-      rgba(255, 255, 255, 0) 50%,
-      rgba(102, 126, 234, 0.1) 75%,
-      rgba(255, 255, 255, 0) 100%
-    );
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-  }
-
-  // Card Header
+  // HEADER
   .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1.5rem 1.5rem 1rem;
+    margin-bottom: 16px;
 
-    .agent-icon {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
+    .header-top {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.2rem;
-      color: white;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-      position: relative;
-      z-index: 1;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+
+      .icon-wrapper {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+      }
+
+      .more-btn {
+        background: transparent;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $google-grey-600;
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover {
+          background: $google-grey-100;
+          color: $google-grey-800;
+        }
+      }
     }
 
-    .agent-status {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.4rem 0.9rem;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      transition: all 0.3s ease;
+    .agent-name {
+      font-family: 'Google Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: $google-grey-800;
+      margin: 0 0 4px;
+      line-height: 1.4;
+    }
 
-      &.active {
-        background: #d4edda;
-        color: #155724;
-
-        i {
-          color: #28a745;
-        }
-      }
-
-      &.inactive {
-        background: #f8d7da;
-        color: #721c24;
-
-        i {
-          color: #dc3545;
-        }
-      }
-
-      i {
-        font-size: 1rem;
-      }
+    .department-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: $google-grey-600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
   }
 
-  // Card Body
+  // BODY
   .card-body {
-    padding: 0 1.5rem 1.5rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 
-    .agent-title-section {
-      margin-bottom: 0.75rem;
-
-      .agent-name {
-        font-size: 1.4rem;
-        font-weight: 700;
-        color: #333;
-        margin-bottom: 0.5rem;
-        line-height: 1.3;
-      }
-
-      .department-badge {
-        display: inline-block;
-        padding: 0.35rem 0.85rem;
-        border-radius: 15px;
-        color: white;
-        font-size: 0.8rem;
-        font-weight: 600;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-      }
-    }
-
-    .agent-description {
-      font-size: 0.95rem;
-      color: #666;
-      margin-bottom: 1.25rem;
+    .description {
+      font-size: 14px;
+      color: $google-grey-600;
       line-height: 1.5;
-      min-height: 45px;
+      margin: 0 0 20px;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      min-height: 42px;
     }
 
-    .agent-stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin-bottom: 1rem;
-      padding: 1rem;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
-      border-radius: 12px;
+    .stats-row {
+      display: flex;
+      gap: 16px;
+      margin-top: auto;
+      padding-top: 16px;
+      border-top: 1px solid $google-grey-100;
 
-      .stat {
+      .stat-item {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 6px;
+        font-size: 13px;
+        color: $google-grey-600;
 
-        .stat-icon {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-          i {
-            color: #667eea;
-            font-size: 1.2rem;
-          }
+        i {
+          font-size: 14px;
         }
 
-        .stat-info {
-          display: flex;
-          flex-direction: column;
-
-          .stat-value {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: #333;
-            line-height: 1.2;
-          }
-
-          small {
-            font-size: 0.75rem;
-            color: #999;
-          }
+        &.date {
+          margin-left: auto;
         }
       }
     }
+  }
 
-    .last-executed {
+  // FOOTER
+  .card-footer {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .status-indicator {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 1rem;
-      padding: 0.5rem 0.75rem;
-      background: #f8f9fa;
-      border-radius: 8px;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: $google-grey-600;
+      padding: 4px 10px;
+      background: $google-grey-100;
+      border-radius: 12px;
 
-      i {
-        color: #667eea;
-        font-size: 1rem;
+      .dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: $google-grey-600;
       }
-    }
 
-    .agent-tools {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
+      &.active {
+        background-color: #e6f4ea;
+        color: #137333;
 
-      ::ng-deep {
-        .tool-chip {
-          background: #f5f5f5;
-          color: #555;
-          font-size: 0.75rem;
-          padding: 0.3rem 0.7rem;
-          border-radius: 12px;
-          font-weight: 500;
-
-          .p-chip-text {
-            margin: 0;
-          }
+        .dot {
+          background-color: #1e8e3e;
         }
-
-        .tool-chip-more {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          font-size: 0.75rem;
-          padding: 0.3rem 0.7rem;
-          border-radius: 12px;
-          font-weight: 600;
-          box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-
-          .p-chip-text {
-            margin: 0;
-          }
-        }
-      }
-    }
-  }
-
-  // Card Footer
-  .card-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem 1.5rem;
-    background: #f8f9fa;
-    border-top: 1px solid #e9ecef;
-
-    .execute-button {
-      flex: 1;
-      max-width: 160px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border: none;
-      font-weight: 600;
-
-      &:not(:disabled):hover {
-        background: linear-gradient(135deg, #5568d3 0%, #65408b 100%);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-    }
-
-    .footer-actions {
-      display: flex;
-      gap: 0.5rem;
-
-      button {
-        width: 36px;
-        height: 36px;
-
-        &:hover {
-          transform: scale(1.1);
-        }
-      }
-    }
-  }
-}
-
-// Animations
-@keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .agent-card {
-    &:hover {
-      transform: translateY(-5px) scale(1.01);
-    }
-
-    .card-header {
-      .agent-icon {
-        width: 60px;
-        height: 60px;
-        font-size: 1.8rem;
-      }
-    }
-
-    .card-body {
-      .agent-title-section .agent-name {
-        font-size: 1.2rem;
-      }
-
-      .agent-stats {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
       }
     }
   }

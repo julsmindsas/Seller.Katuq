@@ -142,8 +142,10 @@ export class InventarioService {
     });
   }
 
-  getProductos(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/productos/all`);
+  getProductos(pageSize: number = 100): Observable<any> {
+    let params = new HttpParams();
+    params = params.set('pageSize', pageSize.toString());
+    return this.http.get(`${this.apiUrl}/productos/all`, { params });
   }
 
   getMovimientoDetalle(id: string): Observable<any> {

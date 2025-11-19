@@ -1,61 +1,55 @@
-<div class="agent-builder-wizard">
-  <div class="wizard-header">
-    <h2 class="text-center mb-3">
-      <i class="pi pi-sparkles text-primary"></i>
-      Crear Agente IA
-    </h2>
-    <p class="text-center text-muted">
-      Crea tu asistente inteligente en 4 simples pasos
-    </p>
-  </div>
+<div class="google-wizard-container">
+  <!-- Header -->
+  <header class="wizard-header">
+    <div class="header-content">
+      <div class="back-button" routerLink="/agent-builder/library">
+        <i class="pi pi-arrow-left"></i>
+      </div>
+      <div class="title-section">
+        <h1>Create New Agent</h1>
+        <p>Configure your AI assistant in a few simple steps</p>
+      </div>
+    </div>
+    <div class="step-indicator">
+      Step {{ activeStep + 1 }} of {{ steps.length }}
+    </div>
+  </header>
 
-  <p-steps
-    [model]="steps"
-    [(activeIndex)]="activeStep"
-    [readonly]="false"
-    styleClass="mb-5">
-  </p-steps>
+  <!-- Main Content -->
+  <main class="wizard-main">
+    <div class="wizard-card">
+      <!-- Stepper -->
+      <div class="stepper-wrapper">
+        <p-steps [model]="steps" [(activeIndex)]="activeStep" [readonly]="false" styleClass="google-steps">
+        </p-steps>
+      </div>
 
-  <div class="wizard-content">
-    <!-- Step 1: Basic Info -->
-    <app-step-basic-info
-      *ngIf="activeStep === 0"
-      [(agentConfig)]="agentConfig"
-      (next)="nextStep()">
-    </app-step-basic-info>
+      <!-- Step Content -->
+      <div class="step-content-area">
+        <!-- Step 1: Basic Info -->
+        <app-step-basic-info *ngIf="activeStep === 0" [(agentConfig)]="agentConfig" (next)="nextStep()">
+        </app-step-basic-info>
 
-    <!-- Step 2: System Prompt -->
-    <app-step-prompt
-      *ngIf="activeStep === 1"
-      [(agentConfig)]="agentConfig"
-      (next)="nextStep()"
-      (back)="prevStep()">
-    </app-step-prompt>
+        <!-- Step 2: System Prompt -->
+        <app-step-prompt *ngIf="activeStep === 1" [(agentConfig)]="agentConfig" (next)="nextStep()" (back)="prevStep()">
+        </app-step-prompt>
 
-    <!-- Step 3: Tools Selection -->
-    <app-step-tools
-      *ngIf="activeStep === 2"
-      [(agentConfig)]="agentConfig"
-      [toolCatalog]="toolCatalog"
-      (next)="nextStep()"
-      (back)="prevStep()">
-    </app-step-tools>
+        <!-- Step 3: Tools Selection -->
+        <app-step-tools *ngIf="activeStep === 2" [(agentConfig)]="agentConfig" [toolCatalog]="toolCatalog"
+          (next)="nextStep()" (back)="prevStep()">
+        </app-step-tools>
 
-    <!-- Step 4: Review & Create -->
-    <app-step-review
-      *ngIf="activeStep === 3"
-      [agentConfig]="agentConfig"
-      [isLoading]="isLoading"
-      (back)="prevStep()"
-      (create)="createAgent()">
-    </app-step-review>
-  </div>
+        <!-- Step 4: Review & Create -->
+        <app-step-review *ngIf="activeStep === 3" [agentConfig]="agentConfig" [isLoading]="isLoading"
+          (back)="prevStep()" (create)="createAgent()">
+        </app-step-review>
+      </div>
+    </div>
+  </main>
 
   <!-- Loading Overlay -->
   <div class="loading-overlay" *ngIf="isLoading">
-    <div class="loading-spinner">
-      <i class="pi pi-spin pi-spinner" style="font-size: 3rem;"></i>
-      <p>Creando tu agente...</p>
-    </div>
+    <div class="google-spinner"></div>
+    <p>Creating your agent...</p>
   </div>
 </div>

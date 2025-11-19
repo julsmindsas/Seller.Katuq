@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.11.12.4 - 12 de Noviembre 2025 (Beta)",
+  version: "2025.11.17.2 - 17 de Noviembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -16,6 +16,11 @@ export const environment = {
   // urlApi: 'https://api-shwp4sc4vq-uc.a.run.app', // API Google Cloud Functions
   urlApi2: "https://api.katuq.com", // API AWS laighsail,
   urlApi: "https://back.katuq.com", // API AWS EC2,
+
+  // Agent Builder Backend (KAI)
+  agentBuilderApi: "https://back.katuq.com", // REST API a través del backend principal
+  agentBuilderWs: "wss://back.katuq.com/ws", // WebSocket
+
   wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
   voiceWsUrl: "wss://tu-servidor-ejemplo.com",
   wompi: {
@@ -42,7 +47,7 @@ export const environment = {
       endpoint: "gmaps-proxy",
     },
   },
-  GEMINI_API_KEY: "AIzaSyAHT5s0bFQBG5a_vJGQWjC5OUIw0ZQPy_U",
+  GEMINI_API_KEY: "AIzaSyDKYiPW1w9TBrCzSgTtMs52jJna_LqCI2o_",
 
   // 🎯 VIDEO AGENT CONFIGURATION
   videoAgent: {

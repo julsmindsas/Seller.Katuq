@@ -1,116 +1,124 @@
+$google-blue: #1a73e8;
+$google-grey-300: #dadce0;
+$google-grey-800: #202124;
+
 .step-container {
+
+  // Title Section
   .step-title {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #333;
-    margin-bottom: 0.5rem;
+    font-size: 24px;
+    font-weight: 400;
+    color: $google-grey-800;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 12px;
 
     i {
-      font-size: 1.8rem;
+      font-size: 24px;
+      color: $google-blue;
     }
   }
 
   .step-subtitle {
-    color: #666;
-    font-size: 1rem;
-    margin-bottom: 2rem;
+    color: #5f6368;
+    font-size: 14px;
+    margin-bottom: 32px;
   }
 
+  // Form Elements
   .form-label {
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 0.5rem;
+    font-size: 14px;
+    font-weight: 500;
+    color: $google-grey-800;
+    margin-bottom: 8px;
     display: block;
 
     &.required::after {
       content: ' *';
-      color: #dc3545;
-    }
-  }
-
-  .department-option {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-
-    i {
-      font-size: 1.2rem;
-    }
-
-    span {
-      font-weight: 500;
+      color: #d93025;
     }
   }
 
   small {
-    color: #6c757d;
+    color: #5f6368;
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
 
     i {
-      font-size: 0.75rem;
-      margin-right: 0.25rem;
+      font-size: 12px;
+      margin-right: 4px;
+      vertical-align: middle;
     }
-  }
-
-  .is-invalid {
-    border-color: #dc3545 !important;
   }
 
   .invalid-feedback {
-    display: block;
-    color: #dc3545;
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
+    color: #d93025;
+    font-size: 12px;
+    margin-top: 4px;
   }
 
+  // Actions
   .step-actions {
-    margin-top: 2rem;
-    padding-top: 2rem;
-    border-top: 1px solid #e0e0e0;
-    text-align: right;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid $google-grey-300;
+    display: flex;
+    justify-content: flex-end;
 
     button {
-      min-width: 150px;
+      border-radius: 24px; // Pill shape
     }
   }
 
+  // PrimeNG Overrides for Google Style
   ::ng-deep {
+
     .p-inputtext,
     .p-inputtextarea,
     .p-dropdown {
-      font-size: 1rem;
-      padding: 0.75rem;
-      border-radius: 8px;
-      border: 2px solid #e0e0e0;
-      transition: all 0.3s ease;
+      border-radius: 4px;
+      border: 1px solid $google-grey-300;
+      padding: 10px 12px;
+      font-size: 16px;
+      color: $google-grey-800;
+      transition: all 0.2s;
 
       &:hover {
-        border-color: #667eea;
+        border-color: $google-grey-800;
       }
 
       &:focus {
-        border-color: #667eea;
-        box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        border-color: $google-blue;
+        box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+      }
+
+      &.ng-invalid.ng-dirty {
+        border-color: #d93025;
+
+        &:focus {
+          box-shadow: 0 0 0 2px rgba(217, 48, 37, 0.2);
+        }
       }
     }
 
-    .p-dropdown-panel {
-      border-radius: 8px;
-      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    .p-dropdown {
+      padding: 0; // Dropdown has internal padding
+
+      .p-dropdown-label {
+        padding: 10px 12px;
+      }
     }
   }
 }
 
+// Responsive
 @media (max-width: 768px) {
   .step-container {
-    .step-title {
-      font-size: 1.25rem;
-    }
-
     .step-actions {
-      text-align: center;
+      flex-direction: column;
+      gap: 12px;
 
       button {
         width: 100%;

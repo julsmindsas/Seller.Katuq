@@ -1,0 +1,214 @@
+RESUMEN DE ARCHIVOS CLAVE - AGENT BUILDER WIZARD
+==================================================
+
+1. COMPONENTE WIZARD PRINCIPAL
+   Ubicación: /Users/danielga/Downloads/Seller.Katuq/src/app/modules/agent-builder/wizard/
+   
+   wizard.component.ts (189 líneas)
+   - Clase: WizardComponent
+   - Inicializa 4 pasos del wizard
+   - Carga catálogo de tools desde backend
+   - Valida agente antes de crear
+   - Crea agente vía AgentService
+   
+   wizard.component.html (62 líneas)
+   - p-steps (componente PrimeNG)
+   - 4 pasos dinámicos
+   - Cada paso con su componente dedicado
+   - Loading overlay durante creación
+   
+   wizard.component.scss
+   - Estilos del contenedor principal
+   - Animaciones de pasos
+
+---
+
+2. PASO 3 - HERRAMIENTAS/TOOLS (FOCUS PRINCIPAL)
+   Ubicación: /Users/danielga/Downloads/Seller.Katuq/src/app/modules/agent-builder/wizard/step-tools/
+   
+   step-tools.component.ts (143 líneas)
+   - Clase: StepToolsComponent
+   - Input: agentConfig (configurable), toolCatalog
+   - Output: agentConfigChange, next, back
+   - Estado: availableTools[], filteredTools[], searchQuery, selectedCategory
+   - Métodos clave:
+     * loadAvailableTools() - carga tools del departamento + generales
+     * filterTools() - filtra por categoría y búsqueda
+     * toggleTool() - selecciona/deselecciona herramienta
+     * selectAllTools() / clearAllTools() - bulk actions
+     * isValid() - valida selección
+   
+   step-tools.component.html (117 líneas)
+   - Header con contador de selecciones
+   - Caja de búsqueda con icono
+   - Pills de filtro por categoría (5 categorías)
+   - Grid responsivo (auto-fill, minmax 280px)
+   - Tarjetas de tools con:
+     * Icono circular
+     * Nombre, descripción, categoría
+     * Check verde si está seleccionada
+   - Empty state si no hay resultados
+   - Validación warning si no hay selecciones
+   - Botones Atrás/Siguiente
+   
+   step-tools.component.scss (314 líneas)
+   - Grid responsivo
+   - Animaciones hover
+   - Gradientes de colores
+   - Media queries para mobile
+
+---
+
+3. OTROS PASOS (COMPLEMENTARIOS)
+   
+   step-basic-info/
+   - Paso 1: Nombre, descripción, departamento
+   - Selecciona departamento (ventas, logística, inventario)
+   - Datos guardados en agentConfig
+   
+   step-prompt/
+   - Paso 2: System prompt con templates predefinidos
+   - 3 templates por defecto (Sales, Logistics, Inventory)
+   - Editor de texto libre
+   
+   step-review/
+   - Paso 4: Resumen de configuración
+   - Tarjeta con información resumida
+   - Muestra tools seleccionadas como chips
+   - Botones: Atrás, Crear Agente
+
+---
+
+4. MODELOS E INTERFACES
+   Ubicación: /Users/danielga/Downloads/Seller.Katuq/src/app/modules/agent-builder/shared/models/
+   
+   tool.model.ts (36 líneas)
+   - Tool: name, description, department, icon, category, isEnabled, parameters
+   - ToolCategory: 'data-access' | 'analytics' | 'automation' | 'communication' | 'utility'
+   - ToolCatalog: { sales[], logistics[], inventory[], general[] }
+   - DepartmentOption: label, value, icon, color
+   
+   agent.model.ts (70 líneas)
+   - Agent: id, agentName, department, systemPrompt, selectedTools[], description, model, status
+   - CreateAgentRequest: lo que se envía al backend
+   - AgentExecutionRequest/Response: para ejecutar agentes
+   - Types: DepartmentType, AgentStatus, ModelType
+
+---
+
+5. SERVICIOS
+   Ubicación: /Users/danielga/Downloads/Seller.Katuq/src/app/modules/agent-builder/shared/services/
+   
+   tool-catalog.service.ts (355 líneas) - MÁS IMPORTANTE PARA INTEGRACIÓN
+   - getToolCatalog() - GET /v1/agent-builder/catalog/tools
+     * Obtiene tools del backend
+     * Transforma a formato ToolCatalog agrupado por departamento
+   - getToolsByDepartment(dept) - GET /v1/agent-builder/catalog/tools/{dept}
+   - getDepartmentOptions() - Retorna opciones de dropdown
+   - getMockToolCatalog() - Catálogo de demo/testing
+   - transformToCatalog() - Enriquece tools con iconos y categorías
+   - getToolIcon() - Map de nombres a iconos PrimeNG
+   - getToolCategory() - Detecta categoría por pattern del nombre
+   
+   agent.service.ts (100 líneas)
+   - createAgent(agent) - POST /v1/agent-builder/create
+   - listAgents(dept?) - GET /v1/agent-builder/list
+   - getAgent(agentId) - GET /v1/agent-builder/agents/{agentId}
+   - updateAgent(agentId, updates) - PUT /v1/agent-builder/agents/{agentId}
+   - deleteAgent(agentId) - DELETE /v1/agent-builder/agents/{agentId}
+   - executeAgent(execution) - POST /v1/agent-builder/execute
+   - getExecutionHistory(agentId) - GET /v1/agent-builder/agents/{agentId}/history
+   - toggleAgentStatus(agentId) - PUT /v1/agent-builder/agents/{agentId}/toggle-status
+
+---
+
+6. MÓDULO
+   Ubicación: /Users/danielga/Downloads/Seller.Katuq/src/app/modules/agent-builder/
+   
+   agent-builder.module.ts (62 líneas)
+   - Imports: CommonModule, FormsModule, RoutingModule
+   - PrimeNG: StepsModule, CardModule, ButtonModule, InputTextModule, DropdownModule, CheckboxModule, etc.
+   - Declarations: 9 componentes principales
+   
+   agent-builder-routing.module.ts (26 líneas)
+   - /library → LibraryComponent
+   - /wizard → WizardComponent
+   - /executor/:id → ExecutorComponent
+
+---
+
+FLUJO DE DATOS PASO A PASO
+===========================
+
+1. Usuario navegó a /agent-builder/wizard
+   
+2. WizardComponent.ngOnInit()
+   - Inicializa 4 pasos
+   - Llama loadToolCatalog()
+   
+3. loadToolCatalog()
+   - Llama toolCatalogService.getToolCatalog()
+   - GET /v1/agent-builder/catalog/tools
+   
+4. Backend retorna:
+   {
+     "success": true,
+     "data": [
+       { name: "getTotalSales", description: "...", department: "sales" },
+       { name: "getProductStock", description: "...", department: "inventory" },
+       ...
+     ]
+   }
+   
+5. ToolCatalogService.transformToCatalog()
+   - Agrupa por departamento
+   - Enriquece con iconos y categorías
+   - Retorna ToolCatalog: { sales: [], logistics: [], inventory: [], general: [] }
+   
+6. WizardComponent asigna:
+   this.toolCatalog = catalog
+   
+7. Step-Tools se inicializa con:
+   - @Input() toolCatalog = ToolCatalog
+   - @Input() agentConfig = { department: 'sales', selectedTools: [] }
+   
+8. StepToolsComponent.ngOnInit()
+   - Llama loadAvailableTools()
+   
+9. loadAvailableTools()
+   - const departmentTools = this.toolCatalog['sales']  // Tools de ventas
+   - const generalTools = this.toolCatalog.general       // Tools generales
+   - this.availableTools = [...departmentTools, ...generalTools]
+   - Aplica filtros activos
+   
+10. Usuario ve grid con tools de su departamento
+    
+11. Usuario hace click en una herramienta:
+    - toggleTool('getTotalSales')
+    - Agrega a agentConfig.selectedTools
+    - Emite agentConfigChange
+    - Actualiza visualmente (check verde)
+    
+12. Usuario continúa a siguiente paso:
+    - Valida que al menos una herramienta esté seleccionada
+    - Emite next()
+    
+13. Step-Review muestra resumen:
+    - Nombre, departamento, prompt, tools seleccionadas
+    
+14. Usuario hace click "Crear Agente":
+    - WizardComponent.createAgent()
+    - Crea CreateAgentRequest con selectedTools: ['getTotalSales', 'getProductStock']
+    - agentService.createAgent(request)
+    - POST /v1/agent-builder/create
+    
+15. Backend crea agente y retorna:
+    {
+      "success": true,
+      "agent": { id: "...", agentName: "...", selectedTools: [...], ... },
+      "message": "Agente creado"
+    }
+    
+16. Redirecciona a /agent-builder/library
+    - Muestra agente recién creado
+

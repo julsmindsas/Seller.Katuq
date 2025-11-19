@@ -1,161 +1,241 @@
-.agent-builder-wizard {
-  max-width: 900px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  position: relative;
+// Google Material Design 3 Variables
+$google-blue: #1a73e8;
+$google-grey-100: #f1f3f4;
+$google-grey-300: #dadce0;
+$google-grey-800: #202124;
+$surface-color: #ffffff;
+$background-color: #f8f9fa;
 
+.google-wizard-container {
+  min-height: 100vh;
+  background-color: $background-color;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  color: $google-grey-800;
+  display: flex;
+  flex-direction: column;
+
+  // HEADER
   .wizard-header {
-    background: white;
-    padding: 2rem;
-    border-radius: 15px;
-    margin-bottom: 2rem;
+    background-color: $surface-color;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    border-bottom: 1px solid $google-grey-300;
+    position: sticky;
+    top: 0;
+    z-index: 100;
 
-    h2 {
-      font-weight: 700;
-      color: #667eea;
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 24px;
 
-      i {
-        margin-right: 0.5rem;
-        animation: sparkle 2s ease-in-out infinite;
+      .back-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #5f6368;
+        transition: background 0.2s;
+
+        &:hover {
+          background-color: $google-grey-100;
+          color: $google-grey-800;
+        }
+
+        i {
+          font-size: 20px;
+        }
+      }
+
+      .title-section {
+        h1 {
+          font-size: 20px;
+          font-weight: 500;
+          margin: 0;
+          color: $google-grey-800;
+        }
+
+        p {
+          font-size: 14px;
+          color: #5f6368;
+          margin: 0;
+        }
       }
     }
 
-    p {
-      font-size: 1rem;
-      margin-bottom: 0;
+    .step-indicator {
+      font-size: 14px;
+      font-weight: 500;
+      color: #5f6368;
+      background: $google-grey-100;
+      padding: 8px 16px;
+      border-radius: 16px;
     }
   }
 
-  .wizard-content {
-    background: white;
-    padding: 2.5rem;
-    border-radius: 15px;
-    min-height: 450px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+  // MAIN CONTENT
+  .wizard-main {
+    flex: 1;
+    padding: 32px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    .wizard-card {
+      background: $surface-color;
+      border-radius: 24px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+      width: 100%;
+      max-width: 900px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+
+      .stepper-wrapper {
+        padding: 32px 32px 0;
+        margin-bottom: 24px;
+      }
+
+      .step-content-area {
+        padding: 0 32px 32px;
+        min-height: 400px;
+      }
+    }
   }
 
+  // LOADING OVERLAY
   .loading-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.9);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    border-radius: 20px;
     z-index: 1000;
 
-    .loading-spinner {
-      text-align: center;
-
-      i {
-        color: #667eea;
-        margin-bottom: 1rem;
-        display: block;
-      }
-
-      p {
-        font-size: 1.2rem;
-        color: #333;
-        font-weight: 600;
-      }
+    .google-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid $google-grey-100;
+      border-radius: 50%;
+      border-top-color: $google-blue;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 16px;
     }
-  }
 
-  ::ng-deep .p-steps {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-
-    .p-steps-item {
-      flex: 1;
-
-      &.p-highlight {
-        .p-steps-number {
-          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-          color: white;
-          box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
-        }
-
-        .p-steps-title {
-          color: #667eea;
-          font-weight: 600;
-        }
-      }
-
-      .p-steps-number {
-        width: 40px;
-        height: 40px;
-        font-size: 1.2rem;
-        font-weight: 600;
-        border-width: 2px;
-        transition: all 0.3s ease;
-      }
-
-      .p-steps-title {
-        font-size: 0.9rem;
-        margin-top: 0.5rem;
-        transition: all 0.3s ease;
-      }
-
-      &.p-disabled {
-        opacity: 0.5;
-      }
-    }
-  }
-
-  @keyframes sparkle {
-    0%, 100% {
-      transform: scale(1) rotate(0deg);
-    }
-    25% {
-      transform: scale(1.1) rotate(5deg);
-    }
-    50% {
-      transform: scale(1) rotate(0deg);
-    }
-    75% {
-      transform: scale(1.1) rotate(-5deg);
+    p {
+      font-size: 16px;
+      color: #5f6368;
+      font-weight: 500;
     }
   }
 }
 
-@media (max-width: 768px) {
-  .agent-builder-wizard {
-    padding: 1rem;
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
-    .wizard-header {
-      padding: 1.5rem;
+// PRIME NG STEPS OVERRIDE
+::ng-deep {
+  .google-steps.p-steps {
+    .p-steps-item {
+      .p-menuitem-link {
+        background: transparent;
+        border: none;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
 
-      h2 {
-        font-size: 1.5rem;
-      }
-    }
-
-    .wizard-content {
-      padding: 1.5rem;
-      min-height: 400px;
-    }
-
-    ::ng-deep .p-steps {
-      padding: 1rem;
-
-      .p-steps-item {
         .p-steps-number {
-          width: 35px;
-          height: 35px;
-          font-size: 1rem;
+          width: 32px;
+          height: 32px;
+          font-size: 14px;
+          background: $surface-color;
+          border: 2px solid $google-grey-300;
+          color: #5f6368;
+          font-weight: 500;
         }
 
         .p-steps-title {
-          font-size: 0.75rem;
+          color: #5f6368;
+          font-weight: 500;
+          font-size: 12px;
+        }
+      }
+
+      &.p-highlight .p-menuitem-link {
+        .p-steps-number {
+          background: $google-blue;
+          border-color: $google-blue;
+          color: white;
+          box-shadow: 0 2px 5px rgba(26, 115, 232, 0.3);
+        }
+
+        .p-steps-title {
+          color: $google-blue;
+          font-weight: 600;
+        }
+      }
+
+      // Completed steps (custom logic if needed, usually p-highlight handles active)
+      // PrimeNG doesn't have a 'completed' class by default for previous steps easily accessible without custom logic
+      // But we can style standard state vs highlight
+    }
+
+    // Connector lines
+    &:before {
+      border-top-color: $google-grey-300;
+      margin-top: -1px; // Adjust alignment
+    }
+  }
+}
+
+// RESPONSIVE
+@media (max-width: 768px) {
+  .google-wizard-container {
+    .wizard-header {
+      padding: 0 16px;
+      height: 64px;
+
+      .header-content {
+        gap: 16px;
+
+        .title-section p {
+          display: none;
+        }
+      }
+
+      .step-indicator {
+        display: none;
+      }
+    }
+
+    .wizard-main {
+      padding: 16px;
+
+      .wizard-card {
+        border-radius: 16px;
+
+        .stepper-wrapper {
+          padding: 24px 16px 0;
+        }
+
+        .step-content-area {
+          padding: 0 16px 24px;
         }
       }
     }

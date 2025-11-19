@@ -53,11 +53,18 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
     // Carga inicial de productos después de que los componentes hijos estén listos
     // Verifica si ya hay una bodega seleccionada en localStorage al iniciar
     const initialBodega = JSON.parse(localStorage.getItem('warehousePOS')!);
-    const initialBodegaId = initialBodega ? initialBodega.idBodega : undefined;
+    const initialBodegaId = initialBodega?.idBodega;
+
     if (this.productComponent) {
-       this.productComponent.obtenerProductos(initialBodegaId);
+      if (!initialBodegaId) {
+        // No cargar productos si no hay bodega seleccionada
+        console.warn('POS: No se puede cargar productos sin una bodega asignada');
+        // El componente product mostrará un mensaje al usuario
+      } else {
+        this.productComponent.obtenerProductos(initialBodegaId);
+      }
     }
-    
+
     // Initialize POS tour after view is loaded only if not completed
     const completedTours = JSON.parse(localStorage.getItem('katuq_completed_tours') || '[]');
     if (!completedTours.includes('pos')) {

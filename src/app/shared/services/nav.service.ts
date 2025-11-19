@@ -480,6 +480,16 @@ export class NavService implements OnDestroy {
         { path: "dashboards", title: "Dashboard gerencial", type: "link" },
       ],
     },
+    {
+      title: "Agent Builder",
+      icon: "cpu",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "agent-builder/library", title: "Mis Agentes IA", type: "link" },
+        { path: "agent-builder/wizard", title: "Crear Agente", type: "link" },
+      ],
+    },
 
     // CONFIGURACIÓN
     { headTitle1: "Configuración" },

@@ -1,4 +1,5 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { MenuItem } from 'primeng/api';
 import { Agent } from '../../shared/models/agent.model';
 import { ToolCatalogService } from '../../shared/services/tool-catalog.service';
 
@@ -7,13 +8,44 @@ import { ToolCatalogService } from '../../shared/services/tool-catalog.service';
   templateUrl: './agent-card.component.html',
   styleUrls: ['./agent-card.component.scss']
 })
-export class AgentCardComponent {
+export class AgentCardComponent implements OnInit {
   @Input() agent!: Agent;
   @Output() execute = new EventEmitter<Agent>();
   @Output() delete = new EventEmitter<Agent>();
   @Output() toggleStatus = new EventEmitter<Agent>();
+  @Output() edit = new EventEmitter<Agent>();
 
-  constructor(private toolCatalogService: ToolCatalogService) {}
+  menuItems: MenuItem[] = [];
+
+  constructor(private toolCatalogService: ToolCatalogService) { }
+
+  ngOnInit(): void {
+    this.updateMenuItems();
+  }
+
+  updateMenuItems(): void {
+    this.menuItems = [
+      {
+        label: this.agent.status === 'active' ? 'Deactivate' : 'Activate',
+        icon: this.agent.status === 'active' ? 'pi pi-power-off' : 'pi pi-check-circle',
+        command: () => this.onToggleStatus()
+      },
+      {
+        label: 'Edit',
+        icon: 'pi pi-pencil',
+        command: () => this.onEdit()
+      },
+      {
+        separator: true
+      },
+      {
+        label: 'Delete',
+        icon: 'pi pi-trash',
+        styleClass: 'text-red-500',
+        command: () => this.onDelete()
+      }
+    ];
+  }
 
   onExecute(): void {
     this.execute.emit(this.agent);
@@ -25,6 +57,12 @@ export class AgentCardComponent {
 
   onToggleStatus(): void {
     this.toggleStatus.emit(this.agent);
+    // Update menu label after toggle (optimistic update, parent will reload)
+    setTimeout(() => this.updateMenuItems(), 100);
+  }
+
+  onEdit(): void {
+    this.edit.emit(this.agent);
   }
 
   getDepartmentIcon(): string {
@@ -37,20 +75,11 @@ export class AgentCardComponent {
 
   getDepartmentLabel(): string {
     const labels: Record<string, string> = {
-      sales: 'Ventas',
-      logistics: 'Logística',
-      inventory: 'Inventario'
+      sales: 'Sales',
+      logistics: 'Logistics',
+      inventory: 'Inventory'
     };
-    return labels[this.agent.department] || '';
-  }
-
-  getGradientClass(): string {
-    const gradients: Record<string, string> = {
-      sales: 'gradient-sales',
-      logistics: 'gradient-logistics',
-      inventory: 'gradient-inventory'
-    };
-    return gradients[this.agent.department] || 'gradient-default';
+    return labels[this.agent.department] || this.agent.department;
   }
 
   getExecutionsCount(): number {
@@ -63,7 +92,7 @@ export class AgentCardComponent {
 
   getLastExecuted(): string {
     if (!this.agent.metadata?.lastExecuted) {
-      return 'Nunca';
+      return 'Never';
     }
 
     const date = new Date(this.agent.metadata.lastExecuted);
@@ -72,22 +101,13 @@ export class AgentCardComponent {
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
     if (diffDays === 0) {
-      return 'Hoy';
+      return 'Today';
     } else if (diffDays === 1) {
-      return 'Ayer';
+      return 'Yesterday';
     } else if (diffDays < 7) {
-      return `Hace ${diffDays} días`;
+      return `${diffDays} days ago`;
     } else {
-      return date.toLocaleDateString('es-CO');
+      return date.toLocaleDateString();
     }
-  }
-
-  getVisibleTools(): string[] {
-    return this.agent.selectedTools?.slice(0, 3) || [];
-  }
-
-  getRemainingToolsCount(): number {
-    const total = this.agent.selectedTools?.length || 0;
-    return Math.max(0, total - 3);
   }
 }

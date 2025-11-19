@@ -24,8 +24,12 @@ export class StepToolsComponent implements OnInit {
     { label: 'Acceso a Datos', value: 'data-access', icon: 'pi-database' },
     { label: 'Análisis', value: 'analytics', icon: 'pi-chart-bar' },
     { label: 'Automatización', value: 'automation', icon: 'pi-cog' },
-    { label: 'Comunicación', value: 'communication', icon: 'pi-send' }
+    { label: 'Comunicación', value: 'communication', icon: 'pi-send' },
+    { label: 'Colaboración', value: 'collaboration', icon: 'pi-users' }
   ];
+
+  collaborationTools: Tool[] = [];
+  showCollaboration: boolean = false;
 
   ngOnInit(): void {
     this.loadAvailableTools();
@@ -35,6 +39,7 @@ export class StepToolsComponent implements OnInit {
   loadAvailableTools(): void {
     if (!this.agentConfig.department || !this.toolCatalog) {
       this.availableTools = [];
+      this.collaborationTools = [];
       return;
     }
 
@@ -43,6 +48,12 @@ export class StepToolsComponent implements OnInit {
     const generalTools = this.toolCatalog.general || [];
 
     this.availableTools = [...departmentTools, ...generalTools];
+
+    // Load collaboration tools (always available for team communication)
+    const collaborationToolsArray = this.toolCatalog['collaboration'] || [];
+    this.collaborationTools = collaborationToolsArray;
+    this.showCollaboration = collaborationToolsArray.length > 0;
+
     this.filterTools();
   }
 
@@ -51,7 +62,12 @@ export class StepToolsComponent implements OnInit {
 
     // Filter by category
     if (this.selectedCategory && this.selectedCategory !== 'all') {
-      filtered = filtered.filter(tool => tool.category === this.selectedCategory);
+      if (this.selectedCategory === 'collaboration') {
+        // For collaboration category, show only collaboration tools
+        filtered = [...this.collaborationTools];
+      } else {
+        filtered = filtered.filter(tool => tool.category === this.selectedCategory);
+      }
     }
 
     // Filter by search query
@@ -138,5 +154,19 @@ export class StepToolsComponent implements OnInit {
 
   getSelectedCount(): number {
     return this.agentConfig.selectedTools?.length || 0;
+  }
+
+  getCollaborationToolsCount(): number {
+    if (!this.agentConfig.selectedTools) return 0;
+    return this.agentConfig.selectedTools.filter(tool =>
+      this.collaborationTools.some(ct => ct.name === tool)
+    ).length;
+  }
+
+  getRegularToolsCount(): number {
+    if (!this.agentConfig.selectedTools) return 0;
+    return this.agentConfig.selectedTools.filter(tool =>
+      this.availableTools.some(at => at.name === tool)
+    ).length;
   }
 }

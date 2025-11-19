@@ -9,6 +9,7 @@ import { InventarioService } from "../../../shared/services/inventarios/inventar
 import { Table } from "primeng/table";
 import { DatePipe } from "@angular/common";
 import { FormBuilder, FormGroup } from "@angular/forms";
+import { Router } from "@angular/router";
 import { Producto } from "../../productos/model/producto.model";
 import { MessageService } from "primeng/api";
 import * as XLSX from "xlsx";
@@ -45,11 +46,19 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
   // Propiedad para filtros rápidos por tipo
   selectedTipoFilter: "todos" | "ingreso" | "salida" = "todos";
 
+  // Control de modales
+  modalDetalleVisible: boolean = false;
+  modalProductoVisible: boolean = false;
+  modalBodegaVisible: boolean = false;
+  modalOrdenVisible: boolean = false;
+  movimientoParaModal: Movimiento | null = null;
+
   constructor(
     private inventarioService: InventarioService,
     private fb: FormBuilder,
     private datePipe: DatePipe,
     private messageService: MessageService,
+    private router: Router,
   ) {
     // Intentar cargar filtros guardados
     const savedFilters = this.loadSavedFilters();
@@ -147,27 +156,53 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
 
       const filtros = { ...this.formFiltros.value };
 
+      // Crear objeto limpio para el backend
+      const filtrosParaBackend: any = {
+        orderBy: filtros.orderBy,
+        orderDirection: filtros.orderDirection
+      };
+
       // Formatear fechas
       if (filtros.fechaInicio) {
-        filtros.fechaInicio = this.datePipe.transform(
+        filtrosParaBackend.fechaInicio = this.datePipe.transform(
           filtros.fechaInicio,
           "yyyy-MM-dd",
         );
       }
       if (filtros.fechaFin) {
-        filtros.fechaFin = this.datePipe.transform(
+        filtrosParaBackend.fechaFin = this.datePipe.transform(
           filtros.fechaFin,
           "yyyy-MM-dd",
         );
       }
 
-      // Agregar paginación
-      if (event) {
-        filtros.limit = event.rows;
-        filtros.lastDoc = this.lastDoc;
+      // Extraer IDs de los objetos seleccionados
+      if (filtros.producto) {
+        // Intentar diferentes propiedades posibles
+        filtrosParaBackend.productoId = filtros.producto._id
+          || filtros.producto.id
+          || filtros.producto.productId
+          || filtros.producto.cd;
+        console.log('Producto seleccionado:', filtros.producto);
+        console.log('ProductoId extraído:', filtrosParaBackend.productoId);
       }
 
-      this.inventarioService.getHistorialMovimientos(filtros).subscribe({
+      if (filtros.bodega) {
+        // Intentar diferentes propiedades posibles
+        filtrosParaBackend.bodegaId = filtros.bodega.idBodega
+          || filtros.bodega.id
+          || filtros.bodega._id;
+        console.log('Bodega seleccionada:', filtros.bodega);
+        console.log('BodegaId extraído:', filtrosParaBackend.bodegaId);
+      }
+
+      // Agregar paginación
+      if (event) {
+        filtrosParaBackend.limit = event.rows;
+        filtrosParaBackend.lastDoc = this.lastDoc;
+      }
+
+      this.inventarioService.getHistorialMovimientos(filtrosParaBackend).subscribe({
         next: (response: MovimientosResponse) => {
           this.movimientos = response.movimientos || [];
           this.totalRecords = response.pagination.total || 0;
@@ -189,17 +224,40 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
   exportarExcel(): void {
     const filtros = { ...this.formFiltros.value };
 
+    // Crear objeto limpio para el backend
+    const filtrosParaBackend: any = {
+      orderBy: filtros.orderBy,
+      orderDirection: filtros.orderDirection
+    };
+
+    // Formatear fechas
     if (filtros.fechaInicio) {
-      filtros.fechaInicio = this.datePipe.transform(
+      filtrosParaBackend.fechaInicio = this.datePipe.transform(
         filtros.fechaInicio,
         "yyyy-MM-dd",
       );
     }
     if (filtros.fechaFin) {
-      filtros.fechaFin = this.datePipe.transform(
+      filtrosParaBackend.fechaFin = this.datePipe.transform(
         filtros.fechaFin,
         "yyyy-MM-dd",
       );
+    }
+
+    // Extraer IDs de los objetos seleccionados
+    if (filtros.producto) {
+      // Intentar diferentes propiedades posibles
+      filtrosParaBackend.productoId = filtros.producto._id
+        || filtros.producto.id
+        || filtros.producto.productId
+        || filtros.producto.cd;
+    }
+
+    if (filtros.bodega) {
+      // Intentar diferentes propiedades posibles
+      filtrosParaBackend.bodegaId = filtros.bodega.idBodega
+        || filtros.bodega.id
+        || filtros.bodega._id;
     }
 
     // Mostrar mensaje de carga
@@ -210,7 +268,7 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
       life: 3000,
     });
 
-    this.inventarioService.getHistorialMovimientos(filtros).subscribe({
+    this.inventarioService.getHistorialMovimientos(filtrosParaBackend).subscribe({
       next: (response: MovimientosResponse) => {
         const datosExcel = (response.movimientos || []).map((movimiento) => ({
           Fecha: this.datePipe.transform(
@@ -255,35 +313,9 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
   }
 
   verDocumento(movimiento: Movimiento): void {
-    // Seleccionar el movimiento actual
-    this.selectedMovimiento = movimiento;
-
-    // Si estamos en modo detallado, no necesitamos hacer una nueva consulta
-    // ya que el detalle se muestra expandiendo la fila
-    if (this.viewMode === "detailed") {
-      return;
-    }
-
-    this.inventarioService.getMovimientoDetalle(movimiento.id).subscribe({
-      next: (response) => {
-        // Implementar lógica para mostrar detalles, por ejemplo en un modal
-        this.messageService.add({
-          severity: "info",
-          summary: "Detalle del movimiento",
-          detail: `Mostrando detalles del movimiento ID: ${movimiento.id}`,
-          life: 3000,
-        });
-
-        // Aquí podríamos abrir un modal o navegar a otra página con los detalles
-      },
-      error: (error) => {
-        this.messageService.add({
-          severity: "error",
-          summary: "Error",
-          detail: "Error al cargar el detalle del documento",
-        });
-      },
-    });
+    this.selectedMovimiento = null;
+    this.movimientoParaModal = movimiento;
+    this.modalDetalleVisible = true;
   }
 
   getTipoMovimientoClass(tipo: string): string {
@@ -365,35 +397,30 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
 
   verProducto(movimiento: Movimiento): void {
     this.selectedMovimiento = null;
-    this.messageService.add({
-      severity: "info",
-      summary: "Producto",
-      detail: `${movimiento.producto?.crearProducto?.titulo}`,
-      life: 3000,
-    });
-    // Aquí puedes navegar a /inventario/productos/:id si existe esa ruta
+    this.movimientoParaModal = movimiento;
+    this.modalProductoVisible = true;
   }
 
   verBodega(movimiento: Movimiento): void {
     this.selectedMovimiento = null;
-    this.messageService.add({
-      severity: "info",
-      summary: "Bodega",
-      detail: `${movimiento.bodegaDoc?.nombre || movimiento.bodega?.nombre || "N/A"}`,
-      life: 3000,
-    });
-    // Aquí puedes navegar a /inventario/bodegas/:id si existe esa ruta
+    this.movimientoParaModal = movimiento;
+    this.modalBodegaVisible = true;
   }
 
   verOrdenCompra(movimiento: Movimiento): void {
     this.selectedMovimiento = null;
-    this.messageService.add({
-      severity: "info",
-      summary: "Orden de Compra",
-      detail: `#${movimiento.ordenCompraId}`,
-      life: 3000,
-    });
-    // Aquí puedes navegar a /compras/orden/:id si existe esa ruta
+
+    if (movimiento.ordenCompraId) {
+      this.movimientoParaModal = movimiento;
+      this.modalOrdenVisible = true;
+    } else {
+      this.messageService.add({
+        severity: "warn",
+        summary: "Orden no disponible",
+        detail: "No hay orden de compra asociada a este movimiento",
+        life: 3000,
+      });
+    }
   }
 
   exportarMovimiento(movimiento: Movimiento): void {

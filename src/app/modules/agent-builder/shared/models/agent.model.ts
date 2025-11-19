@@ -1,4 +1,4 @@
-export type DepartmentType = 'sales' | 'logistics' | 'inventory';
+export type DepartmentType = 'sales' | 'logistics' | 'inventory' | 'collaboration';
 export type AgentStatus = 'active' | 'inactive';
 export type ModelType = 'gemini-2.5-flash' | 'gemini-2.5-pro';
 
@@ -50,6 +50,7 @@ export interface UpdateAgentRequest extends Partial<CreateAgentRequest> {
 export interface AgentExecutionRequest {
   agentId: string;
   task: string;
+  sessionId?: string;  // Optional session ID for WebSocket streaming
 }
 
 export interface AgentExecutionResponse {

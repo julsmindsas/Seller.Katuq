@@ -89,6 +89,44 @@
     <p>Intenta cambiar los filtros o el término de búsqueda</p>
   </div>
 
+  <!-- Collaboration Section -->
+  <div class="collaboration-section" *ngIf="showCollaboration && selectedCategory === 'all'">
+    <div class="collaboration-header">
+      <div class="header-info">
+        <i class="pi pi-users"></i>
+        <div>
+          <h5>🤝 Herramientas de Colaboración</h5>
+          <p>Permite que tu agente se comunique con otros miembros del equipo</p>
+        </div>
+      </div>
+      <span class="collaboration-badge" *ngIf="getCollaborationToolsCount() > 0">
+        {{ getCollaborationToolsCount() }} seleccionada<span *ngIf="getCollaborationToolsCount() !== 1">s</span>
+      </span>
+    </div>
+
+    <div class="collaboration-tools-grid">
+      <div
+        *ngFor="let tool of collaborationTools"
+        class="collaboration-card"
+        [class.selected]="isToolSelected(tool.name)"
+        (click)="toggleTool(tool.name)">
+
+        <div class="collab-icon">
+          <i [class]="'pi ' + (tool.icon || 'pi-users')"></i>
+        </div>
+
+        <div class="collab-info">
+          <h6>{{ tool.name }}</h6>
+          <small>{{ tool.description }}</small>
+        </div>
+
+        <div class="collab-check" *ngIf="isToolSelected(tool.name)">
+          <i class="pi pi-check"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Validation Warning -->
   <div class="validation-warning" *ngIf="getSelectedCount() === 0">
     <i class="pi pi-exclamation-triangle"></i>

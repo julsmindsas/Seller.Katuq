@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { BaseService } from '../../../../shared/services/base.service';
+import { environment } from '../../../../../environments/environment';
 import {
   Agent,
   AgentExecution,
@@ -15,11 +15,10 @@ import {
 @Injectable({
   providedIn: 'root'
 })
-export class AgentService extends BaseService {
+export class AgentService {
+  private readonly apiUrl = environment.agentBuilderApi;
 
-  constructor(public http: HttpClient) {
-    super(http);
-  }
+  constructor(private http: HttpClient) {}
 
   /**
    * Creates a new agent with specified configuration
@@ -27,7 +26,11 @@ export class AgentService extends BaseService {
    * @returns Observable with created agent data
    */
   createAgent(agent: CreateAgentRequest): Observable<{ success: boolean; agent: Agent; message: string }> {
-    return this.post<{ success: boolean; agent: Agent; message: string }>('/v1/agent-builder/create', agent);
+    const payload = {
+      ...agent,
+      company: this.getCurrentCompany()
+    };
+    return this.http.post<{ success: boolean; agent: Agent; message: string }>(`${this.apiUrl}/v1/agent-builder/create`, payload);
   }
 
   /**
@@ -35,11 +38,21 @@ export class AgentService extends BaseService {
    * @param department Optional department filter
    * @returns Observable with array of agents
    */
-  listAgents(department?: DepartmentType): Observable<{ success: boolean; agents: Agent[] }> {
-    const url = department
-      ? `/v1/agent-builder/list?department=${department}`
-      : '/v1/agent-builder/list';
-    return this.get<{ success: boolean; agents: Agent[] }>(url);
+  listAgents(department?: DepartmentType): Observable<{ success: boolean; agents: Agent[]; count: number }> {
+    const company = this.getCurrentCompany();
+
+    // When using proxy (port 3300), company goes in header
+    const headers = { 'company': company };
+
+    const params: any = {};
+    if (department) {
+      params.department = department;
+    }
+
+    return this.http.get<{ success: boolean; agents: Agent[]; count: number }>(
+      `${this.apiUrl}/v1/agent-builder/list`,
+      { headers, params }
+    );
   }
 
   /**
@@ -48,7 +61,7 @@ export class AgentService extends BaseService {
    * @returns Observable with agent data
    */
   getAgent(agentId: string): Observable<{ success: boolean; agent: Agent }> {
-    return this.get<{ success: boolean; agent: Agent }>(`/v1/agent-builder/agents/${agentId}`);
+    return this.http.get<{ success: boolean; agent: Agent }>(`${this.apiUrl}/v1/agent-builder/agents/${agentId}`);
   }
 
   /**
@@ -58,7 +71,7 @@ export class AgentService extends BaseService {
    * @returns Observable with updated agent
    */
   updateAgent(agentId: string, updates: Partial<UpdateAgentRequest>): Observable<{ success: boolean; agent: Agent }> {
-    return this.put<{ success: boolean; agent: Agent }>(`/v1/agent-builder/agents/${agentId}`, updates);
+    return this.http.put<{ success: boolean; agent: Agent }>(`${this.apiUrl}/v1/agent-builder/agents/${agentId}`, updates);
   }
 
   /**
@@ -67,7 +80,7 @@ export class AgentService extends BaseService {
    * @returns Observable with deletion result
    */
   deleteAgent(agentId: string): Observable<{ success: boolean; message: string }> {
-    return this.delete<{ success: boolean; message: string }>(`/v1/agent-builder/agents/${agentId}`);
+    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/v1/agent-builder/agents/${agentId}`);
   }
 
   /**
@@ -76,7 +89,11 @@ export class AgentService extends BaseService {
    * @returns Observable with execution result
    */
   executeAgent(execution: AgentExecutionRequest): Observable<AgentExecutionResponse> {
-    return this.post<AgentExecutionResponse>('/v1/agent-builder/execute', execution);
+    const payload = {
+      ...execution,
+      company: this.getCurrentCompany()
+    };
+    return this.http.post<AgentExecutionResponse>(`${this.apiUrl}/v1/agent-builder/execute`, payload);
   }
 
   /**
@@ -85,7 +102,10 @@ export class AgentService extends BaseService {
    * @returns Observable with array of executions
    */
   getExecutionHistory(agentId: string): Observable<{ success: boolean; executions: AgentExecution[] }> {
-    return this.get<{ success: boolean; executions: AgentExecution[] }>(`/v1/agent-builder/agents/${agentId}/history`);
+    const company = this.getCurrentCompany();
+    return this.http.get<{ success: boolean; executions: AgentExecution[] }>(
+      `${this.apiUrl}/v1/agent-builder/agents/${agentId}/history?company=${company}`
+    );
   }
 
   /**
@@ -94,6 +114,51 @@ export class AgentService extends BaseService {
    * @returns Observable with updated agent
    */
   toggleAgentStatus(agentId: string): Observable<{ success: boolean; agent: Agent }> {
-    return this.put<{ success: boolean; agent: Agent }>(`/v1/agent-builder/agents/${agentId}/toggle-status`, {});
+    return this.http.put<{ success: boolean; agent: Agent }>(`${this.apiUrl}/v1/agent-builder/agents/${agentId}/toggle-status`, {});
+  }
+
+  /**
+   * Ejecuta el General Manager (Orquestador Maestro) con una consulta general
+   * @param request Execution request with task and optional sessionId
+   * @returns Observable with execution result including conversation log
+   */
+  executeGeneralManager(request: { task: string; sessionId?: string }): Observable<{
+    success: boolean;
+    data: {
+      result: string;
+      conversation?: any[];
+      orchestratorsInvolved?: string[];
+    };
+  }> {
+    return this.http.post<{
+      success: boolean;
+      data: {
+        result: string;
+        conversation?: any[];
+        orchestratorsInvolved?: string[];
+      };
+    }>(`${this.apiUrl}/v1/agent-builder/execute-general`, {
+      company: this.getCurrentCompany(),
+      task: request.task,
+      sessionId: request.sessionId
+    });
+  }
+
+  /**
+   * Gets the current company ID from localStorage
+   * @private
+   * @returns Company ID
+   */
+  private getCurrentCompany(): string {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user.company || 'unknown_company';
+      }
+    } catch (error) {
+      console.error('[AgentService] Error getting current company:', error);
+    }
+    return 'unknown_company';
   }
 }

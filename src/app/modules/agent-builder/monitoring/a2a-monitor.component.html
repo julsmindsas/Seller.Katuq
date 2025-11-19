@@ -1,0 +1,282 @@
+<div class="a2a-monitor">
+  <!-- Header -->
+  <div class="monitor-header">
+    <h2>
+      <i class="pi pi-chart-line"></i>
+      A2A Protocol Monitor
+    </h2>
+    <div class="header-actions">
+      <button pButton type="button" icon="pi pi-refresh"
+              class="p-button-rounded p-button-text"
+              (click)="refresh()"
+              [disabled]="loading"
+              pTooltip="Refresh data"></button>
+      <button pButton type="button" icon="pi pi-cog"
+              class="p-button-rounded p-button-text"
+              pTooltip="Settings"></button>
+    </div>
+  </div>
+
+  <!-- Error Message -->
+  <p-message *ngIf="error" severity="error" [text]="error" styleClass="w-full mb-3"></p-message>
+
+  <!-- Tabs -->
+  <p-tabView [(activeIndex)]="activeTab" styleClass="a2a-tabs">
+
+    <!-- Tab 1: Metrics -->
+    <p-tabPanel header="Metrics" leftIcon="pi pi-chart-bar">
+      <div class="metrics-grid">
+        <!-- Total Requests -->
+        <div class="metric-card">
+          <div class="metric-header">
+            <i class="pi pi-send"></i>
+            <span>Total Requests</span>
+          </div>
+          <div class="metric-value">{{ metrics.totalRequests }}</div>
+          <div class="metric-footer">
+            <span class="success">{{ metrics.successfulRequests }} success</span>
+            <span class="error">{{ metrics.failedRequests }} failed</span>
+          </div>
+        </div>
+
+        <!-- Success Rate -->
+        <div class="metric-card">
+          <div class="metric-header">
+            <i class="pi pi-check-circle"></i>
+            <span>Success Rate</span>
+          </div>
+          <div class="metric-value">{{ successRate }}%</div>
+          <div class="metric-footer">
+            <p-progressBar [value]="successRate" [showValue]="false"></p-progressBar>
+          </div>
+        </div>
+
+        <!-- Average Response Time -->
+        <div class="metric-card">
+          <div class="metric-header">
+            <i class="pi pi-clock"></i>
+            <span>Avg Response Time</span>
+          </div>
+          <div class="metric-value">{{ metrics.averageResponseTime }}ms</div>
+          <div class="metric-footer">
+            <span [class.fast]="metrics.averageResponseTime < 1000"
+                  [class.slow]="metrics.averageResponseTime >= 1000">
+              {{ metrics.averageResponseTime < 1000 ? 'Fast' : 'Slow' }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Active Tasks -->
+        <div class="metric-card">
+          <div class="metric-header">
+            <i class="pi pi-list"></i>
+            <span>Active Tasks</span>
+          </div>
+          <div class="metric-value">{{ metrics.activeTasks }}</div>
+          <div class="metric-footer">
+            <span>{{ metrics.a2aCalls }} A2A calls</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row mt-3">
+        <button pButton label="Reset Metrics" icon="pi pi-trash"
+                class="p-button-danger p-button-sm"
+                (click)="clearMetrics()"></button>
+        <button pButton label="Test RPC Call" icon="pi pi-bolt"
+                class="p-button-success p-button-sm"
+                (click)="testRpcCall()"></button>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab 2: Call Logs -->
+    <p-tabPanel header="Call Logs" leftIcon="pi pi-list">
+      <div class="logs-header">
+        <div class="filter-group">
+          <label>Filter:</label>
+          <p-selectButton [options]="[
+            {label: 'All', value: 'all'},
+            {label: 'Success', value: 'success'},
+            {label: 'Error', value: 'error'}
+          ]" [(ngModel)]="logFilter" optionLabel="label" optionValue="value"></p-selectButton>
+        </div>
+        <button pButton label="Clear Logs" icon="pi pi-trash"
+                class="p-button-text p-button-sm"
+                (click)="clearLogs()"></button>
+      </div>
+
+      <div class="logs-container" *ngIf="filteredLogs.length > 0; else noLogs">
+        <div class="log-entry" *ngFor="let log of filteredLogs">
+          <div class="log-header">
+            <span class="log-time">{{ formatTimestamp(log.timestamp) }}</span>
+            <span class="log-method">{{ log.method }}</span>
+            <span class="badge" [ngClass]="getStatusBadgeClass(log.status)">
+              {{ log.status }}
+            </span>
+            <span class="log-duration">{{ formatDuration(log.duration) }}</span>
+          </div>
+          <div class="log-body">
+            <div class="log-section" *ngIf="log.params">
+              <strong>Params:</strong>
+              <pre>{{ formatJson(log.params) }}</pre>
+            </div>
+            <div class="log-section" *ngIf="log.result">
+              <strong>Result:</strong>
+              <pre>{{ formatJson(log.result) }}</pre>
+            </div>
+            <div class="log-section error" *ngIf="log.error">
+              <strong>Error:</strong>
+              <pre>{{ formatJson(log.error) }}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noLogs>
+        <div class="empty-state">
+          <i class="pi pi-inbox"></i>
+          <p>No call logs yet</p>
+          <small>Make some RPC calls to see logs here</small>
+        </div>
+      </ng-template>
+    </p-tabPanel>
+
+    <!-- Tab 3: Events -->
+    <p-tabPanel header="Events" leftIcon="pi pi-bell">
+      <div class="events-header">
+        <div class="filter-group">
+          <label>Filter:</label>
+          <p-selectButton [options]="[
+            {label: 'All', value: 'all'},
+            {label: 'Calls', value: 'calls'},
+            {label: 'Tools', value: 'tools'}
+          ]" [(ngModel)]="eventFilter" optionLabel="label" optionValue="value"></p-selectButton>
+        </div>
+        <button pButton label="Clear Events" icon="pi pi-trash"
+                class="p-button-text p-button-sm"
+                (click)="clearEvents()"></button>
+      </div>
+
+      <div class="events-container" *ngIf="filteredEvents.length > 0; else noEvents">
+        <div class="event-entry" *ngFor="let event of filteredEvents">
+          <i [class]="getEventTypeIcon(event.type)"></i>
+          <div class="event-content">
+            <div class="event-header">
+              <span class="event-type">{{ event.type }}</span>
+              <span class="event-time">{{ formatTimestamp(event.timestamp) }}</span>
+            </div>
+            <div class="event-payload">
+              <pre>{{ formatJson(event.payload) }}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noEvents>
+        <div class="empty-state">
+          <i class="pi pi-bell-slash"></i>
+          <p>No events yet</p>
+          <small>Events will appear here as they occur</small>
+        </div>
+      </ng-template>
+    </p-tabPanel>
+
+    <!-- Tab 4: Agent Cards -->
+    <p-tabPanel header="Agent Cards" leftIcon="pi pi-id-card">
+      <div *ngIf="agentCardRegistry; else loadingCards">
+        <div class="cards-header">
+          <h3>Agent Card Registry</h3>
+          <div class="registry-info">
+            <span><strong>Version:</strong> {{ agentCardRegistry.version }}</span>
+            <span><strong>Protocol:</strong> {{ agentCardRegistry.protocol }}</span>
+            <span><strong>Orchestrators:</strong> {{ agentCardRegistry.metadata.totalOrchestrators }}</span>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="agent-card" *ngFor="let orch of [
+            {key: 'sales', card: agentCardRegistry.orchestrators.sales},
+            {key: 'inventory', card: agentCardRegistry.orchestrators.inventory},
+            {key: 'logistics', card: agentCardRegistry.orchestrators.logistics},
+            {key: 'generalManager', card: agentCardRegistry.orchestrators.generalManager}
+          ]">
+            <div class="card-header" [style.borderLeftColor]="getDepartmentColor(orch.card.metadata?.department)">
+              <i [class]="getOrchestratorIcon(orch.card.metadata?.department)"></i>
+              <h4>{{ orch.card.name }}</h4>
+            </div>
+            <div class="card-body">
+              <p class="description">{{ orch.card.description }}</p>
+
+              <div class="card-section">
+                <strong>Methods ({{ orch.card.capabilities.methods.length }}):</strong>
+                <ul>
+                  <li *ngFor="let method of orch.card.capabilities.methods">
+                    <code>{{ method.name }}</code>
+                    <span class="async-badge" *ngIf="method.async">async</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div class="card-section" *ngIf="orch.card.capabilities.tools && orch.card.capabilities.tools.length > 0">
+                <strong>Tools ({{ orch.card.capabilities.tools.length }}):</strong>
+                <div class="tools-list">
+                  <span class="tool-badge" *ngFor="let tool of orch.card.capabilities.tools">
+                    {{ tool.name }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="card-section">
+                <strong>Capabilities:</strong>
+                <div class="capabilities">
+                  <span class="cap-badge" *ngIf="orch.card.capabilities.asyncSupport">Async</span>
+                  <span class="cap-badge" *ngIf="orch.card.capabilities.batchSupport">Batch</span>
+                  <span class="cap-badge">{{ orch.card.capabilities.supportedProtocols.join(', ') }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #loadingCards>
+        <div class="loading-state">
+          <p-progressSpinner></p-progressSpinner>
+          <p>Loading Agent Card Registry...</p>
+        </div>
+      </ng-template>
+    </p-tabPanel>
+
+    <!-- Tab 5: Orchestrators -->
+    <p-tabPanel header="Orchestrators" leftIcon="pi pi-sitemap">
+      <div *ngIf="!loading && orchestrators.length > 0; else loadingOrch">
+        <div class="orchestrators-grid">
+          <div class="orchestrator-card" *ngFor="let orch of orchestrators">
+            <div class="orch-icon" [style.background]="getDepartmentColor(orch.department)">
+              <i [class]="getOrchestratorIcon(orch.department)"></i>
+            </div>
+            <div class="orch-info">
+              <h4>{{ orch.name }}</h4>
+              <p class="orch-department">{{ orch.department }}</p>
+              <span class="badge" [ngClass]="getStatusBadgeClass(orch.status)">
+                {{ orch.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #loadingOrch>
+        <div class="loading-state">
+          <p-progressSpinner *ngIf="loading"></p-progressSpinner>
+          <div *ngIf="!loading && orchestrators.length === 0" class="empty-state">
+            <i class="pi pi-inbox"></i>
+            <p>No orchestrators found</p>
+            <button pButton label="Refresh" icon="pi pi-refresh" (click)="loadOrchestrators()"></button>
+          </div>
+        </div>
+      </ng-template>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>

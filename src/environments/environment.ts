@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.11.12.4 - 12 de Noviembre 2025 (Beta)",
+  version: "2025.11.17.2 - 17 de Noviembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -13,10 +13,15 @@ export const environment = {
   },
   urlPermitidas:
     "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
-  urlApi: "http://localhost:3300", // API Local,
+  urlApi: "http://localhost:3300", // API Local - Backend Principal Katuq,
   //urlApi: "https://back.katuq.com",
   //urlApi: "https://us-central1-katuq-new.cloudfunctions.net/api", // API GCP
   //urlApi: "https://api.katuq.com", // API AWS
+
+  // Agent Builder Backend (KAI) - A través del backend principal (proxy)
+  agentBuilderApi: "http://localhost:3300", // REST API a través del backend principal
+  agentBuilderWs: "ws://localhost:3892/ws", // WebSocket directo (no puede usar proxy HTTP)
+
   wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
   voiceWsUrl: "wss://api.katuq.com/voice-websocket",
   wompi: {
@@ -44,7 +49,7 @@ export const environment = {
     },
   },
   // GEMINI_API_KEY is injected at runtime via window['GEMINI_API_KEY']
-  GEMINI_API_KEY: "AIzaSyC5vOSF1nCIm3_gIEOmiu8owhMcc3BpJyY", //s(typeof window !== 'undefined' && window['GEMINI_API_KEY']) ? window['GEMINI_API_KEY'] : '',
+  GEMINI_API_KEY: "AIzaSyDKYiPW1w9TBrCzSgTtMs52jJna_LqCI2o_", //s(typeof window !== 'undefined' && window['GEMINI_API_KEY']) ? window['GEMINI_API_KEY'] : '',
 
   // 🎯 VIDEO AGENT CONFIGURATION
   videoAgent: {

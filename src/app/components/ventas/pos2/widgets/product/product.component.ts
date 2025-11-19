@@ -135,30 +135,18 @@ export class ProductComponent implements OnInit {
   }
 
   obtenerProductos(bodegaId?: string) {
-    if (bodegaId) {
-      this.obtenerProductosPorBodega(bodegaId);
-    } else {
-      this.maestroService.getAllProductsPagination(100, 1).subscribe(async (r: any) => {
-        if (r.products && (r.products as any[]).length > 0) {
-          const productosPorEmpresa = r.products;
-          let data = productosPorEmpresa;
-          this.products = data.map(product => ({
-            ...product,
-            cantidad: 1,
-            imageLoaded: false
-          }));
-          this.filteredProduct = this.products;
-          this.updatePagination();
-          // Precargar imágenes de la primera página
-          await this.precargarImagenes(this.paginatedProducts);
-        } else {
-          this.products = [];
-          this.filteredProduct = [];
-          this.paginatedProducts = [];
-        }
-        console.log("🚀 Productos generales cargados:", r)
-      });
+    // Validar que hay bodega asignada
+    if (!bodegaId) {
+      console.warn('POS Product: No se pueden cargar productos sin bodega asignada');
+      // Limpiar productos para mostrar mensaje al usuario
+      this.products = [];
+      this.filteredProduct = [];
+      this.paginatedProducts = [];
+      return;
     }
+
+    // Cargar productos de la bodega específica
+    this.obtenerProductosPorBodega(bodegaId);
   }
 
   obtenerProductosPorBodega(bodegaId: string) {

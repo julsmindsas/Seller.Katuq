@@ -11,47 +11,34 @@
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- Header con filtros -->
-                <div class="card-header bg-light">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h4 class="mb-0">
-                                        <i class="icofont icofont-box text-primary me-2"></i>
-                                        {{ 'Inventario por Bodegas' | translate }}
-                                    </h4>
-                                    <p class="text-muted mb-0 mt-1">
-                                        <small>
-                                            <i class="fa fa-info-circle me-1"></i>
-                                            {{ 'Gestiona el inventario de todas tus bodegas' | translate }}
-                                        </small>
-                                    </p>
-                                </div>
-                                <div>
-                                    <button class="btn btn-info btn-sm me-2" (click)="startInventarioTour()" title="Iniciar tour guiado de inventarios">
-                                        <i class="fa fa-route me-1"></i>{{ 'Tour Guiado' | translate }}
-                                    </button>
-                                </div>
-                            </div>
+                <!-- Header moderno estilo Katuq -->
+                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center flex-wrap">
+                    <div class="mb-2 mb-md-0">
+                        <h5 class="mb-1 fw-bold text-primary">
+                            <i class="pi pi-warehouse me-2"></i>{{ 'Inventario por Bodegas' | translate }}
+                        </h5>
+                        <p class="text-muted small mb-0">
+                            {{ 'Consulta y gestiona el inventario de todas tus bodegas en tiempo real' | translate }}
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="form-group mb-0" style="min-width: 250px;" data-tour="nuevo-producto">
+                            <select class="form-select form-select-sm" [(ngModel)]="bodegaSeleccionada"
+                                (change)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)"
+                                [ngbTooltip]="'Selecciona una bodega para ver su inventario' | translate"
+                                placement="auto">
+                                <option [ngValue]="null" disabled selected>{{ 'Selecciona una bodega' | translate }}</option>
+                                <option *ngFor="let bodega of bodegas" [ngValue]="bodega">
+                                    {{ bodega.nombre }} <small class="text-muted">({{ bodega.tipo }})</small>
+                                </option>
+                            </select>
                         </div>
-                        <div class="col-md-6">
-                            <div class="d-flex justify-content-md-end mt-3 mt-md-0">
-                                <div class="form-group flex-grow-1 me-3" style="max-width: 300px;" data-tour="nuevo-producto">
-                                    <select class="form-select" [(ngModel)]="bodegaSeleccionada"
-                                        (change)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)"
-                                        [ngbTooltip]="'Selecciona una bodega para ver su inventario' | translate"
-                                        placement="auto">
-                                        <option [ngValue]="null" disabled selected>{{ 'Selecciona una bodega' |
-                                            translate }}</option>
-                                        <option *ngFor="let bodega of bodegas" [ngValue]="bodega">
-                                            {{ bodega.nombre }}
-                                            <small class="text-muted">({{ bodega.tipo }})</small>
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                        <button pButton type="button"
+                                icon="pi pi-refresh"
+                                class="p-button-secondary p-button-sm"
+                                (click)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)"
+                                [disabled]="!bodegaSeleccionada"
+                                pTooltip="Actualizar datos"></button>
                     </div>
                 </div>
 
@@ -62,7 +49,7 @@
                             <!-- Título de la sección -->
                             <div class="col-12 mb-3">
                                 <h5 class="border-bottom pb-2">
-                                    <i class="fa fa-filter text-primary me-2"></i>
+                                    <i class="pi pi-filter text-primary me-2"></i>
                                     {{ 'Filtros y ordenamiento' | translate }}
                                 </h5>
                             </div>
@@ -71,7 +58,7 @@
                             <div class="col-md-12 mb-4" data-tour="search-productos">
                                 <div class="input-group">
                                     <span class="input-group-text bg-primary text-white">
-                                        <i class="fa fa-search"></i>
+                                        <i class="pi pi-search"></i>
                                     </span>
                                     <input type="text" class="form-control"
                                         placeholder="{{ 'Buscar por nombre o referencia...' | translate }}"
@@ -175,12 +162,13 @@
                             <!-- Botones de acción -->
                             <div class="col-md-3 mb-3 d-flex align-items-end">
                                 <div class="d-flex gap-2 w-100 justify-content-end">
-                                    <button class="btn btn-outline-secondary btn-sm" (click)="limpiarFiltros()"
-                                        [disabled]="!bodegaSeleccionada || rows.length === 0"
-                                        [ngbTooltip]="'Limpiar todos los filtros' | translate">
-                                        <i class="fa fa-refresh me-1"></i>
-                                        {{ 'Limpiar' | translate }}
-                                    </button>
+                                    <button pButton pRipple type="button"
+                                            icon="pi pi-filter-slash"
+                                            [label]="'Limpiar' | translate"
+                                            class="p-button-outlined p-button-secondary p-button-sm"
+                                            (click)="limpiarFiltros()"
+                                            [disabled]="!bodegaSeleccionada || rows.length === 0"
+                                            pTooltip="Limpiar todos los filtros"></button>
                                 </div>
                             </div>
                         </div>
@@ -232,7 +220,7 @@
                                             style="width: 50px; height: 50px; object-fit: cover;"
                                             [ngbTooltip]="row.crearProducto?.titulo">
                                         <i *ngIf="!row.crearProducto?.imagenesPrincipales?.length"
-                                            class="fa fa-image text-muted fa-2x"></i>
+                                            class="pi pi-image text-muted" style="font-size: 2rem;"></i>
                                     </td>
                                     <td style="width: 120px; min-width: 120px;" [frozen]="true">
                                         <span class="badge bg-light text-dark">
@@ -262,9 +250,9 @@
                                     </td>
                                     <td style="width: 160px; min-width: 160px;">
                                         <div class="d-flex align-items-center">
-                                            <i class="fa" [ngClass]="{
-                                                'fa-building text-primary': row.bodegaNombre && getTipoBodega(row.bodegaId) === 'Física',
-                                                'fa-globe text-info': row.bodegaNombre && getTipoBodega(row.bodegaId) === 'Transaccional'
+                                            <i class="pi" [ngClass]="{
+                                                'pi-building text-primary': row.bodegaNombre && getTipoBodega(row.bodegaId) === 'Física',
+                                                'pi-globe text-info': row.bodegaNombre && getTipoBodega(row.bodegaId) === 'Transaccional'
                                             }" [ngbTooltip]="getTipoBodega(row.bodegaId)"></i>
                                             <span class="ms-2">{{ row.bodegaNombre || getNombreBodega(row.bodegaId)
                                                 }}</span>
@@ -278,7 +266,7 @@
                                 <tr>
                                     <td colspan="7">
                                         <div class="text-center p-5">
-                                            <i class="fa fa-warehouse fa-3x text-muted mb-3"></i>
+                                            <i class="pi pi-inbox text-muted mb-3" style="font-size: 3rem;"></i>
                                             <h5 class="mb-3">
                                                 {{ (bodegaSeleccionada ?
                                                 (rowsFiltradas.length === 0 && rows.length > 0 ? 'No hay productos que
@@ -294,16 +282,18 @@
                                                 translate }}
                                             </p>
                                             <button *ngIf="rowsFiltradas.length === 0 && rows.length > 0"
-                                                class="btn btn-outline-secondary mt-2" (click)="limpiarFiltros()">
-                                                <i class="fa fa-refresh me-1"></i>
-                                                {{ 'Limpiar filtros' | translate }}
-                                            </button>
-                                            <button *ngIf="!bodegaSeleccionada" class="btn btn-primary mt-3"
+                                                pButton pRipple type="button"
+                                                icon="pi pi-filter-slash"
+                                                [label]="'Limpiar filtros' | translate"
+                                                class="p-button-outlined p-button-secondary mt-2"
+                                                (click)="limpiarFiltros()"></button>
+                                            <button *ngIf="!bodegaSeleccionada"
+                                                pButton pRipple type="button"
+                                                icon="pi pi-warehouse"
+                                                [label]="'Seleccionar una bodega' | translate"
+                                                class="p-button-primary mt-3"
                                                 [disabled]="bodegas.length === 0"
-                                                (click)="$event.preventDefault(); document.querySelector('.form-select').focus()">
-                                                <i class="fa fa-warehouse me-1"></i>
-                                                {{ 'Seleccionar una bodega' | translate }}
-                                            </button>
+                                                (click)="$event.preventDefault(); document.querySelector('.form-select').focus()"></button>
                                         </div>
                                     </td>
                                 </tr>
@@ -338,16 +328,17 @@
                     <!-- Footer con acciones principales -->
                     <div class="p-3 bg-light border-top d-flex justify-content-between align-items-center">
                         <div class="d-flex flex-wrap gap-2">
-                            <button class="btn btn-primary" (click)="exportToExcel()"
-                                [disabled]="!bodegaSeleccionada || rows.length === 0"
-                                [ngbTooltip]="'Exportar inventario a Excel' | translate">
-                                <i class="icofont icofont-file-excel me-1"></i>
-                                {{ 'Exportar a Excel' | translate }}
-                            </button>
+                            <button pButton pRipple type="button"
+                                    icon="pi pi-file-excel"
+                                    [label]="'Exportar a Excel' | translate"
+                                    class="p-button-success"
+                                    (click)="exportToExcel()"
+                                    [disabled]="!bodegaSeleccionada || rows.length === 0"
+                                    pTooltip="Exportar inventario a Excel"></button>
                         </div>
                         <div class="text-muted d-flex align-items-center">
                             <span class="badge bg-light text-dark border me-2">
-                                <i class="fa fa-cubes me-1"></i>
+                                <i class="pi pi-box me-1"></i>
                                 <strong>{{ rowsFiltradas.length }}</strong>
                             </span>
                             <span>{{ 'productos' | translate }}</span>

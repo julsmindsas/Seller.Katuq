@@ -1217,7 +1217,7 @@ export class PaymentService extends BaseService {
             <td colspan="4" style="padding: 0;">
         `;
 
-        // Preferencias compactas con precios
+        // 1️⃣ PREFERENCIAS - compactas con precios
         if (configuracion?.preferencias && configuracion.preferencias.length > 0) {
           carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
           carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">Preferencias:</div>`;
@@ -1252,7 +1252,7 @@ export class PaymentService extends BaseService {
           carritoHtml += `</div>`;
         }
 
-        // ✅ NUEVO: Notas de Producción debajo de Preferencias
+        // 2️⃣ NOTAS DE PRODUCCIÓN - debajo de Preferencias (item.notaProduccion)
         if (item?.notaProduccion && item.notaProduccion.length > 0) {
           carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999; background-color: #FFF9E6;">`;
           carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">📝 Notas de Producción:</div>`;
@@ -1274,7 +1274,88 @@ export class PaymentService extends BaseService {
           carritoHtml += `</div>`;
         }
 
-        // Adiciones compactas con precios
+        // 2️⃣ NOTAS DE PRODUCCIÓN - del pedido (pedido.notasPedido.notasProduccion)
+        const notasProducto = (pedido.notasPedido?.notasProduccion ?? []).filter((nota) => {
+          const productoNota = nota?.producto || "General";
+          return productoNota === tituloProducto || productoNota.includes(tituloProducto) || tituloProducto.includes(productoNota);
+        });
+
+        if (notasProducto.length > 0) {
+          carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999; background-color: #FFF9E6;">`;
+          carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">📝 Notas de Producción:</div>`;
+
+          notasProducto.forEach((nota) => {
+            const fechaNota = nota.fecha ? this.customFormatDateHour(nota.fecha) : this.customFormatDateHour(new Date().toISOString());
+            const descripcion = nota.descripcion || nota.nota || "";
+
+            if (descripcion && descripcion.trim() !== "") {
+              carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px; margin-top: 2px; padding: 2px 0;">`;
+              carritoHtml += `<div style="font-weight: bold; color: #000; margin-bottom: 1px;">${fechaNota}</div>`;
+              carritoHtml += `<div>${descripcion}</div>`;
+
+              // Archivos adjuntos en notas
+              if (nota.archivos && nota.archivos.length > 0) {
+                carritoHtml += `<div style="margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px;">`;
+                nota.archivos.forEach((archivo) => {
+                  if (archivo.tipo === 'imagen') {
+                    carritoHtml += `<img src="${archivo.url}" onerror="this.src='assets/images/default-product.png'" alt="${archivo.nombre}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 3px; border: 1px solid #dee2e6;">`;
+                  } else if (archivo.tipo === 'video') {
+                    carritoHtml += `<video src="${archivo.url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 3px; border: 1px solid #dee2e6;"></video>`;
+                  } else {
+                    carritoHtml += `<div style="width: 40px; height: 40px; background: #e9ecef; border-radius: 3px; border: 1px solid #dee2e6; display: inline-flex; align-items: center; justify-content: center; font-size: 16px;">📄</div>`;
+                  }
+                });
+                carritoHtml += `</div>`;
+              }
+
+              carritoHtml += `</div>`;
+            }
+          });
+
+          carritoHtml += `</div>`;
+        }
+
+        // 3️⃣ OPCIONES DE PERSONALIZACIÓN - Datos de Entrega (Ocasión, Género, Observaciones)
+        if (configuracion?.datosEntrega) {
+          const datosEntrega = configuracion.datosEntrega;
+          const ocasionId = datosEntrega.ocasion;
+          let generoId: any = datosEntrega.genero;
+          if (Array.isArray(datosEntrega.genero)) {
+            generoId = datosEntrega.genero[0];
+          }
+
+          const ocasionObj = this.maestros.ocasiones?.find((o) => o.id == ocasionId);
+          const generoObj = this.maestros.generos?.find((g) => g.id == generoId);
+          const ocasionName = ocasionObj?.name ?? null;
+          const generoName = generoObj?.name ?? null;
+          const observaciones = datosEntrega.observaciones ?? "";
+
+          if (ocasionName || generoName || observaciones) {
+            carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
+            carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">Opciones de Personalización:</div>`;
+            if (ocasionName) carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px;">• Ocasión: ${ocasionName}</div>`;
+            if (generoName) carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px;">• Género: ${generoName}</div>`;
+            if (observaciones) carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px;">• Obs: ${observaciones}</div>`;
+            carritoHtml += `</div>`;
+          }
+        }
+
+        // 4️⃣ TARJETA - Tarjetas de regalo
+        if (configuracion?.tarjetas && configuracion.tarjetas.length > 0) {
+          configuracion.tarjetas.forEach((tarjeta: Tarjeta) => {
+            if (tarjeta.mensaje) {
+              tarjetaIndex++;
+              carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
+              carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">🎁 Tarjeta #${tarjetaIndex}:</div>`;
+              carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px;">${tarjeta.mensaje}</div>`;
+              if (tarjeta.de) carritoHtml += `<div style="font-size: 8px; color: #666; margin-left: 4px; margin-top: 1px;">De: ${tarjeta.de}</div>`;
+              if (tarjeta.para) carritoHtml += `<div style="font-size: 8px; color: #666; margin-left: 4px;">Para: ${tarjeta.para}</div>`;
+              carritoHtml += `</div>`;
+            }
+          });
+        }
+
+        // Adiciones compactas con precios (se mantienen después de tarjetas)
         if (configuracion?.adiciones && configuracion.adiciones.length > 0) {
           carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
           carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">Adiciones:</div>`;
@@ -1308,87 +1389,6 @@ export class PaymentService extends BaseService {
                 </tr>
               </table>`;
           });
-          carritoHtml += `</div>`;
-        }
-
-        // Datos de Entrega compactos
-        if (configuracion?.datosEntrega) {
-          const datosEntrega = configuracion.datosEntrega;
-          const ocasionId = datosEntrega.ocasion;
-          let generoId: any = datosEntrega.genero;
-          if (Array.isArray(datosEntrega.genero)) {
-            generoId = datosEntrega.genero[0];
-          }
-
-          const ocasionObj = this.maestros.ocasiones?.find((o) => o.id == ocasionId);
-          const generoObj = this.maestros.generos?.find((g) => g.id == generoId);
-          const ocasionName = ocasionObj?.name ?? null;
-          const generoName = generoObj?.name ?? null;
-          const observaciones = datosEntrega.observaciones ?? "";
-
-          if (ocasionName || generoName || observaciones) {
-            carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
-            carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">Detalles de Entrega:</div>`;
-            if (ocasionName) carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px;">• Ocasión: ${ocasionName}</div>`;
-            if (generoName) carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px;">• Género: ${generoName}</div>`;
-            if (observaciones) carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px;">• Obs: ${observaciones}</div>`;
-            carritoHtml += `</div>`;
-          }
-        }
-
-        // Tarjetas de regalo compactas
-        if (configuracion?.tarjetas && configuracion.tarjetas.length > 0) {
-          configuracion.tarjetas.forEach((tarjeta: Tarjeta) => {
-            if (tarjeta.mensaje) {
-              tarjetaIndex++;
-              carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
-              carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">Tarjeta #${tarjetaIndex}:</div>`;
-              carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px;">${tarjeta.mensaje}</div>`;
-              if (tarjeta.de) carritoHtml += `<div style="font-size: 8px; color: #666; margin-left: 4px; margin-top: 1px;">De: ${tarjeta.de}</div>`;
-              if (tarjeta.para) carritoHtml += `<div style="font-size: 8px; color: #666; margin-left: 4px;">Para: ${tarjeta.para}</div>`;
-              carritoHtml += `</div>`;
-            }
-          });
-        }
-
-        // Notas de Producción para este producto específico
-        const notasProducto = (pedido.notasPedido?.notasProduccion ?? []).filter((nota) => {
-          const productoNota = nota?.producto || "General";
-          return productoNota === tituloProducto || productoNota.includes(tituloProducto) || tituloProducto.includes(productoNota);
-        });
-
-        if (notasProducto.length > 0) {
-          carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
-          carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">Notas de Producción:</div>`;
-
-          notasProducto.forEach((nota) => {
-            const fechaNota = nota.fecha ? this.customFormatDateHour(nota.fecha) : this.customFormatDateHour(new Date().toISOString());
-            const descripcion = nota.descripcion || nota.nota || "";
-
-            if (descripcion && descripcion.trim() !== "") {
-              carritoHtml += `<div style="font-size: 9px; color: #333; margin-left: 4px; margin-top: 2px; padding: 2px 0;">`;
-              carritoHtml += `<div style="font-weight: bold; color: #000; margin-bottom: 1px;">${fechaNota}</div>`;
-              carritoHtml += `<div>${descripcion}</div>`;
-
-              // Archivos adjuntos en notas
-              if (nota.archivos && nota.archivos.length > 0) {
-                carritoHtml += `<div style="margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px;">`;
-                nota.archivos.forEach((archivo) => {
-                  if (archivo.tipo === 'imagen') {
-                    carritoHtml += `<img src="${archivo.url}" onerror="this.src='assets/images/default-product.png'" alt="${archivo.nombre}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 3px; border: 1px solid #dee2e6;">`;
-                  } else if (archivo.tipo === 'video') {
-                    carritoHtml += `<video src="${archivo.url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 3px; border: 1px solid #dee2e6;"></video>`;
-                  } else {
-                    carritoHtml += `<div style="width: 40px; height: 40px; background: #e9ecef; border-radius: 3px; border: 1px solid #dee2e6; display: inline-flex; align-items: center; justify-content: center; font-size: 16px;">📄</div>`;
-                  }
-                });
-                carritoHtml += `</div>`;
-              }
-
-              carritoHtml += `</div>`;
-            }
-          });
-
           carritoHtml += `</div>`;
         }
 

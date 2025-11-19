@@ -113,6 +113,18 @@ const routes: Routes = [
       }
     ]
   },
+  // Agent Builder - AI Agent Creation and Management
+  {
+    path: 'agent-builder',
+    component: ContentComponent,
+    canActivate: [AdminGuard, SubscriptionGuard],
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./modules/agent-builder/agent-builder.module').then(m => m.AgentBuilderModule)
+      }
+    ]
+  },
   // Service Scheduling
   {
     path: 'servicios/agendamiento',

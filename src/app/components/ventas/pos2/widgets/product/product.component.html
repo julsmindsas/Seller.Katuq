@@ -31,6 +31,16 @@
         </div>
     </div>
     <div class="card-body main-our-product">
+        <!-- Mensaje cuando no hay bodega seleccionada -->
+        <div class="alert alert-warning d-flex align-items-center" role="alert"
+             *ngIf="products.length === 0 && paginatedProducts.length === 0">
+            <i class="fa fa-warehouse fa-2x me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">Bodega requerida</h5>
+                <p class="mb-0">Por favor selecciona una bodega en la parte superior para ver los productos disponibles y sus cantidades en stock.</p>
+            </div>
+        </div>
+
         <!-- Productos Paginados -->
         <div class="row g-3">
             <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4"

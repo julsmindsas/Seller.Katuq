@@ -1,19 +1,23 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AgentBuilderComponent } from './agent-builder.component';
+import { GeneralChatComponent } from './general-chat/general-chat.component';
 import { WizardComponent } from './wizard/wizard.component';
 import { LibraryComponent } from './library/library.component';
-import { ExecutorComponent } from './executor/executor.component';
+
+import { A2aMonitorComponent } from './monitoring/a2a-monitor.component';
 
 const routes: Routes = [
   {
     path: '',
     component: AgentBuilderComponent,
     children: [
-      { path: '', redirectTo: 'library', pathMatch: 'full' },
+      { path: '', redirectTo: 'general-chat', pathMatch: 'full' },
+      { path: 'general-chat', component: GeneralChatComponent },
       { path: 'library', component: LibraryComponent },
       { path: 'wizard', component: WizardComponent },
-      { path: 'executor/:id', component: ExecutorComponent }
+
+      { path: 'monitor', component: A2aMonitorComponent }
     ]
   }
 ];

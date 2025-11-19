@@ -223,7 +223,8 @@ export class ToolCatalogService extends BaseService {
     const icons: Record<DepartmentType, string> = {
       sales: 'pi pi-shopping-cart',
       logistics: 'pi pi-truck',
-      inventory: 'pi pi-box'
+      inventory: 'pi pi-box',
+      collaboration: 'pi pi-users'
     };
     return icons[department] || 'pi pi-cog';
   }
@@ -237,7 +238,8 @@ export class ToolCatalogService extends BaseService {
     const colors: Record<DepartmentType, string> = {
       sales: '#f093fb',
       logistics: '#4facfe',
-      inventory: '#43e97b'
+      inventory: '#43e97b',
+      collaboration: '#4caf50'
     };
     return colors[department] || '#667eea';
   }
@@ -252,6 +254,7 @@ export class ToolCatalogService extends BaseService {
       sales: [],
       logistics: [],
       inventory: [],
+      collaboration: [],
       general: []
     };
 
@@ -271,6 +274,8 @@ export class ToolCatalogService extends BaseService {
         catalog.logistics.push(enrichedTool);
       } else if (tool.department === 'inventory') {
         catalog.inventory.push(enrichedTool);
+      } else if (tool.department === 'collaboration') {
+        catalog.collaboration.push(enrichedTool);
       } else {
         catalog.general.push(enrichedTool);
       }
@@ -280,6 +285,7 @@ export class ToolCatalogService extends BaseService {
       sales: catalog.sales.length,
       logistics: catalog.logistics.length,
       inventory: catalog.inventory.length,
+      collaboration: catalog.collaboration.length,
       general: catalog.general.length
     });
 
@@ -309,7 +315,11 @@ export class ToolCatalogService extends BaseService {
 
       // Logistics tools
       'getReadyOrders': 'pi-truck',
-      'getShippingStatus': 'pi-map-marker'
+      'getShippingStatus': 'pi-map-marker',
+
+      // Collaboration tools
+      'callSubAgent': 'pi-users',
+      'listTeamMembers': 'pi-users'
     };
 
     // Return specific icon or fallback to department icon
@@ -322,6 +332,11 @@ export class ToolCatalogService extends BaseService {
    * @returns Tool category
    */
   private getToolCategory(toolName: string): ToolCategory {
+    // Collaboration tools
+    if (toolName.includes('callSubAgent') || toolName.includes('listTeamMembers')) {
+      return 'collaboration';
+    }
+
     // Categories based on tool naming patterns
     if (toolName.includes('get') || toolName.includes('check')) {
       return 'data-access';
@@ -348,6 +363,7 @@ export class ToolCatalogService extends BaseService {
       sales: [],
       logistics: [],
       inventory: [],
+      collaboration: [],
       general: []
     };
   }
