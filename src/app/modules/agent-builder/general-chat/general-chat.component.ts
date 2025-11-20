@@ -66,6 +66,7 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
   currentTask: string = "";
   isExecuting: boolean = false;
   orchestratorsInvolved: string[] = [];
+  participatingAgents: Set<string> = new Set(); // Track active agents in current session
 
   // WebSocket state
   private currentStreamingMessageId: string | null = null;
@@ -491,6 +492,9 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
+          // Ensure agent is in participating list
+          if (response.speaker) this.participatingAgents.add(response.speaker);
+
           const newMessage: ConversationMessage = {
             id: response.id || this.generateId(),
             timestamp: new Date(response.timestamp),
@@ -530,12 +534,16 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
             switch (event.type) {
               case "sub_agent_call":
                 if (event.speaker === "orchestrator") {
+                  // Track agent as participating
+                  const agentName = event.metadata?.agentName;
+                  if (agentName) this.participatingAgents.add(agentName);
+
                   newMessage = {
                       id: `evt_${Date.now()}_${Math.random()}`,
                       timestamp: new Date(),
                       speaker: getOrchestratorName(),
                       department: getOrchestratorDept(),
-                      message: `Consultando a @${event.metadata?.agentName || "Agente"}...`,
+                      message: `Consultando a @${agentName || "Agente"}...`,
                       type: 'agent'
                   };
                 }
@@ -708,6 +716,7 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
   clearChat(): void {
     this.messages = [];
     this.orchestratorsInvolved = [];
+    this.participatingAgents.clear();
     this.showEmptyState = true;
     this.cdr.markForCheck();
   }
@@ -743,6 +752,22 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     }
   }
 
+  getSuggestedActions(): string[] {
+      // In a real app, this would come from the AI or be heuristics-based
+      if (this.currentTask.toLowerCase().includes('stock') || this.currentTask.toLowerCase().includes('inventario')) {
+          return ['📉 Ver productos con bajo stock', '📦 Crear orden de reposición', '📊 Analizar rotación'];
+      }
+      if (this.currentTask.toLowerCase().includes('venta') || this.currentTask.toLowerCase().includes('pedidos')) {
+          return ['💰 Ver reporte de ingresos', '🏆 Top clientes del mes', '📈 Proyección de cierre'];
+      }
+      return ['📊 Ver dashboard completo', '📄 Exportar reporte PDF', '📧 Enviar resumen por correo'];
+  }
+
+  useSuggestion(suggestion: string) {
+      this.currentTask = suggestion;
+      this.executeTask();
+  }
+
   // Helpers for UI
   getDepartmentName(department: string): string {
     const names: { [key: string]: string } = {
@@ -772,6 +797,16 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     return icons[dept] || "pi-briefcase";
   }
 
+  getAgentBySpeakerName(name: string): Agent | undefined {
+      return this.agents.find(a => a.agentName === name);
+  }
+
+  getParticipatingAgentsList(): Agent[] {
+      return Array.from(this.participatingAgents)
+          .map(name => this.getAgentBySpeakerName(name))
+          .filter(a => !!a) as Agent[];
+  }
+
   getDepartmentColor(department: string): string {
     if (!department) return "#999";
     const dept = department.toLowerCase();
@@ -787,6 +822,20 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       user: "#9c27b0",
     };
     return colors[dept] || "#999";
+  }
+
+  getDepartmentBgColor(department: string): string {
+    const color = this.getDepartmentColor(department);
+    // Convert hex to rgba with low opacity for background
+    if (color.startsWith('#')) {
+        let c = color.substring(1);
+        if (c.length === 3) c = c.split('').map(char => char + char).join('');
+        const r = parseInt(c.substring(0, 2), 16);
+        const g = parseInt(c.substring(2, 4), 16);
+        const b = parseInt(c.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, 0.08)`; // 8% opacity
+    }
+    return 'transparent';
   }
 
   getThemeColor(): string {

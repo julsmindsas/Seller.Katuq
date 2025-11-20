@@ -67,8 +67,25 @@
     <div class="chat-header">
       <div class="header-left">
         <div class="model-selector">
-          <span>Gemini 2.5 Flash</span>
-          <i class="pi pi-chevron-down"></i>
+          <div class="active-team-stack" *ngIf="participatingAgents.size > 0; else defaultHeader">
+             <div class="team-label">Equipo Activo:</div>
+             <div class="team-avatars">
+                <!-- General Manager (Always active implicitly) -->
+                <div class="team-avatar gm" [style.background]="'#4285f4'" pTooltip="General Manager" tooltipPosition="bottom">
+                    <i class="pi pi-sparkles"></i>
+                </div>
+                <!-- Dynamic Agents -->
+                <div class="team-avatar" *ngFor="let agent of getParticipatingAgentsList()" 
+                     [style.background]="getDepartmentColor(agent.department)"
+                     [pTooltip]="agent.agentName" tooltipPosition="bottom">
+                    <i [class]="'pi ' + getDepartmentIcon(agent.department)"></i>
+                </div>
+             </div>
+          </div>
+          <ng-template #defaultHeader>
+              <span>Gemini 2.5 Flash</span>
+              <i class="pi pi-chevron-down"></i>
+          </ng-template>
         </div>
       </div>
 
@@ -117,7 +134,7 @@
           </div>
 
             <div class="agent-content-col">
-            <div class="agent-name-label" *ngIf="msg.type !== 'system'">{{ msg.speaker }}</div>
+            <div class="agent-name-label" *ngIf="msg.type !== 'system'" [style.color]="getDepartmentColor(msg.department)">{{ msg.speaker }}</div>
             
             <!-- Thinking Block for Final Response Only -->
             <div class="thought-process" *ngIf="msg.isStreaming">
@@ -128,7 +145,17 @@
             </div>
 
             <!-- Message Text (HTML for mentions) -->
-            <div class="message-text" [innerHTML]="msg.parsedMessage" *ngIf="msg.message"></div>
+            <div class="message-text" [innerHTML]="msg.parsedMessage" *ngIf="msg.message" 
+                 [style.background-color]="msg.type !== 'system' ? getDepartmentBgColor(msg.department) : ''"
+                 [class.has-bg]="msg.type !== 'system'"></div>
+
+            <!-- Suggested Actions (Only for last completed agent message) -->
+            <div class="suggested-actions" *ngIf="last && msg.streamingComplete && msg.type === 'agent' && !msg.speaker.includes('System')">
+                <div class="suggestion-chip" *ngFor="let action of getSuggestedActions()" (click)="useSuggestion(action)">
+                    <i class="pi pi-bolt"></i>
+                    <span>{{ action }}</span>
+                </div>
+            </div>
 
             <!-- Streaming Cursor -->
             <span class="cursor-blink" *ngIf="msg.isStreaming && msg.message"></span>
