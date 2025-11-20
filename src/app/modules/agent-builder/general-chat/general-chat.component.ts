@@ -280,21 +280,24 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       : "general";
 
     // Add response placeholder
+    // REMOVED: We will create messages dynamically based on events to simulate a group chat
+    /*
     this.addMessage({
       id: this.currentStreamingMessageId,
-      timestamp: new Date(),
-      speaker: speakerName,
-      department: department,
-      message: "",
-      type: "agent",
-      isStreaming: true,
-      streamingComplete: false,
-      metadata: {
-        steps: [{
-          description: 'Analizando solicitud...',
-          status: 'running'
-        }]
-      }
+      ...
+    });
+    */
+   
+    // Show a temporary "Typing..." or "Processing" indicator if needed, 
+    // but for now we'll let the first event create the first bubble.
+    // actually, let's add a small system message "Iniciando proceso..." to give immediate feedback
+    this.addMessage({
+        id: `sys_${Date.now()}`,
+        timestamp: new Date(),
+        speaker: 'System',
+        department: 'system',
+        message: 'Iniciando orquestación...',
+        type: 'system'
     });
 
     this.isExecuting = true;
@@ -402,9 +405,29 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       .subscribe({
         next: (chunkData) => {
           if (this.currentStreamingMessageId === chunkData.messageId) {
-            const messageIndex = this.messages.findIndex(
+            let messageIndex = this.messages.findIndex(
               (m) => m.id === chunkData.messageId,
             );
+            
+            // If final response bubble doesn't exist yet, create it now
+            if (messageIndex === -1) {
+                 const speakerName = this.selectedAgent ? this.selectedAgent.agentName : "General Manager";
+                 const department = this.selectedAgent ? this.selectedAgent.department : "general";
+                 
+                 // Use addMessage but ensure it's at the end (which it does by default)
+                 this.addMessage({
+                    id: this.currentStreamingMessageId,
+                    timestamp: new Date(),
+                    speaker: speakerName,
+                    department: department,
+                    message: "", // Start empty
+                    type: "agent",
+                    isStreaming: true,
+                    streamingComplete: false
+                 });
+                 messageIndex = this.messages.findIndex(m => m.id === this.currentStreamingMessageId);
+            }
+
             if (messageIndex !== -1) {
               this.messages[messageIndex].message += chunkData.chunk;
               // Update parsed message for mentions
@@ -468,17 +491,27 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          // Agregar mensaje del sub-agente al chat
-          this.addMessage({
+          const newMessage: ConversationMessage = {
             id: response.id || this.generateId(),
             timestamp: new Date(response.timestamp),
             speaker: response.speaker,
             department: response.department,
             message: response.message,
-            type: "agent", // Lo mostramos como un mensaje de agente normal
+            type: "agent",
             isStreaming: false,
             streamingComplete: true,
-          });
+          };
+
+          // Insert BEFORE final message if exists, to maintain order
+          const finalMsgIndex = this.messages.findIndex(m => m.id === this.currentStreamingMessageId);
+          
+          if (finalMsgIndex !== -1) {
+              this.messages.splice(finalMsgIndex, 0, newMessage);
+              newMessage.parsedMessage = this.parseMentions(newMessage.message);
+              this.cdr.markForCheck();
+          } else {
+              this.addMessage(newMessage);
+          }
           this.scrollToBottom();
         },
       });
@@ -488,111 +521,106 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (event) => {
-          // Find current streaming message
-          const msgIndex = this.messages.findIndex(
-            (m) => m.id === this.currentStreamingMessageId,
-          );
-          if (msgIndex !== -1) {
-            const msg = this.messages[msgIndex];
+            // Transform events into distinct chat messages for Group Chat effect
+            const getOrchestratorName = () => this.selectedAgent ? this.selectedAgent.agentName : "General Manager";
+            const getOrchestratorDept = () => this.selectedAgent ? this.selectedAgent.department : "general";
 
-            // Initialize metadata.steps if not exists
-            if (!msg.metadata) msg.metadata = {};
-            if (!msg.metadata.steps) msg.metadata.steps = [];
-
-            // Map events to steps
-            let stepDescription = "";
-            let stepStatus: "pending" | "running" | "completed" | "failed" =
-              "running";
-            let toolCall = "";
+            let newMessage: ConversationMessage | null = null;
 
             switch (event.type) {
               case "sub_agent_call":
-                // If it's the call initiation (usually from orchestrator)
                 if (event.speaker === "orchestrator") {
-                  stepDescription = `Consultando agente: ${event.metadata?.agentName || "Sub-agente"}`;
-                  stepStatus = "running";
-                } else {
-                  // It's the result
-                  stepDescription = `Respuesta recibida de ${event.speaker}`;
-                  stepStatus = "completed";
+                  newMessage = {
+                      id: `evt_${Date.now()}_${Math.random()}`,
+                      timestamp: new Date(),
+                      speaker: getOrchestratorName(),
+                      department: getOrchestratorDept(),
+                      message: `Consultando a @${event.metadata?.agentName || "Agente"}...`,
+                      type: 'agent'
+                  };
                 }
                 break;
 
               case "a2a_request":
-                stepDescription = `Coordinando con ${this.getDepartmentName(event.metadata?.targetDepartment) || "otro departamento"}...`;
-                stepStatus = "running";
-                break;
-
-              case "a2a_response":
-                stepDescription = `Información recibida de ${this.getDepartmentName(event.department)}`;
-                stepStatus = "completed";
+                newMessage = {
+                    id: `evt_${Date.now()}_${Math.random()}`,
+                    timestamp: new Date(),
+                    speaker: getOrchestratorName(),
+                    department: getOrchestratorDept(),
+                    message: `Coordinando con el departamento de ${this.getDepartmentName(event.metadata?.targetDepartment)}...`,
+                    type: 'agent'
+                };
                 break;
 
               case "orchestrator_thinking":
-                // Pensamientos internos del orquestador
-                stepDescription = `🧠 ${event.message || "Razonando..."}`;
-                stepStatus = "completed"; // Los pensamientos son instantáneos/log
+                newMessage = {
+                    id: `think_${Date.now()}`,
+                    timestamp: new Date(),
+                    speaker: 'System',
+                    department: 'system',
+                    message: `🧠 ${event.message || "Analizando..."}`,
+                    type: 'system'
+                };
                 break;
 
               case "tool_call":
-                // Uso de herramientas
-                const toolName = event.metadata?.toolName || "Herramienta";
-                stepDescription = `🛠️ Ejecutando: ${toolName}`;
-                toolCall = toolName;
-                stepStatus = "running"; // Las tools toman tiempo
+                newMessage = {
+                    id: `tool_${Date.now()}`,
+                    timestamp: new Date(),
+                    speaker: 'System',
+                    department: 'system',
+                    message: `🛠️ Ejecutando herramienta: ${event.metadata?.toolName || "Herramienta"}`,
+                    type: 'system'
+                };
                 break;
 
               case "error":
-                stepDescription = `Error en ${event.speaker}: ${event.metadata?.error || event.message}`;
-                stepStatus = "failed";
-                // Don't treat as fatal error for the whole chat, just a failed step
+                newMessage = {
+                    id: `err_${Date.now()}`,
+                    timestamp: new Date(),
+                    speaker: event.speaker || 'System',
+                    department: 'system',
+                    message: `❌ Error: ${event.metadata?.error || event.message}`,
+                    type: 'system'
+                };
                 break;
 
-              case "final_result":
-                // Update final message text immediately if available
-                if (event.message) {
-                  msg.message = event.message;
-                  // Update parsed message
-                  msg.parsedMessage = this.parseMentions(event.message);
-                  msg.streamingComplete = true; // Optimistic complete
-                }
-                // Mark the last running step as completed if any
-                if (msg.metadata.steps && msg.metadata.steps.length > 0) {
-                  const lastStep =
-                    msg.metadata.steps[msg.metadata.steps.length - 1];
-                  if (lastStep.status === "running") {
-                    lastStep.status = "completed";
-                  }
-                }
-                return; // Don't add as a step
+               case "final_result":
+                   // Usually handled by stream, but if direct:
+                   if (event.message && !this.messages.find(m => m.id === this.currentStreamingMessageId)) {
+                         newMessage = {
+                            id: this.currentStreamingMessageId || `fin_${Date.now()}`,
+                            timestamp: new Date(),
+                            speaker: getOrchestratorName(),
+                            department: getOrchestratorDept(),
+                            message: event.message,
+                            type: 'agent',
+                            streamingComplete: true
+                         };
+                   }
+                   break;
             }
-
-            if (stepDescription) {
-              // Si estamos agregando pasos nuevos, asegurarnos de que el panel esté expandido
-              // para que el usuario vea "hasta el peo" en tiempo real
-              if (msg.isStreaming && !msg.isProcessExpanded) {
-                msg.isProcessExpanded = true;
-              }
-
-              // Add new step
-              msg.metadata.steps.push({
-                description: stepDescription,
-                status: stepStatus,
-                toolCall: toolCall,
-              });
-
-              // Mark previous running steps as completed if needed
-              // (Simple logic: if we add a new step, previous running ones might be done)
-              // ideally we would match IDs but for now linear is fine
-              if (msg.metadata.steps.length > 1) {
-                const prev = msg.metadata.steps[msg.metadata.steps.length - 2];
-                if (prev.status === "running") prev.status = "completed";
-              }
-
-              this.cdr.markForCheck();
-              this.scrollToBottom();
+            
+            if (newMessage) {
+                // Logic to insert BEFORE the final response bubble if it exists (to keep Summary at bottom)
+                // But wait, if we insert before, the Final Response bubble stays at the bottom, 
+                // so the order becomes: [User, Event, Final]. This is what we want.
+                
+                const finalMsgIndex = this.messages.findIndex(m => m.id === this.currentStreamingMessageId);
+                
+                if (finalMsgIndex !== -1) {
+                    // Insert before the final streaming message
+                    this.messages.splice(finalMsgIndex, 0, newMessage);
+                    // Parse mentions for the new message
+                    newMessage.parsedMessage = this.parseMentions(newMessage.message);
+                    this.cdr.markForCheck();
+                } else {
+                    // Just add to end
+                    this.addMessage(newMessage);
+                }
+                
+                this.scrollToBottom();
             }
-          }
         }
       });
 

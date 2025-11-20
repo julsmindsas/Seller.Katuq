@@ -109,50 +109,30 @@
         </div>
 
         <!-- Agent Message (Text style with Avatar) -->
-        <div class="agent-message-container" *ngIf="msg.department !== 'user'">
-          <div class="agent-avatar-col">
+        <div class="agent-message-container" *ngIf="msg.department !== 'user'" [class.system-message]="msg.type === 'system'">
+          <div class="agent-avatar-col" *ngIf="msg.type !== 'system'">
             <div class="agent-avatar-icon" [style.color]="getDepartmentColor(msg.department)">
               <i [class]="'pi ' + getDepartmentIcon(msg.department)"></i>
             </div>
           </div>
 
-          <div class="agent-content-col">
-            <div class="agent-name-label">{{ msg.speaker }}</div>
+            <div class="agent-content-col">
+            <div class="agent-name-label" *ngIf="msg.type !== 'system'">{{ msg.speaker }}</div>
             
-            <!-- Working Process (Thought Block) - Always show if streaming or has steps -->
-            <div class="thought-process" *ngIf="msg.isStreaming || (msg.metadata?.steps && msg.metadata.steps.length > 0)">
-              <div class="thought-header" (click)="msg.isProcessExpanded = !msg.isProcessExpanded">
-                <i class="pi pi-sparkles sparkle-icon" [class.thinking]="msg.isStreaming"
-                  style="color: var(--gemini-accent)"></i>
-                <span class="thought-label" [class.thinking-animated]="msg.isStreaming">
-                  {{ msg.isStreaming ? 'Pensando...' : 'Pensamiento' }}
-                </span>
-                <i class="pi pi-chevron-down" [class.expanded]="msg.isProcessExpanded"></i>
-              </div>
-
-              <div class="thought-content" *ngIf="msg.isProcessExpanded">
-                <div class="step-item" *ngIf="!msg.metadata?.steps || msg.metadata.steps.length === 0">
-                   <div class="step-status">
-                     <i class="pi pi-spin pi-spinner"></i>
-                   </div>
-                   <span class="step-text">Analizando solicitud...</span>
-                </div>
-                <div class="step-item" *ngFor="let step of msg.metadata.steps">
-                  <div class="step-status">
-                    <i class="pi pi-check" *ngIf="step.status === 'completed'"></i>
-                    <i class="pi pi-spin pi-spinner" *ngIf="step.status === 'running'"></i>
-                    <div class="dot" *ngIf="step.status === 'pending'"></div>
-                  </div>
-                  <span class="step-text">{{ step.description }}</span>
-                </div>
+            <!-- Thinking Block for Final Response Only -->
+            <div class="thought-process" *ngIf="msg.isStreaming">
+              <div class="thought-header">
+                <i class="pi pi-sparkles sparkle-icon thinking" style="color: var(--gemini-accent)"></i>
+                <span class="thought-label thinking-animated">Pensando...</span>
               </div>
             </div>
 
             <!-- Message Text (HTML for mentions) -->
-            <div class="message-text" [innerHTML]="msg.parsedMessage"></div>
+            <div class="message-text" [innerHTML]="msg.parsedMessage" *ngIf="msg.message"></div>
 
             <!-- Streaming Cursor -->
-            <span class="cursor-blink" *ngIf="msg.isStreaming"></span>
+            <span class="cursor-blink" *ngIf="msg.isStreaming && msg.message"></span>
+
 
             <!-- Message Actions (Gemini Style) -->
             <div class="message-actions" *ngIf="!msg.isStreaming && msg.department !== 'user'">

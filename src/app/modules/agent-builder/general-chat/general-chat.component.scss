@@ -473,6 +473,31 @@ $font-family:
                         }
                     }
 
+                    // Special styling for system messages (small, centered)
+                    &.system-message {
+                        justify-content: center;
+                        margin: 8px 0;
+                        gap: 8px;
+
+                        .agent-avatar-col {
+                             display: none; // No avatar for system messages
+                        }
+
+                        .agent-content-col {
+                            flex: 0 1 auto;
+                            align-items: center;
+
+                            .message-text {
+                                font-size: 13px;
+                                color: var(--gemini-text-secondary);
+                                background: var(--gemini-code-bg);
+                                padding: 6px 12px;
+                                border-radius: 16px;
+                                font-style: italic;
+                            }
+                        }
+                    }
+
                     .agent-content-col {
                         flex: 1;
                         display: flex;
