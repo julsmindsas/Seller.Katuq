@@ -1274,7 +1274,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.searchError = null;
 
     // Usar el servicio principal para búsqueda
-    this.ventasService.getOrdersByNroPedido(trimmedQuery).subscribe({
+    this.ventasService.searchOrders(trimmedQuery).subscribe({
       next: (res: any) => {
         // Asegurar que la respuesta sea un array
         const results = Array.isArray(res) ? res : res ? [res] : [];

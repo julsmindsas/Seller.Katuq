@@ -16,9 +16,9 @@ import { PaginatedOrdersResponse, PaginatedOrdersRequest } from '../../../compon
 
 // Importar tipos y servicio de notificaciones
 import { NotificationManagerService } from '../notifications/notification-manager.service';
-import { 
-  NotificationType, 
-  NotificationEvent, 
+import {
+  NotificationType,
+  NotificationEvent,
   NotificationPriority,
   NotificationChannel
 } from '../notifications/notification.types';
@@ -136,7 +136,7 @@ export class VentasService extends BaseService {
   editOrder(order: Pedido): Observable<any> {
     // Capturar el estado anterior para comparar cambios
     const previousOrder = { ...order };
-    
+
     return this.post<any>('/v1/orders/edit', order).pipe(
       tap((response) => {
         if (response && response.success) {
@@ -197,6 +197,14 @@ export class VentasService extends BaseService {
   }
   getOrdersByNroPedido(nroPedido: any) {
     return this.get<Pedido[]>('/v1/orders/byNroPedido/' + nroPedido);
+  }
+
+  /**
+   * Busca pedidos por término general (Nro Pedido, WooCommerce ID, Shopify ID, etc.)
+   * @param query Término de búsqueda
+   */
+  searchOrders(query: string) {
+    return this.post<Pedido[]>('/v1/orders/search', { query });
   }
 
 
@@ -312,14 +320,14 @@ export class VentasService extends BaseService {
       // Verificar cambios en estado de pago
       if (previousOrder.estadoPago !== updatedOrder.estadoPago) {
         this.triggerPaymentStatusNotification(
-          updatedOrder.nroPedido || '', 
+          updatedOrder.nroPedido || '',
           updatedOrder.estadoPago,
           updatedOrder
         );
       }
 
       // Notificación general de actualización si hay otros cambios
-      const hasOtherChanges = 
+      const hasOtherChanges =
         JSON.stringify(previousOrder.carrito) !== JSON.stringify(updatedOrder.carrito) ||
         previousOrder.totalPedididoConDescuento !== updatedOrder.totalPedididoConDescuento ||
         previousOrder.formaDePago !== updatedOrder.formaDePago;
@@ -453,9 +461,9 @@ export class VentasService extends BaseService {
         type: NotificationType.CASH_CLOSING_REQUIRED,
         data: {
           fecha: new Date().toLocaleDateString('es-ES'),
-          hora: new Date().toLocaleTimeString('es-ES', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+          hora: new Date().toLocaleTimeString('es-ES', {
+            hour: '2-digit',
+            minute: '2-digit'
           })
         },
         priority: NotificationPriority.HIGH,
@@ -576,9 +584,9 @@ export class VentasService extends BaseService {
     if (!orderId) {
       throw new Error("orderId es requerido para obtener el historial");
     }
-    
+
     console.log(`📜 Consultando historial de orden: ${orderId}`);
-    
+
     return this.get<any>(`/v1/orders/${orderId}/history`).pipe(
       tap((response) => {
         if (response.success) {
