@@ -11,8 +11,13 @@ $border-radius: 8px;
 
 // Animaciones
 @keyframes rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 // Estilos para filtros
@@ -82,6 +87,7 @@ $border-radius: 8px;
     .stat-icon {
       background-color: #5c77ff;
     }
+
     .stat-value {
       color: #5c77ff;
     }
@@ -91,6 +97,7 @@ $border-radius: 8px;
     .stat-icon {
       background-color: #2dce89;
     }
+
     .stat-value {
       color: #2dce89;
     }
@@ -100,6 +107,7 @@ $border-radius: 8px;
     .stat-icon {
       background-color: #11cdef;
     }
+
     .stat-value {
       color: #11cdef;
     }
@@ -109,6 +117,7 @@ $border-radius: 8px;
     .stat-icon {
       background-color: #fb6340;
     }
+
     .stat-value {
       color: #fb6340;
     }
@@ -118,6 +127,7 @@ $border-radius: 8px;
     .stat-icon {
       background-color: #f5365c;
     }
+
     .stat-value {
       color: #f5365c;
     }
@@ -127,6 +137,7 @@ $border-radius: 8px;
     .stat-icon {
       background-color: #6c757d;
     }
+
     .stat-value {
       color: #6c757d;
     }
@@ -201,6 +212,7 @@ $border-radius: 8px;
       .stat-icon {
         background: linear-gradient(135deg, #5c77ff 0%, #3d5afe 100%);
       }
+
       .stat-value {
         color: #5c77ff;
       }
@@ -210,6 +222,7 @@ $border-radius: 8px;
       .stat-icon {
         background: linear-gradient(135deg, #2dce89 0%, #26a69a 100%);
       }
+
       .stat-value {
         color: #2dce89;
       }
@@ -219,6 +232,7 @@ $border-radius: 8px;
       .stat-icon {
         background: linear-gradient(135deg, #11cdef 0%, #00acc1 100%);
       }
+
       .stat-value {
         color: #11cdef;
       }
@@ -228,6 +242,7 @@ $border-radius: 8px;
       .stat-icon {
         background: linear-gradient(135deg, #fb6340 0%, #f5365c 100%);
       }
+
       .stat-value {
         color: #fb6340;
       }
@@ -237,6 +252,7 @@ $border-radius: 8px;
       .stat-icon {
         background: linear-gradient(135deg, #f5365c 0%, #ec0c38 100%);
       }
+
       .stat-value {
         color: #f5365c;
       }
@@ -246,6 +262,7 @@ $border-radius: 8px;
       .stat-icon {
         background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
       }
+
       .stat-value {
         color: #6c757d;
       }
@@ -255,6 +272,7 @@ $border-radius: 8px;
       .stat-icon {
         background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
       }
+
       .stat-value {
         color: #9c27b0;
       }
@@ -264,6 +282,7 @@ $border-radius: 8px;
       .stat-icon {
         background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
       }
+
       .stat-value {
         color: #00bcd4;
       }
@@ -348,7 +367,7 @@ $border-radius: 8px;
 .loader-box {
   position: absolute;
   inset: 0;
-  background: rgba(255,255,255,0.9);
+  background: rgba(255, 255, 255, 0.9);
   z-index: 1000;
   display: flex;
   justify-content: center;
@@ -510,11 +529,13 @@ $border-radius: 8px;
       color: #e09c0e;
       border: 1px solid rgba(255, 187, 51, 0.3);
     }
+
     &.estado-success {
       background-color: rgba(39, 194, 76, 0.15);
       color: #19a03e;
       border: 1px solid rgba(39, 194, 76, 0.3);
     }
+
     &.estado-danger {
       background-color: rgba(255, 62, 62, 0.15);
       color: #de2a2a;
@@ -528,26 +549,31 @@ $border-radius: 8px;
       color: #6c757d;
       border: 1px solid rgba(108, 117, 125, 0.3);
     }
+
     &.estado-info {
       background-color: rgba(23, 162, 184, 0.15);
       color: #c4b5fd;
       border: 1px solid rgba(23, 162, 184, 0.3);
     }
+
     &.estado-primary {
       background-color: rgba(13, 110, 253, 0.15);
       color: #8b5cf6;
       border: 1px solid rgba(13, 110, 253, 0.3);
     }
+
     &.estado-warning {
       background-color: rgba(255, 187, 51, 0.15);
       color: #e09c0e;
       border: 1px solid rgba(255, 187, 51, 0.3);
     }
+
     &.estado-success {
       background-color: rgba(39, 194, 76, 0.15);
       color: #19a03e;
       border: 1px solid rgba(39, 194, 76, 0.3);
     }
+
     &.estado-danger {
       background-color: rgba(255, 62, 62, 0.15);
       color: #de2a2a;
@@ -585,6 +611,7 @@ $border-radius: 8px;
   &.alert-warning {
     background-color: rgba(255, 187, 51, 0.15);
     color: #b27b00;
+
     i {
       color: #ffc107;
     }
@@ -593,6 +620,7 @@ $border-radius: 8px;
   &.alert-info {
     background-color: rgba(13, 202, 240, 0.15);
     color: #087990;
+
     i {
       color: #0dcaf0;
     }
@@ -885,9 +913,11 @@ $border-radius: 8px;
   0% {
     box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.7);
   }
+
   70% {
     box-shadow: 0 0 0 10px rgba(13, 202, 240, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(13, 202, 240, 0);
   }
@@ -1077,6 +1107,7 @@ $border-radius: 8px;
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -1087,6 +1118,7 @@ $border-radius: 8px;
     transform: translateY(-20px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -1152,11 +1184,13 @@ $border-radius: 8px;
 
 /* Estilos para Botón de Acción Flotante (FAB) */
 .fab {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    z-index: 1050; /* Asegura que esté sobre el contenido pero debajo de los modales */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  position: fixed;
+  bottom: 110px;
+  /* Moved up to avoid overlap with global floating button */
+  right: 25px;
+  z-index: 1050;
+  /* Asegura que esté sobre el contenido pero debajo de los modales */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 // NUEVOS ESTILOS PARA FASE 1
@@ -1216,7 +1250,9 @@ $border-radius: 8px;
   }
 }
 
-@media (max-width: 576px) { // Estilos para pantallas extra pequeñas
+@media (max-width: 576px) {
+
+  // Estilos para pantallas extra pequeñas
   :host ::ng-deep .modern-tabs .p-tabview-nav {
     flex-wrap: wrap;
     justify-content: center; // Centrar las pestañas
@@ -1227,14 +1263,14 @@ $border-radius: 8px;
     text-align: center;
 
     .p-tabview-nav-link {
-        justify-content: center;
+      justify-content: center;
     }
   }
 
   .table-header-actions {
-      .p-multiselect {
-          width: 100%;
-      }
+    .p-multiselect {
+      width: 100%;
+    }
   }
 }
 
@@ -1247,6 +1283,7 @@ $border-radius: 8px;
     transform: translateY(-10px);
     max-height: 0;
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1288,23 +1325,23 @@ $border-radius: 8px;
 
           &.search-box {
             min-width: 250px;
-            
+
             .p-inputgroup {
               width: 100%;
               border-radius: 6px;
               overflow: hidden;
               box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
               transition: all 0.3s ease;
-              
+
               &:hover {
                 box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
               }
-              
+
               &:focus-within {
                 box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
                 border-color: #8b5cf6;
               }
-              
+
               .p-inputgroup-addon {
                 background: #f8f9fa;
                 border-color: #ced4da;
@@ -1312,36 +1349,36 @@ $border-radius: 8px;
                 padding: 0.375rem 0.75rem;
                 border-right: none;
                 height: 2.25rem; // Misma altura que p-inputtext-sm
-                
+
                 i {
                   font-size: 0.875rem;
                 }
               }
-              
+
               .search-input {
                 border-left: none;
                 border-right: none;
                 padding: 0.375rem 0.75rem;
                 font-size: 0.875rem;
                 height: 2.25rem; // Misma altura que p-inputtext-sm
-                
+
                 &:focus {
                   border-color: #8b5cf6;
                   box-shadow: none;
                 }
-                
+
                 &::placeholder {
                   color: #6c757d;
                   font-style: italic;
                 }
               }
-              
+
               button {
                 border-left: none;
                 padding: 0.375rem 0.5rem;
                 min-width: 2.25rem;
                 height: 2.25rem; // Misma altura que p-inputtext-sm
-                
+
                 &:hover {
                   background: #f8f9fa;
                 }
@@ -1443,13 +1480,33 @@ $border-radius: 8px;
               border-radius: 50%;
               display: inline-block;
 
-              &.status-warning { background: #ff9800; }
-              &.status-success { background: #4caf50; }
-              &.status-info { background: #2196f3; }
-              &.status-danger { background: #f44336; }
-              &.status-secondary { background: #6c757d; }
-              &.status-primary { background: #9c27b0; }
-              &.status-dark { background: #343a40; }
+              &.status-warning {
+                background: #ff9800;
+              }
+
+              &.status-success {
+                background: #4caf50;
+              }
+
+              &.status-info {
+                background: #2196f3;
+              }
+
+              &.status-danger {
+                background: #f44336;
+              }
+
+              &.status-secondary {
+                background: #6c757d;
+              }
+
+              &.status-primary {
+                background: #9c27b0;
+              }
+
+              &.status-dark {
+                background: #343a40;
+              }
             }
 
             .tag-remove {
@@ -1511,13 +1568,33 @@ $border-radius: 8px;
     border-radius: 50%;
     display: inline-block;
 
-    &.status-warning { background: #ff9800; }
-    &.status-success { background: #4caf50; }
-    &.status-info { background: #2196f3; }
-    &.status-danger { background: #f44336; }
-    &.status-secondary { background: #6c757d; }
-    &.status-primary { background: #9c27b0; }
-    &.status-dark { background: #343a40; }
+    &.status-warning {
+      background: #ff9800;
+    }
+
+    &.status-success {
+      background: #4caf50;
+    }
+
+    &.status-info {
+      background: #2196f3;
+    }
+
+    &.status-danger {
+      background: #f44336;
+    }
+
+    &.status-secondary {
+      background: #6c757d;
+    }
+
+    &.status-primary {
+      background: #9c27b0;
+    }
+
+    &.status-dark {
+      background: #343a40;
+    }
   }
 }
 
@@ -1536,10 +1613,10 @@ $border-radius: 8px;
           .filter-inline-item {
             &.search-box {
               min-width: 100%;
-              
+
               .p-inputgroup {
                 min-width: 100%;
-                
+
                 .search-input {
                   min-width: 200px;
                 }
@@ -1582,16 +1659,16 @@ $border-radius: 8px;
                   min-width: 150px;
                   font-size: 0.8rem;
                 }
-                
+
                 .p-inputgroup-addon {
                   padding: 0.375rem 0.6rem;
                   height: 2.25rem;
-                  
+
                   i {
                     font-size: 0.8rem;
                   }
                 }
-                
+
                 button {
                   padding: 0.375rem 0.4rem;
                   min-width: 2rem;
@@ -1599,7 +1676,7 @@ $border-radius: 8px;
                 }
               }
             }
-            
+
             &.date-range-compact {
               .p-calendar {
                 width: 100%;
@@ -1611,6 +1688,7 @@ $border-radius: 8px;
     }
   }
 }
+
 // Estilos para autocompletado
 .autocomplete-wrapper {
   ::ng-deep .search-autocomplete {
@@ -1706,6 +1784,7 @@ $border-radius: 8px;
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -1949,17 +2028,17 @@ $border-radius: 8px;
     .d-flex {
       overflow-x: auto;
       overflow-y: hidden;
-      -webkit-overflow-scrolling: touch;  // ✅ Smooth scrolling en iOS
-      scroll-snap-type: x proximity;      // ✅ Snap to metrics
-      padding-bottom: 8px;                // ✅ Espacio para scrollbar
+      -webkit-overflow-scrolling: touch; // ✅ Smooth scrolling en iOS
+      scroll-snap-type: x proximity; // ✅ Snap to metrics
+      padding-bottom: 8px; // ✅ Espacio para scrollbar
 
       // FIX CRÍTICO 6: Scrollbar más visible en móvil
       &::-webkit-scrollbar {
-        height: 6px !important;           // ✅ Más grueso (was 4px)
+        height: 6px !important; // ✅ Más grueso (was 4px)
       }
 
       &::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.05);  // ✅ Más visible
+        background: rgba(0, 0, 0, 0.05); // ✅ Más visible
         border-radius: 3px;
       }
 
@@ -1976,27 +2055,27 @@ $border-radius: 8px;
 
   // FIX CRÍTICO 7: Métricas touch-friendly
   .metric-chip {
-    padding: 0.5rem 0.75rem !important;   // ✅ Padding aumentado (was 0.3rem 0.6rem)
-    font-size: 0.875rem !important;       // ✅ Texto más grande (was 0.8rem)
-    min-height: 44px !important;          // ✅ WCAG 2.1 compliant
-    scroll-snap-align: start;             // ✅ Snap behavior
-    flex-shrink: 0;                       // ✅ Prevenir shrink
+    padding: 0.5rem 0.75rem !important; // ✅ Padding aumentado (was 0.3rem 0.6rem)
+    font-size: 0.875rem !important; // ✅ Texto más grande (was 0.8rem)
+    min-height: 44px !important; // ✅ WCAG 2.1 compliant
+    scroll-snap-align: start; // ✅ Snap behavior
+    flex-shrink: 0; // ✅ Prevenir shrink
     transition: all 0.15s ease !important;
 
     .metric-badge {
-      min-width: 28px !important;         // ✅ Badge más grande (was 20px)
-      height: 24px !important;            // ✅ Altura aumentada (was 18px)
-      font-size: 0.8125rem !important;    // ✅ Texto legible (13px, was 0.7rem)
+      min-width: 28px !important; // ✅ Badge más grande (was 20px)
+      height: 24px !important; // ✅ Altura aumentada (was 18px)
+      font-size: 0.8125rem !important; // ✅ Texto legible (13px, was 0.7rem)
       padding: 0 0.5rem !important;
       font-weight: 700 !important;
     }
 
     i {
-      font-size: 1rem !important;         // ✅ Iconos más grandes (was 0.85rem)
+      font-size: 1rem !important; // ✅ Iconos más grandes (was 0.85rem)
     }
 
     .metric-label {
-      font-size: 0.875rem !important;     // ✅ Etiquetas legibles
+      font-size: 0.875rem !important; // ✅ Etiquetas legibles
     }
 
     // FIX CRÍTICO 8: Eliminar hover-expansion, usar siempre etiquetas cortas en móvil
@@ -2063,4 +2142,3 @@ $border-radius: 8px;
     max-width: 180px;
   }
 }
-

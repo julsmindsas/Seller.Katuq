@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.11.17.2 - 17 de Noviembre 2025 (Beta)",
+  version: "2025.11.20.1 - 20 de Noviembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",

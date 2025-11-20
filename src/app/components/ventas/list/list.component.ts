@@ -1934,7 +1934,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   adicion["referencia"]["precioIva"] *
                   itemCarrito.cantidad;
               }
-            } catch (error) {}
+            } catch (error) { }
           });
         }
 
@@ -2316,7 +2316,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           order.faltaPorPagar = Math.max(
             0,
             Number(order.totalPedididoConDescuento || 0) -
-              Number(order.anticipo || 0),
+            Number(order.anticipo || 0),
           );
 
           // 🔍 DEBUG: Log del estado de pago antes de procesar
@@ -2685,17 +2685,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-              // Para Wompi, verificar que no esté pendiente
-              if (
-                pago.formaPago?.toLowerCase().includes("wompi") &&
-                pago.estadoVerificacion === "Pendiente"
-              ) {
-                return sum; // No sumar pagos de Wompi pendientes
-              }
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = pago.valor || pago.valorRegistrado || 0;
-              return sum + valorPago;
-            }, 0)
+            // Para Wompi, verificar que no esté pendiente
+            if (
+              pago.formaPago?.toLowerCase().includes("wompi") &&
+              pago.estadoVerificacion === "Pendiente"
+            ) {
+              return sum; // No sumar pagos de Wompi pendientes
+            }
+            // Considerar tanto valor como valorRegistrado
+            const valorPago = pago.valor || pago.valorRegistrado || 0;
+            return sum + valorPago;
+          }, 0)
           : pedido.anticipo || 0;
       const faltaPorPagar =
         (pedido.totalPedididoConDescuento || 0) - anticipoReal;
@@ -2713,17 +2713,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-              // Para Wompi, verificar que no esté pendiente
-              if (
-                pago.formaPago?.toLowerCase().includes("wompi") &&
-                pago.estadoVerificacion === "Pendiente"
-              ) {
-                return sum; // No sumar pagos de Wompi pendientes
-              }
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = pago.valor || pago.valorRegistrado || 0;
-              return sum + valorPago;
-            }, 0)
+            // Para Wompi, verificar que no esté pendiente
+            if (
+              pago.formaPago?.toLowerCase().includes("wompi") &&
+              pago.estadoVerificacion === "Pendiente"
+            ) {
+              return sum; // No sumar pagos de Wompi pendientes
+            }
+            // Considerar tanto valor como valorRegistrado
+            const valorPago = pago.valor || pago.valorRegistrado || 0;
+            return sum + valorPago;
+          }, 0)
           : pedido.anticipo || 0;
       return acc + anticipoReal;
     }, 0);
@@ -2775,21 +2775,48 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const statusMap: { [key: string]: { short: string; full: string } } = {
       ProducidoTotalmente: {
         short: "Prod. Total",
-        full: "Producido Totalmente",
+        full: "Producido Totalmente - Producción completada al 100%",
       },
       ProducidoParcialmente: {
         short: "Prod. Parcial",
-        full: "Producido Parcialmente",
+        full: "Producido Parcialmente - Producción en progreso parcial",
       },
-      SinProducir: { short: "Sin Producir", full: "Sin Producir" },
-      EnProduccion: { short: "En Prod.", full: "En Producción" },
-      ParaDespachar: { short: "P. Despachar", full: "Para Despachar" },
-      Despachado: { short: "Despachado", full: "Despachado" },
-      Entregado: { short: "Entregado", full: "Entregado" },
-      Empacado: { short: "Empacado", full: "Empacado" },
-      Producido: { short: "Producido", full: "Producido" },
-      Rechazado: { short: "Rechazado", full: "Rechazado" },
-      Cerrado: { short: "Cerrado", full: "Cerrado" },
+      SinProducir: {
+        short: "Sin Producir",
+        full: "Sin Producir - Pendiente de iniciar producción",
+      },
+      EnProduccion: {
+        short: "En Prod.",
+        full: "En Producción - Actualmente en fabricación",
+      },
+      ParaDespachar: {
+        short: "P. Despachar",
+        full: "Para Despachar - Listo para envío",
+      },
+      Despachado: {
+        short: "Despachado",
+        full: "Despachado - Enviado al cliente",
+      },
+      Entregado: {
+        short: "Entregado",
+        full: "Entregado - Entregado al cliente",
+      },
+      Empacado: {
+        short: "Empacado",
+        full: "Empacado - Empacado y listo",
+      },
+      Producido: {
+        short: "Producido",
+        full: "Producido - Producción finalizada",
+      },
+      Rechazado: {
+        short: "Rechazado",
+        full: "Rechazado - Proceso rechazado",
+      },
+      Cerrado: {
+        short: "Cerrado",
+        full: "Cerrado - Pedido finalizado",
+      },
     };
     return statusMap[status] || { short: status, full: status };
   }
@@ -2800,13 +2827,34 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   getPaymentStatusDisplay(status: string): { short: string; full: string } {
     const statusMap: { [key: string]: { short: string; full: string } } = {
-      Pospendiente: { short: "Pendiente", full: "Pospendiente" },
-      Pendiente: { short: "Pendiente", full: "Pendiente" },
-      PreAprobado: { short: "Pre-Aprob.", full: "Pre-Aprobado" },
-      Aprobado: { short: "Aprobado", full: "Aprobado" },
-      Rechazado: { short: "Rechazado", full: "Rechazado" },
-      Cancelado: { short: "Cancelado", full: "Cancelado" },
-      Precancelado: { short: "Pre-Cancel", full: "Pre-Cancelado" },
+      Pospendiente: {
+        short: "Pendiente",
+        full: "Pospendiente - Pago en validación posterior",
+      },
+      Pendiente: {
+        short: "Pendiente",
+        full: "Pendiente - Pago pendiente de confirmación",
+      },
+      PreAprobado: {
+        short: "Pre-Aprob.",
+        full: "Pre-Aprobado - Pago pre-aprobado, verificando",
+      },
+      Aprobado: {
+        short: "Aprobado",
+        full: "Aprobado - Pago confirmado y exitoso",
+      },
+      Rechazado: {
+        short: "Rechazado",
+        full: "Rechazado - Pago rechazado por la entidad",
+      },
+      Cancelado: {
+        short: "Cancelado",
+        full: "Cancelado - Pedido cancelado manualmente",
+      },
+      Precancelado: {
+        short: "Pre-Cancel",
+        full: "Pre-Cancelado - En proceso de cancelación",
+      },
     };
     return statusMap[status] || { short: status, full: status };
   }
@@ -3250,17 +3298,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-              // Para Wompi, verificar que no esté pendiente
-              if (
-                pago.formaPago?.toLowerCase().includes("wompi") &&
-                pago.estadoVerificacion === "Pendiente"
-              ) {
-                return sum; // No sumar pagos de Wompi pendientes
-              }
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = pago.valor || pago.valorRegistrado || 0;
-              return sum + valorPago;
-            }, 0)
+            // Para Wompi, verificar que no esté pendiente
+            if (
+              pago.formaPago?.toLowerCase().includes("wompi") &&
+              pago.estadoVerificacion === "Pendiente"
+            ) {
+              return sum; // No sumar pagos de Wompi pendientes
+            }
+            // Considerar tanto valor como valorRegistrado
+            const valorPago = pago.valor || pago.valorRegistrado || 0;
+            return sum + valorPago;
+          }, 0)
           : pedido.anticipo || 0;
       return acc + anticipoReal;
     }, 0);
@@ -3275,17 +3323,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const anticipoReal =
         pedido.PagosAsentados && pedido.PagosAsentados.length > 0
           ? pedido.PagosAsentados.reduce((sum, pago) => {
-              // Para Wompi, verificar que no esté pendiente
-              if (
-                pago.formaPago?.toLowerCase().includes("wompi") &&
-                pago.estadoVerificacion === "Pendiente"
-              ) {
-                return sum; // No sumar pagos de Wompi pendientes
-              }
-              // Considerar tanto valor como valorRegistrado
-              const valorPago = pago.valor || pago.valorRegistrado || 0;
-              return sum + valorPago;
-            }, 0)
+            // Para Wompi, verificar que no esté pendiente
+            if (
+              pago.formaPago?.toLowerCase().includes("wompi") &&
+              pago.estadoVerificacion === "Pendiente"
+            ) {
+              return sum; // No sumar pagos de Wompi pendientes
+            }
+            // Considerar tanto valor como valorRegistrado
+            const valorPago = pago.valor || pago.valorRegistrado || 0;
+            return sum + valorPago;
+          }, 0)
           : pedido.anticipo || 0;
       const faltaPorPagar =
         (pedido.totalPedididoConDescuento || 0) - anticipoReal;
@@ -4599,7 +4647,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       if (active && typeof active.blur === "function") {
         active.blur();
       }
-    } catch {}
+    } catch { }
     if (!this.canModifyProducts(order)) {
       this.toastrService.warning(
         `No se pueden modificar productos. El pedido está en estado: ${order.estadoProceso}`,
@@ -5443,8 +5491,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           inputValue:
             order.asesorAsignado?.nit !== "9999"
               ? asesoresDisponibles.find(
-                  (a: any) => a.nit === order.asesorAsignado?.nit,
-                )?.cd
+                (a: any) => a.nit === order.asesorAsignado?.nit,
+              )?.cd
               : "",
           showCancelButton: true,
           confirmButtonColor: "#3085d6",
@@ -5506,10 +5554,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
       estadoProceso: this.isFromProduction
         ? [
-            EstadoProceso.SinProducir,
-            EstadoProceso.EnProduccion,
-            EstadoProceso.ProducidoParcialmente,
-          ]
+          EstadoProceso.SinProducir,
+          EstadoProceso.EnProduccion,
+          EstadoProceso.ProducidoParcialmente,
+        ]
         : ["Todos"],
     };
     this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
