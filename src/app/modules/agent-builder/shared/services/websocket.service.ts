@@ -38,6 +38,7 @@ export class WebSocketService {
   private streamCompleteSubject = new Subject<StreamComplete>();
   private streamErrorSubject = new Subject<{ messageId: string; error: string; code: string }>();
   private agentResponseSubject = new Subject<any>(); // Nuevo subject para respuestas de sub-agentes
+  private agentEventSubject = new Subject<any>(); // Generic subject for all agent events (steps, logs, etc)
 
   private connectionSubject = new BehaviorSubject<{ connected: boolean; sessionId?: string }>({ connected: false });
 
@@ -170,8 +171,23 @@ export class WebSocketService {
           this.agentResponseSubject.next(message.data);
           break;
 
+        // Catch-all for agent builder events to populate "Thinking" steps
+        case 'sub_agent_call':
+        case 'a2a_request':
+        case 'a2a_response':
+        case 'tool_call':
+        case 'orchestrator_thinking':
+        case 'final_result':
+          this.agentEventSubject.next({ type: message.type, ...message.data });
+          break;
+
         case 'error':
-          console.error('[WebSocketService] ❌ Server error:', message.data.error);
+          // If it's an agent execution error (has agentName/department), treat as event
+          if (message.data?.metadata?.agentName || message.data?.department) {
+             this.agentEventSubject.next({ type: 'error', ...message.data });
+          } else {
+             console.error('[WebSocketService] ❌ Server error:', message.data.error);
+          }
           break;
 
         case 'pong':
@@ -308,6 +324,13 @@ export class WebSocketService {
    */
   getAgentResponses(): Observable<any> {
     return this.agentResponseSubject.asObservable();
+  }
+
+  /**
+   * Generic Agent Events (for Thinking Process)
+   */
+  getAgentEvents(): Observable<any> {
+    return this.agentEventSubject.asObservable();
   }
 
   /**

@@ -13,55 +13,57 @@
     </div>
 
     <div class="sidebar-content">
-      <!-- General Manager Item -->
-      <div class="agent-item general-manager" [class.selected]="!selectedAgent" (click)="selectAgent(null)">
-        <div class="agent-avatar" [style.background]="'#1a73e8'">
-          <i class="pi pi-users"></i>
-        </div>
-        <div class="agent-info">
-          <span class="name">General Manager</span>
-          <span class="role">Orquestador</span>
-        </div>
+      <!-- New Chat / General Manager -->
+      <div class="action-btn-container">
+        <button class="new-chat-btn" (click)="selectAgent(null)" [class.active]="!selectedAgent">
+          <i class="pi pi-plus"></i>
+          <span>Nuevo chat</span>
+        </button>
       </div>
 
-      <div class="section-title">Mis Agentes</div>
+      <div class="section-title">Agentes por Departamento</div>
+
+      <!-- Grouped Agents List -->
+      <div class="grouped-agents-list" *ngIf="!isLoadingAgents">
+
+        <div class="department-group" *ngFor="let dept of departmentKeys">
+          <div class="dept-header">
+            <span class="dept-name">{{ getDepartmentName(dept) }}</span>
+          </div>
+
+          <div class="agent-item" *ngFor="let agent of groupedAgents[dept]"
+            [class.selected]="selectedAgent?.id === agent.id" (click)="selectAgent(agent)">
+            <div class="agent-icon">
+              <i [class]="'pi ' + getDepartmentIcon(agent.department)"></i>
+            </div>
+            <span class="agent-name">{{ agent.agentName }}</span>
+          </div>
+        </div>
+
+      </div>
 
       <!-- Loading State -->
       <div class="loading-agents" *ngIf="isLoadingAgents">
-        <span>Cargando...</span>
-      </div>
-
-      <!-- Agents List -->
-      <div class="agents-list" *ngIf="!isLoadingAgents">
-        <div class="agent-item" *ngFor="let agent of agents" [class.selected]="selectedAgent?.id === agent.id"
-          (click)="selectAgent(agent)">
-          <div class="agent-avatar" [style.background]="getDepartmentColor(agent.department)">
-            <i [class]="'pi ' + getDepartmentIcon(agent.department)"></i>
-          </div>
-          <div class="agent-info">
-            <span class="name">{{ agent.agentName }}</span>
-            <span class="role">{{ getDepartmentName(agent.department) }}</span>
-          </div>
-        </div>
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Cargando agentes...</span>
       </div>
     </div>
 
     <div class="sidebar-footer">
       <div class="user-profile">
-        <div class="avatar">
-          <i class="pi pi-user"></i>
-        </div>
+        <div class="avatar">D</div>
         <div class="info">
-          <span class="name">Usuario</span>
-          <span class="status">Pro</span>
+          <span class="name">Daniel</span>
+          <span class="status">Katuq Pro</span>
         </div>
+        <i class="pi pi-cog settings-icon"></i>
       </div>
     </div>
   </div>
 
   <!-- MAIN CHAT AREA -->
   <div class="main-chat-area">
-    <!-- Header -->
+    <!-- Header (Minimalist) -->
     <div class="chat-header">
       <div class="header-left">
         <div class="model-selector">
@@ -71,107 +73,122 @@
       </div>
 
       <div class="header-actions">
-        <div class="katuq-pro-badge">
-          KATUQ PRO
-        </div>
-        <div class="user-avatar-mini">
-          <span>D</span>
-        </div>
+        <div class="pro-badge">PRO</div>
+        <div class="user-avatar-mini">D</div>
       </div>
     </div>
 
     <!-- Chat Messages -->
     <div class="chat-messages" #chatMessages>
-      <!-- Empty State (Gemini Style) -->
+      <!-- Empty State -->
       <div *ngIf="showEmptyState" class="empty-state">
         <div class="greeting-container">
-          <h1 class="greeting-text">Hola,</h1>
-          <h2 class="sub-greeting">¿en qué puedo ayudarte hoy?</h2>
+          <div class="greeting-icon">
+            <i class="pi pi-sparkles"></i>
+          </div>
+          <h1 class="greeting-text">Hola, Daniel</h1>
+          <h2 class="sub-greeting">¿En qué puedo ayudarte hoy?</h2>
         </div>
 
-        <div class="suggestions">
-          <div class="suggestions-scroll">
-            <div class="suggestion-chips">
-              <div *ngFor="let question of exampleQuestions" class="suggestion-chip"
-                (click)="useExampleQuestion(question)">
-                <span class="chip-text">{{ question }}</span>
-                <div class="chip-icon">
-                  <i class="pi pi-compass"></i>
-                </div>
-              </div>
+        <div class="suggestions-grid">
+          <div *ngFor="let question of exampleQuestions" class="suggestion-card" (click)="useExampleQuestion(question)">
+            <span class="card-text">{{ question }}</span>
+            <div class="card-icon">
+              <i class="pi pi-compass"></i>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Messages -->
+      <!-- Messages List -->
       <div *ngFor="let msg of messages" class="message-wrapper" [class.user]="msg.department === 'user'">
 
-        <!-- User Message -->
-        <div class="user-message-card" *ngIf="msg.department === 'user'">
-          <div class="message-content">{{ msg.message }}</div>
+        <!-- User Message (Pill style) -->
+        <div class="user-message-pill" *ngIf="msg.department === 'user'">
+          {{ msg.message }}
         </div>
 
-        <!-- Agent Message (Gemini Style) -->
-        <div class="agent-message-card" *ngIf="msg.department !== 'user'">
-          <!-- Header with Avatar -->
-          <div class="agent-header">
-            <div class="agent-avatar-wrapper">
-              <div class="avatar-img">
-                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="AI Avatar">
-              </div>
-            </div>
-            <div class="agent-meta">
-              <span class="agent-name">{{ msg.speaker }}</span>
+        <!-- Agent Message (Text style with Avatar) -->
+        <div class="agent-message-container" *ngIf="msg.department !== 'user'">
+          <div class="agent-avatar-col">
+            <div class="agent-avatar-icon" [style.color]="getDepartmentColor(msg.department)">
+              <i [class]="'pi ' + getDepartmentIcon(msg.department)"></i>
             </div>
           </div>
 
-          <!-- Working Process (Collapsible) -->
-          <div class="working-process-section" *ngIf="msg.metadata?.steps && msg.metadata.steps.length > 0">
-            <div class="process-header" (click)="msg.isProcessExpanded = !msg.isProcessExpanded">
-              <div class="process-title">
-                <i class="pi pi-cog" [class.pi-spin]="msg.isStreaming"></i>
-                <span>Procesando solicitud...</span>
+          <div class="agent-content-col">
+            <div class="agent-name-label">{{ msg.speaker }}</div>
+            
+            <!-- Working Process (Thought Block) - Always show if streaming or has steps -->
+            <div class="thought-process" *ngIf="msg.isStreaming || (msg.metadata?.steps && msg.metadata.steps.length > 0)">
+              <div class="thought-header" (click)="msg.isProcessExpanded = !msg.isProcessExpanded">
+                <i class="pi pi-sparkles sparkle-icon" [class.thinking]="msg.isStreaming"
+                  style="color: var(--gemini-accent)"></i>
+                <span class="thought-label" [class.thinking-animated]="msg.isStreaming">
+                  {{ msg.isStreaming ? 'Pensando...' : 'Pensamiento' }}
+                </span>
+                <i class="pi pi-chevron-down" [class.expanded]="msg.isProcessExpanded"></i>
               </div>
-              <i class="pi pi-chevron-down toggle-icon" [class.expanded]="msg.isProcessExpanded"></i>
-            </div>
 
-            <div class="process-steps" *ngIf="msg.isProcessExpanded">
-              <div class="step-item" *ngFor="let step of msg.metadata.steps">
-                <div class="step-status">
-                  <i class="pi pi-check-circle success" *ngIf="step.status === 'completed'"></i>
-                  <i class="pi pi-spin pi-spinner running" *ngIf="step.status === 'running'"></i>
-                  <i class="pi pi-circle pending" *ngIf="step.status === 'pending'"></i>
+              <div class="thought-content" *ngIf="msg.isProcessExpanded">
+                <div class="step-item" *ngIf="!msg.metadata?.steps || msg.metadata.steps.length === 0">
+                   <div class="step-status">
+                     <i class="pi pi-spin pi-spinner"></i>
+                   </div>
+                   <span class="step-text">Analizando solicitud...</span>
                 </div>
-                <div class="step-content">
+                <div class="step-item" *ngFor="let step of msg.metadata.steps">
+                  <div class="step-status">
+                    <i class="pi pi-check" *ngIf="step.status === 'completed'"></i>
+                    <i class="pi pi-spin pi-spinner" *ngIf="step.status === 'running'"></i>
+                    <div class="dot" *ngIf="step.status === 'pending'"></div>
+                  </div>
                   <span class="step-text">{{ step.description }}</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Main Content -->
-          <div class="message-content" [innerHTML]="msg.message | safeHtml"></div>
+            <!-- Message Text (HTML for mentions) -->
+            <div class="message-text" [innerHTML]="msg.parsedMessage"></div>
 
-          <!-- Streaming Indicator -->
-          <div *ngIf="msg.isStreaming" class="streaming-indicator">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+            <!-- Streaming Cursor -->
+            <span class="cursor-blink" *ngIf="msg.isStreaming"></span>
+
+            <!-- Message Actions (Gemini Style) -->
+            <div class="message-actions" *ngIf="!msg.isStreaming && msg.department !== 'user'">
+              <button class="action-btn" pTooltip="Buen trabajo" tooltipPosition="bottom">
+                <i class="pi pi-thumbs-up"></i>
+              </button>
+              <button class="action-btn" pTooltip="Mal trabajo" tooltipPosition="bottom">
+                <i class="pi pi-thumbs-down"></i>
+              </button>
+              <button class="action-btn" pTooltip="Copiar" tooltipPosition="bottom">
+                <i class="pi pi-copy"></i>
+              </button>
+              <button class="action-btn" pTooltip="Regenerar" tooltipPosition="bottom">
+                <i class="pi pi-refresh"></i>
+              </button>
+              <button class="action-btn" pTooltip="Compartir" tooltipPosition="bottom">
+                <i class="pi pi-share-alt"></i>
+              </button>
+              <button class="action-btn" pTooltip="Más" tooltipPosition="bottom">
+                <i class="pi pi-ellipsis-v"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Input Area (Gemini Style) -->
+    <!-- Input Area (Floating) -->
     <div class="chat-input-area">
       <div class="input-container">
-        <!-- Mention Popup (Hidden by default logic) -->
+        <!-- Mention Popup -->
         <div class="mention-popup" *ngIf="showMentionList">
           <div class="mention-header">Mencionar Agente</div>
           <div class="mention-list">
             <div class="mention-item" *ngFor="let agent of filteredAgentsForMention" (click)="selectMention(agent)">
-              <div class="agent-avatar-small" [style.background]="getDepartmentColor(agent.department)">
+              <div class="agent-icon-small">
                 <i [class]="'pi ' + getDepartmentIcon(agent.department)"></i>
               </div>
               <div class="agent-details">
@@ -183,27 +200,29 @@
         </div>
 
         <div class="input-wrapper">
-          <button class="tool-btn">
-            <i class="pi pi-plus-circle"></i>
+          <button class="attach-btn">
+            <i class="pi pi-plus"></i>
           </button>
-          
-          <textarea #messageInput class="message-input" [(ngModel)]="currentTask" (input)="onInput($event)"
-            placeholder="Ingresa una instrucción para KAI..."
-            (keyup.enter)="!$event.shiftKey && executeTask()" [disabled]="isExecuting" rows="1"></textarea>
 
-          <div class="send-actions">
-            <button class="tool-btn">
+          <textarea #messageInput class="message-input" [(ngModel)]="currentTask" (input)="onInput($event)"
+            placeholder="Ingresa una instrucción para KAI..." (keyup.enter)="!$event.shiftKey && executeTask()"
+            [disabled]="isExecuting" rows="1"></textarea>
+
+          <div class="right-actions">
+            <button class="mic-btn" *ngIf="!currentTask.trim() && !isExecuting">
               <i class="pi pi-microphone"></i>
             </button>
-            <button [class.send-active]="currentTask.trim().length > 0" (click)="executeTask()"
-              [disabled]="isExecuting || !currentTask.trim()">
+            <button class="send-btn" *ngIf="currentTask.trim() && !isExecuting" (click)="executeTask()">
               <i class="pi pi-send"></i>
             </button>
+            <div class="loading-spinner" *ngIf="isExecuting">
+              <i class="pi pi-spin pi-spinner"></i>
+            </div>
           </div>
         </div>
-        
+
         <div class="input-footer">
-          <small>KAI puede mostrar información imprecisa, por favor verifícala.</small>
+          <small>KAI puede cometer errores. Verifica la información importante.</small>
         </div>
       </div>
     </div>
