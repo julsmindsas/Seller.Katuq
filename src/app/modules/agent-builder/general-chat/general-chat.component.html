@@ -1,11 +1,11 @@
-<div class="unified-chat-container" [class.sidebar-closed]="!sidebarOpen" [style.--theme-color]="getThemeColor()">
+<div class="unified-chat-container" [class.sidebar-closed]="!sidebarOpen">
 
   <!-- SIDEBAR -->
   <div class="chat-sidebar">
     <div class="sidebar-header">
       <div class="logo-section">
         <i class="pi pi-sparkles logo-icon"></i>
-        <h3>KAI Intelligence</h3>
+        <h3>Agent Builder</h3>
       </div>
       <button class="toggle-btn" (click)="toggleSidebar()">
         <i class="pi pi-bars"></i>
@@ -14,32 +14,27 @@
 
     <div class="sidebar-content">
       <!-- General Manager Item -->
-      <div class="agent-item general-manager" [class.selected]="!selectedAgent" (click)="selectAgent(null)"
-        [style.--agent-color]="'#1a73e8'" [style.--agent-color-bg]="'#e8f0fe'">
-        <div class="agent-avatar">
+      <div class="agent-item general-manager" [class.selected]="!selectedAgent" (click)="selectAgent(null)">
+        <div class="agent-avatar" [style.background]="'#1a73e8'">
           <i class="pi pi-users"></i>
         </div>
         <div class="agent-info">
           <span class="name">General Manager</span>
-          <span class="role">Orquestador Maestro</span>
+          <span class="role">Orquestador</span>
         </div>
-        <div class="active-indicator" *ngIf="!selectedAgent"></div>
       </div>
 
-      <div class="divider"></div>
-      <div class="section-title">Agentes Especializados</div>
+      <div class="section-title">Mis Agentes</div>
 
       <!-- Loading State -->
       <div class="loading-agents" *ngIf="isLoadingAgents">
-        <div class="google-spinner-small"></div>
-        <span>Cargando agentes...</span>
+        <span>Cargando...</span>
       </div>
 
       <!-- Agents List -->
       <div class="agents-list" *ngIf="!isLoadingAgents">
         <div class="agent-item" *ngFor="let agent of agents" [class.selected]="selectedAgent?.id === agent.id"
-          (click)="selectAgent(agent)" [style.--agent-color]="getDepartmentColor(agent.department)"
-          [style.--agent-color-bg]="getDepartmentColor(agent.department) + '1A'">
+          (click)="selectAgent(agent)">
           <div class="agent-avatar" [style.background]="getDepartmentColor(agent.department)">
             <i [class]="'pi ' + getDepartmentIcon(agent.department)"></i>
           </div>
@@ -47,7 +42,6 @@
             <span class="name">{{ agent.agentName }}</span>
             <span class="role">{{ getDepartmentName(agent.department) }}</span>
           </div>
-          <div class="active-indicator" *ngIf="selectedAgent?.id === agent.id"></div>
         </div>
       </div>
     </div>
@@ -59,7 +53,7 @@
         </div>
         <div class="info">
           <span class="name">Usuario</span>
-          <span class="status">En línea</span>
+          <span class="status">Pro</span>
         </div>
       </div>
     </div>
@@ -70,65 +64,41 @@
     <!-- Header -->
     <div class="chat-header">
       <div class="header-left">
-        <button class="mobile-toggle" (click)="toggleSidebar()">
-          <i class="pi pi-bars"></i>
-        </button>
-
-        <div class="current-agent-info">
-          <div class="avatar-large"
-            [style.background]="selectedAgent ? getDepartmentColor(selectedAgent.department) : '#1a73e8'">
-            <i [class]="'pi ' + (selectedAgent ? getDepartmentIcon(selectedAgent.department) : 'pi-users')"></i>
-          </div>
-          <div class="text-info">
-            <h2>{{ selectedAgent ? selectedAgent.agentName : 'General Manager' }}</h2>
-            <p>{{ selectedAgent ? getDepartmentName(selectedAgent.department) : 'Orquestador Maestro del Sistema' }}</p>
-          </div>
+        <div class="model-selector">
+          <span>Gemini 2.5 Flash</span>
+          <i class="pi pi-chevron-down"></i>
         </div>
       </div>
 
       <div class="header-actions">
-        <div class="orchestrators-badge" *ngIf="orchestratorsInvolved.length > 0">
-          <span class="badge-label">
-            <i class="pi pi-info-circle"></i>
-            Consultados:
-          </span>
-          <span *ngFor="let dept of orchestratorsInvolved" class="dept-tag"
-            [style.backgroundColor]="getDepartmentColor(dept)">
-            <i [class]="'pi ' + getDepartmentIcon(dept)"></i>
-            {{ getDepartmentName(dept) }}
-          </span>
+        <div class="katuq-pro-badge">
+          KATUQ PRO
         </div>
-
-        <button pButton type="button" class="p-button-rounded p-button-text clear-btn" icon="pi pi-trash"
-          pTooltip="Limpiar chat" tooltipPosition="left" (click)="clearChat()" [disabled]="messages.length === 0">
-        </button>
+        <div class="user-avatar-mini">
+          <span>D</span>
+        </div>
       </div>
     </div>
 
     <!-- Chat Messages -->
     <div class="chat-messages" #chatMessages>
-      <!-- Empty State -->
+      <!-- Empty State (Gemini Style) -->
       <div *ngIf="showEmptyState" class="empty-state">
-        <div class="empty-content">
-          <div class="icon-wrapper" [style.background]="getThemeColor() + '1A'">
-            <i [class]="'pi ' + (selectedAgent ? getDepartmentIcon(selectedAgent.department) : 'pi-comments')"
-              [style.color]="getThemeColor()"></i>
-          </div>
-          <h3>{{ selectedAgent ? 'Conversa con ' + selectedAgent.agentName : 'Bienvenido al General Manager' }}</h3>
-          <p>
-            {{ selectedAgent
-            ? 'Estoy especializado en ' + getDepartmentName(selectedAgent.department) + '. ¿En qué puedo ayudarte hoy?'
-            : 'Soy el orquestador central. Puedo coordinar múltiples departamentos para responder consultas complejas.'
-            }}
-          </p>
+        <div class="greeting-container">
+          <h1 class="greeting-text">Hola,</h1>
+          <h2 class="sub-greeting">¿en qué puedo ayudarte hoy?</h2>
+        </div>
 
-          <div class="suggestions">
-            <p class="suggestion-title">Sugerencias:</p>
+        <div class="suggestions">
+          <div class="suggestions-scroll">
             <div class="suggestion-chips">
-              <button *ngFor="let question of exampleQuestions" class="suggestion-chip"
+              <div *ngFor="let question of exampleQuestions" class="suggestion-chip"
                 (click)="useExampleQuestion(question)">
-                {{ question }}
-              </button>
+                <span class="chip-text">{{ question }}</span>
+                <div class="chip-icon">
+                  <i class="pi pi-compass"></i>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -142,26 +112,27 @@
           <div class="message-content">{{ msg.message }}</div>
         </div>
 
-        <!-- Agent Message (MGX Style) -->
+        <!-- Agent Message (Gemini Style) -->
         <div class="agent-message-card" *ngIf="msg.department !== 'user'">
-          <!-- Header -->
+          <!-- Header with Avatar -->
           <div class="agent-header">
             <div class="agent-avatar-wrapper">
-              <div class="avatar-img" [style.backgroundColor]="getDepartmentColor(msg.department)">
-                <i [class]="'pi ' + getDepartmentIcon(msg.department)"></i>
+              <div class="avatar-img">
+                <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png" alt="AI Avatar">
               </div>
             </div>
             <div class="agent-meta">
               <span class="agent-name">{{ msg.speaker }}</span>
-              <span class="agent-role">{{ getDepartmentName(msg.department) }}</span>
             </div>
           </div>
 
           <!-- Working Process (Collapsible) -->
-          <div class="working-process" *ngIf="msg.metadata?.steps && msg.metadata.steps.length > 0">
+          <div class="working-process-section" *ngIf="msg.metadata?.steps && msg.metadata.steps.length > 0">
             <div class="process-header" (click)="msg.isProcessExpanded = !msg.isProcessExpanded">
-              <i class="pi pi-cog process-icon" [class.spinning]="msg.isStreaming"></i>
-              <span>Working Process</span>
+              <div class="process-title">
+                <i class="pi pi-cog" [class.pi-spin]="msg.isStreaming"></i>
+                <span>Procesando solicitud...</span>
+              </div>
               <i class="pi pi-chevron-down toggle-icon" [class.expanded]="msg.isProcessExpanded"></i>
             </div>
 
@@ -169,15 +140,11 @@
               <div class="step-item" *ngFor="let step of msg.metadata.steps">
                 <div class="step-status">
                   <i class="pi pi-check-circle success" *ngIf="step.status === 'completed'"></i>
-                  <i class="pi pi-spin pi-spinner" *ngIf="step.status === 'running'"></i>
-                  <i class="pi pi-circle" *ngIf="step.status === 'pending'"></i>
+                  <i class="pi pi-spin pi-spinner running" *ngIf="step.status === 'running'"></i>
+                  <i class="pi pi-circle pending" *ngIf="step.status === 'pending'"></i>
                 </div>
                 <div class="step-content">
                   <span class="step-text">{{ step.description }}</span>
-                  <div class="tool-call-badge" *ngIf="step.toolCall">
-                    <i class="pi pi-terminal"></i>
-                    {{ step.toolCall }}
-                  </div>
                 </div>
               </div>
             </div>
@@ -196,10 +163,10 @@
       </div>
     </div>
 
-    <!-- Input Area -->
+    <!-- Input Area (Gemini Style) -->
     <div class="chat-input-area">
       <div class="input-container">
-        <!-- Mention Popup -->
+        <!-- Mention Popup (Hidden by default logic) -->
         <div class="mention-popup" *ngIf="showMentionList">
           <div class="mention-header">Mencionar Agente</div>
           <div class="mention-list">
@@ -212,23 +179,31 @@
                 <span class="agent-dept">{{ getDepartmentName(agent.department) }}</span>
               </div>
             </div>
-            <div class="no-results" *ngIf="filteredAgentsForMention.length === 0">
-              No se encontraron agentes
-            </div>
           </div>
         </div>
 
         <div class="input-wrapper">
+          <button class="tool-btn">
+            <i class="pi pi-plus-circle"></i>
+          </button>
+          
           <textarea #messageInput class="message-input" [(ngModel)]="currentTask" (input)="onInput($event)"
-            placeholder="Escribe tu mensaje aquí... Usa '@' para mencionar agentes"
+            placeholder="Ingresa una instrucción para KAI..."
             (keyup.enter)="!$event.shiftKey && executeTask()" [disabled]="isExecuting" rows="1"></textarea>
 
-          <button class="send-btn" [disabled]="isExecuting || !currentTask.trim()" (click)="executeTask()">
-            <i class="pi pi-send"></i>
-          </button>
+          <div class="send-actions">
+            <button class="tool-btn">
+              <i class="pi pi-microphone"></i>
+            </button>
+            <button [class.send-active]="currentTask.trim().length > 0" (click)="executeTask()"
+              [disabled]="isExecuting || !currentTask.trim()">
+              <i class="pi pi-send"></i>
+            </button>
+          </div>
         </div>
+        
         <div class="input-footer">
-          <small>KAI Intelligence puede cometer errores. Verifica la información importante.</small>
+          <small>KAI puede mostrar información imprecisa, por favor verifícala.</small>
         </div>
       </div>
     </div>

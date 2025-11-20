@@ -1,17 +1,63 @@
-// Google Material Design 3 Variables & Premium Palette
-$google-blue: #0b57d0; // Darker, more premium blue
-$google-blue-light: #e8f0fe;
-$google-grey-50: #f8f9fa;
-$google-grey-100: #f1f3f4;
-$google-grey-200: #e3e3e3;
-$google-grey-300: #dadce0;
-$google-grey-500: #9aa0a6;
-$google-grey-700: #5f6368;
-$google-grey-800: #1f1f1f; // Almost black
-$google-grey-900: #202124;
-$surface-color: #ffffff;
-$background-color: #ffffff; // Clean white background
-$sidebar-width: 280px; // Slightly narrower sidebar
+// CSS Variables for Theming (Gemini Style)
+:root {
+  // Light Theme (Default)
+  --gemini-bg: #ffffff;
+  --gemini-sidebar: #f0f4f9;
+  --gemini-surface: #ffffff;
+  --gemini-input: #f0f4f9;
+  --gemini-input-focus: #e9eef6;
+  --gemini-text-primary: #1e1e1e; // Más oscuro para mejor lectura
+  --gemini-text-secondary: #444746;
+  --gemini-border: #c4c7c5; // Bordes más visibles en modo claro
+  --gemini-accent: #0b57d0;
+  --gemini-user-bubble: #f2f2f2;
+  --gemini-hover: rgba(68, 71, 70, 0.08);
+  --gemini-selected: #d3e3fd;
+  --gemini-selected-text: #041e49;
+  --gemini-code-bg: #f8f9fa;
+  
+  // Gradients
+  --gemini-greeting-gradient: linear-gradient(90deg, #4285f4, #9b72cb, #d96570);
+}
+
+// Dark Theme (via prefers-color-scheme or .dark-theme class)
+@media (prefers-color-scheme: dark) {
+  :root {
+    --gemini-bg: #131314;
+    --gemini-sidebar: #1e1f20;
+    --gemini-surface: #1e1f20;
+    --gemini-input: #282a2c;
+    --gemini-input-focus: #363739;
+    --gemini-text-primary: #e3e3e3;
+    --gemini-text-secondary: #c4c7c5;
+    --gemini-border: #444746;
+    --gemini-accent: #a8c7fa;
+    --gemini-user-bubble: #282a2c;
+    --gemini-hover: rgba(255, 255, 255, 0.08);
+    --gemini-selected: #004a77;
+    --gemini-selected-text: #c2e7ff;
+    --gemini-code-bg: #1e1f20;
+  }
+}
+
+// Manual dark mode override if needed
+:host-context(.dark-mode) {
+  --gemini-bg: #131314;
+  --gemini-sidebar: #1e1f20;
+  --gemini-surface: #1e1f20;
+  --gemini-input: #282a2c;
+  --gemini-input-focus: #363739;
+  --gemini-text-primary: #e3e3e3;
+  --gemini-text-secondary: #c4c7c5;
+  --gemini-border: #444746;
+  --gemini-accent: #a8c7fa;
+  --gemini-user-bubble: #282a2c;
+  --gemini-hover: rgba(255, 255, 255, 0.08);
+  --gemini-selected: #004a77;
+  --gemini-selected-text: #c2e7ff;
+  --gemini-code-bg: #1e1f20;
+}
+
 $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 
 // Mixins
@@ -21,38 +67,31 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
   justify-content: center;
 }
 
-@mixin card-shadow {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
-}
-
-@mixin floating-shadow {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
 .unified-chat-container {
   display: flex;
   height: 100vh;
-  background-color: $background-color;
+  background-color: var(--gemini-bg);
   overflow: hidden;
   font-family: $font-family;
-  color: $google-grey-800;
+  color: var(--gemini-text-primary);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
 
-  // Default theme color
-  --theme-color: #{$google-blue};
+  // Default theme color fallback
+  --theme-color: #0b57d0;
 
   // SIDEBAR
   .chat-sidebar {
-    width: $sidebar-width;
-    background: $google-grey-50;
-    border-right: 1px solid $google-grey-200;
+    width: 280px;
+    background: var(--gemini-sidebar);
+    border-right: none;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), background-color 0.3s ease;
     z-index: 100;
 
     .sidebar-header {
-      padding: 20px 24px;
+      padding: 20px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -62,18 +101,34 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
         display: flex;
         align-items: center;
         gap: 12px;
+        padding-left: 8px;
 
         .logo-icon {
-          font-size: 22px;
-          color: var(--theme-color);
+          font-size: 20px;
+          background: var(--gemini-greeting-gradient);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
         }
 
         h3 {
           margin: 0;
           font-size: 18px;
           font-weight: 500;
-          color: $google-grey-800;
+          color: var(--gemini-text-primary);
           letter-spacing: -0.5px;
+        }
+      }
+
+      .toggle-btn {
+        background: transparent;
+        border: none;
+        color: var(--gemini-text-secondary);
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        
+        &:hover {
+          background: var(--gemini-hover);
         }
       }
     }
@@ -86,7 +141,7 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
       .section-title {
         font-size: 11px;
         font-weight: 600;
-        color: $google-grey-700;
+        color: var(--gemini-text-secondary);
         margin: 16px 16px 8px;
         text-transform: uppercase;
         letter-spacing: 0.8px;
@@ -96,42 +151,39 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
         display: flex;
         align-items: center;
         padding: 10px 16px;
-        border-radius: 20px;
+        border-radius: 24px; // More rounded
         cursor: pointer;
         transition: all 0.2s ease;
         margin-bottom: 4px;
         gap: 14px;
         border: 1px solid transparent;
-
-        --agent-color: #{$google-blue};
-        --agent-color-bg: #{$google-blue-light};
+        color: var(--gemini-text-primary);
 
         &:hover {
-          background-color: rgba(0, 0, 0, 0.04);
+          background-color: var(--gemini-hover);
         }
 
         &.selected {
-          background-color: #e3eefc; // Very light blue
-          border-color: transparent;
-
+          background-color: var(--gemini-selected);
+          
           .name {
-            color: #0b57d0;
+            color: var(--gemini-selected-text);
             font-weight: 600;
           }
-
+          
           .role {
-            color: #0b57d0;
+            color: var(--gemini-selected-text);
             opacity: 0.8;
           }
         }
 
         .agent-avatar {
-          width: 36px;
-          height: 36px;
+          width: 32px;
+          height: 32px;
           border-radius: 50%;
           @include flex-center;
           color: white;
-          font-size: 16px;
+          font-size: 14px;
           flex-shrink: 0;
         }
 
@@ -143,7 +195,7 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
 
           .name {
             font-size: 14px;
-            color: $google-grey-800;
+            color: var(--gemini-text-primary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -151,7 +203,7 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
 
           .role {
             font-size: 12px;
-            color: $google-grey-700;
+            color: var(--gemini-text-secondary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -161,21 +213,27 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
     }
 
     .sidebar-footer {
-      padding: 16px 24px;
-      border-top: 1px solid $google-grey-200;
-
+      padding: 16px 20px;
+      
       .user-profile {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 12px;
+        padding: 8px;
+        border-radius: 24px;
+        cursor: pointer;
+        
+        &:hover {
+          background-color: var(--gemini-hover);
+        }
 
         .avatar {
           width: 32px;
           height: 32px;
           border-radius: 50%;
-          background: #e8eaed;
+          background: #7c4dff;
           @include flex-center;
-          color: $google-grey-700;
+          color: white;
           font-size: 14px;
         }
 
@@ -186,24 +244,12 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
           .name {
             font-size: 13px;
             font-weight: 500;
-            color: $google-grey-800;
+            color: var(--gemini-text-primary);
           }
 
           .status {
             font-size: 11px;
-            color: #1e8e3e;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-
-            &::before {
-              content: '';
-              display: block;
-              width: 6px;
-              height: 6px;
-              border-radius: 50%;
-              background-color: #1e8e3e;
-            }
+            color: var(--gemini-text-secondary);
           }
         }
       }
@@ -215,65 +261,69 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
     flex: 1;
     display: flex;
     flex-direction: column;
-    background: white;
+    background: var(--gemini-bg);
     position: relative;
+    transition: background-color 0.3s ease;
 
     .chat-header {
-      padding: 0 32px;
+      padding: 0 24px;
       height: 64px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
-      position: sticky;
+      background: transparent; // Fully transparent
+      position: absolute;
       top: 0;
+      width: 100%;
       z-index: 10;
-      border-bottom: 1px solid transparent; // Keep transparent for cleaner look
 
       .header-left {
         display: flex;
         align-items: center;
-        gap: 16px;
-
-        .current-agent-info {
+        
+        .model-selector {
           display: flex;
           align-items: center;
-          gap: 12px;
-
-          .avatar-large {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            @include flex-center;
-            color: white;
-            font-size: 16px;
+          gap: 8px;
+          color: var(--gemini-text-secondary);
+          font-size: 16px;
+          font-weight: 500;
+          cursor: pointer;
+          padding: 8px 12px;
+          border-radius: 8px;
+          
+          &:hover {
+            background: var(--gemini-hover);
+            color: var(--gemini-text-primary);
           }
-
-          .text-info {
-            h2 {
-              margin: 0;
-              font-size: 16px;
-              font-weight: 500;
-              color: $google-grey-800;
-            }
-          }
+          
+          i { font-size: 14px; }
         }
       }
 
       .header-actions {
-        .clear-btn {
-          color: $google-grey-700;
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          @include flex-center;
-          transition: background 0.2s;
+        display: flex;
+        gap: 12px;
 
-          &:hover {
-            background: $google-grey-100;
-            color: $google-grey-900;
-          }
+        .katuq-pro-badge {
+          background: var(--gemini-surface);
+          color: var(--gemini-text-secondary);
+          padding: 6px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 600;
+          border: 1px solid var(--gemini-border);
+        }
+        
+        .user-avatar-mini {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: #ffd600; // Example color
+          @include flex-center;
+          color: #1f1f1f;
+          font-size: 12px;
+          font-weight: 600;
         }
       }
     }
@@ -281,83 +331,92 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 24px 0;
+      padding: 80px 0 24px;
       display: flex;
       flex-direction: column;
-      gap: 32px; // More space between messages
+      gap: 32px;
       scroll-behavior: smooth;
 
-      // Empty State
+      // Empty State (Gemini Style)
       .empty-state {
         flex: 1;
         @include flex-center;
         flex-direction: column;
-        padding: 40px;
+        padding: 40px 20px;
+        justify-content: center; // Center vertically
 
-        .empty-content {
-          max-width: 600px;
-          text-align: center;
-
-          .icon-wrapper {
-            width: 64px;
-            height: 64px;
-            border-radius: 24px;
-            margin: 0 auto 24px;
-            @include flex-center;
-            background: $google-blue-light;
-
-            i {
-              font-size: 32px;
-              color: var(--theme-color);
-            }
+        .greeting-container {
+          margin-bottom: 48px;
+          text-align: left;
+          width: 100%;
+          max-width: 800px;
+          
+          h1.greeting-text {
+            font-size: 56px;
+            font-weight: 500;
+            margin: 0;
+            background: var(--gemini-greeting-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+            letter-spacing: -1px;
           }
-
-          h3 {
-            font-size: 24px;
-            font-weight: 400;
-            color: $google-grey-800;
-            margin-bottom: 12px;
+          
+          h2.sub-greeting {
+            font-size: 56px;
+            font-weight: 500;
+            margin: 0;
+            color: var(--gemini-border); // In light mode this might need adjustment, but using border color or secondary text
+            opacity: 0.5;
+            line-height: 1.2;
+            letter-spacing: -1px;
           }
+        }
 
-          p {
-            font-size: 16px;
-            color: $google-grey-700;
-            line-height: 1.6;
-            margin-bottom: 40px;
-          }
+        .suggestions {
+          width: 100%;
+          max-width: 800px;
+          
+          .suggestion-chips {
+            display: flex;
+            flex-wrap: nowrap; // Horizontal scroll if needed
+            overflow-x: auto;
+            gap: 12px;
+            padding-bottom: 8px;
+            justify-content: flex-start;
 
-          .suggestions {
-            .suggestion-title {
-              font-size: 12px;
-              font-weight: 500;
-              color: $google-grey-500;
-              margin-bottom: 16px;
-              text-transform: uppercase;
-              letter-spacing: 1px;
-            }
-
-            .suggestion-chips {
+            .suggestion-chip {
+              background: var(--gemini-surface);
+              border: 1px solid var(--gemini-border); // Borde visible
+              border-radius: 12px;
+              padding: 16px;
+              font-size: 14px;
+              color: var(--gemini-text-primary);
+              cursor: pointer;
+              transition: all 0.2s;
+              min-width: 180px;
+              height: 100px;
               display: flex;
-              flex-wrap: wrap;
-              justify-content: center;
-              gap: 12px;
+              flex-direction: column;
+              justify-content: space-between;
+              position: relative;
+              overflow: hidden;
 
-              .suggestion-chip {
-                background: white;
-                border: 1px solid $google-grey-300;
-                border-radius: 20px;
-                padding: 10px 20px;
+              &:hover {
+                background: var(--gemini-hover); // Hover mejorado
+                border-color: var(--gemini-accent); // Acento al hover
+              }
+              
+              .chip-icon {
+                align-self: flex-end;
+                width: 32px;
+                height: 32px;
+                background: var(--gemini-bg);
+                border-radius: 50%;
+                @include flex-center;
                 font-size: 14px;
-                color: $google-grey-700;
-                cursor: pointer;
-                transition: all 0.2s;
-                background: $google-grey-50;
-
-                &:hover {
-                  background: #e3eefc;
-                  border-color: #d3e3fd;
-                  color: #0b57d0;
-                }
+                color: var(--gemini-text-primary);
+                border: 1px solid var(--gemini-border); // Borde en icono
               }
             }
           }
@@ -367,7 +426,7 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
       // Message Wrapper
       .message-wrapper {
         width: 100%;
-        max-width: 800px; // Optimal reading width
+        max-width: 800px;
         margin: 0 auto;
         padding: 0 24px;
         display: flex;
@@ -377,11 +436,10 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
           justify-content: flex-end;
 
           .user-message-card {
-            background: $google-grey-100;
-            color: $google-grey-900;
+            background: var(--gemini-user-bubble);
+            color: var(--gemini-text-primary);
             padding: 12px 20px;
-            border-radius: 20px;
-            border-top-right-radius: 4px; // Distinctive shape
+            border-radius: 24px;
             font-size: 16px;
             line-height: 1.6;
             max-width: 80%;
@@ -394,219 +452,86 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
           display: flex;
           flex-direction: column;
           gap: 8px;
+          animation: fadeIn 0.3s ease-out;
 
           .agent-header {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            align-items: flex-start; // Align to top
+            gap: 16px;
             margin-bottom: 4px;
 
             .agent-avatar-wrapper {
               .avatar-img {
-                width: 28px;
-                height: 28px;
+                width: 32px;
+                height: 32px;
                 border-radius: 50%;
                 @include flex-center;
-                color: white;
-                font-size: 14px;
+                overflow: hidden;
+                background: transparent;
+                
+                img {
+                  width: 100%;
+                  height: 100%;
+                  object-fit: cover;
+                }
+                
+                i {
+                  font-size: 18px;
+                  color: var(--gemini-text-primary);
+                }
               }
             }
 
             .agent-meta {
               display: flex;
-              align-items: baseline;
-              gap: 8px;
-
+              flex-direction: column;
+              
               .agent-name {
                 font-size: 14px;
                 font-weight: 600;
-                color: $google-grey-900;
-              }
-
-              .agent-role {
-                font-size: 12px;
-                color: $google-grey-700;
-              }
-            }
-          }
-
-          // Working Process Section
-          .working-process-section {
-            margin: 8px 0 16px 40px; // Indent to align with text
-            border: 1px solid $google-grey-200;
-            border-radius: 12px;
-            overflow: hidden;
-            background: white;
-
-            .process-header {
-              padding: 10px 16px;
-              background: $google-grey-50;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-              cursor: pointer;
-              transition: background 0.2s;
-
-              &:hover {
-                background: $google-grey-100;
-              }
-
-              .process-title {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                font-size: 13px;
-                font-weight: 500;
-                color: $google-grey-700;
-
-                i.pi-spin {
-                  color: var(--theme-color);
-                }
-              }
-
-              .toggle-icon {
-                color: $google-grey-500;
-                font-size: 12px;
-              }
-            }
-
-            .process-steps {
-              padding: 12px 16px;
-              background: white;
-              border-top: 1px solid $google-grey-200;
-
-              .step-item {
-                display: flex;
-                gap: 12px;
-                margin-bottom: 12px;
-
-                &:last-child {
-                  margin-bottom: 0;
-                }
-
-                .step-status {
-                  padding-top: 2px;
-
-                  i {
-                    font-size: 14px;
-
-                    &.success {
-                      color: #1e8e3e;
-                    }
-
-                    &.running {
-                      color: var(--theme-color);
-                    }
-
-                    &.pending {
-                      color: $google-grey-300;
-                      font-size: 10px;
-                      margin: 2px;
-                    }
-
-                    &.failed {
-                      color: #d93025;
-                    }
-                  }
-                }
-
-                .step-content {
-                  flex: 1;
-
-                  .step-text {
-                    font-size: 13px;
-                    color: $google-grey-800;
-                    display: block;
-                    margin-bottom: 4px;
-                  }
-
-                  .tool-call-badge {
-                    display: inline-flex;
-                    align-items: center;
-                    gap: 6px;
-                    padding: 4px 8px;
-                    background: $google-grey-100;
-                    color: $google-grey-800;
-                    border-radius: 6px;
-                    font-size: 11px;
-                    font-family: 'Roboto Mono', monospace;
-                    border: 1px solid $google-grey-300;
-
-                    i {
-                      font-size: 10px;
-                      color: $google-grey-700;
-                    }
-                  }
-                }
+                color: var(--gemini-text-primary);
               }
             }
           }
 
           // Main Content
           .message-content {
-            padding-left: 40px; // Indent to align with avatar
+            padding-left: 48px; // Indent
             font-size: 16px;
             line-height: 1.6;
-            color: $google-grey-900;
+            color: var(--gemini-text-primary);
 
             ::ng-deep {
-              p {
-                margin-bottom: 16px;
-
-                &:last-child {
-                  margin-bottom: 0;
-                }
-              }
-
-              ul,
-              ol {
-                margin: 16px 0;
-                padding-left: 24px;
-              }
-
-              li {
-                margin-bottom: 8px;
-              }
-
-              strong {
-                font-weight: 600;
-                color: black;
-              }
-
+              p { margin-bottom: 16px; }
+              strong { color: var(--gemini-text-primary); font-weight: 600; }
               pre {
-                background: #f5f5f5;
+                background: var(--gemini-code-bg);
                 padding: 16px;
                 border-radius: 8px;
                 overflow-x: auto;
-                margin: 16px 0;
-                font-family: 'Roboto Mono', monospace;
-                font-size: 13px;
-                border: 1px solid $google-grey-200;
+                color: var(--gemini-text-primary);
+                border: 1px solid var(--gemini-border);
               }
             }
           }
-
-          // Streaming Dots
-          .streaming-indicator {
-            margin-left: 40px;
-            margin-top: 8px;
-            display: flex;
-            gap: 4px;
-
-            .dot {
-              width: 6px;
-              height: 6px;
-              background: $google-grey-500;
-              border-radius: 50%;
-              animation: bounce 1.4s infinite ease-in-out both;
-
-              &:nth-child(1) {
-                animation-delay: -0.32s;
-              }
-
-              &:nth-child(2) {
-                animation-delay: -0.16s;
-              }
+          
+          // Interactive Process
+          .working-process-section {
+            margin: 8px 0 16px 48px;
+            background: var(--gemini-surface);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--gemini-border);
+            
+            .process-header {
+              padding: 10px 16px;
+              display: flex;
+              align-items: center;
+              justify-content: space-between;
+              cursor: pointer;
+              
+              span { color: var(--gemini-text-secondary); font-size: 13px; }
+              i { color: var(--gemini-text-secondary); font-size: 12px; }
             }
           }
         }
@@ -615,44 +540,43 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
 
     // INPUT AREA
     .chat-input-area {
-      padding: 24px 0 36px; // More bottom padding
-      background: transparent; // Transparent to float over content if needed, but usually white
-      background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 1) 20%);
+      padding: 0 0 24px;
+      background: var(--gemini-bg);
       display: flex;
       justify-content: center;
       position: sticky;
       bottom: 0;
       z-index: 20;
+      transition: background-color 0.3s ease;
 
       .input-container {
         width: 100%;
-        max-width: 768px; // Standard width for readability
+        max-width: 832px; // Gemini width
         position: relative;
-        margin: 0 24px;
-      }
-
-      // Mention Popup
+        margin: 0 20px;
+        
+        // Mention Popup
       .mention-popup {
         position: absolute;
         bottom: 100%;
         left: 0;
         margin-bottom: 16px;
         width: 320px;
-        background: white;
+        background: var(--gemini-surface); // Usa surface para que coincida con el tema
         border-radius: 16px;
-        @include floating-shadow;
-        border: 1px solid $google-grey-200;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 1px solid var(--gemini-border);
         overflow: hidden;
         z-index: 1000;
 
         .mention-header {
           padding: 12px 16px;
-          background: $google-grey-50;
+          background: var(--gemini-sidebar); // Fondo ligeramente diferente para header
           font-size: 11px;
           font-weight: 600;
-          color: $google-grey-700;
+          color: var(--gemini-text-secondary);
           text-transform: uppercase;
-          border-bottom: 1px solid $google-grey-200;
+          border-bottom: 1px solid var(--gemini-border);
         }
 
         .mention-list {
@@ -668,7 +592,7 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
             gap: 12px;
 
             &:hover {
-              background: #f5f5f5;
+              background: var(--gemini-hover);
             }
 
             .agent-avatar-small {
@@ -678,159 +602,159 @@ $font-family: 'Google Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-se
               @include flex-center;
               color: white;
               font-size: 12px;
+              flex-shrink: 0; // Evitar que se aplaste
             }
 
             .agent-details {
               display: flex;
               flex-direction: column;
+              overflow: hidden; // Prevenir desborde de texto
 
               .agent-name {
                 font-size: 14px;
                 font-weight: 500;
-                color: $google-grey-900;
+                color: var(--gemini-text-primary);
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
               }
 
               .agent-dept {
                 font-size: 11px;
-                color: $google-grey-700;
+                color: var(--gemini-text-secondary);
               }
             }
+          }
+          
+          .no-results {
+             padding: 16px;
+             text-align: center;
+             color: var(--gemini-text-secondary);
+             font-size: 13px;
           }
         }
       }
 
       .input-wrapper {
-        position: relative;
-        width: 100%;
-        background: $google-grey-100;
-        border-radius: 32px; // Fully rounded pill
-        padding: 8px 8px 8px 24px;
-        display: flex;
-        align-items: flex-end;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        border: 1px solid transparent;
-
-        &:focus-within {
-          background: white;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-          border-color: transparent;
-        }
-
-        .message-input {
-          flex: 1;
-          border: none;
-          background: transparent;
-          padding: 14px 0;
-          font-size: 16px;
-          font-family: inherit;
-          resize: none;
-          max-height: 200px;
-          outline: none;
-          color: $google-grey-900;
-          line-height: 1.5;
-
-          &::placeholder {
-            color: $google-grey-700;
-          }
-        }
-
-        .send-btn {
-          width: 44px;
-          height: 44px;
-          border-radius: 50%;
-          background: var(--theme-color);
-          border: none;
-          color: white;
-          @include flex-center;
-          cursor: pointer;
+          position: relative;
+          width: 100%;
+          background: var(--gemini-input);
+          border-radius: 28px; // Gemini rounded
+          padding: 10px;
+          display: flex;
+          align-items: flex-end;
           transition: all 0.2s;
-          margin-left: 12px;
-
-          &:hover:not(:disabled) {
-            transform: scale(1.05);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+          border: 1px solid transparent; // Default
+          
+          &:focus-within {
+            background: var(--gemini-surface); // Cambia a surface en focus
+            box-shadow: 0 1px 6px rgba(0,0,0,0.1); // Sombra suave
+            border-color: var(--gemini-border); // Borde visible en focus
+          }
+          
+          .tool-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--gemini-text-secondary);
+            cursor: pointer;
+            @include flex-center;
+            margin-bottom: 4px;
+            
+            &:hover {
+              background: var(--gemini-hover);
+              color: var(--gemini-text-primary);
+            }
+            
+            i { font-size: 18px; }
           }
 
-          &:disabled {
-            background: $google-grey-200;
-            color: $google-grey-500;
-            cursor: default;
+          .message-input {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 12px;
+            font-size: 16px;
+            font-family: inherit;
+            resize: none;
+            max-height: 200px;
+            outline: none;
+            color: var(--gemini-text-primary);
+            line-height: 1.5;
+
+            &::placeholder {
+              color: var(--gemini-text-secondary);
+            }
           }
 
-          i {
-            font-size: 18px;
+          .send-actions {
+            display: flex;
+            gap: 8px;
+            padding-bottom: 4px;
+            
+            button {
+              width: 40px;
+              height: 40px;
+              border-radius: 50%;
+              background: transparent;
+              border: none;
+              color: var(--gemini-text-primary);
+              cursor: pointer;
+              @include flex-center;
+              
+              &:hover {
+                background: var(--gemini-hover);
+              }
+              
+              &.send-active {
+                background: var(--gemini-text-primary);
+                color: var(--gemini-bg);
+                
+                &:hover {
+                  opacity: 0.9;
+                }
+              }
+            }
           }
         }
-      }
-
-      .input-footer {
-        text-align: center;
-        margin-top: 12px;
-        position: absolute;
-        bottom: 12px;
-        width: 100%;
-        pointer-events: none; // Let clicks pass through
-
-        small {
-          color: $google-grey-700;
-          font-size: 11px;
+        
+        .input-footer {
+          text-align: center;
+          margin-top: 8px;
+          
+          small {
+            color: var(--gemini-text-secondary);
+            font-size: 11px;
+          }
         }
       }
     }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   @keyframes bounce {
-
-    0%,
-    80%,
-    100% {
-      transform: scale(0);
-    }
-
-    40% {
-      transform: scale(1);
-    }
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
   }
 }
 
-// Responsive
-@media (max-width: 768px) {
-  .unified-chat-container {
-    .chat-sidebar {
-      position: absolute;
-      left: 0;
-      top: 0;
-      bottom: 0;
-      transform: translateX(-100%);
-      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-    }
-
-    &.sidebar-closed {
-      .chat-sidebar {
-        transform: translateX(0);
-      }
-    }
-
-    .main-chat-area {
-      .chat-header {
-        .header-left {
-          .mobile-toggle {
-            display: block;
-          }
-        }
-
-        .header-actions .orchestrators-badge {
-          display: none;
-        }
-      }
-
-      .chat-messages {
-        padding: 16px;
-
-        .message-wrapper .message-card {
-          max-width: 85%;
-        }
-      }
-    }
-  }
+// Scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gemini-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gemini-text-secondary);
 }
