@@ -68,23 +68,24 @@
       <div class="header-left">
         <div class="model-selector">
           <div class="active-team-stack" *ngIf="participatingAgents.size > 0; else defaultHeader">
-             <div class="team-label">Equipo Activo:</div>
-             <div class="team-avatars">
-                <!-- General Manager (Always active implicitly) -->
-                <div class="team-avatar gm" [style.background]="'#4285f4'" pTooltip="General Manager" tooltipPosition="bottom">
-                    <i class="pi pi-sparkles"></i>
-                </div>
-                <!-- Dynamic Agents -->
-                <div class="team-avatar" *ngFor="let agent of getParticipatingAgentsList()" 
-                     [style.background]="getDepartmentColor(agent.department)"
-                     [pTooltip]="agent.agentName" tooltipPosition="bottom">
-                    <i [class]="'pi ' + getDepartmentIcon(agent.department)"></i>
-                </div>
-             </div>
+            <div class="team-label">Equipo Activo:</div>
+            <div class="team-avatars">
+              <!-- General Manager (Always active implicitly) -->
+              <div class="team-avatar gm" [style.background]="'#4285f4'" pTooltip="General Manager"
+                tooltipPosition="bottom">
+                <i class="pi pi-sparkles"></i>
+              </div>
+              <!-- Dynamic Agents -->
+              <div class="team-avatar" *ngFor="let agent of getParticipatingAgentsList()"
+                [style.background]="getDepartmentColor(agent.department)" [pTooltip]="agent.agentName"
+                tooltipPosition="bottom">
+                <i [class]="'pi ' + getDepartmentIcon(agent.department)"></i>
+              </div>
+            </div>
           </div>
           <ng-template #defaultHeader>
-              <span>Gemini 2.5 Flash</span>
-              <i class="pi pi-chevron-down"></i>
+            <span>KAI</span>
+            <i class="pi pi-chevron-down"></i>
           </ng-template>
         </div>
       </div>
@@ -118,7 +119,8 @@
       </div>
 
       <!-- Messages List -->
-      <div *ngFor="let msg of messages" class="message-wrapper" [class.user]="msg.department === 'user'">
+      <div *ngFor="let msg of messages; let i = index" class="message-wrapper" [class.user]="msg.department === 'user'"
+        [class.rewarded]="msg.metadata?.badgeLevel">
 
         <!-- User Message (Pill style) -->
         <div class="user-message-pill" *ngIf="msg.department === 'user'">
@@ -126,14 +128,11 @@
         </div>
 
         <!-- Agent Message (Text style with Avatar) -->
-        <div class="agent-message-container" *ngIf="msg.department !== 'user'" [class.system-message]="msg.type === 'system'">
+        <div class="agent-message-container" *ngIf="msg.department !== 'user'"
+          [class.system-message]="msg.type === 'system'">
           <div class="agent-avatar-col" *ngIf="msg.type !== 'system'">
-            <div
-              class="agent-avatar-icon"
-              [style.background]="getDepartmentColor(msg.department)"
-              [ngClass]="{'manager-avatar': msg.speaker === 'General Manager'}"
-              aria-hidden="true"
-            >
+            <div class="agent-avatar-icon" [style.background]="getDepartmentColor(msg.department)"
+              [ngClass]="{'manager-avatar': msg.speaker === 'General Manager'}" aria-hidden="true">
               <ng-container *ngIf="msg.speaker === 'General Manager'; else defaultAvatar">
                 <span class="gm-initials">GM</span>
               </ng-container>
@@ -143,14 +142,21 @@
             </div>
           </div>
 
-            <div class="agent-content-col">
-            <div class="agent-name-label" *ngIf="msg.type !== 'system'" [style.color]="getDepartmentColor(msg.department)">{{ msg.speaker }}</div>
-            
+          <div class="agent-content-col">
+            <div class="agent-name-label" *ngIf="msg.type !== 'system'"
+              [style.color]="getDepartmentColor(msg.department)">{{ msg.speaker }}</div>
+
+            <div class="agent-reward" *ngIf="msg.metadata?.badgeLevel">
+              <span class="badge-label">Nivel {{ msg.metadata?.badgeLevel }}</span>
+              <div class="badge-points">
+                <i class="pi pi-star-fill"></i>
+                <span>{{ msg.metadata?.points || 0 }} pts</span>
+              </div>
+            </div>
+
             <!-- Thinking Block for Final Response Only -->
-            <div
-              class="thought-process"
-              *ngIf="(msg.isStreaming || (msg.metadata?.steps?.length || 0) > 0) && msg.type !== 'system'"
-            >
+            <div class="thought-process"
+              *ngIf="(msg.isStreaming || (msg.metadata?.steps?.length || 0) > 0) && msg.type !== 'system'">
               <div class="thought-header">
                 <div class="sparkle-wrapper">
                   <i class="pi pi-sparkles sparkle-icon thinking"></i>
@@ -164,11 +170,8 @@
                 <span class="pulse-dot"></span>
               </div>
               <div class="thought-steps" *ngIf="msg.metadata?.steps?.length">
-                <div
-                  class="thought-step"
-                  *ngFor="let step of msg.metadata?.steps"
-                  [style.--step-accent]="step.accentColor || null"
-                >
+                <div class="thought-step" *ngFor="let step of msg.metadata?.steps"
+                  [style.--step-accent]="step.accentColor || null">
                   <div class="step-icon" [ngClass]="step.status">
                     <i [class]="step.icon || 'pi pi-sparkles'"></i>
                     <span class="step-ping" *ngIf="step.status === 'running'"></span>
@@ -179,6 +182,7 @@
                       <span class="step-status-pill" [ngClass]="step.status">
                         {{ getStepStatusLabel(step.status) }}
                       </span>
+                      <span class="step-xp" *ngIf="step.status === 'completed'">+15 XP</span>
                     </div>
                   </div>
                 </div>
@@ -186,19 +190,18 @@
             </div>
 
             <!-- Message Text (HTML for mentions) -->
-            <div class="message-text"
-                 (click)="onMessageContentClick($event)"
-                 (keydown)="onMessageContentKeydown($event)"
-                 [innerHTML]="msg.parsedMessage" *ngIf="msg.message" 
-                 [style.background-color]="msg.type !== 'system' ? getDepartmentBgColor(msg.department) : ''"
-                 [class.has-bg]="msg.type !== 'system'"></div>
+            <div class="message-text" (click)="onMessageContentClick($event)"
+              (keydown)="onMessageContentKeydown($event)" [innerHTML]="msg.parsedMessage" *ngIf="msg.message"
+              [style.background-color]="msg.type !== 'system' ? getDepartmentBgColor(msg.department) : ''"
+              [class.has-bg]="msg.type !== 'system'"></div>
 
             <!-- Suggested Actions (Only for last completed agent message) -->
-            <div class="suggested-actions" *ngIf="last && msg.streamingComplete && msg.type === 'agent' && !msg.speaker.includes('System')">
-                <div class="suggestion-chip" *ngFor="let action of getSuggestedActions()" (click)="useSuggestion(action)">
-                    <i class="pi pi-bolt"></i>
-                    <span>{{ action }}</span>
-                </div>
+            <div class="suggested-actions"
+              *ngIf="last && msg.streamingComplete && msg.type === 'agent' && !msg.speaker.includes('System')">
+              <div class="suggestion-chip" *ngFor="let action of getSuggestedActions()" (click)="useSuggestion(action)">
+                <i class="pi pi-bolt"></i>
+                <span>{{ action }}</span>
+              </div>
             </div>
 
             <!-- Streaming Cursor -->

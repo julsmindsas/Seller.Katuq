@@ -32,6 +32,40 @@
 
   <!-- Main Content -->
   <main class="library-content">
+    <section class="hero-banner">
+      <div class="hero-text">
+        <h2>Construye tu escuadrón de agentes</h2>
+        <p>Comparte, reutiliza y lanza agentes especializados en segundos.</p>
+        <div class="hero-actions">
+          <button class="google-btn primary" (click)="createNewAgent()">
+            <i class="pi pi-sparkles"></i>
+            Crear agente
+          </button>
+          <button class="google-btn ghost" (click)="goToGeneralChat()">
+            <i class="pi pi-comments"></i>
+            Ir al chat general
+          </button>
+        </div>
+      </div>
+      <div class="hero-badges">
+        <div class="badge-card">
+          <span class="label">Activos</span>
+          <strong>{{ getCountByStatus('active') }}</strong>
+        </div>
+        <div class="badge-card">
+          <span class="label">Ventas</span>
+          <strong>{{ getCountByDepartment('sales') }}</strong>
+        </div>
+        <div class="badge-card">
+          <span class="label">Inventario</span>
+          <strong>{{ getCountByDepartment('inventory') }}</strong>
+        </div>
+        <div class="badge-card">
+          <span class="label">Logística</span>
+          <strong>{{ getCountByDepartment('logistics') }}</strong>
+        </div>
+      </div>
+    </section>
     <!-- Filters Row -->
     <div class="filters-row">
       <div class="chip-filters">

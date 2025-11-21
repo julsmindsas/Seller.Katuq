@@ -1,3 +1,72 @@
+@media (max-width: 960px) {
+    .unified-chat-container {
+        flex-direction: column;
+
+        .chat-sidebar {
+            width: 100%;
+            order: 2;
+            padding: 12px 16px;
+            border-top: 1px solid var(--gemini-border);
+
+            .sidebar-content,
+            .sidebar-footer {
+                display: none;
+            }
+        }
+
+        .main-chat-area {
+            order: 1;
+
+            .chat-header {
+                padding: 8px 16px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .chat-messages {
+                padding: 12px 0 24px;
+
+                .message-wrapper {
+                    padding: 0 12px;
+
+                    .agent-message-container {
+                        flex-direction: column;
+                        gap: 8px;
+
+                        .agent-avatar-col {
+                            width: 100%;
+                            display: flex;
+                            justify-content: flex-start;
+                        }
+
+                        .agent-content-col {
+                            .thought-process {
+                                padding: 10px 12px;
+                            }
+
+                            .message-text.has-bg {
+                                border-radius: 16px;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .chat-input-area {
+                padding: 0 12px 16px;
+
+                .input-container {
+                    max-width: 100%;
+                    .input-wrapper {
+                        border-radius: 24px;
+                        padding: 6px 12px;
+                    }
+                }
+            }
+        }
+    }
+}
 // Google Gemini Theme Variables
 :root {
     // Light Theme (Default)
@@ -513,17 +582,17 @@ $font-family:
                 }
             }
 
-      .message-wrapper {
-        width: 100%;
+.message-wrapper {
+                width: 100%;
                 max-width: 800px;
-        margin: 0 auto;
-        padding: 0 24px;
-        display: flex;
+                margin: 0 auto;
+                padding: 0 24px;
+                display: flex;
+                flex-wrap: wrap;
 
-        &.user {
-          justify-content: flex-end;
+                &.user {
+                    justify-content: flex-end;
                 }
-
                 .user-message-pill {
                     background: var(--gemini-user-bubble);
                     color: var(--gemini-text-primary);
@@ -534,10 +603,10 @@ $font-family:
             max-width: 80%;
         }
 
-                .agent-message-container {
-          display: flex;
-                    gap: 16px;
-                    width: 100%;
+                    .agent-message-container {
+                        display: flex;
+                        gap: 16px;
+                        width: 100%;
 
                     .agent-avatar-col {
                         flex-shrink: 0;
@@ -631,6 +700,40 @@ $font-family:
                                 &.sub {
                                     background: rgba(0, 0, 0, 0.05);
                                     color: var(--gemini-text-secondary);
+                                }
+                            }
+                        }
+
+                        .agent-reward {
+                            display: flex;
+                            align-items: center;
+                            gap: 8px;
+                            font-size: 11px;
+                            letter-spacing: 0.5px;
+                            text-transform: uppercase;
+                            color: var(--gemini-text-secondary);
+
+                            .badge-label {
+                                background: rgba(255, 255, 255, 0.2);
+                                border-radius: 999px;
+                                padding: 3px 8px;
+                                border: 1px solid rgba(255, 255, 255, 0.25);
+                            }
+
+                            .badge-points {
+                                display: inline-flex;
+                                align-items: center;
+                                gap: 4px;
+                                background: rgba(255, 215, 0, 0.15);
+                                border-radius: 999px;
+                                padding: 3px 8px;
+                                border: 1px solid rgba(255, 215, 0, 0.35);
+                                color: #b58105;
+                                font-weight: 600;
+
+                                i {
+                                    color: #ffbf00;
+                                    font-size: 12px;
                                 }
                             }
                         }
@@ -808,6 +911,13 @@ $font-family:
                                                 background: rgba(217, 57, 43, 0.12);
                                                 color: #b3261e;
                                             }
+                                        }
+
+                                        .step-xp {
+                                            font-size: 11px;
+                                            color: #ff8f00;
+                                            font-weight: 600;
+                                            margin-left: 8px;
                                         }
                                     }
 
@@ -1072,10 +1182,10 @@ $font-family:
         }
     }
 
-    .chat-input-area {
+.chat-input-area {
         padding: 0 20px 24px;
-      display: flex;
-      justify-content: center;
+        display: flex;
+        justify-content: center;
 
       .input-container {
         width: 100%;

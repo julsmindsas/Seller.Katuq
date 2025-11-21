@@ -658,10 +658,26 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
   }
 
   private addMessage(message: ConversationMessage): void {
-    // Initial parse
     message.parsedMessage = this.parseMentions(message.message);
+
+    if (message.metadata?.pointsEarned && message.speaker !== "System") {
+      message.metadata.totalPoints =
+        (message.metadata.totalPoints || 0) + message.metadata.pointsEarned;
+      message.metadata.badgeLevel = this.calculateBadgeLevel(
+        message.metadata.totalPoints,
+      );
+    }
+
     this.messages.push(message);
     this.cdr.markForCheck();
+  }
+
+  private calculateBadgeLevel(points = 0): number {
+    if (points >= 1000) return 5;
+    if (points >= 600) return 4;
+    if (points >= 350) return 3;
+    if (points >= 150) return 2;
+    return 1;
   }
 
   /**

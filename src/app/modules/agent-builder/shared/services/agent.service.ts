@@ -80,7 +80,11 @@ export class AgentService {
    * @returns Observable with deletion result
    */
   deleteAgent(agentId: string): Observable<{ success: boolean; message: string }> {
-    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/v1/agent-builder/agents/${agentId}`);
+    const encodedId = encodeURIComponent(agentId);
+    return this.http.delete<{ success: boolean; message: string }>(
+      `${this.apiUrl}/v1/agent-builder/agents/${encodedId}`,
+      { headers: { company: this.getCurrentCompany() } }
+    );
   }
 
   /**
@@ -114,7 +118,12 @@ export class AgentService {
    * @returns Observable with updated agent
    */
   toggleAgentStatus(agentId: string): Observable<{ success: boolean; agent: Agent }> {
-    return this.http.put<{ success: boolean; agent: Agent }>(`${this.apiUrl}/v1/agent-builder/agents/${agentId}/toggle-status`, {});
+    const encodedId = encodeURIComponent(agentId);
+    return this.http.put<{ success: boolean; agent: Agent }>(
+      `${this.apiUrl}/v1/agent-builder/agents/${encodedId}/toggle-status`,
+      {},
+      { headers: { company: this.getCurrentCompany() } }
+    );
   }
 
   /**

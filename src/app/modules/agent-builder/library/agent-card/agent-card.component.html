@@ -40,6 +40,9 @@
       <span class="dot"></span>
       {{ agent.status === 'active' ? 'Active' : 'Inactive' }}
     </div>
+    <button class="quick-run" type="button" (click)="$event.stopPropagation(); onExecute()">
+      Ejecutar
+    </button>
   </div>
 </div>
 

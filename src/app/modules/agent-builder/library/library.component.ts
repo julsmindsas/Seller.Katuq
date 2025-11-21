@@ -88,8 +88,16 @@ export class LibraryComponent implements OnInit {
     this.filterAgents();
   }
 
+  getCountByStatus(status: Agent['status'] = 'active'): number {
+    return this.agents.filter(a => a.status === status).length;
+  }
+
+  getCountByDepartment(dept: DepartmentType): number {
+    return this.agents.filter(a => a.department === dept).length;
+  }
+
   executeAgent(agent: Agent): void {
-    if (!agent.id) return;
+    if (!agent.agentName) return;
     this.router.navigate(['/agent-builder/general-chat'], { state: { selectedAgentId: agent.agentName } });
   }
 
@@ -116,8 +124,9 @@ export class LibraryComponent implements OnInit {
       acceptButtonStyleClass: 'p-button-danger p-button-text',
       rejectButtonStyleClass: 'p-button-text',
       accept: () => {
-        if (!agent.id) return;
-        this.agentService.deleteAgent(agent.id).subscribe({
+        const agentIdentifier = agent.id || agent.agentName;
+        if (!agentIdentifier) return;
+        this.agentService.deleteAgent(agentIdentifier).subscribe({
           next: () => {
             this.notificationService.success('Success', 'Agent deleted');
             this.loadAgents();
@@ -129,8 +138,9 @@ export class LibraryComponent implements OnInit {
   }
 
   toggleAgentStatus(agent: Agent): void {
-    if (!agent.id) return;
-    this.agentService.toggleAgentStatus(agent.id).subscribe({
+    const agentIdentifier = agent.id || agent.agentName;
+    if (!agentIdentifier) return;
+    this.agentService.toggleAgentStatus(agentIdentifier).subscribe({
       next: (response) => {
         const status = response.agent.status === 'active' ? 'activated' : 'deactivated';
         this.notificationService.success('Success', `Agent ${status}`);
