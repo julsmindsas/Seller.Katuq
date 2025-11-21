@@ -211,6 +211,10 @@ $font-family:
                             .agent-icon {
                                 color: var(--gemini-selected-text);
                             }
+
+                            .gm-initials {
+                                color: #fff;
+                            }
                         }
 
                         .agent-icon {
@@ -546,11 +550,22 @@ $font-family:
                             border-radius: 50%; // Circle shape
                 @include flex-center;
                             color: #ffffff; // White icon
-                font-size: 14px;
+				font-size: 14px;
                             background: rgba(11, 87, 208, 0.2);
                             border: 2px solid rgba(255, 255, 255, 0.7);
                             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                             transition: transform 0.2s;
+
+                            &.manager-avatar {
+                                background: linear-gradient(135deg, #4285f4, #9b72cb);
+                                border-color: #dfe3eb;
+
+                                .gm-initials {
+                                    font-size: 13px;
+                                    font-weight: 700;
+                                    letter-spacing: 0.5px;
+                                }
+                            }
 
                             &:hover {
                                 transform: scale(1.1);

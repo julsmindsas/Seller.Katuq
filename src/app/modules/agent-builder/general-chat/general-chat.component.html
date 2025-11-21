@@ -131,9 +131,15 @@
             <div
               class="agent-avatar-icon"
               [style.background]="getDepartmentColor(msg.department)"
+              [ngClass]="{'manager-avatar': msg.speaker === 'General Manager'}"
               aria-hidden="true"
             >
-              <i [class]="'pi ' + getDepartmentIcon(msg.department)"></i>
+              <ng-container *ngIf="msg.speaker === 'General Manager'; else defaultAvatar">
+                <span class="gm-initials">GM</span>
+              </ng-container>
+              <ng-template #defaultAvatar>
+                <i [class]="'pi ' + getDepartmentIcon(msg.department)"></i>
+              </ng-template>
             </div>
           </div>
 
