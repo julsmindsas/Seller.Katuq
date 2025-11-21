@@ -690,14 +690,38 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     // 4. Bold (**text**)
     parsed = parsed.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
-    // 5. Mentions (@Name)
-    const mentionRegex = /@(\w+)/g;
+    // 5. Mentions (@Name) with Smart Handling for Departments
+    const mentionRegex = /@([\w\s]+?)(?=\s|$|[.,;:])/g; // Capture until space or punctuation
     parsed = parsed.replace(mentionRegex, (match, name) => {
+      const cleanName = name.trim();
+      
+      // Try to find specific agent
       const agent = this.agents.find(
-        (a) => a.agentName.toLowerCase() === name.toLowerCase(),
+        (a) => a.agentName.toLowerCase() === cleanName.toLowerCase(),
       );
-      const deptClass = agent ? agent.department : "unknown";
-      return `<span class="mention-chip ${deptClass}">@${name}</span>`;
+
+      // If agent found, use its department
+      if (agent) {
+        const deptClass = agent.department || "general";
+        return `<span class="mention-chip ${deptClass}">@${cleanName}</span>`;
+      }
+
+      // If not found, check if it's a known department/role
+      const knownDepartments = ['sales', 'ventas', 'inventory', 'inventario', 'logistics', 'logistica', 'general', 'manager'];
+      const lowerName = cleanName.toLowerCase();
+      
+      if (knownDepartments.includes(lowerName) || knownDepartments.some(d => lowerName.includes(d))) {
+          // Map common names to department classes
+          let deptClass = "general";
+          if (lowerName.includes('sale') || lowerName.includes('venta')) deptClass = "sales";
+          else if (lowerName.includes('invent')) deptClass = "inventory";
+          else if (lowerName.includes('logist')) deptClass = "logistics";
+          
+          return `<span class="mention-chip ${deptClass}">@${cleanName}</span>`;
+      }
+
+      // Fallback for unknown mentions
+      return `<span class="mention-chip unknown">@${cleanName}</span>`;
     });
 
     // 6. Newlines to <br> (but not inside <pre>)
