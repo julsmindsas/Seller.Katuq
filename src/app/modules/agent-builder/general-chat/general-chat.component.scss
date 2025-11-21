@@ -78,40 +78,40 @@ $font-family:
     sans-serif;
 
 @mixin flex-center {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .unified-chat-container {
-    display: flex;
-    height: 100vh;
+  display: flex;
+  height: 100vh;
     background-color: var(--gemini-bg);
-    overflow: hidden;
-    font-family: $font-family;
+  overflow: hidden;
+  font-family: $font-family;
     color: var(--gemini-text-primary);
-    -webkit-font-smoothing: antialiased;
+  -webkit-font-smoothing: antialiased;
     transition:
         background-color 0.3s ease,
         color 0.3s ease;
 
-    // SIDEBAR
-    .chat-sidebar {
+  // SIDEBAR
+  .chat-sidebar {
         width: 260px;
         background: var(--gemini-sidebar);
-        display: flex;
-        flex-direction: column;
+    display: flex;
+    flex-direction: column;
         transition:
             transform 0.3s ease,
             background-color 0.3s ease;
-        z-index: 100;
+    z-index: 100;
         padding: 12px;
 
-        .sidebar-header {
+    .sidebar-header {
             padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
             height: 48px;
 
             .toggle-btn {
@@ -127,7 +127,7 @@ $font-family:
                 }
             }
 
-            .logo-section {
+      .logo-section {
                 display: none;
             }
         }
@@ -142,9 +142,9 @@ $font-family:
 
                 .new-chat-btn {
                     width: 100%;
-                    display: flex;
-                    align-items: center;
-                    gap: 12px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
                     padding: 10px 16px;
                     background: var(--gemini-surface);
                     border: none;
@@ -168,7 +168,7 @@ $font-family:
                 }
             }
 
-            .section-title {
+      .section-title {
                 font-size: 12px;
                 font-weight: 500;
                 color: var(--gemini-text-secondary);
@@ -181,30 +181,30 @@ $font-family:
 
                     .dept-header {
                         padding: 4px 12px;
-                        font-size: 11px;
-                        text-transform: uppercase;
+        font-size: 11px;
+        text-transform: uppercase;
                         letter-spacing: 0.5px;
                         color: var(--gemini-text-secondary);
                         opacity: 0.7;
                         margin-bottom: 4px;
-                    }
+      }
 
-                    .agent-item {
-                        display: flex;
-                        align-items: center;
+      .agent-item {
+        display: flex;
+        align-items: center;
                         padding: 8px 12px;
                         border-radius: 18px;
-                        cursor: pointer;
+        cursor: pointer;
                         gap: 12px;
                         color: var(--gemini-text-primary);
                         font-size: 14px;
                         transition: background 0.2s;
 
-                        &:hover {
+        &:hover {
                             background-color: var(--gemini-hover);
-                        }
+        }
 
-                        &.selected {
+        &.selected {
                             background-color: var(--gemini-selected);
                             color: var(--gemini-selected-text);
 
@@ -215,25 +215,25 @@ $font-family:
 
                         .agent-icon {
                             color: var(--gemini-text-secondary);
-                            font-size: 16px;
+          font-size: 16px;
                         }
 
                         .agent-name {
-                            white-space: nowrap;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                        }
-                    }
-                }
-            }
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          }
         }
+      }
+    }
 
-        .sidebar-footer {
+    .sidebar-footer {
             padding: 12px;
 
-            .user-profile {
-                display: flex;
-                align-items: center;
+      .user-profile {
+        display: flex;
+        align-items: center;
                 gap: 12px;
                 padding: 8px 12px;
                 border-radius: 24px;
@@ -243,57 +243,57 @@ $font-family:
                     background: var(--gemini-hover);
                 }
 
-                .avatar {
-                    width: 32px;
-                    height: 32px;
-                    border-radius: 50%;
+        .avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
                     background: #7c4dff;
-                    @include flex-center;
-                    font-size: 14px;
+          @include flex-center;
+          font-size: 14px;
                     color: white;
-                }
+        }
 
-                .info {
+        .info {
                     flex: 1;
-                    display: flex;
-                    flex-direction: column;
+          display: flex;
+          flex-direction: column;
 
-                    .name {
+          .name {
                         font-size: 14px;
-                        font-weight: 500;
-                    }
+            font-weight: 500;
+          }
 
-                    .status {
-                        font-size: 11px;
+          .status {
+            font-size: 11px;
                         color: var(--gemini-text-secondary);
                     }
                 }
 
                 .settings-icon {
                     color: var(--gemini-text-secondary);
-                }
-            }
         }
+      }
     }
+  }
 
-    // MAIN CHAT AREA
-    .main-chat-area {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        position: relative;
+  // MAIN CHAT AREA
+  .main-chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    position: relative;
         background: var(--gemini-bg);
 
-        .chat-header {
-            height: 64px;
+    .chat-header {
+      height: 64px;
             padding: 0 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
 
             .model-selector {
-                display: flex;
-                align-items: center;
+        display: flex;
+        align-items: center;
                 gap: 8px;
                 color: var(--gemini-text-secondary);
                 font-size: 16px;
@@ -313,8 +313,8 @@ $font-family:
 
                 // Active Team Stack - Cleaner look
                 .active-team-stack {
-                    display: flex;
-                    align-items: center;
+          display: flex;
+          align-items: center;
                     gap: 8px;
                     background: var(--gemini-surface);
                     padding: 4px 8px;
@@ -336,13 +336,13 @@ $font-family:
                         .team-avatar {
                             width: 24px;
                             height: 24px;
-                            border-radius: 50%;
+            border-radius: 50%;
                             display: flex;
                             align-items: center;
                             justify-content: center;
                             border: 2px solid var(--gemini-surface);
                             margin-left: -6px; // Reduced overlap
-                            color: white;
+            color: white;
                             font-size: 10px;
                             transition: transform 0.2s, z-index 0s;
                             cursor: pointer;
@@ -352,12 +352,12 @@ $font-family:
 
                             &:first-child { margin-left: 0; }
                             &:hover { transform: translateY(-2px); z-index: 20; }
-                        }
-                    }
-                }
             }
+          }
+        }
+      }
 
-            .header-actions {
+      .header-actions {
                 display: flex;
                 align-items: center;
                 gap: 12px;
@@ -374,27 +374,27 @@ $font-family:
                 .user-avatar-mini {
                     width: 32px;
                     height: 32px;
-                    border-radius: 50%;
+          border-radius: 50%;
                     background: var(--gemini-accent);
-                    @include flex-center;
+          @include flex-center;
                     font-size: 14px;
                     color: white;
-                }
-            }
         }
+      }
+    }
 
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
             padding: 20px 0 40px;
-            display: flex;
-            flex-direction: column;
+      display: flex;
+      flex-direction: column;
             gap: 24px;
 
-            .empty-state {
-                flex: 1;
+      .empty-state {
+        flex: 1;
                 display: flex;
-                flex-direction: column;
+        flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 padding: 0 20px;
@@ -477,29 +477,29 @@ $font-family:
             }
 
             .suggested-actions {
-                display: flex;
+              display: flex;
                 gap: 8px;
                 margin-top: 12px;
-                flex-wrap: wrap;
+              flex-wrap: wrap;
                 animation: fadeIn 0.5s ease-out;
                 padding-left: 4px;
 
-                .suggestion-chip {
+              .suggestion-chip {
                     display: flex;
                     align-items: center;
                     gap: 6px;
                     padding: 8px 16px;
                     background: var(--gemini-surface);
                     border: 1px solid var(--gemini-border);
-                    border-radius: 20px;
+                border-radius: 20px;
                     font-size: 13px;
                     color: var(--gemini-text-secondary);
-                    cursor: pointer;
-                    transition: all 0.2s;
+                cursor: pointer;
+                transition: all 0.2s;
 
                     i { font-size: 12px; color: var(--gemini-accent); }
 
-                    &:hover {
+                &:hover {
                         background: var(--gemini-surface-variant);
                         border-color: var(--gemini-accent);
                         color: var(--gemini-text-primary);
@@ -509,15 +509,15 @@ $font-family:
                 }
             }
 
-            .message-wrapper {
-                width: 100%;
+      .message-wrapper {
+        width: 100%;
                 max-width: 800px;
-                margin: 0 auto;
-                padding: 0 24px;
-                display: flex;
+        margin: 0 auto;
+        padding: 0 24px;
+        display: flex;
 
-                &.user {
-                    justify-content: flex-end;
+        &.user {
+          justify-content: flex-end;
                 }
 
                 .user-message-pill {
@@ -525,13 +525,13 @@ $font-family:
                     color: var(--gemini-text-primary);
                     padding: 12px 24px; // Increased padding for pill look
                     border-radius: 24px;
-                    font-size: 16px;
+            font-size: 16px;
                     line-height: 1.5;
-                    max-width: 80%;
-                }
+            max-width: 80%;
+        }
 
                 .agent-message-container {
-                    display: flex;
+          display: flex;
                     gap: 16px;
                     width: 100%;
 
@@ -544,9 +544,9 @@ $font-family:
                             width: 32px;
                             height: 32px;
                             border-radius: 50%; // Circle shape
-                            @include flex-center;
+                @include flex-center;
                             color: #ffffff; // White icon
-                            font-size: 14px;
+                font-size: 14px;
                             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
                             transition: transform 0.2s;
 
@@ -564,7 +564,7 @@ $font-family:
                     &.system-message {
                         justify-content: center;
                         margin: 8px 0;
-                        gap: 8px;
+              gap: 8px;
 
                         .agent-avatar-col {
                              display: none; // No avatar for system messages
@@ -593,7 +593,7 @@ $font-family:
                         min-width: 0; // Prevent flex overflow
 
                         .agent-name-label {
-                            font-size: 12px;
+                font-size: 12px;
                             font-weight: 700; // Bolder font weight
                             margin-bottom: 4px;
                             display: flex;
@@ -627,8 +627,8 @@ $font-family:
                             padding-left: 4px;
 
                             .suggestion-chip {
-                                display: flex;
-                                align-items: center;
+              display: flex;
+              align-items: center;
                                 gap: 6px;
                                 padding: 8px 16px;
                                 background: var(--gemini-surface);
@@ -636,12 +636,12 @@ $font-family:
                                 border-radius: 20px;
                                 font-size: 13px;
                                 color: var(--gemini-text-secondary);
-                                cursor: pointer;
+              cursor: pointer;
                                 transition: all 0.2s;
 
                                 i { font-size: 12px; color: var(--gemini-accent); }
 
-                                &:hover {
+              &:hover {
                                     background: var(--gemini-surface-variant);
                                     border-color: var(--gemini-accent);
                                     color: var(--gemini-text-primary);
@@ -659,17 +659,17 @@ $font-family:
 
                             .thought-header {
                                 padding: 8px 0; // Removed horizontal padding to align with text
-                                display: flex;
-                                align-items: center;
+                display: flex;
+                align-items: center;
                                 gap: 8px;
                                 cursor: pointer;
                                 user-select: none;
                                 width: fit-content;
 
                                 .thought-label {
-                                    font-size: 13px;
+                font-size: 13px;
                                     color: var(--gemini-text-secondary);
-                                    font-weight: 500;
+                font-weight: 500;
                                     transition: color 0.2s;
 
                                     &.thinking-animated {
@@ -689,7 +689,7 @@ $font-family:
                                 }
 
                                 i {
-                                    font-size: 12px;
+                font-size: 12px;
                                     color: var(--gemini-text-secondary);
                                     transition: transform 0.2s;
                                 }
@@ -717,17 +717,17 @@ $font-family:
                             border-radius: 12px;
                             margin-top: 4px;
 
-                            .step-item {
-                                display: flex;
-                                gap: 12px;
+              .step-item {
+                display: flex;
+                gap: 12px;
                                 margin-bottom: 10px;
                                 align-items: flex-start;
 
-                                &:last-child {
-                                    margin-bottom: 0;
-                                }
+                &:last-child {
+                  margin-bottom: 0;
+                }
 
-                                .step-status {
+                .step-status {
                                     font-size: 13px;
                                     color: var(--gemini-text-secondary);
                                     font-family: monospace;
@@ -828,8 +828,8 @@ $font-family:
                             }
 
                             li {
-                                margin-bottom: 4px;
-                            }
+                    margin-bottom: 4px;
+                  }
 
                             // Improved Code Block Styling
                             pre {
@@ -854,32 +854,84 @@ $font-family:
                             .mention-chip {
                                 display: inline-flex;
                                 align-items: center;
-                                padding: 0 6px;
-                                background: var(--gemini-mention-bg);
-                                color: var(--gemini-mention-text);
-                                border-radius: 4px;
-                                font-weight: 500;
-                                font-size: 0.95em;
+                                gap: 6px;
+                                padding: 4px 12px;
+                                border-radius: 999px;
+                                font-weight: 600;
+                                font-size: 12px;
+                                line-height: 1.2;
+                                background: var(--mention-bg, rgba(11, 87, 208, 0.08));
+                                color: var(--mention-color, var(--gemini-text-primary));
+                                border: 1px solid var(--mention-border, rgba(11, 87, 208, 0.12));
                                 cursor: pointer;
-                                transition: background 0.2s;
+                                transition:
+                                    transform 0.2s ease,
+                                    box-shadow 0.2s ease,
+                                    border-color 0.2s ease,
+                                    background 0.2s ease;
+                                text-decoration: none;
+                                position: relative;
+                                white-space: nowrap;
+                                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 
-                                &:hover {
-                                    background: rgba(11, 87, 208, 0.2);
+                                i {
+                                    font-size: 12px;
+                                    opacity: 0.9;
+                                }
+
+                                .mention-text {
+                                    letter-spacing: 0.2px;
+                                }
+
+                                &:hover,
+                                &:focus-visible {
+                                    transform: translateY(-1px);
+                                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                                    border-color: var(--mention-border, rgba(11, 87, 208, 0.3));
+                                    outline: none;
+                                }
+
+                                &:focus-visible {
+                                    box-shadow: 0 0 0 2px var(--mention-glow, rgba(11, 87, 208, 0.3)), 0 4px 12px rgba(0, 0, 0, 0.15);
+                                }
+
+                                &.ping {
+                                    animation: mentionPing 0.6s ease-out;
                                 }
 
                                 &.sales {
-                                    color: #d96570;
-                                    background: rgba(217, 101, 112, 0.15);
+                                    --mention-color: #912a3d;
+                                    --mention-bg: rgba(217, 101, 112, 0.18);
+                                    --mention-border: rgba(217, 101, 112, 0.35);
+                                    --mention-glow: rgba(217, 101, 112, 0.4);
                                 }
 
                                 &.inventory {
-                                    color: #1e8e3e;
-                                    background: rgba(30, 142, 62, 0.15);
+                                    --mention-color: #0c6127;
+                                    --mention-bg: rgba(30, 142, 62, 0.2);
+                                    --mention-border: rgba(30, 142, 62, 0.35);
+                                    --mention-glow: rgba(30, 142, 62, 0.35);
                                 }
 
                                 &.logistics {
-                                    color: #1967d2;
-                                    background: rgba(25, 103, 210, 0.15);
+                                    --mention-color: #0f397c;
+                                    --mention-bg: rgba(25, 103, 210, 0.2);
+                                    --mention-border: rgba(25, 103, 210, 0.35);
+                                    --mention-glow: rgba(25, 103, 210, 0.35);
+                                }
+
+                                &.general {
+                                    --mention-color: #3a2c75;
+                                    --mention-bg: rgba(66, 133, 244, 0.2);
+                                    --mention-border: rgba(66, 133, 244, 0.35);
+                                    --mention-glow: rgba(66, 133, 244, 0.35);
+                                }
+
+                                &.unknown {
+                                    --mention-color: var(--gemini-text-secondary);
+                                    --mention-bg: rgba(0, 0, 0, 0.07);
+                                    --mention-border: rgba(0, 0, 0, 0.12);
+                                    --mention-glow: rgba(0, 0, 0, 0.12);
                                 }
                             }
                         }
@@ -897,8 +949,8 @@ $font-family:
 
                     // Message Actions Row
                     .message-actions {
-                        display: flex;
-                        gap: 4px;
+            display: flex;
+            gap: 4px;
                         margin-top: 4px;
                         opacity: 0; // Hidden by default
                         transition: opacity 0.2s;
@@ -908,7 +960,7 @@ $font-family:
                             border: none;
                             color: var(--gemini-text-secondary);
                             padding: 6px;
-                            border-radius: 50%;
+              border-radius: 50%;
                             cursor: pointer;
                             @include flex-center;
                             transition: background 0.2s;
@@ -935,90 +987,90 @@ $font-family:
 
     .chat-input-area {
         padding: 0 20px 24px;
-        display: flex;
-        justify-content: center;
+      display: flex;
+      justify-content: center;
 
-        .input-container {
-            width: 100%;
+      .input-container {
+        width: 100%;
             max-width: 800px;
-            position: relative;
+        position: relative;
 
-            .mention-popup {
-                position: absolute;
-                bottom: 100%;
-                left: 0;
+      .mention-popup {
+        position: absolute;
+        bottom: 100%;
+        left: 0;
                 margin-bottom: 12px;
                 width: 280px;
                 background: var(--gemini-surface);
                 border-radius: 12px;
                 border: 1px solid var(--gemini-border);
-                overflow: hidden;
+        overflow: hidden;
                 z-index: 100;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 
-                .mention-header {
+        .mention-header {
                     padding: 8px 12px;
-                    font-size: 11px;
-                    font-weight: 600;
+          font-size: 11px;
+          font-weight: 600;
                     color: var(--gemini-text-secondary);
                     background: var(--gemini-input);
-                }
+        }
 
-                .mention-list {
+        .mention-list {
                     max-height: 200px;
-                    overflow-y: auto;
+          overflow-y: auto;
 
-                    .mention-item {
-                        display: flex;
-                        align-items: center;
+          .mention-item {
+            display: flex;
+            align-items: center;
                         gap: 10px;
                         padding: 8px 12px;
-                        cursor: pointer;
+            cursor: pointer;
 
-                        &:hover {
+            &:hover {
                             background: var(--gemini-hover);
                         }
 
                         .agent-icon-small {
                             width: 24px;
                             height: 24px;
-                            border-radius: 50%;
+              border-radius: 50%;
                             background: var(--gemini-input);
-                            @include flex-center;
-                            font-size: 12px;
-                        }
-
-                        .agent-details {
-                            display: flex;
-                            flex-direction: column;
-
-                            .agent-name {
-                                font-size: 13px;
-                                color: var(--gemini-text-primary);
-                            }
-
-                            .agent-dept {
-                                font-size: 10px;
-                                color: var(--gemini-text-secondary);
-                            }
-                        }
-                    }
-                }
+              @include flex-center;
+              font-size: 12px;
             }
 
-            .input-wrapper {
+            .agent-details {
+              display: flex;
+              flex-direction: column;
+
+              .agent-name {
+                                font-size: 13px;
+                                color: var(--gemini-text-primary);
+              }
+
+              .agent-dept {
+                                font-size: 10px;
+                                color: var(--gemini-text-secondary);
+              }
+            }
+          }
+        }
+      }
+
+      .input-wrapper {
                 background: var(--gemini-input);
                 border-radius: 32px;
                 padding: 8px 16px;
-                display: flex;
-                align-items: flex-end;
+        display: flex;
+        align-items: flex-end;
                 gap: 12px;
                 transition:
                     background 0.2s,
                     box-shadow 0.2s;
-                border: 1px solid transparent;
+        border: 1px solid transparent;
 
-                &:focus-within {
+        &:focus-within {
                     background: var(--gemini-surface);
                     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
                     border-color: var(
@@ -1039,21 +1091,21 @@ $font-family:
                     &:hover {
                         background: var(--gemini-hover);
                     }
-                }
+        }
 
-                .message-input {
-                    flex: 1;
-                    background: transparent;
+        .message-input {
+          flex: 1;
+          background: transparent;
                     border: none;
                     color: var(--gemini-text-primary);
-                    font-size: 16px;
+          font-size: 16px;
                     padding: 14px 0;
-                    resize: none;
-                    outline: none;
+          resize: none;
+          outline: none;
                     font-family: inherit;
-                    line-height: 1.5;
+          line-height: 1.5;
 
-                    &::placeholder {
+          &::placeholder {
                         color: var(--gemini-text-secondary);
                     }
                 }
@@ -1066,11 +1118,11 @@ $font-family:
                     button {
                         width: 36px;
                         height: 36px;
-                        border-radius: 50%;
-                        border: none;
+          border-radius: 50%;
+          border: none;
                         background: transparent;
                         color: var(--gemini-text-primary);
-                        cursor: pointer;
+          cursor: pointer;
                         @include flex-center;
 
                         &:hover {
@@ -1085,23 +1137,23 @@ $font-family:
                                 opacity: 0.9;
                             }
                         }
-                    }
-                }
-            }
+          }
+        }
+      }
 
-            .input-footer {
-                text-align: center;
-                margin-top: 12px;
+      .input-footer {
+        text-align: center;
+        margin-top: 12px;
 
-                small {
-                    font-size: 11px;
+        small {
+          font-size: 11px;
                     color: var(--gemini-text-secondary);
                     opacity: 0.7;
                 }
-            }
         }
+      }
     }
-}
+  }
 
 @keyframes blink {
     0%,
@@ -1138,6 +1190,16 @@ $font-family:
     100% {
         transform: rotate(360deg) scale(1);
         opacity: 0.8;
+    }
+}
+
+@keyframes mentionPing {
+    0% {
+        box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.4);
+    }
+
+    100% {
+        box-shadow: 0 0 0 14px rgba(66, 133, 244, 0);
     }
 }
 

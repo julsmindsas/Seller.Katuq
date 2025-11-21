@@ -694,34 +694,44 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     const mentionRegex = /@([\w\s]+?)(?=\s|$|[.,;:])/g; // Capture until space or punctuation
     parsed = parsed.replace(mentionRegex, (match, name) => {
       const cleanName = name.trim();
-      
-      // Try to find specific agent
+      if (!cleanName) return match;
+
+      // Try to find specific agent (exact match ignoring case)
       const agent = this.agents.find(
         (a) => a.agentName.toLowerCase() === cleanName.toLowerCase(),
       );
 
-      // If agent found, use its department
       if (agent) {
         const deptClass = agent.department || "general";
-        return `<span class="mention-chip ${deptClass}">@${cleanName}</span>`;
+        return this.buildMentionChip(match, agent.agentName, deptClass);
       }
 
-      // If not found, check if it's a known department/role
-      const knownDepartments = ['sales', 'ventas', 'inventory', 'inventario', 'logistics', 'logistica', 'general', 'manager'];
+      // Map known department slugs to canonical classes
+      const departmentMap: Record<string, string> = {
+        sales: "sales",
+        venta: "sales",
+        ventas: "sales",
+        inventory: "inventory",
+        inventario: "inventory",
+        logistics: "logistics",
+        logistica: "logistics",
+        logística: "logistics",
+        general: "general",
+        manager: "general",
+        gerente: "general",
+      };
+
       const lowerName = cleanName.toLowerCase();
-      
-      if (knownDepartments.includes(lowerName) || knownDepartments.some(d => lowerName.includes(d))) {
-          // Map common names to department classes
-          let deptClass = "general";
-          if (lowerName.includes('sale') || lowerName.includes('venta')) deptClass = "sales";
-          else if (lowerName.includes('invent')) deptClass = "inventory";
-          else if (lowerName.includes('logist')) deptClass = "logistics";
-          
-          return `<span class="mention-chip ${deptClass}">@${cleanName}</span>`;
+      const matchedDeptKey = Object.keys(departmentMap).find((key) =>
+        lowerName.includes(key),
+      );
+
+      if (matchedDeptKey) {
+        const deptClass = departmentMap[matchedDeptKey];
+        return this.buildMentionChip(match, cleanName, deptClass);
       }
 
-      // Fallback for unknown mentions
-      return `<span class="mention-chip unknown">@${cleanName}</span>`;
+      return this.buildMentionChip(match, cleanName, "unknown");
     });
 
     // 6. Newlines to <br> (but not inside <pre>)
@@ -735,6 +745,102 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       .join("");
 
     return this.sanitizer.bypassSecurityTrustHtml(parsed);
+  }
+
+  onMessageContentClick(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (!target) return;
+
+    const mentionEl = target.closest(".mention-chip") as HTMLElement | null;
+    if (!mentionEl) return;
+
+    event.preventDefault();
+    this.handleMentionInteraction(mentionEl);
+  }
+
+  onMessageContentKeydown(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement | null;
+    if (!target || !target.classList.contains("mention-chip")) return;
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      this.handleMentionInteraction(target);
+    }
+  }
+
+  private handleMentionInteraction(element: HTMLElement): void {
+    const mention = element.getAttribute("data-mention");
+    if (!mention) return;
+
+    const normalized = mention.trim();
+    if (!normalized) return;
+
+    const mentionText = `@${normalized} `;
+    const trimmedCurrent = this.currentTask.trimEnd();
+    this.currentTask = trimmedCurrent
+      ? `${trimmedCurrent} ${mentionText}`
+      : mentionText;
+
+    this.focusMessageInput();
+
+    element.classList.add("ping");
+    setTimeout(() => element.classList.remove("ping"), 500);
+  }
+
+  private focusMessageInput(): void {
+    if (!this.messageInput) return;
+    setTimeout(() => {
+      const inputEl = this.messageInput.nativeElement;
+      inputEl.focus();
+      const cursorPos = this.currentTask.length;
+      inputEl.setSelectionRange(cursorPos, cursorPos);
+    }, 0);
+  }
+
+  private buildMentionChip(
+    originalLabel: string,
+    mentionName: string,
+    deptClass: string,
+  ): string {
+    const safeDept = deptClass || "general";
+    const safeMention = mentionName.replace(/"/g, "&quot;");
+    const safeLabel = originalLabel.replace(/"/g, "&quot;");
+    const tooltip =
+      safeDept === "unknown"
+        ? `Mencionar ${mentionName}`
+        : `Hablar con ${mentionName}`;
+    const iconClass = this.getDepartmentIcon(safeDept) || "pi-at";
+    const palette = this.getMentionPalette(safeDept);
+    const styleAttr = `style="--mention-color:${palette.text};--mention-bg:${palette.bg};--mention-border:${palette.border};--mention-glow:${palette.glow};"`;
+
+    return `<span class="mention-chip ${safeDept}" data-mention="${safeMention}" data-dept="${safeDept}" role="button" tabindex="0" title="${tooltip}" ${styleAttr}><i class="pi ${iconClass}"></i><span class="mention-text">${safeLabel}</span></span>`;
+  }
+
+  private getMentionPalette(deptClass: string) {
+    const base = this.getDepartmentColor(deptClass) || "#0b57d0";
+    return {
+      text: base,
+      bg: this.hexToRgba(base, 0.18),
+      border: this.hexToRgba(base, 0.35),
+      glow: this.hexToRgba(base, 0.3),
+    };
+  }
+
+  private hexToRgba(hexColor: string, alpha: number): string {
+    if (!hexColor || !hexColor.startsWith("#")) {
+      return `rgba(11, 87, 208, ${alpha})`;
+    }
+    let hex = hexColor.substring(1);
+    if (hex.length === 3) {
+      hex = hex
+        .split("")
+        .map((char) => char + char)
+        .join("");
+    }
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
   clearChat(): void {

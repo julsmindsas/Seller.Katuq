@@ -145,7 +145,10 @@
             </div>
 
             <!-- Message Text (HTML for mentions) -->
-            <div class="message-text" [innerHTML]="msg.parsedMessage" *ngIf="msg.message" 
+            <div class="message-text"
+                 (click)="onMessageContentClick($event)"
+                 (keydown)="onMessageContentKeydown($event)"
+                 [innerHTML]="msg.parsedMessage" *ngIf="msg.message" 
                  [style.background-color]="msg.type !== 'system' ? getDepartmentBgColor(msg.department) : ''"
                  [class.has-bg]="msg.type !== 'system'"></div>
 
