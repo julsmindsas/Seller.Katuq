@@ -128,7 +128,11 @@
         <!-- Agent Message (Text style with Avatar) -->
         <div class="agent-message-container" *ngIf="msg.department !== 'user'" [class.system-message]="msg.type === 'system'">
           <div class="agent-avatar-col" *ngIf="msg.type !== 'system'">
-            <div class="agent-avatar-icon" [style.color]="getDepartmentColor(msg.department)">
+            <div
+              class="agent-avatar-icon"
+              [style.background]="getDepartmentColor(msg.department)"
+              aria-hidden="true"
+            >
               <i [class]="'pi ' + getDepartmentIcon(msg.department)"></i>
             </div>
           </div>
@@ -137,10 +141,41 @@
             <div class="agent-name-label" *ngIf="msg.type !== 'system'" [style.color]="getDepartmentColor(msg.department)">{{ msg.speaker }}</div>
             
             <!-- Thinking Block for Final Response Only -->
-            <div class="thought-process" *ngIf="msg.isStreaming">
+            <div
+              class="thought-process"
+              *ngIf="(msg.isStreaming || (msg.metadata?.steps?.length || 0) > 0) && msg.type !== 'system'"
+            >
               <div class="thought-header">
-                <i class="pi pi-sparkles sparkle-icon thinking" style="color: var(--gemini-accent)"></i>
-                <span class="thought-label thinking-animated">Pensando...</span>
+                <div class="sparkle-wrapper">
+                  <i class="pi pi-sparkles sparkle-icon thinking"></i>
+                </div>
+                <div class="thought-text">
+                  <span class="thought-label thinking-animated">
+                    {{ msg.metadata?.thinkingLabel || 'Pensando...' }}
+                  </span>
+                  <small>El equipo está trabajando en tu solicitud</small>
+                </div>
+                <span class="pulse-dot"></span>
+              </div>
+              <div class="thought-steps" *ngIf="msg.metadata?.steps?.length">
+                <div
+                  class="thought-step"
+                  *ngFor="let step of msg.metadata?.steps"
+                  [style.--step-accent]="step.accentColor || null"
+                >
+                  <div class="step-icon" [ngClass]="step.status">
+                    <i [class]="step.icon || 'pi pi-sparkles'"></i>
+                    <span class="step-ping" *ngIf="step.status === 'running'"></span>
+                  </div>
+                  <div class="step-body">
+                    <div class="step-title">{{ step.description }}</div>
+                    <div class="step-meta">
+                      <span class="step-status-pill" [ngClass]="step.status">
+                        {{ getStepStatusLabel(step.status) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

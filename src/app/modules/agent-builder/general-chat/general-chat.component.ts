@@ -19,6 +19,10 @@ interface ProcessStep {
   description: string;
   status: "pending" | "running" | "completed" | "failed";
   toolCall?: string;
+  icon?: string;
+  timestamp?: string;
+  accentColor?: string;
+  detail?: string;
 }
 
 interface ConversationMessage {
@@ -33,6 +37,7 @@ interface ConversationMessage {
   streamingComplete?: boolean;
   metadata?: {
     steps?: ProcessStep[];
+    thinkingLabel?: string;
     [key: string]: any;
   };
   isProcessExpanded?: boolean;
@@ -270,7 +275,9 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     });
 
     // Setup streaming ID
-    this.currentStreamingMessageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    this.currentStreamingMessageId = `msg_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
 
     // Determine speaker info
     const speakerName = this.selectedAgent
@@ -279,6 +286,11 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     const department = this.selectedAgent
       ? this.selectedAgent.department
       : "general";
+
+    // Prepare placeholder bubble & thinking state
+    this.ensureStreamingShell(speakerName, department);
+    this.updateThinkingLabel("Analizando la solicitud...");
+    this.addThoughtStep("Analizando la solicitud", "pi pi-sparkles", "running");
 
     // Add response placeholder
     // REMOVED: We will create messages dynamically based on events to simulate a group chat
@@ -424,7 +436,11 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
                     message: "", // Start empty
                     type: "agent",
                     isStreaming: true,
-                    streamingComplete: false
+                    streamingComplete: false,
+                    metadata: {
+                      steps: [],
+                      thinkingLabel: "Analizando la solicitud...",
+                    },
                  });
                  messageIndex = this.messages.findIndex(m => m.id === this.currentStreamingMessageId);
             }
@@ -517,119 +533,100 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
               this.addMessage(newMessage);
           }
           this.scrollToBottom();
+
+          if (response.speaker) {
+            this.markStepStatusByDetail(response.speaker, "completed");
+          }
         },
       });
 
     // Thinking Process Events Subscription
-    const agentEventsSub = this.webSocketService.getAgentEvents()
+    const agentEventsSub = this.webSocketService
+      .getAgentEvents()
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (event) => {
-            // Transform events into distinct chat messages for Group Chat effect
-            const getOrchestratorName = () => this.selectedAgent ? this.selectedAgent.agentName : "General Manager";
-            const getOrchestratorDept = () => this.selectedAgent ? this.selectedAgent.department : "general";
+          const orchestratorDept = this.selectedAgent
+            ? this.selectedAgent.department
+            : "general";
+          const orchestratorName = this.selectedAgent
+            ? this.selectedAgent.agentName
+            : "General Manager";
 
-            let newMessage: ConversationMessage | null = null;
+          if (!this.getActiveStreamingMessage()) {
+            this.ensureStreamingShell(orchestratorName, orchestratorDept);
+          }
 
-            switch (event.type) {
-              case "sub_agent_call":
-                if (event.speaker === "orchestrator") {
-                  // Track agent as participating
-                  const agentName = event.metadata?.agentName;
-                  if (agentName) this.participatingAgents.add(agentName);
-
-                  newMessage = {
-                      id: `evt_${Date.now()}_${Math.random()}`,
-                      timestamp: new Date(),
-                      speaker: getOrchestratorName(),
-                      department: getOrchestratorDept(),
-                      message: `Consultando a @${agentName || "Agente"}...`,
-                      type: 'agent'
-                  };
-                }
-                break;
-
-              case "a2a_request":
-                newMessage = {
-                    id: `evt_${Date.now()}_${Math.random()}`,
-                    timestamp: new Date(),
-                    speaker: getOrchestratorName(),
-                    department: getOrchestratorDept(),
-                    message: `Coordinando con el departamento de ${this.getDepartmentName(event.metadata?.targetDepartment)}...`,
-                    type: 'agent'
-                };
-                break;
-
-              case "orchestrator_thinking":
-                newMessage = {
-                    id: `think_${Date.now()}`,
-                    timestamp: new Date(),
-                    speaker: 'System',
-                    department: 'system',
-                    message: `🧠 ${event.message || "Analizando..."}`,
-                    type: 'system'
-                };
-                break;
-
-              case "tool_call":
-                newMessage = {
-                    id: `tool_${Date.now()}`,
-                    timestamp: new Date(),
-                    speaker: 'System',
-                    department: 'system',
-                    message: `🛠️ Ejecutando herramienta: ${event.metadata?.toolName || "Herramienta"}`,
-                    type: 'system'
-                };
-                break;
-
-              case "error":
-                newMessage = {
-                    id: `err_${Date.now()}`,
-                    timestamp: new Date(),
-                    speaker: event.speaker || 'System',
-                    department: 'system',
-                    message: `❌ Error: ${event.metadata?.error || event.message}`,
-                    type: 'system'
-                };
-                break;
-
-               case "final_result":
-                   // Usually handled by stream, but if direct:
-                   if (event.message && !this.messages.find(m => m.id === this.currentStreamingMessageId)) {
-                         newMessage = {
-                            id: this.currentStreamingMessageId || `fin_${Date.now()}`,
-                            timestamp: new Date(),
-                            speaker: getOrchestratorName(),
-                            department: getOrchestratorDept(),
-                            message: event.message,
-                            type: 'agent',
-                            streamingComplete: true
-                         };
-                   }
-                   break;
+          switch (event.type) {
+            case "sub_agent_call": {
+              if (event.speaker === "orchestrator") {
+                const agentName = event.metadata?.agentName || "agente";
+                if (agentName) this.participatingAgents.add(agentName);
+                const agentDept =
+                  event.metadata?.department || orchestratorDept || "general";
+                const accent = this.getDepartmentColor(agentDept);
+                const icon = `pi ${this.getDepartmentIcon(agentDept)}`;
+                this.addThoughtStep(
+                  `Consultando a ${agentName}`,
+                  icon,
+                  "running",
+                  accent,
+                  agentName,
+                );
+                this.updateThinkingLabel(`Consultando a ${agentName}...`);
+              }
+              break;
             }
-            
-            if (newMessage) {
-                // Logic to insert BEFORE the final response bubble if it exists (to keep Summary at bottom)
-                // But wait, if we insert before, the Final Response bubble stays at the bottom, 
-                // so the order becomes: [User, Event, Final]. This is what we want.
-                
-                const finalMsgIndex = this.messages.findIndex(m => m.id === this.currentStreamingMessageId);
-                
-                if (finalMsgIndex !== -1) {
-                    // Insert before the final streaming message
-                    this.messages.splice(finalMsgIndex, 0, newMessage);
-                    // Parse mentions for the new message
-                    newMessage.parsedMessage = this.parseMentions(newMessage.message);
-                    this.cdr.markForCheck();
-                } else {
-                    // Just add to end
-                    this.addMessage(newMessage);
-                }
-                
-                this.scrollToBottom();
+            case "a2a_request": {
+              const target = event.metadata?.targetDepartment || "general";
+              const label = this.getDepartmentName(target);
+              this.addThoughtStep(
+                `Coordinando con ${label}`,
+                "pi pi-share-alt",
+                "running",
+              );
+              this.updateThinkingLabel(`Coordinando con ${label}...`);
+              break;
             }
-        }
+            case "tool_call": {
+              const toolName = event.metadata?.toolName || "herramienta";
+              this.addThoughtStep(
+                `Ejecutando ${toolName}`,
+                "pi pi-cog",
+                "running",
+                undefined,
+                toolName,
+              );
+              this.updateThinkingLabel(`Ejecutando ${toolName}...`);
+              break;
+            }
+            case "orchestrator_thinking": {
+              if (event.message) {
+                this.updateThinkingLabel(event.message);
+              }
+              break;
+            }
+            case "error": {
+              this.completeRunningSteps("failed");
+              this.updateThinkingLabel("Se presentó un error");
+              break;
+            }
+            case "final_result": {
+              this.completeRunningSteps("completed");
+              this.updateThinkingLabel("Resumen listo");
+              if (event.message) {
+                const message = this.getActiveStreamingMessage();
+                if (message) {
+                  message.message = event.message;
+                  message.parsedMessage = this.parseMentions(event.message);
+                  message.streamingComplete = true;
+                  message.isStreaming = false;
+                }
+              }
+              break;
+            }
+          }
+        },
       });
 
     this.wsSubscriptions.push(
@@ -745,6 +742,128 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       .join("");
 
     return this.sanitizer.bypassSecurityTrustHtml(parsed);
+  }
+
+  private ensureStreamingShell(speakerName: string, department: string): void {
+    if (!this.currentStreamingMessageId) return;
+    const exists = this.messages.some(
+      (m) => m.id === this.currentStreamingMessageId,
+    );
+    if (exists) return;
+
+    const placeholder: ConversationMessage = {
+      id: this.currentStreamingMessageId,
+      timestamp: new Date(),
+      speaker: speakerName,
+      department,
+      message: "",
+      type: "agent",
+      isStreaming: true,
+      streamingComplete: false,
+      metadata: {
+        steps: [],
+        thinkingLabel: "Analizando la solicitud...",
+      },
+    };
+
+    this.messages.push(placeholder);
+    this.cdr.markForCheck();
+  }
+
+  private getActiveStreamingMessage(): ConversationMessage | null {
+    if (!this.currentStreamingMessageId) return null;
+    return (
+      this.messages.find(
+        (m) => m.id === this.currentStreamingMessageId,
+      ) || null
+    );
+  }
+
+  private updateThinkingLabel(label: string): void {
+    const message = this.getActiveStreamingMessage();
+    if (!message) return;
+    if (!message.metadata) message.metadata = {};
+    message.metadata.thinkingLabel = label;
+    this.cdr.markForCheck();
+  }
+
+  private addThoughtStep(
+    description: string,
+    icon: string,
+    status: ProcessStep["status"] = "running",
+    accentColor?: string,
+    detail?: string,
+  ): void {
+    const message = this.getActiveStreamingMessage();
+    if (!message) return;
+    if (!message.metadata) {
+      message.metadata = { steps: [] };
+    }
+    if (!message.metadata.steps) {
+      message.metadata.steps = [];
+    }
+
+    for (let i = message.metadata.steps.length - 1; i >= 0; i--) {
+      if (message.metadata.steps[i].status === "running") {
+        message.metadata.steps[i].status = "completed";
+        break;
+      }
+    }
+
+    message.metadata.steps.push({
+      description,
+      status,
+      icon,
+      timestamp: new Date().toISOString(),
+      accentColor,
+      detail,
+    });
+    this.cdr.markForCheck();
+  }
+
+  private markStepStatusByDetail(
+    detailMatch: string,
+    status: ProcessStep["status"],
+  ): void {
+    const message = this.getActiveStreamingMessage();
+    if (!message?.metadata?.steps?.length) return;
+
+    for (let i = message.metadata.steps.length - 1; i >= 0; i--) {
+      const step = message.metadata.steps[i];
+      if (step.detail === detailMatch && step.status === "running") {
+        step.status = status;
+        break;
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  private completeRunningSteps(
+    status: ProcessStep["status"] = "completed",
+  ): void {
+    const message = this.getActiveStreamingMessage();
+    if (!message?.metadata?.steps?.length) return;
+
+    message.metadata.steps.forEach((step) => {
+      if (step.status === "running" || step.status === "pending") {
+        step.status = status;
+      }
+    });
+    this.cdr.markForCheck();
+  }
+
+  getStepStatusLabel(status: ProcessStep["status"]): string {
+    switch (status) {
+      case "running":
+        return "En progreso";
+      case "completed":
+        return "Completado";
+      case "failed":
+        return "Error";
+      case "pending":
+      default:
+        return "Pendiente";
+    }
   }
 
   onMessageContentClick(event: Event): void {
