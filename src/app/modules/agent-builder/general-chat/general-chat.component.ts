@@ -17,12 +17,19 @@ import { DomSanitizer, SafeHtml } from "@angular/platform-browser";
 
 interface ProcessStep {
   description: string;
-  status: "pending" | "running" | "completed" | "failed";
+  status: "pending" | "running" | "completed" | "failed" | "waiting";
   toolCall?: string;
   icon?: string;
   timestamp?: string;
   accentColor?: string;
   detail?: string;
+  subAgentResponse?: {
+    speaker: string;
+    department: string;
+    message: string;
+    parsedMessage?: SafeHtml;
+    timestamp: Date;
+  };
 }
 
 interface ConversationMessage {
@@ -97,7 +104,7 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     console.log("[GeneralChat] 🎯 Inicializando Unified Chat Hub");
@@ -212,7 +219,7 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     } else {
       this.filteredAgentsForMention = this.agents.filter(
         (agent) =>
-          agent.agentName.toLowerCase().includes(this.mentionFilter) ||
+        agent.agentName.toLowerCase().includes(this.mentionFilter) ||
           this.getDepartmentName(agent.department)
             .toLowerCase()
             .includes(this.mentionFilter),
@@ -300,17 +307,17 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       ...
     });
     */
-   
+
     // Show a temporary "Typing..." or "Processing" indicator if needed, 
     // but for now we'll let the first event create the first bubble.
     // actually, let's add a small system message "Iniciando proceso..." to give immediate feedback
     this.addMessage({
-        id: `sys_${Date.now()}`,
-        timestamp: new Date(),
-        speaker: 'System',
-        department: 'system',
-        message: 'Iniciando orquestación...',
-        type: 'system'
+      id: `sys_${Date.now()}`,
+      timestamp: new Date(),
+      speaker: 'System',
+      department: 'system',
+      message: 'Iniciando orquestación...',
+      type: 'system'
     });
 
     this.isExecuting = true;
@@ -321,8 +328,8 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
 
     // Defer a la siguiente iteración del ciclo de eventos para asegurar que el spinner de carga se renderice
     setTimeout(() => {
-      // Connect and send
-      this.connectAndSend(taskToExecute);
+    // Connect and send
+    this.connectAndSend(taskToExecute);
     }, 0);
   }
 
@@ -421,28 +428,28 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
             let messageIndex = this.messages.findIndex(
               (m) => m.id === chunkData.messageId,
             );
-            
+
             // If final response bubble doesn't exist yet, create it now
             if (messageIndex === -1) {
-                 const speakerName = this.selectedAgent ? this.selectedAgent.agentName : "General Manager";
-                 const department = this.selectedAgent ? this.selectedAgent.department : "general";
-                 
-                 // Use addMessage but ensure it's at the end (which it does by default)
-                 this.addMessage({
-                    id: this.currentStreamingMessageId,
-                    timestamp: new Date(),
-                    speaker: speakerName,
-                    department: department,
-                    message: "", // Start empty
-                    type: "agent",
-                    isStreaming: true,
-                    streamingComplete: false,
-                    metadata: {
-                      steps: [],
-                      thinkingLabel: "Analizando la solicitud...",
-                    },
-                 });
-                 messageIndex = this.messages.findIndex(m => m.id === this.currentStreamingMessageId);
+              const speakerName = this.selectedAgent ? this.selectedAgent.agentName : "General Manager";
+              const department = this.selectedAgent ? this.selectedAgent.department : "general";
+
+              // Use addMessage but ensure it's at the end (which it does by default)
+              this.addMessage({
+                id: this.currentStreamingMessageId,
+                timestamp: new Date(),
+                speaker: speakerName,
+                department: department,
+                message: "", // Start empty
+                type: "agent",
+                isStreaming: true,
+                streamingComplete: false,
+                metadata: {
+                  steps: [],
+                  thinkingLabel: "Analizando la solicitud...",
+                },
+              });
+              messageIndex = this.messages.findIndex(m => m.id === this.currentStreamingMessageId);
             }
 
             if (messageIndex !== -1) {
@@ -511,6 +518,52 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
           // Ensure agent is in participating list
           if (response.speaker) this.participatingAgents.add(response.speaker);
 
+          // Find the active streaming message (GM)
+          const activeMsg = this.getActiveStreamingMessage();
+
+          if (activeMsg && activeMsg.metadata?.steps) {
+            // Find the step that corresponds to this agent call
+            // We look for a running step with the agent's name in detail, or just the last running step
+            let stepIndex = -1;
+
+            // Try to find by detail (agent name)
+            stepIndex = activeMsg.metadata.steps.findIndex(s =>
+              (s.status === 'running' || s.status === 'waiting') && s.detail === response.speaker
+            );
+
+            // If not found, find any running step
+            if (stepIndex === -1) {
+              stepIndex = activeMsg.metadata.steps.findIndex(s => s.status === 'running');
+            }
+
+            // If found, attach response to that step
+            if (stepIndex !== -1) {
+              const step = activeMsg.metadata.steps[stepIndex];
+              step.subAgentResponse = {
+                speaker: response.speaker,
+                department: response.department,
+                message: response.message,
+                parsedMessage: this.parseMentions(response.message),
+                timestamp: new Date(response.timestamp)
+              };
+              
+              // Check if it's an interruption/question
+              if (this.isInterruption(response.message)) {
+                step.status = 'waiting';
+                this.updateThinkingLabel(`Esperando respuesta para ${response.speaker}...`);
+                // Suggest focus to input
+                this.focusMessageInput();
+              } else {
+                step.status = 'completed';
+              }
+              
+              this.cdr.markForCheck();
+              this.scrollToBottom();
+              return; // Handled as embedded response
+            }
+          }
+
+          // Fallback: If no active step found (shouldn't happen in normal flow), add as separate message
           const newMessage: ConversationMessage = {
             id: response.id || this.generateId(),
             timestamp: new Date(response.timestamp),
@@ -524,19 +577,15 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
 
           // Insert BEFORE final message if exists, to maintain order
           const finalMsgIndex = this.messages.findIndex(m => m.id === this.currentStreamingMessageId);
-          
+
           if (finalMsgIndex !== -1) {
-              this.messages.splice(finalMsgIndex, 0, newMessage);
-              newMessage.parsedMessage = this.parseMentions(newMessage.message);
-              this.cdr.markForCheck();
+            this.messages.splice(finalMsgIndex, 0, newMessage);
+            newMessage.parsedMessage = this.parseMentions(newMessage.message);
+            this.cdr.markForCheck();
           } else {
-              this.addMessage(newMessage);
+            this.addMessage(newMessage);
           }
           this.scrollToBottom();
-
-          if (response.speaker) {
-            this.markStepStatusByDetail(response.speaker, "completed");
-          }
         },
       });
 
@@ -819,10 +868,13 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
       message.metadata.steps = [];
     }
 
-    for (let i = message.metadata.steps.length - 1; i >= 0; i--) {
-      if (message.metadata.steps[i].status === "running") {
-        message.metadata.steps[i].status = "completed";
-        break;
+    // If status is 'waiting', we don't auto-complete previous steps because we are pausing
+    if (status !== 'waiting') {
+      for (let i = message.metadata.steps.length - 1; i >= 0; i--) {
+        if (message.metadata.steps[i].status === "running") {
+          message.metadata.steps[i].status = "completed";
+          break;
+        }
       }
     }
 
@@ -876,10 +928,23 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
         return "Completado";
       case "failed":
         return "Error";
+      case "waiting":
+        return "Esperando info";
       case "pending":
       default:
         return "Pendiente";
     }
+  }
+
+  private isInterruption(text: string): boolean {
+    if (!text) return false;
+    const lower = text.toLowerCase();
+    
+    // Heuristicas para detectar preguntas o solicitudes de input
+    const isQuestion = text.trim().endsWith('?') || text.includes('¿');
+    const requestsInfo = lower.includes('necesito') || lower.includes('por favor') || lower.includes('indícame') || lower.includes('proporciona');
+    
+    return isQuestion || requestsInfo;
   }
 
   onMessageContentClick(event: Event): void {
@@ -1018,19 +1083,19 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
   }
 
   getSuggestedActions(): string[] {
-      // In a real app, this would come from the AI or be heuristics-based
-      if (this.currentTask.toLowerCase().includes('stock') || this.currentTask.toLowerCase().includes('inventario')) {
-          return ['📉 Ver productos con bajo stock', '📦 Crear orden de reposición', '📊 Analizar rotación'];
-      }
-      if (this.currentTask.toLowerCase().includes('venta') || this.currentTask.toLowerCase().includes('pedidos')) {
-          return ['💰 Ver reporte de ingresos', '🏆 Top clientes del mes', '📈 Proyección de cierre'];
-      }
-      return ['📊 Ver dashboard completo', '📄 Exportar reporte PDF', '📧 Enviar resumen por correo'];
+    // In a real app, this would come from the AI or be heuristics-based
+    if (this.currentTask.toLowerCase().includes('stock') || this.currentTask.toLowerCase().includes('inventario')) {
+      return ['📉 Ver productos con bajo stock', '📦 Crear orden de reposición', '📊 Analizar rotación'];
+    }
+    if (this.currentTask.toLowerCase().includes('venta') || this.currentTask.toLowerCase().includes('pedidos')) {
+      return ['💰 Ver reporte de ingresos', '🏆 Top clientes del mes', '📈 Proyección de cierre'];
+    }
+    return ['📊 Ver dashboard completo', '📄 Exportar reporte PDF', '📧 Enviar resumen por correo'];
   }
 
   useSuggestion(suggestion: string) {
-      this.currentTask = suggestion;
-      this.executeTask();
+    this.currentTask = suggestion;
+    this.executeTask();
   }
 
   // Helpers for UI
@@ -1063,13 +1128,13 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
   }
 
   getAgentBySpeakerName(name: string): Agent | undefined {
-      return this.agents.find(a => a.agentName === name);
+    return this.agents.find(a => a.agentName === name);
   }
 
   getParticipatingAgentsList(): Agent[] {
-      return Array.from(this.participatingAgents)
-          .map(name => this.getAgentBySpeakerName(name))
-          .filter(a => !!a) as Agent[];
+    return Array.from(this.participatingAgents)
+      .map(name => this.getAgentBySpeakerName(name))
+      .filter(a => !!a) as Agent[];
   }
 
   getDepartmentColor(department: string): string {
@@ -1093,12 +1158,12 @@ export class GeneralChatComponent implements OnInit, OnDestroy {
     const color = this.getDepartmentColor(department);
     // Convert hex to rgba with low opacity for background
     if (color.startsWith('#')) {
-        let c = color.substring(1);
-        if (c.length === 3) c = c.split('').map(char => char + char).join('');
-        const r = parseInt(c.substring(0, 2), 16);
-        const g = parseInt(c.substring(2, 4), 16);
-        const b = parseInt(c.substring(4, 6), 16);
-        return `rgba(${r}, ${g}, ${b}, 0.08)`; // 8% opacity
+      let c = color.substring(1);
+      if (c.length === 3) c = c.split('').map(char => char + char).join('');
+      const r = parseInt(c.substring(0, 2), 16);
+      const g = parseInt(c.substring(2, 4), 16);
+      const b = parseInt(c.substring(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, 0.08)`; // 8% opacity
     }
     return 'transparent';
   }

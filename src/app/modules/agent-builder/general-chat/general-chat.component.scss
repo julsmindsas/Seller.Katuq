@@ -58,6 +58,7 @@
 
                 .input-container {
                     max-width: 100%;
+
                     .input-wrapper {
                         border-radius: 24px;
                         padding: 6px 12px;
@@ -67,6 +68,7 @@
         }
     }
 }
+
 // Google Gemini Theme Variables
 :root {
     // Light Theme (Default)
@@ -87,12 +89,10 @@
     --gemini-thought-bg: #f8f9fa;
     --gemini-mention-bg: rgba(11, 87, 208, 0.1);
     --gemini-mention-text: #0b57d0;
-    --gemini-greeting-gradient: linear-gradient(
-        90deg,
-        #4285f4,
-        #9b72cb,
-        #d96570
-    );
+    --gemini-greeting-gradient: linear-gradient(90deg,
+            #4285f4,
+            #9b72cb,
+            #d96570);
 }
 
 // Dark Theme (System Preference)
@@ -139,48 +139,47 @@
     --gemini-mention-text: #d3e3fd;
 }
 
-$font-family:
-    "Google Sans",
+$font-family: "Google Sans",
     "Inter",
     -apple-system,
     BlinkMacSystemFont,
     sans-serif;
 
 @mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .unified-chat-container {
-  display: flex;
-  height: 100vh;
+    display: flex;
+    height: 100vh;
     background-color: var(--gemini-bg);
-  overflow: hidden;
-  font-family: $font-family;
+    overflow: hidden;
+    font-family: $font-family;
     color: var(--gemini-text-primary);
-  -webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased;
     transition:
         background-color 0.3s ease,
         color 0.3s ease;
 
-  // SIDEBAR
-  .chat-sidebar {
+    // SIDEBAR
+    .chat-sidebar {
         width: 260px;
         background: var(--gemini-sidebar);
-    display: flex;
-    flex-direction: column;
+        display: flex;
+        flex-direction: column;
         transition:
             transform 0.3s ease,
             background-color 0.3s ease;
-    z-index: 100;
+        z-index: 100;
         padding: 12px;
 
-    .sidebar-header {
+        .sidebar-header {
             padding: 8px 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             height: 48px;
 
             .toggle-btn {
@@ -196,7 +195,7 @@ $font-family:
                 }
             }
 
-      .logo-section {
+            .logo-section {
                 display: none;
             }
         }
@@ -211,9 +210,9 @@ $font-family:
 
                 .new-chat-btn {
                     width: 100%;
-        display: flex;
-        align-items: center;
-        gap: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
                     padding: 10px 16px;
                     background: var(--gemini-surface);
                     border: none;
@@ -237,7 +236,7 @@ $font-family:
                 }
             }
 
-      .section-title {
+            .section-title {
                 font-size: 12px;
                 font-weight: 500;
                 color: var(--gemini-text-secondary);
@@ -250,30 +249,30 @@ $font-family:
 
                     .dept-header {
                         padding: 4px 12px;
-        font-size: 11px;
-        text-transform: uppercase;
+                        font-size: 11px;
+                        text-transform: uppercase;
                         letter-spacing: 0.5px;
                         color: var(--gemini-text-secondary);
                         opacity: 0.7;
                         margin-bottom: 4px;
-      }
+                    }
 
-      .agent-item {
-        display: flex;
-        align-items: center;
+                    .agent-item {
+                        display: flex;
+                        align-items: center;
                         padding: 8px 12px;
                         border-radius: 18px;
-        cursor: pointer;
+                        cursor: pointer;
                         gap: 12px;
                         color: var(--gemini-text-primary);
                         font-size: 14px;
                         transition: background 0.2s;
 
-        &:hover {
+                        &:hover {
                             background-color: var(--gemini-hover);
-        }
+                        }
 
-        &.selected {
+                        &.selected {
                             background-color: var(--gemini-selected);
                             color: var(--gemini-selected-text);
 
@@ -288,25 +287,25 @@ $font-family:
 
                         .agent-icon {
                             color: var(--gemini-text-secondary);
-          font-size: 16px;
+                            font-size: 16px;
                         }
 
                         .agent-name {
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-          }
-          }
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
+                    }
+                }
+            }
         }
-      }
-    }
 
-    .sidebar-footer {
+        .sidebar-footer {
             padding: 12px;
 
-      .user-profile {
-        display: flex;
-        align-items: center;
+            .user-profile {
+                display: flex;
+                align-items: center;
                 gap: 12px;
                 padding: 8px 12px;
                 border-radius: 24px;
@@ -316,57 +315,57 @@ $font-family:
                     background: var(--gemini-hover);
                 }
 
-        .avatar {
-          width: 32px;
-          height: 32px;
-          border-radius: 50%;
+                .avatar {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 50%;
                     background: #7c4dff;
-          @include flex-center;
-          font-size: 14px;
+                    @include flex-center;
+                    font-size: 14px;
                     color: white;
-        }
+                }
 
-        .info {
+                .info {
                     flex: 1;
-          display: flex;
-          flex-direction: column;
+                    display: flex;
+                    flex-direction: column;
 
-          .name {
+                    .name {
                         font-size: 14px;
-            font-weight: 500;
-          }
+                        font-weight: 500;
+                    }
 
-          .status {
-            font-size: 11px;
+                    .status {
+                        font-size: 11px;
                         color: var(--gemini-text-secondary);
                     }
                 }
 
                 .settings-icon {
                     color: var(--gemini-text-secondary);
+                }
+            }
         }
-      }
     }
-  }
 
-  // MAIN CHAT AREA
-  .main-chat-area {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    position: relative;
+    // MAIN CHAT AREA
+    .main-chat-area {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
         background: var(--gemini-bg);
 
-    .chat-header {
-      height: 64px;
+        .chat-header {
+            height: 64px;
             padding: 0 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
 
             .model-selector {
-        display: flex;
-        align-items: center;
+                display: flex;
+                align-items: center;
                 gap: 8px;
                 color: var(--gemini-text-secondary);
                 font-size: 16px;
@@ -386,8 +385,8 @@ $font-family:
 
                 // Active Team Stack - Cleaner look
                 .active-team-stack {
-          display: flex;
-          align-items: center;
+                    display: flex;
+                    align-items: center;
                     gap: 8px;
                     background: var(--gemini-surface);
                     padding: 4px 8px;
@@ -405,32 +404,40 @@ $font-family:
 
                     .team-avatars {
                         display: flex;
-                        
+
                         .team-avatar {
                             width: 24px;
                             height: 24px;
-            border-radius: 50%;
+                            border-radius: 50%;
                             display: flex;
                             align-items: center;
                             justify-content: center;
                             border: 2px solid var(--gemini-surface);
                             margin-left: -6px; // Reduced overlap
-            color: white;
+                            color: white;
                             font-size: 10px;
                             transition: transform 0.2s, z-index 0s;
                             cursor: pointer;
-                            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 
-                            &.gm { z-index: 10; }
+                            &.gm {
+                                z-index: 10;
+                            }
 
-                            &:first-child { margin-left: 0; }
-                            &:hover { transform: translateY(-2px); z-index: 20; }
+                            &:first-child {
+                                margin-left: 0;
+                            }
+
+                            &:hover {
+                                transform: translateY(-2px);
+                                z-index: 20;
+                            }
+                        }
+                    }
+                }
             }
-          }
-        }
-      }
 
-      .header-actions {
+            .header-actions {
                 display: flex;
                 align-items: center;
                 gap: 12px;
@@ -447,27 +454,27 @@ $font-family:
                 .user-avatar-mini {
                     width: 32px;
                     height: 32px;
-          border-radius: 50%;
+                    border-radius: 50%;
                     background: var(--gemini-accent);
-          @include flex-center;
+                    @include flex-center;
                     font-size: 14px;
                     color: white;
+                }
+            }
         }
-      }
-    }
 
-    .chat-messages {
-      flex: 1;
-      overflow-y: auto;
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
             padding: 20px 0 40px;
-      display: flex;
-      flex-direction: column;
+            display: flex;
+            flex-direction: column;
             gap: 24px;
 
-      .empty-state {
-        flex: 1;
+            .empty-state {
+                flex: 1;
                 display: flex;
-        flex-direction: column;
+                flex-direction: column;
                 justify-content: center;
                 align-items: center;
                 padding: 0 20px;
@@ -550,39 +557,42 @@ $font-family:
             }
 
             .suggested-actions {
-              display: flex;
+                display: flex;
                 gap: 8px;
                 margin-top: 12px;
-              flex-wrap: wrap;
+                flex-wrap: wrap;
                 animation: fadeIn 0.5s ease-out;
                 padding-left: 4px;
 
-              .suggestion-chip {
+                .suggestion-chip {
                     display: flex;
                     align-items: center;
                     gap: 6px;
                     padding: 8px 16px;
                     background: var(--gemini-surface);
                     border: 1px solid var(--gemini-border);
-                border-radius: 20px;
+                    border-radius: 20px;
                     font-size: 13px;
                     color: var(--gemini-text-secondary);
-                cursor: pointer;
-                transition: all 0.2s;
+                    cursor: pointer;
+                    transition: all 0.2s;
 
-                    i { font-size: 12px; color: var(--gemini-accent); }
+                    i {
+                        font-size: 12px;
+                        color: var(--gemini-accent);
+                    }
 
-                &:hover {
+                    &:hover {
                         background: var(--gemini-surface-variant);
                         border-color: var(--gemini-accent);
                         color: var(--gemini-text-primary);
                         transform: translateY(-1px);
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                     }
                 }
             }
 
-.message-wrapper {
+            .message-wrapper {
                 width: 100%;
                 max-width: 800px;
                 margin: 0 auto;
@@ -593,20 +603,21 @@ $font-family:
                 &.user {
                     justify-content: flex-end;
                 }
+
                 .user-message-pill {
                     background: var(--gemini-user-bubble);
                     color: var(--gemini-text-primary);
                     padding: 12px 24px; // Increased padding for pill look
                     border-radius: 24px;
-            font-size: 16px;
+                    font-size: 16px;
                     line-height: 1.5;
-            max-width: 80%;
-        }
+                    max-width: 80%;
+                }
 
-                    .agent-message-container {
-                        display: flex;
-                        gap: 16px;
-                        width: 100%;
+                .agent-message-container {
+                    display: flex;
+                    gap: 16px;
+                    width: 100%;
 
                     .agent-avatar-col {
                         flex-shrink: 0;
@@ -617,12 +628,12 @@ $font-family:
                             width: 32px;
                             height: 32px;
                             border-radius: 50%; // Circle shape
-                @include flex-center;
+                            @include flex-center;
                             color: #ffffff; // White icon
-				font-size: 14px;
+                            font-size: 14px;
                             background: rgba(11, 87, 208, 0.2);
                             border: 2px solid rgba(255, 255, 255, 0.7);
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                             transition: transform 0.2s;
 
                             &.manager-avatar {
@@ -650,10 +661,10 @@ $font-family:
                     &.system-message {
                         justify-content: center;
                         margin: 8px 0;
-              gap: 8px;
+                        gap: 8px;
 
                         .agent-avatar-col {
-                             display: none; // No avatar for system messages
+                            display: none; // No avatar for system messages
                         }
 
                         .agent-content-col {
@@ -679,7 +690,7 @@ $font-family:
                         min-width: 0; // Prevent flex overflow
 
                         .agent-name-label {
-                font-size: 12px;
+                            font-size: 12px;
                             font-weight: 700; // Bolder font weight
                             margin-bottom: 4px;
                             display: flex;
@@ -747,8 +758,8 @@ $font-family:
                             padding-left: 4px;
 
                             .suggestion-chip {
-              display: flex;
-              align-items: center;
+                                display: flex;
+                                align-items: center;
                                 gap: 6px;
                                 padding: 8px 16px;
                                 background: var(--gemini-surface);
@@ -756,17 +767,20 @@ $font-family:
                                 border-radius: 20px;
                                 font-size: 13px;
                                 color: var(--gemini-text-secondary);
-              cursor: pointer;
+                                cursor: pointer;
                                 transition: all 0.2s;
 
-                                i { font-size: 12px; color: var(--gemini-accent); }
+                                i {
+                                    font-size: 12px;
+                                    color: var(--gemini-accent);
+                                }
 
-              &:hover {
+                                &:hover {
                                     background: var(--gemini-surface-variant);
                                     border-color: var(--gemini-accent);
                                     color: var(--gemini-text-primary);
                                     transform: translateY(-1px);
-                                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                                 }
                             }
                         }
@@ -798,6 +812,148 @@ $font-family:
                                     }
                                 }
 
+                                .step-body {
+                                    flex: 1;
+
+                                    .step-title {
+                                        font-size: 13px;
+                                        font-weight: 500;
+                                        color: var(--gemini-text-primary);
+                                        margin-bottom: 4px;
+                                    }
+
+                                    .step-meta {
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 8px;
+
+                                        .step-status-pill {
+                                            font-size: 10px;
+                                            text-transform: uppercase;
+                                            font-weight: 600;
+                                            padding: 2px 6px;
+                                            border-radius: 4px;
+                                            background: rgba(0, 0, 0, 0.05);
+                                            color: var(--gemini-text-secondary);
+
+                                            &.running {
+                                                background: rgba(11, 87, 208, 0.1);
+                                                color: var(--gemini-accent);
+                                            }
+
+                                            &.completed {
+                                                background: rgba(30, 136, 59, 0.1);
+                                                color: #1e8e3e;
+                                            }
+
+                                            &.failed {
+                                                background: rgba(217, 48, 37, 0.1);
+                                                color: #d93025;
+                                            }
+                                        }
+
+                                        .step-xp {
+                                            font-size: 10px;
+                                            color: #b58105;
+                                            font-weight: 600;
+                                            animation: fadeIn 0.3s ease;
+                                        }
+                                    }
+
+                                    .embedded-response {
+                                        margin-top: 12px;
+                                        background: var(--gemini-surface); // Fallback
+                                        border-radius: 12px; // Full rounded corners
+                                        padding: 12px 16px;
+                                        border-left: 3px solid transparent; // Color set via inline style
+                                        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+                                        animation: slideDown 0.3s ease-out;
+                                        position: relative;
+
+                                        // Expand to cover the full width (including under the icon)
+                                        margin-left: -36px; // - (icon width 24px + gap 12px)
+                                        width: calc(100% + 36px);
+
+                                        .embedded-header {
+                                            display: flex;
+                                            align-items: center;
+                                            gap: 10px;
+                                            margin-bottom: 8px;
+
+                                            .embedded-avatar {
+                                                width: 24px;
+                                                height: 24px;
+                                                border-radius: 50%;
+                                                display: flex;
+                                                align-items: center;
+                                                justify-content: center;
+                                                color: white;
+                                                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+
+                                                i {
+                                                    font-size: 12px;
+                                                }
+                                            }
+
+                                            .embedded-name {
+                                                font-size: 13px;
+                                                font-weight: 600;
+                                                letter-spacing: 0.3px;
+                                            }
+
+                                            .embedded-time {
+                                                margin-left: auto;
+                                                font-size: 10px;
+                                                color: var(--gemini-text-secondary);
+                                                opacity: 0.7;
+                                            }
+                                        }
+
+                                        .embedded-message {
+                                            font-size: 14px;
+                                            line-height: 1.6;
+                                            color: var(--gemini-text-primary);
+                                            padding-left: 34px; // Align with text start (avatar width + gap)
+                                        }
+
+                                        &.response-waiting {
+                                            border-left-width: 4px !important; // Thicker border for emphasis
+                                            background: #fff8e1 !important; // Light amber background
+                                            border-color: #ffca28 !important;
+
+                                            .embedded-name {
+                                                color: #e65100 !important;
+                                            }
+
+                                            .embedded-avatar {
+                                                background: #ffca28 !important;
+                                            }
+                                        }
+
+                                        .interruption-actions {
+                                            margin-top: 12px;
+                                            padding-left: 34px;
+
+                                            .action-hint {
+                                                display: inline-flex;
+                                                align-items: center;
+                                                gap: 6px;
+                                                font-size: 12px;
+                                                color: #e65100;
+                                                font-weight: 600;
+                                                background: rgba(255, 171, 0, 0.15);
+                                                padding: 4px 10px;
+                                                border-radius: 16px;
+
+                                                i {
+                                                    font-size: 10px;
+                                                    animation: bounce 1s infinite;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
                                 .thought-text {
                                     display: flex;
                                     flex-direction: column;
@@ -807,6 +963,7 @@ $font-family:
                                         color: var(--gemini-text-secondary);
                                         font-weight: 600;
                                         letter-spacing: 0.2px;
+
                                         &.thinking-animated {
                                             background: linear-gradient(90deg, var(--gemini-text-secondary), var(--gemini-accent), var(--gemini-text-secondary));
                                             background-size: 200% auto;
@@ -866,8 +1023,15 @@ $font-family:
 
                                         &.failed {
                                             background: rgba(217, 57, 43, 0.15);
-                                color: #b3261e;
+                                            color: #b3261e;
                                             box-shadow: 0 0 0 3px rgba(217, 57, 43, 0.1);
+                                        }
+
+                                        &.waiting {
+                                            background: rgba(255, 171, 0, 0.15);
+                                            color: #e65100;
+                                            box-shadow: 0 0 0 3px rgba(255, 171, 0, 0.1);
+                                            animation: pulse 2s infinite;
                                         }
                                     }
 
@@ -882,11 +1046,19 @@ $font-family:
                                     .step-body {
                                         flex: 1;
                                         display: flex;
-                                        justify-content: space-between;
-                                        align-items: center;
-                                        gap: 12px;
+                                        flex-direction: column; /* Changed to column for stacking */
+                                        justify-content: flex-start;
+                                        align-items: stretch;
+                                        gap: 8px; /* Reduced gap */
                                         padding-bottom: 8px;
                                         border-bottom: 1px dashed var(--gemini-border);
+
+                                        .step-header-row {
+                                            display: flex;
+                                            justify-content: space-between;
+                                            align-items: center;
+                                            width: 100%;
+                                        }
 
                                         .step-title {
                                             font-size: 13px;
@@ -901,6 +1073,7 @@ $font-family:
                                             border-radius: 999px;
                                             background: rgba(11, 87, 208, 0.08);
                                             color: var(--gemini-accent);
+                                            white-space: nowrap;
 
                                             &.completed {
                                                 background: rgba(30, 142, 62, 0.12);
@@ -911,6 +1084,13 @@ $font-family:
                                                 background: rgba(217, 57, 43, 0.12);
                                                 color: #b3261e;
                                             }
+
+                                            &.waiting {
+                                                background: rgba(255, 171, 0, 0.15);
+                                                color: #e65100;
+                                                border: 1px solid rgba(255, 171, 0, 0.3);
+                                                font-weight: 700;
+                                            }
                                         }
 
                                         .step-xp {
@@ -918,6 +1098,29 @@ $font-family:
                                             color: #ff8f00;
                                             font-weight: 600;
                                             margin-left: 8px;
+                                        }
+                                    }
+
+                                    .embedded-response {
+                                        /* ... existing styles ... */
+                                        
+                                        .action-hint-badge {
+                                            display: inline-flex;
+                                            align-items: center;
+                                            gap: 6px;
+                                            font-size: 12px;
+                                            color: #e65100;
+                                            font-weight: 700;
+                                            background: #fff8e1;
+                                            padding: 6px 12px;
+                                            border-radius: 16px;
+                                            border: 1px solid #ffe082;
+                                            margin-top: 8px;
+                                            
+                                            i {
+                                                font-size: 12px;
+                                                animation: bounce 1s infinite;
+                                            }
                                         }
                                     }
 
@@ -938,7 +1141,7 @@ $font-family:
                         display: block;
                         white-space: pre-wrap;
                         word-break: break-word;
-                        
+
                         // New styles for bubble effect
                         &.has-bg {
                             padding: 14px 18px;
@@ -979,7 +1182,7 @@ $font-family:
                                 font-weight: 600;
                                 display: flex;
                                 align-items: center;
-                                
+
                                 &::before {
                                     content: '';
                                     display: inline-block;
@@ -992,20 +1195,28 @@ $font-family:
                             }
 
                             // Style lists under h3 as "Cards"
-                            h3 + ul, h3 + ol {
+                            h3+ul,
+                            h3+ol {
                                 background: var(--gemini-surface);
                                 padding: 16px;
                                 border-radius: 12px;
                                 border: 1px solid var(--gemini-border);
                                 list-style-position: inside;
                                 margin-left: 0;
-                                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-                                
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
                                 li {
                                     padding: 8px 0;
                                     border-bottom: 1px solid var(--gemini-border);
-                                    &:last-child { border-bottom: none; border-width: 0; }
-                                    &::marker { color: var(--gemini-accent); }
+
+                                    &:last-child {
+                                        border-bottom: none;
+                                        border-width: 0;
+                                    }
+
+                                    &::marker {
+                                        color: var(--gemini-accent);
+                                    }
                                 }
                             }
 
@@ -1022,8 +1233,8 @@ $font-family:
                             }
 
                             li {
-                    margin-bottom: 4px;
-                  }
+                                margin-bottom: 4px;
+                            }
 
                             // Improved Code Block Styling
                             pre {
@@ -1146,8 +1357,8 @@ $font-family:
 
                     // Message Actions Row
                     .message-actions {
-            display: flex;
-            gap: 4px;
+                        display: flex;
+                        gap: 4px;
                         margin-top: 4px;
                         opacity: 0; // Hidden by default
                         transition: opacity 0.2s;
@@ -1157,7 +1368,7 @@ $font-family:
                             border: none;
                             color: var(--gemini-text-secondary);
                             padding: 6px;
-              border-radius: 50%;
+                            border-radius: 50%;
                             cursor: pointer;
                             @include flex-center;
                             transition: background 0.2s;
@@ -1182,97 +1393,95 @@ $font-family:
         }
     }
 
-.chat-input-area {
+    .chat-input-area {
         padding: 0 20px 24px;
         display: flex;
         justify-content: center;
 
-      .input-container {
-        width: 100%;
+        .input-container {
+            width: 100%;
             max-width: 800px;
-        position: relative;
+            position: relative;
 
-      .mention-popup {
-        position: absolute;
-        bottom: 100%;
-        left: 0;
+            .mention-popup {
+                position: absolute;
+                bottom: 100%;
+                left: 0;
                 margin-bottom: 12px;
                 width: 280px;
                 background: var(--gemini-surface);
                 border-radius: 12px;
                 border: 1px solid var(--gemini-border);
-        overflow: hidden;
+                overflow: hidden;
                 z-index: 100;
                 box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
 
-        .mention-header {
+                .mention-header {
                     padding: 8px 12px;
-          font-size: 11px;
-          font-weight: 600;
+                    font-size: 11px;
+                    font-weight: 600;
                     color: var(--gemini-text-secondary);
                     background: var(--gemini-input);
-        }
+                }
 
-        .mention-list {
+                .mention-list {
                     max-height: 200px;
-          overflow-y: auto;
+                    overflow-y: auto;
 
-          .mention-item {
-            display: flex;
-            align-items: center;
+                    .mention-item {
+                        display: flex;
+                        align-items: center;
                         gap: 10px;
                         padding: 8px 12px;
-            cursor: pointer;
+                        cursor: pointer;
 
-            &:hover {
+                        &:hover {
                             background: var(--gemini-hover);
                         }
 
                         .agent-icon-small {
                             width: 24px;
                             height: 24px;
-              border-radius: 50%;
+                            border-radius: 50%;
                             background: var(--gemini-input);
-              @include flex-center;
-              font-size: 12px;
-            }
+                            @include flex-center;
+                            font-size: 12px;
+                        }
 
-            .agent-details {
-              display: flex;
-              flex-direction: column;
+                        .agent-details {
+                            display: flex;
+                            flex-direction: column;
 
-              .agent-name {
+                            .agent-name {
                                 font-size: 13px;
                                 color: var(--gemini-text-primary);
-              }
+                            }
 
-              .agent-dept {
+                            .agent-dept {
                                 font-size: 10px;
                                 color: var(--gemini-text-secondary);
-              }
+                            }
+                        }
+                    }
+                }
             }
-          }
-        }
-      }
 
-      .input-wrapper {
+            .input-wrapper {
                 background: var(--gemini-input);
                 border-radius: 32px;
                 padding: 8px 16px;
-        display: flex;
-        align-items: flex-end;
+                display: flex;
+                align-items: flex-end;
                 gap: 12px;
                 transition:
                     background 0.2s,
                     box-shadow 0.2s;
-        border: 1px solid transparent;
+                border: 1px solid transparent;
 
-        &:focus-within {
+                &:focus-within {
                     background: var(--gemini-surface);
                     box-shadow: 0 1px 6px rgba(0, 0, 0, 0.1);
-                    border-color: var(
-                        --gemini-border
-                    ); // Visible border in focus
+                    border-color: var(--gemini-border); // Visible border in focus
                 }
 
                 .attach-btn {
@@ -1288,21 +1497,21 @@ $font-family:
                     &:hover {
                         background: var(--gemini-hover);
                     }
-        }
+                }
 
-        .message-input {
-          flex: 1;
-          background: transparent;
+                .message-input {
+                    flex: 1;
+                    background: transparent;
                     border: none;
                     color: var(--gemini-text-primary);
-          font-size: 16px;
+                    font-size: 16px;
                     padding: 14px 0;
-          resize: none;
-          outline: none;
+                    resize: none;
+                    outline: none;
                     font-family: inherit;
-          line-height: 1.5;
+                    line-height: 1.5;
 
-          &::placeholder {
+                    &::placeholder {
                         color: var(--gemini-text-secondary);
                     }
                 }
@@ -1315,11 +1524,11 @@ $font-family:
                     button {
                         width: 36px;
                         height: 36px;
-          border-radius: 50%;
-          border: none;
+                        border-radius: 50%;
+                        border: none;
                         background: transparent;
                         color: var(--gemini-text-primary);
-          cursor: pointer;
+                        cursor: pointer;
                         @include flex-center;
 
                         &:hover {
@@ -1334,25 +1543,26 @@ $font-family:
                                 opacity: 0.9;
                             }
                         }
-          }
-        }
-      }
+                    }
+                }
+            }
 
-      .input-footer {
-        text-align: center;
-        margin-top: 12px;
+            .input-footer {
+                text-align: center;
+                margin-top: 12px;
 
-        small {
-          font-size: 11px;
+                small {
+                    font-size: 11px;
                     color: var(--gemini-text-secondary);
                     opacity: 0.7;
                 }
+            }
         }
-      }
     }
-  }
+}
 
 @keyframes blink {
+
     0%,
     100% {
         opacity: 1;
