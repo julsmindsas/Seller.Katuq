@@ -2204,6 +2204,71 @@ export class ConfProductToCartComponent
    * Elimina la imagen de una preferencia específica
    * @param item - FormControl del item de preferencia
    */
+  /**
+   * Obtiene la imagen actual de un item de preferencia
+   * Maneja tanto FormControl como FormArray en children
+   */
+  getCurrentImageFromItem(item: FormControl): string | null {
+    try {
+      const childrenControl = item.get('children');
+      if (!childrenControl) return null;
+
+      // Caso 1: children es un FormControl (una sola imagen)
+      if (childrenControl instanceof FormControl) {
+        const value = childrenControl.value;
+        return value?.data?.imagen || null;
+      }
+      
+      // Caso 2: children es un FormArray (múltiples imágenes)
+      if (childrenControl instanceof FormArray && childrenControl.length > 0) {
+        const firstChild = childrenControl.at(0) as FormControl;
+        if (firstChild && firstChild.value) {
+          return firstChild.value.data?.imagen || null;
+        }
+      }
+      
+      // Caso 3: children es un objeto directo (estructura antigua)
+      if (item.value.children && item.value.children.data) {
+        return item.value.children.data.imagen || null;
+      }
+    } catch (error) {
+      console.error('Error al obtener imagen actual:', error);
+    }
+    return null;
+  }
+
+  /**
+   * Obtiene el subtítulo de la imagen actual
+   */
+  getCurrentImageSubtitle(item: FormControl): string | null {
+    try {
+      const childrenControl = item.get('children');
+      if (!childrenControl) return null;
+
+      // Caso 1: children es un FormControl
+      if (childrenControl instanceof FormControl) {
+        const value = childrenControl.value;
+        return value?.data?.subtitulo || null;
+      }
+      
+      // Caso 2: children es un FormArray
+      if (childrenControl instanceof FormArray && childrenControl.length > 0) {
+        const firstChild = childrenControl.at(0) as FormControl;
+        if (firstChild && firstChild.value) {
+          return firstChild.value.data?.subtitulo || null;
+        }
+      }
+      
+      // Caso 3: estructura antigua
+      if (item.value.children && item.value.children.data) {
+        return item.value.children.data.subtitulo || null;
+      }
+    } catch (error) {
+      console.error('Error al obtener subtítulo:', error);
+    }
+    return null;
+  }
+
   deleteImageFromPreference(item: FormControl): void {
     const tituloPreferencia = item.value.data.titulo;
     
@@ -2219,32 +2284,91 @@ export class ConfProductToCartComponent
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
-        // Limpiar la imagen del item
-        if (item.value.children && item.value.children.data) {
-          item.value.children.data = {
-            ...item.value.children.data,
-            imagen: 'assets/images/other-images/sinimagen.webp',
-            subtitulo: '',
-            titulo: ''
-          };
+        try {
+          // Obtener el FormControl de children
+          const childrenControl = item.get('children') as FormControl | FormArray | null;
+          
+          if (childrenControl) {
+            // Caso 1: children es un FormControl (una sola imagen)
+            if (childrenControl instanceof FormControl) {
+              const childrenValue = childrenControl.value;
+              if (childrenValue && childrenValue.data) {
+                childrenControl.patchValue({
+                  data: {
+                    ...childrenValue.data,
+                    imagen: 'assets/images/other-images/sinimagen.webp',
+                    subtitulo: '',
+                    titulo: ''
+                  }
+                });
+              }
+            }
+            // Caso 2: children es un FormArray (múltiples imágenes)
+            else if (childrenControl instanceof FormArray && childrenControl.length > 0) {
+              // Si hay múltiples imágenes, eliminar la imagen del primer elemento seleccionado
+              // o de todos si es necesario
+              const firstChild = childrenControl.at(0) as FormControl;
+              if (firstChild && firstChild.value && firstChild.value.data) {
+                firstChild.patchValue({
+                  data: {
+                    ...firstChild.value.data,
+                    imagen: 'assets/images/other-images/sinimagen.webp',
+                    subtitulo: '',
+                    titulo: ''
+                  }
+                });
+              }
+            }
+            // Caso 3: children es un objeto directo (estructura antigua)
+            else if (item.value.children && item.value.children.data) {
+              item.value.children.data = {
+                ...item.value.children.data,
+                imagen: 'assets/images/other-images/sinimagen.webp',
+                subtitulo: '',
+                titulo: ''
+              };
+            }
+          }
+
+          // Limpiar el input de imagen
+          const imagenInput = item.get('imagenIngresado');
+          if (imagenInput) {
+            imagenInput.setValue('');
+          }
+
+          // Actualizar la preferencia en el array
+          // Obtener el valor actualizado de children
+          const updatedChildren = childrenControl instanceof FormControl 
+            ? childrenControl.value 
+            : childrenControl instanceof FormArray && childrenControl.length > 0
+            ? childrenControl.at(0).value
+            : item.value.children;
+            
+          this.updateProductPreference(item, updatedChildren);
+
+          // Forzar detección de cambios
+          this.cdr.detectChanges();
+
+          // Mostrar confirmación
+          Swal.fire({
+            title: 'Imagen eliminada',
+            text: 'La imagen ha sido eliminada correctamente.',
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+
+          console.log(`🗑️ Imagen eliminada de la preferencia: ${tituloPreferencia}`);
+        } catch (error) {
+          console.error('Error al eliminar imagen:', error);
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudo eliminar la imagen. Por favor, intenta nuevamente.',
+            icon: 'error',
+            timer: 3000,
+            showConfirmButton: false
+          });
         }
-
-        // Limpiar el input
-        item.get('imagenIngresado')?.setValue('');
-
-        // Actualizar la preferencia en el array
-        this.updateProductPreference(item, item.value.children);
-
-        // Mostrar confirmación
-        Swal.fire({
-          title: 'Imagen eliminada',
-          text: 'La imagen ha sido eliminada correctamente.',
-          icon: 'success',
-          timer: 2000,
-          showConfirmButton: false
-        });
-
-        console.log(`🗑️ Imagen eliminada de la preferencia: ${tituloPreferencia}`);
       }
     });
   }

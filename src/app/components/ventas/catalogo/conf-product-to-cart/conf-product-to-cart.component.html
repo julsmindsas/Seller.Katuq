@@ -596,29 +596,31 @@
                                                 </div>
                                                 <div *ngIf="item.get('data')?.get('tipoImagen')?.value === 'imagen'"
                                                     class="form-group mt-2">
-                                                    <!-- Mostrar imagen actual si existe -->
-                                                    <div *ngIf="item.get('children')?.value?.data?.imagen && item.get('children')?.value?.data?.imagen !== 'assets/images/other-images/sinimagen.webp'" 
-                                                         class="mb-2 p-2 border rounded bg-light">
-                                                        <div class="d-flex align-items-center">
-                                                            <img [src]="item.get('children')?.value?.data?.imagen" 
-                                                                 alt="Imagen actual" 
-                                                                 class="me-2" 
-                                                                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
-                                                            <div class="flex-grow-1">
-                                                                <small class="text-muted d-block">Imagen actual:</small>
-                                                                <small class="text-dark">{{item.get('children')?.value?.data?.subtitulo || 'Imagen cargada'}}</small>
-                                                            </div>
-                                                            <div class="ms-2">
-                                                                <button type="button" 
-                                                                        class="btn btn-outline-danger btn-sm"
-                                                                        (click)="deleteImageFromPreference(item)"
-                                                                        title="Eliminar imagen"
-                                                                        style="padding: 2px 6px; font-size: 12px;">
-                                                                    <i class="fa fa-trash"></i>
-                                                                </button>
+                                                    <!-- Mostrar imagen actual si existe (soporta FormControl y FormArray) -->
+                                                    <ng-container *ngIf="getCurrentImageFromItem(item) as currentImage">
+                                                        <div *ngIf="currentImage && currentImage !== 'assets/images/other-images/sinimagen.webp'" 
+                                                             class="mb-2 p-2 border rounded bg-light">
+                                                            <div class="d-flex align-items-center">
+                                                                <img [src]="currentImage" 
+                                                                     alt="Imagen actual" 
+                                                                     class="me-2" 
+                                                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                                                <div class="flex-grow-1">
+                                                                    <small class="text-muted d-block">Imagen actual:</small>
+                                                                    <small class="text-dark">{{getCurrentImageSubtitle(item) || 'Imagen cargada'}}</small>
+                                                                </div>
+                                                                <div class="ms-2">
+                                                                    <button type="button" 
+                                                                            class="btn btn-outline-danger btn-sm"
+                                                                            (click)="deleteImageFromPreference(item)"
+                                                                            title="Eliminar imagen"
+                                                                            style="padding: 2px 6px; font-size: 12px;">
+                                                                        <i class="fa fa-trash"></i>
+                                                                    </button>
+                                                                </div>
                                                             </div>
                                                         </div>
-                                                    </div>
+                                                    </ng-container>
                                                     
                                                     <!-- Input para subir nueva imagen -->
                                                     <div class="input-group">
