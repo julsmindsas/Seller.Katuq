@@ -531,13 +531,32 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Verifica si el usuario tiene rol de administrador
+   */
+  isAdminUser(): boolean {
+    if (!this.UserLogged || !this.UserLogged.rol) {
+      return false;
+    }
+    const rol = this.UserLogged.rol.toLowerCase();
+    return rol.includes("admin") || rol.includes("administrador");
+  }
+
+  /**
+   * Verifica si el usuario puede cambiar el estado del pedido
+   * Permitido para: Super Admins (lista hardcodeada) O Administradores (rol)
+   */
+  canChangeStatus(): boolean {
+    return this.canDeleteOrder() || this.isAdminUser();
+  }
+
+  /**
    * Verifica si se puede editar el estado de pago
    * Solo administradores pueden modificar estados de pago
    * @param order Pedido a verificar
    * @returns true si se puede editar estado de pago
    */
   canEditPaymentStatus(order: Pedido): boolean {
-    return this.canDeleteOrder(); // Solo administradores
+    return this.canChangeStatus();
   }
 
   /**
@@ -550,7 +569,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.isFromProduction) {
       return this.canProductionChangeProcess(order);
     }
-    return this.canDeleteOrder();
+    return this.canChangeStatus();
   }
 
   /** Permite cambio de proceso en módulo de producción entre 4 estados básicos si no está bloqueado */
