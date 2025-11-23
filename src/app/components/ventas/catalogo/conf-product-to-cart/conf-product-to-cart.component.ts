@@ -2372,6 +2372,87 @@ export class ConfProductToCartComponent
       }
     });
   }
+  /**
+   * Elimina la imagen de una preferencia desde la tabla de preferencias
+   * @param preference - La preferencia de la cual eliminar la imagen
+   */
+  deleteImageFromPreferenceTable(preference: any): void {
+    const tituloPreferencia = preference.titulo;
+    
+    // Confirmar eliminación
+    Swal.fire({
+      title: '¿Eliminar imagen?',
+      text: `¿Estás seguro de que quieres eliminar la imagen de "${tituloPreferencia}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        try {
+          // Buscar el FormControl correspondiente a esta preferencia
+          const variablesArray = this.formulario.get('variables') as FormArray;
+          let foundControl: FormControl | null = null;
+
+          // Buscar en todos los controles de variables
+          for (let i = 0; i < variablesArray.length; i++) {
+            const variableControl = variablesArray.at(i) as FormControl;
+            if (variableControl.value?.data?.titulo === tituloPreferencia) {
+              foundControl = variableControl;
+              break;
+            }
+          }
+
+          if (foundControl) {
+            // Eliminar la imagen usando el método existente
+            this.deleteImageFromPreference(foundControl);
+          } else {
+            // Si no se encuentra el control, actualizar directamente la preferencia en el array
+            const index = this.productPreference.findIndex(
+              (p) => p.titulo === tituloPreferencia && p.tipo === 'preferencia'
+            );
+
+            if (index !== -1) {
+              // Actualizar la preferencia sin imagen
+              this.productPreference[index] = {
+                ...this.productPreference[index],
+                imagen: 'assets/images/other-images/sinimagen.webp',
+                subtitulo: ''
+              };
+
+              // Forzar detección de cambios
+              this.cdr.detectChanges();
+
+              // Mostrar confirmación
+              Swal.fire({
+                title: 'Imagen eliminada',
+                text: 'La imagen ha sido eliminada correctamente.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+              });
+
+              console.log(`🗑️ Imagen eliminada de la preferencia desde tabla: ${tituloPreferencia}`);
+            } else {
+              throw new Error('Preferencia no encontrada en el array');
+            }
+          }
+        } catch (error) {
+          console.error('Error al eliminar imagen desde tabla:', error);
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudo eliminar la imagen. Por favor, intenta nuevamente.',
+            icon: 'error',
+            timer: 3000,
+            showConfirmButton: false
+          });
+        }
+      }
+    });
+  }
+
   getVariablesControls() {
     return (this.formulario.get("variables") as FormArray).controls;
   }

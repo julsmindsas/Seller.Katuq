@@ -179,13 +179,13 @@
                                                                 <th>Valor IVA</th>
                                                                 <th>Precio Total con IVA</th>
                                                                 <th>Cantidad</th>
-                                                                <th></th>
+                                                                <th>Acciones</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             <!-- Sección de Preferencia -->
                                                             <tr *ngIf="hasPreferencia()">
-                                                                <td colspan="8"><strong>Sección de Preferencias</strong>
+                                                                <td colspan="9"><strong>Sección de Preferencias</strong>
                                                                 </td>
                                                             </tr>
                                                             <ng-container *ngFor="let preference of productPreference">
@@ -216,6 +216,17 @@
                                                                             <button
                                                                                 (click)="incrementarCantidad(preference); $event.stopPropagation()">+</button>
                                                                         </div> -->
+                                                                    </td>
+                                                                    <td>
+                                                                        <!-- Botón para eliminar imagen de la preferencia -->
+                                                                        <button *ngIf="preference?.imagen && preference?.imagen !== 'assets/images/other-images/sinimagen.webp'"
+                                                                                type="button" 
+                                                                                class="btn btn-outline-danger btn-sm"
+                                                                                (click)="deleteImageFromPreferenceTable(preference)"
+                                                                                title="Eliminar imagen"
+                                                                                style="padding: 2px 6px; font-size: 12px;">
+                                                                            <i class="fa fa-trash"></i>
+                                                                        </button>
                                                                     </td>
                                                                 </tr>
                                                             </ng-container>
