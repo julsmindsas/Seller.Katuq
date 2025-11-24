@@ -528,45 +528,41 @@ import { MessageService } from 'primeng/api';
   `,
   styles: [`
     .generic-step-container {
-      max-width: 800px;
+      max-width: 600px; // Google forms width
       margin: 0 auto;
     }
 
+    // Info Box - Clean & Minimal
     .step-info-box {
       text-align: center;
-      padding: 2rem;
-      background: linear-gradient(135deg, var(--primary-50) 0%, var(--surface-50) 100%);
-      border-radius: 12px;
       margin-bottom: 2rem;
 
       .icon-container {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 1.5rem;
-        border-radius: 50%;
-        background: var(--primary-color);
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 1rem;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-
+        
         i {
-          font-size: 2.5rem;
-          color: white;
+          font-size: 3rem;
+          color: var(--google-blue, #1a73e8);
         }
       }
 
       h3 {
-        margin: 0 0 0.75rem 0;
-        font-size: 1.75rem;
-        color: var(--text-color);
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+        font-weight: 400;
+        color: #202124;
       }
 
       .description {
-        margin: 0 0 1.5rem 0;
-        font-size: 1.1rem;
-        color: var(--text-color-secondary);
-        line-height: 1.6;
+        margin: 0 0 1rem 0;
+        font-size: 1rem;
+        color: #5f6368;
+        line-height: 1.5;
       }
 
       .step-status {
@@ -576,185 +572,171 @@ import { MessageService } from 'primeng/api';
       }
     }
 
+    // Info Cards - Material Cards
     .info-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: 1fr; // Single column for better focus
       gap: 1rem;
       margin-bottom: 2rem;
 
       ::ng-deep .info-card {
-        border-left: 4px solid var(--primary-color);
+        box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15); // Material Shadow 1
+        border-radius: 8px;
+        border: none; // Remove default border
 
         .card-content {
           display: flex;
           gap: 1rem;
+          align-items: flex-start;
 
           i {
-            font-size: 2rem;
-            color: var(--primary-color);
-            flex-shrink: 0;
+            font-size: 1.5rem;
+            color: var(--google-blue, #1a73e8);
+            margin-top: 2px;
           }
 
           h4 {
-            margin: 0 0 0.5rem 0;
-            font-size: 1.1rem;
-            color: var(--text-color);
+            margin: 0 0 0.25rem 0;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #202124;
           }
 
           p {
             margin: 0;
-            color: var(--text-color-secondary);
-            font-size: 0.95rem;
+            color: #5f6368;
+            font-size: 0.875rem;
             line-height: 1.5;
           }
         }
       }
     }
 
+    // AI Notice
     .ai-notice {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
-      padding: 1rem 1.25rem;
-      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
-      border: 1px solid #667eea30;
+      gap: 1rem;
+      padding: 12px 16px;
+      background-color: #f1f3f4;
       border-radius: 8px;
       margin-bottom: 2rem;
 
       i {
-        font-size: 1.5rem;
-        color: #667eea;
+        color: var(--google-blue, #1a73e8);
       }
 
       span {
-        color: var(--text-color);
-        font-size: 0.95rem;
+        color: #202124;
+        font-size: 0.875rem;
       }
     }
 
+    // Existing Data Notice
     .existing-data-notice {
       text-align: center;
-      padding: 2rem;
+      padding: 1.5rem;
 
       i.pi-check-circle {
-        font-size: 4rem;
-        color: var(--green-500);
+        font-size: 3rem;
+        color: #34a853; // Google Green
         margin-bottom: 1rem;
       }
 
       h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 1.4rem;
-        color: var(--green-700);
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        color: #202124;
       }
 
       p {
         margin: 0.5rem 0;
-        color: var(--text-color);
-        font-size: 1.05rem;
-      }
-
-      .existing-data-summary {
-        margin: 1.5rem 0;
-      }
-
-      .edit-hint {
-        font-size: 0.9rem;
-        color: var(--text-color-secondary);
+        color: #5f6368;
       }
     }
 
+    // Configuration Notice
     .configuration-notice {
       text-align: center;
-      padding: 2rem;
+      padding: 1.5rem;
 
       i {
-        font-size: 3rem;
-        color: var(--surface-400);
+        font-size: 2.5rem;
+        color: #dadce0;
         margin-bottom: 1rem;
       }
 
       h4 {
-        margin: 0 0 0.75rem 0;
-        font-size: 1.3rem;
-        color: var(--text-color);
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        color: #202124;
       }
 
       p {
-        margin: 0;
-        color: var(--text-color-secondary);
-        line-height: 1.6;
-        max-width: 600px;
-        margin: 0 auto;
+        color: #5f6368;
       }
 
       .quick-options {
+        margin-top: 1.5rem;
+        
         h5 {
-          margin: 0 0 1rem 0;
-          font-size: 1.1rem;
-          color: var(--text-color);
+          font-size: 0.875rem;
+          color: #5f6368;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
 
         .options-list {
           display: flex;
           flex-direction: column;
-          gap: 0.75rem;
-          max-width: 400px;
+          gap: 0.5rem;
+          max-width: 320px;
           margin: 0 auto;
 
           .option-item {
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 1rem;
-            background: var(--surface-50);
-            border: 2px solid var(--surface-200);
-            border-radius: 8px;
+            padding: 12px 16px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: background 0.2s;
 
             &:hover {
-              background: var(--primary-50);
-              border-color: var(--primary-color);
+              background-color: #f1f3f4;
             }
 
             i {
               font-size: 1.25rem;
-              color: var(--primary-color);
+              color: var(--google-blue, #1a73e8);
+              margin: 0;
             }
 
             span {
-              font-size: 1rem;
-              color: var(--text-color);
+              font-size: 0.875rem;
+              color: #202124;
+              font-weight: 500;
             }
           }
         }
       }
     }
 
-    /* ESTILOS PARA FORMULARIOS DE CONFIGURACIÓN */
+    /* FORM STYLES - Material Design */
     .config-form-container {
-      padding: 1.5rem;
-      background: var(--surface-0);
-      border-radius: 8px;
-
+      padding: 0; // Card already has padding
+      
       .config-form-title {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        margin: 0 0 0.5rem 0;
-        font-size: 1.3rem;
-        color: var(--primary-color);
-
-        i {
-          font-size: 1.5rem;
-        }
-      }
-
-      .config-form-description {
         margin: 0 0 1.5rem 0;
-        color: var(--text-color-secondary);
-        font-size: 0.95rem;
+        font-size: 1.25rem;
+        font-weight: 400;
+        color: #202124;
+        
+        i { color: var(--google-blue, #1a73e8); }
       }
     }
 
@@ -765,28 +747,29 @@ import { MessageService } from 'primeng/api';
         label {
           display: block;
           margin-bottom: 0.5rem;
-          font-weight: 600;
-          color: var(--text-color);
-          font-size: 0.95rem;
+          font-weight: 500;
+          color: #5f6368; // Label color
+          font-size: 0.875rem;
         }
 
-        small.p-error {
-          display: block;
-          margin-top: 0.25rem;
-          font-size: 0.85rem;
-        }
-      }
-
-      .field-checkbox {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        margin-bottom: 1.5rem;
-
-        label {
-          margin: 0;
-          font-weight: 600;
-          color: var(--text-color);
+        // PrimeNG Input Overrides for Material Look
+        ::ng-deep input.p-inputtext, 
+        ::ng-deep textarea.p-inputtextarea {
+          border-radius: 4px;
+          border: 1px solid #dadce0;
+          padding: 10px 12px;
+          transition: border-color 0.2s;
+          
+          &:focus {
+            border-color: var(--google-blue, #1a73e8);
+            box-shadow: none; // Remove default PrimeNG shadow
+            border-width: 2px;
+            padding: 9px 11px; // Adjust for border width
+          }
+          
+          &:hover:not(:focus) {
+            border-color: #202124;
+          }
         }
       }
     }
@@ -796,80 +779,100 @@ import { MessageService } from 'primeng/api';
       justify-content: flex-end;
       gap: 1rem;
       margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--surface-200);
+      
+      button {
+        height: 36px;
+      }
     }
 
     .step-actions {
       display: flex;
       justify-content: center;
       gap: 1rem;
-      padding: 2rem;
-      background: var(--surface-50);
-      border-radius: 8px;
       margin-top: 2rem;
     }
 
     .skip-notice {
       text-align: center;
-      margin: 1rem 0 0 0;
-      padding: 0.75rem;
-      background: var(--blue-50);
-      border: 1px solid var(--blue-200);
-      border-radius: 6px;
-      color: var(--blue-800);
-      font-size: 0.85rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+      margin-top: 1.5rem;
+      color: #5f6368;
+      font-size: 0.875rem;
+      
+      i { font-size: 0.875rem; margin-right: 4px; }
+    }
+  `]
+}
+
+  .step - actions {
+    display: flex;
+    justify- content: center;
+gap: 1rem;
+padding: 2rem;
+background: var(--surface - 50);
+border - radius: 8px;
+margin - top: 2rem;
+    }
+
+    .skip - notice {
+  text - align: center;
+  margin: 1rem 0 0 0;
+  padding: 0.75rem;
+  background: var(--blue - 50);
+  border: 1px solid var(--blue - 200);
+  border - radius: 6px;
+  color: var(--blue - 800);
+  font - size: 0.85rem;
+  display: flex;
+  align - items: center;
+  justify - content: center;
+  gap: 0.5rem;
 
       i {
-        font-size: 0.9rem;
-      }
-    }
+    font - size: 0.9rem;
+  }
+}
 
-    .required-notice {
-      text-align: center;
-      margin: 1rem 0 0 0;
-      padding: 1rem;
-      background: var(--orange-50);
-      border: 1px solid var(--orange-200);
-      border-radius: 6px;
-      color: var(--orange-800);
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
+    .required - notice {
+  text - align: center;
+  margin: 1rem 0 0 0;
+  padding: 1rem;
+  background: var(--orange - 50);
+  border: 1px solid var(--orange - 200);
+  border - radius: 6px;
+  color: var(--orange - 800);
+  font - size: 0.9rem;
+  display: flex;
+  align - items: center;
+  justify - content: center;
+  gap: 0.5rem;
 
       i {
-        font-size: 1rem;
-      }
-    }
+    font - size: 1rem;
+  }
+}
 
-    @media (max-width: 768px) {
-      .step-actions {
-        flex-direction: column;
-
-        button {
-          width: 100%;
-        }
-      }
-
-      .config-form-actions {
-        flex-direction: column;
+@media(max - width: 768px) {
+      .step - actions {
+    flex - direction: column;
 
         button {
-          width: 100%;
-        }
-      }
-
-      .info-cards {
-        grid-template-columns: 1fr;
-      }
+      width: 100 %;
     }
-  `],
+  }
+
+      .config - form - actions {
+    flex - direction: column;
+
+        button {
+      width: 100 %;
+    }
+  }
+
+      .info - cards {
+    grid - template - columns: 1fr;
+  }
+}
+`],
   providers: [MessageService]
 })
 export class GenericStepComponent implements OnInit, OnDestroy {
@@ -1277,7 +1280,7 @@ export class GenericStepComponent implements OnInit, OnDestroy {
       this.messageService.add({
         severity: 'success',
         summary: 'Configuración Guardada',
-        detail: `${this.stepConfig.title} configurado exitosamente`
+        detail: `${ this.stepConfig.title } configurado exitosamente`
       });
 
       this.isConfigured = true;
