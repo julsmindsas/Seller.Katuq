@@ -42,7 +42,7 @@ import { PedidoEntregaComponent } from "../entrega/pedido-entrega.component";
 import { PedidosUtilService } from "../service/pedidos.util.service";
 import { UserLogged } from "../../../shared/models/User/UserLogged";
 import { UserLite } from "../../../shared/models/User/UserLite";
-import { FilterService } from "primeng/api";
+import { FilterService, LazyLoadEvent } from "primeng/api";
 import { FilterService as SharedFilterService } from "../../../shared/services/filters/filter.service";
 import { ServiciosService } from "../../../shared/services/servicios.service";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
@@ -146,8 +146,113 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   originalOrders: Pedido[] = [];
   hasLoadedOrdersOnce: boolean = false;
 
+  // Propiedades para paginación del servidor
+  usePagination: boolean = true;
+  currentPage: number = 1;
+  pageSize: number = 50;
+  totalRecords: number = 0;
+  first: number = 0;
+  
+  // Métricas del backend (calculadas sobre todos los pedidos, no solo los paginados)
+  backendMetrics: any = null;
+
   ngAfterViewInit() {
     // Limpiar funciones del menú anterior
+    
+    // Con lazy loading, PrimeNG debería disparar onLazyLoad automáticamente
+    // Si no se dispara después de un tiempo, forzar la carga inicial
+    if (this.usePagination) {
+      // Esperar a que la vista se estabilice
+      setTimeout(() => {
+        // Si después de 300ms no hay datos y la tabla existe, forzar carga
+        if (this.orders.length === 0 && this.totalRecords === 0 && this.table) {
+          console.log('🔄 Forzando carga inicial - onLazyLoad no se disparó automáticamente');
+          // Simular el evento lazy load inicial
+          this.loadLazy({
+            first: 0,
+            rows: this.pageSize
+          } as LazyLoadEvent);
+        }
+      }, 300);
+    }
+  }
+
+  /**
+   * Maneja el evento de carga diferida (Lazy Load) de la tabla PrimeNG para paginación del servidor
+   */
+  loadLazy(event: LazyLoadEvent) {
+    if (!this.usePagination) {
+      console.log('⏭️ loadLazy omitido - paginación deshabilitada');
+      return;
+    }
+
+    // Si no hay evento, crear uno por defecto para la primera carga
+    if (!event) {
+      console.log('⚠️ loadLazy llamado sin evento, creando evento por defecto');
+      event = {
+        first: 0,
+        rows: this.pageSize
+      } as LazyLoadEvent;
+    }
+
+    const previousPage = this.currentPage;
+    const previousFirst = this.first;
+
+    console.log('🔄 loadLazy llamado:', {
+      eventFirst: event.first,
+      eventRows: event.rows,
+      previousPage: previousPage,
+      previousFirst: previousFirst,
+      sortField: event.sortField,
+      sortOrder: event.sortOrder
+    });
+
+    // Actualizar tamaño de página si cambió
+    if (event.rows) {
+      this.pageSize = event.rows;
+    }
+    
+    // Calcular página actual basada en first y rows
+    if (event.first !== undefined && event.rows && event.rows > 0) {
+      this.currentPage = Math.floor(event.first / event.rows) + 1;
+      this.first = event.first;
+      // Asegurar que currentPage sea al menos 1
+      if (this.currentPage < 1) {
+        this.currentPage = 1;
+        this.first = 0;
+      }
+    } else {
+      // Valores por defecto si no están definidos
+      this.currentPage = 1;
+      this.first = 0;
+      if (event.rows && event.rows > 0) {
+        this.pageSize = event.rows;
+      }
+    }
+    
+    // Detectar si realmente cambió la página
+    const pageChanged = previousPage !== this.currentPage || previousFirst !== this.first;
+    
+    console.log('📄 Parámetros de paginación calculados:', {
+      previousPage: previousPage,
+      newPage: this.currentPage,
+      previousFirst: previousFirst,
+      newFirst: this.first,
+      pageSize: this.pageSize,
+      pageChanged: pageChanged,
+      refrescoEnProgreso: this.refrescoEnProgreso
+    });
+
+    // Capturar ordenamiento si existe
+    if (event.sortField) {
+      // El ordenamiento se puede manejar aquí si es necesario
+      // Por ahora se maneja en el backend
+    }
+
+    // Llamar a refrescar datos con la nueva página
+    // Marcar como cambio de página para evitar bloqueos de protección
+    console.log('🚀 Llamando a refrescarDatos con isPageChange=true');
+    this.refrescarDatos(false, true);
   }
 
   @HostListener("window:scroll", ["$event"])
@@ -1802,11 +1907,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Inicializar búsqueda local
     this.initializeLocalSearch();
 
-    // ✅ CAMBIO: No cargar datos automáticamente al inicializar
-    // Los datos se cargarán a demanda cuando el usuario lo solicite
-    // if (!this.numberProduct) {
-    //   this.refrescarDatos();
-    // }
+    // Cargar datos iniciales si se usa paginación
+    // Nota: Con lazy loading, PrimeNG disparará onLazyLoad automáticamente
+    // pero necesitamos asegurar que los datos se carguen si no se dispara
+    if (this.usePagination) {
+      this.currentPage = 1;
+      this.first = 0;
+      this.pageSize = 50;
+    }
     const context = this;
     this.maestroService.getBillingZone().subscribe({
       next(value: any) {
@@ -2128,16 +2236,42 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  refrescarDatos(forceRefresh: boolean = false) {
+  refrescarDatos(forceRefresh: boolean = false, isPageChange: boolean = false) {
+    // Log del stack trace para identificar de dónde viene la llamada
+    const stackTrace = new Error().stack;
+    const caller = stackTrace?.split('\n')[2]?.trim() || 'unknown';
+    
+    console.log('🔍 refrescarDatos llamado desde:', {
+      caller: caller.substring(0, 100), // Limitar longitud del log
+      forceRefresh,
+      isPageChange,
+      refrescoEnProgreso: this.refrescoEnProgreso
+    });
+    
     // ✅ PROTECCIÓN: Evitar refrescos automáticos muy frecuentes
     // Esta función se ejecuta automáticamente en varios eventos del navegador
     // Por eso agregamos protección para evitar cambios automáticos de estados de pago
+    // PERO: No aplicar protección si es un cambio de página legítimo con paginación
     const ahora = Date.now();
     const tiempoDesdeUltimoRefresco = ahora - this.ultimoRefresco;
     const tiempoMinimoEntreRefrescos = 30 * 1000; // 30 segundos mínimo entre refrescos
 
+    // NO aplicar protección si:
+    // 1. Es un refresco forzado (filtros nuevos)
+    // 2. Es un cambio de página legítimo con paginación habilitada
+    const skipProtection = forceRefresh || (this.usePagination && isPageChange);
+
+    console.log('🔍 Verificando protección de refresco:', {
+      forceRefresh,
+      isPageChange,
+      usePagination: this.usePagination,
+      skipProtection,
+      tiempoDesdeUltimoRefresco: (tiempoDesdeUltimoRefresco / 1000).toFixed(1) + 's',
+      refrescoEnProgreso: this.refrescoEnProgreso
+    });
+
     if (
-      !forceRefresh &&
+      !skipProtection &&
       tiempoDesdeUltimoRefresco < tiempoMinimoEntreRefrescos
     ) {
       console.log(
@@ -2146,13 +2280,23 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
+    // PROTECCIÓN MEJORADA: Bloquear llamadas simultáneas más agresivamente
     if (this.refrescoEnProgreso) {
-      console.log(`🔄 REFRESCO EN PROGRESO - Omitiendo solicitud duplicada`);
+      console.log(`🔄 REFRESCO EN PROGRESO - Omitiendo solicitud duplicada`, {
+        isPageChange,
+        caller: caller.substring(0, 100)
+      });
       return;
     }
 
     this.refrescoEnProgreso = true;
     this.ultimoRefresco = ahora;
+
+    // Si es un refresco forzado (filtros nuevos), resetear a página 1
+    if (forceRefresh && this.usePagination) {
+      this.currentPage = 1;
+      this.first = 0;
+    }
 
     console.log(
       `🔄 INICIANDO REFRESCO - Forzado: ${forceRefresh}, Tiempo desde último: ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s`,
@@ -2181,6 +2325,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         ? [EstadoProceso.SinProducir, EstadoProceso.EnProduccion, EstadoProceso.ProducidoParcialmente, EstadoProceso.ProducidoTotalmente, EstadoProceso.ParaDespachar]
         : ["Todos"],*/
     };
+
+    // Agregar búsqueda global si existe y se usa paginación
+    if (this.usePagination && this.searchQuery && this.searchQuery.trim() !== '') {
+      filter.globalFilter = this.searchQuery.trim();
+    }
 
     // Apply quick filters for payment status
     if (this.quickFilters.estadoPago !== "all") {
@@ -2244,18 +2393,65 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log("Payload para pedidos normales:", filter);
     console.log("Payload para pedidos POS:", posFilter);
 
-    // Obtener pedidos normales y pedidos del POS en paralelo
-    forkJoin([
-      this.ventasService.getOrdersByFilter(filter),
-      this.ventasService.getOrdersPOSByFilter(posFilter),
-    ]).subscribe({
-      next: ([normalOrders, posOrders]) => {
-        console.log("Pedidos normales:", normalOrders);
-        console.log("Pedidos POS:", posOrders);
+    // Usar paginación del servidor si está habilitada
+    if (this.usePagination) {
+      // Establecer loading antes de hacer la petición
+      this.loading = true;
+      
+      console.log('🔄 refrescarDatos con paginación:', {
+        currentPage: this.currentPage,
+        pageSize: this.pageSize,
+        first: this.first,
+        filter: filter,
+        refrescoEnProgreso: this.refrescoEnProgreso
+      });
 
-        // Combinar ambos tipos de pedidos
-        const allOrders = [...(normalOrders || []), ...(posOrders || [])];
-        console.log("Total de pedidos combinados:", allOrders.length);
+      // Obtener pedidos normales paginados y pedidos del POS en paralelo
+      // Usar takeUntil para limpiar suscriptores cuando el componente se destruya
+      forkJoin([
+        this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize),
+        this.ventasService.getOrdersPOSByFilter(posFilter),
+      ]).pipe(
+        takeUntil(this.destroy$)
+      ).subscribe({
+        next: ([paginatedResponse, posOrders]) => {
+          console.log("✅ Respuesta paginada recibida:", {
+            orders: paginatedResponse?.orders?.length || 0,
+            totalItems: paginatedResponse?.pagination?.totalItems || 0,
+            currentPage: paginatedResponse?.pagination?.currentPage || 0,
+            totalPages: paginatedResponse?.pagination?.totalPages || 0
+          });
+          console.log("✅ Pedidos POS recibidos:", posOrders?.length || 0);
+
+          // Extraer pedidos de la respuesta paginada
+          const normalOrders = paginatedResponse?.orders || [];
+          
+          // Actualizar información de paginación
+          if (paginatedResponse?.pagination) {
+            this.totalRecords = paginatedResponse.pagination.totalItems;
+            console.log('📊 Total records actualizado desde backend:', {
+              totalItems: this.totalRecords,
+              currentPage: paginatedResponse.pagination.currentPage,
+              totalPages: paginatedResponse.pagination.totalPages,
+              itemsPerPage: paginatedResponse.pagination.itemsPerPage
+            });
+          } else {
+            // Si no hay paginación en la respuesta, usar el total de pedidos normales como fallback
+            this.totalRecords = normalOrders.length;
+            console.warn('⚠️ No se recibió información de paginación del backend, usando total de pedidos cargados como fallback:', this.totalRecords);
+          }
+          
+          // Guardar métricas del backend (calculadas sobre todos los pedidos, no solo los paginados)
+          if (paginatedResponse?.metrics) {
+            this.backendMetrics = paginatedResponse.metrics;
+            console.log('📊 Métricas recibidas del backend:', this.backendMetrics);
+          } else {
+            console.log('⚠️ No se recibieron métricas del backend');
+          }
+
+          // Combinar ambos tipos de pedidos
+          const allOrders = [...(normalOrders || []), ...(posOrders || [])];
+          console.log("Total de pedidos combinados:", allOrders.length);
 
         // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
         this.orders = [];
@@ -2527,78 +2723,159 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           }
 
           console.log(
-            `✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados`,
+            `✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados, totalRecords: ${this.totalRecords}`,
           );
           // Si hay una referencia a la tabla, forzar su actualización
           if (this.table) {
-            this.table.reset();
+            // Actualizar valores de la tabla
             this.table.value = this.orders;
-            this.table.totalRecords = this.orders.length;
+            this.table.totalRecords = this.usePagination ? this.totalRecords : this.orders.length;
+            this.table.first = this.first;
             this.table.loading = false;
+            
+            // Forzar detección de cambios en la tabla
+            this.changeDetectorRef.detectChanges();
+            
+            console.log('📊 Tabla PrimeNG actualizada:', {
+              totalRecords: this.table.totalRecords,
+              first: this.table.first,
+              rows: this.table.rows,
+              ordersCount: this.orders.length,
+              usePagination: this.usePagination
+            });
           }
         }, 100);
-        //   let precioTotalProductosSinIva=0
-        //   let precioTotalIVA=0
-        //   let precioTotalProductosConIva=0
-        //   order.carrito.forEach(producto=>
-        //     {
-        //       let precioAdicionesSinIva=0
-        //       let precioAdicionesConIva=0
-        //       let precioIvaAdiciones=0
-        //       let precioPreferenciaSinIva=0
-        //       let precioPreferenciaConIva=0
-        //       let precioIvaPreferencia=0
-        //       let precioTotalProductoSinIva=0
-        //       let precioIvaProducto=0
-        //       let precioTotalProductoConIva=0
-        //       if (producto.producto.precio.preciosVolumen.length > 0) {
-        //         producto.producto.precio.preciosVolumen.map(x => {
-        //           if (producto.cantidad >= x.numeroUnidadesInicial && producto.cantidad <= x.numeroUnidadesLimite) {
-        //             precioTotalProductoConIva= x.valorUnitarioPorVolumenConIVA*producto.cantidad
-        //             precioTotalProductoSinIva=x.valorUnitarioPorVolumenSinIVA*producto.cantidad
-        //             precioIvaProducto=x.valorUnitarioPorVolumenIva*producto.cantidad
+        },
+        error: (error) => {
+          console.error("❌ Error loading orders:", error);
+          // IMPORTANTE: Resetear flags para permitir nuevos intentos
+          this.loading = false;
+          this.refrescoEnProgreso = false;
+          console.log('🔄 Flags reseteados después de error - se puede intentar nuevamente');
+          
+          Swal.fire({
+            icon: "error",
+            title: "Error al cargar pedidos",
+            text: "No se pudieron cargar los pedidos. Por favor, intente nuevamente.",
+            confirmButtonText: "Reintentar",
+          });
+        },
+      });
+    } else {
+      // Método antiguo (sin paginación del servidor)
+      forkJoin([
+        this.ventasService.getOrdersByFilter(filter),
+        this.ventasService.getOrdersPOSByFilter(posFilter),
+      ]).subscribe({
+        next: ([normalOrders, posOrders]) => {
+          console.log("Pedidos normales:", normalOrders);
+          console.log("Pedidos POS:", posOrders);
 
-        //           }
-        //         })
-        //       } else {
-        //         precioTotalProductoConIva = producto.producto?.precio?.precioUnitarioConIva*producto.cantidad
-        //         precioTotalProductoSinIva = producto.producto?.precio?.precioUnitarioSinIva*producto.cantidad
-        //         precioIvaProducto=producto.producto?.precio?.valorIva*producto.cantidad
-        //       }
-        //       producto.configuracion.adiciones.forEach(adicion=>{
-        //         precioAdicionesSinIva+=adicion["referencia"].precioUnitario*adicion["cantidad"]*producto.cantidad
-        //         precioIvaAdiciones+=adicion["referencia"].precioIva*adicion["cantidad"]*producto.cantidad
-        //         precioAdicionesConIva+=adicion["referencia"].precioTotal*adicion["cantidad"]*producto.cantidad
-        //       })
-        //       producto.configuracion.preferencias.forEach(preferencia=>{
-        //         precioPreferenciaSinIva+=preferencia.valorUnitarioSinIva * producto.cantidad
-        //         precioIvaPreferencia+=preferencia.valorIva* producto.cantidad
-        //         precioPreferenciaConIva+=preferencia.precioTotalConIva * producto.cantidad
-        //       })
-        //       precioTotalProductosSinIva+=precioTotalProductoSinIva+precioAdicionesSinIva+precioPreferenciaSinIva
-        //       precioTotalIVA+=precioIvaProducto+precioIvaAdiciones+precioIvaPreferencia
-        //       precioTotalProductosConIva+=precioTotalProductoConIva+precioAdicionesConIva+precioPreferenciaConIva
-        //     })
-        //     order.totalImpuesto=precioTotalIVA
-        //     order.totalPedidoSinDescuento=precioTotalProductosSinIva
-        //     order.totalPedididoConDescuento=precioTotalProductosSinIva+order.totalEnvio-order.totalDescuento
+          // Combinar ambos tipos de pedidos
+          const allOrders = [...(normalOrders || []), ...(posOrders || [])];
+          console.log("Total de pedidos combinados:", allOrders.length);
 
-        // })
-      },
-      error: (error) => {
-        console.error("❌ ERROR EN REFRESCO:", error);
-        // ✅ RESETEAR FLAGS EN CASO DE ERROR
-        this.refrescoEnProgreso = false;
-        this.loading = false;
+          // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
+          this.orders = [];
+          this.changeDetectorRef.detectChanges();
 
-        Swal.fire({
-          icon: "error",
-          title: "Error al cargar pedidos",
-          text: "No se pudieron cargar los pedidos. Por favor, intente nuevamente.",
-          confirmButtonText: "Reintentar",
-        });
-      },
-    });
+          allOrders.forEach((order: any) => {
+            // Recalcular montos base con consistencia
+            order.totalPedidoSinDescuento = Number(
+              this.checkPriceScale(order) || 0,
+            );
+            order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
+            // Subtotal: productos sin IVA - descuento
+            const descuento = Number(order.totalDescuento || 0);
+            order.subtotal =
+              Number(order.totalPedidoSinDescuento || 0) - descuento;
+            // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
+            const envio = Number(order.totalEnvio || 0);
+            order.totalPedididoConDescuento =
+              order.subtotal + order.totalImpuesto + envio;
+
+            // Calcular anticipo basado en PagosAsentados si existen
+            if (order.PagosAsentados && order.PagosAsentados.length > 0) {
+              order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
+                const estadoValido =
+                  pago.estadoVerificacion !== "Rechazado" &&
+                  pago.estadoVerificacion !== "Cancelado";
+                if (estadoValido) {
+                  const valorPago = Number(
+                    pago.valor || pago.valorRegistrado || 0,
+                  );
+                  return acc + valorPago;
+                }
+                return acc;
+              }, 0);
+            } else if (order.anticipo == null || order.anticipo == undefined) {
+              order.anticipo = 0;
+            }
+
+            // Calcular falta por pagar
+            order.faltaPorPagar = Math.max(
+              0,
+              Number(order.totalPedididoConDescuento || 0) -
+              Number(order.anticipo || 0),
+            );
+
+            // Validación
+            if (
+              !order.validacion ||
+              order.validacion == null ||
+              order.validacion == undefined
+            ) {
+              order.validacion = false;
+            }
+          });
+
+          // Forzar actualización de la tabla
+          setTimeout(() => {
+            this.orders = [...allOrders];
+            this.changeDetectorRef.detectChanges();
+            this.changeDetectorRef.markForCheck();
+            this.refrescoEnProgreso = false;
+            this.loading = false;
+
+            // Actualizar pedidos originales para búsqueda local
+            this.originalOrders = [...this.orders];
+
+            // Marcar que se han cargado pedidos al menos una vez
+            if (this.orders.length > 0) {
+              this.hasLoadedOrdersOnce = true;
+            }
+
+            // Si hay búsqueda local activa, aplicar el filtro nuevamente
+            if (this.hasActiveLocalSearch()) {
+              this.performLocalSearch(this.localSearchQuery);
+            }
+
+            console.log(
+              `✅ REFRESCO COMPLETADO - ${this.orders.length} pedidos procesados`,
+            );
+            // Si hay una referencia a la tabla, forzar su actualización
+            if (this.table) {
+              this.table.reset();
+              this.table.value = this.orders;
+              this.table.totalRecords = this.orders.length;
+              this.table.loading = false;
+            }
+          }, 100);
+        },
+        error: (error) => {
+          console.error("❌ ERROR EN REFRESCO:", error);
+          this.refrescoEnProgreso = false;
+          this.loading = false;
+
+          Swal.fire({
+            icon: "error",
+            title: "Error al cargar pedidos",
+            text: "No se pudieron cargar los pedidos. Por favor, intente nuevamente.",
+            confirmButtonText: "Reintentar",
+          });
+        },
+      });
+    }
   }
 
   clear(table: Table) {
@@ -2771,13 +3048,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Total de pedidos mostrados en la tabla filtrada
-   */
-  getTotalPedidos(): number {
-    return this.getFilteredOrders().length;
-  }
-
-  /**
    * Conteo de pedidos por estado de pago
    */
   getEstadoCount(estado: string): number {
@@ -2880,11 +3150,45 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Conteo de pedidos por estado de proceso
+   * Usa métricas del backend si están disponibles (más preciso, incluye todos los pedidos)
    */
   getProcesoCount(proceso: string): number {
+    // Si hay métricas del backend, usarlas (más preciso)
+    if (this.backendMetrics) {
+      // Mapear estados de proceso a las métricas del backend
+      const metricMap: { [key: string]: string } = {
+        'SinProducir': 'enProduccion',
+        'EnProduccion': 'enProduccion',
+        'ProducidoTotalmente': 'enProduccion',
+        'ProducidoParcialmente': 'enProduccion',
+        'Empacado': 'empacados',
+        'Despachado': 'enRuta',
+        'ParaDespachar': 'paraDespachar',
+        'Entregado': 'entregados'
+      };
+      
+      const metricKey = metricMap[proceso];
+      if (metricKey && this.backendMetrics[metricKey] !== undefined) {
+        return this.backendMetrics[metricKey];
+      }
+    }
+    
+    // Fallback: calcular localmente (solo sobre pedidos paginados)
     return this.getFilteredOrders().filter(
       (pedido) => pedido.estadoProceso === proceso,
     ).length;
+  }
+
+  /**
+   * Obtener total de pedidos (usa métricas del backend si están disponibles)
+   */
+  getTotalPedidos(): number {
+    // Si hay métricas del backend, usar el total (más preciso, incluye todos los pedidos)
+    if (this.backendMetrics && this.backendMetrics.totalPedidos !== undefined) {
+      return this.backendMetrics.totalPedidos;
+    }
+    // Fallback: usar el total de registros paginados o la longitud de orders
+    return this.totalRecords || this.orders?.length || 0;
   }
 
   /**
@@ -2914,8 +3218,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Conteo de pedidos pendientes de pago
    * Incluye estados: Pendiente y Pospendiente
+   * Usa métricas del backend si están disponibles
    */
   getPendientesPagoCount(): number {
+    // Si hay métricas del backend, calcular desde el total y los aprobados
+    // (Nota: el backend no tiene esta métrica específica, así que calculamos localmente)
+    // Pero podemos usar el total del backend para ser más preciso
+    if (this.backendMetrics && this.backendMetrics.totalPedidos) {
+      // Calcular pendientes = total - aprobados (aproximado)
+      // Por ahora, calcular localmente pero con el total del backend como referencia
+    }
+    
+    // Calcular localmente sobre pedidos paginados
     return this.getFilteredOrders().filter(
       (pedido) =>
         pedido.estadoPago === "Pendiente" ||

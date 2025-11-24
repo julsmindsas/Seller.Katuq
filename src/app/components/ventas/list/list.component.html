@@ -21,11 +21,15 @@
                     <div class="">
                         <div class="">
                             <div class="p-2">
-                                    <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="50"
+                                    <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="pageSize"
                                         [showCurrentPageReport]="true" [rowsPerPageOptions]="[5,10,25,50]"
                                         [loading]="loading" [reorderableColumns]="true" [scrollable]="true"
                                         [scrollHeight]="'flex'"
                                         [paginator]="true"
+                                        [lazy]="usePagination"
+                                        (onLazyLoad)="loadLazy($event)"
+                                        [totalRecords]="totalRecords"
+                                        [(first)]="first"
                                     currentPageReportTemplate="{{'Mostrando {first} a {last} de {totalRecords} pedidos' | translate}}"
                                     [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
                                         styleClass="p-datatable p-datatable-gridlines p-datatable-striped responsive-paginator"
@@ -139,7 +143,7 @@
                                                  tooltipPosition="top">
                                                 <i class="pi pi-shopping-cart"></i>
                                                 <span class="metric-label">Total</span>
-                                                <span class="metric-badge">{{ orders?.length || 0 }}</span>
+                                                <span class="metric-badge">{{ getTotalPedidos() }}</span>
                                             </div>
 
                                             <!-- Separador Principal -->
