@@ -54,7 +54,7 @@ import { ColumnDefinition } from "../interfaces/column-definition.interface";
 import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
-import { Subject, forkJoin } from "rxjs";
+import { Subject, forkJoin, of } from "rxjs";
 import { debounceTime, distinctUntilChanged, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 
@@ -156,24 +156,32 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // Métricas del backend (calculadas sobre todos los pedidos, no solo los paginados)
   backendMetrics: any = null;
 
+  // Skeleton loading - array para generar filas de placeholder
+  skeletonRows = Array(10).fill(0);
+
+  // Filtros de columna para server-side filtering
+  private columnFilters: any = {};
+
+  // Debouncing para filtros de columna (copiado de tabla-pedidos)
+  private filterSubject = new Subject<{ value: string, filterCallback: Function }>();
+  private filterSubscription: any;
+
   ngAfterViewInit() {
-    // Limpiar funciones del menú anterior
-    
-    // Con lazy loading, PrimeNG debería disparar onLazyLoad automáticamente
-    // Si no se dispara después de un tiempo, forzar la carga inicial
+    // Con lazy loading, mostrar skeleton inmediatamente y forzar carga
     if (this.usePagination) {
-      // Esperar a que la vista se estabilice
-      setTimeout(() => {
-        // Si después de 300ms no hay datos y la tabla existe, forzar carga
+      // Mostrar loading/skeleton inmediatamente
+      this.loading = true;
+
+      // Usar requestAnimationFrame en lugar de setTimeout para carga más rápida
+      requestAnimationFrame(() => {
         if (this.orders.length === 0 && this.totalRecords === 0 && this.table) {
-          console.log('🔄 Forzando carga inicial - onLazyLoad no se disparó automáticamente');
-          // Simular el evento lazy load inicial
+          console.log('🔄 Carga inicial inmediata');
           this.loadLazy({
             first: 0,
             rows: this.pageSize
           } as LazyLoadEvent);
         }
-      }, 300);
+      });
     }
   }
 
@@ -249,10 +257,72 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Por ahora se maneja en el backend
     }
 
+    // ==================== FASE 4: Captura de filtros de columna ====================
+    // Capturar filtros de columna para las 4 columnas principales
+    // Mapeo de campos del HTML a campos del backend:
+    // - nroPedido → nroPedido
+    // - cliente.nombres_completos → cliente
+    // - envio.ciudad → ciudad
+    // - transportador → transportador
+    if (event.filters) {
+      this.columnFilters = {};
+
+      console.log('📋 Filtros recibidos del evento:', JSON.stringify(event.filters, null, 2));
+
+      // Mapeo de campos HTML → campos backend
+      const fieldMapping: { [key: string]: string } = {
+        'nroPedido': 'nroPedido',
+        'cliente.nombres_completos': 'cliente',
+        'envio.ciudad': 'ciudad',
+        'transportador': 'transportador',
+        'asesorAsignado.name': 'vendedor'
+      };
+
+      for (const [htmlField, backendField] of Object.entries(fieldMapping)) {
+        const filterData = event.filters[htmlField];
+        if (filterData) {
+          // PrimeNG 14+ usa arrays de filtros: [{value: 'x', matchMode: 'contains'}]
+          // También puede ser un objeto simple: {value: 'x', matchMode: 'contains'}
+          let filterValue: any = null;
+
+          if (Array.isArray(filterData)) {
+            // Es un array de filtros - tomar el primer filtro con valor
+            const activeFilter = filterData.find((f: any) => f.value !== null && f.value !== undefined && f.value !== '');
+            if (activeFilter) {
+              filterValue = activeFilter.value;
+            }
+          } else if (filterData.value !== null && filterData.value !== undefined && filterData.value !== '') {
+            // Es un objeto simple
+            filterValue = filterData.value;
+          }
+
+          if (filterValue) {
+            this.columnFilters[backendField] = filterValue;
+            console.log(`🔍 Filtro de columna capturado: ${htmlField} → ${backendField} = "${filterValue}"`);
+          }
+        }
+      }
+
+      if (Object.keys(this.columnFilters).length > 0) {
+        console.log('🎯 Filtros de columna activos para backend:', this.columnFilters);
+      }
+    }
+    // ==============================================================================
+
     // Llamar a refrescar datos con la nueva página
     // Marcar como cambio de página para evitar bloqueos de protección
     console.log('🚀 Llamando a refrescarDatos con isPageChange=true');
     this.refrescarDatos(false, true);
+  }
+
+  /**
+   * Handler para filtros de columna con debouncing (copiado de tabla-pedidos)
+   * @param event - Input event del campo de filtro
+   * @param filterCallback - Función callback de PrimeNG para aplicar el filtro
+   */
+  onColumnFilterInput(event: Event, filterCallback: Function): void {
+    const value = (event.target as HTMLInputElement).value;
+    this.filterSubject.next({ value, filterCallback });
   }
 
   @HostListener("window:scroll", ["$event"])
@@ -1837,6 +1907,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Setup debouncing para filtros de columna (copiado de tabla-pedidos)
+    this.filterSubscription = this.filterSubject.pipe(
+      debounceTime(300), // Esperar 300ms después del último evento
+      distinctUntilChanged((prev, curr) => prev.value === curr.value)
+    ).subscribe(({ value, filterCallback }) => {
+      filterCallback(value);
+    });
+
     // Initialize dates first before subscribing to service
     const today = new Date();
     this.fechaInicial = today.toISOString().split("T")[0];
@@ -2248,30 +2326,34 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       refrescoEnProgreso: this.refrescoEnProgreso
     });
     
-    // ✅ PROTECCIÓN: Evitar refrescos automáticos muy frecuentes
-    // Esta función se ejecuta automáticamente en varios eventos del navegador
-    // Por eso agregamos protección para evitar cambios automáticos de estados de pago
-    // PERO: No aplicar protección si es un cambio de página legítimo con paginación
+    // ✅ PROTECCIÓN MEJORADA: Evitar refrescos automáticos muy frecuentes
+    // PERO: Los cambios de página SIEMPRE deben procesarse inmediatamente
     const ahora = Date.now();
     const tiempoDesdeUltimoRefresco = ahora - this.ultimoRefresco;
-    const tiempoMinimoEntreRefrescos = 30 * 1000; // 30 segundos mínimo entre refrescos
+    
+    // Tiempo mínimo diferenciado:
+    // - Cambios de página: 500ms (para evitar doble-click)
+    // - Refrescos normales: 5 segundos (reducido de 30s para mejor UX)
+    // - Refrescos forzados: sin límite
+    const tiempoMinimoEntreRefrescos = isPageChange ? 500 : (forceRefresh ? 0 : 5000);
 
-    // NO aplicar protección si:
+    // NO aplicar protección de tiempo si:
     // 1. Es un refresco forzado (filtros nuevos)
     // 2. Es un cambio de página legítimo con paginación habilitada
-    const skipProtection = forceRefresh || (this.usePagination && isPageChange);
+    const skipTimeProtection = forceRefresh || (this.usePagination && isPageChange);
 
     console.log('🔍 Verificando protección de refresco:', {
       forceRefresh,
       isPageChange,
       usePagination: this.usePagination,
-      skipProtection,
+      skipTimeProtection,
       tiempoDesdeUltimoRefresco: (tiempoDesdeUltimoRefresco / 1000).toFixed(1) + 's',
+      tiempoMinimo: (tiempoMinimoEntreRefrescos / 1000).toFixed(1) + 's',
       refrescoEnProgreso: this.refrescoEnProgreso
     });
 
     if (
-      !skipProtection &&
+      !skipTimeProtection &&
       tiempoDesdeUltimoRefresco < tiempoMinimoEntreRefrescos
     ) {
       console.log(
@@ -2280,13 +2362,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // PROTECCIÓN MEJORADA: Bloquear llamadas simultáneas más agresivamente
+    // PROTECCIÓN CONTRA LLAMADAS SIMULTÁNEAS
+    // Para cambios de página: permitir si el anterior ya terminó o si pasaron más de 3s
     if (this.refrescoEnProgreso) {
-      console.log(`🔄 REFRESCO EN PROGRESO - Omitiendo solicitud duplicada`, {
-        isPageChange,
-        caller: caller.substring(0, 100)
-      });
-      return;
+      const tiempoMaximoEspera = 3000; // 3 segundos máximo de espera
+      if (isPageChange && tiempoDesdeUltimoRefresco > tiempoMaximoEspera) {
+        console.log(`⚠️ Forzando refresco - el anterior tardó más de ${tiempoMaximoEspera/1000}s`);
+        // Resetear el flag para permitir el nuevo refresco
+        this.refrescoEnProgreso = false;
+      } else {
+        console.log(`🔄 REFRESCO EN PROGRESO - Omitiendo solicitud duplicada`, {
+          isPageChange,
+          tiempoDesdeUltimoRefresco: (tiempoDesdeUltimoRefresco / 1000).toFixed(1) + 's',
+          caller: caller.substring(0, 100)
+        });
+        return;
+      }
     }
 
     this.refrescoEnProgreso = true;
@@ -2330,6 +2421,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.usePagination && this.searchQuery && this.searchQuery.trim() !== '') {
       filter.globalFilter = this.searchQuery.trim();
     }
+
+    // ==================== FASE 5: Agregar filtros de columna al payload ====================
+    // Mapear filtros de columna capturados en loadLazy al objeto filter
+    // Solo para las 4 columnas principales: nroPedido, cliente, ciudad, transportador
+    if (this.usePagination && Object.keys(this.columnFilters).length > 0) {
+      filter.columnFilters = this.columnFilters;
+      console.log('🎯 Filtros de columna agregados al payload:', filter.columnFilters);
+    }
+    // ======================================================================================
 
     // Apply quick filters for payment status
     if (this.quickFilters.estadoPago !== "all") {
@@ -2383,12 +2483,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     }
 
-    // Crear payload específico para POS (más simple)
-    const posFilter = {
+    // Crear payload específico para POS (incluye filtros de columna)
+    const posFilter: any = {
       fechaInicial: filter.fechaInicial,
       fechaFinal: filter.fechaFinal,
       company: filter.company,
     };
+
+    // Agregar filtros de columna al payload POS si existen
+    if (filter.columnFilters && Object.keys(filter.columnFilters).length > 0) {
+      posFilter.columnFilters = filter.columnFilters;
+    }
+
+    // Agregar filtro global al payload POS si existe
+    if (filter.globalFilter) {
+      posFilter.globalFilter = filter.globalFilter;
+    }
 
     console.log("Payload para pedidos normales:", filter);
     console.log("Payload para pedidos POS:", posFilter);
@@ -2408,69 +2518,128 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Obtener pedidos normales paginados y pedidos del POS en paralelo
       // Usar takeUntil para limpiar suscriptores cuando el componente se destruya
-      forkJoin([
-        this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize),
-        this.ventasService.getOrdersPOSByFilter(posFilter),
-      ]).pipe(
+      // NOTA: Los pedidos POS solo se cargan en la primera página para no afectar la paginación
+      const shouldLoadPOS = this.currentPage === 1;
+      
+      // Usar forkJoin con tipos explícitos para evitar errores de TypeScript
+      const paginatedRequest = this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.pageSize);
+      
+      // Cargar pedidos paginados primero
+      paginatedRequest.pipe(
         takeUntil(this.destroy$)
       ).subscribe({
-        next: ([paginatedResponse, posOrders]) => {
-          console.log("✅ Respuesta paginada recibida:", {
-            orders: paginatedResponse?.orders?.length || 0,
-            totalItems: paginatedResponse?.pagination?.totalItems || 0,
-            currentPage: paginatedResponse?.pagination?.currentPage || 0,
-            totalPages: paginatedResponse?.pagination?.totalPages || 0
-          });
-          console.log("✅ Pedidos POS recibidos:", posOrders?.length || 0);
-
-          // Extraer pedidos de la respuesta paginada
-          const normalOrders = paginatedResponse?.orders || [];
-          
-          // Actualizar información de paginación
-          if (paginatedResponse?.pagination) {
-            this.totalRecords = paginatedResponse.pagination.totalItems;
-            console.log('📊 Total records actualizado desde backend:', {
-              totalItems: this.totalRecords,
-              currentPage: paginatedResponse.pagination.currentPage,
-              totalPages: paginatedResponse.pagination.totalPages,
-              itemsPerPage: paginatedResponse.pagination.itemsPerPage
+        next: (paginatedResponse) => {
+          // Si debemos cargar POS, hacerlo en paralelo
+          if (shouldLoadPOS) {
+            this.ventasService.getOrdersPOSByFilter(posFilter).pipe(
+              takeUntil(this.destroy$)
+            ).subscribe({
+              next: (posOrdersResponse) => {
+                this.procesarRespuestaPaginada(paginatedResponse, posOrdersResponse || [], shouldLoadPOS);
+              },
+              error: (error) => {
+                console.error('Error cargando pedidos POS:', error);
+                // Continuar sin pedidos POS
+                this.procesarRespuestaPaginada(paginatedResponse, [], shouldLoadPOS);
+              }
             });
           } else {
-            // Si no hay paginación en la respuesta, usar el total de pedidos normales como fallback
-            this.totalRecords = normalOrders.length;
-            console.warn('⚠️ No se recibió información de paginación del backend, usando total de pedidos cargados como fallback:', this.totalRecords);
+            this.procesarRespuestaPaginada(paginatedResponse, [], shouldLoadPOS);
           }
-          
-          // Guardar métricas del backend (calculadas sobre todos los pedidos, no solo los paginados)
-          if (paginatedResponse?.metrics) {
-            this.backendMetrics = paginatedResponse.metrics;
-            console.log('📊 Métricas recibidas del backend:', this.backendMetrics);
-          } else {
-            console.log('⚠️ No se recibieron métricas del backend');
-          }
+        },
+        error: (error) => {
+          console.error('Error cargando pedidos:', error);
+          this.loading = false;
+          this.refrescoEnProgreso = false;
+        }
+      });
+    } else {
+      // Usar método sin paginación
+      this.refrescarDatosSinPaginacion();
+    }
+  }
 
-          // Combinar ambos tipos de pedidos
-          const allOrders = [...(normalOrders || []), ...(posOrders || [])];
-          console.log("Total de pedidos combinados:", allOrders.length);
+  /**
+   * Procesa la respuesta paginada y los pedidos POS
+   */
+  private procesarRespuestaPaginada(paginatedResponse: any, posOrders: any[], shouldLoadPOS: boolean): void {
+    try {
+      const posOrdersArray = Array.isArray(posOrders) ? posOrders : [];
+      
+      console.log("✅ Respuesta paginada recibida:", {
+        orders: paginatedResponse?.orders?.length || 0,
+        totalItems: paginatedResponse?.pagination?.totalItems || 0,
+        currentPage: paginatedResponse?.pagination?.currentPage || 0,
+        totalPages: paginatedResponse?.pagination?.totalPages || 0
+      });
+      
+      if (shouldLoadPOS) {
+        console.log("✅ Pedidos POS recibidos:", posOrdersArray?.length || 0);
+      } else {
+        console.log("⏭️ Pedidos POS omitidos (no es primera página)");
+      }
 
-        // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
-        this.orders = [];
-        this.changeDetectorRef.detectChanges();
+      // Extraer pedidos de la respuesta paginada
+      const normalOrders = paginatedResponse?.orders || [];
+      
+      // Actualizar información de paginación
+      // IMPORTANTE: El totalRecords incluye SOLO los pedidos normales del backend
+      // Los pedidos POS se suman al total solo si estamos en la primera página
+      if (paginatedResponse?.pagination) {
+        const totalNormales = paginatedResponse.pagination.totalItems;
+        const totalPOS = posOrdersArray?.length || 0;
+        
+        // El total de registros es la suma de normales + POS
+        this.totalRecords = totalNormales + totalPOS;
+        
+        console.log('📊 Total records actualizado:', {
+          totalNormales: totalNormales,
+          totalPOS: totalPOS,
+          totalCombinado: this.totalRecords,
+          currentPage: paginatedResponse.pagination.currentPage,
+          totalPages: Math.ceil(this.totalRecords / this.pageSize),
+          itemsPerPage: paginatedResponse.pagination.itemsPerPage
+        });
+      } else {
+        // Si no hay paginación en la respuesta, usar el total de pedidos cargados como fallback
+        this.totalRecords = normalOrders.length + (posOrdersArray?.length || 0);
+        console.warn('⚠️ No se recibió información de paginación del backend, usando total de pedidos cargados como fallback:', this.totalRecords);
+      }
+      
+      // Guardar métricas del backend (calculadas sobre todos los pedidos, no solo los paginados)
+      if (paginatedResponse?.metrics) {
+        this.backendMetrics = paginatedResponse.metrics;
+        console.log('📊 Métricas recibidas del backend:', this.backendMetrics);
+      } else {
+        console.log('⚠️ No se recibieron métricas del backend');
+      }
+
+      // Combinar ambos tipos de pedidos
+      // Los pedidos POS van al inicio para que aparezcan primero en la primera página
+      const allOrders = [...posOrdersArray, ...(normalOrders || [])];
+      console.log("Total de pedidos combinados:", allOrders.length);
+
+      // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
+      this.orders = [];
+      this.changeDetectorRef.detectChanges();
 
         allOrders.forEach((order: any) => {
-          // Recalcular montos base con consistencia
-          order.totalPedidoSinDescuento = Number(
-            this.checkPriceScale(order) || 0,
-          );
-          order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
-          // Subtotal: productos sin IVA - descuento
-          const descuento = Number(order.totalDescuento || 0);
-          order.subtotal =
-            Number(order.totalPedidoSinDescuento || 0) - descuento;
-          // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
-          const envio = Number(order.totalEnvio || 0);
-          order.totalPedididoConDescuento =
-            order.subtotal + order.totalImpuesto + envio;
+          // Verificar si el backend ya calculó los totales (optimización de rendimiento)
+          if (!order._calculadoEnBackend) {
+            // Recalcular montos base con consistencia (solo si backend no lo hizo)
+            order.totalPedidoSinDescuento = Number(
+              this.checkPriceScale(order) || 0,
+            );
+            order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
+            // Subtotal: productos sin IVA - descuento
+            const descuento = Number(order.totalDescuento || 0);
+            order.subtotal =
+              Number(order.totalPedidoSinDescuento || 0) - descuento;
+            // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
+            const envio = Number(order.totalEnvio || 0);
+            order.totalPedididoConDescuento =
+              order.subtotal + order.totalImpuesto + envio;
+          }
 
           // Calcular anticipo basado en PagosAsentados si existen
           if (order.PagosAsentados && order.PagosAsentados.length > 0) {
@@ -2700,8 +2869,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           }
         });
 
-        // Forzar actualización de la tabla usando setTimeout para el siguiente ciclo de detección
-        setTimeout(() => {
+        // Usar requestAnimationFrame para actualización más rápida (en lugar de setTimeout 100ms)
+        requestAnimationFrame(() => {
           this.orders = [...allOrders];
           this.changeDetectorRef.detectChanges();
           this.changeDetectorRef.markForCheck();
@@ -2732,10 +2901,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             this.table.totalRecords = this.usePagination ? this.totalRecords : this.orders.length;
             this.table.first = this.first;
             this.table.loading = false;
-            
+
             // Forzar detección de cambios en la tabla
             this.changeDetectorRef.detectChanges();
-            
+
             console.log('📊 Tabla PrimeNG actualizada:', {
               totalRecords: this.table.totalRecords,
               first: this.table.first,
@@ -2744,26 +2913,57 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               usePagination: this.usePagination
             });
           }
-        }, 100);
-        },
-        error: (error) => {
-          console.error("❌ Error loading orders:", error);
-          // IMPORTANTE: Resetear flags para permitir nuevos intentos
-          this.loading = false;
-          this.refrescoEnProgreso = false;
-          console.log('🔄 Flags reseteados después de error - se puede intentar nuevamente');
-          
-          Swal.fire({
-            icon: "error",
-            title: "Error al cargar pedidos",
-            text: "No se pudieron cargar los pedidos. Por favor, intente nuevamente.",
-            confirmButtonText: "Reintentar",
-          });
-        },
+        });
+    } catch (error) {
+      console.error("❌ Error procesando respuesta paginada:", error);
+      this.loading = false;
+      this.refrescoEnProgreso = false;
+      
+      Swal.fire({
+        icon: "error",
+        title: "Error al procesar pedidos",
+        text: "No se pudieron procesar los pedidos. Por favor, intente nuevamente.",
+        confirmButtonText: "Reintentar",
       });
-    } else {
-      // Método antiguo (sin paginación del servidor)
-      forkJoin([
+    }
+  }
+
+  /**
+   * Método antiguo de refrescar datos (sin paginación del servidor)
+   * @deprecated Usar refrescarDatos con usePagination = true
+   */
+  private refrescarDatosSinPaginacion(): void {
+    // Ensure dates are set with fallback to today
+    if (!this.fechaInicial || !this.fechaFinal) {
+      const today = new Date().toISOString().split("T")[0];
+      this.fechaInicial = this.fechaInicial || today;
+      this.fechaFinal = this.fechaFinal || today;
+    }
+
+    const startDate = new Date(this.fechaInicial + "T00:00:00");
+    const endDate = new Date(this.fechaFinal + "T23:59:59.999");
+
+    const filter: any = {
+      fechaInicial: startDate.toISOString(),
+      fechaFinal: endDate.toISOString(),
+      company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
+      tipoFecha: "fechaEntrega",
+      estadoProceso: ["Todos"],
+    };
+
+    const posFilter: any = {
+      fechaInicial: filter.fechaInicial,
+      fechaFinal: filter.fechaFinal,
+      company: filter.company,
+    };
+
+    // Agregar filtros de columna al payload POS si existen (para método sin paginación)
+    if (this.columnFilters && Object.keys(this.columnFilters).length > 0) {
+      posFilter.columnFilters = this.columnFilters;
+    }
+
+    // Método antiguo (sin paginación del servidor)
+    forkJoin([
         this.ventasService.getOrdersByFilter(filter),
         this.ventasService.getOrdersPOSByFilter(posFilter),
       ]).subscribe({
@@ -2780,19 +2980,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.changeDetectorRef.detectChanges();
 
           allOrders.forEach((order: any) => {
-            // Recalcular montos base con consistencia
-            order.totalPedidoSinDescuento = Number(
-              this.checkPriceScale(order) || 0,
-            );
-            order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
-            // Subtotal: productos sin IVA - descuento
-            const descuento = Number(order.totalDescuento || 0);
-            order.subtotal =
-              Number(order.totalPedidoSinDescuento || 0) - descuento;
-            // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
-            const envio = Number(order.totalEnvio || 0);
-            order.totalPedididoConDescuento =
-              order.subtotal + order.totalImpuesto + envio;
+            // Verificar si el backend ya calculó los totales (optimización de rendimiento)
+            if (!order._calculadoEnBackend) {
+              // Recalcular montos base con consistencia (solo si backend no lo hizo)
+              order.totalPedidoSinDescuento = Number(
+                this.checkPriceScale(order) || 0,
+              );
+              order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
+              // Subtotal: productos sin IVA - descuento
+              const descuento = Number(order.totalDescuento || 0);
+              order.subtotal =
+                Number(order.totalPedidoSinDescuento || 0) - descuento;
+              // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
+              const envio = Number(order.totalEnvio || 0);
+              order.totalPedididoConDescuento =
+                order.subtotal + order.totalImpuesto + envio;
+            }
 
             // Calcular anticipo basado en PagosAsentados si existen
             if (order.PagosAsentados && order.PagosAsentados.length > 0) {
@@ -2875,7 +3078,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           });
         },
       });
-    }
   }
 
   clear(table: Table) {
@@ -3151,25 +3353,39 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Conteo de pedidos por estado de proceso
    * Usa métricas del backend si están disponibles (más preciso, incluye todos los pedidos)
+   * Mejorado 2025.11.24 - Usa métricas individuales del backend
    */
   getProcesoCount(proceso: string): number {
     // Si hay métricas del backend, usarlas (más preciso)
     if (this.backendMetrics) {
-      // Mapear estados de proceso a las métricas del backend
+      // Mapear estados de proceso a las métricas individuales del backend
       const metricMap: { [key: string]: string } = {
-        'SinProducir': 'enProduccion',
-        'EnProduccion': 'enProduccion',
-        'ProducidoTotalmente': 'enProduccion',
-        'ProducidoParcialmente': 'enProduccion',
+        'SinProducir': 'sinProducir',
+        'EnProduccion': 'enProduccionIndividual',
+        'ProducidoTotalmente': 'producidoTotalmente',
+        'ProducidoParcialmente': 'producidoParcialmente',
         'Empacado': 'empacados',
         'Despachado': 'enRuta',
         'ParaDespachar': 'paraDespachar',
-        'Entregado': 'entregados'
+        'Entregado': 'entregados',
+        'Cerrado': 'cerrados'
       };
       
       const metricKey = metricMap[proceso];
       if (metricKey && this.backendMetrics[metricKey] !== undefined) {
         return this.backendMetrics[metricKey];
+      }
+      
+      // Fallback a métricas agrupadas si no hay individuales
+      const fallbackMap: { [key: string]: string } = {
+        'SinProducir': 'enProduccion',
+        'EnProduccion': 'enProduccion',
+        'ProducidoTotalmente': 'enProduccion',
+        'ProducidoParcialmente': 'enProduccion',
+      };
+      const fallbackKey = fallbackMap[proceso];
+      if (fallbackKey && this.backendMetrics[fallbackKey] !== undefined) {
+        return this.backendMetrics[fallbackKey];
       }
     }
     
@@ -3219,17 +3435,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Conteo de pedidos pendientes de pago
    * Incluye estados: Pendiente y Pospendiente
    * Usa métricas del backend si están disponibles
+   * Mejorado 2025.11.24 - Usa métricas del backend
    */
   getPendientesPagoCount(): number {
-    // Si hay métricas del backend, calcular desde el total y los aprobados
-    // (Nota: el backend no tiene esta métrica específica, así que calculamos localmente)
-    // Pero podemos usar el total del backend para ser más preciso
-    if (this.backendMetrics && this.backendMetrics.totalPedidos) {
-      // Calcular pendientes = total - aprobados (aproximado)
-      // Por ahora, calcular localmente pero con el total del backend como referencia
+    // Si hay métricas del backend, usarlas (más preciso)
+    if (this.backendMetrics && this.backendMetrics.pendientesPago !== undefined) {
+      return this.backendMetrics.pendientesPago;
     }
     
-    // Calcular localmente sobre pedidos paginados
+    // Fallback: Calcular localmente sobre pedidos paginados
     return this.getFilteredOrders().filter(
       (pedido) =>
         pedido.estadoPago === "Pendiente" ||
@@ -5989,23 +6203,235 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pedidoSeleccionado = event;
   }
 
-  exportarExcel(): void {
-    // Transformar los datos para la exportación
-    const datosExportar = this.orders.map((pedido) => ({
-      ...pedido,
-      asesorAsignado: pedido.asesorAsignado?.name || "",
-      cliente: pedido.cliente?.nombres_completos || "",
-      despachador: pedido.despachador?.name || "",
-      entregado: pedido.entregado?.name || "",
-      channel: pedido.channel?.name || "Regular",
+  /**
+   * Exporta pedidos a Excel usando endpoint dedicado SIN LÍMITE de paginación
+   * Obtiene TODOS los pedidos que coincidan con el filtro de fechas
+   * @since 2025.11.24 - Nuevo endpoint dedicado para exportación sin límites
+   */
+  async exportarExcel(): Promise<void> {
+    // Mostrar loading
+    this.loading = true;
+    const toastRef = this.toastrService.info(
+      'Preparando exportación... Esto puede tomar un momento.',
+      'Exportando',
+      { disableTimeOut: true, tapToDismiss: false }
+    );
+
+    try {
+      // Obtener datos de la empresa actual
+      const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
+      const company = currentCompany.nomComercial;
+
+      if (!company) {
+        throw new Error('No se encontró la empresa actual');
+      }
+
+      // Ensure dates are set with fallback to today
+      const fechaInicial = this.fechaInicial || new Date().toISOString().split("T")[0];
+      const fechaFinal = this.fechaFinal || new Date().toISOString().split("T")[0];
+
+      // Formatear fechas para el backend
+      const startDate = new Date(fechaInicial + "T00:00:00");
+      const endDate = new Date(fechaFinal + "T23:59:59.999");
+
+      console.log(`📤 Exportando pedidos: ${startDate.toISOString()} a ${endDate.toISOString()}`);
+
+      // Usar el nuevo endpoint dedicado para exportación SIN LÍMITES
+      const response = await this.ventasService.getAllOrdersForExportDirect(
+        company,
+        startDate.toISOString(),
+        endDate.toISOString(),
+        'fechaCreacion'
+      ).toPromise();
+
+      if (response && response.success && response.orders && response.orders.length > 0) {
+        console.log(`✅ Obtenidos ${response.orders.length} pedidos para exportar (totalItems: ${response.totalItems})`);
+
+        // Procesar los pedidos igual que en refrescarDatos
+        const pedidosProcesados = response.orders.map((order: any) => {
+          order.totalPedidoSinDescuento = Number(this.checkPriceScale(order) || 0);
+          order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
+          const descuento = Number(order.totalDescuento || 0);
+          order.subtotal = Number(order.totalPedidoSinDescuento || 0) - descuento;
+          const envio = Number(order.totalEnvio || 0);
+          order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto + envio;
+
+          if (order.PagosAsentados && order.PagosAsentados.length > 0) {
+            order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
+              const estadoValido = pago.estadoVerificacion !== "Rechazado" && pago.estadoVerificacion !== "Cancelado";
+              if (estadoValido) {
+                return acc + Number(pago.valor || pago.valorRegistrado || 0);
+              }
+              return acc;
+            }, 0);
+          }
+
+          order.faltaPorPagar = Math.max(0, Number(order.totalPedididoConDescuento || 0) - Number(order.anticipo || 0));
+          return order;
+        });
+
+        // Cerrar toast de progreso
+        this.toastrService.clear(toastRef.toastId);
+
+        // Exportar a Excel
+        this.exportarExcelConDatos(pedidosProcesados);
+        this.toastrService.success(
+          `Exportados ${pedidosProcesados.length} pedidos exitosamente`,
+          'Exportación completada'
+        );
+      } else if (response && response.orders && response.orders.length === 0) {
+        this.toastrService.clear(toastRef.toastId);
+        this.toastrService.warning(
+          'No se encontraron pedidos en el rango de fechas seleccionado',
+          'Sin datos'
+        );
+      } else {
+        throw new Error(response?.error || 'No se recibieron datos del servidor');
+      }
+    } catch (error: any) {
+      console.error('❌ Error al obtener pedidos para exportar:', error);
+      this.toastrService.clear();
+      this.toastrService.error(
+        error.message || 'Error al obtener los pedidos para exportar. Intente nuevamente.',
+        'Error de exportación'
+      );
+    } finally {
+      this.loading = false;
+    }
+  }
+
+  /**
+   * Realiza la exportación a Excel con los datos proporcionados
+   * @param pedidos Array de pedidos a exportar
+   */
+  private exportarExcelConDatos(pedidos: Pedido[]): void {
+    // Transformar los datos para la exportación con columnas legibles
+    const datosExportar = pedidos.map((pedido) => ({
+      'Nro Pedido': pedido.nroPedido || '',
+      'Fecha Creación': pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleDateString('es-CO') : '',
+      'Fecha Entrega': pedido.fechaEntrega ? new Date(pedido.fechaEntrega).toLocaleDateString('es-CO') : '',
+      'Cliente': pedido.cliente?.nombres_completos || '',
+      'Documento': pedido.cliente?.documento || '',
+      'Teléfono': pedido.cliente?.numero_celular_comprador || '',
+      'Email': pedido.cliente?.correo_electronico_comprador || '',
+      'Ciudad': pedido.envio?.ciudad || '',
+      'Dirección': pedido.envio?.direccionEntrega || '',
+      'Zona': pedido.envio?.zonaCobro || '',
+      'Forma Entrega': pedido.formaEntrega || '',
+      'Horario Entrega': pedido.horarioEntrega || '',
+      'Estado Pago': pedido.estadoPago || '',
+      'Estado Proceso': pedido.estadoProceso || '',
+      'Validación': pedido.validacion ? 'Sí' : 'No',
+      'Valor Bruto': pedido.totalPedidoSinDescuento || 0,
+      'Descuento': pedido.totalDescuento || 0,
+      'Envío': pedido.totalEnvio || 0,
+      'IVA': pedido.totalImpuesto || 0,
+      'Subtotal': pedido.subtotal || 0,
+      'Total': pedido.totalPedididoConDescuento || 0,
+      'Anticipo': pedido.anticipo || 0,
+      'Falta por Pagar': pedido.faltaPorPagar || 0,
+      'Forma de Pago': pedido.formaDePago || '',
+      'Asesor': pedido.asesorAsignado?.name || '',
+      'Empacador': pedido.empacador || '',
+      'Despachador': pedido.despachador?.name || '',
+      'Transportador': typeof pedido.transportador === 'string' ? pedido.transportador : pedido.transportador?.nombre || '',
+      'Nro Factura': pedido.nroFactura || '',
+      'Nro Guía': pedido.nroShippingOrder || '',
+      'Canal': pedido.channel?.name || 'Regular',
+      'Notas': pedido.notasPedido?.notasCliente?.[0]?.nota || '',
     }));
 
     const worksheet: XLSX.WorkSheet = XLSX.utils.json_to_sheet(datosExportar);
+    
+    // Ajustar anchos de columna
+    const columnWidths = [
+      { wch: 12 }, // Nro Pedido
+      { wch: 12 }, // Fecha Creación
+      { wch: 12 }, // Fecha Entrega
+      { wch: 25 }, // Cliente
+      { wch: 15 }, // Documento
+      { wch: 15 }, // Teléfono
+      { wch: 25 }, // Email
+      { wch: 15 }, // Ciudad
+      { wch: 40 }, // Dirección
+      { wch: 15 }, // Zona
+      { wch: 15 }, // Forma Entrega
+      { wch: 15 }, // Horario Entrega
+      { wch: 12 }, // Estado Pago
+      { wch: 15 }, // Estado Proceso
+      { wch: 10 }, // Validación
+      { wch: 12 }, // Valor Bruto
+      { wch: 12 }, // Descuento
+      { wch: 10 }, // Envío
+      { wch: 10 }, // IVA
+      { wch: 12 }, // Subtotal
+      { wch: 12 }, // Total
+      { wch: 12 }, // Anticipo
+      { wch: 12 }, // Falta por Pagar
+      { wch: 15 }, // Forma de Pago
+      { wch: 20 }, // Asesor
+      { wch: 15 }, // Empacador
+      { wch: 15 }, // Despachador
+      { wch: 15 }, // Transportador
+      { wch: 12 }, // Nro Factura
+      { wch: 15 }, // Nro Guía
+      { wch: 12 }, // Canal
+      { wch: 40 }, // Notas
+    ];
+    worksheet['!cols'] = columnWidths;
+    
     const workbook: XLSX.WorkBook = {
       Sheets: { Pedidos: worksheet },
       SheetNames: ["Pedidos"],
     };
-    XLSX.writeFile(workbook, "Pedidos.xlsx");
+    
+    // Generar nombre de archivo con fecha
+    const fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `Pedidos_${fecha}.xlsx`);
+  }
+
+  /**
+   * Construye el objeto de filtro actual basado en el estado del componente
+   * Usado para exportación y otras operaciones que necesitan el filtro completo
+   */
+  private buildCurrentFilter(): any {
+    // Ensure dates are set with fallback to today
+    const fechaInicial = this.fechaInicial || new Date().toISOString().split("T")[0];
+    const fechaFinal = this.fechaFinal || new Date().toISOString().split("T")[0];
+
+    const startDate = new Date(fechaInicial + "T00:00:00");
+    const endDate = new Date(fechaFinal + "T23:59:59.999");
+
+    const filter: any = {
+      fechaInicial: startDate.toISOString(),
+      fechaFinal: endDate.toISOString(),
+      company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
+      tipoFecha: "fechaCreacion", // Cambiado de fechaEntrega a fechaCreacion para incluir TODOS los pedidos
+      estadoProceso: ["Todos"],
+    };
+
+    // Agregar búsqueda global si existe
+    if (this.searchQuery && this.searchQuery.trim() !== '') {
+      filter.globalFilter = this.searchQuery.trim();
+    }
+
+    // Apply quick filters for payment status
+    if (this.quickFilters.estadoPago !== "all") {
+      filter.estadosPago = [this.quickFilters.estadoPago];
+    } else {
+      if (this.isFromProduction) {
+        filter.estadosPago = ["Pospendiente", "PreAprobado", "Aprobado", "Pendiente"];
+      } else {
+        filter.estadosPago = ["Pospendiente", "PreAprobado", "Aprobado", "Pendiente", "Rechazado", "Precancelado", "Cancelado"];
+      }
+    }
+
+    // Apply quick filters for process status
+    if (this.quickFilters.estadoProceso !== "all") {
+      filter.estadoProceso = [this.quickFilters.estadoProceso];
+    }
+
+    return filter;
   }
 
   firstEvent(ev: string): void {

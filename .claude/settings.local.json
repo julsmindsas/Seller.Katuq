@@ -49,7 +49,9 @@
       "Bash(python3:*)",
       "Bash(timeout 10 npm run start-express)",
       "Bash(npm run:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(netstat:*)",
+      "Bash(timeout 60 npx tsc:*)"
     ],
     "deny": [],
     "ask": []

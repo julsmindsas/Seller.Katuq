@@ -289,8 +289,14 @@
                                                 {{ '# Pedido' | translate }}
                                                 <p-sortIcon field="nroPedido"></p-sortIcon>
                                                 <p-columnFilter type="text" field="nroPedido" display="menu"
-                                                    placeholder="{{'Buscar número de pedido' | translate}}"
-                                                    matchMode="contains" [showMenu]="true">
+                                                    matchMode="contains" [showMenu]="true" [showClearButton]="true">
+                                                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                                        <input type="text" pInputText
+                                                               [value]="value"
+                                                               (input)="onColumnFilterInput($event, filter)"
+                                                               placeholder="{{'# Pedido' | translate}}"
+                                                               class="p-column-filter">
+                                                    </ng-template>
                                                 </p-columnFilter>
                                             </th>
 
@@ -377,8 +383,14 @@
                                                 {{ 'Cliente' | translate }}
                                                 <p-sortIcon field="cliente.nombres_completos"></p-sortIcon>
                                                 <p-columnFilter type="text" field="cliente.nombres_completos"
-                                                    matchMode="contains" placeholder="{{'Cliente' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    matchMode="contains" [showMenu]="true" display="menu" [showClearButton]="true">
+                                                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                                        <input type="text" pInputText
+                                                               [value]="value"
+                                                               (input)="onColumnFilterInput($event, filter)"
+                                                               placeholder="{{'Cliente' | translate}}"
+                                                               class="p-column-filter">
+                                                    </ng-template>
                                                 </p-columnFilter>
                                             </th>
 
@@ -495,8 +507,14 @@
                                                 {{ 'Ciudad' | translate }}
                                                 <p-sortIcon field="envio.ciudad"></p-sortIcon>
                                                 <p-columnFilter type="text" field="envio.ciudad"
-                                                    matchMode="contains" placeholder="{{'Ciudad' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    matchMode="contains" [showMenu]="true" display="menu" [showClearButton]="true">
+                                                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                                        <input type="text" pInputText
+                                                               [value]="value"
+                                                               (input)="onColumnFilterInput($event, filter)"
+                                                               placeholder="{{'Ciudad' | translate}}"
+                                                               class="p-column-filter">
+                                                    </ng-template>
                                                 </p-columnFilter>
                                             </th>
 
@@ -579,8 +597,14 @@
                                                 {{ 'Transportador' | translate }}
                                                 <p-sortIcon field="transportador"></p-sortIcon>
                                                 <p-columnFilter type="text" field="transportador"
-                                                    matchMode="contains" placeholder="{{'Transportador' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    matchMode="contains" [showMenu]="true" display="menu" [showClearButton]="true">
+                                                    <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                                                        <input type="text" pInputText
+                                                               [value]="value"
+                                                               (input)="onColumnFilterInput($event, filter)"
+                                                               placeholder="{{'Transportador' | translate}}"
+                                                               class="p-column-filter">
+                                                    </ng-template>
                                                 </p-columnFilter>
                                             </th>
 
@@ -602,6 +626,28 @@
                                                     </ng-template>
                                                 </p-columnFilter>
                                             </th>
+                                        </tr>
+                                    </ng-template>
+
+                                    <!-- SKELETON LOADING: Feedback visual inmediato mientras carga -->
+                                    <ng-template pTemplate="loadingbody">
+                                        <tr *ngFor="let i of skeletonRows" class="skeleton-row">
+                                            <td style="width: 2.5rem;"><p-skeleton width="2rem" height="2rem" borderRadius="4px"></p-skeleton></td>
+                                            <td style="width: 8rem;"><p-skeleton width="70px" height="1rem"></p-skeleton></td>
+                                            <td style="width: 7rem;"><p-skeleton width="60px" height="1rem"></p-skeleton></td>
+                                            <td style="width: 5rem;"><p-skeleton width="30px" height="30px" shape="circle"></p-skeleton></td>
+                                            <td><p-skeleton width="80px" height="22px" borderRadius="12px"></p-skeleton></td>
+                                            <td><p-skeleton width="90px" height="22px" borderRadius="12px"></p-skeleton></td>
+                                            <td><p-skeleton width="30px" height="30px" shape="circle"></p-skeleton></td>
+                                            <td><p-skeleton width="120px" height="1rem"></p-skeleton></td>
+                                            <td><p-skeleton width="80px" height="1rem"></p-skeleton></td>
+                                            <td><p-skeleton width="60px" height="1rem"></p-skeleton></td>
+                                            <td><p-skeleton width="70px" height="1rem"></p-skeleton></td>
+                                            <td><p-skeleton width="70px" height="1rem"></p-skeleton></td>
+                                            <td><p-skeleton width="50px" height="1rem"></p-skeleton></td>
+                                            <td><p-skeleton width="80px" height="1rem"></p-skeleton></td>
+                                            <td><p-skeleton width="60px" height="1rem"></p-skeleton></td>
+                                            <td><p-skeleton width="70px" height="1rem"></p-skeleton></td>
                                         </tr>
                                     </ng-template>
 

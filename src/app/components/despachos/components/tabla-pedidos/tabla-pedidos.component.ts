@@ -474,13 +474,7 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
         sortField: event.sortField,
         sortOrder: event.sortOrder,
         sortDirection: event.sortOrder === 1 ? 'ASC' : event.sortOrder === -1 ? 'DESC' : 'NONE',
-        filters: event.filters ? Object.keys(event.filters).reduce((acc, key) => {
-          acc[key] = {
-            value: event.filters[key].value,
-            matchMode: event.filters[key].matchMode
-          };
-          return acc;
-        }, {} as any) : null,
+        filters: event.filters,
         globalFilter: event.globalFilter
       });
 

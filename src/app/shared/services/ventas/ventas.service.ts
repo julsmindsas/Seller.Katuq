@@ -195,6 +195,97 @@ export class VentasService extends BaseService {
 
     return this.post<PaginatedOrdersResponse>(endpoint, filter);
   }
+
+  /**
+   * Obtiene TODOS los pedidos filtrados para exportación usando paginación por lotes
+   * Hace múltiples requests para obtener todos los registros sin límite
+   * @since 2025.11.24 - Exportación por lotes para manejar cualquier cantidad de registros
+   * @param filter - Filter criteria
+   * @param totalRecords - Total de registros a exportar (del componente)
+   * @param onProgress - Callback opcional para reportar progreso
+   * @returns Promise con todos los pedidos agregados
+   */
+  async getAllOrdersForExportBatched(
+    filter: any,
+    totalRecords: number,
+    onProgress?: (loaded: number, total: number) => void
+  ): Promise<any[]> {
+    const BATCH_SIZE = 5000; // Aumentado de 500 a 5000 para mejor rendimiento (el backend ahora soporta hasta 50000)
+    const totalPages = Math.ceil(totalRecords / BATCH_SIZE);
+    let allOrders: any[] = [];
+
+    console.log(`📊 VentasService - Iniciando exportación por lotes: ${totalRecords} registros en ${totalPages} páginas (${BATCH_SIZE} por lote)`);
+
+    for (let page = 1; page <= totalPages; page++) {
+      const queryParams = `page=${page}&pageSize=${BATCH_SIZE}&includeMetrics=false&forExport=true`;
+      const endpoint = `/v1/orders/all/filter/optimized?${queryParams}`;
+
+      try {
+        const response = await this.post<PaginatedOrdersResponse>(endpoint, filter).toPromise();
+
+        if (response && response.orders && response.orders.length > 0) {
+          allOrders = allOrders.concat(response.orders);
+          const porcentaje = Math.round((allOrders.length / totalRecords) * 100);
+          console.log(`📦 Lote ${page}/${totalPages}: ${response.orders.length} pedidos obtenidos (Total: ${allOrders.length}/${totalRecords} - ${porcentaje}%)`);
+
+          if (onProgress) {
+            onProgress(allOrders.length, totalRecords);
+          }
+
+          // Si recibimos menos registros de los esperados, significa que llegamos al final
+          if (response.orders.length < BATCH_SIZE && allOrders.length < totalRecords) {
+            console.log(`📦 Lote ${page}: Última página recibida (${response.orders.length} < ${BATCH_SIZE}), finalizando`);
+            break;
+          }
+        } else {
+          // No más datos, salir del loop
+          console.log(`📦 Lote ${page}: Sin más datos, finalizando`);
+          break;
+        }
+      } catch (error) {
+        console.error(`❌ Error en lote ${page}:`, error);
+        throw error;
+      }
+    }
+
+    console.log(`✅ Exportación completada: ${allOrders.length} pedidos obtenidos de ${totalRecords} esperados`);
+    return allOrders;
+  }
+
+  /**
+   * Endpoint dedicado para exportación - SIN LÍMITE de paginación
+   * Usa el endpoint /v1/orders/all/export que devuelve TODOS los pedidos
+   * Solo requiere: company, fechaInicial, fechaFinal, tipoFecha
+   * @since 2025.11.24 - Nuevo endpoint dedicado para exportación
+   */
+  getAllOrdersForExportDirect(
+    company: string,
+    fechaInicial: string,
+    fechaFinal: string,
+    tipoFecha: string = 'fechaCreacion'
+  ): Observable<any> {
+    console.log(`📤 VentasService - Exportación directa: ${fechaInicial} a ${fechaFinal} (${tipoFecha})`);
+
+    const exportFilter = {
+      company,
+      fechaInicial,
+      fechaFinal,
+      tipoFecha
+    };
+
+    return this.post<any>('/v1/orders/all/export', exportFilter);
+  }
+
+  /**
+   * @deprecated Usar getAllOrdersForExportDirect para exportaciones
+   * Este método tiene límites de paginación del backend
+   */
+  getAllOrdersForExport(filter: any): Observable<PaginatedOrdersResponse> {
+    const queryParams = `page=1&pageSize=10000&includeMetrics=false&forExport=true`;
+    const endpoint = `/v1/orders/all/filter/optimized?${queryParams}`;
+    console.log('📊 VentasService - getAllOrdersForExport (legacy)');
+    return this.post<PaginatedOrdersResponse>(endpoint, filter);
+  }
   getOrdersByNroPedido(nroPedido: any) {
     return this.get<Pedido[]>('/v1/orders/byNroPedido/' + nroPedido);
   }
