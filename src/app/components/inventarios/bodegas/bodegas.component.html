@@ -97,12 +97,20 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <span *ngIf="bodega.ciudadesCobertura?.length > 0"
+                                    <!-- Nacional -->
+                                    <span *ngIf="bodega.coberturaNacional"
+                                          class="badge bg-primary p-2"
+                                          [ngbTooltip]="getCoberturaTooltip(bodega)">
+                                        <i class="fa fa-globe-americas me-1"></i> Nacional
+                                    </span>
+                                    <!-- Ciudades específicas -->
+                                    <span *ngIf="!bodega.coberturaNacional && bodega.ciudadesCobertura?.length > 0"
                                           class="badge bg-success p-2"
                                           [ngbTooltip]="getCoberturaTooltip(bodega)">
                                         {{ bodega.ciudadesCobertura.length }} ciudades
                                     </span>
-                                    <span *ngIf="!bodega.ciudadesCobertura || bodega.ciudadesCobertura.length === 0"
+                                    <!-- Sin cobertura -->
+                                    <span *ngIf="!bodega.coberturaNacional && (!bodega.ciudadesCobertura || bodega.ciudadesCobertura.length === 0)"
                                           class="text-muted">
                                         Sin cobertura
                                     </span>

@@ -11,12 +11,16 @@ import { CiudadCobertura } from '../../../../shared/models/inventarios/bodega.mo
 })
 export class SelectorCiudadesCoberturaComponent implements OnInit {
   @Input() ciudadesSeleccionadas: CiudadCobertura[] = [];
+  @Input() coberturaNacional: boolean = false;
 
   departamentos: string[] = [];
   departamentoSeleccionado: string = '';
   municipiosFiltrados: MunicipioDane[] = [];
   searchQuery: string = '';
   cargando: boolean = false;
+
+  // National coverage option
+  esCoberturaNacional: boolean = false;
 
   // Track selected cities by DANE code for quick lookup
   seleccionadasMap: Map<string, CiudadCobertura> = new Map();
@@ -32,11 +36,25 @@ export class SelectorCiudadesCoberturaComponent implements OnInit {
       this.departamentos = deptos;
     });
 
+    // Initialize national coverage from input
+    this.esCoberturaNacional = this.coberturaNacional || false;
+
     // Initialize selection map from input
     if (this.ciudadesSeleccionadas) {
       this.ciudadesSeleccionadas.forEach(c => {
         this.seleccionadasMap.set(c.codigo, c);
       });
+    }
+  }
+
+  toggleCoberturaNacional(): void {
+    this.esCoberturaNacional = !this.esCoberturaNacional;
+    if (this.esCoberturaNacional) {
+      // Clear city selection when enabling national coverage
+      this.seleccionadasMap.clear();
+      this.municipiosFiltrados = [];
+      this.departamentoSeleccionado = '';
+      this.searchQuery = '';
     }
   }
 
@@ -108,7 +126,10 @@ export class SelectorCiudadesCoberturaComponent implements OnInit {
 
   guardar(): void {
     const ciudades = Array.from(this.seleccionadasMap.values());
-    this.activeModal.close(ciudades);
+    this.activeModal.close({
+      coberturaNacional: this.esCoberturaNacional,
+      ciudadesCobertura: this.esCoberturaNacional ? [] : ciudades
+    });
   }
 
   cancelar(): void {

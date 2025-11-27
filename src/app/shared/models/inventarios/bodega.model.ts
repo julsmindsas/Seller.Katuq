@@ -14,5 +14,6 @@ export interface Bodega {
   departamento?: string;
   pais?: string;
   tipo: 'Física' | 'Transaccional';
+  coberturaNacional?: boolean;
   ciudadesCobertura?: CiudadCobertura[];
 }

@@ -8,8 +8,22 @@
 </div>
 
 <div class="modal-body">
+  <!-- National Coverage Option -->
+  <div class="alert mb-3" [ngClass]="esCoberturaNacional ? 'alert-success' : 'alert-light border'">
+    <div class="form-check form-switch d-flex align-items-center">
+      <input class="form-check-input me-2" type="checkbox" role="switch" id="coberturaNacional"
+             [checked]="esCoberturaNacional" (change)="toggleCoberturaNacional()"
+             style="width: 3em; height: 1.5em;">
+      <label class="form-check-label" for="coberturaNacional">
+        <i class="fa fa-globe-americas me-1"></i>
+        <strong>Cobertura Nacional</strong>
+        <span class="text-muted ms-2">- Esta bodega atiende todas las ciudades de Colombia</span>
+      </label>
+    </div>
+  </div>
+
   <!-- Filters Row -->
-  <div class="row mb-3">
+  <div class="row mb-3" [class.disabled-section]="esCoberturaNacional">
     <div class="col-md-5">
       <label class="form-label">Departamento</label>
       <select class="form-control" [(ngModel)]="departamentoSeleccionado"
@@ -35,7 +49,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <div class="row" [class.disabled-section]="esCoberturaNacional">
     <!-- Available Cities Panel -->
     <div class="col-md-7">
       <div class="card">
@@ -112,6 +126,8 @@
     <i class="fa fa-times"></i> Cancelar
   </button>
   <button type="button" class="btn btn-primary" (click)="guardar()">
-    <i class="fa fa-check"></i> Guardar ({{ selectedCount }} ciudades)
+    <i class="fa fa-check"></i>
+    <span *ngIf="esCoberturaNacional">Guardar (Cobertura Nacional)</span>
+    <span *ngIf="!esCoberturaNacional">Guardar ({{ selectedCount }} ciudades)</span>
   </button>
 </div>

@@ -32,6 +32,7 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   leafletLoaded = false;
 
   // Ciudades de cobertura
+  coberturaNacional: boolean = false;
   ciudadesCobertura: CiudadCobertura[] = [];
 
   constructor(
@@ -58,7 +59,8 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     if (this.bodegaData) {
       this.bodegaForm.patchValue(this.bodegaData);
-      // Load existing coverage cities
+      // Load existing coverage
+      this.coberturaNacional = this.bodegaData.coberturaNacional || false;
       if (this.bodegaData.ciudadesCobertura) {
         this.ciudadesCobertura = [...this.bodegaData.ciudadesCobertura];
       }
@@ -229,10 +231,12 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
       backdrop: 'static'
     });
     modalRef.componentInstance.ciudadesSeleccionadas = [...this.ciudadesCobertura];
+    modalRef.componentInstance.coberturaNacional = this.coberturaNacional;
 
-    modalRef.result.then((result: CiudadCobertura[]) => {
+    modalRef.result.then((result: { coberturaNacional: boolean; ciudadesCobertura: CiudadCobertura[] }) => {
       if (result) {
-        this.ciudadesCobertura = result;
+        this.coberturaNacional = result.coberturaNacional;
+        this.ciudadesCobertura = result.ciudadesCobertura;
       }
     }, () => {});
   }
@@ -244,6 +248,7 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
     }
     const bodega = {
       ...this.bodegaForm.value,
+      coberturaNacional: this.coberturaNacional,
       ciudadesCobertura: this.ciudadesCobertura
     };
     if (this.isEditMode) {

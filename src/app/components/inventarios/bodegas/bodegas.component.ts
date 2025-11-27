@@ -97,10 +97,15 @@ export class BodegasComponent implements OnInit {
       backdrop: 'static'
     });
     modalRef.componentInstance.ciudadesSeleccionadas = bodega.ciudadesCobertura || [];
+    modalRef.componentInstance.coberturaNacional = bodega.coberturaNacional || false;
 
-    modalRef.result.then((result: CiudadCobertura[]) => {
+    modalRef.result.then((result: { coberturaNacional: boolean; ciudadesCobertura: CiudadCobertura[] }) => {
       if (result) {
-        const bodegaActualizada = { ...bodega, ciudadesCobertura: result };
+        const bodegaActualizada = {
+          ...bodega,
+          coberturaNacional: result.coberturaNacional,
+          ciudadesCobertura: result.ciudadesCobertura
+        };
         this.cargando = true;
         this.bodegaService.actualizarBodega(bodegaActualizada).subscribe({
           next: () => {
@@ -117,6 +122,9 @@ export class BodegasComponent implements OnInit {
   }
 
   getCoberturaTooltip(bodega: any): string {
+    if (bodega.coberturaNacional) {
+      return 'Cobertura Nacional - Atiende todas las ciudades de Colombia';
+    }
     if (!bodega.ciudadesCobertura || bodega.ciudadesCobertura.length === 0) {
       return 'Sin ciudades de cobertura';
     }
