@@ -1,9 +1,11 @@
 import { Component, Input, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbActiveModal, NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { HttpClient } from '@angular/common/http';
 import { BodegaService } from '../../../../shared/services/bodegas/bodega.service';
 import { ToastrService } from 'ngx-toastr';
+import { CiudadCobertura } from '../../../../shared/models/inventarios/bodega.model';
+import { SelectorCiudadesCoberturaComponent } from '../selector-ciudades-cobertura/selector-ciudades-cobertura.component';
 
 @Component({
   selector: 'app-crear-bodegas',
@@ -29,9 +31,13 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   marker: any;
   leafletLoaded = false;
 
+  // Ciudades de cobertura
+  ciudadesCobertura: CiudadCobertura[] = [];
+
   constructor(
     private fb: FormBuilder,
     public activeModal: NgbActiveModal,
+    private modalService: NgbModal,
     private http: HttpClient,
     private bodegaService: BodegaService,
     private toastr: ToastrService
@@ -52,6 +58,10 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   ngOnInit(): void {
     if (this.bodegaData) {
       this.bodegaForm.patchValue(this.bodegaData);
+      // Load existing coverage cities
+      if (this.bodegaData.ciudadesCobertura) {
+        this.ciudadesCobertura = [...this.bodegaData.ciudadesCobertura];
+      }
     }
 
     this.bodegaForm.get('tipo')?.valueChanges.subscribe(tipo => {
@@ -212,12 +222,30 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
     });
   }
 
+  abrirSelectorCiudades(): void {
+    const modalRef = this.modalService.open(SelectorCiudadesCoberturaComponent, {
+      size: 'xl',
+      centered: true,
+      backdrop: 'static'
+    });
+    modalRef.componentInstance.ciudadesSeleccionadas = [...this.ciudadesCobertura];
+
+    modalRef.result.then((result: CiudadCobertura[]) => {
+      if (result) {
+        this.ciudadesCobertura = result;
+      }
+    }, () => {});
+  }
+
   guardarBodega() {
     if (this.bodegaForm.invalid) {
       this.marcarControlesComoTocados();
       return;
     }
-    const bodega = this.bodegaForm.value;
+    const bodega = {
+      ...this.bodegaForm.value,
+      ciudadesCobertura: this.ciudadesCobertura
+    };
     if (this.isEditMode) {
       this.bodegaService.actualizarBodega(bodega).subscribe({
         next: () => {

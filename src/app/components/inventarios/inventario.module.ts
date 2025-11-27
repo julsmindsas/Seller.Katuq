@@ -15,6 +15,7 @@ import { SharedModule } from '../../shared/shared.module';
 import { PaginatorModule } from 'primeng/paginator';
 import { BodegasComponent } from './bodegas/bodegas.component';
 import { CrearBodegasComponent } from './bodegas/crear-bodegas/crear-bodegas.component';
+import { SelectorCiudadesCoberturaComponent } from './bodegas/selector-ciudades-cobertura/selector-ciudades-cobertura.component';
 import { RecepcionMercanciaComponent } from './recepcion-mercancia/recepcion-mercancia.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TrasladosComponent } from './traslados/traslados.component';
@@ -56,6 +57,7 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
         InventarioCatalogoComponent,
         BodegasComponent,
         CrearBodegasComponent,
+        SelectorCiudadesCoberturaComponent,
         RecepcionMercanciaComponent,
         TrasladosComponent,
         HistorialMovimientosComponent

@@ -95,6 +95,28 @@
                     <div *ngIf="cargandoCiudades" class="text-info small mt-1"><i class="icofont icofont-spinner"></i> Cargando ciudades...</div>
                     <div *ngIf="!cargandoCiudades && ciudades.length === 0 && bodegaForm.get('departamento')?.value" class="text-warning small mt-1">No hay ciudades disponibles</div>
                   </div>
+
+                  <!-- Ciudades de Cobertura -->
+                  <div class="mb-3">
+                    <label class="form-label">
+                      <i class="fa fa-map-marked-alt"></i>&nbsp;Ciudades de Cobertura
+                      <span class="ms-1 text-muted" style="font-size: 0.9em;">
+                        ({{ ciudadesCobertura.length }} ciudades)
+                      </span>
+                    </label>
+                    <button type="button" class="btn btn-outline-primary w-100" (click)="abrirSelectorCiudades()">
+                      <i class="fa fa-plus"></i> Gestionar ciudades de cobertura
+                    </button>
+                    <div *ngIf="ciudadesCobertura.length > 0" class="mt-2">
+                      <span *ngFor="let ciudad of ciudadesCobertura.slice(0, 5)"
+                            class="badge bg-light text-dark me-1 mb-1 p-2">
+                        {{ ciudad.nombre }}
+                      </span>
+                      <span *ngIf="ciudadesCobertura.length > 5" class="badge bg-secondary p-2">
+                        +{{ ciudadesCobertura.length - 5 }} mas
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

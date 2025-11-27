@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CrearBodegasComponent } from './crear-bodegas/crear-bodegas.component';
+import { SelectorCiudadesCoberturaComponent } from './selector-ciudades-cobertura/selector-ciudades-cobertura.component';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
+import { CiudadCobertura } from '../../../shared/models/inventarios/bodega.model';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -86,6 +88,43 @@ export class BodegasComponent implements OnInit {
         });
       }
     });
+  }
+
+  abrirModalCobertura(bodega: any): void {
+    const modalRef = this.modalService.open(SelectorCiudadesCoberturaComponent, {
+      size: 'xl',
+      centered: true,
+      backdrop: 'static'
+    });
+    modalRef.componentInstance.ciudadesSeleccionadas = bodega.ciudadesCobertura || [];
+
+    modalRef.result.then((result: CiudadCobertura[]) => {
+      if (result) {
+        const bodegaActualizada = { ...bodega, ciudadesCobertura: result };
+        this.cargando = true;
+        this.bodegaService.actualizarBodega(bodegaActualizada).subscribe({
+          next: () => {
+            Swal.fire('Actualizado', 'Cobertura actualizada correctamente.', 'success');
+            this.cargarBodegas();
+          },
+          error: () => {
+            Swal.fire('Error', 'Error al actualizar la cobertura.', 'error');
+            this.cargando = false;
+          }
+        });
+      }
+    }, () => {});
+  }
+
+  getCoberturaTooltip(bodega: any): string {
+    if (!bodega.ciudadesCobertura || bodega.ciudadesCobertura.length === 0) {
+      return 'Sin ciudades de cobertura';
+    }
+    const primeras = bodega.ciudadesCobertura.slice(0, 5).map((c: CiudadCobertura) => c.nombre).join(', ');
+    if (bodega.ciudadesCobertura.length > 5) {
+      return primeras + ` y ${bodega.ciudadesCobertura.length - 5} mas...`;
+    }
+    return primeras;
   }
 
   exportarExcel() {

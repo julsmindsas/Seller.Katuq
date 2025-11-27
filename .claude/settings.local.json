@@ -51,7 +51,8 @@
       "Bash(npm run:*)",
       "Bash(/dev/null)",
       "Bash(netstat:*)",
-      "Bash(timeout 60 npx tsc:*)"
+      "Bash(timeout 60 npx tsc:*)",
+      "WebFetch(domain:docs.wompi.co)"
     ],
     "deny": [],
     "ask": []

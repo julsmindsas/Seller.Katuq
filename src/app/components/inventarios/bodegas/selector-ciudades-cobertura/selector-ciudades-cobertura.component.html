@@ -1,0 +1,117 @@
+<div class="modal-header">
+  <h4 class="modal-title">
+    <i class="fa fa-map-marker-alt"></i>&nbsp;Ciudades de Cobertura
+  </h4>
+  <button type="button" class="close" aria-label="Close" (click)="cancelar()">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+
+<div class="modal-body">
+  <!-- Filters Row -->
+  <div class="row mb-3">
+    <div class="col-md-5">
+      <label class="form-label">Departamento</label>
+      <select class="form-control" [(ngModel)]="departamentoSeleccionado"
+              (change)="onDepartamentoChange()">
+        <option value="">-- Todos los departamentos --</option>
+        <option *ngFor="let depto of departamentos" [value]="depto">{{ depto }}</option>
+      </select>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label">Buscar ciudad</label>
+      <div class="input-group">
+        <input type="text" class="form-control" [(ngModel)]="searchQuery"
+               placeholder="Nombre o codigo DANE"
+               (keyup.enter)="onSearch()"
+               (input)="onSearch()">
+        <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+          <i class="fa fa-search"></i>
+        </button>
+      </div>
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+      <span class="badge bg-primary p-2 w-100 text-center">{{ selectedCount }} seleccionadas</span>
+    </div>
+  </div>
+
+  <div class="row">
+    <!-- Available Cities Panel -->
+    <div class="col-md-7">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+          <span><i class="fa fa-list"></i> Ciudades disponibles</span>
+          <div>
+            <button class="btn btn-sm btn-outline-primary me-1" (click)="selectAllVisible()"
+                    [disabled]="municipiosFiltrados.length === 0">
+              <i class="fa fa-check-double"></i> Todos
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" (click)="deselectAllVisible()"
+                    [disabled]="municipiosFiltrados.length === 0">
+              <i class="fa fa-times"></i> Ninguno
+            </button>
+          </div>
+        </div>
+        <div class="card-body city-list-container">
+          <div *ngIf="cargando" class="text-center py-4">
+            <i class="fa fa-spinner fa-spin fa-2x"></i>
+            <p class="mt-2 text-muted">Cargando...</p>
+          </div>
+          <div *ngIf="!cargando && municipiosFiltrados.length === 0" class="text-center text-muted py-4">
+            <i class="fa fa-search fa-2x mb-2"></i>
+            <p>Seleccione un departamento o busque una ciudad</p>
+          </div>
+          <div *ngFor="let municipio of municipiosFiltrados"
+               class="city-item d-flex align-items-center p-2"
+               [class.selected]="isSelected(municipio)"
+               (click)="toggleSelection(municipio)">
+            <input type="checkbox" [checked]="isSelected(municipio)" class="form-check-input me-2" (click)="$event.stopPropagation()">
+            <div class="flex-grow-1">
+              <strong>{{ municipio.nombre }}</strong>
+              <small class="text-muted d-block">{{ municipio.departamento }} - {{ municipio.codigo }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selected Cities Panel -->
+    <div class="col-md-5">
+      <div class="card">
+        <div class="card-header py-2">
+          <i class="fa fa-check-circle"></i> Seleccionadas ({{ selectedCount }})
+        </div>
+        <div class="card-body selected-list-container">
+          <div *ngIf="selectedCount === 0" class="text-center text-muted py-4">
+            <i class="fa fa-inbox fa-2x mb-2"></i>
+            <p>Ninguna ciudad seleccionada</p>
+          </div>
+
+          <!-- Group by department -->
+          <div *ngFor="let group of selectedByDepartment" class="mb-3">
+            <div class="department-header">
+              <i class="fa fa-map"></i> {{ group.departamento }}
+              <span class="badge bg-secondary ms-1">{{ group.ciudades.length }}</span>
+            </div>
+            <div *ngFor="let ciudad of group.ciudades"
+                 class="selected-city-item d-flex justify-content-between align-items-center">
+              <span>{{ ciudad.nombre }}</span>
+              <button class="btn btn-sm btn-link text-danger p-0" (click)="removeCity(ciudad.codigo)">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-secondary" (click)="cancelar()">
+    <i class="fa fa-times"></i> Cancelar
+  </button>
+  <button type="button" class="btn btn-primary" (click)="guardar()">
+    <i class="fa fa-check"></i> Guardar ({{ selectedCount }} ciudades)
+  </button>
+</div>

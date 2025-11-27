@@ -1,3 +1,9 @@
+export interface CiudadCobertura {
+  codigo: string;        // Código DANE
+  nombre: string;        // Nombre municipio
+  departamento: string;  // Departamento
+}
+
 export interface Bodega {
   id?: string;
   nombre: string;
@@ -8,4 +14,5 @@ export interface Bodega {
   departamento?: string;
   pais?: string;
   tipo: 'Física' | 'Transaccional';
+  ciudadesCobertura?: CiudadCobertura[];
 }

@@ -63,6 +63,9 @@
                                     <p-sortIcon field="tipo"></p-sortIcon>
                                 </th>
                                 <th class="text-center">
+                                    {{ "Cobertura" | translate }}
+                                </th>
+                                <th class="text-center">
                                     {{ "Acciones" | translate }}
                                 </th>
                             </tr>
@@ -82,16 +85,32 @@
                                 </td>
                                 <td class="text-center">
                                     <!-- Para bodegas Físicas -->
-                                    <span *ngIf="bodega.tipo === 'Física'" 
+                                    <span *ngIf="bodega.tipo === 'Física'"
                                           class="badge rounded-pill bg-primary p-2">
                                         <i class="fa fa-building me-1"></i> {{ bodega.tipo }}
                                     </span>
-                                    
+
                                     <!-- Para bodegas Transaccionales -->
-                                    <span *ngIf="bodega.tipo === 'Transaccional'" 
+                                    <span *ngIf="bodega.tipo === 'Transaccional'"
                                           class="badge rounded-pill bg-info p-2">
                                         <i class="fa fa-cloud me-1"></i> {{ bodega.tipo }}
                                     </span>
+                                </td>
+                                <td class="text-center">
+                                    <span *ngIf="bodega.ciudadesCobertura?.length > 0"
+                                          class="badge bg-success p-2"
+                                          [ngbTooltip]="getCoberturaTooltip(bodega)">
+                                        {{ bodega.ciudadesCobertura.length }} ciudades
+                                    </span>
+                                    <span *ngIf="!bodega.ciudadesCobertura || bodega.ciudadesCobertura.length === 0"
+                                          class="text-muted">
+                                        Sin cobertura
+                                    </span>
+                                    <i placement="top" ngbTooltip="Gestionar cobertura"
+                                        style="font-size: 16px; margin-left: 8px; cursor: pointer;"
+                                        class="fa fa-map-marker-alt fc-primary"
+                                        (click)="abrirModalCobertura(bodega)">
+                                    </i>
                                 </td>
                                 <td class="text-center">
                                     <i placement="top" ngbTooltip="Editar"
@@ -108,7 +127,7 @@
 
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td colspan="5">No hay bodegas registradas</td>
+                                <td colspan="6">No hay bodegas registradas</td>
                             </tr>
                         </ng-template>
 
