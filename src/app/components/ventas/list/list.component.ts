@@ -4180,7 +4180,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       );
     }
 
-    // 🚚 MANEJO DEL COSTO DE ENVÍO según la forma de entrega
+    // 🚚 MANEJO DEL COSTO DE ENVÍO Y DATOS DE ENVÍO según la forma de entrega
     if (
       formaEntregaFinal &&
       formaEntregaFinal.toLowerCase().includes("recoge")
@@ -4202,6 +4202,47 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         // Recalcular totales del pedido
         this.recalcularTotalesPedido(pedido);
       }
+
+      // 📦 ACTUALIZAR DATOS DE ENVÍO para "recoge en tienda"
+      // Establecer todos los campos como N/A excepto alias y ciudad
+      if (!pedido.envio) {
+        pedido.envio = {} as any;
+      }
+
+      // Preservar la ciudad actual si existe, de lo contrario usar N/A
+      const ciudadActual = pedido.envio.ciudad || "N/A";
+
+      // Establecer datos de envío según el formato requerido para recoge en tienda
+      pedido.envio = {
+        ...pedido.envio,
+        nombres: "N/A",
+        apellidos: "N/A",
+        alias: "Recoge",
+        direccionEntrega: "N/A",
+        nombreUnidad: "N/A",
+        especificacionesInternas: "N/A",
+        departamento: "N/A",
+        ciudad: ciudadActual, // Mantener la ciudad actual
+        barrio: "N/A",
+        codigoPV: "N/A",
+        indicativoCel: "N/A",
+        celular: "N/A",
+        indicativoOtroNumero: "N/A",
+        otroNumero: "N/A",
+        zonaCobro: "N/A",
+        observaciones: "N/A",
+        pais: pedido.envio.pais || "N/A",
+        valorZonaCobro: 0,
+      };
+
+      console.log(
+        "📦 SINCRONIZACIÓN - Datos de envío actualizados para recoge en tienda:",
+        {
+          nroPedido: pedido.nroPedido,
+          formaEntrega: formaEntregaFinal,
+          datosEnvio: pedido.envio,
+        },
+      );
     }
 
     console.log("🔄 SINCRONIZACIÓN - Estado final:", {
@@ -4573,6 +4614,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     }
+
+    // 🔄 Sincronizar forma de entrega y actualizar datos de envío si es necesario
+    this.sincronizarFormaEntrega(order);
 
     // Log del payload que se envía al servicio
     console.log("📤 PAYLOAD EDIT ORDER:", {
@@ -5397,7 +5441,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param pedido Pedido al que se aplicará el descuento
    */
   aplicarCodigoDescuento(content: any, pedido: Pedido) {
-    if (!this.canModifyProducts(pedido)) {
+    // Permitir a administradores aplicar descuentos incluso en pedidos congelados
+    if (!this.canModifyProducts(pedido) && !this.isAdminUser()) {
       this.toastrService.warning(
         `No se pueden aplicar descuentos. El pedido está en estado: ${pedido.estadoProceso}`,
         "Pedido Congelado",

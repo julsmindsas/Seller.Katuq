@@ -1764,7 +1764,7 @@
                     </button>
 
                     <!-- Aplicar Código de Descuento -->
-                    <button *ngIf="!isFromProduction && canModifyProducts(selectedOrder)" class="option-btn" type="button"
+                    <button *ngIf="!isFromProduction && (canModifyProducts(selectedOrder) || isAdminUser())" class="option-btn" type="button"
                         (click)="aplicarCodigoDescuento(descuentoModal, selectedOrder); closeOptionsModal()">
                         <div class="option-icon discount-icon">
                             <i class="fa fa-ticket"></i>
