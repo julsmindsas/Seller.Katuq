@@ -2043,6 +2043,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  /**
+   * Calcula el subtotal de productos SIN IVA
+   * Incluye: productos, adiciones y preferencias
+   * Consistente con PaymentService
+   */
   checkPriceScale(pedido) {
     let totalPrecioSinIVADef = 0;
 
@@ -2051,113 +2056,119 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         // Calcular precio base del producto con escalas de volumen
         const precioUnitarioSinIVA =
           this.calcularPrecioUnitarioSinIVA(itemCarrito);
-        let totalPrecioSinIVA = precioUnitarioSinIVA * itemCarrito.cantidad;
+        const cantidad = Number(itemCarrito.cantidad) || 0;
+        let totalItemSinIVA = precioUnitarioSinIVA * cantidad;
 
-        // Sumar precios de adiciones
-        if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
+        // Sumar precios de adiciones (usando valorUnitarioSinIva - CORRECTO)
+        if (itemCarrito.configuracion?.adiciones) {
           itemCarrito.configuracion.adiciones.forEach((adicion) => {
-            try {
-              if (adicion["referencia"]["precioUnitario"]) {
-                totalPrecioSinIVA +=
-                  adicion["cantidad"] *
-                  (adicion["referencia"]["precioUnitario"] ?? 1) *
-                  itemCarrito.cantidad;
-              }
-            } catch (error) {
-              console.log("Pedido: ", adicion);
-            }
+            const valorAdicionSinIva = Number(adicion.valorUnitarioSinIva) || 0;
+            totalItemSinIVA += valorAdicionSinIva * cantidad;
           });
         }
 
         // Sumar precios de preferencias
-        if (
-          itemCarrito.configuracion &&
-          itemCarrito.configuracion.preferencias
-        ) {
+        if (itemCarrito.configuracion?.preferencias) {
           itemCarrito.configuracion.preferencias.forEach((preferencia) => {
-            totalPrecioSinIVA +=
-              preferencia["valorUnitarioSinIva"] * itemCarrito.cantidad;
+            const valorPreferenciaSinIva = Number(preferencia.valorUnitarioSinIva) || 0;
+            totalItemSinIVA += valorPreferenciaSinIva * cantidad;
           });
         }
 
-        totalPrecioSinIVADef += totalPrecioSinIVA;
+        if (!isNaN(totalItemSinIVA)) {
+          totalPrecioSinIVADef += totalItemSinIVA;
+        }
       });
     }
 
-    return totalPrecioSinIVADef;
+    return isNaN(totalPrecioSinIVADef) ? 0 : totalPrecioSinIVADef;
   }
 
   /**
-   * Calcula el IVA unitario considerando escalas de volumen
+   * Calcula el IVA total extrayéndolo del precio CON IVA
+   * Aplica el descuento antes de calcular el IVA
+   * Fórmula: IVA = (valorConDescuento / (1 + %IVA)) * %IVA
+   * Consistente con PaymentService
    */
-  private calcularIVAUnitario(itemCarrito: any): number {
-    const producto = itemCarrito.producto;
-    const cantidad = itemCarrito.cantidad;
+  checkIVAPrice(pedido): number {
+    let totalPrecioIVADef = 0;
 
-    if (!producto?.precio) {
+    if (!pedido?.carrito) {
       return 0;
     }
 
-    const preciosVolumen = producto.precio.preciosVolumen || [];
+    // Obtener porcentaje de descuento del pedido
+    const porceDescuento = (Number(pedido.porceDescuento) || 0) / 100;
 
-    // Si no hay precios por volumen, usar IVA base
-    if (preciosVolumen.length === 0) {
-      return Number(producto.precio.valorIva) || 0;
-    }
+    pedido.carrito.forEach((itemCarrito) => {
+      const producto = itemCarrito?.producto;
+      const cantidad = Number(itemCarrito?.cantidad) || 0;
+      const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
 
-    // Buscar el precio por volumen que aplique para esta cantidad
-    const precioVolumen = preciosVolumen.find((x: any) => {
-      const min = Number(x.numeroUnidadesInicial) || 0;
-      const max = Number(x.numeroUnidadesLimite) || Infinity;
-      return cantidad >= min && cantidad <= max;
+      // Obtener precio CON IVA y porcentaje de IVA
+      let precioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
+      let porcentajeIvaStr = (producto?.precio?.precioUnitarioIva ?? "0").toString();
+
+      // Buscar precio por volumen si aplica
+      if (preciosVolumen.length > 0) {
+        for (const x of preciosVolumen) {
+          const unidadesInicial = Number(x.numeroUnidadesInicial) || 0;
+          const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
+
+          if (cantidad >= unidadesInicial && cantidad <= unidadesLimite) {
+            precioConIva = Number(x.valorUnitarioPorVolumenIva) || 0;
+            porcentajeIvaStr = (x.valorIVAPorVolumen ?? "0").toString();
+            break;
+          }
+        }
+      }
+
+      // Calcular IVA del producto principal
+      const valorConIva = precioConIva * cantidad;
+      const valorConDescuento = valorConIva * (1 - porceDescuento);
+      const porcentajeIva = (Number(porcentajeIvaStr) || 0) / 100;
+
+      if (1 + porcentajeIva !== 0) {
+        const ivaProducto = (valorConDescuento / (1 + porcentajeIva)) * porcentajeIva;
+        if (!isNaN(ivaProducto)) {
+          totalPrecioIVADef += ivaProducto;
+        }
+      }
+
+      // IVA de adiciones
+      if (itemCarrito.configuracion?.adiciones) {
+        itemCarrito.configuracion.adiciones.forEach((adicion) => {
+          const valorAdicionConIva = (Number(adicion.precioTotalConIva) || 0) * cantidad;
+          const valorAdicionConDesc = valorAdicionConIva * (1 - porceDescuento);
+          const porcAdicion = (Number(adicion.porcentajeIva) || 0) / 100;
+
+          if (1 + porcAdicion !== 0) {
+            const ivaAdicion = (valorAdicionConDesc / (1 + porcAdicion)) * porcAdicion;
+            if (!isNaN(ivaAdicion)) {
+              totalPrecioIVADef += ivaAdicion;
+            }
+          }
+        });
+      }
+
+      // IVA de preferencias
+      if (itemCarrito.configuracion?.preferencias) {
+        itemCarrito.configuracion.preferencias.forEach((preferencia) => {
+          const valorPrefConIva = (Number(preferencia.precioTotalConIva) || 0) * cantidad;
+          const valorPrefConDesc = valorPrefConIva * (1 - porceDescuento);
+          const porcPref = (Number(preferencia.porcentajeIva) || 0) / 100;
+
+          if (1 + porcPref !== 0) {
+            const ivaPref = (valorPrefConDesc / (1 + porcPref)) * porcPref;
+            if (!isNaN(ivaPref)) {
+              totalPrecioIVADef += ivaPref;
+            }
+          }
+        });
+      }
     });
 
-    // Si se encuentra un precio por volumen, usar su IVA; sino usar IVA base
-    if (precioVolumen) {
-      return Number(precioVolumen.valorUnitarioPorVolumenIva) || 0;
-    } else {
-      return Number(producto.precio.valorIva) || 0;
-    }
-  }
-
-  checkIVAPrice(pedido) {
-    let totalPrecioIVADef = 0;
-
-    if (pedido && pedido.carrito) {
-      pedido.carrito.forEach((itemCarrito) => {
-        // Calcular IVA base del producto con escalas de volumen
-        const ivaUnitario = this.calcularIVAUnitario(itemCarrito);
-        let totalPrecioIVA = ivaUnitario * itemCarrito.cantidad;
-
-        // Sumar precios de adiciones
-        if (itemCarrito.configuracion && itemCarrito.configuracion.adiciones) {
-          itemCarrito.configuracion.adiciones.forEach((adicion) => {
-            try {
-              if (adicion["referencia"]["precioIva"]) {
-                totalPrecioIVA +=
-                  adicion["cantidad"] *
-                  adicion["referencia"]["precioIva"] *
-                  itemCarrito.cantidad;
-              }
-            } catch (error) { }
-          });
-        }
-
-        // Sumar precios de preferencias
-        if (
-          itemCarrito.configuracion &&
-          itemCarrito.configuracion.preferencias
-        ) {
-          itemCarrito.configuracion.preferencias.forEach((preferencia) => {
-            totalPrecioIVA += preferencia["valorIva"] * itemCarrito.cantidad;
-          });
-        }
-
-        totalPrecioIVADef += totalPrecioIVA;
-      });
-    }
-
-    return totalPrecioIVADef;
+    return isNaN(totalPrecioIVADef) ? 0 : totalPrecioIVADef;
   }
 
   private registerCustomFilters() {
@@ -2716,25 +2727,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
           // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
+          // ✅ CORREGIDO: No recalcular estados finales (Rechazado, Cancelado, Precancelado)
+          const estadosFinales = ["Rechazado", "Cancelado", "Precancelado"];
+          const esEstadoFinal = estadosFinales.includes(order.estadoPago);
+
           const debeRecalcular =
-            !order._estadoCalculadoEnFrontend ||
-            order.estadoPago === "Precancelado" ||
-            order.estadoPago === "Cancelado";
+            !order._estadoCalculadoEnFrontend &&
+            !esEstadoFinal;
 
           console.log(`🔍 VERIFICACIÓN ESTADO - Pedido ${order.nroPedido}:`, {
             _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
             _timestamp: order._timestamp,
             debeRecalcular: debeRecalcular,
+            esEstadoFinal: esEstadoFinal,
             estadoActual: order.estadoPago,
           });
 
           // Actualizar estado de pago basado en los cálculos reales
           // SOLO recalcular estado si no viene ya calculado del frontend
-          if (
-            debeRecalcular &&
-            order.estadoPago !== "Precancelado" &&
-            order.estadoPago !== "Cancelado"
-          ) {
+          // ✅ NUNCA recalcular estados finales (Rechazado, Cancelado, Precancelado)
+          if (debeRecalcular && !esEstadoFinal) {
             // Regla: si la forma de entrega es "Recoge", el estado de pago debe ser siempre "Pendiente"
             const formaEntregaActual =
               (order.formaEntrega as string) ||
@@ -2779,11 +2791,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             }
           } else if (
             order._estadoCalculadoEnFrontend &&
-            order.estadoPago !== "Precancelado" &&
-            order.estadoPago !== "Cancelado"
+            !esEstadoFinal
           ) {
             // 🔒 PROTECCIÓN MEJORADA: Si el estado ya fue calculado en el frontend,
             // verificar que sea consistente con los pagos actuales para evitar inconsistencias
+            // ✅ NUNCA modificar estados finales (Rechazado, Cancelado, Precancelado)
 
             // Verificar si hay inconsistencias entre el estado y los pagos
             const totalPedido = Number(order.totalPedididoConDescuento || 0);

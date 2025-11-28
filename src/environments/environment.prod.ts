@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.11.27.1 - 27 de Noviembre 2025 (Beta)",
+  version: "2025.11.28.3 - 28 de Noviembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -20,7 +20,7 @@ export const environment = {
   // Agent Builder Backend (KAI)
   agentBuilderApi: "https://back.katuq.com", // REST API a través del backend principal
   agentBuilderWs: "wss://back.katuq.com/ws", // WebSocket
-
+  adkBackendApi: "http://localhost:8080", // ADK Flask server directo
   wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
   voiceWsUrl: "wss://tu-servidor-ejemplo.com",
   wompi: {

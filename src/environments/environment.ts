@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.11.27.1 - 27 de Noviembre 2025 (Beta)",
+  version: "2025.11.28.3 - 28 de Noviembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -13,13 +13,16 @@ export const environment = {
   },
   urlPermitidas:
     "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
-  //urlApi: "http://localhost:3300", // API Local - Backend Principal Katuq,
-  urlApi: "https://back.katuq.com",
+  urlApi: "http://localhost:3300", // API Local - Backend Principal Katuq,
+  //urlApi: "https://back.katuq.com",
   //urlApi: "https://us-central1-katuq-new.cloudfunctions.net/api", // API GCP
 
   // Agent Builder Backend (KAI) - A través del backend principal (proxy)
   agentBuilderApi: "http://localhost:3300", // REST API a través del backend principal
   agentBuilderWs: "ws://localhost:3892/ws", // WebSocket directo (no puede usar proxy HTTP)
+
+  // ADK Backend directo (Python/Flask) - Para Chat Pro streaming
+  adkBackendApi: "http://localhost:8080", // ADK Flask server directo
 
   wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
   voiceWsUrl: "wss://api.katuq.com/voice-websocket",

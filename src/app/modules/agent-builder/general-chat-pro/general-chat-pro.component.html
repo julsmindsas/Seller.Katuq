@@ -1,0 +1,236 @@
+<div class="gemini-chat-container">
+  <!-- Minimal Header -->
+  <header class="chat-topbar">
+    <div class="topbar-left">
+      <button class="back-btn" routerLink="/agent-builder">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <div class="model-selector">
+        <span class="model-name">KAI Pro</span>
+        <i class="pi pi-chevron-down"></i>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="active-team" *ngIf="activeAgents.size > 0">
+        <div class="team-avatars">
+          <div
+            *ngFor="let agent of getActiveAgentsArray()"
+            class="mini-avatar"
+            [pTooltip]="agent"
+            tooltipPosition="bottom"
+          >
+            {{ agent.charAt(0) }}
+          </div>
+        </div>
+      </div>
+
+      <button class="icon-btn" pTooltip="Limpiar" (click)="clearChat()" [disabled]="isExecuting">
+        <i class="pi pi-refresh"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Chat Area -->
+  <main class="chat-main" #messagesContainer>
+    <!-- Empty State - Gemini Style -->
+    <div class="welcome-screen" *ngIf="messages.length === 0">
+      <div class="welcome-content">
+        <div class="gradient-icon">
+          <i class="pi pi-sparkles"></i>
+        </div>
+        <h1>Hola, <span class="gradient-text">Daniel</span></h1>
+        <p class="subtitle">Como puedo ayudarte hoy?</p>
+
+        <div class="suggestion-cards">
+          <button
+            class="suggestion-card"
+            (click)="userInput = 'Dame un resumen del negocio'; sendMessage()"
+          >
+            <i class="pi pi-chart-bar"></i>
+            <span>Dame un resumen del negocio</span>
+          </button>
+          <button
+            class="suggestion-card"
+            (click)="userInput = 'Cuantas ventas tenemos hoy?'; sendMessage()"
+          >
+            <i class="pi pi-dollar"></i>
+            <span>Cuantas ventas tenemos hoy?</span>
+          </button>
+          <button
+            class="suggestion-card"
+            (click)="userInput = 'Que productos estan bajos de stock?'; sendMessage()"
+          >
+            <i class="pi pi-box"></i>
+            <span>Productos bajos de stock</span>
+          </button>
+          <button
+            class="suggestion-card"
+            (click)="userInput = 'Cuantos pedidos hay pendientes?'; sendMessage()"
+          >
+            <i class="pi pi-truck"></i>
+            <span>Pedidos pendientes</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div class="messages-wrapper" *ngIf="messages.length > 0">
+      <div
+        *ngFor="let message of messages; trackBy: trackByMessageId"
+        class="message-row"
+        [class.user-row]="isUserMessage(message)"
+        [class.agent-row]="!isUserMessage(message)"
+      >
+        <!-- User Message -->
+        <div class="user-bubble" *ngIf="isUserMessage(message)">
+          {{ message.content }}
+        </div>
+
+        <!-- Agent Message -->
+        <div class="agent-response" *ngIf="!isUserMessage(message)">
+          <!-- Agent Avatar -->
+          <div
+            class="agent-avatar"
+            [style.background]="message.speaker.color"
+          >
+            <i class="pi" [ngClass]="message.speaker.avatar || 'pi-sparkles'"></i>
+          </div>
+
+          <!-- Agent Content -->
+          <div class="agent-content">
+            <!-- Agent Name + Event Type -->
+            <div class="agent-meta">
+              <span class="agent-name">{{ message.speaker.name }}</span>
+              <span class="event-badge" *ngIf="message.eventType !== 'agent_message' && message.eventType !== 'final_response'">
+                <i class="pi" [ngClass]="getEventIcon(message.eventType)"></i>
+                {{ getEventLabel(message.eventType) }}
+              </span>
+            </div>
+
+            <!-- Delegation Info -->
+            <div class="delegation-chip" *ngIf="message.delegationTarget">
+              <i class="pi pi-arrow-right"></i>
+              <span
+                class="target-name"
+                [style.color]="message.delegationTarget.color"
+              >
+                {{ message.delegationTarget.name }}
+              </span>
+            </div>
+
+            <!-- Message Text -->
+            <div
+              class="agent-text"
+              [innerHTML]="formatMessageContent(message.content)"
+            ></div>
+
+            <!-- Tool Card -->
+            <div class="tool-card" *ngIf="message.toolName">
+              <button class="tool-header" (click)="toggleToolDetails(message)">
+                <div class="tool-icon">
+                  <i class="pi pi-code"></i>
+                </div>
+                <span class="tool-name">{{ message.toolName }}</span>
+                <span class="tool-time" *ngIf="message.executionTimeMs">
+                  {{ formatExecutionTime(message.executionTimeMs) }}
+                </span>
+                <i
+                  class="pi chevron"
+                  [ngClass]="message.isExpanded ? 'pi-chevron-up' : 'pi-chevron-down'"
+                ></i>
+              </button>
+
+              <div class="tool-body" *ngIf="message.isExpanded">
+                <div class="code-block" *ngIf="message.toolParams">
+                  <span class="code-label">Parametros</span>
+                  <pre>{{ formatJson(message.toolParams) }}</pre>
+                </div>
+                <div class="code-block" *ngIf="message.toolResult">
+                  <span class="code-label">Resultado</span>
+                  <pre>{{ formatJson(message.toolResult) }}</pre>
+                </div>
+              </div>
+            </div>
+
+            <!-- Vote Badge -->
+            <div class="vote-chip" *ngIf="message.vote">
+              <i
+                class="pi"
+                [ngClass]="{
+                  'pi-check-circle': message.vote === 'APPROVE',
+                  'pi-times-circle': message.vote === 'REJECT',
+                  'pi-clock': message.vote === 'PENDING'
+                }"
+                [class.approve]="message.vote === 'APPROVE'"
+                [class.reject]="message.vote === 'REJECT'"
+              ></i>
+              <span>{{ message.vote }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Thinking Indicator -->
+      <div class="message-row agent-row" *ngIf="isExecuting">
+        <div class="agent-response">
+          <div class="agent-avatar thinking-avatar">
+            <i class="pi pi-sparkles"></i>
+          </div>
+          <div class="agent-content">
+            <div class="thinking-indicator">
+              <div class="thinking-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <span class="thinking-text">Pensando...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Error Toast -->
+  <div class="error-toast" *ngIf="errorMessage">
+    <i class="pi pi-exclamation-circle"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Input Area - Floating -->
+  <footer class="chat-input-footer">
+    <div class="input-card">
+      <textarea
+        #messageInput
+        [(ngModel)]="userInput"
+        placeholder="Escribe algo..."
+        (keypress)="onKeyPress($event)"
+        [disabled]="isExecuting"
+        rows="1"
+      ></textarea>
+
+      <div class="input-actions">
+        <button class="action-btn" pTooltip="Adjuntar archivo" disabled>
+          <i class="pi pi-paperclip"></i>
+        </button>
+        <button class="action-btn" pTooltip="Microfono" disabled>
+          <i class="pi pi-microphone"></i>
+        </button>
+        <button
+          class="send-btn"
+          [class.active]="userInput.trim()"
+          (click)="sendMessage()"
+          [disabled]="!userInput.trim() || isExecuting"
+        >
+          <i class="pi pi-arrow-up"></i>
+        </button>
+      </div>
+    </div>
+
+    <p class="disclaimer">
+      KAI puede cometer errores. Verifica la informacion importante.
+    </p>
+  </footer>
+</div>

@@ -37,6 +37,7 @@ import { StepToolsComponent } from './wizard/step-tools/step-tools.component';
 import { StepReviewComponent } from './wizard/step-review/step-review.component';
 import { LibraryComponent } from './library/library.component';
 import { AgentCardComponent } from './library/agent-card/agent-card.component';
+import { GeneralChatProComponent } from './general-chat-pro/general-chat-pro.component';
 
 import { A2aMonitorComponent } from './monitoring/a2a-monitor.component';
 
@@ -44,6 +45,7 @@ import { A2aMonitorComponent } from './monitoring/a2a-monitor.component';
   declarations: [
     AgentBuilderComponent,
     GeneralChatComponent,
+    GeneralChatProComponent,
     WizardComponent,
     StepBasicInfoComponent,
     StepPromptComponent,
