@@ -5,11 +5,15 @@ import {
   ViewChild,
   ElementRef,
   ChangeDetectorRef,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  HostBinding,
+  ViewEncapsulation
 } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ChatProService } from '../shared/services/chat-pro.service';
+import { LayoutService } from '../../../shared/services/layout.service';
 import {
   ChatProMessage,
   ChatProEventType,
@@ -27,11 +31,18 @@ import {
   selector: 'app-general-chat-pro',
   templateUrl: './general-chat-pro.component.html',
   styleUrls: ['./general-chat-pro.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.None // Necesario para estilos en innerHTML
 })
 export class GeneralChatProComponent implements OnInit, OnDestroy {
   @ViewChild('messagesContainer') messagesContainer!: ElementRef;
   @ViewChild('messageInput') messageInput!: ElementRef;
+
+  // Theme binding - aplica la clase del tema al host
+  @HostBinding('class')
+  get themeClass(): string {
+    return this.layoutService.config.settings.layout_version || 'light-only';
+  }
 
   // Estado del chat
   messages: ChatProMessage[] = [];
@@ -49,7 +60,9 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
 
   constructor(
     private chatProService: ChatProService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer,
+    private layoutService: LayoutService
   ) {}
 
   ngOnInit(): void {
@@ -260,13 +273,54 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Formatea el contenido del mensaje con @mentions resaltados
+   * Formatea el contenido del mensaje con Markdown y @mentions
+   * Basado en el parser de general-chat
    */
-  formatMessageContent(content: string): string {
+  formatMessageContent(content: string): SafeHtml {
     if (!content) return '';
 
-    // Resaltar @mentions
-    return content.replace(/@(\w+)/g, '<span class="mention">@$1</span>');
+    // 1. Escape HTML para prevenir inyección
+    let parsed = content
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+
+    // 2. Code blocks (```code```)
+    parsed = parsed.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+    // 3. Inline code (`code`)
+    parsed = parsed.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // 4. Bold (**text**)
+    parsed = parsed.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // 5. Italic (*text*)
+    parsed = parsed.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+
+    // 6. Headers (## text)
+    parsed = parsed.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    parsed = parsed.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+
+    // 7. Bullet points (- item or * item)
+    parsed = parsed.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+    // Wrap consecutive <li> in <ul>
+    parsed = parsed.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+
+    // 8. Mentions (@Name)
+    parsed = parsed.replace(/@([\w\s]+?)(?=\s|$|[.,;:])/g,
+      '<span class="mention">@$1</span>'
+    );
+
+    // 9. Newlines to <br> (pero no dentro de <pre>)
+    const parts = parsed.split(/(<pre>[\s\S]*?<\/pre>)/g);
+    parsed = parts.map(part => {
+      if (part.startsWith('<pre>')) return part;
+      return part.replace(/\n/g, '<br>');
+    }).join('');
+
+    return this.sanitizer.bypassSecurityTrustHtml(parsed);
   }
 
   /**

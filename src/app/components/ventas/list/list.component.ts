@@ -275,7 +275,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         'cliente.nombres_completos': 'cliente',
         'envio.ciudad': 'ciudad',
         'transportador': 'transportador',
-        'asesorAsignado.name': 'vendedor'
+        'asesorAsignado.name': 'vendedor',
+        'estadoPago': 'estadoPago',
+        'estadoProceso': 'estadoProceso',
+        'horarioEntrega': 'horarioEntrega'
       };
 
       for (const [htmlField, backendField] of Object.entries(fieldMapping)) {
@@ -2727,8 +2730,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
           // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
-          // ✅ CORREGIDO: No recalcular estados finales (Rechazado, Cancelado, Precancelado)
-          const estadosFinales = ["Rechazado", "Cancelado", "Precancelado"];
+          // ✅ CORREGIDO: No recalcular estados finales (Aprobado, Rechazado, Cancelado, Precancelado)
+          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado"];
           const esEstadoFinal = estadosFinales.includes(order.estadoPago);
 
           const debeRecalcular =

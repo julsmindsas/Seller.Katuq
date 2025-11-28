@@ -44,10 +44,30 @@ export class ChatProService {
     // Cerrar conexion anterior si existe
     this.disconnect();
 
+    console.log('[ChatProService] Enviando mensaje:', { company, query, baseUrl: this.baseUrl });
+
+    // Emitir mensaje del usuario inmediatamente (UX instantanea)
+    const userMessage: ChatProMessage = {
+      id: `user_${Date.now()}`,
+      timestamp: new Date(),
+      eventType: 'user_message',
+      speaker: {
+        name: 'Tu',
+        type: 'user',
+        avatar: 'pi-user',
+        color: '#6366f1'
+      },
+      content: query,
+      mentions: []
+    };
+    this.messagesSubject.next(userMessage);
+
     this.executingSubject.next(true);
 
     // Crear la URL con el body como query param (para SSE con POST)
     const url = `${this.baseUrl}/chat/pro/stream`;
+
+    console.log('[ChatProService] Conectando a:', url);
 
     // Usar fetch para POST con SSE
     this.connectWithFetch(url, company, query);
@@ -121,8 +141,21 @@ export class ChatProService {
       this.connectionStatusSubject.next(false);
 
     } catch (error: any) {
-      console.error('[ChatProService] Error:', error);
-      this.errorSubject.next(error.message || 'Error de conexion');
+      console.error('[ChatProService] Error completo:', error);
+      console.error('[ChatProService] URL intentada:', url);
+      console.error('[ChatProService] Datos enviados:', { company, query });
+
+      // Mostrar error mas descriptivo
+      let errorMsg = 'Error de conexion';
+      if (error.message?.includes('fetch')) {
+        errorMsg = 'No se pudo conectar al servidor. Verifica que el backend este corriendo.';
+      } else if (error.message?.includes('CORS')) {
+        errorMsg = 'Error de CORS. El backend no permite conexiones desde este origen.';
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+
+      this.errorSubject.next(errorMsg);
       this.executingSubject.next(false);
       this.connectionStatusSubject.next(false);
     }
@@ -133,6 +166,14 @@ export class ChatProService {
    */
   private processEvent(eventType: ChatProEventType, dataStr: string): void {
     try {
+      // Ignorar user_message del backend (ya lo mostramos localmente)
+      if (eventType === 'user_message') {
+        console.log('[ChatProService] Ignorando user_message del backend (ya mostrado localmente)');
+        return;
+      }
+
+      console.log('[ChatProService] Evento recibido:', eventType);
+
       const data = JSON.parse(dataStr);
       const message = this.convertToMessage(eventType, data);
 
