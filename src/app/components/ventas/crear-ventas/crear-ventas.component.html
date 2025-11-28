@@ -371,47 +371,36 @@
                 </div>
               </ng-template>
 
-              <!-- Buscador de clientes mejorado -->
-              <div class="card shadow-sm mb-4" data-tour="clientes">
-                <div class="card-header bg-primary text-white">
-                  <h5 class="mb-0"><i class="fa fa-search me-2"></i>Buscar Cliente</h5>
-                </div>
-                <div class="card-body py-3">
-                  <div class="row g-3">
-                    <div class="col-md-3">
-                      <label class="form-label mb-2">
-                        <i class="fa fa-filter text-primary me-1"></i>
-                        <span>Buscar por</span>
-                      </label>
-                      <div class="position-relative">
-                        <select #buscarPor class="form-select custom-select" id="tipo_documento">
-                          <option value="CC-NIT" selected>Documento</option>
-                          <option value="PA">Email</option>
-                          <option value="TI">Nombre</option>
-                        </select>
-                        <i class="fa fa-search select-icon"></i>
-                      </div>
+              <!-- Buscador de clientes compacto -->
+              <div class="card shadow-sm mb-4 client-search-card" data-tour="clientes">
+                <div class="card-body py-2 px-3">
+                  <div class="d-flex align-items-center flex-wrap gap-2">
+                    <!-- Icono y título -->
+                    <div class="d-flex align-items-center me-2">
+                      <i class="fa fa-user-circle text-primary me-2" style="font-size: 1.25rem;"></i>
+                      <span class="fw-semibold text-dark">Cliente</span>
                     </div>
-                    <div class="col-md-6">
-                      <label class="form-label mb-2">
-                        <i class="fa fa-info-circle text-primary me-1"></i>
-                        <span>Información</span>
-                      </label>
-                      <div class="input-group">
-                        <span class="input-group-text"><i class="fa fa-user"></i></span>
-                        <input #documentoBusqueda class="form-control" type="text"
-                          placeholder="Ingrese información de búsqueda" />
-                        <button class="btn btn-primary" (click)="buscar()">
-                          <i class="fa fa-search me-1"></i> Buscar
-                        </button>
-                      </div>
-                    </div>
-                    <div class="col-md-3">
-                      <label class="form-label mb-2 invisible">Acción</label>
-                      <button class="btn btn-success w-100" (click)="mostrarFormularioNuevoCliente()">
-                        <i class="fa fa-plus-circle me-1"></i> Nuevo Cliente
+
+                    <!-- Selector tipo búsqueda -->
+                    <select #buscarPor class="form-select form-select-sm" style="width: auto; min-width: 110px;">
+                      <option value="CC-NIT" selected>Documento</option>
+                      <option value="PA">Email</option>
+                      <option value="TI">Nombre</option>
+                    </select>
+
+                    <!-- Input de búsqueda -->
+                    <div class="input-group input-group-sm flex-grow-1" style="max-width: 320px;">
+                      <input #documentoBusqueda class="form-control" type="text"
+                        placeholder="Buscar cliente..." (keyup.enter)="buscar()" />
+                      <button class="btn btn-primary btn-sm px-3" (click)="buscar()">
+                        <i class="fa fa-search"></i>
                       </button>
                     </div>
+
+                    <!-- Botón nuevo cliente -->
+                    <button class="btn btn-outline-success btn-sm" (click)="mostrarFormularioNuevoCliente()">
+                      <i class="fa fa-plus me-1"></i> Nuevo
+                    </button>
                   </div>
                 </div>
               </div>

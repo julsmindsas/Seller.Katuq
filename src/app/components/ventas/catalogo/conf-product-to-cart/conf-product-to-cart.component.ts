@@ -355,7 +355,7 @@ export class ConfProductToCartComponent
                     {
                       timeOut: 3000,
                       progressBar: true,
-                      positionClass: "toast-bottom-right",
+                      positionClass: "toast-top-right",
                     },
                   );
                 }
@@ -457,7 +457,7 @@ export class ConfProductToCartComponent
         {
           timeOut: 3000,
           progressBar: true,
-          positionClass: "toast-bottom-right",
+          positionClass: "toast-top-right",
         },
       );
 
@@ -473,7 +473,7 @@ export class ConfProductToCartComponent
         {
           timeOut: 8000,
           progressBar: true,
-          positionClass: "toast-bottom-right",
+          positionClass: "toast-top-right",
           closeButton: true,
         },
       );
@@ -505,7 +505,7 @@ export class ConfProductToCartComponent
           {
             timeOut: 4000,
             progressBar: true,
-            positionClass: "toast-bottom-right",
+            positionClass: "toast-top-right",
           },
         );
         return;
@@ -518,7 +518,7 @@ export class ConfProductToCartComponent
           {
             timeOut: 4000,
             progressBar: true,
-            positionClass: "toast-bottom-right",
+            positionClass: "toast-top-right",
           },
         );
         return;
@@ -562,7 +562,7 @@ export class ConfProductToCartComponent
           {
             closeButton: true,
             enableHtml: true,
-            positionClass: "toast-bottom-right",
+            positionClass: "toast-top-right",
             timeOut: 2000,
           },
         );
@@ -623,7 +623,7 @@ export class ConfProductToCartComponent
             {
               closeButton: true,
               enableHtml: true,
-              positionClass: "toast-bottom-right",
+              positionClass: "toast-top-right",
               timeOut: 2000,
             },
           );
@@ -1509,7 +1509,7 @@ export class ConfProductToCartComponent
             {
               timeOut: 4000,
               progressBar: true,
-              positionClass: "toast-bottom-right",
+              positionClass: "toast-top-right",
             },
           );
           return;
@@ -1522,7 +1522,7 @@ export class ConfProductToCartComponent
             {
               timeOut: 4000,
               progressBar: true,
-              positionClass: "toast-bottom-right",
+              positionClass: "toast-top-right",
             },
           );
           return;
@@ -1590,7 +1590,7 @@ export class ConfProductToCartComponent
       this.toastrService.success("Producto agregado al carrito", "Éxito", {
         timeOut: 5000,
         progressBar: true,
-        positionClass: "toast-bottom-right",
+        positionClass: "toast-top-right",
       });
 
       this.tarjetasForm.reset();
@@ -3506,7 +3506,7 @@ export class ConfProductToCartComponent
     this.toastrService.error(mensaje, "Error de Configuración", {
       timeOut: 8000,
       progressBar: true,
-      positionClass: "toast-bottom-right",
+      positionClass: "toast-top-right",
       closeButton: true,
     });
 

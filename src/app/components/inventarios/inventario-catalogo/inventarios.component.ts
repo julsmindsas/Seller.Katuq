@@ -10,13 +10,21 @@ import * as XLSX from 'xlsx';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
 import { TourService } from '../../../shared/services/tour.service';
+import { FulfillmentService } from '../../../shared/services/fulfillment/fulfillment.service';
+import { ToastrService } from 'ngx-toastr';
 import { Table } from 'primeng/table';
 
 // Tipo extendido para productos con información de inventario
 interface ProductoInventario extends Producto {
+  id?: string; // ID del producto en el inventario (productoId)
   cantidad?: number;
   bodegaId?: string;
   bodegaNombre?: string;
+  // Campos de fulfillment
+  stockFulfillment?: number | null;
+  fulfillmentLoading?: boolean;
+  fulfillmentError?: string;
+  diferencia?: number | null;
 }
 
 interface PageReference {
@@ -97,13 +105,23 @@ export class InventarioCatalogoComponent implements OnInit {
   // Control del ordenamiento
   ordenamiento: string = 'nombreAsc';
 
+  // ============== FULFILLMENT ==============
+  fulfillmentEnabled: boolean = false;
+  fulfillmentProvider: string = '';
+  fulfillmentProviderName: string = '';
+  loadingFulfillmentStock: boolean = false;
+  syncingProduct: string | null = null; // ID del producto que se está sincronizando
+  syncingBodega: boolean = false;
+
   constructor(
     private service: MaestroService,
     private inventarioService: InventarioService,
     private router: Router,
     private modalService: NgbModal,
     private bodegaService: BodegaService, // Inyectamos el servicio de bodegas
-    private tourService: TourService
+    private tourService: TourService,
+    private fulfillmentService: FulfillmentService,
+    private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
@@ -129,6 +147,32 @@ export class InventarioCatalogoComponent implements OnInit {
     // Inicializar rows como un array vacío
     this.rows = [];
     this.productosSinFiltro = [];
+
+    // Verificar si hay fulfillment configurado
+    this.checkFulfillmentConfig();
+  }
+
+  /**
+   * Verifica si hay un proveedor de fulfillment configurado
+   */
+  checkFulfillmentConfig(): void {
+    this.fulfillmentService.getConfiguredProviders().subscribe({
+      next: (providers) => {
+        if (providers && providers.length > 0) {
+          const activeProvider = providers.find(p => p.configured);
+          if (activeProvider) {
+            this.fulfillmentEnabled = true;
+            this.fulfillmentProvider = activeProvider.provider;
+            this.fulfillmentProviderName = this.fulfillmentService.getProviderDisplayName(activeProvider.provider);
+            console.log(`✅ Fulfillment habilitado: ${this.fulfillmentProviderName}`);
+          }
+        }
+      },
+      error: (error) => {
+        console.log('No hay fulfillment configurado o error al verificar:', error);
+        this.fulfillmentEnabled = false;
+      }
+    });
   }
 
   cargarBodegas() {
@@ -543,5 +587,245 @@ export class InventarioCatalogoComponent implements OnInit {
 
   startInventarioTour(): void {
     this.tourService.startTour('inventario', this.tourService.getInventarioTour());
+  }
+
+  // ============== MÉTODOS DE FULFILLMENT ==============
+
+  /**
+   * Obtiene los IDs de los productos actuales
+   */
+  getProductIds(): string[] {
+    return this.rowsFiltradas.map(p => p.id).filter(id => id);
+  }
+
+  /**
+   * Carga el stock de fulfillment para todos los productos visibles
+   */
+  loadFulfillmentStock(): void {
+    if (!this.fulfillmentEnabled || !this.fulfillmentProvider) {
+      return;
+    }
+
+    const productIds = this.getProductIds();
+    if (productIds.length === 0) {
+      return;
+    }
+
+    this.loadingFulfillmentStock = true;
+
+    // Marcar todos los productos como cargando
+    this.rowsFiltradas.forEach(p => {
+      p.fulfillmentLoading = true;
+      p.fulfillmentError = undefined;
+    });
+
+    this.fulfillmentService.getBulkStock(this.fulfillmentProvider, productIds).subscribe({
+      next: (response) => {
+        if (response.success && response.stocks) {
+          // Mapear resultados a los productos
+          this.rowsFiltradas.forEach(producto => {
+            const stockInfo = response.stocks[producto.id];
+            if (stockInfo) {
+              producto.stockFulfillment = stockInfo.stock;
+              producto.fulfillmentError = stockInfo.error;
+              producto.diferencia = stockInfo.stock !== null
+                ? stockInfo.stock - (producto.cantidad || 0)
+                : null;
+            } else {
+              producto.stockFulfillment = null;
+              producto.diferencia = null;
+            }
+            producto.fulfillmentLoading = false;
+          });
+
+          // También actualizar en productosSinFiltro
+          this.productosSinFiltro.forEach(producto => {
+            const stockInfo = response.stocks[producto.id];
+            if (stockInfo) {
+              producto.stockFulfillment = stockInfo.stock;
+              producto.fulfillmentError = stockInfo.error;
+              producto.diferencia = stockInfo.stock !== null
+                ? stockInfo.stock - (producto.cantidad || 0)
+                : null;
+            }
+            producto.fulfillmentLoading = false;
+          });
+        }
+        this.loadingFulfillmentStock = false;
+      },
+      error: (error) => {
+        console.error('Error cargando stock de fulfillment:', error);
+        this.rowsFiltradas.forEach(p => {
+          p.fulfillmentLoading = false;
+          p.fulfillmentError = 'Error al cargar';
+        });
+        this.loadingFulfillmentStock = false;
+        this.toastr.error('Error al cargar stock de fulfillment', 'Error');
+      }
+    });
+  }
+
+  /**
+   * Obtiene el stock de fulfillment de un producto específico
+   */
+  getFulfillmentStock(productId: string): number | null {
+    const producto = this.rowsFiltradas.find(p => p.id === productId);
+    return producto?.stockFulfillment ?? null;
+  }
+
+  /**
+   * Obtiene la diferencia de stock (fulfillment - katuq)
+   */
+  getDiferencia(producto: ProductoInventario): number | null {
+    if (producto.stockFulfillment === null || producto.stockFulfillment === undefined) {
+      return null;
+    }
+    return producto.stockFulfillment - (producto.cantidad || 0);
+  }
+
+  /**
+   * Sincroniza el inventario de un producto con el fulfillment
+   * Crea movimiento de ajuste si hay diferencia
+   */
+  syncProduct(producto: ProductoInventario): void {
+    if (!this.fulfillmentEnabled || !this.fulfillmentProvider || !this.bodegaSeleccionada) {
+      this.toastr.warning('Seleccione una bodega y verifique la configuración de fulfillment', 'Advertencia');
+      return;
+    }
+
+    this.syncingProduct = producto.id;
+
+    this.fulfillmentService.syncProductInventory(
+      producto.id,
+      this.bodegaSeleccionada.idBodega,
+      this.fulfillmentProvider
+    ).subscribe({
+      next: (result) => {
+        this.syncingProduct = null;
+
+        if (result.success) {
+          // Actualizar el producto con los nuevos valores
+          producto.cantidad = result.stockFulfillment;
+          producto.stockFulfillment = result.stockFulfillment;
+          producto.diferencia = 0;
+
+          if (result.diferencia !== 0) {
+            this.toastr.success(
+              `Sincronizado. Diferencia de ${result.diferencia} unidades ajustada.`,
+              'Sincronización completada'
+            );
+          } else {
+            this.toastr.info('Sin diferencias encontradas', 'Sincronización completada');
+          }
+        } else {
+          this.toastr.error(result.error || 'Error al sincronizar', 'Error');
+        }
+      },
+      error: (error) => {
+        this.syncingProduct = null;
+        console.error('Error sincronizando producto:', error);
+        this.toastr.error('Error al sincronizar con fulfillment', 'Error');
+      }
+    });
+  }
+
+  /**
+   * Sincroniza todos los productos de la bodega con el fulfillment
+   */
+  syncBodegaCompleta(): void {
+    if (!this.fulfillmentEnabled || !this.fulfillmentProvider || !this.bodegaSeleccionada) {
+      this.toastr.warning('Seleccione una bodega y verifique la configuración de fulfillment', 'Advertencia');
+      return;
+    }
+
+    // Confirmar antes de sincronizar
+    Swal.fire({
+      title: 'Sincronizar Bodega Completa',
+      text: `¿Desea sincronizar todos los productos de la bodega "${this.bodegaSeleccionada.nombre}" con ${this.fulfillmentProviderName}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, sincronizar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ejecutarSyncBodega();
+      }
+    });
+  }
+
+  /**
+   * Ejecuta la sincronización de la bodega completa
+   */
+  private ejecutarSyncBodega(): void {
+    this.syncingBodega = true;
+
+    this.fulfillmentService.syncBodegaCompleta(
+      this.bodegaSeleccionada.idBodega,
+      this.fulfillmentProvider
+    ).subscribe({
+      next: (result) => {
+        this.syncingBodega = false;
+
+        if (result.success) {
+          // Recargar inventario después de sincronizar
+          this.obtenerProductosPorBodega(this.bodegaSeleccionada.idBodega);
+
+          Swal.fire({
+            title: 'Sincronización Completada',
+            html: `
+              <p><strong>${result.sincronizados}</strong> productos procesados</p>
+              <p><strong>${result.conDiferencias}</strong> con diferencias ajustadas</p>
+              ${result.errores > 0 ? `<p class="text-danger"><strong>${result.errores}</strong> errores</p>` : ''}
+              <p class="text-muted">Duración: ${(result.duracionMs / 1000).toFixed(1)}s</p>
+            `,
+            icon: result.errores > 0 ? 'warning' : 'success'
+          });
+        } else {
+          Swal.fire({
+            title: 'Error',
+            text: result.error || 'Error al sincronizar la bodega',
+            icon: 'error'
+          });
+        }
+      },
+      error: (error) => {
+        this.syncingBodega = false;
+        console.error('Error sincronizando bodega:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Error al sincronizar la bodega con fulfillment',
+          icon: 'error'
+        });
+      }
+    });
+  }
+
+  /**
+   * Verifica si un producto está siendo sincronizado
+   */
+  isSyncingProduct(productId: string): boolean {
+    return this.syncingProduct === productId;
+  }
+
+  /**
+   * Obtiene la clase CSS para mostrar la diferencia de stock
+   */
+  getDiferenciaClass(producto: ProductoInventario): string {
+    const diferencia = this.getDiferencia(producto);
+    if (diferencia === null) return '';
+    if (diferencia > 0) return 'text-success'; // Hay más en fulfillment
+    if (diferencia < 0) return 'text-danger';  // Hay menos en fulfillment
+    return 'text-muted'; // Sin diferencia
+  }
+
+  /**
+   * Obtiene el badge para mostrar la diferencia
+   */
+  getDiferenciaBadgeClass(producto: ProductoInventario): string {
+    const diferencia = this.getDiferencia(producto);
+    if (diferencia === null) return '';
+    if (diferencia > 0) return 'badge bg-warning text-dark'; // Más en fulfillment
+    if (diferencia < 0) return 'badge bg-danger';            // Menos en fulfillment
+    return 'badge bg-success';                                // Sin diferencia
   }
 }

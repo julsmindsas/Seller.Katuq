@@ -39,6 +39,23 @@
                                 (click)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)"
                                 [disabled]="!bodegaSeleccionada"
                                 pTooltip="Actualizar datos"></button>
+                        <!-- Botones de Fulfillment -->
+                        <ng-container *ngIf="fulfillmentEnabled">
+                            <button pButton type="button"
+                                    icon="pi pi-cloud-download"
+                                    class="p-button-info p-button-sm"
+                                    (click)="loadFulfillmentStock()"
+                                    [disabled]="!bodegaSeleccionada || rowsFiltradas.length === 0 || loadingFulfillmentStock"
+                                    [loading]="loadingFulfillmentStock"
+                                    [pTooltip]="'Cargar stock de ' + fulfillmentProviderName"></button>
+                            <button pButton type="button"
+                                    icon="pi pi-sync"
+                                    class="p-button-warning p-button-sm"
+                                    (click)="syncBodegaCompleta()"
+                                    [disabled]="!bodegaSeleccionada || rowsFiltradas.length === 0 || syncingBodega"
+                                    [loading]="syncingBodega"
+                                    [pTooltip]="'Sincronizar bodega con ' + fulfillmentProviderName"></button>
+                        </ng-container>
                     </div>
                 </div>
 
@@ -196,7 +213,19 @@
                                         {{ 'Nombre' | translate }}
                                     </th>
                                     <th style="width: 110px; min-width: 110px;" class="text-center">
-                                        {{ 'Cantidad' | translate }}
+                                        {{ 'Stock Katuq' | translate }}
+                                    </th>
+                                    <!-- Columnas de Fulfillment -->
+                                    <th *ngIf="fulfillmentEnabled" style="width: 130px; min-width: 130px;" class="text-center bg-light">
+                                        {{ 'Stock ' + fulfillmentProviderName | translate }}
+                                        <i class="pi pi-refresh ms-1 cursor-pointer"
+                                           [class.pi-spin]="loadingFulfillmentStock"
+                                           (click)="loadFulfillmentStock()"
+                                           pTooltip="Actualizar stock de fulfillment"
+                                           style="font-size: 0.8rem;"></i>
+                                    </th>
+                                    <th *ngIf="fulfillmentEnabled" style="width: 80px; min-width: 80px;" class="text-center bg-light">
+                                        {{ 'Sync' | translate }}
                                     </th>
                                     <th style="width: 130px; min-width: 130px;">
                                         {{ 'Precio Unit.' | translate }}
@@ -240,6 +269,46 @@
                                             {{ 'No inventariable' | translate }}
                                         </span>
                                     </td>
+                                    <!-- Stock Fulfillment -->
+                                    <td *ngIf="fulfillmentEnabled" style="width: 130px; min-width: 130px;" class="text-center bg-light">
+                                        <!-- Loading state -->
+                                        <span *ngIf="row.fulfillmentLoading" class="text-muted">
+                                            <i class="pi pi-spin pi-spinner"></i>
+                                        </span>
+                                        <!-- Error state -->
+                                        <span *ngIf="!row.fulfillmentLoading && row.fulfillmentError"
+                                              class="text-danger"
+                                              [pTooltip]="row.fulfillmentError">
+                                            <i class="pi pi-exclamation-triangle"></i>
+                                        </span>
+                                        <!-- Stock value -->
+                                        <ng-container *ngIf="!row.fulfillmentLoading && !row.fulfillmentError">
+                                            <span *ngIf="row.stockFulfillment !== null && row.stockFulfillment !== undefined">
+                                                {{ row.stockFulfillment }}
+                                                <!-- Diferencia badge -->
+                                                <span *ngIf="getDiferencia(row) !== null && getDiferencia(row) !== 0"
+                                                      class="badge ms-1"
+                                                      [ngClass]="getDiferenciaBadgeClass(row)"
+                                                      [pTooltip]="'Diferencia: ' + getDiferencia(row)">
+                                                    {{ getDiferencia(row) > 0 ? '+' : '' }}{{ getDiferencia(row) }}
+                                                </span>
+                                            </span>
+                                            <span *ngIf="row.stockFulfillment === null || row.stockFulfillment === undefined"
+                                                  class="text-muted small">
+                                                --
+                                            </span>
+                                        </ng-container>
+                                    </td>
+                                    <!-- Sync button -->
+                                    <td *ngIf="fulfillmentEnabled" style="width: 80px; min-width: 80px;" class="text-center bg-light">
+                                        <button pButton type="button"
+                                                icon="pi pi-sync"
+                                                class="p-button-text p-button-sm p-button-secondary"
+                                                [loading]="syncingProduct === row._id"
+                                                [disabled]="syncingProduct !== null || !row.disponibilidad?.inventariable"
+                                                (click)="syncProduct(row)"
+                                                pTooltip="Sincronizar inventario"></button>
+                                    </td>
                                     <td style="width: 130px; min-width: 130px;" class="text-end">
                                         <strong>${{ row.precio?.precioUnitarioConIva | number:'1.0-0' }}</strong>
                                     </td>
@@ -264,7 +333,7 @@
                             <!-- Mensaje cuando no hay datos -->
                             <ng-template pTemplate="emptymessage">
                                 <tr>
-                                    <td colspan="7">
+                                    <td [attr.colspan]="fulfillmentEnabled ? 9 : 7">
                                         <div class="text-center p-5">
                                             <i class="pi pi-inbox text-muted mb-3" style="font-size: 3rem;"></i>
                                             <h5 class="mb-3">

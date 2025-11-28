@@ -223,7 +223,7 @@
       white-space: nowrap;
 
       &.primary {
-        background-color: #a78bfa;
+        background-color: #4361ee;
         color: white;
         
         &:hover {
@@ -343,7 +343,7 @@
     width: 100%;
     height: 100%;
     border: none;
-    background-color: #a78bfa;
+    background-color: #4361ee;
     color: white;
     border-radius: 50%;
     display: flex;
@@ -418,7 +418,7 @@
     left: 0;
     width: 100%;
     height: 40px;
-    background: linear-gradient(transparent, rgba(255, 255, 255, 0.9));
+    background: rgba(255, 255, 255, 0.95);
     pointer-events: none;
   }
 }
@@ -954,8 +954,8 @@
     border-radius: 0.2rem;
     
     &.btn-primary {
-      background-color: #8b5cf6;
-      border-color: #8b5cf6;
+      background-color: #4361ee;
+      border-color: #4361ee;
       
       &:hover {
         background-color: #0b5ed7;
@@ -1045,7 +1045,7 @@
         margin-left: 0.5rem;
         
         &[title*="Reintentar"] {
-          color: #8b5cf6;
+          color: #4361ee;
           
           &:hover {
             color: #0b5ed7;

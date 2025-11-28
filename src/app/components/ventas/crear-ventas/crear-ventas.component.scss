@@ -385,7 +385,7 @@ html {
         left: 0;
         width: 100%;
         height: 3px;
-        background: linear-gradient(90deg, #4361ee, #738efc);
+        background: #4361ee;
         border-radius: 2px;
         animation: stepPulse 2s ease-in-out infinite;
       }
@@ -1177,11 +1177,7 @@ html {
     left: 0;
     right: 0;
     height: 2px;
-    background: linear-gradient(90deg,
-                                transparent 0%,
-                                var(--primary-color) 20%,
-                                var(--primary-color) 80%,
-                                transparent 100%);
+    background: var(--primary-color);
     opacity: 0.3;
   }
 }
@@ -1722,7 +1718,7 @@ html {
         transition: all 0.3s ease;
 
         &.active {
-          background: linear-gradient(to right, var(--success-color) 0%, var(--secondary-color) 100%);
+          background: var(--success-color);
         }
       }
     }
@@ -2124,6 +2120,72 @@ html {
     .selector-body .warehouse-select {
       height: 44px;
       font-size: 0.875rem;
+    }
+  }
+}
+
+// ============================================================================
+// BUSCADOR DE CLIENTE COMPACTO
+// ============================================================================
+.client-search-card {
+  border: 1px solid #e9ecef;
+  border-radius: 10px;
+  background: #ffffff;
+
+  .card-body {
+    padding: 0.75rem 1rem !important;
+  }
+
+  .form-select-sm,
+  .form-control {
+    height: 36px;
+    font-size: 0.875rem;
+    border-color: #dee2e6;
+
+    &:focus {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(var(--primary-rgb), 0.1);
+    }
+  }
+
+  .btn-sm {
+    height: 36px;
+    font-size: 0.8125rem;
+    padding: 0 0.875rem;
+
+    i {
+      font-size: 0.875rem;
+    }
+  }
+
+  .btn-outline-success {
+    border-color: var(--success-color);
+    color: var(--success-color);
+
+    &:hover {
+      background: var(--success-color);
+      color: white;
+    }
+  }
+
+  // Responsive
+  @media (max-width: 768px) {
+    .card-body > .d-flex {
+      flex-direction: column;
+      align-items: stretch !important;
+      gap: 0.5rem !important;
+    }
+
+    .input-group {
+      max-width: 100% !important;
+    }
+
+    .form-select-sm {
+      width: 100% !important;
+    }
+
+    .btn-outline-success {
+      width: 100%;
     }
   }
 }

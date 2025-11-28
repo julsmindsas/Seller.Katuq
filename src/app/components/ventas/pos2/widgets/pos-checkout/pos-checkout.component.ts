@@ -91,12 +91,22 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
 
     // Asegurar que el pedido tenga estado pendiente inicialmente
     pedido.estadoPago = EstadoPago.Pendiente;
-    
+
     // Guardar el pedido antes de iniciar el pago
     this.guardarPedidoParaWompi(pedido).then(pedidoGuardado => {
       if (pedidoGuardado) {
-        // Iniciar el widget de Wompi
-        this.checkoutService.iniciarPagoConWompi(pedido).then(pagoExitoso => {
+        // ✅ FIX: Usar el pedido actualizado del backend (con nroPedido e integridad correctos)
+        const pedidoActualizado = this.checkoutService.pedido$.getValue();
+        if (pedidoActualizado) {
+          console.log('🔑 [Wompi] Usando pedido del backend:', pedidoActualizado?.nroPedido);
+          console.log('🔐 [Wompi] Integridad:', pedidoActualizado?.pagoInformation?.integridad?.substring(0, 20) + '...');
+        }
+
+        // Usar el pedido actualizado que tiene tanto nroPedido como integridad correctos
+        const pedidoParaWompi = pedidoActualizado || pedido;
+
+        // Iniciar el widget de Wompi con el pedido actualizado
+        this.checkoutService.iniciarPagoConWompi(pedidoParaWompi).then(pagoExitoso => {
           if (pagoExitoso) {
             // ✅ INFORMATIVO: El widget se completó, pero el webhook actualizará el estado
             console.log("✅ [Wompi Widget] Pago iniciado exitosamente. El webhook actualizará el estado.");

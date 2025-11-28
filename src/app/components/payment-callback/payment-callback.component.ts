@@ -32,8 +32,7 @@ export class PaymentCallbackComponent implements OnInit {
     this.route.queryParams.subscribe(params => {
       this.paymentReference = params['reference'] || null;
       this.transactionId = params['id'] || null;
-      //this.environment = params['env'] || 'prod';
-      this.environment = 'prod';
+      this.environment = params['env'] || 'prod';
       
       console.log('Referencia de pago recibida:', this.paymentReference);
       console.log('ID de transacción:', this.transactionId);
@@ -52,9 +51,13 @@ export class PaymentCallbackComponent implements OnInit {
 
   getTransactionStatus(): void {
     // Determinar la URL base según el ambiente
-    const baseUrl = this.environment === 'prod' 
-      ? 'https://production.wompi.co/v1' 
+    // env=test → sandbox, env=prod o sin parámetro → production
+    const isProduction = this.environment !== 'test';
+    const baseUrl = isProduction
+      ? 'https://production.wompi.co/v1'
       : 'https://sandbox.wompi.co/v1';
+
+    console.log(`🔍 Consultando transacción en ${isProduction ? 'PRODUCTION' : 'SANDBOX'}`);
       
     // Consultar estado de la transacción usando el ID
     this.http.get(`${baseUrl}/transactions/${this.transactionId}`).subscribe({
