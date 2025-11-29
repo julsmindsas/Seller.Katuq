@@ -169,6 +169,7 @@ export interface PagoInformation {
     referencia: string;
     tipo: string;
     id: string;
+    linkId?: string;
     integridad?: string;
     linkPago?: string;
     detalleIntegracion?: any;

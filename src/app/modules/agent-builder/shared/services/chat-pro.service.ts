@@ -29,13 +29,17 @@ export class ChatProService {
   private errorSubject = new Subject<string>();
   private executingSubject = new BehaviorSubject<boolean>(false);
 
+  // Para detectar duplicados entre agent_message y final_response
+  private lastMessageContent: string | null = null;
+  private lastMessageSpeaker: string | null = null;
+
   // Observable streams
   public messages$ = this.messagesSubject.asObservable();
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
   public error$ = this.errorSubject.asObservable();
   public executing$ = this.executingSubject.asObservable();
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * Envia un mensaje al Chat Pro y procesa la respuesta SSE
@@ -43,6 +47,10 @@ export class ChatProService {
   sendMessage(company: string, query: string): void {
     // Cerrar conexion anterior si existe
     this.disconnect();
+
+    // Reset duplicate tracking
+    this.lastMessageContent = null;
+    this.lastMessageSpeaker = null;
 
     console.log('[ChatProService] Enviando mensaje:', { company, query, baseUrl: this.baseUrl });
 
@@ -175,6 +183,31 @@ export class ChatProService {
       console.log('[ChatProService] Evento recibido:', eventType);
 
       const data = JSON.parse(dataStr);
+      const messageContent = data.message || '';
+      const speakerName = data.speaker?.display_name || data.speaker?.name || '';
+
+      // Detectar duplicados: si final_response tiene el mismo contenido que el ultimo agent_message
+      if (eventType === 'final_response') {
+        const contentHash = messageContent.substring(0, 200); // Comparar primeros 200 chars
+        if (this.lastMessageContent === contentHash && this.lastMessageSpeaker === speakerName) {
+          console.log('[ChatProService] Ignorando final_response duplicado (mismo contenido que agent_message)');
+          // Solo marcar fin de ejecucion, no emitir mensaje duplicado
+          setTimeout(() => {
+            this.executingSubject.next(false);
+          }, 300);
+          // Reset tracking
+          this.lastMessageContent = null;
+          this.lastMessageSpeaker = null;
+          return;
+        }
+      }
+
+      // Trackear agent_message para detectar duplicados
+      if (eventType === 'agent_message') {
+        this.lastMessageContent = messageContent.substring(0, 200);
+        this.lastMessageSpeaker = speakerName;
+      }
+
       const message = this.convertToMessage(eventType, data);
 
       if (message) {
@@ -187,6 +220,9 @@ export class ChatProService {
         setTimeout(() => {
           this.executingSubject.next(false);
         }, 300);
+        // Reset tracking
+        this.lastMessageContent = null;
+        this.lastMessageSpeaker = null;
       }
 
     } catch (error) {
@@ -265,7 +301,24 @@ export class ChatProService {
         return {
           ...baseMessage,
           vote: data.vote,
-          voteReason: data.vote_reason
+          voteReason: data.vote_reason,
+          content: data.message || `Voto: ${data.vote}`
+        };
+
+      case 'negotiation_round':
+        return {
+          ...baseMessage,
+          negotiationRound: data.round,
+          newProposal: data.new_proposal,
+          content: data.message || `Ronda ${data.round} de negociación`
+        };
+
+      case 'consensus_reached':
+        return {
+          ...baseMessage,
+          consensusDecision: data.decision,
+          votesSummary: data.votes_summary,
+          content: data.message || `Consenso alcanzado: ${data.decision}`
         };
 
       case 'agent_joined':

@@ -17,6 +17,7 @@ import { LayoutService } from '../../../shared/services/layout.service';
 import {
   ChatProMessage,
   ChatProEventType,
+  ChatProSpeaker,
   AGENT_UI_CONFIG
 } from '../shared/models/chat-pro.model';
 
@@ -54,6 +55,9 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
   // Configuracion
   company = 'ALMARA FELICIDAD'; // TODO: Obtener de servicio de empresa
   activeAgents = new Set<string>();
+
+  // Sprint 1.4: Agentes escribiendo (typing indicators)
+  typingAgents: ChatProSpeaker[] = [];
 
   // Cleanup
   private destroy$ = new Subject<void>();
@@ -124,6 +128,22 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
       this.activeAgents.add(message.speaker.agent_id);
     }
 
+    // Manejar typing indicators
+    if (message.eventType === 'agent_thinking' || message.eventType === 'agent_joined') {
+      // Agregar agente a la lista de "escribiendo"
+      this.addTypingAgent(message.speaker);
+    } else if (message.eventType === 'agent_message' ||
+               message.eventType === 'final_response' ||
+               message.eventType === 'tool_result') {
+      // Remover agente de la lista de "escribiendo" cuando envía mensaje
+      this.removeTypingAgent(message.speaker);
+    }
+
+    // Limpiar todos los typing al recibir final_response
+    if (message.eventType === 'final_response') {
+      this.clearTypingAgents();
+    }
+
     // Agregar mensaje a la lista
     this.messages.push(message);
 
@@ -182,6 +202,7 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
   clearChat(): void {
     this.messages = [];
     this.activeAgents.clear();
+    this.clearTypingAgents();
     this.cdr.markForCheck();
   }
 
@@ -367,5 +388,129 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
    */
   trackByMessageId(index: number, message: ChatProMessage): string {
     return message.id;
+  }
+
+  // ============================================
+  // Sprint 1.3: Message Grouping
+  // ============================================
+
+  /**
+   * Verifica si el mensaje actual es parte de un grupo
+   * (mismo speaker que el mensaje anterior y no es primer mensaje)
+   */
+  isGroupedMessage(index: number): boolean {
+    if (index === 0) return false;
+
+    const currentMsg = this.messages[index];
+    const prevMsg = this.messages[index - 1];
+
+    // No agrupar mensajes de usuario
+    if (this.isUserMessage(currentMsg)) return false;
+
+    // No agrupar si el anterior es de usuario
+    if (this.isUserMessage(prevMsg)) return false;
+
+    // Agrupar si es el mismo speaker
+    return currentMsg.speaker.agent_id === prevMsg.speaker.agent_id ||
+           currentMsg.speaker.name === prevMsg.speaker.name;
+  }
+
+  /**
+   * Verifica si es el ultimo mensaje de un grupo
+   */
+  isGroupEnd(index: number): boolean {
+    // Es el ultimo mensaje
+    if (index === this.messages.length - 1) return true;
+
+    const currentMsg = this.messages[index];
+    const nextMsg = this.messages[index + 1];
+
+    // Si el siguiente es de usuario, termina el grupo
+    if (this.isUserMessage(nextMsg)) return true;
+
+    // Si el siguiente es de diferente speaker, termina el grupo
+    return currentMsg.speaker.agent_id !== nextMsg.speaker.agent_id &&
+           currentMsg.speaker.name !== nextMsg.speaker.name;
+  }
+
+  // ============================================
+  // Sprint 4: Vote Grouping
+  // ============================================
+
+  /**
+   * Verifica si es el primer voto de una secuencia de votos
+   */
+  isFirstVote(index: number): boolean {
+    const currentMsg = this.messages[index];
+    if (currentMsg.eventType !== 'vote') return false;
+
+    // Es el primer mensaje o el anterior no es voto
+    if (index === 0) return true;
+    return this.messages[index - 1].eventType !== 'vote';
+  }
+
+  /**
+   * Verifica si es el último voto de una secuencia de votos
+   */
+  isLastVote(index: number): boolean {
+    const currentMsg = this.messages[index];
+    if (currentMsg.eventType !== 'vote') return false;
+
+    // Es el último mensaje o el siguiente no es voto
+    if (index === this.messages.length - 1) return true;
+    return this.messages[index + 1].eventType !== 'vote';
+  }
+
+  /**
+   * Obtiene todos los votos consecutivos a partir de un índice
+   */
+  getConsecutiveVotes(startIndex: number): ChatProMessage[] {
+    const votes: ChatProMessage[] = [];
+    for (let i = startIndex; i < this.messages.length; i++) {
+      if (this.messages[i].eventType === 'vote') {
+        votes.push(this.messages[i]);
+      } else {
+        break;
+      }
+    }
+    return votes;
+  }
+
+  // ============================================
+  // Sprint 1.4: Typing Agents Management
+  // ============================================
+
+  /**
+   * Agrega un agente a la lista de "escribiendo"
+   */
+  addTypingAgent(speaker: ChatProSpeaker): void {
+    // Evitar duplicados
+    const exists = this.typingAgents.some(
+      a => a.agent_id === speaker.agent_id || a.name === speaker.name
+    );
+
+    if (!exists) {
+      this.typingAgents.push(speaker);
+      this.cdr.markForCheck();
+      this.scrollToBottom();
+    }
+  }
+
+  /**
+   * Remueve un agente de la lista de "escribiendo"
+   */
+  removeTypingAgent(speaker: ChatProSpeaker): void {
+    this.typingAgents = this.typingAgents.filter(
+      a => a.agent_id !== speaker.agent_id && a.name !== speaker.name
+    );
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Limpia todos los agentes escribiendo
+   */
+  clearTypingAgents(): void {
+    this.typingAgents = [];
+    this.cdr.markForCheck();
   }
 }

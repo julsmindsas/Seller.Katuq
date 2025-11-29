@@ -2154,6 +2154,18 @@ export class PaymentService extends BaseService {
       </table>
     `;
 
+    // Construir URL de pago: usar linkId si existe, sino usar linkPago como fallback
+    let linkPagoUrl: string | null = null;
+    if (!isComanda && pedido.pagoInformation) {
+      if (pedido.pagoInformation.linkId) {
+        // Construir URL desde linkId: https://checkout.wompi.co/l/{linkId}
+        linkPagoUrl = `https://checkout.wompi.co/l/${pedido.pagoInformation.linkId}`;
+      } else if (pedido.pagoInformation.linkPago) {
+        // Fallback: usar linkPago completo si existe
+        linkPagoUrl = pedido.pagoInformation.linkPago;
+      }
+    }
+
     const htmlString = `
     <!DOCTYPE html>
     <html lang="es">
@@ -2363,6 +2375,49 @@ export class PaymentService extends BaseService {
 
                         <!-- Totales -->
                         ${htmlTotales}
+
+                        <!-- Link de Pago Wompi (usando linkId o linkPago) -->
+                        ${linkPagoUrl ? `
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin: ${styles.spacing.xl} 0;">
+                          <tr>
+                            <td style="padding: 0 ${styles.spacing.md};">
+                              <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #00aee8 0%, #0088cc 100%); border-radius: ${styles.borderRadius.md}; padding: ${styles.spacing.lg}; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                                <tr>
+                                  <td style="text-align: center;">
+                                    <table width="100%" cellpadding="0" cellspacing="0">
+                                      <tr>
+                                        <td style="padding-bottom: ${styles.spacing.md}; text-align: center;">
+                                          <span style="color: ${styles.colors.white}; font-size: ${styles.typography.heading3}; font-weight: ${styles.typography.bold}; display: block; margin-bottom: ${styles.spacing.xs};">
+                                            💳 Realiza tu pago ahora
+                                          </span>
+                                          <span style="color: ${styles.colors.white}; font-size: ${styles.typography.body}; opacity: 0.95; display: block;">
+                                            Haz clic en el botón para completar tu pago de forma segura
+                                          </span>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td style="text-align: center; padding: ${styles.spacing.md} 0;">
+                                          <a href="${linkPagoUrl}" 
+                                             style="display: inline-block; background-color: ${styles.colors.white}; color: #00aee8; padding: ${styles.spacing.md} ${styles.spacing.xl}; text-decoration: none; border-radius: ${styles.borderRadius.md}; font-weight: ${styles.typography.bold}; font-size: ${styles.typography.body}; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); transition: all 0.3s ease;">
+                                            PAGAR AHORA
+                                          </a>
+                                        </td>
+                                      </tr>
+                                      <tr>
+                                        <td style="text-align: center; padding-top: ${styles.spacing.sm};">
+                                          <span style="color: ${styles.colors.white}; font-size: ${styles.typography.bodySmall}; opacity: 0.9; display: block; word-break: break-all;">
+                                            O copia este enlace: ${linkPagoUrl}
+                                          </span>
+                                        </td>
+                                      </tr>
+                                    </table>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                        ` : ''}
 
                       </td>
                     </tr>

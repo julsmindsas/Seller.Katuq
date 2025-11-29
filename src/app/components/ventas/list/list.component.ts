@@ -42,7 +42,7 @@ import { PedidoEntregaComponent } from "../entrega/pedido-entrega.component";
 import { PedidosUtilService } from "../service/pedidos.util.service";
 import { UserLogged } from "../../../shared/models/User/UserLogged";
 import { UserLite } from "../../../shared/models/User/UserLite";
-import { FilterService, LazyLoadEvent } from "primeng/api";
+import { FilterService, LazyLoadEvent, MenuItem } from "primeng/api";
 import { FilterService as SharedFilterService } from "../../../shared/services/filters/filter.service";
 import { ServiciosService } from "../../../shared/services/servicios.service";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
@@ -88,6 +88,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild("ordenVentaTemplate", { static: false }) ordenVentaTemplate: any;
   @ViewChild("ordenVentaContainer", { static: false }) ordenVentaContainer: ElementRef;
 
+  // Referencias a modales para menú de opciones rápidas
+  @ViewChild("modalContent", { static: false }) modalContentRef: any;
+  @ViewChild("clientesModal", { static: false }) clientesModalRef: any;
+  @ViewChild("notasModal", { static: false }) notasModalRef: any;
+
   @ViewChild("fechaInicialCtrl", { static: false })
   fechaInicialCtrl: ElementRef;
   @ViewChild("fechaFinalCtrl", { static: false }) fechaFinalCtrl: ElementRef;
@@ -104,6 +109,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   formulario: any;
   pedidoSeleccionado: Pedido;
   pedidoParaOrdenVenta: Pedido | null = null; // Pedido para el componente de orden de venta
+
+  // Menú de opciones dropdown (3 puntos)
+  rowMenuItems: MenuItem[] = [];
+  selectedMenuPedido: any;
   datosEntregaDelCliente: any[] = [];
   estadosPago = Object.values(EstadoPago);
   ciudadSeleccionada: any;
@@ -341,6 +350,65 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   @HostListener("document:click", ["$event"])
   onDocumentClick(event: Event) {
     // Modal handles its own click-outside behavior
+  }
+
+  /**
+   * Maneja el clic en el menú de 3 puntos para mostrar opciones del pedido
+   */
+  onRowMenuClick(event: Event, menu: any, pedido: any): void {
+    this.selectedMenuPedido = pedido;
+
+    // Construir menú dinámicamente según el pedido - Opciones más usadas
+    const items: MenuItem[] = [
+      {
+        label: 'Imprimir PDF',
+        icon: 'pi pi-file-pdf',
+        command: () => this.pdfOrder(this.modalContentRef, this.selectedMenuPedido)
+      },
+      {
+        label: 'Duplicar',
+        icon: 'pi pi-copy',
+        command: () => this.duplicarPedido(this.selectedMenuPedido)
+      }
+    ];
+
+    // Agregar opciones de edición solo si no es desde producción
+    if (!this.isFromProduction) {
+      items.push(
+        {
+          label: 'Editar Cliente',
+          icon: 'pi pi-user-edit',
+          command: () => this.editDatosClientes(this.clientesModalRef, this.selectedMenuPedido)
+        },
+        {
+          label: 'Editar Notas',
+          icon: 'pi pi-pencil',
+          command: () => this.editNotas(this.notasModalRef, this.selectedMenuPedido)
+        }
+      );
+    }
+
+    // Agregar opción de producción si aplica
+    if (this.isFromProduction) {
+      items.push({
+        label: 'Producción',
+        icon: 'pi pi-sitemap',
+        command: () => this.produceOrder(this.selectedMenuPedido)
+      });
+    }
+
+    // Separador y más opciones al final
+    items.push(
+      { separator: true },
+      {
+        label: 'Más opciones...',
+        icon: 'pi pi-cog',
+        command: () => this.openOptionsModal(this.selectedMenuPedido)
+      }
+    );
+
+    this.rowMenuItems = items;
+    menu.toggle(event);
   }
 
   openOptionsModal(order: any, producto?: any) {
