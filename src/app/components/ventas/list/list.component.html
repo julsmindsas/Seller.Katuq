@@ -1792,6 +1792,20 @@
                         </div>
                     </button>
 
+                    <!-- Editar/Eliminar Descuento (Solo si el pedido tiene descuento) -->
+                    <button *ngIf="!isFromProduction && selectedOrder?.porceDescuento && selectedOrder.porceDescuento > 0 && (canModifyProducts(selectedOrder) || isAdminUser())" 
+                            class="option-btn" 
+                            type="button"
+                            (click)="editarDescuentoPedido(editarDescuentoModal, selectedOrder); closeOptionsModal()">
+                        <div class="option-icon edit-discount-icon">
+                            <i class="fa fa-edit"></i>
+                        </div>
+                        <div class="option-content">
+                            <span class="option-title">{{ 'Editar/Eliminar Descuento' | translate }}</span>
+                            <small class="option-description">{{ 'Modificar o eliminar descuento aplicado' | translate }}</small>
+                        </div>
+                    </button>
+
                     <!-- Ver Detalles de Entrega (Desde Despachado en adelante) -->
                     <button *ngIf="selectedOrder?.estadoProceso === 'Despachado' || selectedOrder?.estadoProceso === 'Entregado'" class="option-btn" type="button"
                         (click)="mostrarDetalleEntrega(selectedOrder); closeOptionsModal()">
@@ -1911,6 +1925,111 @@
         <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
             <i class="fa fa-times me-1"></i>
             {{'Cerrar' | translate}}
+        </button>
+    </div>
+</ng-template>
+
+<!-- Modal para editar/eliminar descuento -->
+<ng-template #editarDescuentoModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="modal-basic-title">{{'Editar/Eliminar Descuento' | translate}}</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body">
+        <div *ngIf="pedidoDescuentoEditando" class="edit-discount-container">
+            <!-- Información del descuento actual -->
+            <div class="alert alert-info mb-3">
+                <h6 class="mb-2"><i class="fa fa-info-circle me-2"></i>{{'Descuento Actual' | translate}}</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-1"><strong>{{'Porcentaje:' | translate}}</strong> {{pedidoDescuentoEditando.porceDescuento}}%</p>
+                        <p class="mb-1"><strong>{{'Valor del descuento:' | translate}}</strong> {{pedidoDescuentoEditando.totalDescuento | currency}}</p>
+                    </div>
+                    <div class="col-md-6" *ngIf="pedidoDescuentoEditando.cuponAplicado">
+                        <p class="mb-1"><strong>{{'Código de cupón:' | translate}}</strong> {{pedidoDescuentoEditando.cuponAplicado}}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario para editar descuento -->
+            <div class="form-group mb-3">
+                <label for="nuevoPorcentajeDescuento">{{'Nuevo Porcentaje de Descuento' | translate}} (%)</label>
+                <div class="input-group">
+                    <input type="number" 
+                           class="form-control" 
+                           id="nuevoPorcentajeDescuento"
+                           [(ngModel)]="nuevoPorcentajeDescuento"
+                           min="0"
+                           max="100"
+                           step="0.01"
+                           placeholder="{{'Ingrese el porcentaje (0-100)' | translate}}"
+                           (input)="calcularPreviewTotales(pedidoDescuentoEditando, nuevoPorcentajeDescuento)"
+                           [class.is-invalid]="nuevoPorcentajeDescuento < 0 || nuevoPorcentajeDescuento > 100">
+                    <span class="input-group-text">%</span>
+                </div>
+                <small class="form-text text-muted">{{'Ingrese un valor entre 0 y 100' | translate}}</small>
+                <div class="invalid-feedback" *ngIf="nuevoPorcentajeDescuento < 0 || nuevoPorcentajeDescuento > 100">
+                    {{'El porcentaje debe estar entre 0 y 100' | translate}}
+                </div>
+            </div>
+
+            <!-- Preview de totales -->
+            <div class="preview-totales-container" *ngIf="previewTotales && nuevoPorcentajeDescuento >= 0 && nuevoPorcentajeDescuento <= 100">
+                <h6 class="mb-3"><i class="fa fa-calculator me-2"></i>{{'Vista Previa de Totales' | translate}}</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-bordered">
+                        <tbody>
+                            <tr>
+                                <td><strong>{{'Valor Bruto:' | translate}}</strong></td>
+                                <td class="text-end">{{previewTotales.totalPedidoSinDescuento | currency}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{'Descuento:' | translate}}</strong></td>
+                                <td class="text-end text-danger">-{{previewTotales.totalDescuento | currency}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{'Domicilio:' | translate}}</strong></td>
+                                <td class="text-end">{{previewTotales.totalEnvio | currency}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{'Subtotal:' | translate}}</strong></td>
+                                <td class="text-end">{{previewTotales.subtotal | currency}}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>{{'IVA:' | translate}}</strong></td>
+                                <td class="text-end">{{previewTotales.totalImpuesto | currency}}</td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td><strong>{{'Total:' | translate}}</strong></td>
+                                <td class="text-end"><strong>{{previewTotales.totalPedididoConDescuento | currency}}</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-danger" 
+                (click)="eliminarDescuentoPedido()"
+                [disabled]="guardandoDescuento">
+            <i class="fa fa-trash me-1"></i>
+            {{'Eliminar Descuento' | translate}}
+        </button>
+        <button type="button" class="btn btn-outline-secondary" 
+                (click)="modal.dismiss('cancel')"
+                [disabled]="guardandoDescuento">
+            <i class="fa fa-times me-1"></i>
+            {{'Cancelar' | translate}}
+        </button>
+        <button type="button" class="btn btn-primary" 
+                (click)="guardarCambiosDescuento()"
+                [disabled]="guardandoDescuento || nuevoPorcentajeDescuento < 0 || nuevoPorcentajeDescuento > 100">
+            <i class="fa fa-spinner fa-spin me-1" *ngIf="guardandoDescuento"></i>
+            <i class="fa fa-save me-1" *ngIf="!guardandoDescuento"></i>
+            {{'Guardar Cambios' | translate}}
         </button>
     </div>
 </ng-template>

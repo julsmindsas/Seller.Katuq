@@ -859,6 +859,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   errorCodigoDescuento: string = "";
   descuentoAplicado: any = null;
   pedidoSeleccionadoDescuento: Pedido;
+
+  // Propiedades para editar/eliminar descuento
+  pedidoDescuentoEditando: Pedido | null = null;
+  nuevoPorcentajeDescuento: number = 0;
+  previewTotales: any = null;
+  guardandoDescuento: boolean = false;
   // Date objects for p-calendar components
   fechaInicialDate: Date | null;
   fechaFinalDate: Date | null;
@@ -5696,6 +5702,212 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const cantidad = item.cantidad || 0;
       return total + precioUnitario * cantidad;
     }, 0);
+  }
+
+  /**
+   * Abre el modal para editar/eliminar descuento
+   * @param content Template del modal
+   * @param pedido Pedido al que se le editará el descuento
+   */
+  editarDescuentoPedido(content: any, pedido: Pedido) {
+    // Permitir a administradores editar descuentos incluso en pedidos congelados
+    if (!this.canModifyProducts(pedido) && !this.isAdminUser()) {
+      this.toastrService.warning(
+        `No se pueden editar descuentos. El pedido está en estado: ${pedido.estadoProceso}`,
+        "Pedido Congelado",
+      );
+      return;
+    }
+
+    if (!pedido.porceDescuento || pedido.porceDescuento <= 0) {
+      this.toastrService.warning(
+        "Este pedido no tiene descuento aplicado",
+        "Sin Descuento",
+      );
+      return;
+    }
+
+    // Crear una copia del pedido para editar sin afectar el original
+    this.pedidoDescuentoEditando = JSON.parse(JSON.stringify(pedido));
+    this.nuevoPorcentajeDescuento = pedido.porceDescuento || 0;
+    this.previewTotales = null;
+    this.guardandoDescuento = false;
+
+    // Calcular preview inicial
+    if (this.pedidoDescuentoEditando) {
+      this.calcularPreviewTotales(this.pedidoDescuentoEditando, this.nuevoPorcentajeDescuento);
+    }
+
+    this.scrollStack.push(window.scrollY);
+    this.modalService
+      .open(content, {
+        size: "lg",
+        scrollable: true,
+        centered: true,
+        ariaLabelledBy: "modal-basic-title",
+      })
+      .result.then(
+        (result) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
+          // Limpiar datos al cerrar
+          this.pedidoDescuentoEditando = null;
+          this.nuevoPorcentajeDescuento = 0;
+          this.previewTotales = null;
+        },
+        (reason) => {
+          const last = this.scrollStack.pop();
+          if (last !== undefined) {
+            setTimeout(() => {
+              window.scrollTo({ top: last });
+            }, 0);
+          }
+          // Limpiar datos al cerrar
+          this.pedidoDescuentoEditando = null;
+          this.nuevoPorcentajeDescuento = 0;
+          this.previewTotales = null;
+        },
+      );
+  }
+
+  /**
+   * Calcula el preview de los totales con el nuevo porcentaje de descuento
+   * @param pedido Pedido base
+   * @param nuevoPorcentaje Nuevo porcentaje de descuento
+   */
+  calcularPreviewTotales(pedido: Pedido, nuevoPorcentaje: number): void {
+    if (!pedido || nuevoPorcentaje < 0 || nuevoPorcentaje > 100) {
+      this.previewTotales = null;
+      return;
+    }
+
+    // Crear una copia del pedido para calcular sin afectar el original
+    const pedidoCopia: Pedido = JSON.parse(JSON.stringify(pedido));
+    pedidoCopia.porceDescuento = nuevoPorcentaje;
+
+    // Asignar el pedido al servicio de utilidades para calcular
+    this.pedidoUtilService.pedido = pedidoCopia;
+    this.sincronizarFormaEntrega(pedidoCopia);
+
+    // Recalcular envío y totales usando el mismo método que se usa en la tabla
+    this.recalcularEnvioYTotalizarPedido(pedidoCopia);
+
+    // Preparar el preview
+    this.previewTotales = {
+      totalPedidoSinDescuento: pedidoCopia.totalPedidoSinDescuento || 0,
+      totalDescuento: pedidoCopia.totalDescuento || 0,
+      totalEnvio: pedidoCopia.totalEnvio || 0,
+      subtotal: pedidoCopia.subtotal || 0,
+      totalImpuesto: pedidoCopia.totalImpuesto || 0,
+      totalPedididoConDescuento: pedidoCopia.totalPedididoConDescuento || 0,
+    };
+  }
+
+  /**
+   * Guarda los cambios del descuento editado
+   */
+  guardarCambiosDescuento(): void {
+    if (!this.pedidoDescuentoEditando) {
+      return;
+    }
+
+    if (this.nuevoPorcentajeDescuento < 0 || this.nuevoPorcentajeDescuento > 100) {
+      this.toastrService.error(
+        "El porcentaje de descuento debe estar entre 0 y 100",
+        "Error de Validación",
+      );
+      return;
+    }
+
+    this.guardandoDescuento = true;
+
+    // Buscar el pedido original en la lista
+    const pedidoOriginal = this.orders.find(
+      (p) => p._id === this.pedidoDescuentoEditando?._id || p.nroPedido === this.pedidoDescuentoEditando?.nroPedido,
+    );
+
+    if (!pedidoOriginal) {
+      this.toastrService.error("No se encontró el pedido en la lista", "Error");
+      this.guardandoDescuento = false;
+      return;
+    }
+
+    // Actualizar el porcentaje de descuento
+    pedidoOriginal.porceDescuento = this.nuevoPorcentajeDescuento;
+
+    // Si el descuento es 0, limpiar el cupón aplicado
+    if (this.nuevoPorcentajeDescuento === 0) {
+      pedidoOriginal.cuponAplicado = undefined;
+    }
+
+    // Recalcular todos los totales usando el mismo método que se usa en la tabla
+    this.recalcularEnvioYTotalizarPedido(pedidoOriginal);
+
+    // Actualizar el pedido en el backend
+    this.ventasService.editOrder(pedidoOriginal).subscribe({
+      next: (response) => {
+        this.guardandoDescuento = false;
+        this.toastrService.success(
+          `Descuento ${this.nuevoPorcentajeDescuento === 0 ? 'eliminado' : 'actualizado'} exitosamente`,
+          "Descuento Actualizado",
+          {
+            timeOut: 3000,
+            progressBar: true,
+            positionClass: "toast-bottom-right",
+          },
+        );
+
+        // Cerrar el modal
+        this.modalService.dismissAll();
+
+        // Refrescar los datos de la tabla
+        this.refrescarDatos();
+      },
+      error: (err) => {
+        this.guardandoDescuento = false;
+        console.error("Error al actualizar el descuento:", err);
+        this.toastrService.error(
+          "Error al actualizar el descuento. Por favor, intente nuevamente.",
+          "Error",
+          {
+            timeOut: 4000,
+            progressBar: true,
+            positionClass: "toast-bottom-right",
+          },
+        );
+      },
+    });
+  }
+
+  /**
+   * Elimina el descuento del pedido
+   */
+  eliminarDescuentoPedido(): void {
+    if (!this.pedidoDescuentoEditando) {
+      return;
+    }
+
+    Swal.fire({
+      title: "¿Eliminar descuento?",
+      text: "Esta acción eliminará el descuento aplicado al pedido. ¿Desea continuar?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Establecer el porcentaje en 0
+        this.nuevoPorcentajeDescuento = 0;
+        // Guardar los cambios (que ahora eliminará el descuento)
+        this.guardarCambiosDescuento();
+      }
+    });
   }
 
   /**
