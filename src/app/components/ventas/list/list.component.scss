@@ -1095,6 +1095,59 @@ $filter-border-color: #e0e0e0;
   color: #495057;
 }
 
+// -----------------------
+// Modal impresión PDF
+// -----------------------
+.pdf-print-modal-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e9ecef;
+
+  .modal-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #212529;
+  }
+}
+
+.pdf-print-modal-close {
+  padding: 0.6rem;
+  border-radius: 999px;
+  background-color: #f1f3f5;
+  border: none;
+  box-shadow: none;
+  outline: none;
+
+  &:hover {
+    background-color: #e9ecef;
+  }
+
+  &:focus {
+    box-shadow: 0 0 0 0.15rem rgba(0, 123, 255, 0.25);
+  }
+}
+
+.pdf-print-modal-body {
+  background-color: #f8f9fb;
+
+  .pdf-print-content-wrapper {
+    max-height: 70vh;
+    overflow: auto;
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0 0 1px #f1f3f5;
+  }
+}
+
+.pdf-print-modal-footer {
+  border-top: 1px solid #e9ecef;
+  background-color: #ffffff;
+
+  .btn {
+    min-width: 110px;
+  }
+}
+
 .btn-primary {
   background-color: $primary-color;
   border-color: $primary-color;

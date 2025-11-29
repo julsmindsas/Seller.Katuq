@@ -2710,7 +2710,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             order.anticipo = 0;
           }
 
-          // Calcular falta por pagar basado en el total y anticipo real
+          // 🚚 RECALCULAR ENVÍO Y TOTALIZAR usando la misma lógica que el PDF
+          // Esto asegura consistencia entre la tabla y el PDF
+          this.recalcularEnvioYTotalizarPedido(order);
+
+          // Calcular falta por pagar basado en el total y anticipo real (ya recalculado)
           order.faltaPorPagar = Math.max(
             0,
             Number(order.totalPedididoConDescuento || 0) -
@@ -3030,7 +3034,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               order.anticipo = 0;
             }
 
-            // Calcular falta por pagar
+            // 🚚 RECALCULAR ENVÍO Y TOTALIZAR usando la misma lógica que el PDF
+            // Esto asegura consistencia entre la tabla y el PDF
+            this.recalcularEnvioYTotalizarPedido(order);
+
+            // Calcular falta por pagar basado en el total y anticipo real (ya recalculado)
             order.faltaPorPagar = Math.max(
               0,
               Number(order.totalPedididoConDescuento || 0) -
@@ -4301,6 +4309,111 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       totalImpuesto,
       totalFinal,
       faltaPorPagar: pedido.faltaPorPagar,
+    });
+  }
+
+  /**
+   * 🚚 RECALCULA el envío y totaliza el pedido usando la misma lógica que el PDF
+   * Asegura consistencia entre la tabla y el PDF
+   */
+  private recalcularEnvioYTotalizarPedido(order: Pedido): void {
+    if (!order) return;
+
+    // Asignar pedido al servicio de utilidades
+    this.pedidoUtilService.pedido = order;
+
+    // Sincronizar forma de entrega antes de recalcular envío
+    this.sincronizarFormaEntrega(order);
+
+    // 🔍 DETECTAR CAMBIOS EN FORMA DE ENTREGA
+    const tieneDomicilio = (order.carrito ?? []).some((car) => {
+      const forma = car?.configuracion?.datosEntrega?.formaEntrega || "";
+      return forma.toLowerCase().includes("domicilio");
+    });
+
+    // 🔄 SINCRONIZAR ENVÍO CON FORMA DE ENTREGA ACTUAL
+    let costoEnvioAnterior = order.totalEnvio || 0;
+    let costoEnvioNuevo = 0;
+
+    // Asegurar que allBillingZone esté disponible
+    const billingZones = this.allBillingZone ||
+      JSON.parse(sessionStorage.getItem("allBillingZone") || "[]");
+
+    if (tieneDomicilio && order.envio?.zonaCobro) {
+      try {
+        costoEnvioNuevo = Number(
+          this.pedidoUtilService.getShippingCost(billingZones),
+        );
+        order.totalEnvio = costoEnvioNuevo;
+
+        console.log("🚚 RECÁLCULO ENVÍO - Envío domicilio detectado:", {
+          nroPedido: order.nroPedido,
+          costoAnterior: costoEnvioAnterior,
+          costoNuevo: costoEnvioNuevo,
+          formaEntrega: "Domicilio",
+          zonaCobro: order.envio.zonaCobro,
+        });
+      } catch (e) {
+        console.warn("No se pudo calcular el costo de envío:", e);
+        order.totalEnvio = 0;
+        costoEnvioNuevo = 0;
+      }
+    } else {
+      // Recoge en tienda o sin zona de cobro
+      if (order.totalEnvio !== 0) {
+        console.log(
+          "🚚 RECÁLCULO ENVÍO - Envío removido (recoge en tienda o sin zona):",
+          {
+            nroPedido: order.nroPedido,
+            costoAnterior: costoEnvioAnterior,
+            formaEntrega: order.formaEntrega,
+          },
+        );
+      }
+      order.totalEnvio = 0;
+      costoEnvioNuevo = 0;
+    }
+
+    // 🔄 RECALCULAR TOTALES DEPENDIENTES
+    // 1. Obtener subtotal SOLO de productos
+    const subtotalProductos = this.pedidoUtilService.getSubtotal();
+
+    // 2. Sumar envío al subtotal
+    order.totalPedidoSinDescuento = subtotalProductos + (order.totalEnvio || 0);
+
+    // 3. Recalcular descuento si existe porcentaje
+    if (order.porceDescuento) {
+      order.totalDescuento = this.pedidoUtilService.getDiscount();
+    }
+
+    // 4. Calcular subtotal con descuento
+    const descuento = Number(order.totalDescuento || 0);
+    order.subtotal = Number(order.totalPedidoSinDescuento || 0) - descuento;
+
+    // 5. Calcular total final
+    const totalImpuesto = Number(order.totalImpuesto || 0);
+    order.totalPedididoConDescuento =
+      order.subtotal + totalImpuesto;
+
+    // 6. Recalcular falta por pagar si hay anticipo
+    const anticipo = Number(order.anticipo || 0);
+    order.faltaPorPagar = Math.max(
+      0,
+      order.totalPedididoConDescuento - anticipo,
+    );
+
+    console.log("💰 RECÁLCULO ENVÍO - Totales actualizados:", {
+      nroPedido: order.nroPedido,
+      subtotalProductos,
+      totalEnvio: order.totalEnvio,
+      totalDescuento: descuento,
+      totalImpuesto,
+      subtotalFinal: order.subtotal,
+      totalFinal: order.totalPedididoConDescuento,
+      cambioEnvio: costoEnvioAnterior !== costoEnvioNuevo,
+      formaEntrega: order.carrito?.map(
+        (c) => c.configuracion?.datosEntrega?.formaEntrega,
+      ),
     });
   }
 
