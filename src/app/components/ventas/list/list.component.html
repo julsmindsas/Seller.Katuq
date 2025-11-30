@@ -328,7 +328,7 @@
                                             <th *ngIf="isColumnVisible('estadoPago')" class="text-center" pSortableColumn="estadoPago">
                                                 {{ 'Estado de Pago' | translate }}
                                                 <p-sortIcon field="estadoPago"></p-sortIcon>
-                                                <p-columnFilter field="estadoPago" matchMode="equals"
+                                                <p-columnFilter field="estadoPago" matchMode="in"
                                                     [showMenu]="true" display="menu">
                                                     <ng-template pTemplate="filter" let-value
                                                         let-filter="filterCallback">
@@ -345,7 +345,7 @@
                                             <th *ngIf="isColumnVisible('estadoProceso')" class="text-center" pSortableColumn="estadoProceso">
                                                 {{ 'Estado de Proceso' | translate }}
                                                 <p-sortIcon field="estadoProceso"></p-sortIcon>
-                                                <p-columnFilter field="estadoProceso" matchMode="equals"
+                                                <p-columnFilter field="estadoProceso" matchMode="in"
                                                     [showMenu]="true" display="menu">
                                                     <ng-template pTemplate="filter" let-value
                                                         let-filter="filterCallback">

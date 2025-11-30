@@ -290,18 +290,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           if (Array.isArray(filterData)) {
             // Es un array de filtros - tomar el primer filtro con valor
-            const activeFilter = filterData.find((f: any) => f.value !== null && f.value !== undefined && f.value !== '');
+            const activeFilter = filterData.find((f: any) => {
+              if (f.value === null || f.value === undefined || f.value === '') return false;
+              // Validar arrays vacíos (multiselect sin selección)
+              if (Array.isArray(f.value) && f.value.length === 0) return false;
+              return true;
+            });
             if (activeFilter) {
               filterValue = activeFilter.value;
             }
           } else if (filterData.value !== null && filterData.value !== undefined && filterData.value !== '') {
-            // Es un objeto simple
-            filterValue = filterData.value;
+            // Es un objeto simple - también validar arrays vacíos
+            if (Array.isArray(filterData.value) && filterData.value.length === 0) {
+              filterValue = null;
+            } else {
+              filterValue = filterData.value;
+            }
           }
 
-          if (filterValue) {
+          // Solo agregar el filtro si tiene un valor válido (no null, no array vacío)
+          if (filterValue && (!Array.isArray(filterValue) || filterValue.length > 0)) {
             this.columnFilters[backendField] = filterValue;
-            console.log(`🔍 Filtro de columna capturado: ${htmlField} → ${backendField} = "${filterValue}"`);
+            console.log(`🔍 Filtro de columna capturado: ${htmlField} → ${backendField} = "${JSON.stringify(filterValue)}"`);
           }
         }
       }
@@ -2097,13 +2107,29 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Calcula el IVA total extrayéndolo del precio CON IVA
    * Aplica el descuento antes de calcular el IVA
    * Fórmula: IVA = (valorConDescuento / (1 + %IVA)) * %IVA
-   * Consistente con PaymentService
+   * Consistente con PaymentService - Incluye IVA del envío
    */
-  checkIVAPrice(pedido): number {
+  checkIVAPrice(pedido): {
+    totalPrecioIVADef: number;
+    totalExcluidos: number;
+    totalIva5: number;
+    totalImpo: number;
+    totalIva19: number;
+  } {
     let totalPrecioIVADef = 0;
+    let totalExcluidosDef = 0;
+    let totalIva5Def = 0;
+    let totalImpoDef = 0;
+    let totalIva19Def = 0;
 
     if (!pedido?.carrito) {
-      return 0;
+      return {
+        totalPrecioIVADef: 0,
+        totalExcluidos: 0,
+        totalIva5: 0,
+        totalImpo: 0,
+        totalIva19: 0,
+      };
     }
 
     // Obtener porcentaje de descuento del pedido
@@ -2141,6 +2167,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         const ivaProducto = (valorConDescuento / (1 + porcentajeIva)) * porcentajeIva;
         if (!isNaN(ivaProducto)) {
           totalPrecioIVADef += ivaProducto;
+          // Acumular por tipo de IVA
+          switch (porcentajeIvaStr) {
+            case "0":
+              totalExcluidosDef += isNaN(valorConDescuento) ? 0 : valorConDescuento;
+              break;
+            case "5":
+              totalIva5Def += ivaProducto;
+              break;
+            case "8":
+              totalImpoDef += ivaProducto;
+              break;
+            case "19":
+              totalIva19Def += ivaProducto;
+              break;
+          }
         }
       }
 
@@ -2149,12 +2190,27 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         itemCarrito.configuracion.adiciones.forEach((adicion) => {
           const valorAdicionConIva = (Number(adicion.precioTotalConIva) || 0) * cantidad;
           const valorAdicionConDesc = valorAdicionConIva * (1 - porceDescuento);
+          const porcAdicionStr = (adicion.porcentajeIva ?? "0").toString();
           const porcAdicion = (Number(adicion.porcentajeIva) || 0) / 100;
 
           if (1 + porcAdicion !== 0) {
             const ivaAdicion = (valorAdicionConDesc / (1 + porcAdicion)) * porcAdicion;
             if (!isNaN(ivaAdicion)) {
               totalPrecioIVADef += ivaAdicion;
+              switch (porcAdicionStr) {
+                case "0":
+                  totalExcluidosDef += isNaN(valorAdicionConDesc) ? 0 : valorAdicionConDesc;
+                  break;
+                case "5":
+                  totalIva5Def += ivaAdicion;
+                  break;
+                case "8":
+                  totalImpoDef += ivaAdicion;
+                  break;
+                case "19":
+                  totalIva19Def += ivaAdicion;
+                  break;
+              }
             }
           }
         });
@@ -2165,19 +2221,75 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         itemCarrito.configuracion.preferencias.forEach((preferencia) => {
           const valorPrefConIva = (Number(preferencia.precioTotalConIva) || 0) * cantidad;
           const valorPrefConDesc = valorPrefConIva * (1 - porceDescuento);
+          const porcPrefStr = (preferencia.porcentajeIva ?? "0").toString();
           const porcPref = (Number(preferencia.porcentajeIva) || 0) / 100;
 
           if (1 + porcPref !== 0) {
             const ivaPref = (valorPrefConDesc / (1 + porcPref)) * porcPref;
             if (!isNaN(ivaPref)) {
               totalPrecioIVADef += ivaPref;
+              switch (porcPrefStr) {
+                case "0":
+                  totalExcluidosDef += isNaN(valorPrefConDesc) ? 0 : valorPrefConDesc;
+                  break;
+                case "5":
+                  totalIva5Def += ivaPref;
+                  break;
+                case "8":
+                  totalImpoDef += ivaPref;
+                  break;
+                case "19":
+                  totalIva19Def += ivaPref;
+                  break;
+              }
             }
           }
         });
       }
     });
 
-    return isNaN(totalPrecioIVADef) ? 0 : totalPrecioIVADef;
+    // Calcular IVA del envío (domicilio) - Consistente con PaymentService
+    const billingZones = this.allBillingZone ||
+      JSON.parse(sessionStorage.getItem("allBillingZone") || "[]");
+
+    if (billingZones && pedido) {
+      this.pedidoUtilService.pedido = pedido;
+      const costoEnvioConIva = Number(
+        this.pedidoUtilService.getShippingTaxCostInvoice(billingZones, pedido)
+      ) || 0;
+      const porcentajeIvaEnvioStr =
+        this.pedidoUtilService.getShippingTaxValueInvoice(billingZones, pedido) ?? "0";
+      const porcentajeIvaEnvioNum = (Number(porcentajeIvaEnvioStr) || 0) / 100;
+
+      if (1 + porcentajeIvaEnvioNum !== 0 && costoEnvioConIva > 0) {
+        const ivaEnvio = (costoEnvioConIva / (1 + porcentajeIvaEnvioNum)) * porcentajeIvaEnvioNum;
+        if (!isNaN(ivaEnvio)) {
+          totalPrecioIVADef += ivaEnvio;
+          switch (porcentajeIvaEnvioStr) {
+            case "0":
+              totalExcluidosDef += isNaN(costoEnvioConIva) ? 0 : costoEnvioConIva;
+              break;
+            case "5":
+              totalIva5Def += ivaEnvio;
+              break;
+            case "8":
+              totalImpoDef += ivaEnvio;
+              break;
+            case "19":
+              totalIva19Def += ivaEnvio;
+              break;
+          }
+        }
+      }
+    }
+
+    return {
+      totalPrecioIVADef: isNaN(totalPrecioIVADef) ? 0 : totalPrecioIVADef,
+      totalExcluidos: isNaN(totalExcluidosDef) ? 0 : totalExcluidosDef,
+      totalIva5: isNaN(totalIva5Def) ? 0 : totalIva5Def,
+      totalImpo: isNaN(totalImpoDef) ? 0 : totalImpoDef,
+      totalIva19: isNaN(totalIva19Def) ? 0 : totalIva19Def,
+    };
   }
 
   private registerCustomFilters() {
@@ -2647,18 +2759,31 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // Verificar si el backend ya calculó los totales (optimización de rendimiento)
           if (!order._calculadoEnBackend) {
             // Recalcular montos base con consistencia (solo si backend no lo hizo)
-            order.totalPedidoSinDescuento = Number(
-              this.checkPriceScale(order) || 0,
-            );
-            order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
-            // Subtotal: productos sin IVA - descuento
-            const descuento = Number(order.totalDescuento || 0);
-            order.subtotal =
-              Number(order.totalPedidoSinDescuento || 0) - descuento;
-            // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
+            // Consistente con PaymentService
+            const subtotalProductos = Number(this.checkPriceScale(order) || 0);
             const envio = Number(order.totalEnvio || 0);
-            order.totalPedididoConDescuento =
-              order.subtotal + order.totalImpuesto + envio;
+
+            // 1. Valor Bruto (totalPedidoSinDescuento) = SOLO productos (sin envío)
+            order.totalPedidoSinDescuento = subtotalProductos;
+
+            // 2. Calcular descuento SOLO sobre productos (NO sobre envío)
+            let descuento = 0;
+            if (order.porceDescuento) {
+              descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
+              order.totalDescuento = descuento;
+            } else {
+              descuento = Number(order.totalDescuento || 0);
+            }
+
+            // 3. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
+            order.subtotal = subtotalProductos - descuento + envio;
+
+            // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
+            const ivaResult = this.checkIVAPrice(order);
+            order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || 0);
+
+            // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
+            order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
           }
 
           // Calcular anticipo basado en PagosAsentados si existen
@@ -3008,18 +3133,31 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             // Verificar si el backend ya calculó los totales (optimización de rendimiento)
             if (!order._calculadoEnBackend) {
               // Recalcular montos base con consistencia (solo si backend no lo hizo)
-              order.totalPedidoSinDescuento = Number(
-                this.checkPriceScale(order) || 0,
-              );
-              order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
-              // Subtotal: productos sin IVA - descuento
-              const descuento = Number(order.totalDescuento || 0);
-              order.subtotal =
-                Number(order.totalPedidoSinDescuento || 0) - descuento;
-              // Total = subtotal + IVA + envío (el descuento ya está restado en el subtotal)
+              // Consistente con PaymentService y recalcularEnvioYTotalizarPedido
+              const subtotalProductos = Number(this.checkPriceScale(order) || 0);
               const envio = Number(order.totalEnvio || 0);
-              order.totalPedididoConDescuento =
-                order.subtotal + order.totalImpuesto + envio;
+
+              // 1. Valor Bruto (totalPedidoSinDescuento) = SOLO productos (sin envío)
+              order.totalPedidoSinDescuento = subtotalProductos;
+
+              // 2. Calcular descuento SOLO sobre productos (NO sobre envío)
+              let descuento = 0;
+              if (order.porceDescuento) {
+                descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
+                order.totalDescuento = descuento;
+              } else {
+                descuento = Number(order.totalDescuento || 0);
+              }
+
+              // 3. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
+              order.subtotal = subtotalProductos - descuento + envio;
+
+              // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
+              const ivaResultSinPag = this.checkIVAPrice(order);
+              order.totalImpuesto = Number(ivaResultSinPag.totalPrecioIVADef || 0);
+
+              // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
+              order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
             }
 
             // Calcular anticipo basado en PagosAsentados si existen
@@ -3827,22 +3965,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Total subtotal de pedidos filtrados
+   * Total subtotal de pedidos filtrados (solo productos, sin envío)
+   * Consistente con getSubtotalConDomicilio y el PDF
    */
   getFilteredCalculateSubtotal(): number {
     return this.getFilteredOrders().reduce((acc, pedido: any) => {
-      // El subtotal debe incluir el valor del domicilio
-      const subtotalConDomicilio =
-        (pedido.subtotal || 0) + (pedido.totalEnvio || 0);
-      return acc + subtotalConDomicilio;
+      // Subtotal = solo productos (sin envío, sin descuento)
+      const subtotalProductos = this.getSubtotalConDomicilio(pedido);
+      return acc + subtotalProductos;
     }, 0);
   }
 
   /**
-   * Calcula el subtotal de un pedido individual incluyendo el domicilio
+   * Retorna el subtotal del pedido (valorBruto - descuento + envío)
+   * @note subtotal ahora incluye el domicilio según la fórmula correcta
    */
   getSubtotalConDomicilio(pedido: any): number {
-    return (pedido.subtotal || 0) + (pedido.totalEnvio || 0);
+    // subtotal ya incluye: valorBruto - descuento + envío
+    return Number(pedido.subtotal || 0);
   }
 
   /**
@@ -4285,6 +4425,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * 🧮 RECALCULA los totales del pedido después de cambiar el costo de envío
+   * Fórmula consistente con PaymentService y orderCalculationService
    */
   private recalcularTotalesPedido(pedido: Pedido): void {
     if (!pedido) return;
@@ -4292,28 +4433,44 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Recalcular totales usando el servicio de utilidades
     this.pedidoUtilService.pedido = pedido;
 
-    // Actualizar totales
-    const subtotalSinEnvio = this.pedidoUtilService.getSubtotalSinEnvio();
-    const totalDescuento = Number(pedido.totalDescuento) || 0;
-    const totalImpuesto = Number(pedido.totalImpuesto) || 0;
+    // 1. Obtener subtotal SOLO de productos (sin IVA, sin envío)
+    const subtotalProductos = this.pedidoUtilService.getSubtotalSinEnvio();
     const totalEnvio = Number(pedido.totalEnvio) || 0;
 
-    // Calcular total final
-    const totalFinal =
-      subtotalSinEnvio + totalEnvio + totalImpuesto - totalDescuento;
+    // 2. Valor Bruto (totalPedidoSinDescuento) = SOLO productos (sin envío)
+    pedido.totalPedidoSinDescuento = subtotalProductos;
 
-    // Actualizar propiedades del pedido
-    pedido.totalPedidoSinDescuento = subtotalSinEnvio + totalEnvio;
-    pedido.totalPedididoConDescuento = totalFinal;
-    pedido.faltaPorPagar = totalFinal - (Number(pedido.anticipo) || 0);
+    // 3. Calcular descuento SOLO sobre productos (NO sobre envío)
+    let descuento = 0;
+    if (pedido.porceDescuento) {
+      descuento = subtotalProductos * (Number(pedido.porceDescuento) / 100);
+      pedido.totalDescuento = descuento;
+    } else {
+      descuento = Number(pedido.totalDescuento) || 0;
+    }
+
+    // 4. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
+    pedido.subtotal = subtotalProductos - descuento + totalEnvio;
+
+    // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
+    const ivaResultTotales = this.checkIVAPrice(pedido);
+    const totalImpuesto = Number(ivaResultTotales.totalPrecioIVADef || 0);
+    pedido.totalImpuesto = totalImpuesto;
+
+    // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
+    pedido.totalPedididoConDescuento = pedido.subtotal + totalImpuesto;
+
+    // 7. Calcular falta por pagar
+    pedido.faltaPorPagar = Math.max(0, pedido.totalPedididoConDescuento - (Number(pedido.anticipo) || 0));
 
     console.log("🧮 RECÁLCULO - Totales actualizados:", {
       nroPedido: pedido.nroPedido,
-      subtotalSinEnvio,
+      subtotalProductos,
       totalEnvio,
-      totalDescuento,
+      descuento,
+      subtotal: pedido.subtotal,
       totalImpuesto,
-      totalFinal,
+      totalFinal: pedido.totalPedididoConDescuento,
       faltaPorPagar: pedido.faltaPorPagar,
     });
   }
@@ -4380,28 +4537,34 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       costoEnvioNuevo = 0;
     }
 
-    // 🔄 RECALCULAR TOTALES DEPENDIENTES
-    // 1. Obtener subtotal SOLO de productos
+    // 🔄 RECALCULAR TOTALES DEPENDIENTES - Fórmula consistente con PaymentService
+    // 1. Obtener subtotal SOLO de productos (sin IVA, sin envío)
     const subtotalProductos = this.pedidoUtilService.getSubtotal();
 
-    // 2. Sumar envío al subtotal
-    order.totalPedidoSinDescuento = subtotalProductos + (order.totalEnvio || 0);
+    // 2. Valor Bruto (totalPedidoSinDescuento) = SOLO productos (sin envío)
+    order.totalPedidoSinDescuento = subtotalProductos;
 
-    // 3. Recalcular descuento si existe porcentaje
+    // 3. Calcular descuento SOLO sobre productos (NO sobre envío)
+    let descuento = 0;
     if (order.porceDescuento) {
-      order.totalDescuento = this.pedidoUtilService.getDiscount();
+      descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
+      order.totalDescuento = descuento;
+    } else {
+      descuento = Number(order.totalDescuento || 0);
     }
 
-    // 4. Calcular subtotal con descuento
-    const descuento = Number(order.totalDescuento || 0);
-    order.subtotal = Number(order.totalPedidoSinDescuento || 0) - descuento;
+    // 4. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
+    const envio = Number(order.totalEnvio || 0);
+    order.subtotal = subtotalProductos - descuento + envio;
 
-    // 5. Calcular total final
-    const totalImpuesto = Number(order.totalImpuesto || 0);
-    order.totalPedididoConDescuento =
-      order.subtotal + totalImpuesto;
+    // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
+    const ivaResultRecalc = this.checkIVAPrice(order);
+    order.totalImpuesto = Number(ivaResultRecalc.totalPrecioIVADef || 0);
 
-    // 6. Recalcular falta por pagar si hay anticipo
+    // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
+    order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
+
+    // 7. Recalcular falta por pagar si hay anticipo
     const anticipo = Number(order.anticipo || 0);
     order.faltaPorPagar = Math.max(
       0,
@@ -4413,7 +4576,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       subtotalProductos,
       totalEnvio: order.totalEnvio,
       totalDescuento: descuento,
-      totalImpuesto,
+      totalImpuesto: order.totalImpuesto,
       subtotalFinal: order.subtotal,
       totalFinal: order.totalPedididoConDescuento,
       cambioEnvio: costoEnvioAnterior !== costoEnvioNuevo,
@@ -6633,13 +6796,32 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         console.log(`✅ Obtenidos ${response.orders.length} pedidos para exportar (totalItems: ${response.totalItems})`);
 
         // Procesar los pedidos igual que en refrescarDatos
+        // Consistente con PaymentService y recalcularEnvioYTotalizarPedido
         const pedidosProcesados = response.orders.map((order: any) => {
-          order.totalPedidoSinDescuento = Number(this.checkPriceScale(order) || 0);
-          order.totalImpuesto = Number(this.checkIVAPrice(order) || 0);
-          const descuento = Number(order.totalDescuento || 0);
-          order.subtotal = Number(order.totalPedidoSinDescuento || 0) - descuento;
+          const subtotalProductos = Number(this.checkPriceScale(order) || 0);
           const envio = Number(order.totalEnvio || 0);
-          order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto + envio;
+
+          // 1. Valor Bruto (totalPedidoSinDescuento) = SOLO productos (sin envío)
+          order.totalPedidoSinDescuento = subtotalProductos;
+
+          // 2. Calcular descuento SOLO sobre productos (NO sobre envío)
+          let descuento = 0;
+          if (order.porceDescuento) {
+            descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
+            order.totalDescuento = descuento;
+          } else {
+            descuento = Number(order.totalDescuento || 0);
+          }
+
+          // 3. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
+          order.subtotal = subtotalProductos - descuento + envio;
+
+          // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
+          const ivaResultExport = this.checkIVAPrice(order);
+          order.totalImpuesto = Number(ivaResultExport.totalPrecioIVADef || 0);
+
+          // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
+          order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
 
           if (order.PagosAsentados && order.PagosAsentados.length > 0) {
             order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
