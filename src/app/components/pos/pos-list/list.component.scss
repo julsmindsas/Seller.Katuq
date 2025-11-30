@@ -383,3 +383,576 @@
 .text-small {
   font-size: small !important;
 }
+
+// ==================== ESTILOS DE TABLA DE PEDIDOS (APLICADOS A POS) ====================
+
+:host ::ng-deep .p-datatable {
+  width: 100%;
+  table-layout: fixed;
+  font-size: 0.68rem;
+
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td,
+  .p-datatable-tfoot > tr > td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0.35rem 0.25rem !important;
+  }
+
+  .p-datatable-header {
+    padding: 0.5rem;
+    background-color: white;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .p-datatable-thead > tr > th {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border: none !important;
+    border-bottom: 2px solid #dee2e6 !important;
+    color: #495057;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 0.35rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+
+    .p-column-filter {
+      margin-left: 0.5rem;
+    }
+  }
+
+  .p-datatable-tbody > tr {
+    td {
+      border: none !important;
+      border-bottom: 1px solid #f1f3f4 !important;
+      vertical-align: middle;
+      font-size: 0.85rem;
+      color: #666;
+      padding: 0.5rem;
+
+      .p-button-text {
+        padding: 0.375rem;
+
+        &:focus {
+          box-shadow: none;
+        }
+      }
+    }
+
+    td.options-cell {
+      position: relative;
+      text-align: center;
+      vertical-align: middle;
+      z-index: 1000;
+    }
+  }
+
+  .p-row-toggler {
+    width: 1.5rem;
+    height: 1.5rem;
+
+    &.p-link:focus {
+      box-shadow: none;
+    }
+  }
+
+  .p-rowexpansion-content {
+    background-color: #f9f9f9;
+    box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.05);
+
+    .expanded-table {
+      box-shadow: none;
+
+      .p-datatable-thead > tr > th {
+        background-color: #f8f9fa;
+        font-size: 0.7rem;
+        padding: 0.35rem 0.4rem;
+        color: #495057;
+        border-bottom: 1px solid #dee2e6;
+      }
+
+      .p-datatable-tbody > tr > td {
+        font-size: 0.7rem;
+        padding: 0.35rem 0.4rem;
+        border-bottom: 1px solid #f1f3f5;
+      }
+
+      img {
+        width: 32px;
+        height: 32px;
+        object-fit: cover;
+      }
+    }
+  }
+
+  // Estilos para headers con clase p-table-tr-th
+  .p-table-tr-th {
+    th {
+      font-size: 0.75rem !important;
+      font-weight: 600 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      padding: 0.75rem 0.5rem !important;
+      vertical-align: middle !important;
+      white-space: nowrap !important;
+      background-color: #f8f9fa !important;
+      border-bottom: 2px solid #dee2e6 !important;
+
+      span {
+        display: inline-block;
+        vertical-align: middle;
+      }
+
+      .p-sortable-column-icon {
+        margin-left: 0.25rem;
+        font-size: 0.65rem;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  // Estilos para filas con clase p-table-tr-td
+  .p-table-tr-td {
+    td {
+      padding: 0.5rem !important;
+      vertical-align: middle !important;
+      font-size: 0.8rem !important;
+    }
+  }
+}
+
+// Estilos para paginador responsive
+:host ::ng-deep .responsive-paginator {
+  .p-paginator {
+    padding: 0.5rem 0.5rem;
+    flex-wrap: wrap;
+
+    .p-paginator-left-content,
+    .p-paginator-right-content {
+      margin: 0.25rem 0;
+    }
+
+    .p-paginator-current {
+      font-size: 0.75rem;
+      margin-right: 0.5rem;
+    }
+
+    .p-paginator-rpp-options {
+      display: none;
+
+      @media (min-width: 576px) {
+        display: block;
+      }
+    }
+
+    .p-paginator-pages {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+
+      @media (max-width: 360px) {
+        .p-paginator-page {
+          min-width: 1.75rem;
+          height: 1.75rem;
+          font-size: 0.65rem;
+          padding: 0.1rem;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .p-paginator-page {
+          min-width: 2rem;
+          height: 2rem;
+          font-size: 0.75rem;
+        }
+      }
+    }
+
+    .p-paginator-first,
+    .p-paginator-prev,
+    .p-paginator-next,
+    .p-paginator-last {
+      @media (max-width: 576px) {
+        min-width: 2rem;
+        height: 2rem;
+        font-size: 0.75rem;
+      }
+    }
+  }
+}
+
+// ==================== ESTILOS PARA CARD DE PRODUCTOS (REPLICADOS DE MÓDULO DE PEDIDOS) ====================
+
+.products-expansion-card {
+  margin: 0 !important;
+  border: 1px solid #e9ecef !important;
+  border-radius: 4px;
+
+  .card-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 0.4rem 0.6rem;
+    color: #495057;
+    
+    .card-title {
+      font-weight: 500;
+      font-size: 0.75rem;
+      color: #6c757d;
+      
+      i {
+        font-size: 0.9em;
+        color: #a78bfa;
+        margin-right: 0.3rem;
+      }
+    }
+    
+    .badge {
+      background-color: #e9ecef !important;
+      color: #495057;
+      font-weight: 500;
+      font-size: 0.7em;
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      min-width: 18px;
+      text-align: center;
+    }
+  }
+  
+  .card-body {
+    background: #ffffff;
+    
+    // Estilos para la lista vertical de productos
+    .products-vertical-list {
+      width: fit-content;
+      min-width: 400px;
+      max-width: 550px;
+    }
+    
+    .product-item-row {
+      border-bottom: 1px solid #eaecf4;
+      margin-bottom: 0.4rem;
+      padding-bottom: 0.4rem;
+      
+      &:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+    }
+    
+    .product-main-info {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      width: 100%;
+      min-width: 0;
+    }
+    
+    .product-image {
+      flex-shrink: 0;
+      
+      .product-thumb {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        border: 1px solid #dee2e6;
+        object-fit: cover;
+      }
+    }
+    
+    .product-details {
+      flex: 1;
+      min-width: 0;
+      max-width: 200px; // Limitar el ancho del nombre
+      
+      .product-name {
+        font-size: 0.8em;
+        font-weight: 600;
+        color: #333;
+        line-height: 1.2;
+        margin-bottom: 0.1rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 180px;
+      }
+      
+      .product-meta {
+        .quantity-info {
+          font-size: 0.7em;
+          color: #6c757d;
+          display: inline-flex;
+          align-items: center;
+          white-space: nowrap;
+          
+          i {
+            color: #a78bfa;
+            margin-right: 0.15rem;
+            font-size: 0.9em;
+          }
+        }
+      }
+    }
+    
+    // Contenedor para todos los botones agrupados
+    .product-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.15rem;
+      flex-shrink: 0;
+    }
+    
+    .product-actions-vertical {
+      display: flex;
+      gap: 0.15rem;
+      
+      .btn {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 3px;
+        font-size: 0.7em;
+        
+        i {
+          font-size: 0.75em;
+        }
+      }
+    }
+    
+    .expand-config-btn {
+      .btn {
+        width: 24px;
+        height: 24px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 2px;
+        border: 1px solid #dee2e6;
+        background-color: #f8f9fa;
+        
+        &.active {
+          background-color: #a78bfa;
+          border-color: #a78bfa;
+          color: white;
+        }
+        
+        i {
+          font-size: 0.75em;
+          color: #6c757d;
+        }
+        
+        &.active i {
+          color: white;
+        }
+      }
+    }
+    
+    // Sección de configuración expandible
+    .product-config-section {
+      margin-top: 0.5rem;
+      padding: 0.5rem;
+      background: #f8f9fa;
+      border-radius: 3px;
+      border-left: 2px solid #a78bfa;
+    }
+    
+    .config-subsection {
+      margin-bottom: 0.75rem;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+      
+      .config-title {
+        font-size: 0.8em;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.5rem;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 0.25rem;
+      }
+    }
+    
+    .config-items {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .config-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.3rem;
+      background: white;
+      border-radius: 2px;
+      border: 1px solid #e9ecef;
+      
+      .config-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 2px;
+        border: 1px solid #dee2e6;
+        object-fit: cover;
+        flex-shrink: 0;
+      }
+      
+      .config-info {
+        flex: 1;
+        min-width: 0;
+        
+        .config-name {
+          display: block;
+          font-size: 0.75em;
+          font-weight: 400;
+          color: #495057;
+          line-height: 1.2;
+          margin-bottom: 0.1rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        
+        .config-price {
+          font-size: 0.7em;
+          color: #6c757d;
+          font-weight: 500;
+        }
+      }
+    }
+    
+    .no-products-message {
+      text-align: center;
+      padding: 1.5rem 1rem;
+      color: #6c757d;
+      
+      i {
+        font-size: 1.5em;
+        margin-bottom: 0.5rem;
+        display: block;
+      }
+    }
+  }
+}
+
+// Responsive adjustments for the card
+@media (max-width: 768px) {
+  .products-expansion-card {
+    .card-header {
+      padding: 0.4rem 0.6rem;
+      
+      .d-flex {
+        flex-direction: row;
+        align-items: center !important;
+        gap: 0.3rem;
+      }
+      
+      .card-title {
+        font-size: 0.75rem;
+      }
+      
+      .badge {
+        font-size: 0.65em;
+        padding: 0.1em 0.4em;
+      }
+    }
+    
+    .card-body {
+      padding: 0.5rem;
+      
+      .products-vertical-list {
+        min-width: 300px;
+        max-width: 400px;
+      }
+      
+      .product-main-info {
+        gap: 0.3rem;
+      }
+      
+      .product-image .product-thumb {
+        width: 28px;
+        height: 28px;
+      }
+      
+      .product-details {
+        max-width: 150px;
+        
+        .product-name {
+          font-size: 0.75em;
+          max-width: 130px;
+        }
+        
+        .product-meta .quantity-info {
+          font-size: 0.65em;
+          
+          i {
+            margin-right: 0.1rem;
+            font-size: 0.8em;
+          }
+        }
+      }
+      
+      .product-controls {
+        gap: 0.1rem;
+      }
+      
+      .product-actions-vertical {
+        gap: 0.1rem;
+        
+        .btn {
+          width: 18px;
+          height: 18px;
+          
+          i {
+            font-size: 0.6em;
+          }
+        }
+      }
+      
+      .expand-config-btn {
+        .btn {
+          width: 18px;
+          height: 18px;
+          
+          i {
+            font-size: 0.6em;
+          }
+        }
+      }
+      
+      .product-config-section {
+        padding: 0.5rem;
+        
+        .config-title {
+          font-size: 0.75em;
+        }
+        
+        .config-item {
+          padding: 0.4rem;
+          
+          .config-thumb {
+            width: 20px;
+            height: 20px;
+          }
+          
+          .config-info {
+            .config-name {
+              font-size: 0.75em;
+            }
+
+            .config-price {
+              font-size: 0.7em;
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -14,10 +14,11 @@
                 [rowsPerPageOptions]="[5, 10, 25, 50]" [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos" [loading]="loading"
                 [resizableColumns]="true" [reorderableColumns]="true" [autoLayout]="true" [scrollable]="true"
-                [scrollHeight]="'calc(100vh - 450px)'"
-                styleClass=" p-datatable-sm p-datatable-customers p-datatable-gridlines"
+                [scrollHeight]="'flex'"
+                styleClass="p-datatable p-datatable-gridlines p-datatable-striped responsive-paginator"
                 [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadosPago']"
-                style="font-size: 0.9em;">
+                [tableStyle]="{ 'min-width': '14rem', 'padding':'2px' }"
+                style="font-size: 0.65em; table-layout: fixed;">
 
                 <!-- =========================
   1) CAPTION (parte superior)
@@ -80,7 +81,7 @@
                 <ng-template pTemplate="header">
 
                     <!-- Fila de filtros por columna -->
-                    <tr style="font-size: 0.8em;">
+                    <tr class="p-table-tr-th" style="font-size: 0.8em;">
                         <th style="min-width: 7rem;">Detalles</th>
                         <!-- Filtro nroPedido -->
                         <th>
@@ -285,120 +286,126 @@
                 </ng-template>
 
                 <!-- ============================
-  4) ROW EXPANSION (nivel 1)
+  4) ROW EXPANSION (nivel 1) - Card de productos
   ============================ -->
                 <ng-template pTemplate="rowexpansion" let-pedido>
-                    <tr style="width: 50%; font-size: 0.85em;">
-                        <td colspan="5">
-                            <div class="p-3">
-                                <p-table [value]="pedido.carrito" dataKey="pedido.carrito">
-                                    <!-- Header interno -->
-                                    <ng-template pTemplate="header">
-                    <tr>
-                        <th style="width: 2rem;"></th>
-                        <th>Imagen</th>
-                        <th>Producto</th>
-                        <th>Cantidad</th>
-                    </tr>
-                </ng-template>
-
-                <!-- Body del carrito -->
-                <ng-template pTemplate="body" let-item let-expanded="expanded">
-                    <tr style="width: 50%;">
-                        <td>
-                            <button type="button" pButton pRipple [pRowToggler]="item"
-                                class="p-button-text p-button-rounded p-button-plain"
-                                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
-                            </button>
+                    <tr style="font-size: 0.85em;">
+                        <td colspan="15">
+                            <div class="p-2">
+                                <!-- Card contenedora para la tabla de productos -->
+                                <div class="card products-expansion-card">
+                                    <div class="card-header">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <small class="card-title mb-0">
+                                                <i class="fa fa-shopping-cart me-1"></i>
+                                                Productos
+                                            </small>
+                                            <span class="badge bg-primary">
+                                                {{ pedido.carrito?.length || 0 }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="card-body p-2">
+                                        <!-- Lista vertical de productos sin tabla -->
+                                        <div class="products-vertical-list">
+                                            <div *ngFor="let item of pedido.carrito; let i = index" 
+                                                 class="product-item-row">
+                                                
+                                                <!-- Información principal del producto en una sola fila -->
+                                                <div class="product-main-info">
+                                                    <div class="product-image">
+                                                        <img [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
+                                                             [alt]="item.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen"
+                                                             class="product-thumb" />
+                                                    </div>
+                                                    
+                                                    <div class="product-details">
+                                                        <div class="product-name">{{ item.producto?.crearProducto?.titulo }}</div>
+                                                        <div class="product-meta">
+                                                            <span class="quantity-info">
+                                                                <i class="fa fa-cubes"></i>
+                                                                {{ item.cantidad }}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Todos los controles agrupados -->
+                                                    <div class="product-controls">
+                                                        <!-- Acciones del producto -->
+                                                        <div class="product-actions-vertical">
+                                                            <button type="button" 
+                                                                    class="btn btn-outline-primary"
+                                                                    [title]="'Configurar producto'"
+                                                                    (click)="confProductToCart(confProductToCartModal,item,pedido)">
+                                                                <i class="fa fa-cogs"></i>
+                                                            </button>
+                                                            <button type="button" 
+                                                                    class="btn btn-outline-danger"
+                                                                    [title]="'Eliminar producto'"
+                                                                    (click)="deleteProductToCart(pedido, item)">
+                                                                <i class="fa fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                        
+                                                        <!-- Botón para expandir configuración -->
+                                                        <div class="expand-config-btn">
+                                                            <button type="button" 
+                                                                    class="btn btn-outline-secondary"
+                                                                    [class.active]="item.configExpanded"
+                                                                    (click)="item.configExpanded = !item.configExpanded"
+                                                                    *ngIf="(item?.configuracion?.preferencias?.length > 0) || (item?.configuracion?.adiciones?.length > 0)">
+                                                                <i class="fa" [class.fa-chevron-down]="item.configExpanded" [class.fa-chevron-right]="!item.configExpanded"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Configuración expandible -->
+                                                <div class="product-config-section" 
+                                                     *ngIf="item.configExpanded && ((item?.configuracion?.preferencias?.length > 0) || (item?.configuracion?.adiciones?.length > 0))">
+                                                    
+                                                    <!-- Preferencias -->
+                                                    <div *ngIf="item?.configuracion?.preferencias?.length > 0" class="config-subsection">
+                                                        <h6 class="config-title">Preferencias</h6>
+                                                        <div class="config-items">
+                                                            <div *ngFor="let pref of item?.configuracion?.preferencias" class="config-item">
+                                                                <img [src]="pref.imagen" class="config-thumb" [alt]="pref.titulo" />
+                                                                <div class="config-info">
+                                                                    <span class="config-name">{{ pref.titulo }}</span>
+                                                                    <small class="config-price">{{ pref.precioTotalConIva | currency }}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <!-- Adiciones -->
+                                                    <div *ngIf="item?.configuracion?.adiciones?.length > 0" class="config-subsection">
+                                                        <h6 class="config-title">Adiciones</h6>
+                                                        <div class="config-items">
+                                                            <div *ngFor="let addon of item?.configuracion?.adiciones" class="config-item">
+                                                                <img [src]="addon.imagen" class="config-thumb" [alt]="addon.titulo" />
+                                                                <div class="config-info">
+                                                                    <span class="config-name">{{ addon.titulo }}</span>
+                                                                    <small class="config-price">{{ addon.precioTotalConIva | currency }}</small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Mensaje si no hay productos -->
+                                            <div *ngIf="!pedido.carrito || pedido.carrito.length === 0" class="no-products-message">
+                                                <i class="fa fa-shopping-cart text-muted"></i>
+                                                <span class="text-muted">No hay productos en el carrito para este pedido.</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </td>
-                        <td>
-                            <img height="50" width="50" class="shadow-4"
-                                [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
-                                [alt]="item.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen" />
-                        </td>
-                        <td>{{ item.producto?.crearProducto?.titulo }}</td>
-                        <td>{{ item.cantidad }}</td>
                     </tr>
                 </ng-template>
-
-                <!-- ROW EXPANSION (nivel 2) para preferencias y adiciones -->
-                <ng-template pTemplate="rowexpansion" let-configuracion>
-                    <tr>
-                        <td colspan="7">
-                            <div class="p-4">
-                                <!-- Preferencias -->
-                                <h4>Preferencias</h4>
-                                <p-table [value]="configuracion?.configuracion?.preferencias">
-                                    <ng-template pTemplate="header">
-                    <tr>
-                        <th>Imagen</th>
-                        <th>Titulo</th>
-                        <th>SubTitulo</th>
-                        <th>Iva</th>
-                        <th>Total Iva</th>
-                        <th>Total sin Iva</th>
-                        <th>Cantidad</th>
-                        <th>Total con Iva</th>
-                    </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-itemconf>
-                    <tr style="width: 50%;">
-                        <td>
-                            <img height="50" width="50" class="shadow-4" [src]="itemconf.imagen" />
-                        </td>
-                        <td>{{ itemconf.titulo }}</td>
-                        <td>{{ itemconf.subtitulo }}</td>
-                        <td>{{ itemconf.porcentajeIva }}</td>
-                        <td>{{ itemconf.valorIva | currency }}</td>
-                        <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
-                        <td>1</td>
-                        <td>{{ itemconf.precioTotalConIva | currency }}</td>
-                    </tr>
-                </ng-template>
-            </p-table>
-
-            <!-- Adiciones -->
-            <h4 *ngIf="configuracion?.configuracion?.adiciones.length > 0">
-                Adiciones
-            </h4>
-            <p-table *ngIf="configuracion?.configuracion?.adiciones.length > 0"
-                [value]="configuracion?.configuracion?.adiciones">
-                <ng-template pTemplate="header">
-                    <tr>
-                        <th>Imagen</th>
-                        <th>Titulo</th>
-                        <th>SubTitulo</th>
-                        <th>Iva</th>
-                        <th>Total Iva</th>
-                        <th>Total sin Iva</th>
-                        <th>Cantidad</th>
-                        <th>Total con Iva</th>
-                    </tr>
-                </ng-template>
-                <ng-template pTemplate="body" let-itemconf>
-                    <tr style="width: 50%;">
-                        <td>
-                            <img height="50" width="50" class="shadow-4" [src]="itemconf.imagen" />
-                        </td>
-                        <td>{{ itemconf.titulo }}</td>
-                        <td>{{ itemconf.subtitulo }}</td>
-                        <td>{{ itemconf.porcentajeIva }}</td>
-                        <td>{{ itemconf.valorIva | currency }}</td>
-                        <td>{{ itemconf.valorUnitarioSinIva | currency }}</td>
-                        <td>1</td>
-                        <td>{{ itemconf.precioTotalConIva | currency }}</td>
-                    </tr>
-                </ng-template>
-            </p-table>
-        </div>
-        </td>
-        </tr>
-        </ng-template>
-        </p-table>
-    </div>
-    </td>
-    </tr>
-    </ng-template>
 
     <!-- =========================
   5) MENSAJE SIN DATOS
