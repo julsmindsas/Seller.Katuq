@@ -1687,8 +1687,8 @@
                         </div>
                     </button>
 
-                    <!-- Editar Notas - SIEMPRE DISPONIBLE -->
-                    <button *ngIf="!isFromProduction" class="option-btn" type="button"
+                    <!-- Editar Notas - NO DISPONIBLE PARA PEDIDOS POS -->
+                    <button *ngIf="!isFromProduction && !isPedidoPOS(selectedOrder)" class="option-btn" type="button"
                         (click)="editNotas(notasModal, selectedOrder)">
                         <div class="option-icon notes-icon">
                             <i class="fa fa-sticky-note"></i>

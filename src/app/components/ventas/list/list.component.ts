@@ -389,13 +389,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           label: 'Editar Cliente',
           icon: 'pi pi-user-edit',
           command: () => this.editDatosClientes(this.clientesModalRef, this.selectedMenuPedido)
-        },
-        {
+        }
+      );
+      
+      // Solo mostrar "Editar Notas" si NO es un pedido del POS
+      if (!this.isPedidoPOS(this.selectedMenuPedido)) {
+        items.push({
           label: 'Editar Notas',
           icon: 'pi pi-pencil',
           command: () => this.editNotas(this.notasModalRef, this.selectedMenuPedido)
-        }
-      );
+        });
+      }
     }
 
     // Agregar opción de producción si aplica
@@ -665,6 +669,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   canEditProductionNotes(order: Pedido): boolean {
     return !this.isPedidoGrupo1(order);
+  }
+
+  /**
+   * Verifica si un pedido es del POS (Punto de Venta)
+   * Los pedidos del POS tienen typeOrder = 'POS'
+   * @param pedido Pedido a verificar
+   * @returns true si el pedido es del POS
+   */
+  isPedidoPOS(pedido: Pedido): boolean {
+    return pedido?.typeOrder === 'POS';
   }
 
   /**
