@@ -2909,9 +2909,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             order.anticipo = 0;
           }
 
-          // 🚚 RECALCULAR ENVÍO Y TOTALIZAR usando la misma lógica que el PDF
-          // Esto asegura consistencia entre la tabla y el PDF
-          this.recalcularEnvioYTotalizarPedido(order);
+          // 🚚 RECALCULAR ENVÍO Y TOTALIZAR solo si el backend NO lo calculó
+          // Si _calculadoEnBackend === true, confiamos en los valores del backend (fórmula correcta)
+          if (!order._calculadoEnBackend) {
+            this.recalcularEnvioYTotalizarPedido(order);
+          }
 
           // Calcular falta por pagar basado en el total y anticipo real (ya recalculado)
           order.faltaPorPagar = Math.max(
@@ -4546,9 +4548,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * 🚚 RECALCULA el envío y totaliza el pedido usando la misma lógica que el PDF
    * Asegura consistencia entre la tabla y el PDF
+   *
+   * NOTA: Si el backend ya calculó los totales (_calculadoEnBackend = true),
+   * NO se debe llamar este método para evitar sobrescribir la fórmula correcta.
    */
   private recalcularEnvioYTotalizarPedido(order: Pedido): void {
     if (!order) return;
+
+    // Guard: Si el backend ya calculó los totales, no recalcular
+    // El backend usa calculateOrderTotals() que tiene la fórmula correcta:
+    // subtotal = productos - descuento + envío
+    // total = subtotal + IVA
+    if (order._calculadoEnBackend) {
+      console.log(`⚠️ RECÁLCULO OMITIDO - Backend ya calculó totales para pedido: ${order.nroPedido}`);
+      return;
+    }
 
     // Asignar pedido al servicio de utilidades
     this.pedidoUtilService.pedido = order;
@@ -6489,26 +6503,46 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       costoEnvioNuevo = 0;
     }
 
-    // 🔄 CALCULAR SUBTOTAL CORRECTAMENTE
-    // 1. Obtener subtotal SOLO de productos
+    // 🔄 CALCULAR SUBTOTAL CORRECTAMENTE - Fórmula consistente con backend
+    // 1. Obtener subtotal SOLO de productos (sin envío)
     const subtotalProductos = this.pedidoUtilService.getSubtotal();
 
-    // 2. Sumar envío al subtotal
-    order.totalPedidoSinDescuento = subtotalProductos + (order.totalEnvio || 0);
+    // 2. Valor Bruto (totalPedidoSinDescuento) = SOLO productos (sin envío)
+    // CORREGIDO: Antes sumaba envío aquí, lo cual era incorrecto
+    order.totalPedidoSinDescuento = subtotalProductos;
 
-    console.log("💰 ACTUALIZAR VALORES - Cálculo del subtotal:", {
+    // 3. Calcular descuento SOLO sobre productos (NO sobre envío)
+    let descuento = 0;
+    if (order.porceDescuento) {
+      descuento = subtotalProductos * (Number(order.porceDescuento) / 100);
+      order.totalDescuento = descuento;
+    } else {
+      descuento = Number(order.totalDescuento || 0);
+    }
+
+    // 4. Subtotal = valorBruto - descuento + envío (INCLUYE domicilio)
+    const envio = Number(order.totalEnvio || 0);
+    order.subtotal = subtotalProductos - descuento + envio;
+
+    // 5. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado)
+    const ivaResult = this.checkIVAPrice(order);
+    order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || 0);
+
+    // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
+    order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
+
+    console.log("💰 ACTUALIZAR VALORES - Cálculo corregido:", {
       subtotalProductos,
+      descuento,
       totalEnvio: order.totalEnvio,
-      subtotalFinal: order.totalPedidoSinDescuento,
+      subtotal: order.subtotal,
+      totalImpuesto: order.totalImpuesto,
+      totalFinal: order.totalPedididoConDescuento,
       cambioEnvio: costoEnvioAnterior !== costoEnvioNuevo,
       formaEntrega: order.carrito?.map(
         (c) => c.configuracion?.datosEntrega?.formaEntrega,
       ),
     });
-
-    // Recalcular total con descuentos (el envío ya está incluido en el subtotal)
-    const totalConDescuento = this.pedidoUtilService.getTotalToPay(0); // 0 porque el subtotal ya incluye envío
-    order.totalPedididoConDescuento = totalConDescuento;
 
     // Recalcular falta por pagar si hay anticipos
     if (order.PagosAsentados && order.PagosAsentados.length > 0) {

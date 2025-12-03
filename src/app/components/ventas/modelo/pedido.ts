@@ -60,6 +60,7 @@ export interface Pedido {
   pagoInformation?: PagoInformation;
   channel?: Channel;
   _estadoCalculadoEnFrontend?: boolean;
+  _calculadoEnBackend?: boolean; // Indica si los totales fueron calculados por el backend (calculateOrderTotals)
   preAprobadoManual?: boolean;
   // Propiedades de evidencia de entrega
   fotosEvidencia?: string[];
