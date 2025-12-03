@@ -4448,6 +4448,41 @@ $filter-border-color: #e0e0e0;
   }
 }
 
+// Ajustes específicos para métricas de moneda (Ventas Hoy, Ticket Promedio)
+// Necesitan más espacio para mostrar valores como "$1.234.567"
+.metric-chip-currency {
+  max-width: none !important;
+  min-width: auto;
+
+  .metric-badge {
+    min-width: auto !important;
+    max-width: none !important;
+    padding: 0 0.5rem !important;
+    font-size: 0.7rem !important;
+    white-space: nowrap;
+    overflow: visible !important;
+  }
+
+  // En estado compacto, mostrar número abreviado si es muy grande
+  &.metric-chip-compact {
+    max-width: 120px;
+
+    .metric-badge {
+      font-size: 0.65rem !important;
+      letter-spacing: -0.3px;
+    }
+
+    &:hover {
+      max-width: 200px;
+
+      .metric-badge {
+        font-size: 0.75rem !important;
+        letter-spacing: 0;
+      }
+    }
+  }
+}
+
 /* ==========================================
    MOBILE OPTIMIZATION - VENTAS LIST
    Touch targets, input font sizes, spacing

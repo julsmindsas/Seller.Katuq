@@ -3605,7 +3605,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         'Despachado': 'enRuta',
         'ParaDespachar': 'paraDespachar',
         'Entregado': 'entregados',
-        'Cerrado': 'cerrados'
+        'Cerrado': 'cerrados',
+        // Estados de proceso faltantes
+        'Rechazado': 'rechazadosProceso',
+        'EnDespacho': 'enDespacho',
+        'Producido': 'producido',
+        // Estados de Dropshipping
+        'SolicitadoProveedor': 'solicitadoProveedor',
+        'AceptadoProveedor': 'aceptadoProveedor',
+        'RechazadoProveedor': 'rechazadoProveedor',
+        'DespachadoProveedor': 'despachadoProveedor',
+        'EnTransitoProveedor': 'enTransitoProveedor'
       };
       
       const metricKey = metricMap[proceso];
@@ -3715,8 +3725,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Suma del valor total de pedidos creados hoy
    * Métrica financiera diaria
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getVentasDelDia(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.ventasDelDia != null) {
+      return this.backendMetrics.ventasDelDia;
+    }
+    // Fallback: cálculo local (solo página actual)
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
@@ -3737,8 +3753,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Valor promedio por pedido (Ticket Promedio)
    * Indicador de valor por transacción
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getTicketPromedio(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.totalBruto != null && this.backendMetrics?.totalPedidos > 0) {
+      return this.backendMetrics.totalBruto / this.backendMetrics.totalPedidos;
+    }
+    // Fallback: cálculo local (solo página actual)
     const pedidos = this.getFilteredOrders();
 
     if (pedidos.length === 0) {
@@ -4006,8 +4028,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Total valor bruto de pedidos filtrados
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getFilteredCalculateValorBruto(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.totalBruto != null) {
+      return this.backendMetrics.totalBruto;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().reduce(
       (acc, pedido: any) => acc + (pedido.totalPedidoSinDescuento || 0),
       0,
@@ -4016,8 +4044,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Total descuento de pedidos filtrados
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getFilteredCalculateDescuento(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.totalDescuentos != null) {
+      return this.backendMetrics.totalDescuentos;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().reduce(
       (acc, pedido: any) => acc + (pedido.totalDescuento || 0),
       0,
@@ -4026,8 +4060,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Total envío de pedidos filtrados
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getFilteredCalculateEnvio(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.totalEnvio != null) {
+      return this.backendMetrics.totalEnvio;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().reduce(
       (acc, pedido: any) => acc + (pedido.totalEnvio || 0),
       0,
@@ -4037,8 +4077,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Total subtotal de pedidos filtrados (solo productos, sin envío)
    * Consistente con getSubtotalConDomicilio y el PDF
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getFilteredCalculateSubtotal(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.totalSubtotal != null) {
+      return this.backendMetrics.totalSubtotal;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().reduce((acc, pedido: any) => {
       // Subtotal = solo productos (sin envío, sin descuento)
       const subtotalProductos = this.getSubtotalConDomicilio(pedido);
@@ -4057,8 +4103,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Total impuestos (IVA) de pedidos filtrados
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getFilteredCalculateTotalImpuestos(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.totalImpuestos != null) {
+      return this.backendMetrics.totalImpuestos;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().reduce(
       (acc, pedido: any) => acc + (pedido.totalImpuesto || 0),
       0,
@@ -4067,8 +4119,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Total general de pedidos filtrados
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getFilteredCalculateTotal(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.totalVentas != null) {
+      return this.backendMetrics.totalVentas;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().reduce(
       (acc, pedido: any) => acc + (pedido.totalPedididoConDescuento || 0),
       0,
@@ -4077,8 +4135,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Total anticipo de pedidos filtrados
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getFilteredCalculateAnticipo(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.totalAnticipo != null) {
+      return this.backendMetrics.totalAnticipo;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().reduce((acc, pedido: any) => {
       // Calcular anticipo basado en PagosAsentados si existen
       const anticipoReal =
@@ -4102,8 +4166,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Total falta por pagar de pedidos filtrados
+   * Usa métricas del backend si están disponibles (cubre todos los pedidos)
    */
   getFilteredCalculateFaltaPorPagar(): number {
+    // Priorizar métricas del backend (más precisas, cubren todos los pedidos filtrados)
+    if (this.backendMetrics?.porCobrar != null) {
+      return this.backendMetrics.porCobrar;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().reduce((acc, pedido: any) => {
       // Recalcular falta por pagar basado en pagos asentados
       const anticipoReal =
