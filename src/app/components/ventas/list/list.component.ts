@@ -3701,10 +3701,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Conteo de pedidos con pago aprobado creados hoy
    * KPI de conversión diaria
+   * Usa métricas del backend si están disponibles
    */
   getPagosAprobadosHoyCount(): number {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+    // Priorizar métricas del backend
+    if (this.backendMetrics?.aprobadosHoy != null) {
+      return this.backendMetrics.aprobadosHoy;
+    }
+    // Fallback: cálculo local (solo página actual)
+    const hoyStr = new Date().toISOString().split('T')[0];
 
     return this.getFilteredOrders().filter((pedido) => {
       if (pedido.estadoPago !== "Aprobado") {
@@ -3715,10 +3720,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         return false;
       }
 
-      const fechaPedido = new Date(pedido.fechaCreacion);
-      fechaPedido.setHours(0, 0, 0, 0);
-
-      return fechaPedido.getTime() === hoy.getTime();
+      let fechaPedidoStr: string;
+      if (typeof pedido.fechaCreacion === 'string') {
+        fechaPedidoStr = pedido.fechaCreacion.substring(0, 10);
+      } else {
+        fechaPedidoStr = new Date(pedido.fechaCreacion).toISOString().split('T')[0];
+      }
+      return fechaPedidoStr === hoyStr;
     }).length;
   }
 
@@ -3733,19 +3741,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return this.backendMetrics.ventasDelDia;
     }
     // Fallback: cálculo local (solo página actual)
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
+    const hoyStr = new Date().toISOString().split('T')[0]; // "2025-12-02"
 
     return this.getFilteredOrders()
       .filter((pedido) => {
         if (!pedido.fechaCreacion) {
           return false;
         }
-
-        const fechaPedido = new Date(pedido.fechaCreacion);
-        fechaPedido.setHours(0, 0, 0, 0);
-
-        return fechaPedido.getTime() === hoy.getTime();
+        // Normalizar fecha del pedido a YYYY-MM-DD
+        let fechaPedidoStr: string;
+        if (typeof pedido.fechaCreacion === 'string') {
+          fechaPedidoStr = pedido.fechaCreacion.substring(0, 10);
+        } else {
+          fechaPedidoStr = new Date(pedido.fechaCreacion).toISOString().split('T')[0];
+        }
+        return fechaPedidoStr === hoyStr;
       })
       .reduce((acc, pedido) => acc + (pedido.totalPedidoSinDescuento || 0), 0);
   }
@@ -3778,8 +3788,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Conteo de pedidos urgentes
    * Pedidos con fecha de entrega hoy o mañana que no están completados
+   * Usa métricas del backend si están disponibles
    */
   getPedidosUrgentesCount(): number {
+    // Priorizar métricas del backend
+    if (this.backendMetrics?.pedidosUrgentes != null) {
+      return this.backendMetrics.pedidosUrgentes;
+    }
+    // Fallback: cálculo local (solo página actual)
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
 
@@ -3787,7 +3803,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     manana.setDate(manana.getDate() + 1);
 
     return this.getFilteredOrders().filter((pedido) => {
-      // Solo pedidos no completados (no Entregado, no Rechazado, no Cerrado)
       const estadosNoCompletados = [
         "SinProducir",
         "EnProduccion",
@@ -3809,7 +3824,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const fechaEntrega = new Date(pedido.fechaEntrega);
       fechaEntrega.setHours(0, 0, 0, 0);
 
-      // Entrega hoy o mañana
       return fechaEntrega.getTime() <= manana.getTime();
     }).length;
   }
@@ -3817,8 +3831,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Conteo de pedidos con anticipo pendiente
    * Pedidos con saldo por pagar después de anticipo
+   * Usa métricas del backend si están disponibles
    */
   getAnticiposPendientesCount(): number {
+    // Priorizar métricas del backend
+    if (this.backendMetrics?.anticiposPendientes != null) {
+      return this.backendMetrics.anticiposPendientes;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().filter((pedido) => {
       const tieneAnticipo = pedido.anticipo && pedido.anticipo > 0;
       const tieneSaldoPendiente =
@@ -3830,8 +3850,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Conteo de pedidos con descuento aplicado
    * Monitoreo de estrategia promocional
+   * Usa métricas del backend si están disponibles
    */
   getPedidosConDescuentoCount(): number {
+    // Priorizar métricas del backend
+    if (this.backendMetrics?.pedidosConDescuento != null) {
+      return this.backendMetrics.pedidosConDescuento;
+    }
+    // Fallback: cálculo local (solo página actual)
     return this.getFilteredOrders().filter(
       (pedido) => pedido.totalDescuento && pedido.totalDescuento > 0,
     ).length;
