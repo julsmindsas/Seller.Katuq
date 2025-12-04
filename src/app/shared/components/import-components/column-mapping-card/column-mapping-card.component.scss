@@ -1,0 +1,375 @@
+@import '../../../styles/import-mixins';
+
+.mapping-card {
+  @include mobile-card;
+  padding: $spacing-md;
+  border-left: 4px solid var(--surface-border);
+  transition: all 0.3s ease;
+
+  @include mobile {
+    padding: $spacing-sm;
+  }
+
+  // =============================================================================
+  // BORDER VARIATIONS
+  // =============================================================================
+
+  &.border-required {
+    border-left-color: var(--orange-500);
+    background: linear-gradient(90deg, var(--orange-50) 0%, transparent 100%);
+
+    &:hover {
+      border-left-color: var(--orange-600);
+    }
+  }
+
+  &.border-adjusted {
+    border-left-color: var(--blue-500);
+    background: linear-gradient(90deg, var(--blue-50) 0%, transparent 100%);
+
+    &:hover {
+      border-left-color: var(--blue-600);
+    }
+  }
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+  }
+
+  // =============================================================================
+  // CARD HEADER
+  // =============================================================================
+
+  .card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: $spacing-md;
+    margin-bottom: $spacing-md;
+
+    .field-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-xs;
+
+      .field-title-row {
+        display: flex;
+        align-items: center;
+        gap: $spacing-xs;
+
+        .required-icon {
+          color: var(--orange-500);
+          font-size: 0.75rem;
+          flex-shrink: 0;
+        }
+
+        .field-name {
+          @include mobile-subtitle;
+          margin: 0;
+          color: var(--text-color);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      ::ng-deep .manual-chip {
+        .p-chip {
+          background: var(--blue-100);
+          color: var(--blue-700);
+          font-size: 0.75rem;
+          padding: 0.25rem 0.5rem;
+          height: auto;
+
+          .p-chip-icon {
+            font-size: 0.75rem;
+            margin-right: 0.25rem;
+          }
+
+          .p-chip-text {
+            font-weight: 600;
+          }
+        }
+      }
+    }
+
+    .confidence-badge {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: $spacing-xs;
+      padding: $spacing-xs $spacing-sm;
+      border-radius: 20px;
+      font-weight: 700;
+      @include mobile-small-text;
+
+      i {
+        font-size: 1rem;
+      }
+
+      &.confidence-high {
+        background: var(--green-100);
+        color: var(--green-700);
+
+        i {
+          color: var(--green-600);
+        }
+      }
+
+      &.confidence-medium {
+        background: var(--orange-100);
+        color: var(--orange-700);
+
+        i {
+          color: var(--orange-600);
+        }
+      }
+
+      &.confidence-low {
+        background: var(--red-100);
+        color: var(--red-700);
+
+        i {
+          color: var(--red-600);
+        }
+      }
+
+      .confidence-text {
+        font-weight: 700;
+      }
+    }
+  }
+
+  // =============================================================================
+  // DROPDOWN SECTION
+  // =============================================================================
+
+  .dropdown-section {
+    margin-bottom: $spacing-md;
+
+    .dropdown-label {
+      display: block;
+      @include mobile-small-text;
+      font-weight: 600;
+      color: var(--text-color);
+      margin-bottom: $spacing-xs;
+    }
+
+    ::ng-deep .mobile-dropdown {
+      width: 100%;
+
+      .p-dropdown {
+        @include mobile-input;
+        width: 100%;
+        border: 2px solid var(--surface-border);
+        transition: all 0.2s ease;
+
+        &:hover {
+          border-color: var(--primary-color);
+        }
+
+        &:focus,
+        &.p-focus {
+          border-color: var(--primary-color);
+          box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.1);
+        }
+
+        .p-dropdown-label {
+          @include mobile-body;
+          padding: $spacing-sm;
+        }
+
+        .p-dropdown-trigger {
+          width: 48px;
+        }
+      }
+    }
+
+    .dropdown-selected-item,
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+
+      i {
+        color: var(--primary-color);
+        font-size: 0.9rem;
+      }
+
+      span {
+        @include mobile-body;
+      }
+    }
+
+    .dropdown-item {
+      padding: $spacing-sm;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background: var(--surface-100);
+      }
+    }
+  }
+
+  // =============================================================================
+  // CONFIDENCE INDICATOR
+  // =============================================================================
+
+  .confidence-indicator {
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    margin-bottom: $spacing-md;
+    padding: $spacing-xs $spacing-sm;
+    background: var(--surface-100);
+    border-radius: 6px;
+
+    .confidence-label {
+      @include mobile-small-text;
+      color: var(--text-color-secondary);
+      font-weight: 600;
+    }
+
+    .confidence-level {
+      @include mobile-small-text;
+      font-weight: 700;
+      padding: 2px $spacing-xs;
+      border-radius: 4px;
+
+      &.confidence-high {
+        background: var(--green-100);
+        color: var(--green-700);
+      }
+
+      &.confidence-medium {
+        background: var(--orange-100);
+        color: var(--orange-700);
+      }
+
+      &.confidence-low {
+        background: var(--red-100);
+        color: var(--red-700);
+      }
+    }
+  }
+
+  // =============================================================================
+  // REASONING SECTION
+  // =============================================================================
+
+  .reasoning-section {
+    .reasoning-toggle {
+      @include touch-target;
+      @include no-tap-highlight;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: $spacing-xs;
+      padding: $spacing-sm;
+      background: var(--surface-100);
+      border: 1px solid var(--surface-border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      @include mobile-small-text;
+      font-weight: 600;
+      color: var(--text-color-secondary);
+
+      &:hover {
+        background: var(--surface-200);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+      }
+
+      &:active {
+        transform: scale(0.98);
+      }
+
+      i {
+        font-size: 0.875rem;
+        transition: transform 0.3s ease;
+      }
+
+      &[aria-expanded="true"] i {
+        transform: rotate(180deg);
+      }
+    }
+
+    .reasoning-content {
+      margin-top: $spacing-sm;
+      overflow: hidden;
+      animation: expandDown 0.3s ease;
+
+      .reasoning-text {
+        display: flex;
+        gap: $spacing-sm;
+        padding: $spacing-md;
+        background: var(--blue-50);
+        border: 1px solid var(--blue-200);
+        border-radius: 6px;
+
+        @include mobile {
+          padding: $spacing-sm;
+        }
+
+        i.pi-sparkles {
+          color: var(--blue-600);
+          font-size: 1.25rem;
+          flex-shrink: 0;
+          margin-top: 2px;
+        }
+
+        p {
+          @include mobile-body;
+          margin: 0;
+          color: var(--text-color);
+          line-height: 1.6;
+        }
+      }
+    }
+  }
+}
+
+// =============================================================================
+// ANIMATIONS
+// =============================================================================
+
+@keyframes expandDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    max-height: 500px;
+    transform: translateY(0);
+  }
+}
+
+// =============================================================================
+// RESPONSIVE OPTIMIZATIONS
+// =============================================================================
+
+@include mobile {
+  .mapping-card {
+    .card-header {
+      flex-direction: column;
+      align-items: flex-start;
+
+      .confidence-badge {
+        align-self: flex-start;
+      }
+    }
+
+    .dropdown-section {
+      ::ng-deep .p-dropdown-panel {
+        max-width: 90vw;
+      }
+    }
+  }
+}

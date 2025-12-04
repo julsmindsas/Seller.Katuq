@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { UtilsService } from '../../shared/services/utils.service';
 import { ProveedoresService } from '../dropshipping/services/proveedores.service';
 import { Proveedor } from '../dropshipping/interfaces';
+import { ImportResult } from '../../shared/models/column-mapping.model';
 
 @Component({
   selector: 'app-productos',
@@ -49,6 +50,9 @@ export class ProductosComponent implements OnInit {
   selectedProveedor: string | null = null;
   loadingProveedores = false;
   mostrarSoloDropshipping = false;
+
+  // Import modal
+  showImportModal: boolean = false;
 
   constructor(
     private service: MaestroService,
@@ -444,5 +448,31 @@ export class ProductosComponent implements OnInit {
         console.error('Error al exportar el archivo:', err);
       },
     });
+  }
+
+  // ============== MÉTODOS DE IMPORTACIÓN ==============
+
+  openImportModal(): void {
+    this.showImportModal = true;
+  }
+
+  onImportComplete(result: ImportResult): void {
+    this.showImportModal = false;
+    if (result.success > 0) {
+      Swal.fire({
+        title: 'Importación Exitosa',
+        text: `${result.success} productos importados correctamente`,
+        icon: 'success'
+      });
+      // Recargar lista de productos
+      this.cargarDatos();
+    }
+    if (result.failed > 0) {
+      Swal.fire({
+        title: 'Importación con errores',
+        text: `${result.failed} productos no pudieron ser importados`,
+        icon: 'warning'
+      });
+    }
   }
 }

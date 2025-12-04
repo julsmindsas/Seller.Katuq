@@ -80,6 +80,7 @@ import { DespachosModule } from "../despachos/despachos.module";
 import { ListProduccionComponent } from "./list/list-produccion.component";
 import { OrderHistoryTimelineComponent } from "./order-history-timeline/order-history-timeline.component";
 import { OrdenVentaComponent } from "./orden-venta/orden-venta.component";
+import { ImportModalModule } from "../../shared/components/import-modal/import-modal.module";
 
 @NgModule({
   imports: [
@@ -121,6 +122,7 @@ import { OrdenVentaComponent } from "./orden-venta/orden-venta.component";
     InputMaskModule,
     CardModule,
     MenuModule,
+    ImportModalModule,
   ],
   declarations: [
     PedidoFacturacionComponent,

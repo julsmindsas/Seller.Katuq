@@ -1,0 +1,104 @@
+<div class="mobile-file-upload" [ngClass]="getStateClass()">
+
+  <!-- Empty State: Upload Zone -->
+  <div *ngIf="state === 'empty'" class="upload-zone">
+    <div class="upload-zone-content">
+      <i class="pi pi-cloud-upload upload-icon"></i>
+      <p class="upload-text">{{ placeholder }}</p>
+      <p class="upload-hint">{{ getFileHint() }}</p>
+
+      <p-fileUpload
+        #fileUpload
+        mode="basic"
+        [accept]="acceptedFormats"
+        [maxFileSize]="maxFileSize"
+        [auto]="false"
+        chooseLabel="Seleccionar Archivo"
+        chooseIcon="pi pi-folder-open"
+        (onSelect)="onFileSelect($event)"
+        [disabled]="disabled"
+        styleClass="p-button-lg upload-button">
+      </p-fileUpload>
+    </div>
+  </div>
+
+  <!-- Selected/Uploading State: File Details Card -->
+  <div *ngIf="state !== 'empty' && fileDetails" class="file-details-card">
+
+    <!-- File Icon and Info -->
+    <div class="file-info-section">
+      <div class="file-icon-container">
+        <i class="pi file-icon" [ngClass]="getFileIcon()"></i>
+      </div>
+
+      <div class="file-info">
+        <h4 class="file-name">{{ fileDetails.name }}</h4>
+        <p class="file-meta">
+          <span class="file-size">{{ formatFileSize(fileDetails.size) }}</span>
+          <span class="file-separator">.</span>
+          <span class="file-type">{{ fileDetails.extension.toUpperCase() }}</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Progress Bar (only when uploading) -->
+    <div *ngIf="state === 'uploading'" class="progress-section">
+      <p-progressBar
+        [value]="uploadProgress"
+        [showValue]="true"
+        styleClass="mobile-progress-bar">
+      </p-progressBar>
+      <p class="progress-text">Procesando archivo...</p>
+    </div>
+
+    <!-- State Messages -->
+    <div *ngIf="state === 'uploaded'" class="state-message success-message">
+      <i class="pi pi-check-circle"></i>
+      <span>Archivo cargado correctamente</span>
+    </div>
+
+    <div *ngIf="state === 'error'" class="state-message error-message">
+      <i class="pi pi-exclamation-circle"></i>
+      <span>Error al procesar el archivo</span>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons" *ngIf="state !== 'uploading'">
+      <button
+        pButton
+        type="button"
+        label="Cambiar Archivo"
+        icon="pi pi-sync"
+        class="p-button-outlined change-button"
+        (click)="changeFile()"
+        [disabled]="disabled">
+      </button>
+
+      <button
+        pButton
+        type="button"
+        icon="pi pi-trash"
+        class="p-button-outlined p-button-danger clear-button"
+        (click)="clearFile()"
+        [disabled]="disabled"
+        pTooltip="Eliminar archivo"
+        tooltipPosition="top">
+      </button>
+    </div>
+
+    <!-- Hidden file upload for change functionality -->
+    <div class="hidden-upload">
+      <p-fileUpload
+        #fileUpload
+        mode="basic"
+        [accept]="acceptedFormats"
+        [maxFileSize]="maxFileSize"
+        [auto]="false"
+        (onSelect)="onFileSelect($event)"
+        [disabled]="disabled"
+        [style]="{'display': 'none'}">
+      </p-fileUpload>
+    </div>
+  </div>
+
+</div>

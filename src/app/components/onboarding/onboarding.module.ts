@@ -27,9 +27,13 @@ import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { FileUploadModule } from 'primeng/fileupload';
 import { TreeSelectModule } from 'primeng/treeselect';
+import { MessageModule } from 'primeng/message';
 
 // Routing
 import { OnboardingRoutingModule } from './onboarding-routing.module';
+
+// Shared Import Components Module (moved to shared)
+import { ImportComponentsModule } from '../../shared/components/import-components/import-components.module';
 
 // Components
 import { OnboardingWizardComponent } from './onboarding-wizard/onboarding-wizard.component';
@@ -50,11 +54,6 @@ import { ImportCustomersStepComponent } from './steps/import-customers-step.comp
 import { ImportProductsStepComponent } from './steps/import-products-step.component';
 import { SequencesStepComponent } from './steps/sequences-step.component';
 
-// Shared Components
-import { ColumnMappingPreviewComponent } from './components/column-mapping-preview/column-mapping-preview.component';
-import { MobileFileUploadComponent } from './components/mobile-file-upload/mobile-file-upload.component';
-import { ColumnMappingCardComponent } from './components/column-mapping-card/column-mapping-card.component';
-
 // Services are provided in root, no need to provide here
 
 @NgModule({
@@ -74,11 +73,8 @@ import { ColumnMappingCardComponent } from './components/column-mapping-card/col
     FirstProductStepComponent,
     ImportCustomersStepComponent,
     ImportProductsStepComponent,
-    SequencesStepComponent,
-    // Shared components
-    ColumnMappingPreviewComponent,
-    MobileFileUploadComponent,
-    ColumnMappingCardComponent
+    SequencesStepComponent
+    // Shared import components moved to ImportComponentsModule
   ],
   imports: [
     CommonModule,
@@ -86,6 +82,9 @@ import { ColumnMappingCardComponent } from './components/column-mapping-card/col
     ReactiveFormsModule,
     TranslateModule,
     OnboardingRoutingModule,
+
+    // Shared Import Components (mobile-file-upload, column-mapping-card, column-mapping-preview)
+    ImportComponentsModule,
 
     // PrimeNG
     SidebarModule,
@@ -110,7 +109,8 @@ import { ColumnMappingCardComponent } from './components/column-mapping-card/col
     TableModule,
     TagModule,
     FileUploadModule,
-    TreeSelectModule
+    TreeSelectModule,
+    MessageModule
   ]
 })
 export class OnboardingModule { }

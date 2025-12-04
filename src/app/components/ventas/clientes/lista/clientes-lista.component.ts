@@ -11,6 +11,7 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente-modal.component';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ImportResult } from '../../../../shared/models/column-mapping.model';
 
 @Component({
     selector: 'app-clientes-lista',
@@ -43,6 +44,9 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         { label: 'Activo', value: 'activo' },
         { label: 'Inactivo', value: 'inactivo' }
     ];
+
+    // Import modal
+    showImportModal: boolean = false;
 
     constructor(
         private modalService: NgbModal,
@@ -412,6 +416,31 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             );
         } catch (error) {
             console.error('Error saving filters:', error);
+        }
+    }
+
+    // Import functionality
+    openImportModal(): void {
+        this.showImportModal = true;
+    }
+
+    onImportComplete(result: ImportResult): void {
+        this.showImportModal = false;
+        if (result.success > 0) {
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Importacion Exitosa',
+                detail: `${result.success} clientes importados correctamente`
+            });
+            // Recargar lista de clientes
+            this.cargarClientes();
+        }
+        if (result.failed > 0) {
+            this.messageService.add({
+                severity: 'warn',
+                summary: 'Importacion con errores',
+                detail: `${result.failed} clientes no pudieron ser importados`
+            });
         }
     }
 }

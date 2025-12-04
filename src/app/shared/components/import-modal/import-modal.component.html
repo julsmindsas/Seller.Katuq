@@ -1,0 +1,194 @@
+<p-dialog
+  [(visible)]="visible"
+  [header]="config?.title || 'Importar'"
+  [modal]="true"
+  [closable]="!isUploading && !isAnalyzingColumns"
+  [style]="{width: '90vw', maxWidth: '900px'}"
+  [contentStyle]="{'max-height': '80vh', 'overflow': 'auto'}"
+  (onShow)="onDialogShow()"
+  (onHide)="onDialogHide()">
+
+  <p-toast></p-toast>
+
+  <!-- Step 1: File Upload -->
+  <div class="import-step" *ngIf="!showMappingPreview && !importResult">
+    <div class="step-header">
+      <h4>
+        <i class="pi pi-upload mr-2"></i>
+        Selecciona el archivo a importar
+      </h4>
+      <p class="text-muted">
+        Formatos aceptados: Excel (.xlsx, .xls) o JSON (.json)
+      </p>
+    </div>
+
+    <app-mobile-file-upload
+      [acceptedFormats]="acceptedFormats"
+      [maxFileSize]="config?.maxFileSize || 5000000"
+      [placeholder]="'Selecciona un archivo para importar'"
+      (fileSelected)="onMobileFileSelected($event)"
+      (fileCleared)="clearFile()">
+    </app-mobile-file-upload>
+
+    <div class="template-section mt-4">
+      <p-divider></p-divider>
+      <div class="template-info">
+        <i class="pi pi-info-circle mr-2"></i>
+        <span>Necesitas una plantilla? Descargala aqui:</span>
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Descargar Plantilla"
+        icon="pi pi-download"
+        class="p-button-outlined p-button-sm mt-2"
+        (click)="downloadTemplate()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Step 2: KAI Analyzing -->
+  <div class="analyzing-step" *ngIf="isAnalyzingColumns">
+    <div class="analyzing-content">
+      <i class="pi pi-spin pi-spinner analyzing-icon"></i>
+      <h4>KAI esta analizando tu archivo...</h4>
+      <p class="text-muted">
+        El agente inteligente esta identificando las columnas y sugiriendo el mejor mapeo
+      </p>
+      <p-progressBar mode="indeterminate" styleClass="mt-3"></p-progressBar>
+    </div>
+  </div>
+
+  <!-- Step 3: Column Mapping -->
+  <div class="mapping-step" *ngIf="showMappingPreview && !importResult && !isAnalyzingColumns">
+    <div class="step-header">
+      <h4>
+        <i class="pi pi-sparkles mr-2"></i>
+        Mapeo Inteligente de Columnas
+      </h4>
+      <p class="text-muted">
+        KAI ha sugerido los siguientes mapeos. Puedes ajustarlos manualmente si es necesario.
+      </p>
+    </div>
+
+    <!-- Mobile View: Cards -->
+    <div class="mapping-cards-mobile d-md-none">
+      <div *ngFor="let field of mappingFields" class="mb-3">
+        <app-column-mapping-card
+          [field]="field"
+          [availableColumns]="availableColumns"
+          (mappingChanged)="onCardMappingChanged($event)">
+        </app-column-mapping-card>
+      </div>
+    </div>
+
+    <!-- Desktop View: Table -->
+    <div class="mapping-table-desktop d-none d-md-block">
+      <app-column-mapping-preview
+        [mappingResult]="mappingResult"
+        [sourceColumns]="sourceColumns"
+        [type]="type"
+        (mappingsAdjusted)="onMappingsAdjusted($event)"
+        (mappingsConfirmed)="onMappingsConfirmed($event)">
+      </app-column-mapping-preview>
+    </div>
+
+    <!-- Summary Footer -->
+    <div class="mapping-summary mt-4">
+      <div class="summary-chips">
+        <p-chip
+          [label]="getMappedCount() + ' campos mapeados'"
+          icon="pi pi-check-circle"
+          styleClass="mr-2">
+        </p-chip>
+        <p-chip
+          *ngIf="getAdjustedCount() > 0"
+          [label]="getAdjustedCount() + ' ajustados manualmente'"
+          icon="pi pi-pencil"
+          styleClass="chip-adjusted">
+        </p-chip>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Import Result -->
+  <div class="result-step" *ngIf="importResult">
+    <div class="result-content" [ngClass]="{'success': importResult.success > 0, 'partial': importResult.failed > 0}">
+      <i class="pi result-icon" [ngClass]="importResult.success > 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
+      <h4>Importacion {{ importResult.success > 0 ? 'Completada' : 'con Errores' }}</h4>
+      <div class="result-stats">
+        <div class="stat success">
+          <span class="stat-number">{{ importResult.success }}</span>
+          <span class="stat-label">Importados</span>
+        </div>
+        <div class="stat error" *ngIf="importResult.failed > 0">
+          <span class="stat-number">{{ importResult.failed }}</span>
+          <span class="stat-label">Fallidos</span>
+        </div>
+      </div>
+
+      <div class="errors-list" *ngIf="importResult.errors && importResult.errors.length > 0">
+        <p-accordion>
+          <p-accordionTab header="Ver errores ({{ importResult.errors.length }})">
+            <ul>
+              <li *ngFor="let error of importResult.errors">{{ error }}</li>
+            </ul>
+          </p-accordionTab>
+        </p-accordion>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Actions -->
+  <ng-template pTemplate="footer">
+    <div class="modal-footer-actions">
+      <!-- Cancel button -->
+      <button
+        pButton
+        type="button"
+        label="Cancelar"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        (click)="visible = false; visibleChange.emit(false)"
+        [disabled]="isUploading">
+      </button>
+
+      <!-- Confirm Mapping button (mobile only) -->
+      <button
+        *ngIf="showMappingPreview && !importResult && !isAnalyzingColumns"
+        pButton
+        type="button"
+        label="Confirmar Mapeo"
+        icon="pi pi-check"
+        class="p-button-secondary d-md-none"
+        (click)="confirmAllMappings()"
+        [disabled]="mappingFields.length === 0">
+      </button>
+
+      <!-- Import button -->
+      <button
+        *ngIf="showMappingPreview && !importResult"
+        pButton
+        type="button"
+        [label]="'Importar ' + (type === 'customer' ? 'Clientes' : 'Productos')"
+        icon="pi pi-upload"
+        class="p-button-success"
+        (click)="importData()"
+        [disabled]="!canImport()"
+        [loading]="isUploading">
+      </button>
+
+      <!-- Close button (after import) -->
+      <button
+        *ngIf="importResult"
+        pButton
+        type="button"
+        label="Cerrar"
+        icon="pi pi-check"
+        class="p-button-success"
+        (click)="visible = false; visibleChange.emit(false)">
+      </button>
+    </div>
+  </ng-template>
+
+</p-dialog>

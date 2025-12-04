@@ -4,22 +4,16 @@ import { MessageService } from 'primeng/api';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
-import { ColumnMappingService } from '../services/column-mapping.service';
+import { ColumnMappingService } from '../../../shared/services/import/column-mapping.service';
 import {
   ColumnMappingResult,
   ColumnMappingRequest,
+  ImportResult,
+  MappingField,
   getConfidenceSeverity,
   getConfidenceIcon
-} from '../models/column-mapping.model';
-import { MobileFileUploadComponent } from '../components/mobile-file-upload/mobile-file-upload.component';
-import { MappingField } from '../components/column-mapping-card/column-mapping-card.component';
-
-interface ImportResult {
-  success: number;
-  failed: number;
-  errors: string[];
-  importedCustomers?: any[];
-}
+} from '../../../shared/models/column-mapping.model';
+import { MobileFileUploadComponent } from '../../../shared/components/import-components/mobile-file-upload/mobile-file-upload.component';
 
 @Component({
   selector: 'app-import-customers-step',
@@ -333,7 +327,17 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
 
     try {
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      const companyId = company.cd || company._id || company.nit;
+      const companyId = company.nomComercial;
+
+      if (!companyId) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error de configuracion',
+          detail: 'No se encontro la empresa. Por favor cierra sesion e ingresa nuevamente.'
+        });
+        this.isUploading = false;
+        return;
+      }
 
       // Transformar datos usando el mapeo confirmado
       const transformedData = this.transformDataWithMapping(this.parsedData, this.confirmedMappings);

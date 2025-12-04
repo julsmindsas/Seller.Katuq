@@ -20,6 +20,12 @@
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <button pButton type="button"
+                                icon="pi pi-upload"
+                                label="{{ 'Importar' | translate }}"
+                                class="p-button-outlined p-button-primary p-button-sm"
+                                (click)="openImportModal()"
+                                pTooltip="{{ 'Importar clientes desde Excel' | translate }}"></button>
+                        <button pButton type="button"
                                 icon="pi pi-plus"
                                 label="{{ 'Crear cliente' | translate }}"
                                 class="p-button-primary p-button-sm"
@@ -412,3 +418,10 @@
         </div>
     </div>
 </div>
+
+<!-- Modal de Importacion de Clientes -->
+<app-import-modal
+    [(visible)]="showImportModal"
+    type="customer"
+    (importComplete)="onImportComplete($event)">
+</app-import-modal>

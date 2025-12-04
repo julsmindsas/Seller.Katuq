@@ -1,34 +1,47 @@
-import { Component, OnInit, OnDestroy, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Subject } from 'rxjs';
 import { MessageService } from 'primeng/api';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import * as XLSX from 'xlsx';
-import { ColumnMappingService } from '../../../shared/services/import/column-mapping.service';
+import { ColumnMappingService } from '../../services/import/column-mapping.service';
 import {
   ColumnMappingResult,
   ColumnMappingRequest,
   ImportResult,
   MappingField,
+  TemplateColumn,
   getConfidenceSeverity,
   getConfidenceIcon
-} from '../../../shared/models/column-mapping.model';
-import { MobileFileUploadComponent } from '../../../shared/components/import-components/mobile-file-upload/mobile-file-upload.component';
+} from '../../models/column-mapping.model';
+import { MobileFileUploadComponent } from '../import-components/mobile-file-upload/mobile-file-upload.component';
+
+interface ImportConfig {
+  title: string;
+  endpoint: string;
+  payloadKey: string;
+  maxFileSize: number;
+  templateColumns: TemplateColumn[];
+  fieldLabels: { [key: string]: string };
+}
 
 @Component({
-  selector: 'app-import-products-step',
-  templateUrl: './import-products-step.component.html',
-  styleUrls: ['./import-products-step.component.scss']
+  selector: 'app-import-modal',
+  templateUrl: './import-modal.component.html',
+  styleUrls: ['./import-modal.component.scss'],
+  providers: [MessageService]
 })
-export class ImportProductsStepComponent implements OnInit, OnDestroy {
+export class ImportModalComponent implements OnInit, OnDestroy {
   @ViewChild(MobileFileUploadComponent) mobileFileUpload: MobileFileUploadComponent;
 
-  @Input() initialData: any = null;
-  @Input() aiSuggestion: any = null;
-  @Output() dataChange = new EventEmitter<any>();
-  @Output() stepComplete = new EventEmitter<any>();
+  @Input() type: 'customer' | 'product' = 'customer';
+  @Input() visible = false;
+  @Output() visibleChange = new EventEmitter<boolean>();
+  @Output() importComplete = new EventEmitter<ImportResult>();
 
   private destroy$ = new Subject<void>();
+
+  config: ImportConfig | null = null;
 
   isUploading = false;
   uploadedFile: File | null = null;
@@ -49,21 +62,84 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
   availableColumns: { label: string; value: string }[] = [];
 
   acceptedFormats = '.xlsx,.xls,.json';
-  maxFileSize = 10000000; // 10MB para productos (pueden tener imágenes)
 
-  // Template columns for Excel/JSON
-  templateColumns = [
-    { field: 'referencia', header: 'Referencia/SKU', required: true, example: 'PROD001' },
-    { field: 'titulo', header: 'Título', required: true, example: 'Camiseta Básica' },
-    { field: 'descripcion', header: 'Descripción', required: true, example: 'Camiseta de algodón...' },
-    { field: 'precioUnitarioSinIva', header: 'Precio Sin IVA', required: true, example: '25000' },
-    { field: 'valorIva', header: 'IVA %', required: true, example: '19' },
-    { field: 'cantidadDisponible', header: 'Cantidad Disponible', required: true, example: '100' },
-    { field: 'marca', header: 'Marca', required: false, example: 'Mi Marca' },
-    { field: 'codigoBarras', header: 'Código de Barras', required: false, example: '7501234567890' },
-    { field: 'pesoKg', header: 'Peso (kg)', required: false, example: '0.5' },
-    { field: 'categoria', header: 'Categoría', required: false, example: 'Ropa' }
-  ];
+  // Configurations for each type
+  private customerConfig: ImportConfig = {
+    title: 'Importar Clientes',
+    endpoint: '/v1/onboarding/import-customers',
+    payloadKey: 'customers',
+    maxFileSize: 5000000, // 5MB
+    templateColumns: [
+      { field: 'documento', header: 'Documento/NIT', required: true, example: '1234567890' },
+      { field: 'nombres_completos', header: 'Nombres Completos', required: true, example: 'Juan Perez' },
+      { field: 'correo_electronico_comprador', header: 'Email', required: true, example: 'juan@example.com' },
+      { field: 'numero_celular_comprador', header: 'Celular', required: true, example: '3001234567' },
+      { field: 'tipo_documento_comprador', header: 'Tipo Documento', required: false, example: 'CC' },
+      { field: 'ciudad', header: 'Ciudad', required: false, example: 'Bogota' },
+      { field: 'direccion', header: 'Direccion', required: false, example: 'Calle 123 #45-67' }
+    ],
+    fieldLabels: {
+      'documento': 'Documento/NIT',
+      'nombres_completos': 'Nombres Completos',
+      'correo_electronico_comprador': 'Correo Electronico',
+      'numero_celular_comprador': 'Numero de Celular',
+      'tipo_documento_comprador': 'Tipo de Documento',
+      'datosFacturacionElectronica.tipoDocumento': 'Tipo Documento (Facturacion)',
+      'datosFacturacionElectronica.documento': 'Documento (Facturacion)',
+      'datosFacturacionElectronica.nombres': 'Nombres (Facturacion)',
+      'datosFacturacionElectronica.correoElectronico': 'Email (Facturacion)',
+      'datosFacturacionElectronica.celular': 'Celular (Facturacion)',
+      'datosFacturacionElectronica.direccion': 'Direccion (Facturacion)',
+      'datosFacturacionElectronica.ciudad': 'Ciudad (Facturacion)',
+      'datosFacturacionElectronica.departamento': 'Departamento (Facturacion)',
+      'datosFacturacionElectronica.pais': 'Pais (Facturacion)',
+      'datosEntrega.direccion': 'Direccion de Entrega',
+      'datosEntrega.ciudad': 'Ciudad de Entrega',
+      'datosEntrega.departamento': 'Departamento de Entrega'
+    }
+  };
+
+  private productConfig: ImportConfig = {
+    title: 'Importar Productos',
+    endpoint: '/v1/onboarding/import-products',
+    payloadKey: 'products',
+    maxFileSize: 10000000, // 10MB
+    templateColumns: [
+      { field: 'referencia', header: 'Referencia/SKU', required: true, example: 'PROD001' },
+      { field: 'titulo', header: 'Titulo', required: true, example: 'Camiseta Basica' },
+      { field: 'descripcion', header: 'Descripcion', required: true, example: 'Camiseta de algodon' },
+      { field: 'precioUnitarioSinIva', header: 'Precio Sin IVA', required: true, example: '50000' },
+      { field: 'valorIva', header: 'IVA (%)', required: true, example: '19' },
+      { field: 'cantidadDisponible', header: 'Cantidad Disponible', required: true, example: '100' },
+      { field: 'marca', header: 'Marca', required: false, example: 'MiMarca' },
+      { field: 'codigoBarras', header: 'Codigo de Barras', required: false, example: '7701234567890' },
+      { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' }
+    ],
+    fieldLabels: {
+      'identificacion.referencia': 'Referencia/SKU',
+      'identificacion.marca': 'Marca',
+      'identificacion.tipoProducto': 'Tipo de Producto',
+      'identificacion.codigoBarras': 'Codigo de Barras',
+      'crearProducto.titulo': 'Titulo del Producto',
+      'crearProducto.descripcion': 'Descripcion',
+      'crearProducto.garantiasProducto': 'Garantias',
+      'precio.precioUnitarioSinIva': 'Precio sin IVA',
+      'precio.valorIva': 'Valor IVA (%)',
+      'precio.precioUnitarioConIva': 'Precio con IVA',
+      'disponibilidad.cantidadDisponible': 'Cantidad Disponible',
+      'disponibilidad.cantidadMinVenta': 'Cantidad Minima de Venta',
+      'disponibilidad.inventarioSeguridad': 'Inventario de Seguridad',
+      'referencia': 'Referencia/SKU',
+      'titulo': 'Titulo',
+      'descripcion': 'Descripcion',
+      'precioUnitarioSinIva': 'Precio Sin IVA',
+      'valorIva': 'IVA (%)',
+      'cantidadDisponible': 'Cantidad Disponible',
+      'marca': 'Marca',
+      'codigoBarras': 'Codigo de Barras',
+      'categoria': 'Categoria'
+    }
+  };
 
   constructor(
     private messageService: MessageService,
@@ -72,13 +148,7 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // Si ya hay datos importados previamente, marcar como completo
-    if (this.initialData?.data) {
-      this.importResult = this.initialData.data;
-      setTimeout(() => {
-        this.stepComplete.emit({ data: this.importResult });
-      }, 0);
-    }
+    this.loadConfig();
   }
 
   ngOnDestroy(): void {
@@ -86,26 +156,48 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  /**
-   * Maneja la selección de archivo (desde mobile-file-upload)
-   */
+  private loadConfig(): void {
+    this.config = this.type === 'customer' ? this.customerConfig : this.productConfig;
+  }
+
+  onDialogShow(): void {
+    this.loadConfig();
+  }
+
+  onDialogHide(): void {
+    this.resetState();
+    this.visibleChange.emit(false);
+  }
+
+  private resetState(): void {
+    this.uploadedFile = null;
+    this.previewData = [];
+    this.showPreview = false;
+    this.importResult = null;
+    this.parsedData = [];
+    this.sourceColumns = [];
+    this.mappingResult = null;
+    this.confirmedMappings = {};
+    this.showMappingPreview = false;
+    this.mappingFields = [];
+    this.availableColumns = [];
+    this.isUploading = false;
+    this.isAnalyzingColumns = false;
+  }
+
   onMobileFileSelected(file: File): void {
     this.onFileSelect({ files: [file] });
   }
 
-  /**
-   * Maneja la selección de archivo
-   */
   onFileSelect(event: any): void {
     const file = event.files[0];
     if (!file) return;
 
-    // Validar tamaño
-    if (file.size > this.maxFileSize) {
+    if (file.size > (this.config?.maxFileSize || 5000000)) {
       this.messageService.add({
         severity: 'error',
         summary: 'Archivo muy grande',
-        detail: `El archivo no debe superar ${this.maxFileSize / 1000000}MB`
+        detail: `El archivo no debe superar ${(this.config?.maxFileSize || 5000000) / 1000000}MB`
       });
       return;
     }
@@ -114,9 +206,6 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     this.previewFile(file);
   }
 
-  /**
-   * Previsualiza el contenido del archivo y llama a KAI para mapeo inteligente
-   */
   private async previewFile(file: File): Promise<void> {
     const reader = new FileReader();
 
@@ -128,7 +217,6 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
           const jsonData = JSON.parse(e.target.result);
           data = Array.isArray(jsonData) ? jsonData : [jsonData];
         } else {
-          // Parsear Excel
           const arrayBuffer = e.target.result;
           const workbook = XLSX.read(arrayBuffer, { type: 'array' });
           const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
@@ -138,19 +226,17 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
         if (data.length === 0) {
           this.messageService.add({
             severity: 'warn',
-            summary: 'Archivo vacío',
+            summary: 'Archivo vacio',
             detail: 'El archivo no contiene datos'
           });
           return;
         }
 
-        // Guardar datos parseados
         this.parsedData = data;
         this.sourceColumns = this.columnMappingService.extractColumns(data);
         this.previewData = data.slice(0, 5);
         this.showPreview = true;
 
-        // Llamar a KAI para análisis de columnas
         await this.analyzeColumnsWithKAI();
 
       } catch (error) {
@@ -170,9 +256,6 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Analiza las columnas usando el agente KAI
-   */
   private async analyzeColumnsWithKAI(): Promise<void> {
     this.isAnalyzingColumns = true;
 
@@ -181,7 +264,7 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
       const sampleRows = this.columnMappingService.getSampleRows(this.parsedData, 3);
 
       const request: ColumnMappingRequest = {
-        type: 'product',
+        type: this.type,
         sourceColumns: this.sourceColumns,
         sampleRows: sampleRows,
         companyId: company.cd || company._id
@@ -192,21 +275,19 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
         .toPromise() || null;
 
       this.showMappingPreview = true;
-
-      // Convert mappings to mobile-friendly card format
       this.prepareMappingFields();
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Análisis Completado',
-        detail: `KAI analizó ${this.sourceColumns.length} columnas y sugirió ${Object.keys(this.mappingResult?.mappings || {}).length} mapeos`
+        summary: 'Analisis Completado',
+        detail: `KAI analizo ${this.sourceColumns.length} columnas y sugirio ${Object.keys(this.mappingResult?.mappings || {}).length} mapeos`
       });
 
     } catch (error: any) {
       console.error('Error analyzing columns with KAI:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error en Análisis',
+        summary: 'Error en Analisis',
         detail: error?.error?.message || 'No se pudo analizar el archivo con KAI'
       });
     } finally {
@@ -214,9 +295,6 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * Prepara los campos de mapeo para las tarjetas móviles
-   */
   private prepareMappingFields(): void {
     if (!this.mappingResult) return;
 
@@ -237,7 +315,6 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
       icon: getConfidenceIcon(mapping.confidence)
     }));
 
-    // Sort by required first, then by confidence
     this.mappingFields.sort((a, b) => {
       if (a.isRequired && !b.isRequired) return -1;
       if (!a.isRequired && b.isRequired) return 1;
@@ -245,9 +322,6 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Maneja cambios de mapeo desde las tarjetas móviles
-   */
   onCardMappingChanged(event: { katuqField: string; sourceColumn: string }): void {
     const field = this.mappingFields.find(f => f.katuqField === event.katuqField);
     if (field) {
@@ -259,13 +333,9 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
       field.reasoning = 'Mapeo ajustado manualmente';
     }
 
-    // Update confirmed mappings
     this.updateConfirmedMappings();
   }
 
-  /**
-   * Actualiza los mapeos confirmados desde las tarjetas
-   */
   private updateConfirmedMappings(): void {
     this.confirmedMappings = {};
     this.mappingFields.forEach(field => {
@@ -273,41 +343,29 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Confirma todos los mapeos actuales
-   */
   confirmAllMappings(): void {
     this.updateConfirmedMappings();
     this.messageService.add({
       severity: 'success',
       summary: 'Mapeo Confirmado',
-      detail: 'Los mapeos han sido confirmados. Ahora puedes importar los productos.'
+      detail: `Los mapeos han sido confirmados. Ahora puedes importar los ${this.type === 'customer' ? 'clientes' : 'productos'}.`
     });
   }
 
-  /**
-   * Maneja los ajustes manuales del mapeo (legacy - para compatibilidad con tabla)
-   */
   onMappingsAdjusted(adjustedMappings: { [katuqField: string]: string }): void {
     this.confirmedMappings = adjustedMappings;
   }
 
-  /**
-   * Maneja la confirmación del mapeo
-   */
   onMappingsConfirmed(finalMappings: { [katuqField: string]: string }): void {
     this.confirmedMappings = finalMappings;
     this.messageService.add({
       severity: 'info',
       summary: 'Mapeo Confirmado',
-      detail: 'Ahora puedes importar los productos con el mapeo confirmado'
+      detail: `Ahora puedes importar los ${this.type === 'customer' ? 'clientes' : 'productos'} con el mapeo confirmado`
     });
   }
 
-  /**
-   * Importa los productos
-   */
-  async importProducts(): Promise<void> {
+  async importData(): Promise<void> {
     if (!this.uploadedFile) {
       this.messageService.add({
         severity: 'warn',
@@ -342,22 +400,20 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Transformar datos usando el mapeo confirmado
       const transformedData = this.transformDataWithMapping(this.parsedData, this.confirmedMappings);
 
-      const payload = {
-        products: transformedData,
+      const payload: any = {
         companyId: companyId,
         mappings: this.confirmedMappings
       };
+      payload[this.config!.payloadKey] = transformedData;
 
-      // Agregar header company explícitamente para onboarding
       const headers = new HttpHeaders({
         'company': companyId
       });
 
       const response = await this.http.post<ImportResult>(
-        `${environment.urlApi}/v1/onboarding/import-products`,
+        `${environment.urlApi}${this.config!.endpoint}`,
         payload,
         { headers }
       ).toPromise();
@@ -366,37 +422,37 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
 
       this.messageService.add({
         severity: 'success',
-        summary: 'Importación Completada',
-        detail: `${this.importResult.success} productos importados correctamente${this.importResult.failed > 0 ? `, ${this.importResult.failed} fallidos` : ''}`
+        summary: 'Importacion Completada',
+        detail: `${this.importResult.success} ${this.type === 'customer' ? 'clientes' : 'productos'} importados correctamente${this.importResult.failed > 0 ? `, ${this.importResult.failed} fallidos` : ''}`
       });
 
-      this.dataChange.emit({ data: this.importResult });
-      this.stepComplete.emit({ data: this.importResult });
+      this.importComplete.emit(this.importResult);
+
+      // Close modal after short delay
+      setTimeout(() => {
+        this.visible = false;
+        this.visibleChange.emit(false);
+      }, 1500);
 
     } catch (error: any) {
-      console.error('Error importing products:', error);
+      console.error('Error importing data:', error);
       this.messageService.add({
         severity: 'error',
-        summary: 'Error en Importación',
-        detail: error?.error?.message || 'No se pudieron importar los productos'
+        summary: 'Error en Importacion',
+        detail: error?.error?.message || `No se pudieron importar los ${this.type === 'customer' ? 'clientes' : 'productos'}`
       });
     } finally {
       this.isUploading = false;
     }
   }
 
-  /**
-   * Transforma los datos usando el mapeo confirmado
-   */
   private transformDataWithMapping(data: any[], mappings: { [katuqField: string]: string }): any[] {
     return data.map(row => {
       const transformedRow: any = {};
 
-      // Aplicar mapeos
       Object.entries(mappings).forEach(([katuqField, sourceColumn]) => {
         const value = row[sourceColumn];
 
-        // Manejar campos nested (ej: "identificacion.referencia", "precio.precioUnitarioSinIva")
         if (katuqField.includes('.')) {
           const parts = katuqField.split('.');
           let current = transformedRow;
@@ -418,43 +474,26 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     });
   }
 
-  /**
-   * Descarga plantilla Excel
-   */
   downloadTemplate(): void {
-    // Crear CSV con las columnas de ejemplo
-    const headers = this.templateColumns.map(col => col.header).join(',');
-    const example = this.templateColumns.map(col => col.example).join(',');
+    if (!this.config) return;
+
+    const headers = this.config.templateColumns.map(col => col.header).join(',');
+    const example = this.config.templateColumns.map(col => col.example).join(',');
     const csvContent = `${headers}\n${example}`;
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = 'plantilla_productos_katuq.csv';
+    link.download = `plantilla_${this.type === 'customer' ? 'clientes' : 'productos'}_katuq.csv`;
     link.click();
 
     this.messageService.add({
       severity: 'success',
       summary: 'Plantilla Descargada',
-      detail: 'Completa la plantilla con tus productos y súbela para importar'
+      detail: `Completa la plantilla con tus ${this.type === 'customer' ? 'clientes' : 'productos'} y subela para importar`
     });
   }
 
-  /**
-   * Omite este paso
-   */
-  skipStep(): void {
-    this.stepComplete.emit({ data: { skipped: true } });
-    this.messageService.add({
-      severity: 'info',
-      summary: 'Paso Omitido',
-      detail: 'Podrás importar productos más tarde desde el módulo de inventarios'
-    });
-  }
-
-  /**
-   * Limpia el archivo seleccionado
-   */
   clearFile(): void {
     this.uploadedFile = null;
     this.previewData = [];
@@ -469,34 +508,10 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     this.availableColumns = [];
   }
 
-  /**
-   * Gets field label for display
-   */
-  private getFieldLabel(katuqField: string): string {
-    const productLabels: { [key: string]: string } = {
-      'identificacion.referencia': 'Referencia/SKU',
-      'titulo': 'Título del Producto',
-      'descripcion': 'Descripción',
-      'precio.precioUnitarioSinIva': 'Precio Sin IVA',
-      'precio.valorIva': '% IVA',
-      'stock.cantidadDisponible': 'Stock Disponible',
-      'caracteristicas.marca': 'Marca',
-      'caracteristicas.categoria': 'Categoría',
-      'caracteristicas.codigoBarras': 'Código de Barras',
-      'dimensiones.pesoKg': 'Peso (kg)',
-      'dimensiones.alto': 'Alto (cm)',
-      'dimensiones.ancho': 'Ancho (cm)',
-      'dimensiones.largo': 'Largo (cm)',
-      'precio.precioUnitarioConIva': 'Precio Con IVA',
-      'stock.cantidadMinima': 'Stock Mínimo',
-      'stock.cantidadMaxima': 'Stock Máximo'
-    };
-    return productLabels[katuqField] || katuqField;
+  getFieldLabel(katuqField: string): string {
+    return this.config?.fieldLabels[katuqField] || katuqField;
   }
 
-  /**
-   * Gets summary counts for mobile sticky footer
-   */
   getMappedCount(): number {
     return this.mappingFields.filter(f => f.sourceColumn).length;
   }
@@ -517,9 +532,6 @@ export class ImportProductsStepComponent implements OnInit, OnDestroy {
     return this.getMappedRequiredCount() < this.getRequiredCount();
   }
 
-  /**
-   * Verifica si se puede importar
-   */
   canImport(): boolean {
     return !!this.uploadedFile &&
            Object.keys(this.confirmedMappings).length > 0 &&

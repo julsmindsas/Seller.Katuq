@@ -1,0 +1,318 @@
+@import '../../../styles/import-mixins';
+
+.mobile-file-upload {
+  width: 100%;
+
+  // =============================================================================
+  // UPLOAD ZONE (Empty State)
+  // =============================================================================
+
+  .upload-zone {
+    @include mobile-card;
+    min-height: 200px;
+    border: 2px dashed var(--surface-border);
+    background: var(--surface-50);
+    transition: all 0.3s ease;
+    cursor: pointer;
+
+    @include mobile {
+      min-height: 180px;
+    }
+
+    &:hover {
+      border-color: var(--primary-color);
+      background: var(--primary-50);
+
+      .upload-icon {
+        color: var(--primary-color);
+        transform: scale(1.1);
+      }
+    }
+
+    .upload-zone-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: $spacing-xl;
+      height: 100%;
+      text-align: center;
+
+      @include mobile {
+        padding: $spacing-lg;
+      }
+
+      .upload-icon {
+        font-size: 4rem;
+        color: var(--primary-color);
+        margin-bottom: $spacing-md;
+        transition: all 0.3s ease;
+
+        @include mobile {
+          font-size: 3rem;
+        }
+      }
+
+      .upload-text {
+        @include mobile-subtitle;
+        margin: 0 0 $spacing-xs 0;
+        color: var(--text-color);
+        font-weight: 600;
+      }
+
+      .upload-hint {
+        @include mobile-small-text;
+        margin: 0 0 $spacing-lg 0;
+        color: var(--text-color-secondary);
+      }
+
+      ::ng-deep .upload-button {
+        .p-button {
+          @include mobile-button-primary;
+          font-size: 1rem;
+          padding: $spacing-sm $spacing-xl;
+
+          @include mobile {
+            width: 100%;
+            max-width: 280px;
+          }
+        }
+      }
+    }
+  }
+
+  // =============================================================================
+  // FILE DETAILS CARD (Selected/Uploading State)
+  // =============================================================================
+
+  .file-details-card {
+    @include mobile-card;
+    padding: $spacing-lg;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+
+    @include mobile {
+      padding: $spacing-md;
+    }
+
+    // File Info Section
+    .file-info-section {
+      display: flex;
+      align-items: center;
+      gap: $spacing-md;
+
+      .file-icon-container {
+        flex-shrink: 0;
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--primary-100);
+        border-radius: 12px;
+
+        @include mobile {
+          width: 50px;
+          height: 50px;
+        }
+
+        .file-icon {
+          font-size: 2rem;
+          color: var(--primary-color);
+
+          @include mobile {
+            font-size: 1.75rem;
+          }
+        }
+      }
+
+      .file-info {
+        flex: 1;
+        min-width: 0;
+
+        .file-name {
+          @include mobile-subtitle;
+          margin: 0 0 $spacing-xs 0;
+          color: var(--text-color);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .file-meta {
+          @include mobile-small-text;
+          margin: 0;
+          color: var(--text-color-secondary);
+          display: flex;
+          align-items: center;
+          gap: $spacing-xs;
+
+          .file-separator {
+            color: var(--surface-300);
+          }
+        }
+      }
+    }
+
+    // Progress Section
+    .progress-section {
+      display: flex;
+      flex-direction: column;
+      gap: $spacing-sm;
+
+      ::ng-deep .mobile-progress-bar {
+        .p-progressbar {
+          height: 8px;
+          border-radius: 4px;
+          background: var(--surface-200);
+
+          .p-progressbar-value {
+            background: linear-gradient(90deg, var(--primary-color), var(--primary-400));
+          }
+
+          .p-progressbar-label {
+            @include mobile-small-text;
+            font-weight: 600;
+          }
+        }
+      }
+
+      .progress-text {
+        @include mobile-small-text;
+        margin: 0;
+        color: var(--text-color-secondary);
+        text-align: center;
+        font-weight: 500;
+      }
+    }
+
+    // State Messages
+    .state-message {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: $spacing-sm;
+      padding: $spacing-sm $spacing-md;
+      border-radius: 8px;
+      @include mobile-body;
+      font-weight: 600;
+
+      i {
+        font-size: 1.25rem;
+      }
+
+      &.success-message {
+        background: var(--green-50);
+        color: var(--green-700);
+        border: 1px solid var(--green-200);
+
+        i {
+          color: var(--green-600);
+        }
+      }
+
+      &.error-message {
+        background: var(--red-50);
+        color: var(--red-700);
+        border: 1px solid var(--red-200);
+
+        i {
+          color: var(--red-600);
+        }
+      }
+    }
+
+    // Action Buttons
+    .action-buttons {
+      display: flex;
+      gap: $spacing-sm;
+
+      @include mobile {
+        flex-direction: column;
+      }
+
+      .change-button {
+        flex: 1;
+
+        ::ng-deep .p-button {
+          @include mobile-button;
+          width: 100%;
+        }
+      }
+
+      .clear-button {
+        ::ng-deep .p-button {
+          @include touch-target-comfortable;
+
+          @include mobile {
+            width: 100%;
+          }
+        }
+      }
+    }
+
+    .hidden-upload {
+      display: none;
+    }
+  }
+
+  // =============================================================================
+  // STATE VARIATIONS
+  // =============================================================================
+
+  &.state-uploading {
+    .file-details-card {
+      border: 2px solid var(--primary-color);
+      background: var(--primary-50);
+
+      .file-icon-container {
+        animation: pulse 2s ease-in-out infinite;
+      }
+    }
+  }
+
+  &.state-uploaded {
+    .file-details-card {
+      border: 2px solid var(--green-300);
+    }
+  }
+
+  &.state-error {
+    .file-details-card {
+      border: 2px solid var(--red-300);
+    }
+  }
+}
+
+// =============================================================================
+// ANIMATIONS
+// =============================================================================
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+// =============================================================================
+// RESPONSIVE OPTIMIZATIONS
+// =============================================================================
+
+@include mobile {
+  .mobile-file-upload {
+    .upload-zone,
+    .file-details-card {
+      border-radius: 8px;
+    }
+
+    .action-buttons {
+      button {
+        width: 100%;
+      }
+    }
+  }
+}

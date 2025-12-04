@@ -11,6 +11,7 @@ import { NgbActiveModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ProductDetailsComponent } from './product-details/product-details.component'
 import { GalleryModule, ModalGalleryService } from '@ks89/angular-modal-gallery';
 import { TableModule } from 'primeng/table';
+import { ImportModalModule } from '../../shared/components/import-modal/import-modal.module';
 
 import 'hammerjs';
 import 'mousetrap';
@@ -25,7 +26,8 @@ import 'mousetrap';
     AngularFireStorageModule,
     NgbModule,
     GalleryModule,
-    TableModule
+    TableModule,
+    ImportModalModule
   ],
   declarations: [ProductosComponent, ProductDetailsComponent],
   providers: [NgbActiveModal, ModalGalleryService]
