@@ -305,7 +305,8 @@
 
 												<th scope="row">
 													<input formControlName="numeroUnidadesInicial"
-														placeholder="Desde Cantidad" class="form-control" type="number">
+														placeholder="Desde Cantidad" class="form-control" type="number"
+														[disabled]="i === 0">
 													<div *ngIf="item.get('numeroUnidadesInicial').errors">
 														<small class="form-text text-danger"
 															*ngIf="item.get('numeroUnidadesInicial').hasError('required')">Este
@@ -321,7 +322,8 @@
 													</div>
 												</th>
 												<td><input class="form-control" formControlName="numeroUnidadesLimite"
-														placeholder="Hasta Cantidad" type="number">
+														placeholder="Hasta Cantidad" type="number"
+														[disabled]="i === 0">
 													<div *ngIf="item.get('numeroUnidadesLimite').errors">
 														<small class="form-text text-danger"
 															*ngIf="item.get('numeroUnidadesLimite').hasError('required')">Este

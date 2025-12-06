@@ -426,6 +426,9 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
           const calculo = unitPrice * (precioIva / 100);
           this.precio.get("valorIva").setValue(calculo);
           this.precio.get("precioUnitarioConIva").setValue(calculo + unitPrice);
+          
+          // Sincronizar el porcentaje de IVA con la primera fila de la tabla
+          this.syncIvaPercentageToFirstRow(precioIva);
         } else {
           this.precio.get("valorIva").setValue("");
         }
@@ -878,6 +881,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     fbSub
       .get("numeroUnidadesInicial")
       .valueChanges.subscribe((valorInicial: any) => {
+        // Verificar si es la primera fila (índice 0)
+        const preciosPorVolumen = this.precio.get("preciosVolumen") as FormArray;
+        const currentIndex = preciosPorVolumen.controls.indexOf(fbSub);
+        
+        // Si es la primera fila, forzar el valor a 1
+        if (currentIndex === 0) {
+          if (valorInicial !== 1 && valorInicial !== null && valorInicial !== undefined) {
+            fbSub.get("numeroUnidadesInicial").setValue(1, { emitEvent: false });
+            return;
+          }
+        }
+        
         const valorLimite = fbSub.get("numeroUnidadesLimite").value;
 
         if (valorInicial && valorLimite && valorInicial > valorLimite) {
@@ -893,6 +908,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     fbSub
       .get("numeroUnidadesLimite")
       .valueChanges.subscribe((valorLimite: any) => {
+        // Verificar si es la primera fila (índice 0)
+        const preciosPorVolumen = this.precio.get("preciosVolumen") as FormArray;
+        const currentIndex = preciosPorVolumen.controls.indexOf(fbSub);
+        
+        // Si es la primera fila, forzar el valor a 1
+        if (currentIndex === 0) {
+          if (valorLimite !== 1 && valorLimite !== null && valorLimite !== undefined) {
+            fbSub.get("numeroUnidadesLimite").setValue(1, { emitEvent: false });
+            return;
+          }
+        }
+        
         const valorInicial = fbSub.get("numeroUnidadesInicial").value;
 
         if (valorLimite && valorInicial && valorInicial > valorLimite) {
@@ -1690,17 +1717,23 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     // this.paraProduccion = productWithKatuq.crearProducto.paraProduccion;
     const preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
     // this.precio.patchValue(productWithKatuq.precio)
-    productWithKatuq.precio.preciosVolumen.forEach((precio) => {
-      preciosVolumen.push(
-        this.fb.group({
-          numeroUnidadesInicial: [precio.numeroUnidadesInicial],
-          numeroUnidadesLimite: [precio.numeroUnidadesInicial],
-          valorUnitarioPorVolumenSinIVA: [precio.valorUnitarioPorVolumenSinIVA],
-          valorUnitarioPorVolumenIva: [precio.valorUnitarioPorVolumenIva],
-          valorIVAPorVolumen: [precio.valorIVAPorVolumen],
-          valorUnitarioPorVolumenConIVA: [precio.valorUnitarioPorVolumenConIVA],
-        }),
-      );
+    productWithKatuq.precio.preciosVolumen.forEach((precio, index) => {
+      const newItem = this.fb.group({
+        numeroUnidadesInicial: [index === 0 ? 1 : precio.numeroUnidadesInicial],
+        numeroUnidadesLimite: [index === 0 ? 1 : precio.numeroUnidadesInicial],
+        valorUnitarioPorVolumenSinIVA: [precio.valorUnitarioPorVolumenSinIVA],
+        valorUnitarioPorVolumenIva: [precio.valorUnitarioPorVolumenIva],
+        valorIVAPorVolumen: [precio.valorIVAPorVolumen],
+        valorUnitarioPorVolumenConIVA: [precio.valorUnitarioPorVolumenConIVA],
+      });
+      
+      // Si es la primera fila, deshabilitar los campos de cantidad
+      if (index === 0) {
+        newItem.get("numeroUnidadesInicial").disable();
+        newItem.get("numeroUnidadesLimite").disable();
+      }
+      
+      preciosVolumen.push(newItem);
     });
     this.preciosPorVolumen = preciosVolumen;
     this.precio.patchValue(productWithKatuq.precio);
@@ -2017,15 +2050,23 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   private loadPricingData() {
     const preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
-    this.edit.precio.preciosVolumen.forEach((precio) => {
-      preciosVolumen.push(this.fb.group({
-        numeroUnidadesInicial: [precio.numeroUnidadesInicial],
-        numeroUnidadesLimite: [precio.numeroUnidadesLimite],
+    this.edit.precio.preciosVolumen.forEach((precio, index) => {
+      const newItem = this.fb.group({
+        numeroUnidadesInicial: [index === 0 ? 1 : precio.numeroUnidadesInicial],
+        numeroUnidadesLimite: [index === 0 ? 1 : precio.numeroUnidadesLimite],
         valorUnitarioPorVolumenSinIVA: [precio.valorUnitarioPorVolumenSinIVA],
         valorUnitarioPorVolumenIva: [precio.valorUnitarioPorVolumenIva],
         valorIVAPorVolumen: [precio.valorIVAPorVolumen],
         valorUnitarioPorVolumenConIVA: [precio.valorUnitarioPorVolumenConIVA],
-      }));
+      });
+      
+      // Si es la primera fila, deshabilitar los campos de cantidad
+      if (index === 0) {
+        newItem.get("numeroUnidadesInicial").disable();
+        newItem.get("numeroUnidadesLimite").disable();
+      }
+      
+      preciosVolumen.push(newItem);
     });
     this.preciosPorVolumen = preciosVolumen;
     this.precio.patchValue(this.edit.precio);
@@ -2062,6 +2103,44 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.cdr.detectChanges();
   }
 
+  /**
+   * Sincroniza el porcentaje de IVA de la parte superior con la primera fila de la tabla
+   * y recalcula los valores de IVA y total con IVA
+   */
+  private syncIvaPercentageToFirstRow(precioIva: number) {
+    if (!this.preciosPorVolumen) {
+      this.preciosPorVolumen = this.precio.get("preciosVolumen") as FormArray;
+    }
+
+    // Solo actualizar si existe al menos una fila
+    if (this.preciosPorVolumen.length > 0) {
+      const firstItem = this.preciosPorVolumen.controls[0];
+      let precioUnitarioSinIva = firstItem.get("valorUnitarioPorVolumenSinIVA").value || 0;
+      
+      // Convertir a número si es necesario
+      if (typeof precioUnitarioSinIva === 'string') {
+        precioUnitarioSinIva = parseFloat(precioUnitarioSinIva) || 0;
+      }
+      
+      // Convertir precioIva a número si es necesario
+      let precioIvaNum = precioIva;
+      if (typeof precioIva === 'string') {
+        precioIvaNum = parseFloat(precioIva) || 0;
+      }
+      
+      // Actualizar el porcentaje de IVA de la primera fila (sin emitir evento para evitar bucle)
+      firstItem.get("valorIVAPorVolumen").setValue(precioIvaNum, { emitEvent: false });
+      
+      // Recalcular el IVA y el total con IVA
+      const calculoIva = precioUnitarioSinIva * (precioIvaNum / 100);
+      const precioTotalConIva = calculoIva + precioUnitarioSinIva;
+      
+      // Actualizar los valores calculados
+      firstItem.get("valorUnitarioPorVolumenIva").setValue(calculoIva);
+      firstItem.get("valorUnitarioPorVolumenConIVA").setValue(precioTotalConIva);
+    }
+  }
+
   private initializePreciosPorVolumenIfNeeded(precioUnitarioSinIva: number, valorIva: number) {
     if (!this.preciosPorVolumen) {
       this.preciosPorVolumen = this.precio.get("preciosVolumen") as FormArray;
@@ -2073,15 +2152,36 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       newItem.get("numeroUnidadesInicial").setValue(1);
       newItem.get("numeroUnidadesInicial").disable();
       newItem.get("numeroUnidadesLimite").setValue(1);
+      newItem.get("numeroUnidadesLimite").disable();
       newItem.get("valorIVAPorVolumen").setValue(this.precio.get("precioUnitarioIva").value || 0);
       newItem.get("valorUnitarioPorVolumenSinIVA").setValue(precioUnitarioSinIva);
       newItem.get("valorUnitarioPorVolumenConIVA").setValue(valorIva + precioUnitarioSinIva);
       this.preciosPorVolumen.push(newItem);
     } else {
-      // Solo actualizar el primer elemento si ya existe
-      this.preciosPorVolumen.controls[0]
-        .get("valorUnitarioPorVolumenSinIVA")
-        .setValue(precioUnitarioSinIva);
+      // Actualizar el primer elemento si ya existe
+      const firstItem = this.preciosPorVolumen.controls[0];
+      const porcentajeIvaTabla = firstItem.get("valorIVAPorVolumen").value || 0;
+      
+      // Asegurar que la primera fila siempre tenga cantidad inicial y final en 1
+      firstItem.get("numeroUnidadesInicial").setValue(1, { emitEvent: false });
+      firstItem.get("numeroUnidadesLimite").setValue(1, { emitEvent: false });
+      
+      // Deshabilitar los campos de cantidad en la primera fila si no están deshabilitados
+      if (!firstItem.get("numeroUnidadesInicial").disabled) {
+        firstItem.get("numeroUnidadesInicial").disable();
+      }
+      if (!firstItem.get("numeroUnidadesLimite").disabled) {
+        firstItem.get("numeroUnidadesLimite").disable();
+      }
+      
+      // Recalcular el IVA basado en el porcentaje de IVA de la tabla
+      const calculoIva = precioUnitarioSinIva * (porcentajeIvaTabla / 100);
+      const precioTotalConIva = calculoIva + precioUnitarioSinIva;
+      
+      // Actualizar todos los campos relacionados
+      firstItem.get("valorUnitarioPorVolumenSinIVA").setValue(precioUnitarioSinIva);
+      firstItem.get("valorUnitarioPorVolumenIva").setValue(calculoIva);
+      firstItem.get("valorUnitarioPorVolumenConIVA").setValue(precioTotalConIva);
     }
   }
 
