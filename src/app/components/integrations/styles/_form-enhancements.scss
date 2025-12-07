@@ -1,0 +1,837 @@
+/* ==================================================================
+   FORM ENHANCEMENTS - MINIMALIST DESIGN
+   Version: 1.0.0 | Clean, professional form styling
+   ================================================================== */
+
+/* ============================================================
+   FORM FIELD GROUPS - ENHANCED
+   ============================================================ */
+.form-field-enhanced {
+  position: relative;
+  margin-bottom: 1.25rem;
+
+  .field-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #374151;
+    letter-spacing: 0.01em;
+
+    .label-icon {
+      width: 18px;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f3f4f6;
+      border-radius: 4px;
+
+      i {
+        font-size: 0.625rem;
+        color: #6b7280;
+      }
+    }
+
+    .required-mark {
+      color: #ef4444;
+      font-weight: 500;
+    }
+
+    .optional-mark {
+      font-size: 0.6875rem;
+      font-weight: 400;
+      color: #9ca3af;
+      margin-left: 0.25rem;
+    }
+  }
+
+  .field-input-wrapper {
+    position: relative;
+
+    .field-prefix {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-right: none;
+      border-radius: 6px 0 0 6px;
+
+      i {
+        font-size: 0.8125rem;
+        color: #6b7280;
+      }
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      padding-left: 52px;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 0.8125rem;
+      color: #1f2937;
+      background: #fff;
+      transition: all 0.15s ease;
+
+      &::placeholder {
+        color: #9ca3af;
+      }
+
+      &:hover {
+        border-color: #d1d5db;
+      }
+
+      &:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+      }
+
+      &.is-invalid {
+        border-color: #ef4444;
+
+        &:focus {
+          box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.08);
+        }
+      }
+
+      &.is-valid {
+        border-color: #10b981;
+      }
+    }
+
+    .field-suffix {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+
+      i {
+        font-size: 0.875rem;
+        color: #9ca3af;
+        transition: color 0.15s ease;
+      }
+
+      &:hover i {
+        color: #6b7280;
+      }
+    }
+
+    &.has-suffix input {
+      padding-right: 44px;
+    }
+  }
+
+  .field-hint {
+    margin-top: 0.375rem;
+    font-size: 0.6875rem;
+    color: #6b7280;
+    line-height: 1.4;
+  }
+
+  .field-error {
+    margin-top: 0.375rem;
+    font-size: 0.75rem;
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    i {
+      font-size: 0.625rem;
+    }
+  }
+}
+
+/* ============================================================
+   CREDENTIAL CARD - ENHANCED
+   ============================================================ */
+.credential-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  overflow: hidden;
+
+  .credential-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+
+    .credential-title {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #374151;
+
+      .title-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #e5e7eb;
+        border-radius: 5px;
+
+        i {
+          font-size: 0.6875rem;
+          color: #4b5563;
+        }
+      }
+    }
+
+    .credential-status {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+
+      &.status-required {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      &.status-optional {
+        background: #f3f4f6;
+        color: #6b7280;
+      }
+
+      &.status-valid {
+        background: #d1fae5;
+        color: #065f46;
+      }
+    }
+  }
+
+  .credential-body {
+    padding: 1rem;
+  }
+
+  .credential-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+/* ============================================================
+   INTEGRATION INFO BANNER - ENHANCED
+   ============================================================ */
+.integration-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: #f0f9ff;
+  border: 1px solid #bae6fd;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+
+  .info-icon {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0ea5e9;
+    border-radius: 50%;
+    margin-top: 1px;
+
+    i {
+      font-size: 0.625rem;
+      color: #fff;
+    }
+  }
+
+  .info-content {
+    flex: 1;
+    min-width: 0;
+
+    .info-text {
+      font-size: 0.8125rem;
+      color: #0c4a6e;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    .info-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      margin-top: 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #0284c7;
+      text-decoration: none;
+      transition: color 0.15s ease;
+
+      &:hover {
+        color: #0369a1;
+        text-decoration: underline;
+      }
+
+      i {
+        font-size: 0.625rem;
+      }
+    }
+  }
+}
+
+/* ============================================================
+   ENVIRONMENT SELECTOR - ENHANCED
+   ============================================================ */
+.environment-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+
+  .env-toggle {
+    position: relative;
+    width: 44px;
+    height: 24px;
+    background: #d1d5db;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    &.active {
+      background: #10b981;
+
+      &::after {
+        transform: translateX(20px);
+      }
+    }
+
+    &.test-mode {
+      background: #f59e0b;
+
+      &::after {
+        transform: translateX(20px);
+      }
+    }
+  }
+
+  .env-label {
+    flex: 1;
+
+    .env-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #374151;
+      margin: 0;
+    }
+
+    .env-description {
+      font-size: 0.6875rem;
+      color: #6b7280;
+      margin: 0.125rem 0 0 0;
+    }
+  }
+
+  .env-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+
+    i {
+      font-size: 0.625rem;
+    }
+
+    &.badge-production {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    &.badge-test {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    &.badge-sandbox {
+      background: #e0e7ff;
+      color: #3730a3;
+    }
+  }
+}
+
+/* ============================================================
+   FORM SECTION DIVIDER
+   ============================================================ */
+.form-section-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #e5e7eb;
+  }
+
+  .divider-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #9ca3af;
+    white-space: nowrap;
+  }
+}
+
+/* ============================================================
+   ACTION BUTTONS - ENHANCED
+   ============================================================ */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+
+  .btn-form {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1px solid transparent;
+
+    i {
+      font-size: 0.75rem;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-secondary {
+    background: #fff;
+    color: #374151;
+    border-color: #d1d5db;
+
+    &:hover:not(:disabled) {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+  }
+
+  .btn-primary {
+    background: #4f46e5;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: #4338ca;
+    }
+  }
+
+  .btn-success {
+    background: #059669;
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: #047857;
+    }
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: #4f46e5;
+    border-color: #4f46e5;
+
+    &:hover:not(:disabled) {
+      background: #eef2ff;
+    }
+  }
+}
+
+/* ============================================================
+   INPUT GROUP ENHANCEMENTS
+   ============================================================ */
+.input-group-enhanced {
+  display: flex;
+  align-items: stretch;
+
+  .input-prepend {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-right: none;
+    border-radius: 6px 0 0 6px;
+
+    i {
+      font-size: 0.8125rem;
+      color: #6b7280;
+    }
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0;
+    font-size: 0.8125rem;
+    color: #1f2937;
+    transition: all 0.15s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #6366f1;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.08);
+      z-index: 1;
+    }
+
+    &:first-child {
+      border-radius: 6px 0 0 6px;
+    }
+
+    &:last-child {
+      border-radius: 0 6px 6px 0;
+    }
+
+    &:only-child {
+      border-radius: 6px;
+    }
+  }
+
+  .input-append {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-left: none;
+    border-radius: 0 6px 6px 0;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    i {
+      font-size: 0.8125rem;
+      color: #6b7280;
+      transition: color 0.15s ease;
+    }
+
+    &:hover {
+      background: #f3f4f6;
+
+      i {
+        color: #374151;
+      }
+    }
+  }
+
+  &.input-group-lg {
+    .input-prepend,
+    .input-append {
+      padding: 0 1rem;
+
+      i {
+        font-size: 0.9375rem;
+      }
+    }
+
+    input {
+      padding: 0.75rem 1rem;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+/* ============================================================
+   VALIDATION FEEDBACK
+   ============================================================ */
+.validation-feedback {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  margin-top: 0.375rem;
+  font-size: 0.75rem;
+
+  i {
+    font-size: 0.625rem;
+  }
+
+  &.feedback-error {
+    color: #dc2626;
+  }
+
+  &.feedback-success {
+    color: #059669;
+  }
+
+  &.feedback-warning {
+    color: #d97706;
+  }
+
+  &.feedback-info {
+    color: #0284c7;
+  }
+}
+
+/* ============================================================
+   CHECKBOX & RADIO ENHANCED
+   ============================================================ */
+.checkbox-enhanced {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  cursor: pointer;
+
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    margin-top: 2px;
+    accent-color: #4f46e5;
+    cursor: pointer;
+  }
+
+  .checkbox-label {
+    flex: 1;
+
+    .label-text {
+      font-size: 0.8125rem;
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .label-description {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.125rem;
+    }
+  }
+}
+
+.switch-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  .switch-track {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    background: #d1d5db;
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    &.active {
+      background: #4f46e5;
+
+      &::after {
+        transform: translateX(18px);
+      }
+    }
+  }
+
+  .switch-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .switch-status {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.125rem 0.5rem;
+    border-radius: 4px;
+    margin-left: 0.5rem;
+
+    &.status-on {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    &.status-off {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+  }
+}
+
+/* ============================================================
+   FORM CARD WRAPPER
+   ============================================================ */
+.form-card-wrapper {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 1rem;
+
+  .form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+
+    .header-icon {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e5e7eb;
+      border-radius: 6px;
+
+      i {
+        font-size: 0.75rem;
+        color: #4b5563;
+      }
+    }
+
+    .header-content {
+      flex: 1;
+
+      .header-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+      }
+
+      .header-subtitle {
+        font-size: 0.6875rem;
+        color: #6b7280;
+        margin: 0.125rem 0 0 0;
+      }
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+  }
+
+  .form-card-body {
+    padding: 1rem;
+  }
+
+  .form-card-footer {
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-top: 1px solid #e5e7eb;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================ */
+@media (max-width: 640px) {
+  .credential-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    .btn-form {
+      width: 100%;
+    }
+  }
+
+  .environment-selector {
+    flex-wrap: wrap;
+
+    .env-badge {
+      margin-top: 0.5rem;
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .form-field-enhanced {
+    .field-input-wrapper {
+      .field-prefix {
+        width: 36px;
+      }
+
+      input {
+        padding-left: 44px;
+      }
+    }
+  }
+}

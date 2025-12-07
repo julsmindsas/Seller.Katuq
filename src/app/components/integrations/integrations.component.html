@@ -1939,6 +1939,106 @@
           </div>
         </ng-container>
 
+        <!-- Prindel Fields -->
+        <ng-container *ngIf="selectedIntegrationType === 'prindel'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>Configure la integración con Prindel para envíos de última milla en Colombia. Necesitará su Customer Token proporcionado por Prindel.</span>
+            <a href="https://api.prindel.com.co/swagger/doc.json" target="_blank" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver documentación
+            </a>
+          </div>
+
+          <div class="form-group">
+            <label for="customerToken">
+              <i class="fa fa-key"></i> Customer Token:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-lock prefix-icon"></i>
+              <input [type]="showApiKey ? 'text' : 'password'" id="customerToken" formControlName="customerToken" placeholder="Ingrese el token de cliente de Prindel" autocomplete="off">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
+            </div>
+            <div *ngIf="integrationForm.get('customerToken')?.invalid && integrationForm.get('customerToken')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> El Customer Token es obligatorio (mínimo 10 caracteres)
+            </div>
+            <small class="form-text text-muted">Token de autenticación proporcionado por Prindel (X-Customer-Token)</small>
+          </div>
+
+          <div class="form-group">
+            <label for="apiUrl">
+              <i class="fa fa-globe"></i> URL de API:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-link prefix-icon"></i>
+              <input type="url" id="apiUrl" formControlName="apiUrl" placeholder="https://api.prindel.com.co" autocomplete="off">
+            </div>
+            <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL válida para la API
+            </div>
+            <small class="form-text text-muted">URL base del servicio API de Prindel</small>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="environment">
+                <i class="fa fa-server"></i> Ambiente:
+              </label>
+              <select id="environment" formControlName="environment" class="form-control" autocomplete="off">
+                <option value="production">Producción</option>
+                <option value="sandbox">Sandbox</option>
+              </select>
+              <small class="form-text text-muted">Ambiente del servicio a utilizar</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="defaultRate">
+                <i class="fa fa-dollar-sign"></i> Tarifa por defecto (COP):
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-money-bill prefix-icon"></i>
+                <input type="number" id="defaultRate" formControlName="defaultRate" min="0" placeholder="0" autocomplete="off">
+              </div>
+              <small class="form-text text-muted">Tarifa acordada comercialmente (Prindel no tiene cotización automática)</small>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label for="estimatedDays">
+                <i class="fa fa-calendar-alt"></i> Días estimados de entrega:
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-clock prefix-icon"></i>
+                <input type="text" id="estimatedDays" formControlName="estimatedDays" placeholder="1-3" autocomplete="off">
+              </div>
+              <small class="form-text text-muted">Tiempo estimado de entrega (ej: 1-3)</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label for="testMode">
+                <i class="fa fa-flask"></i> Modo de prueba:
+              </label>
+              <div class="toggle-container">
+                <label class="switch">
+                  <input type="checkbox" formControlName="testMode" id="testMode">
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('testMode')?.value, 'inactive': !integrationForm.get('testMode')?.value}">
+                  {{ integrationForm.get('testMode')?.value ? 'Activado' : 'Desactivado' }}
+                </span>
+              </div>
+              <small class="form-text text-muted">Activar para realizar pruebas sin crear envíos reales</small>
+            </div>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-lightbulb"></i>
+            <span><strong>Nota:</strong> Prindel es un proveedor de logística de última milla especializado en Colombia. Los envíos se crean directamente sin cotización previa, con tarifa acordada comercialmente.</span>
+          </div>
+        </ng-container>
+
         <!-- ===== FORMULARIO DINÁMICO BASADO EN ESQUEMA ===== -->
         <ng-container *ngIf="isDynamicForm && currentSchema">
           <div class="dynamic-form-container">

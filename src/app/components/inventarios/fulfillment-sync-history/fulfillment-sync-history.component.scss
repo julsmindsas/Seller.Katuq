@@ -1,0 +1,111 @@
+.sync-history-container {
+  padding: 1rem 0;
+}
+
+.stat-card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+
+  .stat-label {
+    opacity: 0.9;
+  }
+}
+
+.card-header {
+  font-weight: 600;
+}
+
+.table {
+  th {
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom-width: 2px;
+  }
+
+  td {
+    vertical-align: middle;
+  }
+}
+
+// Estilos para las filas según resultado
+tr:has(.bg-danger) {
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+tr:has(.bg-warning) {
+  background-color: rgba(255, 193, 7, 0.05);
+}
+
+// Badge de tipo de sync
+.badge.bg-light {
+  border: 1px solid #dee2e6;
+}
+
+// Diferencia positiva/negativa
+.text-success.fw-bold {
+  color: #198754 !important;
+}
+
+.text-danger.fw-bold {
+  color: #dc3545 !important;
+}
+
+// Responsivo
+@media (max-width: 768px) {
+  .stat-card {
+    .stat-value {
+      font-size: 1.2rem;
+    }
+
+    i {
+      font-size: 1.5rem !important;
+    }
+  }
+
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+}
+
+// Pre para detalles JSON
+pre {
+  max-height: 200px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+// Scrollbar para tabla
+.table-responsive {
+  max-height: 500px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+
+    &:hover {
+      background: #a1a1a1;
+    }
+  }
+}

@@ -6,6 +6,8 @@ import { BodegaService } from '../../../../shared/services/bodegas/bodega.servic
 import { ToastrService } from 'ngx-toastr';
 import { CiudadCobertura } from '../../../../shared/models/inventarios/bodega.model';
 import { SelectorCiudadesCoberturaComponent } from '../selector-ciudades-cobertura/selector-ciudades-cobertura.component';
+import { DaneCodesService } from '../../../../shared/services/dane-codes.service';
+import { GeocodingService } from '../../../../shared/services/geocoding.service';
 
 @Component({
   selector: 'app-crear-bodegas',
@@ -35,13 +37,21 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   coberturaNacional: boolean = false;
   ciudadesCobertura: CiudadCobertura[] = [];
 
+  // Geocodificación
+  geocodificando = false;
+
+  // Mapa nombre limpio → nombre original para API
+  departamentosMap: { [key: string]: string } = {};
+
   constructor(
     private fb: FormBuilder,
     public activeModal: NgbActiveModal,
     private modalService: NgbModal,
     private http: HttpClient,
     private bodegaService: BodegaService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private daneService: DaneCodesService,
+    private geocodingService: GeocodingService
   ) {
     this.bodegaForm = this.fb.group({
       id: [''],
@@ -57,26 +67,18 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    if (this.bodegaData) {
-      this.bodegaForm.patchValue(this.bodegaData);
-      // Load existing coverage
-      this.coberturaNacional = this.bodegaData.coberturaNacional || false;
-      if (this.bodegaData.ciudadesCobertura) {
-        this.ciudadesCobertura = [...this.bodegaData.ciudadesCobertura];
-      }
-    }
-
+    // Suscripción para tipo de bodega
     this.bodegaForm.get('tipo')?.valueChanges.subscribe(tipo => {
       this.actualizarValidaciones(tipo);
     });
 
-    // Suscripción para cargar departamentos al cambiar país
+    // Suscripción para cargar departamentos al cambiar país (solo si no es carga inicial)
     this.bodegaForm.get('pais')?.valueChanges.subscribe(pais => {
-      if (pais) {
+      if (pais && !this.cargandoEdicion) {
         this.cargarDepartamentos(pais);
         this.bodegaForm.get('departamento')?.setValue('');
         this.bodegaForm.get('ciudad')?.setValue('');
-      } else {
+      } else if (!pais) {
         this.departamentos = [];
         this.ciudades = [];
         this.bodegaForm.get('departamento')?.setValue('');
@@ -84,18 +86,137 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
       }
     });
 
-    // Suscripción para cargar ciudades al cambiar departamento
+    // Suscripción para cargar ciudades al cambiar departamento (solo si no es carga inicial)
     this.bodegaForm.get('departamento')?.valueChanges.subscribe(depto => {
-      if (depto) {
+      if (depto && !this.cargandoEdicion) {
         this.cargarCiudades(depto);
         this.bodegaForm.get('ciudad')?.setValue('');
-      } else {
+      } else if (!depto) {
         this.ciudades = [];
         this.bodegaForm.get('ciudad')?.setValue('');
       }
     });
 
+    // Cargar países y luego manejar modo edición
     this.cargarPaises();
+
+    if (this.bodegaData) {
+      this.cargarDatosEdicion();
+    }
+  }
+
+  // Flag para evitar resetear valores durante carga de edición
+  private cargandoEdicion = false;
+
+  /**
+   * Carga los datos en cascada para modo edición
+   */
+  private cargarDatosEdicion(): void {
+    this.cargandoEdicion = true;
+
+    // Cargar cobertura
+    this.coberturaNacional = this.bodegaData.coberturaNacional || false;
+    if (this.bodegaData.ciudadesCobertura) {
+      this.ciudadesCobertura = [...this.bodegaData.ciudadesCobertura];
+    }
+
+    // Cargar datos básicos primero
+    this.bodegaForm.patchValue({
+      id: this.bodegaData.id,
+      nombre: this.bodegaData.nombre,
+      idBodega: this.bodegaData.idBodega,
+      tipo: this.bodegaData.tipo,
+      direccion: this.bodegaData.direccion,
+      coordenadas: this.bodegaData.coordenadas
+    });
+
+    // Cargar país y esperar a que se carguen departamentos
+    const pais = this.bodegaData.pais;
+    const departamento = this.bodegaData.departamento;
+    const ciudad = this.bodegaData.ciudad;
+
+    if (pais) {
+      this.bodegaForm.get('pais')?.setValue(pais);
+
+      // Cargar departamentos del país
+      if (pais === 'Colombia') {
+        this.daneService.getDepartamentos().subscribe({
+          next: (deptos) => {
+            this.departamentos = deptos.sort();
+
+            if (departamento) {
+              this.bodegaForm.get('departamento')?.setValue(departamento);
+
+              // Cargar ciudades del departamento
+              this.daneService.getMunicipiosByDepartamento(departamento).subscribe({
+                next: (municipios) => {
+                  this.ciudades = municipios.map(m => m.nombre).sort();
+                  if (ciudad) {
+                    this.bodegaForm.get('ciudad')?.setValue(ciudad);
+                  }
+                  this.cargandoEdicion = false;
+                },
+                error: () => {
+                  this.cargandoEdicion = false;
+                }
+              });
+            } else {
+              this.cargandoEdicion = false;
+            }
+          },
+          error: () => {
+            this.cargandoEdicion = false;
+          }
+        });
+      } else {
+        // Para otros países usar countriesnow
+        this.http.post<any>('https://countriesnow.space/api/v0.1/countries/states', { country: pais }).subscribe({
+          next: (data) => {
+            const states = data.data.states || [];
+            this.departamentos = states.map((d: any) => {
+              const original = d.name;
+              const limpio = original
+                .replace(/ Department$/i, '')
+                .replace(/ Province$/i, '')
+                .replace(/ State$/i, '')
+                .replace(/ Region$/i, '');
+              this.departamentosMap[limpio] = original;
+              return limpio;
+            }).sort();
+
+            if (departamento) {
+              // Buscar el departamento limpio que corresponde
+              const deptoLimpio = this.departamentos.find(d =>
+                d === departamento || this.departamentosMap[d] === departamento
+              ) || departamento;
+
+              this.bodegaForm.get('departamento')?.setValue(deptoLimpio);
+
+              const deptoOriginal = this.departamentosMap[deptoLimpio] || deptoLimpio;
+              this.http.post<any>('https://countriesnow.space/api/v0.1/countries/state/cities', { country: pais, state: deptoOriginal }).subscribe({
+                next: (cityData) => {
+                  this.ciudades = (cityData.data || []).sort();
+                  if (ciudad) {
+                    this.bodegaForm.get('ciudad')?.setValue(ciudad);
+                  }
+                  this.cargandoEdicion = false;
+                },
+                error: () => {
+                  this.cargandoEdicion = false;
+                }
+              });
+            } else {
+              this.cargandoEdicion = false;
+            }
+          },
+          error: () => {
+            this.cargandoEdicion = false;
+          }
+        });
+      }
+    } else {
+      this.cargandoEdicion = false;
+    }
   }
 
   ngAfterViewInit(): void {
@@ -196,32 +317,77 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
     this.cargandoDepartamentos = true;
     this.departamentos = [];
     this.ciudades = [];
-    this.http.post<any>('https://countriesnow.space/api/v0.1/countries/states', { country: pais }).subscribe({
-      next: (data) => {
-        this.departamentos = (data.data.states || []).map((d: any) => d.name).sort();
-        this.cargandoDepartamentos = false;
-      },
-      error: () => {
-        this.departamentos = [];
-        this.cargandoDepartamentos = false;
-      }
-    });
+    this.departamentosMap = {};
+
+    if (pais === 'Colombia') {
+      // Usar DaneCodesService para Colombia (nombres correctos en español)
+      this.daneService.getDepartamentos().subscribe({
+        next: (deptos) => {
+          this.departamentos = deptos.sort();
+          this.cargandoDepartamentos = false;
+        },
+        error: () => {
+          this.departamentos = [];
+          this.cargandoDepartamentos = false;
+        }
+      });
+    } else {
+      // Usar countriesnow para otros países
+      this.http.post<any>('https://countriesnow.space/api/v0.1/countries/states', { country: pais }).subscribe({
+        next: (data) => {
+          const states = data.data.states || [];
+          // Limpiar sufijos comunes y guardar mapa para API
+          this.departamentos = states.map((d: any) => {
+            const original = d.name;
+            const limpio = original
+              .replace(/ Department$/i, '')
+              .replace(/ Province$/i, '')
+              .replace(/ State$/i, '')
+              .replace(/ Region$/i, '');
+            this.departamentosMap[limpio] = original;
+            return limpio;
+          }).sort();
+          this.cargandoDepartamentos = false;
+        },
+        error: () => {
+          this.departamentos = [];
+          this.cargandoDepartamentos = false;
+        }
+      });
+    }
   }
 
   cargarCiudades(departamento: string) {
     this.cargandoCiudades = true;
     this.ciudades = [];
     const pais = this.bodegaForm.get('pais')?.value;
-    this.http.post<any>('https://countriesnow.space/api/v0.1/countries/state/cities', { country: pais, state: departamento }).subscribe({
-      next: (data) => {
-        this.ciudades = (data.data || []).sort();
-        this.cargandoCiudades = false;
-      },
-      error: () => {
-        this.ciudades = [];
-        this.cargandoCiudades = false;
-      }
-    });
+
+    if (pais === 'Colombia') {
+      // Usar DaneCodesService para Colombia (1,122 municipios con códigos DANE)
+      this.daneService.getMunicipiosByDepartamento(departamento).subscribe({
+        next: (municipios) => {
+          this.ciudades = municipios.map(m => m.nombre).sort();
+          this.cargandoCiudades = false;
+        },
+        error: () => {
+          this.ciudades = [];
+          this.cargandoCiudades = false;
+        }
+      });
+    } else {
+      // Usar countriesnow para otros países
+      const departamentoOriginal = this.departamentosMap[departamento] || departamento;
+      this.http.post<any>('https://countriesnow.space/api/v0.1/countries/state/cities', { country: pais, state: departamentoOriginal }).subscribe({
+        next: (data) => {
+          this.ciudades = (data.data || []).sort();
+          this.cargandoCiudades = false;
+        },
+        error: () => {
+          this.ciudades = [];
+          this.cargandoCiudades = false;
+        }
+      });
+    }
   }
 
   abrirSelectorCiudades(): void {
@@ -239,6 +405,52 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
         this.ciudadesCobertura = result.ciudadesCobertura;
       }
     }, () => {});
+  }
+
+  /**
+   * Geocodifica una dirección usando GeocodingService
+   * Sistema con fallback: Google Maps → Firebase → Nominatim
+   */
+  geocodificarDireccion(): void {
+    const direccion = this.bodegaForm.get('direccion')?.value;
+    const ciudad = this.bodegaForm.get('ciudad')?.value;
+
+    if (!direccion) {
+      this.toastr.warning('Ingresa una dirección para buscar', 'Dirección requerida');
+      return;
+    }
+
+    this.geocodificando = true;
+
+    // Usar GeocodingService existente (tiene fallback a múltiples proveedores)
+    this.geocodingService.geocodeDireccion(direccion, ciudad).subscribe({
+      next: (result) => {
+        const lat = parseFloat(result.latitud);
+        const lng = parseFloat(result.longitud);
+
+        // Actualizar coordenadas en el formulario
+        this.bodegaForm.get('coordenadas')?.setValue(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+
+        // Actualizar mapa y marcador
+        if (this.map) {
+          const L = (window as any).L;
+          if (this.marker) {
+            this.marker.setLatLng([lat, lng]);
+          } else {
+            this.marker = L.marker([lat, lng]).addTo(this.map);
+          }
+          this.map.setView([lat, lng], 15);
+        }
+
+        this.toastr.success(`Coordenadas encontradas (calidad: ${result.quality}%)`, 'Geocodificación exitosa');
+        this.geocodificando = false;
+      },
+      error: (err) => {
+        console.error('Error en geocodificación:', err);
+        this.toastr.error('Error al buscar coordenadas', 'Error');
+        this.geocodificando = false;
+      }
+    });
   }
 
   guardarBodega() {

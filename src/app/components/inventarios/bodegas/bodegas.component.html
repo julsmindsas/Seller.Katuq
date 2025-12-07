@@ -30,6 +30,14 @@
                                 "></i>&nbsp;
                             <span style="color: white">Crear Bodega</span>
                         </button>
+                        <button class="btn btn-info ml-3 mb-2" style="color: white"
+                                (click)="importarBodegasFulfillment()"
+                                [disabled]="importandoFulfillment"
+                                ngbTooltip="Importar bodegas desde proveedores de fulfillment (ej: Aliaddo)">
+                            <i class="fa fa-cloud-download" *ngIf="!importandoFulfillment"></i>
+                            <i class="fa fa-spinner fa-spin" *ngIf="importandoFulfillment"></i>&nbsp;
+                            Importar de Fulfillment
+                        </button>
                         <button class="btn btn-success ml-3 mb-2" style="color: white" (click)="exportarExcel()">
                             <i class="fa fa-file-excel-o"></i>&nbsp;
                             Excel
@@ -63,6 +71,9 @@
                                     <p-sortIcon field="tipo"></p-sortIcon>
                                 </th>
                                 <th class="text-center">
+                                    {{ "Origen" | translate }}
+                                </th>
+                                <th class="text-center">
                                     {{ "Cobertura" | translate }}
                                 </th>
                                 <th class="text-center">
@@ -94,6 +105,19 @@
                                     <span *ngIf="bodega.tipo === 'Transaccional'"
                                           class="badge rounded-pill bg-info p-2">
                                         <i class="fa fa-cloud me-1"></i> {{ bodega.tipo }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <!-- Bodega de Fulfillment -->
+                                    <span *ngIf="bodega.origenFulfillment"
+                                          class="badge rounded-pill bg-warning p-2"
+                                          [ngbTooltip]="'Importada de ' + (bodega.fulfillmentProvider | titlecase)">
+                                        <i class="fa fa-cloud-download me-1"></i> Fulfillment
+                                    </span>
+                                    <!-- Bodega local de Katuq -->
+                                    <span *ngIf="!bodega.origenFulfillment"
+                                          class="badge rounded-pill bg-secondary p-2">
+                                        <i class="fa fa-home me-1"></i> Local
                                     </span>
                                 </td>
                                 <td class="text-center">
@@ -135,7 +159,7 @@
 
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td colspan="6">No hay bodegas registradas</td>
+                                <td colspan="7">No hay bodegas registradas</td>
                             </tr>
                         </ng-template>
 

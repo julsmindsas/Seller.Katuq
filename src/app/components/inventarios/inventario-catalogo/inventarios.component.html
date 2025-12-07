@@ -60,6 +60,85 @@
                 </div>
 
                 <div class="card-body">
+                    <!-- TabView para Inventario e Historial de Sync -->
+                    <p-tabView [(activeIndex)]="activeTabIndex">
+                        <!-- Tab 1: Inventario -->
+                        <p-tabPanel header="Inventario" leftIcon="pi pi-box">
+                    <!-- BARRA DE HERRAMIENTAS FULFILLMENT - Prominente -->
+                    <div class="fulfillment-toolbar card border-info mb-4" *ngIf="fulfillmentEnabled && bodegaSeleccionada">
+                        <div class="card-body p-3">
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                                <!-- Info del Provider -->
+                                <div class="d-flex align-items-center">
+                                    <div class="fulfillment-icon me-3">
+                                        <i class="pi pi-cloud text-info" style="font-size: 2rem;"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold text-info">
+                                            Fulfillment: {{ fulfillmentProviderName }}
+                                        </h6>
+                                        <small class="text-muted" *ngIf="!stockFulfillmentCargado">
+                                            <i class="pi pi-info-circle me-1"></i>
+                                            Stock de fulfillment no cargado
+                                        </small>
+                                        <small class="text-success" *ngIf="stockFulfillmentCargado">
+                                            <i class="pi pi-check-circle me-1"></i>
+                                            Stock cargado - {{ rowsFiltradas.length }} productos
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <!-- Botones de Acción -->
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <!-- Botón principal para cargar stock -->
+                                    <button pButton type="button"
+                                            [icon]="loadingFulfillmentStock ? 'pi pi-spin pi-spinner' : 'pi pi-cloud-download'"
+                                            [label]="stockFulfillmentCargado ? 'Recargar Stock' : 'Cargar Stock Fulfillment'"
+                                            class="p-button-info p-button-raised"
+                                            (click)="loadFulfillmentStock()"
+                                            [disabled]="loadingFulfillmentStock || rowsFiltradas.length === 0">
+                                    </button>
+
+                                    <!-- Botón de sincronización masiva -->
+                                    <button pButton type="button"
+                                            icon="pi pi-sync"
+                                            label="Sincronizar Bodega"
+                                            class="p-button-warning"
+                                            (click)="syncBodegaCompleta()"
+                                            [loading]="syncingBodega"
+                                            [disabled]="!stockFulfillmentCargado || syncingBodega">
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Alerta de diferencias -->
+                            <div class="alert alert-warning mt-3 mb-0 d-flex align-items-center justify-content-between"
+                                 *ngIf="stockFulfillmentCargado && tieneProductosConDiferencia()">
+                                <div>
+                                    <i class="pi pi-exclamation-triangle me-2"></i>
+                                    <strong>{{ contarProductosConDiferencia() }}</strong> productos con diferencias de stock
+                                    <span class="ms-2 text-muted">
+                                        (Total: {{ calcularDiferenciaTotalInventario() > 0 ? '+' : '' }}{{ calcularDiferenciaTotalInventario() }} unidades)
+                                    </span>
+                                </div>
+                                <button pButton type="button"
+                                        icon="pi pi-sync"
+                                        label="Sincronizar diferencias"
+                                        class="p-button-warning p-button-sm"
+                                        (click)="syncBodegaCompleta()"
+                                        [loading]="syncingBodega">
+                                </button>
+                            </div>
+
+                            <!-- Mensaje de éxito cuando no hay diferencias -->
+                            <div class="alert alert-success mt-3 mb-0"
+                                 *ngIf="stockFulfillmentCargado && !tieneProductosConDiferencia() && rowsFiltradas.length > 0">
+                                <i class="pi pi-check-circle me-2"></i>
+                                Todos los productos están sincronizados correctamente con {{ fulfillmentProviderName }}
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Nueva sección de filtros independiente -->
                     <div class="filtros-externos mb-4 p-3 border rounded bg-light">
                         <div class="row">
@@ -198,11 +277,17 @@
                             styleClass="p-datatable-customers p-datatable-striped p-datatable-gridlines"
                             [responsive]="true" [loading]="cargando" [paginatorPosition]="'bottom'"
                             [showFirstLastIcon]="true" [rowsPerPageOptions]="[10,20,50]" [scrollable]="true"
-                            scrollHeight="50vh" scrollDirection="both">
+                            scrollHeight="50vh" scrollDirection="both"
+                            dataKey="_id"
+                            [(expandedRowKeys)]="expandedRows"
+                            (onRowExpand)="onRowExpand($event)">
 
                             <!-- Encabezados sin filtros con configuración freeze para scroll horizontal -->
                             <ng-template pTemplate="header">
                                 <tr>
+                                    <th style="width: 50px; min-width: 50px;" class="text-center" [frozen]="true">
+                                        <!-- Columna para expandir -->
+                                    </th>
                                     <th style="width: 80px; min-width: 80px;" class="text-center" [frozen]="true">
                                         {{ 'Imagen' | translate }}
                                     </th>
@@ -240,8 +325,14 @@
                             </ng-template>
 
                             <!-- Contenido de la tabla -->
-                            <ng-template pTemplate="body" let-row>
+                            <ng-template pTemplate="body" let-row let-expanded="expanded">
                                 <tr [ngClass]="{'bg-light-warning': row.cantidad <= 5}">
+                                    <td style="width: 50px; min-width: 50px;" class="text-center" [frozen]="true">
+                                        <button type="button" pButton pRipple [pRowToggler]="row"
+                                                class="p-button-text p-button-rounded p-button-plain"
+                                                [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                                                pTooltip="Ver stock por bodega"></button>
+                                    </td>
                                     <td style="width: 80px; min-width: 80px;" class="text-center" [frozen]="true">
                                         <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
                                             [src]="row.crearProducto.imagenesPrincipales[0].urls"
@@ -330,10 +421,163 @@
                                 </tr>
                             </ng-template>
 
+                            <!-- Template de expansión - Stock por Bodega -->
+                            <ng-template pTemplate="rowexpansion" let-row>
+                                <tr>
+                                    <td [attr.colspan]="fulfillmentEnabled ? 10 : 8" class="p-0">
+                                        <div class="p-4 bg-light border-top border-bottom">
+                                            <!-- Loading state -->
+                                            <div *ngIf="row.detalleLoading" class="text-center py-4">
+                                                <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+                                                <p class="mt-2 text-muted">Cargando detalle de stock...</p>
+                                            </div>
+
+                                            <!-- Contenido cuando ya cargó -->
+                                            <div *ngIf="!row.detalleLoading" class="row">
+                                                <!-- Bodegas de Katuq -->
+                                                <div [ngClass]="fulfillmentEnabled ? 'col-md-6' : 'col-12'">
+                                                    <div class="card h-100">
+                                                        <div class="card-header bg-primary text-white py-2">
+                                                            <h6 class="mb-0">
+                                                                <i class="pi pi-warehouse me-2"></i>
+                                                                Stock en Katuq
+                                                            </h6>
+                                                        </div>
+                                                        <div class="card-body p-0">
+                                                            <table class="table table-sm table-hover mb-0">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>Bodega</th>
+                                                                        <th class="text-center">Tipo</th>
+                                                                        <th class="text-end">Cantidad</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr *ngFor="let bodega of row.inventarioPorBodega">
+                                                                        <td>
+                                                                            <span [class.text-warning]="bodega.origenFulfillment">
+                                                                                {{ bodega.bodegaNombre }}
+                                                                            </span>
+                                                                            <i *ngIf="bodega.origenFulfillment"
+                                                                               class="pi pi-cloud-download ms-1 text-warning"
+                                                                               pTooltip="Bodega importada de Fulfillment"></i>
+                                                                        </td>
+                                                                        <td class="text-center">
+                                                                            <span class="badge" [ngClass]="{
+                                                                                'bg-primary': bodega.tipo === 'Física',
+                                                                                'bg-info': bodega.tipo === 'Transaccional'
+                                                                            }">{{ bodega.tipo }}</span>
+                                                                        </td>
+                                                                        <td class="text-end">
+                                                                            <span class="badge" [ngClass]="{
+                                                                                'bg-danger': bodega.cantidad === 0,
+                                                                                'bg-warning text-dark': bodega.cantidad > 0 && bodega.cantidad <= 5,
+                                                                                'bg-success': bodega.cantidad > 5
+                                                                            }">{{ bodega.cantidad }}</span>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr *ngIf="!row.inventarioPorBodega || row.inventarioPorBodega.length === 0">
+                                                                        <td colspan="3" class="text-center text-muted py-3">
+                                                                            Sin inventario en bodegas
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                                <tfoot class="table-secondary">
+                                                                    <tr>
+                                                                        <th colspan="2">Total Katuq</th>
+                                                                        <th class="text-end">
+                                                                            <span class="badge bg-dark">{{ getTotalStockKatuq(row) }}</span>
+                                                                        </th>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Bodegas del Fulfillment -->
+                                                <div *ngIf="fulfillmentEnabled" class="col-md-6">
+                                                    <div class="card h-100">
+                                                        <div class="card-header bg-warning text-dark py-2">
+                                                            <h6 class="mb-0">
+                                                                <i class="pi pi-cloud me-2"></i>
+                                                                Stock en {{ fulfillmentProviderName }}
+                                                            </h6>
+                                                        </div>
+                                                        <div class="card-body p-0">
+                                                            <table class="table table-sm table-hover mb-0">
+                                                                <thead class="table-light">
+                                                                    <tr>
+                                                                        <th>Bodega Fulfillment</th>
+                                                                        <th class="text-end">Cantidad</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr *ngFor="let wh of row.fulfillmentWarehouses">
+                                                                        <td>{{ wh.name }}</td>
+                                                                        <td class="text-end">
+                                                                            <span class="badge bg-warning text-dark">{{ wh.quantity }}</span>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <tr *ngIf="!row.fulfillmentWarehouses || row.fulfillmentWarehouses.length === 0">
+                                                                        <td colspan="2" class="text-center text-muted py-3">
+                                                                            Sin stock en fulfillment
+                                                                        </td>
+                                                                    </tr>
+                                                                </tbody>
+                                                                <tfoot class="table-secondary">
+                                                                    <tr>
+                                                                        <th>Total Fulfillment</th>
+                                                                        <th class="text-end">
+                                                                            <span class="badge bg-warning text-dark">{{ getTotalStockFulfillment(row) }}</span>
+                                                                        </th>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            </table>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Resumen de diferencias -->
+                                                <div class="col-12 mt-3" *ngIf="fulfillmentEnabled">
+                                                    <div class="alert mb-0" [ngClass]="{
+                                                        'alert-success': getDiferenciaTotal(row) === 0,
+                                                        'alert-warning': getDiferenciaTotal(row) > 0,
+                                                        'alert-danger': getDiferenciaTotal(row) < 0
+                                                    }">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <div>
+                                                                <strong>Diferencia (Fulfillment - Katuq):</strong>
+                                                                <span class="ms-2 fs-5" [ngClass]="{
+                                                                    'text-success': getDiferenciaTotal(row) === 0,
+                                                                    'text-warning': getDiferenciaTotal(row) > 0,
+                                                                    'text-danger': getDiferenciaTotal(row) < 0
+                                                                }">
+                                                                    {{ getDiferenciaTotal(row) > 0 ? '+' : '' }}{{ getDiferenciaTotal(row) }} unidades
+                                                                </span>
+                                                            </div>
+                                                            <button pButton type="button"
+                                                                    icon="pi pi-sync"
+                                                                    label="Sincronizar"
+                                                                    class="p-button-sm"
+                                                                    [class.p-button-success]="getDiferenciaTotal(row) === 0"
+                                                                    [class.p-button-warning]="getDiferenciaTotal(row) !== 0"
+                                                                    [loading]="syncingProduct === row._id"
+                                                                    [disabled]="syncingProduct !== null || !row.disponibilidad?.inventariable"
+                                                                    (click)="syncProduct(row)"></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </ng-template>
+
                             <!-- Mensaje cuando no hay datos -->
                             <ng-template pTemplate="emptymessage">
                                 <tr>
-                                    <td [attr.colspan]="fulfillmentEnabled ? 9 : 7">
+                                    <td [attr.colspan]="fulfillmentEnabled ? 10 : 8">
                                         <div class="text-center p-5">
                                             <i class="pi pi-inbox text-muted mb-3" style="font-size: 3rem;"></i>
                                             <h5 class="mb-3">
@@ -420,6 +664,16 @@
                             </span>
                         </div>
                     </div>
+                        </p-tabPanel>
+
+                        <!-- Tab 2: Historial de Sincronización (solo si fulfillment está habilitado) -->
+                        <p-tabPanel header="Historial Sync" leftIcon="pi pi-history" *ngIf="fulfillmentEnabled">
+                            <app-fulfillment-sync-history
+                                [bodegaId]="bodegaSeleccionada?.idBodega"
+                                [provider]="fulfillmentProvider">
+                            </app-fulfillment-sync-history>
+                        </p-tabPanel>
+                    </p-tabView>
                 </div>
             </div>
         </div>

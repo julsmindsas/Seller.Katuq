@@ -1002,6 +1002,8 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     // Si es Enviame, abrir el modal de cotización
     if (this.selectedTransporter === 'enviame') {
       this.openEnviameRatesModalForDispatch();
+    } else if (this.selectedTransporter === 'prindel') {
+      this.procesarDespachoPrindel();
     } else {
       // Para otras transportadoras, mostrar mensaje informativo
       Swal.fire({
@@ -1057,6 +1059,144 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       }
     });
   }
+
+  // ========== MÉTODOS PARA PRINDEL ==========
+
+  /**
+   * Procesa despacho con Prindel (sin modal de tarifas - tarifa fija)
+   */
+  private procesarDespachoPrindel(): void {
+    if (this.pedidosSeleccionados.length === 0) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Sin pedidos',
+        text: 'Debes seleccionar al menos un pedido.',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    // Mostrar confirmación con resumen de pedidos
+    const pedidosResumen = this.pedidosSeleccionados
+      .map(p => `• ${p.nroPedido} - ${p.cliente?.nombres_completos || 'Sin nombre'}`)
+      .join('<br>');
+
+    Swal.fire({
+      icon: 'question',
+      title: 'Confirmar despacho con Prindel',
+      html: `
+        <p><strong>Pedidos a despachar:</strong></p>
+        <div style="text-align: left; margin: 10px 0;">${pedidosResumen}</div>
+        <p class="text-muted">La tarifa se calculará según el acuerdo comercial configurado.</p>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Crear Envíos',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#28a745'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.crearEnviosPrindel();
+      }
+    });
+  }
+
+  /**
+   * Crea los envíos en Prindel
+   */
+  private crearEnviosPrindel(): void {
+    this.isSaving = true;
+
+    // Preparar shipments para cada pedido
+    const shipmentItems = this.pedidosSeleccionados.map(pedido => ({
+      pedido: pedido,
+      destination: {
+        address: pedido.envio?.direccionEntrega || '',
+        city: pedido.envio?.ciudad || '',
+        department: pedido.envio?.departamento || '',
+        country: 'CO',
+        recipient: {
+          name: pedido.cliente?.nombres_completos || '',
+          phone: pedido.cliente?.numero_celular_comprador || '',
+          email: pedido.cliente?.correo_electronico_comprador || ''
+        }
+      },
+      package: {
+        weight: this.calcularPesoPedido(pedido),
+        value: pedido.subtotal || 0,
+        description: this.getProductosDescripcionPrindel(pedido)
+      },
+      options: {
+        cashOnDelivery: pedido.formaDePago === 'CONTRAENTREGA'
+      }
+    }));
+
+    const payload = {
+      companyId: this.getCompanyId(),
+      provider: 'prindel',
+      shippingOrder: {
+        nroShippingOrder: this.nroShippingOrder || 'TEMP',
+        fecha: this.ordenEnvioForm.get('fechaFin')?.value || new Date(),
+        metodoEnvio: 'prindel'
+      },
+      shipments: shipmentItems
+    };
+
+    this.logisticaService.createShipment(payload).subscribe({
+      next: (response) => {
+        this.isSaving = false;
+        console.log('✅ Envíos Prindel creados:', response);
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Envíos Creados',
+          text: `Se crearon ${shipmentItems.length} envío(s) con Prindel exitosamente.`,
+          timer: 2500,
+          showConfirmButton: false
+        });
+
+        this.onDispatchOrder.emit();
+      },
+      error: (error) => {
+        this.isSaving = false;
+        console.error('❌ Error creando envíos Prindel:', error);
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error?.error?.message || 'Error al crear los envíos con Prindel.'
+        });
+      }
+    });
+  }
+
+  /**
+   * Genera descripción de productos para Prindel
+   */
+  private getProductosDescripcionPrindel(pedido: any): string {
+    if (!pedido.carrito?.length) return 'Productos varios';
+    return pedido.carrito
+      .map((item: any) => item.producto?.nombre || item.nombre || 'Producto')
+      .slice(0, 3)
+      .join(', ') + (pedido.carrito.length > 3 ? '...' : '');
+  }
+
+  /**
+   * Calcula el peso total del pedido basándose en el carrito
+   */
+  private calcularPesoPedido(pedido: any): number {
+    if (!pedido.carrito?.length) return 1; // Peso por defecto 1kg
+
+    let totalWeight = 0;
+    pedido.carrito.forEach((item: any) => {
+      const pesoUnitario = parseFloat(item.producto?.dimensiones?.pesoUnitarioProductoKg) || 0.5;
+      const cantidad = item.cantidad || 1;
+      totalWeight += pesoUnitario * cantidad;
+    });
+
+    return totalWeight > 0 ? totalWeight : 1; // Mínimo 1kg
+  }
+
+  // ========== FIN MÉTODOS PRINDEL ==========
 
   shouldDisplayPedido(pedido: any): boolean {
     return (
