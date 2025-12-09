@@ -851,13 +851,29 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     fbSub
       .get("valorUnitarioPorVolumenSinIVA")
       .valueChanges.subscribe((precioUnitarioSinIva: any) => {
-        if (precioUnitarioSinIva) {
+        if (precioUnitarioSinIva !== null && precioUnitarioSinIva !== undefined && precioUnitarioSinIva !== '') {
+          // Convertir a número si es necesario
+          let precioSinIvaNum = precioUnitarioSinIva;
+          if (typeof precioUnitarioSinIva === 'string') {
+            precioSinIvaNum = parseFloat(precioUnitarioSinIva) || 0;
+          }
+          
           const precioIva = fbSub.get("valorIVAPorVolumen").value;
-          const calculo = parseInt(precioUnitarioSinIva) * (precioIva / 100);
+          // Convertir precioIva a número si es necesario
+          let precioIvaNum = precioIva;
+          if (typeof precioIva === 'string') {
+            precioIvaNum = parseFloat(precioIva) || 0;
+          } else if (precioIva === null || precioIva === undefined) {
+            precioIvaNum = 0;
+          }
+          
+          // Calcular el IVA
+          const calculo = precioSinIvaNum * (precioIvaNum / 100);
+          const precioTotalConIva = calculo + precioSinIvaNum;
+          
+          // Actualizar los valores calculados
           fbSub.get("valorUnitarioPorVolumenIva").setValue(calculo);
-          fbSub
-            .get("valorUnitarioPorVolumenConIVA")
-            .setValue(calculo + precioUnitarioSinIva);
+          fbSub.get("valorUnitarioPorVolumenConIVA").setValue(precioTotalConIva);
         } else {
           fbSub.get("valorUnitarioPorVolumenIva").setValue(0);
           fbSub.get("valorUnitarioPorVolumenConIVA").setValue(0);
@@ -865,13 +881,30 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       });
 
     fbSub.get("valorIVAPorVolumen").valueChanges.subscribe((precioIva: any) => {
-      if (precioIva) {
+      if (precioIva !== null && precioIva !== undefined && precioIva !== '') {
         const unitPrice = fbSub.get("valorUnitarioPorVolumenSinIVA").value;
-        const calculo = unitPrice * (precioIva / 100);
+        
+        // Convertir a número si es necesario
+        let unitPriceNum = unitPrice;
+        if (typeof unitPrice === 'string') {
+          unitPriceNum = parseFloat(unitPrice) || 0;
+        } else if (unitPrice === null || unitPrice === undefined) {
+          unitPriceNum = 0;
+        }
+        
+        // Convertir precioIva a número si es necesario
+        let precioIvaNum = precioIva;
+        if (typeof precioIva === 'string') {
+          precioIvaNum = parseFloat(precioIva) || 0;
+        }
+        
+        // Calcular el IVA
+        const calculo = unitPriceNum * (precioIvaNum / 100);
+        const precioTotalConIva = calculo + unitPriceNum;
+        
+        // Actualizar los valores calculados
         fbSub.get("valorUnitarioPorVolumenIva").setValue(calculo);
-        fbSub
-          .get("valorUnitarioPorVolumenConIVA")
-          .setValue(calculo + unitPrice);
+        fbSub.get("valorUnitarioPorVolumenConIVA").setValue(precioTotalConIva);
       } else {
         fbSub.get("valorUnitarioPorVolumenIva").setValue(0);
         fbSub.get("valorUnitarioPorVolumenConIVA").setValue(0);
