@@ -25,6 +25,24 @@ interface ProductoInventario extends Producto {
   fulfillmentLoading?: boolean;
   fulfillmentError?: string;
   diferencia?: number | null;
+  // Campos para vista expandida
+  inventarioPorBodega?: BodegaStock[];
+  fulfillmentWarehouses?: FulfillmentWarehouseStock[];
+  detalleLoading?: boolean;
+}
+
+interface BodegaStock {
+  bodegaId: string;
+  bodegaNombre: string;
+  cantidad: number;
+  tipo: string;
+  origenFulfillment?: boolean;
+}
+
+interface FulfillmentWarehouseStock {
+  id: string;
+  name: string;
+  quantity: number;
 }
 
 interface PageReference {
@@ -112,6 +130,13 @@ export class InventarioCatalogoComponent implements OnInit {
   loadingFulfillmentStock: boolean = false;
   syncingProduct: string | null = null; // ID del producto que se está sincronizando
   syncingBodega: boolean = false;
+  stockFulfillmentCargado: boolean = false; // Indica si ya se cargó el stock de fulfillment
+
+  // ============== TABS ==============
+  activeTabIndex: number = 0; // 0 = Inventario, 1 = Historial Sync
+
+  // ============== ROW EXPANSION ==============
+  expandedRows: { [key: string]: boolean } = {};
 
   constructor(
     private service: MaestroService,
@@ -195,10 +220,12 @@ export class InventarioCatalogoComponent implements OnInit {
       this.rows = [];
       this.rowsFiltradas = [];
       this.productosSinFiltro = [];
+      this.stockFulfillmentCargado = false; // Reset al cambiar de bodega
       return;
     }
 
     this.cargando = true;
+    this.stockFulfillmentCargado = false; // Reset al cambiar de bodega
     this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe({
       next: (r: any) => {
         if (Array.isArray(r.productos) && r.productos.length > 0) {
@@ -652,6 +679,7 @@ export class InventarioCatalogoComponent implements OnInit {
           });
         }
         this.loadingFulfillmentStock = false;
+        this.stockFulfillmentCargado = true; // Marcar que el stock fue cargado
       },
       error: (error) => {
         console.error('Error cargando stock de fulfillment:', error);
@@ -827,5 +855,139 @@ export class InventarioCatalogoComponent implements OnInit {
     if (diferencia > 0) return 'badge bg-warning text-dark'; // Más en fulfillment
     if (diferencia < 0) return 'badge bg-danger';            // Menos en fulfillment
     return 'badge bg-success';                                // Sin diferencia
+  }
+
+  /**
+   * Verifica si hay productos con diferencias de stock
+   */
+  tieneProductosConDiferencia(): boolean {
+    return this.rowsFiltradas.some(p =>
+      p.diferencia !== null && p.diferencia !== undefined && p.diferencia !== 0
+    );
+  }
+
+  /**
+   * Cuenta los productos con diferencias de stock
+   */
+  contarProductosConDiferencia(): number {
+    return this.rowsFiltradas.filter(p =>
+      p.diferencia !== null && p.diferencia !== undefined && p.diferencia !== 0
+    ).length;
+  }
+
+  /**
+   * Calcula la suma total de diferencias
+   */
+  calcularDiferenciaTotalInventario(): number {
+    return this.rowsFiltradas.reduce((total, p) => {
+      if (p.diferencia !== null && p.diferencia !== undefined) {
+        return total + p.diferencia;
+      }
+      return total;
+    }, 0);
+  }
+
+  // ============== MÉTODOS DE ROW EXPANSION ==============
+
+  /**
+   * Maneja la expansión/colapso de una fila
+   */
+  onRowExpand(event: any): void {
+    const producto = event.data as ProductoInventario;
+    if (!producto.inventarioPorBodega || producto.inventarioPorBodega.length === 0) {
+      this.loadStockDetallado(producto);
+    }
+  }
+
+  /**
+   * Carga el stock detallado por bodega para un producto
+   */
+  loadStockDetallado(producto: ProductoInventario): void {
+    producto.detalleLoading = true;
+    producto.inventarioPorBodega = [];
+    producto.fulfillmentWarehouses = [];
+
+    // 1. Cargar inventario de todas las bodegas de Katuq
+    this.inventarioService.obtenerInventarioProducto(producto.id).subscribe({
+      next: (inventarios: any[]) => {
+        producto.inventarioPorBodega = inventarios.map(inv => ({
+          bodegaId: inv.bodegaId || inv.idBodega,
+          bodegaNombre: inv.bodega?.nombre || this.getNombreBodega(inv.bodegaId || inv.idBodega),
+          cantidad: inv.cantidad || 0,
+          tipo: inv.bodega?.tipo || this.getTipoBodega(inv.bodegaId || inv.idBodega),
+          origenFulfillment: inv.bodega?.origenFulfillment || this.bodegas.find(b => b.idBodega === inv.bodegaId)?.origenFulfillment
+        }));
+
+        // 2. Si hay fulfillment habilitado, cargar también las bodegas del fulfillment
+        if (this.fulfillmentEnabled && this.fulfillmentProvider) {
+          this.loadFulfillmentWarehouseStock(producto);
+        } else {
+          producto.detalleLoading = false;
+        }
+      },
+      error: (error) => {
+        console.error('Error cargando inventario detallado:', error);
+        producto.detalleLoading = false;
+        // Si falla, al menos mostrar la bodega actual
+        if (producto.bodegaId) {
+          producto.inventarioPorBodega = [{
+            bodegaId: producto.bodegaId,
+            bodegaNombre: producto.bodegaNombre || this.getNombreBodega(producto.bodegaId),
+            cantidad: producto.cantidad || 0,
+            tipo: this.getTipoBodega(producto.bodegaId),
+            origenFulfillment: false
+          }];
+        }
+      }
+    });
+  }
+
+  /**
+   * Carga el stock de las bodegas del fulfillment para un producto
+   */
+  loadFulfillmentWarehouseStock(producto: ProductoInventario): void {
+    const productRef = producto.identificacion?.referencia || producto.id;
+
+    this.fulfillmentService.getStock(this.fulfillmentProvider, productRef).subscribe({
+      next: (result) => {
+        if (result.success && result.warehouses) {
+          producto.fulfillmentWarehouses = result.warehouses.map((wh: any) => ({
+            id: wh.id || wh.warehouseId,
+            name: wh.name || wh.warehouseName || 'Bodega Fulfillment',
+            quantity: wh.quantity || wh.stock || 0
+          }));
+        }
+        producto.detalleLoading = false;
+      },
+      error: (error) => {
+        console.error('Error cargando stock de fulfillment:', error);
+        producto.detalleLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Calcula el total de stock en bodegas de Katuq
+   */
+  getTotalStockKatuq(producto: ProductoInventario): number {
+    if (!producto.inventarioPorBodega) return producto.cantidad || 0;
+    return producto.inventarioPorBodega.reduce((total, b) => total + b.cantidad, 0);
+  }
+
+  /**
+   * Calcula el total de stock en bodegas del fulfillment
+   */
+  getTotalStockFulfillment(producto: ProductoInventario): number {
+    if (!producto.fulfillmentWarehouses) return producto.stockFulfillment || 0;
+    return producto.fulfillmentWarehouses.reduce((total, wh) => total + wh.quantity, 0);
+  }
+
+  /**
+   * Obtiene la diferencia total entre Katuq y Fulfillment
+   */
+  getDiferenciaTotal(producto: ProductoInventario): number {
+    const totalKatuq = this.getTotalStockKatuq(producto);
+    const totalFulfillment = this.getTotalStockFulfillment(producto);
+    return totalFulfillment - totalKatuq;
   }
 }

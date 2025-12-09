@@ -750,6 +750,7 @@ export class IntegrationsService {
       case "coordinadora":
       case "enviame":
       case "partners_logistics":
+      case "prindel":
         return IntegrationCategory.LOGISTICS;
       case "mailchimp":
       case "hubspot":
@@ -1119,6 +1120,14 @@ export class IntegrationsService {
           description:
             "Integración de fulfillment e inventario externo con Aliaddo. Sincroniza stock, productos y gestiona bodegas de forma automática.",
           logo: "assets/images/integrations/aliaddo-logo.png",
+          active: true,
+        },
+        {
+          id: "prindel",
+          name: "Prindel",
+          description:
+            "Soluciones de logística de última milla para e-commerce en Colombia. Envíos rápidos con tracking en tiempo real.",
+          logo: "assets/images/logos/prindel.png",
           active: true,
         },
       ],

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Component, OnInit, OnDestroy, ViewEncapsulation } from "@angular/core";
 import {
   IntegrationsService,
   Integration,
@@ -23,6 +23,7 @@ interface Toast {
   selector: "app-integrations-list",
   templateUrl: "./integrations-list.component.html",
   styleUrls: ["./integrations-list.component.scss"],
+  encapsulation: ViewEncapsulation.None
 })
 export class IntegrationsListComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();

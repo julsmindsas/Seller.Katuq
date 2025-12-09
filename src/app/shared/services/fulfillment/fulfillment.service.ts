@@ -24,18 +24,25 @@ import {
   providedIn: 'root'
 })
 export class FulfillmentService {
-  private apiUrl = environment.urlApi + '/v1/fulfillment-integrations';
+  // Backend monta el router en /v1/fulfillment (ver index.js línea 476)
+  private apiUrl = environment.urlApi + '/v1/fulfillment';
 
   constructor(private http: HttpClient) {}
 
   /**
    * Obtiene el companyId del usuario actual desde localStorage
+   * Usa nomComercial como identificador principal (estándar del sistema)
    */
   private getCompanyId(): string {
     try {
       const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      return currentCompany.id || currentCompany._id || '';
-    } catch {
+      // nomComercial es el identificador principal usado en todo el sistema
+      const companyId = currentCompany.nomComercial || currentCompany.id || currentCompany._id || '';
+      console.log('[FulfillmentService] getCompanyId - currentCompany:', currentCompany);
+      console.log('[FulfillmentService] getCompanyId - companyId resuelto:', companyId);
+      return companyId;
+    } catch (error) {
+      console.error('[FulfillmentService] Error parseando currentCompany:', error);
       return '';
     }
   }
@@ -180,17 +187,27 @@ export class FulfillmentService {
    */
   getConfiguredProviders(): Observable<FulfillmentProvider[]> {
     const companyId = this.getCompanyId();
+    console.log('[FulfillmentService] getConfiguredProviders - companyId:', companyId);
+
     if (!companyId) {
-      console.warn('No se encontró companyId para obtener providers de fulfillment');
+      console.warn('[FulfillmentService] No se encontró companyId para obtener providers de fulfillment');
       return of([]);
     }
 
+    const url = `${this.apiUrl}/providers`;
     const params = new HttpParams().set('companyId', companyId);
-    return this.http.get<any>(`${this.apiUrl}/providers`, { params })
+    console.log('[FulfillmentService] Llamando a:', url, 'con params:', params.toString());
+
+    return this.http.get<any>(url, { params })
       .pipe(
-        map(res => res.data || []),
+        map(res => {
+          console.log('[FulfillmentService] Respuesta del servidor:', res);
+          const providers = res.data || [];
+          console.log('[FulfillmentService] Providers encontrados:', providers.length, providers);
+          return providers;
+        }),
         catchError(error => {
-          console.error('Error obteniendo providers:', error);
+          console.error('[FulfillmentService] Error obteniendo providers:', error);
           return of([]);
         })
       );

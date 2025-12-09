@@ -273,6 +273,9 @@ export class IntegrationFormValidatorService {
       case 'aliaddo_fulfillment':
         this.validateAliaddoFulfillmentForm(formValue, result);
         break;
+      case 'prindel':
+        this.validatePrindelForm(formValue, result);
+        break;
       default:
         this.validateGenericForm(formValue, result);
     }
@@ -547,6 +550,58 @@ export class IntegrationFormValidatorService {
     // Success message
     if (Object.keys(result.errors!).length === 0) {
       result.suggestions!.push('Configuración válida. Asegúrate de tener el token correcto desde tu panel de Aliaddo');
+    }
+  }
+
+  private validatePrindelForm(formValue: any, result: ValidationResult): void {
+    // Validar Customer Token
+    if (!formValue.customerToken || formValue.customerToken.length < 10) {
+      result.errors!['customerToken'] = 'El Customer Token debe tener al menos 10 caracteres';
+    }
+
+    // Validar URL de API
+    if (formValue.apiUrl) {
+      const urlValidator = this.createUrlValidator();
+      const urlError = urlValidator({ value: formValue.apiUrl } as AbstractControl);
+      if (urlError) {
+        result.errors!['apiUrl'] = 'La URL de API debe ser una URL válida (https://...)';
+      }
+
+      // Verificar que sea HTTPS para seguridad
+      if (!formValue.apiUrl.startsWith('https://')) {
+        result.warnings!.push('Se recomienda usar HTTPS para la URL de la API por seguridad');
+      }
+    } else {
+      result.errors!['apiUrl'] = 'La URL de API es obligatoria';
+    }
+
+    // Validar ambiente
+    if (!formValue.environment || !['production', 'sandbox'].includes(formValue.environment)) {
+      result.errors!['environment'] = 'Seleccione un ambiente válido (production o sandbox)';
+    }
+
+    // Validar tarifa por defecto
+    if (formValue.defaultRate && formValue.defaultRate < 0) {
+      result.errors!['defaultRate'] = 'La tarifa por defecto no puede ser negativa';
+    }
+
+    // Validar formato de días estimados
+    if (formValue.estimatedDays && !/^\d+(-\d+)?$/.test(formValue.estimatedDays)) {
+      result.warnings!.push('El formato de días estimados debe ser un número o rango (ej: 1-3)');
+    }
+
+    // Sugerencias específicas para Prindel
+    if (formValue.environment === 'production' && (!formValue.defaultRate || formValue.defaultRate === 0)) {
+      result.suggestions!.push('Recuerde configurar la tarifa acordada comercialmente con Prindel');
+    }
+
+    if (!formValue.estimatedDays) {
+      result.suggestions!.push('Configure los días estimados de entrega para informar a sus clientes');
+    }
+
+    // Success message
+    if (Object.keys(result.errors!).length === 0) {
+      result.suggestions!.push('Configuración válida. Asegúrate de tener el Customer Token correcto proporcionado por Prindel');
     }
   }
 

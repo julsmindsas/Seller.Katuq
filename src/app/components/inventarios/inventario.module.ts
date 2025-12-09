@@ -27,7 +27,10 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
+import { TabViewModule } from 'primeng/tabview';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
+import { ImportarBodegasModalComponent } from './bodegas/importar-bodegas-modal/importar-bodegas-modal.component';
+import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulfillment-sync-history.component';
 
 @NgModule({
     imports: [
@@ -51,7 +54,8 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
         ButtonModule,
         InputTextModule,
         DialogModule,
-        TooltipModule
+        TooltipModule,
+        TabViewModule
     ],
     declarations: [
         InventarioCatalogoComponent,
@@ -60,7 +64,9 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
         SelectorCiudadesCoberturaComponent,
         RecepcionMercanciaComponent,
         TrasladosComponent,
-        HistorialMovimientosComponent
+        HistorialMovimientosComponent,
+        ImportarBodegasModalComponent,
+        FulfillmentSyncHistoryComponent
     ],
     providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective],
 })

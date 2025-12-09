@@ -96,6 +96,29 @@
                     <div *ngIf="!cargandoCiudades && ciudades.length === 0 && bodegaForm.get('departamento')?.value" class="text-warning small mt-1">No hay ciudades disponibles</div>
                   </div>
 
+                  <!-- Dirección (solo para bodega física) -->
+                  <div class="mb-3" *ngIf="bodegaForm.get('tipo')?.value === 'Física'">
+                    <label class="form-label">
+                      <i class="icofont icofont-map-marker"></i>&nbsp;Dirección <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                      <input type="text" class="form-control" formControlName="direccion" placeholder="Ej: Carrera 7 #45-23">
+                      <button type="button" class="btn btn-outline-primary"
+                              (click)="geocodificarDireccion()"
+                              [disabled]="geocodificando || !bodegaForm.get('direccion')?.value"
+                              title="Buscar coordenadas">
+                        <i class="fa fa-search" *ngIf="!geocodificando"></i>
+                        <i class="fa fa-spinner fa-spin" *ngIf="geocodificando"></i>
+                      </button>
+                    </div>
+                    <div class="mt-2" style="font-size: 0.95em;" *ngIf="bodegaForm.get('direccion')?.value && bodegaForm.get('ciudad')?.value">
+                      <strong>Se buscará:</strong> {{ bodegaForm.get('direccion')?.value }}, {{ bodegaForm.get('ciudad')?.value }}, {{ bodegaForm.get('departamento')?.value }}, {{ bodegaForm.get('pais')?.value }}
+                    </div>
+                    <small class="text-muted" *ngIf="!bodegaForm.get('direccion')?.value || !bodegaForm.get('ciudad')?.value">
+                      Completa país, departamento y ciudad para mejor precisión
+                    </small>
+                  </div>
+
                   <!-- Ciudades de Cobertura -->
                   <div class="mb-3">
                     <label class="form-label">
@@ -128,24 +151,17 @@
               </div>
             </div>
             
-            <!-- Datos de localización física -->
+            <!-- Mapa y coordenadas (solo para bodega física) -->
             <div class="col-12 col-lg-6" *ngIf="bodegaForm.get('tipo')?.value === 'Física'">
               <div class="card h-100">
                 <div class="card-body">
                   <div class="mb-3">
                     <label class="form-label">
-                      <i class="icofont icofont-map-marker"></i>&nbsp;Dirección <span class="text-danger">*</span>
-                    </label>
-                    <input type="text" class="form-control" formControlName="direccion" placeholder="Calle, número, etc.">
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label class="form-label">
                       <i class="icofont icofont-location-arrow"></i>&nbsp;Coordenadas <span class="text-danger">*</span>
-                      <span class="ms-1 text-muted" style="font-size: 0.9em;">Selecciona en el mapa</span>
+                      <span class="ms-1 text-muted" style="font-size: 0.9em;">O selecciona en el mapa</span>
                     </label>
                     <input type="text" class="form-control" formControlName="coordenadas" placeholder="Latitud, Longitud" readonly>
-                    <div #mapContainer style="height: 220px; width: 100%; margin-top: 10px;"></div>
+                    <div #mapContainer style="height: 280px; width: 100%; margin-top: 10px;"></div>
                   </div>
                 </div>
               </div>

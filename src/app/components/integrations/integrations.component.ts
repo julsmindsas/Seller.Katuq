@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ValidatorFn } from '@angular/forms';
 import { IntegrationsService, Integration, IntegrationCategory, CATEGORY_LABELS, ValidationResponse, ConfigSchema } from './integrations.service';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -10,7 +10,8 @@ import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError } 
 @Component({
   selector: 'app-integrations',
   templateUrl: './integrations.component.html',
-  styleUrls: ['./integrations.component.scss']
+  styleUrls: ['./integrations.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class IntegrationsComponent implements OnInit, OnDestroy {
   @Input() integrationToEdit: Integration | null = null;
@@ -533,11 +534,14 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'siigo':
         this.integrationForm = this.createSiigoForm();
         break;
+      case 'prindel':
+        this.integrationForm = this.createPrindelForm();
+        break;
       default:
         this.integrationForm = this.createShopifyForm();
         break;
     }
-    
+
     this.statusMessage = null;
     this.editingIntegrationId = null;
     
@@ -608,6 +612,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'siigo':
         this.integrationForm = this.createSiigoForm();
+        break;
+      case 'prindel':
+        this.integrationForm = this.createPrindelForm();
         break;
       default:
         this.integrationForm = this.createShopifyForm();
@@ -902,6 +909,25 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  createPrindelForm(): FormGroup {
+    return this.fb.group({
+      name: ['Prindel', Validators.required],
+      enabled: [true],
+      // Credencial principal - X-Customer-Token
+      customerToken: ['', [Validators.required, Validators.minLength(10)]],
+      // URL de la API
+      apiUrl: ['https://api.prindel.com.co', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      // Configuración
+      environment: ['production', Validators.required],
+      // Tarifa por defecto (Prindel no tiene endpoint de cotización)
+      defaultRate: [0, [Validators.min(0)]],
+      // Días estimados de entrega
+      estimatedDays: ['1-3'],
+      // Modo de prueba
+      testMode: [false]
+    });
+  }
+
   onSubmit(): void {
     if (this.integrationForm.invalid) {
       this.integrationForm.markAllAsTouched();
@@ -1150,6 +1176,16 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           enableAutoSync: formData.enableAutoSync,
           webhookUrl: formData.webhookUrl,
           webhookSecret: formData.webhookSecret
+        };
+        break;
+      case 'prindel':
+        credentials = {
+          customerToken: formData.customerToken,
+          apiUrl: formData.apiUrl,
+          environment: formData.environment,
+          defaultRate: formData.defaultRate,
+          estimatedDays: formData.estimatedDays,
+          testMode: formData.testMode
         };
         break;
     }

@@ -151,4 +151,14 @@ export class InventarioService {
   getMovimientoDetalle(id: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/movimiento/${id}`);
   }
+
+  /**
+   * Obtiene el inventario de un producto en todas las bodegas
+   * @param productoId ID del producto
+   * @returns Observable con el inventario en todas las bodegas
+   */
+  obtenerInventarioProducto(productoId: string): Observable<any[]> {
+    const url = `${this.apiUrl}/inventory/producto/${productoId}`;
+    return this.http.get<any[]>(url);
+  }
 }
