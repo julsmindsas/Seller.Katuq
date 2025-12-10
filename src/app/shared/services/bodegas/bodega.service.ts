@@ -16,11 +16,13 @@ export class BodegaService {
 
   // Obtener todas las bodegas
   getBodegas(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/all`)
+    // Cache busting para evitar respuestas cacheadas
+    const timestamp = new Date().getTime();
+    return this.http.get<any[]>(`${this.apiUrl}/all?_t=${timestamp}`)
       .pipe(
         map(bodegas => bodegas.map(bodega => ({
           ...bodega,
-          // No necesitamos mapear cd a id ya que la API ya devuelve el id correctamente
+          id: bodega.id || bodega.cd  // Asegurar que siempre haya id
         })))
       );
   }
@@ -74,7 +76,7 @@ export class BodegaService {
   }
 
   // Eliminar bodega
-  eliminarBodega(id: number): Observable<any> {
+  eliminarBodega(id: string | number): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/remove`, { id });
   }
 

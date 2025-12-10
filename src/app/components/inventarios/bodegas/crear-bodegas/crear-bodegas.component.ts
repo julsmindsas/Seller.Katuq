@@ -456,6 +456,11 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
   guardarBodega() {
     if (this.bodegaForm.invalid) {
       this.marcarControlesComoTocados();
+      const camposInvalidos = this.obtenerCamposInvalidos();
+      this.toastr.warning(
+        `Campos requeridos: ${camposInvalidos.join(', ')}`,
+        'Formulario incompleto'
+      );
       return;
     }
     const bodega = {
@@ -496,4 +501,26 @@ export class CrearBodegasComponent implements OnInit, AfterViewInit {
     });
   }
 
+  private obtenerCamposInvalidos(): string[] {
+    const campos: string[] = [];
+    const nombresAmigables: { [key: string]: string } = {
+      nombre: 'Nombre',
+      idBodega: 'Código Bodega',
+      tipo: 'Tipo',
+      pais: 'País',
+      departamento: 'Departamento',
+      ciudad: 'Ciudad',
+      direccion: 'Dirección',
+      coordenadas: 'Coordenadas'
+    };
+
+    Object.keys(this.bodegaForm.controls).forEach(key => {
+      const control = this.bodegaForm.get(key);
+      if (control?.invalid) {
+        campos.push(nombresAmigables[key] || key);
+      }
+    });
+
+    return campos;
+  }
 }

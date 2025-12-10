@@ -321,6 +321,32 @@ export class FulfillmentService {
     );
   }
 
+  // ============== IMPORTACIÓN DE PRODUCTOS ==============
+
+  /**
+   * Importa productos desde el fulfillment al catálogo de Katuq
+   * @param provider Nombre del provider (ej: 'aliaddo')
+   * @param options Opciones de importación
+   */
+  importProductsFromFulfillment(
+    provider: string,
+    options: { bodegaId?: string; updateExisting?: boolean } = {}
+  ): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/import-products`, {
+      provider,
+      companyId: this.getCompanyId(),
+      ...options
+    }).pipe(
+      map(res => res.data || res),
+      catchError(error => {
+        console.error('Error importando productos desde fulfillment:', error);
+        return of({ success: false, error: error.error?.message || error.message });
+      })
+    );
+  }
+
+  // ============== UTILIDADES ==============
+
   /**
    * Obtiene el nombre legible del provider
    */

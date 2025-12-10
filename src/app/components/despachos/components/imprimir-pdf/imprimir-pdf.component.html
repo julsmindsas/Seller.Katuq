@@ -34,13 +34,13 @@
   <button type="button" class="btn btn-secondary" (click)="closeModal()">
     {{ 'Cerrar' | translate }}
   </button>
-  <button 
-    type="button" 
-    class="btn btn-primary" 
-    [disabled]="isLoadingContent || hasError"
+  <button
+    type="button"
+    class="btn btn-primary"
+    [disabled]="isLoadingContent || hasError || isGeneratingPDF"
     (click)="imprimirPdf()">
-    <div *ngIf="isLoadingContent" class="spinner-border spinner-border-sm me-2" role="status"></div>
-    <i *ngIf="!isLoadingContent" class="pi pi-print me-1"></i>
-    {{ (isLoadingContent ? 'Cargando...' : 'Imprimir PDF') | translate }}
+    <div *ngIf="isLoadingContent || isGeneratingPDF" class="spinner-border spinner-border-sm me-2" role="status"></div>
+    <i *ngIf="!isLoadingContent && !isGeneratingPDF" class="pi pi-print me-1"></i>
+    {{ (isLoadingContent ? 'Cargando...' : isGeneratingPDF ? 'Generando PDF...' : 'Imprimir PDF') | translate }}
   </button>
 </div> 

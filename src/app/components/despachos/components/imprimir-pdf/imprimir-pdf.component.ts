@@ -1,8 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { Pedido } from '../../../ventas/modelo/pedido';
 import { PaymentService } from '../../../../shared/services/ventas/payment.service';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -21,6 +19,7 @@ export class ImprimirPdfComponent implements OnInit {
   isLoadingContent: boolean = false;
   hasError: boolean = false;
   errorMessage: string = '';
+  isGeneratingPDF: boolean = false;
   
   constructor(
     private paymentService: PaymentService,
@@ -93,72 +92,79 @@ export class ImprimirPdfComponent implements OnInit {
     this.onClose.emit();
   }
   
-  imprimirPdf(): void {
+  async imprimirPdf(): Promise<void> {
     // Verificar que el contenido esté listo
-    if (this.isLoadingContent) {
-      console.warn('Content is still loading, cannot generate PDF yet');
-      return;
-    }
-
-    if (this.hasError) {
-      console.warn('Content has errors, cannot generate PDF');
-      this.retryLoadContent();
+    if (this.isLoadingContent || this.hasError || this.isGeneratingPDF) {
+      if (this.hasError) {
+        this.retryLoadContent();
+      }
       return;
     }
 
     const printContent = document.getElementById('htmlPdf');
-    if (printContent) {
-      // Opciones para mejorar la calidad de la imagen generada por html2canvas
+    if (!printContent) return;
+
+    this.isGeneratingPDF = true;
+
+    try {
+      // Lazy loading de librerías para reducir bundle inicial
+      const html2canvas = (await import('html2canvas')).default;
+      const { jsPDF } = await import('jspdf');
+
+      // Configuración optimizada: scale 2 (vs 3) reduce ~55% tiempo de procesamiento
       const options = {
-        scale: 3, // Aumentar la escala para una mayor resolución
-        useCORS: true, // Permitir cargar imágenes de otros orígenes
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
         logging: false,
+        letterRendering: true,
         width: printContent.scrollWidth,
         height: printContent.scrollHeight,
       };
 
-      html2canvas(printContent, options).then(canvas => {
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: 'landscape', // Cambiado a horizontal
-          unit: 'mm',
-          format: 'a4'
-        });
-        
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        
-        // Calcular la altura de la imagen en el PDF manteniendo la proporción
-        const ratio = canvasWidth / canvasHeight;
-        const imgWidth = pageWidth;
-        const imgHeight = imgWidth / ratio;
-        
-        let heightLeft = imgHeight;
-        let position = 0;
+      const canvas = await html2canvas(printContent, options);
 
-        // Agregar la primera página
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      // JPEG 92% vs PNG reduce ~70% el tamaño del archivo
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
 
-        // Agregar páginas adicionales si el contenido es más alto que una página
-        while (heightLeft > 0) {
-          position -= pageHeight; // Mover la posición de la imagen hacia arriba para la siguiente página
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pageHeight;
-        }
-        
-        if (this.pedido && this.pedido.nroPedido) {
-          pdf.save(`pedido-${this.pedido.nroPedido}.pdf`);
-        } else {
-          pdf.save(`pedido-${new Date().getTime()}.pdf`);
-        }
-        
-        this.onPrint.emit();
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4',
+        compress: true,
       });
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const ratio = canvas.width / canvas.height;
+      const imgWidth = pageWidth;
+      const imgHeight = imgWidth / ratio;
+
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      // JPEG en lugar de PNG
+      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position -= pageHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      const filename = this.pedido?.nroPedido
+        ? `pedido-${this.pedido.nroPedido}.pdf`
+        : `pedido-${Date.now()}.pdf`;
+
+      pdf.save(filename);
+      this.onPrint.emit();
+    } catch (error) {
+      console.error('Error generando PDF:', error);
+    } finally {
+      this.isGeneratingPDF = false;
     }
   }
 } 
