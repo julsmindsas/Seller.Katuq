@@ -2,6 +2,7 @@ import {
   Component,
   ElementRef,
   OnInit,
+  OnDestroy,
   TemplateRef,
   ViewChild,
   EventEmitter,
@@ -156,7 +157,7 @@ interface UbicacionPedido {
     ])
   ]
 })
-export class DespachosComponent implements OnInit {
+export class DespachosComponent implements OnInit, OnDestroy {
   @ViewChild("autoCompleteInput") autoCompleteInput: any;
   @ViewChild("clientes", { static: false }) clientes: ClientesComponent;
   @ViewChild("entrega", { static: false }) entrega: PedidoEntregaComponent;
@@ -220,6 +221,7 @@ export class DespachosComponent implements OnInit {
   // Propiedades para búsqueda con autocompletado
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private actualizarMapaDebounceTimer: any = null;
   isSearching: boolean = false;
   searchError: string | null = null;
   searchDebounceTime: number = 300;
@@ -506,6 +508,17 @@ export class DespachosComponent implements OnInit {
     ];
   }
 
+  ngOnDestroy(): void {
+    // Limpiar Subject para cancelar subscripciones
+    this.destroy$.next();
+    this.destroy$.complete();
+
+    // Limpiar timer de debounce del mapa
+    if (this.actualizarMapaDebounceTimer) {
+      clearTimeout(this.actualizarMapaDebounceTimer);
+    }
+  }
+
   public onTabChange(event: any): void {
     // El índice de la pestaña del mapa es 1
     if (event.index === 1) {
@@ -537,25 +550,8 @@ export class DespachosComponent implements OnInit {
 
     // Choose between optimized and legacy loading
     if (this.useOptimizedLoading) {
-      // Use optimized endpoint with pagination - use component properties directly
-      console.log('🚀 Despachos - Making optimized API request:', {
-        currentPage: this.currentPage,
-        pageSize: this.currentPageSize,
-        hasLazyEvent: !!this.lastLazyLoadEvent,
-        hasColumnFilters: Object.keys(this.columnFilters).length > 0,
-        filterKeys: Object.keys(filter),
-        fullFilter: filter // Log the complete filter to verify column filters are included
-      });
-      
       this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.currentPageSize).subscribe({
         next: (response) => {
-          console.log('✅ Despachos - Optimized API response received:', {
-            ordersCount: response.orders?.length || 0,
-            totalRecords: response.pagination?.totalItems,
-            currentPage: response.pagination?.currentPage,
-            totalPages: response.pagination?.totalPages,
-            hasMetrics: !!response.metrics
-          });
           this.processOrdersData(response.orders as PedidoPriorizado[], response.pagination, response.metrics);
         },
         error: (error) => {
@@ -2026,7 +2022,6 @@ export class DespachosComponent implements OnInit {
       distinctUntilChanged(),
       takeUntil(this.destroy$)
     ).subscribe(query => {
-      console.log('🔍 Debounce ejecutado con query:', query);
       this.performSearch(query);
     });
   }
@@ -2041,7 +2036,6 @@ export class DespachosComponent implements OnInit {
 
     // Validar longitud mínima de 3 caracteres
     if (query.trim().length < 3) {
-      console.log('⚠️ Búsqueda requiere al menos 3 caracteres');
       return false;
     }
 
@@ -3149,9 +3143,6 @@ export class DespachosComponent implements OnInit {
       // Convertir a string si no lo es
       let textoStr = String(texto);
 
-      console.log('🔍 limpiarTexto - Texto original:', textoStr);
-      console.log('🔍 limpiarTexto - Longitud original:', textoStr.length);
-
       // Preservar ñ y tildes, solo limpiar emojis y caracteres problemáticos
       let textoLimpio = textoStr
         .replace(/[çÇ]/g, 'c') // Convertir ç en c
@@ -3195,9 +3186,6 @@ export class DespachosComponent implements OnInit {
         .replace(/[😈👿👹👺💀👻👽🤖💩😺😸😹😻]/g, '') // Otros emojis
         // Verificación final: eliminar cualquier carácter que no sea ASCII básico + letras españolas
         .replace(/[^\x00-\x7FáéíóúñÁÉÍÓÚÑ]/g, '');
-
-      console.log('🔍 limpiarTexto - Texto después de limpieza:', textoLimpio);
-      console.log('🔍 limpiarTexto - Longitud después de limpieza:', textoLimpio.length);
 
       return textoLimpio;
     };
@@ -4399,17 +4387,6 @@ export class DespachosComponent implements OnInit {
     console.log('🔧 optimizarDatosPedidos - Procesando', pedidos.length, 'pedidos');
 
     return pedidos.map((pedido, index) => {
-      const tieneNotasPedido = !!pedido.notasPedido;
-      const notasDespachos = pedido.notasPedido?.notasDespachos?.length || 0;
-      const notasEntregas = pedido.notasPedido?.notasEntregas?.length || 0;
-
-      console.log(`Pedido ${index + 1} (${pedido.nroPedido}):`, {
-        tieneNotasPedido,
-        notasDespachos,
-        notasEntregas,
-        tieneObservaciones: !!pedido.envio?.observaciones
-      });
-
       return {
         nroPedido: pedido.nroPedido,
         faltaPorPagar: pedido.faltaPorPagar || 0,
@@ -5945,27 +5922,6 @@ export class DespachosComponent implements OnInit {
    * Transforma los datos de pedidos al formato requerido por el mapa
    */
   transformarPedidosAUbicaciones(): UbicacionPedido[] {
-    // DIAGNÓSTICO: Logging detallado para pedidos despachados
-    const totalPedidos = this.orders.length;
-    const pedidosDespachados = this.orders.filter(p => p.estadoProceso === 'Despachado');
-    const pedidosDespachadosConDireccion = pedidosDespachados.filter(p => p.envio?.direccionEntrega);
-    const pedidosDespachadosConCoordenadas = pedidosDespachados.filter(p =>
-      p.envio?.latitud && p.envio?.longitud
-    );
-
-    console.log('🚚 DIAGNÓSTICO PEDIDOS DESPACHADOS:');
-    console.log(`📦 Total pedidos cargados: ${totalPedidos}`);
-    console.log(`🚚 Pedidos con estado "Despachado": ${pedidosDespachados.length}`);
-    console.log(`📍 Pedidos despachados con dirección: ${pedidosDespachadosConDireccion.length}`);
-    console.log(`🗺️ Pedidos despachados con coordenadas: ${pedidosDespachadosConCoordenadas.length}`);
-
-    if (pedidosDespachados.length > 0) {
-      console.log('📋 Detalle de pedidos despachados:');
-      pedidosDespachados.forEach(p => {
-        console.log(`  - ${p.nroPedido}: ${p.envio?.direccionEntrega || 'SIN DIRECCIÓN'} | Coords: ${p.envio?.latitud ? 'SÍ' : 'NO'}`);
-      });
-    }
-
     let pedidosFiltrados = this.orders
       .filter(pedido =>
         pedido.envio?.latitud &&
@@ -5973,15 +5929,11 @@ export class DespachosComponent implements OnInit {
         pedido.envio?.direccionEntrega
       );
 
-    console.log(`🔍 Pedidos con coordenadas válidas (todos los estados): ${pedidosFiltrados.length}`);
-
     // Aplicar filtro de estado si está activo
     if (this.filtroEstadoMapa) {
-      const antesDelFiltro = pedidosFiltrados.length;
       pedidosFiltrados = pedidosFiltrados.filter(pedido =>
         pedido.estadoProceso === this.filtroEstadoMapa
       );
-      console.log(`🎯 Filtro activo: "${this.filtroEstadoMapa}" - Antes: ${antesDelFiltro}, Después: ${pedidosFiltrados.length}`);
     }
 
     const ubicacionesFinales = pedidosFiltrados.map(pedido => ({
@@ -5998,15 +5950,28 @@ export class DespachosComponent implements OnInit {
       tiempoEstimado: undefined // Se puede calcular más tarde
     }));
 
-    console.log(`✅ Total ubicaciones finales para el mapa: ${ubicacionesFinales.length}`);
-
     return ubicacionesFinales;
   }
 
   /**
-   * Actualiza la configuración del mapa con los datos actuales
+   * Actualiza la configuración del mapa con los datos actuales (con debounce)
    */
   actualizarConfiguracionMapa(): void {
+    // Cancelar timer anterior si existe
+    if (this.actualizarMapaDebounceTimer) {
+      clearTimeout(this.actualizarMapaDebounceTimer);
+    }
+
+    // Ejecutar después de 500ms de inactividad
+    this.actualizarMapaDebounceTimer = setTimeout(() => {
+      this.actualizarConfiguracionMapaInterno();
+    }, 500);
+  }
+
+  /**
+   * Implementación interna de actualización del mapa
+   */
+  private actualizarConfiguracionMapaInterno(): void {
     const ubicaciones = this.transformarPedidosAUbicaciones();
 
     this.configuracionMapa = {
@@ -6021,8 +5986,6 @@ export class DespachosComponent implements OnInit {
 
     // Calcular y actualizar métricas unificadas del mapa
     this.calcularMetricasMapa();
-
-    console.log(`Mapa actualizado con ${ubicaciones.length} ubicaciones`);
   }
 
   /**

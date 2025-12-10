@@ -28,6 +28,15 @@
                                 ngbTooltip="{{ 'Importar productos desde Excel' | translate }}">
                             <i class="icofont icofont-upload-alt"></i> {{ 'Importar' | translate }}
                         </button>
+                        <button *ngIf="fulfillmentEnabled" type="button"
+                                class="btn btn-info btn-sm"
+                                (click)="importarProductosFulfillment()"
+                                [disabled]="importandoProductosFulfillment"
+                                ngbTooltip="Importar productos desde {{ fulfillmentProviderName }}">
+                            <i class="icofont icofont-cloud-download" *ngIf="!importandoProductosFulfillment"></i>
+                            <i class="fa fa-spinner fa-spin" *ngIf="importandoProductosFulfillment"></i>
+                            {{ 'Fulfillment' | translate }}
+                        </button>
                         <button type="button" class="btn btn-success btn-sm"
                                 (click)="exportToExcel()">
                             <i class="icofont icofont-file-excel"></i> {{ 'Exportar' | translate }}
@@ -56,6 +65,13 @@
                             <button type="button" class="btn btn-outline-primary btn-sm me-2"
                                     (click)="openImportModal()">
                                 <i class="icofont icofont-upload-alt"></i>
+                            </button>
+                            <button *ngIf="fulfillmentEnabled" type="button"
+                                    class="btn btn-info btn-sm me-2"
+                                    (click)="importarProductosFulfillment()"
+                                    [disabled]="importandoProductosFulfillment">
+                                <i class="icofont icofont-cloud-download" *ngIf="!importandoProductosFulfillment"></i>
+                                <i class="fa fa-spinner fa-spin" *ngIf="importandoProductosFulfillment"></i>
                             </button>
                             <button type="button" class="btn btn-success btn-sm"
                                     (click)="exportToExcel()">

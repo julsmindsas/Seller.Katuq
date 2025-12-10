@@ -12,6 +12,8 @@ import { UtilsService } from '../../shared/services/utils.service';
 import { ProveedoresService } from '../dropshipping/services/proveedores.service';
 import { Proveedor } from '../dropshipping/interfaces';
 import { ImportResult } from '../../shared/models/column-mapping.model';
+import { FulfillmentService } from '../../shared/services/fulfillment/fulfillment.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-productos',
@@ -54,13 +56,21 @@ export class ProductosComponent implements OnInit {
   // Import modal
   showImportModal: boolean = false;
 
+  // Fulfillment
+  fulfillmentEnabled: boolean = false;
+  fulfillmentProvider: string = '';
+  fulfillmentProviderName: string = '';
+  importandoProductosFulfillment: boolean = false;
+
   constructor(
     private service: MaestroService,
     private imageService: ImagenService,
     private router: Router,
     private modalService: NgbModal,
     private utilsService: UtilsService,
-    private proveedoresService: ProveedoresService
+    private proveedoresService: ProveedoresService,
+    private fulfillmentService: FulfillmentService,
+    private toastr: ToastrService
   ) { }
 
   ngOnInit(): void {
@@ -72,6 +82,7 @@ export class ProductosComponent implements OnInit {
     // Cargar datos iniciales
     this.cargarDatos();
     this.cargarProveedores();
+    this.checkFulfillmentConfig();
   }
 
   cargarDatos() {
@@ -474,5 +485,91 @@ export class ProductosComponent implements OnInit {
         icon: 'warning'
       });
     }
+  }
+
+  // ============== MÉTODOS DE FULFILLMENT ==============
+
+  /**
+   * Verifica si hay un proveedor de fulfillment configurado
+   */
+  checkFulfillmentConfig(): void {
+    this.fulfillmentService.getConfiguredProviders().subscribe({
+      next: (providers) => {
+        if (providers && providers.length > 0) {
+          const activeProvider = providers.find(p => p.configured);
+          if (activeProvider) {
+            this.fulfillmentEnabled = true;
+            this.fulfillmentProvider = activeProvider.provider;
+            this.fulfillmentProviderName = this.fulfillmentService.getProviderDisplayName(activeProvider.provider);
+            console.log(`✅ Fulfillment habilitado: ${this.fulfillmentProviderName}`);
+          }
+        }
+      },
+      error: () => {
+        this.fulfillmentEnabled = false;
+      }
+    });
+  }
+
+  /**
+   * Importa productos desde el fulfillment
+   */
+  importarProductosFulfillment(): void {
+    if (!this.fulfillmentEnabled || !this.fulfillmentProvider) {
+      this.toastr.warning('No hay proveedor de fulfillment configurado', 'Advertencia');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Importar Productos de Fulfillment',
+      text: `¿Desea importar los productos desde ${this.fulfillmentProviderName}?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, importar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ejecutarImportacionFulfillment();
+      }
+    });
+  }
+
+  /**
+   * Ejecuta la importación de productos desde fulfillment
+   */
+  private ejecutarImportacionFulfillment(): void {
+    this.importandoProductosFulfillment = true;
+
+    Swal.fire({
+      title: 'Importando productos...',
+      text: 'Por favor espera mientras se importan los productos desde el fulfillment.',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    this.fulfillmentService.importProductsFromFulfillment(this.fulfillmentProvider)
+      .subscribe({
+        next: (res) => {
+          this.importandoProductosFulfillment = false;
+          if (res.success) {
+            this.cargarDatos();
+            Swal.fire({
+              title: 'Importación Completada',
+              html: `<p><strong>${res.data?.created || res.created || 0}</strong> productos creados</p>
+                     <p><strong>${res.data?.skipped || res.skipped || 0}</strong> productos omitidos</p>
+                     ${(res.data?.errors || res.errors || 0) > 0 ? `<p class="text-danger"><strong>${res.data?.errors || res.errors}</strong> errores</p>` : ''}`,
+              icon: (res.data?.errors || res.errors || 0) > 0 ? 'warning' : 'success'
+            });
+          } else {
+            Swal.fire('Error', res.error || 'Error al importar productos', 'error');
+          }
+        },
+        error: (error) => {
+          this.importandoProductosFulfillment = false;
+          console.error('Error importando productos:', error);
+          Swal.fire('Error', 'Error al importar productos del fulfillment', 'error');
+        }
+      });
   }
 }

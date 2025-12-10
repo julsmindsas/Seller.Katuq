@@ -16,4 +16,9 @@ export interface Bodega {
   tipo: 'Física' | 'Transaccional';
   coberturaNacional?: boolean;
   ciudadesCobertura?: CiudadCobertura[];
+  // Campos de fulfillment
+  fulfillmentId?: string;           // UUID del proveedor
+  fulfillmentProvider?: string;     // Nombre del proveedor (aliaddo, etc.)
+  origenFulfillment?: boolean;      // true si fue importada
+  fulfillmentCode?: string;         // Código original del fulfillment
 }

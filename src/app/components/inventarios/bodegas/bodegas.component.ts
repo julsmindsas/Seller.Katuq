@@ -6,11 +6,12 @@ import { SelectorCiudadesCoberturaComponent } from './selector-ciudades-cobertur
 import { ImportarBodegasModalComponent } from './importar-bodegas-modal/importar-bodegas-modal.component';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { FulfillmentService } from '../../../shared/services/fulfillment/fulfillment.service';
+import { DaneCodesService } from '../../../shared/services/dane-codes.service';
 import { CiudadCobertura } from '../../../shared/models/inventarios/bodega.model';
 import { FulfillmentWarehouse } from '../../../shared/models/fulfillment/fulfillment.model';
 import Swal from 'sweetalert2';
 import { forkJoin, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-bodegas',
@@ -20,13 +21,15 @@ import { catchError } from 'rxjs/operators';
 export class BodegasComponent implements OnInit {
   cargando: boolean = false;
   bodegas: any[] = [];
+  todasLasBodegas: any[] = [];  // Incluye inactivas para verificar fulfillmentId
   selectedColumns: any[] = [];
   importandoFulfillment: boolean = false;
 
   constructor(
     private modalService: NgbModal,
     private bodegaService: BodegaService,
-    private fulfillmentService: FulfillmentService
+    private fulfillmentService: FulfillmentService,
+    private daneCodesService: DaneCodesService
   ) { }
 
   ngOnInit(): void {
@@ -36,7 +39,9 @@ export class BodegasComponent implements OnInit {
   cargarBodegas() {
     this.cargando = true;
     this.bodegaService.getBodegas().subscribe(bodegas => {
-      this.bodegas = bodegas;
+      this.todasLasBodegas = bodegas;  // Guardar todas para verificar fulfillmentId
+      // Filtrar solo bodegas activas para mostrar (el backend usa soft delete)
+      this.bodegas = bodegas.filter(b => b.active !== false);
       this.cargando = false;
     });
   }
@@ -73,6 +78,14 @@ export class BodegasComponent implements OnInit {
   }
 
   eliminarBodega(bodega: any) {
+    // Usar id o cd como fallback (la API puede devolver cualquiera)
+    const bodegaId = bodega?.id || bodega?.cd;
+
+    if (!bodegaId) {
+      Swal.fire('Error', 'No se pudo identificar la bodega a eliminar.', 'error');
+      return;
+    }
+
     Swal.fire({
       title: '¿Está seguro de eliminar esta bodega?',
       text: 'Esta acción no se puede deshacer.',
@@ -83,12 +96,13 @@ export class BodegasComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         this.cargando = true;
-        this.bodegaService.eliminarBodega(bodega.id).subscribe({
+        this.bodegaService.eliminarBodega(bodegaId).subscribe({
           next: () => {
             Swal.fire('Eliminado', 'Bodega eliminada correctamente.', 'success');
             this.cargarBodegas();
           },
-          error: () => {
+          error: (err) => {
+            console.error('Error eliminando bodega:', err);
             Swal.fire('Error', 'Ocurrió un error al eliminar la bodega.', 'error');
             this.cargando = false;
           }
@@ -240,23 +254,17 @@ export class BodegasComponent implements OnInit {
   }
 
   /**
-   * Muestra modal para seleccionar qué bodegas importar
+   * Muestra modal para seleccionar qué bodegas importar/actualizar
    */
   private mostrarModalSeleccionBodegas(warehouses: any[]) {
-    // Filtrar las que ya existen en Katuq por fulfillmentId
-    const bodegasExistentes = this.bodegas
-      .filter(b => b.fulfillmentId)
-      .map(b => b.fulfillmentId);
-
-    const bodegasDisponibles = warehouses.filter(
-      wh => !bodegasExistentes.includes(wh.id)
-    );
+    // Mostrar TODAS las bodegas del fulfillment (para crear o actualizar)
+    const bodegasDisponibles = warehouses;
 
     if (bodegasDisponibles.length === 0) {
       Swal.fire({
         icon: 'info',
-        title: 'Bodegas ya importadas',
-        text: 'Todas las bodegas del fulfillment ya están registradas en Katuq.'
+        title: 'Sin bodegas',
+        text: 'No se encontraron bodegas en el fulfillment.'
       });
       return;
     }
@@ -273,7 +281,7 @@ export class BodegasComponent implements OnInit {
       ...wh,
       selected: true
     }));
-    modalRef.componentInstance.bodegasExistentes = bodegasExistentes;
+    modalRef.componentInstance.bodegasExistentes = [];  // Ya no filtramos, sincronizamos todas
 
     // Manejar resultado
     modalRef.result.then((seleccionadas) => {
@@ -286,53 +294,181 @@ export class BodegasComponent implements OnInit {
   }
 
   /**
-   * Crea las bodegas seleccionadas en Katuq
+   * Crea, actualiza o reactiva las bodegas seleccionadas en Katuq
    */
   private crearBodegasImportadas(warehouses: any[]) {
     this.cargando = true;
     let creadas = 0;
+    let actualizadas = 0;
     let errores = 0;
 
     const crearSiguiente = (index: number) => {
       if (index >= warehouses.length) {
         this.cargando = false;
         this.cargarBodegas();
+        const mensajes: string[] = [];
+        if (creadas > 0) mensajes.push(`${creadas} creadas`);
+        if (actualizadas > 0) mensajes.push(`${actualizadas} actualizadas`);
+        if (errores > 0) mensajes.push(`${errores} con errores`);
         Swal.fire({
           icon: errores === 0 ? 'success' : 'warning',
-          title: 'Importación completada',
-          text: `Se crearon ${creadas} bodegas${errores > 0 ? `, ${errores} con errores` : ''}.`
+          title: 'Sincronización completada',
+          text: mensajes.join(', ') + '.'
         });
         return;
       }
 
       const wh = warehouses[index];
-      const nuevaBodega = {
-        nombre: wh.name,
-        idBodega: `FF-${wh.id?.substring(0, 8) || Date.now()}`,
-        tipo: 'Física',
-        ciudad: wh.city || wh.location || 'Sin especificar',
-        departamento: wh.state || wh.region || '',
-        direccion: wh.address || '',
-        fulfillmentId: wh.id,
-        fulfillmentProvider: wh.provider,
-        origenFulfillment: true,
-        coberturaNacional: false,
-        ciudadesCobertura: []
-      };
 
-      this.bodegaService.agregarBodega(nuevaBodega).subscribe({
-        next: () => {
-          creadas++;
-          crearSiguiente(index + 1);
-        },
-        error: (err) => {
-          console.error('Error creando bodega:', err);
-          errores++;
-          crearSiguiente(index + 1);
+      // Buscar si existe una bodega con el mismo fulfillmentId (activa o inactiva)
+      const bodegaExistente = this.todasLasBodegas.find(
+        b => b.fulfillmentId === wh.id
+      );
+
+      // Buscar ciudad en códigos DANE para agregar cobertura
+      this.buscarCiudadCobertura(wh.name).then(ciudadCobertura => {
+        const coberturaArray: CiudadCobertura[] = ciudadCobertura ? [ciudadCobertura] : [];
+
+        if (bodegaExistente) {
+          // Actualizar la bodega existente con datos nuevos del fulfillment
+          const bodegaActualizada = {
+            ...bodegaExistente,
+            active: true,  // Reactivar si estaba inactiva
+            nombre: wh.name,
+            idBodega: wh.code || bodegaExistente.idBodega,
+            fulfillmentProvider: wh.provider,
+            // Actualizar ubicación con datos del fulfillment
+            ciudad: wh.name,  // El nombre de la bodega suele ser la ciudad
+            pais: this.mapearCodigoPais(wh.location?.country),
+            // Agregar cobertura si se encontró la ciudad
+            ciudadesCobertura: this.mergeCoberturas(bodegaExistente.ciudadesCobertura, coberturaArray)
+          };
+
+          this.bodegaService.actualizarBodega(bodegaActualizada).subscribe({
+            next: () => {
+              actualizadas++;
+              crearSiguiente(index + 1);
+            },
+            error: (err) => {
+              console.error('Error actualizando bodega:', err);
+              errores++;
+              crearSiguiente(index + 1);
+            }
+          });
+        } else {
+          // Crear nueva bodega
+          const nuevaBodega = {
+            nombre: wh.name,
+            idBodega: wh.code || `FF-${wh.id?.substring(0, 8) || Date.now()}`,
+            tipo: 'Física',
+            ciudad: wh.name,  // El nombre de la bodega suele ser la ciudad
+            departamento: ciudadCobertura?.departamento || '',
+            pais: this.mapearCodigoPais(wh.location?.country),
+            direccion: wh.address || '',
+            fulfillmentId: wh.id,
+            fulfillmentProvider: wh.provider,
+            origenFulfillment: true,
+            coberturaNacional: false,
+            ciudadesCobertura: coberturaArray,
+            active: true
+          };
+
+          this.bodegaService.agregarBodega(nuevaBodega).subscribe({
+            next: () => {
+              creadas++;
+              crearSiguiente(index + 1);
+            },
+            error: (err) => {
+              console.error('Error creando bodega:', err);
+              errores++;
+              crearSiguiente(index + 1);
+            }
+          });
         }
       });
     };
 
     crearSiguiente(0);
+  }
+
+  /**
+   * Convierte código de país ISO a nombre completo
+   */
+  private mapearCodigoPais(codigoISO: string | undefined): string {
+    if (!codigoISO) return '';
+
+    const paises: { [key: string]: string } = {
+      'CO': 'Colombia',
+      'US': 'United States',
+      'MX': 'Mexico',
+      'AR': 'Argentina',
+      'BR': 'Brazil',
+      'CL': 'Chile',
+      'PE': 'Peru',
+      'EC': 'Ecuador',
+      'VE': 'Venezuela',
+      'PA': 'Panama',
+      'CR': 'Costa Rica',
+      'GT': 'Guatemala',
+      'ES': 'Spain'
+    };
+
+    return paises[codigoISO.toUpperCase()] || codigoISO;
+  }
+
+  /**
+   * Busca una ciudad por nombre en los códigos DANE
+   */
+  private async buscarCiudadCobertura(nombreCiudad: string): Promise<CiudadCobertura | null> {
+    if (!nombreCiudad) return null;
+
+    return new Promise((resolve) => {
+      this.daneCodesService.searchMunicipios(nombreCiudad).pipe(take(1)).subscribe({
+        next: (municipios) => {
+          // Buscar coincidencia exacta primero
+          const exacto = municipios.find(m =>
+            m.nombre.toUpperCase() === nombreCiudad.toUpperCase()
+          );
+
+          if (exacto) {
+            resolve({
+              codigo: exacto.codigo,
+              nombre: exacto.nombre,
+              departamento: exacto.departamento
+            });
+          } else if (municipios.length > 0) {
+            // Si no hay exacta, tomar la primera coincidencia
+            const primero = municipios[0];
+            resolve({
+              codigo: primero.codigo,
+              nombre: primero.nombre,
+              departamento: primero.departamento
+            });
+          } else {
+            resolve(null);
+          }
+        },
+        error: () => resolve(null)
+      });
+    });
+  }
+
+  /**
+   * Combina coberturas existentes con nuevas sin duplicados
+   */
+  private mergeCoberturas(
+    existentes: CiudadCobertura[] | undefined,
+    nuevas: CiudadCobertura[]
+  ): CiudadCobertura[] {
+    const resultado = [...(existentes || [])];
+
+    for (const nueva of nuevas) {
+      const existe = resultado.some(e => e.codigo === nueva.codigo);
+      if (!existe) {
+        resultado.push(nueva);
+      }
+    }
+
+    return resultado;
   }
 }

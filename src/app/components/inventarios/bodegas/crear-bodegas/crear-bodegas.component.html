@@ -63,10 +63,14 @@
                       <label class="form-label">
                         <i class="icofont icofont-flag"></i>&nbsp;País <span class="text-danger">*</span>
                       </label>
-                      <select class="form-control" formControlName="pais" [disabled]="cargandoPaises">
+                      <select class="form-control" formControlName="pais" [disabled]="cargandoPaises"
+                              [class.is-invalid]="bodegaForm.get('pais')?.invalid && bodegaForm.get('pais')?.touched">
                         <option value="" disabled>Seleccionar...</option>
                         <option *ngFor="let pais of paises" [value]="pais">{{ pais }}</option>
                       </select>
+                      <div *ngIf="bodegaForm.get('pais')?.invalid && bodegaForm.get('pais')?.touched" class="text-danger small mt-1">
+                        <i class="icofont icofont-close-circled"></i> El país es requerido
+                      </div>
                       <div *ngIf="cargandoPaises" class="text-info small mt-1"><i class="icofont icofont-spinner"></i> Cargando países...</div>
                       <div *ngIf="!cargandoPaises && paises.length === 0" class="text-warning small mt-1">No hay países disponibles</div>
                     </div>
@@ -75,10 +79,14 @@
                       <label class="form-label">
                         <i class="icofont icofont-map"></i>&nbsp;Departamento <span class="text-danger">*</span>
                       </label>
-                      <select class="form-control" formControlName="departamento" [disabled]="!bodegaForm.get('pais')?.value || cargandoDepartamentos">
+                      <select class="form-control" formControlName="departamento" [disabled]="!bodegaForm.get('pais')?.value || cargandoDepartamentos"
+                              [class.is-invalid]="bodegaForm.get('departamento')?.invalid && bodegaForm.get('departamento')?.touched">
                         <option value="" disabled>Seleccionar...</option>
                         <option *ngFor="let depto of departamentos" [value]="depto">{{ depto }}</option>
                       </select>
+                      <div *ngIf="bodegaForm.get('departamento')?.invalid && bodegaForm.get('departamento')?.touched" class="text-danger small mt-1">
+                        <i class="icofont icofont-close-circled"></i> El departamento es requerido
+                      </div>
                       <div *ngIf="cargandoDepartamentos" class="text-info small mt-1"><i class="icofont icofont-spinner"></i> Cargando departamentos...</div>
                       <div *ngIf="!cargandoDepartamentos && departamentos.length === 0 && bodegaForm.get('pais')?.value" class="text-warning small mt-1">No hay departamentos disponibles</div>
                     </div>
@@ -88,10 +96,14 @@
                     <label class="form-label">
                       <i class="icofont icofont-location-pin"></i>&nbsp;Ciudad <span class="text-danger">*</span>
                     </label>
-                    <select class="form-control" formControlName="ciudad" [disabled]="!bodegaForm.get('departamento')?.value || cargandoCiudades">
+                    <select class="form-control" formControlName="ciudad" [disabled]="!bodegaForm.get('departamento')?.value || cargandoCiudades"
+                            [class.is-invalid]="bodegaForm.get('ciudad')?.invalid && bodegaForm.get('ciudad')?.touched">
                       <option value="" disabled>Seleccionar...</option>
                       <option *ngFor="let ciudad of ciudades" [value]="ciudad">{{ ciudad }}</option>
                     </select>
+                    <div *ngIf="bodegaForm.get('ciudad')?.invalid && bodegaForm.get('ciudad')?.touched" class="text-danger small mt-1">
+                      <i class="icofont icofont-close-circled"></i> La ciudad es requerida
+                    </div>
                     <div *ngIf="cargandoCiudades" class="text-info small mt-1"><i class="icofont icofont-spinner"></i> Cargando ciudades...</div>
                     <div *ngIf="!cargandoCiudades && ciudades.length === 0 && bodegaForm.get('departamento')?.value" class="text-warning small mt-1">No hay ciudades disponibles</div>
                   </div>
@@ -102,7 +114,8 @@
                       <i class="icofont icofont-map-marker"></i>&nbsp;Dirección <span class="text-danger">*</span>
                     </label>
                     <div class="input-group">
-                      <input type="text" class="form-control" formControlName="direccion" placeholder="Ej: Carrera 7 #45-23">
+                      <input type="text" class="form-control" formControlName="direccion" placeholder="Ej: Carrera 7 #45-23"
+                             [class.is-invalid]="bodegaForm.get('direccion')?.invalid && bodegaForm.get('direccion')?.touched">
                       <button type="button" class="btn btn-outline-primary"
                               (click)="geocodificarDireccion()"
                               [disabled]="geocodificando || !bodegaForm.get('direccion')?.value"
@@ -110,6 +123,9 @@
                         <i class="fa fa-search" *ngIf="!geocodificando"></i>
                         <i class="fa fa-spinner fa-spin" *ngIf="geocodificando"></i>
                       </button>
+                    </div>
+                    <div *ngIf="bodegaForm.get('direccion')?.invalid && bodegaForm.get('direccion')?.touched" class="text-danger small mt-1">
+                      <i class="icofont icofont-close-circled"></i> La dirección es requerida
                     </div>
                     <div class="mt-2" style="font-size: 0.95em;" *ngIf="bodegaForm.get('direccion')?.value && bodegaForm.get('ciudad')?.value">
                       <strong>Se buscará:</strong> {{ bodegaForm.get('direccion')?.value }}, {{ bodegaForm.get('ciudad')?.value }}, {{ bodegaForm.get('departamento')?.value }}, {{ bodegaForm.get('pais')?.value }}
@@ -160,7 +176,11 @@
                       <i class="icofont icofont-location-arrow"></i>&nbsp;Coordenadas <span class="text-danger">*</span>
                       <span class="ms-1 text-muted" style="font-size: 0.9em;">O selecciona en el mapa</span>
                     </label>
-                    <input type="text" class="form-control" formControlName="coordenadas" placeholder="Latitud, Longitud" readonly>
+                    <input type="text" class="form-control" formControlName="coordenadas" placeholder="Latitud, Longitud" readonly
+                           [class.is-invalid]="bodegaForm.get('coordenadas')?.invalid && bodegaForm.get('coordenadas')?.touched">
+                    <div *ngIf="bodegaForm.get('coordenadas')?.invalid && bodegaForm.get('coordenadas')?.touched" class="text-danger small mt-1">
+                      <i class="icofont icofont-close-circled"></i> Las coordenadas son requeridas (haz clic en el mapa o busca la dirección)
+                    </div>
                     <div #mapContainer style="height: 280px; width: 100%; margin-top: 10px;"></div>
                   </div>
                 </div>
