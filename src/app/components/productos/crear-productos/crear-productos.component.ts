@@ -1751,14 +1751,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     const preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
     // this.precio.patchValue(productWithKatuq.precio)
     productWithKatuq.precio.preciosVolumen.forEach((precio, index) => {
-      const newItem = this.fb.group({
-        numeroUnidadesInicial: [index === 0 ? 1 : precio.numeroUnidadesInicial],
-        numeroUnidadesLimite: [index === 0 ? 1 : precio.numeroUnidadesInicial],
-        valorUnitarioPorVolumenSinIVA: [precio.valorUnitarioPorVolumenSinIVA],
-        valorUnitarioPorVolumenIva: [precio.valorUnitarioPorVolumenIva],
-        valorIVAPorVolumen: [precio.valorIVAPorVolumen],
-        valorUnitarioPorVolumenConIVA: [precio.valorUnitarioPorVolumenConIVA],
-      });
+      // Usar crearPreciosPorVolumen() para que se configuren los listeners de valueChanges
+      const newItem = this.crearPreciosPorVolumen();
+      
+      // Establecer los valores con emitEvent: false para evitar disparar los listeners durante la carga
+      newItem.patchValue({
+        numeroUnidadesInicial: index === 0 ? 1 : precio.numeroUnidadesInicial,
+        numeroUnidadesLimite: index === 0 ? 1 : precio.numeroUnidadesLimite,
+        valorUnitarioPorVolumenSinIVA: precio.valorUnitarioPorVolumenSinIVA,
+        valorUnitarioPorVolumenIva: precio.valorUnitarioPorVolumenIva,
+        valorIVAPorVolumen: precio.valorIVAPorVolumen,
+        valorUnitarioPorVolumenConIVA: precio.valorUnitarioPorVolumenConIVA,
+      }, { emitEvent: false });
       
       // Si es la primera fila, deshabilitar los campos de cantidad
       if (index === 0) {
@@ -2084,14 +2088,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   private loadPricingData() {
     const preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
     this.edit.precio.preciosVolumen.forEach((precio, index) => {
-      const newItem = this.fb.group({
-        numeroUnidadesInicial: [index === 0 ? 1 : precio.numeroUnidadesInicial],
-        numeroUnidadesLimite: [index === 0 ? 1 : precio.numeroUnidadesLimite],
-        valorUnitarioPorVolumenSinIVA: [precio.valorUnitarioPorVolumenSinIVA],
-        valorUnitarioPorVolumenIva: [precio.valorUnitarioPorVolumenIva],
-        valorIVAPorVolumen: [precio.valorIVAPorVolumen],
-        valorUnitarioPorVolumenConIVA: [precio.valorUnitarioPorVolumenConIVA],
-      });
+      // Usar crearPreciosPorVolumen() para que se configuren los listeners de valueChanges
+      const newItem = this.crearPreciosPorVolumen();
+      
+      // Establecer los valores con emitEvent: false para evitar disparar los listeners durante la carga
+      newItem.patchValue({
+        numeroUnidadesInicial: index === 0 ? 1 : precio.numeroUnidadesInicial,
+        numeroUnidadesLimite: index === 0 ? 1 : precio.numeroUnidadesLimite,
+        valorUnitarioPorVolumenSinIVA: precio.valorUnitarioPorVolumenSinIVA,
+        valorUnitarioPorVolumenIva: precio.valorUnitarioPorVolumenIva,
+        valorIVAPorVolumen: precio.valorIVAPorVolumen,
+        valorUnitarioPorVolumenConIVA: precio.valorUnitarioPorVolumenConIVA,
+      }, { emitEvent: false });
       
       // Si es la primera fila, deshabilitar los campos de cantidad
       if (index === 0) {
