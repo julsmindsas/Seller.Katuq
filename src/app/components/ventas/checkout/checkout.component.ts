@@ -377,7 +377,14 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
     if (productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
       const cantidad = parseInt(item.cantidad?.toString() || '0');
-      const rangoActual = productoPrecio.preciosVolumen.find(pv =>
+      
+      // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
+      const rangosValidos = productoPrecio.preciosVolumen.filter(pv =>
+        pv?.numeroUnidadesInicial !== undefined && pv?.numeroUnidadesInicial !== null &&
+        pv?.numeroUnidadesLimite !== undefined && pv?.numeroUnidadesLimite !== null
+      );
+      
+      const rangoActual = rangosValidos.find(pv =>
         cantidad >= pv.numeroUnidadesInicial && cantidad <= pv.numeroUnidadesLimite
       );
       if (rangoActual) {
@@ -482,7 +489,13 @@ export class CheckOutComponent implements OnInit, OnChanges {
       const porceDescuento = (this.pedido?.porceDescuento ?? 0) / 100;
 
       if (productoPrecio && productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
-        const rangoActual = productoPrecio.preciosVolumen.find(pv =>
+        // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
+        const rangosValidos = productoPrecio.preciosVolumen.filter(pv =>
+          pv?.numeroUnidadesInicial !== undefined && pv?.numeroUnidadesInicial !== null &&
+          pv?.numeroUnidadesLimite !== undefined && pv?.numeroUnidadesLimite !== null
+        );
+        
+        const rangoActual = rangosValidos.find(pv =>
           cantidadItem >= pv.numeroUnidadesInicial && cantidadItem <= pv.numeroUnidadesLimite
         );
 

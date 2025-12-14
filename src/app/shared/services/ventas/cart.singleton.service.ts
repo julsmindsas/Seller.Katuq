@@ -66,7 +66,16 @@ export class CartSingletonService {
     const nuevoCarrito = [...carrito];
     this.productInCart.next(nuevoCarrito);
     this.syncWithLocalStorage(nuevoCarrito);
-    console.log('➕ Producto agregado al carrito:', productoCompra.producto?.crearProducto?.titulo || 'Producto sin nombre');
+    
+    // Log detallado para depuración de precios por cantidad
+    console.log('➕ Producto agregado al carrito:', {
+      titulo: productoCompra.producto?.crearProducto?.titulo || 'Producto sin nombre',
+      cantidad: productoCompra.cantidad,
+      precioUnitarioConIva: productoCompra.producto?.precio?.precioUnitarioConIva,
+      tienePreciosVolumen: !!(productoCompra.producto?.precio?.preciosVolumen?.length > 0),
+      preciosVolumen: productoCompra.producto?.precio?.preciosVolumen || [],
+      configuracion: productoCompra.configuracion ? 'presente' : 'ausente'
+    });
   }
 
   // Remover producto

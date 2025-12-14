@@ -550,8 +550,15 @@ export class PedidosUtilService {
             return Number(producto.precio.precioUnitarioSinIva) || 0;
         }
 
+        // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
+        const rangosValidos = preciosVolumen.filter((x: any) => {
+            const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+            const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+            return tieneMinimo && tieneMaximo;
+        });
+
         // Buscar el precio por volumen que aplique para esta cantidad
-        const precioVolumen = preciosVolumen.find((x: any) => {
+        const precioVolumen = rangosValidos.find((x: any) => {
             const min = Number(x.numeroUnidadesInicial) || 0;
             const max = Number(x.numeroUnidadesLimite) || Infinity;
             return cantidad >= min && cantidad <= max;
@@ -583,8 +590,15 @@ export class PedidosUtilService {
             return Number(producto.precio.precioUnitarioConIva) || 0;
         }
 
+        // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
+        const rangosValidos = preciosVolumen.filter((x: any) => {
+            const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+            const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+            return tieneMinimo && tieneMaximo;
+        });
+
         // Buscar el precio por volumen que aplique para esta cantidad
-        const precioVolumen = preciosVolumen.find((x: any) => {
+        const precioVolumen = rangosValidos.find((x: any) => {
             const min = Number(x.numeroUnidadesInicial) || 0;
             const max = Number(x.numeroUnidadesLimite) || Infinity;
             return cantidad >= min && cantidad <= max;
@@ -688,8 +702,15 @@ export class PedidosUtilService {
             return Number(producto.precio.valorIva) || 0;
         }
 
+        // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
+        const rangosValidos = preciosVolumen.filter((x: any) => {
+            const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+            const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+            return tieneMinimo && tieneMaximo;
+        });
+
         // Buscar el precio por volumen que aplique para esta cantidad
-        const precioVolumen = preciosVolumen.find((x: any) => {
+        const precioVolumen = rangosValidos.find((x: any) => {
             const min = Number(x.numeroUnidadesInicial) || 0;
             const max = Number(x.numeroUnidadesLimite) || Infinity;
             return cantidad >= min && cantidad <= max;

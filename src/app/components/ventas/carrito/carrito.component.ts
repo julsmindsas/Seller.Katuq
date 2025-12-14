@@ -161,23 +161,66 @@ export class CarritoComponent implements OnInit {
   }
 
   private getProductPriceWithScale(producto: any): number {
-    if (!producto?.producto?.precio) return 0;
+    if (!producto?.producto?.precio) {
+      console.log('⚠️ CARRITO: Producto sin precio', producto);
+      return 0;
+    }
 
     const preciosVolumen = producto?.producto?.precio?.preciosVolumen ?? [];
     const precioUnitarioConIvaBase = Number(producto?.producto?.precio?.precioUnitarioConIva) || 0;
+    
+    console.log('💰 CARRITO - Calculando precio por cantidad:', {
+      titulo: producto?.producto?.crearProducto?.titulo,
+      cantidad: producto?.cantidad,
+      precioBase: precioUnitarioConIvaBase,
+      tienePreciosVolumen: preciosVolumen.length > 0,
+      preciosVolumen: preciosVolumen
+    });
+    
     if (!Array.isArray(preciosVolumen) || preciosVolumen.length === 0) {
+      console.log('⚠️ CARRITO: Sin precios por volumen, usando precio base:', precioUnitarioConIvaBase);
       return precioUnitarioConIvaBase;
     }
 
     const cantidad = Number(producto?.cantidad) || 0;
-    const rangoActual = preciosVolumen.find((x: any) => {
-      const min = Number(x?.numeroUnidadesInicial) || 0;
-      const max = Number(x?.numeroUnidadesLimite) || Infinity;
-      return cantidad >= min && cantidad <= max;
+    
+    // ✅ CORREGIDO: Filtrar solo rangos que tengan límites válidos definidos
+    // y buscar el rango más específico que coincida con la cantidad
+    const rangosValidos = preciosVolumen.filter((x: any) => {
+      // Solo considerar rangos que tengan ambos límites definidos y válidos
+      const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+      const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+      return tieneMinimo && tieneMaximo;
     });
 
-    const precioVolumenConIva = Number(rangoActual?.valorUnitarioPorVolumenConIVA) || 0;
-    return precioVolumenConIva > 0 ? precioVolumenConIva : precioUnitarioConIvaBase;
+    console.log('🔍 CARRITO - Rangos válidos filtrados:', rangosValidos.length, 'de', preciosVolumen.length);
+
+    // Buscar el rango donde la cantidad esté dentro de los límites
+    const rangoActual = rangosValidos.find((x: any) => {
+      const min = Number(x.numeroUnidadesInicial) || 0;
+      const max = Number(x.numeroUnidadesLimite) || Infinity;
+      const dentroDelRango = cantidad >= min && cantidad <= max;
+      
+      console.log(`   Evaluando rango [${min} - ${max}]: cantidad ${cantidad} → ${dentroDelRango ? '✓ MATCH' : '✗ no match'}`);
+      
+      return dentroDelRango;
+    });
+
+    console.log('🎯 CARRITO - Rango encontrado para cantidad', cantidad, ':', rangoActual);
+
+    // Intentar ambos nombres de campo por si hay inconsistencia
+    const precioVolumenConIva = Number(rangoActual?.valorUnitarioPorVolumenConIVA) || 
+                                Number(rangoActual?.valorUnitarioPorVolumenIva) || 0;
+    
+    const precioFinal = precioVolumenConIva > 0 ? precioVolumenConIva : precioUnitarioConIvaBase;
+    
+    console.log('✅ CARRITO - Precio final calculado:', {
+      precioVolumenEncontrado: precioVolumenConIva,
+      precioFinal: precioFinal,
+      usandoPrecioBase: precioVolumenConIva <= 0
+    });
+    
+    return precioFinal;
   }
 
   getTotalProductPriceInCart(): number {
@@ -311,10 +354,19 @@ export class CarritoComponent implements OnInit {
   private getCurrentPriceRange(itemCarrito: any): any {
     const preciosVolumen = itemCarrito?.producto?.precio?.preciosVolumen;
     if (!Array.isArray(preciosVolumen)) return null;
+    
     const cantidad = Number(itemCarrito?.cantidad) || 0;
-    return preciosVolumen.find((x: any) => {
-      const min = Number(x?.numeroUnidadesInicial) || 0;
-      const max = Number(x?.numeroUnidadesLimite) || Infinity;
+    
+    // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
+    const rangosValidos = preciosVolumen.filter((x: any) => {
+      const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+      const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+      return tieneMinimo && tieneMaximo;
+    });
+    
+    return rangosValidos.find((x: any) => {
+      const min = Number(x.numeroUnidadesInicial) || 0;
+      const max = Number(x.numeroUnidadesLimite) || Infinity;
       return cantidad >= min && cantidad <= max;
     });
   }

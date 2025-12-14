@@ -2129,8 +2129,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return Number(producto.precio.precioUnitarioSinIva) || 0;
     }
 
+    // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
+    const rangosValidos = preciosVolumen.filter((x: any) => {
+      const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+      const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+      return tieneMinimo && tieneMaximo;
+    });
+
     // Buscar el precio por volumen que aplique para esta cantidad
-    const precioVolumen = preciosVolumen.find((x: any) => {
+    const precioVolumen = rangosValidos.find((x: any) => {
       const min = Number(x.numeroUnidadesInicial) || 0;
       const max = Number(x.numeroUnidadesLimite) || Infinity;
       return cantidad >= min && cantidad <= max;
@@ -2228,7 +2235,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
       // Buscar precio por volumen si aplica
       if (preciosVolumen.length > 0) {
-        for (const x of preciosVolumen) {
+        // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
+        const rangosValidos = preciosVolumen.filter((x: any) => {
+          const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+          const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+          return tieneMinimo && tieneMaximo;
+        });
+
+        for (const x of rangosValidos) {
           const unidadesInicial = Number(x.numeroUnidadesInicial) || 0;
           const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
 
@@ -3026,23 +3040,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // ✅ CORREGIDO: Solo corregir inconsistencias CRÍTICAS y OBVIAS
             // Evitar cambios automáticos que puedan causar confusión
+            // 🔒 PROTECCIÓN: NUNCA cambiar de "Aprobado" a otro estado automáticamente
+            // Si el usuario o el sistema marcó un pedido como "Aprobado", esa decisión debe respetarse
             let estadoCorregido = false;
 
-            if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
-              // Solo corregir si la inconsistencia es muy clara (falta más del 10% del total)
-              const porcentajeFaltante =
-                (faltaPorPagarReal / totalPedido) * 100;
-              if (porcentajeFaltante > 10) {
-                if (faltaPorPagarReal < totalPedido) {
-                  order.estadoPago = "PreAprobado";
-                } else {
-                  order.estadoPago = "Pendiente";
-                }
-                estadoCorregido = true;
-                console.log(
-                  `⚠️ CORRECCIÓN CRÍTICA - Pedido ${order.nroPedido}: Estado Aprobado → ${order.estadoPago} (falta ${porcentajeFaltante.toFixed(1)}%)`,
-                );
-              }
+            // 🔒 ELIMINADO: Lógica que cambiaba de "Aprobado" a "Pendiente" o "PreAprobado"
+            // Esta lógica causaba el problema reportado donde pedidos aprobados cambiaban automáticamente
+            // a pendiente al refrescar la página, debido a discrepancias en el cálculo de faltaPorPagar
+            // Si el estado es "Aprobado", SIEMPRE respetarlo (es un estado final establecido manualmente)
+            if (order.estadoPago === "Aprobado") {
+              console.log(`🔒 ESTADO APROBADO PROTEGIDO - Pedido ${order.nroPedido}:`, {
+                estadoPreservado: order.estadoPago,
+                razon: "Estado Aprobado es inmutable - No se recalcula automáticamente",
+                anticipoReal: anticipoReal,
+                faltaPorPagarReal: faltaPorPagarReal,
+                totalPedido: totalPedido,
+                tienePagosAsentados: (order.PagosAsentados?.length || 0) > 0
+              });
+              // NO HACER NADA - Preservar el estado "Aprobado"
             } else if (
               order.estadoPago === "PreAprobado" &&
               faltaPorPagarReal <= 0
