@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm ls:*)",
-      "Bash(timeout 60 npx tsc:*)"
+      "Bash(timeout 60 npx tsc:*)",
+      "Bash(find:*)",
+      "Bash(lsof:*)"
     ],
     "deny": [],
     "ask": []

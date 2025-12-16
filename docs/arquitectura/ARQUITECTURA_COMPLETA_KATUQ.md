@@ -957,3 +957,7 @@ La arquitectura está diseñada para crecer y adaptarse a las necesidades del ne
 **Versión del documento**: 2.0  
 **Mantenido por**: Equipo de Desarrollo Katuq
 
+
+
+
+

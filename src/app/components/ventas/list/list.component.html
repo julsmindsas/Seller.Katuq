@@ -28,6 +28,7 @@
                                         [paginator]="true"
                                         [lazy]="usePagination"
                                         (onLazyLoad)="loadLazy($event)"
+                                        (onFilter)="onTableFilter($event)"
                                         [totalRecords]="totalRecords"
                                         [(first)]="first"
                                     currentPageReportTemplate="{{'Mostrando {first} a {last} de {totalRecords} pedidos' | translate}}"

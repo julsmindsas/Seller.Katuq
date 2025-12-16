@@ -347,6 +347,74 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.filterSubject.next({ value, filterCallback });
   }
 
+  /**
+   * Handler para cuando PrimeNG aplica un filtro en la tabla
+   * Fuerza recarga desde backend para obtener métricas actualizadas
+   * @param event - Evento de filtro de PrimeNG
+   */
+  onTableFilter(event: any): void {
+    console.log('🔍 onTableFilter disparado:', event.filters);
+
+    // Capturar filtros del evento
+    if (event.filters) {
+      this.captureColumnFilters(event.filters);
+    }
+
+    // Si estamos en modo lazy y hay filtros activos, recargar datos del backend
+    // para obtener métricas recalculadas sobre los datos filtrados
+    if (this.usePagination) {
+      const hasActiveFilters = Object.keys(this.columnFilters).length > 0;
+      console.log('🎯 Filtros activos:', this.columnFilters, '- Recargando:', hasActiveFilters || Object.keys(event.filters || {}).length > 0);
+
+      // Siempre recargar cuando hay cambio de filtros para actualizar métricas
+      this.currentPage = 1; // Reset a primera página
+      this.first = 0;
+      this.refrescarDatos(false, true);
+    }
+  }
+
+  /**
+   * Extrae filtros del evento de PrimeNG y los mapea al formato del backend
+   * @param filters - Objeto de filtros de PrimeNG
+   */
+  private captureColumnFilters(filters: any): void {
+    this.columnFilters = {};
+
+    // Mapeo de campos HTML a campos del backend
+    const fieldMapping: { [key: string]: string } = {
+      'nroPedido': 'nroPedido',
+      'cliente.nombres_completos': 'cliente',
+      'envio.ciudad': 'ciudad',
+      'transportador': 'transportador',
+      'asesorAsignado.name': 'vendedor',
+      'estadoPago': 'estadoPagoFilter',
+      'estadoProceso': 'estadoProcesoFilter',
+      'horarioEntrega': 'horarioEntrega'
+    };
+
+    for (const [htmlField, backendField] of Object.entries(fieldMapping)) {
+      const filterData = filters[htmlField];
+      if (filterData) {
+        let filterValue = null;
+
+        // PrimeNG puede enviar filtros como array o como objeto único
+        if (Array.isArray(filterData)) {
+          const activeFilter = filterData.find((f: any) => f.value != null && f.value !== '');
+          if (activeFilter) filterValue = activeFilter.value;
+        } else if (filterData.value != null && filterData.value !== '') {
+          filterValue = filterData.value;
+        }
+
+        if (filterValue) {
+          this.columnFilters[backendField] = filterValue;
+          console.log(`   📌 Filtro capturado: ${backendField} = "${filterValue}"`);
+        }
+      }
+    }
+
+    console.log('📊 columnFilters final:', this.columnFilters);
+  }
+
   @HostListener("window:scroll", ["$event"])
   onWindowScroll() {
     // No action needed for modal-based options

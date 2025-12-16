@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.12.10.2 - 10 de Diciembre 2025 (Beta)",
+  version: "2025.12.16.1 - 16 de Diciembre 2025 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -13,8 +13,8 @@ export const environment = {
   },
   urlPermitidas:
     "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
-  //urlApi: "http://localhost:3300", // API Local - Backend Principal Katuq,
-  urlApi: "https://back.katuq.com",
+  urlApi: "http://localhost:3300", // API Local - Backend Principal Katuq,
+  //urlApi: "https://back.katuq.com",
   //urlApi: "https://us-central1-katuq-new.cloudfunctions.net/api", // API GCP
 
   // Agent Builder Backend (KAI) - A través del backend principal (proxy)

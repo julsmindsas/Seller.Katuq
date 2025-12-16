@@ -7,6 +7,111 @@ import { TipoMovimientoInventario } from '../../../components/inventarios/enums/
 import { Bodega } from '../../models/inventarios/bodega.model';
 import { Traslado } from '../../models/inventarios/traslado.model';
 
+/**
+ * Interfaz para producto en vista consolidada de inventario
+ */
+export interface ProductoConsolidado {
+  id: string;
+  referencia: string;
+  nombre: string;
+  imagen: string | null;
+  precio: number;
+  precioSinIva: number;
+  inventariable: boolean;
+  stockPorBodega: { [bodegaId: string]: number };
+  stockTotal: number;
+  fulfillmentId: string | null;
+  fulfillmentProvider: string | null;
+  // Campos para UI
+  expanded?: boolean;
+  fulfillmentLoading?: boolean;
+  fulfillmentStock?: { [warehouseId: string]: number };
+  fulfillmentWarehouses?: any[];
+}
+
+/**
+ * Interfaz para métricas de IA por bodega (FUTURO)
+ */
+export interface MetricasIABodega {
+  alertaReorden: string | null;        // "URGENTE" | "PRONTO" | null
+  productosParaReorden: string[];      // IDs de productos
+  tendencia: string | null;            // "SUBIENDO" | "BAJANDO" | "ESTABLE"
+  prediccionAgotamiento: number | null; // Días estimados
+  sugerencias: string[];
+}
+
+/**
+ * Interfaz para métricas globales de una bodega
+ */
+export interface MetricasBodega {
+  valorTotal: number;
+  totalUnidades: number;
+  totalProductos: number;
+  productosSinStock: number;
+  productosBajoStock: number;
+  // Métricas adicionales
+  coberturaCatalogo: number;      // % de SKUs con stock
+  valorPromedioPorSKU: number;    // Valor promedio
+  porcentajeInventario: number;   // % del total
+  // IA (FUTURO)
+  ia?: MetricasIABodega;
+}
+
+/**
+ * Interfaz para bodega en vista consolidada
+ */
+export interface BodegaConsolidada {
+  id: string;
+  docId: string;
+  nombre: string;
+  tipo: string;
+  fulfillmentId: string | null;
+  fulfillmentProvider: string | null;
+  metricas?: MetricasBodega;
+}
+
+/**
+ * Interfaz para métricas de IA globales (FUTURO)
+ */
+export interface MetricasIAGlobal {
+  saludInventario: string | null;   // "BUENA" | "REGULAR" | "CRITICA"
+  bodegaCritica: string | null;     // ID de bodega
+  resumenEjecutivo: string | null;  // Texto generado por IA
+}
+
+/**
+ * Interfaz para totales globales del inventario
+ */
+export interface TotalesGlobales {
+  valorTotal: number;
+  totalUnidades: number;
+  totalProductos: number;        // SKUs únicos con stock
+  totalSKUsCatalogo: number;     // Total SKUs inventariables
+  ia?: MetricasIAGlobal;
+}
+
+/**
+ * Interfaz para respuesta del endpoint consolidado
+ */
+export interface InventarioConsolidadoResponse {
+  success: boolean;
+  productos: ProductoConsolidado[];
+  bodegas: BodegaConsolidada[];
+  totalProductos: number;
+  estadisticas: {
+    totalStock: number;
+    productosSinStock: number;
+    productosBajoStock: number;
+  };
+  totalesGlobales: TotalesGlobales;
+  pagination: {
+    limit: number;
+    returned: number;
+    hasMore: boolean;
+    lastDoc: string | null;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -75,6 +180,7 @@ export class InventarioService {
 
   /**
    * Obtener el inventario actual por bodega
+   * @deprecated Usar obtenerInventarioConsolidado() para la nueva vista consolidada
    * @param bodegaId ID de la bodega
    * @returns Observable con el inventario actual
    */
@@ -82,6 +188,36 @@ export class InventarioService {
     const url = `${this.apiUrl}/inventory/bodega/${bodegaId}?loadAll=true`;
 
     return this.http.get<any>(url);
+  }
+
+  /**
+   * Obtener inventario consolidado - todos los productos con stock por bodega
+   * Diseñado para la vista consolidada de inventarios (sin selector de bodega)
+   * 
+   * @param options Opciones de paginación y filtro
+   * @returns Observable con productos, bodegas y estadísticas
+   */
+  obtenerInventarioConsolidado(options: {
+    limit?: number;
+    lastDoc?: string;
+    soloInventariables?: boolean;
+  } = {}): Observable<InventarioConsolidadoResponse> {
+    let params = new HttpParams();
+    
+    if (options.limit) {
+      params = params.set('limit', options.limit.toString());
+    }
+    if (options.lastDoc) {
+      params = params.set('lastDoc', options.lastDoc);
+    }
+    if (options.soloInventariables !== undefined) {
+      params = params.set('soloInventariables', options.soloInventariables.toString());
+    }
+
+    return this.http.get<InventarioConsolidadoResponse>(
+      `${this.apiUrl}/inventory/consolidado`,
+      { params }
+    );
   }
 
   getBodegas(): Observable<Bodega[]> {
@@ -160,5 +296,18 @@ export class InventarioService {
   obtenerInventarioProducto(productoId: string): Observable<any[]> {
     const url = `${this.apiUrl}/inventory/producto/${productoId}`;
     return this.http.get<any[]>(url);
+  }
+
+  /**
+   * Elimina FÍSICAMENTE todo el inventario de un comercio
+   * ⚠️ OPERACIÓN DESTRUCTIVA - USO ADMINISTRATIVO/DESARROLLO
+   * @param confirmCompanyName Nombre del comercio para confirmar
+   */
+  deleteAllInventoryByCompany(confirmCompanyName: string): Observable<any> {
+    const payload = {
+      confirmCompanyName: confirmCompanyName,
+      confirmDelete: 'ELIMINAR_TODO_EL_INVENTARIO'
+    };
+    return this.http.post(`${this.apiUrl}/inventory/delete-all-by-company`, payload);
   }
 }

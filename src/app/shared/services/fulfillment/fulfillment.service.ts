@@ -31,23 +31,85 @@ export class FulfillmentService {
 
   /**
    * Obtiene el companyId del usuario actual desde localStorage
-   * Usa nomComercial como identificador principal (estándar del sistema)
+   * Usa el mismo patrón que IntegrationsService para consistencia
    */
   private getCompanyId(): string {
     try {
-      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      // nomComercial es el identificador principal usado en todo el sistema
-      const companyId = currentCompany.nomComercial || currentCompany.id || currentCompany._id || '';
-      console.log('[FulfillmentService] getCompanyId - currentCompany:', currentCompany);
-      console.log('[FulfillmentService] getCompanyId - companyId resuelto:', companyId);
-      return companyId;
+      // Primero verificar si existe currentCompanyId directamente
+      const directCompanyId = localStorage.getItem('currentCompanyId');
+      if (directCompanyId) {
+        console.log('[FulfillmentService] getCompanyId - Using direct ID:', directCompanyId);
+        return directCompanyId;
+      }
+
+      // Si no existe, extraerlo del objeto currentCompany
+      const currentCompany = localStorage.getItem('currentCompany');
+      if (currentCompany) {
+        const company = JSON.parse(currentCompany);
+        // Usar el mismo orden de prioridad que IntegrationsService
+        const companyId = company.nomComercial ||
+                          company.nombreComercio ||
+                          company.razonSocial ||
+                          company.nombre ||
+                          company.id ||
+                          company._id ||
+                          '';
+        console.log('[FulfillmentService] getCompanyId - Extracted from company:', companyId);
+        return companyId;
+      }
+
+      console.warn('[FulfillmentService] getCompanyId - No company found');
+      return '';
     } catch (error) {
       console.error('[FulfillmentService] Error parseando currentCompany:', error);
       return '';
     }
   }
 
+  /**
+   * Genera headers con company ID para consistencia con otras integraciones
+   */
+  private getApiHeaders(): { [key: string]: string } {
+    return {
+      'Content-Type': 'application/json',
+      'company': this.getCompanyId()
+    };
+  }
+
   // ============== STOCK ==============
+
+  /**
+   * Obtiene el stock de UN producto en Aliaddo usando su fulfillmentId (UUID de Aliaddo)
+   * Método simplificado para el modal de sincronización
+   * @param provider Nombre del provider (ej: 'aliaddo')
+   * @param fulfillmentProductId UUID del producto en Aliaddo (integrations.fulfillment.id)
+   */
+  getProductStock(provider: string, fulfillmentProductId: string): Observable<{
+    success: boolean;
+    totalStock: number;
+    warehouses?: any[];
+    error?: string;
+  }> {
+    const params = new HttpParams().set('companyId', this.getCompanyId());
+    return this.http.get<any>(
+      `${this.apiUrl}/stock/${provider}/${fulfillmentProductId}`,
+      { params }
+    ).pipe(
+      map(res => {
+        const data = res.data || res;
+        return {
+          success: true,
+          totalStock: data.totalStock ?? data.stock ?? 0,
+          warehouses: data.warehouses || []
+        };
+      }),
+      catchError(error => of({
+        success: false,
+        totalStock: 0,
+        error: error.error?.message || error.message
+      }))
+    );
+  }
 
   /**
    * Obtiene el stock de un producto en el fulfillment
@@ -184,6 +246,7 @@ export class FulfillmentService {
 
   /**
    * Obtiene los providers de fulfillment configurados para la empresa actual
+   * Envía companyId tanto en header como en query param para compatibilidad
    */
   getConfiguredProviders(): Observable<FulfillmentProvider[]> {
     const companyId = this.getCompanyId();
@@ -196,9 +259,13 @@ export class FulfillmentService {
 
     const url = `${this.apiUrl}/providers`;
     const params = new HttpParams().set('companyId', companyId);
-    console.log('[FulfillmentService] Llamando a:', url, 'con params:', params.toString());
+    const headers = { 'company': companyId };
 
-    return this.http.get<any>(url, { params })
+    console.log('[FulfillmentService] Llamando a:', url);
+    console.log('[FulfillmentService] Headers:', headers);
+    console.log('[FulfillmentService] Params:', params.toString());
+
+    return this.http.get<any>(url, { params, headers })
       .pipe(
         map(res => {
           console.log('[FulfillmentService] Respuesta del servidor:', res);
@@ -327,20 +394,63 @@ export class FulfillmentService {
    * Importa productos desde el fulfillment al catálogo de Katuq
    * @param provider Nombre del provider (ej: 'aliaddo')
    * @param options Opciones de importación
+   * @param options.bodegaId ID de bodega específica (solo si fetchStockPerWarehouse=false)
+   * @param options.updateExisting Actualizar productos existentes
+   * @param options.fetchStockPerWarehouse Obtener stock desglosado por bodega desde Aliaddo
    */
   importProductsFromFulfillment(
     provider: string,
-    options: { bodegaId?: string; updateExisting?: boolean } = {}
+    options: { 
+      bodegaId?: string; 
+      updateExisting?: boolean;
+      fetchStockPerWarehouse?: boolean;
+    } = {}
   ): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/import-products`, {
       provider,
       companyId: this.getCompanyId(),
-      ...options
+      options: {
+        ...options,
+        fetchStockPerWarehouse: options.fetchStockPerWarehouse ?? true // Por defecto obtener stock por bodega
+      }
     }).pipe(
       map(res => res.data || res),
       catchError(error => {
         console.error('Error importando productos desde fulfillment:', error);
         return of({ success: false, error: error.error?.message || error.message });
+      })
+    );
+  }
+
+  // ============== INICIALIZACIÓN DE INVENTARIO ==============
+
+  /**
+   * Inicializa el inventario de una bodega desde el fulfillment.
+   * Para productos que YA existen en el catálogo de Katuq pero NO tienen inventario.
+   * 
+   * @param bodegaId ID de la bodega
+   * @param provider Nombre del provider (ej: 'aliaddo')
+   * @param options Opciones adicionales (batchSize, etc.)
+   */
+  initInventoryFromFulfillment(
+    bodegaId: string,
+    provider: string,
+    options: { batchSize?: number } = {}
+  ): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/init-inventory`, {
+      provider,
+      bodegaId,
+      companyId: this.getCompanyId(),
+      options
+    }).pipe(
+      map(res => res.data || res),
+      catchError(error => {
+        console.error('Error inicializando inventario desde fulfillment:', error);
+        return of({
+          success: false,
+          error: error.error?.message || error.message,
+          errorType: 'INIT_INVENTORY_ERROR'
+        });
       })
     );
   }

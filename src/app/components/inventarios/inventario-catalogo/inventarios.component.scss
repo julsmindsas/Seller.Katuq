@@ -1,11 +1,12 @@
 // ===================================
 // VARIABLES DEL TEMA KATUQ
+// Paleta profesional B2B (estilo Atlassian/Shopify)
 // ===================================
-$primary-color: #667eea;  // Purple (Katuq brand)
-$success-color: #2dce89;
-$danger-color: #f5365c;
-$warning-color: #fb6340;
-$info-color: #11cdef;
+$primary-color: #5c6ac4;    // Morado profesional
+$success-color: #36b37e;    // Verde equilibrado
+$danger-color: #de350b;     // Rojo profesional
+$warning-color: #ff991f;    // Ámbar suave
+$info-color: #0065ff;       // Azul informativo
 $border-radius: 8px;
 
 // Animaciones
@@ -226,20 +227,20 @@ $border-radius: 8px;
     }
 }
 
-// Estados de productos
+// Estados de productos - Colores profesionales (textos oscuros)
 .outofstock {
-    color: $danger-color;
+    color: #bf2600;  // Rojo profesional oscuro
     font-weight: 600;
     text-decoration: line-through;
 }
 
 .lowstock {
-    color: $warning-color;
+    color: #974f0c;  // Ámbar oscuro
     font-weight: 600;
 }
 
 .instock {
-    color: $success-color;
+    color: #006644;  // Verde oscuro
     font-weight: 600;
 }
 
@@ -288,13 +289,7 @@ $border-radius: 8px;
                 }
 
                 .badge {
-                    padding: 0.5em 0.8em;
-                    font-weight: 500;
                     transition: all 0.2s;
-
-                    &.bg-success { background-color: #66BB6A !important; }
-                    &.bg-warning { background-color: #FFA726 !important; }
-                    &.bg-danger { background-color: #FF5252 !important; }
                 }
             }
         }
@@ -935,33 +930,61 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   }
 }
 
-/* Estilos para los badges */
+/* =====================================================
+   BADGES - COLORES DEFINITIVOS (Alta especificidad)
+   ===================================================== */
+:host ::ng-deep .badge,
 .badge {
-  font-size: 0.8rem;
-  font-weight: 500;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  padding: 0.5rem 0.85rem !important;
+  border-radius: 6px !important;
+  min-width: 42px !important;
+  display: inline-block !important;
+  text-align: center !important;
+  letter-spacing: 0.3px !important;
+}
 
-  &.bg-primary {
-    background-color: $primary-color !important;
-  }
+:host ::ng-deep .badge.bg-primary,
+.badge.bg-primary {
+  background-color: #5c6ac4 !important;
+  color: #ffffff !important;
+}
 
-  &.bg-success {
-    background-color: $success-color !important;
-  }
+:host ::ng-deep .badge.bg-success,
+.badge.bg-success {
+  background-color: #22a06b !important;
+  color: #ffffff !important;
+}
 
-  &.bg-warning {
-    background-color: $warning-color !important;
-  }
+:host ::ng-deep .badge.bg-warning,
+.badge.bg-warning {
+  background-color: #f5a623 !important;
+  color: #1a1a1a !important;
+}
 
-  &.bg-danger {
-    background-color: $danger-color !important;
-  }
-  
-  &.bg-dark {
-    background-color: #343a40 !important;
-    font-weight: 600;
-  }
+:host ::ng-deep .badge.bg-danger,
+.badge.bg-danger {
+  background-color: #c9ccd1 !important;
+  color: #44546f !important;
+}
+
+:host ::ng-deep .badge.bg-info,
+.badge.bg-info {
+  background-color: #1d7afc !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .badge.bg-secondary,
+.badge.bg-secondary {
+  background-color: #626f86 !important;
+  color: #ffffff !important;
+}
+
+:host ::ng-deep .badge.bg-dark,
+.badge.bg-dark {
+  background-color: #44546f !important;
+  color: #ffffff !important;
 }
 
 /* Estilos para la imagen del producto */

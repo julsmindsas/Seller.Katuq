@@ -28,6 +28,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
 import { TabViewModule } from 'primeng/tabview';
+import { CheckboxModule } from 'primeng/checkbox';
+import { MenuModule } from 'primeng/menu';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { ImportarBodegasModalComponent } from './bodegas/importar-bodegas-modal/importar-bodegas-modal.component';
 import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulfillment-sync-history.component';
@@ -55,7 +57,9 @@ import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulf
         InputTextModule,
         DialogModule,
         TooltipModule,
-        TabViewModule
+        TabViewModule,
+        CheckboxModule,
+        MenuModule
     ],
     declarations: [
         InventarioCatalogoComponent,

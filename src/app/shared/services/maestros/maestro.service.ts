@@ -335,6 +335,19 @@ export class MaestroService {
     return this.http.post(this.urlBase + '/v1/productos/delete', value, this.httpOptions);
   }
 
+  /**
+   * Elimina FÍSICAMENTE todos los productos de un comercio
+   * ⚠️ OPERACIÓN DESTRUCTIVA - USO ADMINISTRATIVO/DESARROLLO
+   * @param confirmCompanyName Nombre del comercio para confirmar
+   */
+  public deleteAllProductsByCompany(confirmCompanyName: string): Observable<any> {
+    const payload = {
+      confirmCompanyName: confirmCompanyName,
+      confirmDelete: 'ELIMINAR_TODOS_LOS_PRODUCTOS'
+    };
+    return this.http.post(this.urlBase + '/v1/productos/delete-all-by-company', payload, this.httpOptions);
+  }
+
   deleteTipoDeEntrega(row: any) {
     return this.http.post(this.urlBase + '/v1/tipoentrega/delete', row, this.httpOptions);
   }

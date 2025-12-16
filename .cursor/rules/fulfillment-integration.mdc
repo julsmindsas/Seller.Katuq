@@ -1,0 +1,681 @@
+# Integración Fulfillment (Aliaddo) - Documentación Técnica
+
+## Resumen
+
+Este documento describe la integración completa entre Katuq y Aliaddo (proveedor de fulfillment), incluyendo:
+- Importación de productos
+- Sincronización de inventario
+- Mapeo de IDs entre sistemas
+
+---
+
+## Arquitectura General
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND (Angular)                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  productos.component.ts          │  inventarios.component.ts                │
+│  - Botón "Importar productos"    │  - Botón "Cargar Stock Fulfillment"     │
+│  - importarProductosFulfillment()│  - Botón "Sincronizar Bodega"           │
+│                                  │  - loadFulfillmentStock()                │
+│                                  │  - syncBodegaCompleta()                  │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                         fulfillment.service.ts                               │
+│  - importProductsFromFulfillment()                                          │
+│  - getBulkStock()                                                           │
+│  - syncBodegaCompleta()                                                     │
+│  - syncProductInventory()                                                   │
+└───────────────────────────────────┬─────────────────────────────────────────┘
+                                    │ HTTP
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND (Node.js)                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  fulfillmentIntegrations.js (Router)                                        │
+│  - POST /import-products                                                    │
+│  - POST /stock/bulk                                                         │
+│  - POST /sync-bodega                                                        │
+│  - POST /sync-inventory                                                     │
+├─────────────────────────────────────────────────────────────────────────────┤
+│  fulfillmentProductImportService.js    │  fulfillmentSyncService.js         │
+│  - importProductsFromFulfillment()     │  - getBulkFulfillmentStock()       │
+│  - mapToKatuqProduct()                 │  - syncBodegaCompleta()            │
+│  - getStockByWarehouse()               │  - syncProductInventory()          │
+│  - createInitialInventory()            │  - #getFulfillmentProductId()      │
+│  - findBodegaByFulfillmentId()         │                                    │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                         fulfillmentManager.js                                │
+│  - getProvider() → aliaddoProvider                                          │
+│  - getCredentials()                                                         │
+│  - getStock()                                                               │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                         aliaddoProvider.js                                   │
+│  - syncProducts() → GET /items (paginado)                                   │
+│  - getStock() → GET /items/{id}/stock                                       │
+│  - #normalizeProduct()                                                      │
+│  - #normalizeStock()                                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Mapeo de IDs (CRÍTICO)
+
+### Problema Resuelto
+Katuq usa IDs de Firestore internos, pero Aliaddo usa sus propios UUIDs.
+Al importar productos, guardamos el mapeo en el producto.
+
+### Campos de Mapeo (en producto Katuq)
+
+```javascript
+// Guardados durante la importación en mapToKatuqProduct()
+{
+  integrations: {
+    fulfillment: {
+      id: "bf09ac80-69c2-4a14-9e96-af0848f276c2",  // UUID de Aliaddo
+      provider: "aliaddo",
+      externalData: {
+        sku: "JCR4021",
+        price: 50000,
+        // ...
+      }
+    }
+  },
+  metadata: {
+    idOriginal: "bf09ac80-69c2-4a14-9e96-af0848f276c2",  // Backup
+    origenImportacion: "aliaddo"
+  },
+  identificacion: {
+    referencia: "JCR4021"  // SKU como fallback
+  }
+}
+```
+
+### Helper para Obtener ID de Fulfillment
+
+```javascript
+// En fulfillmentSyncService.js
+async #getFulfillmentProductId(productId) {
+  const productDoc = await db.collection('products').doc(productId).get();
+  const data = productDoc.data();
+  
+  // Buscar en orden de prioridad
+  return data?.integrations?.fulfillment?.id    // UUID de Aliaddo
+      || data?.metadata?.idOriginal              // Backup
+      || data?.identificacion?.referencia;       // SKU fallback
+}
+```
+
+---
+
+## Flujo 1: Importar Productos
+
+**Ubicación:** `src/app/components/productos/productos.component.ts`
+**Botón:** "Importar productos"
+
+### Proceso:
+1. `importarProductosFulfillment()` → Confirma con SweetAlert
+2. `ejecutarImportacionFulfillment()` → Llama al servicio
+3. `fulfillmentService.importProductsFromFulfillment('aliaddo', { fetchStockPerWarehouse: true })`
+4. Backend: `POST /import-products`
+5. `fulfillmentProductImportService.importProductsFromFulfillment()`
+   - Obtiene productos de Aliaddo (`syncProducts()`)
+   - Por cada producto:
+     - `mapToKatuqProduct()` → Convierte estructura Aliaddo → Katuq
+     - Guarda en Firestore
+     - Si `fetchStockPerWarehouse: true`:
+       - `getStockByWarehouse()` → Obtiene stock por bodega
+       - `createInitialInventory()` → Crea registro en `inventory`
+
+### Mapeo de Precios (aliaddoProvider.js → #normalizeProduct)
+
+```javascript
+// Lógica de precios
+const precioVenta = productData.priceSell || productData.price || 0;
+const costoCompra = productData.priceBuy || productData.cost || 0;
+const taxRate = productData.tax || productData.taxRate || 0;
+
+// Si no hay precio de venta pero hay costo, usar costo como precio
+let precioFinal = precioVenta;
+if (precioFinal === 0 && costoCompra > 0) {
+  precioFinal = costoCompra;
+}
+
+// Calcular precio sin IVA
+const precioSinIva = taxRate > 0 
+  ? precioFinal / (1 + taxRate / 100) 
+  : precioFinal;
+```
+
+---
+
+## Flujo 2: Cargar Stock Fulfillment
+
+**Ubicación:** `src/app/components/inventarios/inventario-catalogo/inventarios.component.ts`
+**Botón:** "Cargar Stock Fulfillment"
+
+### Proceso:
+1. `loadFulfillmentStock()` → Obtiene IDs de productos de la tabla
+2. `fulfillmentService.getBulkStock(productIds, provider)`
+3. Backend: `POST /stock/bulk`
+4. `fulfillmentSyncService.getBulkFulfillmentStock()`
+   - Por cada producto:
+     - `#getFulfillmentProductId(productId)` → Mapea ID Firestore → ID Aliaddo
+     - `fulfillmentManager.getStock(companyId, provider, fulfillmentId)`
+     - `aliaddoProvider.getStock()` → `GET /items/{id}/stock`
+5. Frontend procesa respuesta:
+   - `getStockForSelectedBodega(stockInfo)` → Busca stock de bodega específica
+   - Busca en `warehouses` por `fulfillmentId` o `code` de la bodega seleccionada
+   - Si no encuentra, usa stock total como fallback
+6. Frontend actualiza `row.stockFulfillment` con el stock de la bodega correcta
+
+### Comparación de Stock por Bodega (IMPORTANTE)
+El backend retorna:
+- `totalStock`: Suma de todas las bodegas
+- `warehouses`: Array con stock por bodega
+
+El frontend usa `getStockForSelectedBodega()` para extraer el stock de la bodega seleccionada:
+```typescript
+// Busca por fulfillmentId (UUID) o por código de bodega
+const warehouseMatch = stockInfo.warehouses.find(wh => 
+  wh.id === bodegaSeleccionada.fulfillmentId ||
+  wh.code === bodegaSeleccionada.idBodega
+);
+return warehouseMatch?.stock ?? stockInfo.stock; // fallback al total
+```
+
+---
+
+## Flujo 3: Sincronizar Bodega
+
+**Ubicación:** `src/app/components/inventarios/inventario-catalogo/inventarios.component.ts`
+**Botón:** "Sincronizar Bodega"
+
+### Proceso:
+1. `syncBodegaCompleta()` → Confirma con SweetAlert
+2. `ejecutarSyncBodega()` → Llama al servicio
+3. `fulfillmentService.syncBodegaCompleta(bodegaId, provider)`
+4. Backend: `POST /sync-bodega`
+5. `fulfillmentSyncService.syncBodegaCompleta()`
+   - `#getProductosEnBodega()` → Obtiene productos de la bodega
+   - Por cada producto:
+     - `syncProductInventory(companyId, productoId, bodegaId, provider)`
+       - `#getFulfillmentProductId()` → Mapea ID
+       - Compara stock Katuq vs Aliaddo
+       - Crea movimiento de ajuste si hay diferencia
+
+---
+
+## Mapeo de Bodegas
+
+### Campos en Bodega Katuq
+
+```javascript
+{
+  idBodega: "BOD-001",           // Código interno Katuq
+  nombre: "MEDELLIN",
+  fulfillmentId: "1712e02b...",  // UUID de bodega en Aliaddo
+  fulfillmentProvider: "aliaddo",
+  origenFulfillment: true
+}
+```
+
+### Búsqueda de Bodega (fulfillmentProductImportService.js)
+
+```javascript
+async findBodegaByFulfillmentId(companyId, fulfillmentId, code) {
+  // 1. Buscar por fulfillmentId (UUID)
+  let query = db.collection('companies').doc(companyId)
+    .collection('bodegas')
+    .where('fulfillmentId', '==', fulfillmentId);
+  
+  // 2. Si no encuentra, buscar por código (idBodega)
+  if (!found && code) {
+    query = query.where('idBodega', '==', code);
+  }
+}
+```
+
+---
+
+## Modelo de Producto Katuq (Producto.ts)
+
+```typescript
+interface Producto {
+  identificacion: {
+    referencia: string;        // SKU
+    codigoBarras?: string;
+  };
+  crearProducto: {
+    tituloProducto: string;
+    descripcion?: string;
+    imagenesProductos?: string[];
+  };
+  precio: {
+    precioUnitarioConIva: number;
+    precioUnitarioSinIva: number;
+    precioUnitarioIva: number;
+    valorIva: number;
+    costoProducto?: number;
+  };
+  disponibilidad: {
+    inventariable: boolean;    // IMPORTANTE: true para productos importados
+    activo: boolean;
+  };
+  integrations?: {
+    fulfillment?: {
+      id: string;              // ID en Aliaddo
+      provider: string;
+    };
+  };
+  metadata?: {
+    origenImportacion?: string;
+    idOriginal?: string;
+  };
+  date_edit: string;           // IMPORTANTE: necesario para listado
+}
+```
+
+---
+
+## Archivos Clave
+
+| Archivo | Descripción |
+|---------|-------------|
+| `src/app/components/productos/productos.component.ts` | Listado de productos, botón importar |
+| `src/app/components/inventarios/inventario-catalogo/inventarios.component.ts` | Gestión de inventario, botones sync |
+| `src/app/shared/services/fulfillment/fulfillment.service.ts` | Servicio Angular para API fulfillment |
+| `functions/services/fulfillmentProductImportService.js` | Importación de productos |
+| `functions/services/fulfillmentSyncService.js` | Sincronización de inventario |
+| `functions/services/fulfillmentProviders/aliaddoProvider.js` | Integración específica Aliaddo |
+| `functions/services/fulfillmentManager.js` | Gestor de providers |
+| `functions/routers/fulfillmentIntegrations.js` | Endpoints API |
+| `functions/controllers/inventory.js` | Lógica de inventario, TIPOS_MOVIMIENTO |
+
+---
+
+## Tipos de Movimiento de Inventario
+
+```javascript
+// En inventory.js
+const TIPOS_MOVIMIENTO = {
+  INGRESO_COMPRA: "Ingreso por compra",
+  SALIDA_VENTA: "Salida por venta",
+  AJUSTE_POSITIVO: "Ajuste positivo",
+  AJUSTE_NEGATIVO: "Ajuste negativo",
+  INGRESO_FULFILLMENT: "Ingreso por importación desde fulfillment",  // NUEVO
+  // ...
+};
+```
+
+---
+
+## Errores Comunes y Soluciones
+
+### Error 404 al consultar stock
+**Causa:** Se envía ID de Firestore en lugar de ID de Aliaddo.
+**Solución:** Usar `#getFulfillmentProductId()` para mapear antes de consultar.
+
+### Productos no aparecen en listado
+**Causa:** Falta campo `date_edit`.
+**Solución:** Agregar `date_edit: new Date().toISOString()` en `mapToKatuqProduct()`.
+
+### Precios en 0
+**Causa:** Aliaddo envía `priceSell: 0`.
+**Solución:** Usar `priceBuy` (costo) como fallback si `priceSell` es 0.
+
+### Error "companyId undefined" en cache de stock
+**Causa:** `fulfillmentManager.getStock()` no pasaba `companyId` al provider.
+**Solución:** En `fulfillmentManager.js`, pasar todos los parámetros:
+```javascript
+// getStock: pasar httpClient=null y companyId
+await strategy.getStock(productId, config, null, companyId, options);
+
+// updateStock: igual
+await strategy.updateStock(productId, quantity, operation, config, null, companyId, options);
+```
+
+---
+
+## API de Aliaddo
+
+### Endpoints utilizados
+- `GET /items` - Lista productos (paginado, limit=10)
+- `GET /items/{id}/stock` - Stock por bodega de un producto
+
+### Respuesta de Stock
+```json
+{
+  "stockPerWarehouse": [
+    {
+      "id": "1712e02b-c08e-49e7-922e-e293abb6d171",
+      "code": "003",
+      "name": "MEDELLIN",
+      "stock": 8
+    }
+  ]
+}
+```
+
+---
+
+## NUEVO: Vista Consolidada de Inventarios (Diciembre 2024)
+
+### Descripción
+Nueva vista que muestra todos los productos con su stock desglosado por bodega en una tabla única,
+sin necesidad de seleccionar una bodega específica. Incluye columnas dinámicas por cada bodega.
+
+### Endpoint Backend
+
+```
+GET /inventory/consolidado
+```
+
+**Parámetros Query:**
+- `limit` (number, default: 100, max: 500) - Límite de productos
+- `lastDoc` (string) - ID del último doc para paginación
+- `soloInventariables` (boolean, default: true) - Filtrar productos inventariables
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "productos": [
+    {
+      "id": "abc123",
+      "referencia": "SKU001",
+      "nombre": "Producto 1",
+      "imagen": "https://...",
+      "precio": 50000,
+      "precioSinIva": 42016,
+      "inventariable": true,
+      "stockPorBodega": {
+        "BOD-001": 10,
+        "BOD-002": 5
+      },
+      "stockTotal": 15,
+      "fulfillmentId": "uuid-aliaddo",
+      "fulfillmentProvider": "aliaddo"
+    }
+  ],
+  "bodegas": [
+    {
+      "id": "BOD-001",
+      "docId": "...",
+      "nombre": "MEDELLIN",
+      "tipo": "Fisica",
+      "fulfillmentId": "uuid-bodega",
+      "fulfillmentProvider": "aliaddo"
+    }
+  ],
+  "totalProductos": 64,
+  "estadisticas": {
+    "totalStock": 1500,
+    "productosSinStock": 5,
+    "productosBajoStock": 12
+  },
+  "pagination": {
+    "limit": 100,
+    "returned": 64,
+    "hasMore": false,
+    "lastDoc": "xyz789"
+  }
+}
+```
+
+### Frontend - Componentes Modificados
+
+**Archivo:** `inventarios.component.ts`
+
+**Propiedades Nuevas:**
+```typescript
+vistaConsolidada: boolean = true;
+productosConsolidados: ProductoConsolidado[] = [];
+bodegasConsolidadas: BodegaConsolidada[] = [];
+estadisticasConsolidadas: {...};
+paginationConsolidada: {...};
+syncModalVisible: boolean = false;
+productoSyncSeleccionado: ProductoConsolidado | null = null;
+bodegasParaSync: {...}[];
+syncSelectAll: boolean = false;
+```
+
+**Métodos Principales:**
+- `cargarInventarioConsolidado()` - Carga datos del endpoint consolidado
+- `getStockBodega(producto, bodegaId)` - Obtiene stock de bodega específica
+- `toggleExpansion(producto)` - Expande/colapsa fila con detalles
+- `cargarFulfillmentExpansion(producto)` - Lazy load de stock fulfillment
+- `openSyncModal(producto)` - Abre modal de sincronización
+- `toggleBodegaSelection(index)` - Selecciona/deselecciona bodega por click en fila
+- `syncSeleccionadas()` / `syncTodas()` - Ejecuta sincronización
+- `executeSyncBodegas(bodegaIds)` - Ejecuta sincronización secuencial
+
+**Archivo:** `inventario.module.ts`
+
+**Módulos Agregados:**
+- `CheckboxModule` (PrimeNG) - Para checkboxes del modal de sincronización
+
+### Diseño de la Vista Consolidada
+
+#### Header con Gradiente
+- Header con gradiente morado profesional (`#667eea` → `#764ba2`)
+- Título prominente con icono
+- Indicador de Fulfillment conectado (badge blanco)
+- Botón de actualizar datos
+
+#### Barra de Estadísticas
+Cards con estadísticas principales:
+- **Total Productos** - Badge azul con icono de caja
+- **Unidades en Stock** - Badge verde con icono de check
+- **Stock Bajo (≤5)** - Badge amarillo con icono de advertencia
+- **Agotados** - Badge rojo con icono de X
+
+Cada card tiene:
+- Borde izquierdo de color distintivo
+- Efecto hover con elevación
+- Iconos grandes con opacidad
+
+#### Tabla Consolidada
+- Columnas dinámicas por cada bodega de Katuq
+- Columna "TOTAL" con fondo azul
+- Columna "Sync" (solo si hay fulfillment)
+- Badges de colores según nivel de stock:
+  - Rojo: Stock = 0
+  - Amarillo: Stock 1-5
+  - Verde: Stock > 5
+
+#### Row Expansion
+Al expandir un producto:
+- **Sin Fulfillment:** Tabla simple con stock por bodega Katuq
+- **Con Fulfillment:** Comparativa lado a lado:
+  - Bodega Katuq | Stock Katuq | Bodega Aliaddo | Stock Aliaddo | Diferencia
+  - Colores en diferencia: Verde (+), Rojo (-), Gris (igual)
+
+### Modal de Sincronización (ACTUALIZADO Diciembre 2024)
+
+**IMPORTANTE - Corrección de Bug:**
+El modal ahora usa `fulfillmentId` (UUID de Aliaddo) para consultar stock, NO `producto.id` (ID de Katuq).
+
+```typescript
+// CORRECTO - Usa el UUID de Aliaddo
+this.fulfillmentService.getProductStock(this.fulfillmentProvider, producto.fulfillmentId)
+
+// INCORRECTO (bug anterior) - Usaba ID de Katuq
+// this.fulfillmentService.getBulkStock(this.fulfillmentProvider, [producto.id])
+```
+
+**Diseño Simplificado:**
+```
+┌─────────────────────────────────────────────────────┐
+│  Sincronizar con Aliaddo                            │
+├─────────────────────────────────────────────────────┤
+│           [Imagen del producto]                     │
+│           Camiseta Azul XL                          │
+│                                                     │
+│  RESUMEN TOTAL                                      │
+│  ┌──────────┬──────────┬──────────┐                │
+│  │  KATUQ   │  ALIADDO │   DIF    │                │
+│  │    25    │    30    │   +5     │                │
+│  └──────────┴──────────┴──────────┘                │
+│                                                     │
+│  DESGLOSE POR BODEGA                               │
+│  ┌────────────────┬────────┬────────┬──────┐      │
+│  │ Bodega         │ Katuq  │ Aliaddo│ Dif  │      │
+│  ├────────────────┼────────┼────────┼──────┤      │
+│  │ Bodega Centro  │   15   │   18   │  +3  │      │
+│  │ Bodega Norte   │   10   │   12   │  +2  │      │
+│  └────────────────┴────────┴────────┴──────┘      │
+│                                                     │
+│  ✓ Aliaddo tiene 5 unidades más                    │
+│                                                     │
+│  [Cancelar]              [Sincronizar (+5)]        │
+└─────────────────────────────────────────────────────┘
+```
+
+**Características:**
+1. **Header del Producto:**
+   - Imagen del producto (64x64px)
+   - Nombre y referencia
+
+2. **Resumen Total:**
+   - Stock Katuq (suma de todas las bodegas)
+   - Stock Aliaddo (totalStock del API)
+   - Diferencia calculada
+
+3. **Desglose por Bodega:**
+   - Tabla con cada bodega de Aliaddo
+   - Mapeo automático Aliaddo → Katuq (por `fulfillmentId` o `code`)
+   - Filas con diferencia resaltadas en amarillo
+   - Badges de color para diferencias (+verde, -rojo, =gris)
+
+4. **Un Solo Botón de Sincronizar:**
+   - Muestra la diferencia total: "Sincronizar (+5)"
+   - Deshabilitado si diferencia = 0
+   - Sincroniza en la bodega principal con fulfillmentId
+
+**Variables del Componente:**
+```typescript
+// Modal de sincronización
+syncModalVisible: boolean = false;
+productoSyncSeleccionado: ProductoConsolidado | null = null;
+stockKatuqTotal: number = 0;
+stockAliaddoTotal: number = 0;
+diferenciaSyncTotal: number = 0;
+loadingSyncModal: boolean = false;
+errorSyncModal: string | null = null;
+bodegasDesglose: {
+  nombre: string;
+  stockKatuq: number;
+  stockAliaddo: number;
+  diferencia: number;
+}[] = [];
+```
+
+**Método openSyncModal:**
+```typescript
+openSyncModal(producto: ProductoConsolidado): void {
+  // Usa fulfillmentId (UUID de Aliaddo), NO producto.id
+  this.fulfillmentService.getProductStock(
+    this.fulfillmentProvider,
+    producto.fulfillmentId  // ← UUID de Aliaddo
+  ).subscribe({
+    next: (response) => {
+      this.stockAliaddoTotal = response.totalStock;
+      this.diferenciaSyncTotal = this.stockAliaddoTotal - this.stockKatuqTotal;
+
+      // Calcular desglose por bodega
+      response.warehouses?.forEach(wh => {
+        const bodegaKatuq = this.bodegasConsolidadas.find(b =>
+          b.fulfillmentId === wh.id || b.id === wh.code
+        );
+        this.bodegasDesglose.push({
+          nombre: bodegaKatuq?.nombre || wh.name,
+          stockKatuq: bodegaKatuq ? this.getStockBodega(producto, bodegaKatuq.id) : 0,
+          stockAliaddo: wh.quantity || wh.stock || 0,
+          diferencia: ...
+        });
+      });
+    }
+  });
+}
+```
+
+**Funcionalidades:**
+- Consulta stock de Aliaddo usando UUID correcto
+- Muestra comparativa total y desglose por bodega
+- Un solo botón de sincronizar (simplicidad)
+- Recarga automática de datos después de sincronizar
+
+---
+
+## Endpoints DEPRECATED
+
+### GET /inventory/bodega/:idBodega
+**Estado:** DEPRECATED  
+**Reemplazo:** `GET /inventory/consolidado`  
+**Razón:** La vista consolidada es más eficiente, retorna todos los productos con stock por bodega en una sola llamada.  
+**Fecha estimada de eliminación:** Q2 2025
+
+### POST /fulfillment/sync-bodega
+**Estado:** DEPRECATED  
+**Reemplazo:** Modal de sincronización por producto (frontend) + `POST /sync-inventory`  
+**Razón:** La sincronización ahora es granular por producto y bodega desde el modal de la vista consolidada.  
+**Fecha estimada de eliminación:** Q2 2025
+
+---
+
+## Comportamiento SIN Fulfillment
+
+Cuando `fulfillmentEnabled = false`:
+
+1. **Vista Consolidada:** Se muestra igual, pero sin columna "Sync"
+2. **Row Expansion:** Muestra solo stock Katuq por bodega (sin comparativa)
+3. **Modal Sync:** No disponible (botón oculto)
+4. **Estadísticas:** Solo datos de Katuq
+
+---
+
+## Mapeo de Bodegas Katuq ↔ Fulfillment
+
+### Enlace de Bodegas
+Cada bodega de Katuq puede tener un `fulfillmentId` que la vincula a una bodega de Aliaddo:
+
+```javascript
+{
+  idBodega: "BOD-001",        // Código interno Katuq
+  fulfillmentId: "1712e02b-c08e-49e7-922e-e293abb6d171",  // UUID Aliaddo
+  nombre: "MEDELLIN"
+}
+```
+
+### Lógica de Mapeo en Frontend
+```typescript
+// En inventarios.component.ts
+getFulfillmentStockForBodega(producto, bodega): number | null {
+  const warehouseMatch = producto.fulfillmentWarehouses?.find(wh => 
+    (bodega.fulfillmentId && wh.id === bodega.fulfillmentId) ||
+    (wh.code && wh.code === bodega.id)
+  );
+  return warehouseMatch?.stock ?? null;
+}
+```
+
+### Qué pasa si no hay match
+- Si una bodega Katuq no tiene `fulfillmentId`, no se puede comparar con Aliaddo
+- El modal mostrará "Sin enlace FF" para esas bodegas
+- La sincronización no estará disponible para bodegas sin enlace
+
+---
+
+## Última actualización: Diciembre 2024
+
+### Mejoras de Diseño (Diciembre 2024)
+- Header con gradiente profesional
+- Barra de estadísticas con cards informativos
+- Modal de sincronización rediseñado con tabla HTML
+- Click en fila completa para seleccionar bodegas
+- Estados visuales mejorados (✓ ↻ -)
+- Estilos CSS con transiciones y hover effects
+- Agregado `CheckboxModule` de PrimeNG al módulo
+

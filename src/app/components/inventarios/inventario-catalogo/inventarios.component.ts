@@ -8,11 +8,16 @@ import { Producto } from '../../../shared/models/productos/Producto';
 import { MovimientoInventario } from '../model/movimientoinventario'
 import * as XLSX from 'xlsx';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
-import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
+import { 
+  InventarioService, 
+  ProductoConsolidado, 
+  BodegaConsolidada 
+} from '../../../shared/services/inventarios/inventario.service';
 import { TourService } from '../../../shared/services/tour.service';
 import { FulfillmentService } from '../../../shared/services/fulfillment/fulfillment.service';
 import { ToastrService } from 'ngx-toastr';
 import { Table } from 'primeng/table';
+import { MenuItem } from 'primeng/api';
 
 // Tipo extendido para productos con información de inventario
 interface ProductoInventario extends Producto {
@@ -132,11 +137,57 @@ export class InventarioCatalogoComponent implements OnInit {
   syncingBodega: boolean = false;
   stockFulfillmentCargado: boolean = false; // Indica si ya se cargó el stock de fulfillment
 
+  // ============== MENÚ DE ACCIONES ==============
+  rowMenuItems: MenuItem[] = [];
+  selectedMenuProducto: ProductoConsolidado | null = null;
+
   // ============== TABS ==============
   activeTabIndex: number = 0; // 0 = Inventario, 1 = Historial Sync
 
   // ============== ROW EXPANSION ==============
   expandedRows: { [key: string]: boolean } = {};
+
+  // ============== INICIALIZACIÓN DE INVENTARIO ==============
+  initializingInventory: boolean = false;
+
+  // ============== VISTA CONSOLIDADA ==============
+  vistaConsolidada: boolean = true; // Modo por defecto: vista consolidada
+  productosConsolidados: ProductoConsolidado[] = [];
+  bodegasConsolidadas: BodegaConsolidada[] = [];
+  estadisticasConsolidadas: { totalStock: number; productosSinStock: number; productosBajoStock: number } = {
+    totalStock: 0,
+    productosSinStock: 0,
+    productosBajoStock: 0
+  };
+  paginationConsolidada: { limit: number; hasMore: boolean; lastDoc: string | null } = {
+    limit: 100,
+    hasMore: false,
+    lastDoc: null
+  };
+  loadingConsolidado: boolean = false;
+  // Totales globales calculados en backend
+  totalesGlobales: { valorTotal: number; totalUnidades: number; totalProductos: number; totalSKUsCatalogo: number } = {
+    valorTotal: 0,
+    totalUnidades: 0,
+    totalProductos: 0,
+    totalSKUsCatalogo: 0
+  };
+
+  // ============== MODAL DE SINCRONIZACIÓN ==============
+  syncModalVisible: boolean = false;
+  productoSyncSeleccionado: ProductoConsolidado | null = null;
+  stockKatuqTotal: number = 0;
+  stockAliaddoTotal: number = 0;
+  diferenciaSyncTotal: number = 0;
+  loadingSyncModal: boolean = false;
+  errorSyncModal: string | null = null;
+  // Desglose por bodega
+  bodegasDesglose: {
+    nombre: string;
+    stockKatuq: number;
+    stockAliaddo: number;
+    diferencia: number;
+  }[] = [];
 
   constructor(
     private service: MaestroService,
@@ -163,18 +214,16 @@ export class InventarioCatalogoComponent implements OnInit {
     this.ultimasLetras = texto.substring(texto.length - 3);
 
     // Inicializar el historial de páginas
-    // Suponemos que no tenemos referencias para la página 1 todavía
     this.pageReferences[this.currentPage] = { firstDocId: null, lastDocId: null };
-
-    // Cargar solo las bodegas inicialmente, no los productos
-    this.cargarBodegas();
-
-    // Inicializar rows como un array vacío
-    this.rows = [];
-    this.productosSinFiltro = [];
 
     // Verificar si hay fulfillment configurado
     this.checkFulfillmentConfig();
+
+    // Cargar bodegas (necesario para la vista antigua y para el modal)
+    this.cargarBodegas();
+
+    // Cargar la vista consolidada (nuevo comportamiento por defecto)
+    this.cargarInventarioConsolidado();
   }
 
   /**
@@ -214,6 +263,339 @@ export class InventarioCatalogoComponent implements OnInit {
     });
   }
 
+  // ============== MÉTODOS DE VISTA CONSOLIDADA ==============
+
+  /**
+   * Carga el inventario consolidado - todos los productos con stock por bodega
+   */
+  cargarInventarioConsolidado(loadMore: boolean = false): void {
+    this.loadingConsolidado = true;
+    
+    const options: { limit?: number; lastDoc?: string; soloInventariables?: boolean } = {
+      limit: this.paginationConsolidada.limit,
+      soloInventariables: true
+    };
+    
+    if (loadMore && this.paginationConsolidada.lastDoc) {
+      options.lastDoc = this.paginationConsolidada.lastDoc;
+    }
+
+    this.inventarioService.obtenerInventarioConsolidado(options).subscribe({
+      next: (response) => {
+        if (response.success) {
+          if (loadMore) {
+            // Agregar a la lista existente
+            this.productosConsolidados = [...this.productosConsolidados, ...response.productos];
+          } else {
+            // Reemplazar la lista
+            this.productosConsolidados = response.productos;
+          }
+          
+          this.bodegasConsolidadas = response.bodegas;
+          this.estadisticasConsolidadas = response.estadisticas;
+          this.paginationConsolidada = {
+            limit: response.pagination.limit,
+            hasMore: response.pagination.hasMore,
+            lastDoc: response.pagination.lastDoc
+          };
+          this.totalItems = response.totalProductos;
+          // Totales globales calculados en backend (para métricas)
+          this.totalesGlobales = response.totalesGlobales || {
+            valorTotal: 0,
+            totalUnidades: 0,
+            totalProductos: 0,
+            totalSKUsCatalogo: 0
+          };
+
+          console.log(`📦 Inventario consolidado cargado: ${this.productosConsolidados.length} productos, ${this.bodegasConsolidadas.length} bodegas (valor total: $${this.totalesGlobales.valorTotal.toLocaleString()})`);
+        } else {
+          this.toastr.error('Error al cargar inventario consolidado');
+        }
+        this.loadingConsolidado = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar inventario consolidado:', error);
+        this.toastr.error('Error al cargar inventario');
+        this.loadingConsolidado = false;
+      }
+    });
+  }
+
+  /**
+   * Carga más productos en la vista consolidada (paginación infinita)
+   */
+  cargarMasProductos(): void {
+    if (this.paginationConsolidada.hasMore && !this.loadingConsolidado) {
+      this.cargarInventarioConsolidado(true);
+    }
+  }
+
+  /**
+   * Obtiene el stock de un producto en una bodega específica
+   */
+  getStockBodega(producto: ProductoConsolidado, bodegaId: string): number {
+    return producto.stockPorBodega?.[bodegaId] ?? 0;
+  }
+
+  /**
+   * Formatea valores grandes de forma abreviada (ej: 12500000 -> "12.5M")
+   */
+  formatearValorAbreviado(valor: number): string {
+    if (valor >= 1000000) {
+      return '$' + (valor / 1000000).toFixed(1) + 'M';
+    } else if (valor >= 1000) {
+      return '$' + (valor / 1000).toFixed(0) + 'K';
+    }
+    return '$' + valor.toLocaleString();
+  }
+
+  /**
+   * Expande/colapsa la fila de un producto para ver detalles de fulfillment
+   */
+  toggleExpansion(producto: ProductoConsolidado): void {
+    producto.expanded = !producto.expanded;
+    
+    // Si se expande y tiene fulfillment habilitado, cargar stock de fulfillment
+    if (producto.expanded && this.fulfillmentEnabled && producto.fulfillmentId && !producto.fulfillmentStock) {
+      this.cargarFulfillmentExpansion(producto);
+    }
+  }
+
+  /**
+   * Carga el stock de fulfillment para un producto específico (lazy load)
+   * Usa el fulfillmentId (UUID de Aliaddo) para consultar el stock
+   */
+  cargarFulfillmentExpansion(producto: ProductoConsolidado): void {
+    if (!producto.fulfillmentId) return;
+
+    producto.fulfillmentLoading = true;
+
+    // Usar fulfillmentId (UUID de Aliaddo), no producto.id (ID de Katuq)
+    this.fulfillmentService.getProductStock(this.fulfillmentProvider, producto.fulfillmentId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          producto.fulfillmentStock = {};
+          producto.fulfillmentWarehouses = response.warehouses || [];
+
+          // Mapear warehouses a un objeto por ID/code
+          if (response.warehouses && response.warehouses.length > 0) {
+            response.warehouses.forEach((wh: any) => {
+              const key = wh.code || wh.id;
+              if (producto.fulfillmentStock) {
+                producto.fulfillmentStock[key] = wh.stock || wh.quantity || 0;
+              }
+            });
+          }
+
+        }
+        producto.fulfillmentLoading = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar fulfillment:', error);
+        producto.fulfillmentLoading = false;
+      }
+    });
+  }
+
+  /**
+   * Obtiene el stock de fulfillment para una bodega específica
+   */
+  getFulfillmentStockForBodega(producto: ProductoConsolidado, bodega: BodegaConsolidada): number | null {
+    if (!producto.fulfillmentStock || !bodega.fulfillmentId) return null;
+    
+    // Buscar por fulfillmentId de la bodega o por código
+    const warehouseMatch = producto.fulfillmentWarehouses?.find((wh: any) => 
+      (bodega.fulfillmentId && wh.id === bodega.fulfillmentId) ||
+      (wh.code && wh.code === bodega.id)
+    );
+    
+    return warehouseMatch?.stock ?? warehouseMatch?.quantity ?? null;
+  }
+
+  /**
+   * Calcula la diferencia entre stock Katuq y fulfillment para una bodega
+   */
+  getDiferenciaStock(producto: ProductoConsolidado, bodega: BodegaConsolidada): number | null {
+    const stockKatuq = this.getStockBodega(producto, bodega.id);
+    const stockFulfillment = this.getFulfillmentStockForBodega(producto, bodega);
+    
+    if (stockFulfillment === null) return null;
+    return stockFulfillment - stockKatuq;
+  }
+
+  // ============== MENÚ DE ACCIONES POR FILA ==============
+
+  /**
+   * Maneja el clic en el menú de acciones de una fila
+   */
+  onRowMenuClick(event: Event, menu: any, producto: ProductoConsolidado): void {
+    this.selectedMenuProducto = producto;
+
+    const items: MenuItem[] = [];
+
+    // Opción de ver detalles (expandir fila)
+    items.push({
+      label: producto.expanded ? 'Ocultar detalles' : 'Ver detalles',
+      icon: producto.expanded ? 'pi pi-eye-slash' : 'pi pi-eye',
+      command: () => this.toggleExpansion(this.selectedMenuProducto!)
+    });
+
+    // Opción de sincronizar (siempre visible si fulfillment está habilitado)
+    if (this.fulfillmentEnabled) {
+      items.push({ separator: true });
+      items.push({
+        label: `Sincronizar con ${this.fulfillmentProviderName}`,
+        icon: 'pi pi-sync',
+        disabled: !producto.fulfillmentId,
+        tooltip: !producto.fulfillmentId ? 'Este producto no tiene enlace a fulfillment' : '',
+        command: () => {
+          if (this.selectedMenuProducto?.fulfillmentId) {
+            this.openSyncModal(this.selectedMenuProducto);
+          }
+        }
+      });
+    }
+
+    this.rowMenuItems = items;
+    menu.toggle(event);
+  }
+
+  // ============== MÉTODOS DEL MODAL DE SINCRONIZACIÓN - SIMPLIFICADO ==============
+
+  /**
+   * Abre el modal de sincronización para un producto
+   * Consulta el stock de Aliaddo usando el fulfillmentId (UUID de Aliaddo)
+   */
+  openSyncModal(producto: ProductoConsolidado): void {
+    if (!producto.fulfillmentId) {
+      this.toastr.warning('Este producto no tiene enlace a fulfillment');
+      return;
+    }
+
+    this.productoSyncSeleccionado = producto;
+    this.loadingSyncModal = true;
+    this.errorSyncModal = null;
+    this.bodegasDesglose = [];
+    this.syncModalVisible = true;
+
+    // Stock de Katuq (suma de todas las bodegas)
+    this.stockKatuqTotal = producto.stockTotal || 0;
+
+    // Consultar stock de Aliaddo usando el fulfillmentId correcto (UUID de Aliaddo)
+    this.fulfillmentService.getProductStock(
+      this.fulfillmentProvider,
+      producto.fulfillmentId
+    ).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.stockAliaddoTotal = response.totalStock || 0;
+          this.diferenciaSyncTotal = this.stockAliaddoTotal - this.stockKatuqTotal;
+
+          // Calcular desglose por bodega
+          if (response.warehouses && response.warehouses.length > 0) {
+            response.warehouses.forEach((wh: any) => {
+              // Buscar bodega de Katuq correspondiente
+              const bodegaKatuq = this.bodegasConsolidadas.find(b =>
+                b.fulfillmentId === wh.id || b.id === wh.code
+              );
+
+              const stockKatuq = bodegaKatuq
+                ? this.getStockBodega(producto, bodegaKatuq.id)
+                : 0;
+              const stockAliaddo = wh.quantity || wh.stock || 0;
+
+              this.bodegasDesglose.push({
+                nombre: bodegaKatuq?.nombre || wh.name || 'Sin mapear',
+                stockKatuq,
+                stockAliaddo,
+                diferencia: stockAliaddo - stockKatuq
+              });
+            });
+          }
+        } else {
+          this.errorSyncModal = response.error || 'Error al consultar Aliaddo';
+        }
+        this.loadingSyncModal = false;
+      },
+      error: (error) => {
+        console.error('Error al consultar stock de Aliaddo:', error);
+        this.errorSyncModal = 'Error de conexión con Aliaddo';
+        this.loadingSyncModal = false;
+      }
+    });
+  }
+
+  /**
+   * Cierra el modal de sincronización
+   */
+  closeSyncModal(): void {
+    this.syncModalVisible = false;
+    this.productoSyncSeleccionado = null;
+    this.stockKatuqTotal = 0;
+    this.stockAliaddoTotal = 0;
+    this.diferenciaSyncTotal = 0;
+    this.errorSyncModal = null;
+    this.bodegasDesglose = [];
+  }
+
+  /**
+   * Ejecuta la sincronización del producto con Aliaddo
+   * Actualiza el stock de Katuq para que coincida con Aliaddo
+   */
+  ejecutarSincronizacion(): void {
+    if (!this.productoSyncSeleccionado || this.diferenciaSyncTotal === 0) {
+      return;
+    }
+
+    this.loadingSyncModal = true;
+
+    // Sincronizar en la bodega principal (primera con fulfillmentId)
+    const bodegaDestino = this.bodegasConsolidadas.find(b => b.fulfillmentId);
+
+    if (!bodegaDestino) {
+      this.toastr.error('No hay bodega configurada para fulfillment');
+      this.loadingSyncModal = false;
+      return;
+    }
+
+    this.fulfillmentService.syncProductInventory(
+      this.productoSyncSeleccionado.id,
+      bodegaDestino.id,
+      this.fulfillmentProvider,
+      { fulfillmentProductId: this.productoSyncSeleccionado.fulfillmentId! }
+    ).subscribe({
+      next: (result) => {
+        if (result.success) {
+          const signo = this.diferenciaSyncTotal > 0 ? '+' : '';
+          this.toastr.success(`Sincronizado: ${signo}${this.diferenciaSyncTotal} unidades`);
+          this.closeSyncModal();
+          this.cargarInventarioConsolidado(); // Recargar datos
+        } else {
+          this.toastr.error(result.error || 'Error al sincronizar');
+        }
+        this.loadingSyncModal = false;
+      },
+      error: (error) => {
+        console.error('Error sincronizando producto:', error);
+        this.toastr.error('Error al sincronizar con Aliaddo');
+        this.loadingSyncModal = false;
+      }
+    });
+  }
+
+  /**
+   * Calcula el total de stock de fulfillment para un producto
+   */
+  calcularTotalFulfillment(producto: ProductoConsolidado): number {
+    if (!producto.fulfillmentStock) return 0;
+    return Object.values(producto.fulfillmentStock).reduce((sum, qty) => sum + qty, 0);
+  }
+
+  // ============== FIN MÉTODOS VISTA CONSOLIDADA ==============
+
+  /**
+   * @deprecated Usar cargarInventarioConsolidado() para la nueva vista
+   */
   obtenerProductosPorBodega(bodegaId: string) {
     // Si no hay bodega seleccionada, no hacer nada
     if (!bodegaId) {
@@ -653,10 +1035,13 @@ export class InventarioCatalogoComponent implements OnInit {
           this.rowsFiltradas.forEach(producto => {
             const stockInfo = response.stocks[producto.id];
             if (stockInfo) {
-              producto.stockFulfillment = stockInfo.stock;
+              // IMPORTANTE: Buscar stock de la bodega específica, no el total
+              const stockBodega = this.getStockForSelectedBodega(stockInfo);
+              producto.stockFulfillment = stockBodega;
               producto.fulfillmentError = stockInfo.error;
-              producto.diferencia = stockInfo.stock !== null
-                ? stockInfo.stock - (producto.cantidad || 0)
+              producto.fulfillmentWarehouses = stockInfo.warehouses; // Guardar desglose
+              producto.diferencia = stockBodega !== null
+                ? stockBodega - (producto.cantidad || 0)
                 : null;
             } else {
               producto.stockFulfillment = null;
@@ -669,10 +1054,13 @@ export class InventarioCatalogoComponent implements OnInit {
           this.productosSinFiltro.forEach(producto => {
             const stockInfo = response.stocks[producto.id];
             if (stockInfo) {
-              producto.stockFulfillment = stockInfo.stock;
+              // IMPORTANTE: Buscar stock de la bodega específica, no el total
+              const stockBodega = this.getStockForSelectedBodega(stockInfo);
+              producto.stockFulfillment = stockBodega;
               producto.fulfillmentError = stockInfo.error;
-              producto.diferencia = stockInfo.stock !== null
-                ? stockInfo.stock - (producto.cantidad || 0)
+              producto.fulfillmentWarehouses = stockInfo.warehouses; // Guardar desglose
+              producto.diferencia = stockBodega !== null
+                ? stockBodega - (producto.cantidad || 0)
                 : null;
             }
             producto.fulfillmentLoading = false;
@@ -709,6 +1097,43 @@ export class InventarioCatalogoComponent implements OnInit {
       return null;
     }
     return producto.stockFulfillment - (producto.cantidad || 0);
+  }
+
+  /**
+   * Obtiene el stock de la bodega seleccionada desde la respuesta de fulfillment.
+   * Busca en warehouses por fulfillmentId o código de bodega.
+   * Si no encuentra la bodega específica, retorna el stock total como fallback.
+   * 
+   * @param stockInfo Respuesta del API con stock y warehouses
+   * @returns Stock de la bodega específica o total si no encuentra
+   */
+  private getStockForSelectedBodega(stockInfo: any): number | null {
+    if (!stockInfo || stockInfo.stock === null || stockInfo.stock === undefined) {
+      return null;
+    }
+
+    // Si no hay bodega seleccionada o no tiene warehouses, usar total
+    if (!this.bodegaSeleccionada || !stockInfo.warehouses || stockInfo.warehouses.length === 0) {
+      return stockInfo.stock;
+    }
+
+    // Buscar la bodega específica en warehouses
+    const warehouseMatch = stockInfo.warehouses.find((wh: any) => 
+      // Buscar por fulfillmentId (UUID de Aliaddo)
+      (this.bodegaSeleccionada.fulfillmentId && wh.id === this.bodegaSeleccionada.fulfillmentId) ||
+      // O por código de bodega
+      (wh.code && wh.code === this.bodegaSeleccionada.idBodega)
+    );
+
+    if (warehouseMatch) {
+      // Encontró la bodega específica, usar su stock
+      return warehouseMatch.stock ?? warehouseMatch.quantity ?? 0;
+    }
+
+    // Si no encuentra la bodega, usar el stock total como fallback
+    // Esto puede pasar si la bodega no está configurada correctamente
+    console.warn(`[Fulfillment] No se encontró bodega ${this.bodegaSeleccionada.idBodega} en warehouses, usando stock total`);
+    return stockInfo.stock;
   }
 
   /**
@@ -989,5 +1414,237 @@ export class InventarioCatalogoComponent implements OnInit {
     const totalKatuq = this.getTotalStockKatuq(producto);
     const totalFulfillment = this.getTotalStockFulfillment(producto);
     return totalFulfillment - totalKatuq;
+  }
+
+  // ============== INICIALIZACIÓN DE INVENTARIO DESDE FULFILLMENT ==============
+
+  /**
+   * Verifica si la bodega seleccionada es de origen fulfillment
+   */
+  isBodegaFulfillment(): boolean {
+    return this.bodegaSeleccionada?.origenFulfillment === true;
+  }
+
+  /**
+   * Inicializa el inventario de la bodega desde el fulfillment.
+   * Para productos que YA existen en el catálogo pero NO tienen inventario.
+   */
+  initInventoryFromFulfillment(): void {
+    if (!this.fulfillmentEnabled || !this.fulfillmentProvider || !this.bodegaSeleccionada) {
+      this.toastr.warning('Seleccione una bodega y verifique la configuración de fulfillment', 'Advertencia');
+      return;
+    }
+
+    // Confirmar antes de inicializar
+    Swal.fire({
+      title: 'Inicializar Inventario desde Fulfillment',
+      html: `
+        <p>Esta acción creará registros de inventario para los productos de <strong>${this.fulfillmentProviderName}</strong> 
+        que ya existen en el catálogo de Katuq pero no tienen inventario en la bodega 
+        <strong>"${this.bodegaSeleccionada.nombre}"</strong>.</p>
+        <p class="text-muted small mt-3">
+          <i class="pi pi-info-circle me-1"></i>
+          Solo se procesarán productos que coincidan por SKU/Referencia.
+        </p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, inicializar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#3085d6'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ejecutarInitInventory();
+      }
+    });
+  }
+
+  /**
+   * Ejecuta la inicialización del inventario
+   */
+  private ejecutarInitInventory(): void {
+    this.initializingInventory = true;
+
+    this.fulfillmentService.initInventoryFromFulfillment(
+      this.bodegaSeleccionada.idBodega,
+      this.fulfillmentProvider,
+      { batchSize: 10 }
+    ).subscribe({
+      next: (result) => {
+        this.initializingInventory = false;
+
+        if (result.success) {
+          // Recargar inventario después de inicializar
+          this.obtenerProductosPorBodega(this.bodegaSeleccionada.idBodega);
+
+          Swal.fire({
+            title: 'Inicialización Completada',
+            html: `
+              <div class="text-start">
+                <p><strong>${result.initialized}</strong> productos inicializados correctamente</p>
+                <p><strong>${result.skipped}</strong> ya tenían inventario</p>
+                ${result.notInCatalog > 0 ? `<p class="text-warning"><strong>${result.notInCatalog}</strong> no están en el catálogo de Katuq</p>` : ''}
+                ${result.errors > 0 ? `<p class="text-danger"><strong>${result.errors}</strong> errores</p>` : ''}
+                <p class="text-muted mt-2">Duración: ${(result.duracionMs / 1000).toFixed(1)}s</p>
+              </div>
+            `,
+            icon: result.errors > 0 ? 'warning' : 'success'
+          });
+        } else {
+          Swal.fire({
+            title: 'Error',
+            text: result.error || 'Error al inicializar el inventario',
+            icon: 'error'
+          });
+        }
+      },
+      error: (error) => {
+        this.initializingInventory = false;
+        console.error('Error inicializando inventario:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Error al inicializar el inventario desde fulfillment',
+          icon: 'error'
+        });
+      }
+    });
+  }
+
+  // ============== MÉTODOS ADMINISTRATIVOS ==============
+
+  /**
+   * Elimina FÍSICAMENTE todo el inventario del comercio actual
+   * ⚠️ OPERACIÓN DESTRUCTIVA - USO ADMINISTRATIVO/DESARROLLO
+   */
+  limpiarInventarioComercio(): void {
+    const companyName = this.empresaActual?.nomComercial;
+    
+    if (!companyName) {
+      Swal.fire('Error', 'No se pudo obtener el nombre del comercio', 'error');
+      return;
+    }
+
+    // Primera confirmación
+    Swal.fire({
+      title: '⚠️ Eliminación Masiva de Inventario',
+      html: `
+        <div class="text-start">
+          <p class="text-danger fw-bold">Esta acción eliminará FÍSICAMENTE todo el inventario del comercio:</p>
+          <p class="text-primary fw-bold fs-5">"${companyName}"</p>
+          <hr>
+          <p class="text-muted">Se eliminarán los siguientes registros:</p>
+          <ul class="text-start">
+            <li><strong>Inventario</strong> (stock actual en todas las bodegas)</li>
+            <li><strong>Movimientos</strong> (historial de entradas/salidas)</li>
+            <li><strong>Historial</strong> (registros de cambios)</li>
+          </ul>
+          <p class="text-danger"><i class="fa fa-exclamation-triangle"></i> Esta acción NO se puede deshacer.</p>
+          <p>Uso recomendado solo para:</p>
+          <ul class="text-start">
+            <li>Entornos de desarrollo</li>
+            <li>Limpieza de datos de prueba</li>
+            <li>Reinicio completo del inventario</li>
+          </ul>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: '⚠️ Continuar',
+      cancelButtonText: 'Cancelar',
+      focusCancel: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Segunda confirmación con input del nombre
+        Swal.fire({
+          title: 'Confirmación Final',
+          html: `
+            <p>Para confirmar, escriba el nombre del comercio:</p>
+            <p class="fw-bold text-primary">"${companyName}"</p>
+          `,
+          input: 'text',
+          inputPlaceholder: 'Escriba el nombre del comercio',
+          inputAttributes: {
+            autocapitalize: 'off'
+          },
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: '🗑️ Eliminar TODO el Inventario',
+          cancelButtonText: 'Cancelar',
+          focusCancel: true,
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Debe escribir el nombre del comercio';
+            }
+            if (value !== companyName) {
+              return 'El nombre no coincide. Intente de nuevo.';
+            }
+            return null;
+          }
+        }).then((confirmResult) => {
+          if (confirmResult.isConfirmed && confirmResult.value === companyName) {
+            this.ejecutarLimpiezaInventario(companyName);
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Ejecuta la eliminación masiva de inventario
+   */
+  private ejecutarLimpiezaInventario(companyName: string): void {
+    Swal.fire({
+      title: 'Eliminando inventario...',
+      html: 'Por favor espere. Esta operación puede tomar varios minutos dependiendo de la cantidad de registros.',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    this.inventarioService.deleteAllInventoryByCompany(companyName).subscribe({
+      next: (response) => {
+        if (response.success) {
+          Swal.fire({
+            title: '✅ Limpieza Completada',
+            html: `
+              <div class="text-start">
+                <p><strong>${response.deletedCount?.total || 0}</strong> registros eliminados físicamente.</p>
+                <hr>
+                <ul>
+                  <li>Inventario: <strong>${response.deletedCount?.inventory || 0}</strong></li>
+                  <li>Movimientos: <strong>${response.deletedCount?.inventoryMovement || 0}</strong></li>
+                  <li>Historial: <strong>${response.deletedCount?.inventoryProductHistory || 0}</strong></li>
+                </ul>
+                <p class="text-muted">Comercio: ${response.company}</p>
+                <p class="text-muted small">Timestamp: ${response.timestamp}</p>
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonText: 'Entendido'
+          });
+          // Limpiar la vista
+          this.rows = [];
+          this.rowsFiltradas = [];
+          this.productosSinFiltro = [];
+          this.totalItems = 0;
+        } else {
+          Swal.fire('Error', response.error || 'Error desconocido', 'error');
+        }
+      },
+      error: (error) => {
+        console.error('Error eliminando inventario:', error);
+        Swal.fire({
+          title: 'Error',
+          html: `
+            <p>No se pudo eliminar el inventario.</p>
+            <p class="text-danger">${error.error?.error || error.message || 'Error desconocido'}</p>
+          `,
+          icon: 'error'
+        });
+      }
+    });
   }
 }

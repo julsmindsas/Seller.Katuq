@@ -41,6 +41,13 @@
                                 (click)="exportToExcel()">
                             <i class="icofont icofont-file-excel"></i> {{ 'Exportar' | translate }}
                         </button>
+                        <!-- Botón Administrativo: Limpiar BD - COMENTADO PARA NO DESPLEGAR
+                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                (click)="limpiarProductosComercio()"
+                                ngbTooltip="{{ 'Eliminar TODOS los productos (Admin/Dev)' | translate }}">
+                            <i class="icofont icofont-trash"></i> {{ 'Limpiar BD' | translate }}
+                        </button>
+                        -->
                     </div>
                 </div>
 
@@ -244,13 +251,13 @@
                                 <!-- Precio unitario sin IVA (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-end">
                                     <span class="fw-bold text-primary">
-                                        {{ row.precio?.precioUnitarioSinIva | currency:'USD':'symbol':'1.0-0' }}
+                                        {{ (row.precio?.precioUnitarioSinIva || 0) | currency:'USD':'symbol':'1.0-0' }}
                                     </span>
                                 </td>
 
                                 <!-- Fecha editado (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-center">
-                                    <small class="text-muted">{{ row.date_edit | date: "dd/MM/yyyy" }}</small>
+                                    <small class="text-muted">{{ toDate(row.date_edit) ? (toDate(row.date_edit) | date: "dd/MM/yyyy") : 'N/A' }}</small>
                                 </td>
 
                                 <!-- Tipo de producto - OCULTO -->

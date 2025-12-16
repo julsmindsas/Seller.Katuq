@@ -14,6 +14,7 @@ import { Proveedor } from '../dropshipping/interfaces';
 import { ImportResult } from '../../shared/models/column-mapping.model';
 import { FulfillmentService } from '../../shared/services/fulfillment/fulfillment.service';
 import { ToastrService } from 'ngx-toastr';
+import { IntegrationsService } from '../integrations/integrations.service';
 
 @Component({
   selector: 'app-productos',
@@ -70,7 +71,8 @@ export class ProductosComponent implements OnInit {
     private utilsService: UtilsService,
     private proveedoresService: ProveedoresService,
     private fulfillmentService: FulfillmentService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private integrationsService: IntegrationsService
   ) { }
 
   ngOnInit(): void {
@@ -491,21 +493,31 @@ export class ProductosComponent implements OnInit {
 
   /**
    * Verifica si hay un proveedor de fulfillment configurado
+   * Usa IntegrationsService (mismo patrón que despachos)
    */
   checkFulfillmentConfig(): void {
-    this.fulfillmentService.getConfiguredProviders().subscribe({
-      next: (providers) => {
-        if (providers && providers.length > 0) {
-          const activeProvider = providers.find(p => p.configured);
-          if (activeProvider) {
-            this.fulfillmentEnabled = true;
-            this.fulfillmentProvider = activeProvider.provider;
-            this.fulfillmentProviderName = this.fulfillmentService.getProviderDisplayName(activeProvider.provider);
-            console.log(`✅ Fulfillment habilitado: ${this.fulfillmentProviderName}`);
-          }
+    // Usar IntegrationsService para obtener todas las integraciones
+    this.integrationsService.getIntegrations().subscribe({
+      next: (integrations) => {
+        console.log('[Productos] Integraciones cargadas:', integrations);
+        // Buscar integración de fulfillment (aliaddo, aliaddo_fulfillment)
+        const fulfillmentIntegration = integrations.find(i =>
+          i.enabled && (i.provider === 'aliaddo' || i.type === 'aliaddo' ||
+                        i.provider === 'aliaddo_fulfillment' || i.type === 'aliaddo_fulfillment')
+        );
+
+        if (fulfillmentIntegration) {
+          this.fulfillmentEnabled = true;
+          this.fulfillmentProvider = fulfillmentIntegration.provider || fulfillmentIntegration.type;
+          this.fulfillmentProviderName = this.fulfillmentService.getProviderDisplayName(this.fulfillmentProvider);
+          console.log(`✅ Fulfillment habilitado: ${this.fulfillmentProviderName}`);
+        } else {
+          console.log('⚠️ No se encontró integración de fulfillment activa');
+          this.fulfillmentEnabled = false;
         }
       },
-      error: () => {
+      error: (err) => {
+        console.error('[Productos] Error cargando integraciones:', err);
         this.fulfillmentEnabled = false;
       }
     });
@@ -522,7 +534,8 @@ export class ProductosComponent implements OnInit {
 
     Swal.fire({
       title: 'Importar Productos de Fulfillment',
-      text: `¿Desea importar los productos desde ${this.fulfillmentProviderName}?`,
+      html: `<p>¿Desea importar los productos desde ${this.fulfillmentProviderName}?</p>
+             <small class="text-muted">Se importará el inventario por cada bodega sincronizada.</small>`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Sí, importar',
@@ -548,18 +561,29 @@ export class ProductosComponent implements OnInit {
       didOpen: () => Swal.showLoading()
     });
 
-    this.fulfillmentService.importProductsFromFulfillment(this.fulfillmentProvider)
+    this.fulfillmentService.importProductsFromFulfillment(this.fulfillmentProvider, { fetchStockPerWarehouse: true })
       .subscribe({
         next: (res) => {
           this.importandoProductosFulfillment = false;
           if (res.success) {
             this.cargarDatos();
+            const data = res.data || res;
+            const inventoryInfo = data.inventoryByWarehouse;
+            
+            let inventoryHtml = '';
+            if (inventoryInfo && inventoryInfo.totalBodegas > 0) {
+              inventoryHtml = `<hr><p><strong>Inventario por bodega:</strong></p>
+                               <p><i class="fa fa-warehouse"></i> ${inventoryInfo.creados} bodegas con stock</p>
+                               ${inventoryInfo.sinMapeo > 0 ? `<p class="text-warning"><i class="fa fa-exclamation-triangle"></i> ${inventoryInfo.sinMapeo} bodegas sin mapear</p>` : ''}`;
+            }
+            
             Swal.fire({
               title: 'Importación Completada',
-              html: `<p><strong>${res.data?.created || res.created || 0}</strong> productos creados</p>
-                     <p><strong>${res.data?.skipped || res.skipped || 0}</strong> productos omitidos</p>
-                     ${(res.data?.errors || res.errors || 0) > 0 ? `<p class="text-danger"><strong>${res.data?.errors || res.errors}</strong> errores</p>` : ''}`,
-              icon: (res.data?.errors || res.errors || 0) > 0 ? 'warning' : 'success'
+              html: `<p><strong>${data.created || 0}</strong> productos creados</p>
+                     <p><strong>${data.skipped || 0}</strong> productos omitidos</p>
+                     ${(data.errors || 0) > 0 ? `<p class="text-danger"><strong>${data.errors}</strong> errores</p>` : ''}
+                     ${inventoryHtml}`,
+              icon: (data.errors || 0) > 0 ? 'warning' : 'success'
             });
           } else {
             Swal.fire('Error', res.error || 'Error al importar productos', 'error');
@@ -571,5 +595,156 @@ export class ProductosComponent implements OnInit {
           Swal.fire('Error', 'Error al importar productos del fulfillment', 'error');
         }
       });
+  }
+
+  /**
+   * Convierte cualquier formato de fecha a Date para el pipe
+   * Maneja: Firestore Timestamp, string ISO, Date, número (epoch)
+   */
+  toDate(value: any): Date | null {
+    if (!value) return null;
+
+    // Si es un Firestore Timestamp (tiene seconds y nanoseconds)
+    if (value && typeof value === 'object' && 'seconds' in value) {
+      return new Date(value.seconds * 1000);
+    }
+
+    // Si es un Firestore Timestamp con toDate()
+    if (value && typeof value.toDate === 'function') {
+      return value.toDate();
+    }
+
+    // Si ya es un Date
+    if (value instanceof Date) {
+      return value;
+    }
+
+    // Si es un string o número, intentar parsear
+    const parsed = new Date(value);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  }
+
+  // ============== MÉTODOS ADMINISTRATIVOS ==============
+
+  /**
+   * Elimina FÍSICAMENTE todos los productos del comercio actual
+   * ⚠️ OPERACIÓN DESTRUCTIVA - USO ADMINISTRATIVO/DESARROLLO
+   */
+  limpiarProductosComercio(): void {
+    const companyName = this.empresaActual?.nomComercial;
+    
+    if (!companyName) {
+      Swal.fire('Error', 'No se pudo obtener el nombre del comercio', 'error');
+      return;
+    }
+
+    // Primera confirmación
+    Swal.fire({
+      title: '⚠️ Eliminación Masiva de Productos',
+      html: `
+        <div class="text-start">
+          <p class="text-danger fw-bold">Esta acción eliminará FÍSICAMENTE todos los productos del comercio:</p>
+          <p class="text-primary fw-bold fs-5">"${companyName}"</p>
+          <hr>
+          <p class="text-muted">Total de productos a eliminar: <strong>${this.totalItems}</strong></p>
+          <p class="text-danger"><i class="fa fa-exclamation-triangle"></i> Esta acción NO se puede deshacer.</p>
+          <p>Uso recomendado solo para:</p>
+          <ul class="text-start">
+            <li>Entornos de desarrollo</li>
+            <li>Limpieza de datos de prueba</li>
+            <li>Reinicio completo del catálogo</li>
+          </ul>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: '⚠️ Continuar',
+      cancelButtonText: 'Cancelar',
+      focusCancel: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Segunda confirmación con input del nombre
+        Swal.fire({
+          title: 'Confirmación Final',
+          html: `
+            <p>Para confirmar, escriba el nombre del comercio:</p>
+            <p class="fw-bold text-primary">"${companyName}"</p>
+          `,
+          input: 'text',
+          inputPlaceholder: 'Escriba el nombre del comercio',
+          inputAttributes: {
+            autocapitalize: 'off'
+          },
+          showCancelButton: true,
+          confirmButtonColor: '#dc3545',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: '🗑️ Eliminar TODO',
+          cancelButtonText: 'Cancelar',
+          focusCancel: true,
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Debe escribir el nombre del comercio';
+            }
+            if (value !== companyName) {
+              return 'El nombre no coincide. Intente de nuevo.';
+            }
+            return null;
+          }
+        }).then((confirmResult) => {
+          if (confirmResult.isConfirmed && confirmResult.value === companyName) {
+            this.ejecutarLimpiezaProductos(companyName);
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Ejecuta la eliminación masiva de productos
+   */
+  private ejecutarLimpiezaProductos(companyName: string): void {
+    Swal.fire({
+      title: 'Eliminando productos...',
+      html: 'Por favor espere. Esta operación puede tomar varios minutos dependiendo de la cantidad de productos.',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    this.service.deleteAllProductsByCompany(companyName).subscribe({
+      next: (response) => {
+        if (response.success) {
+          Swal.fire({
+            title: '✅ Limpieza Completada',
+            html: `
+              <div class="text-start">
+                <p><strong>${response.deletedCount}</strong> productos eliminados físicamente.</p>
+                <p class="text-muted">Comercio: ${response.company}</p>
+                <p class="text-muted small">Timestamp: ${response.timestamp}</p>
+              </div>
+            `,
+            icon: 'success',
+            confirmButtonText: 'Entendido'
+          });
+          // Recargar la lista (debería estar vacía)
+          this.cargarDatos();
+        } else {
+          Swal.fire('Error', response.error || 'Error desconocido', 'error');
+        }
+      },
+      error: (error) => {
+        console.error('Error eliminando productos:', error);
+        Swal.fire({
+          title: 'Error',
+          html: `
+            <p>No se pudieron eliminar los productos.</p>
+            <p class="text-danger">${error.error?.error || error.message || 'Error desconocido'}</p>
+          `,
+          icon: 'error'
+        });
+      }
+    });
   }
 }
