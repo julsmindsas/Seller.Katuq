@@ -4,7 +4,8 @@
       "Bash(npm ls:*)",
       "Bash(timeout 60 npx tsc:*)",
       "Bash(find:*)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": [],
     "ask": []

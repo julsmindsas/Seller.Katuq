@@ -1,4 +1,4 @@
-import { Component, ViewEncapsulation, HostListener, OnInit, OnDestroy, ElementRef, Renderer2, AfterViewInit } from '@angular/core';
+import { Component, ViewEncapsulation, HostListener, OnInit, OnDestroy, ElementRef, Renderer2, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { Menu, NavService } from '../../services/nav.service';
 import { LayoutService } from '../../services/layout.service';
@@ -261,7 +261,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     private renderer: Renderer2,
     private elementRef: ElementRef,
     private notificationManager: NotificationManagerService,
-    private subscriptionService: SubscriptionService
+    private subscriptionService: SubscriptionService,
+    private cdr: ChangeDetectorRef
   ) {
     this.navServices.items.subscribe(menuItems => {
       this.processMenuItems(menuItems); // Procesar items para crear secciones
@@ -698,6 +699,15 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   
   // Nueva función para procesar los items del menú en secciones
   private processMenuItems(menuItems: Menu[]): void {
+    console.log('🔄 processMenuItems LLAMADO - reconstruyendo sections');
+
+    // Log estado de menuItems entrantes
+    menuItems.forEach(mi => {
+      if (mi.title && mi.children) {
+        console.log(`   📥 Input: ${mi.title} active=${mi.active}`);
+      }
+    });
+
     // Limpiar las secciones existentes
     this.sections = [];
     
@@ -1135,8 +1145,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       event.preventDefault();
     }
 
-    // MEJORA: El menú permanece abierto siempre - el usuario cierra manualmente
-    // (Se removió resetCollapseTimer() para evitar auto-colapso)
+    const currentlyActive = item.active; // Guardar estado actual
+
+    // ACCORDION GLOBAL: Cerrar hermanos SIEMPRE PRIMERO, antes de cualquier return
+    // Esto asegura que el accordion funcione en TODOS los modos (desktop, colapsado, móvil)
+    if (!currentlyActive && item.children) {
+      this.closeSiblings(item);
+    }
 
     // En estado colapsado para desktop (sin expansión temporal), mostrar submenú flotante
     if (this.collapseMenu && !this.isTemporarilyExpanded && !this.isMobile()) {
@@ -1147,6 +1162,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       // Si tiene hijos, mostrar submenú flotante
       this.showCollapsedSubmenu(item, event);
+      item.active = true; // Marcar como activo incluso en modo colapsado
+      // Forzar detección de cambios para que el accordion se actualice en la UI
+      this.cdr.detectChanges();
       return;
     }
 
@@ -1156,21 +1174,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    const currentlyActive = item.active; // Guardar estado actual
-
-    // Si no está activo, cerramos otros menús del mismo nivel o superiores antes de abrir
-    if (!currentlyActive) {
-       this.sections.forEach(section => {
-         section.items.forEach(menuItem => {
-           this.resetActiveState(menuItem, item); // Resetear hermanos y tíos, etc.
-         });
-       });
-    }
-
     item.active = !currentlyActive; // Cambiar estado del item clickeado
 
-    // MEJORA: El menú permanece abierto siempre - el usuario cierra manualmente
-    // (Se removió resetCollapseTimer() para evitar auto-colapso)
+    // SOLUCION ACCORDION: Forzar detección de cambios para que Angular actualice la UI
+    // Esto es necesario porque modificamos propiedades internas de objetos en arrays
+    // y Angular no siempre detecta estos cambios automáticamente
+    this.cdr.detectChanges();
   }
 
   // Helper para resetear el estado activo al hacer toggle en submenús
@@ -1191,6 +1200,104 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!potentialAncestor.children) return false;
     if (potentialAncestor.children.includes(item)) return true;
     return potentialAncestor.children.some(child => this.isAncestor(child, item));
+  }
+
+  // Helper para cerrar todos los hijos de un item recursivamente
+  private closeChildrenRecursive(item: Menu): void {
+    if (item.children) {
+      item.children.forEach(child => {
+        child.active = false;
+        this.closeChildrenRecursive(child);
+      });
+    }
+  }
+
+  // ACCORDION GLOBAL: Cerrar hermanos del item en el mismo nivel (TODAS las secciones)
+  private closeSiblings(item: Menu): void {
+    const itemTitle = item.title;
+    const isFirstLevel = this.isFirstLevelItem(item);
+
+    console.log('🎯 ACCORDION closeSiblings:', itemTitle, 'isFirstLevel:', isFirstLevel);
+
+    // Log estado actual de todos los items de primer nivel
+    console.log('📋 Estado ANTES de cerrar:');
+    this.sections.forEach(section => {
+      section.items.forEach(menuItem => {
+        if (menuItem.title && menuItem.children) {
+          console.log(`   - ${menuItem.title}: active=${menuItem.active}`);
+        }
+      });
+    });
+
+    // Si es de primer nivel, cerrar TODOS los otros items de primer nivel en TODAS las secciones
+    if (isFirstLevel) {
+      // Cerrar directamente en sections (la vista que se renderiza)
+      this.sections.forEach(section => {
+        section.items.forEach(menuItem => {
+          if (menuItem.title && menuItem.title !== itemTitle && menuItem.active && menuItem.children) {
+            console.log(`   ❌ Cerrando: ${menuItem.title}`);
+            menuItem.active = false;
+            this.closeChildrenRecursive(menuItem);
+          }
+        });
+      });
+
+      // También cerrar en originalMenuItems para mantener sincronizado
+      const originalMenuItems = this.navServices.getMenuItems();
+      originalMenuItems.forEach(menuItem => {
+        if (menuItem.title && menuItem.title !== itemTitle && menuItem.active && menuItem.children) {
+          menuItem.active = false;
+          this.closeChildrenRecursive(menuItem);
+        }
+      });
+    } else {
+      // Si es de segundo nivel o más, buscar y cerrar hermanos en el mismo padre
+      this.sections.forEach(section => {
+        section.items.forEach(menuItem => {
+          if (menuItem.children) {
+            this.closeSiblingsInChildren(menuItem.children, item);
+          }
+        });
+      });
+
+      const originalMenuItems = this.navServices.getMenuItems();
+      originalMenuItems.forEach(menuItem => {
+        if (menuItem.children) {
+          this.closeSiblingsInChildren(menuItem.children, item);
+        }
+      });
+    }
+
+  }
+
+  // Helper para cerrar hermanos dentro de un array de hijos
+  private closeSiblingsInChildren(children: Menu[], targetItem: Menu): void {
+    // Verificar si el targetItem está en este nivel
+    const isInThisLevel = children.some(child => child === targetItem || child.title === targetItem.title);
+
+    if (isInThisLevel) {
+      // Cerrar todos los hermanos excepto el target
+      children.forEach(child => {
+        if (child !== targetItem && child.title !== targetItem.title && child.active) {
+          child.active = false;
+          this.closeChildrenRecursive(child);
+        }
+      });
+    } else {
+      // Buscar recursivamente en niveles más profundos
+      children.forEach(child => {
+        if (child.children) {
+          this.closeSiblingsInChildren(child.children, targetItem);
+        }
+      });
+    }
+  }
+
+  // Verificar si un item es de primer nivel (está directamente en sections.items)
+  private isFirstLevelItem(item: Menu): boolean {
+    return this.sections.some(section =>
+      section.items.some(menuItem => menuItem === item || menuItem.title === item.title)
+    );
   }
 
   /**
@@ -2175,7 +2282,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         targetElement.classList.remove('touch-feedback');
       }, 150);
     }
-    
+
     // Toggle normal del submenú
     const currentlyActive = item.active;
     if (!currentlyActive) {
@@ -2186,6 +2293,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       });
     }
     item.active = !currentlyActive;
+
+    // SOLUCION ACCORDION MOBILE: Forzar detección de cambios para que Angular actualice la UI
+    this.cdr.detectChanges();
   }
 
   // Método mejorado para mostrar submenú flotante en estado colapsado
