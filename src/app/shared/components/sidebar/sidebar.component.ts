@@ -155,101 +155,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @HostListener('mouseleave')
   onMouseLeave() {
-    // Solo aplicar si está temporalmente expandido
-    console.log('Sidebar mouseleave - collapseMenu:', this.collapseMenu, 'isTemporarilyExpanded:', this.isTemporarilyExpanded, 'isAutoCollapseEnabled:', this.isAutoCollapseEnabled, 'isMobile:', this.isMobile());
-    if (this.collapseMenu && this.isTemporarilyExpanded && !this.isAutoCollapseEnabled && !this.isMobile()) {
-      this.isMouseInsideSidebar = false;
-
-      // Delay reducido a 300ms para mejor responsividad
-      this.hoverExpandTimeout = setTimeout(() => {
-        // No colapsar si hay un submenú abierto o el mouse volvió a entrar
-        if (!this.hasOpenSubmenu() && !this.isMouseInsideSidebar) {
-          this.isTemporarilyExpanded = false;
-          // Remover marcas visuales
-          const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
-          if (wrapper) {
-            wrapper.classList.remove('sidebar-temporarily-expanded');
-            console.log('Removed class sidebar-temporarily-expanded from page-wrapper');
-            wrapper.style.display = 'block';
-          }
-
-          const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
-          if (sidebar) {
-            this.renderer.removeClass(sidebar, 'temporarily-expanded');
-            console.log('Removed class temporarily-expanded from sidebar-container');
-          }
-
-          const headerEl = document.querySelector('.page-header') as HTMLElement;
-          if (headerEl) {
-            headerEl.classList.remove('temporarily-expanded');
-            console.log('Removed class temporarily-expanded from page-header');
-            // Forzar reflow para que CSS se aplique inmediatamente
-            headerEl.offsetHeight;
-
-            // Debug: mostrar estado actual de clases CSS después de remover
-            const wrapperClassNameAfter = wrapper?.className || 'undefined';
-            const sidebarClassNameAfter = sidebar?.className || 'undefined';
-            const headerClassNameAfter = headerEl.className;
-            const computedMarginAfter = getComputedStyle(headerEl).marginLeft;
-
-            console.log('Current CSS classes on page-wrapper after remove:', wrapperClassNameAfter);
-            console.log('Current CSS classes on sidebar-container after remove:', sidebarClassNameAfter);
-            console.log('Current CSS classes on page-header after remove:', headerClassNameAfter);
-            console.log('Computed margin-left of header after remove:', computedMarginAfter);
-
-            // Verificar si las reglas CSS se removieron correctamente
-            const styleAfter = getComputedStyle(headerEl);
-            console.log('All computed styles for header after remove:');
-            console.log('- margin-left:', styleAfter.marginLeft);
-            console.log('- width:', styleAfter.width);
-            console.log('- transform:', styleAfter.transform);
-            console.log('- position:', styleAfter.position);
-            console.log('- z-index:', styleAfter.zIndex);
-            console.log('- left:', styleAfter.left);
-            console.log('- right:', styleAfter.right);
-
-            // Verificar estilos inline después de remover
-            console.log('Checking for inline styles after remove...');
-            console.log('- inline styles:', headerEl.getAttribute('style'));
-            console.log('- header style property:', headerEl.style.cssText);
-
-            // Verificar todas las propiedades de margin después de remover
-            const allStylesAfter = getComputedStyle(headerEl);
-            console.log('All CSS properties that contain "margin" after remove:');
-            for (let i = 0; i < allStylesAfter.length; i++) {
-              const prop = allStylesAfter[i];
-              if (prop.includes('margin')) {
-                console.log(`- ${prop}: ${allStylesAfter.getPropertyValue(prop)}`);
-              }
-            }
-
-            // Verificar jerarquía de elementos después de remover
-            console.log('Header classes after remove:', headerEl.className);
-            console.log('Parent classes after remove:', headerEl.parentElement?.className);
-            console.log('Grandparent classes after remove:', headerEl.parentElement?.parentElement?.className);
-
-            // Verificar computed styles del wrapper después de remover
-            if (wrapper) {
-              const wrapperStyleAfter = getComputedStyle(wrapper);
-              console.log('Page wrapper computed styles after remove:');
-              console.log('- margin-left:', wrapperStyleAfter.marginLeft);
-              console.log('- width:', wrapperStyleAfter.width);
-              console.log('- position:', wrapperStyleAfter.position);
-            }
-
-            // Verificar si el colapso funcionó correctamente
-            const marginAfter = getComputedStyle(headerEl).marginLeft;
-            if (marginAfter === '70px') {
-              console.log('✅ SUCCESS: Header margin-left is 70px after collapse - CSS rules working correctly!');
-            } else if (marginAfter === '90px') {
-              console.log('⚠️  WARNING: Header margin-left is 90px after collapse - global rules still overriding');
-            } else {
-              console.log('❓ UNKNOWN: Header margin-left is', marginAfter, 'after collapse');
-            }
-          }
-        }
-      }, this.collapseDelayMs); // 300ms
-    }
+    // El menú permanece abierto siempre - el usuario cierra manualmente
+    // Solo actualizamos el estado del mouse para otros propósitos
+    this.isMouseInsideSidebar = false;
+    // No auto-colapsar - el usuario cierra manualmente con el botón de colapso
   }
 
   /**
@@ -361,14 +270,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.router.events.subscribe((event) => {
         if (event instanceof NavigationEnd) {
           // Actualizar active state en los items originales o en las secciones
-           // Primero, obtenemos los items originales de NavService para limpiarlos
-          const originalMenuItems = this.navServices.getMenuItems(); // Asumiendo que NavService tiene un método así o acceso a la lista original
-          originalMenuItems.forEach(item => this.clearActiveStatesRecursive(item, null)); // Limpiar estados activos primero en la fuente original
+          const originalMenuItems = this.navServices.getMenuItems();
+
+          // MEJORA: NO limpiar los estados activos - mantener submenús abiertos
+          // Solo marcamos el item correspondiente a la URL actual como activo
+          // Los padres se marcan automáticamente en setActiveRecursive()
 
           // Volver a marcar como activo basado en la URL actual
           let activeItemFound = false;
           originalMenuItems.forEach(items => {
-            if (activeItemFound) return; // Si ya encontramos el activo, no seguir
+            if (activeItemFound) return;
             if (items.path === event.url) { this.setNavActive(items); activeItemFound = true; return; }
             if (!items.children) return;
             items.children.forEach(subItems => {
@@ -383,7 +294,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
           });
 
           // Reflejar cambios de active state en las secciones procesadas
-          // Usamos los items originales actualizados de NavService para reprocesar
           this.processMenuItems(originalMenuItems);
           this.collapseMenu = this.navServices.collapseSidebar;
           
@@ -1197,6 +1107,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
    // Helper recursivo para marcar el estado activo en el item y sus ancestros
+   // MEJORA: Solo marca como activo, NO desactiva items (para mantener submenús abiertos)
    private setActiveRecursive(currentItem: Menu, activeItem: Menu): boolean {
        let isActive = false;
        if (currentItem === activeItem) {
@@ -1208,7 +1119,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
                }
            });
        }
-       currentItem.active = isActive; // Marcar como activo si es el item o un ancestro
+       // Solo marcar como activo si es el item o un ancestro
+       // NO desactivar items que el usuario abrió manualmente
+       if (isActive) {
+           currentItem.active = true;
+       }
        return isActive; // Devolver si este subárbol contiene el item activo
    }
 
@@ -1220,11 +1135,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       event.preventDefault();
     }
 
-    // MEJORA: NO colapsar al abrir/cerrar submenús
-    if (this.collapseMenu && this.isTemporarilyExpanded) {
-      // Mantener expandido mientras el usuario interactúa con submenús
-      this.resetCollapseTimer();
-    }
+    // MEJORA: El menú permanece abierto siempre - el usuario cierra manualmente
+    // (Se removió resetCollapseTimer() para evitar auto-colapso)
 
     // En estado colapsado para desktop (sin expansión temporal), mostrar submenú flotante
     if (this.collapseMenu && !this.isTemporarilyExpanded && !this.isMobile()) {
@@ -1257,10 +1169,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     item.active = !currentlyActive; // Cambiar estado del item clickeado
 
-    // MEJORA: Si abrimos un submenú mientras está temporalmente expandido, mantenerlo
-    if (this.isTemporarilyExpanded && item.active && item.children) {
-      this.resetCollapseTimer();
-    }
+    // MEJORA: El menú permanece abierto siempre - el usuario cierra manualmente
+    // (Se removió resetCollapseTimer() para evitar auto-colapso)
   }
 
   // Helper para resetear el estado activo al hacer toggle en submenús
@@ -1352,31 +1262,19 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /**
-   * NUEVO: Manejar click en items del menú principal
-   * Colapsa inmediatamente si es un link de navegación
+   * Manejar click en items del menú principal
+   * El menú permanece abierto - el usuario cierra manualmente
    */
   onMenuItemClick(item: Menu): void {
-    // Si es un link de navegación (no un submenú)
-    if (!item.children) {
-      // Colapsar inmediatamente si estaba temporalmente expandido
-      if (this.collapseMenu && this.isTemporarilyExpanded) {
-        this.collapseImmediately();
-      }
-    }
+    // No auto-colapsar - el usuario cierra manualmente con el botón de colapso
   }
 
   /**
-   * NUEVO: Manejar click en items de submenús
-   * Colapsa con un pequeño delay para permitir la navegación
+   * Manejar click en items de submenús
+   * El menú permanece abierto - el usuario cierra manualmente
    */
   onSubMenuItemClick(event: Event): void {
-    // Colapsar inmediatamente después de seleccionar
-    if (this.collapseMenu && this.isTemporarilyExpanded) {
-      // Pequeño delay para que la navegación se complete
-      setTimeout(() => {
-        this.collapseImmediately();
-      }, 50);
-    }
+    // No auto-colapsar - el usuario cierra manualmente con el botón de colapso
   }
 
   // For Horizontal Menu (Sin cambios)

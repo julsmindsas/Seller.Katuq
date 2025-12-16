@@ -31,18 +31,24 @@
                                     (click)="cargarInventarioConsolidado()"
                                     [disabled]="loadingConsolidado"
                                     pTooltip="Actualizar datos"></button>
+                            <!-- Botón Análisis IA -->
+                            <button pButton type="button"
+                                    icon="pi pi-bolt"
+                                    class="p-button-rounded ia-analysis-btn"
+                                    (click)="analizarConIA()"
+                                    [disabled]="analizandoIA || loadingConsolidado || bodegasConsolidadas.length === 0"
+                                    [loading]="analizandoIA"
+                                    pTooltip="Analizar inventario con IA"
+                                    tooltipPosition="bottom"></button>
+                            <!-- Última análisis IA -->
+                            <span *ngIf="iaLastAnalysis" class="badge bg-secondary d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                                <i class="pi pi-clock"></i>
+                                IA: {{ iaLastAnalysis | date:'shortTime' }}
+                            </span>
                             <!-- Indicador de Fulfillment -->
                             <span class="badge bg-primary d-flex align-items-center gap-1 px-3 py-2" *ngIf="fulfillmentEnabled">
                                 <i class="pi pi-cloud"></i> {{ fulfillmentProviderName }} Conectado
                             </span>
-                            <!-- Botón Administrativo: Limpiar Inventario - COMENTADO PARA NO DESPLEGAR
-                            <button pButton type="button"
-                                    icon="pi pi-trash"
-                                    class="p-button-rounded p-button-text p-button-lg"
-                                    style="color: #de350b; opacity: 0.7;"
-                                    (click)="limpiarInventarioComercio()"
-                                    pTooltip="Eliminar TODO el inventario (Admin/Dev)"></button>
-                            -->
                         </div>
                     </div>
                 </div>
@@ -93,6 +99,38 @@
                                     <i class="pi pi-times-circle text-danger" style="font-size: 1.75rem; opacity: 0.4;"></i>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel de Resumen IA - Se muestra después del análisis -->
+                <div class="ia-summary-bar px-4 py-2 border-bottom animate__animated animate__fadeIn"
+                     *ngIf="iaMetricasGlobales?.saludInventario"
+                     [ngClass]="{
+                         'bg-success': iaMetricasGlobales.saludInventario === 'BUENA',
+                         'bg-warning': iaMetricasGlobales.saludInventario === 'REGULAR',
+                         'bg-danger': iaMetricasGlobales.saludInventario === 'CRITICA'
+                     }"
+                     style="background: linear-gradient(90deg, var(--bg-color, #28a745) 0%, rgba(255,255,255,0.9) 100%);">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="badge fs-6 text-white"
+                                  [ngClass]="{
+                                      'bg-success': iaMetricasGlobales.saludInventario === 'BUENA',
+                                      'bg-warning text-dark': iaMetricasGlobales.saludInventario === 'REGULAR',
+                                      'bg-danger': iaMetricasGlobales.saludInventario === 'CRITICA'
+                                  }">
+                                <i class="pi pi-bolt me-1"></i>
+                                Salud: {{ iaMetricasGlobales.saludInventario }}
+                            </span>
+                            <span *ngIf="iaMetricasGlobales.bodegaCritica" class="text-danger fw-semibold bg-white px-2 py-1 rounded">
+                                <i class="pi pi-exclamation-triangle me-1"></i>
+                                Bodega crítica: {{ getNombreBodegaById(iaMetricasGlobales.bodegaCritica) }}
+                            </span>
+                        </div>
+                        <div class="text-dark small fst-italic flex-grow-1 text-end bg-white bg-opacity-75 px-2 py-1 rounded" style="max-width: 60%;">
+                            <i class="pi pi-info-circle me-1"></i>
+                            {{ iaMetricasGlobales.resumenEjecutivo }}
                         </div>
                     </div>
                 </div>
@@ -153,7 +191,7 @@
                                             <th style="width: 70px;"></th>
                                             <th style="width: 120px;"></th>
                                             <th style="min-width: 200px;"></th>
-                                            <!-- Métricas por cada Bodega (Compacto: 2 líneas) -->
+                                            <!-- Métricas por cada Bodega (Compacto: 2-3 líneas) -->
                                             <th *ngFor="let bodega of bodegasConsolidadas" class="text-center py-1 bg-light">
                                                 <div class="d-flex flex-column align-items-center" style="line-height: 1.3;">
                                                     <!-- Línea 1: Valor · Unidades -->
@@ -168,6 +206,41 @@
                                                         <span class="text-muted mx-1">·</span>
                                                         <span class="badge bg-success" style="font-size: 0.55rem;" pTooltip="Productos con inventario disponible">{{ bodega.metricas?.totalProductos }}</span>
                                                         <span class="badge bg-warning text-dark ms-1" style="font-size: 0.55rem;" pTooltip="Productos con stock bajo (5 o menos)">{{ bodega.metricas?.productosBajoStock }}</span>
+                                                    </span>
+                                                    <!-- Línea 3: Indicadores IA (solo si hay análisis) -->
+                                                    <span *ngIf="bodega.metricas?.ia?.alertaReorden || bodega.metricas?.ia?.tendencia" class="mt-1">
+                                                        <!-- Alerta de reorden -->
+                                                        <span *ngIf="bodega.metricas?.ia?.alertaReorden"
+                                                              class="badge"
+                                                              [ngClass]="{
+                                                                  'bg-danger': bodega.metricas.ia.alertaReorden === 'URGENTE',
+                                                                  'bg-warning text-dark': bodega.metricas.ia.alertaReorden === 'PRONTO'
+                                                              }"
+                                                              style="font-size: 0.5rem;"
+                                                              [pTooltip]="getIASugerenciasTooltip(bodega)"
+                                                              tooltipPosition="bottom">
+                                                            {{ bodega.metricas.ia.alertaReorden }}
+                                                        </span>
+                                                        <!-- Predicción de agotamiento -->
+                                                        <span *ngIf="bodega.metricas?.ia?.prediccionAgotamiento"
+                                                              class="badge bg-info ms-1"
+                                                              style="font-size: 0.45rem;"
+                                                              pTooltip="Días estimados hasta agotamiento"
+                                                              tooltipPosition="bottom">
+                                                            ~{{ bodega.metricas.ia.prediccionAgotamiento }}d
+                                                        </span>
+                                                        <!-- Tendencia -->
+                                                        <span *ngIf="bodega.metricas?.ia?.tendencia"
+                                                              class="badge bg-light text-dark ms-1"
+                                                              style="font-size: 0.45rem;"
+                                                              pTooltip="Tendencia del inventario">
+                                                            <i class="pi"
+                                                               [ngClass]="{
+                                                                   'pi-arrow-up text-success': bodega.metricas.ia.tendencia === 'SUBIENDO',
+                                                                   'pi-arrow-down text-danger': bodega.metricas.ia.tendencia === 'BAJANDO',
+                                                                   'pi-minus text-muted': bodega.metricas.ia.tendencia === 'ESTABLE'
+                                                               }"></i>
+                                                        </span>
                                                     </span>
                                                 </div>
                                             </th>
@@ -1307,6 +1380,29 @@
 
 <!-- Estilos adicionales - Colores profesionales -->
 <style>
+    /* Botón de IA con gradiente púrpura elegante */
+    .ia-analysis-btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        border: none !important;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        transition: all 0.3s ease;
+    }
+
+    .ia-analysis-btn:hover:not(:disabled) {
+        background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%) !important;
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        transform: translateY(-2px);
+    }
+
+    .ia-analysis-btn:disabled {
+        background: linear-gradient(135deg, #a0aec0 0%, #718096 100%) !important;
+        box-shadow: none;
+    }
+
+    .ia-analysis-btn .pi-bolt {
+        font-size: 1.1rem;
+    }
+
     .empty-state {
         display: flex;
         flex-direction: column;

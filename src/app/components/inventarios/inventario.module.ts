@@ -30,6 +30,10 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TabViewModule } from 'primeng/tabview';
 import { CheckboxModule } from 'primeng/checkbox';
 import { MenuModule } from 'primeng/menu';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { AutoCompleteModule } from 'primeng/autocomplete';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { ConfirmationService } from 'primeng/api';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { ImportarBodegasModalComponent } from './bodegas/importar-bodegas-modal/importar-bodegas-modal.component';
 import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulfillment-sync-history.component';
@@ -59,7 +63,10 @@ import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulf
         TooltipModule,
         TabViewModule,
         CheckboxModule,
-        MenuModule
+        MenuModule,
+        ConfirmDialogModule,
+        AutoCompleteModule,
+        InputNumberModule
     ],
     declarations: [
         InventarioCatalogoComponent,
@@ -72,6 +79,6 @@ import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulf
         ImportarBodegasModalComponent,
         FulfillmentSyncHistoryComponent
     ],
-    providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective],
+    providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective, ConfirmationService],
 })
 export class InventarioCatalogoModule { }

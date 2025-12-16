@@ -4,6 +4,7 @@ import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
 import { ToastrService } from 'ngx-toastr';
+import { ConfirmationService } from 'primeng/api';
 import { MovimientoInventario } from '../model/movimientoinventario';
 import { Producto } from '../../../shared/models/productos/Producto';
 import { TipoMovimientoInventario } from '../enums/tipos-movimiento.enum';
@@ -24,6 +25,7 @@ export class RecepcionMercanciaComponent implements OnInit {
   bodegas: any[] = [];
   productoForm: FormGroup;
   productos: ProductoRecepcion[] = [];
+  productosSugeridos: any[] = [];
   busquedaInput: string = '';
   cargando: boolean = false;
   buscandoProducto: boolean = false;
@@ -56,6 +58,7 @@ export class RecepcionMercanciaComponent implements OnInit {
     private maestroService: MaestroService,
     private inventarioService: InventarioService,
     private toastr: ToastrService,
+    private confirmationService: ConfirmationService,
     private fb: FormBuilder
   ) {
     this.productoForm = this.fb.group({
@@ -234,5 +237,142 @@ export class RecepcionMercanciaComponent implements OnInit {
       }, 0);
       event.preventDefault();
     }
+  }
+
+  /**
+   * Busca sugerencias de productos para el autocompletado
+   */
+  buscarProductosSugerencias(event: any): void {
+    const query = event.query?.trim();
+    if (!query || query.length < 2) {
+      this.productosSugeridos = [];
+      return;
+    }
+
+    this.maestroService.getProductsBySearch(query, 10, 1).subscribe({
+      next: (response: any) => {
+        this.productosSugeridos = response.products || [];
+      },
+      error: (error) => {
+        console.error('Error al buscar sugerencias:', error);
+        this.productosSugeridos = [];
+      }
+    });
+  }
+
+  /**
+   * Agrega un producto seleccionado del autocompletado
+   */
+  agregarProductoSeleccionado(producto: any): void {
+    if (!producto) return;
+
+    // Verificar si el producto ya existe en la tabla
+    const productoExistente = this.productos.find(p =>
+      p.producto.identificacion?.referencia === producto.identificacion?.referencia
+    );
+
+    if (productoExistente) {
+      productoExistente.cantidad += 1;
+      this.toastr.info('Cantidad de producto actualizada', 'Producto actualizado');
+    } else {
+      const nuevoProducto: ProductoRecepcion = {
+        id: producto.cd || Math.random().toString(36).substring(2, 9),
+        producto: producto,
+        cantidad: 1
+      };
+      this.productos.push(nuevoProducto);
+      this.toastr.success('Producto agregado correctamente', 'Éxito');
+    }
+
+    // Limpiar el campo de búsqueda
+    this.busquedaInput = '';
+  }
+
+  /**
+   * Obtiene la etiqueta del tipo de movimiento seleccionado
+   */
+  getTipoMovimientoLabel(): string {
+    const tipoSeleccionado = this.productoForm.get('tipoMovimiento')?.value;
+    const tipo = this.tiposMovimientoRecepcion.find(t => t.valor === tipoSeleccionado);
+    return tipo?.nombre || 'No seleccionado';
+  }
+
+  /**
+   * Obtiene el icono correspondiente al tipo de movimiento
+   */
+  getIconoTipoMovimiento(valor: string): string {
+    const iconos: { [key: string]: string } = {
+      'INGRESO_INVENTARIO_FISICO': 'pi pi-list',
+      'INGRESO_COMPRA': 'pi pi-shopping-cart',
+      'INGRESO_PRODUCCION': 'pi pi-cog',
+      'INGRESO_AJUSTE': 'pi pi-sliders-h',
+      'INGRESO_MOVIMIENTO': 'pi pi-arrow-right-arrow-left',
+      'SALIDA_INVENTARIO_FISICO': 'pi pi-list',
+      'SALIDA_VENTA_POS': 'pi pi-calculator',
+      'SALIDA_VENTA_ASISTIDA': 'pi pi-user',
+      'SALIDA_OBSEQUIO': 'pi pi-gift',
+      'SALIDA_AJUSTE': 'pi pi-sliders-h',
+      'SALIDA_ROBO': 'pi pi-exclamation-triangle'
+    };
+    return iconos[valor] || 'pi pi-box';
+  }
+
+  /**
+   * Limpia la lista de productos
+   */
+  limpiarLista(): void {
+    if (this.productos.length === 0) {
+      this.toastr.info('La lista ya está vacía', 'Información');
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `¿Estás seguro de eliminar <strong>${this.productos.length} productos</strong> de la lista?`,
+      header: 'Confirmar limpieza',
+      icon: 'pi pi-trash',
+      acceptLabel: 'Sí, limpiar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-outlined',
+      accept: () => {
+        this.productos = [];
+        this.toastr.warning('Lista de productos limpiada', 'Lista vacía');
+      }
+    });
+  }
+
+  /**
+   * Muestra confirmación antes de guardar la recepción
+   */
+  confirmarGuardado(): void {
+    if (this.productoForm.invalid || this.productos.length === 0) {
+      this.toastr.error('Por favor selecciona una bodega, tipo de movimiento y añade al menos un producto', 'Error');
+      return;
+    }
+
+    const bodega = this.productoForm.get('bodegaSeleccionada')?.value;
+    const tipoLabel = this.getTipoMovimientoLabel();
+    const totalProductos = this.productos.length;
+    const totalUnidades = this.calcularTotalItems();
+
+    this.confirmationService.confirm({
+      message: `
+        <div class="text-start">
+          <p class="mb-2"><strong>Bodega:</strong> ${bodega?.nombre || 'No especificada'}</p>
+          <p class="mb-2"><strong>Tipo:</strong> ${tipoLabel}</p>
+          <p class="mb-2"><strong>Productos:</strong> ${totalProductos}</p>
+          <p class="mb-0"><strong>Total unidades:</strong> ${totalUnidades}</p>
+        </div>
+      `,
+      header: 'Confirmar Ajuste de Inventario',
+      icon: 'pi pi-check-circle',
+      acceptLabel: 'Confirmar',
+      rejectLabel: 'Revisar',
+      acceptButtonStyleClass: 'p-button-success',
+      rejectButtonStyleClass: 'p-button-outlined',
+      accept: () => {
+        this.guardarRecepcion();
+      }
+    });
   }
 }

@@ -310,4 +310,30 @@ export class InventarioService {
     };
     return this.http.post(`${this.apiUrl}/inventory/delete-all-by-company`, payload);
   }
+
+  /**
+   * Analiza el inventario usando ADK Agent IA
+   * Ejecuta análisis inteligente para detectar alertas de reorden, tendencias y predicciones
+   * @param bodegas Array de bodegas a analizar
+   * @returns Observable con métricas de IA por bodega y globales
+   */
+  analyzeInventoryWithIA(bodegas: BodegaConsolidada[]): Observable<{
+    success: boolean;
+    metricasPorBodega: { [bodegaId: string]: MetricasIABodega };
+    metricasGlobales: MetricasIAGlobal;
+    timestamp: string;
+    error?: string;
+  }> {
+    const url = `${this.apiUrl}/inventory/analyze-ia`;
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    return this.http.post<any>(url, {
+      bodegas: bodegas.map(b => ({
+        id: b.id,
+        nombre: b.nombre
+      }))
+    }, { headers });
+  }
 }

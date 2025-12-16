@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { ConfirmationService } from 'primeng/api';
+import { ToastrService } from 'ngx-toastr';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
 import { Bodega } from '../../../shared/models/inventarios/bodega.model';
 import { Traslado } from '../../../shared/models/inventarios/traslado.model';
@@ -19,7 +22,10 @@ export class TrasladosComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private inventarioService: InventarioService
+    private inventarioService: InventarioService,
+    private confirmationService: ConfirmationService,
+    private toastr: ToastrService,
+    private router: Router
   ) {
     this.trasladoForm = this.fb.group({
       bodegaOrigenId: ['', Validators.required],
@@ -32,7 +38,7 @@ export class TrasladosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarBodegas();
-    
+
     this.trasladoForm.get('bodegaOrigenId')?.valueChanges.subscribe(bodegaId => {
       if (bodegaId) {
         this.cargarProductosBodega(bodegaId);
@@ -85,50 +91,115 @@ export class TrasladosComponent implements OnInit {
   }
 
   cargarBodegas(): void {
-    this.inventarioService.getBodegas().subscribe(
-      (bodegas) => {
+    this.inventarioService.getBodegas().subscribe({
+      next: (bodegas) => {
         this.bodegas = bodegas;
       },
-      (error) => {
+      error: (error) => {
         console.error('Error al cargar bodegas:', error);
+        this.toastr.error('Error al cargar las bodegas', 'Error');
       }
-    );
+    });
   }
 
   cargarProductosBodega(bodegaId: string): void {
     this.loading = true;
-    this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe(
-      (productos) => {
+    this.inventarioService.obtenerInventarioPorBodega(bodegaId).subscribe({
+      next: (productos) => {
         this.productos = productos.productos;
         this.loading = false;
       },
-      (error) => {
+      error: (error) => {
         console.error('Error al cargar productos:', error);
+        this.toastr.error('Error al cargar productos de la bodega', 'Error');
         this.loading = false;
       }
-    );
+    });
   }
 
-  onSubmit(): void {
-    if (this.trasladoForm.valid && !this.errorMensaje) {
-      this.loading = true;
-      const traslado: Traslado = {
-        ...this.trasladoForm.value,
-        fecha: new Date(),
-        estado: 'Pendiente'
-      };
-
-      this.inventarioService.realizarTraslado(traslado).subscribe(
-        (response) => {
-          console.log('Traslado realizado con éxito:', response);
+  /**
+   * Cancela el traslado y vuelve al inventario
+   */
+  cancelar(): void {
+    if (this.trasladoForm.dirty) {
+      this.confirmationService.confirm({
+        message: '¿Tienes cambios sin guardar. ¿Estás seguro de cancelar?',
+        header: 'Confirmar cancelación',
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: 'Sí, cancelar',
+        rejectLabel: 'No, continuar',
+        acceptButtonStyleClass: 'p-button-danger',
+        rejectButtonStyleClass: 'p-button-outlined',
+        accept: () => {
           this.trasladoForm.reset();
-          this.loading = false;
-        },
-        (error) => {
-          console.error('Error al realizar el traslado:', error);
-          this.loading = false;
+          this.productos = [];
+          this.stockDisponible = 0;
+          this.router.navigate(['/inventario']);
         }
-      );
+      });
+    } else {
+      this.router.navigate(['/inventario']);
     }
   }
-} 
+
+  /**
+   * Muestra confirmación antes de realizar el traslado
+   */
+  confirmarTraslado(): void {
+    if (this.trasladoForm.valid && !this.errorMensaje) {
+      const bodegaOrigen = this.bodegas.find(b => b.idBodega === this.trasladoForm.get('bodegaOrigenId')?.value);
+      const bodegaDestino = this.bodegas.find(b => b.idBodega === this.trasladoForm.get('bodegaDestinoId')?.value);
+      const producto = this.productos.find(p => p.producto.cd === this.trasladoForm.get('productoId')?.value);
+      const cantidad = this.trasladoForm.get('cantidad')?.value;
+
+      this.confirmationService.confirm({
+        message: `¿Confirmas el traslado de <strong>${cantidad} unidades</strong> de "<strong>${producto?.producto?.crearProducto?.titulo}</strong>" desde "<strong>${bodegaOrigen?.nombre}</strong>" hacia "<strong>${bodegaDestino?.nombre}</strong>"?`,
+        header: 'Confirmar Traslado',
+        icon: 'pi pi-arrow-right-arrow-left',
+        acceptLabel: 'Confirmar traslado',
+        rejectLabel: 'Revisar',
+        acceptButtonStyleClass: 'p-button-success',
+        rejectButtonStyleClass: 'p-button-outlined',
+        accept: () => {
+          this.ejecutarTraslado();
+        }
+      });
+    } else {
+      this.toastr.warning('Por favor complete todos los campos requeridos', 'Formulario incompleto');
+    }
+  }
+
+  /**
+   * Ejecuta el traslado después de la confirmación
+   */
+  private ejecutarTraslado(): void {
+    this.loading = true;
+    const traslado: Traslado = {
+      ...this.trasladoForm.value,
+      fecha: new Date(),
+      estado: 'Pendiente'
+    };
+
+    this.inventarioService.realizarTraslado(traslado).subscribe({
+      next: (response) => {
+        this.toastr.success('Traslado realizado con éxito', 'Completado');
+        this.trasladoForm.reset();
+        this.productos = [];
+        this.stockDisponible = 0;
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error al realizar el traslado:', error);
+        this.toastr.error('Error al realizar el traslado', 'Error');
+        this.loading = false;
+      }
+    });
+  }
+
+  /**
+   * @deprecated Usar confirmarTraslado() en su lugar
+   */
+  onSubmit(): void {
+    this.confirmarTraslado();
+  }
+}

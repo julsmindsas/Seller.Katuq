@@ -189,6 +189,12 @@ export class InventarioCatalogoComponent implements OnInit {
     diferencia: number;
   }[] = [];
 
+  // ============== ANÁLISIS IA ==============
+  analizandoIA: boolean = false;
+  iaAnalysisError: string | null = null;
+  iaLastAnalysis: Date | null = null;
+  iaMetricasGlobales: { saludInventario: string | null; bodegaCritica: string | null; resumenEjecutivo: string | null } | null = null;
+
   constructor(
     private service: MaestroService,
     private inventarioService: InventarioService,
@@ -347,6 +353,70 @@ export class InventarioCatalogoComponent implements OnInit {
       return '$' + (valor / 1000).toFixed(0) + 'K';
     }
     return '$' + valor.toLocaleString();
+  }
+
+  // ============== ANÁLISIS IA ==============
+
+  /**
+   * Ejecuta análisis de inventario con IA (ADK Agent)
+   * Popula los campos de IA en las métricas de cada bodega y globales
+   */
+  analizarConIA(): void {
+    if (this.bodegasConsolidadas.length === 0) {
+      this.toastr.warning('No hay bodegas para analizar', 'Análisis IA');
+      return;
+    }
+
+    this.analizandoIA = true;
+    this.iaAnalysisError = null;
+
+    this.inventarioService.analyzeInventoryWithIA(this.bodegasConsolidadas).subscribe({
+      next: (response) => {
+        if (response.success) {
+          // Update IA metrics for each bodega
+          this.bodegasConsolidadas.forEach(bodega => {
+            const iaMetrics = response.metricasPorBodega[bodega.id];
+            if (iaMetrics && bodega.metricas) {
+              bodega.metricas.ia = iaMetrics;
+            }
+          });
+
+          // Update global IA metrics
+          this.iaMetricasGlobales = response.metricasGlobales;
+
+          this.iaLastAnalysis = new Date(response.timestamp);
+          this.toastr.success('Análisis completado', 'Inteligencia Artificial');
+        } else {
+          this.iaAnalysisError = response.error || 'Error desconocido en el análisis';
+          this.toastr.error(this.iaAnalysisError, 'Error IA');
+        }
+        this.analizandoIA = false;
+      },
+      error: (error) => {
+        console.error('Error en análisis IA:', error);
+        this.iaAnalysisError = error.error?.details || error.error?.error || 'Error de conexión con servicio de IA';
+        this.toastr.error(this.iaAnalysisError, 'Error IA');
+        this.analizandoIA = false;
+      }
+    });
+  }
+
+  /**
+   * Helper para obtener nombre de bodega por ID
+   */
+  getNombreBodegaById(bodegaId: string): string {
+    const bodega = this.bodegasConsolidadas.find(b => b.id === bodegaId);
+    return bodega?.nombre || bodegaId;
+  }
+
+  /**
+   * Genera el tooltip con sugerencias de IA para una bodega
+   */
+  getIASugerenciasTooltip(bodega: BodegaConsolidada): string {
+    if (!bodega.metricas?.ia?.sugerencias?.length) {
+      return 'Sin sugerencias';
+    }
+    return bodega.metricas.ia.sugerencias.join('\n');
   }
 
   /**

@@ -1,13 +1,16 @@
-// Variables
-$primary-color: #3867d6;
-$secondary-color: #4b7bec;
-$text-color: #2d3436;
-$light-gray: #f1f2f6;
-$medium-gray: #dfe4ea;
-$error-color: #ff4757;
-$success-color: #2ed573;
-$border-radius: 12px;
-$box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+// Variables Katuq
+$primary-color: #5c6ac4;
+$secondary-color: #6c7ae0;
+$success-color: #36b37e;
+$warning-color: #ff991f;
+$danger-color: #de350b;
+$info-color: #0065ff;
+$text-color: #172b4d;
+$light-gray: #f8fafc;
+$medium-gray: #dfe1e6;
+$error-color: #de350b;
+$border-radius: 8px;
+$box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
 // Mixins
 @mixin card {
@@ -441,15 +444,199 @@ $box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
   .traslado-form {
     .bodegas-section {
       flex-direction: column;
-      
+
       .transfer-arrow {
         transform: rotate(90deg);
         margin: 16px 0;
       }
     }
-    
+
     .quantity-section {
       grid-template-columns: 1fr;
     }
   }
-} 
+}
+
+// Estilos adicionales para nuevo diseño Katuq
+
+// Loader
+.loader-box {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .loader-8 {
+    position: relative;
+    width: 40px;
+    height: 40px;
+
+    &:after {
+      content: '';
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 3px solid $primary-color;
+      border-right-color: transparent;
+      animation: spin 1s infinite linear;
+      position: absolute;
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// Stats Bar
+.stats-bar {
+  .stat-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+    }
+  }
+}
+
+// Bodega Cards
+.bodega-card {
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+
+  &:hover {
+    border-color: $medium-gray;
+    box-shadow: $box-shadow;
+  }
+}
+
+// Product Section
+.product-section {
+  transition: all 0.2s ease;
+}
+
+// PrimeNG Dropdown personalizado
+::ng-deep {
+  .p-dropdown {
+    border: 2px solid $medium-gray !important;
+    border-radius: $border-radius !important;
+
+    &:hover {
+      border-color: $primary-color !important;
+    }
+
+    &.p-focus {
+      border-color: $primary-color !important;
+      box-shadow: 0 0 0 2px rgba($primary-color, 0.2) !important;
+    }
+
+    .p-dropdown-label {
+      padding: 0.75rem 1rem;
+    }
+  }
+
+  .p-dropdown-panel {
+    border-radius: $border-radius !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+
+    .p-dropdown-items {
+      padding: 0.5rem !important;
+
+      .p-dropdown-item {
+        border-radius: 6px !important;
+        margin-bottom: 2px;
+
+        &.p-highlight {
+          background-color: rgba($primary-color, 0.1) !important;
+          color: $text-color !important;
+        }
+
+        &:hover {
+          background-color: $light-gray !important;
+        }
+      }
+    }
+  }
+
+  // Input groups
+  .p-inputgroup {
+    .p-inputgroup-addon {
+      border-radius: 0;
+
+      &:first-child {
+        border-top-left-radius: $border-radius;
+        border-bottom-left-radius: $border-radius;
+      }
+
+      &:last-child {
+        border-top-right-radius: $border-radius;
+        border-bottom-right-radius: $border-radius;
+      }
+    }
+  }
+
+  // Buttons
+  .p-button {
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+    }
+  }
+
+  // Confirm Dialog
+  .p-confirm-dialog {
+    border-radius: $border-radius !important;
+
+    .p-dialog-header {
+      border-bottom: 1px solid $medium-gray;
+    }
+
+    .p-dialog-footer {
+      border-top: 1px solid $medium-gray;
+    }
+  }
+}
+
+// Progress bar
+.progress {
+  border-radius: 4px;
+  background-color: $medium-gray;
+  overflow: hidden;
+
+  .progress-bar {
+    transition: width 0.3s ease;
+  }
+}
+
+// Responsive ajustes adicionales
+@media (max-width: 576px) {
+  .module-header {
+    h4 {
+      font-size: 1.1rem;
+    }
+  }
+
+  .stats-bar {
+    .stat-card {
+      h3 {
+        font-size: 1.25rem;
+      }
+    }
+  }
+
+  .bodega-card {
+    padding: 1rem !important;
+
+    .bodega-icon {
+      width: 50px !important;
+      height: 50px !important;
+    }
+  }
+}
