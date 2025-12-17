@@ -207,7 +207,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public collapseMenu: boolean = false;
   public isPlanCardCollapsed: boolean = false;
   public isAdminUser: boolean = false;
-  
+
   // Nuevas propiedades
   public isCompactMode: boolean = false;
   public searchTerm: string = '';
@@ -215,15 +215,18 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public isSearchActive: boolean = false;
   public favoriteItems: Menu[] = [];
   public isSearchFocused: boolean = false;
-  
+
   // Variables para control de gestos en móviles
   private touchStartX: number = 0;
   private touchEndX: number = 0;
   private swipeThreshold: number = 50;
-  
+
   // Nueva propiedad para las secciones colapsables
   public sections: SidebarSection[] = [];
-  
+
+  // ACCORDION: Set centralizado para trackear menús abiertos (soluciona problema de referencias)
+  public openMenus: Set<string> = new Set();
+
   // Propiedades para notificaciones
   public unreadNotificationCount: number = 0;
   public hasNewNotifications: boolean = false;
@@ -285,19 +288,19 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
             if (!items.children) return;
             items.children.forEach(subItems => {
               if (activeItemFound) return;
-               if (subItems.path === event.url) { this.setNavActive(subItems); activeItemFound = true; return; }
-               if (!subItems.children) return;
-               subItems.children.forEach(subSubItems => {
-                  if (activeItemFound) return;
-                  if (subSubItems.path === event.url) { this.setNavActive(subSubItems); activeItemFound = true; return; }
-               });
+              if (subItems.path === event.url) { this.setNavActive(subItems); activeItemFound = true; return; }
+              if (!subItems.children) return;
+              subItems.children.forEach(subSubItems => {
+                if (activeItemFound) return;
+                if (subSubItems.path === event.url) { this.setNavActive(subSubItems); activeItemFound = true; return; }
+              });
             });
           });
 
           // Reflejar cambios de active state en las secciones procesadas
           this.processMenuItems(originalMenuItems);
           this.collapseMenu = this.navServices.collapseSidebar;
-          
+
           // En móviles, cerrar el menú después de navegar
           if (window.innerWidth < 992) {
             this.collapseMenu = true;
@@ -471,7 +474,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     // Configurar zona de hover para auto-hide
     this.setupHoverZone();
   }
-  
+
   // Configurar eventos táctiles para móviles
   // Inicializar estado del sidebar
   private initializeSidebarState(): void {
@@ -557,16 +560,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   private setupMobileGestures(): void {
     // Limpiar listeners existentes para evitar duplicados
     this.cleanupEventListeners();
-    
+
     // Añadir listeners para eventos táctiles
     this.touchStartListener = this.handleTouchStart.bind(this);
     this.touchEndListener = this.handleTouchEnd.bind(this);
     this.resizeListener = this.handleResize.bind(this);
-    
+
     document.addEventListener('touchstart', this.touchStartListener, { passive: true });
     document.addEventListener('touchend', this.touchEndListener, { passive: true });
     window.addEventListener('resize', this.resizeListener);
-    
+
     // Configurar overlay y swipe indicator después de que el DOM esté listo
     this.setupOverlayListeners();
   }
@@ -600,14 +603,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Manejar resize de ventana
   private handleResize(): void {
     const wasMobile = this.isMobile();
-    
+
     if (window.innerWidth >= 992) {
       // Desktop: restaurar estado normal
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.width = '';
       document.body.style.top = '';
-      
+
       // Solo cambiar estado si no estaba guardado intencionalmente
       const savedCollapsed = localStorage.getItem('sidebarCollapsed');
       if (savedCollapsed === null) {
@@ -629,7 +632,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     setTimeout(() => {
       const overlay = document.querySelector('.sidebar-overlay');
       const swipeIndicator = document.querySelector('.sidebar-swipe-indicator');
-      
+
       if (overlay) {
         this.overlayListener = this.renderer.listen(overlay, 'click', (event) => {
           event.preventDefault();
@@ -639,7 +642,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
           }
         });
       }
-      
+
       if (swipeIndicator) {
         this.swipeListener = this.renderer.listen(swipeIndicator, 'click', (event) => {
           event.preventDefault();
@@ -651,7 +654,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }, 200);
   }
-  
+
   // Manejar inicio de toque
   private handleTouchStart(event: TouchEvent): void {
     // Ignorar toques en el botón hamburguesa para evitar conflictos
@@ -659,10 +662,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (target.closest('.sidebar-toggle-btn')) {
       return;
     }
-    
+
     this.touchStartX = event.touches[0].clientX;
   }
-  
+
   // Manejar fin de toque y detectar deslizamiento
   private handleTouchEnd(event: TouchEvent): void {
     // Ignorar toques en el botón hamburguesa para evitar conflictos
@@ -670,11 +673,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (target.closest('.sidebar-toggle-btn')) {
       return;
     }
-    
+
     this.touchEndX = event.changedTouches[0].clientX;
     this.handleSwipe();
   }
-  
+
   // Detectar tipo de deslizamiento y actuar en consecuencia
   private handleSwipe(): void {
     const distance = this.touchEndX - this.touchStartX;
@@ -696,26 +699,17 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     }
   }
-  
+
   // Nueva función para procesar los items del menú en secciones
   private processMenuItems(menuItems: Menu[]): void {
-    console.log('🔄 processMenuItems LLAMADO - reconstruyendo sections');
-
-    // Log estado de menuItems entrantes
-    menuItems.forEach(mi => {
-      if (mi.title && mi.children) {
-        console.log(`   📥 Input: ${mi.title} active=${mi.active}`);
-      }
-    });
-
     // Limpiar las secciones existentes
     this.sections = [];
-    
+
     // Variables para seguimiento de la sección actual
     let currentTitle: string | null = null;
     let currentItems: Menu[] = [];
     let isHeaderSection = false;
-    
+
     // Recorrer cada ítem
     const shouldHide = (mi: Menu): boolean => {
       const path = (mi.path || '').toLowerCase();
@@ -731,7 +725,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (!item) return;
       // Filtrar items que deben ocultarse del sidebar
       if (shouldHide(item)) return;
-      
+
       // Si es un encabezado, crear nueva sección con el encabezado anterior (si existe)
       if (item.headTitle1) {
         // Si ya hay una sección en curso, guardarla (si tiene items)
@@ -742,15 +736,15 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
             collapsed: true,
             isHeaderSection
           });
-          
+
           // Reiniciar los items
           currentItems = [];
         }
-        
+
         // Actualizar variables para la nueva sección
         currentTitle = item.headTitle1;
         isHeaderSection = true;
-      } 
+      }
       // Si es un ítem normal (no headTitle)
       else if (!item.headTitle1 && !item.headTitle2) {
         // Si aún no hay sección, crear una sin título
@@ -773,7 +767,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       // Ignorar headTitle2 u otros tipos
     });
-    
+
     // No olvidar añadir la última sección si tiene items
     if (currentItems.length > 0) {
       this.sections.push({
@@ -783,15 +777,15 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         isHeaderSection
       });
     }
-    
+
     // Recuperar estado colapsado de localStorage
     const savedSectionsState = localStorage.getItem('sidebarSectionsState');
     let collapsedStates: { [title: string]: boolean } = {};
-    
+
     if (savedSectionsState) {
       try {
         collapsedStates = JSON.parse(savedSectionsState);
-        
+
         // Aplicar estados guardados a las secciones
         this.sections.forEach(section => {
           if (section.title && collapsedStates[section.title] !== undefined) {
@@ -822,6 +816,15 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Nueva función para colapsar/expandir secciones
   toggleSection(section: SidebarSection): void {
     if (section.isHeaderSection) {
+      // ACCORDION: Si vamos a expandir esta sección, colapsar las demás
+      if (section.collapsed) {
+        this.sections.forEach(s => {
+          if (s !== section && s.isHeaderSection) {
+            s.collapsed = true;
+          }
+        });
+      }
+
       section.collapsed = !section.collapsed;
       this.saveSectionsState(); // Guardar estado
     }
@@ -840,13 +843,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Limpiar estados activos recursivamente
   private clearActiveStatesRecursive(item: Menu | null, activeItem: Menu | null): void {
-     if (!item) return; // Si el item es null (filtrado), no hacer nada
-     if (item !== activeItem) {
-        item.active = false;
-     }
-     if (item.children) {
-       item.children.forEach(child => this.clearActiveStatesRecursive(child, activeItem));
-     }
+    if (!item) return; // Si el item es null (filtrado), no hacer nada
+    if (item !== activeItem) {
+      item.active = false;
+    }
+    if (item.children) {
+      item.children.forEach(child => this.clearActiveStatesRecursive(child, activeItem));
+    }
   }
 
   // --- Métodos existentes (adaptar setNavActive si es necesario) ---
@@ -985,7 +988,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     // Actualizar el plan actual con los nuevos datos
     if (planData && planData.nombrePlan) {
       this.currentPlan.type = planData.nombrePlan;
-      
+
       // Guardar actualización en sessionStorage
       try {
         const currentCompanyStr = sessionStorage.getItem('currentCompany');
@@ -996,7 +999,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
             currentCompany.plan.nombre = planData.nombrePlan;
             currentCompany.plan.planPago = planData.planPago;
             currentCompany.plan.tipoPrecio = planData.tipoPrecio;
-            
+
             // Guardar en sessionStorage
             sessionStorage.setItem('currentCompany', JSON.stringify(currentCompany));
           }
@@ -1005,7 +1008,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         console.error('Error al actualizar plan en sessionStorage:', error);
       }
     }
-    
+
     this.closePlanModal();
   }
 
@@ -1033,10 +1036,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       clearTimeout(this.hoverExpandTimeout);
       this.hoverExpandTimeout = null;
     }
-    
+
     // Cerrar submenú flotante si está abierto
     this.closeCollapsedSubmenu();
-    
+
     // Manejar body scroll SOLO en móviles
     if (this.isMobile()) {
       if (!this.collapseMenu) {
@@ -1047,22 +1050,22 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.restoreBodyScroll();
       }
     }
-    
+
     // Cerrar búsqueda activa cuando se cierra el sidebar
     if (this.collapseMenu && this.isSearchActive) {
       this.clearSearch();
     }
-    
+
     // En modo compacto, cerrar submenús al colapsar
     if (this.collapseMenu && this.isCompactMode) {
       this.closeAllSubmenus();
     }
-    
+
     // Guardar estado en localStorage SOLO en desktop
     if (!this.isMobile()) {
       localStorage.setItem('sidebarCollapsed', this.collapseMenu.toString());
     }
-    
+
     // Liberar lock de toggle después de animación - optimizado para responsividad inmediata
     setTimeout(() => {
       this.isToggling = false;
@@ -1071,13 +1074,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Variable para prevenir toggle múltiple
   private isToggling = false;
-  
+
   // Método simplificado para toggle móvil
   toggleSidebarMobile(event: Event): void {
     // Prevenir que el evento se propague a otros listeners
     event.stopPropagation();
     event.preventDefault();
-    
+
     // Ejecutar toggle directamente sin complicaciones
     if (!this.isToggling) {
       this.sidebarToggle();
@@ -1100,7 +1103,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     document.body.style.top = '';
     document.body.style.width = '';
     document.body.style.overflow = '';
-    
+
     if (scrollY) {
       window.scrollTo(0, parseInt(scrollY));
       document.body.removeAttribute('data-scroll-y');
@@ -1111,87 +1114,158 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   setNavActive(item) {
     if (!item) return;
     const originalMenuItems = this.navServices.getMenuItems(); // Trabajar con la fuente
-     originalMenuItems.forEach(menuItem => this.setActiveRecursive(menuItem, item));
-     this.processMenuItems(originalMenuItems); // Actualizar la vista (secciones)
-     this.collapseMenu = this.navServices.collapseSidebar;
+    originalMenuItems.forEach(menuItem => this.setActiveRecursive(menuItem, item));
+    this.processMenuItems(originalMenuItems); // Actualizar la vista (secciones)
+    this.collapseMenu = this.navServices.collapseSidebar;
   }
 
-   // Helper recursivo para marcar el estado activo en el item y sus ancestros
-   // MEJORA: Solo marca como activo, NO desactiva items (para mantener submenús abiertos)
-   private setActiveRecursive(currentItem: Menu, activeItem: Menu): boolean {
-       let isActive = false;
-       if (currentItem === activeItem) {
-           isActive = true;
-       } else if (currentItem.children) {
-           currentItem.children.forEach(child => {
-               if (this.setActiveRecursive(child, activeItem)) {
-                   isActive = true;
-               }
-           });
-       }
-       // Solo marcar como activo si es el item o un ancestro
-       // NO desactivar items que el usuario abrió manualmente
-       if (isActive) {
-           currentItem.active = true;
-       }
-       return isActive; // Devolver si este subárbol contiene el item activo
-   }
+  // Helper recursivo para marcar el estado activo en el item y sus ancestros
+  // MEJORA: Solo marca como activo, NO desactiva items (para mantener submenús abiertos)
+  private setActiveRecursive(currentItem: Menu, activeItem: Menu): boolean {
+    let isActive = false;
+    if (currentItem === activeItem) {
+      isActive = true;
+    } else if (currentItem.children) {
+      currentItem.children.forEach(child => {
+        if (this.setActiveRecursive(child, activeItem)) {
+          isActive = true;
+        }
+      });
+    }
+    // Solo marcar como activo si es el item o un ancestro
+    // NO desactivar items que el usuario abrió manualmente
+    if (isActive) {
+      currentItem.active = true;
+    }
+    return isActive; // Devolver si este subárbol contiene el item activo
+  }
 
 
-  // Click Toggle menu - Para submenús dentro de items (Funciona sobre item recibido)
-  toggletNavActive(item, event?: Event) {
+  // ==================== ACCORDION CON SET CENTRALIZADO ====================
+
+  /**
+   * Genera una clave única para identificar un item del menú
+   */
+  getMenuKey(item: Menu): string {
+    return item.title || item.path || '';
+  }
+
+  /**
+   * Verifica si un menú está abierto usando el Set centralizado
+   */
+  isMenuOpen(item: Menu): boolean {
+    return this.openMenus.has(this.getMenuKey(item));
+  }
+
+  /**
+   * Cierra TODOS los menús de primer nivel (ACCORDION GLOBAL)
+   */
+  private closeAllFirstLevelMenus(): void {
+    // Limpiar el Set y también item.active para que la UI se actualice
+    this.sections.forEach(section => {
+      section.items.forEach(menuItem => {
+        if (menuItem.children) {
+          const key = this.getMenuKey(menuItem);
+          this.openMenus.delete(key);
+          menuItem.active = false; // Actualizar estado visual
+          // También cerrar submenús
+          this.closeChildrenInSet(menuItem);
+          this.closeChildrenActive(menuItem);
+        }
+      });
+    });
+  }
+
+  /**
+   * Cierra los hijos de un item (propiedad active)
+   */
+  private closeChildrenActive(item: Menu): void {
+    if (item.children) {
+      item.children.forEach(child => {
+        child.active = false;
+        this.closeChildrenActive(child);
+      });
+    }
+  }
+
+  /**
+   * Cierra los hijos de un item en el Set
+   */
+  private closeChildrenInSet(item: Menu): void {
+    if (item.children) {
+      item.children.forEach(child => {
+        this.openMenus.delete(this.getMenuKey(child));
+        this.closeChildrenInSet(child);
+      });
+    }
+  }
+
+  // Click Toggle menu - Para submenús dentro de items
+  toggletNavActive(item: Menu, event?: Event) {
     if (event) {
       event.stopPropagation();
       event.preventDefault();
     }
 
-    const currentlyActive = item.active; // Guardar estado actual
-
-    // ACCORDION GLOBAL: Cerrar hermanos SIEMPRE PRIMERO, antes de cualquier return
-    // Esto asegura que el accordion funcione en TODOS los modos (desktop, colapsado, móvil)
-    if (!currentlyActive && item.children) {
-      this.closeSiblings(item);
-    }
+    const menuKey = this.getMenuKey(item);
+    const isCurrentlyOpen = this.openMenus.has(menuKey);
+    const isFirstLevel = this.isFirstLevelItem(item);
 
     // En estado colapsado para desktop (sin expansión temporal), mostrar submenú flotante
     if (this.collapseMenu && !this.isTemporarilyExpanded && !this.isMobile()) {
       if (item.path && !item.children) {
-        // Si es un item sin hijos, navegar directamente
         this.router.navigate([item.path]);
         return;
       }
-      // Si tiene hijos, mostrar submenú flotante
       this.showCollapsedSubmenu(item, event);
-      item.active = true; // Marcar como activo incluso en modo colapsado
-      // Forzar detección de cambios para que el accordion se actualice en la UI
+      // Accordion en modo colapsado
+      if (!isCurrentlyOpen && isFirstLevel) {
+        this.closeAllFirstLevelMenus();
+      }
+      this.openMenus.add(menuKey);
+      item.active = true;
       this.cdr.detectChanges();
       return;
     }
 
-    // En móviles, manejar con delay para mejor experiencia táctil
+    // En móviles, manejar con delay
     if (this.isMobile() && item.children) {
+      // Aplicar accordion antes del toggle móvil
+      if (!isCurrentlyOpen && isFirstLevel) {
+        this.closeAllFirstLevelMenus();
+      }
       this.handleMobileSubmenuToggle(item, event);
       return;
     }
 
-    item.active = !currentlyActive; // Cambiar estado del item clickeado
+    // ACCORDION GLOBAL: Si vamos a ABRIR y tiene hijos, cerrar hermanos (para todos los niveles)
+    if (!isCurrentlyOpen && item.children) {
+      this.closeSiblings(item);
+    }
 
-    // SOLUCION ACCORDION: Forzar detección de cambios para que Angular actualice la UI
-    // Esto es necesario porque modificamos propiedades internas de objetos en arrays
-    // y Angular no siempre detecta estos cambios automáticamente
+    // Toggle del estado en el Set
+    if (isCurrentlyOpen) {
+      this.openMenus.delete(menuKey);
+      this.closeChildrenInSet(item);
+      item.active = false;
+    } else {
+      this.openMenus.add(menuKey);
+      item.active = true;
+    }
+
     this.cdr.detectChanges();
   }
 
   // Helper para resetear el estado activo al hacer toggle en submenús
-   private resetActiveState(currentItem: Menu, toggledItem: Menu): void {
-     // Solo desactivar si NO es el item clickeado Y NO es un ancestro del item clickeado
-     if (currentItem !== toggledItem && !this.isAncestor(currentItem, toggledItem)) {
-        currentItem.active = false;
-     }
-     // Recorrer hijos independientemente de si se desactivó el padre
-     if (currentItem.children) {
-        currentItem.children.forEach(child => this.resetActiveState(child, toggledItem));
-     }
+  private resetActiveState(currentItem: Menu, toggledItem: Menu): void {
+    // Solo desactivar si NO es el item clickeado Y NO es un ancestro del item clickeado
+    if (currentItem !== toggledItem && !this.isAncestor(currentItem, toggledItem)) {
+      currentItem.active = false;
+    }
+    // Recorrer hijos independientemente de si se desactivó el padre
+    if (currentItem.children) {
+      currentItem.children.forEach(child => this.resetActiveState(child, toggledItem));
+    }
   }
 
 
@@ -1206,9 +1280,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   private closeChildrenRecursive(item: Menu): void {
     if (item.children) {
       item.children.forEach(child => {
+        this.openMenus.delete(this.getMenuKey(child));
         child.active = false;
         this.closeChildrenRecursive(child);
       });
+
     }
   }
 
@@ -1217,25 +1293,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     const itemTitle = item.title;
     const isFirstLevel = this.isFirstLevelItem(item);
 
-    console.log('🎯 ACCORDION closeSiblings:', itemTitle, 'isFirstLevel:', isFirstLevel);
-
-    // Log estado actual de todos los items de primer nivel
-    console.log('📋 Estado ANTES de cerrar:');
-    this.sections.forEach(section => {
-      section.items.forEach(menuItem => {
-        if (menuItem.title && menuItem.children) {
-          console.log(`   - ${menuItem.title}: active=${menuItem.active}`);
-        }
-      });
-    });
-
     // Si es de primer nivel, cerrar TODOS los otros items de primer nivel en TODAS las secciones
     if (isFirstLevel) {
       // Cerrar directamente en sections (la vista que se renderiza)
       this.sections.forEach(section => {
         section.items.forEach(menuItem => {
           if (menuItem.title && menuItem.title !== itemTitle && menuItem.active && menuItem.children) {
-            console.log(`   ❌ Cerrando: ${menuItem.title}`);
+            this.openMenus.delete(this.getMenuKey(menuItem));
             menuItem.active = false;
             this.closeChildrenRecursive(menuItem);
           }
@@ -1246,6 +1310,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       const originalMenuItems = this.navServices.getMenuItems();
       originalMenuItems.forEach(menuItem => {
         if (menuItem.title && menuItem.title !== itemTitle && menuItem.active && menuItem.children) {
+          this.openMenus.delete(this.getMenuKey(menuItem));
           menuItem.active = false;
           this.closeChildrenRecursive(menuItem);
         }
@@ -1267,7 +1332,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
-
   }
 
   // Helper para cerrar hermanos dentro de un array de hijos
@@ -1279,6 +1343,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       // Cerrar todos los hermanos excepto el target
       children.forEach(child => {
         if (child !== targetItem && child.title !== targetItem.title && child.active) {
+          this.openMenus.delete(this.getMenuKey(child));
           child.active = false;
           this.closeChildrenRecursive(child);
         }
@@ -1295,9 +1360,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Verificar si un item es de primer nivel (está directamente en sections.items)
   private isFirstLevelItem(item: Menu): boolean {
-    return this.sections.some(section =>
+    const result = this.sections.some(section =>
       section.items.some(menuItem => menuItem === item || menuItem.title === item.title)
     );
+    return result;
   }
 
   /**
@@ -1418,18 +1484,18 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (!this.currentPlan || !this.currentPlan.renewalDate) {
         return 0;
       }
-      
+
       // Parsear la fecha de renovación (formato DD/MM/YYYY)
       const parts = this.currentPlan.renewalDate.split('/');
       if (parts.length !== 3) return 0;
-      
+
       const renewalDate = new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
       const today = new Date();
-      
+
       // Calcular diferencia en días
       const diffTime = renewalDate.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
+
       // Retornar 0 si es negativo (vencido)
       return diffDays > 0 ? diffDays : 0;
     } catch (e) {
@@ -1447,7 +1513,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'Inteligencia de Negocios': 'fa-lightbulb-o',
       'Administración Global': 'fa-users',
       'Configuración Plataforma': 'fa-sliders',
-      
+
       // Módulos específicos
       'Ventas': 'fa-line-chart',
       'Inventario': 'fa-building-o',
@@ -1493,7 +1559,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'gps': 'fa-crosshairs',
       'tracking': 'fa-location-arrow',
       'logistics': 'fa-truck',
-      
+
       // === ESTADOS Y ALERTAS ===
       'check': 'fa-check',
       'success': 'fa-check-circle',
@@ -1509,7 +1575,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'processing': 'fa-spinner',
       'completed': 'fa-check',
       'status': 'fa-circle',
-      
+
       // === ACCIONES ===
       'plus': 'fa-plus',
       'add': 'fa-plus',
@@ -1534,7 +1600,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'sync': 'fa-refresh',
       'refresh': 'fa-refresh',
       'reload': 'fa-repeat',
-      
+
       // === BÚSQUEDA Y FILTROS ===
       'search': 'fa-search',
       'find': 'fa-search',
@@ -1545,7 +1611,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'view': 'fa-eye',
       'hide': 'fa-eye-slash',
       'show': 'fa-eye',
-      
+
       // === TIEMPO Y CALENDARIO ===
       'calendar': 'fa-calendar',
       'date': 'fa-calendar-o',
@@ -1556,7 +1622,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'deadline': 'fa-hourglass-end',
       'timer': 'fa-clock-o',
       'history': 'fa-history',
-      
+
       // === EMPRESARIAL Y NEGOCIOS ===
       'building': 'fa-building',
       'company': 'fa-building',
@@ -1575,7 +1641,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'investment': 'fa-line-chart',
       'profit': 'fa-arrow-up',
       'loss': 'fa-arrow-down',
-      
+
       // === CALIDAD Y CERTIFICACIONES ===
       'quality': 'fa-star',
       'medal': 'fa-star',
@@ -1584,7 +1650,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'verification': 'fa-check-circle',
       'approval': 'fa-check-square-o',
       'signature': 'fa-pencil-square-o',
-      
+
       // === SEGURIDAD ===
       'security': 'fa-shield',
       'shield': 'fa-shield',
@@ -1596,7 +1662,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'privacy': 'fa-user-secret',
       'backup': 'fa-cloud-upload',
       'restore': 'fa-cloud-download',
-      
+
       // === TECNOLOGÍA ===
       'computer': 'fa-desktop',
       'laptop': 'fa-laptop',
@@ -1608,7 +1674,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'cloud': 'fa-cloud',
       'network': 'fa-sitemap',
       'internet': 'fa-globe',
-      
+
       // === GENÉRICOS MEJORADOS ===
       'circle': 'fa-circle',
       'dot': 'fa-circle',
@@ -1628,7 +1694,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!icon && title) {
       icon = this.inferIconFromTitle(title);
     }
-    
+
     if (!icon) {
       return isSubmenu ? 'fa-circle-o' : 'fa-circle-o';
     }
@@ -1665,7 +1731,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'order': 'fa-clipboard',
       'purchase': 'fa-shopping-cart',
       'sell': 'fa-handshake-o',
-      
+
       // === USUARIOS Y PERSONAS ===
       'user': 'fa-user',
       'users': 'fa-users',
@@ -1685,7 +1751,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'role': 'fa-user-circle-o',
       'group': 'fa-users',
       'organization': 'fa-sitemap',
-      
+
       // === INVENTARIO Y PRODUCTOS ===
       'box': 'fa-cube',
       'boxes': 'fa-cubes',
@@ -1706,7 +1772,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'transfer': 'fa-exchange',
       'movement': 'fa-arrows',
       'catalog': 'fa-book',
-      
+
       // === REPORTES Y ANÁLISIS ===
       'chart-bar': 'fa-bar-chart',
       'chart-line': 'fa-line-chart',
@@ -1723,7 +1789,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'insights': 'fa-lightbulb-o',
       'business-intelligence': 'fa-lightbulb-o',
       'report': 'fa-file-text-o',
-      
+
       // === DOCUMENTOS Y ARCHIVOS ===
       'file': 'fa-file-o',
       'document': 'fa-file-text-o',
@@ -1742,7 +1808,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'archive': 'fa-file-archive-o',
       'folder': 'fa-folder-o',
       'folder-open': 'fa-folder-open-o',
-      
+
       // === CONFIGURACIÓN Y SISTEMA ===
       'cog': 'fa-cog',
       'cogs': 'fa-cogs',
@@ -1758,7 +1824,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'api': 'fa-code',
       'integration': 'fa-puzzle-piece',
       'plugin': 'fa-plug',
-      
+
       // === NAVEGACIÓN Y UI ===
       'home': 'fa-home',
       'menu': 'fa-bars',
@@ -1776,7 +1842,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'expand': 'fa-expand',
       'collapse': 'fa-compress',
       'sidebar': 'fa-bars',
-      
+
       // === COMUNICACIÓN ===
       'envelope': 'fa-envelope',
       'email': 'fa-envelope',
@@ -1790,7 +1856,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'news': 'fa-newspaper-o',
       'broadcast': 'fa-bullhorn',
       'support': 'fa-headphones',
-      
+
       // === LOGÍSTICA Y TRANSPORTE ===
       'truck': 'fa-truck',
       'shipping': 'fa-truck',
@@ -1803,7 +1869,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'gps': 'fa-crosshairs',
       'tracking': 'fa-location-arrow',
       'logistics': 'fa-truck',
-      
+
       // === ESTADOS Y ALERTAS ===
       'check': 'fa-check',
       'success': 'fa-check-circle',
@@ -1819,7 +1885,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'processing': 'fa-spinner',
       'completed': 'fa-check',
       'status': 'fa-circle',
-      
+
       // === ACCIONES ===
       'plus': 'fa-plus',
       'add': 'fa-plus',
@@ -1844,7 +1910,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'sync': 'fa-refresh',
       'refresh': 'fa-refresh',
       'reload': 'fa-repeat',
-      
+
       // === BÚSQUEDA Y FILTROS ===
       'search': 'fa-search',
       'find': 'fa-search',
@@ -1855,7 +1921,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'view': 'fa-eye',
       'hide': 'fa-eye-slash',
       'show': 'fa-eye',
-      
+
       // === TIEMPO Y CALENDARIO ===
       'calendar': 'fa-calendar',
       'date': 'fa-calendar-o',
@@ -1866,7 +1932,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'deadline': 'fa-hourglass-end',
       'timer': 'fa-clock-o',
       'history': 'fa-history',
-      
+
       // === EMPRESARIAL Y NEGOCIOS ===
       'building': 'fa-building',
       'company': 'fa-building',
@@ -1885,7 +1951,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'investment': 'fa-line-chart',
       'profit': 'fa-arrow-up',
       'loss': 'fa-arrow-down',
-      
+
       // === CALIDAD Y CERTIFICACIONES ===
       'quality': 'fa-star',
       'medal': 'fa-star',
@@ -1894,7 +1960,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'verification': 'fa-check-circle',
       'approval': 'fa-check-square-o',
       'signature': 'fa-pencil-square-o',
-      
+
       // === SEGURIDAD ===
       'security': 'fa-shield',
       'shield': 'fa-shield',
@@ -1906,7 +1972,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'privacy': 'fa-user-secret',
       'backup': 'fa-cloud-upload',
       'restore': 'fa-cloud-download',
-      
+
       // === TECNOLOGÍA ===
       'computer': 'fa-desktop',
       'laptop': 'fa-laptop',
@@ -1918,7 +1984,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'cloud': 'fa-cloud',
       'network': 'fa-sitemap',
       'internet': 'fa-globe',
-      
+
       // === GENÉRICOS MEJORADOS ===
       'circle': 'fa-circle',
       'dot': 'fa-circle',
@@ -1933,12 +1999,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Intentar mapear el icono
     let mappedIcon = iconMap[icon.toLowerCase()];
-    
+
     // Si no se encuentra en el mapa, intentar con el nombre original añadiendo fa-
     if (!mappedIcon) {
-      mappedIcon = `fa-${icon.toLowerCase()}`;
+      mappedIcon = `fa - ${icon.toLowerCase()} `;
     }
-    
+
     // Si aún no es válido, usar icono por defecto
     return mappedIcon || (isSubmenu ? 'fa-circle-o' : 'fa-circle-o');
   }
@@ -1946,13 +2012,13 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Método para obtener icono contextual inteligente - Compatible con FontAwesome 4.7.0
   private getContextualIcon(title: string, position: number, hasSubmenu: boolean): string {
     const titleLower = title.toLowerCase();
-    
+
     // Iconos específicos por posición (primeros items suelen ser más importantes)
     if (position === 0) {
       if (titleLower.includes('inicio') || titleLower.includes('dashboard')) return 'fa-home';
       if (titleLower.includes('principal')) return 'fa-star';
     }
-    
+
     // Iconos para items con submenús (más elaborados)
     if (hasSubmenu) {
       if (titleLower.includes('venta')) return 'fa-shopping-bag';
@@ -1961,7 +2027,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       if (titleLower.includes('usuario')) return 'fa-users';
       if (titleLower.includes('config')) return 'fa-cogs';
     }
-    
+
     // Usar el método de inferencia estándar como fallback
     return this.inferIconFromTitle(title);
   }
@@ -1969,7 +2035,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Método para inferir iconos basado en el título del menú - Compatible con FontAwesome 4.7.0
   private inferIconFromTitle(title: string): string {
     const titleLower = title.toLowerCase();
-    
+
     // Patrones de títulos comunes y sus iconos (FontAwesome 4.7.0)
     const titlePatterns: { [key: string]: string } = {
       // Dashboard y home
@@ -1977,7 +2043,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'dashboard': 'tachometer',
       'panel': 'tachometer',
       'escritorio': 'desktop',
-      
+
       // Ventas y comercial
       'venta': 'shopping-cart',
       'ventas': 'line-chart',
@@ -1987,7 +2053,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'orden': 'clipboard',
       'cliente': 'user',
       'prospecto': 'user-plus',
-      
+
       // Inventario
       'producto': 'cube',
       'inventario': 'building-o',
@@ -1995,7 +2061,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'categoria': 'folder-o',
       'almacén': 'building-o',
       'bodega': 'building-o',
-      
+
       // Finanzas
       'finanza': 'dollar',
       'contab': 'calculator',
@@ -2004,14 +2070,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'gasto': 'arrow-down',
       'ingreso': 'arrow-up',
       'presupuesto': 'calculator',
-      
+
       // Reportes
       'reporte': 'bar-chart',
       'estadística': 'bar-chart',
       'análisis': 'search',
       'gráfico': 'pie-chart',
       'métrica': 'tachometer',
-      
+
       // Usuarios y administración
       'usuario': 'user',
       'empleado': 'id-card-o',
@@ -2020,21 +2086,21 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'permiso': 'key',
       'configuración': 'cog',
       'ajuste': 'sliders',
-      
+
       // Logística
       'envío': 'truck',
       'entrega': 'truck',
       'transporte': 'truck',
       'ruta': 'road',
       'ubicación': 'map-marker',
-      
+
       // Comunicación
       'mensaje': 'comment',
       'notificación': 'bell',
       'correo': 'envelope',
       'chat': 'comments',
       'soporte': 'headphones',
-      
+
       // Documentos
       'documento': 'file-text-o',
       'archivo': 'file-o',
@@ -2042,21 +2108,21 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'pdf': 'file-pdf-o',
       'excel': 'file-excel-o',
       'word': 'file-word-o',
-      
+
       // Procesos
       'proceso': 'cogs',
       'flujo': 'refresh',
       'tarea': 'list',
       'actividad': 'clock-o',
       'historial': 'history',
-      
+
       // Calidad y control
       'calidad': 'star',
       'auditoría': 'search',
       'control': 'shield',
       'seguridad': 'lock',
       'backup': 'cloud-upload',
-      
+
       // Herramientas
       'herramienta': 'wrench',
       'utilidad': 'wrench',
@@ -2085,20 +2151,20 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   toggleCompactMode(): void {
     this.isCompactMode = !this.isCompactMode;
     localStorage.setItem('sidebarCompactMode', this.isCompactMode.toString());
-    
+
     // Aplicar clase CSS para el modo compacto
     if (this.isCompactMode) {
       document.body.classList.add('sidebar-compact-mode');
     } else {
       document.body.classList.remove('sidebar-compact-mode');
     }
-    
+
     // Cerrar submenús abiertos en modo compacto para evitar conflictos
     if (this.isCompactMode) {
       this.closeAllSubmenus();
     }
   }
-  
+
   // Método para crear etiqueta para enlaces externos
   getExtLinkLabel(title: string): string {
     return `${title} (enlace externo)`;
@@ -2139,40 +2205,40 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isSearchActive = false;
     this.isSearchFocused = false;
   }
-  
+
   // Obtener todos los items de menú para la búsqueda
   private getAllMenuItems(): Menu[] {
     const allItems: Menu[] = [];
-    
+
     const processItem = (item: Menu) => {
       allItems.push(item);
-      
+
       if (item.children) {
         item.children.forEach(child => processItem(child));
       }
     };
-    
+
     const originalItems = this.navServices.getMenuItems();
     originalItems.forEach(item => {
       if (!item.headTitle1 && !item.headTitle2) {
         processItem(item);
       }
     });
-    
+
     return allItems;
   }
-  
+
   // Método para agregar/quitar de favoritos
   toggleFavorite(item: Menu, event?: Event): void {
     if (event) {
       event.stopPropagation();
       event.preventDefault();
     }
-    
-    const index = this.favoriteItems.findIndex(fav => 
+
+    const index = this.favoriteItems.findIndex(fav =>
       fav.path === item.path && fav.title === item.title
     );
-    
+
     if (index > -1) {
       this.favoriteItems.splice(index, 1);
     } else {
@@ -2182,17 +2248,17 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       this.favoriteItems.unshift(item);
     }
-    
+
     this.saveFavoriteItems();
   }
-  
+
   // Comprobar si un item está en favoritos
   isFavorite(item: Menu): boolean {
-    return this.favoriteItems.some(fav => 
+    return this.favoriteItems.some(fav =>
       fav.path === item.path && fav.title === item.title
     );
   }
-  
+
   // Guardar favoritos en localStorage
   private saveFavoriteItems(): void {
     const favoritesToSave = this.favoriteItems.map(item => ({
@@ -2201,17 +2267,17 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       icon: item.icon,
       type: item.type
     }));
-    
+
     localStorage.setItem('sidebarFavoriteItems', JSON.stringify(favoritesToSave));
   }
-  
+
   // Cargar favoritos desde localStorage
   private loadFavoriteItems(): void {
     const savedFavorites = localStorage.getItem('sidebarFavoriteItems');
     if (savedFavorites) {
       try {
         this.favoriteItems = JSON.parse(savedFavorites);
-      } catch(e) {
+      } catch (e) {
         console.error('Error loading favorite items:', e);
         this.favoriteItems = [];
       }
@@ -2254,17 +2320,17 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
       const toggleBtn = document.querySelector('.sidebar-toggle-btn');
       const overlay = document.querySelector('.sidebar-overlay');
-      
+
       // Verificar que el clic no sea en elementos del sidebar
-      if (sidebar && !sidebar.contains(target) && 
-          toggleBtn && !toggleBtn.contains(target) &&
-          overlay && !overlay.contains(target)) {
-        
+      if (sidebar && !sidebar.contains(target) &&
+        toggleBtn && !toggleBtn.contains(target) &&
+        overlay && !overlay.contains(target)) {
+
         // Verificar que no sea un elemento interno del sidebar
-        const isInsideSidebar = target.closest('.sidebar-container') || 
-                               target.closest('.sidebar-toggle-btn') ||
-                               target.closest('.sidebar-overlay');
-        
+        const isInsideSidebar = target.closest('.sidebar-container') ||
+          target.closest('.sidebar-toggle-btn') ||
+          target.closest('.sidebar-overlay');
+
         if (!isInsideSidebar) {
           this.sidebarToggle();
         }
@@ -2309,35 +2375,35 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     const submenuElement = this.renderer.createElement('div');
     this.renderer.addClass(submenuElement, 'collapsed-submenu-floating');
     this.renderer.setAttribute(submenuElement, 'role', 'menu');
-    
+
     // Obtener posición del elemento padre
     const parentElement = (event?.target as HTMLElement)?.closest('.menu-link');
     if (!parentElement) return;
-    
+
     const rect = parentElement.getBoundingClientRect();
-    
+
     // Calcular posición óptima del submenú
     const viewportHeight = window.innerHeight;
     const submenuHeight = item.children.length * 48 + 16; // Estimación
     let topPosition = rect.top;
-    
+
     // Ajustar posición si se sale de la pantalla
     if (topPosition + submenuHeight > viewportHeight) {
       topPosition = Math.max(16, viewportHeight - submenuHeight - 16);
     }
-    
+
     // Posicionar el submenú
     this.renderer.setStyle(submenuElement, 'position', 'fixed');
-    this.renderer.setStyle(submenuElement, 'left', `${rect.right + 12}px`);
-    this.renderer.setStyle(submenuElement, 'top', `${topPosition}px`);
+    this.renderer.setStyle(submenuElement, 'left', `${rect.right + 12} px`);
+    this.renderer.setStyle(submenuElement, 'top', `${topPosition} px`);
     this.renderer.setStyle(submenuElement, 'z-index', '1200');
-    this.renderer.setStyle(submenuElement, 'max-height', `${viewportHeight - topPosition - 32}px`);
+    this.renderer.setStyle(submenuElement, 'max-height', `${viewportHeight - topPosition - 32} px`);
     this.renderer.setStyle(submenuElement, 'overflow-y', 'auto');
-    
+
     // Crear contenido del submenú con diseño mejorado
     item.children.forEach((childItem, index) => {
       const itemElement = this.renderer.createElement('a');
-      
+
       if (childItem.type === 'link') {
         this.renderer.setAttribute(itemElement, 'href', childItem.path || '#');
         this.renderer.listen(itemElement, 'click', (e) => {
@@ -2352,16 +2418,16 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.renderer.setAttribute(itemElement, 'target', '_blank');
         this.renderer.setAttribute(itemElement, 'rel', 'noopener noreferrer');
       }
-      
+
       this.renderer.addClass(itemElement, 'collapsed-submenu-item');
       this.renderer.setAttribute(itemElement, 'role', 'menuitem');
       this.renderer.setAttribute(itemElement, 'title', childItem.title || '');
-      this.renderer.setStyle(itemElement, 'animation-delay', `${index * 0.05}s`);
-      
+      this.renderer.setStyle(itemElement, 'animation-delay', `${index * 0.05} s`);
+
       // Crear wrapper de icono
       const iconWrapper = this.renderer.createElement('div');
       this.renderer.addClass(iconWrapper, 'submenu-icon-wrapper');
-      
+
       // Crear icono con sistema mejorado y contexto
       const iconElement = this.renderer.createElement('i');
       this.renderer.addClass(iconElement, 'fa');
@@ -2370,20 +2436,20 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.renderer.addClass(iconElement, 'floating-submenu-icon');
       this.renderer.setAttribute(iconElement, 'aria-hidden', 'true');
       this.renderer.setStyle(iconElement, '--floating-icon-index', index.toString());
-      
+
       this.renderer.appendChild(iconWrapper, iconElement);
-      
+
       // Crear wrapper de contenido
       const contentWrapper = this.renderer.createElement('div');
       this.renderer.addClass(contentWrapper, 'submenu-content');
-      
+
       // Crear texto principal
       const textElement = this.renderer.createElement('span');
       this.renderer.addClass(textElement, 'submenu-text');
       this.renderer.appendChild(textElement, this.renderer.createText(childItem.title || ''));
-      
+
       this.renderer.appendChild(contentWrapper, textElement);
-      
+
       // Añadir indicador para enlaces externos
       if (childItem.type === 'extLink') {
         const externalIcon = this.renderer.createElement('i');
@@ -2393,7 +2459,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.renderer.setAttribute(externalIcon, 'aria-hidden', 'true');
         this.renderer.appendChild(contentWrapper, externalIcon);
       }
-      
+
       // Añadir indicador para submenús anidados
       if (childItem.children && childItem.children.length > 0) {
         const chevronIcon = this.renderer.createElement('i');
@@ -2403,24 +2469,24 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.renderer.setAttribute(chevronIcon, 'aria-hidden', 'true');
         this.renderer.appendChild(contentWrapper, chevronIcon);
       }
-      
+
       this.renderer.appendChild(itemElement, iconWrapper);
       this.renderer.appendChild(itemElement, contentWrapper);
       this.renderer.appendChild(submenuElement, itemElement);
-      
+
       // Añadir eventos de hover para mejor UX
       this.renderer.listen(itemElement, 'mouseenter', () => {
         this.renderer.addClass(itemElement, 'hovered');
       });
-      
+
       this.renderer.listen(itemElement, 'mouseleave', () => {
         this.renderer.removeClass(itemElement, 'hovered');
       });
     });
-    
+
     // Añadir al DOM
     this.renderer.appendChild(document.body, submenuElement);
-    
+
     // Listener para cerrar al hacer clic fuera con debounce
     setTimeout(() => {
       const closeListener = this.renderer.listen('document', 'click', (e) => {
@@ -2429,11 +2495,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
           closeListener();
         }
       });
-      
+
       // Guardar referencia para poder cerrarlo después
       (submenuElement as any)._closeListener = closeListener;
     }, 100);
-    
+
     this.currentCollapsedSubmenu = submenuElement;
   }
 
@@ -2457,7 +2523,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isSearchFocused = false;
     this.closeAllSubmenus();
     this.closeCollapsedSubmenu();
-    
+
     // Resetear estado de secciones si es necesario
     this.sections.forEach(section => {
       if (section.isHeaderSection) {
@@ -2474,7 +2540,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Cache para iconos validados
   private iconCache = new Map<string, string>();
-  
+
   // Lista de iconos válidos en FontAwesome 4.7.0
   private readonly validFA4Icons = new Set([
     'fa-home', 'fa-user', 'fa-users', 'fa-cog', 'fa-cogs', 'fa-search', 'fa-bell',
@@ -2599,7 +2665,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   validateAndOptimizeIcon(iconClass: string, category: string = 'default'): string {
     // Verificar cache primero
-    const cacheKey = `${iconClass}-${category}`;
+    const cacheKey = `${iconClass} -${category} `;
     if (this.iconCache.has(cacheKey)) {
       return this.iconCache.get(cacheKey)!;
     }
@@ -2608,7 +2674,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Asegurar que tiene prefijo fa-
     if (!optimizedIcon.startsWith('fa-')) {
-      optimizedIcon = `fa-${optimizedIcon}`;
+      optimizedIcon = `fa - ${optimizedIcon} `;
     }
 
     // Verificar si es válido
@@ -2627,10 +2693,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     // Usar icono de fallback
     const fallbackIcon = this.fallbackIcons[category] || this.fallbackIcons['default'];
     this.iconCache.set(cacheKey, fallbackIcon);
-    
+
     // Log para debugging en desarrollo
     if (!environment.production) {
-      console.warn(`Icon '${iconClass}' not found in FA 4.7.0, using fallback: ${fallbackIcon}`);
+      console.warn(`Icon '${iconClass}' not found in FA 4.7.0, using fallback: ${fallbackIcon} `);
     }
 
     return fallbackIcon;
@@ -2752,7 +2818,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   private detectIconCategory(title: string, hasChildren: boolean = false): string {
     const titleLower = title.toLowerCase();
-    
+
     if (titleLower.includes('usuario') || titleLower.includes('empleado') || titleLower.includes('cliente')) {
       return 'user';
     }
@@ -2783,7 +2849,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (titleLower.includes('estado') || titleLower.includes('estatus') || titleLower.includes('activo')) {
       return 'status';
     }
-    
+
     return 'default';
   }
 
@@ -2795,7 +2861,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!icon && title) {
       icon = this.inferIconFromTitle(title);
     }
-    
+
     if (!icon) {
       const category = this.detectIconCategory(title || '', hasChildren);
       return this.validateAndOptimizeIcon('circle-o', category);
@@ -2803,10 +2869,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Detectar categoría para mejor fallback
     const category = this.detectIconCategory(title || '', hasChildren);
-    
+
     // Usar mapeo existente primero
     const mappedIcon = this.getMenuIcon(icon, title, false);
-    
+
     // Validar y optimizar el resultado
     return this.validateAndOptimizeIcon(mappedIcon, category);
   }
@@ -2886,15 +2952,15 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         const rect = sidebar.getBoundingClientRect();
         const x = event.clientX - rect.left;
         const y = event.clientY - rect.top;
-        
+
         if (this.animationFrameId) {
           cancelAnimationFrame(this.animationFrameId);
         }
-        
+
         this.animationFrameId = requestAnimationFrame(() => {
           if (this.spotlightElement) {
-            this.renderer.setStyle(this.spotlightElement, 'left', `${x}px`);
-            this.renderer.setStyle(this.spotlightElement, 'top', `${y}px`);
+            this.renderer.setStyle(this.spotlightElement, 'left', `${x} px`);
+            this.renderer.setStyle(this.spotlightElement, 'top', `${y} px`);
           }
         });
       }
@@ -2907,12 +2973,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   private setupMagneticEffects(): void {
     // Aplicar efecto magnético a todos los enlaces del menú
     const menuLinks = this.elementRef.nativeElement.querySelectorAll('.menu-link');
-    
+
     menuLinks.forEach((link: HTMLElement) => {
       this.renderer.listen(link, 'mouseenter', () => {
         this.renderer.addClass(link, 'magnetic-hover');
       });
-      
+
       this.renderer.listen(link, 'mouseleave', () => {
         this.renderer.removeClass(link, 'magnetic-hover');
       });
@@ -2924,12 +2990,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   private animateInitialLoad(): void {
     const menuItems = this.elementRef.nativeElement.querySelectorAll('.menu-item');
-    
+
     menuItems.forEach((item: HTMLElement) => {
       // Asegurar que todos los elementos sean visibles
       this.renderer.setStyle(item, 'opacity', '1');
       this.renderer.setStyle(item, 'transform', 'translateY(0) scale(1)');
-      
+
       // Agregar clases para animaciones breathing sutiles (solo algunas)
       if (Math.random() > 0.7) {
         this.renderer.addClass(item, 'breathing-element');
@@ -2943,7 +3009,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   activateDemoHighlight(element: HTMLElement): void {
     this.renderer.addClass(element, 'demo-highlight');
     this.renderer.addClass(element, 'active');
-    
+
     // Quitar después de 3 segundos
     setTimeout(() => {
       this.renderer.removeClass(element, 'demo-highlight');
@@ -2956,7 +3022,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   activateDemoFocus(element: HTMLElement): void {
     this.renderer.addClass(element, 'demo-focus');
-    
+
     // Quitar después de 2 segundos
     setTimeout(() => {
       this.renderer.removeClass(element, 'demo-focus');
@@ -2968,7 +3034,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   simulateLoadingState(element: HTMLElement): void {
     this.renderer.addClass(element, 'shimmer-loading');
-    
+
     setTimeout(() => {
       this.renderer.removeClass(element, 'shimmer-loading');
     }, 1500);
@@ -2979,28 +3045,28 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   applyCinematicGlow(element: HTMLElement): void {
     this.renderer.addClass(element, 'cinematic-glow');
-    
+
     setTimeout(() => {
       this.renderer.removeClass(element, 'cinematic-glow');
     }, 2000);
   }
-  
+
   // ===================================================
   // MÉTODOS DE NOTIFICACIONES
   // ===================================================
-  
+
   private initializeNotifications(): void {
     // Suscribirse a las notificaciones del NotificationManagerService
     if (this.notificationManager) {
       this.notificationSubscription = this.notificationManager.notifications$.subscribe(notifications => {
         // Contar notificaciones no leídas
         this.unreadNotificationCount = notifications.filter(n => n.status !== 'READ').length;
-        
+
         // Obtener la última notificación para el preview
         if (notifications.length > 0) {
           const latest = notifications[0];
           this.latestNotification = latest.message || latest.title || '';
-          
+
           // Si hay nuevas notificaciones, activar animación
           if (this.unreadNotificationCount > 0) {
             this.triggerNewNotificationAnimation();
@@ -3010,53 +3076,53 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       });
     }
-    
+
     // Cargar preferencia de sonido
     const soundPref = localStorage.getItem('notificationSound');
     this.notificationSoundEnabled = soundPref !== 'false';
   }
-  
+
   private triggerNewNotificationAnimation(): void {
     this.hasNewNotifications = true;
-    
+
     // Reproducir sonido si está habilitado
     if (this.notificationSoundEnabled) {
       this.playNotificationSound();
     }
-    
+
     // Desactivar la animación después de 3 segundos
     if (this.newNotificationTimer) {
       clearTimeout(this.newNotificationTimer);
     }
-    
+
     this.newNotificationTimer = setTimeout(() => {
       this.hasNewNotifications = false;
     }, 3000);
   }
-  
+
   private playNotificationSound(): void {
     try {
       // Crear un sonido simple usando Web Audio API
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
-      
+
       oscillator.connect(gainNode);
       gainNode.connect(audioContext.destination);
-      
+
       oscillator.frequency.value = 800;
       oscillator.type = 'sine';
-      
+
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
-      
+
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.2);
     } catch (error) {
       console.log('No se pudo reproducir el sonido de notificación', error);
     }
   }
-  
+
   public openNotificationCenter(): void {
     // Emitir evento para abrir el panel de notificaciones
     // Esto puede comunicarse con el notification-center component
@@ -3065,15 +3131,15 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       notificationBell.click();
     }
   }
-  
+
   public markAllNotificationsAsRead(event: Event): void {
     event.stopPropagation();
-    
+
     if (this.notificationManager) {
       this.notificationManager.markAllAsRead();
     }
   }
-  
+
   public toggleNotificationSound(event: Event): void {
     event.stopPropagation();
 
@@ -3186,8 +3252,8 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
       // Verificar si el click fue fuera del sidebar
       if (!sidebarElement.contains(target) &&
-          !target.closest('.sidebar-hover-zone') &&
-          !target.closest('.sidebar-toggle-btn')) {
+        !target.closest('.sidebar-hover-zone') &&
+        !target.closest('.sidebar-toggle-btn')) {
 
         // Solo ocultar si auto-hide está activo
         if (this.isAutoHideEnabled && this.isSidebarVisible) {
