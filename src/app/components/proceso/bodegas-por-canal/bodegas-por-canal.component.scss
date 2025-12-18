@@ -1,140 +1,577 @@
-// Variables
-$primary-color: #6ec0d4;
-$secondary-color: #5cb85c;
-$danger-color: #d9534f;
+// Variables - Katuq Theme
+$primary-color: #a78bfa;
+$secondary-color: #4555D1;
+$success-color: #51bb25;
+$danger-color: #dc3545;
 $info-color: #5bc0de;
-$warning-color: #f0ad4e;
+$warning-color: #f8d62b;
 $light-bg: #f8f9fa;
 $border-color: #dee2e6;
 
-// General styles
-.card {
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  
-  .card-header {
-    font-weight: 500;
+// Dark theme variables
+$dark-body-bg: #1d1e26;
+$dark-card-bg: #262932;
+$dark-text: rgba(255, 255, 255, 0.9);
+$dark-text-muted: rgba(255, 255, 255, 0.6);
+$dark-border: #374558;
+
+// Main container
+.container-fluid {
+  .card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    border: none;
+    transition: all 0.3s ease;
+    background: var(--card-bg, #ffffff);
+
+    .card-header {
+      font-weight: 600;
+      border-radius: 12px 12px 0 0;
+      background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.02) 100%);
+      border-bottom: 1px solid rgba($primary-color, 0.15);
+
+      h5 {
+        color: var(--text-primary, #2b2b2b);
+        font-weight: 600;
+
+        i {
+          opacity: 0.9;
+        }
+      }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+  }
+}
+
+// Header section
+.fc-secondary {
+  color: var(--text-primary, #2b2b2b) !important;
+  font-weight: 700 !important;
+}
+
+.fs-24 {
+  font-size: 1.5rem;
+}
+
+.fs-18 {
+  font-size: 1.125rem;
+}
+
+// Muted text with better visibility
+.text-muted {
+  color: var(--text-muted, #6c757d) !important;
+}
+
+// Form elements
+.form-label {
+  color: var(--text-primary, #2b2b2b);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.form-select {
+  background-color: var(--input-bg, #ffffff);
+  border: 2px solid var(--input-border, #e0e0e0);
+  color: var(--text-primary, #2b2b2b);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: $primary-color;
+  }
+
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+    outline: none;
+  }
+
+  option {
+    color: #2b2b2b;
+    background-color: #ffffff;
+    padding: 0.5rem;
   }
 }
 
 // Canal Info Card
 .card.border-primary {
-  border-color: $primary-color !important;
-  background-color: rgba($primary-color, 0.03);
+  border: 2px solid $primary-color !important;
+  background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.03) 100%);
+  border-radius: 10px;
+
+  .card-body {
+    h5 {
+      color: var(--text-primary, #2b2b2b);
+      font-weight: 600;
+    }
+
+    small {
+      color: var(--text-muted, #6c757d);
+    }
+  }
+}
+
+// Status badges
+.badge {
+  font-weight: 600;
+  padding: 0.5em 1em;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+
+  &.rounded-pill {
+    border-radius: 50px;
+  }
+
+  &.bg-success {
+    background: linear-gradient(135deg, $success-color, darken($success-color, 10%)) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba($success-color, 0.3);
+  }
+
+  &.bg-secondary {
+    background: linear-gradient(135deg, #6c757d, #5a6268) !important;
+    color: #ffffff !important;
+  }
+
+  &.bg-primary {
+    background: linear-gradient(135deg, $primary-color, darken($primary-color, 15%)) !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba($primary-color, 0.3);
+  }
+
+  &.bg-info {
+    background: rgba($info-color, 0.15) !important;
+    color: darken($info-color, 25%) !important;
+    border: 1px solid rgba($info-color, 0.3);
+
+    &.text-dark {
+      color: darken($info-color, 30%) !important;
+    }
+  }
+}
+
+// Grid columns for bodegas
+.col-md-6 {
+  > .card {
+    border: 1px solid var(--card-border, #e8e8e8);
+
+    &.h-100 {
+      min-height: 450px;
+    }
+  }
+}
+
+// Card headers for bodega sections
+.card-header {
+  &.bg-light {
+    background: linear-gradient(135deg, rgba($primary-color, 0.06) 0%, rgba(255, 255, 255, 0.9) 100%) !important;
+    border-bottom: 2px solid rgba($primary-color, 0.1);
+    padding: 1rem 1.25rem;
+
+    h5 {
+      color: var(--text-primary, #2b2b2b) !important;
+      font-size: 1rem;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i {
+        font-size: 1.1rem;
+
+        &.text-primary {
+          color: $primary-color !important;
+        }
+
+        &.text-success {
+          color: $success-color !important;
+        }
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        padding: 0.35em 0.75em;
+      }
+    }
+  }
 }
 
 // Bodega items
 .bodega-item {
-  transition: all 0.2s ease;
-  
+  background: var(--bodega-item-bg, #ffffff) !important;
+  border: 1px solid var(--bodega-item-border, #e8e8e8) !important;
+  border-radius: 10px !important;
+  transition: all 0.25s ease;
+
   &:hover {
-    background-color: #f0f7ff !important;
+    background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.02) 100%) !important;
     border-color: $primary-color !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba($primary-color, 0.15);
   }
-  
+
+  h6 {
+    color: var(--text-primary, #2b2b2b) !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+  }
+
+  small {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+
+    .text-muted {
+      color: var(--text-muted, #6c757d) !important;
+      font-size: 0.85rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.3em 0.6em;
+    }
+  }
+
+  // Action buttons
   .btn-outline-danger {
+    border-color: $danger-color;
+    color: $danger-color;
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    transition: all 0.2s ease;
+
     &:hover {
-      background-color: $danger-color;
-      color: #fff;
+      background: $danger-color;
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba($danger-color, 0.3);
     }
   }
-  
+
   .btn-outline-success {
+    border-color: $success-color;
+    color: $success-color;
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+    transition: all 0.2s ease;
+
     &:hover {
-      background-color: $secondary-color;
-      color: #fff;
+      background: $success-color;
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba($success-color, 0.3);
     }
   }
+}
+
+// Assigned bodega style
+.bodega-asignada {
+  opacity: 0.6;
+  background: var(--bodega-assigned-bg, #f8f9fa) !important;
+  border-color: var(--bodega-assigned-border, #dee2e6) !important;
+  cursor: not-allowed;
+
+  &:hover {
+    transform: none;
+    box-shadow: none;
+    background: var(--bodega-assigned-bg, #f8f9fa) !important;
+    border-color: var(--bodega-assigned-border, #dee2e6) !important;
+  }
+}
+
+.badge-asignada {
+  background: linear-gradient(135deg, $success-color, darken($success-color, 10%));
+  color: #ffffff;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba($success-color, 0.25);
 }
 
 // Custom scrollbar for bodega lists
-.bodega-list::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+.bodega-list {
+  padding-right: 0.5rem;
 
-.bodega-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
 
-.bodega-list::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-  
-  &:hover {
-    background: #a8a8a8;
+  &::-webkit-scrollbar-track {
+    background: var(--scrollbar-track, #f1f1f1);
+    border-radius: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba($primary-color, 0.4), rgba($primary-color, 0.6));
+    border-radius: 4px;
+
+    &:hover {
+      background: linear-gradient(135deg, rgba($primary-color, 0.6), rgba($primary-color, 0.8));
+    }
   }
 }
 
-// Animation for loading spinner
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+// Loading spinner
+.spinner-border {
+  color: $primary-color !important;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-width: 3px;
+}
+
+// Loading text
+.text-center p {
+  color: var(--text-muted, #6c757d);
+  font-size: 0.95rem;
+}
+
+// Alert styles
+.alert {
+  border-radius: 10px;
+  border: none;
+  padding: 2rem;
+
+  &.alert-info {
+    background: linear-gradient(135deg, rgba($info-color, 0.12) 0%, rgba($info-color, 0.05) 100%);
+    color: var(--text-primary, #2b2b2b);
+
+    i {
+      color: $info-color;
+      display: block;
+      margin: 0 auto 1rem;
+    }
+
+    p {
+      color: var(--text-muted, #6c757d);
+      margin: 0;
+    }
+  }
+
+  &.alert-warning {
+    background: linear-gradient(135deg, rgba($warning-color, 0.15) 0%, rgba($warning-color, 0.05) 100%);
+    color: var(--text-primary, #2b2b2b);
+
+    i {
+      color: darken($warning-color, 15%);
+      display: block;
+      margin: 0 auto 1rem;
+    }
+
+    h5 {
+      color: var(--text-primary, #2b2b2b);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    p {
+      color: var(--text-muted, #6c757d);
+      margin: 0;
+    }
+  }
+}
+
+// Validation errors
+.text-danger {
+  color: $danger-color !important;
+  font-weight: 500;
+}
+
+// Icon background
+.icon-bg {
+  font-size: 5rem;
+  opacity: 0.12 !important;
+  color: $primary-color !important;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+// Loader
+.loader-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  .loader-8 {
+    border-color: $primary-color;
+  }
+}
+
+// Dark theme support
+:host-context(.dark-only),
+:host-context([data-theme="dark"]) {
+  --card-bg: #{$dark-card-bg};
+  --text-primary: #{$dark-text};
+  --text-muted: #{$dark-text-muted};
+  --input-bg: #{$dark-card-bg};
+  --input-border: #{$dark-border};
+  --card-border: #{$dark-border};
+  --bodega-item-bg: #{lighten($dark-card-bg, 3%)};
+  --bodega-item-border: #{$dark-border};
+  --bodega-assigned-bg: #{$dark-body-bg};
+  --bodega-assigned-border: #{$dark-border};
+  --scrollbar-track: #{$dark-body-bg};
+
+  .card {
+    background: $dark-card-bg;
+    border: 1px solid $dark-border;
+
+    .card-header {
+      background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-card-bg, 0.9) 100%) !important;
+      border-bottom: 1px solid rgba($primary-color, 0.2);
+
+      &.bg-light {
+        background: linear-gradient(135deg, rgba($primary-color, 0.12) 0%, rgba($dark-card-bg, 0.95) 100%) !important;
+      }
+
+      h5 {
+        color: $dark-text !important;
+      }
+    }
+  }
+
+  .fc-secondary {
+    color: $dark-text !important;
+  }
+
+  .text-muted {
+    color: $dark-text-muted !important;
+  }
+
+  .form-label {
+    color: $dark-text;
+  }
+
+  .form-select {
+    background-color: lighten($dark-card-bg, 5%);
+    border-color: $dark-border;
+    color: $dark-text;
+
+    option {
+      background-color: $dark-card-bg;
+      color: $dark-text;
+    }
+  }
+
+  .card.border-primary {
+    background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-card-bg, 0.95) 100%);
+
+    .card-body {
+      h5 {
+        color: $dark-text;
+      }
+
+      small {
+        color: $dark-text-muted;
+      }
+    }
+  }
+
+  .bodega-item {
+    background: lighten($dark-card-bg, 4%) !important;
+    border-color: $dark-border !important;
+
+    &:hover {
+      background: linear-gradient(135deg, rgba($primary-color, 0.2) 0%, rgba($dark-card-bg, 0.95) 100%) !important;
+    }
+
+    h6 {
+      color: $dark-text !important;
+    }
+
+    small .text-muted {
+      color: $dark-text-muted !important;
+    }
+  }
+
+  .bodega-asignada {
+    background: $dark-body-bg !important;
+
+    &:hover {
+      background: $dark-body-bg !important;
+    }
+  }
+
+  .alert {
+    &.alert-info {
+      background: linear-gradient(135deg, rgba($info-color, 0.2) 0%, rgba($dark-card-bg, 0.95) 100%);
+
+      p {
+        color: $dark-text-muted;
+      }
+    }
+
+    &.alert-warning {
+      background: linear-gradient(135deg, rgba($warning-color, 0.2) 0%, rgba($dark-card-bg, 0.95) 100%);
+
+      h5 {
+        color: $dark-text;
+      }
+
+      p {
+        color: $dark-text-muted;
+      }
+    }
+  }
+
+  .badge.bg-info {
+    background: rgba($info-color, 0.25) !important;
+    color: lighten($info-color, 10%) !important;
+    border-color: rgba($info-color, 0.4);
+
+    &.text-dark {
+      color: lighten($info-color, 15%) !important;
+    }
+  }
 }
 
 // Responsive adjustments
 @media (max-width: 768px) {
   .row > div[class^="col"] {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
   }
-  
+
   .card-body {
     padding: 1rem;
   }
-  
+
   .bodega-list {
     max-height: 300px !important;
   }
-}
 
-// Icon styles
-.icon-bg {
-  font-size: 4rem;
-}
+  .fc-secondary {
+    font-size: 1.25rem !important;
+  }
 
-// Badge styles
-.badge {
-  font-weight: 500;
-  
-  &.bg-info {
-    background-color: rgba($info-color, 0.2) !important;
-    color: darken($info-color, 20%) !important;
-    border: 1px solid rgba($info-color, 0.3);
+  .card-header.bg-light h5 {
+    font-size: 0.9rem;
   }
 }
 
-// Add hover effect to select control
-.form-select {
-  &:hover {
-    border-color: $primary-color;
-  }
-  
-  &:focus {
-    border-color: $primary-color;
-    box-shadow: 0 0 0 0.25rem rgba($primary-color, 0.25);
-  }
-}
+@media (max-width: 576px) {
+  .bodega-item {
+    .d-flex {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 0.75rem;
+    }
 
-// Style for empty state messages
-.alert-info, .alert-warning {
-  i {
-    display: block;
-    margin: 0 auto;
+    .btn-outline-danger,
+    .btn-outline-success {
+      width: 100%;
+      text-align: center;
+    }
   }
 }
-
-.bodega-asignada {
-  opacity: 0.7;
-  background-color: #f8f9fa;
-  border-color: #dee2e6;
-  cursor: not-allowed;
-}
-
-.badge-asignada {
-  background-color: #28a745;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-} 

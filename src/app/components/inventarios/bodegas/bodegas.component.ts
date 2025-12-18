@@ -87,23 +87,85 @@ export class BodegasComponent implements OnInit {
     }
 
     Swal.fire({
-      title: '¿Está seguro de eliminar esta bodega?',
-      text: 'Esta acción no se puede deshacer.',
+      title: '¿Está seguro de desactivar esta bodega?',
+      text: 'La bodega quedará inactiva pero podrá ser reactivada posteriormente.',
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
+      confirmButtonText: 'Sí, desactivar',
       cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
         this.cargando = true;
         this.bodegaService.eliminarBodega(bodegaId).subscribe({
           next: () => {
-            Swal.fire('Eliminado', 'Bodega eliminada correctamente.', 'success');
+            Swal.fire('Desactivada', 'Bodega desactivada correctamente.', 'success');
             this.cargarBodegas();
           },
           error: (err) => {
-            console.error('Error eliminando bodega:', err);
-            Swal.fire('Error', 'Ocurrió un error al eliminar la bodega.', 'error');
+            console.error('Error desactivando bodega:', err);
+            Swal.fire('Error', 'Ocurrió un error al desactivar la bodega.', 'error');
+            this.cargando = false;
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Elimina permanentemente una bodega del maestro (hard delete)
+   * Esta acción NO se puede deshacer
+   */
+  eliminarBodegaPermanente(bodega: any) {
+    const bodegaId = bodega?.id || bodega?.cd;
+
+    if (!bodegaId) {
+      Swal.fire('Error', 'No se pudo identificar la bodega a eliminar.', 'error');
+      return;
+    }
+
+    Swal.fire({
+      title: '⚠️ Eliminación Permanente',
+      html: `
+        <div class="text-start">
+          <p><strong>Bodega:</strong> ${bodega.nombre}</p>
+          <p class="text-danger"><strong>¡ADVERTENCIA!</strong> Esta acción eliminará la bodega <strong>permanentemente</strong> del sistema.</p>
+          <ul class="text-muted small">
+            <li>Se perderá toda la información de la bodega</li>
+            <li>Se eliminarán las asociaciones con canales</li>
+            <li>Esta acción <strong>NO</strong> se puede deshacer</li>
+          </ul>
+          <p>Escriba <strong>"ELIMINAR"</strong> para confirmar:</p>
+        </div>
+      `,
+      input: 'text',
+      inputPlaceholder: 'Escriba ELIMINAR',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar permanentemente',
+      confirmButtonColor: '#dc3545',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => {
+        if (value !== 'ELIMINAR') {
+          return 'Debe escribir "ELIMINAR" para confirmar';
+        }
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.cargando = true;
+        this.bodegaService.eliminarBodegaPermanente(bodegaId).subscribe({
+          next: () => {
+            Swal.fire({
+              icon: 'success',
+              title: 'Eliminada',
+              text: 'La bodega ha sido eliminada permanentemente del sistema.'
+            });
+            this.cargarBodegas();
+          },
+          error: (err) => {
+            console.error('Error eliminando bodega permanentemente:', err);
+            const mensaje = err?.error?.message || 'Ocurrió un error al eliminar la bodega.';
+            Swal.fire('Error', mensaje, 'error');
             this.cargando = false;
           }
         });

@@ -1,40 +1,335 @@
-/* Estilos para los iconos */
+/* =============================================
+   BODEGAS TABLE - CLEAN MINIMAL DESIGN
+   ============================================= */
+
+// Variables
+$gray-100: #f5f5f5;
+$gray-200: #eeeeee;
+$gray-300: #e0e0e0;
+$gray-400: #bdbdbd;
+$gray-500: #9e9e9e;
+$gray-600: #757575;
+$gray-700: #616161;
+$gray-800: #424242;
+
+// Colores para tags (fondos suaves, texto oscuro legible)
+$blue-bg: #e3f2fd;
+$blue-text: #1565c0;
+$purple-bg: #f3e5f5;
+$purple-text: #7b1fa2;
+$amber-bg: #fff8e1;
+$amber-text: #f57f17;
+$gray-tag-bg: #f5f5f5;
+$gray-tag-text: #616161;
+$teal-bg: #e0f2f1;
+$teal-text: #00796b;
+$green-bg: #e8f5e9;
+$green-text: #2e7d32;
+
+// =============================================
+// ICON STYLES
+// =============================================
+.icon-bg {
+  z-index: 0;
+}
+
+// =============================================
+// LOADER
+// =============================================
+.loader-box {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+}
+
+// =============================================
+// TAGS (BADGES) - MINIMAL STYLE
+// =============================================
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+
+  i {
+    font-size: 11px;
+  }
+}
+
+// Tipo: Física
+.tag-blue {
+  background-color: $blue-bg;
+  color: $blue-text;
+}
+
+// Tipo: Transaccional
+.tag-purple {
+  background-color: $purple-bg;
+  color: $purple-text;
+}
+
+// Origen: Fulfillment
+.tag-amber {
+  background-color: $amber-bg;
+  color: $amber-text;
+}
+
+// Origen: Local
+.tag-gray {
+  background-color: $gray-tag-bg;
+  color: $gray-tag-text;
+}
+
+// Cobertura: Nacional
+.tag-teal {
+  background-color: $teal-bg;
+  color: $teal-text;
+}
+
+// Cobertura: Ciudades
+.tag-green {
+  background-color: $green-bg;
+  color: $green-text;
+}
+
+// Sin cobertura
+.tag-text-muted {
+  color: $gray-500;
+  font-size: 13px;
+}
+
+// =============================================
+// ACTION BUTTONS
+// =============================================
+.actions-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  color: $gray-600;
+
+  i {
+    font-size: 14px;
+  }
+
+  &:hover {
+    background: $gray-200;
+  }
+}
+
+.btn-icon-edit {
+  color: #5c6bc0;
+
+  &:hover {
+    background: #e8eaf6;
+    color: #3f51b5;
+  }
+}
+
+.btn-icon-warn {
+  color: #ffa726;
+
+  &:hover {
+    background: #fff3e0;
+    color: #f57c00;
+  }
+}
+
+.btn-icon-danger {
+  color: #ef5350;
+
+  &:hover {
+    background: #ffebee;
+    color: #d32f2f;
+  }
+}
+
+// Legacy classes (mantener compatibilidad)
 .fc-primary {
-    color: #5e72e4;
+  color: #5c6bc0;
+}
+
+.fc-danger {
+  color: #ef5350;
+}
+
+.fc-secondary {
+  color: $gray-700;
+}
+
+// =============================================
+// TABLE CUSTOMIZATION
+// =============================================
+.custom-datatable {
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-thead > tr > th {
+        background: $gray-100;
+        color: $gray-700;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 12px 16px;
+        border-bottom: 2px solid $gray-300;
+      }
+
+      .p-datatable-tbody > tr > td {
+        padding: 12px 16px;
+        font-size: 13px;
+        color: $gray-800;
+        border-bottom: 1px solid $gray-200;
+        vertical-align: middle;
+      }
+
+      .p-datatable-tbody > tr:hover {
+        background: $gray-100;
+      }
+
+      // Paginator
+      .p-paginator {
+        background: transparent;
+        border: none;
+        padding: 12px 0;
+
+        .p-paginator-element {
+          min-width: 32px;
+          height: 32px;
+          border-radius: 4px;
+          margin: 0 2px;
+
+          &:hover {
+            background: $gray-200;
+          }
+        }
+
+        .p-highlight {
+          background: #5c6bc0;
+          color: white;
+
+          &:hover {
+            background: #3f51b5;
+          }
+        }
+      }
+    }
   }
-  
-  .fc-danger {
-    color: #f5365c;
+}
+
+// =============================================
+// DARK MODE
+// =============================================
+:host-context(body.dark-only) {
+  .tag-blue {
+    background-color: rgba(#1565c0, 0.15);
+    color: #90caf9;
   }
-  
-  .fc-primary:hover, .fc-danger:hover {
-    opacity: 0.8;
+
+  .tag-purple {
+    background-color: rgba(#7b1fa2, 0.15);
+    color: #ce93d8;
   }
-  
-  /* Icono de fondo */
-  .icon-bg {
-    z-index: 0;
+
+  .tag-amber {
+    background-color: rgba(#f57f17, 0.15);
+    color: #ffcc80;
   }
-  
-  /* Loader */
-  .loader-box {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: 10;
+
+  .tag-gray {
+    background-color: rgba(#616161, 0.2);
+    color: #bdbdbd;
   }
-  
-  /* Badges */
-  .badge {
-    padding: 0.35em 0.65em;
-    font-size: 0.85em;
+
+  .tag-teal {
+    background-color: rgba(#00796b, 0.15);
+    color: #80cbc4;
   }
-  
-  .bg-primary {
-    background-color: #5e72e4!important;
+
+  .tag-green {
+    background-color: rgba(#2e7d32, 0.15);
+    color: #a5d6a7;
   }
-  
-  .bg-info {
-    background-color: #11cdef!important;
+
+  .tag-text-muted {
+    color: #9e9e9e;
   }
+
+  .btn-icon {
+    color: #bdbdbd;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .btn-icon-edit {
+    color: #7986cb;
+
+    &:hover {
+      background: rgba(#5c6bc0, 0.15);
+      color: #9fa8da;
+    }
+  }
+
+  .btn-icon-warn {
+    color: #ffb74d;
+
+    &:hover {
+      background: rgba(#ffa726, 0.15);
+      color: #ffcc80;
+    }
+  }
+
+  .btn-icon-danger {
+    color: #ef5350;
+
+    &:hover {
+      background: rgba(#ef5350, 0.15);
+      color: #e57373;
+    }
+  }
+
+  .custom-datatable {
+    ::ng-deep {
+      .p-datatable {
+        .p-datatable-thead > tr > th {
+          background: #2a2640;
+          color: #e0e0e0;
+          border-bottom-color: #3d3856;
+        }
+
+        .p-datatable-tbody > tr > td {
+          color: #e0e0e0;
+          border-bottom-color: #3d3856;
+        }
+
+        .p-datatable-tbody > tr:hover {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .p-paginator {
+          .p-paginator-element:hover {
+            background: rgba(255, 255, 255, 0.1);
+          }
+        }
+      }
+    }
+  }
+}

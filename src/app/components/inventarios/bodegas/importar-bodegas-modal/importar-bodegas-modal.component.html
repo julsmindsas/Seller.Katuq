@@ -1,128 +1,155 @@
-<div class="modal-header bg-light">
-  <div class="d-flex align-items-center">
-    <i class="pi pi-cloud-download text-primary me-3" style="font-size: 1.5rem;"></i>
-    <div>
-      <h5 class="modal-title mb-0">Importar Bodegas de Fulfillment</h5>
-      <small class="text-muted">Seleccione las bodegas que desea importar a Katuq</small>
+<!-- Modal Header - Glassmorphism Style -->
+<div class="modal-header-glass">
+  <div class="header-content">
+    <div class="header-icon">
+      <i class="fa fa-cloud-download"></i>
+    </div>
+    <div class="header-text">
+      <h4 class="modal-title">Importar Bodegas</h4>
+      <p class="modal-subtitle">Sincroniza bodegas desde tu proveedor de fulfillment</p>
     </div>
   </div>
-  <button type="button" class="btn-close" aria-label="Cerrar" (click)="cancelar()"></button>
+  <button type="button" class="btn-close-custom" aria-label="Cerrar" (click)="cancelar()">
+    <i class="fa fa-times"></i>
+  </button>
 </div>
 
-<div class="modal-body">
-  <!-- Filtros -->
-  <div class="row mb-3 g-2">
-    <div class="col-md-5">
-      <label class="form-label small text-muted">Filtrar por proveedor</label>
-      <select class="form-select" [(ngModel)]="providerFilter">
-        <option value="">Todos los proveedores</option>
-        <option *ngFor="let provider of providers" [value]="provider.value">
-          {{ provider.label }}
-        </option>
-      </select>
+<div class="modal-body-glass">
+  <!-- Search & Filters Section -->
+  <div class="filters-section">
+    <div class="search-box">
+      <i class="fa fa-search search-icon"></i>
+      <input type="text"
+             [(ngModel)]="searchQuery"
+             placeholder="Buscar por nombre, ciudad o dirección..."
+             class="search-input">
+      <button class="clear-search" *ngIf="searchQuery" (click)="searchQuery = ''">
+        <i class="fa fa-times"></i>
+      </button>
     </div>
-    <div class="col-md-5">
-      <label class="form-label small text-muted">Buscar bodega</label>
-      <div class="input-group">
-        <span class="input-group-text"><i class="pi pi-search"></i></span>
-        <input type="text" class="form-control" [(ngModel)]="searchQuery"
-               placeholder="Nombre, ciudad, dirección...">
-      </div>
-    </div>
-    <div class="col-md-2 d-flex align-items-end">
-      <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltros()"
-              [disabled]="!providerFilter && !searchQuery">
-        <i class="pi pi-filter-slash"></i> Limpiar
+
+    <div class="filter-chips">
+      <button class="chip"
+              [class.active]="!providerFilter"
+              (click)="providerFilter = ''">
+        <i class="fa fa-th-large"></i> Todos
+      </button>
+      <button class="chip"
+              *ngFor="let provider of providers"
+              [class.active]="providerFilter === provider.value"
+              (click)="providerFilter = provider.value">
+        <i class="fa fa-truck"></i> {{ provider.label }}
       </button>
     </div>
   </div>
 
-  <!-- Contador y acciones de selección -->
-  <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-    <div>
-      <span class="badge bg-primary me-2">{{ warehousesFiltradas.length }}</span>
-      <span class="text-muted">bodegas disponibles</span>
-      <span class="text-muted ms-2" *ngIf="contarSeleccionadas() > 0">
-        | <strong class="text-success">{{ contarSeleccionadas() }}</strong> seleccionadas
-      </span>
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-number">{{ warehousesFiltradas.length }}</span>
+      <span class="stat-label">disponibles</span>
     </div>
-    <div class="form-check">
-      <input class="form-check-input" type="checkbox" id="selectAll"
-             [(ngModel)]="selectAllChecked" (change)="onSelectAllChange()">
-      <label class="form-check-label" for="selectAll">
-        Seleccionar todas
+    <div class="stat-divider"></div>
+    <div class="stat-item selected" *ngIf="contarSeleccionadas() > 0">
+      <span class="stat-number">{{ contarSeleccionadas() }}</span>
+      <span class="stat-label">seleccionadas</span>
+    </div>
+
+    <div class="select-all-toggle">
+      <label class="toggle-label">
+        <input type="checkbox"
+               [(ngModel)]="selectAllChecked"
+               (change)="onSelectAllChange()"
+               class="toggle-input">
+        <span class="toggle-slider"></span>
+        <span class="toggle-text">Seleccionar todas</span>
       </label>
     </div>
   </div>
 
-  <!-- Lista de bodegas -->
-  <div class="warehouse-list" style="max-height: 400px; overflow-y: auto;">
-    <!-- Mensaje si no hay bodegas -->
-    <div *ngIf="warehousesFiltradas.length === 0" class="text-center py-5 text-muted">
-      <i class="pi pi-inbox" style="font-size: 3rem;"></i>
-      <p class="mt-3 mb-0">No hay bodegas disponibles para importar</p>
-      <small *ngIf="providerFilter || searchQuery">
-        Intente ajustar los filtros de búsqueda
-      </small>
+  <!-- Warehouse Grid -->
+  <div class="warehouse-grid">
+    <!-- Empty State -->
+    <div *ngIf="warehousesFiltradas.length === 0" class="empty-state">
+      <div class="empty-icon">
+        <i class="fa fa-inbox"></i>
+      </div>
+      <h5>No hay bodegas disponibles</h5>
+      <p *ngIf="providerFilter || searchQuery">Intenta ajustar los filtros de búsqueda</p>
+      <p *ngIf="!providerFilter && !searchQuery">No se encontraron bodegas en el fulfillment</p>
     </div>
 
-    <!-- Lista de bodegas disponibles -->
+    <!-- Warehouse Cards -->
     <div *ngFor="let wh of warehousesFiltradas; let i = index"
-         class="warehouse-item d-flex align-items-start p-3 border-bottom"
-         [class.bg-light]="wh.selected"
-         [class.hover-highlight]="!wh.selected">
+         class="warehouse-card"
+         [class.selected]="wh.selected"
+         (click)="wh.selected = !wh.selected; updateSelectAllState()">
 
-      <div class="form-check mt-1">
-        <input class="form-check-input" type="checkbox"
+      <div class="card-checkbox">
+        <input type="checkbox"
                [id]="'wh-' + i"
                [(ngModel)]="wh.selected"
+               (click)="$event.stopPropagation()"
                (change)="updateSelectAllState()">
+        <span class="checkmark">
+          <i class="fa fa-check"></i>
+        </span>
       </div>
 
-      <label class="ms-3 flex-grow-1 cursor-pointer" [for]="'wh-' + i">
-        <div class="d-flex justify-content-between align-items-start">
-          <div>
-            <strong class="d-block">{{ wh.name }}</strong>
-            <span class="badge bg-info text-white me-2">{{ wh.providerName }}</span>
-            <span class="badge bg-secondary" *ngIf="wh.id">
-              ID: {{ wh.id | slice:0:8 }}...
-            </span>
+      <div class="card-content">
+        <div class="card-header">
+          <h5 class="warehouse-name">{{ wh.name }}</h5>
+          <span class="provider-badge">
+            <i class="fa fa-link"></i> {{ wh.providerName }}
+          </span>
+        </div>
+
+        <div class="card-details">
+          <div class="detail-item" *ngIf="getUbicacion(wh) !== 'Sin ubicación'">
+            <i class="fa fa-map-marker"></i>
+            <span>{{ getUbicacion(wh) }}</span>
+          </div>
+          <div class="detail-item" *ngIf="wh.id">
+            <i class="fa fa-hashtag"></i>
+            <span class="id-text">{{ wh.id | slice:0:12 }}...</span>
           </div>
         </div>
-        <div class="text-muted small mt-1" *ngIf="getUbicacion(wh) !== 'Sin ubicación'">
-          <i class="pi pi-map-marker me-1"></i>
-          {{ getUbicacion(wh) }}
-        </div>
-      </label>
+      </div>
 
-      <div class="ms-2">
-        <i class="pi pi-check-circle text-success" style="font-size: 1.2rem;"
-           *ngIf="wh.selected"></i>
+      <div class="card-status">
+        <div class="status-indicator" [class.active]="wh.selected">
+          <i class="fa fa-check-circle"></i>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<div class="modal-footer bg-light">
-  <div class="d-flex justify-content-between w-100 align-items-center">
-    <div class="btn-group">
-      <button class="btn btn-outline-secondary btn-sm" (click)="selectAll()">
-        <i class="pi pi-check-square me-1"></i> Todas
-      </button>
-      <button class="btn btn-outline-secondary btn-sm" (click)="deselectAll()">
-        <i class="pi pi-stop me-1"></i> Ninguna
-      </button>
-    </div>
+<!-- Modal Footer -->
+<div class="modal-footer-glass">
+  <div class="footer-actions-left">
+    <button class="btn-action" (click)="selectAll()">
+      <i class="fa fa-check-square-o"></i>
+      <span>Todas</span>
+    </button>
+    <button class="btn-action" (click)="deselectAll()">
+      <i class="fa fa-square-o"></i>
+      <span>Ninguna</span>
+    </button>
+  </div>
 
-    <div>
-      <button class="btn btn-secondary me-2" (click)="cancelar()">
-        Cancelar
-      </button>
-      <button class="btn btn-primary" (click)="importarSeleccionadas()"
-              [disabled]="!tieneSeleccionadas()">
-        <i class="pi pi-download me-1"></i>
-        Importar {{ contarSeleccionadas() > 0 ? '(' + contarSeleccionadas() + ')' : '' }}
-      </button>
-    </div>
+  <div class="footer-actions-right">
+    <button class="btn-cancel" (click)="cancelar()">
+      Cancelar
+    </button>
+    <button class="btn-import"
+            (click)="importarSeleccionadas()"
+            [disabled]="!tieneSeleccionadas()">
+      <i class="fa fa-download"></i>
+      <span>Importar</span>
+      <span class="count-badge" *ngIf="contarSeleccionadas() > 0">
+        {{ contarSeleccionadas() }}
+      </span>
+    </button>
   </div>
 </div>

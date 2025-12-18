@@ -96,63 +96,61 @@
                                 </td>
                                 <td class="text-center">
                                     <!-- Para bodegas Físicas -->
-                                    <span *ngIf="bodega.tipo === 'Física'"
-                                          class="badge rounded-pill bg-primary p-2">
-                                        <i class="fa fa-building me-1"></i> {{ bodega.tipo }}
+                                    <span *ngIf="bodega.tipo === 'Física'" class="tag tag-blue">
+                                        <i class="fa fa-building"></i> {{ bodega.tipo }}
                                     </span>
-
                                     <!-- Para bodegas Transaccionales -->
-                                    <span *ngIf="bodega.tipo === 'Transaccional'"
-                                          class="badge rounded-pill bg-info p-2">
-                                        <i class="fa fa-cloud me-1"></i> {{ bodega.tipo }}
+                                    <span *ngIf="bodega.tipo === 'Transaccional'" class="tag tag-purple">
+                                        <i class="fa fa-cloud"></i> {{ bodega.tipo }}
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <!-- Bodega de Fulfillment -->
-                                    <span *ngIf="bodega.origenFulfillment"
-                                          class="badge rounded-pill bg-warning p-2"
+                                    <span *ngIf="bodega.origenFulfillment" class="tag tag-amber"
                                           [ngbTooltip]="'Importada de ' + (bodega.fulfillmentProvider | titlecase)">
-                                        <i class="fa fa-cloud-download me-1"></i> Fulfillment
+                                        <i class="fa fa-cloud-download"></i> Fulfillment
                                     </span>
                                     <!-- Bodega local de Katuq -->
-                                    <span *ngIf="!bodega.origenFulfillment"
-                                          class="badge rounded-pill bg-secondary p-2">
-                                        <i class="fa fa-home me-1"></i> Local
+                                    <span *ngIf="!bodega.origenFulfillment" class="tag tag-gray">
+                                        <i class="fa fa-home"></i> Local
                                     </span>
                                 </td>
                                 <td class="text-center">
                                     <!-- Nacional -->
-                                    <span *ngIf="bodega.coberturaNacional"
-                                          class="badge bg-primary p-2"
+                                    <span *ngIf="bodega.coberturaNacional" class="tag tag-teal"
                                           [ngbTooltip]="getCoberturaTooltip(bodega)">
-                                        <i class="fa fa-globe-americas me-1"></i> Nacional
+                                        <i class="fa fa-globe-americas"></i> Nacional
                                     </span>
                                     <!-- Ciudades específicas -->
                                     <span *ngIf="!bodega.coberturaNacional && bodega.ciudadesCobertura?.length > 0"
-                                          class="badge bg-success p-2"
-                                          [ngbTooltip]="getCoberturaTooltip(bodega)">
+                                          class="tag tag-green" [ngbTooltip]="getCoberturaTooltip(bodega)">
                                         {{ bodega.ciudadesCobertura.length }} ciudades
                                     </span>
                                     <!-- Sin cobertura -->
                                     <span *ngIf="!bodega.coberturaNacional && (!bodega.ciudadesCobertura || bodega.ciudadesCobertura.length === 0)"
-                                          class="text-muted">
+                                          class="tag-text-muted">
                                         Sin cobertura
                                     </span>
-                                    <i placement="top" ngbTooltip="Gestionar cobertura"
-                                        style="font-size: 16px; margin-left: 8px; cursor: pointer;"
-                                        class="fa fa-map-marker-alt fc-primary"
-                                        (click)="abrirModalCobertura(bodega)">
-                                    </i>
+                                    <button class="btn-icon" ngbTooltip="Gestionar cobertura" placement="top"
+                                            (click)="abrirModalCobertura(bodega)">
+                                        <i class="fa fa-map-marker-alt"></i>
+                                    </button>
                                 </td>
                                 <td class="text-center">
-                                    <i placement="top" ngbTooltip="Editar"
-                                        style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                                        class="fa fa-pencil fc-primary" (click)="abrirModalEditar(bodega)">
-                                    </i>
-                                    <i placement="top" ngbTooltip="Eliminar"
-                                        style="font-size: 18px; margin-left: 10px; cursor: pointer;"
-                                        class="fa fa-trash fc-danger" (click)="eliminarBodega(bodega)">
-                                    </i>
+                                    <div class="actions-cell">
+                                        <button class="btn-icon btn-icon-edit" ngbTooltip="Editar" placement="top"
+                                                (click)="abrirModalEditar(bodega)">
+                                            <i class="fa fa-pencil"></i>
+                                        </button>
+                                        <button class="btn-icon btn-icon-warn" ngbTooltip="Desactivar" placement="top"
+                                                (click)="eliminarBodega(bodega)">
+                                            <i class="fa fa-ban"></i>
+                                        </button>
+                                        <button class="btn-icon btn-icon-danger" ngbTooltip="Eliminar permanentemente" placement="top"
+                                                (click)="eliminarBodegaPermanente(bodega)">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                         </ng-template>

@@ -75,9 +75,14 @@ export class BodegaService {
     return this.http.post<any>(`${this.apiUrl}/edit`, bodega);
   }
 
-  // Eliminar bodega
+  // Eliminar bodega (soft delete - marca como inactiva)
   eliminarBodega(id: string | number): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/remove`, { id });
+  }
+
+  // Eliminar bodega permanentemente (hard delete - elimina físicamente del maestro)
+  eliminarBodegaPermanente(id: string | number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}/permanent`);
   }
 
   // NUEVOS MÉTODOS PARA LA ASOCIACIÓN DE CANALES Y BODEGAS
