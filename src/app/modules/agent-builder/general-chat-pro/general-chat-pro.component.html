@@ -17,10 +17,69 @@
       </div>
     </div>
     <div class="chat-header-actions">
+      <button class="btn-icon" (click)="toggleSessionPanel()" title="Historial de sesiones">
+        <i class="pi pi-history"></i>
+      </button>
+      <button class="btn-icon" (click)="newSession()" title="Nueva conversación" [disabled]="isExecuting">
+        <i class="pi pi-plus"></i>
+      </button>
       <button class="btn-icon" (click)="clearChat()" title="Limpiar chat">
         <i class="pi pi-trash"></i>
       </button>
     </div>
+  </div>
+
+  <!-- Session Panel (Sidebar) -->
+  <div class="session-panel" [class.open]="showSessionPanel">
+    <div class="session-panel-header">
+      <h3>
+        <i class="pi pi-history"></i>
+        Conversaciones
+      </h3>
+      <button class="btn-icon-small" (click)="toggleSessionPanel()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+
+    <div class="session-panel-actions">
+      <button class="btn-new-session" (click)="newSession()" [disabled]="isExecuting">
+        <i class="pi pi-plus"></i>
+        Nueva conversación
+      </button>
+    </div>
+
+    <div class="session-list" *ngIf="!isLoadingSessions">
+      <div class="session-item"
+           *ngFor="let session of sessions"
+           [class.active]="isCurrentSession(session)"
+           (click)="switchSession(session.id)">
+        <div class="session-info">
+          <span class="session-title">{{ getSessionDisplayTitle(session) }}</span>
+          <span class="session-date">{{ formatSessionDate(session.last_update) }}</span>
+        </div>
+        <button class="btn-delete-session"
+                (click)="deleteSession(session.id, $event)"
+                title="Eliminar conversación">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+
+      <div class="session-empty" *ngIf="sessions.length === 0">
+        <i class="pi pi-inbox"></i>
+        <span>Sin conversaciones guardadas</span>
+      </div>
+    </div>
+
+    <div class="session-loading" *ngIf="isLoadingSessions">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Cargando...</span>
+    </div>
+  </div>
+
+  <!-- Session Panel Overlay -->
+  <div class="session-panel-overlay"
+       *ngIf="showSessionPanel"
+       (click)="toggleSessionPanel()">
   </div>
 
   <!-- Active Agents Bar -->

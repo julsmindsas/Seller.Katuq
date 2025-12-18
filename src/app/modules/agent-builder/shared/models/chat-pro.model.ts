@@ -567,3 +567,36 @@ export function formatPercent(value: number): string {
     const sign = value >= 0 ? '+' : '';
     return `${sign}${value.toFixed(1)}%`;
 }
+
+// =============================================================================
+// SESSION MANAGEMENT INTERFACES
+// =============================================================================
+
+/**
+ * Sesion de chat persistida en Firestore
+ */
+export interface ChatSession {
+    id: string;
+    title: string;
+    last_update: string | null;
+    created_at?: string;
+}
+
+/**
+ * Respuesta del historial de una sesion
+ */
+export interface SessionHistory {
+    session_id: string;
+    title: string;
+    messages: HistoryMessage[];
+    state?: Record<string, any>;
+}
+
+/**
+ * Mensaje individual del historial
+ */
+export interface HistoryMessage {
+    author: string;
+    text: string;
+    timestamp: number;
+}
