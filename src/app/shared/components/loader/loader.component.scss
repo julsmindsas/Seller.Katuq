@@ -62,33 +62,3 @@
 // svg.active .svg-elem-5 {
 //   fill: rgb(155, 0, 255);
 // }
-
-/* ============================================
-   DARK MODE - KATUQ PURPLE PALETTE
-   Primary: #a78bfa
-   Background base: #1a1625
-   Background card: #262335
-   Border: #4a4366
-   Text primary: #e9e4f5
-   ============================================ */
-:host-context(body.dark-only) {
-  .loader-wrapper {
-    background-color: #1a1625;
-  }
-
-  svg {
-    .svg-elem-1,
-    .svg-elem-2,
-    .svg-elem-3 {
-      fill: #e9e4f5;
-    }
-
-    .svg-elem-4 {
-      fill: #a78bfa;
-    }
-
-    .svg-elem-5 {
-      fill: #c4b5fd;
-    }
-  }
-}

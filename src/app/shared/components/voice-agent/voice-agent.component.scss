@@ -548,139 +548,22 @@ $transition-standard: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   &.theme-compact {
     .call-avatar-container {
       padding: 15px;
-
+      
       .interactive-avatar-wrapper {
         .interactive-avatar-canvas {
           width: 90px !important;
           height: 90px !important;
         }
       }
-
+      
       .call-avatar {
         width: 60px;
         height: 60px;
       }
-
+      
       .call-name {
         font-size: 16px;
       }
-    }
-  }
-}
-
-/* ============================================
-   DARK MODE - KATUQ PURPLE PALETTE
-   Primary: #a78bfa
-   Background base: #1a1625
-   Background card: #262335
-   Border: #4a4366
-   Text primary: #e9e4f5
-   Text secondary: #c4b5fd
-   ============================================ */
-:host-context(body.dark-only) {
-  .voice-agent-container {
-    background-color: #262335;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-  }
-
-  .voice-call-interface {
-    .call-header {
-      background: linear-gradient(135deg, #a78bfa, darken(#a78bfa, 15%));
-    }
-
-    .call-avatar-container {
-      .interactive-avatar-wrapper {
-        .interactive-avatar-canvas {
-          border-color: rgba(167, 139, 250, 0.4);
-
-          &:hover {
-            border-color: #a78bfa;
-            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
-          }
-        }
-      }
-
-      .call-avatar {
-        background-color: #1a1625;
-        border-color: #4a4366;
-      }
-
-      .call-name {
-        color: #e9e4f5;
-      }
-
-      .call-status-text {
-        color: #c4b5fd;
-      }
-    }
-
-    .call-visual-content {
-      background-color: #1a1625;
-
-      .no-content-message {
-        color: #6b5a8e;
-      }
-
-      .content-steps {
-        .steps-indicator {
-          .step-dot {
-            background-color: #4a4366;
-
-            &.active {
-              background-color: #a78bfa;
-            }
-
-            &:hover {
-              background-color: rgba(167, 139, 250, 0.7);
-            }
-          }
-        }
-
-        .steps-carousel {
-          .step-item {
-            .step-title {
-              color: #e9e4f5;
-            }
-
-            .step-caption {
-              color: #c4b5fd;
-            }
-          }
-        }
-
-        .steps-controls {
-          .step-control {
-            background-color: rgba(167, 139, 250, 0.15);
-            color: #a78bfa;
-
-            &:hover:not(:disabled) {
-              background-color: rgba(167, 139, 250, 0.25);
-            }
-          }
-
-          .step-counter {
-            color: #c4b5fd;
-          }
-        }
-      }
-    }
-
-    .call-visualizer {
-      background-color: #1a1625;
-
-      .call-wave {
-        background: #a78bfa;
-      }
-    }
-
-    .call-controls {
-      background-color: #262335;
-      border-top-color: #4a4366;
-    }
-
-    .call-error {
-      background-color: rgba(239, 68, 68, 0.15);
-      color: #f87171;
     }
   }
 }

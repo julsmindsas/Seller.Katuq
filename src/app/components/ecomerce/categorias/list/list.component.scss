@@ -5,7 +5,7 @@
     margin: 5px;
     padding: 10px 15px;
     border-radius: 8px;
-
+    
     i {
       margin-left: 8px;
     }
@@ -20,22 +20,22 @@
     align-items: center;
     justify-content: center;
     transition: all 0.3s ease;
-
+    
     &.add-button {
       background-color: var(--success-color);
       color: white;
       border: none;
-
+      
       &:hover {
         background-color: var(--success-color);
       }
     }
-
+    
     &.delete-button {
       background-color: var(--error-color);
       color: white;
       border: none;
-
+      
       &:hover {
         background-color: var(--error-color);
       }
@@ -58,11 +58,11 @@
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
-
+  
   .p-inputswitch {
     transform: scale(1.2);
   }
-
+  
   .form-section {
     padding: 10px;
     background-color: #f9f9f9;
@@ -71,7 +71,7 @@
     border: 2px solid #d1d8e0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
-
+  
   .category-header {
     font-size: 1.2rem;
     margin-bottom: 15px;
@@ -82,26 +82,26 @@
     border-radius: 6px;
     background-color: #f8f9fa;
   }
-
+  
   /* Adding clear border delimiters */
   .card {
     border: 3px solid #dee2e6;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   }
-
+  
   .alert {
     border: 2px solid #a8c9e8;
     border-radius: 8px;
   }
-
+  
   .image-upload-container {
     border: 1px dashed #adb5bd;
     padding: 10px;
     border-radius: 6px;
     background-color: #f8f9fa;
   }
-
+  
   /* Improvement for the tree table */
   ::ng-deep {
     .p-treetable {
@@ -109,408 +109,56 @@
       border: 2px solid #dee2e6;
       border-radius: 8px;
       overflow: hidden;
-
+      
       .p-treetable-header {
         background-color: #f0f8ff;
         padding: 15px;
       }
-
+      
       .p-treetable-thead > tr > th {
         padding: 15px 10px;
         background-color: #f0f8ff;
         font-weight: bold;
         border: 1px solid #cfd8dc;
       }
-
+      
       .p-treetable-tbody > tr > td {
         padding: 15px 10px;
         border: 1px solid #e9ecef;
       }
-
+      
       .p-treetable-toggler {
         width: 2.5rem;
         height: 2.5rem;
       }
-
+      
       .p-treetable-tbody > tr {
         border-bottom: 2px solid #dee2e6;
-
+        
         &:last-child {
           border-bottom: none;
         }
-
+        
         &:hover {
           background-color: #f0f8ff;
         }
       }
     }
   }
-
+  
   /* Dialog border improvements */
   ::ng-deep {
     .modal-content {
       border: 3px solid #6c757d;
       border-radius: 10px;
-
+      
       .modal-header {
         border-bottom: 2px solid #dee2e6;
       }
-
+      
       .modal-footer {
         border-top: 2px solid #dee2e6;
       }
-    }
-  }
-}
-
-// ============================================
-// DARK MODE - Katuq Purple Palette
-// ============================================
-:host-context(body.dark-only) {
-  // Katuq Purple Palette Variables
-  $dark-primary: #a78bfa;
-  $dark-bg-base: #1a1625;
-  $dark-bg-card: #262335;
-  $dark-border: #4a4366;
-  $dark-text-primary: #e9e4f5;
-  $dark-text-secondary: #c4b5fd;
-
-  .category-management {
-    // Cards
-    .card {
-      background-color: $dark-bg-card;
-      border-color: $dark-border;
-      color: $dark-text-primary;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-
-      .card-body {
-        background-color: $dark-bg-card;
-      }
-    }
-
-    // Text colors
-    .fc-secondary {
-      color: $dark-text-primary !important;
-    }
-
-    .text-muted {
-      color: $dark-text-secondary !important;
-    }
-
-    .text-success {
-      color: #34d399 !important;
-    }
-
-    // Form sections
-    .form-section {
-      background-color: $dark-bg-base;
-      border-color: $dark-border;
-    }
-
-    // Category header
-    .category-header {
-      background-color: $dark-bg-base;
-      border-color: $dark-border;
-      color: $dark-text-primary;
-    }
-
-    // Help text
-    .help-text {
-      color: $dark-text-secondary;
-    }
-
-    // Image preview
-    .image-preview {
-      border-color: $dark-border;
-      background-color: $dark-bg-base;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    // Image upload container
-    .image-upload-container {
-      background-color: $dark-bg-base;
-      border-color: $dark-border;
-
-      .text-muted {
-        color: $dark-text-secondary !important;
-      }
-    }
-
-    // Alert boxes
-    .alert {
-      border-color: $dark-border;
-
-      &.alert-info {
-        background-color: rgba($dark-primary, 0.15);
-        color: $dark-text-primary;
-        border-color: $dark-primary;
-
-        h5 {
-          color: $dark-primary;
-        }
-
-        ul li {
-          color: $dark-text-primary;
-        }
-      }
-
-      &.alert-warning {
-        background-color: rgba(#f59e0b, 0.15);
-        color: #fbbf24;
-        border-color: #f59e0b;
-
-        h4 {
-          color: #fbbf24;
-        }
-      }
-
-      &.alert-danger {
-        background-color: rgba(#ef4444, 0.15);
-        color: #f87171;
-        border-color: #ef4444;
-      }
-
-      &.alert-success {
-        background-color: rgba(#10b981, 0.15);
-        color: #34d399;
-        border-color: #10b981;
-      }
-    }
-
-    // Buttons
-    .btn-primary {
-      background-color: $dark-primary;
-      border-color: $dark-primary;
-      color: $dark-bg-base;
-
-      &:hover {
-        background-color: lighten($dark-primary, 8%);
-        border-color: lighten($dark-primary, 8%);
-      }
-
-      &:focus {
-        box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.5);
-      }
-    }
-
-    .btn-success {
-      background-color: #10b981;
-      border-color: #10b981;
-      color: white;
-
-      &:hover {
-        background-color: #059669;
-        border-color: #059669;
-      }
-    }
-
-    .btn-secondary {
-      background-color: $dark-border;
-      border-color: $dark-border;
-      color: $dark-text-primary;
-
-      &:hover {
-        background-color: lighten($dark-border, 10%);
-      }
-    }
-
-    .btn-danger {
-      background-color: #ef4444;
-      border-color: #ef4444;
-
-      &:hover {
-        background-color: #dc2626;
-      }
-    }
-
-    .btn-outline-info {
-      color: $dark-primary;
-      border-color: $dark-primary;
-
-      &:hover {
-        background-color: rgba($dark-primary, 0.15);
-        color: lighten($dark-primary, 10%);
-      }
-    }
-
-    // Action icon buttons in dark mode
-    .action-icon-button {
-      &.add-button {
-        background-color: #10b981;
-
-        &:hover {
-          background-color: #059669;
-        }
-      }
-
-      &.delete-button {
-        background-color: #ef4444;
-
-        &:hover {
-          background-color: #dc2626;
-        }
-      }
-    }
-
-    // Loader
-    .loader-box {
-      background-color: rgba($dark-bg-card, 0.9);
-    }
-
-    // PrimeNG TreeTable
-    ::ng-deep {
-      .p-treetable {
-        border-color: $dark-border;
-        background-color: $dark-bg-card;
-
-        .p-treetable-header {
-          background-color: $dark-bg-base;
-          border-color: $dark-border;
-          color: $dark-text-primary;
-        }
-
-        .p-treetable-thead > tr > th {
-          background-color: $dark-bg-base;
-          border-color: $dark-border;
-          color: $dark-text-primary;
-        }
-
-        .p-treetable-tbody > tr {
-          background-color: $dark-bg-card;
-          border-color: $dark-border;
-
-          > td {
-            border-color: $dark-border;
-            color: $dark-text-primary;
-          }
-
-          &:hover {
-            background-color: rgba($dark-primary, 0.1);
-          }
-        }
-
-        .p-treetable-toggler {
-          color: $dark-text-secondary;
-
-          &:hover {
-            color: $dark-primary;
-            background-color: rgba($dark-primary, 0.1);
-          }
-        }
-
-        // Editable cells
-        .p-treetable-cell-editor-input {
-          .p-inputtext {
-            background-color: $dark-bg-base;
-            border-color: $dark-primary !important;
-            color: $dark-text-primary;
-
-            &:focus {
-              box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25);
-            }
-          }
-        }
-      }
-    }
-
-    // PrimeNG InputSwitch
-    ::ng-deep {
-      .p-inputswitch {
-        .p-inputswitch-slider {
-          background-color: $dark-border;
-        }
-
-        &.p-inputswitch-checked {
-          .p-inputswitch-slider {
-            background-color: $dark-primary;
-          }
-        }
-      }
-    }
-
-    // PrimeNG InputText
-    ::ng-deep {
-      .p-inputtext {
-        background-color: $dark-bg-base;
-        border-color: $dark-border;
-        color: $dark-text-primary;
-
-        &:enabled:focus {
-          border-color: $dark-primary;
-          box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25);
-        }
-
-        &::placeholder {
-          color: $dark-text-secondary;
-        }
-      }
-    }
-
-    // Bootstrap Modal in dark mode
-    ::ng-deep {
-      .modal-content {
-        background-color: $dark-bg-card;
-        border-color: $dark-border;
-
-        .modal-header {
-          background-color: $dark-bg-base;
-          border-bottom-color: $dark-border;
-          color: $dark-text-primary;
-
-          .modal-title {
-            color: $dark-text-primary;
-          }
-
-          .close {
-            color: $dark-text-primary;
-            text-shadow: none;
-            opacity: 0.8;
-
-            &:hover {
-              color: $dark-primary;
-              opacity: 1;
-            }
-          }
-        }
-
-        .modal-body {
-          background-color: $dark-bg-card;
-          color: $dark-text-primary;
-
-          p {
-            color: $dark-text-primary;
-          }
-        }
-
-        .modal-footer {
-          background-color: $dark-bg-base;
-          border-top-color: $dark-border;
-        }
-      }
-    }
-
-    // Tooltips
-    ::ng-deep {
-      .tooltip {
-        .tooltip-inner {
-          background-color: $dark-bg-base;
-          color: $dark-text-primary;
-          border: 1px solid $dark-border;
-        }
-
-        &.bs-tooltip-top .tooltip-arrow::before {
-          border-top-color: $dark-border;
-        }
-
-        &.bs-tooltip-bottom .tooltip-arrow::before {
-          border-bottom-color: $dark-border;
-        }
-      }
-    }
-
-    // PrimeNG icons
-    .pi {
-      color: inherit;
     }
   }
 }

@@ -1,7 +1,3 @@
-/* ============================================
-   COMPANY INFORMATION - HEADER LOGO
-   ============================================ */
-
 .sizelogoHeader {
     width: auto;
     height: 32px; // Consistente con sidebar logo height
@@ -9,7 +5,6 @@
     display: block;
     margin: 0;
     object-fit: contain;
-    transition: filter 0.2s ease;
 
     img {
         width: 100%;
@@ -20,29 +15,6 @@
 
 .font-size-custom {
     font-size: x-small;
-    color: #4a4366;
-    transition: color 0.2s ease;
-}
-
-// Company name text
-.company-name {
-    color: #1a1625;
-    font-weight: 600;
-    transition: color 0.2s ease;
-}
-
-// Company container wrapper
-.company-info-wrapper {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px 8px;
-    border-radius: 8px;
-    transition: background 0.15s ease;
-
-    &:hover {
-        background: rgba(99, 102, 241, 0.08);
-    }
 }
 
 /* Responsive adjustments - Consistente con sidebar breakpoints */
@@ -64,42 +36,5 @@
     .sizelogoHeader {
         height: 22px;
         max-width: 120px;
-    }
-
-    .font-size-custom {
-        display: none; // Hide text on mobile, show only logo
-    }
-}
-
-/* ============================================
-   DARK MODE - KATUQ PURPLE PALETTE
-   Primary: #a78bfa
-   Background base: #1a1625
-   Background card: #262335
-   Border: #4a4366
-   Text primary: #e9e4f5
-   ============================================ */
-:host-context(body.dark-only) {
-    .sizelogoHeader {
-        // Optional: add subtle glow for logos in dark mode
-        filter: drop-shadow(0 0 8px rgba(167, 139, 250, 0.2));
-
-        img {
-            // If using dark/light logo variants, control visibility here
-        }
-    }
-
-    .font-size-custom {
-        color: #c4b5fd;
-    }
-
-    .company-name {
-        color: #e9e4f5;
-    }
-
-    .company-info-wrapper {
-        &:hover {
-            background: rgba(167, 139, 250, 0.1);
-        }
     }
 }

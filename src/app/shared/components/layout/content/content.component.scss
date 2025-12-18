@@ -12,17 +12,14 @@ a {
 // Page Body Layout - Consistente con Header
 .page-body {
   // Ajustar margin-top para coincidir con header height
-  margin-top: 2px !important; // Minimo espaciado
+  margin-top: 2px !important; // Mínimo espaciado
   min-height: calc(100vh - 2px) !important;
   padding: 16px !important; // Consistente con header padding
-  transition: margin-top 0.1s ease-out, background-color 0.2s ease; // Consistente con header transitions
-
+  transition: margin-top 0.1s ease-out; // Consistente con header transitions
+  
   // Asegurar que no se superponga con el header
   position: relative;
   z-index: 1;
-
-  // Light mode default
-  background-color: #f8f9fa;
 }
 
 // Mobile navigation adjustments
@@ -30,10 +27,10 @@ a {
   .page-body {
     // Add bottom padding to account for bottom navigation
     padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
-    margin-top: 2px !important; // Minimo espaciado
+    margin-top: 2px !important; // Mínimo espaciado
     min-height: calc(100vh - 2px) !important;
   }
-
+  
   .footer {
     // Ensure footer doesn't overlap with bottom navigation
     margin-bottom: calc(60px + env(safe-area-inset-bottom, 0px)) !important;
@@ -42,9 +39,9 @@ a {
 
 @media (max-width: 767px) {
   .page-body {
-    margin-top: 2px !important; // Minimo espaciado
+    margin-top: 2px !important; // Mínimo espaciado
     min-height: calc(100vh - 2px) !important;
-    padding: 12px !important; // Padding reducido para moviles
+    padding: 12px !important; // Padding reducido para móviles
   }
 }
 
@@ -61,161 +58,6 @@ a {
   .page-body {
     @media (max-width: 991px) {
       padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
-    }
-  }
-}
-
-/* ============================================
-   DARK MODE - KATUQ PURPLE PALETTE
-   Primary: #a78bfa
-   Background base: #1a1625
-   Background card: #262335
-   Border: #4a4366
-   Text primary: #e9e4f5
-   ============================================ */
-:host-context(body.dark-only) {
-  .page-body {
-    background-color: #1a1625 !important;
-  }
-
-  // Page wrapper and main content
-  .page-wrapper {
-    background-color: #1a1625;
-  }
-
-  // Card styles within content
-  .card {
-    background: #262335;
-    border: 1px solid #4a4366;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-
-    .card-header {
-      background: rgba(167, 139, 250, 0.05);
-      border-bottom: 1px solid #4a4366;
-      color: #e9e4f5;
-    }
-
-    .card-body {
-      color: #e9e4f5;
-    }
-
-    .card-footer {
-      background: rgba(167, 139, 250, 0.05);
-      border-top: 1px solid #4a4366;
-    }
-  }
-
-  // Text colors
-  h1, h2, h3, h4, h5, h6 {
-    color: #e9e4f5;
-  }
-
-  p, span, label {
-    color: #c4b5fd;
-  }
-
-  // Links
-  a {
-    color: #a78bfa;
-
-    &:hover {
-      color: #c4b5fd;
-    }
-  }
-
-  // Tables
-  .table {
-    color: #e9e4f5;
-
-    thead th {
-      background: rgba(167, 139, 250, 0.1);
-      border-color: #4a4366;
-      color: #e9e4f5;
-    }
-
-    tbody td {
-      border-color: #4a4366;
-    }
-
-    &.table-striped tbody tr:nth-of-type(odd) {
-      background-color: rgba(167, 139, 250, 0.05);
-    }
-
-    &.table-hover tbody tr:hover {
-      background-color: rgba(167, 139, 250, 0.1);
-    }
-  }
-
-  // Forms
-  .form-control {
-    background-color: #262335;
-    border-color: #4a4366;
-    color: #e9e4f5;
-
-    &::placeholder {
-      color: #6b5a8e;
-    }
-
-    &:focus {
-      background-color: #262335;
-      border-color: #a78bfa;
-      color: #e9e4f5;
-      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
-    }
-  }
-
-  .form-select {
-    background-color: #262335;
-    border-color: #4a4366;
-    color: #e9e4f5;
-
-    &:focus {
-      border-color: #a78bfa;
-      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
-    }
-  }
-
-  // Buttons - primary with Katuq purple
-  .btn-primary {
-    background-color: #a78bfa;
-    border-color: #a78bfa;
-    color: #1a1625;
-
-    &:hover {
-      background-color: #8b5cf6;
-      border-color: #8b5cf6;
-    }
-
-    &:focus {
-      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.5);
-    }
-  }
-
-  .btn-outline-primary {
-    color: #a78bfa;
-    border-color: #a78bfa;
-
-    &:hover {
-      background-color: #a78bfa;
-      color: #1a1625;
-    }
-  }
-
-  // Alerts
-  .alert {
-    border-color: #4a4366;
-  }
-
-  // Badges
-  .badge {
-    &.bg-primary {
-      background-color: #a78bfa !important;
-      color: #1a1625;
-    }
-
-    &.bg-secondary {
-      background-color: #4a4366 !important;
-      color: #e9e4f5;
     }
   }
 }

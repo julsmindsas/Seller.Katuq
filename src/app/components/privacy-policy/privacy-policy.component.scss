@@ -263,144 +263,18 @@ a {
   &::-webkit-scrollbar {
     width: 8px;
   }
-
+  
   &::-webkit-scrollbar-track {
     background: #f1f1f1;
     border-radius: 4px;
   }
-
+  
   &::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, #667eea, #764ba2);
     border-radius: 4px;
-
+    
     &:hover {
       background: linear-gradient(135deg, #5a6fd8, #6a4190);
-    }
-  }
-}
-
-// =====================================
-// DARK MODE - Katuq Purple Palette
-// =====================================
-:host-context(body.dark-only) {
-  // Variables de paleta Katuq Purple
-  $dark-primary: #a78bfa;
-  $dark-bg-base: #1a1625;
-  $dark-bg-card: #262335;
-  $dark-border: #4a4366;
-  $dark-text-primary: #e9e4f5;
-  $dark-text-secondary: #b8b0c9;
-
-  .privacy-policy-container {
-    background: linear-gradient(135deg, $dark-bg-base 0%, darken($dark-bg-base, 5%) 100%);
-  }
-
-  .privacy-policy-content {
-    background: rgba($dark-bg-card, 0.95);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    border: 1px solid $dark-border;
-  }
-
-  .privacy-header {
-    background: linear-gradient(135deg, $dark-primary 0%, darken($dark-primary, 20%) 100%);
-
-    h1 {
-      color: $dark-bg-base;
-    }
-
-    h2 {
-      color: rgba($dark-bg-base, 0.9);
-    }
-
-    .last-updated {
-      color: rgba($dark-bg-base, 0.8);
-    }
-  }
-
-  .privacy-section {
-    border-bottom-color: $dark-border;
-
-    h3 {
-      color: $dark-text-primary;
-      border-bottom-color: $dark-primary;
-
-      &::before {
-        background: linear-gradient(90deg, $dark-primary, lighten($dark-primary, 10%));
-      }
-    }
-
-    h4 {
-      color: $dark-text-secondary;
-    }
-
-    p {
-      color: $dark-text-secondary;
-    }
-
-    ul li {
-      color: $dark-text-secondary;
-
-      &::before {
-        color: $dark-primary;
-      }
-
-      strong {
-        color: $dark-text-primary;
-      }
-    }
-  }
-
-  .contact-info {
-    background: linear-gradient(135deg, rgba($dark-primary, 0.1) 0%, rgba($dark-primary, 0.05) 100%);
-    border-left-color: $dark-primary;
-    border: 1px solid $dark-border;
-    border-left-width: 4px;
-
-    p {
-      color: $dark-text-secondary;
-
-      strong {
-        color: $dark-text-primary;
-      }
-    }
-  }
-
-  .privacy-footer {
-    background: linear-gradient(135deg, rgba($dark-bg-card, 0.8) 0%, $dark-bg-card 100%);
-    border-top-color: $dark-border;
-
-    p {
-      color: $dark-text-secondary;
-
-      strong {
-        color: $dark-text-primary;
-      }
-    }
-
-    .footer-note {
-      color: $dark-text-secondary;
-    }
-  }
-
-  // Links
-  a {
-    color: $dark-primary;
-
-    &:hover {
-      color: lighten($dark-primary, 15%);
-    }
-  }
-
-  // Scrollbar personalizada para dark mode
-  &::-webkit-scrollbar-track {
-    background: $dark-bg-card;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, $dark-primary, darken($dark-primary, 15%));
-
-    &:hover {
-      background: linear-gradient(135deg, lighten($dark-primary, 10%), $dark-primary);
     }
   }
 }

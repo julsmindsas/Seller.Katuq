@@ -178,126 +178,25 @@ h1 {
   }
 }
 
-// Dark mode support - Katuq Purple Theme
-:host-context(body.dark-only) {
+// Dark mode support (optional)
+@media (prefers-color-scheme: dark) {
   .pricing-container {
-    background-color: #1a1625;
-  }
-
-  h1 {
-    color: #e9e4f5;
-  }
-
-  .text-muted {
-    color: #a89fc4 !important;
-  }
-
-  .plan-card {
-    background-color: #262335;
-    border: 1px solid #4a4366;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
-
-    &:hover {
-      box-shadow: 0 8px 24px rgba(167, 139, 250, 0.2);
-      border-color: #a78bfa;
+    h1 {
+      color: #e9ecef;
     }
 
-    &.premium {
-      border: 2px solid #a78bfa;
-      box-shadow: 0 4px 16px rgba(167, 139, 250, 0.3);
-    }
+    .plan-card {
+      background-color: #2c3e50;
+      color: #e9ecef;
 
-    &.current-plan {
-      background-color: #302845;
-      opacity: 1;
-
-      .plan-header h3::after {
-        color: #86efac;
+      &.current-plan {
+        background-color: #34495e;
       }
     }
-  }
 
-  .plan-badge {
-    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
-    box-shadow: 0 2px 8px rgba(167, 139, 250, 0.4);
-  }
-
-  .plan-header {
-    h3 {
-      color: #e9e4f5;
-    }
-  }
-
-  .plan-price {
-    .currency {
-      color: #a89fc4;
-    }
-
-    .amount {
-      color: #a78bfa;
-    }
-
-    .period {
-      color: #a89fc4;
-    }
-  }
-
-  .plan-features {
-    ul {
-      li {
-        color: #e9e4f5;
-        border-bottom-color: #4a4366;
-
-        i {
-          &.pi-check {
-            color: #86efac;
-          }
-
-          &.pi-times {
-            color: #f87171;
-          }
-        }
-
-        &.disabled {
-          color: #6b6385;
-        }
-      }
-    }
-  }
-
-  .plan-action {
-    button {
-      &:not(:disabled):hover {
-        box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
-      }
-
-      // Primary button styles
-      &.p-button-primary {
-        background-color: #a78bfa;
-        border-color: #a78bfa;
-
-        &:hover {
-          background-color: #8b5cf6;
-          border-color: #8b5cf6;
-        }
-      }
-
-      // Outlined button styles
-      &.p-button-outlined {
-        color: #a78bfa;
-        border-color: #4a4366;
-
-        &:hover {
-          background-color: rgba(167, 139, 250, 0.1);
-          border-color: #a78bfa;
-        }
-      }
-
-      &:disabled {
-        background-color: #4a4366;
-        border-color: #4a4366;
-        color: #6b6385;
-      }
+    .plan-header h3,
+    .plan-features li {
+      color: #e9ecef;
     }
   }
 }

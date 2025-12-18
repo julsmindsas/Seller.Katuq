@@ -1,92 +1,75 @@
-// Estilos para componente de confirmacion de orden
-.confirm {
-  text-align: center;
-  font-size: 3rem;
-}
+// .confirm {
+//     text-align: center;
+//     font-size: 3rem;
+// }
 
-.container {
-  width: 80%;
-  margin: auto;
-  overflow: hidden;
-}
 
-.section {
-  background: #fff;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
+// /* Estilos Generales */
+// body {
+//     font-family: Arial, sans-serif;
+//     background-color: #f4f4f4;
+//     color: #333;
+//     line-height: 1.6;
+// }
 
-.section h2 {
-  color: #444;
-  margin-bottom: 10px;
-}
+// .container {
+//     width: 80%;
+//     margin: auto;
+//     overflow: hidden;
+// }
 
-.section p {
-  font-size: 14px;
-  margin: 5px 0;
-  margin-left: 50px;
-}
+// /* Estilos para cada Sección */
+// .section {
+//     background: #fff;
+//     padding: 20px;
+//     margin-bottom: 20px;
+//     border-radius: 8px;
+//     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+// }
 
-.section div {
-  margin-bottom: 10px;
-  margin-left: 50px;
-}
+// /* Títulos de Sección */
+// .section h2 {
+//     color: #444;
+//     margin-bottom: 10px;
+// }
 
-.section ul {
-  list-style-type: none;
-  padding: 0;
-}
+// /* Estilo para los párrafos y datos */
+// .section p {
+//     font-size: 14px;
+//     margin: 5px 0;
+//     margin-left: 50px;
+// }
 
-.section ul li {
-  background: #f8f8f8;
-  padding: 10px;
-  margin-bottom: 5px;
-  border-radius: 4px;
-}
+// /* Estilos para listados */
+// .section div {
+//     margin-bottom: 10px;
+//     margin-left: 50px;
 
-.section p, .section li {
-  line-height: 1.4;
-}
+// }
 
-// ==============================================================================
-// DARK THEME - Katuq Palette
-// ==============================================================================
-:host-context(body.dark-only) {
-  // Variables de dark theme Katuq
-  $dark-primary: #a78bfa;
-  $dark-bg-base: #1a1625;
-  $dark-bg-card: #262335;
-  $dark-bg-header: #2e2445;
-  $dark-border: #4a4366;
-  $dark-text-primary: #e9e4f5;
-  $dark-text-secondary: #c4b5fd;
-  $dark-success: #4ade80;
-  $dark-warning: #fbbf24;
-  $dark-danger: #f87171;
+// /* Estilo para listas dentro de secciones */
+// .section ul {
+//     list-style-type: none;
+//     padding: 0;
+// }
 
-  .confirm {
-    color: $dark-text-primary;
-  }
+// .section ul li {
+//     background: #f8f8f8;
+//     padding: 10px;
+//     margin-bottom: 5px;
+//     border-radius: 4px;
+// }
 
-  .section {
-    background: $dark-bg-card;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    border: 1px solid $dark-border;
+// /* Mejorar visibilidad de elementos iterados */
+// .section div *ngFor {
+//     border-top: 1px solid #eee;
+//     padding-top: 10px;
+// }
 
-    h2 {
-      color: $dark-text-primary;
-    }
+// /* Pequeños detalles para mejorar la experiencia de usuario */
+// .section p, .section li {
+//     line-height: 1.4;
+// }
 
-    p {
-      color: $dark-text-primary;
-    }
-  }
-
-  .section ul li {
-    background: $dark-bg-header;
-    color: $dark-text-primary;
-    border: 1px solid $dark-border;
-  }
-}
+// /* Puedes añadir más estilos específicos según tus necesidades */

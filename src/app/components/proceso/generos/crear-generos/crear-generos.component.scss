@@ -1,113 +1,44 @@
-// ==============================================
-// Crear Generos Modal - Katuq Dark Theme Styles
-// ==============================================
-
-// Katuq Theme Variables
-$primary-color: #a78bfa;
-$primary-hover: #8b5cf6;
-$success-color: #51bb25;
-$danger-color: #dc3545;
-$secondary-color: #6c757d;
-
-// Light theme
-$light-bg: #ffffff;
-$light-card-bg: #ffffff;
-$light-text: #2b2b2b;
-$light-text-muted: #6c757d;
-$light-border: #dee2e6;
-$light-input-bg: #ffffff;
-
-// Dark theme - Katuq Palette
-$dark-bg-primary: #1a1625;
-$dark-bg-secondary: #262335;
-$dark-border: #4a4366;
-$dark-text: #e9e4f5;
-$dark-text-muted: rgba(233, 228, 245, 0.6);
-
-// ==============================================
-// Base Styles (Light Theme)
-// ==============================================
-
-// Modal header
-.modal-header {
-  background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.02) 100%);
-  border-bottom: 2px solid rgba($primary-color, 0.15);
-  padding: 1.25rem 1.5rem;
-
-  .modal-title {
-    color: $light-text;
-    font-weight: 600;
-    font-size: 1.25rem;
-  }
-
-  .btn-close {
-    opacity: 0.6;
-    transition: opacity 0.2s ease;
-
-    &:hover {
-      opacity: 1;
-    }
-  }
-}
-
-// Modal body
-.modal-body {
-  padding: 1.5rem;
-  background: $light-card-bg;
-}
-
-// Form group
 .form-group {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-// Labels
-.form-label {
-  color: $light-text;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-}
-
-// Form controls
-.form-control {
-  background-color: $light-input-bg;
-  border: 2px solid $light-border;
-  color: $light-text;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-
-  &::placeholder {
-    color: $light-text-muted;
+    display: flex;
+    flex-direction: column;
+    align-items: right;
   }
 
-  &:hover {
-    border-color: rgba($primary-color, 0.5);
+input[type="checkbox"] {
+  width: 25%;
+}
+input[type="checkbox"] {
+    transform: scale(2);
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    align-items: right;
   }
 
-  &:focus {
-    border-color: $primary-color;
-    box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
-    outline: none;
+input[type="checkbox"] {
+  width: 25%;
+}
+input[type="checkbox"] {
+    transform: scale(2);
   }
+  .file-upload-label {
+    cursor: pointer;
+    transition: all 0.3s;
 }
 
-// Toggle switch
+/* Estilos para el toggle switch */
 .toggle-switch {
   position: relative;
   display: inline-block;
   width: 50px;
   height: 28px;
+}
 
-  input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
 }
 
 .slider {
@@ -118,61 +49,41 @@ $dark-text-muted: rgba(233, 228, 245, 0.6);
   right: 0;
   bottom: 0;
   background-color: #ccc;
-  transition: 0.4s;
+  transition: .4s;
   border-radius: 34px;
+}
 
-  &:before {
-    position: absolute;
-    content: "";
-    height: 20px;
-    width: 20px;
-    left: 4px;
-    bottom: 4px;
-    background-color: white;
-    transition: 0.4s;
-    border-radius: 50%;
-  }
-
-  &.round {
-    border-radius: 34px;
-
-    &:before {
-      border-radius: 50%;
-    }
-  }
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
 }
 
 input:checked + .slider {
-  background-color: $primary-color;
+  background-color: #0d6efd;
 }
 
 input:checked + .slider:before {
   transform: translateX(22px);
 }
 
-// File upload
-.file-upload-wrapper {
-  width: 100%;
-}
-
+/* Estilos para la carga de archivos */
 .file-upload-label {
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px dashed $light-border !important;
-  background-color: $light-bg !important;
-  border-radius: 8px !important;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  transition: all 0.3s;
+  border: 1px dashed #ced4da;
+  background-color: #f8f9fa;
+}
 
-  &:hover {
-    background-color: darken($light-bg, 3%) !important;
-    border-color: rgba($primary-color, 0.5) !important;
-  }
-
-  i {
-    color: $primary-color;
-  }
+.file-upload-label:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
 }
 
 .file-upload-text {
@@ -182,202 +93,4 @@ input:checked + .slider:before {
   display: inline-block;
   max-width: 80%;
   vertical-align: middle;
-  color: $light-text-muted;
-}
-
-.file-upload-info {
-  font-size: 0.85rem;
-}
-
-// Validation
-.text-danger {
-  color: $danger-color !important;
-  font-size: 0.85rem;
-  margin-top: 0.25rem;
-  font-weight: 500;
-}
-
-// Text muted
-.text-muted {
-  color: $light-text-muted !important;
-}
-
-// Modal footer
-.modal-footer {
-  background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, transparent 100%);
-  border-top: 1px solid $light-border;
-  padding: 1rem 1.5rem;
-  gap: 0.75rem;
-
-  .btn-outline-secondary {
-    border: 2px solid $light-border;
-    color: $light-text;
-    border-radius: 8px;
-    padding: 0.6rem 1.25rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: $light-border;
-      border-color: $light-border;
-      color: $light-text;
-    }
-  }
-
-  .btn-primary {
-    background: linear-gradient(135deg, $primary-color, $primary-hover);
-    border: none;
-    border-radius: 8px;
-    padding: 0.6rem 1.5rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba($primary-color, 0.3);
-
-    &:hover {
-      background: linear-gradient(135deg, $primary-hover, darken($primary-hover, 10%));
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba($primary-color, 0.4);
-    }
-
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-  }
-}
-
-// ==============================================
-// Dark Theme Styles
-// ==============================================
-
-:host-context(body.dark-only) {
-  // Modal header dark
-  .modal-header {
-    background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-bg-secondary, 0.95) 100%);
-    border-bottom-color: rgba($primary-color, 0.25);
-
-    .modal-title {
-      color: $dark-text;
-    }
-
-    .btn-close {
-      filter: invert(1) grayscale(100%) brightness(200%);
-    }
-  }
-
-  // Modal body dark
-  .modal-body {
-    background: $dark-bg-secondary;
-  }
-
-  // Labels dark
-  .form-label {
-    color: $dark-text;
-  }
-
-  // Form controls dark
-  .form-control {
-    background-color: $dark-bg-primary;
-    border-color: $dark-border;
-    color: $dark-text;
-
-    &::placeholder {
-      color: $dark-text-muted;
-    }
-
-    &:hover {
-      border-color: rgba($primary-color, 0.5);
-    }
-
-    &:focus {
-      border-color: $primary-color;
-      background-color: lighten($dark-bg-primary, 3%);
-      box-shadow: 0 0 0 3px rgba($primary-color, 0.25);
-      color: $dark-text;
-    }
-  }
-
-  // Toggle switch dark
-  .slider {
-    background-color: $dark-border;
-  }
-
-  // File upload dark
-  .file-upload-label {
-    border-color: $dark-border !important;
-    background-color: $dark-bg-primary !important;
-    color: $dark-text;
-
-    &:hover {
-      background-color: lighten($dark-bg-primary, 3%) !important;
-      border-color: rgba($primary-color, 0.5) !important;
-    }
-  }
-
-  .file-upload-text {
-    color: $dark-text-muted;
-  }
-
-  .file-upload-info {
-    color: $dark-text-muted;
-  }
-
-  // Text muted dark
-  .text-muted {
-    color: $dark-text-muted !important;
-  }
-
-  // Modal footer dark
-  .modal-footer {
-    background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($dark-bg-secondary, 0.95) 100%);
-    border-top-color: $dark-border;
-
-    .btn-outline-secondary {
-      border-color: $dark-border;
-      color: $dark-text;
-      background: transparent;
-
-      &:hover {
-        background: rgba($dark-border, 0.5);
-        border-color: $dark-border;
-        color: $dark-text;
-      }
-    }
-
-    .btn-primary {
-      box-shadow: 0 4px 15px rgba($primary-color, 0.4);
-
-      &:hover {
-        box-shadow: 0 6px 20px rgba($primary-color, 0.5);
-      }
-    }
-  }
-}
-
-// ==============================================
-// Responsive Adjustments
-// ==============================================
-
-@media (max-width: 768px) {
-  .modal-header {
-    padding: 1rem;
-  }
-
-  .modal-body {
-    padding: 1rem;
-  }
-
-  .row.g-4 {
-    --bs-gutter-x: 0.5rem;
-  }
-
-  .modal-footer {
-    padding: 0.75rem 1rem;
-    flex-direction: column;
-
-    .btn {
-      width: 100%;
-    }
-  }
 }

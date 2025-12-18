@@ -389,271 +389,46 @@
     .product-header {
       display: none;
     }
-
+    
     .product-row {
       display: flex;
       flex-wrap: wrap;
       position: relative;
       margin-bottom: 2rem;
-
+      
       td {
         display: block;
         width: 100%;
         text-align: center;
         border: none;
-
+        
         &:first-child {
           width: 100%;
         }
-
+        
         &:nth-child(2) {
           width: 100%;
         }
-
+        
         &:nth-child(3),
         &:nth-child(4) {
           width: 50%;
           float: left;
         }
-
+        
         &:nth-child(5) {
           position: absolute;
           top: 0.5rem;
           right: 0.5rem;
           width: auto;
         }
-
+        
         &:nth-child(6) {
           width: 100%;
           background-color: #f8f9fa;
           font-weight: 600;
         }
       }
-    }
-  }
-}
-
-// ==============================================================================
-// DARK THEME - Katuq Palette
-// ==============================================================================
-:host-context(body.dark-only) {
-  // Variables de dark theme Katuq
-  $dark-primary: #a78bfa;
-  $dark-bg-base: #1a1625;
-  $dark-bg-card: #262335;
-  $dark-bg-header: #2e2445;
-  $dark-border: #4a4366;
-  $dark-text-primary: #e9e4f5;
-  $dark-text-secondary: #c4b5fd;
-  $dark-success: #4ade80;
-  $dark-warning: #fbbf24;
-  $dark-danger: #f87171;
-
-  // Cart card
-  .cart-card {
-    background-color: $dark-bg-card;
-    border-color: $dark-border;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-
-    &:hover {
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
-    }
-
-    .cart-header {
-      background-color: $dark-bg-header;
-      border-bottom-color: $dark-border;
-
-      .cart-title {
-        color: $dark-primary;
-
-        i {
-          color: $dark-primary;
-        }
-      }
-    }
-  }
-
-  // Empty cart
-  .empty-cart {
-    background-color: $dark-bg-card;
-    border-color: $dark-border;
-
-    i {
-      color: $dark-primary;
-    }
-
-    h5 {
-      color: $dark-text-primary;
-    }
-  }
-
-  // Product image container
-  .product-image-container {
-    background-color: $dark-bg-header;
-    border-color: $dark-border;
-
-    .no-image-placeholder {
-      background-color: $dark-bg-base;
-      color: $dark-text-secondary;
-    }
-  }
-
-  // Product header
-  .product-header {
-    background-color: $dark-bg-header;
-    border-bottom-color: $dark-border;
-
-    th {
-      color: $dark-text-primary;
-    }
-  }
-
-  // Product row
-  .product-row {
-    border-bottom-color: $dark-border;
-
-    &:hover {
-      background-color: rgba($dark-primary, 0.05);
-    }
-
-    td {
-      color: $dark-text-primary;
-    }
-  }
-
-  // Product details
-  .product-details {
-    .product-name {
-      color: $dark-text-primary;
-    }
-  }
-
-  // Button group
-  .btn-group {
-    .btn {
-      background-color: $dark-bg-header;
-      border-color: $dark-border;
-      color: $dark-text-secondary;
-
-      &:hover:not(:disabled) {
-        background-color: $dark-primary;
-        border-color: $dark-primary;
-        color: $dark-bg-base;
-      }
-    }
-  }
-
-  // Addition and preference headers
-  .addition-header, .preference-header {
-    background-color: $dark-bg-header;
-
-    td {
-      color: $dark-text-primary;
-    }
-  }
-
-  // Addition and preference rows
-  .addition-row, .preference-row {
-    td {
-      color: $dark-text-secondary;
-    }
-  }
-
-  // Quantity box
-  .qty-box {
-    .input-group {
-      .btn {
-        background-color: $dark-bg-header;
-        border-color: $dark-border;
-        color: $dark-text-secondary;
-
-        &:hover:not(:disabled) {
-          background-color: $dark-primary;
-          border-color: $dark-primary;
-          color: $dark-bg-base;
-        }
-      }
-
-      input {
-        background-color: $dark-bg-base;
-        border-color: $dark-border;
-        color: $dark-text-primary;
-
-        &:focus {
-          background-color: $dark-bg-card;
-          border-color: $dark-primary;
-        }
-      }
-    }
-  }
-
-  // Coupon section
-  .coupon-section {
-    background-color: $dark-bg-card;
-    border-color: $dark-border;
-
-    .input-group {
-      input {
-        background-color: $dark-bg-base;
-        border-color: $dark-border;
-        color: $dark-text-primary;
-
-        &::placeholder {
-          color: rgba($dark-text-secondary, 0.6);
-        }
-
-        &:focus {
-          border-color: $dark-primary;
-        }
-      }
-    }
-  }
-
-  // Summary rows
-  .summary-row, .total-row, .discount-row {
-    td {
-      color: $dark-text-primary;
-    }
-  }
-
-  // Final total row
-  .final-total-row {
-    background-color: $dark-bg-header;
-    border-top-color: $dark-primary;
-    border-bottom-color: $dark-primary;
-
-    td {
-      color: $dark-text-primary;
-    }
-  }
-
-  // Total amount
-  .total-amount {
-    color: $dark-primary;
-    text-shadow: 0 2px 4px rgba($dark-primary, 0.3);
-  }
-
-  // Tax info row
-  .tax-info-row {
-    td {
-      color: $dark-text-secondary;
-    }
-  }
-
-  // Price values
-  .price-value, .total-value {
-    color: $dark-text-primary;
-  }
-
-  // Table hover
-  .table-hover tbody tr:hover {
-    background-color: rgba($dark-primary, 0.08);
-  }
-
-  // Responsive mobile styles
-  @media (max-width: 767.98px) {
-    .table .product-row td:nth-child(6) {
-      background-color: $dark-bg-header;
     }
   }
 }

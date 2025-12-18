@@ -25,34 +25,3 @@ ks-carousel img {
     border-radius: 50%; /* Hace que el elemento tenga forma de círculo */
     margin-right: 5px; /* Espacio entre el círculo y el texto */
   }
-
-// ============================================
-// DARK THEME - KATUQ PALETTE
-// ============================================
-:host-context(body.dark-only) {
-  // Variables del tema oscuro Katuq
-  $dark-bg-primary: #1a1625;
-  $dark-bg-secondary: #262335;
-  $dark-bg-tertiary: #2a2640;
-  $dark-border: #4a4366;
-  $dark-text-primary: #e9e4f5;
-  $dark-text-secondary: #b8b0c9;
-  $dark-text-muted: #8b839d;
-  $dark-accent: #a78bfa;
-
-  // Modal fullscreen
-  .modal-fullscreen {
-    background: $dark-bg-primary;
-  }
-
-  // Carousel
-  ks-carousel {
-    background: $dark-bg-secondary;
-  }
-
-  // Color circle (mantiene el color pero agrega borde para visibilidad)
-  .color-circle {
-    border: 2px solid $dark-border;
-    box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
-  }
-}

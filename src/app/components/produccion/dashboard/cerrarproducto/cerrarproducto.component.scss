@@ -204,182 +204,28 @@ $transition: all 0.3s ease;
         align-items: flex-start;
         gap: 1rem;
     }
-
+    
     .action-buttons {
         width: 100%;
     }
-
+    
     .btn-cerrar-producto {
         width: 100%;
         justify-content: center;
     }
-
+    
     .modern-process-table {
         th, td {
             padding: 0.75rem 0.5rem;
         }
-
+        
         .estado-icon {
             width: 2rem;
             height: 2rem;
-
+            
             i {
                 font-size: 1rem;
             }
         }
     }
-}
-
-/* ========================================
-   DARK THEME STYLES - KATUQ PALETTE
-   ======================================== */
-
-// Dark theme variables
-$dark-primary: #a78bfa;
-$dark-primary-light: rgba(167, 139, 250, 0.15);
-$dark-bg-base: #1a1625;
-$dark-bg-card: #262335;
-$dark-bg-header: #2e2445;
-$dark-bg-elevated: #322a47;
-$dark-border: #4a4366;
-$dark-text-primary: #e9e4f5;
-$dark-text-secondary: #a09cb5;
-$dark-text-muted: #7a7592;
-$dark-success: #4ade80;
-$dark-success-light: rgba(74, 222, 128, 0.15);
-$dark-warning: #fbbf24;
-$dark-warning-light: rgba(251, 191, 36, 0.15);
-$dark-danger: #f87171;
-$dark-danger-light: rgba(248, 113, 113, 0.15);
-$dark-neutral: #9ca3af;
-$dark-neutral-light: rgba(156, 163, 175, 0.15);
-
-:host-context(body.dark-only) {
-  // Producto container
-  .producto-container {
-    background-color: $dark-bg-card;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-
-    &:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    }
-  }
-
-  // Producto header
-  .producto-header {
-    border-color: $dark-border;
-  }
-
-  .producto-title {
-    i {
-      color: $dark-primary;
-    }
-
-    h4 {
-      color: $dark-text-primary;
-    }
-  }
-
-  // Button cerrar producto
-  .btn-cerrar-producto {
-    background-color: $dark-primary;
-    box-shadow: 0 2px 5px rgba(167, 139, 250, 0.25);
-
-    &:hover {
-      background-color: lighten($dark-primary, 5%);
-      box-shadow: 0 4px 8px rgba(167, 139, 250, 0.3);
-    }
-  }
-
-  // Table container
-  .table-container {
-    background-color: $dark-bg-card;
-  }
-
-  // Modern process table
-  .modern-process-table {
-    color: $dark-text-primary;
-
-    thead {
-      background: linear-gradient(to right, $dark-primary, darken($dark-primary, 15%));
-
-      th {
-        color: white;
-      }
-    }
-
-    tbody {
-      tr {
-        &:hover {
-          background-color: $dark-bg-elevated;
-        }
-
-        &:nth-child(even) {
-          background-color: rgba($dark-bg-elevated, 0.5);
-        }
-
-        &:nth-child(odd) {
-          background-color: $dark-bg-card;
-        }
-      }
-
-      td {
-        color: $dark-text-primary;
-        border-color: $dark-border;
-      }
-    }
-
-    .articulo-name {
-      color: $dark-text-primary;
-
-      i {
-        color: $dark-primary;
-      }
-    }
-
-    // Estado icons
-    .estado-icon {
-      background-color: $dark-bg-elevated;
-    }
-
-    .status-complete {
-      .estado-icon {
-        background-color: $dark-success-light;
-
-        i {
-          color: $dark-success;
-        }
-      }
-    }
-
-    .status-partial {
-      .estado-icon {
-        background-color: $dark-warning-light;
-
-        i {
-          color: $dark-warning;
-        }
-      }
-    }
-
-    .status-pending {
-      .estado-icon {
-        background-color: $dark-danger-light;
-
-        i {
-          color: $dark-danger;
-        }
-      }
-    }
-
-    .status-na {
-      .estado-icon {
-        background-color: $dark-neutral-light;
-
-        i {
-          color: $dark-neutral;
-        }
-      }
-    }
-  }
 }

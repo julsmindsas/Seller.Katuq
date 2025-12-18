@@ -60,7 +60,7 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
   errorMessage = '';
 
   // Configuracion
-  company = '';
+  company = 'ALMARA FELICIDAD'; // TODO: Obtener de servicio de empresa
   activeAgents = new Set<string>();
 
   // Sprint 1.4: Agentes escribiendo (typing indicators)
@@ -83,31 +83,11 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.loadCompany();
     this.setupSubscriptions();
 
     // Cargar sesiones si hay empresa
     if (this.company) {
       this.loadSessions();
-    }
-  }
-
-  /**
-   * Carga la empresa actual desde localStorage
-   */
-  private loadCompany(): void {
-    try {
-      const currentCompany = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      this.company = currentCompany.nomComercial || '';
-
-      if (!this.company) {
-        console.warn('[GeneralChatPro] No se encontró empresa en localStorage');
-      } else {
-        console.log('[GeneralChatPro] Empresa cargada:', this.company);
-      }
-    } catch (error) {
-      console.error('[GeneralChatPro] Error al cargar empresa:', error);
-      this.company = '';
     }
   }
 
