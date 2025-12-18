@@ -23,3 +23,109 @@
 ::ng-deep .p-picklist-buttons .p-button:nth-child(3) {
   display: inline-flex;
 }
+
+// ============================================
+// DARK THEME - KATUQ PALETTE
+// ============================================
+:host-context(body.dark-only) {
+  // Variables del tema oscuro Katuq
+  $dark-bg-primary: #1a1625;
+  $dark-bg-secondary: #262335;
+  $dark-bg-tertiary: #2a2640;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #b8b0c9;
+  $dark-text-muted: #8b839d;
+  $dark-accent: #a78bfa;
+
+  // Container
+  .container {
+    color: $dark-text-primary;
+  }
+
+  // Form group
+  .form-group {
+    label {
+      color: $dark-text-primary;
+    }
+
+    .form-control {
+      background-color: $dark-bg-secondary;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:focus {
+        background-color: $dark-bg-secondary;
+        border-color: $dark-accent;
+        box-shadow: 0 0 0 0.2rem rgba($dark-accent, 0.25);
+      }
+
+      &::placeholder {
+        color: $dark-text-muted;
+      }
+    }
+  }
+
+  // Buttons
+  .btn-primary {
+    background: $dark-accent;
+    border-color: $dark-accent;
+
+    &:hover {
+      background: lighten($dark-accent, 10%);
+      border-color: lighten($dark-accent, 10%);
+    }
+  }
+
+  // PrimeNG Picklist dark mode
+  ::ng-deep {
+    .p-picklist {
+      .p-picklist-list-wrapper {
+        background: $dark-bg-secondary;
+        border-color: $dark-border;
+
+        .p-picklist-header {
+          background: $dark-bg-tertiary;
+          border-color: $dark-border;
+          color: $dark-text-primary;
+        }
+
+        .p-picklist-list {
+          background: $dark-bg-secondary;
+
+          .p-picklist-item {
+            color: $dark-text-primary;
+            border-color: $dark-border;
+
+            &:hover {
+              background: rgba(255, 255, 255, 0.05);
+            }
+
+            &.p-highlight {
+              background: rgba($dark-accent, 0.2);
+              color: $dark-accent;
+            }
+          }
+        }
+      }
+
+      .p-picklist-buttons {
+        .p-button {
+          background: $dark-bg-tertiary;
+          border-color: $dark-border;
+          color: $dark-text-secondary;
+
+          &:hover {
+            background: $dark-accent;
+            border-color: $dark-accent;
+            color: white;
+          }
+
+          &:focus {
+            box-shadow: 0 0 0 0.2rem rgba($dark-accent, 0.25);
+          }
+        }
+      }
+    }
+  }
+}

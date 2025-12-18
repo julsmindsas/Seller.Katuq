@@ -472,3 +472,268 @@
         font-size: 1.1rem;
     }
 }
+
+/* ================================================
+   DARK MODE - Katuq Purple Theme
+   ================================================ */
+:host-context(body.dark-only) {
+    // Variables del tema Katuq Purple
+    $primary: #a78bfa;
+    $bg-base: #1a1625;
+    $bg-card: #262335;
+    $border-color: #4a4366;
+    $text-primary: #e9e4f5;
+    $text-secondary: #b8b0cc;
+    $text-muted: #8a8099;
+
+    .appointments-container {
+        background: $bg-base;
+    }
+
+    // ========== HEADER ==========
+    .appointments-header {
+        .header-title {
+            h2 {
+                color: $text-primary;
+
+                i {
+                    color: $primary;
+                }
+            }
+        }
+    }
+
+    // ========== ESTADISTICAS ==========
+    .stat-card {
+        background: $bg-card;
+        border: 1px solid $border-color;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        &:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat-label {
+            color: $text-secondary;
+        }
+
+        // Variantes de color para dark mode
+        &.total {
+            border-left-color: $primary;
+            .stat-icon {
+                background: rgba(167, 139, 250, 0.15);
+                color: $primary;
+            }
+            .stat-value {
+                color: $primary;
+            }
+        }
+
+        &.confirmed {
+            border-left-color: #34d399;
+            .stat-icon {
+                background: rgba(52, 211, 153, 0.15);
+                color: #34d399;
+            }
+            .stat-value {
+                color: #34d399;
+            }
+        }
+
+        &.pending {
+            border-left-color: #fbbf24;
+            .stat-icon {
+                background: rgba(251, 191, 36, 0.15);
+                color: #fbbf24;
+            }
+            .stat-value {
+                color: #fbbf24;
+            }
+        }
+
+        &.completed {
+            border-left-color: #818cf8;
+            .stat-icon {
+                background: rgba(129, 140, 248, 0.15);
+                color: #818cf8;
+            }
+            .stat-value {
+                color: #818cf8;
+            }
+        }
+
+        &.cancelled {
+            border-left-color: #f87171;
+            .stat-icon {
+                background: rgba(248, 113, 113, 0.15);
+                color: #f87171;
+            }
+            .stat-value {
+                color: #f87171;
+            }
+        }
+    }
+
+    // ========== FILTROS ==========
+    .filters-section {
+        background: $bg-card;
+        border: 1px solid $border-color;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        .filter-group {
+            label {
+                color: $text-secondary;
+            }
+        }
+
+        ::ng-deep {
+            .p-inputtext {
+                background: $bg-base;
+                border-color: $border-color;
+                color: $text-primary;
+
+                &::placeholder {
+                    color: $text-muted;
+                }
+
+                &:focus {
+                    border-color: $primary;
+                    box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+                }
+            }
+
+            .p-dropdown {
+                background: $bg-base;
+                border-color: $border-color;
+
+                .p-dropdown-label {
+                    color: $text-primary;
+                }
+
+                .p-dropdown-trigger {
+                    color: $text-secondary;
+                }
+
+                &:hover {
+                    border-color: $primary;
+                }
+            }
+
+            .p-dropdown-panel {
+                background: $bg-card;
+                border: 1px solid $border-color;
+
+                .p-dropdown-items {
+                    .p-dropdown-item {
+                        color: $text-primary;
+
+                        &:hover {
+                            background: rgba(167, 139, 250, 0.1);
+                        }
+
+                        &.p-highlight {
+                            background: rgba(167, 139, 250, 0.2);
+                            color: $primary;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ========== CARD DE CITA ==========
+    .appointment-card {
+        background: $bg-card;
+        border: 1px solid $border-color;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        &:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            border-color: rgba(167, 139, 250, 0.3);
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.3) 0%, rgba(118, 75, 162, 0.4) 100%);
+            border-bottom: 1px solid $border-color;
+        }
+
+        .card-body {
+            background: $bg-card;
+        }
+
+        .info-item {
+            i {
+                color: $primary;
+            }
+
+            .info-content {
+                label {
+                    color: $text-muted;
+                }
+
+                span {
+                    color: $text-primary;
+                }
+            }
+
+            &.operador-asignado {
+                background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(118, 75, 162, 0.15) 100%);
+                border-left-color: $primary;
+
+                i {
+                    color: $primary;
+                }
+
+                .operador-details {
+                    .operador-nombre {
+                        color: $text-primary;
+                    }
+
+                    .operador-contacto {
+                        color: $text-secondary;
+                    }
+
+                    .operador-distancia {
+                        color: $primary;
+                        background: rgba(167, 139, 250, 0.15);
+                    }
+                }
+            }
+        }
+
+        .card-footer {
+            background: $bg-base;
+            border-top-color: $border-color;
+
+            .card-footer-left {
+                .created-at {
+                    color: $text-muted;
+
+                    i {
+                        color: $text-muted;
+                    }
+                }
+            }
+        }
+    }
+
+    // ========== ESTADOS VACIOS ==========
+    .empty-state,
+    .loading-state {
+        background: $bg-card;
+        border: 1px solid $border-color;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+        i {
+            color: $text-muted;
+        }
+
+        h3 {
+            color: $text-primary;
+        }
+
+        p {
+            color: $text-secondary;
+        }
+    }
+}

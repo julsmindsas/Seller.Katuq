@@ -1,3 +1,7 @@
+/* ============================================
+   NOTIFICATION DROPDOWN - GLASSMORPHISM DESIGN
+   ============================================ */
+
 .notification-box {
   display: inline-flex;
   align-items: center;
@@ -10,33 +14,246 @@
   background: transparent;
   border: none;
   box-shadow: none;
+  transition: all 0.15s ease-out;
+  position: relative;
+
+  ::ng-deep svg {
+    color: #6366f1;
+    transition: color 0.15s ease;
+  }
+
+  // Notification badge
+  .badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    font-size: 10px;
+    font-weight: 600;
+    background: #ef4444;
+    color: #fff;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:hover {
+    ::ng-deep svg {
+      color: #4f46e5;
+    }
+  }
 }
 
 .notification-dropdown {
   position: absolute;
   right: 0;
   margin-top: 8px;
-  width: 340px;
+  width: 360px;
   max-height: 70vh;
   overflow: auto;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-  padding: 10px 12px;
 
-  li { list-style: none; }
+  // Glassmorphism effect
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 16px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.15),
+    0 10px 20px rgba(99, 102, 241, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 0;
 
-  h6 { font-weight: 700; }
+  // Header
+  .notification-header {
+    padding: 16px;
+    border-bottom: 1px solid rgba(99, 102, 241, 0.1);
 
-  p { margin-bottom: 10px; }
+    h6 {
+      font-weight: 700;
+      color: #1a1625;
+      margin: 0;
+    }
+  }
+
+  // Notification items container
+  .notification-list {
+    padding: 8px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  li {
+    list-style: none;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 4px;
+    transition: all 0.15s ease-out;
+    cursor: pointer;
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    // Unread state
+    &.unread {
+      background: rgba(99, 102, 241, 0.05);
+      border-left: 3px solid #6366f1;
+    }
+  }
+
+  h6 {
+    font-weight: 600;
+    font-size: 13px;
+    color: #1a1625;
+    margin-bottom: 4px;
+  }
+
+  p {
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: #4a4366;
+    line-height: 1.4;
+  }
+
+  .notification-time {
+    font-size: 11px;
+    color: #9ca3af;
+  }
+
+  // Footer
+  .notification-footer {
+    padding: 12px 16px;
+    border-top: 1px solid rgba(99, 102, 241, 0.1);
+    text-align: center;
+
+    a {
+      color: #6366f1;
+      font-weight: 500;
+      font-size: 13px;
+      text-decoration: none;
+
+      &:hover {
+        color: #4f46e5;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // Empty state
+  .empty-notifications {
+    padding: 32px 16px;
+    text-align: center;
+    color: #9ca3af;
+
+    ::ng-deep svg {
+      width: 48px;
+      height: 48px;
+      color: #d1d5db;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #6b7280;
+    }
+  }
 }
 
-body.dark-only {
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   ============================================ */
+:host-context(body.dark-only) {
+  .notification-box {
+    ::ng-deep svg {
+      color: #c4b5fd;
+    }
+
+    .badge {
+      background: #ef4444;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+    }
+
+    &:hover {
+      ::ng-deep svg {
+        color: #a78bfa;
+      }
+    }
+  }
+
   .notification-dropdown {
-    background: #1f2937;
-    border-color: #374151;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    background: rgba(38, 35, 53, 0.95);
+    border-color: rgba(167, 139, 250, 0.2);
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.5),
+      0 10px 20px rgba(167, 139, 250, 0.1),
+      inset 0 1px 0 rgba(167, 139, 250, 0.1);
+
+    .notification-header {
+      border-bottom-color: rgba(167, 139, 250, 0.15);
+
+      h6 {
+        color: #e9e4f5;
+      }
+    }
+
+    li {
+      &:hover {
+        background: rgba(167, 139, 250, 0.1);
+      }
+
+      &.unread {
+        background: rgba(167, 139, 250, 0.08);
+        border-left-color: #a78bfa;
+      }
+    }
+
+    h6 {
+      color: #e9e4f5;
+    }
+
+    p {
+      color: #c4b5fd;
+    }
+
+    .notification-time {
+      color: #6b5a8e;
+    }
+
+    .notification-footer {
+      border-top-color: rgba(167, 139, 250, 0.15);
+
+      a {
+        color: #a78bfa;
+
+        &:hover {
+          color: #c4b5fd;
+        }
+      }
+    }
+
+    .empty-notifications {
+      color: #6b5a8e;
+
+      ::ng-deep svg {
+        color: #4a4366;
+      }
+
+      p {
+        color: #6b5a8e;
+      }
+    }
   }
 }
 

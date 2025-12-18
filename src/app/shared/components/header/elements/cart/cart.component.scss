@@ -1,3 +1,7 @@
+/* ============================================
+   CART DROPDOWN - GLASSMORPHISM DESIGN
+   ============================================ */
+
 .cart-box {
   display: inline-flex;
   align-items: center;
@@ -10,16 +14,30 @@
   background: transparent;
   border: none;
   box-shadow: none;
+  transition: all 0.15s ease-out;
 
   app-feather-icons {
     display: flex;
     align-items: center;
     justify-content: center;
+
+    ::ng-deep svg {
+      color: #6366f1;
+      transition: color 0.15s ease;
+    }
   }
 
   .badge {
     font-size: 10px;
     padding: 2px 4px;
+    background: #6366f1;
+    color: #fff;
+  }
+
+  &:hover {
+    app-feather-icons ::ng-deep svg {
+      color: #4f46e5;
+    }
   }
 }
 
@@ -27,34 +45,161 @@
   position: absolute;
   right: 0;
   margin-top: 6px;
-  width: 280px;
+  width: 300px;
   max-height: 60vh;
   overflow: auto;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.1);
-  padding: 8px 10px;
+
+  // Glassmorphism effect
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 12px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.12),
+    0 10px 20px rgba(99, 102, 241, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 12px;
 
   &.active { display: block; }
 
   li {
     list-style: none;
-    padding: 2px 0;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    h6, .media-body h6 {
+      color: #1a1625;
+      font-weight: 600;
+    }
+
+    span, p {
+      color: #4a4366;
+    }
   }
 
-  .img-60 { width: 48px; height: 48px; object-fit: cover; }
+  .img-60 {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+  }
 
-  .qty-box .btn { padding: 2px 4px; }
+  .qty-box .btn {
+    padding: 2px 4px;
+    background: rgba(99, 102, 241, 0.1);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    color: #6366f1;
 
-  .total { border-top: 1px solid #edf2f7; padding-top: 6px; margin-top: 4px; }
+    &:hover {
+      background: rgba(99, 102, 241, 0.2);
+    }
+  }
+
+  .total {
+    border-top: 1px solid rgba(99, 102, 241, 0.15);
+    padding-top: 10px;
+    margin-top: 8px;
+    color: #1a1625;
+    font-weight: 600;
+  }
+
+  // View cart / checkout buttons
+  .btn-primary {
+    background: #6366f1;
+    border-color: #6366f1;
+
+    &:hover {
+      background: #4f46e5;
+      border-color: #4f46e5;
+    }
+  }
 }
 
-body.dark-only {
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   ============================================ */
+:host-context(body.dark-only) {
+  .cart-box {
+    app-feather-icons ::ng-deep svg {
+      color: #c4b5fd;
+    }
+
+    .badge {
+      background: #a78bfa;
+      color: #1a1625;
+    }
+
+    &:hover {
+      app-feather-icons ::ng-deep svg {
+        color: #a78bfa;
+      }
+    }
+  }
+
   .cart-dropdown {
-    background: #1f2937;
-    border-color: #374151;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+    background: rgba(38, 35, 53, 0.95);
+    border-color: rgba(167, 139, 250, 0.2);
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.5),
+      0 10px 20px rgba(167, 139, 250, 0.1),
+      inset 0 1px 0 rgba(167, 139, 250, 0.1);
+
+    li {
+      &:hover {
+        background: rgba(167, 139, 250, 0.1);
+      }
+
+      h6, .media-body h6 {
+        color: #e9e4f5;
+      }
+
+      span, p {
+        color: #c4b5fd;
+      }
+    }
+
+    .img-60 {
+      border-color: rgba(167, 139, 250, 0.2);
+    }
+
+    .qty-box .btn {
+      background: rgba(167, 139, 250, 0.1);
+      border-color: rgba(167, 139, 250, 0.2);
+      color: #a78bfa;
+
+      &:hover {
+        background: rgba(167, 139, 250, 0.2);
+        color: #c4b5fd;
+      }
+    }
+
+    .total {
+      border-top-color: rgba(167, 139, 250, 0.2);
+      color: #e9e4f5;
+    }
+
+    .btn-primary {
+      background: #a78bfa;
+      border-color: #a78bfa;
+      color: #1a1625;
+
+      &:hover {
+        background: #8b5cf6;
+        border-color: #8b5cf6;
+      }
+    }
   }
 }
 

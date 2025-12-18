@@ -188,3 +188,148 @@
     }
   }
 }
+
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   Text secondary: #c4b5fd
+   ============================================ */
+:host-context(body.dark-only) {
+  .column-mapping-preview {
+    .mapping-header {
+      .mapping-title {
+        color: #e9e4f5;
+
+        i {
+          color: #a78bfa;
+        }
+      }
+
+      .mapping-subtitle {
+        color: #c4b5fd;
+      }
+    }
+
+    .mapping-table {
+      ::ng-deep {
+        .manual-adjustment {
+          background-color: rgba(167, 139, 250, 0.15) !important;
+          border-left-color: #a78bfa;
+        }
+
+        .p-datatable-tbody > tr > td {
+          background-color: #262335;
+          color: #e9e4f5;
+          border-color: #4a4366;
+        }
+
+        .p-datatable-thead > tr > th {
+          background-color: #1a1625;
+          color: #e9e4f5;
+          border-color: #4a4366;
+        }
+
+        .p-dropdown {
+          background-color: #1a1625;
+          border-color: #4a4366;
+
+          .p-dropdown-label {
+            color: #e9e4f5;
+          }
+
+          &:hover {
+            border-color: #a78bfa;
+          }
+        }
+
+        strong {
+          color: #e9e4f5;
+        }
+
+        small {
+          &.text-muted {
+            color: #6b5a8e;
+          }
+
+          &.reasoning-text {
+            color: #c4b5fd;
+          }
+        }
+      }
+    }
+
+    .warnings-section,
+    .suggestions-section {
+      ::ng-deep {
+        .p-accordion .p-accordion-header {
+          background-color: rgba(251, 191, 36, 0.15);
+          border-color: rgba(251, 191, 36, 0.3);
+
+          .p-accordion-header-link {
+            color: #fbbf24;
+
+            &:hover {
+              background-color: rgba(251, 191, 36, 0.2);
+            }
+          }
+        }
+
+        .p-accordion-content {
+          background-color: #262335;
+          border-color: #4a4366;
+        }
+      }
+
+      .warnings-list {
+        .warning-item {
+          color: #fbbf24;
+
+          i {
+            color: #f59e0b;
+          }
+        }
+      }
+
+      .suggestions-list {
+        .suggestion-item {
+          color: #c4b5fd;
+
+          i {
+            color: #a78bfa;
+          }
+        }
+      }
+    }
+
+    .suggestions-section {
+      ::ng-deep {
+        .p-accordion .p-accordion-header {
+          background-color: rgba(167, 139, 250, 0.15);
+          border-color: rgba(167, 139, 250, 0.3);
+
+          .p-accordion-header-link {
+            color: #c4b5fd;
+          }
+        }
+      }
+    }
+
+    .mapping-footer {
+      border-top-color: #4a4366;
+    }
+  }
+
+  .empty-mapping-state {
+    h4 {
+      color: #e9e4f5;
+    }
+
+    p {
+      color: #c4b5fd;
+    }
+  }
+}

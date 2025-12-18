@@ -280,3 +280,147 @@ button.p-button {
     }
   }
 }
+
+// =====================================
+// DARK MODE - Katuq Purple Palette
+// =====================================
+:host-context(body.dark-only) {
+  // Variables de paleta Katuq Purple
+  $dark-primary: #a78bfa;
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #b8b0c9;
+  $dark-accent: #00FFCC;
+
+  .callback-container {
+    background-color: $dark-bg-base;
+    background-image:
+      radial-gradient(circle at 20% 50%, rgba($dark-primary, 0.1) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba($dark-accent, 0.08) 0%, transparent 50%);
+  }
+
+  .callback-card {
+    background: $dark-bg-card;
+    box-shadow:
+      0 10px 40px rgba(0, 0, 0, 0.3),
+      0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 1px solid $dark-border;
+  }
+
+  .loading-section {
+    .spinner-wrapper i {
+      color: $dark-primary;
+    }
+
+    h2 {
+      color: $dark-text-primary;
+    }
+
+    p {
+      color: $dark-text-secondary;
+    }
+  }
+
+  .result-section {
+    .icon-wrapper {
+      &.success-icon {
+        background: linear-gradient(135deg, rgba($dark-accent, 0.2) 0%, rgba($dark-accent, 0.1) 100%);
+        color: $dark-accent;
+        box-shadow: 0 4px 12px rgba($dark-accent, 0.2);
+      }
+
+      &.pending-icon {
+        background: linear-gradient(135deg, rgba(#FFA726, 0.2) 0%, rgba(#FFA726, 0.1) 100%);
+        color: #FFA726;
+        box-shadow: 0 4px 12px rgba(#FFA726, 0.2);
+      }
+    }
+
+    h2 {
+      color: $dark-text-primary;
+    }
+
+    .message {
+      color: $dark-text-secondary;
+    }
+  }
+
+  .success-features {
+    background: rgba($dark-primary, 0.1);
+    border: 1px solid $dark-border;
+
+    h4 {
+      color: $dark-text-primary;
+    }
+
+    .feature-item {
+      background: $dark-bg-card;
+      border: 1px solid $dark-border;
+
+      i {
+        color: $dark-accent;
+      }
+
+      span {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  .info-box {
+    background: linear-gradient(135deg, rgba($dark-primary, 0.15) 0%, rgba($dark-primary, 0.08) 100%);
+    border-left-color: $dark-primary;
+    box-shadow: 0 2px 8px rgba($dark-primary, 0.15);
+
+    i {
+      color: $dark-primary;
+    }
+
+    p {
+      color: $dark-text-secondary;
+    }
+  }
+
+  .subscription-info {
+    background: rgba($dark-bg-card, 0.8);
+    border: 1px solid $dark-border;
+
+    p {
+      color: $dark-text-secondary;
+
+      strong {
+        color: $dark-text-primary;
+      }
+    }
+  }
+
+  // Buttons
+  button.p-button {
+    &.p-button-primary {
+      background: linear-gradient(135deg, $dark-primary 0%, darken($dark-primary, 15%) 100%) !important;
+
+      &:hover {
+        box-shadow: 0 4px 12px rgba($dark-primary, 0.4) !important;
+      }
+    }
+
+    &.p-button-secondary {
+      background: linear-gradient(135deg, $dark-accent 0%, darken($dark-accent, 15%) 100%) !important;
+
+      &:hover {
+        box-shadow: 0 4px 12px rgba($dark-accent, 0.4) !important;
+      }
+    }
+
+    &.p-button-text {
+      color: $dark-text-secondary !important;
+
+      &:hover {
+        background: rgba($dark-primary, 0.1) !important;
+        color: $dark-primary !important;
+      }
+    }
+  }
+}

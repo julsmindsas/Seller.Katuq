@@ -247,3 +247,193 @@ $light-color: #f8f9fa;
     }
   }
 }
+
+// =====================================
+// DARK THEME STYLES - KATUQ PALETTE
+// =====================================
+// Primary: #a78bfa
+// Background: #1a1625 / #262335
+// Border: #4a4366
+// Text: #e9e4f5
+
+:host-context(body.dark-only) {
+  // Dark theme variables
+  $dark-bg-primary: #1a1625;
+  $dark-bg-secondary: #262335;
+  $dark-bg-tertiary: #2d2a3e;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #b8b0c9;
+  $dark-text-muted: #8b839e;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #c4b5fd;
+
+  // Modal header dark theme
+  .modal-header {
+    background-color: $dark-bg-secondary;
+    border-bottom-color: $dark-border;
+  }
+
+  .modal-title {
+    color: $dark-text-primary;
+  }
+
+  .modal-footer {
+    background-color: $dark-bg-secondary;
+    border-top-color: $dark-border;
+  }
+
+  // Cards dark theme
+  .card {
+    background-color: $dark-bg-secondary;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+
+    .card-title {
+      color: $dark-text-primary;
+    }
+  }
+
+  // Table dark theme
+  .table {
+    th {
+      background-color: $dark-bg-tertiary;
+      color: $dark-text-primary;
+    }
+
+    td {
+      background-color: $dark-bg-secondary;
+      color: $dark-text-primary;
+      border-bottom-color: $dark-border;
+    }
+
+    tbody tr {
+      &:hover {
+        background-color: rgba($dark-primary, 0.1);
+      }
+    }
+  }
+
+  .table-responsive {
+    background-color: $dark-bg-secondary;
+  }
+
+  // Alert dark theme
+  .alert {
+    &.alert-info {
+      background-color: rgba($dark-primary, 0.15);
+      border-color: rgba($dark-primary, 0.3);
+      color: $dark-primary-hover;
+    }
+  }
+
+  // Badge dark theme
+  .badge {
+    &.bg-primary {
+      background-color: $dark-primary !important;
+    }
+
+    &.bg-secondary {
+      background-color: $dark-text-muted !important;
+    }
+
+    &.bg-success {
+      background-color: #22c55e !important;
+    }
+
+    &.bg-warning {
+      background-color: #f59e0b !important;
+      color: $dark-bg-primary !important;
+    }
+  }
+
+  // Buttons dark theme
+  .btn {
+    &.btn-outline-primary {
+      color: $dark-primary;
+      border-color: $dark-primary;
+
+      &:hover {
+        background-color: $dark-primary;
+        color: white;
+      }
+    }
+
+    &.btn-outline-secondary {
+      color: $dark-text-secondary;
+      border-color: $dark-border;
+
+      &:hover {
+        background-color: $dark-text-muted;
+        border-color: $dark-text-muted;
+        color: white;
+      }
+    }
+
+    &.btn-secondary {
+      background-color: $dark-text-muted;
+      border-color: $dark-text-muted;
+
+      &:hover {
+        background-color: lighten($dark-text-muted, 10%);
+        border-color: lighten($dark-text-muted, 10%);
+      }
+    }
+  }
+
+  // Input group dark theme
+  .input-group {
+    .form-control {
+      background-color: $dark-bg-tertiary;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &::placeholder {
+        color: $dark-text-muted;
+      }
+
+      &:focus {
+        border-color: $dark-primary;
+        box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25);
+      }
+    }
+
+    .btn {
+      background-color: $dark-bg-tertiary;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-secondary;
+      }
+    }
+  }
+
+  // Mobile responsive dark theme
+  @media (max-width: 768px) {
+    .table-responsive > .table {
+      tr {
+        background: $dark-bg-secondary !important;
+        border-color: $dark-border;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      td {
+        border-bottom-color: $dark-border;
+        background-color: transparent;
+
+        &::before {
+          color: $dark-text-muted;
+        }
+      }
+
+      .col-nro-orden {
+        border-bottom-color: $dark-border !important;
+        color: $dark-text-primary;
+      }
+
+      .col-total {
+        color: #4ade80;
+      }
+    }
+  }
+}

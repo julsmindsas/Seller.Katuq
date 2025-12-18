@@ -1,0 +1,390 @@
+// ===================================
+// CREATE CUSTOMER MODAL (POS2) - ESTILOS
+// ===================================
+
+// Variables de color (Light Mode)
+$primary: #667eea;
+$primary-light: #f0f2ff;
+$border-color: #e9ecef;
+$text-dark: #333;
+$text-muted: #6c757d;
+$success: #28a745;
+$danger: #dc3545;
+$bg-light: #f8f9fa;
+
+// Modal Container
+.create-customer-modal {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  border: none;
+  background: white;
+}
+
+// Modal Header
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  border-bottom: 2px solid $border-color;
+
+  .modal-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    i {
+      color: $primary;
+      font-size: 1.5rem;
+    }
+  }
+
+  .btn-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: $text-muted;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background-color: rgba($primary, 0.1);
+      color: $primary;
+    }
+  }
+}
+
+// Modal Body
+.modal-body {
+  padding: 1.5rem;
+  background-color: #fafbfc;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba($text-muted, 0.2);
+    border-radius: 4px;
+
+    &:hover {
+      background-color: rgba($text-muted, 0.4);
+    }
+  }
+}
+
+// Form Groups
+.form-group {
+  margin-bottom: 1rem;
+
+  label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: $text-dark;
+    margin-bottom: 0.5rem;
+
+    .required {
+      color: $danger;
+      margin-left: 0.25rem;
+    }
+  }
+
+  input,
+  select,
+  textarea {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    border: 1px solid $border-color;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: $text-dark;
+    background: white;
+    transition: all 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $primary;
+      box-shadow: 0 0 0 3px rgba($primary, 0.1);
+    }
+
+    &::placeholder {
+      color: $text-muted;
+    }
+
+    &:disabled {
+      background-color: $bg-light;
+      color: $text-muted;
+    }
+  }
+}
+
+// Error Message
+.error-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: $danger;
+  margin-top: 0.5rem;
+
+  i {
+    font-size: 0.75rem;
+  }
+}
+
+// Modal Footer
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: white;
+  border-top: 1px solid $border-color;
+
+  .btn {
+    padding: 0.625rem 1.25rem;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      font-size: 0.875rem;
+    }
+
+    &.btn-primary {
+      background-color: $primary;
+      border: none;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background-color: darken($primary, 10%);
+        box-shadow: 0 4px 12px rgba($primary, 0.3);
+        transform: translateY(-2px);
+      }
+
+      &:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+        opacity: 0.6;
+      }
+    }
+
+    &.btn-secondary {
+      background-color: transparent;
+      border: 1px solid $border-color;
+      color: $text-muted;
+
+      &:hover:not(:disabled) {
+        background-color: $bg-light;
+        border-color: $primary;
+        color: $primary;
+      }
+    }
+  }
+}
+
+// ==============================================
+// DARK MODE SUPPORT - KATUQ PALETTE
+// ==============================================
+:host-context(body.dark-only) {
+  // Katuq Dark Theme Colors
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #8b5cf6;
+  $dark-success: #34d399;
+  $dark-error: #f87171;
+
+  // Modal Container
+  .create-customer-modal {
+    background: $dark-bg-card;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  // Modal Header
+  .modal-header {
+    background: linear-gradient(135deg, $dark-bg-header 0%, $dark-bg-card 100%);
+    border-bottom-color: $dark-border;
+
+    .modal-title {
+      color: $dark-text-primary;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+
+    .btn-close {
+      color: $dark-text-secondary;
+
+      &:hover {
+        background-color: rgba($dark-primary, 0.15);
+        color: $dark-primary;
+      }
+    }
+  }
+
+  // Modal Body
+  .modal-body {
+    background-color: $dark-bg-base;
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba($dark-text-secondary, 0.3);
+
+      &:hover {
+        background-color: rgba($dark-text-secondary, 0.5);
+      }
+    }
+  }
+
+  // Form Groups
+  .form-group {
+    label {
+      color: $dark-text-primary;
+
+      .required {
+        color: $dark-error;
+      }
+    }
+
+    input,
+    select,
+    textarea {
+      background: $dark-bg-header;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:focus {
+        border-color: $dark-primary;
+        box-shadow: 0 0 0 3px rgba($dark-primary, 0.2);
+      }
+
+      &::placeholder {
+        color: $dark-text-secondary;
+      }
+
+      &:disabled {
+        background-color: $dark-bg-base;
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Error Message
+  .error-message {
+    color: $dark-error;
+  }
+
+  // Modal Footer
+  .modal-footer {
+    background: $dark-bg-card;
+    border-top-color: $dark-border;
+
+    .btn {
+      &.btn-primary {
+        background-color: $dark-primary;
+        color: $dark-bg-base;
+
+        &:hover:not(:disabled) {
+          background-color: $dark-primary-hover;
+          box-shadow: 0 4px 12px rgba($dark-primary, 0.4);
+        }
+
+        &:disabled {
+          background-color: $dark-border;
+          color: $dark-text-secondary;
+        }
+      }
+
+      &.btn-secondary {
+        border-color: $dark-border;
+        color: $dark-text-secondary;
+
+        &:hover:not(:disabled) {
+          background-color: $dark-bg-header;
+          border-color: $dark-primary;
+          color: $dark-primary;
+        }
+      }
+    }
+  }
+
+  // PrimeNG Overrides
+  ::ng-deep {
+    .p-inputtext {
+      background: $dark-bg-header !important;
+      border-color: $dark-border !important;
+      color: $dark-text-primary !important;
+
+      &:focus {
+        border-color: $dark-primary !important;
+        box-shadow: 0 0 0 3px rgba($dark-primary, 0.2) !important;
+      }
+    }
+
+    .p-dropdown {
+      background: $dark-bg-header;
+      border-color: $dark-border;
+
+      .p-dropdown-label {
+        color: $dark-text-primary;
+      }
+
+      .p-dropdown-trigger {
+        color: $dark-text-secondary;
+      }
+
+      &:focus {
+        border-color: $dark-primary !important;
+        box-shadow: 0 0 0 3px rgba($dark-primary, 0.2) !important;
+      }
+    }
+
+    .p-dropdown-panel {
+      background: $dark-bg-card;
+      border-color: $dark-border;
+
+      .p-dropdown-items {
+        .p-dropdown-item {
+          color: $dark-text-primary;
+
+          &:hover {
+            background: rgba($dark-primary, 0.15);
+          }
+
+          &.p-highlight {
+            background: rgba($dark-primary, 0.25);
+            color: $dark-primary;
+          }
+        }
+      }
+    }
+  }
+}

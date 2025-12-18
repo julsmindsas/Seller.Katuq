@@ -83,6 +83,150 @@ tbody, td, tfoot, th, thead, tr {
 
 table{
 font-family: 'Roboto', sans-serif;
+}
 
+// ============================================
+// DARK THEME STYLES - Katuq Palette
+// ============================================
+:host-context(body.dark-only) {
+  // Mobile card list dark
+  .mobile-card-list {
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
 
+    &::-webkit-scrollbar-track {
+      background: #1a1625;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #4a4366;
+      border-radius: 4px;
+
+      &:hover {
+        background-color: #a78bfa;
+      }
+    }
+  }
+
+  // Cost summary dark
+  .cost-summary {
+    background-color: #1a1625;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid #4a4366;
+
+    h6 {
+      color: #e9e4f5;
+    }
+
+    p {
+      color: #e9e4f5;
+    }
+
+    .total-item {
+      border-bottom-color: #4a4366;
+    }
+  }
+
+  // Carrito card dark (mobile)
+  .carrito-card {
+    background-color: #262335;
+    border-color: #4a4366;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+    .card-body {
+      background-color: #262335;
+      color: #e9e4f5;
+    }
+
+    .card-title {
+      color: #e9e4f5;
+    }
+
+    .card-text {
+      color: rgba(233, 228, 245, 0.8);
+    }
+  }
+
+  // Cart image container dark
+  .cart-image {
+    border-color: #4a4366;
+    background-color: #1a1625;
+  }
+
+  // Table dark styles
+  table {
+    color: #e9e4f5;
+    background-color: #262335;
+
+    thead {
+      background-color: #1a1625;
+
+      th {
+        color: #e9e4f5;
+        border-bottom-color: #4a4366;
+      }
+    }
+
+    tbody {
+      tr {
+        background-color: #262335;
+        border-bottom-color: #4a4366;
+
+        &:hover {
+          background-color: #2d2844;
+        }
+
+        td {
+          color: #e9e4f5;
+          border-color: #4a4366;
+        }
+      }
+    }
+  }
+
+  // Table borders reset
+  tbody, td, tfoot, th, thead, tr {
+    border-color: #4a4366;
+  }
+
+  // Cart item actions
+  .fa {
+    color: #a78bfa;
+
+    &:hover {
+      color: #c4b5fd;
+    }
+
+    &.fa-trash, &.fa-times {
+      color: #ef4444;
+
+      &:hover {
+        color: #f87171;
+      }
+    }
+  }
+
+  // Quantity input
+  input[type="number"] {
+    background-color: #1a1625;
+    border-color: #4a4366;
+    color: #e9e4f5;
+
+    &:focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+    }
+  }
+
+  // Price text
+  .price, .total-price {
+    color: #a78bfa;
+    font-weight: 600;
+  }
+
+  // Empty cart message
+  .text-muted {
+    color: rgba(233, 228, 245, 0.6) !important;
+  }
 }

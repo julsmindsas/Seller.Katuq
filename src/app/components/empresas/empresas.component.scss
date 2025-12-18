@@ -266,4 +266,340 @@ a[href^="mailto:"] {
   --bs-table-hover-bg: #ffe69c;
   --bs-table-hover-color: #000;
 }
-  
+
+// ============================================
+// DARK THEME STYLES - Katuq Palette
+// ============================================
+// Primary: #a78bfa
+// Background: #1a1625 / #262335
+// Border: #4a4366
+// Text: #e9e4f5
+// ============================================
+
+:host-context(body.dark-only) {
+  // Card header
+  .card-header {
+    background-color: #262335;
+    border-bottom: 1px solid #4a4366;
+    color: #e9e4f5;
+  }
+
+  // Filter panel
+  .filter-panel {
+    background-color: #262335;
+    border: 1px solid #4a4366;
+  }
+
+  // Filters advanced
+  .filters-advanced {
+    .form-label {
+      color: #e9e4f5;
+    }
+  }
+
+  // Loader
+  .loader-box {
+    background-color: transparent;
+  }
+
+  .loader-8 {
+    border: 4px solid #4a4366;
+    border-top: 4px solid #a78bfa;
+  }
+
+  // Table warning state in dark mode
+  .table-warning {
+    --bs-table-accent-bg: rgba(167, 139, 250, 0.15);
+    --bs-table-striped-bg: rgba(167, 139, 250, 0.2);
+    --bs-table-striped-color: #e9e4f5;
+    --bs-table-active-bg: rgba(167, 139, 250, 0.25);
+    --bs-table-active-color: #e9e4f5;
+    --bs-table-hover-bg: rgba(167, 139, 250, 0.3);
+    --bs-table-hover-color: #e9e4f5;
+  }
+
+  // Email links
+  a[href^="mailto:"] {
+    color: #a78bfa;
+
+    &:hover {
+      color: #c4b5fd;
+    }
+  }
+
+  // Button outline states
+  .btn-outline-primary {
+    color: #a78bfa;
+    border-color: #a78bfa;
+
+    &:hover {
+      background-color: #a78bfa;
+      border-color: #a78bfa;
+      color: #1a1625;
+    }
+  }
+
+  .btn-outline-info {
+    color: #c4b5fd;
+    border-color: #c4b5fd;
+
+    &:hover {
+      background-color: #c4b5fd;
+      border-color: #c4b5fd;
+      color: #1a1625;
+    }
+  }
+
+  .btn-outline-secondary {
+    color: #9ca3af;
+    border-color: #4a4366;
+
+    &:hover {
+      background-color: #4a4366;
+      border-color: #4a4366;
+      color: #e9e4f5;
+    }
+  }
+
+  // Focus states
+  .btn:focus,
+  .form-control:focus {
+    box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+    border-color: #a78bfa;
+  }
+}
+
+// PrimeNG Dark Theme Styles
+:host-context(body.dark-only) ::ng-deep {
+  // DataTable
+  .p-datatable {
+    .p-datatable-header {
+      background: #262335;
+      border: 1px solid #4a4366;
+      color: #e9e4f5;
+    }
+
+    .p-datatable-thead > tr > th {
+      background: #1a1625;
+      border-color: #4a4366;
+      color: #e9e4f5;
+    }
+
+    .p-datatable-tbody > tr {
+      background: #262335;
+      color: #e9e4f5;
+
+      &:hover {
+        background-color: rgba(167, 139, 250, 0.1) !important;
+      }
+
+      &.table-warning {
+        background-color: rgba(167, 139, 250, 0.15) !important;
+
+        &:hover {
+          background-color: rgba(167, 139, 250, 0.25) !important;
+        }
+      }
+    }
+
+    .p-datatable-tbody > tr > td {
+      border-color: #4a4366;
+      color: #e9e4f5;
+    }
+
+    // Empty message
+    .p-datatable-emptymessage {
+      td {
+        background: #262335;
+        color: #9ca3af;
+      }
+    }
+  }
+
+  // Paginator
+  .p-paginator {
+    background: #262335;
+    border: 1px solid #4a4366;
+    border-top: none;
+
+    .p-paginator-element {
+      color: #e9e4f5;
+
+      &:hover {
+        background: rgba(167, 139, 250, 0.1);
+      }
+    }
+
+    .p-paginator-pages .p-paginator-page {
+      color: #e9e4f5;
+
+      &.p-highlight {
+        background: #a78bfa;
+        border-color: #a78bfa;
+        color: #1a1625;
+      }
+
+      &:hover:not(.p-highlight) {
+        background: rgba(167, 139, 250, 0.1);
+      }
+    }
+  }
+
+  // MultiSelect
+  .p-multiselect {
+    background: #262335;
+    border-color: #4a4366;
+
+    .p-multiselect-label {
+      color: #e9e4f5;
+    }
+
+    .p-multiselect-trigger {
+      color: #e9e4f5;
+    }
+
+    &:hover {
+      border-color: #a78bfa;
+    }
+
+    &.p-focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+    }
+  }
+
+  .p-multiselect-panel {
+    background: #262335;
+    border: 1px solid #4a4366;
+
+    .p-multiselect-header {
+      background: #1a1625;
+      border-bottom: 1px solid #4a4366;
+      color: #e9e4f5;
+
+      .p-multiselect-filter-container .p-inputtext {
+        background: #262335;
+        border-color: #4a4366;
+        color: #e9e4f5;
+      }
+    }
+
+    .p-multiselect-items {
+      .p-multiselect-item {
+        color: #e9e4f5;
+
+        &:hover {
+          background: rgba(167, 139, 250, 0.1);
+        }
+
+        &.p-highlight {
+          background: rgba(167, 139, 250, 0.2);
+          color: #a78bfa;
+        }
+      }
+    }
+  }
+
+  // Dropdown
+  .p-dropdown {
+    background: #262335;
+    border-color: #4a4366;
+
+    .p-dropdown-label {
+      color: #e9e4f5;
+    }
+
+    .p-dropdown-trigger {
+      color: #e9e4f5;
+    }
+
+    &:hover {
+      border-color: #a78bfa;
+    }
+
+    &.p-focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+    }
+  }
+
+  .p-dropdown-panel {
+    background: #262335;
+    border: 1px solid #4a4366;
+
+    .p-dropdown-items {
+      .p-dropdown-item {
+        color: #e9e4f5;
+
+        &:hover {
+          background: rgba(167, 139, 250, 0.1);
+        }
+
+        &.p-highlight {
+          background: rgba(167, 139, 250, 0.2);
+          color: #a78bfa;
+        }
+      }
+    }
+  }
+
+  // Calendar
+  .p-calendar {
+    .p-inputtext {
+      background: #262335;
+      border-color: #4a4366;
+      color: #e9e4f5;
+
+      &:hover {
+        border-color: #a78bfa;
+      }
+
+      &:focus {
+        border-color: #a78bfa;
+        box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+      }
+    }
+  }
+
+  // Tag
+  .p-tag {
+    &.p-tag-success {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+    }
+
+    &.p-tag-warning {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fbbf24;
+    }
+
+    &.p-tag-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    &.p-tag-info {
+      background: rgba(167, 139, 250, 0.2);
+      color: #a78bfa;
+    }
+  }
+
+  // Toast
+  .p-toast {
+    .p-toast-message {
+      background: #262335;
+      border: 1px solid #4a4366;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.3);
+
+      .p-toast-message-content {
+        color: #e9e4f5;
+      }
+    }
+  }
+
+  // Input text focus
+  .p-inputtext:focus {
+    box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+    border-color: #a78bfa;
+  }
+}

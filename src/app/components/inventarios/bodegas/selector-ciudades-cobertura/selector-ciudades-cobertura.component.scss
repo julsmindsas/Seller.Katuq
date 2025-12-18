@@ -71,3 +71,127 @@
   pointer-events: none;
   user-select: none;
 }
+
+// ===================================
+// DARK MODE - Katuq Purple Palette
+// ===================================
+:host-context(body.dark-only) {
+  // Variables Dark Mode
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-text-muted: #8b7fa8;
+  $dark-primary: #a78bfa;
+
+  .city-list-container,
+  .selected-list-container {
+    background-color: $dark-bg-card;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: $dark-bg-base;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $dark-border;
+      border-radius: 3px;
+
+      &:hover {
+        background: $dark-primary;
+      }
+    }
+  }
+
+  .city-item {
+    border-bottom-color: $dark-border;
+    color: $dark-text-primary;
+
+    &:hover {
+      background-color: $dark-bg-header;
+    }
+
+    &.selected {
+      background-color: rgba($dark-primary, 0.15);
+      border-left-color: $dark-primary;
+    }
+  }
+
+  .selected-city-item {
+    border-bottom-color: $dark-border;
+    color: $dark-text-primary;
+
+    &:hover {
+      background-color: rgba(#f87171, 0.1);
+    }
+  }
+
+  .department-header {
+    background-color: $dark-bg-header;
+    color: $dark-text-secondary;
+  }
+
+  .card-header {
+    background-color: $dark-bg-header !important;
+    color: $dark-text-primary;
+  }
+
+  .modal-body {
+    background-color: $dark-bg-card;
+  }
+
+  .form-check-input {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+
+    &:checked {
+      background-color: $dark-primary;
+      border-color: $dark-primary;
+    }
+
+    &:focus {
+      border-color: $dark-primary;
+      box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25);
+    }
+  }
+
+  // Card styles
+  .card {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+  }
+
+  // Labels and text
+  label {
+    color: $dark-text-primary;
+  }
+
+  small, .text-muted {
+    color: $dark-text-muted !important;
+  }
+
+  // Buttons
+  .btn-outline-danger {
+    color: #f87171;
+    border-color: #f87171;
+
+    &:hover {
+      background-color: rgba(#f87171, 0.15);
+      color: #fecaca;
+    }
+  }
+
+  .btn-primary {
+    background-color: $dark-primary;
+    border-color: $dark-primary;
+
+    &:hover {
+      background-color: lighten($dark-primary, 5%);
+    }
+  }
+}

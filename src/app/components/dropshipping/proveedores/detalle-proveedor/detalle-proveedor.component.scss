@@ -52,9 +52,128 @@
     font-size: 0.75rem;
     font-weight: 600;
   }
-  
+
   .badge {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
+  }
+}
+
+// =============================================
+// DARK MODE - Katuq Purple Palette
+// =============================================
+:host-context(body.dark-only) {
+  .card-header {
+    background-color: #262335;
+    border-bottom-color: #4a4366;
+
+    h5, h6 {
+      color: #e9e4f5;
+    }
+  }
+
+  .card-body {
+    background-color: #262335;
+  }
+
+  .card {
+    background-color: #262335;
+    border-color: #4a4366;
+  }
+
+  .info-item {
+    label {
+      color: rgba(233, 228, 245, 0.7);
+    }
+
+    span {
+      color: #e9e4f5;
+    }
+
+    a {
+      color: #a78bfa;
+
+      &:hover {
+        color: lighten(#a78bfa, 10%);
+      }
+    }
+  }
+
+  // Metric cards with gradients - adjusted for dark mode
+  .bg-primary {
+    background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%) !important;
+
+    .card-body {
+      background: transparent;
+    }
+  }
+
+  .bg-warning {
+    background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%) !important;
+
+    .card-body {
+      background: transparent;
+    }
+  }
+
+  .bg-success {
+    background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+
+    .card-body {
+      background: transparent;
+    }
+  }
+
+  .bg-info {
+    background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%) !important;
+
+    .card-body {
+      background: transparent;
+    }
+  }
+
+  ::ng-deep {
+    .p-tag {
+      &.p-tag-success {
+        background-color: rgba(52, 211, 153, 0.2);
+        color: #34d399;
+        border: 1px solid #34d399;
+      }
+
+      &.p-tag-warning {
+        background-color: rgba(251, 191, 36, 0.2);
+        color: #fbbf24;
+        border: 1px solid #fbbf24;
+      }
+
+      &.p-tag-danger {
+        background-color: rgba(248, 113, 113, 0.2);
+        color: #f87171;
+        border: 1px solid #f87171;
+      }
+
+      &.p-tag-info {
+        background-color: rgba(96, 165, 250, 0.2);
+        color: #60a5fa;
+        border: 1px solid #60a5fa;
+      }
+    }
+
+    .badge {
+      &.bg-success {
+        background-color: rgba(52, 211, 153, 0.2) !important;
+        color: #34d399 !important;
+      }
+
+      &.bg-warning {
+        background-color: rgba(251, 191, 36, 0.2) !important;
+        color: #fbbf24 !important;
+      }
+
+      &.bg-danger {
+        background-color: rgba(248, 113, 113, 0.2) !important;
+        color: #f87171 !important;
+      }
+    }
   }
 }

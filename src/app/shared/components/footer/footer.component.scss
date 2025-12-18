@@ -5,10 +5,25 @@
 .footer-copyright {
   padding: 16px 8px;
   font-size: 0.875rem;
+  background: transparent;
+  color: #4a4366;
+  transition: background 0.2s ease, color 0.2s ease;
 
   p {
     margin-bottom: 0;
     line-height: 1.5;
+    color: inherit;
+  }
+
+  a {
+    color: #6366f1;
+    text-decoration: none;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: #4f46e5;
+      text-decoration: underline;
+    }
   }
 }
 
@@ -19,6 +34,34 @@
 
     p {
       font-size: 0.75rem;
+    }
+  }
+}
+
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   ============================================ */
+:host-context(body.dark-only) {
+  .footer-copyright {
+    background: rgba(26, 22, 37, 0.5);
+    color: #c4b5fd;
+    border-top: 1px solid rgba(74, 67, 102, 0.3);
+
+    p {
+      color: #e9e4f5;
+    }
+
+    a {
+      color: #a78bfa;
+
+      &:hover {
+        color: #c4b5fd;
+      }
     }
   }
 }

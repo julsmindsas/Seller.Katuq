@@ -33,3 +33,48 @@ th {
     color: gray;
     /* Cambia "gray" por el color que desees */
 }
+
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   Text secondary: #c4b5fd
+   ============================================ */
+:host-context(body.dark-only) {
+  .progress-bar {
+    background-color: #262335;
+    border: 1px solid #4a4366;
+  }
+
+  .progress {
+    background-color: #a78bfa;
+  }
+
+  input[type="file"]::-webkit-file-upload-button {
+    background-color: #a78bfa;
+    color: #1a1625;
+  }
+
+  th {
+    color: #e9e4f5;
+    background-color: #262335;
+  }
+
+  .select-default {
+    color: #c4b5fd;
+    background-color: #262335;
+    border-color: #4a4366;
+  }
+
+  .select-default option {
+    background-color: #262335;
+    color: #e9e4f5;
+  }
+
+  .select-default option:first-child {
+    color: #6b5a8e;
+  }
+}

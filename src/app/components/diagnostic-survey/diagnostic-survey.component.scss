@@ -2180,3 +2180,373 @@
         transform: translateY(0);
     }
 }
+
+// =====================================
+// DARK MODE - Katuq Purple Palette
+// =====================================
+:host-context(body.dark-only) {
+    // Variables de paleta Katuq Purple
+    $dark-primary: #a78bfa;
+    $dark-bg-base: #1a1625;
+    $dark-bg-card: #262335;
+    $dark-border: #4a4366;
+    $dark-text-primary: #e9e4f5;
+    $dark-text-secondary: #b8b0c9;
+    $dark-accent: #00FFCC;
+
+    .survey-container {
+        background: $dark-bg-base;
+    }
+
+    .survey-form {
+        background: $dark-bg-base;
+        color: $dark-text-primary;
+    }
+
+    .survey-form h1,
+    .survey-form h3 {
+        color: $dark-text-primary;
+    }
+
+    .survey-form p,
+    .survey-form label {
+        color: $dark-text-secondary;
+    }
+
+    .survey-card {
+        background: $dark-bg-card;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        color: $dark-text-primary;
+    }
+
+    // Welcome Landing
+    .welcome-landing {
+        color: $dark-text-primary;
+    }
+
+    .welcome-title {
+        color: $dark-text-primary;
+    }
+
+    .welcome-subtitle {
+        color: $dark-text-secondary;
+    }
+
+    .social-proof {
+        background: rgba($dark-primary, 0.1);
+        border: 1px solid $dark-border;
+    }
+
+    .social-proof-number {
+        color: $dark-primary;
+    }
+
+    .social-proof-label {
+        color: $dark-text-secondary;
+    }
+
+    .social-proof-divider {
+        background: $dark-border;
+    }
+
+    .benefits-list {
+        .benefit-item {
+            background: rgba($dark-primary, 0.08);
+            border-left-color: $dark-primary;
+
+            &:hover {
+                background: rgba($dark-primary, 0.15);
+            }
+        }
+
+        .benefit-text {
+            color: $dark-text-primary;
+        }
+    }
+
+    .testimonial-box {
+        background: linear-gradient(135deg, rgba($dark-primary, 0.15) 0%, rgba($dark-accent, 0.1) 100%);
+        border-left-color: $dark-primary;
+    }
+
+    .testimonial-text {
+        color: $dark-text-primary;
+    }
+
+    .testimonial-author {
+        color: $dark-text-secondary;
+    }
+
+    .time-estimate {
+        background: rgba($dark-accent, 0.15);
+        border: 1px solid rgba($dark-accent, 0.3);
+    }
+
+    .time-text {
+        color: $dark-text-primary;
+    }
+
+    .cta-subtext {
+        color: $dark-text-secondary;
+    }
+
+    // Motivational messages
+    .motivational-message {
+        background: rgba($dark-primary, 0.15);
+        border-left-color: $dark-primary;
+        color: $dark-text-primary;
+    }
+
+    .intro-motivational {
+        color: $dark-text-secondary;
+    }
+
+    .intro-reassuring {
+        background: rgba($dark-accent, 0.15);
+        color: $dark-text-primary;
+    }
+
+    .registration-help {
+        color: $dark-text-secondary;
+    }
+
+    .summary-motivational {
+        color: $dark-primary;
+    }
+
+    .time-remaining {
+        color: $dark-text-secondary;
+    }
+
+    // Option buttons
+    .option-button {
+        background: linear-gradient(135deg, $dark-primary 0%, darken($dark-primary, 15%) 100%);
+        border-color: $dark-primary;
+        color: $dark-bg-base;
+
+        &:hover {
+            background: linear-gradient(135deg, lighten($dark-primary, 5%) 0%, $dark-primary 100%);
+            border-color: lighten($dark-primary, 5%);
+        }
+
+        &.selected {
+            background: linear-gradient(135deg, $dark-accent 0%, darken($dark-accent, 10%) 100%);
+            border-color: $dark-accent;
+            color: $dark-bg-base;
+        }
+    }
+
+    // Navigation buttons
+    .next-button {
+        background: linear-gradient(135deg, $dark-primary 0%, darken($dark-primary, 15%) 100%);
+        border-color: $dark-primary;
+        color: $dark-bg-base;
+
+        &:hover:not(.disabled):not(:disabled) {
+            background: linear-gradient(135deg, lighten($dark-primary, 5%) 0%, $dark-primary 100%);
+            border-color: lighten($dark-primary, 5%);
+        }
+
+        &.disabled,
+        &:disabled {
+            background: $dark-border;
+            border-color: $dark-border;
+            color: $dark-text-secondary;
+        }
+    }
+
+    .back-button {
+        background: linear-gradient(135deg, lighten($dark-bg-card, 10%) 0%, $dark-bg-card 100%);
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:hover {
+            background: linear-gradient(135deg, lighten($dark-bg-card, 15%) 0%, lighten($dark-bg-card, 5%) 100%);
+            border-color: lighten($dark-border, 10%);
+        }
+    }
+
+    // Summary container
+    .summary-container {
+        background: $dark-bg-card;
+        color: $dark-text-primary;
+        border: 1px solid $dark-border;
+
+        h3 {
+            color: $dark-primary;
+        }
+
+        p {
+            color: $dark-text-primary;
+        }
+    }
+
+    // Input validation
+    .material-input {
+        color: $dark-text-primary;
+        border-bottom-color: $dark-border;
+        background: transparent;
+
+        &:focus {
+            border-bottom-color: $dark-primary;
+        }
+
+        &.valid {
+            border-bottom-color: $dark-accent;
+            background-color: rgba($dark-accent, 0.05);
+        }
+
+        &.invalid {
+            border-bottom-color: #ff6b6b;
+            background-color: rgba(#ff6b6b, 0.05);
+        }
+    }
+
+    .error-message {
+        color: #ff6b6b;
+    }
+
+    // Progress bar
+    .main-progress-container {
+        border-bottom-color: $dark-border;
+    }
+
+    .progress-steps::before {
+        background: $dark-border;
+    }
+
+    .step-number {
+        background: $dark-bg-card;
+        color: $dark-text-secondary;
+    }
+
+    .step-label {
+        color: $dark-text-secondary;
+    }
+
+    .step.active {
+        .step-number {
+            background: $dark-primary;
+            color: $dark-bg-base;
+        }
+
+        .step-label {
+            color: $dark-primary;
+        }
+    }
+
+    .step.completed {
+        .step-number {
+            background: $dark-accent;
+            color: $dark-bg-base;
+        }
+
+        .step-label {
+            color: $dark-accent;
+        }
+    }
+
+    // Question progress
+    .question-progress .progress-text {
+        color: $dark-text-secondary;
+    }
+
+    .progress-bar-container {
+        background: $dark-bg-card;
+    }
+
+    .progress-bar-fill {
+        background: linear-gradient(90deg, $dark-primary 0%, darken($dark-primary, 10%) 100%);
+    }
+
+    // Quick start
+    .next-steps-container {
+        background: rgba($dark-primary, 0.1);
+        border-left-color: $dark-primary;
+    }
+
+    .next-steps-list li {
+        color: $dark-text-primary;
+        border-bottom-color: rgba($dark-primary, 0.2);
+    }
+
+    .quickstart-message {
+        color: $dark-primary;
+    }
+
+    .quickstart-error {
+        background: rgba(#ff6b6b, 0.1);
+        border-left-color: #ff6b6b;
+    }
+
+    // CTA buttons
+    .cta-button.primary {
+        background: linear-gradient(135deg, $dark-primary 0%, darken($dark-primary, 15%) 100%);
+        border-color: $dark-primary;
+        color: $dark-bg-base;
+
+        &:hover {
+            background: linear-gradient(135deg, lighten($dark-primary, 5%) 0%, $dark-primary 100%);
+        }
+    }
+
+    .cta-button.secondary {
+        background: $dark-bg-card;
+        color: $dark-primary;
+        border-color: $dark-primary;
+
+        &:hover {
+            background: linear-gradient(135deg, $dark-primary 0%, darken($dark-primary, 15%) 100%);
+            color: $dark-bg-base;
+        }
+    }
+
+    // Video intro
+    .video-intro-title {
+        color: $dark-text-primary;
+    }
+
+    .video-intro-subtitle {
+        color: $dark-text-secondary;
+    }
+
+    .video-wrapper-intro {
+        background: linear-gradient(135deg, $dark-primary 0%, darken($dark-primary, 20%) 100%);
+    }
+
+    .skip-video-btn-large {
+        background: $dark-primary;
+        color: $dark-bg-base;
+
+        &:hover {
+            background: lighten($dark-primary, 10%);
+        }
+    }
+
+    // Autosave indicator
+    .autosave-indicator {
+        background: rgba($dark-accent, 0.95);
+        color: $dark-bg-base;
+    }
+
+    // Spinner
+    .spinner {
+        border-color: $dark-border;
+        border-top-color: $dark-primary;
+    }
+
+    // Processing message
+    .processing-message {
+        color: $dark-text-primary;
+    }
+
+    // Highlight text
+    .highlight {
+        color: $dark-primary;
+    }
+
+    .welcome-text,
+    .welcome-text-sm {
+        color: $dark-text-primary;
+    }
+}

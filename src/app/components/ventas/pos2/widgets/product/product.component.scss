@@ -500,4 +500,259 @@
     }
 }
 
+// ==============================================
+// DARK THEME SUPPORT - KATUQ PALETTE
+// POS PRODUCT GRID - Product cards visibility
+// ==============================================
+:host-context(body.dark-only) {
+  // Katuq Dark Theme Colors
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #8b5cf6;
+  $dark-success: #34d399;
+  $dark-error: #f87171;
+  $dark-warning: #fbbf24;
+
+  // Product Wrapper
+  .our-product-wrapper {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    &:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+      border-color: $dark-primary;
+    }
+
+    .our-product-content {
+      .producto-titulo {
+        color: $dark-text-primary;
+      }
+
+      .precio-producto {
+        color: $dark-success;
+      }
+
+      .descripcion-producto {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Product Image
+  .our-product-img {
+    background-color: $dark-bg-header;
+
+    .image-placeholder {
+      background-color: $dark-bg-header;
+
+      i {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Reference Badge
+  .ref-badge {
+    background-color: $dark-bg-header;
+    color: $dark-text-secondary;
+    border: 1px solid $dark-border;
+  }
+
+  // Stock Badge
+  .stock-badge {
+    &.bg-success {
+      background-color: $dark-success !important;
+      color: $dark-bg-base !important;
+    }
+
+    &.bg-warning {
+      background-color: $dark-warning !important;
+      color: $dark-bg-base !important;
+    }
+
+    &.bg-danger {
+      background-color: $dark-error !important;
+      color: #fff !important;
+    }
+  }
+
+  // Add Quantity
+  .add-quantity,
+  .add-quantity-small {
+    background-color: $dark-bg-header;
+
+    i {
+      color: $dark-text-primary;
+
+      &:hover {
+        color: $dark-primary;
+      }
+    }
+
+    input {
+      color: $dark-text-primary;
+    }
+
+    .decrement-btn,
+    .increment-btn {
+      color: $dark-text-primary;
+
+      &:hover {
+        color: $dark-primary;
+      }
+    }
+
+    .cantidad-value {
+      color: $dark-text-primary;
+    }
+  }
+
+  // Card Styles
+  .card {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+
+    .card-header {
+      background: $dark-bg-header;
+      border-bottom-color: $dark-border;
+      color: $dark-text-primary;
+    }
+
+    .card-body {
+      background: $dark-bg-card;
+      color: $dark-text-primary;
+    }
+
+    .card-footer {
+      background: $dark-bg-header;
+      border-top-color: $dark-border;
+    }
+  }
+
+  // Controls Container
+  .controls-container {
+    button.btn-sm {
+      &.btn-primary {
+        background-color: $dark-primary;
+        border-color: $dark-primary;
+        color: $dark-bg-base;
+
+        &:hover {
+          background-color: $dark-primary-hover;
+        }
+      }
+
+      &.btn-success {
+        background-color: $dark-success;
+        border-color: $dark-success;
+        color: $dark-bg-base;
+      }
+
+      &.btn-danger {
+        background-color: $dark-error;
+        border-color: $dark-error;
+      }
+    }
+  }
+
+  // Pagination - CRITICAL: Navigation
+  .pagination-container {
+    .pagination {
+      .page-item {
+        .page-link {
+          background-color: $dark-bg-card;
+          border-color: $dark-border;
+          color: $dark-primary;
+
+          &:hover {
+            background-color: rgba($dark-primary, 0.2);
+            border-color: $dark-primary;
+          }
+
+          &:focus {
+            box-shadow: 0 0 0 2px rgba($dark-primary, 0.2);
+          }
+        }
+
+        &.active .page-link {
+          background-color: $dark-primary;
+          border-color: $dark-primary;
+          color: $dark-bg-base;
+        }
+
+        &.disabled .page-link {
+          color: $dark-text-secondary;
+          background-color: $dark-bg-header;
+          border-color: $dark-border;
+        }
+      }
+    }
+  }
+
+  // Results Counter
+  .results-counter {
+    color: $dark-text-secondary;
+  }
+
+  // Order Details
+  .order-details {
+    .search-items {
+      button {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:hover {
+          background: $dark-primary;
+          color: $dark-bg-base;
+        }
+      }
+    }
+
+    .order-quantity {
+      .order-details-wrapper {
+        .category-details {
+          .right-details {
+            .btn-touchspin {
+              background-color: $dark-bg-header;
+              color: $dark-text-primary;
+              border-color: $dark-border;
+
+              &:hover {
+                background-color: $dark-primary;
+                color: $dark-bg-base;
+              }
+            }
+
+            input[type='number'] {
+              color: $dark-text-primary;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Payment Methods
+  .payment-methods {
+    .bg-payment {
+      background: $dark-bg-header;
+      border-color: $dark-border;
+    }
+  }
+
+  // Main Product Wrapper
+  .main-product-wrapper {
+    h5, h6, p {
+      color: $dark-text-primary;
+    }
+  }
+}
+
 

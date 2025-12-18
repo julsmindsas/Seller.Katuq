@@ -59,3 +59,190 @@
 ::ng-deep .wizard-content {
   padding: 0px  !important;
 }
+
+// ============================================
+// DARK THEME STYLES - Katuq Palette
+// ============================================
+:host-context(body.dark-only) {
+  // Wizard steps container
+  .wizard-steps {
+    background-color: #1a1625;
+    border-bottom: 1px solid #4a4366;
+  }
+
+  // Wizard content area
+  .wizard-content {
+    background-color: #262335;
+    color: #e9e4f5;
+  }
+
+  // Wizard buttons container
+  .wizard-buttons {
+    background-color: #1a1625;
+    border-top: 1px solid #4a4366;
+    padding: 15px;
+
+    button {
+      background-color: #a78bfa;
+      color: #1a1625;
+      border: none;
+
+      &:hover {
+        background-color: #8b6fdb;
+      }
+
+      &:disabled {
+        background-color: #4a4366;
+        color: rgba(233, 228, 245, 0.5);
+      }
+    }
+  }
+
+  // Wizard container
+  .wizard-container {
+    background-color: #262335;
+    border: 1px solid #4a4366;
+    border-radius: 8px;
+  }
+
+  // Wizard sidebar
+  .wizard-sidebar {
+    background-color: #1a1625;
+    border-right-color: #4a4366;
+  }
+
+  // Step list
+  .step-list {
+    li {
+      color: #e9e4f5;
+      border-bottom: 1px solid #4a4366;
+
+      &:hover {
+        background-color: #262335;
+      }
+
+      &.active {
+        background-color: #a78bfa;
+        color: #1a1625;
+      }
+
+      &.completed {
+        color: #22c55e;
+
+        &::after {
+          color: #22c55e;
+        }
+      }
+
+      a {
+        color: inherit;
+      }
+    }
+  }
+
+  // PrimeNG Steps override
+  ::ng-deep .p-steps {
+    background-color: transparent;
+
+    .p-steps-item {
+      .p-menuitem-link {
+        background-color: transparent;
+
+        .p-steps-number {
+          background-color: #4a4366;
+          color: #e9e4f5;
+          border-color: #4a4366;
+        }
+
+        .p-steps-title {
+          color: #e9e4f5;
+        }
+
+        &:hover {
+          .p-steps-number {
+            background-color: #a78bfa;
+            color: #1a1625;
+          }
+        }
+      }
+
+      &.p-highlight {
+        .p-menuitem-link {
+          .p-steps-number {
+            background-color: #a78bfa;
+            color: #1a1625;
+            border-color: #a78bfa;
+          }
+
+          .p-steps-title {
+            color: #a78bfa;
+            font-weight: 600;
+          }
+        }
+      }
+
+      &::before {
+        border-color: #4a4366;
+      }
+    }
+  }
+
+  // Step indicators
+  .step-indicator {
+    &.active {
+      background-color: #a78bfa;
+      color: #1a1625;
+    }
+
+    &.completed {
+      background-color: #22c55e;
+      color: #1a1625;
+    }
+
+    &.pending {
+      background-color: #4a4366;
+      color: #e9e4f5;
+    }
+  }
+
+  // Step connector lines
+  .step-connector {
+    background-color: #4a4366;
+
+    &.completed {
+      background-color: #22c55e;
+    }
+
+    &.active {
+      background-color: #a78bfa;
+    }
+  }
+
+  // Navigation arrows
+  .wizard-nav {
+    .nav-prev, .nav-next {
+      color: #e9e4f5;
+      background-color: #4a4366;
+      border: none;
+
+      &:hover:not(:disabled) {
+        background-color: #a78bfa;
+        color: #1a1625;
+      }
+
+      &:disabled {
+        color: rgba(233, 228, 245, 0.4);
+        background-color: #2d2844;
+      }
+    }
+  }
+
+  // Progress bar
+  .wizard-progress {
+    background-color: #4a4366;
+
+    .progress-bar {
+      background-color: #a78bfa;
+    }
+  }
+}

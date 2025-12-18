@@ -4,10 +4,38 @@
     text-align: center;
     margin-bottom: 20px;
   }
-  
+
   object {
     width: 100%;
     height: 80vh;
     border: none;
+  }
+}
+
+// =====================================
+// DARK MODE - Katuq Purple Palette
+// =====================================
+:host-context(body.dark-only) {
+  // Variables de paleta Katuq Purple
+  $dark-primary: #a78bfa;
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #b8b0c9;
+
+  .terms-container {
+    background: $dark-bg-base;
+    min-height: 100vh;
+
+    h2 {
+      color: $dark-text-primary;
+    }
+
+    object {
+      background: $dark-bg-card;
+      border: 1px solid $dark-border;
+      border-radius: 8px;
+    }
   }
 }

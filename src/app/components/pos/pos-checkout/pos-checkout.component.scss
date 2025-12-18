@@ -77,3 +77,184 @@ p-inputnumber-input {
     font-size: 1.1rem;
   }
 }
+
+// ============================================
+// DARK THEME STYLES - Katuq Palette
+// ============================================
+:host-context(body.dark-only) {
+  // Two column list dark
+  .two-column-list {
+    li {
+      border-bottom-color: #4a4366;
+    }
+
+    .title {
+      color: #e9e4f5;
+    }
+
+    .value {
+      color: rgba(233, 228, 245, 0.8);
+    }
+  }
+
+  // Custom input number dark
+  .custom-input-number {
+    background-color: #1a1625;
+    border-color: #4a4366;
+    color: #e9e4f5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+    &:focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+    }
+  }
+
+  // PrimeNG InputNumber dark
+  ::ng-deep p-inputnumber {
+    .p-inputtext {
+      background-color: #1a1625;
+      border-color: #4a4366;
+      color: #e9e4f5;
+
+      &:focus {
+        border-color: #a78bfa;
+        box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+      }
+    }
+
+    .p-button {
+      background-color: #a78bfa;
+      border-color: #a78bfa;
+      color: #1a1625;
+
+      &:hover {
+        background-color: #8b6fdb;
+        border-color: #8b6fdb;
+      }
+    }
+  }
+
+  // Mobile checkout card dark
+  .mobile-checkout {
+    .card {
+      background-color: #262335;
+      border-color: #4a4366;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+
+      .card-header {
+        background-color: #a78bfa;
+        color: #1a1625;
+      }
+
+      .card-body {
+        background-color: #262335;
+        color: #e9e4f5;
+      }
+    }
+
+    h5 {
+      color: #e9e4f5;
+    }
+
+    p {
+      color: rgba(233, 228, 245, 0.8);
+    }
+  }
+
+  // Buttons dark
+  .btn-block {
+    background-color: #a78bfa;
+    border-color: #a78bfa;
+    color: #1a1625;
+
+    &:hover {
+      background-color: #8b6fdb;
+      border-color: #8b6fdb;
+    }
+
+    &:disabled {
+      background-color: #4a4366;
+      border-color: #4a4366;
+      color: rgba(233, 228, 245, 0.5);
+    }
+  }
+
+  // Nombre largo text
+  .nombre-largo {
+    color: #e9e4f5;
+  }
+
+  // Form controls
+  .form-control, .form-select {
+    background-color: #1a1625;
+    border-color: #4a4366;
+    color: #e9e4f5;
+
+    &:focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+      background-color: #1a1625;
+    }
+
+    &::placeholder {
+      color: rgba(233, 228, 245, 0.5);
+    }
+  }
+
+  // Labels
+  label {
+    color: #e9e4f5;
+  }
+
+  // Cards general
+  .card {
+    background-color: #262335;
+    border-color: #4a4366;
+
+    .card-header {
+      background-color: #1a1625;
+      border-bottom-color: #4a4366;
+      color: #e9e4f5;
+    }
+
+    .card-body {
+      background-color: #262335;
+      color: #e9e4f5;
+    }
+  }
+
+  // Payment method buttons
+  .payment-method-btn {
+    background-color: #262335;
+    border-color: #4a4366;
+    color: #e9e4f5;
+
+    &:hover, &.active {
+      background-color: #a78bfa;
+      border-color: #a78bfa;
+      color: #1a1625;
+    }
+  }
+
+  // Summary section
+  .summary-row {
+    border-bottom-color: #4a4366;
+    color: #e9e4f5;
+
+    .summary-label {
+      color: rgba(233, 228, 245, 0.8);
+    }
+
+    .summary-value {
+      color: #e9e4f5;
+    }
+
+    &.total {
+      .summary-value {
+        color: #a78bfa;
+        font-weight: bold;
+      }
+    }
+  }
+}

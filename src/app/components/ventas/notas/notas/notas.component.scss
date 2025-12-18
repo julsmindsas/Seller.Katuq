@@ -1118,3 +1118,473 @@
     }
   }
 }
+
+// ==============================================
+// DARK THEME SUPPORT - KATUQ PALETTE
+// NOTAS COMPONENT - Notes system
+// ==============================================
+:host-context(body.dark-only) {
+  // Katuq Dark Theme Colors
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #8b5cf6;
+  $dark-success: #34d399;
+  $dark-error: #f87171;
+  $dark-warning: #fbbf24;
+
+  // Notes Card
+  .notes-card {
+    background: $dark-bg-card;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+    .card-header {
+      background-color: $dark-bg-header;
+      border-bottom-color: $dark-border;
+
+      i {
+        color: $dark-primary;
+      }
+
+      h5 {
+        color: $dark-text-primary;
+      }
+    }
+  }
+
+  // PrimeNG Tabs
+  :host ::ng-deep {
+    .p-tabview {
+      .p-tabview-nav {
+        li {
+          .p-tabview-nav-link {
+            background: $dark-bg-card;
+            color: $dark-text-secondary;
+
+            &:hover:not(.p-highlight) {
+              background: rgba($dark-primary, 0.1);
+            }
+
+            i {
+              color: $dark-text-secondary;
+            }
+          }
+
+          &.p-highlight .p-tabview-nav-link {
+            background-color: $dark-bg-header;
+            border-color: $dark-border;
+            color: $dark-primary;
+            border-bottom-color: $dark-bg-header;
+
+            i {
+              color: $dark-primary;
+            }
+          }
+        }
+      }
+
+      .p-tabview-panels {
+        background-color: $dark-bg-header;
+        border-color: $dark-border;
+      }
+    }
+  }
+
+  // Notes Form
+  .notes-form {
+    .note-input-container {
+      background: $dark-bg-card;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      .note-metadata {
+        color: $dark-text-secondary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      .input-group {
+        textarea,
+        input {
+          background: $dark-bg-header;
+          border-color: $dark-border;
+          color: $dark-text-primary;
+
+          &:focus {
+            border-color: $dark-primary;
+            box-shadow: 0 0 0 2px rgba($dark-primary, 0.2);
+          }
+
+          &::placeholder {
+            color: rgba($dark-text-secondary, 0.6);
+          }
+        }
+      }
+    }
+
+    .alert {
+      &.alert-success {
+        background: rgba($dark-success, 0.15);
+        border-color: rgba($dark-success, 0.3);
+        color: $dark-success;
+
+        i {
+          color: $dark-success;
+        }
+      }
+
+      &.alert-info {
+        background: rgba($dark-primary, 0.15);
+        border-color: rgba($dark-primary, 0.3);
+        color: $dark-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      &.alert-warning {
+        background: rgba($dark-warning, 0.15);
+        border-color: rgba($dark-warning, 0.3);
+        color: $dark-warning;
+
+        i {
+          color: $dark-warning;
+        }
+      }
+    }
+  }
+
+  // Product Note
+  .product-note {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+    &:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .note-header {
+      border-bottom-color: $dark-border;
+
+      .date-label {
+        color: $dark-text-secondary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      .product-label {
+        color: $dark-text-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      .badge {
+        &.bg-primary,
+        &.bg-success {
+          background-color: $dark-success !important;
+        }
+
+        &.bg-info {
+          background-color: $dark-primary !important;
+        }
+      }
+    }
+
+    .input-group {
+      .input-group-text {
+        background-color: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-secondary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      textarea {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:focus {
+          border-color: $dark-primary;
+        }
+
+        &::placeholder {
+          color: rgba($dark-text-secondary, 0.6);
+        }
+      }
+    }
+
+    .btn-outline-primary {
+      border-color: $dark-primary;
+      color: $dark-primary;
+
+      &:hover {
+        background-color: $dark-primary;
+        color: $dark-bg-base;
+      }
+    }
+
+    .existing-notes {
+      background-color: $dark-bg-header;
+      border-left-color: $dark-primary;
+
+      .existing-notes-title {
+        color: $dark-text-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      .existing-note-item {
+        background-color: $dark-bg-card;
+        border-color: $dark-border;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+        &:hover {
+          border-color: $dark-primary;
+        }
+
+        .existing-note-header {
+          .note-date {
+            color: $dark-text-secondary;
+          }
+        }
+
+        .existing-note-content {
+          color: $dark-text-primary;
+          background-color: $dark-bg-header;
+          border-left-color: $dark-primary;
+        }
+      }
+    }
+
+    .new-notes-title {
+      color: $dark-primary;
+      border-top-color: $dark-border;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+
+    .add-note-section {
+      background-color: rgba($dark-primary, 0.1);
+      border-color: $dark-primary;
+
+      &:hover {
+        background-color: rgba($dark-primary, 0.15);
+      }
+
+      .btn-success {
+        background-color: $dark-success;
+        border-color: $dark-success;
+        color: $dark-bg-base;
+
+        &:hover {
+          background-color: darken($dark-success, 8%);
+        }
+      }
+    }
+  }
+
+  // Notes List
+  .notes-list {
+    .list-header {
+      color: $dark-text-secondary;
+      border-bottom-color: $dark-border;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+
+    table {
+      background: $dark-bg-card;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      thead th {
+        background: $dark-bg-header;
+        border-bottom-color: $dark-border;
+        color: $dark-text-secondary;
+      }
+
+      tbody {
+        tr {
+          &:hover {
+            background: rgba($dark-primary, 0.1);
+          }
+        }
+
+        td {
+          border-bottom-color: $dark-border;
+          color: $dark-text-primary;
+        }
+      }
+    }
+  }
+
+  // Empty Notes
+  .empty-notes {
+    background: $dark-bg-card;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    border-color: $dark-border;
+
+    &:hover {
+      border-color: $dark-text-secondary;
+      background: rgba($dark-primary, 0.05);
+    }
+
+    i {
+      color: $dark-primary;
+    }
+
+    h5 {
+      color: $dark-text-primary;
+    }
+
+    p, small {
+      color: $dark-text-secondary;
+    }
+  }
+
+  // Buttons
+  .btn {
+    &.btn-primary {
+      background: $dark-primary;
+      border-color: $dark-primary;
+      color: $dark-bg-base;
+
+      &:hover {
+        background: $dark-primary-hover;
+      }
+    }
+
+    &.btn-success {
+      background: $dark-success;
+      border-color: $dark-success;
+      color: $dark-bg-base;
+
+      &:hover {
+        background: darken($dark-success, 8%);
+      }
+    }
+  }
+
+  // File Upload Container
+  .file-upload-container {
+    background-color: $dark-bg-header;
+    border-color: $dark-border;
+
+    &:hover {
+      background-color: $dark-bg-card;
+      border-color: $dark-text-secondary;
+    }
+
+    .input-group {
+      .input-group-text {
+        background-color: $dark-bg-card;
+        border-color: $dark-border;
+        color: $dark-text-secondary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      input[type="file"] {
+        background: $dark-bg-card;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:focus {
+          border-color: $dark-primary;
+        }
+      }
+    }
+
+    small {
+      color: $dark-text-secondary;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+  }
+
+  // File Preview
+  .file-preview-container {
+    background: $dark-bg-header;
+    border-color: $dark-border;
+
+    .preview-title {
+      color: $dark-text-primary;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+  }
+
+  .preview-item {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+
+    &:hover {
+      border-color: $dark-primary;
+    }
+  }
+
+  .image-preview,
+  .video-preview {
+    .file-info {
+      background: $dark-bg-card;
+
+      .file-name {
+        color: $dark-text-primary;
+      }
+
+      .file-size {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  .file-preview {
+    background: $dark-bg-card;
+
+    .file-icon {
+      color: $dark-text-secondary;
+    }
+
+    .file-info {
+      .file-name {
+        color: $dark-text-primary;
+      }
+
+      .file-size {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Disabled Section
+  .readonly-indicator {
+    background-color: $dark-bg-header;
+    color: $dark-text-secondary;
+    border-color: $dark-border;
+  }
+}

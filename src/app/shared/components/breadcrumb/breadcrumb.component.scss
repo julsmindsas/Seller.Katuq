@@ -10,6 +10,9 @@
   h3 {
     font-size: 1.5rem;
     margin-bottom: 8px;
+    color: #1a1625;
+    font-weight: 600;
+    transition: color 0.2s ease;
   }
 
   .breadcrumb {
@@ -17,11 +20,15 @@
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch; // Smooth scrolling on iOS
+    background: transparent;
+    margin-bottom: 0;
+    padding: 0;
 
     .breadcrumb-item {
       min-height: 44px;
       display: flex;
       align-items: center;
+      color: #4a4366;
 
       a {
         display: flex;
@@ -29,11 +36,32 @@
         min-width: 44px;
         min-height: 44px;
         justify-content: center;
+        color: #6366f1;
+        text-decoration: none;
+        transition: color 0.15s ease;
+
+        &:hover {
+          color: #4f46e5;
+        }
       }
 
       app-feather-icons {
         min-width: 20px;
         min-height: 20px;
+
+        ::ng-deep svg {
+          color: #6366f1;
+          transition: color 0.15s ease;
+        }
+      }
+
+      &.active {
+        color: #4a4366;
+      }
+
+      // Separator styling
+      &::before {
+        color: #9ca3af;
       }
     }
   }
@@ -61,6 +89,53 @@
 
       &:first-child {
         margin-bottom: 0.5rem;
+      }
+    }
+  }
+}
+
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   ============================================ */
+:host-context(body.dark-only) {
+  .page-title {
+    h3 {
+      color: #e9e4f5;
+    }
+
+    .breadcrumb {
+      background: transparent;
+
+      .breadcrumb-item {
+        color: #c4b5fd;
+
+        a {
+          color: #a78bfa;
+
+          &:hover {
+            color: #c4b5fd;
+          }
+        }
+
+        app-feather-icons {
+          ::ng-deep svg {
+            color: #a78bfa;
+          }
+        }
+
+        &.active {
+          color: #e9e4f5;
+        }
+
+        // Separator styling in dark mode
+        &::before {
+          color: #4a4366;
+        }
       }
     }
   }

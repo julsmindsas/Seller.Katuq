@@ -1216,11 +1216,558 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   .table-container {
     border-radius: 6px;
   }
-  
+
   :host ::ng-deep .p-datatable {
     .p-datatable-thead > tr > th,
     .p-datatable-tbody > tr > td {
       padding: 0.5rem 0.4rem;
     }
+  }
+}
+
+// ===================================
+// DARK MODE - Katuq Purple Palette
+// ===================================
+:host-context(body.dark-only) {
+  // Variables Dark Mode
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-text-muted: #8b7fa8;
+  $dark-primary: #a78bfa;
+
+  // Module Header
+  .module-header {
+    background: linear-gradient(to right, $dark-bg-card, $dark-bg-header) !important;
+
+    h5 {
+      color: $dark-text-primary !important;
+    }
+
+    p {
+      color: $dark-text-muted !important;
+    }
+  }
+
+  // Cards
+  .card {
+    background-color: $dark-bg-card !important;
+    border-color: $dark-border !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+
+    &:hover {
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
+    }
+  }
+
+  // Loader
+  .loader-box {
+    background: rgba($dark-bg-base, 0.9) !important;
+    backdrop-filter: blur(4px);
+
+    .loader-8:after {
+      border-color: $dark-primary !important;
+      border-right-color: transparent !important;
+    }
+  }
+
+  // Empty State
+  .empty-state {
+    background: linear-gradient(to bottom, $dark-bg-card, $dark-bg-header) !important;
+
+    i {
+      color: $dark-text-muted !important;
+    }
+
+    h5 {
+      color: $dark-text-primary !important;
+    }
+
+    p {
+      color: $dark-text-muted !important;
+    }
+  }
+
+  // Form Controls
+  .form-control,
+  .form-select {
+    background-color: $dark-bg-card !important;
+    border-color: $dark-border !important;
+    color: $dark-text-primary !important;
+
+    &::placeholder {
+      color: $dark-text-muted !important;
+    }
+
+    &:focus {
+      border-color: $dark-primary !important;
+      box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25) !important;
+    }
+
+    &:disabled {
+      background-color: $dark-bg-header !important;
+      color: $dark-text-muted !important;
+    }
+  }
+
+  // Input Group
+  .input-group {
+    .input-group-text {
+      background-color: $dark-primary !important;
+      border-color: $dark-primary !important;
+      color: white !important;
+    }
+
+    .form-control {
+      border-left: none !important;
+    }
+  }
+
+  // Buttons
+  .btn {
+    &.btn-primary {
+      background-color: $dark-primary !important;
+      border-color: $dark-primary !important;
+
+      &:hover {
+        background-color: lighten($dark-primary, 5%) !important;
+        box-shadow: 0 4px 10px rgba($dark-primary, 0.4) !important;
+      }
+    }
+
+    &.btn-outline-primary {
+      border-color: $dark-primary !important;
+      color: $dark-primary !important;
+
+      &:hover {
+        background-color: $dark-primary !important;
+        color: white !important;
+      }
+    }
+
+    &.btn-outline-secondary {
+      border-color: $dark-border !important;
+      color: $dark-text-secondary !important;
+
+      &:hover {
+        background-color: $dark-bg-header !important;
+        color: $dark-text-primary !important;
+      }
+    }
+  }
+
+  // Stock States
+  .outofstock {
+    color: #fca5a5 !important;
+  }
+
+  .lowstock {
+    color: #fde68a !important;
+  }
+
+  .instock {
+    color: #a7f3d0 !important;
+  }
+
+  // Marketplace Section
+  .marketplaces-section,
+  .marketplace-item {
+    background: linear-gradient(to bottom right, $dark-bg-card, $dark-bg-header) !important;
+    border-color: $dark-border !important;
+
+    &:hover {
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .marketplace-label {
+      color: $dark-text-primary !important;
+    }
+
+    .input-inventario {
+      background-color: $dark-bg-card !important;
+      border-color: $dark-border !important;
+      color: $dark-text-primary !important;
+
+      &:focus {
+        border-color: $dark-primary !important;
+        box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25) !important;
+      }
+    }
+  }
+
+  .other-channel-item {
+    background-color: $dark-bg-header !important;
+    border-color: $dark-border !important;
+
+    .channel-label {
+      color: $dark-text-primary !important;
+    }
+
+    .channel-icon {
+      color: $dark-text-muted !important;
+    }
+  }
+
+  .divider {
+    border-color: $dark-border !important;
+  }
+
+  // Modal Styles
+  ::ng-deep .modal-content {
+    background-color: $dark-bg-card !important;
+    border-color: $dark-border !important;
+
+    .modal-header {
+      background: linear-gradient(to right, $dark-bg-header, $dark-bg-card) !important;
+      border-bottom-color: $dark-border !important;
+
+      .modal-title {
+        color: $dark-text-primary !important;
+      }
+
+      .btn-close {
+        filter: invert(1) grayscale(100%) brightness(200%);
+      }
+    }
+
+    .modal-body {
+      background-color: $dark-bg-card !important;
+      color: $dark-text-primary !important;
+    }
+
+    .modal-footer {
+      background-color: $dark-bg-header !important;
+      border-top-color: $dark-border !important;
+    }
+  }
+
+  #movimientosModal .modal-content {
+    background-color: $dark-bg-card !important;
+
+    .modal-title {
+      color: $dark-text-primary !important;
+    }
+
+    .table {
+      thead {
+        background-color: $dark-bg-header !important;
+
+        th {
+          color: $dark-text-secondary !important;
+        }
+      }
+
+      tbody tr {
+        &:hover {
+          background-color: rgba($dark-primary, 0.08) !important;
+        }
+
+        td {
+          color: $dark-text-primary !important;
+          border-color: $dark-border !important;
+        }
+      }
+    }
+
+    .btn-secondary {
+      background-color: $dark-bg-header !important;
+      color: $dark-text-primary !important;
+      border-color: $dark-border !important;
+
+      &:hover {
+        background-color: $dark-border !important;
+      }
+    }
+  }
+
+  // Tooltips
+  ::ng-deep .tooltip {
+    .tooltip-inner {
+      background: $dark-bg-header !important;
+      color: $dark-text-primary !important;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+    }
+  }
+
+  // Filter Container
+  .filter-container {
+    background-color: $dark-bg-header !important;
+
+    .input-group {
+      .input-group-text {
+        border-color: $dark-border !important;
+      }
+
+      input.form-control {
+        border-color: $dark-border !important;
+
+        &:focus {
+          border-color: $dark-primary !important;
+        }
+      }
+    }
+  }
+
+  // Filtros Externos Section
+  .filtros-externos {
+    background: linear-gradient(to bottom, $dark-bg-card, $dark-bg-header) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+
+    h5 {
+      color: $dark-text-primary !important;
+      border-bottom-color: $dark-border !important;
+
+      i {
+        color: $dark-primary !important;
+      }
+    }
+
+    .form-label {
+      color: $dark-text-muted !important;
+    }
+  }
+
+  // PrimeNG DataTable Dark Mode
+  :host ::ng-deep {
+    .p-datatable {
+      .p-datatable-header {
+        background: linear-gradient(to right, $dark-bg-header, $dark-bg-card) !important;
+      }
+
+      .p-datatable-thead > tr > th {
+        background-color: $dark-bg-header !important;
+        color: $dark-text-secondary !important;
+        border-color: $dark-border !important;
+
+        &:hover {
+          background-color: lighten($dark-bg-header, 5%) !important;
+        }
+      }
+
+      .p-datatable-tbody > tr {
+        background-color: $dark-bg-card !important;
+        color: $dark-text-primary !important;
+
+        &:hover {
+          background-color: rgba($dark-primary, 0.08) !important;
+          transform: translateY(-1px);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        &.row-accessories {
+          background-color: rgba(0, 0, 0, 0.25) !important;
+        }
+
+        &.bg-light-warning {
+          background-color: rgba(#fbbf24, 0.1) !important;
+        }
+
+        > td {
+          border-color: $dark-border !important;
+          color: $dark-text-primary !important;
+
+          &[frozen] {
+            background-color: $dark-bg-card !important;
+          }
+        }
+
+        &:hover > td[frozen] {
+          background-color: rgba($dark-primary, 0.08) !important;
+        }
+      }
+
+      .p-datatable-footer {
+        background-color: $dark-bg-header !important;
+        border-color: $dark-border !important;
+        color: $dark-text-primary !important;
+      }
+
+      // Paginator
+      .p-paginator {
+        background-color: $dark-bg-header !important;
+        border-color: $dark-border !important;
+
+        .p-paginator-element {
+          color: $dark-text-secondary !important;
+
+          &:hover:not(.p-disabled) {
+            background-color: rgba($dark-primary, 0.15) !important;
+            color: $dark-primary !important;
+          }
+        }
+
+        .p-paginator-pages .p-paginator-page {
+          &.p-highlight {
+            background-color: $dark-primary !important;
+            border-color: $dark-primary !important;
+            color: white !important;
+          }
+        }
+      }
+
+      // Frozen columns
+      .p-datatable-frozen-view {
+        background-color: $dark-bg-card !important;
+        border-right-color: $dark-border !important;
+        box-shadow: 5px 0 8px rgba(0, 0, 0, 0.3) !important;
+      }
+
+      // Scrollbar
+      .p-datatable-scrollable-body {
+        scrollbar-color: $dark-border $dark-bg-base;
+
+        &::-webkit-scrollbar-track {
+          background: $dark-bg-base !important;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: $dark-border !important;
+
+          &:hover {
+            background: $dark-primary !important;
+          }
+        }
+      }
+    }
+
+    // Sortable columns
+    .p-sortable-column {
+      &:hover {
+        background-color: lighten($dark-bg-header, 5%) !important;
+      }
+
+      &.p-highlight {
+        background-color: rgba($dark-primary, 0.15) !important;
+      }
+    }
+
+    // Column filter
+    .p-column-filter {
+      .p-column-filter-menu-button {
+        &:hover {
+          background-color: rgba($dark-primary, 0.15) !important;
+        }
+
+        &.p-column-filter-menu-button-active {
+          background-color: rgba($dark-primary, 0.2) !important;
+          color: $dark-primary !important;
+        }
+      }
+    }
+
+    .p-column-filter-overlay {
+      background-color: $dark-bg-card !important;
+      border-color: $dark-border !important;
+      box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.4) !important;
+    }
+  }
+
+  // Badges Dark Mode
+  .badge,
+  :host ::ng-deep .badge {
+    &.bg-primary {
+      background-color: rgba($dark-primary, 0.2) !important;
+      color: $dark-text-secondary !important;
+    }
+
+    &.bg-success {
+      background-color: rgba(#34d399, 0.2) !important;
+      color: #a7f3d0 !important;
+    }
+
+    &.bg-warning {
+      background-color: rgba(#fbbf24, 0.2) !important;
+      color: #fde68a !important;
+    }
+
+    &.bg-danger {
+      background-color: rgba($dark-text-muted, 0.2) !important;
+      color: $dark-text-muted !important;
+    }
+
+    &.bg-info {
+      background-color: rgba(#38bdf8, 0.2) !important;
+      color: #bae6fd !important;
+    }
+
+    &.bg-secondary {
+      background-color: rgba($dark-text-muted, 0.2) !important;
+      color: $dark-text-secondary !important;
+    }
+
+    &.bg-dark {
+      background-color: rgba($dark-text-primary, 0.15) !important;
+      color: $dark-text-primary !important;
+    }
+  }
+
+  // Table Container
+  .table-container {
+    border-color: $dark-border !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+
+    &::-webkit-scrollbar-track {
+      background: $dark-bg-base !important;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $dark-border !important;
+
+      &:hover {
+        background: $dark-primary !important;
+      }
+    }
+  }
+
+  // Image Thumbnail
+  .img-thumbnail {
+    border-color: $dark-border !important;
+    background-color: $dark-bg-header !important;
+  }
+
+  // Totales Inventario Section
+  .totales-inventario {
+    background-color: $dark-bg-card !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) !important;
+
+    .text-muted {
+      color: $dark-text-muted !important;
+    }
+
+    .text-primary {
+      color: $dark-primary !important;
+    }
+
+    .badge {
+      &.bg-dark {
+        background-color: $dark-bg-header !important;
+        color: $dark-text-primary !important;
+      }
+
+      &.bg-primary {
+        background-color: $dark-primary !important;
+        color: white !important;
+      }
+    }
+  }
+
+  // Text utilities
+  .text-muted {
+    color: $dark-text-muted !important;
+  }
+
+  h5, h4, h3, h2, h1 {
+    color: $dark-text-primary;
+  }
+
+  p {
+    color: $dark-text-secondary;
+  }
+
+  label {
+    color: $dark-text-primary;
   }
 }

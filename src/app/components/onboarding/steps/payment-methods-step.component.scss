@@ -382,3 +382,280 @@
     flex-direction: column;
   }
 }
+
+// ============================================================================
+// DARK MODE - Katuq Purple Palette
+// ============================================================================
+:host-context(body.dark-only) {
+  // Dark Mode Variables
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-text-muted: #8b7fa8;
+  $dark-primary: #a78bfa;
+
+  .step-intro {
+    background: $dark-bg-header;
+    border-left-color: $dark-primary;
+
+    .intro-text {
+      color: $dark-text-secondary;
+    }
+  }
+
+  ::ng-deep .p-card {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    .p-card-header {
+      background: $dark-bg-header;
+      border-bottom-color: $dark-border;
+    }
+
+    .p-card-body {
+      background: $dark-bg-card;
+    }
+  }
+
+  .card-header {
+    color: $dark-text-primary;
+
+    i {
+      color: $dark-primary;
+    }
+  }
+
+  // Templates Grid
+  .templates-card {
+    .template-button {
+      ::ng-deep .p-button-outlined {
+        color: $dark-text-primary;
+        border-color: $dark-border;
+
+        &:hover {
+          background: rgba($dark-primary, 0.1);
+          border-color: $dark-primary;
+        }
+      }
+    }
+
+    .field-help {
+      color: $dark-text-muted;
+    }
+  }
+
+  // Form Styles
+  .form-grid {
+    .form-field {
+      label {
+        color: $dark-text-primary;
+      }
+
+      .field-help {
+        color: $dark-text-muted;
+      }
+
+      small.p-error {
+        color: #f87171;
+      }
+    }
+  }
+
+  .icon-option {
+    i {
+      color: $dark-primary;
+    }
+  }
+
+  .pos-option {
+    background: rgba($dark-primary, 0.1);
+    border-left-color: $dark-primary;
+
+    ::ng-deep .p-checkbox {
+      .p-checkbox-label {
+        color: $dark-text-primary;
+      }
+    }
+
+    .field-help {
+      color: $dark-text-muted;
+    }
+  }
+
+  .form-actions {
+    border-top-color: $dark-border;
+  }
+
+  // Table Styles
+  ::ng-deep .p-datatable {
+    .p-datatable-thead > tr > th {
+      background: $dark-bg-header;
+      color: $dark-text-primary;
+      border-color: $dark-border;
+    }
+
+    .p-datatable-tbody > tr {
+      background: $dark-bg-card;
+      color: $dark-text-primary;
+
+      > td {
+        border-color: $dark-border;
+      }
+
+      &:hover {
+        background: $dark-bg-header;
+      }
+    }
+  }
+
+  .badge {
+    &.badge-active {
+      background: rgba(#10b981, 0.2);
+      color: #34d399;
+    }
+
+    &.badge-inactive {
+      background: rgba(#ef4444, 0.2);
+      color: #f87171;
+    }
+  }
+
+  .empty-message {
+    color: $dark-text-muted;
+
+    i {
+      color: $dark-border;
+    }
+  }
+
+  .step-actions {
+    background: $dark-bg-header;
+
+    .form-status {
+      color: #fbbf24;
+
+      &.success {
+        color: #34d399;
+      }
+    }
+  }
+
+  // PrimeNG Input States
+  ::ng-deep {
+    .p-inputtext,
+    .p-dropdown,
+    .p-inputtextarea {
+      background: $dark-bg-base;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:hover:not(:disabled) {
+        border-color: $dark-primary;
+      }
+
+      &:focus {
+        border-color: $dark-primary;
+        box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25);
+      }
+
+      &::placeholder {
+        color: $dark-text-muted;
+      }
+    }
+
+    .p-dropdown {
+      .p-dropdown-label {
+        color: $dark-text-primary;
+      }
+
+      .p-dropdown-trigger {
+        color: $dark-text-muted;
+      }
+    }
+
+    .p-dropdown-panel {
+      background: $dark-bg-card;
+      border-color: $dark-border;
+
+      .p-dropdown-items {
+        .p-dropdown-item {
+          color: $dark-text-primary;
+
+          &:hover {
+            background: $dark-bg-header;
+          }
+
+          &.p-highlight {
+            background: rgba($dark-primary, 0.2);
+            color: $dark-primary;
+          }
+        }
+      }
+    }
+
+    .p-checkbox {
+      .p-checkbox-box {
+        background: $dark-bg-base;
+        border-color: $dark-border;
+
+        &.p-highlight {
+          background: $dark-primary;
+          border-color: $dark-primary;
+        }
+      }
+    }
+
+    .p-button {
+      &.p-button-success {
+        background: #10b981;
+        border-color: #10b981;
+
+        &:hover {
+          background: #059669;
+          border-color: #059669;
+        }
+      }
+
+      &.p-button-secondary {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:hover {
+          background: $dark-border;
+        }
+      }
+
+      &.p-button-outlined {
+        color: $dark-text-primary;
+        border-color: $dark-border;
+
+        &:hover {
+          background: rgba($dark-primary, 0.1);
+        }
+      }
+
+      &.p-button-text {
+        color: $dark-text-secondary;
+
+        &:hover {
+          background: rgba($dark-primary, 0.1);
+        }
+      }
+
+      &.p-button-danger {
+        &.p-button-text {
+          color: #f87171;
+
+          &:hover {
+            background: rgba(#ef4444, 0.1);
+          }
+        }
+      }
+    }
+  }
+}

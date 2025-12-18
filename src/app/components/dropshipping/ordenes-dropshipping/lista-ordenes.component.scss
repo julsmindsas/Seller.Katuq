@@ -317,3 +317,267 @@ code {
   border-radius: 4px;
   border: 1px solid #dee2e6;
 }
+
+// =============================================
+// DARK MODE - Katuq Purple Palette
+// =============================================
+:host-context(body.dark-only) {
+  .card {
+    background-color: #262335;
+    border-color: #4a4366;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    // Gradient cards for metrics
+    &.bg-primary {
+      background: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%) !important;
+      border: none;
+    }
+
+    &.bg-warning {
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%) !important;
+      border: none;
+    }
+
+    &.bg-success {
+      background: linear-gradient(135deg, #34d399 0%, #059669 100%) !important;
+      border: none;
+    }
+
+    &.bg-info {
+      background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%) !important;
+      border: none;
+    }
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(167, 139, 250, 0.3);
+    }
+  }
+
+  .card-body {
+    background-color: #262335;
+
+    h3 {
+      color: #e9e4f5;
+    }
+
+    p {
+      color: rgba(233, 228, 245, 0.8);
+    }
+  }
+
+  // Table styles for dark mode
+  .p-table {
+    .p-datatable-header {
+      background-color: #262335;
+      border-color: #4a4366;
+      color: #e9e4f5;
+    }
+
+    .p-datatable-tbody > tr > td {
+      border-color: #4a4366;
+      background-color: #262335;
+      color: #e9e4f5;
+    }
+
+    .p-datatable-thead > tr > th {
+      background-color: #1a1625;
+      border-color: #4a4366;
+      color: #e9e4f5;
+    }
+
+    .p-datatable-tbody > tr {
+      &:nth-child(even) {
+        background-color: rgba(26, 22, 37, 0.5);
+      }
+
+      &:hover {
+        background-color: #4a4366 !important;
+      }
+    }
+  }
+
+  // Button group styles
+  .btn-group {
+    .btn {
+      background-color: #262335;
+      border-color: #4a4366;
+      color: #e9e4f5;
+
+      &:hover {
+        background-color: #4a4366;
+        border-color: #a78bfa;
+      }
+
+      &.btn-primary {
+        background-color: #a78bfa;
+        border-color: #a78bfa;
+        color: #1a1625;
+
+        &:hover {
+          background-color: #8b5cf6;
+        }
+      }
+
+      &.btn-success {
+        background-color: #34d399;
+        border-color: #34d399;
+        color: #1a1625;
+      }
+
+      &.btn-danger {
+        background-color: #f87171;
+        border-color: #f87171;
+        color: #1a1625;
+      }
+    }
+  }
+
+  .p-splitButton {
+    .p-button {
+      background-color: #a78bfa;
+      border-color: #a78bfa;
+      color: #1a1625;
+
+      &:hover {
+        background-color: #8b5cf6;
+      }
+    }
+  }
+
+  // Tags for dark mode
+  .p-tag {
+    &.p-tag-warning {
+      background-color: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border: 1px solid #fbbf24;
+    }
+
+    &.p-tag-info {
+      background-color: rgba(96, 165, 250, 0.2);
+      color: #60a5fa;
+      border: 1px solid #60a5fa;
+    }
+
+    &.p-tag-primary {
+      background-color: rgba(167, 139, 250, 0.2);
+      color: #a78bfa;
+      border: 1px solid #a78bfa;
+    }
+
+    &.p-tag-success {
+      background-color: rgba(52, 211, 153, 0.2);
+      color: #34d399;
+      border: 1px solid #34d399;
+    }
+
+    &.p-tag-danger {
+      background-color: rgba(248, 113, 113, 0.2);
+      color: #f87171;
+      border: 1px solid #f87171;
+    }
+  }
+
+  // Filter inputs
+  .p-inputgroup {
+    .p-inputgroup-addon {
+      background-color: #1a1625;
+      border-color: #4a4366;
+      color: rgba(233, 228, 245, 0.7);
+    }
+
+    .p-inputtext {
+      background-color: #1a1625;
+      border-color: #4a4366;
+      color: #e9e4f5;
+
+      &::placeholder {
+        color: rgba(233, 228, 245, 0.5);
+      }
+
+      &:focus {
+        border-color: #a78bfa;
+        box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+      }
+    }
+  }
+
+  .p-dropdown {
+    background-color: #1a1625;
+    border-color: #4a4366;
+    color: #e9e4f5;
+
+    .p-dropdown-trigger {
+      color: rgba(233, 228, 245, 0.7);
+    }
+
+    &.p-focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+    }
+  }
+
+  // Loading overlay
+  .loading-overlay {
+    &::after {
+      background: rgba(26, 22, 37, 0.8);
+    }
+  }
+
+  // Empty state
+  .empty-state {
+    color: rgba(233, 228, 245, 0.7);
+
+    .pi {
+      color: #4a4366;
+    }
+
+    div {
+      color: #e9e4f5;
+    }
+
+    p {
+      color: rgba(233, 228, 245, 0.6);
+    }
+  }
+
+  // Code styling
+  code {
+    background-color: #1a1625;
+    border-color: #4a4366;
+    color: #a78bfa;
+  }
+
+  // Tracking number
+  .tracking-number {
+    background-color: #1a1625;
+    border-color: #4a4366;
+    color: #a78bfa;
+  }
+
+  // Text utilities
+  .text-success {
+    color: #34d399 !important;
+  }
+
+  .text-muted {
+    color: rgba(233, 228, 245, 0.6) !important;
+  }
+
+  .font-weight-bold {
+    color: #e9e4f5;
+  }
+
+  // Card header
+  .card-header {
+    background-color: #262335;
+    border-bottom-color: #4a4366;
+
+    h5 {
+      color: #e9e4f5;
+    }
+
+    div {
+      color: #e9e4f5;
+    }
+  }
+}

@@ -1119,7 +1119,7 @@ a {
         app-live-audio ::ng-deep {
             .controls {
                 bottom: 15px !important;
-                
+
                 button {
                     width: 50px !important;
                     height: 50px !important;
@@ -1127,4 +1127,230 @@ a {
             }
         }
     }
+}
+
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   Text secondary: #c4b5fd
+   ============================================ */
+:host-context(body.dark-only) {
+  .floating-button {
+    background-color: #a78bfa;
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
+
+    &:hover {
+      background-color: #8b5cf6;
+      box-shadow: 0 8px 20px rgba(167, 139, 250, 0.5);
+    }
+
+    &.active {
+      background-color: #c4b5fd;
+    }
+
+    &.listening {
+      background-color: #22c55e;
+    }
+
+    &.has-unread .notification-indicator {
+      background-color: #f87171;
+      border-color: #262335;
+    }
+  }
+
+  .tooltip-text-floating {
+    background-color: #262335;
+    color: #e9e4f5;
+    border: 1px solid #4a4366;
+
+    &:after {
+      border-left-color: #262335;
+    }
+  }
+
+  .options-wrapper {
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  .options-panel {
+    background-color: #262335;
+
+    .options-header {
+      background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    }
+
+    .options-list {
+      &::-webkit-scrollbar-thumb {
+        background-color: #4a4366;
+      }
+
+      .option-item {
+        color: #e9e4f5;
+
+        &:hover {
+          background-color: rgba(167, 139, 250, 0.1);
+        }
+
+        &.selected {
+          background-color: rgba(167, 139, 250, 0.15);
+          border-left-color: #a78bfa;
+        }
+
+        .option-icon {
+          background-color: rgba(167, 139, 250, 0.15);
+          color: #a78bfa;
+        }
+
+        &:hover .option-icon {
+          background-color: rgba(167, 139, 250, 0.25);
+        }
+
+        .option-details {
+          .option-title {
+            color: #e9e4f5;
+          }
+
+          .option-description {
+            color: #c4b5fd;
+          }
+        }
+      }
+
+      .option-separator {
+        color: #6b5a8e;
+        border-bottom-color: #4a4366;
+      }
+    }
+  }
+
+  .minimized-chat-bubble {
+    background-color: #262335;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+
+    &:hover {
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
+
+    .minimize-text {
+      color: #e9e4f5;
+    }
+
+    .notification-indicator {
+      background-color: #f87171;
+    }
+
+    .maximize-chat-btn {
+      color: #a78bfa;
+
+      &:hover {
+        background-color: rgba(167, 139, 250, 0.15);
+      }
+    }
+  }
+
+  .floating-chat-overlay {
+    background-color: #262335;
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5);
+
+    .chat-header {
+      background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    }
+  }
+
+  .voice-mode-container {
+    background-color: #262335;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .voice-call-ui {
+    .call-header {
+      background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    }
+
+    .call-avatar-container {
+      .call-avatar {
+        background-color: #1a1625;
+        border-color: #4a4366;
+      }
+
+      .call-name {
+        color: #e9e4f5;
+      }
+
+      .call-status-text {
+        color: #c4b5fd;
+      }
+    }
+
+    .call-visual-content {
+      background-color: #1a1625;
+
+      .no-content-message {
+        color: #6b5a8e;
+      }
+
+      .content-steps {
+        .step-dot {
+          background-color: #4a4366;
+
+          &.active {
+            background-color: #a78bfa;
+          }
+
+          &:hover {
+            background-color: rgba(167, 139, 250, 0.7);
+          }
+        }
+
+        .step-title {
+          color: #e9e4f5;
+        }
+
+        .step-caption {
+          color: #c4b5fd;
+        }
+
+        .step-control {
+          background-color: rgba(167, 139, 250, 0.15);
+          color: #a78bfa;
+
+          &:hover:not(:disabled) {
+            background-color: rgba(167, 139, 250, 0.25);
+          }
+        }
+
+        .step-counter {
+          color: #c4b5fd;
+        }
+      }
+    }
+
+    .call-visualizer {
+      background-color: #1a1625;
+
+      .call-wave {
+        background: #a78bfa;
+      }
+    }
+
+    .call-controls {
+      background-color: #262335;
+      border-top-color: #4a4366;
+    }
+
+    .call-error {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+    }
+  }
+
+  .live-audio-container {
+    background: #1a1625;
+    border-color: #4a4366;
+  }
 }

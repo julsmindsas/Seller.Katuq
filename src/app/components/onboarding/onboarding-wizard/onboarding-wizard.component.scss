@@ -1047,3 +1047,362 @@ $text-light: #64748b;
     transform: translateY(0);
   }
 }
+
+// ============================================================================
+// DARK MODE - Katuq Purple Palette
+// ============================================================================
+:host-context(body.dark-only) {
+  // Dark Mode Variables
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-text-muted: #8b7fa8;
+  $dark-primary: #a78bfa;
+
+  // Loading State
+  .onboarding-loading {
+    background: $dark-bg-base;
+
+    .loading-content {
+      background: $dark-bg-card;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+
+      i {
+        color: $dark-primary;
+      }
+
+      p {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Main Layout
+  .onboarding-wizard {
+    background: $dark-bg-base;
+  }
+
+  // Mobile Header
+  .mobile-wizard-header {
+    background: $dark-bg-header;
+    border-bottom-color: $dark-border;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    .header-content {
+      .step-name {
+        color: $dark-text-primary;
+      }
+
+      .step-progress {
+        .step-counter {
+          color: $dark-text-muted;
+        }
+
+        .progress-bar-mini {
+          background: $dark-border;
+
+          .progress-fill {
+            background: $dark-primary;
+          }
+        }
+      }
+    }
+  }
+
+  // Sidebar
+  .onboarding-sidebar {
+    background: $dark-bg-card;
+    border-right-color: $dark-border;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.3);
+
+    .sidebar-header {
+      border-bottom-color: $dark-border;
+      background: $dark-bg-header;
+
+      .sidebar-title {
+        color: $dark-text-primary;
+      }
+
+      .sidebar-subtitle {
+        color: $dark-text-secondary;
+      }
+    }
+
+    .progress-section {
+      background: $dark-bg-card;
+
+      .progress-info {
+        .progress-text {
+          color: $dark-text-muted;
+        }
+
+        .progress-count {
+          color: $dark-primary;
+          background: rgba($dark-primary, 0.15);
+        }
+      }
+
+      ::ng-deep .custom-progress {
+        background: $dark-border;
+
+        .p-progressbar-value {
+          background: $dark-primary;
+        }
+      }
+    }
+
+    ::ng-deep .p-divider {
+      border-color: $dark-border;
+    }
+
+    .sidebar-footer {
+      border-top-color: $dark-border;
+      background: $dark-bg-header;
+    }
+  }
+
+  // Step Items
+  .step-item {
+    &:hover:not(.step-disabled) {
+      background: rgba($dark-primary, 0.1);
+    }
+
+    &.step-current {
+      background: rgba($dark-primary, 0.15);
+      border-left-color: $dark-primary;
+      box-shadow: 0 2px 8px rgba($dark-primary, 0.2);
+
+      .step-number {
+        background: $dark-primary;
+        color: $dark-bg-base;
+        box-shadow: 0 4px 12px rgba($dark-primary, 0.4);
+      }
+
+      .step-title {
+        color: $dark-primary;
+      }
+
+      .step-icon-main {
+        color: $dark-primary;
+      }
+    }
+
+    &.step-completed {
+      .step-number {
+        background: #10b981;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+      }
+
+      .step-title {
+        color: $dark-text-muted;
+      }
+
+      .step-icon-main {
+        color: #10b981;
+      }
+    }
+
+    &.step-in-progress {
+      background: rgba(#f59e0b, 0.15);
+
+      .step-number {
+        background: #f59e0b;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+      }
+
+      .step-icon-main {
+        color: #f59e0b;
+      }
+    }
+
+    &.step-skipped {
+      .step-number {
+        background: $dark-border;
+        color: $dark-text-muted;
+      }
+    }
+
+    &.step-pending {
+      .step-number {
+        background: $dark-bg-header;
+        color: $dark-text-muted;
+        border-color: $dark-border;
+      }
+
+      .step-icon-main {
+        color: $dark-border;
+      }
+    }
+
+    .step-info {
+      .step-title {
+        color: $dark-text-primary;
+
+        .optional-badge {
+          background: rgba(#f59e0b, 0.2);
+          color: #fbbf24;
+        }
+      }
+
+      .step-time {
+        color: $dark-text-muted;
+      }
+    }
+
+    .step-ai-badge {
+      background: #8b5cf6;
+      box-shadow: 0 2px 8px rgba(139, 92, 246, 0.5);
+    }
+  }
+
+  // Step Header
+  .step-header {
+    background: $dark-bg-header;
+    border-bottom-color: $dark-border;
+
+    .step-header-main {
+      .step-badge {
+        background: rgba($dark-primary, 0.15);
+        color: $dark-primary;
+        border-color: rgba($dark-primary, 0.3);
+      }
+
+      .step-title {
+        color: $dark-text-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      .step-description {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // AI Suggestions Banner
+  .ai-suggestions-banner {
+    .ai-banner-content {
+      background: rgba(#8b5cf6, 0.15);
+      border-color: rgba(#8b5cf6, 0.3);
+
+      .ai-banner-icon {
+        background: #8b5cf6;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+      }
+
+      .ai-banner-text {
+        strong {
+          color: $dark-text-primary;
+        }
+
+        p {
+          color: $dark-text-secondary;
+        }
+      }
+    }
+
+    .ai-suggestions-panel {
+      background: $dark-bg-card;
+      border-color: $dark-border;
+
+      .ai-suggestions-header h4 {
+        color: $dark-text-primary;
+      }
+
+      .ai-suggestions-data {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+
+        pre {
+          color: $dark-text-primary;
+        }
+      }
+    }
+  }
+
+  // Step Content
+  .step-content {
+    .step-placeholder {
+      background: $dark-bg-card;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+
+      h3 {
+        color: $dark-text-primary;
+      }
+
+      p {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Step Footer
+  .step-footer {
+    background: $dark-bg-header;
+    border-top-color: $dark-border;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+
+    .footer-actions-left,
+    .footer-actions-right {
+      button {
+        &:not(:disabled):hover {
+          box-shadow: 0 4px 12px rgba($dark-primary, 0.3);
+        }
+      }
+    }
+  }
+
+  // Saving Indicator
+  .saving-indicator {
+    background: $dark-bg-card;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+
+    i {
+      color: #06b6d4;
+    }
+  }
+
+  // Mobile Bottom Nav
+  .mobile-bottom-nav {
+    background: $dark-bg-header;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  // Success Banner
+  .success-banner {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+
+    .banner-content {
+      .finish-direct-btn {
+        background: $dark-text-primary;
+        color: #059669;
+      }
+    }
+  }
+
+  // PrimeNG Sidebar Overlay
+  ::ng-deep {
+    .onboarding-sidebar-overlay {
+      .p-sidebar-content {
+        background: $dark-bg-card;
+      }
+
+      .sidebar-header,
+      .sidebar-footer {
+        background: $dark-bg-header;
+      }
+    }
+  }
+
+  // Responsive adjustments
+  @media (max-width: 768px) {
+    .onboarding-sidebar {
+      border-bottom-color: $dark-border;
+    }
+  }
+}

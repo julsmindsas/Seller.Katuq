@@ -12,3 +12,315 @@ h1 {
     border-color: #484848;
     color: #fff;
 }
+
+// ============================================
+// DARK THEME STYLES - Katuq Palette
+// ============================================
+// Primary: #a78bfa
+// Background: #1a1625 / #262335
+// Border: #4a4366
+// Text: #e9e4f5
+// ============================================
+
+:host-context(body.dark-only) {
+  // Headings
+  h1 {
+    color: #e9e4f5;
+  }
+
+  h2, h3, h4, h5, h6 {
+    color: #e9e4f5;
+  }
+
+  // Container background
+  .container {
+    background-color: transparent;
+  }
+
+  // Primary button override
+  .btn-primary {
+    background-color: #a78bfa;
+    border-color: #a78bfa;
+    color: #1a1625;
+
+    &:hover {
+      background-color: #c4b5fd;
+      border-color: #c4b5fd;
+      color: #1a1625;
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.5);
+    }
+
+    &:disabled {
+      background-color: #6b5b95;
+      border-color: #6b5b95;
+    }
+  }
+
+  // Secondary button
+  .btn-secondary {
+    background-color: #4a4366;
+    border-color: #4a4366;
+    color: #e9e4f5;
+
+    &:hover {
+      background-color: #5a5476;
+      border-color: #5a5476;
+    }
+  }
+
+  // Outline buttons
+  .btn-outline-primary {
+    color: #a78bfa;
+    border-color: #a78bfa;
+
+    &:hover {
+      background-color: #a78bfa;
+      color: #1a1625;
+    }
+  }
+
+  .btn-outline-secondary {
+    color: #9ca3af;
+    border-color: #4a4366;
+
+    &:hover {
+      background-color: #4a4366;
+      color: #e9e4f5;
+    }
+  }
+
+  // Card styles
+  .card {
+    background-color: #262335;
+    border-color: #4a4366;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(0, 0, 0, 0.3);
+
+    .card-header {
+      background-color: #1a1625;
+      border-bottom-color: #4a4366;
+      color: #e9e4f5;
+    }
+
+    .card-body {
+      background-color: #262335;
+      color: #e9e4f5;
+    }
+
+    .card-footer {
+      background-color: #1a1625;
+      border-top-color: #4a4366;
+    }
+  }
+
+  // Form controls
+  .form-control,
+  .form-select {
+    background-color: #262335;
+    border-color: #4a4366;
+    color: #e9e4f5;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+
+    &:focus {
+      background-color: #262335;
+      border-color: #a78bfa;
+      color: #e9e4f5;
+      box-shadow: 0 0 0 0.2rem rgba(167, 139, 250, 0.25);
+    }
+
+    &:disabled {
+      background-color: #1a1625;
+      color: #9ca3af;
+    }
+  }
+
+  // Labels
+  label,
+  .form-label {
+    color: #e9e4f5;
+  }
+
+  // Text muted
+  .text-muted {
+    color: #9ca3af !important;
+  }
+
+  // Paragraphs
+  p {
+    color: #e9e4f5;
+  }
+
+  // Links
+  a {
+    color: #a78bfa;
+
+    &:hover {
+      color: #c4b5fd;
+    }
+  }
+
+  // Alerts
+  .alert-info {
+    background-color: rgba(167, 139, 250, 0.15);
+    border-color: rgba(167, 139, 250, 0.3);
+    color: #c4b5fd;
+  }
+
+  .alert-warning {
+    background-color: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fbbf24;
+  }
+
+  .alert-success {
+    background-color: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #34d399;
+  }
+
+  .alert-danger {
+    background-color: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+  }
+
+  // List groups
+  .list-group-item {
+    background-color: #262335;
+    border-color: #4a4366;
+    color: #e9e4f5;
+
+    &:hover {
+      background-color: rgba(167, 139, 250, 0.1);
+    }
+
+    &.active {
+      background-color: #a78bfa;
+      border-color: #a78bfa;
+      color: #1a1625;
+    }
+  }
+
+  // Tables
+  .table {
+    color: #e9e4f5;
+
+    th,
+    td {
+      border-color: #4a4366;
+    }
+
+    thead th {
+      background-color: #1a1625;
+      color: #e9e4f5;
+    }
+
+    tbody tr {
+      background-color: #262335;
+
+      &:hover {
+        background-color: rgba(167, 139, 250, 0.1);
+      }
+    }
+
+    &.table-striped tbody tr:nth-of-type(odd) {
+      background-color: #1a1625;
+    }
+  }
+
+  // Input group
+  .input-group-text {
+    background-color: #1a1625;
+    border-color: #4a4366;
+    color: #e9e4f5;
+  }
+
+  // Badges
+  .badge {
+    &.bg-primary {
+      background-color: #a78bfa !important;
+      color: #1a1625;
+    }
+
+    &.bg-secondary {
+      background-color: #4a4366 !important;
+      color: #e9e4f5;
+    }
+
+    &.bg-success {
+      background-color: rgba(16, 185, 129, 0.8) !important;
+    }
+
+    &.bg-warning {
+      background-color: rgba(245, 158, 11, 0.8) !important;
+    }
+
+    &.bg-danger {
+      background-color: rgba(239, 68, 68, 0.8) !important;
+    }
+  }
+
+  // Module section cards
+  .module-card {
+    background-color: #262335;
+    border: 1px solid #4a4366;
+    border-radius: 0.5rem;
+
+    &:hover {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.3);
+    }
+  }
+
+  // Navigation tabs
+  .nav-tabs {
+    border-bottom-color: #4a4366;
+
+    .nav-link {
+      color: #9ca3af;
+
+      &:hover {
+        border-color: #4a4366;
+        color: #e9e4f5;
+      }
+
+      &.active {
+        background-color: #262335;
+        border-color: #4a4366 #4a4366 #262335;
+        color: #a78bfa;
+      }
+    }
+  }
+
+  // Accordion
+  .accordion {
+    .accordion-item {
+      background-color: #262335;
+      border-color: #4a4366;
+    }
+
+    .accordion-button {
+      background-color: #1a1625;
+      color: #e9e4f5;
+
+      &:not(.collapsed) {
+        background-color: rgba(167, 139, 250, 0.1);
+        color: #a78bfa;
+      }
+
+      &::after {
+        filter: brightness(0) saturate(100%) invert(91%) sepia(6%) saturate(497%) hue-rotate(213deg) brightness(98%) contrast(95%);
+      }
+    }
+
+    .accordion-body {
+      background-color: #262335;
+      color: #e9e4f5;
+    }
+  }
+}

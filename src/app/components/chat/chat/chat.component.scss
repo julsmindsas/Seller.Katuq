@@ -715,3 +715,367 @@ section.messages-area {
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
   z-index: 1000;
 }
+
+/* ============================================
+   DARK MODE - Katuq Purple Palette
+   Selector: :host-context(body.dark-only)
+   ============================================ */
+
+// Katuq Purple Dark Theme Variables
+$katuq-primary: #a78bfa;
+$katuq-bg-base: #1a1625;
+$katuq-bg-card: #262335;
+$katuq-border: #4a4366;
+$katuq-text-primary: #e9e4f5;
+$katuq-text-secondary: rgba(#e9e4f5, 0.7);
+$katuq-glassmorphism-bg: rgba(38, 35, 53, 0.85);
+$katuq-glassmorphism-border: rgba(167, 139, 250, 0.2);
+
+:host-context(body.dark-only) {
+  // Container principal
+  .chat-container {
+    background-color: $katuq-bg-base;
+    color: $katuq-text-primary;
+    border-color: $katuq-border;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  // Header del modulo
+  .module-header {
+    background-color: $katuq-bg-card !important;
+    border-color: $katuq-border !important;
+    backdrop-filter: blur(12px);
+
+    h5 {
+      color: $katuq-primary !important;
+    }
+
+    .text-primary {
+      color: $katuq-primary !important;
+    }
+
+    .text-muted {
+      color: $katuq-text-secondary !important;
+    }
+
+    .p-badge {
+      background-color: rgba($katuq-primary, 0.2);
+      color: $katuq-primary;
+    }
+  }
+
+  // Area de mensajes
+  section.messages-area {
+    background-color: $katuq-bg-base;
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba($katuq-primary, 0.3);
+
+      &:hover {
+        background: rgba($katuq-primary, 0.5);
+      }
+    }
+  }
+
+  // Mensaje de bienvenida
+  .welcome-message {
+    background-color: $katuq-glassmorphism-bg;
+    border-color: $katuq-border;
+    backdrop-filter: blur(12px);
+
+    h3 {
+      color: $katuq-primary;
+    }
+
+    p {
+      color: $katuq-text-secondary;
+    }
+  }
+
+  // Avatar container
+  .avatar-container {
+    &.small {
+      background-color: $katuq-bg-card;
+      border-color: $katuq-bg-base;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  // Mensajes - Burbujas
+  .message-row {
+    &.user-message {
+      .message-bubble {
+        background: linear-gradient(135deg, $katuq-primary, darken($katuq-primary, 15%));
+        color: #fff;
+        border-color: transparent;
+        box-shadow: 0 4px 15px rgba($katuq-primary, 0.3);
+      }
+    }
+
+    &.assistant-message {
+      .message-bubble {
+        background-color: $katuq-glassmorphism-bg;
+        color: $katuq-text-primary;
+        border-color: $katuq-glassmorphism-border;
+        backdrop-filter: blur(8px);
+      }
+    }
+  }
+
+  .message-bubble {
+    border-color: $katuq-border;
+
+    .message-time {
+      color: $katuq-text-secondary;
+    }
+
+    .message-text {
+      color: inherit;
+    }
+
+    &:hover {
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  // Sugerencias rapidas
+  .quick-prompts {
+    .prompt-chip {
+      background-color: $katuq-bg-card;
+      border-color: $katuq-border;
+      color: $katuq-text-primary;
+
+      i {
+        color: $katuq-primary;
+      }
+
+      &:hover {
+        border-color: $katuq-primary;
+        background-color: rgba($katuq-primary, 0.1);
+        box-shadow: 0 4px 15px rgba($katuq-primary, 0.2);
+      }
+    }
+  }
+
+  // Area de input
+  .input-area {
+    background-color: $katuq-glassmorphism-bg;
+    border-color: $katuq-border;
+    backdrop-filter: blur(12px);
+
+    &.drag-over {
+      border-color: $katuq-primary;
+      box-shadow: 0 0 0 3px rgba($katuq-primary, 0.2);
+    }
+  }
+
+  .input-wrapper {
+    background-color: $katuq-bg-card;
+    border-color: $katuq-border;
+
+    &:focus-within {
+      border-color: $katuq-primary;
+      box-shadow: 0 0 0 3px rgba($katuq-primary, 0.2);
+    }
+  }
+
+  .message-input {
+    background-color: transparent;
+    color: $katuq-text-primary;
+    caret-color: $katuq-primary;
+
+    &::placeholder {
+      color: $katuq-text-secondary;
+    }
+  }
+
+  // Botones
+  .attach-button,
+  .emoji-button {
+    color: $katuq-text-secondary;
+
+    &:hover {
+      color: $katuq-primary;
+      background-color: rgba($katuq-primary, 0.1);
+    }
+  }
+
+  .send-button {
+    background: linear-gradient(135deg, $katuq-primary, darken($katuq-primary, 10%)) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+
+    &:hover:not(:disabled) {
+      filter: brightness(1.1);
+      box-shadow: 0 4px 15px rgba($katuq-primary, 0.4);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      background: $katuq-bg-card !important;
+      color: $katuq-text-secondary !important;
+    }
+  }
+
+  // Vista previa de adjuntos
+  .attachment-preview {
+    background-color: $katuq-bg-card;
+    border-color: $katuq-border;
+
+    .remove-attachment {
+      background-color: rgba($katuq-primary, 0.2);
+      color: $katuq-text-primary;
+
+      &:hover {
+        background-color: $katuq-primary;
+        color: #fff;
+      }
+    }
+  }
+
+  // Drop hint
+  .drop-hint {
+    background: rgba($katuq-primary, 0.1);
+    border-color: $katuq-primary;
+    color: $katuq-primary;
+  }
+
+  // Input hint
+  .input-hint {
+    color: $katuq-text-secondary;
+  }
+
+  // Boton scroll to bottom
+  .scroll-to-bottom-btn {
+    background: $katuq-primary;
+    box-shadow: 0 4px 15px rgba($katuq-primary, 0.3);
+
+    &:hover {
+      background: darken($katuq-primary, 10%);
+      box-shadow: 0 6px 20px rgba($katuq-primary, 0.4);
+    }
+  }
+
+  // Indicador de escritura
+  .typing-indicator {
+    .message-bubble.typing {
+      background-color: $katuq-glassmorphism-bg;
+      backdrop-filter: blur(8px);
+      border-color: $katuq-glassmorphism-border;
+
+      .dots-container .dot {
+        background-color: $katuq-primary;
+      }
+
+      .typing-text {
+        color: $katuq-text-secondary;
+      }
+    }
+  }
+
+  // Skeleton de PrimeNG
+  ::ng-deep .p-skeleton {
+    background-color: rgba($katuq-primary, 0.1) !important;
+
+    &::after {
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba($katuq-primary, 0.15),
+        transparent
+      ) !important;
+    }
+  }
+
+  // Emoji picker
+  .emoji-picker-container {
+    background-color: $katuq-bg-card;
+    border-color: $katuq-border;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+    ::ng-deep {
+      .emoji-mart {
+        background-color: $katuq-bg-card !important;
+        border-color: $katuq-border !important;
+      }
+
+      .emoji-mart-bar {
+        background-color: $katuq-bg-base !important;
+        border-color: $katuq-border !important;
+      }
+
+      .emoji-mart-search input {
+        background-color: $katuq-bg-base !important;
+        border-color: $katuq-border !important;
+        color: $katuq-text-primary !important;
+      }
+
+      .emoji-mart-category-label span {
+        background-color: $katuq-bg-card !important;
+        color: $katuq-text-secondary !important;
+      }
+    }
+  }
+
+  // Acciones de mensaje
+  .msg-action {
+    color: $katuq-text-secondary;
+
+    &:hover {
+      background-color: rgba($katuq-primary, 0.15);
+      color: $katuq-primary;
+    }
+  }
+
+  // Botones PrimeNG
+  ::ng-deep {
+    .p-button-text {
+      color: $katuq-text-secondary;
+
+      &:hover {
+        background-color: rgba($katuq-primary, 0.1) !important;
+        color: $katuq-primary !important;
+      }
+    }
+
+    .p-button-secondary {
+      background-color: $katuq-bg-card !important;
+      border-color: $katuq-border !important;
+      color: $katuq-text-primary !important;
+
+      &:hover {
+        background-color: rgba($katuq-primary, 0.15) !important;
+        border-color: $katuq-primary !important;
+      }
+    }
+
+    .p-button-danger {
+      &:hover {
+        box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+      }
+    }
+
+    // Tooltips
+    .p-tooltip {
+      .p-tooltip-text {
+        background-color: $katuq-bg-card;
+        color: $katuq-text-primary;
+        border: 1px solid $katuq-border;
+      }
+
+      .p-tooltip-arrow {
+        border-top-color: $katuq-bg-card;
+      }
+    }
+  }
+
+  // Modo flotante en dark mode
+  .chat-container.floating-mode {
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5),
+                0 0 0 1px rgba($katuq-primary, 0.1);
+  }
+}

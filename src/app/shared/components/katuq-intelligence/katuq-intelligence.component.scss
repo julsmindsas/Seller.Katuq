@@ -114,5 +114,60 @@
     /* Añade un efecto de iluminación verde */
     border: 2px solid #9b00ff;
   }
-  
+
   // fin nueva ia
+
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   Text secondary: #c4b5fd
+   ============================================ */
+:host-context(body.dark-only) {
+  .ai-button-image {
+    border-color: #a78bfa;
+
+    &:hover {
+      box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+      border-color: #c4b5fd;
+    }
+  }
+
+  .usage-badge {
+    background-color: rgba(167, 139, 250, 0.2);
+    color: #c4b5fd;
+    border-color: #4a4366;
+
+    &.premium {
+      background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+      color: #1a1625;
+      border-color: #a78bfa;
+      box-shadow: 0 2px 8px rgba(167, 139, 250, 0.3);
+    }
+
+    &.warning {
+      background-color: rgba(251, 191, 36, 0.2);
+      color: #fbbf24;
+      border-color: #fbbf24;
+    }
+
+    &.critical {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border-color: #f87171;
+    }
+  }
+
+  .btn-ia {
+    color: #e9e4f5;
+    background-color: #262335;
+
+    &:hover {
+      box-shadow: 0 0 15px rgba(167, 139, 250, 0.5);
+      border-color: #a78bfa;
+    }
+  }
+}
