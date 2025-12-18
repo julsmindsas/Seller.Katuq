@@ -2584,18 +2584,19 @@ body.dark-only {
 }
 
 // Katuq Specific Components Dark Mode
+// Usando variables CSS para consistencia con el tema Katuq
 body.dark-only {
-  // Sidebar Component
+  // Sidebar Component - Colores Katuq (purpura/lavanda)
   .sidebar-wrapper {
-    background: #1e2128;
-    border-right-color: #3d4149;
+    background: var(--glass-bg, #1a1625);
+    border-right-color: var(--glass-border, rgba(167, 139, 250, 0.15));
 
     .sidebar-header {
-      background: #252830;
-      border-bottom-color: #3d4149;
+      background: var(--glass-bg-secondary, #231d35);
+      border-bottom-color: var(--glass-border, rgba(167, 139, 250, 0.15));
 
       .company-name {
-        color: #f0f0f0;
+        color: var(--glass-text-primary, #ffffff);
       }
 
       .logo {
@@ -2604,29 +2605,29 @@ body.dark-only {
     }
 
     .sidebar-content {
-      background: #1e2128;
+      background: var(--glass-bg, #1a1625);
 
       .menu-section {
         .section-title {
-          color: #808080;
+          color: var(--glass-text-inactive, #c4b5fd);
         }
 
         .menu-link {
-          color: #b0b0b0;
+          color: var(--glass-text-inactive, #c4b5fd);
 
           &:hover {
-            background: rgba(106, 181, 232, 0.1);
-            color: #e0e0e0;
+            background: var(--item-hover-bg, rgba(167, 139, 250, 0.1));
+            color: var(--glass-text-primary, #ffffff);
           }
 
           &.active {
-            background: rgba(106, 181, 232, 0.15);
-            color: #6AB5E8;
-            border-left-color: #6AB5E8;
+            background: var(--item-active-bg, rgba(167, 139, 250, 0.2));
+            color: var(--glass-text-primary, #ffffff);
+            border-left-color: var(--primary-color, #a78bfa);
           }
 
           .menu-icon {
-            color: #808080;
+            color: var(--glass-text-inactive, #c4b5fd);
           }
 
           .menu-text {
@@ -2635,56 +2636,56 @@ body.dark-only {
         }
 
         .submenu {
-          background: #1a1d23;
+          background: var(--glass-bg, #1a1625);
 
           .submenu-link {
-            color: #b0b0b0;
+            color: var(--glass-text-secondary, #e9e4f5);
 
             &:hover {
-              background: rgba(106, 181, 232, 0.1);
-              color: #e0e0e0;
+              background: var(--item-hover-bg, rgba(167, 139, 250, 0.1));
+              color: var(--glass-text-primary, #ffffff);
             }
 
             &.active {
-              color: #6AB5E8;
-              background: rgba(106, 181, 232, 0.15);
+              color: var(--glass-text-primary, #ffffff);
+              background: var(--item-active-bg, rgba(167, 139, 250, 0.2));
             }
           }
         }
       }
 
       .favorites-section {
-        border-top-color: #3d4149;
+        border-top-color: var(--glass-border, rgba(167, 139, 250, 0.15));
 
         .favorites-title {
-          color: #808080;
+          color: var(--glass-text-inactive, #c4b5fd);
         }
 
         .favorite-item {
-          color: #b0b0b0;
+          color: var(--glass-text-secondary, #e9e4f5);
 
           &:hover {
-            background: rgba(106, 181, 232, 0.1);
-            color: #e0e0e0;
+            background: var(--item-hover-bg, rgba(167, 139, 250, 0.1));
+            color: var(--glass-text-primary, #ffffff);
           }
         }
       }
     }
 
     .sidebar-footer {
-      background: #252830;
-      border-top-color: #3d4149;
+      background: var(--glass-bg-secondary, #231d35);
+      border-top-color: var(--glass-border, rgba(167, 139, 250, 0.15));
 
       .version {
-        color: #606060;
+        color: var(--glass-text-inactive, #c4b5fd);
       }
 
       .control-btn {
-        color: #808080;
+        color: var(--glass-text-inactive, #c4b5fd);
 
         &:hover {
-          color: #e0e0e0;
-          background: rgba(106, 181, 232, 0.1);
+          color: var(--glass-text-primary, #ffffff);
+          background: var(--item-hover-bg, rgba(167, 139, 250, 0.1));
         }
       }
     }

@@ -1,66 +1,73 @@
 /**=====================
    DARK SIDEBAR THEME - KATUQ 2025
+   Usando paleta Katuq: Purpura (#a78bfa) / Lavanda
 ==========================**/
 
-// Variables para tema oscuro
+// Variables para tema oscuro - KATUQ PALETTE
 :root {
   &[data-theme="dark"] {
-    --sidebar-bg: #1a202c;
-    --sidebar-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-    --sidebar-border: #2d3748;
-    
-    // Colores principales
-    --primary-color: #63b3ed;
-    --primary-hover: #4299e1;
-    --primary-light: rgba(99, 179, 237, 0.15);
-    --primary-lighter: rgba(99, 179, 237, 0.08);
-    
-    // Texto
-    --text-primary: #f7fafc;
-    --text-secondary: #cbd5e0;
-    --text-muted: #a0aec0;
-    
+    --sidebar-bg: var(--glass-bg, #1a1625);
+    --sidebar-shadow: var(--glass-shadow, 0 8px 32px rgba(0, 0, 0, 0.5));
+    --sidebar-border: var(--glass-border, rgba(167, 139, 250, 0.15));
+
+    // Colores principales KATUQ
+    --primary-color: #a78bfa;
+    --primary-hover: #b39dfa;
+    --primary-dark: #8b5cf6;
+    --primary-light: rgba(167, 139, 250, 0.15);
+    --primary-lighter: rgba(167, 139, 250, 0.08);
+
+    // Texto - Glassmorphism
+    --text-primary: var(--glass-text-primary, #ffffff);
+    --text-secondary: var(--glass-text-secondary, #e9e4f5);
+    --text-muted: var(--glass-text-inactive, #c4b5fd);
+
     // Fondos
-    --bg-hover: #2d3748;
-    --bg-active: #4a5568;
-    --bg-section: #2d3748;
+    --bg-hover: var(--item-hover-bg, rgba(167, 139, 250, 0.1));
+    --bg-active: var(--item-active-bg, rgba(167, 139, 250, 0.2));
+    --bg-section: var(--glass-bg-secondary, #231d35);
   }
 }
 
-// Estilos específicos para el tema oscuro
-[data-theme="dark"] {
+// Estilos específicos para el tema oscuro - KATUQ
+// FIX: Color sólido Katuq púrpura oscuro - TODOS los selectores dark
+[data-theme="dark"],
+body.dark-only,
+.dark-only,
+body.dark,
+.dark {
   .sidebar-container {
-    background: var(--sidebar-bg);
-    border-right-color: var(--sidebar-border);
-    box-shadow: var(--sidebar-shadow);
+    background: #2e1065 !important; // Púrpura Katuq visible
+    border-right-color: rgba(167, 139, 250, 0.15) !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
   }
 
   .sidebar-header {
-    background: linear-gradient(135deg, rgba(99, 179, 237, 0.1) 0%, transparent 100%);
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, transparent 100%);
     border-bottom-color: var(--sidebar-border);
-    
+
     .logo-section {
       .company-info {
         .company-name {
           color: var(--text-primary);
         }
-        
+
         .version {
           color: var(--text-muted);
         }
       }
     }
-    
+
     .logo-compact {
       a:hover {
         background: var(--primary-light);
       }
     }
-    
+
     .control-btn {
       background: var(--bg-hover);
       color: var(--text-secondary);
-      
+
       &:hover {
         background: var(--primary-light);
         color: var(--primary-color);
@@ -70,106 +77,108 @@
 
   .search-section {
     border-bottom-color: var(--sidebar-border);
-    
+
     .search-input-container {
       .search-icon {
         color: var(--text-muted);
       }
-      
+
       .search-input {
         background: var(--bg-hover);
         border-color: var(--sidebar-border);
         color: var(--text-primary);
-        
+
         &:focus {
-          background: #2d3748;
+          background: var(--bg-section);
           border-color: var(--primary-color);
         }
-        
+
         &::placeholder {
           color: var(--text-muted);
         }
       }
-      
+
       .clear-btn {
         color: var(--text-muted);
-        
+
         &:hover {
           background: var(--bg-active);
           color: var(--text-primary);
         }
       }
     }
-    
+
     .search-results {
-      background: #2d3748;
+      background: var(--bg-section);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-      
+
       .search-result-link {
         color: var(--text-primary);
-        
+
         i {
           color: var(--text-muted);
         }
-        
+
         &:hover {
           background: var(--bg-hover);
           color: var(--primary-color);
-          
+
           i {
             color: var(--primary-color);
           }
         }
       }
     }
-    
+
     .search-no-results {
       color: var(--text-muted);
     }
   }
 
   .favorites-section {
-    background: rgba(99, 179, 237, 0.05);
+    background: rgba(167, 139, 250, 0.05);
     border-bottom-color: var(--sidebar-border);
-    
+
     .favorites-title {
-      color: var(--primary-color);
+      color: var(--text-muted);
     }
-    
+
     .favorite-link {
-      color: var(--text-primary);
-      
+      color: var(--text-secondary);
+
       i {
         color: #f1c40f;
       }
-      
+
       .remove-favorite-btn {
         background: rgba(255, 0, 0, 0.15);
         color: #fc8181;
-        
+
         &:hover {
           background: rgba(255, 0, 0, 0.25);
         }
       }
-      
+
       &:hover {
-        background: #2d3748;
+        background: var(--bg-hover);
+        color: var(--text-primary);
       }
     }
   }
 
   .menu-section {
     .section-header {
-      background: linear-gradient(135deg, rgba(99, 179, 237, 0.08) 0%, transparent 100%);
-      color: var(--primary-color);
-      
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.08) 0%, transparent 100%);
+      color: var(--text-muted);
+
       &:hover {
-        background: linear-gradient(135deg, var(--primary-light) 0%, rgba(99, 179, 237, 0.08) 100%);
+        background: linear-gradient(135deg, var(--primary-light) 0%, rgba(167, 139, 250, 0.08) 100%);
+        color: var(--text-primary);
       }
-      
+
       .section-icon {
         background: var(--primary-light);
-        
+
         i {
           color: var(--primary-color);
         }
@@ -177,58 +186,72 @@
     }
   }
 
+  // Líneas conectoras del menú (tree style)
+  .menu-items::before,
+  .menu-item::before {
+    background: rgba(196, 181, 253, 0.5);
+  }
+
   .menu-items {
     .menu-item {
       .menu-link {
-        color: var(--text-primary);
-        
+        color: var(--text-muted);
+
         &:hover {
           background: var(--bg-hover);
-          color: var(--primary-color);
+          color: var(--text-primary);
+
+          .menu-icon i {
+            color: var(--text-primary);
+          }
         }
-        
+
         &.active {
-          background: var(--primary-light);
-          color: var(--primary-color);
-          
+          background: var(--bg-active);
+          color: var(--text-primary);
+
           &::before {
             background: var(--primary-color);
           }
-          
+
           .menu-icon i {
             color: var(--primary-color);
           }
         }
-        
+
         .menu-icon i {
-          color: var(--text-secondary);
+          color: var(--text-muted);
         }
-        
+
+        .menu-text {
+          color: inherit;
+        }
+
         .submenu-chevron {
           color: var(--text-muted);
         }
-        
+
         .favorite-btn {
           color: var(--text-muted);
-          
+
           &:hover {
             background: var(--bg-active);
             color: #f1c40f;
           }
-          
+
           &.active {
             color: #f1c40f;
           }
         }
-        
+
         // Tooltip para modo compacto en tema oscuro
         .tooltip {
-          background: rgba(26, 32, 44, 0.95);
+          background: rgba(26, 22, 37, 0.95);
           color: var(--text-primary);
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-          
+
           &::before {
-            border-right-color: rgba(26, 32, 44, 0.95);
+            border-right-color: rgba(26, 22, 37, 0.95);
           }
         }
       }
@@ -236,31 +259,31 @@
   }
 
   .submenu {
-    background: rgba(45, 55, 72, 0.8);
-    
+    background: rgba(35, 29, 53, 0.8);
+
     &.compact-submenu {
-      background: #2d3748;
+      background: var(--bg-section);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     }
-    
+
     .submenu-item {
       .submenu-link {
-        color: var(--text-primary);
-        
+        color: var(--text-secondary);
+
         &:hover {
-          background: #2d3748;
-          color: var(--primary-color);
+          background: var(--bg-hover);
+          color: var(--text-primary);
         }
-        
+
         &.active {
-          background: #2d3748;
-          color: var(--primary-color);
-          
+          background: var(--bg-active);
+          color: var(--text-primary);
+
           &::before {
             background: var(--primary-color);
           }
         }
-        
+
         .submenu-chevron {
           color: var(--text-muted);
         }
@@ -272,15 +295,15 @@
     .sub-submenu-item {
       .sub-submenu-link {
         color: var(--text-secondary);
-        
+
         &:hover {
-          background: rgba(45, 55, 72, 0.8);
-          color: var(--primary-color);
+          background: var(--bg-hover);
+          color: var(--text-primary);
         }
-        
+
         &.active {
-          background: rgba(45, 55, 72, 0.8);
-          color: var(--primary-color);
+          background: var(--bg-active);
+          color: var(--text-primary);
         }
       }
     }
@@ -288,44 +311,44 @@
 
   // Plan card en tema oscuro
   .plan-card-container {
-    background: var(--sidebar-bg);
-    border-top-color: var(--sidebar-border);
+    background: #231d35 !important;  // Katuq secondary bg
+    border-top-color: rgba(167, 139, 250, 0.15) !important;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
   }
 
   .plan-card-header {
-    background: linear-gradient(to right, rgba(99, 179, 237, 0.08), rgba(99, 179, 237, 0.04));
-    border-bottom-color: rgba(99, 179, 237, 0.15);
-    
+    background: linear-gradient(to right, rgba(167, 139, 250, 0.08), rgba(167, 139, 250, 0.04));
+    border-bottom-color: rgba(167, 139, 250, 0.15);
+
     .plan-title {
       small {
         color: var(--text-primary);
       }
     }
-    
+
     .plan-badge {
       background: var(--primary-light);
       color: var(--primary-color);
     }
-    
+
     .plan-balance {
-      background: rgba(99, 179, 237, 0.08);
-      
+      background: rgba(167, 139, 250, 0.08);
+
       i {
         color: var(--primary-color);
       }
-      
+
       span {
         color: var(--text-primary);
       }
     }
-    
+
     .toggle-plan-btn {
       background-color: var(--primary-light);
       color: var(--primary-color);
-      
+
       &:hover {
-        background-color: rgba(99, 179, 237, 0.2);
+        background-color: rgba(167, 139, 250, 0.2);
       }
     }
   }
@@ -334,15 +357,15 @@
   *:focus {
     outline-color: var(--primary-color);
   }
-  
+
   .focus-visible {
     outline-color: var(--primary-color);
   }
-  
+
   .control-btn:focus-visible {
     box-shadow: 0 0 0 2px var(--primary-color);
   }
-  
+
   .search-result-link:focus-visible,
   .favorite-link:focus-within,
   .menu-link:focus-visible,
@@ -350,7 +373,7 @@
   .sub-submenu-link:focus-visible {
     box-shadow: inset 0 0 0 2px var(--primary-color);
   }
-  
+
   .section-header:focus-visible {
     box-shadow: 0 0 0 2px var(--primary-color);
   }
@@ -359,7 +382,7 @@
 // Modo compacto en tema oscuro
 [data-theme="dark"] .sidebar-container.compact {
   .tooltip {
-    background: rgba(26, 32, 44, 0.98) !important;
+    background: rgba(26, 22, 37, 0.98) !important;
     color: var(--text-primary);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
   }
@@ -375,7 +398,7 @@
   }
 }
 
-// Compatibilidad con temas existentes
+// Compatibilidad con temas existentes - KATUQ PURPLE
 .page-wrapper.compact-wrapper, .page-wrapper.horizontal-wrapper {
   &[data-theme="dark"] {
     .page-body-wrapper {
@@ -385,19 +408,19 @@
             .sidebar-links {
               > li {
                 .sidebar-link {
-                  border-bottom: 1px solid rgba(99, 179, 237, 0.1);
+                  border-bottom: 1px solid rgba(167, 139, 250, 0.1);
                   transition: all 0.3s ease;
                 }
               }
             }
           }
         }
-        
+
         &[sidebar-layout="iconcolor-sidebar"] {
           .sidebar-main {
             .sidebar-links {
               > li {
-                $colors: #48bb78, #ed8936, #4299e1, #f56565, #38b2ac, #ecc94b, #e2e8f0;
+                $colors: #a78bfa, #8b5cf6, #c4b5fd, #b39dfa, #7c3aed, #6366f1, #818cf8;
                 $repeat: 60;
                 @for $i from 1 through $repeat {
                   &:nth-child(#{length($colors)}n+#{$i}) {

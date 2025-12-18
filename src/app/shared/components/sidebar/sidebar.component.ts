@@ -155,10 +155,78 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @HostListener('mouseleave')
   onMouseLeave() {
-    // El menú permanece abierto siempre - el usuario cierra manualmente
-    // Solo actualizamos el estado del mouse para otros propósitos
     this.isMouseInsideSidebar = false;
-    // No auto-colapsar - el usuario cierra manualmente con el botón de colapso
+
+    // Si está temporalmente expandido por hover, colapsar al salir el mouse
+    if (this.isTemporarilyExpanded && this.collapseMenu && !this.isMobile()) {
+      // Pequeño delay para evitar colapsos accidentales
+      if (this.hoverExpandTimeout) {
+        clearTimeout(this.hoverExpandTimeout);
+      }
+
+      this.hoverExpandTimeout = setTimeout(() => {
+        if (!this.isMouseInsideSidebar) {
+          this.collapseTemporaryExpansion();
+        }
+      }, 150); // 150ms de delay
+    }
+  }
+
+  /**
+   * Colapsa el sidebar temporalmente expandido y limpia las clases CSS
+   */
+  private collapseTemporaryExpansion(): void {
+    this.isTemporarilyExpanded = false;
+    this.cleanupTemporaryExpansionClasses();
+    console.log('Sidebar collapsed from temporary expansion');
+  }
+
+  /**
+   * Limpia TODAS las clases relacionadas con la expansión temporal
+   * Se llama tanto al colapsar como al anclar el sidebar
+   */
+  private cleanupTemporaryExpansionClasses(): void {
+    // Remover clase del sidebar
+    const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
+    if (sidebar) {
+      this.renderer.removeClass(sidebar, 'temporarily-expanded');
+    }
+
+    // Remover clase del page-wrapper
+    const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
+    if (wrapper) {
+      wrapper.classList.remove('sidebar-temporarily-expanded');
+    }
+
+    // Remover clase del header
+    const headerEl = document.querySelector('.page-header') as HTMLElement;
+    if (headerEl) {
+      headerEl.classList.remove('temporarily-expanded');
+    }
+  }
+
+  /**
+   * Navega a una ruta y limpia las clases de expansión temporal
+   * Resuelve el bug donde el header queda colapsado después de navegar
+   */
+  private navigateAndCleanup(path: string): void {
+    // Resetear estado de expansión temporal
+    this.isTemporarilyExpanded = false;
+
+    // Limpiar todas las clases de expansión temporal
+    this.cleanupTemporaryExpansionClasses();
+
+    // Cerrar cualquier submenú flotante abierto
+    this.closeCollapsedSubmenu();
+
+    // Limpiar timeouts pendientes
+    if (this.hoverExpandTimeout) {
+      clearTimeout(this.hoverExpandTimeout);
+      this.hoverExpandTimeout = null;
+    }
+
+    // Navegar a la ruta
+    this.router.navigate([path]);
   }
 
   /**
@@ -215,6 +283,11 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public isSearchActive: boolean = false;
   public favoriteItems: Menu[] = [];
   public isSearchFocused: boolean = false;
+
+  // Propiedades del perfil de usuario (Glassmorphism redesign)
+  public userName: string = '';
+  public userInitials: string = '';
+  public userAvatarUrl: string = '';
 
   // Variables para control de gestos en móviles
   private touchStartX: number = 0;
@@ -457,6 +530,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Cargar favoritos
     this.loadFavoriteItems();
+
+    // Inicializar perfil de usuario para glassmorphism sidebar
+    this.initializeUserProfile();
 
     // Configurar eventos táctiles para dispositivos móviles
     setTimeout(() => {
@@ -871,7 +947,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     console.log('📊 Mostrando detalles de uso...');
     // Por ahora, redirigir a pricing donde se ve todo
     // En el futuro puede ser una página dedicada de detalles
-    this.router.navigate(['/pricing']);
+    this.navigateAndCleanup('/pricing');
   }
 
   closePlanModal() {
@@ -1030,6 +1106,9 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Resetear estado temporal cuando se hace click manual
     this.isTemporarilyExpanded = false;
+
+    // ★ IMPORTANTE: Limpiar TODAS las clases de expansión temporal
+    this.cleanupTemporaryExpansionClasses();
 
     // Limpiar timeouts de hover
     if (this.hoverExpandTimeout) {
@@ -1214,7 +1293,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     // En estado colapsado para desktop (sin expansión temporal), mostrar submenú flotante
     if (this.collapseMenu && !this.isTemporarilyExpanded && !this.isMobile()) {
       if (item.path && !item.children) {
-        this.router.navigate([item.path]);
+        this.navigateAndCleanup(item.path);
         return;
       }
       this.showCollapsedSubmenu(item, event);
@@ -1436,18 +1515,38 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   /**
    * Manejar click en items del menú principal
-   * El menú permanece abierto - el usuario cierra manualmente
+   * Limpia las clases de expansión temporal cuando se navega
    */
   onMenuItemClick(item: Menu): void {
-    // No auto-colapsar - el usuario cierra manualmente con el botón de colapso
+    // Si está temporalmente expandido, limpiar estado para que el header se ajuste
+    if (this.isTemporarilyExpanded) {
+      this.isTemporarilyExpanded = false;
+      this.cleanupTemporaryExpansionClasses();
+
+      // Limpiar timeouts pendientes
+      if (this.hoverExpandTimeout) {
+        clearTimeout(this.hoverExpandTimeout);
+        this.hoverExpandTimeout = null;
+      }
+    }
   }
 
   /**
    * Manejar click en items de submenús
-   * El menú permanece abierto - el usuario cierra manualmente
+   * Limpia las clases de expansión temporal cuando se navega
    */
   onSubMenuItemClick(event: Event): void {
-    // No auto-colapsar - el usuario cierra manualmente con el botón de colapso
+    // Si está temporalmente expandido, limpiar estado para que el header se ajuste
+    if (this.isTemporarilyExpanded) {
+      this.isTemporarilyExpanded = false;
+      this.cleanupTemporaryExpansionClasses();
+
+      // Limpiar timeouts pendientes
+      if (this.hoverExpandTimeout) {
+        clearTimeout(this.hoverExpandTimeout);
+        this.hoverExpandTimeout = null;
+      }
+    }
   }
 
   // For Horizontal Menu (Sin cambios)
@@ -1995,6 +2094,44 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       'label': 'fa-tag',
       'external-link': 'fa-external-link',
       'map-pin': 'fa-map-marker',
+
+      // === ICONOS FEATHER ADICIONALES ===
+      'target': 'fa-bullseye',
+      'bar-chart-2': 'fa-bar-chart',
+      'pie-chart': 'fa-pie-chart',
+      'toggle-right': 'fa-toggle-on',
+      'toggle-left': 'fa-toggle-off',
+      'share-2': 'fa-share-alt',
+      'git-branch': 'fa-code-fork',
+      'git-merge': 'fa-code-fork',
+      'link-2': 'fa-link',
+      'gift': 'fa-gift',
+      'user-plus': 'fa-user-plus',
+      'shopping-bag': 'fa-shopping-bag',
+      'monitor': 'fa-desktop',
+      'tool': 'fa-wrench',
+      'plus-circle': 'fa-plus-circle',
+      'minus-circle': 'fa-minus-circle',
+      'clock': 'fa-clock-o',
+      'send': 'fa-paper-plane',
+      'plus-square': 'fa-plus-square',
+      'minus-square': 'fa-minus-square',
+      'edit-3': 'fa-pencil',
+      'edit-2': 'fa-pencil',
+      'refresh-cw': 'fa-refresh',
+      'rotate-cw': 'fa-refresh',
+      'activity': 'fa-line-chart',
+      'zap': 'fa-bolt',
+      'award': 'fa-trophy',
+      'file-text': 'fa-file-text-o',
+      'smartphone': 'fa-mobile',
+      'cpu': 'fa-microchip',
+      'navigation': 'fa-location-arrow',
+      'navigation-2': 'fa-location-arrow',
+      'chevron-right': 'fa-chevron-right',
+      'chevron-left': 'fa-chevron-left',
+      'chevron-down': 'fa-chevron-down',
+      'chevron-up': 'fa-chevron-up',
     };
 
     // Intentar mapear el icono
@@ -2284,6 +2421,32 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  // Métodos para perfil de usuario (Glassmorphism redesign)
+  private initializeUserProfile(): void {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      this.userName = user.nombre || user.name || user.displayName || 'Usuario';
+      this.userInitials = this.userName
+        .split(' ')
+        .filter((n: string) => n.length > 0)
+        .map((n: string) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2) || 'US';
+      // Buscar imagen en múltiples propiedades posibles (incluyendo 'image' del header)
+      this.userAvatarUrl = user.image || user.avatar || user.photoUrl || user.photoURL || '';
+    } catch (e) {
+      console.error('Error initializing user profile:', e);
+      this.userName = 'Usuario';
+      this.userInitials = 'US';
+      this.userAvatarUrl = '';
+    }
+  }
+
+  onAvatarError(event: Event): void {
+    this.userAvatarUrl = '';
+  }
+
   // Método para cerrar todos los submenús
   private closeAllSubmenus(): void {
     const allMenuItems = this.getAllMenuItems();
@@ -2409,8 +2572,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.renderer.listen(itemElement, 'click', (e) => {
           e.preventDefault();
           if (childItem.path) {
-            this.router.navigate([childItem.path]);
-            this.closeCollapsedSubmenu();
+            this.navigateAndCleanup(childItem.path);
           }
         });
       } else if (childItem.type === 'extLink') {

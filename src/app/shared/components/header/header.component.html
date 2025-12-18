@@ -1,64 +1,50 @@
-<!-- Page Header Start-->
+<!-- Page Header Start - CLEAN VERSION -->
 <div class="page-header" [class.close_icon]="navServices.collapseSidebar" role="banner" aria-label="Encabezado principal">
   <div class="header-wrapper row m-0">
+    <!-- Search component (hidden) -->
     <app-search></app-search>
-    <div class="header-logo-wrapper col-auto d-lg-none px-0">
-      <div class="logo-wrapper">
-        <a routerLink='/'>
-          <img class="img-fluid for-light" src="assets/images/logo/Katuq/katuq_light.svg" alt="">
-          <img class="img-fluid for-dark" src="assets/images/logo/Katuq/katuq_light.svg" alt="">
-        </a>
-      </div>
-      <div class="toggle-sidebar" (click)="sidebarToggle()">
-        <app-feather-icons [icon]="'align-center'" class="status_toggle middle"></app-feather-icons>
+
+    <!-- LOGOS SECTION - Katuq + Empresa -->
+    <div class="header-logos-section col-auto d-flex align-items-center gap-3 px-2">
+      <!-- Logo Katuq -->
+      <a routerLink='/' class="logo-link katuq-logo">
+        <img class="img-fluid logo-light" src="assets/images/logo/Katuq/katuq_light.svg" alt="Katuq" style="max-height: 28px;">
+        <img class="img-fluid logo-dark" src="assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq" style="max-height: 28px;">
+      </a>
+
+      <!-- Separador -->
+      <div class="logo-divider"></div>
+
+      <!-- Logo Empresa -->
+      <div class="company-logo">
+        <app-company-information></app-company-information>
       </div>
     </div>
-    <div class="left-header col horizontal-wrapper ps-0" aria-label="Información de la empresa">
-      <!-- <app-mega-menu></app-mega-menu> -->
-      <app-company-information></app-company-information>
-    </div>
-    <div class="nav-right col-8 pull-right right-header p-0">
+
+    <!-- NAV RIGHT - Elementos esenciales -->
+    <div class="nav-right col pull-right right-header p-0 ms-auto">
       <ul class="nav-menus">
-        <li class="language-nav" (click)="languageToggle()" role="button" tabindex="0" aria-haspopup="true" [attr.aria-expanded]="navServices.language" aria-controls="languages-menu"
+        <!-- Language Selector -->
+        <li class="language-nav" (click)="languageToggle()" role="button" tabindex="0"
+            aria-haspopup="true" [attr.aria-expanded]="navServices.language"
             (keydown.enter)="languageToggle()" (keydown.space)="$event.preventDefault(); languageToggle()">
           <app-languages></app-languages>
         </li>
-        <li>
-          <button class="header-search" type="button" aria-label="Abrir búsqueda" (click)="searchToggle()">
-            <app-feather-icons [icon]="'search'"></app-feather-icons>
-          </button>
-        </li>
 
-        <!-- <li class="onhover-dropdown">
-          <app-bookmark></app-bookmark>
-        </li> -->
+        <!-- Dark Mode Toggle -->
         <li>
           <button class="mode" type="button" (click)="layoutToggle()" [attr.aria-pressed]="dark" aria-label="Cambiar tema">
             <i class="fa fa-moon-o" *ngIf="!dark" aria-hidden="true"></i>
             <i class="fa fa-lightbulb-o" *ngIf="dark" aria-hidden="true"></i>
           </button>
         </li>
-        <li class="cart-nav onhover-dropdown" aria-label="Carrito">
-          <app-cart></app-cart>
-        </li>
+
+        <!-- Notifications -->
         <li class="onhover-dropdown" aria-label="Notificaciones">
           <app-notification-center></app-notification-center>
         </li>
-        <!-- <li class="onhover-dropdown">
-          <app-message-box></app-message-box>
-        </li> -->
-        <li class="maximize">
-          <a class="text-dark" href="javascript:void(0)" (click)="toggleFullScreen()" role="button" aria-label="Pantalla completa"
-             (keydown.enter)="toggleFullScreen()" (keydown.space)="$event.preventDefault(); toggleFullScreen()" tabindex="0">
-            <app-feather-icons [icon]="'maximize'"></app-feather-icons>
-          </a>
-        </li>
-        <!-- Botón de Tours - Oculto temporalmente -->
-        <!-- <li class="tour-nav">
-          <button class="btn btn-sm btn-primary tour-btn" (click)="openTourMenu()" title="Tours Guiados">
-            🎯 Tours
-          </button>
-        </li> -->
+
+        <!-- Profile + Logout -->
         <li class="profile-nav onhover-dropdown p-0" aria-label="Mi cuenta">
           <app-my-account></app-my-account>
         </li>

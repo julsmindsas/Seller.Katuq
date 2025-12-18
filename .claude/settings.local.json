@@ -5,7 +5,9 @@
       "Bash(timeout 60 npx tsc:*)",
       "Bash(find:*)",
       "Bash(lsof:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "mcp__plugin_figma_figma__get_screenshot",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

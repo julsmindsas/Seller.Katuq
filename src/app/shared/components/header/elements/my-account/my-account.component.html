@@ -1,33 +1,68 @@
-<div class="d-flex profile-media" (click)="toggleAccount()" role="button" aria-haspopup="true" [attr.aria-expanded]="openAccount" aria-controls="account-dropdown" tabindex="0"
-     (keydown.enter)="toggleAccount()" (keydown.space)="$event.preventDefault(); toggleAccount()">
-  <img class="b-r-10" [src]="user.image ? user.image : 'assets/images/user/user.png'" alt="profile" style="max-height: 40px; width: auto;">
-  <div class="media-body">
-    <span>{{user.name}}</span><i class="middle fa fa-angle-down"></i>
-    <p class="mb-0 font-roboto user-details">
-      {{ (user?.company === '' ? 'Sin empresa' : (user?.company === 'La Tartaleria' ? 'La Tartaleteria' : user?.company)) }} | {{user?.rol }}
-    </p>
+<!-- Avatar Button - Solo imagen, compacto -->
+<div class="avatar-trigger" (click)="toggleAccount()" role="button"
+     aria-haspopup="true" [attr.aria-expanded]="openAccount"
+     aria-controls="account-dropdown" tabindex="0"
+     (keydown.enter)="toggleAccount()"
+     (keydown.space)="$event.preventDefault(); toggleAccount()">
+  <div class="avatar-wrapper">
+    <img *ngIf="user?.image" [src]="user.image" alt="profile" class="avatar-img">
+    <div *ngIf="!user?.image" class="avatar-placeholder">
+      {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+    </div>
+    <span class="status-dot"></span>
   </div>
 </div>
-<ul class="profile-dropdown onhover-show-div" [class.active]="openAccount" id="account-dropdown" role="menu" aria-label="Opciones de cuenta">
-  <!-- Mi Cuenta - Always visible -->
-  <li>
-    <a [routerLink]="'/' + accountMenuItem.path" (click)="openAccount = false">
-      <app-feather-icons [icon]="accountMenuItem.icon"></app-feather-icons>
+
+<!-- Dropdown Glassmorphism -->
+<div class="profile-dropdown-glass" [class.active]="openAccount" id="account-dropdown" role="menu">
+  <!-- Header con info del usuario -->
+  <div class="dropdown-header">
+    <div class="user-avatar-large">
+      <img *ngIf="user?.image" [src]="user.image" alt="profile">
+      <div *ngIf="!user?.image" class="avatar-placeholder-lg">
+        {{ user?.name?.charAt(0)?.toUpperCase() || 'U' }}
+      </div>
+    </div>
+    <div class="user-info">
+      <span class="user-name">{{ user?.name || 'Usuario' }}</span>
+      <span class="user-company">{{ user?.company || 'Sin empresa' }}</span>
+      <span class="user-role">{{ user?.rol || 'Usuario' }}</span>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="dropdown-divider"></div>
+
+  <!-- Menu Items -->
+  <div class="dropdown-menu-items">
+    <!-- Mi Cuenta -->
+    <a class="menu-item" [routerLink]="'/' + accountMenuItem.path" (click)="openAccount = false">
+      <div class="item-icon">
+        <app-feather-icons [icon]="accountMenuItem.icon"></app-feather-icons>
+      </div>
       <span>{{ accountMenuItem.label }}</span>
+      <app-feather-icons [icon]="'chevron-right'" class="chevron"></app-feather-icons>
     </a>
-  </li>
 
-  <!-- Other menu items - Only shown if user is authorized -->
-  <li *ngFor="let item of authorizedMenuItems">
-    <a [routerLink]="'/' + item.path" (click)="openAccount = false">
-      <app-feather-icons [icon]="item.icon"></app-feather-icons>
+    <!-- Dynamic Menu Items -->
+    <a class="menu-item" *ngFor="let item of authorizedMenuItems"
+       [routerLink]="'/' + item.path" (click)="openAccount = false">
+      <div class="item-icon">
+        <app-feather-icons [icon]="item.icon"></app-feather-icons>
+      </div>
       <span>{{ item.label }}</span>
+      <app-feather-icons [icon]="'chevron-right'" class="chevron"></app-feather-icons>
     </a>
-  </li>
+  </div>
 
-  <!-- Logout - Always available -->
-  <li><a (click)="logOut()" role="menuitem">
-    <app-feather-icons [icon]="'log-in'"></app-feather-icons>
+  <!-- Divider -->
+  <div class="dropdown-divider"></div>
+
+  <!-- Logout -->
+  <a class="menu-item logout" (click)="logOut()" role="menuitem">
+    <div class="item-icon logout-icon">
+      <app-feather-icons [icon]="'log-out'"></app-feather-icons>
+    </div>
     <span>{{ 'Cerrar sesión' | translate }}</span>
-  </a></li>
-</ul>
+  </a>
+</div>

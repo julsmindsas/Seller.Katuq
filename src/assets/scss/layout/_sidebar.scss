@@ -6,7 +6,7 @@
   content: "";
   top: 48%;
   width: 6px;
-  border-top: 2px solid #595c60;
+  border-top: 2px solid var(--glass-text-inactive, #5a5272);
 }
 
 %horizontal-after {
@@ -16,7 +16,7 @@
   width: 5px;
   height: 1px;
   border-radius: 100%;
-  background-color: #59667a;
+  background-color: var(--glass-text-inactive, #5a5272);
 }
 
 %common {
@@ -84,11 +84,11 @@
   margin-left: 115px;
 }
 
-// Variables para el tema
-$sidebar-bg: #ffffff;
-$sidebar-text: #2c3e50;
-$sidebar-hover: rgba(69, 155, 209, 0.05);
-$sidebar-active: rgba(167, 139, 250, 0.08); // Purple light
+// Variables para el tema - Usando CSS variables para consistencia
+$sidebar-bg: var(--glass-bg, #ffffff);
+$sidebar-text: var(--glass-text-primary, #1a1625);
+$sidebar-hover: var(--item-hover-bg, rgba(167, 139, 250, 0.1));
+$sidebar-active: var(--item-active-bg, rgba(167, 139, 250, 0.15));
 $sidebar-border: #e9ecef;
 $sidebar-shadow: 0 0 20px rgba(0, 0, 0, 0.02);
 $primary-color: #a78bfa; // Purple light Katuq
@@ -1506,7 +1506,7 @@ $primary-color: #a78bfa; // Purple light Katuq
                 a {
                   padding: 12px 15px;
                   position: relative;
-                  color: #222222;
+                  color: var(--glass-text-secondary, #3d3654);
                   transition: all 0.3s ease;
 
                   svg {
@@ -1515,7 +1515,7 @@ $primary-color: #a78bfa; // Purple light Katuq
                     vertical-align: bottom;
                     float: none;
                     stroke-width: 2.3px;
-                    color: $dark-color;
+                    color: var(--glass-text-inactive, #5a5272);
                     transition: all 0.3s ease;
                   }
 
@@ -2165,7 +2165,7 @@ $primary-color: #a78bfa; // Purple light Katuq
                           left: 20px;
                           top: 48%;
                           width: 6px;
-                          border-top: 2px solid #595c60;
+                          border-top: 2px solid var(--glass-text-inactive, #5a5272);
                         }
                       }
                     }

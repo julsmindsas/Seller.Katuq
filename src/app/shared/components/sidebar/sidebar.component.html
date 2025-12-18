@@ -45,46 +45,73 @@
        role="navigation"
        aria-label="Menú principal">
 
-  <!-- Header del Sidebar -->
-  <header class="sidebar-header">
-    <!-- Logo Principal (modo normal) -->
-    <div class="logo-section" [class.hidden]="isCompactMode || (collapseMenu && !isTemporarilyExpanded)">
-      <a routerLink='/welcome' class="logo-link" [attr.aria-label]="'Ir a inicio - ' + (companyInformation?.razonSocial || 'Katuq')">
-        <img class="logo-main" 
-             src="assets/images/logo/Katuq/katuq_dark.svg" 
-             alt="Logo Katuq"
-             [class.for-light]="true">
-        <img class="logo-dark" 
-             src="assets/images/logo/Katuq/katuq-dark.png" 
-             alt="Logo Katuq"
-             [class.for-dark]="true">
-      </a>
-      
-      <div class="company-info" *ngIf="companyInformation?.razonSocial">
-        <span class="company-name">{{companyInformation.razonSocial}}</span>
-        <span class="version">v{{version}}</span>
+  <!-- Header Unificado: Logo + Perfil de Usuario -->
+  <header class="sidebar-header unified-header"
+          [class.collapsed]="collapseMenu && !isTemporarilyExpanded">
+
+    <!-- Puntos decorativos (Figma design) -->
+    <div class="decorative-dots" *ngIf="!collapseMenu || isTemporarilyExpanded">
+      <span class="dot dot-red"></span>
+      <span class="dot dot-yellow"></span>
+      <span class="dot dot-green"></span>
+    </div>
+
+    <!-- Contenido principal del header -->
+    <div class="header-content">
+      <!-- Logo + Avatar combinados -->
+      <div class="brand-profile">
+        <!-- Logo/Avatar clickeable -->
+        <a routerLink='/welcome' class="brand-avatar-link" [attr.aria-label]="'Ir a inicio'">
+          <!-- Logo compacto cuando está colapsado -->
+          <div class="logo-avatar" *ngIf="collapseMenu && !isTemporarilyExpanded">
+            <img src="assets/images/logo/Katuq/katuq_logo_solo.svg"
+                 alt="Katuq"
+                 class="logo-icon">
+          </div>
+
+          <!-- Avatar del usuario cuando está expandido -->
+          <div class="user-avatar" *ngIf="!collapseMenu || isTemporarilyExpanded">
+            <img *ngIf="userAvatarUrl"
+                 [src]="userAvatarUrl"
+                 [alt]="userName"
+                 class="avatar-image"
+                 (error)="onAvatarError($event)">
+            <div *ngIf="!userAvatarUrl" class="avatar-placeholder">
+              <span>{{userInitials}}</span>
+            </div>
+          </div>
+        </a>
+
+        <!-- Info expandida: Saludo + Logo -->
+        <div class="expanded-info" *ngIf="!collapseMenu || isTemporarilyExpanded">
+          <div class="greeting-section">
+            <span class="greeting-text">Hello <span class="emoji">👋</span></span>
+            <span class="user-name">{{userName}}</span>
+          </div>
+          <div class="brand-logo">
+            <img class="logo-light"
+                 src="assets/images/logo/Katuq/katuq_dark.svg"
+                 alt="Katuq">
+            <img class="logo-dark"
+                 src="assets/images/logo/Katuq/katuq-dark.png"
+                 alt="Katuq">
+          </div>
+        </div>
       </div>
-    </div>
 
-    <!-- Logo Compacto (modo colapsado o compacto) -->
-    <div class="logo-compact" [class.visible]="(collapseMenu && !isTemporarilyExpanded) || (isCompactMode && !collapseMenu)">
-      <a routerLink='/welcome' [attr.aria-label]="'Ir a inicio'" title="Katuq">
-        <img src="assets/images/logo/Katuq/katuq_logo_solo.svg" alt="K">
-      </a>
-    </div>
-
-    <!-- Controles del Sidebar -->
-    <div class="sidebar-controls" [class.collapsed-controls]="collapseMenu && !isTemporarilyExpanded">
-      <!-- Botón de colapso tradicional con hover-expand -->
-      <button class="control-btn collapse-btn"
+      <!-- Botón de colapsar/expandir -->
+      <button class="collapse-toggle-btn"
+              *ngIf="!collapseMenu || isTemporarilyExpanded"
               (click)="sidebarToggle()"
-              [attr.aria-label]="collapseMenu ? 'Expandir menú (hover para vista previa)' : 'Contraer menú'"
-              [attr.aria-expanded]="!collapseMenu"
-              [title]="collapseMenu ? 'Expandir menú (hover para vista previa)' : 'Contraer menú'">
-        <i class="fa" [ngClass]="collapseMenu ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+              [attr.aria-label]="collapseMenu ? 'Expandir menú' : 'Contraer menú'"
+              [title]="collapseMenu ? 'Expandir menú' : 'Contraer menú'">
+        <i class="fa" [ngClass]="collapseMenu ? 'fa-angle-double-right' : 'fa-angle-double-left'"></i>
       </button>
+    </div>
 
-      <!-- Botón de Auto-Hide desactivado en desktop -->
+    <!-- Versión (solo expandido) -->
+    <div class="version-badge" *ngIf="!collapseMenu || isTemporarilyExpanded">
+      <span>v{{version}}</span>
     </div>
   </header>
 

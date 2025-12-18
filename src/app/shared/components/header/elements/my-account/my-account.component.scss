@@ -1,50 +1,393 @@
-.profile-media {
-  gap: 8px;
-  padding: 0;
-  border-radius: 8px;
+/* =============================================
+   MY ACCOUNT - GLASSMORPHISM DROPDOWN 2025
+   ============================================= */
+
+// =============================================
+// AVATAR TRIGGER (botón compacto)
+// =============================================
+.avatar-trigger {
   cursor: pointer;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  align-items: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease-out;
 
-  .media-body span { font-weight: 700; }
-  .user-details { font-size: 11px; opacity: 0.7; }
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
-.profile-dropdown {
+.avatar-wrapper {
+  position: relative;
+  width: 38px;
+  height: 38px;
+
+  .avatar-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(99, 102, 241, 0.3);
+    transition: border-color 0.2s ease;
+  }
+
+  .avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    border: 2px solid rgba(99, 102, 241, 0.3);
+  }
+
+  .status-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 10px;
+    height: 10px;
+    background: #22c55e;
+    border-radius: 50%;
+    border: 2px solid white;
+  }
+
+  &:hover {
+    .avatar-img,
+    .avatar-placeholder {
+      border-color: #6366f1;
+    }
+  }
+}
+
+// =============================================
+// DROPDOWN GLASSMORPHISM
+// =============================================
+.profile-dropdown-glass {
   position: absolute;
+  top: calc(100% + 8px);
   right: 0;
-  margin-top: 6px;
-  min-width: 220px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  min-width: 280px;
+
+  // Glassmorphism
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 16px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.15),
+    0 10px 20px rgba(99, 102, 241, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+  padding: 0;
+  z-index: 1100;
+
+  // Hidden by default
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px) scale(0.95);
+  transform-origin: top right;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+  }
+}
+
+// =============================================
+// DROPDOWN HEADER (User Info)
+// =============================================
+.dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border-radius: 16px 16px 0 0;
+}
+
+.user-avatar-large {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+
+  img {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    object-fit: cover;
+    border: 2px solid rgba(99, 102, 241, 0.2);
+  }
+
+  .avatar-placeholder-lg {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+  }
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+
+  .user-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-company {
+    font-size: 12px;
+    color: #6366f1;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-role {
+    font-size: 11px;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+// =============================================
+// DIVIDER
+// =============================================
+.dropdown-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.2), transparent);
+  margin: 0;
+}
+
+// =============================================
+// MENU ITEMS
+// =============================================
+.dropdown-menu-items {
+  padding: 8px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
   border-radius: 10px;
-  box-shadow: 0 10px 24px rgba(0,0,0,0.1);
-  padding: 8px 0;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  text-decoration: none;
 
-  li { 
-    list-style: none;
-    padding: 0;
+  &:hover {
+    background: rgba(99, 102, 241, 0.1);
+    color: #6366f1;
+    transform: translateX(4px);
+
+    .item-icon {
+      background: rgba(99, 102, 241, 0.15);
+
+      ::ng-deep svg {
+        color: #6366f1;
+      }
+    }
+
+    .chevron {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 
-  a { 
-    display: flex; 
-    align-items: center; 
-    gap: 6px; 
-    padding: 6px 10px;
-    font-size: 13px;
+  .item-icon {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(99, 102, 241, 0.08);
+    border-radius: 8px;
+    transition: all 0.15s ease;
+
+    ::ng-deep svg {
+      width: 16px;
+      height: 16px;
+      color: #6b7280;
+      transition: color 0.15s ease;
+    }
   }
-  
-  a:hover { background: rgba(99,102,241,0.08); }
+
+  span {
+    flex: 1;
+  }
+
+  .chevron {
+    opacity: 0;
+    transform: translateX(-8px);
+    transition: all 0.15s ease;
+
+    ::ng-deep svg {
+      width: 14px;
+      height: 14px;
+      color: #6366f1;
+    }
+  }
+
+  // Logout especial
+  &.logout {
+    margin: 8px;
+    margin-top: 0;
+    color: #ef4444;
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+      color: #dc2626;
+
+      .logout-icon {
+        background: rgba(239, 68, 68, 0.15);
+
+        ::ng-deep svg {
+          color: #dc2626;
+        }
+      }
+    }
+
+    .logout-icon {
+      background: rgba(239, 68, 68, 0.08);
+
+      ::ng-deep svg {
+        color: #ef4444;
+      }
+    }
+  }
 }
 
-body.dark-only {
-  .profile-dropdown {
-    background: #1f2937;
-    border-color: #374151;
-    box-shadow: 0 12px 30px rgba(0,0,0,0.5);
+// =============================================
+// DARK MODE - Usando :host-context para Angular
+// =============================================
+:host-context(body.dark-only),
+:host-context(.dark-only) {
+  .avatar-wrapper {
+    .avatar-img,
+    .avatar-placeholder {
+      border-color: rgba(167, 139, 250, 0.4);
+    }
+
+    .status-dot {
+      border-color: #1f2937;
+    }
+
+    &:hover {
+      .avatar-img,
+      .avatar-placeholder {
+        border-color: #a78bfa;
+      }
+    }
+  }
+
+  .profile-dropdown-glass {
+    background: rgba(30, 27, 46, 0.95);
+    border-color: rgba(167, 139, 250, 0.2);
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.5),
+      0 10px 20px rgba(167, 139, 250, 0.1),
+      inset 0 1px 0 rgba(167, 139, 250, 0.1);
+  }
+
+  .dropdown-header {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+  }
+
+  .user-info {
+    .user-name {
+      color: #ffffff;
+    }
+
+    .user-company {
+      color: #a78bfa;
+    }
+
+    .user-role {
+      color: #9ca3af;
+    }
+  }
+
+  .dropdown-divider {
+    background: linear-gradient(90deg, transparent, rgba(167, 139, 250, 0.3), transparent);
+  }
+
+  .menu-item {
+    color: #e5e7eb;
+
+    &:hover {
+      background: rgba(167, 139, 250, 0.15);
+      color: #c4b5fd;
+
+      .item-icon {
+        background: rgba(167, 139, 250, 0.2);
+
+        ::ng-deep svg {
+          color: #c4b5fd;
+        }
+      }
+    }
+
+    .item-icon {
+      background: rgba(167, 139, 250, 0.1);
+
+      ::ng-deep svg {
+        color: #9ca3af;
+      }
+    }
+
+    .chevron ::ng-deep svg {
+      color: #a78bfa;
+    }
+
+    &.logout {
+      color: #f87171;
+
+      &:hover {
+        background: rgba(239, 68, 68, 0.15);
+        color: #fca5a5;
+
+        .logout-icon ::ng-deep svg {
+          color: #fca5a5;
+        }
+      }
+
+      .logout-icon {
+        background: rgba(239, 68, 68, 0.1);
+
+        ::ng-deep svg {
+          color: #f87171;
+        }
+      }
+    }
   }
 }
-
-

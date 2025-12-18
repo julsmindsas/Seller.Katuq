@@ -1,21 +1,57 @@
-/* Header Component Styles - MOBILE-OPTIMIZED */
+/* Header Component Styles - GLASSMORPHISM DESIGN */
+/* Armonizado con Sidebar Glassmorphism 2025 */
+
 .page-header {
   position: sticky;
   top: 0;
   z-index: var(--z-header, 1025);
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid #e5e7eb;
 
-  // ✅ MOBILE-FIRST: Better Material Design compliance
+  // =============================================
+  // GLASSMORPHISM - Igual que sidebar
+  // =============================================
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+
+  // Borde sutil glassmorphism
+  border-bottom: 1px solid rgba(99, 102, 241, 0.12);
+  border-left: none;
+
+  // =============================================
+  // BORDES REDONDEADOS - Conexión fluida con sidebar
+  // El sidebar tiene: 0px 29px 29px 0px (derecha redondeada)
+  // El header debe conectar suavemente
+  // =============================================
+
+  // Mobile: esquinas inferiores redondeadas
+  border-radius: 0 0 24px 24px;
+
+  @media (min-width: 992px) {
+    // Desktop: solo esquina inferior DERECHA redondeada
+    // La izquierda se conecta con el sidebar
+    border-radius: 0 0 24px 0;
+
+    // Pequeño margen superior para separar del borde del viewport
+    margin-top: 0;
+  }
+
+  // =============================================
+  // DIMENSIONES
+  // =============================================
   min-height: 56px;
 
   @media (min-width: 768px) {
     min-height: 52px;
   }
 
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08),
-              0 1px 2px rgba(0, 0, 0, 0.04);
+  // =============================================
+  // SOMBRA GLASSMORPHISM
+  // =============================================
+  box-shadow:
+    0 4px 24px rgba(99, 102, 241, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
   font-family: var(--font-family, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
 
   // ✅ SAFE AREA: Handle iPhone X+ notch and other safe areas
@@ -32,28 +68,52 @@
   transition: margin-left 0.15s ease-out, width 0.15s ease-out, opacity 0.2s ease;
 
   .header-wrapper {
-    padding: 4px 10px;
+    padding: 8px 16px;
     align-items: center;
+    justify-content: flex-end; // Alinear a la derecha
 
+    @media (min-width: 768px) {
+      padding: 6px 20px;
+    }
+
+    // =============================================
+    // ELEMENTOS ELIMINADOS - Mantenidos por compatibilidad
+    // =============================================
     .header-logo-wrapper {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      display: none; // Ya no se usa - logo está en sidebar
 
       .logo-wrapper {
         padding: 6px 12px;
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
-        border-radius: 10px;
-        border: 1px solid rgba(99, 102, 241, 0.15);
-        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+
+        // =============================================
+        // GLASSMORPHISM LOGO CONTAINER
+        // =============================================
+        background: rgba(99, 102, 241, 0.06);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 12px;
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        box-shadow:
+          0 2px 8px rgba(99, 102, 241, 0.06),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
+        transition: all 0.15s ease-out;
 
         img {
           max-height: 28px;
-          // ✅ Solo transform para performance
           transition: transform 0.15s ease-out;
+        }
 
-          &:hover {
-            transform: scale(1.05);
+        &:hover {
+          background: rgba(99, 102, 241, 0.1);
+          border-color: rgba(99, 102, 241, 0.2);
+          transform: translateY(-1px);
+          box-shadow:
+            0 4px 12px rgba(99, 102, 241, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+          img {
+            transform: scale(1.02);
           }
         }
       }
@@ -63,12 +123,12 @@
         align-items: center;
         justify-content: center;
 
-        // ✅ MOBILE: Hide toggle-sidebar (menu is elsewhere)
+        // MOBILE: Hide toggle-sidebar (menu is elsewhere)
         @media (max-width: 991px) {
           display: none !important;
         }
 
-        // ✅ MOBILE-FIRST: 44x44px touch target (WCAG compliant)
+        // MOBILE-FIRST: 44x44px touch target (WCAG compliant)
         width: 44px;
         height: 44px;
 
@@ -77,28 +137,37 @@
           height: 36px;
         }
 
-        background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%);
-        border: 1px solid rgba(99, 102, 241, 0.15);
-        border-radius: 12px; // ✅ Larger radius for better touch feedback
+        // =============================================
+        // GLASSMORPHISM TOGGLE BUTTON
+        // =============================================
+        background: rgba(99, 102, 241, 0.06);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(99, 102, 241, 0.1);
+        border-radius: 12px;
         cursor: pointer;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        box-shadow:
+          0 2px 8px rgba(99, 102, 241, 0.06),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
 
-        // ✅ GPU-accelerated transforms for better performance
-        transition: transform 0.15s ease-out, background-color 0.15s ease-out;
-        will-change: transform;
+        transition: all 0.15s ease-out;
+        will-change: transform, background;
 
         &:hover {
-          background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-          border-color: rgba(99, 102, 241, 0.3);
-          transform: scale(1.05);
-          box-shadow: 0 3px 8px rgba(99, 102, 241, 0.15);
+          background: rgba(99, 102, 241, 0.12);
+          border-color: rgba(99, 102, 241, 0.2);
+          transform: translateY(-1px);
+          box-shadow:
+            0 4px 12px rgba(99, 102, 241, 0.12),
+            inset 0 1px 0 rgba(255, 255, 255, 0.6);
         }
 
         &:active {
-          transform: scale(0.95);
+          transform: translateY(0);
+          box-shadow: 0 1px 4px rgba(99, 102, 241, 0.08);
         }
 
-        // ✅ ACCESSIBILITY: Focus visible for keyboard navigation
+        // ACCESSIBILITY: Focus visible for keyboard navigation
         &:focus-visible {
           outline: 2px solid #6366f1;
           outline-offset: 2px;
@@ -117,44 +186,115 @@
       }
     }
 
-    .left-header {
+    // =============================================
+    // LOGOS SECTION - Katuq + Empresa
+    // =============================================
+    .header-logos-section {
       display: flex;
       align-items: center;
-      min-height: 42px;
-      padding-right: 6px;
-      margin-right: 6px;
+      gap: 12px;
 
-      // ✅ MOBILE: Hide company logo/info on mobile devices
-      @media (max-width: 991px) {
-        display: none !important;
+      .logo-link {
+        display: flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 10px;
+        transition: all 0.15s ease-out;
+
+        &:hover {
+          background: rgba(99, 102, 241, 0.08);
+        }
+
+        .logo-light {
+          display: block;
+        }
+
+        .logo-dark {
+          display: none;
+        }
+      }
+
+      // Separador vertical entre logos
+      .logo-divider {
+        width: 1px;
+        height: 24px;
+        background: linear-gradient(180deg, transparent, rgba(99, 102, 241, 0.3), transparent);
+      }
+
+      // Logo de la empresa
+      .company-logo {
+        display: flex;
+        align-items: center;
+
+        ::ng-deep {
+          .horizontal-menu {
+            margin: 0;
+            padding: 0;
+
+            .row {
+              margin: 0;
+              align-items: center;
+            }
+
+            img {
+              max-height: 32px !important;
+              width: auto !important;
+              border-radius: 6px;
+            }
+          }
+        }
       }
     }
 
-    .nav-right {
-      // ✅ MOBILE: Take full width when .left-header is hidden
-      @media (max-width: 991px) {
-        flex: 1 !important;
-        max-width: 100% !important;
+    // Dark mode para logos section
+    :host-context(body.dark-only) &,
+    :host-context(.dark-only) & {
+      .header-logos-section {
+        .logo-link {
+          .logo-light {
+            display: none;
+          }
+          .logo-dark {
+            display: block;
+          }
+
+          &:hover {
+            background: rgba(167, 139, 250, 0.1);
+          }
+        }
+
+        .logo-divider {
+          background: linear-gradient(180deg, transparent, rgba(167, 139, 250, 0.4), transparent);
+        }
       }
+    }
+
+    // ELIMINADO - Ya no se usa
+    .left-header {
+      display: none !important;
+    }
+
+    // =============================================
+    // NAV RIGHT - Header simplificado
+    // =============================================
+    .nav-right {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      flex: 1;
 
       .nav-menus {
         display: flex;
         align-items: center;
-        gap: 8px; // ✅ MOBILE-OPTIMIZED: Proper spacing for touch safety (was 2px)
+        gap: 12px;
         margin: 0;
         padding: 0;
         list-style: none;
         flex-wrap: nowrap;
         justify-content: flex-end;
 
-        // ✅ RESPONSIVE: Desktop can be tighter
         @media (min-width: 768px) {
-          gap: 4px;
-        }
-
-        // ✅ MOBILE: Reduce gap further on very small screens
-        @media (max-width: 576px) {
-          gap: 4px;
+          gap: 8px;
         }
 
         li {
@@ -197,23 +337,37 @@
               height: 36px;
             }
 
-            border-radius: 12px; // ✅ Larger radius for better touch feedback
+            // =============================================
+            // GLASSMORPHISM BUTTONS
+            // =============================================
+            border-radius: 12px;
             cursor: pointer;
-            background: transparent;
-            border: 1px solid transparent;
+            background: rgba(99, 102, 241, 0.06);
+            border: 1px solid rgba(99, 102, 241, 0.1);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
 
-            // ✅ GPU-accelerated transforms for better performance
-            transition: transform 0.15s ease-out, background-color 0.15s ease-out;
-            will-change: transform;
+            // Sombra sutil glassmorphism
+            box-shadow:
+              0 2px 8px rgba(99, 102, 241, 0.06),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
+
+            // GPU-accelerated transitions
+            transition: all 0.15s ease-out;
+            will-change: transform, background;
 
             &:hover {
               background: rgba(99, 102, 241, 0.12);
               border-color: rgba(99, 102, 241, 0.2);
-              transform: scale(1.05);
+              transform: translateY(-1px);
+              box-shadow:
+                0 4px 12px rgba(99, 102, 241, 0.12),
+                inset 0 1px 0 rgba(255, 255, 255, 0.6);
             }
 
             &:active {
-              transform: scale(0.95);
+              transform: translateY(0);
+              box-shadow: 0 1px 4px rgba(99, 102, 241, 0.08);
             }
 
             // ✅ ACCESSIBILITY: Focus visible for keyboard navigation
@@ -223,7 +377,7 @@
             }
 
             svg, i {
-              font-size: 18px; // ✅ Larger icons for mobile visibility
+              font-size: 18px;
               color: #6366f1;
 
               @media (min-width: 768px) {
@@ -298,52 +452,112 @@
   }
 }
 
-/* Dark theme - MEJORADO VISUALMENTE */
+/* =============================================
+   DARK THEME - KATUQ GLASSMORPHISM
+   Sincronizado con sidebar dark mode
+   ============================================= */
 body.dark-only {
   .page-header {
-    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-    border-bottom: 1px solid #374151;
-    box-shadow: 0 3px 15px rgba(0, 0, 0, 0.5),
-                0 1px 3px rgba(0, 0, 0, 0.3);
+    // =============================================
+    // GLASSMORPHISM DARK - Mismo estilo que sidebar
+    // =============================================
+    background: rgba(46, 16, 101, 0.85); // #2e1065 con transparencia
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+
+    // Bordes Katuq purple
+    border-bottom: 1px solid rgba(167, 139, 250, 0.2);
+    border-left: none;
+
+    // Sombra glassmorphism dark
+    box-shadow:
+      0 4px 24px rgba(0, 0, 0, 0.4),
+      0 1px 3px rgba(0, 0, 0, 0.2),
+      inset 0 1px 0 rgba(167, 139, 250, 0.1);
 
     .header-wrapper {
       .left-header {
-        border-right-color: #374151;
+        border-right-color: rgba(167, 139, 250, 0.15);
+      }
+
+      .header-logo-wrapper {
+        .logo-wrapper {
+          background: rgba(167, 139, 250, 0.1);
+          border-color: rgba(167, 139, 250, 0.2);
+        }
+
+        .toggle-sidebar {
+          background: rgba(167, 139, 250, 0.1);
+          border-color: rgba(167, 139, 250, 0.2);
+
+          &:hover {
+            background: rgba(167, 139, 250, 0.2);
+            border-color: rgba(167, 139, 250, 0.3);
+          }
+
+          ::ng-deep app-feather-icons svg {
+            color: #c4b5fd;
+          }
+        }
       }
 
       .nav-right .nav-menus li {
         .header-search,
         .mode {
-          background: linear-gradient(135deg, rgba(129, 140, 248, 0.15) 0%, rgba(167, 139, 250, 0.15) 100%);
-          border: 1px solid rgba(129, 140, 248, 0.25);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-          // ✅ Solo transform para performance
-          transition: transform 0.15s ease-out, opacity 0.15s ease-out;
+          // Glassmorphism buttons
+          background: rgba(167, 139, 250, 0.1);
+          border: 1px solid rgba(167, 139, 250, 0.2);
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+          transition: all 0.15s ease-out;
 
           &:hover {
-            background: linear-gradient(135deg, rgba(129, 140, 248, 0.25) 0%, rgba(167, 139, 250, 0.25) 100%);
-            border-color: rgba(129, 140, 248, 0.4);
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 4px 12px rgba(129, 140, 248, 0.25);
+            background: rgba(167, 139, 250, 0.2);
+            border-color: rgba(167, 139, 250, 0.35);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(167, 139, 250, 0.2);
           }
 
           &:active {
-            transform: translateY(0) scale(0.98);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+            transform: translateY(0);
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
           }
 
           svg, i {
-            color: #a5b4fc;
+            color: #c4b5fd; // Katuq lavender
           }
         }
 
-        .language-nav {
-          // ✅ Solo opacity para mejor performance
-          transition: opacity 0.15s ease-out;
-
+        &.language-nav {
           &:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
+            background: rgba(167, 139, 250, 0.1);
+            border-radius: 12px;
+          }
+        }
+
+        &.cart-nav,
+        &.onhover-dropdown {
+          ::ng-deep {
+            .notification-box,
+            .cart-box {
+              background: rgba(167, 139, 250, 0.1);
+              border: 1px solid rgba(167, 139, 250, 0.2);
+
+              svg {
+                color: #c4b5fd;
+              }
+            }
+          }
+        }
+
+        &.profile-nav {
+          ::ng-deep {
+            .media {
+              .media-body {
+                p, span {
+                  color: #e9e4f5;
+                }
+              }
+            }
           }
         }
       }
@@ -351,38 +565,35 @@ body.dark-only {
   }
 }
 
-/* ✅ CLEAN SOLUTION: Sidebar interaction with CSS custom properties */
+/* ============================================
+   SIDEBAR-HEADER INTERACTION
+   Nota: Estilos principales están en styles.scss (global)
+   Estos son fallbacks y optimizaciones específicas del componente
+   ============================================ */
+
+/* Variables sincronizadas con sidebar y styles.scss */
 :root {
-  --sidebar-width: 260px;
-  --sidebar-collapsed-width: 53px;
+  --sidebar-width: 280px;
+  --sidebar-collapsed-width: 80px;
   --header-transition-speed: 0.15s;
 }
 
-/* Sidebar interaction states - DESKTOP ONLY */
+/* Header z-index debe ser menor que sidebar expandido temporalmente (1030) */
+.page-header {
+  z-index: var(--z-header, 1025);
+}
+
+/* Transiciones suaves para sidebar interaction - DESKTOP ONLY */
 @media (min-width: 992px) {
-  /* Default state: sidebar expanded */
-  .page-header:not(.close_icon) {
-    margin-left: var(--sidebar-width);
-    width: calc(100% - var(--sidebar-width));
-  }
-
-  /* Collapsed state: sidebar collapsed */
-  .page-header.close_icon {
-    margin-left: var(--sidebar-collapsed-width);
-    width: calc(100% - var(--sidebar-collapsed-width));
-  }
-
-  /* Temporarily expanded state: sidebar hover while collapsed */
-  .page-wrapper.sidebar-temporarily-expanded .page-header,
-  body:has(.sidebar-container.temporarily-expanded) .page-header {
-    margin-left: var(--sidebar-width) !important;
-    width: calc(100% - var(--sidebar-width)) !important;
-  }
-
-  /* Smooth transitions */
   .page-header {
     transition: margin-left var(--header-transition-speed) ease-out,
                 width var(--header-transition-speed) ease-out;
+  }
+
+  /* Estado con clase .temporarily-expanded aplicada directamente al header */
+  .page-header.close_icon.temporarily-expanded {
+    margin-left: var(--sidebar-width) !important;
+    width: calc(100% - var(--sidebar-width)) !important;
   }
 }
 

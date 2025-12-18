@@ -294,8 +294,9 @@ export class NavService implements OnDestroy {
           path: "superadmin/clientes",
           title: "Clientes plataforma",
           type: "link",
+          icon: "users",
         },
-        { path: "prospectos/lista", title: "Prospectos", type: "link" },
+        { path: "prospectos/lista", title: "Prospectos", type: "link", icon: "user-plus" },
       ],
     },
 
@@ -307,11 +308,12 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "ventas/clientes", title: "Crear cliente", type: "link" },
+        { path: "ventas/clientes", title: "Crear cliente", type: "link", icon: "user-plus" },
         {
           path: "ventas/clienteslista",
           title: "Listado de clientes",
           type: "link",
+          icon: "list",
         },
       ],
     },
@@ -321,9 +323,9 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "ventas/crear-ventas", title: "Venta asistida", type: "link" },
-        { path: "ventas/carga-ventas", title: "Ventas masivas", type: "link" },
-        { path: "ventas/ventas-pos", title: "Ventas POS", type: "link" },
+        { path: "ventas/crear-ventas", title: "Venta asistida", type: "link", icon: "shopping-bag" },
+        { path: "ventas/carga-ventas", title: "Ventas masivas", type: "link", icon: "upload" },
+        { path: "ventas/ventas-pos", title: "Ventas POS", type: "link", icon: "monitor" },
       ],
     },
     {
@@ -332,14 +334,15 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "dropshipping/dashboard", title: "Dashboard", type: "link" },
+        { path: "dropshipping/dashboard", title: "Dashboard", type: "link", icon: "bar-chart-2" },
         {
           path: "dropshipping/proveedores",
           title: "Proveedores",
           type: "link",
+          icon: "briefcase",
         },
-        { path: "dropshipping/productos", title: "Productos", type: "link" },
-        { path: "dropshipping/ordenes", title: "Órdenes", type: "link" },
+        { path: "dropshipping/productos", title: "Productos", type: "link", icon: "package" },
+        { path: "dropshipping/ordenes", title: "Órdenes", type: "link", icon: "clipboard" },
       ],
     },
     {
@@ -349,7 +352,7 @@ export class NavService implements OnDestroy {
       active: false,
       isOnlySuperAdministrador: true,
       children: [
-        { path: "katuq-flow/leads", title: "Gestión de Leads", type: "link" },
+        { path: "katuq-flow/leads", title: "Gestión de Leads", type: "link", icon: "target" },
       ],
     },
 
@@ -361,8 +364,8 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "ventas/pedidos", title: "Todos los pedidos", type: "link" },
-        { path: "pos/list-ventas", title: "Pedidos POS", type: "link" },
+        { path: "ventas/pedidos", title: "Todos los pedidos", type: "link", icon: "list" },
+        { path: "pos/list-ventas", title: "Pedidos POS", type: "link", icon: "monitor" },
       ],
     },
     {
@@ -375,6 +378,7 @@ export class NavService implements OnDestroy {
           path: "produccion/dashboard",
           title: "Órdenes de producción",
           type: "link",
+          icon: "tool",
         },
       ],
     },
@@ -388,11 +392,13 @@ export class NavService implements OnDestroy {
           path: "servicios/agendamiento",
           title: "Solicitar servicio",
           type: "link",
+          icon: "plus-circle",
         },
         {
           path: "servicios/agendamiento/citas",
           title: "Ver citas agendadas",
           type: "link",
+          icon: "clock",
         },
       ],
     },
@@ -402,7 +408,7 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "despachos", title: "Envíos y entregas", type: "link" },
+        { path: "despachos", title: "Envíos y entregas", type: "link", icon: "send" },
       ],
     },
 
@@ -414,11 +420,12 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "productos", title: "Productos", type: "link" },
+        { path: "productos", title: "Productos", type: "link", icon: "grid" },
         {
           path: "ecommerce/adiciones/listar",
           title: "Adiciones",
           type: "link",
+          icon: "plus-square",
         },
       ],
     },
@@ -432,21 +439,25 @@ export class NavService implements OnDestroy {
           path: "inventario/inventario-catalogo",
           title: "Inventario por bodega",
           type: "link",
+          icon: "database",
         },
         {
           path: "inventario/recepcion-mercancia",
           title: "Ajustes de inventario",
           type: "link",
+          icon: "edit-3",
         },
         {
           path: "inventario/traslados",
           title: "Traslados entre bodegas",
           type: "link",
+          icon: "refresh-cw",
         },
         {
           path: "inventario/historial-movimientos",
           title: "Historial de movimientos",
           type: "link",
+          icon: "activity",
         },
       ],
     },
@@ -460,11 +471,13 @@ export class NavService implements OnDestroy {
           path: "picking-packing/picking",
           title: "Órdenes de picking",
           type: "link",
+          icon: "search",
         },
         {
           path: "picking-packing/packing",
           title: "Órdenes de packing",
           type: "link",
+          icon: "archive",
         },
       ],
     },
@@ -477,7 +490,7 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "dashboards", title: "Dashboard gerencial", type: "link" },
+        { path: "dashboards", title: "Dashboard gerencial", type: "link", icon: "pie-chart" },
       ],
     },
     {
@@ -486,8 +499,8 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "agent-builder/library", title: "Mis Agentes IA", type: "link" },
-        { path: "agent-builder/wizard", title: "Crear Agente", type: "link" },
+        { path: "agent-builder/library", title: "Mis Agentes IA", type: "link", icon: "zap" },
+        { path: "agent-builder/wizard", title: "Crear Agente", type: "link", icon: "plus" },
       ],
     },
 
@@ -499,8 +512,8 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "rol", title: "Roles y permisos", type: "link" },
-        { path: "usuarios", title: "Usuarios", type: "link" },
+        { path: "rol", title: "Roles y permisos", type: "link", icon: "lock" },
+        { path: "usuarios", title: "Usuarios", type: "link", icon: "users" },
       ],
     },
     {
@@ -509,18 +522,20 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "empresas", title: "Mi Empresa", type: "link" },
+        { path: "empresas", title: "Mi Empresa", type: "link", icon: "home" },
         {
           path: "empresas/planes",
           title: "Planes y suscripciones",
           type: "link",
+          icon: "award",
         },
-        { path: "extras/formasPago", title: "Medios de pago", type: "link" },
-        { path: "empresa/facturacion", title: "Facturación", type: "link" },
+        { path: "extras/formasPago", title: "Medios de pago", type: "link", icon: "credit-card" },
+        { path: "empresa/facturacion", title: "Facturación", type: "link", icon: "file-text" },
         {
           path: "empresas/modulovariable/produccion/opciones",
           title: "Activación Módulos",
           type: "link",
+          icon: "toggle-right",
         },
       ],
     },
@@ -534,13 +549,15 @@ export class NavService implements OnDestroy {
           path: "empresas/modulovariable/produccion/opciones",
           title: "Producción",
           type: "link",
+          icon: "tool",
         },
         {
           path: "empresas/modulovariable/dropshipping/configuracion",
           title: "Dropshipping",
           type: "link",
+          icon: "truck",
         },
-        { path: "app-entregas", title: "App de entregas", type: "link" },
+        { path: "app-entregas", title: "App de entregas", type: "link", icon: "smartphone" },
       ],
     },
     {
@@ -549,13 +566,14 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "categorias", title: "Categorías de productos", type: "link" },
-        { path: "inventario/bodegas", title: "Bodegas", type: "link" },
-        { path: "proceso/canales", title: "Canales de venta", type: "link" },
+        { path: "categorias", title: "Categorías de productos", type: "link", icon: "folder" },
+        { path: "inventario/bodegas", title: "Bodegas", type: "link", icon: "home" },
+        { path: "proceso/canales", title: "Canales de venta", type: "link", icon: "share-2" },
         {
           path: "proceso/bodegas-por-canal",
           title: "Bodegas por canal",
           type: "link",
+          icon: "git-branch",
         },
       ],
     },
@@ -565,8 +583,8 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "proceso/ocasiones", title: "Ocasiones", type: "link" },
-        { path: "proceso/generos", title: "Géneros", type: "link" },
+        { path: "proceso/ocasiones", title: "Ocasiones", type: "link", icon: "gift" },
+        { path: "proceso/generos", title: "Géneros", type: "link", icon: "users" },
       ],
     },
     {
@@ -575,14 +593,15 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "formasEntrega", title: "Formas de entrega", type: "link" },
+        { path: "formasEntrega", title: "Formas de entrega", type: "link", icon: "navigation" },
         {
           path: "formasEntrega/tipoentrega/lista",
           title: "Tipos de entrega",
           type: "link",
+          icon: "list",
         },
-        { path: "tiempoentrega", title: "Tiempos de entrega", type: "link" },
-        { path: "extras/zonasCobro", title: "Zonas de cobro", type: "link" },
+        { path: "tiempoentrega", title: "Tiempos de entrega", type: "link", icon: "clock" },
+        { path: "extras/zonasCobro", title: "Zonas de cobro", type: "link", icon: "map" },
       ],
     },
     {
@@ -591,11 +610,12 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "extras/formasPago", title: "Métodos de pago", type: "link" },
+        { path: "extras/formasPago", title: "Métodos de pago", type: "link", icon: "dollar-sign" },
         {
           path: "extras/pos/formasPago",
           title: "Métodos de pago POS",
           type: "link",
+          icon: "monitor",
         },
       ],
     },
@@ -605,7 +625,7 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "integrations", title: "Integraciones", type: "link" },
+        { path: "integrations", title: "Integraciones", type: "link", icon: "link-2" },
       ],
     },
     {
@@ -614,7 +634,7 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
-        { path: "notificaciones", title: "Notificaciones", type: "link" },
+        { path: "notificaciones", title: "Notificaciones", type: "link", icon: "settings" },
       ],
     },
 

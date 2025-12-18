@@ -1,51 +1,98 @@
 // ===================================================
-// SIDEBAR MINIMALISTA 2025 - Sistema de Diseño Limpio
+// SIDEBAR GLASSMORPHISM 2025 - Diseño Moderno con Blur
+// Basado en diseño de Figma: Sidebar Concept (Community)
 // ===================================================
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-  // Dimensiones
-  --sidebar-width: 260px;
-  --sidebar-compact-width: 64px;
+  // =============================================
+  // GLASSMORPHISM CORE VARIABLES - Light Theme
+  // =============================================
+  --glass-bg: rgb(255, 255, 255);
+  --glass-bg-secondary: rgba(255, 255, 255, 0.6);
+  --glass-blur: 75px;
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 
-  // Fondos limpios sin degradados
-  --sidebar-bg: #ffffff;
-  --sidebar-border: rgba(0, 0, 0, 0.06);
-  --sidebar-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  // Sidebar specific glassmorphism
+  --sidebar-radius: 0px 29px 29px 0px; // Rounded on right side only
+  --item-radius: 12px;
 
-  // Sistema de colores plano
+  // Active item glassmorphism
+  --item-active-bg: rgba(99, 102, 241, 0.15);
+  --item-hover-bg: rgba(0, 0, 0, 0.06);
+
+  // Text colors for glassmorphism - MEJORADO CONTRASTE
+  --glass-text-primary: #1a1625;
+  --glass-text-secondary: #3d3654;
+  --glass-text-inactive: #5a5272;
+
+  // Tree connector lines
+  --tree-connector-color: rgba(0, 0, 0, 0.15);
+
+  // Divider color
+  --divider-color: rgba(0, 0, 0, 0.08);
+
+  // Notification badge (Figma design)
+  --notification-badge-bg: #ffb620;
+  --notification-badge-text: #333333;
+
+  // =============================================
+  // DIMENSIONES
+  // =============================================
+  --sidebar-width: 280px;
+  --sidebar-compact-width: 80px;
+
+  // Legacy variables (keeping for compatibility)
+  --sidebar-bg: var(--glass-bg);
+  --sidebar-border: var(--glass-border);
+  --sidebar-shadow: var(--glass-shadow);
+
+  // =============================================
+  // SISTEMA DE COLORES
+  // =============================================
   --primary-color: #6366f1;
   --primary-hover: #5558e3;
   --primary-dark: #4338ca;
   --primary-light: rgba(99, 102, 241, 0.08);
   --primary-lighter: rgba(99, 102, 241, 0.04);
 
-  // Typography
+  // =============================================
+  // TYPOGRAPHY
+  // =============================================
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  // Texto
-  --text-primary: #111827;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
+  // =============================================
+  // TEXTO - Usando variables de glassmorphism
+  // =============================================
+  --text-primary: var(--glass-text-primary);
+  --text-secondary: var(--glass-text-secondary);
+  --text-muted: var(--glass-text-inactive);
   --text-white: #ffffff;
 
-  // Fondos planos
-  --bg-hover: #f9fafb;
-  --bg-active: #f3f4f6;
-  --bg-section: #fafafa;
+  // =============================================
+  // FONDOS
+  // =============================================
+  --bg-hover: rgba(0, 0, 0, 0.04);
+  --bg-active: rgba(99, 102, 241, 0.08);
+  --bg-section: rgba(0, 0, 0, 0.02);
 
-  // Transiciones OPTIMIZADAS para mejor rendimiento
-  --transition-ultrafast: 0.1s ease-out;   // Para hover effects
-  --transition-fast: 0.15s ease-out;       // Para expansión rápida
-  --transition-normal: 0.2s ease-out;      // Para animaciones normales
-  --transition-slow: 0.3s ease-out;        // Para animaciones complejas
+  // =============================================
+  // TRANSICIONES OPTIMIZADAS
+  // =============================================
+  --transition-ultrafast: 0.1s ease-out;
+  --transition-fast: 0.15s ease-out;
+  --transition-normal: 0.2s ease-out;
+  --transition-slow: 0.3s ease-out;
 
-  // Espaciado compacto
+  // =============================================
+  // ESPACIADO
+  // =============================================
   --spacing-xs: 2px;
   --spacing-sm: 4px;
   --spacing-md: 8px;
@@ -53,22 +100,28 @@
   --spacing-xl: 16px;
   --spacing-xxl: 20px;
 
-  // Bordes
+  // =============================================
+  // BORDES
+  // =============================================
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 10px;
   --radius-xl: 12px;
 
-  // Z-index - Estructura mejorada para evitar conflictos
+  // =============================================
+  // Z-INDEX
+  // =============================================
   --z-dropdown: 1000;
   --z-sticky: 1020;
-  --z-sidebar: 1024;    // Sidebar por debajo del header
-  --z-header: 1025;     // Header por encima del sidebar
-  --z-fixed: 1030;      // Nivel base para elementos fijos
+  --z-sidebar: 1024;
+  --z-header: 1025;
+  --z-fixed: 1030;
   --z-modal: 1050;
   --z-tooltip: 1070;
 
-  // Espaciado compartido header-sidebar
+  // =============================================
+  // ESPACIADO HEADER-SIDEBAR
+  // =============================================
   --header-height: 60px;
   --item-padding-y: 8px;
   --item-padding-x: 12px;
@@ -78,68 +131,97 @@
 }
 
 // ===================================================
-// MODO OSCURO - Dark Theme Support
+// MODO OSCURO - Dark Theme Glassmorphism
 // ===================================================
 .dark-only,
 .dark,
 [data-theme="dark"],
 body.dark,
 body.dark-only {
-  // Fondos oscuros
-  --sidebar-bg: #1f2937;
-  --sidebar-border: rgba(255, 255, 255, 0.1);
-  --sidebar-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+  // =============================================
+  // KATUQ DARK THEME - Facil de cambiar
+  // Colores base Katuq: #a78bfa (purpura), #6366f1 (indigo)
+  // =============================================
 
-  // Sistema de colores oscuro
-  --primary-color: #818cf8;
-  --primary-hover: #6366f1;
-  --primary-dark: #4f46e5;
-  --primary-light: rgba(129, 140, 248, 0.15);
-  --primary-lighter: rgba(129, 140, 248, 0.08);
+  // FONDOS (100% solidos - no transparentes)
+  --glass-bg: #593ea5;
+  --glass-bg-secondary: #1a1625;
+  --glass-border: rgba(167, 139, 250, 0.15);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 
-  // Texto en modo oscuro
-  --text-primary: #f3f4f6;
-  --text-secondary: #d1d5db;
-  --text-muted: #9ca3af;
+  // ITEMS INTERACTIVOS (Acento Katuq)
+  --item-active-bg: rgba(167, 139, 250, 0.2);
+  --item-hover-bg: rgba(167, 139, 250, 0.1);
+
+  // TEXTO (Alta legibilidad)
+  --glass-text-primary: #ffffff;
+  --glass-text-secondary: #e9e4f5;
+  --glass-text-inactive: #c4b5fd;
+
+  // BORDES Y CONECTORES
+  --tree-connector-color: rgba(196, 181, 253, 0.3);
+  --divider-color: rgba(167, 139, 250, 0.12);
+
+  // Legacy variables
+  --sidebar-bg: var(--glass-bg);
+  --sidebar-border: var(--glass-border);
+  --sidebar-shadow: var(--glass-shadow);
+
+  // COLORES PRIMARIOS KATUQ
+  --primary-color: #a78bfa;
+  --primary-hover: #b39dfa;
+  --primary-dark: #8b5cf6;
+  --primary-light: rgba(167, 139, 250, 0.15);
+  --primary-lighter: rgba(167, 139, 250, 0.08);
+
+  // Texto - Usando variables de glassmorphism
+  --text-primary: var(--glass-text-primary);
+  --text-secondary: var(--glass-text-secondary);
+  --text-muted: var(--glass-text-inactive);
   --text-white: #ffffff;
 
-  // Fondos en modo oscuro
-  --bg-hover: #374151;
-  --bg-active: #4b5563;
-  --bg-section: #111827;
+  // Fondos
+  --bg-hover: rgba(167, 139, 250, 0.1);
+  --bg-active: rgba(167, 139, 250, 0.2);
+  --bg-section: rgba(26, 22, 37, 0.5);
 
-  // Bordes en modo oscuro
-  --border-color: rgba(255, 255, 255, 0.12);
+  // Bordes
+  --border-color: rgba(167, 139, 250, 0.12);
 }
 
-// Selectores más específicos para el modo oscuro
-.dark-only .sidebar-container,
-.dark .sidebar-container {
-  background: var(--sidebar-bg) !important;
-  border-color: var(--sidebar-border) !important;
+// =============================================
+// DARK MODE - Usando :host-context() de Angular
+// =============================================
+:host-context(body.dark-only) {
 
-  // Intercambiar logos en modo oscuro - MANTENIENDO LAS MISMAS DIMENSIONES
+  // Contenedor principal
+  .sidebar-container {
+    background: #2e1065 !important;
+    border-color: rgba(167, 139, 250, 0.2) !important;
+  }
+
+  // Logos
+  .brand-logo {
+    .logo-light {
+      display: none !important;
+    }
+
+    .logo-dark {
+      display: block !important;
+    }
+  }
+
   .logo-link {
-    // Mantener las dimensiones del contenedor
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    height: 60px !important;
-
     .logo-main {
       display: none !important;
     }
 
     .logo-dark {
       display: block !important;
-      // DIMENSIONES ADAPTATIVAS IGUALES AL MODO CLARO
-      max-width: 160px;
-      width: 100%;
-      height: 50px;
-      object-fit: contain !important;
     }
   }
 
+  // Secciones
   .sidebar-header,
   .search-section,
   .favorites-section,
@@ -147,36 +229,141 @@ body.dark-only {
   .notification-section,
   .plan-card {
     background: transparent !important;
-    color: var(--text-primary) !important;
+    color: #ffffff !important;
   }
 
-  .menu-link,
-  .submenu-link,
-  .section-header {
-    color: var(--text-primary) !important;
+  // Menu items
+  .menu-link {
+    color: #c4b5fd !important;
+
+    .menu-icon i,
+    .menu-text {
+      color: #c4b5fd !important;
+    }
 
     &:hover {
-      background: var(--bg-hover) !important;
+      background: rgba(167, 139, 250, 0.15) !important;
+      color: #ffffff !important;
+
+      .menu-icon i,
+      .menu-text {
+        color: #ffffff !important;
+      }
     }
 
     &.active {
-      background: var(--bg-active) !important;
+      background: rgba(167, 139, 250, 0.2) !important;
+      color: #ffffff !important;
+
+      .menu-icon i {
+        color: #a78bfa !important;
+      }
+
+      .menu-text {
+        color: #ffffff !important;
+      }
     }
   }
 
-  .search-input {
-    background: var(--bg-section) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--border-color) !important;
-  }
+  // Submenu links
+  .submenu-link {
+    color: #c4b5fd !important;
 
-  .control-btn {
-    background: var(--bg-section) !important;
-    color: var(--text-primary) !important;
-    border-color: var(--border-color) !important;
+    .submenu-icon i {
+      color: #c4b5fd !important;
+    }
 
     &:hover {
-      background: var(--bg-hover) !important;
+      background: rgba(167, 139, 250, 0.15) !important;
+      color: #ffffff !important;
+
+      .submenu-icon i {
+        color: #ffffff !important;
+      }
+    }
+
+    &.active {
+      background: rgba(167, 139, 250, 0.2) !important;
+      color: #ffffff !important;
+
+      .submenu-icon i {
+        color: #a78bfa !important;
+      }
+    }
+  }
+
+  // Líneas conectoras del menú y submenú (tree style)
+  .menu-items::before,
+  .menu-item::before,
+  .submenu::before,
+  .submenu-item::before,
+  .sub-submenu::before,
+  .sub-submenu-item::before {
+    background: rgba(196, 181, 253, 0.5) !important;
+  }
+
+  // Section headers
+  .section-header {
+    color: #c4b5fd !important;
+
+    &:hover {
+      color: #ffffff !important;
+    }
+  }
+
+  // Favoritos
+  .favorite-link {
+    color: #c4b5fd !important;
+
+    i {
+      color: #c4b5fd !important;
+    }
+
+    &:hover {
+      color: #ffffff !important;
+    }
+  }
+
+  // Search
+  .search-input {
+    background: rgba(167, 139, 250, 0.1) !important;
+    color: #ffffff !important;
+    border-color: rgba(167, 139, 250, 0.2) !important;
+
+    &::placeholder {
+      color: #c4b5fd !important;
+    }
+  }
+
+  // Control buttons
+  .control-btn {
+    background: rgba(167, 139, 250, 0.1) !important;
+    color: #ffffff !important;
+    border-color: rgba(167, 139, 250, 0.2) !important;
+
+    &:hover {
+      background: rgba(167, 139, 250, 0.2) !important;
+    }
+  }
+
+  // Chevrons
+  .submenu-chevron {
+    color: #c4b5fd !important;
+  }
+
+  // User profile section
+  .user-profile-section {
+    .user-greeting .greeting-text {
+      color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .user-greeting .user-name {
+      color: #ffffff !important;
+    }
+
+    .version-badge {
+      background: rgba(167, 139, 250, 0.2) !important;
+      color: #c4b5fd !important;
     }
   }
 }
@@ -284,7 +471,7 @@ body.dark-only {
 }
 
 // ===================================================
-// SIDEBAR CONTAINER
+// SIDEBAR CONTAINER - GLASSMORPHISM
 // ===================================================
 
 .sidebar-container {
@@ -293,32 +480,52 @@ body.dark-only {
   left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--sidebar-border);
-  box-shadow: var(--sidebar-shadow);
+
+  // Glassmorphism effect
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+
+  // Rounded corners (Figma: 29px on right side)
+  border-radius: var(--sidebar-radius);
+
+  // Border and shadow
+  border: 1px solid var(--glass-border);
+  border-left: none;
+  box-shadow: var(--glass-shadow);
+
   display: flex;
   flex-direction: column;
-  z-index: var(--z-sidebar); // Bajo el header (1024 < 1025)
+  z-index: var(--z-sidebar, 1024);
   transform: translateX(0);
-  transition: transform var(--transition-fast), width var(--transition-fast);
+  transition: transform var(--transition-fast),
+    width var(--transition-fast),
+    z-index 0s, // z-index cambia instantáneamente
+    background var(--transition-normal),
+    backdrop-filter var(--transition-normal);
   font-family: var(--font-family);
   overflow: hidden;
 
   &.collapsed {
     @media (min-width: 992px) {
-      width: 70px;
-      overflow-x: hidden; // Asegurar que el contenido no se desborde
-      // OPTIMIZADO: Transición más rápida
-      transition: width var(--transition-fast) ease-out;
+      width: var(--sidebar-compact-width);
+      overflow-x: hidden;
+      z-index: 1020; // Menor z-index cuando está colapsado
+      transition: width var(--transition-fast) ease-out, z-index 0s;
 
-      // NUEVO: Transición aún más rápida al colapsar por click
+      // Mantener glassmorphism en estado colapsado
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+
+      // Transición rápida al colapsar por click
       &:not(.temporarily-expanded) {
         transition: width var(--transition-ultrafast) ease-out !important;
       }
 
       .sidebar-header {
         padding: var(--spacing-md);
-        overflow: hidden; // Prevenir desbordamiento del logo
+        overflow: hidden;
       }
 
       // Ocultar elementos cuando está colapsado
@@ -328,7 +535,10 @@ body.dark-only {
       .section-header,
       .submenu-chevron,
       .favorite-btn,
-      .logo-section { // Ocultar logo principal cuando está colapsado
+      .logo-section,
+      .user-profile-section .user-greeting,
+      .user-profile-section .decorative-dots,
+      .user-profile-section .collapse-toggle-btn {
         opacity: 0;
         visibility: hidden;
         transition: opacity var(--transition-ultrafast), visibility var(--transition-ultrafast);
@@ -341,10 +551,21 @@ body.dark-only {
         visibility: visible;
       }
 
-      // Mostrar solo iconos
+      // Centrar iconos en modo colapsado
       .menu-icon {
         margin: 0 auto;
         transition: margin var(--transition-fast);
+      }
+
+      // Avatar más pequeño en modo colapsado
+      .user-profile-section {
+        justify-content: center;
+        padding: var(--spacing-md);
+
+        .user-avatar {
+          width: 40px;
+          height: 40px;
+        }
       }
     }
 
@@ -358,9 +579,10 @@ body.dark-only {
     @media (min-width: 992px) {
       width: var(--sidebar-width) !important;
       // MEJORA: Transición INSTANTÁNEA para expansión
-      transition: width var(--transition-fast) ease-out !important;
-      box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
-      z-index: calc(var(--z-fixed) + 1);
+      transition: width var(--transition-fast) ease-out, z-index 0s !important;
+      box-shadow: 4px 0 25px rgba(0, 0, 0, 0.2);
+      // Z-INDEX MAYOR QUE EL HEADER (1025) para que el logo no quede tapado
+      z-index: 1030 !important;
 
       // Mostrar elementos con animación ULTRA RÁPIDA
       .menu-text,
@@ -426,6 +648,7 @@ body.dark-only {
 
     // Estado colapsado por defecto (mantener estructura por compatibilidad)
     &:not(.auto-collapse-expanded) {
+
       .menu-title,
       .section-header span,
       .plan-status .card-content,
@@ -519,138 +742,260 @@ body.dark-only {
 }
 
 // ===================================================
-// HEADER
+// HEADER UNIFICADO - Logo + Perfil Glassmorphism
 // ===================================================
 
-.sidebar-header {
-  padding: var(--spacing-xl);
-  border-bottom: 1px solid var(--sidebar-border);
-  background: var(--sidebar-bg);
-  position: relative;
-  overflow: hidden; // Prevenir desbordamiento del logo
+.sidebar-header.unified-header {
+  padding: var(--spacing-lg);
+  border-bottom: 1px solid var(--divider-color);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  transition: all var(--transition-fast);
+  background: transparent;
 
-  .logo-section {
-    transition: all var(--transition-normal);
-    width: 100%; // Asegurar que ocupe todo el ancho disponible
-    overflow: hidden; // Prevenir desbordamiento
+  // Puntos decorativos (Figma design - macOS style)
+  .decorative-dots {
+    display: flex;
+    gap: 6px;
 
-    &.hidden {
-      display: none;
-    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      transition: transform var(--transition-fast);
 
-    .logo-link {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      text-decoration: none;
-      height: 60px; // Altura fija del contenedor
-      margin-bottom: var(--spacing-md);
-      padding: 0 var(--spacing-md);
-      overflow: hidden; // Prevenir desbordamiento de imágenes
-
-      img {
-        // DIMENSIONES ADAPTATIVAS PARA PREVENIR DESBORDAMIENTO
-        max-width: 160px;
-        width: 100%; // Adaptarse al contenedor
-        height: 50px;
-        object-fit: contain; // Mantener proporción dentro del contenedor fijo
-        display: block;
-        transition: transform var(--transition-fast);
-
-        &:hover {
-          transform: scale(1.02);
-        }
-
-        // Logo para modo claro - con dimensiones adaptativas
-        &.logo-main {
-          display: block;
-          max-width: 160px;
-          width: 100%;
-          height: 50px;
-          object-fit: contain;
-        }
-
-        // Logo para modo oscuro - con dimensiones adaptativas idénticas
-        &.logo-dark {
-          display: none;
-          max-width: 160px;
-          width: 100%;
-          height: 50px;
-          object-fit: contain;
-        }
-      }
-    }
-
-    .company-info {
-      text-align: center;
-
-      .company-name {
-        display: block;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--text-primary);
-        margin-bottom: 2px;
+      &:hover {
+        transform: scale(1.1);
       }
 
-      .version {
-        display: block;
-        font-size: 10px;
-        color: var(--text-muted);
+      &.dot-red {
+        background: #ff5f57;
+        box-shadow: 0 0 8px rgba(255, 95, 87, 0.4);
+      }
+
+      &.dot-yellow {
+        background: #febc2e;
+        box-shadow: 0 0 8px rgba(254, 188, 46, 0.4);
+      }
+
+      &.dot-green {
+        background: #28c840;
+        box-shadow: 0 0 8px rgba(40, 200, 64, 0.4);
       }
     }
   }
 
-  .logo-compact {
-    display: none;
-    text-align: center;
-    width: 100%;
-    padding: var(--spacing-sm);
+  // Contenido principal del header
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+  }
 
-    &.visible {
-      display: block;
+  // Brand + Profile combinados
+  .brand-profile {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .brand-avatar-link {
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+
+  // Logo compacto (estado colapsado)
+  .logo-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--item-radius);
+    background: var(--item-hover-bg);
+    border: 2px solid var(--glass-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+
+    &:hover {
+      border-color: var(--primary-color);
+      transform: scale(1.05);
     }
 
-    a {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    img {
-      width: 32px;
-      height: 32px;
+    .logo-icon {
+      width: 28px;
+      height: 28px;
       object-fit: contain;
     }
   }
 
-  .sidebar-controls {
-    display: flex;
-    justify-content: center;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
+  // Avatar del usuario (estado expandido)
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--item-radius);
+    overflow: hidden;
+    flex-shrink: 0;
+    border: 2px solid var(--glass-border);
+    background: var(--item-hover-bg);
+    transition: all var(--transition-fast);
 
-    .control-btn {
+    &:hover {
+      border-color: var(--primary-color);
+      transform: scale(1.02);
+    }
+
+    .avatar-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 36px;
-      height: 36px;
-      border: 1px solid var(--sidebar-border);
-      border-radius: var(--radius-md);
-      background: var(--sidebar-bg);
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
+      color: white;
+      font-weight: var(--font-weight-semibold);
+      font-size: 16px;
+    }
+  }
+
+  // Info expandida (saludo + logo de marca)
+  .expanded-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .greeting-section {
+    display: flex;
+    flex-direction: column;
+
+    .greeting-text {
+      font-size: 12px;
+      color: var(--glass-text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+
+      .emoji {
+        font-size: 14px;
+      }
+    }
+
+    .user-name {
+      font-size: 16px;
+      font-weight: var(--font-weight-semibold);
+      color: var(--glass-text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  // Logo de marca pequeño
+  .brand-logo {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+
+    img {
+      height: 18px;
+      width: auto;
+      object-fit: contain;
+      opacity: 0.7;
+      transition: opacity var(--transition-fast);
 
       &:hover {
-        background: var(--primary-color);
-        color: white;
-        border-color: var(--primary-color);
+        opacity: 1;
       }
+    }
 
-      i {
-        font-size: 12px;
-      }
+    // Light theme: mostrar logo claro
+    .logo-light {
+      display: block;
+    }
+
+    .logo-dark {
+      display: none;
+    }
+  }
+
+  // Botón de colapsar/expandir
+  .collapse-toggle-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--item-hover-bg);
+    border: 1px solid var(--glass-border);
+    color: var(--glass-text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+
+    &:hover {
+      background: var(--item-active-bg);
+      color: var(--glass-text-primary);
+      border-color: var(--primary-color);
+    }
+
+    i {
+      font-size: 12px;
+      transition: transform var(--transition-fast);
+    }
+  }
+
+  // Badge de versión
+  .version-badge {
+    display: flex;
+    justify-content: center;
+
+    span {
+      font-size: 10px;
+      color: var(--glass-text-inactive);
+      background: var(--item-hover-bg);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+  }
+
+  // Estado colapsado
+  &.collapsed {
+    padding: var(--spacing-md);
+    justify-content: center;
+    align-items: center;
+
+    .decorative-dots,
+    .expanded-info,
+    .collapse-toggle-btn,
+    .version-badge {
+      display: none;
+    }
+
+    .header-content {
+      justify-content: center;
+    }
+
+    .brand-profile {
+      justify-content: center;
+      flex: none;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
     }
   }
 }
@@ -749,7 +1094,7 @@ body.dark-only {
     margin: 0 0 var(--spacing-sm) 0;
     font-size: 10px;
     font-weight: 600;
-    color: var(--text-secondary);
+    color: var(--glass-text-inactive);
     text-transform: uppercase;
     letter-spacing: 0.5px;
 
@@ -772,7 +1117,7 @@ body.dark-only {
         display: flex;
         align-items: center;
         padding: var(--spacing-sm) var(--spacing-md);
-        color: var(--text-primary);
+        color: var(--glass-text-secondary);
         text-decoration: none;
         border-radius: var(--radius-sm);
         transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
@@ -780,6 +1125,7 @@ body.dark-only {
 
         &:hover {
           background: var(--bg-hover);
+          color: var(--glass-text-primary);
 
           .remove-favorite-btn {
             opacity: 1;
@@ -789,7 +1135,7 @@ body.dark-only {
         i {
           width: 16px;
           margin-right: var(--spacing-md);
-          color: var(--text-secondary);
+          color: var(--glass-text-inactive);
           font-size: 11px;
         }
 
@@ -867,7 +1213,7 @@ body.dark-only {
     padding: var(--spacing-sm) var(--spacing-lg);
     border: none;
     background: transparent;
-    color: var(--text-secondary);
+    color: var(--glass-text-inactive);
     cursor: pointer;
     transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
     font-size: 10px;
@@ -876,7 +1222,7 @@ body.dark-only {
     letter-spacing: 0.5px;
 
     &:hover {
-      color: var(--primary-color);
+      color: var(--glass-text-primary);
     }
 
     .section-icon {
@@ -905,14 +1251,27 @@ body.dark-only {
 }
 
 // ===================================================
-// ITEMS DEL MENÚ - COMPACTOS Y LIMPIOS
+// ITEMS DEL MENÚ - GLASSMORPHISM STYLE
 // ===================================================
 
 .menu-items {
   list-style: none;
   margin: 0;
   padding: 0 var(--spacing-md);
-  transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
+  padding-left: calc(var(--spacing-md) + 16px); // Espacio para línea vertical
+  transition: opacity var(--transition-ultrafast);
+  position: relative;
+
+  // Línea vertical conectora (tree style)
+  &::before {
+    content: '';
+    position: absolute;
+    left: var(--spacing-md);
+    top: 0;
+    bottom: 12px;
+    width: 1px;
+    background: var(--tree-connector-color);
+  }
 
   &.collapsed {
     max-height: 0;
@@ -921,38 +1280,63 @@ body.dark-only {
   }
 
   .menu-item {
-    margin-bottom: 1px;
+    margin-bottom: 2px;
+    position: relative;
+
+    // Línea horizontal conectora a cada item
+    &::before {
+      content: '';
+      position: absolute;
+      left: -16px;
+      top: 50%;
+      width: 12px;
+      height: 1px;
+      background: var(--tree-connector-color);
+    }
 
     .menu-link {
       display: flex;
       align-items: center;
-      padding: 6px 12px;
-      color: var(--text-primary);
+      padding: 12px 16px;
+      color: var(--glass-text-inactive);
       text-decoration: none;
-      border-radius: var(--radius-md);
-      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
+      border-radius: var(--item-radius);
+      transition: all var(--transition-fast);
       border: none;
       background: transparent;
       width: 100%;
       cursor: pointer;
       font-family: var(--font-family);
-      font-size: 13px;
+      font-size: 14px;
       font-weight: var(--font-weight-regular);
       position: relative;
 
       &:hover {
-        background: var(--bg-hover);
-        color: var(--primary-color);
+        background: var(--item-hover-bg);
+        color: var(--glass-text-primary);
 
         .menu-icon i {
-          color: var(--primary-color);
+          color: var(--glass-text-primary);
         }
       }
 
       &.active {
-        background: var(--primary-light);
-        color: var(--primary-color);
+        background: var(--item-active-bg);
+        color: var(--glass-text-primary);
         font-weight: var(--font-weight-medium);
+
+        // Left indicator bar (Figma design)
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 60%;
+          background: var(--primary-color);
+          border-radius: 0 4px 4px 0;
+        }
 
         .menu-icon i {
           color: var(--primary-color);
@@ -969,20 +1353,24 @@ body.dark-only {
       }
 
       .menu-icon {
-        width: 20px;
+        width: 24px;
+        height: 24px;
         margin-right: var(--spacing-md);
         display: flex;
         align-items: center;
+        justify-content: center;
 
         i {
-          font-size: 13px;
-          color: var(--text-secondary);
-          transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
+          font-size: 18px;
+          color: var(--glass-text-inactive);
+          transition: color var(--transition-fast);
         }
       }
 
       .menu-text {
-        flex: 0;
+        flex: 1;
+        text-align: left;
+        transition: opacity var(--transition-fast);
 
         &.sr-only {
           position: absolute;
@@ -998,14 +1386,26 @@ body.dark-only {
       }
 
       .submenu-chevron {
-        font-size: 10px;
-        color: var(--text-muted);
+        font-size: 12px;
+        color: var(--glass-text-inactive);
         margin-left: auto;
         transition: transform var(--transition-fast);
 
         &.rotated {
           transform: rotate(180deg);
         }
+      }
+
+      // Notification badge (Figma style)
+      .notification-badge {
+        background: var(--notification-badge-bg);
+        color: var(--notification-badge-text);
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: var(--font-weight-semibold);
+        margin-left: var(--spacing-sm);
+        box-shadow: 0 0 6px 2px rgba(219, 188, 159, 0.3);
       }
 
       .favorite-btn {
@@ -1084,47 +1484,75 @@ body.dark-only {
 }
 
 // ===================================================
-// SUBMENÚS
+// SUBMENÚS - CON LÍNEAS CONECTORAS (TREE STYLE)
 // ===================================================
 
 .submenu {
   list-style: none;
-  margin: 2px 0 2px var(--spacing-sm);
-  padding: 0;
+  margin: 4px 0 4px 20px;
+  padding-left: 16px;
+  position: relative;
   max-height: 0;
   overflow: hidden;
   transition: max-height var(--transition-normal);
 
+  // Línea vertical del árbol
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 12px;
+    width: 1px;
+    background: var(--tree-connector-color);
+  }
+
   &.expanded {
     max-height: 500px;
-    padding: 2px 0;
+    padding: 4px 0 4px 16px;
   }
 
   .submenu-item {
-    margin-bottom: 1px;
+    margin-bottom: 2px;
+    position: relative;
+
+    // Línea horizontal conectora a cada item
+    &::before {
+      content: '';
+      position: absolute;
+      left: -16px;
+      top: 50%;
+      width: 12px;
+      height: 1px;
+      background: var(--tree-connector-color);
+    }
 
     .submenu-link {
       display: flex;
       align-items: center;
-      padding: 4px 8px;
-      color: var(--text-secondary);
+      padding: 8px 12px;
+      color: var(--glass-text-secondary);
       text-decoration: none;
-      border-radius: var(--radius-sm);
-      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
-      font-size: 12px;
+      border-radius: var(--item-radius);
+      transition: all var(--transition-fast);
+      font-size: 13px;
+      background: transparent;
+      border: none;
+      width: 100%;
+      cursor: pointer;
 
       &:hover {
-        background: var(--bg-hover);
-        color: var(--primary-color);
+        background: var(--item-hover-bg);
+        color: var(--glass-text-primary);
 
         .submenu-icon i {
-          color: var(--primary-color);
+          color: var(--glass-text-primary);
         }
       }
 
       &.active {
-        background: var(--primary-lighter);
-        color: var(--primary-color);
+        background: var(--item-active-bg);
+        color: var(--glass-text-primary);
         font-weight: var(--font-weight-medium);
 
         .submenu-icon i {
@@ -1133,23 +1561,24 @@ body.dark-only {
       }
 
       .submenu-icon {
-        width: 16px;
-        margin-right: var(--spacing-md);
+        width: 20px;
+        margin-right: var(--spacing-sm);
 
         i {
-          font-size: 11px;
-          color: var(--text-muted);
-          transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
+          font-size: 14px;
+          color: inherit;
+          transition: color var(--transition-fast);
         }
       }
 
       .submenu-text {
         flex: 1;
+        text-align: left;
       }
 
       .submenu-chevron {
         font-size: 10px;
-        color: var(--text-muted);
+        color: var(--glass-text-inactive);
         transition: transform var(--transition-fast);
 
         &.rotated {
@@ -1160,33 +1589,58 @@ body.dark-only {
   }
 }
 
-// Sub-submenú
+// Sub-submenú - CON LÍNEAS CONECTORAS
 .sub-submenu {
   list-style: none;
-  margin: 2px 0 2px var(--spacing-sm);
-  padding: 0;
+  margin: 4px 0 4px 16px;
+  padding-left: 12px;
+  position: relative;
   max-height: 0;
   overflow: hidden;
   transition: max-height var(--transition-normal);
+
+  // Línea vertical
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 8px;
+    width: 1px;
+    background: var(--tree-connector-color);
+  }
 
   &.expanded {
     max-height: 300px;
   }
 
   .sub-submenu-item {
+    position: relative;
+
+    // Línea horizontal
+    &::before {
+      content: '';
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      width: 8px;
+      height: 1px;
+      background: var(--tree-connector-color);
+    }
+
     .sub-submenu-link {
       display: flex;
       align-items: center;
-      padding: 3px 8px;
-      color: var(--text-muted);
+      padding: 6px 10px;
+      color: var(--glass-text-inactive);
       text-decoration: none;
       border-radius: var(--radius-sm);
-      transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
-      font-size: 11px;
+      transition: all var(--transition-fast);
+      font-size: 12px;
 
       &:hover {
-        background: var(--bg-hover);
-        color: var(--primary-color);
+        background: var(--item-hover-bg);
+        color: var(--glass-text-primary);
       }
 
       &.active {
@@ -1199,8 +1653,8 @@ body.dark-only {
         margin-right: var(--spacing-md);
 
         i {
-          font-size: 10px;
-          color: var(--text-muted);
+          font-size: 12px;
+          color: inherit;
         }
       }
     }
@@ -1214,14 +1668,16 @@ body.dark-only {
 .sidebar-notification-section {
   margin: var(--spacing-md);
   padding: var(--spacing-md);
-  background: var(--bg-section);
-  border-radius: var(--radius-md);
-  border: 1px solid var(--sidebar-border);
-  transition: background-color var(--transition-ultrafast), color var(--transition-ultrafast), opacity var(--transition-ultrafast);
+  background: var(--item-hover-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: var(--item-radius);
+  border: 1px solid var(--glass-border);
+  transition: all var(--transition-fast);
 
   &:hover {
-    background: var(--bg-hover);
-    border-color: var(--primary-color);
+    background: var(--item-active-bg);
+    border-color: var(--glass-border-hover, var(--primary-color));
   }
 
   &.collapsed,
@@ -1333,10 +1789,15 @@ body.dark-only {
 .plan-card-container {
   position: sticky;
   bottom: 0;
-  background: var(--sidebar-bg);
-  border-top: 1px solid var(--sidebar-border);
+  background: var(--glass-bg-secondary, rgba(255, 255, 255, 0.5));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--glass-border);
+  margin: 0 var(--spacing-sm) var(--spacing-sm);
+  border-radius: var(--item-radius);
   margin-top: auto;
   transition: all var(--transition-normal);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.05);
 
   &.collapsed {
     display: none;
@@ -1348,8 +1809,14 @@ body.dark-only {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--bg-section);
+  background: var(--item-hover-bg);
+  border-radius: var(--item-radius) var(--item-radius) 0 0;
   cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--item-active-bg);
+  }
 
   .plan-title {
     display: flex;
@@ -1442,16 +1909,18 @@ body.dark-only {
   }
 
   .credit-card {
-    border-radius: 12px;
+    border-radius: var(--item-radius);
     padding: 14px;
     position: relative;
     overflow: hidden;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--glass-border);
     transition: all 0.3s ease;
 
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 12px 48px rgba(0, 0, 0, 0.16);
+      border-color: var(--glass-border-hover, rgba(255, 255, 255, 0.3));
     }
 
     // Gradientes por tipo de plan
@@ -1926,7 +2395,7 @@ body.dark-only {
       }
 
       // Si hay 3 botones, que ocupe toda la columna el tercero
-      & > :nth-child(3) {
+      &> :nth-child(3) {
         grid-column: 1 / -1;
       }
     }
@@ -1935,15 +2404,23 @@ body.dark-only {
 
 // Animations
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.1);
     opacity: 0.8;
@@ -1987,13 +2464,18 @@ body.dark-only {
 }
 
 // ===================================================
-// RESPONSIVE
+// RESPONSIVE - GLASSMORPHISM MOBILE
 // ===================================================
 
 @media (max-width: 991.98px) {
   .sidebar-container {
-    width: 240px !important;
-    z-index: var(--z-modal) !important; // ✅ Sobre header en móviles (1050)
+    width: 280px !important;
+    z-index: var(--z-modal) !important;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border-radius: 0;
+    border-right: 1px solid var(--glass-border);
 
     &.collapsed {
       transform: translateX(-100%) !important;
@@ -2002,6 +2484,14 @@ body.dark-only {
 
   .sidebar-overlay {
     display: block !important;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  // Ocultar perfil en móvil cuando está colapsado
+  .user-profile-section.collapsed {
+    display: none;
   }
 
   .plan-card-container {
@@ -2283,12 +2773,30 @@ body.dark-only {
 
 // Reducir motion para accesibilidad
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  // Glassmorphism: desactivar animaciones suaves
+  .sidebar-container {
+    transition: none !important;
+  }
+
+  .menu-link,
+  .submenu-link,
+  .user-profile-section,
+  .plan-card-container {
+    transition: none !important;
+  }
+
+  // Mantener indicadores visuales de estado activo sin animación
+  .menu-link.active::before {
+    transition: none !important;
   }
 }
 
@@ -2299,6 +2807,20 @@ body.dark-only {
     --text-primary: #000000;
     --text-secondary: #333333;
     --sidebar-border: #666666;
+    // Glassmorphism: usar fondos sólidos para alto contraste
+    --glass-bg: rgba(255, 255, 255, 0.95);
+    --glass-border: #333333;
+    --glass-text-primary: #000000;
+    --glass-text-inactive: #333333;
+    --item-active-bg: rgba(0, 102, 204, 0.2);
+    --item-hover-bg: rgba(0, 0, 0, 0.1);
+    --tree-connector-color: #333333;
+  }
+
+  // Reducir efectos de blur para mejor rendimiento en alto contraste
+  .sidebar-container {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
 }
 
@@ -2341,11 +2863,11 @@ body.dark-only {
     bottom: 0;
     width: 2px;
     background: linear-gradient(180deg,
-      transparent 0%,
-      var(--primary-light) 20%,
-      var(--primary-color) 50%,
-      var(--primary-light) 80%,
-      transparent 100%);
+        transparent 0%,
+        var(--primary-light) 20%,
+        var(--primary-color) 50%,
+        var(--primary-light) 80%,
+        transparent 100%);
     opacity: 0.3;
     transition: opacity var(--transition-normal);
   }
@@ -2383,9 +2905,12 @@ body.dark-only {
 
 // Animación para el indicador
 @keyframes pulseArrow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(0);
   }
+
   50% {
     transform: translateX(3px);
   }
@@ -2395,8 +2920,8 @@ body.dark-only {
 .sidebar-container {
   &.auto-hide-enabled {
     transition: transform var(--transition-normal) ease-out,
-                opacity var(--transition-fast),
-                box-shadow var(--transition-fast);
+      opacity var(--transition-fast),
+      box-shadow var(--transition-fast);
 
     &.sidebar-hidden {
       transform: translateX(-100%);
@@ -2422,14 +2947,15 @@ body.dark-only {
         bottom: 0;
         width: 1px;
         background: linear-gradient(180deg,
-          transparent 0%,
-          var(--primary-light) 50%,
-          transparent 100%);
+            transparent 0%,
+            var(--primary-light) 50%,
+            transparent 100%);
         opacity: 0.5;
       }
     }
 
     &.sidebar-pinned {
+
       // Indicador visual de que está fijado
       .sidebar-header::before {
         content: '';
@@ -2447,10 +2973,13 @@ body.dark-only {
 }
 
 @keyframes pinIndicator {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.2);
@@ -2459,6 +2988,7 @@ body.dark-only {
 
 // Botones de control adicionales
 .sidebar-controls {
+
   .auto-hide-btn,
   .pin-btn {
     opacity: 0.7;
@@ -2531,17 +3061,15 @@ body.dark-only {
   }
 }
 
-// Modo oscuro para auto-hide (si se implementa tema oscuro)
-@media (prefers-color-scheme: dark) {
-  .sidebar-edge-indicator {
-    .edge-line {
-      background: linear-gradient(180deg,
+// Modo oscuro para auto-hide - usar body.dark-only
+body.dark-only .sidebar-edge-indicator {
+  .edge-line {
+    background: linear-gradient(180deg,
         transparent 0%,
         rgba(139, 92, 246, 0.2) 20%,
         rgba(139, 92, 246, 0.6) 50%,
         rgba(139, 92, 246, 0.2) 80%,
         transparent 100%);
-    }
   }
 }
 
@@ -2595,10 +3123,13 @@ body.dark-only {
 
 // Animación del indicador
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.6;
     transform: scale(0.8);
@@ -2606,10 +3137,13 @@ body.dark-only {
 }
 
 @keyframes pulse-indicator {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.6;
     transform: scale(0.8);
