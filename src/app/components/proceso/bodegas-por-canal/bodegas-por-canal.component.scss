@@ -1,19 +1,34 @@
-// Variables - Katuq Theme
+// ==============================================
+// Bodegas por Canal Component - Katuq Dark Theme Styles
+// ==============================================
+
+// Katuq Theme Variables
 $primary-color: #a78bfa;
+$primary-hover: #8b5cf6;
 $secondary-color: #4555D1;
 $success-color: #51bb25;
 $danger-color: #dc3545;
 $info-color: #5bc0de;
 $warning-color: #f8d62b;
-$light-bg: #f8f9fa;
-$border-color: #dee2e6;
 
-// Dark theme variables
-$dark-body-bg: #1d1e26;
-$dark-card-bg: #262932;
-$dark-text: rgba(255, 255, 255, 0.9);
-$dark-text-muted: rgba(255, 255, 255, 0.6);
-$dark-border: #374558;
+// Light theme
+$light-bg: #ffffff;
+$light-card-bg: #ffffff;
+$light-text: #2b2b2b;
+$light-text-muted: #6c757d;
+$light-border: #dee2e6;
+$light-input-bg: #ffffff;
+
+// Dark theme - Katuq Palette
+$dark-bg-primary: #1a1625;
+$dark-bg-secondary: #262335;
+$dark-border: #4a4366;
+$dark-text: #e9e4f5;
+$dark-text-muted: rgba(233, 228, 245, 0.6);
+
+// ==============================================
+// Base Styles (Light Theme)
+// ==============================================
 
 // Main container
 .container-fluid {
@@ -22,7 +37,7 @@ $dark-border: #374558;
     border-radius: 12px;
     border: none;
     transition: all 0.3s ease;
-    background: var(--card-bg, #ffffff);
+    background: var(--card-bg, $light-card-bg);
 
     .card-header {
       font-weight: 600;
@@ -31,7 +46,7 @@ $dark-border: #374558;
       border-bottom: 1px solid rgba($primary-color, 0.15);
 
       h5 {
-        color: var(--text-primary, #2b2b2b);
+        color: var(--text-primary, $light-text);
         font-weight: 600;
 
         i {
@@ -48,7 +63,7 @@ $dark-border: #374558;
 
 // Header section
 .fc-secondary {
-  color: var(--text-primary, #2b2b2b) !important;
+  color: var(--text-primary, $light-text) !important;
   font-weight: 700 !important;
 }
 
@@ -62,21 +77,21 @@ $dark-border: #374558;
 
 // Muted text with better visibility
 .text-muted {
-  color: var(--text-muted, #6c757d) !important;
+  color: var(--text-muted, $light-text-muted) !important;
 }
 
 // Form elements
 .form-label {
-  color: var(--text-primary, #2b2b2b);
+  color: var(--text-primary, $light-text);
   font-weight: 600;
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
 }
 
 .form-select {
-  background-color: var(--input-bg, #ffffff);
-  border: 2px solid var(--input-border, #e0e0e0);
-  color: var(--text-primary, #2b2b2b);
+  background-color: var(--input-bg, $light-input-bg);
+  border: 2px solid var(--input-border, $light-border);
+  color: var(--text-primary, $light-text);
   padding: 0.75rem 1rem;
   border-radius: 8px;
   font-size: 0.95rem;
@@ -93,8 +108,8 @@ $dark-border: #374558;
   }
 
   option {
-    color: #2b2b2b;
-    background-color: #ffffff;
+    color: $light-text;
+    background-color: $light-card-bg;
     padding: 0.5rem;
   }
 }
@@ -107,12 +122,12 @@ $dark-border: #374558;
 
   .card-body {
     h5 {
-      color: var(--text-primary, #2b2b2b);
+      color: var(--text-primary, $light-text);
       font-weight: 600;
     }
 
     small {
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted, $light-text-muted);
     }
   }
 }
@@ -176,7 +191,7 @@ $dark-border: #374558;
     padding: 1rem 1.25rem;
 
     h5 {
-      color: var(--text-primary, #2b2b2b) !important;
+      color: var(--text-primary, $light-text) !important;
       font-size: 1rem;
       margin: 0;
       display: flex;
@@ -205,7 +220,7 @@ $dark-border: #374558;
 
 // Bodega items
 .bodega-item {
-  background: var(--bodega-item-bg, #ffffff) !important;
+  background: var(--bodega-item-bg, $light-card-bg) !important;
   border: 1px solid var(--bodega-item-border, #e8e8e8) !important;
   border-radius: 10px !important;
   transition: all 0.25s ease;
@@ -218,7 +233,7 @@ $dark-border: #374558;
   }
 
   h6 {
-    color: var(--text-primary, #2b2b2b) !important;
+    color: var(--text-primary, $light-text) !important;
     font-weight: 600;
     font-size: 0.95rem;
     margin-bottom: 0.25rem;
@@ -231,7 +246,7 @@ $dark-border: #374558;
     flex-wrap: wrap;
 
     .text-muted {
-      color: var(--text-muted, #6c757d) !important;
+      color: var(--text-muted, $light-text-muted) !important;
       font-size: 0.85rem;
     }
 
@@ -275,14 +290,14 @@ $dark-border: #374558;
 .bodega-asignada {
   opacity: 0.6;
   background: var(--bodega-assigned-bg, #f8f9fa) !important;
-  border-color: var(--bodega-assigned-border, #dee2e6) !important;
+  border-color: var(--bodega-assigned-border, $light-border) !important;
   cursor: not-allowed;
 
   &:hover {
     transform: none;
     box-shadow: none;
     background: var(--bodega-assigned-bg, #f8f9fa) !important;
-    border-color: var(--bodega-assigned-border, #dee2e6) !important;
+    border-color: var(--bodega-assigned-border, $light-border) !important;
   }
 }
 
@@ -330,7 +345,7 @@ $dark-border: #374558;
 
 // Loading text
 .text-center p {
-  color: var(--text-muted, #6c757d);
+  color: var(--text-muted, $light-text-muted);
   font-size: 0.95rem;
 }
 
@@ -342,7 +357,7 @@ $dark-border: #374558;
 
   &.alert-info {
     background: linear-gradient(135deg, rgba($info-color, 0.12) 0%, rgba($info-color, 0.05) 100%);
-    color: var(--text-primary, #2b2b2b);
+    color: var(--text-primary, $light-text);
 
     i {
       color: $info-color;
@@ -351,14 +366,14 @@ $dark-border: #374558;
     }
 
     p {
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted, $light-text-muted);
       margin: 0;
     }
   }
 
   &.alert-warning {
     background: linear-gradient(135deg, rgba($warning-color, 0.15) 0%, rgba($warning-color, 0.05) 100%);
-    color: var(--text-primary, #2b2b2b);
+    color: var(--text-primary, $light-text);
 
     i {
       color: darken($warning-color, 15%);
@@ -367,13 +382,13 @@ $dark-border: #374558;
     }
 
     h5 {
-      color: var(--text-primary, #2b2b2b);
+      color: var(--text-primary, $light-text);
       font-weight: 600;
       margin-bottom: 0.75rem;
     }
 
     p {
-      color: var(--text-muted, #6c757d);
+      color: var(--text-muted, $light-text-muted);
       margin: 0;
     }
   }
@@ -409,35 +424,39 @@ $dark-border: #374558;
   }
 }
 
-// Dark theme support
-:host-context(.dark-only),
-:host-context([data-theme="dark"]) {
-  --card-bg: #{$dark-card-bg};
+// ==============================================
+// Dark Theme Styles
+// ==============================================
+
+:host-context(body.dark-only) {
+  --card-bg: #{$dark-bg-secondary};
   --text-primary: #{$dark-text};
   --text-muted: #{$dark-text-muted};
-  --input-bg: #{$dark-card-bg};
+  --input-bg: #{$dark-bg-primary};
   --input-border: #{$dark-border};
   --card-border: #{$dark-border};
-  --bodega-item-bg: #{lighten($dark-card-bg, 3%)};
+  --bodega-item-bg: #{lighten($dark-bg-secondary, 3%)};
   --bodega-item-border: #{$dark-border};
-  --bodega-assigned-bg: #{$dark-body-bg};
+  --bodega-assigned-bg: #{$dark-bg-primary};
   --bodega-assigned-border: #{$dark-border};
-  --scrollbar-track: #{$dark-body-bg};
+  --scrollbar-track: #{$dark-bg-primary};
 
-  .card {
-    background: $dark-card-bg;
-    border: 1px solid $dark-border;
+  .container-fluid {
+    .card {
+      background: $dark-bg-secondary;
+      border: 1px solid $dark-border;
 
-    .card-header {
-      background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-card-bg, 0.9) 100%) !important;
-      border-bottom: 1px solid rgba($primary-color, 0.2);
+      .card-header {
+        background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-bg-secondary, 0.9) 100%) !important;
+        border-bottom: 1px solid rgba($primary-color, 0.2);
 
-      &.bg-light {
-        background: linear-gradient(135deg, rgba($primary-color, 0.12) 0%, rgba($dark-card-bg, 0.95) 100%) !important;
-      }
+        &.bg-light {
+          background: linear-gradient(135deg, rgba($primary-color, 0.12) 0%, rgba($dark-bg-secondary, 0.95) 100%) !important;
+        }
 
-      h5 {
-        color: $dark-text !important;
+        h5 {
+          color: $dark-text !important;
+        }
       }
     }
   }
@@ -455,18 +474,28 @@ $dark-border: #374558;
   }
 
   .form-select {
-    background-color: lighten($dark-card-bg, 5%);
+    background-color: $dark-bg-primary;
     border-color: $dark-border;
     color: $dark-text;
 
+    &:hover {
+      border-color: rgba($primary-color, 0.5);
+    }
+
+    &:focus {
+      border-color: $primary-color;
+      background-color: lighten($dark-bg-primary, 3%);
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.25);
+    }
+
     option {
-      background-color: $dark-card-bg;
+      background-color: $dark-bg-secondary;
       color: $dark-text;
     }
   }
 
   .card.border-primary {
-    background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-card-bg, 0.95) 100%);
+    background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-bg-secondary, 0.95) 100%);
 
     .card-body {
       h5 {
@@ -480,11 +509,11 @@ $dark-border: #374558;
   }
 
   .bodega-item {
-    background: lighten($dark-card-bg, 4%) !important;
+    background: lighten($dark-bg-secondary, 4%) !important;
     border-color: $dark-border !important;
 
     &:hover {
-      background: linear-gradient(135deg, rgba($primary-color, 0.2) 0%, rgba($dark-card-bg, 0.95) 100%) !important;
+      background: linear-gradient(135deg, rgba($primary-color, 0.2) 0%, rgba($dark-bg-secondary, 0.95) 100%) !important;
     }
 
     h6 {
@@ -497,16 +526,16 @@ $dark-border: #374558;
   }
 
   .bodega-asignada {
-    background: $dark-body-bg !important;
+    background: $dark-bg-primary !important;
 
     &:hover {
-      background: $dark-body-bg !important;
+      background: $dark-bg-primary !important;
     }
   }
 
   .alert {
     &.alert-info {
-      background: linear-gradient(135deg, rgba($info-color, 0.2) 0%, rgba($dark-card-bg, 0.95) 100%);
+      background: linear-gradient(135deg, rgba($info-color, 0.2) 0%, rgba($dark-bg-secondary, 0.95) 100%);
 
       p {
         color: $dark-text-muted;
@@ -514,7 +543,7 @@ $dark-border: #374558;
     }
 
     &.alert-warning {
-      background: linear-gradient(135deg, rgba($warning-color, 0.2) 0%, rgba($dark-card-bg, 0.95) 100%);
+      background: linear-gradient(135deg, rgba($warning-color, 0.2) 0%, rgba($dark-bg-secondary, 0.95) 100%);
 
       h5 {
         color: $dark-text;
@@ -535,9 +564,18 @@ $dark-border: #374558;
       color: lighten($info-color, 15%) !important;
     }
   }
+
+  // Icon background in dark mode
+  .icon-bg {
+    color: $primary-color !important;
+    opacity: 0.15 !important;
+  }
 }
 
-// Responsive adjustments
+// ==============================================
+// Responsive Adjustments
+// ==============================================
+
 @media (max-width: 768px) {
   .row > div[class^="col"] {
     margin-bottom: 1.5rem;

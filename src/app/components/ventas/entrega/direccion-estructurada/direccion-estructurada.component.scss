@@ -393,8 +393,252 @@
     padding: 0.75rem;
     font-size: 0.9rem;
   }
-  
+
   .form-text {
     font-size: 0.75rem;
+  }
+}
+
+// ==============================================================================
+// DARK THEME - Katuq Palette
+// ==============================================================================
+:host-context(body.dark-only) {
+  // Variables de dark theme Katuq
+  $dark-primary: #a78bfa;
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-success: #4ade80;
+  $dark-warning: #fbbf24;
+  $dark-danger: #f87171;
+  $dark-info: #60a5fa;
+
+  // Modal body
+  .modal-body {
+    background-color: $dark-bg-card;
+  }
+
+  // Labeled form
+  .labeled-form {
+    .form-label {
+      color: $dark-text-secondary;
+
+      &.small {
+        color: $dark-text-secondary;
+      }
+    }
+
+    .form-control, .form-select {
+      background-color: $dark-bg-base;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25);
+        border-color: $dark-primary;
+      }
+
+      &:disabled {
+        background-color: rgba($dark-bg-base, 0.5);
+        color: $dark-text-secondary;
+      }
+
+      option {
+        background-color: $dark-bg-card;
+        color: $dark-text-primary;
+      }
+    }
+
+    .input-group {
+      .input-group-text {
+        background-color: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Alert info
+  .alert-info {
+    background-color: rgba($dark-info, 0.15);
+    border-color: rgba($dark-info, 0.3);
+    color: $dark-text-primary;
+
+    strong {
+      color: $dark-primary;
+    }
+  }
+
+  // Modal body alert info
+  .modal-body > .alert-info {
+    border-left-color: $dark-primary;
+
+    strong {
+      color: $dark-primary;
+    }
+  }
+
+  // Direccion preview
+  .direccion-preview {
+    background-color: $dark-bg-header;
+    border-color: $dark-border;
+
+    strong {
+      color: $dark-text-secondary;
+    }
+
+    p {
+      color: $dark-text-primary;
+
+      &.text-success {
+        color: $dark-success !important;
+        border-left-color: $dark-success;
+      }
+
+      &.text-warning {
+        color: $dark-warning !important;
+        border-left-color: $dark-warning;
+      }
+    }
+
+    .text-warning small {
+      color: $dark-warning;
+    }
+  }
+
+  // Map container
+  .map-container {
+    border-color: $dark-border;
+
+    &:focus-within {
+      border-color: $dark-primary;
+      box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25);
+    }
+  }
+
+  // Map instructions
+  .map-instructions {
+    .alert-warning {
+      background-color: rgba($dark-warning, 0.15);
+      border-color: rgba($dark-warning, 0.3);
+
+      i, strong, .fw-bold {
+        color: $dark-warning;
+      }
+    }
+  }
+
+  // Modal footer
+  .modal-footer {
+    background-color: $dark-bg-header;
+    border-top-color: $dark-border;
+
+    .btn-primary {
+      background-color: $dark-primary;
+      border-color: $dark-primary;
+      color: $dark-bg-base;
+
+      &:hover:not(:disabled) {
+        background-color: lighten($dark-primary, 10%);
+        border-color: lighten($dark-primary, 10%);
+      }
+    }
+
+    .btn-outline-secondary {
+      color: $dark-text-secondary;
+      border-color: $dark-border;
+
+      &:hover {
+        background-color: $dark-bg-card;
+        color: $dark-text-primary;
+      }
+    }
+  }
+
+  // Text utilities
+  .text-info {
+    color: $dark-info !important;
+  }
+
+  .text-danger {
+    color: $dark-danger !important;
+  }
+
+  // Rural and urban forms
+  .rural-form, .urban-form {
+    background-color: $dark-bg-header;
+    border-color: $dark-border;
+
+    &:hover {
+      border-color: $dark-border;
+      background-color: rgba($dark-primary, 0.05);
+    }
+
+    .form-label {
+      color: $dark-text-secondary;
+    }
+  }
+
+  .rural-form {
+    border-left-color: $dark-success;
+
+    .form-label {
+      color: $dark-success;
+    }
+  }
+
+  .urban-form {
+    border-left-color: $dark-primary;
+
+    .form-label {
+      color: $dark-primary;
+    }
+  }
+
+  // Form check switch
+  .form-check-switch {
+    .form-check-input {
+      background-color: $dark-border;
+
+      &:checked {
+        background-color: $dark-success;
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 0.25rem rgba($dark-success, 0.25);
+      }
+    }
+
+    .form-check-label {
+      color: $dark-text-primary;
+    }
+  }
+
+  // Alert success
+  .alert-success {
+    background-color: rgba($dark-success, 0.15);
+    border-color: rgba($dark-success, 0.3);
+    color: $dark-text-primary;
+    border-left-color: $dark-success;
+
+    i.pi-map-marker {
+      color: $dark-success;
+    }
+
+    strong {
+      color: $dark-success;
+    }
+  }
+
+  // Form text
+  .form-text {
+    color: $dark-text-secondary;
+
+    &.text-muted {
+      color: $dark-text-secondary !important;
+    }
   }
 }

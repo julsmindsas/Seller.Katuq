@@ -188,3 +188,206 @@
     }
   }
 }
+
+// ============================================================================
+// DARK MODE - Katuq Purple Palette
+// ============================================================================
+:host-context(body.dark-only) {
+  // Dark Mode Variables
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-text-muted: #8b7fa8;
+  $dark-primary: #a78bfa;
+
+  .column-mapping-preview {
+    .mapping-header {
+      .mapping-title {
+        color: $dark-text-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      .mapping-subtitle {
+        color: $dark-text-muted;
+      }
+    }
+
+    .mapping-table {
+      ::ng-deep {
+        .manual-adjustment {
+          background-color: rgba($dark-primary, 0.1) !important;
+          border-left-color: $dark-primary;
+        }
+
+        .p-datatable {
+          .p-datatable-thead > tr > th {
+            background: $dark-bg-header;
+            color: $dark-text-primary;
+            border-color: $dark-border;
+          }
+
+          .p-datatable-tbody > tr {
+            background: $dark-bg-card;
+            color: $dark-text-primary;
+
+            > td {
+              border-color: $dark-border;
+            }
+
+            &:hover {
+              background: $dark-bg-header;
+            }
+          }
+        }
+
+        .p-dropdown {
+          background: $dark-bg-base;
+          border-color: $dark-border;
+          color: $dark-text-primary;
+
+          &:hover {
+            border-color: $dark-primary;
+          }
+        }
+
+        strong {
+          color: $dark-text-primary;
+        }
+
+        small {
+          &.text-muted {
+            color: $dark-text-muted;
+          }
+
+          &.reasoning-text {
+            color: $dark-text-muted;
+          }
+        }
+      }
+    }
+
+    .warnings-section,
+    .suggestions-section {
+      ::ng-deep {
+        .p-accordion .p-accordion-header {
+          background-color: rgba(#f59e0b, 0.15);
+          border-color: rgba(#f59e0b, 0.3);
+
+          .p-accordion-header-link {
+            color: #fbbf24;
+
+            &:hover {
+              background-color: rgba(#f59e0b, 0.2);
+            }
+          }
+        }
+
+        .p-accordion-content {
+          background: $dark-bg-card;
+          border-color: $dark-border;
+        }
+      }
+
+      .warnings-list,
+      .suggestions-list {
+        .warning-item,
+        .suggestion-item {
+          color: $dark-text-secondary;
+        }
+
+        .warning-item {
+          color: #fbbf24;
+
+          i {
+            color: #f59e0b;
+          }
+        }
+
+        .suggestion-item {
+          color: $dark-primary;
+
+          i {
+            color: $dark-primary;
+          }
+        }
+      }
+    }
+
+    .suggestions-section {
+      ::ng-deep {
+        .p-accordion .p-accordion-header {
+          background-color: rgba($dark-primary, 0.15);
+          border-color: rgba($dark-primary, 0.3);
+
+          .p-accordion-header-link {
+            color: $dark-primary;
+
+            &:hover {
+              background-color: rgba($dark-primary, 0.2);
+            }
+          }
+        }
+      }
+    }
+
+    .mapping-footer {
+      border-top-color: $dark-border;
+    }
+  }
+
+  .empty-mapping-state {
+    h4 {
+      color: $dark-text-primary;
+    }
+
+    p {
+      color: $dark-text-muted;
+    }
+  }
+
+  ::ng-deep {
+    .p-tag {
+      &.p-tag-success {
+        background: rgba(#10b981, 0.2);
+        color: #34d399;
+      }
+
+      &.p-tag-warning {
+        background: rgba(#f59e0b, 0.2);
+        color: #fbbf24;
+      }
+
+      &.p-tag-info {
+        background: rgba($dark-primary, 0.2);
+        color: $dark-primary;
+      }
+    }
+
+    .p-button {
+      &.p-button-success {
+        background: #10b981;
+        border-color: #10b981;
+
+        &:hover {
+          background: #059669;
+        }
+      }
+
+      &.p-button-secondary {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:hover {
+          background: $dark-border;
+        }
+      }
+    }
+  }
+}

@@ -1786,3 +1786,946 @@ $transition: all 0.3s ease;
     max-width: 180px;
   }
 }
+
+/* ========================================
+   DARK THEME STYLES - KATUQ PALETTE
+   ======================================== */
+
+// Dark theme variables
+$dark-primary: #a78bfa;
+$dark-primary-light: rgba(167, 139, 250, 0.15);
+$dark-bg-base: #1a1625;
+$dark-bg-card: #262335;
+$dark-bg-header: #2e2445;
+$dark-bg-elevated: #322a47;
+$dark-border: #4a4366;
+$dark-text-primary: #e9e4f5;
+$dark-text-secondary: #a09cb5;
+$dark-text-muted: #7a7592;
+$dark-success: #4ade80;
+$dark-warning: #fbbf24;
+$dark-danger: #f87171;
+$dark-info: #60a5fa;
+
+:host-context(body.dark-only) {
+  // Loader
+  .loader-box {
+    background: rgba($dark-bg-base, 0.9);
+
+    .loader-8:after {
+      border-color: $dark-primary;
+      border-right-color: transparent;
+    }
+  }
+
+  // Filtros container
+  .filtros-container {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+  }
+
+  // Cards
+  .card {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  // Buttons
+  .btn-primary {
+    background: $dark-primary;
+    border-color: $dark-primary;
+    box-shadow: 0 2px 5px rgba(167, 139, 250, 0.3);
+
+    &:hover, &:focus {
+      background: lighten($dark-primary, 5%);
+      border-color: lighten($dark-primary, 5%);
+      box-shadow: 0 4px 8px rgba(167, 139, 250, 0.4);
+    }
+  }
+
+  .btn-outline-primary {
+    color: $dark-primary;
+    border-color: rgba(167, 139, 250, 0.4);
+
+    &:hover, &:focus {
+      background-color: $dark-primary-light;
+      color: lighten($dark-primary, 10%);
+    }
+  }
+
+  // PrimeNG DataTable
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-header {
+        background-color: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+      }
+
+      .p-datatable-thead > tr > th {
+        background-color: $dark-bg-header;
+        color: $dark-text-primary;
+        border-color: $dark-border;
+
+        &:hover {
+          background-color: $dark-bg-elevated;
+        }
+      }
+
+      .p-datatable-tbody > tr {
+        background-color: $dark-bg-card;
+        color: $dark-text-primary;
+
+        &:hover {
+          background-color: $dark-bg-elevated;
+        }
+
+        > td {
+          border-color: $dark-border;
+          color: $dark-text-primary;
+        }
+
+        &:nth-child(even) {
+          background-color: rgba($dark-bg-elevated, 0.5);
+        }
+      }
+
+      .p-paginator {
+        background-color: $dark-bg-card;
+        border-color: $dark-border;
+
+        .p-paginator-element {
+          color: $dark-text-primary;
+
+          &:hover {
+            background-color: $dark-bg-elevated;
+          }
+
+          &:focus {
+            box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+          }
+        }
+
+        .p-paginator-page.p-highlight {
+          background-color: $dark-primary;
+          color: white;
+        }
+      }
+    }
+
+    .p-dropdown, .p-multiselect {
+      background-color: $dark-bg-card;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:hover {
+        border-color: $dark-primary;
+      }
+
+      &:focus, &.p-focus {
+        border-color: $dark-primary;
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+      }
+
+      .p-dropdown-label, .p-multiselect-label {
+        color: $dark-text-primary;
+      }
+
+      .p-dropdown-panel, .p-multiselect-panel {
+        background-color: $dark-bg-card;
+        border-color: $dark-border;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+
+        .p-dropdown-item, .p-multiselect-item {
+          color: $dark-text-primary;
+
+          &:hover {
+            background-color: $dark-bg-elevated;
+          }
+
+          &.p-highlight {
+            background-color: $dark-primary-light;
+            color: $dark-primary;
+          }
+        }
+      }
+    }
+
+    .p-calendar {
+      .p-inputtext {
+        background-color: $dark-bg-card;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:hover {
+          border-color: $dark-primary;
+        }
+
+        &:focus {
+          border-color: $dark-primary;
+          box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+        }
+      }
+
+      .p-datepicker {
+        background-color: $dark-bg-card;
+        border-color: $dark-border;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        color: $dark-text-primary;
+
+        .p-datepicker-header {
+          background-color: $dark-bg-header;
+          border-color: $dark-border;
+          color: $dark-text-primary;
+        }
+
+        .p-datepicker-calendar {
+          th {
+            color: $dark-text-secondary;
+          }
+
+          td > span {
+            color: $dark-text-primary;
+
+            &.p-highlight {
+              background-color: $dark-primary;
+              color: white;
+            }
+
+            &:hover {
+              background-color: $dark-bg-elevated;
+            }
+          }
+        }
+      }
+    }
+
+    .p-button {
+      &.p-button-outlined {
+        color: $dark-primary;
+        border-color: $dark-primary;
+
+        &:hover {
+          background-color: $dark-primary-light;
+        }
+      }
+
+      &.p-button-text {
+        color: $dark-primary;
+
+        &:hover {
+          background-color: $dark-primary-light;
+        }
+      }
+    }
+
+    .p-tooltip .p-tooltip-text {
+      background-color: $dark-bg-elevated;
+      color: $dark-text-primary;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .p-chip {
+      background-color: $dark-primary-light;
+      color: $dark-primary;
+    }
+  }
+
+  // Badges
+  .badge {
+    &.bg-primary {
+      background-color: $dark-primary !important;
+    }
+
+    &.bg-success {
+      background-color: $dark-success !important;
+    }
+
+    &.bg-warning {
+      background-color: $dark-warning !important;
+      color: #1a1625 !important;
+    }
+
+    &.bg-danger {
+      background-color: $dark-danger !important;
+    }
+  }
+
+  // Module header
+  .module-header {
+    background: linear-gradient(to right, $dark-bg-header, $dark-bg-card);
+  }
+
+  .text-primary {
+    color: $dark-primary !important;
+  }
+
+  // Column selector
+  .column-selector-container {
+    .reset-columns-btn {
+      background-color: $dark-bg-card;
+      color: $dark-text-secondary;
+      border-color: $dark-border;
+
+      &:hover {
+        background-color: $dark-bg-elevated;
+      }
+    }
+  }
+
+  .column-option-item {
+    .option-icon {
+      color: $dark-primary;
+    }
+
+    .option-title {
+      color: $dark-text-primary;
+    }
+
+    .option-description {
+      color: $dark-text-muted;
+    }
+  }
+
+  // Modern production table
+  .modern-production-table {
+    .header-cell {
+      color: $dark-text-primary;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+
+    .action-column {
+      .process-menu-btn {
+        background-color: $dark-bg-card;
+        color: $dark-primary;
+        border-color: rgba(167, 139, 250, 0.3);
+
+        &:hover {
+          background-color: $dark-primary-light;
+        }
+      }
+    }
+
+    .process-action-btn {
+      background-color: $dark-bg-card;
+      color: $dark-primary;
+      border-color: rgba(167, 139, 250, 0.3);
+
+      &:hover {
+        background-color: $dark-primary-light;
+      }
+    }
+
+    .quantity-value {
+      background-color: $dark-primary-light;
+      color: $dark-primary;
+    }
+
+    .date-cell, .time-cell {
+      .date-icon, .time-icon {
+        color: $dark-primary;
+      }
+    }
+
+    .article-name {
+      color: $dark-text-primary;
+    }
+
+    .product-name {
+      color: $dark-text-secondary;
+    }
+
+    .empty-state {
+      .empty-icon-container {
+        background-color: $dark-bg-elevated;
+
+        i {
+          color: $dark-text-muted;
+        }
+      }
+
+      h5 {
+        color: $dark-text-primary;
+      }
+
+      p {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Legacy table styles
+  .p-table-tr-th > th,
+  .p-table-tr-th > td {
+    background-color: $dark-bg-header;
+    color: $dark-text-primary;
+  }
+
+  .p-table-tr-tr > td {
+    color: $dark-text-primary;
+    border-color: $dark-border;
+  }
+
+  .labelHeader {
+    color: $dark-text-primary;
+  }
+
+  .spanProccesName {
+    color: $dark-primary !important;
+  }
+
+  // Modern modal
+  .modern-modal-header {
+    background-color: $dark-bg-header;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+
+    &.bg-primary {
+      background: linear-gradient(to right, $dark-primary, darken($dark-primary, 15%)) !important;
+    }
+
+    &.bg-success {
+      background: linear-gradient(to right, $dark-success, darken($dark-success, 15%)) !important;
+    }
+
+    .modern-close-btn {
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+    }
+  }
+
+  .modern-modal-footer {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+  }
+
+  .btn-modal-primary {
+    background-color: $dark-primary;
+    box-shadow: 0 2px 5px rgba(167, 139, 250, 0.25);
+
+    &:hover:not(:disabled) {
+      background-color: lighten($dark-primary, 5%);
+      box-shadow: 0 4px 8px rgba(167, 139, 250, 0.3);
+    }
+  }
+
+  .btn-modal-secondary {
+    background-color: $dark-bg-card;
+    color: $dark-text-secondary;
+    border-color: $dark-border;
+
+    &:hover:not(:disabled) {
+      background-color: $dark-bg-elevated;
+    }
+  }
+
+  // Estado pago
+  .estado-pago-content {
+    .estado-select-container {
+      .modern-select {
+        background-color: $dark-bg-card;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:focus {
+          border-color: $dark-primary;
+          box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+        }
+      }
+
+      .select-icon {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Proceso selection
+  .proceso-info {
+    background-color: $dark-primary-light;
+    border-color: $dark-primary;
+  }
+
+  .proceso-info-header {
+    i {
+      color: $dark-primary;
+    }
+
+    h5 {
+      color: $dark-text-primary;
+    }
+  }
+
+  .proceso-info-subtitle {
+    i, span {
+      color: $dark-text-secondary;
+    }
+  }
+
+  .procesos-list-title {
+    color: $dark-text-primary;
+  }
+
+  .proceso-item {
+    background-color: $dark-bg-card;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+
+    &:hover:not(.proceso-disabled) {
+      background-color: $dark-bg-elevated;
+    }
+
+    &.proceso-selected {
+      background-color: $dark-primary-light;
+      border-color: $dark-primary;
+    }
+  }
+
+  .proceso-icon {
+    background-color: $dark-bg-elevated;
+
+    i {
+      color: $dark-text-secondary;
+    }
+
+    &.icon-complete {
+      background-color: rgba($dark-success, 0.15);
+
+      i {
+        color: $dark-success;
+      }
+    }
+
+    &.icon-partial {
+      background-color: rgba($dark-warning, 0.15);
+
+      i {
+        color: $dark-warning;
+      }
+    }
+
+    &.icon-pending {
+      background-color: rgba($dark-danger, 0.15);
+
+      i {
+        color: $dark-danger;
+      }
+    }
+  }
+
+  .proceso-name {
+    color: $dark-text-primary;
+  }
+
+  .proceso-status {
+    color: $dark-text-secondary;
+  }
+
+  .proceso-action {
+    color: $dark-text-muted;
+  }
+
+  // Process status indicator
+  .process-status-indicator {
+    &.status-complete {
+      background-color: rgba($dark-success, 0.15);
+      color: $dark-success;
+      box-shadow: 0 2px 6px rgba($dark-success, 0.2);
+
+      &:hover {
+        background-color: rgba($dark-success, 0.25);
+      }
+    }
+
+    &.status-partial {
+      background-color: rgba($dark-warning, 0.15);
+      color: $dark-warning;
+      box-shadow: 0 2px 6px rgba($dark-warning, 0.2);
+
+      &:hover {
+        background-color: rgba($dark-warning, 0.25);
+      }
+    }
+
+    &.status-pending {
+      background-color: rgba($dark-danger, 0.15);
+      color: $dark-danger;
+      box-shadow: 0 2px 6px rgba($dark-danger, 0.2);
+
+      &:hover {
+        background-color: rgba($dark-danger, 0.25);
+      }
+    }
+
+    &.status-none {
+      background-color: rgba($dark-text-muted, 0.15);
+      color: $dark-text-muted;
+
+      &:hover {
+        background-color: rgba($dark-text-muted, 0.25);
+      }
+    }
+  }
+
+  // Tracking modal
+  .tracking-modal-body {
+    background-color: $dark-bg-base;
+  }
+
+  .tracking-modal-footer {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+  }
+
+  .tracking-legend {
+    .legend-item {
+      .status-indicator {
+        &.status-complete {
+          background-color: $dark-success;
+        }
+
+        &.status-partial {
+          background-color: $dark-warning;
+        }
+
+        &.status-pending {
+          background-color: $dark-danger;
+        }
+      }
+
+      .legend-text {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Modern filters container
+  .modern-filters-container {
+    background: linear-gradient(135deg, $dark-bg-header 0%, $dark-bg-card 100%);
+    border-color: $dark-border;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    .filters-compact-header {
+      border-color: $dark-border;
+
+      .filter-toggle-section {
+        color: $dark-text-primary;
+
+        &:hover {
+          color: $dark-primary;
+        }
+      }
+
+      .quick-actions {
+        .header-quick-filters {
+          .shortcuts-label {
+            color: $dark-text-muted;
+          }
+
+          .shortcuts-group {
+            .shortcut-btn {
+              background-color: $dark-bg-card;
+              border-color: $dark-border;
+              color: $dark-text-primary;
+
+              &:hover {
+                background-color: $dark-bg-elevated;
+                border-color: $dark-primary;
+              }
+            }
+          }
+        }
+
+        .vertical-separator {
+          background-color: $dark-border;
+        }
+
+        .actions-group {
+          .action-btn {
+            background-color: $dark-primary;
+            color: white;
+
+            &:hover {
+              background-color: lighten($dark-primary, 5%);
+            }
+          }
+        }
+      }
+    }
+
+    .filters-expanded-content {
+      .active-filters-summary {
+        background-color: $dark-primary-light;
+        border-color: rgba($dark-primary, 0.3);
+
+        .filter-indicator-label {
+          color: $dark-primary;
+        }
+
+        .filter-tag {
+          background-color: $dark-primary;
+        }
+      }
+
+      .main-filters-grid {
+        .filter-group {
+          background-color: $dark-bg-card;
+          border-color: $dark-border;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+          .filter-group-header {
+            color: $dark-text-primary;
+
+            i {
+              color: $dark-primary;
+            }
+          }
+
+          .filter-group-content {
+            .filter-label {
+              color: $dark-text-muted;
+            }
+
+            .modern-date-input,
+            .modern-autocomplete input {
+              background-color: $dark-bg-base;
+              border-color: $dark-border;
+              color: $dark-text-primary;
+
+              &:focus {
+                border-color: $dark-primary;
+                box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.25);
+              }
+            }
+
+            .date-range-container {
+              .date-separator {
+                color: $dark-text-muted;
+              }
+            }
+
+            .status-chips {
+              .status-chip {
+                background-color: $dark-bg-card;
+                border-color: $dark-border;
+                color: $dark-text-secondary;
+
+                &:hover {
+                  border-color: $dark-primary;
+                  color: $dark-primary;
+                }
+
+                &.active {
+                  background-color: $dark-primary;
+                  border-color: $dark-primary;
+                  color: white;
+                }
+
+                &.status-success.active {
+                  background-color: $dark-success;
+                  border-color: $dark-success;
+                }
+
+                &.status-warning.active {
+                  background-color: $dark-warning;
+                  border-color: $dark-warning;
+                  color: #1a1625;
+                }
+
+                &.status-info.active {
+                  background-color: $dark-info;
+                  border-color: $dark-info;
+                }
+
+                &.status-secondary.active {
+                  background-color: $dark-text-muted;
+                  border-color: $dark-text-muted;
+                }
+              }
+            }
+
+            .action-buttons {
+              .action-btn {
+                &.btn-primary {
+                  background-color: $dark-primary;
+
+                  &:hover {
+                    background-color: lighten($dark-primary, 5%);
+                  }
+                }
+
+                &.btn-secondary {
+                  background-color: $dark-text-muted;
+
+                  &:hover {
+                    background-color: lighten($dark-text-muted, 10%);
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Metrics breadcrumb panel
+  .metrics-breadcrumb-panel {
+    background: linear-gradient(135deg, $dark-bg-header 0%, $dark-bg-card 100%);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+    .d-flex {
+      &::-webkit-scrollbar-thumb {
+        background-color: $dark-border;
+      }
+    }
+  }
+
+  .metric-chip {
+    background-color: $dark-bg-elevated;
+    color: $dark-text-primary;
+    border-color: transparent;
+
+    .metric-badge {
+      background-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+
+    &:not(.metric-chip-info-only):hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    &.metric-chip-primary {
+      background-color: rgba($dark-primary, 0.15);
+      color: $dark-primary;
+
+      .metric-badge {
+        background-color: $dark-primary;
+        color: white;
+      }
+
+      &:hover {
+        background-color: rgba($dark-primary, 0.25);
+        border-color: $dark-primary;
+      }
+    }
+
+    &.metric-chip-success {
+      background-color: rgba($dark-success, 0.15);
+      color: $dark-success;
+
+      .metric-badge {
+        background-color: $dark-success;
+        color: #1a1625;
+      }
+
+      &:hover {
+        background-color: rgba($dark-success, 0.25);
+        border-color: $dark-success;
+      }
+    }
+
+    &.metric-chip-info {
+      background-color: rgba($dark-info, 0.15);
+      color: $dark-info;
+
+      .metric-badge {
+        background-color: $dark-info;
+        color: white;
+      }
+
+      &:hover {
+        background-color: rgba($dark-info, 0.25);
+        border-color: $dark-info;
+      }
+    }
+
+    &.metric-chip-warning {
+      background-color: rgba($dark-warning, 0.15);
+      color: $dark-warning;
+
+      .metric-badge {
+        background-color: $dark-warning;
+        color: #1a1625;
+      }
+
+      &:hover {
+        background-color: rgba($dark-warning, 0.25);
+        border-color: $dark-warning;
+      }
+    }
+
+    &.metric-chip-danger {
+      background-color: rgba($dark-danger, 0.15);
+      color: $dark-danger;
+
+      .metric-badge {
+        background-color: $dark-danger;
+        color: white;
+      }
+
+      &:hover {
+        background-color: rgba($dark-danger, 0.25);
+        border-color: $dark-danger;
+      }
+    }
+
+    &.metric-chip-secondary {
+      background-color: rgba($dark-text-muted, 0.15);
+      color: $dark-text-secondary;
+
+      .metric-badge {
+        background-color: $dark-text-muted;
+        color: white;
+      }
+
+      &:hover {
+        background-color: rgba($dark-text-muted, 0.25);
+        border-color: $dark-text-muted;
+      }
+    }
+
+    &.metric-chip-production {
+      background-color: rgba(#a78bfa, 0.15);
+      color: #a78bfa;
+
+      .metric-badge {
+        background-color: #a78bfa;
+        color: white;
+      }
+
+      &:hover {
+        background-color: rgba(#a78bfa, 0.25);
+        border-color: #a78bfa;
+      }
+    }
+
+    &.metric-chip-packed {
+      background-color: rgba(#2dd4bf, 0.15);
+      color: #2dd4bf;
+
+      .metric-badge {
+        background-color: #2dd4bf;
+        color: #1a1625;
+      }
+
+      &:hover {
+        background-color: rgba(#2dd4bf, 0.25);
+        border-color: #2dd4bf;
+      }
+    }
+  }
+
+  .separator {
+    color: $dark-border;
+  }
+
+  .metric-divider {
+    background-color: $dark-border;
+  }
+}

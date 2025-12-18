@@ -177,17 +177,175 @@
   @media (max-width: 768px) {
     .modal-body {
       padding: 1rem;
-      
+
       .card-body {
         padding: 1rem;
       }
     }
-    
+
     .timeline {
       padding-left: 1.5rem;
-      
+
       .timeline-item .timeline-marker {
         left: -1.25rem;
+      }
+    }
+  }
+}
+
+// =====================================
+// DARK THEME STYLES - KATUQ PALETTE
+// =====================================
+// Primary: #a78bfa
+// Background: #1a1625 / #262335
+// Border: #4a4366
+// Text: #e9e4f5
+
+:host-context(body.dark-only) {
+  // Dark theme variables
+  $dark-bg-primary: #1a1625;
+  $dark-bg-secondary: #262335;
+  $dark-bg-tertiary: #2d2a3e;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #b8b0c9;
+  $dark-text-muted: #8b839e;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #c4b5fd;
+
+  .seguimiento-modal {
+    // Modal header dark theme
+    .modal-header {
+      background-color: $dark-bg-secondary;
+      border-bottom-color: $dark-border;
+
+      .modal-title {
+        color: $dark-text-primary;
+      }
+    }
+
+    // Modal body dark theme
+    .modal-body {
+      background-color: $dark-bg-primary;
+
+      .card {
+        background-color: $dark-bg-secondary;
+        border-color: $dark-border;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+        .card-header {
+          background-color: $dark-bg-tertiary;
+          border-bottom-color: $dark-border;
+          color: $dark-text-primary;
+
+          h6 {
+            color: $dark-text-primary;
+          }
+        }
+
+        .card-body {
+          p {
+            color: $dark-text-secondary;
+
+            strong {
+              color: $dark-text-primary;
+            }
+          }
+        }
+      }
+    }
+
+    // Estado badges dark theme - keep gradients but adjust colors
+    .estado-badge {
+      &.estado-transito {
+        background: linear-gradient(135deg, $dark-primary 0%, #20c997 100%);
+      }
+
+      &.estado-entregado {
+        background: linear-gradient(135deg, #22c55e 0%, #20c997 100%);
+      }
+
+      &.estado-ruta {
+        background: linear-gradient(135deg, $dark-primary 0%, #8b5cf6 100%);
+      }
+
+      &.estado-retenido {
+        background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+        color: white;
+      }
+
+      &.estado-devuelto {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      }
+
+      &.estado-default {
+        background: linear-gradient(135deg, $dark-text-muted 0%, #64748b 100%);
+      }
+    }
+
+    // Timeline dark theme
+    .timeline {
+      &::before {
+        background: linear-gradient(to bottom, $dark-primary, $dark-border);
+      }
+
+      .timeline-item {
+        .timeline-marker {
+          background: $dark-primary;
+          border-color: $dark-bg-secondary;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-content {
+          background: $dark-bg-tertiary;
+          border-left-color: $dark-primary;
+
+          .evento-fecha {
+            color: $dark-text-muted;
+          }
+
+          .evento-descripcion {
+            color: $dark-text-primary;
+          }
+
+          .evento-ubicacion {
+            color: $dark-text-muted;
+
+            i {
+              color: $dark-primary;
+            }
+          }
+        }
+      }
+    }
+
+    // Modal footer dark theme
+    .modal-footer {
+      background-color: $dark-bg-secondary;
+      border-top-color: $dark-border;
+
+      .btn {
+        &.btn-secondary {
+          background-color: $dark-text-muted;
+          border-color: $dark-text-muted;
+          color: white;
+
+          &:hover {
+            background-color: lighten($dark-text-muted, 10%);
+            border-color: lighten($dark-text-muted, 10%);
+          }
+        }
+
+        &.btn-primary {
+          background-color: $dark-primary;
+          border-color: $dark-primary;
+          color: white;
+
+          &:hover {
+            background-color: $dark-primary-hover;
+            border-color: $dark-primary-hover;
+          }
+        }
       }
     }
   }

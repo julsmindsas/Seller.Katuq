@@ -505,3 +505,284 @@ $border-radius: 8px;
         }
     }
 }
+
+// ============================================
+// DARK THEME - KATUQ PALETTE
+// ============================================
+:host-context(body.dark-only) {
+    // Variables del tema oscuro Katuq
+    $dark-bg-primary: #1a1625;
+    $dark-bg-secondary: #262335;
+    $dark-bg-tertiary: #2a2640;
+    $dark-border: #4a4366;
+    $dark-text-primary: #e9e4f5;
+    $dark-text-secondary: #b8b0c9;
+    $dark-text-muted: #8b839d;
+    $dark-accent: #a78bfa;
+    $dark-accent-hover: #c4b5fd;
+
+    // Module header
+    .module-header {
+        background: linear-gradient(to right, $dark-bg-secondary, $dark-bg-tertiary);
+
+        h5 {
+            color: $dark-text-primary;
+        }
+
+        p {
+            color: $dark-text-secondary;
+        }
+    }
+
+    // Loader
+    .loader-box {
+        background: rgba($dark-bg-primary, 0.9);
+
+        .loader-8:after {
+            border-color: $dark-accent;
+            border-right-color: transparent;
+        }
+    }
+
+    // Cards
+    .card.shadow-sm {
+        background: $dark-bg-secondary !important;
+        border: 1px solid $dark-border !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+
+        &:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
+        }
+    }
+
+    // Badges para productos
+    .badge {
+        &.bg-success {
+            background-color: rgba(#2e7d32, 0.2) !important;
+            color: #a5d6a7 !important;
+            border-color: rgba(#a5d6a7, 0.3) !important;
+        }
+
+        &.bg-danger {
+            background-color: rgba(#c62828, 0.2) !important;
+            color: #ef9a9a !important;
+            border-color: rgba(#ef9a9a, 0.3) !important;
+        }
+
+        &.bg-info {
+            background-color: rgba(#0277bd, 0.2) !important;
+            color: #81d4fa !important;
+            border-color: rgba(#81d4fa, 0.3) !important;
+        }
+
+        &.bg-warning {
+            background-color: rgba(#ef6c00, 0.2) !important;
+            color: #ffcc80 !important;
+            border-color: rgba(#ffcc80, 0.3) !important;
+        }
+
+        &.bg-secondary {
+            background-color: rgba($dark-text-muted, 0.2) !important;
+            color: $dark-text-secondary !important;
+            border-color: rgba($dark-border, 0.5) !important;
+        }
+
+        &.bg-light {
+            background-color: $dark-bg-tertiary !important;
+            color: $dark-text-secondary !important;
+            border-color: $dark-border !important;
+        }
+    }
+
+    // Badges de tipo de producto
+    .badge-product-traditional {
+        background-color: rgba($dark-accent, 0.15);
+        color: $dark-accent-hover;
+        border-color: rgba($dark-accent, 0.3);
+    }
+
+    .badge-product-dropshipping {
+        background-color: rgba(#0277bd, 0.15);
+        color: #81d4fa;
+        border-color: rgba(#81d4fa, 0.3);
+    }
+
+    // Search input
+    .search-input-group {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+        &:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        &:focus-within {
+            box-shadow: 0 0 0 0.2rem rgba($dark-accent, 0.25);
+        }
+
+        .input-group-text {
+            background: $dark-bg-tertiary;
+            border-color: $dark-border;
+
+            i {
+                color: $dark-text-muted;
+            }
+        }
+
+        .search-input {
+            background: $dark-bg-secondary;
+            border-color: $dark-border;
+            color: $dark-text-primary;
+
+            &:focus {
+                border-color: $dark-accent;
+                background: $dark-bg-secondary;
+            }
+
+            &::placeholder {
+                color: $dark-text-muted;
+            }
+        }
+    }
+
+    // Product thumbnails
+    .product-thumbnail {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+        &:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+    }
+
+    // Action buttons in table
+    .action-buttons {
+        i {
+            &:hover {
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            }
+
+            &.icofont-pencil-alt-5 {
+                color: $dark-accent !important;
+
+                &:hover {
+                    background-color: rgba($dark-accent, 0.15);
+                }
+            }
+
+            &.icofont-copy {
+                color: #a5d6a7 !important;
+
+                &:hover {
+                    background-color: rgba(#a5d6a7, 0.15);
+                }
+            }
+
+            &.icofont-trash {
+                color: #ef9a9a !important;
+
+                &:hover {
+                    background-color: rgba(#ef9a9a, 0.15);
+                }
+            }
+        }
+    }
+
+    // Action buttons table style
+    .action-buttons-table {
+        .btn-action {
+            &.btn-action-info {
+                color: $dark-accent-hover;
+
+                &:hover {
+                    background-color: rgba($dark-accent, 0.15);
+                }
+            }
+
+            &.btn-action-purple {
+                color: #ce93d8;
+
+                &:hover {
+                    background-color: rgba(#ce93d8, 0.15);
+                }
+            }
+
+            &.btn-action-success {
+                color: #a5d6a7;
+
+                &:hover {
+                    background-color: rgba(#a5d6a7, 0.15);
+                }
+            }
+
+            &.btn-action-danger {
+                color: #ef9a9a;
+
+                &:hover {
+                    background-color: rgba(#ef9a9a, 0.15);
+                }
+            }
+        }
+    }
+
+    // PrimeNG DataTable
+    .p-datatable {
+        .p-datatable-thead > tr > th {
+            background: $dark-bg-tertiary !important;
+            color: $dark-text-primary !important;
+            border-color: $dark-border !important;
+        }
+
+        .p-datatable-tbody {
+            tr {
+                background: $dark-bg-secondary;
+
+                &:hover {
+                    background-color: rgba(255, 255, 255, 0.05) !important;
+                }
+
+                td {
+                    color: $dark-text-primary;
+                    border-color: $dark-border;
+
+                    img {
+                        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+                    }
+                }
+            }
+        }
+
+        .p-paginator {
+            background: transparent;
+
+            .p-paginator-element {
+                color: $dark-text-secondary;
+
+                &:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                }
+            }
+
+            .p-highlight {
+                background: $dark-accent;
+                color: white;
+            }
+        }
+    }
+
+    // FAB button
+    .btn-fab {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+
+        &:hover {
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+        }
+    }
+
+    // SweetAlert dark mode
+    :global .swal-wide {
+        .swal2-html-container {
+            hr {
+                border-top-color: $dark-border;
+            }
+        }
+    }
+}

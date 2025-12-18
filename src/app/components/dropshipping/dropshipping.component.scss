@@ -2,3 +2,12 @@
   min-height: 100vh;
   background-color: var(--surface-50);
 }
+
+// =============================================
+// DARK MODE - Katuq Purple Palette
+// =============================================
+:host-context(body.dark-only) {
+  .dropshipping-container {
+    background-color: #1a1625;
+  }
+}

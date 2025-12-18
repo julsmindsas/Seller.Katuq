@@ -1079,3 +1079,492 @@ img.product-thumbnail[src^="data:image/svg"] {
   background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
   border: none !important;
 }
+
+// =====================================
+// DARK THEME STYLES - KATUQ PALETTE
+// =====================================
+// Primary: #a78bfa
+// Background: #1a1625 / #262335
+// Border: #4a4366
+// Text: #e9e4f5
+
+:host-context(body.dark-only) {
+  // Dark theme variables
+  $dark-bg-primary: #1a1625;
+  $dark-bg-secondary: #262335;
+  $dark-bg-tertiary: #2d2a3e;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #b8b0c9;
+  $dark-text-muted: #8b839e;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #c4b5fd;
+
+  // Override variables
+  $text-primary: $dark-text-primary;
+  $text-secondary: $dark-text-secondary;
+  $text-muted: $dark-text-muted;
+  $border-color: $dark-border;
+  $bg-white: $dark-bg-secondary;
+  $bg-gray: $dark-bg-primary;
+  $bg-hover: $dark-bg-tertiary;
+  $accent-primary: $dark-primary;
+
+  // Modal content dark theme
+  .modal-content.modern-modal {
+    background-color: $dark-bg-primary;
+    border-color: $dark-border;
+  }
+
+  // Header dark theme
+  .modal-header.modern-header {
+    background: $dark-bg-secondary;
+    border-bottom-color: $dark-border;
+
+    .header-content {
+      .modal-title {
+        color: $dark-text-primary;
+
+        .modal-subtitle {
+          color: $dark-text-secondary;
+        }
+      }
+    }
+
+    .btn-close-modern {
+      background: transparent;
+      border-color: $dark-border;
+      color: $dark-text-secondary;
+
+      &:hover {
+        background: $dark-bg-tertiary;
+        color: $dark-text-primary;
+      }
+    }
+  }
+
+  // Body dark theme
+  .modal-body {
+    background: $dark-bg-primary;
+  }
+
+  .orden-envio-container {
+    background: $dark-bg-primary;
+  }
+
+  // Config compact container
+  .config-compact-container {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+  }
+
+  .config-compact-section {
+    .config-compact-label {
+      color: $dark-text-muted;
+    }
+  }
+
+  // Buttons compact
+  .btn-compact {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+
+    &:hover:not(:disabled) {
+      background: $dark-bg-tertiary;
+      border-color: lighten($dark-border, 10%);
+    }
+
+    &.btn-compact-primary {
+      background: $dark-primary;
+      border-color: $dark-primary;
+      color: white;
+
+      &:hover:not(:disabled) {
+        background: $dark-primary-hover;
+      }
+    }
+
+    &.btn-compact-outline {
+      background: transparent;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:hover:not(:disabled) {
+        background: $dark-bg-tertiary;
+      }
+    }
+  }
+
+  // Method compact
+  .method-compact {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+    color: $dark-text-secondary;
+
+    &:hover {
+      border-color: $dark-primary;
+      color: $dark-text-primary;
+    }
+
+    &.selected {
+      background: rgba($dark-primary, 0.2);
+      border-color: $dark-primary;
+      color: $dark-primary;
+    }
+  }
+
+  // Cards dark theme
+  .card.modern-card {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+
+    .card-header-modern {
+      background: $dark-bg-tertiary;
+      border-bottom-color: $dark-border;
+    }
+  }
+
+  // Table header compact
+  .table-header-compact {
+    .table-title-compact {
+      color: $dark-text-primary;
+    }
+  }
+
+  // Count badge
+  .count-badge {
+    background: $dark-bg-tertiary;
+    color: $dark-text-secondary;
+
+    &.badge-warning-compact {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fcd34d;
+    }
+  }
+
+  // Compact switch
+  .compact-switch {
+    .form-check-label {
+      color: $dark-text-secondary;
+    }
+  }
+
+  // Empty state
+  .empty-state-compact {
+    color: $dark-text-muted;
+
+    p {
+      color: $dark-text-secondary;
+    }
+
+    small {
+      color: $dark-text-muted;
+    }
+  }
+
+  // DataTable dark theme
+  ::ng-deep {
+    .p-datatable-compact {
+      .p-datatable-thead > tr > th {
+        background: $dark-bg-tertiary !important;
+        border-bottom-color: $dark-border;
+        color: $dark-text-secondary;
+      }
+
+      .p-datatable-tbody > tr {
+        background: $dark-bg-secondary;
+        border-bottom-color: $dark-border;
+
+        &:hover {
+          background: $dark-bg-tertiary !important;
+        }
+
+        &.row-moved {
+          background: rgba(245, 158, 11, 0.15) !important;
+        }
+
+        td {
+          color: $dark-text-primary;
+        }
+      }
+
+      .p-datatable-footer {
+        border-top-color: $dark-border;
+        background: $dark-bg-secondary;
+      }
+
+      .p-paginator {
+        background: $dark-bg-secondary;
+
+        .p-paginator-element {
+          color: $dark-text-primary;
+
+          &:hover {
+            background: $dark-bg-tertiary;
+          }
+
+          &.p-highlight {
+            background: $dark-primary;
+            color: white;
+          }
+        }
+      }
+    }
+
+    // Inputs dark theme
+    .input-compact {
+      .p-inputtext {
+        background: $dark-bg-tertiary;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &::placeholder {
+          color: $dark-text-muted;
+        }
+
+        &:focus {
+          border-color: $dark-primary;
+        }
+      }
+    }
+
+    .p-multiselect {
+      background: $dark-bg-tertiary;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      .p-multiselect-label {
+        color: $dark-text-primary;
+      }
+    }
+  }
+
+  // Badge compact
+  .badge-compact {
+    &.badge-compact-success {
+      background: rgba(34, 197, 94, 0.2);
+      color: #86efac;
+    }
+
+    &.badge-compact-warning {
+      background: rgba(245, 158, 11, 0.2);
+      color: #fcd34d;
+    }
+  }
+
+  // Button icon compact
+  .btn-icon-compact {
+    background: transparent;
+    border-color: $dark-border;
+    color: $dark-text-secondary;
+
+    &:hover {
+      background: $dark-primary;
+      border-color: $dark-primary;
+      color: white;
+    }
+  }
+
+  // Alert compact
+  .alert-compact {
+    border-color: $dark-border;
+
+    &.alert-compact-warning {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.3);
+      color: #fcd34d;
+    }
+  }
+
+  // Footer dark theme
+  .modal-footer.modern-footer {
+    background: $dark-bg-secondary;
+    border-top-color: $dark-border;
+
+    .pdf-progress-inline {
+      background: $dark-bg-tertiary;
+
+      .progress-bar-inline {
+        background: $dark-primary;
+      }
+    }
+  }
+
+  // Scrollbar dark theme
+  ::-webkit-scrollbar-track {
+    background: $dark-bg-tertiary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: $dark-border;
+
+    &:hover {
+      background: lighten($dark-border, 10%);
+    }
+  }
+
+  // Modal overlay dark theme
+  .modal-overlay {
+    background: rgba(0, 0, 0, 0.7);
+  }
+
+  .modal-container {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+
+    .modal-header-custom {
+      border-bottom-color: $dark-border;
+
+      h5 {
+        color: $dark-text-primary;
+      }
+
+      .btn-close-custom {
+        border-color: $dark-border;
+        color: $dark-text-secondary;
+
+        &:hover {
+          background: $dark-bg-tertiary;
+          color: $dark-text-primary;
+        }
+      }
+    }
+
+    .modal-body-custom {
+      background: $dark-bg-secondary;
+    }
+
+    .modal-footer-custom {
+      border-top-color: $dark-border;
+    }
+  }
+
+  // Transporter card dark theme
+  .transporter-card {
+    background: $dark-bg-secondary;
+    border-color: $dark-border;
+
+    &:hover {
+      border-color: $dark-primary;
+      background: rgba($dark-primary, 0.1);
+    }
+
+    &.transporter-selected {
+      border-color: $dark-primary;
+      background: rgba($dark-primary, 0.2);
+    }
+
+    .transporter-icon {
+      color: $dark-text-secondary;
+    }
+
+    .transporter-content {
+      .transporter-name {
+        color: $dark-text-primary;
+      }
+
+      .transporter-description {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Fecha entrega
+  .fecha-entrega {
+    color: $dark-text-primary;
+
+    i {
+      color: $dark-text-secondary;
+    }
+
+    &.urgente {
+      color: #f87171;
+
+      i {
+        color: #f87171;
+      }
+    }
+  }
+
+  // Info item dark theme
+  .info-item {
+    .info-label {
+      color: $dark-text-muted;
+    }
+
+    .info-value {
+      color: $dark-text-primary;
+
+      &.address-block {
+        background: $dark-bg-tertiary;
+        border-left-color: $dark-primary;
+      }
+    }
+  }
+
+  // Product thumbnail dark theme
+  .product-thumbnail {
+    border-color: $dark-border;
+    background: $dark-bg-tertiary;
+
+    &:not([src]) {
+      background: $dark-bg-tertiary;
+    }
+
+    &.image-error {
+      background: $dark-bg-tertiary;
+    }
+  }
+
+  // Delivery summary dark theme
+  .delivery-summary {
+    .delivery-item {
+      background: $dark-bg-tertiary;
+
+      .delivery-content {
+        .delivery-label {
+          color: $dark-text-muted;
+        }
+
+        .delivery-value {
+          color: $dark-text-primary;
+        }
+      }
+    }
+  }
+
+  // Payment summary dark theme
+  .payment-summary {
+    .payment-item {
+      .payment-label {
+        color: $dark-text-muted;
+      }
+
+      .payment-value {
+        color: $dark-text-primary;
+      }
+    }
+
+    .payment-item-total {
+      background: $dark-bg-tertiary;
+
+      .payment-label {
+        color: $dark-text-secondary;
+      }
+
+      .payment-value-total {
+        color: $dark-text-primary;
+      }
+    }
+  }
+
+  // Gradient backgrounds dark theme
+  .bg-gradient-primary {
+    background: linear-gradient(135deg, $dark-primary 0%, darken($dark-primary, 15%) 100%);
+  }
+
+  .bg-gradient-warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.3) 100%);
+  }
+}

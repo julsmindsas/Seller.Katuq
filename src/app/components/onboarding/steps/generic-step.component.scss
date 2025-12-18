@@ -305,3 +305,222 @@
     grid-template-columns: 1fr;
   }
 }
+
+// ============================================================================
+// DARK MODE - Katuq Purple Palette
+// ============================================================================
+:host-context(body.dark-only) {
+  // Dark Mode Variables
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-text-muted: #8b7fa8;
+  $dark-primary: #a78bfa;
+
+  .step-info-box {
+    .icon-container {
+      i {
+        color: $dark-primary;
+      }
+    }
+
+    h3 {
+      color: $dark-text-primary;
+    }
+
+    .description {
+      color: $dark-text-secondary;
+    }
+  }
+
+  .info-cards {
+    ::ng-deep .info-card {
+      background: $dark-bg-card;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border: 1px solid $dark-border;
+
+      .card-content {
+        i {
+          color: $dark-primary;
+        }
+
+        h4 {
+          color: $dark-text-primary;
+        }
+
+        p {
+          color: $dark-text-secondary;
+        }
+      }
+    }
+  }
+
+  .ai-notice {
+    background: $dark-bg-header;
+    border: 1px solid $dark-border;
+
+    i {
+      color: $dark-primary;
+    }
+
+    span {
+      color: $dark-text-primary;
+    }
+  }
+
+  .existing-data-notice {
+    i.pi-check-circle {
+      color: #34d399;
+    }
+
+    h4 {
+      color: $dark-text-primary;
+    }
+
+    p {
+      color: $dark-text-secondary;
+    }
+  }
+
+  .configuration-notice {
+    i {
+      color: $dark-border;
+    }
+
+    h4 {
+      color: $dark-text-primary;
+    }
+
+    p {
+      color: $dark-text-secondary;
+    }
+
+    .quick-options {
+      h5 {
+        color: $dark-text-muted;
+      }
+
+      .options-list {
+        .option-item {
+          border-color: $dark-border;
+          background: $dark-bg-card;
+
+          &:hover {
+            background: $dark-bg-header;
+          }
+
+          i {
+            color: $dark-primary;
+          }
+
+          span {
+            color: $dark-text-primary;
+          }
+        }
+      }
+    }
+  }
+
+  .config-form-container {
+    .config-form-title {
+      color: $dark-text-primary;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+  }
+
+  .onboarding-form {
+    .field {
+      label {
+        color: $dark-text-muted;
+      }
+
+      ::ng-deep input.p-inputtext,
+      ::ng-deep textarea.p-inputtextarea {
+        background: $dark-bg-base;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:focus {
+          border-color: $dark-primary;
+        }
+
+        &:hover:not(:focus) {
+          border-color: $dark-text-muted;
+        }
+
+        &::placeholder {
+          color: $dark-text-muted;
+        }
+      }
+    }
+  }
+
+  .skip-notice {
+    color: $dark-text-muted;
+  }
+
+  .required-notice {
+    background: rgba(#f59e0b, 0.1);
+    border-color: rgba(#f59e0b, 0.3);
+    color: #fbbf24;
+  }
+
+  ::ng-deep .p-button {
+    &.p-button-primary {
+      background: $dark-primary;
+      border-color: $dark-primary;
+
+      &:hover {
+        background: lighten($dark-primary, 10%);
+      }
+    }
+
+    &.p-button-success {
+      background: #10b981;
+      border-color: #10b981;
+
+      &:hover {
+        background: #059669;
+        border-color: #059669;
+      }
+    }
+
+    &.p-button-secondary,
+    &.p-button-outlined {
+      background: transparent;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:hover {
+        background: rgba($dark-primary, 0.1);
+        border-color: $dark-primary;
+      }
+    }
+
+    &.p-button-text {
+      color: $dark-text-secondary;
+
+      &:hover {
+        background: rgba($dark-primary, 0.1);
+      }
+    }
+  }
+
+  ::ng-deep .p-tag {
+    &.p-tag-success {
+      background: rgba(#10b981, 0.2);
+      color: #34d399;
+    }
+
+    &.p-tag-warning {
+      background: rgba(#f59e0b, 0.2);
+      color: #fbbf24;
+    }
+  }
+}

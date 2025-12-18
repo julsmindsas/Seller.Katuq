@@ -715,3 +715,91 @@ $color-danger: #e74c3c;
     image-rendering: crisp-edges;
   }
 }
+
+// ==============================================================================
+// DARK THEME - Katuq Palette (Solo para vista en pantalla, no para PDF)
+// ==============================================================================
+@media screen {
+  :host-context(body.dark-only) {
+    // Variables de dark theme Katuq
+    $dark-primary: #a78bfa;
+    $dark-bg-base: #1a1625;
+    $dark-bg-card: #262335;
+    $dark-bg-header: #2e2445;
+    $dark-border: #4a4366;
+    $dark-text-primary: #e9e4f5;
+    $dark-text-secondary: #c4b5fd;
+    $dark-success: #4ade80;
+    $dark-warning: #fbbf24;
+    $dark-danger: #f87171;
+
+    // Modal actions
+    .modal-actions {
+      background: $dark-bg-header;
+      border-top-color: $dark-border;
+
+      button {
+        &.btn-secondary {
+          background: $dark-border;
+          border-color: $dark-border;
+
+          &:hover {
+            background: darken($dark-border, 10%);
+          }
+        }
+
+        &.btn-primary {
+          background: $dark-primary;
+          border-color: $dark-primary;
+          color: $dark-bg-base;
+
+          &:hover:not(:disabled) {
+            background: lighten($dark-primary, 10%);
+            border-color: lighten($dark-primary, 10%);
+          }
+        }
+      }
+    }
+
+    // PDF Loading overlay
+    .pdf-loading {
+      background: rgba($dark-bg-base, 0.9);
+
+      .loading-content {
+        background: $dark-bg-card;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+
+        h3 {
+          color: $dark-primary;
+        }
+
+        .progress-bar {
+          background: $dark-bg-header;
+
+          .progress-fill {
+            background: linear-gradient(90deg, $dark-primary, lighten($dark-primary, 10%));
+          }
+        }
+
+        .progress-text {
+          color: $dark-primary;
+        }
+
+        .progress-message {
+          color: $dark-text-secondary;
+        }
+
+        .spinner-container {
+          .pdf-icon {
+            color: $dark-primary;
+          }
+
+          .spinner-circle {
+            border-color: rgba($dark-primary, 0.2);
+            border-top-color: $dark-primary;
+          }
+        }
+      }
+    }
+  }
+}

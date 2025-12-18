@@ -77,12 +77,112 @@
   .text-right {
     text-align: center !important;
   }
-  
+
   .card-header .row {
     text-align: center;
   }
-  
+
   .card-header .col-md-4:last-child {
     margin-top: 1rem;
+  }
+}
+
+// ============================================
+// DARK THEME - KATUQ PALETTE
+// ============================================
+:host-context(body.dark-only) {
+  // Variables del tema oscuro Katuq
+  $dark-bg-primary: #1a1625;
+  $dark-bg-secondary: #262335;
+  $dark-bg-tertiary: #2a2640;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #b8b0c9;
+  $dark-text-muted: #8b839d;
+  $dark-accent: #a78bfa;
+
+  // Form check
+  .form-check-input {
+    background-color: $dark-bg-tertiary;
+    border-color: $dark-border;
+
+    &:checked {
+      background-color: $dark-accent;
+      border-color: $dark-accent;
+    }
+
+    &:focus {
+      border-color: $dark-accent;
+      box-shadow: 0 0 0 0.25rem rgba($dark-accent, 0.25);
+    }
+  }
+
+  .form-check-label {
+    color: $dark-text-primary;
+  }
+
+  // Alert info
+  .alert-info {
+    background-color: rgba($dark-accent, 0.1);
+    border-color: rgba($dark-accent, 0.3);
+    color: $dark-text-secondary;
+  }
+
+  // Headings
+  .h5 {
+    color: $dark-text-primary;
+  }
+
+  // Text colors
+  .text-success {
+    color: #a5d6a7 !important;
+  }
+
+  .text-primary {
+    color: $dark-accent !important;
+  }
+
+  // Loader box
+  .loader-box {
+    background-color: rgba($dark-bg-primary, 0.8);
+  }
+
+  // Card header
+  .card-header {
+    background-color: $dark-bg-tertiary;
+    border-bottom-color: $dark-border;
+    color: $dark-text-primary;
+  }
+
+  // Badge secondary
+  .badge-secondary {
+    background-color: $dark-bg-tertiary;
+    color: $dark-text-secondary;
+  }
+
+  // Form switch
+  .form-switch .form-check-input {
+    background-color: $dark-bg-tertiary;
+    border-color: $dark-border;
+
+    &:checked {
+      background-color: #a5d6a7;
+    }
+  }
+
+  // Input group text
+  .input-group-text {
+    background-color: $dark-bg-tertiary;
+    border-color: $dark-border;
+    color: $dark-text-secondary;
+  }
+
+  // Invalid feedback
+  .is-invalid {
+    border-color: #ef9a9a;
+  }
+
+  .invalid-feedback {
+    color: #ef9a9a;
   }
 }

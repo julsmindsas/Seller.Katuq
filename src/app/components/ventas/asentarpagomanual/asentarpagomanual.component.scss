@@ -636,10 +636,342 @@
 // Ocultar flechas (spinners) del input de tipo number
 .no-spinner {
   -moz-appearance: textfield; /* Firefox */
-  
+
   &::-webkit-outer-spin-button,
   &::-webkit-inner-spin-button {
     -webkit-appearance: none; /* Chrome, Safari, Edge */
     margin: 0;
+  }
+}
+
+// ==============================================
+// DARK THEME SUPPORT - KATUQ PALETTE
+// ASENTAR PAGO MANUAL - Manual payment recording
+// ==============================================
+:host-context(body.dark-only) {
+  // Katuq Dark Theme Colors
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #8b5cf6;
+  $dark-success: #34d399;
+  $dark-error: #f87171;
+  $dark-warning: #fbbf24;
+
+  // Main Container
+  .payment-management-container {
+    background: linear-gradient(135deg, $dark-bg-base 0%, $dark-bg-header 100%);
+
+    // Modern Tabs
+    ::ng-deep .modern-tabs {
+      .p-tabview-nav {
+        background: $dark-bg-card;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+        li {
+          .p-tabview-nav-link {
+            background: transparent;
+            color: $dark-text-secondary;
+
+            &:hover {
+              background: rgba($dark-primary, 0.1);
+              color: $dark-text-primary;
+            }
+          }
+
+          &.p-highlight .p-tabview-nav-link {
+            background: $dark-primary;
+            color: $dark-bg-base;
+            box-shadow: 0 4px 12px rgba($dark-primary, 0.4);
+          }
+        }
+      }
+
+      .p-tabview-panels {
+        background: $dark-bg-card;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      }
+    }
+  }
+
+  // Payments List Container
+  .payments-list-container {
+    .list-header {
+      .section-title {
+        color: $dark-text-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      .section-subtitle {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Payment Card
+  .payment-card {
+    background: $dark-bg-card;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    border-color: $dark-border;
+
+    &:hover {
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, $dark-primary 0%, $dark-primary-hover 100%);
+
+      .status-badge {
+        &.status-pendiente {
+          background: rgba($dark-warning, 0.2);
+          color: $dark-warning;
+          border-color: rgba($dark-warning, 0.3);
+        }
+
+        &.status-aprobado {
+          background: rgba($dark-success, 0.2);
+          color: $dark-success;
+          border-color: rgba($dark-success, 0.3);
+        }
+
+        &.status-rechazado {
+          background: rgba($dark-error, 0.2);
+          color: $dark-error;
+          border-color: rgba($dark-error, 0.3);
+        }
+      }
+    }
+
+    .card-body {
+      background: $dark-bg-card;
+
+      .payment-details {
+        .detail-row {
+          border-bottom-color: $dark-border;
+
+          .label {
+            color: $dark-text-secondary;
+          }
+
+          .value {
+            color: $dark-text-primary;
+
+            &.amount {
+              color: $dark-success;
+            }
+          }
+        }
+      }
+    }
+
+    .card-footer {
+      background: $dark-bg-header;
+
+      .footer-info {
+        .text-muted {
+          color: $dark-text-secondary !important;
+        }
+      }
+    }
+  }
+
+  // Empty State
+  .empty-state {
+    color: $dark-text-secondary;
+
+    .empty-icon {
+      color: $dark-border;
+    }
+
+    h4 {
+      color: $dark-text-primary;
+    }
+  }
+
+  // Payment Form Container
+  .payment-form-container {
+    .form-header {
+      .section-title {
+        color: $dark-text-primary;
+
+        i {
+          color: $dark-success;
+        }
+      }
+
+      .payment-summary {
+        background: linear-gradient(135deg, $dark-primary 0%, $dark-primary-hover 100%);
+        box-shadow: 0 4px 16px rgba($dark-primary, 0.3);
+      }
+    }
+  }
+
+  // Modern Form
+  .modern-form {
+    .form-grid {
+      .form-group {
+        .form-label {
+          color: $dark-text-primary;
+
+          i {
+            color: $dark-primary;
+          }
+
+          .required {
+            color: $dark-error;
+          }
+        }
+
+        .form-control {
+          background: $dark-bg-header;
+          border-color: $dark-border;
+          color: $dark-text-primary;
+
+          &:focus {
+            border-color: $dark-primary;
+            box-shadow: 0 0 0 2px rgba($dark-primary, 0.2);
+          }
+
+          &.is-invalid {
+            border-color: $dark-error;
+            box-shadow: 0 0 0 2px rgba($dark-error, 0.2);
+          }
+
+          &::placeholder {
+            color: rgba($dark-text-secondary, 0.6);
+          }
+        }
+
+        .input-group {
+          .input-group-text {
+            background: $dark-bg-header;
+            border-color: $dark-border;
+            color: $dark-text-secondary;
+          }
+        }
+
+        .invalid-feedback {
+          color: $dark-error;
+        }
+
+        .alert {
+          &.alert-warning {
+            background: linear-gradient(135deg, rgba($dark-warning, 0.15), rgba($dark-warning, 0.25));
+            color: $dark-warning;
+
+            i {
+              color: $dark-warning;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // File Upload Area
+  .file-upload-area {
+    border-color: $dark-border;
+    background: $dark-bg-header;
+
+    &:hover {
+      border-color: $dark-primary;
+      background: rgba($dark-primary, 0.1);
+    }
+
+    &.has-file {
+      border-color: $dark-success;
+      background: rgba($dark-success, 0.15);
+    }
+
+    .upload-content {
+      .upload-icon {
+        color: $dark-primary;
+      }
+
+      .upload-text {
+        color: $dark-text-primary;
+      }
+
+      .upload-hint {
+        color: $dark-text-secondary;
+      }
+    }
+
+    .file-selected {
+      color: $dark-success;
+    }
+  }
+
+  // Form Actions
+  .form-actions {
+    border-top-color: $dark-border;
+
+    .btn {
+      &.btn-outline-secondary {
+        border-color: $dark-border;
+        color: $dark-text-secondary;
+
+        &:hover {
+          background: $dark-bg-header;
+          color: $dark-text-primary;
+        }
+      }
+
+      &.btn-primary {
+        background: linear-gradient(135deg, $dark-primary, $dark-primary-hover);
+        border: none;
+        color: $dark-bg-base;
+        box-shadow: 0 4px 16px rgba($dark-primary, 0.4);
+
+        &:hover:not(:disabled) {
+          box-shadow: 0 6px 20px rgba($dark-primary, 0.5);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+        }
+      }
+    }
+  }
+
+  // Action Buttons
+  .btn-outline-primary {
+    border-color: $dark-primary;
+    color: $dark-primary;
+
+    &:hover {
+      background: $dark-primary;
+      color: $dark-bg-base;
+    }
+  }
+
+  .btn-outline-danger {
+    border-color: $dark-error;
+    color: $dark-error;
+
+    &:hover {
+      background: $dark-error;
+      color: #fff;
+    }
+  }
+
+  // Scrollbar
+  ::-webkit-scrollbar-track {
+    background: $dark-bg-base;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: $dark-primary;
+
+    &:hover {
+      background: $dark-primary-hover;
+    }
   }
 }

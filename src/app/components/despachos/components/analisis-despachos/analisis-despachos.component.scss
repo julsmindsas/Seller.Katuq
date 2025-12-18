@@ -63,3 +63,174 @@
     color: var(--primary-color);
     border-bottom: 2px solid var(--primary-color) !important;
 }
+
+// =====================================
+// DARK THEME STYLES - KATUQ PALETTE
+// =====================================
+// Primary: #a78bfa
+// Background: #1a1625 / #262335
+// Border: #4a4366
+// Text: #e9e4f5
+
+:host-context(body.dark-only) {
+  // Dark theme variables
+  $dark-bg-primary: #1a1625;
+  $dark-bg-secondary: #262335;
+  $dark-bg-tertiary: #2d2a3e;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #b8b0c9;
+  $dark-text-muted: #8b839e;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #c4b5fd;
+
+  // Header dark theme
+  .analisis-header {
+    background-color: $dark-bg-secondary;
+    border-bottom-color: $dark-border;
+
+    h5 {
+      color: $dark-text-primary;
+    }
+  }
+
+  // Body dark theme
+  .analisis-body {
+    background-color: $dark-bg-primary;
+  }
+
+  // Metric cards dark theme
+  .metric-card {
+    background-color: $dark-bg-secondary;
+    border-color: $dark-border;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+
+    .card-header {
+      background-color: $dark-bg-tertiary;
+      border-bottom-color: $dark-border;
+      color: $dark-text-primary;
+    }
+
+    .list-group-flush .list-group-item {
+      background-color: $dark-bg-secondary;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: $dark-bg-tertiary;
+      }
+    }
+  }
+
+  // Background utilities dark theme
+  .bg-info-light {
+    background-color: rgba($dark-primary, 0.15) !important;
+  }
+
+  .text-info-dark {
+    color: $dark-primary-hover !important;
+  }
+
+  // Table hover dark theme
+  .table-hover tbody tr:hover {
+    background-color: rgba($dark-primary, 0.1);
+  }
+
+  // PrimeNG TabView dark theme
+  ::ng-deep {
+    .p-tabview {
+      .p-tabview-nav {
+        background-color: $dark-bg-secondary;
+        border-bottom-color: $dark-border;
+
+        li {
+          .p-tabview-nav-link {
+            background-color: transparent;
+            color: $dark-text-secondary;
+            border-color: transparent;
+
+            &:hover {
+              background-color: rgba($dark-primary, 0.1);
+              color: $dark-text-primary;
+            }
+          }
+
+          &.p-highlight .p-tabview-nav-link {
+            color: $dark-primary !important;
+            border-bottom-color: $dark-primary !important;
+          }
+        }
+      }
+
+      .p-tabview-panels {
+        background-color: $dark-bg-primary;
+        color: $dark-text-primary;
+
+        .p-tabview-panel {
+          background-color: transparent;
+        }
+      }
+    }
+  }
+
+  // Card dark theme
+  .card {
+    background-color: $dark-bg-secondary;
+    border-color: $dark-border;
+
+    .card-header {
+      background-color: $dark-bg-tertiary;
+      border-bottom-color: $dark-border;
+      color: $dark-text-primary;
+    }
+
+    .card-body {
+      background-color: $dark-bg-secondary;
+      color: $dark-text-primary;
+    }
+  }
+
+  // Badge dark theme
+  .badge {
+    &.bg-primary {
+      background-color: $dark-primary !important;
+    }
+
+    &.bg-secondary {
+      background-color: $dark-text-muted !important;
+    }
+
+    &.bg-success {
+      background-color: #22c55e !important;
+    }
+
+    &.bg-warning {
+      background-color: #f59e0b !important;
+      color: $dark-bg-primary !important;
+    }
+
+    &.bg-danger {
+      background-color: #ef4444 !important;
+    }
+
+    &.bg-info {
+      background-color: $dark-primary !important;
+    }
+  }
+
+  // Text utilities dark theme
+  .text-muted {
+    color: $dark-text-muted !important;
+  }
+
+  .text-dark {
+    color: $dark-text-primary !important;
+  }
+
+  // List group dark theme
+  .list-group-item {
+    background-color: $dark-bg-secondary;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+  }
+}

@@ -13,3 +13,15 @@
 ::ng-deep .p-inputnumber {
   width: 100%;
 }
+
+// ============================================================================
+// DARK MODE - Katuq Purple Palette (additional styles)
+// ============================================================================
+:host-context(body.dark-only) {
+  $dark-primary: #a78bfa;
+
+  .badge-days {
+    background: rgba($dark-primary, 0.2);
+    color: $dark-primary;
+  }
+}

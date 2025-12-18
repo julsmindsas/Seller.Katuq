@@ -699,3 +699,258 @@
     max-width: 180px;
   }
 }
+
+// ==============================================================================
+// DARK THEME - Katuq Palette
+// ==============================================================================
+:host-context(body.dark-only) {
+  // Variables de dark theme Katuq
+  $dark-primary: #a78bfa;
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-success: #4ade80;
+  $dark-warning: #fbbf24;
+  $dark-danger: #f87171;
+  $dark-info: #60a5fa;
+
+  // Card
+  .card {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  // Table
+  .table {
+    color: $dark-text-primary;
+
+    thead th {
+      background: $dark-bg-header;
+      color: $dark-text-primary;
+      border-bottom-color: $dark-primary;
+    }
+
+    tbody {
+      tr:nth-child(even) {
+        background: $dark-bg-base;
+      }
+
+      tr:hover {
+        background: rgba($dark-primary, 0.15);
+      }
+    }
+
+    td, th {
+      border-color: $dark-border;
+    }
+
+    td:last-child, th:last-child {
+      background: $dark-bg-header;
+    }
+  }
+
+  // Fallback avatar
+  .fallback-avatar {
+    background: $dark-bg-header;
+    border-color: $dark-border;
+    color: $dark-text-secondary;
+  }
+
+  // Image viewer
+  .image-viewer-overlay {
+    background-color: rgba($dark-bg-base, 0.9);
+  }
+
+  .image-viewer-close {
+    background: $dark-bg-card;
+    color: $dark-text-primary;
+  }
+
+  // Buttons
+  .btn-outline-primary {
+    border-color: $dark-primary;
+    color: $dark-primary;
+
+    &:hover {
+      background: linear-gradient(90deg, $dark-primary 0%, lighten($dark-primary, 10%) 100%);
+      border-color: $dark-primary;
+      color: $dark-bg-base;
+    }
+  }
+
+  // Modern badges
+  .modern-badge {
+    &.badge-success {
+      background: linear-gradient(135deg, rgba($dark-success, 0.2) 0%, rgba($dark-success, 0.1) 100%);
+      color: $dark-success;
+      border-color: $dark-success;
+    }
+
+    &.badge-warning {
+      background: linear-gradient(135deg, rgba($dark-warning, 0.2) 0%, rgba($dark-warning, 0.1) 100%);
+      color: $dark-warning;
+      border-color: $dark-warning;
+    }
+
+    &.badge-danger {
+      background: linear-gradient(135deg, rgba($dark-danger, 0.2) 0%, rgba($dark-danger, 0.1) 100%);
+      color: $dark-danger;
+      border-color: $dark-danger;
+    }
+
+    &.badge-info {
+      background: linear-gradient(135deg, rgba($dark-info, 0.2) 0%, rgba($dark-info, 0.1) 100%);
+      color: $dark-info;
+      border-color: $dark-info;
+    }
+
+    &.badge-primary {
+      background: linear-gradient(135deg, rgba($dark-primary, 0.2) 0%, rgba($dark-primary, 0.1) 100%);
+      color: $dark-primary;
+      border-color: $dark-primary;
+    }
+
+    &.badge-secondary {
+      background: linear-gradient(135deg, rgba($dark-border, 0.3) 0%, rgba($dark-border, 0.15) 100%);
+      color: $dark-text-secondary;
+      border-color: $dark-border;
+    }
+
+    &.badge-dark {
+      background: linear-gradient(135deg, rgba(52, 58, 64, 0.4) 0%, rgba(52, 58, 64, 0.2) 100%);
+      color: $dark-text-primary;
+      border-color: $dark-border;
+    }
+  }
+
+  // Revisado badge
+  .revisado-badge {
+    background: linear-gradient(135deg, $dark-success 0%, lighten($dark-success, 10%) 100%) !important;
+    color: $dark-bg-base;
+  }
+
+  // Row revisada
+  ::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada {
+    background-color: rgba($dark-success, 0.15) !important;
+    border-left-color: $dark-success !important;
+  }
+
+  ::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada:hover {
+    background-color: rgba($dark-success, 0.2) !important;
+  }
+
+  ::ng-deep .p-datatable .p-datatable-tbody > tr.row-revisada:nth-child(even) {
+    background-color: rgba($dark-success, 0.12) !important;
+  }
+
+  // Metrics breadcrumb panel
+  .metrics-breadcrumb-panel {
+    background: linear-gradient(135deg, $dark-bg-card 0%, $dark-bg-header 100%);
+
+    .d-flex::-webkit-scrollbar-thumb {
+      background-color: $dark-border;
+    }
+  }
+
+  .metric-chip {
+    background-color: $dark-bg-header;
+    color: $dark-text-secondary;
+
+    .metric-badge {
+      background-color: rgba($dark-bg-base, 0.9);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+
+    &.metric-chip-primary {
+      background-color: rgba($dark-primary, 0.15);
+      color: $dark-primary;
+
+      .metric-badge {
+        background-color: $dark-primary;
+        color: $dark-bg-base;
+      }
+    }
+
+    &.metric-chip-success {
+      background-color: rgba($dark-success, 0.15);
+      color: $dark-success;
+
+      .metric-badge {
+        background-color: $dark-success;
+        color: $dark-bg-base;
+      }
+    }
+
+    &.metric-chip-warning {
+      background-color: rgba($dark-warning, 0.15);
+      color: $dark-warning;
+
+      .metric-badge {
+        background-color: $dark-warning;
+        color: $dark-bg-base;
+      }
+    }
+
+    &.metric-chip-danger {
+      background-color: rgba($dark-danger, 0.15);
+      color: $dark-danger;
+
+      .metric-badge {
+        background-color: $dark-danger;
+        color: white;
+      }
+    }
+
+    &.metric-chip-info {
+      background-color: rgba($dark-info, 0.15);
+      color: $dark-info;
+
+      .metric-badge {
+        background-color: $dark-info;
+        color: $dark-bg-base;
+      }
+    }
+
+    &.metric-chip-secondary {
+      background-color: rgba($dark-border, 0.3);
+      color: $dark-text-secondary;
+
+      .metric-badge {
+        background-color: $dark-border;
+        color: $dark-text-primary;
+      }
+    }
+
+    &.metric-chip-production {
+      background-color: rgba($dark-primary, 0.15);
+      color: $dark-primary;
+
+      .metric-badge {
+        background-color: $dark-primary;
+        color: $dark-bg-base;
+      }
+    }
+
+    &.metric-chip-packed {
+      background-color: rgba($dark-success, 0.15);
+      color: $dark-success;
+
+      .metric-badge {
+        background-color: $dark-success;
+        color: $dark-bg-base;
+      }
+    }
+  }
+
+  .separator {
+    color: $dark-border;
+  }
+
+  .metric-divider {
+    background-color: $dark-border;
+  }
+}

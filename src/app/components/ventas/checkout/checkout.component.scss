@@ -802,4 +802,321 @@
     }
   }
 }
-  
+
+// ==============================================================================
+// DARK THEME - Katuq Palette
+// ==============================================================================
+:host-context(body.dark-only) {
+  // Variables de dark theme Katuq
+  $dark-primary: #a78bfa;
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-success: #4ade80;
+  $dark-warning: #fbbf24;
+  $dark-danger: #f87171;
+  $dark-info: #60a5fa;
+
+  // Checkout header
+  .checkout-header {
+    border-bottom-color: $dark-border;
+
+    h4 {
+      color: $dark-text-primary;
+    }
+  }
+
+  .order-number .badge {
+    background-color: $dark-bg-header;
+    color: $dark-primary;
+  }
+
+  // Delivery estimate
+  .delivery-estimate .card {
+    background-color: $dark-bg-card;
+    border-left-color: $dark-primary;
+
+    &:hover {
+      background-color: rgba($dark-primary, 0.1);
+    }
+  }
+
+  .delivery-icon {
+    background-color: rgba($dark-primary, 0.15);
+    color: $dark-primary;
+  }
+
+  // Accordion
+  .accordion-item {
+    background-color: transparent;
+  }
+
+  .accordion-header {
+    background-color: $dark-bg-header;
+  }
+
+  .accordion-button {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+
+    &:not(.collapsed) {
+      background-color: $dark-bg-card;
+      color: $dark-primary;
+      border-color: rgba($dark-primary, 0.3);
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.15rem rgba($dark-primary, 0.25);
+      border-color: rgba($dark-primary, 0.35);
+    }
+
+    &::before {
+      background-color: rgba($dark-primary, 0.15);
+    }
+
+    &:not(.collapsed)::before {
+      background-color: rgba($dark-primary, 0.25);
+    }
+  }
+
+  .accordion-body {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+  }
+
+  .accordion-summary {
+    color: $dark-text-secondary;
+
+    span.complete {
+      color: $dark-success;
+    }
+  }
+
+  // Checkout details
+  .checkout-details {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .title-box h4 {
+    color: $dark-text-primary;
+  }
+
+  // Products container
+  .products-container {
+    &::-webkit-scrollbar-track {
+      background: $dark-bg-base;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $dark-border;
+    }
+  }
+
+  .product-card {
+    background-color: $dark-bg-header;
+
+    &:hover {
+      background-color: rgba($dark-primary, 0.1);
+    }
+  }
+
+  .product-name {
+    color: $dark-text-primary;
+  }
+
+  .product-details {
+    color: $dark-text-secondary;
+  }
+
+  .quantity {
+    color: $dark-text-secondary;
+  }
+
+  .price {
+    color: $dark-primary;
+  }
+
+  // Sub-total
+  .sub-total li {
+    border-bottom-color: $dark-border;
+    color: $dark-text-primary;
+
+    &:last-child {
+      color: $dark-primary;
+      border-top-color: $dark-primary;
+    }
+  }
+
+  // Two column list
+  .two-column-list {
+    background-color: rgba($dark-primary, 0.08);
+
+    li {
+      border-bottom-color: rgba($dark-primary, 0.15);
+    }
+
+    .title {
+      color: $dark-text-secondary;
+    }
+
+    .value {
+      color: $dark-primary;
+    }
+  }
+
+  // Payment tabs
+  .payment-tabs {
+    border-bottom-color: $dark-border;
+
+    .nav-link {
+      color: $dark-text-secondary;
+
+      &.active {
+        color: $dark-primary;
+        border-bottom-color: $dark-primary;
+      }
+    }
+  }
+
+  // Payment method card
+  .payment-method-card {
+    background-color: $dark-bg-header;
+    border-color: $dark-border;
+
+    i {
+      color: $dark-text-secondary;
+    }
+
+    span {
+      color: $dark-text-primary;
+    }
+  }
+
+  .payment-radio:checked + .payment-method-card {
+    background-color: rgba($dark-primary, 0.15);
+    border-color: $dark-primary;
+
+    i, span {
+      color: $dark-primary;
+    }
+
+    &::before {
+      color: $dark-primary;
+      background-color: $dark-bg-card;
+    }
+  }
+
+  .payment-radio:focus + .payment-method-card {
+    box-shadow: 0 0 0 0.2rem rgba($dark-primary, 0.2);
+  }
+
+  // Payment security
+  .payment-security {
+    background-color: rgba($dark-primary, 0.08);
+  }
+
+  .security-badge {
+    i {
+      color: $dark-primary;
+    }
+
+    span {
+      color: $dark-text-primary;
+    }
+  }
+
+  // Order place button
+  .order-place .btn {
+    box-shadow: 0 2px 4px rgba($dark-primary, 0.3);
+
+    &:hover {
+      box-shadow: 0 4px 8px rgba($dark-primary, 0.4);
+    }
+  }
+
+  // Info summary
+  .info-summary-item {
+    background-color: $dark-bg-header;
+    color: $dark-text-primary;
+
+    i {
+      color: $dark-primary;
+    }
+  }
+
+  // Alerts
+  .alert {
+    &.alert-danger {
+      background-color: rgba($dark-danger, 0.15);
+      color: $dark-danger;
+      border-left-color: $dark-danger;
+    }
+  }
+
+  .text-danger {
+    color: $dark-danger !important;
+  }
+
+  // Notes section
+  .notes-section {
+    .notes-section-title {
+      color: $dark-text-primary;
+      border-bottom-color: $dark-border;
+    }
+
+    .notes-list {
+      .note-item {
+        background-color: $dark-bg-header;
+        border-left-color: $dark-primary;
+
+        .note-header {
+          .note-date {
+            color: $dark-text-secondary;
+          }
+
+          .note-product {
+            color: $dark-primary;
+            background-color: rgba($dark-primary, 0.15);
+          }
+        }
+
+        .note-content {
+          color: $dark-text-primary;
+        }
+
+        .note-attachments {
+          .attachments-title {
+            color: $dark-text-secondary;
+          }
+
+          .attachments-grid {
+            .attachment-item {
+              .attachment-preview {
+                background-color: $dark-bg-card;
+
+                .attachment-document {
+                  color: $dark-text-secondary;
+
+                  i {
+                    color: $dark-primary;
+                  }
+                }
+
+                .attachment-overlay {
+                  background: rgba($dark-bg-base, 0.8);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

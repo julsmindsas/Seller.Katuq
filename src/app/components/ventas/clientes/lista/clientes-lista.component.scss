@@ -1391,3 +1391,653 @@ $border-radius: 8px;
     padding: $clientes-spacing-sm;
   }
 }
+
+// ==============================================
+// DARK THEME SUPPORT - KATUQ PALETTE
+// ==============================================
+:host-context(body.dark-only) {
+  // Katuq Dark Theme Colors
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #8b5cf6;
+  $dark-success: #34d399;
+  $dark-error: #f87171;
+  $dark-warning: #fbbf24;
+
+  // Module Header
+  .module-header {
+    background: linear-gradient(to right, $dark-bg-card, $dark-bg-header);
+
+    h5 {
+      color: $dark-text-primary;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+
+    p {
+      color: $dark-text-secondary;
+    }
+  }
+
+  // Card Header
+  .card-header {
+    background: $dark-bg-header;
+    border-bottom-color: $dark-border;
+
+    &:hover {
+      background-color: $dark-bg-card !important;
+    }
+  }
+
+  // Metrics Breadcrumb Panel
+  .metrics-breadcrumb-panel {
+    background: linear-gradient(135deg, $dark-bg-header 0%, $dark-bg-card 100%);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .metrics-scroll-container {
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba($dark-text-secondary, 0.3);
+    }
+  }
+
+  .metric-chip {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+    color: $dark-text-primary;
+
+    .metric-label {
+      color: $dark-text-primary;
+    }
+
+    .metric-badge {
+      background: $dark-bg-header;
+      color: $dark-text-primary;
+    }
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border-color: $dark-primary;
+    }
+
+    &.active {
+      border-color: $dark-primary;
+      box-shadow: 0 2px 12px rgba($dark-primary, 0.3);
+    }
+
+    &.metric-chip-primary.active {
+      border-color: $dark-text-secondary;
+      background: $dark-bg-header;
+
+      .metric-label {
+        color: $dark-text-primary;
+      }
+
+      .metric-badge {
+        background: $dark-text-secondary;
+        color: $dark-bg-base;
+      }
+    }
+
+    &.metric-chip-success {
+      i {
+        color: $dark-success;
+      }
+
+      &.active {
+        border-color: $dark-success;
+        background: rgba($dark-success, 0.15);
+
+        .metric-label {
+          color: $dark-success;
+        }
+      }
+    }
+
+    &.metric-chip-danger {
+      i {
+        color: $dark-error;
+      }
+
+      &.active {
+        border-color: $dark-error;
+        background: rgba($dark-error, 0.15);
+
+        .metric-label {
+          color: $dark-error;
+        }
+      }
+    }
+  }
+
+  .separator {
+    color: $dark-border;
+  }
+
+  // Table Toolbar
+  .table-toolbar {
+    background-color: $dark-bg-header;
+  }
+
+  .badge-count {
+    background-color: rgba($dark-primary, 0.2);
+    color: $dark-primary;
+    border-color: rgba($dark-primary, 0.4);
+
+    &:hover {
+      background-color: rgba($dark-primary, 0.3);
+    }
+  }
+
+  // Table Container
+  .table-container {
+    background: $dark-bg-card;
+  }
+
+  // Modern Badges
+  .modern-badge {
+    &.badge-success {
+      background-color: rgba($dark-success, 0.15);
+      color: $dark-success;
+      border-color: rgba($dark-success, 0.3);
+
+      i {
+        color: $dark-success;
+      }
+
+      &:hover {
+        background-color: rgba($dark-success, 0.25);
+      }
+    }
+
+    &.badge-danger {
+      background-color: rgba($dark-error, 0.15);
+      color: $dark-error;
+      border-color: rgba($dark-error, 0.3);
+
+      i {
+        color: $dark-error;
+      }
+
+      &:hover {
+        background-color: rgba($dark-error, 0.25);
+      }
+    }
+
+    &.badge-secondary {
+      background-color: rgba($dark-text-secondary, 0.15);
+      color: $dark-text-secondary;
+      border-color: rgba($dark-text-secondary, 0.3);
+
+      i {
+        color: $dark-text-secondary;
+      }
+
+      &:hover {
+        background-color: rgba($dark-text-secondary, 0.25);
+      }
+    }
+
+    &.badge-info {
+      background-color: rgba($dark-primary, 0.15);
+      color: $dark-primary;
+      border-color: rgba($dark-primary, 0.3);
+
+      i {
+        color: $dark-primary;
+      }
+
+      &:hover {
+        background-color: rgba($dark-primary, 0.25);
+      }
+    }
+
+    &.badge-warning {
+      background-color: rgba($dark-warning, 0.15);
+      color: $dark-warning;
+      border-color: rgba($dark-warning, 0.3);
+
+      i {
+        color: $dark-warning;
+      }
+
+      &:hover {
+        background-color: rgba($dark-warning, 0.25);
+      }
+    }
+  }
+
+  // Action Buttons
+  .btn-options {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+
+    &:hover {
+      background-color: $dark-bg-header;
+      border-color: $dark-primary;
+    }
+
+    .pi {
+      color: $dark-text-primary;
+    }
+  }
+
+  .list-actions {
+    background-color: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+    li {
+      color: $dark-text-primary;
+
+      &:hover {
+        background-color: rgba($dark-primary, 0.15);
+        color: $dark-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      &.separator {
+        background-color: $dark-border;
+      }
+    }
+  }
+
+  // Expanded Row
+  .expanded-row {
+    background-color: $dark-bg-header;
+  }
+
+  .detail-section {
+    border-color: $dark-border;
+    background-color: $dark-bg-card;
+  }
+
+  .detail-title {
+    color: $dark-text-primary;
+    border-bottom-color: $dark-border;
+
+    i {
+      color: $dark-primary;
+    }
+  }
+
+  .detail-label {
+    color: $dark-text-secondary;
+  }
+
+  .detail-value {
+    color: $dark-text-primary;
+  }
+
+  // Loader
+  .loader-box {
+    background: rgba($dark-bg-base, 0.95);
+  }
+
+  .loader-8 {
+    &:after {
+      border-color: $dark-primary;
+      border-right-color: transparent;
+    }
+  }
+
+  // Lista Container
+  .clientes-lista-container {
+    background: $dark-bg-base;
+  }
+
+  // Lista Header
+  .lista-header {
+    background: $dark-bg-card;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    h1, h2 {
+      color: $dark-text-primary;
+
+      i {
+        color: $dark-primary;
+      }
+    }
+
+    p {
+      color: $dark-text-secondary;
+    }
+  }
+
+  // Filters Bar
+  .filters-bar {
+    background: $dark-bg-card;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    .filter-group {
+      label {
+        color: $dark-text-secondary;
+      }
+
+      select {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+      }
+    }
+
+    .search-group {
+      input {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &::placeholder {
+          color: rgba($dark-text-secondary, 0.6);
+        }
+      }
+    }
+  }
+
+  // Action Buttons
+  .action-buttons {
+    .btn-action {
+      &.btn-view {
+        background: rgba($dark-primary, 0.15);
+        color: $dark-primary;
+        border-color: rgba($dark-primary, 0.3);
+
+        &:hover {
+          background: $dark-primary;
+          color: $dark-bg-base;
+        }
+      }
+
+      &.btn-edit {
+        background: rgba($dark-warning, 0.15);
+        color: $dark-warning;
+        border-color: rgba($dark-warning, 0.3);
+
+        &:hover {
+          background: $dark-warning;
+          color: $dark-bg-base;
+        }
+      }
+
+      &.btn-delete {
+        background: rgba($dark-error, 0.15);
+        color: $dark-error;
+        border-color: rgba($dark-error, 0.3);
+
+        &:hover {
+          background: $dark-error;
+          color: #fff;
+        }
+      }
+    }
+  }
+
+  // Status Badges
+  .status-badge {
+    &.status-active {
+      background: rgba($dark-success, 0.15);
+      color: $dark-success;
+      border-color: rgba($dark-success, 0.3);
+    }
+
+    &.status-inactive {
+      background: rgba($dark-text-secondary, 0.15);
+      color: $dark-text-secondary;
+      border-color: rgba($dark-text-secondary, 0.3);
+    }
+
+    &.status-pending {
+      background: rgba($dark-warning, 0.15);
+      color: $dark-warning;
+      border-color: rgba($dark-warning, 0.3);
+    }
+
+    &.status-blocked {
+      background: rgba($dark-error, 0.15);
+      color: $dark-error;
+      border-color: rgba($dark-error, 0.3);
+    }
+  }
+
+  // Column Customization
+  .columna {
+    background-color: $dark-primary;
+    color: $dark-bg-base;
+  }
+
+  // Export Buttons
+  .export-buttons {
+    .btn-export {
+      background: $dark-bg-card;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &:hover {
+        background: $dark-primary;
+        color: $dark-bg-base;
+        border-color: $dark-primary;
+        box-shadow: 0 4px 12px rgba($dark-primary, 0.4);
+      }
+    }
+  }
+
+  // Bulk Actions
+  .bulk-actions {
+    background: $dark-primary;
+    color: $dark-bg-base;
+
+    .bulk-buttons {
+      .btn {
+        background: rgba($dark-bg-base, 0.2);
+        color: $dark-bg-base;
+        border-color: rgba($dark-bg-base, 0.3);
+
+        &:hover {
+          background: $dark-bg-base;
+          color: $dark-primary;
+        }
+      }
+    }
+  }
+
+  // Empty State
+  .empty-state {
+    background: $dark-bg-card;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    .empty-icon {
+      color: $dark-text-secondary;
+    }
+
+    h3 {
+      color: $dark-text-primary;
+    }
+
+    p {
+      color: $dark-text-secondary;
+    }
+  }
+
+  // Loading Overlay
+  .loading-overlay {
+    background: rgba($dark-bg-base, 0.95);
+
+    .loading-content {
+      .spinner {
+        border-color: $dark-border;
+        border-top-color: $dark-primary;
+      }
+
+      p {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // PrimeNG DataTable
+  ::ng-deep {
+    .p-datatable {
+      background: $dark-bg-card;
+      border-color: $dark-border;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+      .p-datatable-header {
+        background: $dark-bg-card;
+        border-bottom-color: $dark-border;
+      }
+
+      .p-datatable-thead > tr > th {
+        background: $dark-bg-header;
+        color: $dark-text-secondary;
+        border-bottom-color: $dark-border;
+
+        &:hover {
+          background: $dark-bg-card;
+        }
+
+        .p-sortable-column-icon {
+          color: $dark-text-secondary;
+        }
+
+        &.p-highlight {
+          background: $dark-primary;
+          color: $dark-bg-base;
+
+          .p-sortable-column-icon {
+            color: $dark-bg-base;
+          }
+        }
+
+        input.p-column-filter {
+          background: $dark-bg-card;
+          border-color: $dark-border;
+          color: $dark-text-primary;
+        }
+      }
+
+      .p-datatable-tbody {
+        > tr {
+          background: $dark-bg-card;
+          color: $dark-text-primary;
+
+          &:nth-child(even) {
+            background: rgba($dark-bg-header, 0.5);
+          }
+
+          &:hover {
+            background: rgba($dark-primary, 0.1) !important;
+          }
+
+          &.p-highlight {
+            background: rgba($dark-primary, 0.2);
+          }
+
+          &.row-active {
+            background: rgba($dark-primary, 0.15) !important;
+          }
+
+          > td {
+            border-bottom-color: $dark-border;
+            color: $dark-text-primary;
+          }
+        }
+      }
+
+      .p-datatable-emptymessage {
+        color: $dark-text-secondary;
+        background: $dark-bg-header;
+      }
+
+      .p-datatable-loading-overlay {
+        background: rgba($dark-bg-base, 0.9);
+      }
+
+      .p-datatable-loading-icon {
+        color: $dark-primary;
+      }
+
+      .p-datatable-footer {
+        background: $dark-bg-card;
+        border-top-color: $dark-border;
+        color: $dark-text-secondary;
+      }
+    }
+
+    // Paginator
+    .p-paginator {
+      background: $dark-bg-card;
+      border-color: $dark-border;
+
+      .p-paginator-element {
+        color: $dark-text-secondary;
+
+        &:hover:not(.p-disabled):not(.p-highlight) {
+          background: rgba($dark-primary, 0.15);
+          color: $dark-text-primary;
+        }
+
+        &.p-highlight {
+          background: $dark-primary;
+          color: $dark-bg-base;
+        }
+      }
+
+      .p-paginator-current {
+        color: $dark-text-secondary;
+      }
+
+      .p-dropdown {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+
+        &:hover {
+          border-color: $dark-primary;
+        }
+
+        .p-dropdown-label {
+          color: $dark-text-primary;
+        }
+      }
+    }
+
+    // Checkbox
+    .p-checkbox {
+      .p-checkbox-box {
+        background: $dark-bg-card;
+        border-color: $dark-border;
+
+        &.p-highlight {
+          background: $dark-primary;
+          border-color: $dark-primary;
+        }
+
+        &:hover {
+          border-color: $dark-primary;
+        }
+      }
+    }
+  }
+
+  // Scrollbar styling
+  ::-webkit-scrollbar-track {
+    background: $dark-bg-base;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: $dark-border;
+
+    &:hover {
+      background: $dark-text-secondary;
+    }
+  }
+}

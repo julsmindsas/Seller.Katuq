@@ -1,0 +1,383 @@
+// ==============================================
+// Variables Component - Katuq Dark Theme Styles
+// ==============================================
+
+// Katuq Theme Variables
+$primary-color: #a78bfa;
+$primary-hover: #8b5cf6;
+$success-color: #51bb25;
+$danger-color: #dc3545;
+$info-color: #5bc0de;
+
+// Light theme
+$light-bg: #ffffff;
+$light-card-bg: #ffffff;
+$light-text: #2b2b2b;
+$light-text-muted: #6c757d;
+$light-border: #dee2e6;
+$light-input-bg: #ffffff;
+
+// Dark theme - Katuq Palette
+$dark-bg-primary: #1a1625;
+$dark-bg-secondary: #262335;
+$dark-border: #4a4366;
+$dark-text: #e9e4f5;
+$dark-text-muted: rgba(233, 228, 245, 0.6);
+
+// ==============================================
+// Base Styles (Light Theme)
+// ==============================================
+
+.container-fluid {
+  .card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    border: none;
+    transition: all 0.3s ease;
+    background: $light-card-bg;
+    position: relative;
+    overflow: hidden;
+
+    .card-body {
+      padding: 1.5rem;
+    }
+  }
+}
+
+// Icon background decoration
+.icon-bg {
+  font-size: 5rem;
+  opacity: 0.12 !important;
+  color: $primary-color !important;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+// Loader
+.loader-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  .loader-8 {
+    border-color: $primary-color;
+  }
+}
+
+// Filter input
+.filter-ngx {
+  background-color: $light-input-bg;
+  border: 2px solid $light-border;
+  color: $light-text;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: $light-text-muted;
+  }
+
+  &:hover {
+    border-color: rgba($primary-color, 0.5);
+  }
+
+  &:focus {
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba($primary-color, 0.2);
+    outline: none;
+  }
+}
+
+// Primary button styling
+.btn-primary {
+  background: linear-gradient(135deg, $primary-color, $primary-hover);
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba($primary-color, 0.3);
+
+  &:hover {
+    background: linear-gradient(135deg, $primary-hover, darken($primary-hover, 10%));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba($primary-color, 0.4);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Custom datatable container
+.custom-datatable {
+  min-height: 400px;
+  position: relative;
+  z-index: 1;
+}
+
+// ngx-datatable styling
+.datatable-scroll {
+  ngx-datatable {
+    &.material {
+      background: transparent;
+      box-shadow: none;
+
+      .datatable-header {
+        background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.02) 100%);
+        border-bottom: 2px solid rgba($primary-color, 0.15);
+        border-radius: 8px 8px 0 0;
+
+        .datatable-header-cell {
+          color: $light-text;
+          font-weight: 600;
+          font-size: 0.9rem;
+          padding: 12px 16px;
+          background: transparent;
+          border-right: 1px solid rgba($primary-color, 0.1);
+
+          &:last-child {
+            border-right: none;
+          }
+
+          .datatable-header-cell-label {
+            color: $light-text;
+          }
+        }
+      }
+
+      .datatable-body {
+        .datatable-body-row {
+          background: $light-card-bg;
+          border-bottom: 1px solid $light-border;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: rgba($primary-color, 0.05);
+          }
+
+          .datatable-body-cell {
+            color: $light-text;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+          }
+        }
+      }
+
+      .datatable-footer {
+        background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, transparent 100%);
+        border-top: 1px solid $light-border;
+        color: $light-text-muted;
+
+        .datatable-pager {
+          .pager {
+            li {
+              a {
+                color: $light-text;
+                border-radius: 6px;
+                margin: 0 2px;
+                transition: all 0.2s ease;
+
+                &:hover {
+                  background: rgba($primary-color, 0.1);
+                }
+              }
+
+              &.active a {
+                background: $primary-color;
+                color: #ffffff;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==============================================
+// Dark Theme Styles
+// ==============================================
+
+:host-context(body.dark-only) {
+  .container-fluid {
+    .card {
+      background: $dark-bg-secondary;
+      border: 1px solid $dark-border;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .icon-bg {
+    color: $primary-color !important;
+    opacity: 0.15 !important;
+  }
+
+  // Filter input dark
+  .filter-ngx {
+    background-color: $dark-bg-primary;
+    border-color: $dark-border;
+    color: $dark-text;
+
+    &::placeholder {
+      color: $dark-text-muted;
+    }
+
+    &:hover {
+      border-color: rgba($primary-color, 0.5);
+    }
+
+    &:focus {
+      border-color: $primary-color;
+      background-color: lighten($dark-bg-primary, 3%);
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.25);
+    }
+  }
+
+  // ngx-datatable dark theme
+  .datatable-scroll {
+    ngx-datatable {
+      &.material {
+        .datatable-header {
+          background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-bg-secondary, 0.9) 100%);
+          border-bottom: 2px solid rgba($primary-color, 0.25);
+
+          .datatable-header-cell {
+            color: $dark-text;
+            border-right-color: rgba($primary-color, 0.15);
+
+            .datatable-header-cell-label {
+              color: $dark-text;
+            }
+
+            .sort-btn {
+              color: $dark-text-muted;
+            }
+          }
+        }
+
+        .datatable-body {
+          .datatable-body-row {
+            background: $dark-bg-secondary;
+            border-bottom-color: $dark-border;
+
+            &:hover {
+              background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($dark-bg-secondary, 0.95) 100%);
+            }
+
+            &:nth-child(odd) {
+              background: rgba($dark-bg-primary, 0.5);
+
+              &:hover {
+                background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($dark-bg-secondary, 0.95) 100%);
+              }
+            }
+
+            .datatable-body-cell {
+              color: $dark-text;
+            }
+          }
+        }
+
+        .datatable-footer {
+          background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($dark-bg-secondary, 0.95) 100%);
+          border-top-color: $dark-border;
+          color: $dark-text-muted;
+
+          .datatable-pager {
+            .pager {
+              li {
+                a {
+                  color: $dark-text;
+
+                  &:hover {
+                    background: rgba($primary-color, 0.2);
+                  }
+                }
+
+                &.active a {
+                  background: $primary-color;
+                  color: #ffffff;
+                }
+
+                &.disabled a {
+                  color: $dark-text-muted;
+                  opacity: 0.5;
+                }
+              }
+            }
+
+            .page-count {
+              color: $dark-text-muted;
+            }
+          }
+        }
+
+        // Empty row message
+        .empty-row {
+          color: $dark-text-muted;
+        }
+      }
+    }
+  }
+
+  // Button styles in dark mode
+  .btn-primary {
+    background: linear-gradient(135deg, $primary-color, $primary-hover);
+    box-shadow: 0 4px 15px rgba($primary-color, 0.4);
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba($primary-color, 0.5);
+    }
+  }
+}
+
+// ==============================================
+// Responsive Adjustments
+// ==============================================
+
+@media (max-width: 768px) {
+  .container-fluid {
+    .card-body {
+      padding: 1rem;
+    }
+  }
+
+  .filter-ngx {
+    font-size: 0.875rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .btn-primary {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .datatable-scroll {
+    ngx-datatable {
+      &.material {
+        .datatable-header .datatable-header-cell,
+        .datatable-body .datatable-body-row .datatable-body-cell {
+          padding: 8px 12px;
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .row > div[class*="col-"] {
+    margin-bottom: 1rem;
+  }
+
+  .btn-primary {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}

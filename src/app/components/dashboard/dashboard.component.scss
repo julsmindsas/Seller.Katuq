@@ -658,6 +658,49 @@
 }
 
 // ============================================================================
+// K.A.I. INSIGHTS SECTION - BASE STYLES
+// ============================================================================
+.kai-insights-section {
+  padding: 24px;
+  background: #fafbfc;
+  border-radius: 8px;
+}
+
+.kai-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.kai-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.kai-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.kai-body {
+  padding: 20px;
+}
+
+.analysis-result {
+  max-height: 300px;
+  overflow-y: auto;
+  background: #f3f4f6;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+// ============================================================================
 // RESPONSIVE DESIGN
 // ============================================================================
 @media (max-width: 992px) {
@@ -755,5 +798,400 @@
 button {
   &:not(:disabled) {
     cursor: pointer;
+  }
+}
+
+// ============================================================================
+// DARK THEME - KATUQ PURPLE PALETTE
+// ============================================================================
+// Color Palette Reference:
+// - Primary: #a78bfa
+// - Background base: #1a1625
+// - Background card: #262335
+// - Background header: #2e2445
+// - Border: #4a4366
+// - Text primary: #e9e4f5
+// - Text secondary: #c4b5fd
+// - Text muted: #8b7fa8
+
+:host-context(body.dark-only) {
+  // ============================================================================
+  // ROOT CONTAINER - DARK
+  // ============================================================================
+  .dashboard-container {
+    background: linear-gradient(135deg, #1a1625 0%, #1f1b2e 100%);
+  }
+
+  // ============================================================================
+  // HEADER SECTION - DARK
+  // ============================================================================
+  .dashboard-header-modern {
+    background: #262335;
+    border-bottom-color: #4a4366;
+
+    .header-top {
+      background: transparent;
+    }
+  }
+
+  .header-title-section {
+    .dashboard-title {
+      color: #f5f3ff;
+    }
+
+    .header-subtitle {
+      color: #8b7fa8;
+    }
+  }
+
+  // Date inputs
+  .date-input-wrapper {
+    .date-label {
+      color: #c4b5fd;
+    }
+
+    .date-input {
+      background: #2e2445;
+      border-color: #4a4366;
+      color: #e9e4f5;
+
+      &:focus {
+        border-color: #a78bfa;
+        box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+        background: #3d3654;
+      }
+
+      &.primeng-styled {
+        background: #2e2445;
+      }
+
+      // Webkit date input styling for dark mode
+      &::-webkit-calendar-picker-indicator {
+        filter: invert(0.8) sepia(0.2) hue-rotate(210deg);
+      }
+    }
+  }
+
+  // Button group
+  .button-group-modern {
+    .btn-filter {
+      background: #a78bfa;
+      color: #1a1625;
+
+      &:hover:not(:disabled) {
+        background: #c4b5fd;
+        box-shadow: 0 4px 12px rgba(167, 139, 250, 0.4);
+      }
+
+      &:active:not(:disabled) {
+        background: #8b5cf6;
+      }
+    }
+
+    .btn-secondary {
+      background: #2e2445;
+      color: #c4b5fd;
+      border-color: #4a4366;
+
+      &:hover:not(:disabled) {
+        background: #3d3654;
+        color: #e9e4f5;
+        border-color: #6b5d8a;
+      }
+
+      &:active:not(:disabled) {
+        background: #4a4366;
+      }
+    }
+
+    .btn-icon {
+      color: #8b7fa8;
+
+      &:hover:not(:disabled) {
+        background: #3d3654;
+        color: #c4b5fd;
+      }
+
+      &:active:not(:disabled) {
+        background: #4a4366;
+      }
+    }
+  }
+
+  .module-controls-divider {
+    background: #4a4366;
+  }
+
+  // Error banner
+  .error-banner {
+    background: rgba(251, 191, 36, 0.15);
+    border-color: rgba(251, 191, 36, 0.4);
+    color: #fbbf24;
+  }
+
+  // ============================================================================
+  // KPI CARDS - DARK
+  // ============================================================================
+  .kpi-card-modern {
+    background: #262335;
+    border-color: #4a4366;
+
+    &::before {
+      background: #3d3654;
+    }
+
+    &:hover {
+      border-color: #6b5d8a;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+
+      &::before {
+        background: #a78bfa;
+      }
+    }
+
+    .kpi-loading {
+      .spinner-border {
+        border-color: #4a4366;
+        border-right-color: #a78bfa;
+      }
+    }
+  }
+
+  .kpi-label {
+    color: #8b7fa8;
+  }
+
+  .kpi-change {
+    background: #3d3654;
+    color: #8b7fa8;
+
+    &.positive {
+      background: rgba(74, 222, 128, 0.15);
+      color: #4ade80;
+    }
+
+    &.negative {
+      background: rgba(248, 113, 113, 0.15);
+      color: #f87171;
+    }
+  }
+
+  .kpi-value {
+    color: #f5f3ff;
+  }
+
+  .kpi-footer {
+    color: #6b5d8a;
+  }
+
+  // ============================================================================
+  // OPERATIONAL MODULES - DARK
+  // ============================================================================
+  .operational-module-modern {
+    background: #262335;
+    border-color: #4a4366;
+  }
+
+  .module-header-modern {
+    border-bottom-color: #4a4366;
+
+    &:hover {
+      background: #2e2445;
+    }
+  }
+
+  .module-title-modern {
+    color: #f5f3ff;
+
+    i {
+      color: #a78bfa;
+    }
+  }
+
+  .module-description-modern {
+    color: #8b7fa8;
+  }
+
+  .toggle-icon {
+    color: #6b5d8a;
+  }
+
+  .module-content-modern {
+    background: #1f1b2e;
+  }
+
+  // ============================================================================
+  // WIDGETS - DARK
+  // ============================================================================
+  .widget-modern {
+    background: #262335;
+    border-color: #4a4366;
+
+    &:hover {
+      border-color: #6b5d8a;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    &.cdk-drag-preview {
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  .widget-header-bar {
+    background: #2e2445;
+    border-bottom-color: #4a4366;
+
+    &:hover {
+      background: #3d3654;
+    }
+  }
+
+  .drag-handle-icon {
+    color: #4a4366;
+
+    .widget-header-bar:hover & {
+      color: #6b5d8a;
+    }
+  }
+
+  .widget-title-text {
+    color: #f5f3ff;
+
+    i {
+      color: #a78bfa;
+    }
+  }
+
+  .widget-content {
+    background: #262335;
+  }
+
+  .widget-loading-modern {
+    .spinner-border {
+      border-color: #4a4366;
+      border-right-color: #a78bfa;
+    }
+  }
+
+  .widget-preview-content {
+    background: #262335;
+    border-color: #4a4366;
+    color: #f5f3ff;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  }
+
+  // ============================================================================
+  // K.A.I. INSIGHTS SECTION - DARK
+  // ============================================================================
+  .kai-insights-section {
+    background: #1f1b2e;
+  }
+
+  .kai-card {
+    background: #262335;
+    border-color: #4a4366;
+  }
+
+  .kai-header {
+    background: #2e2445;
+    border-bottom-color: #4a4366;
+  }
+
+  .kai-title {
+    color: #f5f3ff;
+
+    i {
+      color: #a78bfa;
+    }
+  }
+
+  .kai-body {
+    background: #262335;
+
+    .btn-apply {
+      background: #a78bfa;
+      color: #1a1625;
+      border: none;
+
+      &:hover:not(:disabled) {
+        background: #c4b5fd;
+      }
+
+      &:disabled {
+        background: #4a4366;
+        color: #8b7fa8;
+      }
+    }
+  }
+
+  .analysis-result {
+    background: #1f1b2e;
+
+    .bg-light {
+      background: #2e2445 !important;
+      color: #e9e4f5;
+    }
+  }
+
+  // ============================================================================
+  // UTILITY CLASSES - DARK
+  // ============================================================================
+  .text-muted {
+    color: #8b7fa8 !important;
+  }
+
+  .text-success {
+    color: #4ade80 !important;
+  }
+
+  .text-danger {
+    color: #f87171 !important;
+  }
+
+  .bg-light {
+    background: #2e2445 !important;
+  }
+
+  // Spinners
+  .spinner-border {
+    border-color: #4a4366;
+    border-right-color: #a78bfa;
+  }
+
+  // Alerts
+  .alert-info {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+  }
+
+  // ============================================================================
+  // CHARTS - DARK THEME SUPPORT
+  // ============================================================================
+  // Note: ECharts options should be configured in TypeScript with dark theme colors
+  // These styles ensure proper container backgrounds
+  .chart-container {
+    background: transparent;
+  }
+
+  .chart-echarts {
+    background: transparent;
+  }
+
+  // ============================================================================
+  // RESPONSIVE ADJUSTMENTS - DARK
+  // ============================================================================
+  @media (max-width: 768px) {
+    .dashboard-header-modern {
+      background: #262335;
+    }
+
+    .kpi-card-modern {
+      background: #262335;
+    }
+
+    .widget-modern {
+      background: #262335;
+    }
   }
 }

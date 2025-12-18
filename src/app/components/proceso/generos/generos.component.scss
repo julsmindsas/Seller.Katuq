@@ -1,0 +1,516 @@
+// ==============================================
+// Generos Component - Katuq Dark Theme Styles
+// ==============================================
+
+// Katuq Theme Variables
+$primary-color: #a78bfa;
+$primary-hover: #8b5cf6;
+$success-color: #51bb25;
+$danger-color: #dc3545;
+$info-color: #5bc0de;
+
+// Light theme
+$light-bg: #ffffff;
+$light-card-bg: #ffffff;
+$light-text: #2b2b2b;
+$light-text-muted: #6c757d;
+$light-border: #dee2e6;
+
+// Dark theme - Katuq Palette
+$dark-bg-primary: #1a1625;
+$dark-bg-secondary: #262335;
+$dark-border: #4a4366;
+$dark-text: #e9e4f5;
+$dark-text-muted: rgba(233, 228, 245, 0.6);
+
+// ==============================================
+// Base Styles (Light Theme)
+// ==============================================
+
+.container-fluid {
+  .card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    border: none;
+    transition: all 0.3s ease;
+    background: $light-card-bg;
+    position: relative;
+    overflow: hidden;
+  }
+}
+
+// Icon background decoration
+.icon-bg {
+  font-size: 5rem;
+  opacity: 0.12 !important;
+  color: $primary-color !important;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 0;
+  pointer-events: none;
+}
+
+// Header section
+.fc-secondary {
+  color: $light-text !important;
+  font-weight: 700 !important;
+}
+
+.fs-24 {
+  font-size: 1.5rem;
+}
+
+.fs-18 {
+  font-size: 1.125rem;
+}
+
+.text-muted {
+  color: $light-text-muted !important;
+}
+
+// Loader
+.loader-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+
+  .loader-8 {
+    border-color: $primary-color;
+  }
+}
+
+// Custom datatable container
+.custom-datatable {
+  min-height: 400px;
+  position: relative;
+  z-index: 1;
+}
+
+// Button styling
+.btn-primary {
+  background: linear-gradient(135deg, $primary-color, $primary-hover);
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba($primary-color, 0.3);
+
+  &:hover {
+    background: linear-gradient(135deg, $primary-hover, darken($primary-hover, 10%));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba($primary-color, 0.4);
+  }
+}
+
+.btn-success {
+  background: linear-gradient(135deg, $success-color, darken($success-color, 10%));
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba($success-color, 0.3);
+
+  &:hover {
+    background: linear-gradient(135deg, darken($success-color, 5%), darken($success-color, 15%));
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba($success-color, 0.4);
+  }
+}
+
+// Switch toggle
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+  margin-bottom: 0;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+.switch-state {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 34px;
+
+  &:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: 0.4s;
+    border-radius: 50%;
+  }
+}
+
+input:checked + .switch-state {
+  background-color: $primary-color;
+}
+
+input:focus + .switch-state {
+  box-shadow: 0 0 1px $primary-color;
+}
+
+input:checked + .switch-state:before {
+  transform: translateX(20px);
+}
+
+// Action icons
+.fc-primary {
+  color: $primary-color !important;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: $primary-hover !important;
+    transform: scale(1.1);
+  }
+}
+
+.fc-danger {
+  color: $danger-color !important;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: darken($danger-color, 10%) !important;
+    transform: scale(1.1);
+  }
+}
+
+// PrimeNG Table Styles
+::ng-deep {
+  .p-datatable {
+    .p-datatable-header {
+      background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($primary-color, 0.02) 100%);
+      border: none;
+      border-radius: 8px 8px 0 0;
+      padding: 1rem;
+    }
+
+    .p-datatable-thead > tr > th {
+      background: linear-gradient(135deg, rgba($primary-color, 0.06) 0%, rgba($light-bg, 0.95) 100%);
+      color: $light-text;
+      font-weight: 600;
+      border-color: rgba($primary-color, 0.1);
+      padding: 1rem;
+
+      .p-sortable-column-icon {
+        color: $light-text-muted;
+      }
+
+      &.p-highlight {
+        background: rgba($primary-color, 0.1);
+        color: $primary-color;
+      }
+    }
+
+    .p-datatable-tbody > tr {
+      background: $light-card-bg;
+      color: $light-text;
+      transition: all 0.2s ease;
+
+      > td {
+        border-color: $light-border;
+        padding: 0.875rem 1rem;
+      }
+
+      &:nth-child(even) {
+        background: rgba($light-bg, 0.5);
+      }
+
+      &.p-highlight {
+        background: rgba($primary-color, 0.1);
+        color: $light-text;
+      }
+
+      &:hover {
+        background: rgba($primary-color, 0.08) !important;
+      }
+    }
+
+    .p-datatable-footer {
+      background: linear-gradient(135deg, rgba($primary-color, 0.05) 0%, transparent 100%);
+      border-color: $light-border;
+      color: $light-text-muted;
+      padding: 1rem;
+    }
+
+    // Paginator
+    .p-paginator {
+      background: transparent;
+      border: none;
+      padding: 1rem;
+
+      .p-paginator-pages {
+        .p-paginator-page {
+          color: $light-text;
+          border-radius: 6px;
+          margin: 0 2px;
+          transition: all 0.2s ease;
+
+          &:hover {
+            background: rgba($primary-color, 0.1);
+          }
+
+          &.p-highlight {
+            background: $primary-color;
+            color: #ffffff;
+          }
+        }
+      }
+
+      .p-paginator-first,
+      .p-paginator-prev,
+      .p-paginator-next,
+      .p-paginator-last {
+        color: $light-text;
+        border-radius: 6px;
+
+        &:hover {
+          background: rgba($primary-color, 0.1);
+        }
+      }
+
+      .p-dropdown {
+        border-color: $light-border;
+
+        .p-dropdown-label {
+          color: $light-text;
+        }
+      }
+    }
+
+    // Empty message
+    .p-datatable-emptymessage {
+      td {
+        color: $light-text-muted;
+        text-align: center;
+        padding: 2rem;
+      }
+    }
+  }
+}
+
+// ==============================================
+// Dark Theme Styles
+// ==============================================
+
+:host-context(body.dark-only) {
+  .container-fluid {
+    .card {
+      background: $dark-bg-secondary;
+      border: 1px solid $dark-border;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .icon-bg {
+    color: $primary-color !important;
+    opacity: 0.15 !important;
+  }
+
+  .fc-secondary {
+    color: $dark-text !important;
+  }
+
+  .text-muted {
+    color: $dark-text-muted !important;
+  }
+
+  // Switch dark
+  .switch-state {
+    background-color: $dark-border;
+  }
+
+  // PrimeNG Table Dark Theme
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-header {
+        background: linear-gradient(135deg, rgba($primary-color, 0.15) 0%, rgba($dark-bg-secondary, 0.9) 100%);
+        color: $dark-text;
+      }
+
+      .p-datatable-thead > tr > th {
+        background: linear-gradient(135deg, rgba($primary-color, 0.12) 0%, rgba($dark-bg-secondary, 0.95) 100%);
+        color: $dark-text;
+        border-color: $dark-border;
+
+        .p-sortable-column-icon {
+          color: $dark-text-muted;
+        }
+
+        &.p-highlight {
+          background: rgba($primary-color, 0.2);
+          color: $primary-color;
+
+          .p-sortable-column-icon {
+            color: $primary-color;
+          }
+        }
+
+        &:hover {
+          background: rgba($primary-color, 0.15);
+        }
+      }
+
+      .p-datatable-tbody > tr {
+        background: $dark-bg-secondary;
+        color: $dark-text;
+
+        > td {
+          border-color: $dark-border;
+        }
+
+        &:nth-child(even) {
+          background: rgba($dark-bg-primary, 0.5);
+        }
+
+        &.p-highlight {
+          background: rgba($primary-color, 0.15);
+          color: $dark-text;
+        }
+
+        &:hover {
+          background: linear-gradient(135deg, rgba($primary-color, 0.12) 0%, rgba($dark-bg-secondary, 0.95) 100%) !important;
+        }
+      }
+
+      .p-datatable-footer {
+        background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($dark-bg-secondary, 0.95) 100%);
+        border-color: $dark-border;
+        color: $dark-text-muted;
+      }
+
+      // Paginator dark
+      .p-paginator {
+        background: transparent;
+
+        .p-paginator-pages {
+          .p-paginator-page {
+            color: $dark-text;
+
+            &:hover {
+              background: rgba($primary-color, 0.2);
+            }
+
+            &.p-highlight {
+              background: $primary-color;
+              color: #ffffff;
+            }
+          }
+        }
+
+        .p-paginator-first,
+        .p-paginator-prev,
+        .p-paginator-next,
+        .p-paginator-last {
+          color: $dark-text;
+
+          &:hover {
+            background: rgba($primary-color, 0.2);
+          }
+
+          &:disabled {
+            color: $dark-text-muted;
+            opacity: 0.5;
+          }
+        }
+
+        .p-dropdown {
+          background: $dark-bg-primary;
+          border-color: $dark-border;
+
+          .p-dropdown-label {
+            color: $dark-text;
+          }
+
+          .p-dropdown-trigger {
+            color: $dark-text;
+          }
+        }
+
+        .p-paginator-current {
+          color: $dark-text-muted;
+        }
+      }
+
+      // Empty message dark
+      .p-datatable-emptymessage {
+        td {
+          color: $dark-text-muted;
+          background: $dark-bg-secondary;
+        }
+      }
+    }
+
+    // Dropdown panel dark
+    .p-dropdown-panel {
+      background: $dark-bg-secondary;
+      border-color: $dark-border;
+
+      .p-dropdown-items {
+        .p-dropdown-item {
+          color: $dark-text;
+
+          &:hover {
+            background: rgba($primary-color, 0.15);
+          }
+
+          &.p-highlight {
+            background: rgba($primary-color, 0.2);
+            color: $dark-text;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==============================================
+// Responsive Adjustments
+// ==============================================
+
+@media (max-width: 768px) {
+  .fc-secondary {
+    font-size: 1.25rem !important;
+  }
+
+  .fs-18 {
+    font-size: 1rem;
+  }
+
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-thead > tr > th,
+      .p-datatable-tbody > tr > td {
+        padding: 0.75rem;
+        font-size: 0.875rem;
+      }
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  .row > div[class*="col-"] {
+    margin-bottom: 1rem;
+  }
+
+  .btn-primary,
+  .btn-success {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}

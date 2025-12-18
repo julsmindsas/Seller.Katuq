@@ -1,4 +1,7 @@
-// Estilos del selector de idioma
+/* ============================================
+   LANGUAGE SELECTOR - GLASSMORPHISM DESIGN
+   ============================================ */
+
 .translate_wrapper {
   position: relative;
   display: inline-flex;
@@ -15,20 +18,33 @@
     padding: 0 4px;
     min-width: 38px;
     height: 32px;
-    border-radius: 6px;
+    border-radius: 8px;
     background: transparent;
     border: none;
     cursor: pointer;
     user-select: none;
+    transition: all 0.15s ease-out;
 
     .lang {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       gap: 4px;
-      color: #2d3748;
+      color: #1a1625;
 
-      .lang-txt { font-weight: 600; font-size: 11px; }
+      .lang-txt {
+        font-weight: 600;
+        font-size: 11px;
+        color: #4a4366;
+      }
+    }
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.08);
+
+      .lang .lang-txt {
+        color: #6366f1;
+      }
     }
   }
 
@@ -38,45 +54,143 @@
     right: 0;
     min-width: 180px;
     padding: 8px;
-    border-radius: 10px;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-radius: 12px;
+
+    // Glassmorphism effect
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    box-shadow:
+      0 20px 50px rgba(0, 0, 0, 0.12),
+      0 10px 20px rgba(99, 102, 241, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
     display: none;
     z-index: 1050;
 
-    &.active { display: block; }
+    // Animation
+    opacity: 0;
+    transform: translateY(-10px) scale(0.95);
+    transform-origin: top right;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
 
     button.lang {
       width: 100%;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding: 8px 10px;
+      gap: 10px;
+      padding: 10px 12px;
       border: 0;
       background: transparent;
       border-radius: 8px;
       cursor: pointer;
       text-align: left;
+      transition: all 0.15s ease-out;
+      color: #1a1625;
 
       &:hover {
-        background: rgba(99,102,241,0.08);
+        background: rgba(99, 102, 241, 0.1);
+        transform: translateX(4px);
+
+        .lang-txt {
+          color: #6366f1;
+        }
       }
 
-      .lang-txt { font-size: 13px; font-weight: 500; }
+      .lang-txt {
+        font-size: 13px;
+        font-weight: 500;
+        color: #4a4366;
+        transition: color 0.15s ease;
+      }
+
+      // Flag image styling
+      img {
+        width: 20px;
+        height: 15px;
+        object-fit: cover;
+        border-radius: 2px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+
+      // Active language indicator
+      &.selected {
+        background: rgba(99, 102, 241, 0.08);
+
+        .lang-txt {
+          color: #6366f1;
+          font-weight: 600;
+        }
+      }
     }
   }
 }
 
-// Dark mode
-body.dark-only {
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   ============================================ */
+:host-context(body.dark-only) {
   .translate_wrapper {
-    .more_lang {
-      background: #1f2937;
-      border-color: #374151;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+    .current_lang {
+      .lang {
+        color: #e9e4f5;
 
-      button.lang:hover { background: rgba(129,140,248,0.12); }
+        .lang-txt {
+          color: #c4b5fd;
+        }
+      }
+
+      &:hover {
+        background: rgba(167, 139, 250, 0.1);
+
+        .lang .lang-txt {
+          color: #a78bfa;
+        }
+      }
+    }
+
+    .more_lang {
+      background: rgba(38, 35, 53, 0.95);
+      border-color: rgba(167, 139, 250, 0.2);
+      box-shadow:
+        0 20px 50px rgba(0, 0, 0, 0.5),
+        0 10px 20px rgba(167, 139, 250, 0.1),
+        inset 0 1px 0 rgba(167, 139, 250, 0.1);
+
+      button.lang {
+        color: #e9e4f5;
+
+        &:hover {
+          background: rgba(167, 139, 250, 0.15);
+
+          .lang-txt {
+            color: #a78bfa;
+          }
+        }
+
+        .lang-txt {
+          color: #c4b5fd;
+        }
+
+        &.selected {
+          background: rgba(167, 139, 250, 0.1);
+
+          .lang-txt {
+            color: #a78bfa;
+          }
+        }
+      }
     }
   }
 }

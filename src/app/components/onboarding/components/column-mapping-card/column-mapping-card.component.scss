@@ -373,3 +373,222 @@
     }
   }
 }
+
+// ============================================================================
+// DARK MODE - Katuq Purple Palette
+// ============================================================================
+:host-context(body.dark-only) {
+  // Dark Mode Variables
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-text-muted: #8b7fa8;
+  $dark-primary: #a78bfa;
+
+  .mapping-card {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+
+    &.border-required {
+      border-left-color: #f59e0b;
+      background: linear-gradient(90deg, rgba(#f59e0b, 0.1) 0%, $dark-bg-card 100%);
+
+      &:hover {
+        border-left-color: #fbbf24;
+      }
+    }
+
+    &.border-adjusted {
+      border-left-color: $dark-primary;
+      background: linear-gradient(90deg, rgba($dark-primary, 0.1) 0%, $dark-bg-card 100%);
+
+      &:hover {
+        border-left-color: lighten($dark-primary, 10%);
+      }
+    }
+
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    // Card Header
+    .card-header {
+      .field-info {
+        .field-title-row {
+          .required-icon {
+            color: #fbbf24;
+          }
+
+          .field-name {
+            color: $dark-text-primary;
+          }
+        }
+
+        ::ng-deep .manual-chip {
+          .p-chip {
+            background: rgba($dark-primary, 0.2);
+            color: $dark-primary;
+          }
+        }
+      }
+
+      .confidence-badge {
+        &.confidence-high {
+          background: rgba(#10b981, 0.2);
+          color: #34d399;
+
+          i {
+            color: #34d399;
+          }
+        }
+
+        &.confidence-medium {
+          background: rgba(#f59e0b, 0.2);
+          color: #fbbf24;
+
+          i {
+            color: #fbbf24;
+          }
+        }
+
+        &.confidence-low {
+          background: rgba(#ef4444, 0.2);
+          color: #f87171;
+
+          i {
+            color: #f87171;
+          }
+        }
+      }
+    }
+
+    // Dropdown Section
+    .dropdown-section {
+      .dropdown-label {
+        color: $dark-text-primary;
+      }
+
+      ::ng-deep .mobile-dropdown {
+        .p-dropdown {
+          background: $dark-bg-base;
+          border-color: $dark-border;
+
+          &:hover {
+            border-color: $dark-primary;
+          }
+
+          &:focus,
+          &.p-focus {
+            border-color: $dark-primary;
+            box-shadow: 0 0 0 3px rgba($dark-primary, 0.2);
+          }
+
+          .p-dropdown-label {
+            color: $dark-text-primary;
+          }
+
+          .p-dropdown-trigger {
+            color: $dark-text-muted;
+          }
+        }
+      }
+
+      .dropdown-selected-item,
+      .dropdown-item {
+        i {
+          color: $dark-primary;
+        }
+
+        span {
+          color: $dark-text-primary;
+        }
+      }
+
+      .dropdown-item {
+        &:hover {
+          background: $dark-bg-header;
+        }
+      }
+    }
+
+    // Confidence Indicator
+    .confidence-indicator {
+      background: $dark-bg-header;
+
+      .confidence-label {
+        color: $dark-text-muted;
+      }
+
+      .confidence-level {
+        &.confidence-high {
+          background: rgba(#10b981, 0.2);
+          color: #34d399;
+        }
+
+        &.confidence-medium {
+          background: rgba(#f59e0b, 0.2);
+          color: #fbbf24;
+        }
+
+        &.confidence-low {
+          background: rgba(#ef4444, 0.2);
+          color: #f87171;
+        }
+      }
+    }
+
+    // Reasoning Section
+    .reasoning-section {
+      .reasoning-toggle {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-muted;
+
+        &:hover {
+          background: $dark-border;
+          border-color: $dark-primary;
+          color: $dark-primary;
+        }
+      }
+
+      .reasoning-content {
+        .reasoning-text {
+          background: rgba($dark-primary, 0.1);
+          border-color: rgba($dark-primary, 0.3);
+
+          i.pi-sparkles {
+            color: $dark-primary;
+          }
+
+          p {
+            color: $dark-text-secondary;
+          }
+        }
+      }
+    }
+  }
+
+  ::ng-deep .p-dropdown-panel {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+
+    .p-dropdown-items {
+      .p-dropdown-item {
+        color: $dark-text-primary;
+
+        &:hover {
+          background: $dark-bg-header;
+        }
+
+        &.p-highlight {
+          background: rgba($dark-primary, 0.2);
+          color: $dark-primary;
+        }
+      }
+    }
+  }
+}

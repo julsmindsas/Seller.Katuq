@@ -202,3 +202,147 @@
     padding: 0.25rem 0.375rem;
   }
 }
+
+// ==============================================================================
+// DARK THEME - Katuq Palette
+// ==============================================================================
+:host-context(body.dark-only) {
+  // Variables de dark theme Katuq
+  $dark-primary: #a78bfa;
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-success: #4ade80;
+  $dark-warning: #fbbf24;
+  $dark-danger: #f87171;
+  $dark-info: #60a5fa;
+
+  // Input group
+  .input-group {
+    .form-control[readonly] {
+      background-color: $dark-bg-header;
+      color: $dark-text-primary;
+      border-color: $dark-border;
+
+      &:hover {
+        background-color: rgba($dark-primary, 0.1);
+        border-color: $dark-primary;
+      }
+
+      &::placeholder {
+        color: $dark-text-secondary;
+      }
+    }
+
+    .input-group-text {
+      background-color: $dark-bg-header;
+      color: $dark-primary;
+      border-color: $dark-border;
+    }
+
+    &:hover .input-group-text {
+      background-color: $dark-primary;
+      color: $dark-bg-base;
+      border-color: $dark-primary;
+    }
+  }
+
+  // Table
+  .table-responsive {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .table {
+    th {
+      background-color: $dark-bg-header;
+      border-bottom-color: $dark-border;
+      color: $dark-text-primary;
+    }
+
+    td {
+      border-bottom-color: $dark-border;
+      color: $dark-text-primary;
+    }
+
+    tr {
+      &:hover {
+        background-color: rgba($dark-primary, 0.08);
+      }
+
+      &.table-success {
+        background-color: rgba($dark-success, 0.15);
+        border-left-color: $dark-success;
+
+        &:hover {
+          background-color: rgba($dark-success, 0.2);
+        }
+      }
+
+      &.table-warning {
+        background-color: rgba($dark-warning, 0.15);
+        border-left-color: $dark-warning;
+
+        &:hover {
+          background-color: rgba($dark-warning, 0.2);
+        }
+      }
+    }
+  }
+
+  // Badges
+  .badge {
+    &.bg-success {
+      background-color: $dark-success !important;
+      color: $dark-bg-base !important;
+    }
+
+    &.bg-warning {
+      background-color: $dark-warning !important;
+      color: $dark-bg-base !important;
+    }
+
+    &.bg-secondary {
+      background-color: $dark-border !important;
+      color: $dark-text-primary !important;
+    }
+
+    &.bg-light {
+      background-color: $dark-bg-header !important;
+      color: $dark-text-primary !important;
+      border-color: $dark-border;
+    }
+  }
+
+  // Buttons
+  .btn-sm {
+    &:hover {
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  // Alerts
+  .alert {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    &.alert-info {
+      background-color: rgba($dark-info, 0.15);
+      color: $dark-text-primary;
+      border-left-color: $dark-primary;
+    }
+
+    &.alert-warning {
+      background-color: rgba($dark-warning, 0.15);
+      color: $dark-warning;
+      border-left-color: $dark-warning;
+    }
+
+    &.alert-secondary {
+      background-color: $dark-bg-header;
+      color: $dark-text-primary;
+      border-left-color: $dark-text-secondary;
+    }
+  }
+}

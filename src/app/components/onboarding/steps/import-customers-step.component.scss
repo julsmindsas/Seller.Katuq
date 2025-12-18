@@ -549,3 +549,330 @@
     display: block !important;
   }
 }
+
+// ============================================================================
+// DARK MODE - Katuq Purple Palette
+// ============================================================================
+:host-context(body.dark-only) {
+  // Dark Mode Variables
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-text-muted: #8b7fa8;
+  $dark-primary: #a78bfa;
+
+  .step-intro {
+    .intro-text {
+      color: $dark-text-muted;
+    }
+  }
+
+  .template-card {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+
+    .template-info {
+      p {
+        color: $dark-text-muted;
+      }
+    }
+
+    .required-fields {
+      h4 {
+        color: $dark-text-primary;
+      }
+
+      .fields-grid {
+        .field-item {
+          border-color: $dark-border;
+          background: $dark-bg-header;
+
+          &.required-field {
+            border-color: $dark-primary;
+            background: rgba($dark-primary, 0.1);
+
+            i {
+              color: $dark-primary;
+            }
+          }
+
+          i {
+            color: $dark-text-muted;
+          }
+
+          .field-info {
+            strong {
+              color: $dark-text-primary;
+            }
+
+            small {
+              color: $dark-text-muted;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .analysis-loading {
+    .loading-card {
+      background: linear-gradient(135deg, rgba($dark-primary, 0.2) 0%, rgba(#3b82f6, 0.1) 100%);
+      border: 1px solid $dark-border;
+
+      .loading-icon {
+        color: $dark-primary;
+      }
+
+      .loading-title {
+        color: $dark-text-primary;
+      }
+
+      .loading-text {
+        color: $dark-text-muted;
+      }
+    }
+  }
+
+  .mapping-section {
+    .mapping-header {
+      .mapping-title {
+        color: $dark-text-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+
+      .mapping-subtitle {
+        color: $dark-text-muted;
+      }
+    }
+
+    .mapping-stats {
+      .stat-chip {
+        background: rgba(#10b981, 0.2);
+        color: #34d399;
+
+        i {
+          color: #34d399;
+        }
+
+        &.required {
+          background: rgba(#f59e0b, 0.2);
+          color: #fbbf24;
+
+          i {
+            color: #fbbf24;
+          }
+        }
+
+        &.adjusted {
+          background: rgba($dark-primary, 0.2);
+          color: $dark-primary;
+
+          i {
+            color: $dark-primary;
+          }
+        }
+      }
+    }
+
+    .warning-message {
+      background: rgba(#f59e0b, 0.1);
+      border-color: rgba(#f59e0b, 0.3);
+
+      > i {
+        color: #fbbf24;
+      }
+
+      .warning-content {
+        strong {
+          color: #fbbf24;
+        }
+
+        p {
+          color: $dark-text-secondary;
+        }
+      }
+    }
+  }
+
+  .import-result {
+    .result-card {
+      background: $dark-bg-card;
+      border-color: $dark-border;
+    }
+
+    .result-summary {
+      .result-item {
+        &.success {
+          background: rgba(#10b981, 0.1);
+          border-color: rgba(#10b981, 0.3);
+
+          i {
+            color: #34d399;
+          }
+
+          strong {
+            color: #34d399;
+          }
+        }
+
+        &.error {
+          background: rgba(#ef4444, 0.1);
+          border-color: rgba(#ef4444, 0.3);
+
+          i {
+            color: #f87171;
+          }
+
+          strong {
+            color: #f87171;
+          }
+        }
+
+        div {
+          span {
+            color: $dark-text-muted;
+          }
+        }
+      }
+    }
+
+    .errors-list {
+      h4 {
+        color: #f87171;
+      }
+
+      ul li {
+        color: #f87171;
+      }
+
+      small {
+        color: $dark-text-muted;
+      }
+    }
+  }
+
+  .info-card {
+    background: rgba($dark-primary, 0.1);
+    border-color: rgba($dark-primary, 0.3);
+
+    .info-list {
+      li {
+        color: $dark-text-primary;
+
+        i {
+          color: $dark-primary;
+        }
+      }
+    }
+  }
+
+  .card-header {
+    color: $dark-primary;
+
+    i {
+      color: $dark-primary;
+    }
+  }
+
+  .field-help {
+    color: $dark-text-muted;
+  }
+
+  .mobile-sticky-footer {
+    background: $dark-bg-header;
+    border-top: 1px solid $dark-border;
+
+    .footer-summary {
+      .summary-chips {
+        ::ng-deep .summary-chip {
+          .p-chip {
+            background: rgba(#10b981, 0.2);
+            color: #34d399;
+
+            .p-chip-icon {
+              color: #34d399;
+            }
+
+            &.warning {
+              background: rgba(#f59e0b, 0.2);
+              color: #fbbf24;
+
+              .p-chip-icon {
+                color: #fbbf24;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  ::ng-deep {
+    .p-card {
+      background: $dark-bg-card;
+      border-color: $dark-border;
+
+      .p-card-header {
+        background: $dark-bg-header;
+        border-bottom-color: $dark-border;
+      }
+
+      .p-card-body {
+        background: $dark-bg-card;
+      }
+    }
+
+    .p-button {
+      &.p-button-primary {
+        background: $dark-primary;
+        border-color: $dark-primary;
+
+        &:hover {
+          background: lighten($dark-primary, 10%);
+        }
+      }
+
+      &.p-button-success {
+        background: #10b981;
+        border-color: #10b981;
+
+        &:hover {
+          background: #059669;
+        }
+      }
+
+      &.p-button-secondary {
+        background: $dark-bg-header;
+        border-color: $dark-border;
+        color: $dark-text-primary;
+
+        &:hover {
+          background: $dark-border;
+        }
+      }
+
+      &.p-button-outlined {
+        color: $dark-text-primary;
+        border-color: $dark-border;
+
+        &:hover {
+          background: rgba($dark-primary, 0.1);
+        }
+      }
+    }
+
+    .p-progressbar {
+      background: $dark-border;
+
+      .p-progressbar-value {
+        background: linear-gradient(90deg, $dark-primary, lighten($dark-primary, 10%));
+      }
+    }
+  }
+}

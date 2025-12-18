@@ -630,3 +630,352 @@ $border-radius: 8px;
 .border-top {
     border-top: 1px solid #dee2e6 !important;
 }
+
+// ===================================
+// DARK MODE - Katuq Purple Palette
+// ===================================
+:host-context(body.dark-only) {
+    // Variables Dark Mode
+    $dark-bg-base: #1a1625;
+    $dark-bg-card: #262335;
+    $dark-bg-header: #2e2445;
+    $dark-border: #4a4366;
+    $dark-text-primary: #e9e4f5;
+    $dark-text-secondary: #c4b5fd;
+    $dark-text-muted: #8b7fa8;
+    $dark-primary: #a78bfa;
+
+    // Module Header
+    .module-header {
+        background: linear-gradient(to right, $dark-bg-card, $dark-bg-header) !important;
+
+        h5 {
+            color: $dark-text-primary !important;
+        }
+
+        p {
+            color: $dark-text-muted !important;
+        }
+    }
+
+    // Card Header
+    .card-header {
+        background-color: $dark-bg-header !important;
+        border-color: $dark-border !important;
+        color: $dark-text-primary !important;
+
+        &:hover {
+            background-color: lighten($dark-bg-header, 5%) !important;
+        }
+    }
+
+    // Metrics Breadcrumb Panel
+    .metrics-breadcrumb-panel {
+        background: linear-gradient(135deg, $dark-bg-card 0%, $dark-bg-header 100%) !important;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .metrics-scroll-container {
+        &::-webkit-scrollbar-thumb {
+            background-color: rgba($dark-primary, 0.4) !important;
+        }
+    }
+
+    .metric-chip {
+        background: $dark-bg-card !important;
+        border-color: $dark-border !important;
+        color: $dark-text-secondary !important;
+
+        .metric-label {
+            color: $dark-text-primary !important;
+        }
+
+        .metric-badge {
+            background: $dark-bg-header !important;
+            color: $dark-text-secondary !important;
+        }
+
+        &:hover {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+            border-color: $dark-primary !important;
+        }
+
+        &.active {
+            box-shadow: 0 2px 6px rgba($dark-primary, 0.3) !important;
+        }
+
+        &.metric-chip-primary.active {
+            border-color: $dark-text-muted !important;
+            background: $dark-bg-header !important;
+
+            .metric-label {
+                color: $dark-text-primary !important;
+            }
+
+            .metric-badge {
+                background: $dark-text-muted !important;
+                color: $dark-bg-base !important;
+            }
+        }
+
+        &.metric-chip-success {
+            i {
+                color: #34d399 !important;
+            }
+
+            &.active {
+                border-color: #34d399 !important;
+                background: rgba(#34d399, 0.15) !important;
+
+                .metric-label {
+                    color: #a7f3d0 !important;
+                }
+            }
+        }
+
+        &.metric-chip-danger {
+            i {
+                color: #f87171 !important;
+            }
+
+            &.active {
+                border-color: #f87171 !important;
+                background: rgba(#f87171, 0.15) !important;
+
+                .metric-label {
+                    color: #fecaca !important;
+                }
+            }
+        }
+    }
+
+    .separator {
+        color: $dark-border !important;
+    }
+
+    // Table Toolbar
+    .table-toolbar {
+        background-color: $dark-bg-header !important;
+    }
+
+    .badge-count {
+        background-color: rgba($dark-primary, 0.2) !important;
+        color: $dark-primary !important;
+        border-color: rgba($dark-primary, 0.3) !important;
+
+        &:hover {
+            background-color: rgba($dark-primary, 0.3) !important;
+        }
+    }
+
+    // Table Container
+    .table-container {
+        background: $dark-bg-card !important;
+    }
+
+    // Modern Badges Dark Mode
+    .modern-badge {
+        &.badge-success {
+            background-color: rgba(#34d399, 0.15) !important;
+            color: #a7f3d0 !important;
+            border-color: rgba(#34d399, 0.3) !important;
+
+            i {
+                color: #34d399 !important;
+            }
+
+            &:hover {
+                background-color: rgba(#34d399, 0.25) !important;
+            }
+        }
+
+        &.badge-danger {
+            background-color: rgba(#f87171, 0.15) !important;
+            color: #fecaca !important;
+            border-color: rgba(#f87171, 0.3) !important;
+
+            i {
+                color: #f87171 !important;
+            }
+
+            &:hover {
+                background-color: rgba(#f87171, 0.25) !important;
+            }
+        }
+
+        &.badge-secondary {
+            background-color: rgba($dark-primary, 0.15) !important;
+            color: $dark-text-secondary !important;
+            border-color: rgba($dark-primary, 0.3) !important;
+
+            i {
+                color: $dark-primary !important;
+            }
+
+            &:hover {
+                background-color: rgba($dark-primary, 0.25) !important;
+            }
+        }
+
+        &.badge-info {
+            background-color: rgba(#38bdf8, 0.15) !important;
+            color: #bae6fd !important;
+            border-color: rgba(#38bdf8, 0.3) !important;
+
+            i {
+                color: #38bdf8 !important;
+            }
+
+            &:hover {
+                background-color: rgba(#38bdf8, 0.25) !important;
+            }
+        }
+
+        &.badge-warning {
+            background-color: rgba(#fbbf24, 0.15) !important;
+            color: #fde68a !important;
+            border-color: rgba(#fbbf24, 0.3) !important;
+
+            i {
+                color: #fbbf24 !important;
+            }
+
+            &:hover {
+                background-color: rgba(#fbbf24, 0.25) !important;
+            }
+        }
+    }
+
+    // Action Buttons
+    .btn-options {
+        background-color: $dark-bg-card !important;
+        border-color: $dark-border !important;
+
+        &:hover {
+            background-color: $dark-bg-header !important;
+            border-color: $dark-primary !important;
+        }
+
+        .pi {
+            color: $dark-text-secondary !important;
+        }
+    }
+
+    .list-actions {
+        background-color: $dark-bg-card !important;
+        border-color: $dark-border !important;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+
+        li {
+            color: $dark-text-primary !important;
+
+            &:hover {
+                background-color: $dark-bg-header !important;
+                color: $dark-primary !important;
+
+                i {
+                    color: $dark-primary !important;
+                }
+            }
+
+            &.separator {
+                background-color: $dark-border !important;
+
+                &:hover {
+                    background-color: $dark-border !important;
+                }
+            }
+        }
+    }
+
+    // PrimeNG DataTable Dark Mode
+    :host ::ng-deep {
+        .p-datatable {
+            .p-datatable-thead > tr > th {
+                background: $dark-bg-header !important;
+                color: $dark-text-primary !important;
+                border-color: $dark-border !important;
+            }
+
+            .p-datatable-tbody > tr {
+                background: $dark-bg-card !important;
+                color: $dark-text-primary !important;
+
+                &:hover {
+                    background-color: rgba($dark-primary, 0.08) !important;
+                }
+
+                &.row-active {
+                    background-color: rgba($dark-primary, 0.12) !important;
+                }
+
+                > td {
+                    border-color: $dark-border !important;
+                    color: $dark-text-primary !important;
+                }
+            }
+        }
+
+        .p-datatable-scrollable-body {
+            &::-webkit-scrollbar-track {
+                background: $dark-bg-base !important;
+            }
+
+            &::-webkit-scrollbar-thumb {
+                background: $dark-border !important;
+
+                &:hover {
+                    background: $dark-primary !important;
+                }
+            }
+        }
+    }
+
+    // Expanded Row
+    .expanded-row {
+        background-color: $dark-bg-header !important;
+    }
+
+    .detail-section {
+        background-color: $dark-bg-card !important;
+        border-color: $dark-border !important;
+    }
+
+    .detail-title {
+        color: $dark-text-primary !important;
+        border-bottom-color: $dark-border !important;
+
+        i {
+            color: $dark-primary !important;
+        }
+    }
+
+    .detail-label {
+        color: $dark-text-muted !important;
+    }
+
+    .detail-value {
+        color: $dark-text-primary !important;
+    }
+
+    // Loader Dark Mode
+    .loader-box {
+        background: rgba($dark-bg-base, 0.95) !important;
+    }
+
+    .loader-8 {
+        &:after {
+            border-color: $dark-primary !important;
+            border-right-color: transparent !important;
+        }
+    }
+
+    // Border utilities
+    .border-bottom {
+        border-bottom-color: $dark-border !important;
+    }
+
+    .border-top {
+        border-top-color: $dark-border !important;
+    }
+}

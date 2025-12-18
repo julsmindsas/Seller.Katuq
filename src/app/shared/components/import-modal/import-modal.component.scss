@@ -209,3 +209,122 @@
     display: block !important;
   }
 }
+
+/* ============================================
+   DARK MODE - KATUQ PURPLE PALETTE
+   Primary: #a78bfa
+   Background base: #1a1625
+   Background card: #262335
+   Border: #4a4366
+   Text primary: #e9e4f5
+   Text secondary: #c4b5fd
+   ============================================ */
+:host-context(body.dark-only) {
+  .import-step,
+  .mapping-step,
+  .result-step {
+    .step-header {
+      h4 {
+        color: #e9e4f5;
+
+        i {
+          color: #a78bfa;
+        }
+      }
+
+      p {
+        color: #c4b5fd;
+      }
+    }
+  }
+
+  .template-section {
+    .template-info {
+      color: #c4b5fd;
+
+      i {
+        color: #a78bfa;
+      }
+    }
+  }
+
+  .analyzing-step {
+    .analyzing-content {
+      .analyzing-icon {
+        color: #a78bfa;
+      }
+
+      h4 {
+        color: #e9e4f5;
+      }
+
+      p {
+        color: #c4b5fd;
+      }
+    }
+  }
+
+  .mapping-summary {
+    border-top-color: #4a4366;
+
+    .summary-chips {
+      ::ng-deep .chip-adjusted {
+        .p-chip {
+          background-color: rgba(167, 139, 250, 0.2);
+          color: #c4b5fd;
+        }
+      }
+    }
+  }
+
+  .result-step {
+    .result-content {
+      h4 {
+        color: #e9e4f5;
+      }
+
+      &.success {
+        .result-icon {
+          color: #22c55e;
+        }
+      }
+
+      &.partial {
+        .result-icon {
+          color: #f59e0b;
+        }
+      }
+
+      .result-stats {
+        .stat {
+          &.success {
+            background-color: rgba(34, 197, 94, 0.15);
+
+            .stat-number {
+              color: #22c55e;
+            }
+          }
+
+          &.error {
+            background-color: rgba(239, 68, 68, 0.15);
+
+            .stat-number {
+              color: #f87171;
+            }
+          }
+
+          .stat-label {
+            color: #c4b5fd;
+          }
+        }
+      }
+
+      .errors-list {
+        ul li {
+          border-bottom-color: #4a4366;
+          color: #c4b5fd;
+        }
+      }
+    }
+  }
+}

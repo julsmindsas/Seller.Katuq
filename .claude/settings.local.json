@@ -8,7 +8,11 @@
       "Bash(npm run build:*)",
       "mcp__plugin_figma_figma__get_screenshot",
       "WebSearch",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(dir \"C:\\\\sourcecodejuls\\\\Seller.Katuq\\\\src\\\\app\\\\components\\\\ecomerce\" /b)",
+      "Bash(ls -la \"C:\\\\sourcecodejuls\\\\Seller.Katuq\\\\src\\\\app\\\\components\\\\pages\"\" 2>/dev/null || dir \"C:sourcecodejulsSeller.Katuqsrcappcomponentspages\"\")",
+      "Bash(ls:*)",
+      "Bash(dir /s /b \"C:\\\\sourcecodejuls\\\\Seller.Katuq\\\\src\\\\app\\\\components\\\\katuq-flow\\\\*.scss\")"
     ],
     "deny": [],
     "ask": []

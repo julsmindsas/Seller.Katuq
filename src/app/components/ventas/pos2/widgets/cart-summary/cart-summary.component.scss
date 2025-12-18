@@ -164,4 +164,238 @@
 
 .f-w-600 {
   font-weight: 600;
+}
+
+// ==============================================
+// DARK THEME SUPPORT - KATUQ PALETTE
+// POS CART SUMMARY - CRITICAL: High visibility
+// ==============================================
+:host-context(body.dark-only) {
+  // Katuq Dark Theme Colors
+  $dark-bg-base: #1a1625;
+  $dark-bg-card: #262335;
+  $dark-bg-header: #2e2445;
+  $dark-border: #4a4366;
+  $dark-text-primary: #e9e4f5;
+  $dark-text-secondary: #c4b5fd;
+  $dark-primary: #a78bfa;
+  $dark-primary-hover: #8b5cf6;
+  $dark-success: #34d399;
+  $dark-error: #f87171;
+  $dark-warning: #fbbf24;
+
+  // Cart Summary Sticky Container
+  .cart-summary-sticky {
+    background: $dark-bg-card;
+    border-color: $dark-border;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+    &:hover {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+  }
+
+  // Header
+  .header-top {
+    color: $dark-text-primary;
+  }
+
+  // Cart Items Container
+  .cart-items-container {
+    &::-webkit-scrollbar-track {
+      background: $dark-bg-base;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: $dark-border;
+
+      &:hover {
+        background: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Order Details Wrapper
+  .order-details-wrapper {
+    border-bottom-color: $dark-border;
+  }
+
+  // Order Image
+  .order-img {
+    img {
+      border-color: $dark-border;
+    }
+  }
+
+  // Order Details
+  .order-details-right {
+    h6 {
+      color: $dark-text-primary;
+    }
+
+    p {
+      color: $dark-text-secondary;
+    }
+  }
+
+  // Touchspin Wrapper - CRITICAL: Quantity controls
+  .touchspin-wrapper {
+    background: $dark-bg-header;
+    border-color: $dark-border;
+
+    .btn-touchspin {
+      color: $dark-text-primary;
+      background: transparent;
+
+      &:hover {
+        background-color: rgba($dark-primary, 0.15);
+        color: $dark-primary;
+      }
+    }
+
+    .input-touchspin {
+      background: transparent;
+      color: $dark-text-primary;
+    }
+  }
+
+  // Trash Remove Button
+  .trash-remove {
+    color: $dark-error;
+
+    &:hover {
+      color: lighten($dark-error, 10%);
+    }
+  }
+
+  // Coupon Code Section
+  .coupon-code {
+    .input-group {
+      background: $dark-bg-header;
+      border-color: $dark-border;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .common-search {
+    .input-group-text {
+      background-color: $dark-bg-card;
+      border-color: $dark-border;
+      color: $dark-text-secondary;
+    }
+
+    input.form-control {
+      background-color: $dark-bg-card;
+      border-color: $dark-border;
+      color: $dark-text-primary;
+
+      &::placeholder {
+        color: rgba($dark-text-secondary, 0.6);
+      }
+    }
+  }
+
+  // Primary Background
+  .bc-primary {
+    background-color: $dark-primary;
+  }
+
+  // Total Item Section - CRITICAL: Price visibility
+  .total-item {
+    h5, h6 {
+      color: $dark-text-primary;
+    }
+  }
+
+  .item-number {
+    color: $dark-text-primary;
+
+    span {
+      color: $dark-text-secondary;
+    }
+  }
+
+  // Border Bottom
+  .border-bottom {
+    border-bottom-color: $dark-border !important;
+  }
+
+  // Empty Cart
+  .empty-cart {
+    .empty-cart-wrapper {
+      h6 {
+        color: $dark-text-primary;
+      }
+
+      p {
+        color: $dark-text-secondary;
+      }
+    }
+  }
+
+  // Text Primary
+  .txt-primary {
+    color: $dark-primary;
+  }
+
+  // Card Header
+  .card-header {
+    background: $dark-bg-header;
+    border-bottom-color: $dark-border;
+    color: $dark-text-primary;
+  }
+
+  // Card Body
+  .card-body {
+    background: $dark-bg-card;
+  }
+
+  // Buttons - CRITICAL: Very visible for POS
+  .btn {
+    &.btn-primary {
+      background-color: $dark-primary;
+      border-color: $dark-primary;
+      color: $dark-bg-base;
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        background-color: $dark-primary-hover;
+        box-shadow: 0 4px 12px rgba($dark-primary, 0.4);
+      }
+    }
+
+    &.btn-success {
+      background-color: $dark-success;
+      border-color: $dark-success;
+      color: $dark-bg-base;
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        background-color: darken($dark-success, 8%);
+        box-shadow: 0 4px 12px rgba($dark-success, 0.4);
+      }
+    }
+
+    &.btn-danger {
+      background-color: $dark-error;
+      border-color: $dark-error;
+      color: #fff;
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        background-color: darken($dark-error, 8%);
+        box-shadow: 0 4px 12px rgba($dark-error, 0.4);
+      }
+    }
+
+    &.btn-outline-primary {
+      color: $dark-primary;
+      border-color: $dark-primary;
+
+      &:hover:not(:disabled) {
+        background-color: $dark-primary;
+        color: $dark-bg-base;
+      }
+    }
+  }
 } 
