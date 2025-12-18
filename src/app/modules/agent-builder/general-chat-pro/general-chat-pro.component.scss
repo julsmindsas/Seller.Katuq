@@ -1,883 +1,653 @@
-// ==============================================
-// Chat Pro V2 - Modern WhatsApp/Slack Style
-// ==============================================
+/**
+ * KAI Chat - Minimalista Katuq
+ * Limpio, claro, sin ruido visual
+ */
 
-// Variables
-$primary-color: #6366f1;
-$success-color: #10b981;
-$warning-color: #f59e0b;
-$danger-color: #ef4444;
-$info-color: #3b82f6;
+// Colores Katuq
+$primary: #a78bfa;
+$secondary: #4555D1;
+$text-dark: #242934;
+$text-gray: #64748b;
+$text-light: #94a3b8;
+$bg-page: #f8f8f8;
+$bg-white: #ffffff;
+$border: #e5e7eb;
+$success: #51bb25;
+$danger: #dc3545;
 
-$bg-light: #f8fafc;
-$bg-dark: #1e293b;
-$border-light: #e2e8f0;
-$border-dark: #334155;
-
-$text-primary-light: #1e293b;
-$text-secondary-light: #64748b;
-$text-primary-dark: #f1f5f9;
-$text-secondary-dark: #94a3b8;
-
-$bubble-user-light: #6366f1;
-$bubble-agent-light: #ffffff;
-$bubble-user-dark: #4f46e5;
-$bubble-agent-dark: #334155;
-
-$radius-sm: 4px;
-$radius-md: 8px;
-$radius-lg: 16px;
-$radius-xl: 20px;
-
-$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-
-// Host styles
 :host {
   display: flex;
   flex-direction: column;
   height: 100%;
-  width: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
 }
 
-// Container
 .chat-pro-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: $bg-light;
-  border-radius: $radius-lg;
-  overflow: hidden;
-  box-shadow: $shadow-lg;
-
-  .dark-only & {
-    background: $bg-dark;
-  }
+  background: $bg-page;
+  font-family: 'Montserrat', sans-serif;
 }
 
-// ============================================
-// Header
-// ============================================
+// Header simple
 .chat-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  background: white;
-  border-bottom: 1px solid $border-light;
-
-  .dark-only & {
-    background: #0f172a;
-    border-bottom-color: $border-dark;
-  }
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: $bg-white;
+  border-bottom: 1px solid $border;
 }
 
 .chat-header-info {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 12px;
 }
 
 .chat-title {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 18px;
+  gap: 10px;
+  font-size: 15px;
   font-weight: 600;
-  color: $text-primary-light;
+  color: $text-dark;
+}
 
-  .dark-only & {
-    color: $text-primary-dark;
-  }
+.chat-logo {
+  width: 32px;
+  height: 32px;
+  background: $primary;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-  i {
-    color: $primary-color;
+  .logo-text {
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
   }
 }
 
 .chat-subtitle {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 12px;
+  gap: 8px;
+  margin-left: 42px;
 }
 
 .company-badge {
-  padding: 2px 8px;
-  background: rgba($primary-color, 0.1);
-  color: $primary-color;
-  border-radius: $radius-sm;
-  font-weight: 500;
+  font-size: 11px;
+  color: $text-gray;
 }
 
 .connection-status {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: $text-secondary-light;
+  font-size: 11px;
+  color: $text-light;
 
-  .dark-only & {
-    color: $text-secondary-dark;
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: $text-light;
   }
 
-  i {
-    font-size: 8px;
-    color: $danger-color;
-  }
-
-  &.connected i {
-    color: $success-color;
-  }
-}
-
-.chat-header-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.btn-icon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  background: transparent;
-  border-radius: $radius-md;
-  color: $text-secondary-light;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  .dark-only & {
-    color: $text-secondary-dark;
-  }
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.05);
-    color: $text-primary-light;
-
-    .dark-only & {
-      background: rgba(255, 255, 255, 0.1);
-      color: $text-primary-dark;
+  &.connected {
+    color: $success;
+    .status-dot {
+      background: $success;
     }
   }
 }
 
-// ============================================
-// Active Agents Bar
-// ============================================
+.chat-header-actions .btn-icon {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: $text-gray;
+  cursor: pointer;
+
+  &:hover {
+    background: $bg-page;
+  }
+}
+
+// Agentes activos
 .active-agents-bar {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 20px;
-  background: rgba($primary-color, 0.05);
-  border-bottom: 1px solid $border-light;
-  overflow-x: auto;
-
-  .dark-only & {
-    background: rgba($primary-color, 0.1);
-    border-bottom-color: $border-dark;
-  }
-}
-
-.active-label {
+  padding: 8px 16px;
+  background: $bg-white;
+  border-bottom: 1px solid $border;
   font-size: 12px;
-  color: $text-secondary-light;
-  white-space: nowrap;
+  color: $text-gray;
+}
 
-  .dark-only & {
-    color: $text-secondary-dark;
+.agents-avatars {
+  display: flex;
+
+  .agent-avatar-small {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: $primary;
+    color: white;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: -6px;
+    border: 2px solid $bg-white;
+
+    &:first-child { margin-left: 0; }
   }
 }
 
-.agent-chip {
-  padding: 4px 10px;
-  background: white;
-  border-radius: $radius-xl;
-  font-size: 12px;
-  font-weight: 500;
-  color: $text-primary-light;
-  box-shadow: $shadow-sm;
-  white-space: nowrap;
-
-  .dark-only & {
-    background: $border-dark;
-    color: $text-primary-dark;
-  }
-}
-
-// ============================================
-// Messages Container
-// ============================================
+// Mensajes
 .messages-container {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-
-  // Custom scrollbar
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: $border-light;
-    border-radius: 3px;
-
-    .dark-only & {
-      background: $border-dark;
-    }
-  }
+  gap: 12px;
 }
 
-// Empty State
+// Empty state
 .empty-state {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: $text-secondary-light;
   text-align: center;
 
-  .dark-only & {
-    color: $text-secondary-dark;
-  }
-
-  i {
-    font-size: 48px;
+  .empty-icon {
+    width: 56px;
+    height: 56px;
+    background: rgba($primary, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     margin-bottom: 16px;
-    opacity: 0.5;
+
+    i {
+      font-size: 24px;
+      color: $primary;
+    }
   }
 
   h3 {
-    margin: 0 0 8px;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 600;
+    color: $text-dark;
+    margin: 0 0 4px;
   }
 
   p {
-    margin: 0;
-    font-size: 14px;
+    font-size: 13px;
+    color: $text-gray;
+    margin: 0 0 20px;
   }
 }
 
-// ============================================
-// Message Wrapper
-// ============================================
-.message-wrapper {
+.suggestion-chips {
   display: flex;
   gap: 8px;
-  max-width: 85%;
-  animation: fadeInUp 0.3s ease;
+  flex-wrap: wrap;
+  justify-content: center;
 
-  &.user {
-    align-self: flex-end;
-    flex-direction: row-reverse;
-  }
+  .chip {
+    padding: 8px 14px;
+    background: $bg-white;
+    border: 1px solid $border;
+    border-radius: 20px;
+    font-size: 12px;
+    color: $text-gray;
+    cursor: pointer;
 
-  &.agent {
-    align-self: flex-start;
-  }
-
-  &.grouped {
-    margin-top: -4px;
-  }
-
-  &.final .message-bubble {
-    border-width: 2px;
+    &:hover {
+      border-color: $primary;
+      color: $primary;
+    }
   }
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
+// Message cards
+.message-card {
+  display: flex;
+  gap: 10px;
+  max-width: 80%;
+}
+
+.message-card.user {
+  flex-direction: row-reverse;
+  align-self: flex-end;
+
+  .message-body {
+    background: $primary;
+    color: white;
+    border-radius: 16px 16px 4px 16px;
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .message-time {
+    color: rgba(255,255,255,0.7);
   }
 }
 
-// Agent Avatar
-.agent-avatar,
-.typing-avatar {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
+.message-card.agent {
+  align-self: flex-start;
+
+  .message-body {
+    background: $bg-white;
+    border: 1px solid $border;
+    border-radius: 16px 16px 16px 4px;
+  }
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
   font-size: 14px;
+  flex-shrink: 0;
+
+  &.user-avatar {
+    background: $primary;
+    color: white;
+    font-size: 12px;
+  }
 }
 
-.avatar-placeholder {
-  width: 36px;
-  min-width: 36px;
-}
-
-// Message Bubbles
-.message-bubble {
+.message-body {
   padding: 10px 14px;
-  border-radius: $radius-lg;
-  position: relative;
-}
-
-.user-bubble {
-  background: $bubble-user-light;
-  color: white;
-  border-bottom-right-radius: $radius-sm;
-
-  .dark-only & {
-    background: $bubble-user-dark;
-  }
-
-  .message-time {
-    color: rgba(255, 255, 255, 0.7);
-  }
-}
-
-.agent-bubble {
-  background: $bubble-agent-light;
-  color: $text-primary-light;
-  border-left: 3px solid;
-  border-bottom-left-radius: $radius-sm;
-  box-shadow: $shadow-sm;
-
-  .dark-only & {
-    background: $bubble-agent-dark;
-    color: $text-primary-dark;
-  }
+  min-width: 0;
 }
 
 .message-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-bottom: 4px;
 }
 
 .speaker-name {
+  font-size: 12px;
   font-weight: 600;
+}
+
+.speaker-badge {
+  font-size: 10px;
+  color: $text-light;
+}
+
+.message-text {
   font-size: 13px;
-}
-
-.speaker-dept {
-  font-size: 11px;
-  padding: 1px 6px;
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: $radius-sm;
-  color: $text-secondary-light;
-  text-transform: capitalize;
-
-  .dark-only & {
-    background: rgba(255, 255, 255, 0.1);
-    color: $text-secondary-dark;
-  }
-}
-
-.message-content {
-  font-size: 14px;
   line-height: 1.5;
-  word-wrap: break-word;
+  color: $text-dark;
 
-  // Markdown styles
+  .message-card.user & {
+    color: white;
+  }
+
   code {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0,0,0,0.05);
     padding: 1px 4px;
-    border-radius: $radius-sm;
-    font-family: 'SF Mono', Monaco, monospace;
-    font-size: 13px;
-
-    .dark-only & {
-      background: rgba(255, 255, 255, 0.1);
-    }
+    border-radius: 3px;
+    font-size: 12px;
   }
 
   pre {
-    background: rgba(0, 0, 0, 0.05);
+    background: rgba(0,0,0,0.05);
     padding: 10px;
-    border-radius: $radius-md;
+    border-radius: 6px;
     overflow-x: auto;
-    margin: 8px 0;
-
-    .dark-only & {
-      background: rgba(0, 0, 0, 0.3);
-    }
-
-    code {
-      background: none;
-      padding: 0;
-    }
+    margin: 6px 0;
   }
 
-  strong {
-    font-weight: 600;
+  ul, ol {
+    margin: 6px 0;
+    padding-left: 18px;
   }
-
-  ul {
-    margin: 8px 0;
-    padding-left: 20px;
-  }
-
-  h3, h4 {
-    margin: 12px 0 8px;
-    font-weight: 600;
-  }
-
-  .mention {
-    color: $primary-color;
-    font-weight: 500;
-  }
-}
-
-.message-footer {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 4px;
 }
 
 .message-time {
-  font-size: 11px;
-  color: $text-secondary-light;
-
-  .dark-only & {
-    color: $text-secondary-dark;
-  }
-}
-
-.final-badge {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  color: $success-color;
-  font-weight: 500;
-}
-
-// ============================================
-// System Events (compact)
-// ============================================
-.system-event {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 4px 0;
-  animation: fadeIn 0.2s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.event-line {
+  font-size: 10px;
+  color: $text-light;
+  margin-top: 4px;
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
-  color: $text-secondary-light;
-  background: rgba(0, 0, 0, 0.03);
-  padding: 6px 12px;
-  border-radius: $radius-xl;
-  cursor: pointer;
+}
 
-  .dark-only & {
-    color: $text-secondary-dark;
-    background: rgba(255, 255, 255, 0.05);
+.final-badge {
+  color: $success;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+// System notices
+.system-notice {
+  display: flex;
+  justify-content: center;
+
+  .notice-content {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: rgba($primary, 0.08);
+    border-radius: 12px;
+    font-size: 11px;
+    color: $text-gray;
+
+    strong { color: $text-dark; }
   }
 
-  i {
+  .notice-emoji {
     font-size: 12px;
   }
 }
 
-.agent-name {
-  font-weight: 600;
-}
+// Activity notice (tools)
+.activity-notice {
+  padding-left: 42px;
 
-.tool-name {
-  background: rgba(0, 0, 0, 0.1);
-  padding: 2px 6px;
-  border-radius: $radius-sm;
-  font-size: 11px;
-
-  .dark-only & {
-    background: rgba(255, 255, 255, 0.1);
-  }
-}
-
-.execution-time {
-  font-size: 10px;
-  color: $success-color;
-}
-
-.expand-icon {
-  transition: transform 0.2s;
-  font-size: 10px;
-
-  &.expanded {
-    transform: rotate(180deg);
-  }
-}
-
-.tool-details {
-  margin-top: 8px;
-  max-width: 90%;
-
-  pre {
-    background: rgba(0, 0, 0, 0.05);
-    padding: 10px;
-    border-radius: $radius-md;
+  .activity-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: $bg-white;
+    border: 1px solid $border;
+    border-radius: 8px;
     font-size: 11px;
-    overflow-x: auto;
-    max-height: 200px;
-    margin: 0;
+  }
 
-    .dark-only & {
-      background: rgba(0, 0, 0, 0.3);
+  .activity-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i { font-size: 10px; color: white; }
+
+    &.success { background: $success; }
+  }
+
+  .activity-name {
+    font-weight: 600;
+    color: $text-dark;
+  }
+
+  .activity-action {
+    color: $text-gray;
+  }
+
+  .activity-time {
+    color: $text-light;
+    font-size: 10px;
+  }
+
+  .activity-spinner {
+    color: $primary;
+    i { font-size: 12px; }
+  }
+
+  &.completed .activity-content {
+    background: rgba($success, 0.05);
+    border-color: rgba($success, 0.2);
+  }
+}
+
+// Votes
+.votes-container {
+  padding: 8px 0;
+  padding-left: 42px;
+
+  .votes-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: $text-gray;
+    margin-bottom: 8px;
+
+    i { color: $primary; }
+  }
+
+  .votes-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .vote-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: $bg-white;
+    border: 1px solid $border;
+    border-radius: 6px;
+    font-size: 11px;
+
+    .vote-emoji { font-size: 12px; }
+    .vote-name { color: $text-dark; }
+
+    &.approve {
+      background: rgba($success, 0.05);
+      border-color: rgba($success, 0.2);
+      i { color: $success; }
+    }
+
+    &.reject {
+      background: rgba($danger, 0.05);
+      border-color: rgba($danger, 0.2);
+      i { color: $danger; }
     }
   }
 }
 
-// ============================================
-// Vote Events - Horizontal Layout
-// ============================================
-.vote-event {
-  display: inline-flex;
-  padding: 4px;
-  animation: fadeInUp 0.3s ease;
-  vertical-align: top;
+// Negotiation
+.negotiation-notice {
+  padding-left: 42px;
 
-  // Votos consecutivos se muestran en fila
-  & + .vote-event {
-    margin-left: 0;
+  .negotiation-card {
+    background: $bg-white;
+    border: 1px solid $border;
+    border-radius: 10px;
+    padding: 12px;
+    max-width: 320px;
+  }
+
+  .negotiation-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: $text-dark;
+    margin-bottom: 8px;
+
+    i { color: $primary; }
+  }
+
+  .negotiation-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    .progress-bar {
+      flex: 1;
+      height: 3px;
+      background: $border;
+      border-radius: 2px;
+
+      .progress-fill {
+        height: 100%;
+        background: $primary;
+        border-radius: 2px;
+      }
+    }
+
+    .progress-text {
+      font-size: 10px;
+      color: $text-light;
+    }
+  }
+
+  .negotiation-proposal {
+    font-size: 12px;
+    color: $text-gray;
   }
 }
 
-// Contenedor para agrupar votos (se aplica via CSS grid en messages-container)
-.messages-container {
-  // Grid para agrupar votos consecutivos
+// Consensus
+.consensus-notice {
+  padding-left: 42px;
+
+  .consensus-card {
+    background: rgba($success, 0.05);
+    border: 1px solid rgba($success, 0.2);
+    border-radius: 10px;
+    padding: 14px;
+    max-width: 360px;
+  }
+
+  .consensus-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+
+    i { color: $success; font-size: 18px; }
+
+    .consensus-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: $success;
+    }
+  }
+
+  .consensus-decision {
+    font-size: 13px;
+    color: $text-dark;
+    margin-bottom: 8px;
+  }
+
+  .consensus-votes {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+
+    .vote-stat {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+
+      &.approve { color: $success; }
+      &.reject { color: $danger; }
+    }
+  }
+
+  .consensus-next-steps {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba($success, 0.15);
+
+    .next-steps-header {
+      font-size: 11px;
+      font-weight: 600;
+      color: $text-gray;
+      margin-bottom: 6px;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 16px;
+      li {
+        font-size: 12px;
+        color: $text-dark;
+        margin: 3px 0;
+      }
+    }
+  }
+}
+
+// Error
+.error-notice {
+  .error-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: rgba($danger, 0.05);
+    border: 1px solid rgba($danger, 0.2);
+    border-radius: 8px;
+    font-size: 12px;
+    color: $danger;
+  }
+}
+
+// Typing
+.typing-indicators {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-
-  // Wrap para votos
-  .vote-event {
-    align-self: flex-start;
-  }
+  gap: 6px;
 }
 
-// Wrapper para votos consecutivos
-.votes-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: flex-start;
-  width: 100%;
-}
-
-.vote-card {
-  background: white;
-  border-radius: $radius-md;
-  padding: 10px 12px;
-  min-width: 180px;
-  max-width: 280px;
-  box-shadow: $shadow-sm;
-  border-left: 3px solid;
-  flex: 1 1 auto;
-
-  .dark-only & {
-    background: $bubble-agent-dark;
-  }
-
-  &.approve {
-    border-color: $success-color;
-    background: rgba($success-color, 0.03);
-
-    .vote-badge {
-      background: $success-color;
-      color: white;
-    }
-
-    .dark-only & {
-      background: rgba($success-color, 0.1);
-    }
-  }
-
-  &.reject {
-    border-color: $danger-color;
-    background: rgba($danger-color, 0.03);
-
-    .vote-badge {
-      background: $danger-color;
-      color: white;
-    }
-
-    .dark-only & {
-      background: rgba($danger-color, 0.1);
-    }
-  }
-
-  &.pending {
-    border-color: $warning-color;
-    background: rgba($warning-color, 0.03);
-
-    .vote-badge {
-      background: $warning-color;
-      color: white;
-    }
-
-    .dark-only & {
-      background: rgba($warning-color, 0.1);
-    }
-  }
-}
-
-.vote-header {
+.typing-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  padding-left: 42px;
 }
 
-.vote-avatar {
+.typing-avatar {
   width: 28px;
   height: 28px;
-  min-width: 28px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  font-size: 11px;
-}
-
-.vote-speaker {
-  flex: 1;
-  font-weight: 600;
-  font-size: 13px;
-  color: $text-primary-light;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  .dark-only & {
-    color: $text-primary-dark;
-  }
-}
-
-.vote-badge {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  padding: 3px 8px;
-  border-radius: $radius-xl;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.vote-reason {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid $border-light;
   font-size: 12px;
-  color: $text-secondary-light;
-  line-height: 1.4;
-  // Limitar a 2 líneas
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-
-  .dark-only & {
-    border-top-color: $border-dark;
-    color: $text-secondary-dark;
-  }
-}
-
-// ============================================
-// Negotiation Events
-// ============================================
-.negotiation-event {
-  display: flex;
-  justify-content: center;
-  padding: 8px 0;
-}
-
-.negotiation-card {
-  background: linear-gradient(135deg, rgba($info-color, 0.1), rgba($primary-color, 0.1));
-  border: 1px solid rgba($info-color, 0.2);
-  border-radius: $radius-lg;
-  padding: 12px 16px;
-  min-width: 300px;
-  max-width: 400px;
-}
-
-.negotiation-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: $info-color;
-  margin-bottom: 8px;
-}
-
-.negotiation-proposal {
-  font-size: 13px;
-  color: $text-primary-light;
-
-  .dark-only & {
-    color: $text-primary-dark;
-  }
-}
-
-// ============================================
-// Consensus Events
-// ============================================
-.consensus-event {
-  display: flex;
-  justify-content: center;
-  padding: 12px 0;
-}
-
-.consensus-card {
-  background: linear-gradient(135deg, rgba($success-color, 0.15), rgba($success-color, 0.05));
-  border: 2px solid $success-color;
-  border-radius: $radius-lg;
-  padding: 16px 20px;
-  min-width: 300px;
-  max-width: 450px;
-  text-align: center;
-}
-
-.consensus-header {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 700;
-  color: $success-color;
-  margin-bottom: 10px;
-
-  i {
-    font-size: 20px;
-  }
-}
-
-.consensus-decision {
-  font-size: 14px;
-  color: $text-primary-light;
-  line-height: 1.5;
-  margin-bottom: 12px;
-
-  .dark-only & {
-    color: $text-primary-dark;
-  }
-}
-
-.consensus-votes {
-  display: flex;
-  justify-content: center;
-  gap: 16px;
-}
-
-.vote-count {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 14px;
-  font-weight: 600;
-
-  &.approve {
-    color: $success-color;
-  }
-
-  &.reject {
-    color: $danger-color;
-  }
-
-  &.pending {
-    color: $warning-color;
-  }
-}
-
-// ============================================
-// Error Events
-// ============================================
-.error-event {
-  display: flex;
-  justify-content: center;
-  padding: 8px 0;
-}
-
-.error-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba($danger-color, 0.1);
-  border: 1px solid rgba($danger-color, 0.2);
-  color: $danger-color;
-  padding: 10px 16px;
-  border-radius: $radius-lg;
-  font-size: 13px;
-}
-
-// ============================================
-// Typing Indicators
-// ============================================
-.typing-indicators {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 0;
 }
 
 .typing-bubble {
   display: flex;
   align-items: center;
   gap: 8px;
-  animation: fadeIn 0.3s ease;
-}
-
-.typing-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: $bubble-agent-light;
   padding: 8px 12px;
-  border-radius: $radius-lg;
-  box-shadow: $shadow-sm;
-
-  .dark-only & {
-    background: $bubble-agent-dark;
-  }
+  background: $bg-white;
+  border: 1px solid $border;
+  border-radius: 12px;
+  font-size: 12px;
 }
 
 .typing-name {
-  font-size: 12px;
-  font-weight: 500;
-  color: $text-secondary-light;
+  font-weight: 600;
+  color: $text-dark;
+}
 
-  .dark-only & {
-    color: $text-secondary-dark;
-  }
+.typing-text {
+  color: $text-gray;
 }
 
 .typing-dots {
@@ -885,155 +655,103 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   gap: 3px;
 
   span {
-    width: 6px;
-    height: 6px;
-    background: $text-secondary-light;
+    width: 5px;
+    height: 5px;
+    background: $primary;
     border-radius: 50%;
-    animation: bounce 1.4s infinite ease-in-out both;
+    animation: bounce 1.4s infinite;
 
-    .dark-only & {
-      background: $text-secondary-dark;
-    }
-
-    &:nth-child(1) { animation-delay: -0.32s; }
-    &:nth-child(2) { animation-delay: -0.16s; }
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
   }
 }
 
 @keyframes bounce {
-  0%, 80%, 100% {
-    transform: scale(0);
-  }
-  40% {
-    transform: scale(1);
-  }
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-3px); opacity: 1; }
 }
 
-// ============================================
-// Error Banner
-// ============================================
+// Error banner
 .error-banner {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  background: rgba($danger-color, 0.1);
-  border-top: 1px solid rgba($danger-color, 0.2);
-  color: $danger-color;
-  font-size: 13px;
-  animation: slideDown 0.3s ease;
+  padding: 10px 16px;
+  background: rgba($danger, 0.05);
+  border-top: 1px solid rgba($danger, 0.2);
+  font-size: 12px;
+  color: $danger;
 }
 
-@keyframes slideDown {
-  from {
-    transform: translateY(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-// ============================================
-// Input Area
-// ============================================
+// Input
 .input-area {
-  padding: 16px 20px;
-  background: white;
-  border-top: 1px solid $border-light;
-
-  .dark-only & {
-    background: #0f172a;
-    border-top-color: $border-dark;
-  }
+  padding: 12px 16px;
+  background: $bg-white;
+  border-top: 1px solid $border;
 }
 
 .input-wrapper {
   display: flex;
-  gap: 12px;
   align-items: flex-end;
-}
+  gap: 10px;
+  background: $bg-page;
+  border: 1px solid $border;
+  border-radius: 12px;
+  padding: 8px 12px;
 
-textarea {
-  flex: 1;
-  padding: 12px 16px;
-  border: 1px solid $border-light;
-  border-radius: $radius-lg;
-  font-size: 14px;
-  font-family: inherit;
-  resize: none;
-  min-height: 44px;
-  max-height: 120px;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-
-  .dark-only & {
-    background: $border-dark;
-    border-color: $border-dark;
-    color: $text-primary-dark;
-
-    &::placeholder {
-      color: $text-secondary-dark;
-    }
+  &:focus-within {
+    border-color: $primary;
   }
 
-  &:focus {
-    border-color: $primary-color;
-    box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
-  }
+  textarea {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 13px;
+    line-height: 1.4;
+    color: $text-dark;
+    min-height: 20px;
+    max-height: 100px;
+    font-family: inherit;
 
-  &:disabled {
-    background: $bg-light;
-    cursor: not-allowed;
-
-    .dark-only & {
-      background: rgba($border-dark, 0.5);
-    }
+    &::placeholder { color: $text-light; }
+    &:disabled { opacity: 0.5; }
   }
 }
 
 .send-button {
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
+  background: $primary;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: $primary-color;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.2s;
+  flex-shrink: 0;
 
-  &:hover:not(:disabled) {
-    background: darken($primary-color, 10%);
-    transform: scale(1.05);
-  }
+  i { font-size: 14px; }
 
-  &:disabled {
-    background: $border-light;
-    color: $text-secondary-light;
-    cursor: not-allowed;
-
-    .dark-only & {
-      background: $border-dark;
-      color: $text-secondary-dark;
-    }
-  }
+  &:hover:not(:disabled) { opacity: 0.9; }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
 
   &.loading {
-    background: $primary-color;
+    background: $bg-page;
+    border: 1px solid $border;
+    color: $text-gray;
   }
 }
 
 .input-hint {
-  margin-top: 8px;
   text-align: center;
-  font-size: 11px;
-  color: $text-secondary-light;
+  padding-top: 6px;
 
-  .dark-only & {
-    color: $text-secondary-dark;
+  span {
+    font-size: 10px;
+    color: $text-light;
   }
 }

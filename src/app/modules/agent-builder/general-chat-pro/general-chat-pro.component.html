@@ -3,13 +3,15 @@
   <div class="chat-header">
     <div class="chat-header-info">
       <div class="chat-title">
-        <i class="pi pi-comments"></i>
-        <span>KAI Assistant</span>
+        <div class="chat-logo">
+          <span class="logo-text">KAI</span>
+        </div>
+        <span>Centro de Comando</span>
       </div>
       <div class="chat-subtitle">
         <span class="company-badge">{{ company }}</span>
         <span class="connection-status" [class.connected]="isConnected">
-          <i class="pi" [ngClass]="isConnected ? 'pi-circle-fill' : 'pi-circle'"></i>
+          <span class="status-dot"></span>
           {{ isConnected ? 'Conectado' : 'Desconectado' }}
         </span>
       </div>
@@ -23,195 +25,172 @@
 
   <!-- Active Agents Bar -->
   <div class="active-agents-bar" *ngIf="activeAgents.size > 0">
-    <span class="active-label">Agentes activos:</span>
-    <span class="agent-chip" *ngFor="let agent of getActiveAgentsArray()">
-      {{ agent }}
-    </span>
+    <div class="agents-avatars">
+      <div class="agent-avatar-small"
+           *ngFor="let agent of getActiveAgentsArray()"
+           [title]="agent">
+        {{ agent.charAt(0) }}
+      </div>
+    </div>
+    <span class="agents-label">{{ activeAgents.size }} especialistas activos</span>
   </div>
 
   <!-- Messages Container -->
   <div class="messages-container" #messagesContainer>
     <!-- Empty State -->
     <div class="empty-state" *ngIf="messages.length === 0">
-      <i class="pi pi-comments"></i>
-      <h3>Inicia una conversacion</h3>
-      <p>Pregunta sobre ventas, inventario o logistica</p>
+      <div class="empty-icon">
+        <i class="pi pi-microchip-ai"></i>
+      </div>
+      <h3>Centro de Comando KAI</h3>
+      <p>Tu equipo de especialistas está listo.<br>Consulta sobre ventas, inventario o logística.</p>
+      <div class="suggestion-chips">
+        <button class="chip" (click)="userInput = '¿Cómo van las ventas de hoy?'; sendMessage()">
+          Ventas de hoy
+        </button>
+        <button class="chip" (click)="userInput = '¿Hay productos con bajo stock?'; sendMessage()">
+          Stock bajo
+        </button>
+        <button class="chip" (click)="userInput = '¿Cuántos pedidos hay pendientes?'; sendMessage()">
+          Pedidos pendientes
+        </button>
+      </div>
     </div>
 
     <!-- Messages -->
     <ng-container *ngFor="let message of messages; let i = index; trackBy: trackByMessageId">
 
       <!-- User Message -->
-      <div class="message-wrapper user" *ngIf="isUserMessage(message)">
-        <div class="message-bubble user-bubble">
-          <div class="message-content" [innerHTML]="formatMessageContent(message.content)"></div>
-          <div class="message-time">
-            {{ message.timestamp | date:'HH:mm' }}
+      <div class="message-card user" *ngIf="isUserMessage(message)">
+        <div class="message-avatar user-avatar">
+          <i class="pi pi-user"></i>
+        </div>
+        <div class="message-body">
+          <div class="message-text" [innerHTML]="formatMessageContent(message.content)"></div>
+          <div class="message-time">{{ message.timestamp | date:'HH:mm' }}</div>
+        </div>
+      </div>
+
+      <!-- Agent Joined -->
+      <div class="system-notice" *ngIf="message.eventType === 'agent_joined'">
+        <div class="notice-content">
+          <span class="notice-emoji">{{ getSpeakerEmoji(message.speaker) }}</span>
+          <span class="notice-text">
+            <strong>{{ message.speaker.name }}</strong> se conectó
+          </span>
+        </div>
+      </div>
+
+      <!-- Delegation -->
+      <div class="system-notice" *ngIf="message.eventType === 'delegation'">
+        <div class="notice-content">
+          <span class="notice-emoji">{{ getSpeakerEmoji(message.speaker) }}</span>
+          <span class="notice-text">
+            <strong>{{ message.speaker.name }}</strong> →
+            <strong>{{ message.delegationTarget?.name }}</strong>
+          </span>
+          <span class="notice-emoji" *ngIf="message.delegationTarget">{{ getSpeakerEmoji(message.delegationTarget) }}</span>
+        </div>
+      </div>
+
+      <!-- Vote Events -->
+      <ng-container *ngIf="message.eventType === 'vote' && isFirstVote(i)">
+        <div class="votes-container">
+          <div class="votes-header">
+            <i class="pi pi-users"></i>
+            <span>Votación</span>
           </div>
-        </div>
-      </div>
-
-      <!-- Agent Joined (compact) -->
-      <div class="system-event" *ngIf="message.eventType === 'agent_joined'">
-        <div class="event-line">
-          <i class="pi pi-sign-in"></i>
-          <span class="agent-name" [style.color]="message.speaker.color">
-            {{ message.speaker.name }}
-          </span>
-          <span>se unio a la conversacion</span>
-        </div>
-      </div>
-
-      <!-- Delegation (compact) -->
-      <div class="system-event delegation" *ngIf="message.eventType === 'delegation'">
-        <div class="event-line">
-          <i class="pi pi-share-alt"></i>
-          <span class="agent-name" [style.color]="message.speaker.color">
-            {{ message.speaker.name }}
-          </span>
-          <span>delego a</span>
-          <span class="agent-name" [style.color]="message.delegationTarget?.color">
-            @{{ message.delegationTarget?.name }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Tool Call (compact) -->
-      <div class="system-event tool" *ngIf="message.eventType === 'tool_call'">
-        <div class="event-line" (click)="toggleToolDetails(message)">
-          <i class="pi pi-cog pi-spin"></i>
-          <span class="agent-name" [style.color]="message.speaker.color">
-            {{ message.speaker.name }}
-          </span>
-          <span>consulta</span>
-          <code class="tool-name">{{ message.toolName }}</code>
-          <i class="pi pi-chevron-down expand-icon" [class.expanded]="message.isExpanded"></i>
-        </div>
-        <div class="tool-details" *ngIf="message.isExpanded && message.toolParams">
-          <pre>{{ formatJson(message.toolParams) }}</pre>
-        </div>
-      </div>
-
-      <!-- Tool Result (compact) -->
-      <div class="system-event tool-result" *ngIf="message.eventType === 'tool_result'">
-        <div class="event-line" (click)="toggleToolDetails(message)">
-          <i class="pi pi-check-circle"></i>
-          <code class="tool-name">{{ message.toolName }}</code>
-          <span class="execution-time" *ngIf="message.executionTimeMs">
-            {{ formatExecutionTime(message.executionTimeMs) }}
-          </span>
-          <i class="pi pi-chevron-down expand-icon" [class.expanded]="message.isExpanded"></i>
-        </div>
-        <div class="tool-details" *ngIf="message.isExpanded && message.toolResult">
-          <pre>{{ formatJson(message.toolResult) }}</pre>
-        </div>
-      </div>
-
-      <!-- Vote Events - Grouped in Row -->
-      <ng-container *ngIf="message.eventType === 'vote'">
-        <!-- Abrir contenedor si es el primer voto -->
-        <div class="votes-row" *ngIf="isFirstVote(i)">
-          <ng-container *ngFor="let vote of getConsecutiveVotes(i); trackBy: trackByMessageId">
-            <div class="vote-card" [class.approve]="vote.vote === 'APPROVE'"
+          <div class="votes-grid">
+            <div class="vote-chip"
+                 *ngFor="let vote of getConsecutiveVotes(i); trackBy: trackByMessageId"
+                 [class.approve]="vote.vote === 'APPROVE'"
                  [class.reject]="vote.vote === 'REJECT'"
                  [class.pending]="vote.vote === 'PENDING'">
-              <div class="vote-header">
-                <div class="vote-avatar" [style.background-color]="vote.speaker.color">
-                  <i class="pi" [ngClass]="vote.speaker.avatar"></i>
-                </div>
-                <span class="vote-speaker">{{ vote.speaker.name }}</span>
-                <span class="vote-badge">
-                  <i class="pi" [ngClass]="{
-                    'pi-check': vote.vote === 'APPROVE',
-                    'pi-times': vote.vote === 'REJECT',
-                    'pi-clock': vote.vote === 'PENDING'
-                  }"></i>
-                  {{ vote.vote }}
-                </span>
-              </div>
-              <div class="vote-reason" *ngIf="vote.voteReason">
-                {{ vote.voteReason }}
-              </div>
+              <span class="vote-emoji">{{ getSpeakerEmoji(vote.speaker) }}</span>
+              <span class="vote-name">{{ vote.speaker.name }}</span>
+              <i class="pi" [ngClass]="getVoteIcon(vote.vote)"></i>
             </div>
-          </ng-container>
+          </div>
         </div>
       </ng-container>
 
       <!-- Negotiation Round -->
-      <div class="negotiation-event" *ngIf="message.eventType === 'negotiation_round'">
+      <div class="negotiation-notice" *ngIf="message.eventType === 'negotiation_round'">
         <div class="negotiation-card">
           <div class="negotiation-header">
             <i class="pi pi-sync"></i>
-            <span>Ronda {{ message.negotiationRound }} de Negociacion</span>
+            <span>Ronda {{ message.negotiationRound }}</span>
+          </div>
+          <div class="negotiation-progress" *ngIf="message.negotiationContext">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getNegotiationProgress(message)"></div>
+            </div>
+            <span class="progress-text">
+              {{ message.negotiationContext.currentRound }}/{{ message.negotiationContext.maxRounds }}
+            </span>
           </div>
           <div class="negotiation-proposal" *ngIf="message.newProposal">
-            <strong>Nueva propuesta:</strong> {{ message.newProposal }}
+            {{ message.newProposal }}
           </div>
         </div>
       </div>
 
       <!-- Consensus Reached -->
-      <div class="consensus-event" *ngIf="message.eventType === 'consensus_reached'">
+      <div class="consensus-notice" *ngIf="message.eventType === 'consensus_reached'">
         <div class="consensus-card">
           <div class="consensus-header">
-            <i class="pi pi-check-square"></i>
-            <span>Consenso Alcanzado</span>
+            <i class="pi pi-check-circle"></i>
+            <span class="consensus-title">Consenso</span>
           </div>
           <div class="consensus-decision">
             {{ message.consensusDecision }}
           </div>
           <div class="consensus-votes" *ngIf="message.votesSummary">
-            <span class="vote-count approve" *ngIf="message.votesSummary.approve">
+            <span class="vote-stat approve" *ngIf="message.votesSummary.approve">
               <i class="pi pi-check"></i> {{ message.votesSummary.approve }}
             </span>
-            <span class="vote-count reject" *ngIf="message.votesSummary.reject">
+            <span class="vote-stat reject" *ngIf="message.votesSummary.reject">
               <i class="pi pi-times"></i> {{ message.votesSummary.reject }}
             </span>
-            <span class="vote-count pending" *ngIf="message.votesSummary.pending">
-              <i class="pi pi-clock"></i> {{ message.votesSummary.pending }}
-            </span>
+          </div>
+          <div class="consensus-next-steps" *ngIf="message.consensusResult?.nextSteps?.length">
+            <div class="next-steps-header">Próximos pasos:</div>
+            <ul>
+              <li *ngFor="let step of message.consensusResult.nextSteps">{{ step }}</li>
+            </ul>
           </div>
         </div>
       </div>
 
       <!-- Agent Message -->
-      <div class="message-wrapper agent"
-           *ngIf="message.eventType === 'agent_message' || message.eventType === 'final_response'"
-           [class.grouped]="isGroupedMessage(i)"
-           [class.final]="message.eventType === 'final_response'">
-
-        <!-- Avatar (solo si no es parte de un grupo) -->
-        <div class="agent-avatar" *ngIf="!isGroupedMessage(i)" [style.background-color]="message.speaker.color">
-          <i class="pi" [ngClass]="message.speaker.avatar"></i>
+      <div class="message-card agent"
+           *ngIf="message.eventType === 'agent_message' || message.eventType === 'final_response'">
+        <div class="message-avatar" [style.background-color]="message.speaker.color">
+          <span>{{ getSpeakerEmoji(message.speaker) }}</span>
         </div>
-        <div class="avatar-placeholder" *ngIf="isGroupedMessage(i)"></div>
-
-        <div class="message-bubble agent-bubble" [style.border-left-color]="message.speaker.color">
-          <!-- Header (solo si no es parte de un grupo) -->
-          <div class="message-header" *ngIf="!isGroupedMessage(i)">
+        <div class="message-body">
+          <div class="message-header">
             <span class="speaker-name" [style.color]="message.speaker.color">
               {{ message.speaker.name }}
             </span>
-            <span class="speaker-dept" *ngIf="message.speaker.department">
-              {{ message.speaker.department }}
+            <span class="speaker-badge" *ngIf="getSpeakerRole(message.speaker)">
+              {{ getSpeakerRole(message.speaker) }}
             </span>
           </div>
-
-          <div class="message-content" [innerHTML]="formatMessageContent(message.content)"></div>
-
-          <div class="message-footer">
-            <span class="message-time">{{ message.timestamp | date:'HH:mm' }}</span>
+          <div class="message-text" [innerHTML]="formatMessageContent(message.content)"></div>
+          <div class="message-time">
+            {{ message.timestamp | date:'HH:mm' }}
             <span class="final-badge" *ngIf="message.eventType === 'final_response'">
-              <i class="pi pi-flag"></i> Respuesta final
+              <i class="pi pi-check-circle"></i> Final
             </span>
           </div>
         </div>
       </div>
 
       <!-- Error Message -->
-      <div class="error-event" *ngIf="message.eventType === 'error'">
-        <div class="error-card">
-          <i class="pi pi-exclamation-triangle"></i>
+      <div class="error-notice" *ngIf="message.eventType === 'error'">
+        <div class="error-content">
+          <i class="pi pi-exclamation-circle"></i>
           <span>{{ message.content }}</span>
         </div>
       </div>
@@ -220,12 +199,13 @@
 
     <!-- Typing Indicators -->
     <div class="typing-indicators" *ngIf="typingAgents.length > 0">
-      <div class="typing-bubble" *ngFor="let agent of typingAgents">
+      <div class="typing-row" *ngFor="let agent of typingAgents">
         <div class="typing-avatar" [style.background-color]="agent.color">
-          <i class="pi" [ngClass]="agent.avatar"></i>
+          <span>{{ getSpeakerEmoji(agent) }}</span>
         </div>
-        <div class="typing-content">
+        <div class="typing-bubble">
           <span class="typing-name">{{ agent.name }}</span>
+          <span class="typing-text">{{ getTypingMessage(agent) }}</span>
           <div class="typing-dots">
             <span></span>
             <span></span>
@@ -249,7 +229,7 @@
         #messageInput
         [(ngModel)]="userInput"
         (keypress)="onKeyPress($event)"
-        placeholder="Escribe tu mensaje..."
+        placeholder="Escribe tu consulta..."
         [disabled]="isExecuting"
         rows="1"
       ></textarea>

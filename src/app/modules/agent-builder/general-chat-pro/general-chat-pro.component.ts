@@ -18,7 +18,12 @@ import {
   ChatProMessage,
   ChatProEventType,
   ChatProSpeaker,
-  AGENT_UI_CONFIG
+  AGENT_UI_CONFIG,
+  getActivityMessage,
+  getDelegationMessage,
+  formatCurrency,
+  formatNumber,
+  formatPercent
 } from '../shared/models/chat-pro.model';
 
 /**
@@ -128,14 +133,31 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
       this.activeAgents.add(message.speaker.agent_id);
     }
 
-    // Manejar typing indicators
-    if (message.eventType === 'agent_thinking' || message.eventType === 'agent_joined') {
-      // Agregar agente a la lista de "escribiendo"
+    // agent_thinking: solo typing indicator, no mostrar mensaje
+    if (message.eventType === 'agent_thinking') {
+      this.addTypingAgent(message.speaker);
+      this.cdr.markForCheck();
+      return; // No agregar a messages
+    }
+
+    // tool_call: solo typing indicator
+    if (message.eventType === 'tool_call') {
+      this.addTypingAgent(message.speaker);
+      this.cdr.markForCheck();
+      return; // No agregar a messages
+    }
+
+    // tool_result: ignorar, no mostrar
+    if (message.eventType === 'tool_result') {
+      this.cdr.markForCheck();
+      return; // No agregar a messages
+    }
+
+    if (message.eventType === 'agent_joined') {
       this.addTypingAgent(message.speaker);
     } else if (message.eventType === 'agent_message' ||
-               message.eventType === 'final_response' ||
-               message.eventType === 'tool_result') {
-      // Remover agente de la lista de "escribiendo" cuando envía mensaje
+               message.eventType === 'final_response') {
+      // Remover agente de typing cuando envía mensaje real
       this.removeTypingAgent(message.speaker);
     }
 
@@ -490,7 +512,29 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
     );
 
     if (!exists) {
-      this.typingAgents.push(speaker);
+      // Clonar speaker para poder modificar el contexto
+      this.typingAgents.push({ ...speaker });
+      this.cdr.markForCheck();
+      this.scrollToBottom();
+    }
+  }
+
+  /**
+   * Actualiza el contexto de actividad de un agente en typing
+   */
+  updateTypingContext(speaker: ChatProSpeaker, context: string): void {
+    const agent = this.typingAgents.find(
+      a => a.agent_id === speaker.agent_id || a.name === speaker.name
+    );
+    if (agent) {
+      // Guardar contexto en una propiedad custom
+      (agent as any).activityContext = context;
+      this.cdr.markForCheck();
+    } else {
+      // Si no existe, agregarlo con contexto
+      const newAgent = { ...speaker } as any;
+      newAgent.activityContext = context;
+      this.typingAgents.push(newAgent);
       this.cdr.markForCheck();
       this.scrollToBottom();
     }
@@ -512,5 +556,151 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
   clearTypingAgents(): void {
     this.typingAgents = [];
     this.cdr.markForCheck();
+  }
+
+  // ============================================
+  // Sprint 2: Natural UI Helpers
+  // ============================================
+
+  /**
+   * Obtiene mensaje de actividad natural para typing indicator
+   */
+  getTypingMessage(speaker: ChatProSpeaker): string {
+    return getActivityMessage(speaker);
+  }
+
+  /**
+   * Formatea valor como moneda colombiana
+   */
+  formatAsCurrency(value: number): string {
+    return formatCurrency(value);
+  }
+
+  /**
+   * Formatea número con separadores
+   */
+  formatAsNumber(value: number): string {
+    return formatNumber(value);
+  }
+
+  /**
+   * Formatea porcentaje con signo
+   */
+  formatAsPercent(value: number): string {
+    return formatPercent(value);
+  }
+
+  /**
+   * Verifica si es mensaje de herramienta (para mostrar compacto)
+   */
+  isToolEvent(message: ChatProMessage): boolean {
+    return message.eventType === 'tool_call' || message.eventType === 'tool_result';
+  }
+
+  /**
+   * Verifica si es evento de sistema (delegación, join, etc)
+   */
+  isSystemEvent(message: ChatProMessage): boolean {
+    return message.eventType === 'delegation' ||
+           message.eventType === 'agent_joined' ||
+           message.eventType === 'negotiation_round' ||
+           message.eventType === 'consensus_reached';
+  }
+
+  /**
+   * Verifica si debe mostrar el avatar (no agrupado)
+   */
+  shouldShowAvatar(index: number): boolean {
+    return !this.isGroupedMessage(index);
+  }
+
+  /**
+   * Verifica si debe mostrar el header del mensaje (no agrupado)
+   */
+  shouldShowHeader(index: number): boolean {
+    return !this.isGroupedMessage(index);
+  }
+
+  /**
+   * Obtiene clase CSS para badge de voto
+   */
+  getVoteBadgeClass(vote: string | undefined): string {
+    switch (vote) {
+      case 'APPROVE': return 'vote-approve';
+      case 'REJECT': return 'vote-reject';
+      case 'PENDING': return 'vote-pending';
+      default: return '';
+    }
+  }
+
+  /**
+   * Obtiene icono para voto
+   */
+  getVoteIcon(vote: string | undefined): string {
+    switch (vote) {
+      case 'APPROVE': return 'pi-check';
+      case 'REJECT': return 'pi-times';
+      case 'PENDING': return 'pi-clock';
+      default: return 'pi-question';
+    }
+  }
+
+  /**
+   * Calcula progreso de negociación (1/3, 2/3, 3/3)
+   */
+  getNegotiationProgress(message: ChatProMessage): number {
+    if (!message.negotiationContext) return 0;
+    return (message.negotiationContext.currentRound / message.negotiationContext.maxRounds) * 100;
+  }
+
+  /**
+   * Obtiene rol/departamento legible
+   */
+  getSpeakerRole(speaker: ChatProSpeaker): string {
+    const config = AGENT_UI_CONFIG[speaker.agent_id || ''];
+    if (config?.role) return config.role;
+
+    switch (speaker.department) {
+      case 'sales': return 'Ventas';
+      case 'inventory': return 'Inventario';
+      case 'logistics': return 'Logística';
+      default: return '';
+    }
+  }
+
+  /**
+   * Obtiene emoji del agente
+   */
+  getSpeakerEmoji(speaker: ChatProSpeaker): string {
+    const config = AGENT_UI_CONFIG[speaker.agent_id || ''];
+    return config?.emoji || '👤';
+  }
+
+  /**
+   * Verifica si el mensaje tiene contenido expandible
+   */
+  hasExpandableContent(message: ChatProMessage): boolean {
+    return !!(message.toolParams || message.toolResult);
+  }
+
+  /**
+   * Obtiene nombre amigable de herramienta
+   */
+  getToolFriendlyName(message: ChatProMessage): string {
+    return message.toolMetadata?.friendlyName || message.toolName || 'Procesando';
+  }
+
+  /**
+   * Obtiene descripción de herramienta
+   */
+  getToolDescription(message: ChatProMessage): string {
+    return message.toolMetadata?.description || 'Ejecutando consulta...';
+  }
+
+  /**
+   * Obtiene icono de herramienta
+   */
+  getToolIcon(message: ChatProMessage): string {
+    return message.toolMetadata?.icon || 'pi-cog';
   }
 }
