@@ -7,7 +7,8 @@
       "Bash(lsof:*)",
       "Bash(npm run build:*)",
       "mcp__plugin_figma_figma__get_screenshot",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "ask": []
