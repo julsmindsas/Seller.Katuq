@@ -23,7 +23,9 @@ import {
   getDelegationMessage,
   formatCurrency,
   formatNumber,
-  formatPercent
+  formatPercent,
+  ChatSession,
+  SessionHistory
 } from '../shared/models/chat-pro.model';
 
 /**
@@ -64,6 +66,12 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
   // Sprint 1.4: Agentes escribiendo (typing indicators)
   typingAgents: ChatProSpeaker[] = [];
 
+  // Session management
+  sessions: ChatSession[] = [];
+  currentSessionId: string | null = null;
+  showSessionPanel = false;
+  isLoadingSessions = false;
+
   // Cleanup
   private destroy$ = new Subject<void>();
 
@@ -77,6 +85,11 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.loadCompany();
     this.setupSubscriptions();
+
+    // Cargar sesiones si hay empresa
+    if (this.company) {
+      this.loadSessions();
+    }
   }
 
   /**
@@ -722,5 +735,159 @@ export class GeneralChatProComponent implements OnInit, OnDestroy {
    */
   getToolIcon(message: ChatProMessage): string {
     return message.toolMetadata?.icon || 'pi-cog';
+  }
+
+  // ============================================
+  // Session Management Methods
+  // ============================================
+
+  /**
+   * Carga la lista de sesiones de la empresa
+   */
+  async loadSessions(): Promise<void> {
+    if (!this.company) return;
+
+    this.isLoadingSessions = true;
+    this.cdr.markForCheck();
+
+    try {
+      this.sessions = await this.chatProService.listSessions(this.company);
+      this.currentSessionId = this.chatProService.currentSessionId;
+    } catch (error) {
+      console.error('[GeneralChatPro] Error loading sessions:', error);
+    } finally {
+      this.isLoadingSessions = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Cambia a una sesion existente y carga su historial
+   */
+  async switchSession(sessionId: string): Promise<void> {
+    if (!this.company || this.isExecuting) return;
+
+    this.isLoadingSessions = true;
+    this.cdr.markForCheck();
+
+    try {
+      const history = await this.chatProService.loadHistory(this.company, sessionId);
+      if (history) {
+        this.currentSessionId = sessionId;
+        this.messages = this.chatProService.convertHistoryToMessages(history);
+        this.showSessionPanel = false;
+        this.scrollToBottom();
+      }
+    } catch (error) {
+      console.error('[GeneralChatPro] Error switching session:', error);
+    } finally {
+      this.isLoadingSessions = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Crea una nueva sesion de chat
+   */
+  async newSession(): Promise<void> {
+    if (!this.company || this.isExecuting) return;
+
+    // Limpiar chat actual
+    this.messages = [];
+    this.activeAgents.clear();
+    this.clearTypingAgents();
+
+    try {
+      // Crear nueva sesion en el backend
+      const sessionId = await this.chatProService.createSession(this.company);
+      if (sessionId) {
+        this.currentSessionId = sessionId;
+        await this.loadSessions();
+      }
+    } catch (error) {
+      console.error('[GeneralChatPro] Error creating session:', error);
+      // Si falla, al menos limpiar la sesion local
+      this.chatProService.startNewConversation();
+      this.currentSessionId = null;
+    }
+
+    this.showSessionPanel = false;
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Elimina una sesion
+   */
+  async deleteSession(sessionId: string, event: Event): Promise<void> {
+    event.stopPropagation(); // Evitar que se active switchSession
+
+    if (!this.company) return;
+
+    try {
+      const success = await this.chatProService.deleteSession(this.company, sessionId);
+      if (success) {
+        // Si eliminamos la sesion actual, limpiar chat
+        if (this.currentSessionId === sessionId) {
+          this.messages = [];
+          this.currentSessionId = null;
+          this.chatProService.startNewConversation();
+        }
+        await this.loadSessions();
+      }
+    } catch (error) {
+      console.error('[GeneralChatPro] Error deleting session:', error);
+    }
+
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Toggle del panel de sesiones
+   */
+  toggleSessionPanel(): void {
+    this.showSessionPanel = !this.showSessionPanel;
+    if (this.showSessionPanel && this.company) {
+      this.loadSessions();
+    }
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Obtiene el titulo de una sesion para mostrar
+   */
+  getSessionDisplayTitle(session: ChatSession): string {
+    return session.title || 'Chat sin titulo';
+  }
+
+  /**
+   * Formatea la fecha de ultima actualizacion
+   */
+  formatSessionDate(dateStr: string | null): string {
+    if (!dateStr) return '';
+
+    try {
+      const date = new Date(dateStr);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / 60000);
+      const diffHours = Math.floor(diffMs / 3600000);
+      const diffDays = Math.floor(diffMs / 86400000);
+
+      if (diffMins < 1) return 'Ahora';
+      if (diffMins < 60) return `Hace ${diffMins} min`;
+      if (diffHours < 24) return `Hace ${diffHours}h`;
+      if (diffDays < 7) return `Hace ${diffDays}d`;
+
+      return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Verifica si una sesion es la actual
+   */
+  isCurrentSession(session: ChatSession): boolean {
+    return session.id === this.currentSessionId;
   }
 }

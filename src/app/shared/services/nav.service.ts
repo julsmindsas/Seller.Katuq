@@ -499,8 +499,11 @@ export class NavService implements OnDestroy {
       type: "sub",
       active: false,
       children: [
+        { path: "agent-builder/chat-pro", title: "KAI Chat", type: "link", icon: "message-circle" },
+        { path: "agent-builder/general-chat", title: "Chat Básico", type: "link", icon: "message-square" },
         { path: "agent-builder/library", title: "Mis Agentes IA", type: "link", icon: "zap" },
         { path: "agent-builder/wizard", title: "Crear Agente", type: "link", icon: "plus" },
+        { path: "agent-builder/monitor", title: "Monitor A2A", type: "link", icon: "activity" },
       ],
     },
 

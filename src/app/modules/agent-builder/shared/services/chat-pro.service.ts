@@ -12,7 +12,10 @@ import {
   getDelegationMessage,
   getActivityMessage,
   ToolMetadata,
-  AgentActivityContext
+  AgentActivityContext,
+  ChatSession,
+  SessionHistory,
+  HistoryMessage
 } from '../models/chat-pro.model';
 
 /**
@@ -43,6 +46,11 @@ export class ChatProService {
   private idleTimeout: any = null;
   private readonly EXECUTION_TIMEOUT_MS = 120000; // 2 minutos max
   private readonly IDLE_TIMEOUT_MS = 30000; // 30 segundos sin actividad
+
+  // Session management
+  public currentSessionId: string | null = null;
+  private sessionsSubject = new BehaviorSubject<ChatSession[]>([]);
+  public sessions$ = this.sessionsSubject.asObservable();
 
   // Observable streams
   public messages$ = this.messagesSubject.asObservable();
@@ -103,13 +111,19 @@ export class ChatProService {
    */
   private async connectWithFetch(url: string, company: string, query: string): Promise<void> {
     try {
+      // Incluir session_id si existe para persistencia
+      const body: any = { company, query };
+      if (this.currentSessionId) {
+        body.session_id = this.currentSessionId;
+      }
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'text/event-stream'
         },
-        body: JSON.stringify({ company, query })
+        body: JSON.stringify(body)
       });
 
       if (!response.ok) {
@@ -514,6 +528,184 @@ export class ChatProService {
     this.connectionStatusSubject.next(false);
   }
 
+  // =============================================================================
+  // SESSION MANAGEMENT METHODS
+  // =============================================================================
+
+  /**
+   * Lista todas las sesiones de chat de una empresa
+   */
+  async listSessions(company: string): Promise<ChatSession[]> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/sessions/${encodeURIComponent(company)}`,
+        { method: 'GET' }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const sessions = data.sessions || [];
+      this.sessionsSubject.next(sessions);
+      return sessions;
+    } catch (error) {
+      console.error('[ChatProService] Error listing sessions:', error);
+      this.errorSubject.next('Error al cargar sesiones');
+      return [];
+    }
+  }
+
+  /**
+   * Crea una nueva sesion de chat
+   */
+  async createSession(company: string, title?: string): Promise<string | null> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/sessions/${encodeURIComponent(company)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: title || 'Nueva conversacion' })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      this.currentSessionId = data.session_id;
+      console.log('[ChatProService] Nueva sesion creada:', this.currentSessionId);
+
+      // Refrescar lista de sesiones
+      await this.listSessions(company);
+
+      return this.currentSessionId;
+    } catch (error) {
+      console.error('[ChatProService] Error creating session:', error);
+      this.errorSubject.next('Error al crear sesion');
+      return null;
+    }
+  }
+
+  /**
+   * Elimina una sesion de chat
+   */
+  async deleteSession(company: string, sessionId: string): Promise<boolean> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/sessions/${encodeURIComponent(company)}/${encodeURIComponent(sessionId)}`,
+        { method: 'DELETE' }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Si la sesion eliminada es la actual, limpiar
+      if (this.currentSessionId === sessionId) {
+        this.currentSessionId = null;
+      }
+
+      // Refrescar lista de sesiones
+      await this.listSessions(company);
+
+      return true;
+    } catch (error) {
+      console.error('[ChatProService] Error deleting session:', error);
+      this.errorSubject.next('Error al eliminar sesion');
+      return false;
+    }
+  }
+
+  /**
+   * Carga el historial de una sesion
+   */
+  async loadHistory(company: string, sessionId: string): Promise<SessionHistory | null> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/sessions/${encodeURIComponent(company)}/${encodeURIComponent(sessionId)}/history`,
+        { method: 'GET' }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      this.currentSessionId = sessionId;
+
+      return {
+        session_id: data.session_id,
+        title: data.title,
+        messages: data.messages || [],
+        state: data.state
+      };
+    } catch (error) {
+      console.error('[ChatProService] Error loading history:', error);
+      this.errorSubject.next('Error al cargar historial');
+      return null;
+    }
+  }
+
+  /**
+   * Actualiza el titulo de una sesion
+   */
+  async updateSessionTitle(company: string, sessionId: string, newTitle: string): Promise<boolean> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/sessions/${encodeURIComponent(company)}/${encodeURIComponent(sessionId)}/title`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: newTitle })
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Refrescar lista de sesiones
+      await this.listSessions(company);
+
+      return true;
+    } catch (error) {
+      console.error('[ChatProService] Error updating session title:', error);
+      this.errorSubject.next('Error al actualizar titulo');
+      return false;
+    }
+  }
+
+  /**
+   * Convierte mensajes del historial a ChatProMessages
+   */
+  convertHistoryToMessages(history: SessionHistory): ChatProMessage[] {
+    return history.messages.map((msg, index) => {
+      const isUser = msg.author === 'user' || msg.author?.includes('user');
+
+      return {
+        id: `history_${index}_${Date.now()}`,
+        timestamp: msg.timestamp ? new Date(msg.timestamp * 1000) : new Date(),
+        eventType: isUser ? 'user_message' : 'agent_message',
+        speaker: isUser ? getSpeakerConfig('user') : getSpeakerConfig(msg.author || 'general_manager'),
+        content: msg.text,
+        mentions: []
+      } as ChatProMessage;
+    });
+  }
+
+  /**
+   * Inicia una nueva conversacion (limpia sesion actual)
+   */
+  startNewConversation(): void {
+    this.currentSessionId = null;
+    // No limpiamos messagesSubject aqui porque el componente maneja su propio estado
+    console.log('[ChatProService] Nueva conversacion iniciada (sin sesion)');
+  }
+
   /**
    * Limpia recursos al destruir el servicio
    */
@@ -523,5 +715,6 @@ export class ChatProService {
     this.connectionStatusSubject.complete();
     this.errorSubject.complete();
     this.executingSubject.complete();
+    this.sessionsSubject.complete();
   }
 }

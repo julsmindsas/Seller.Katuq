@@ -755,3 +755,221 @@ $danger: #dc3545;
     color: $text-light;
   }
 }
+
+// ==============================================
+// Session Panel Styles
+// ==============================================
+
+.chat-header-actions {
+  display: flex;
+  gap: 4px;
+
+  .btn-icon {
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.session-panel-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 999;
+}
+
+.session-panel {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  width: 320px;
+  height: 100vh;
+  background: $bg-white;
+  box-shadow: -2px 0 16px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transition: right 0.3s ease;
+
+  &.open {
+    right: 0;
+  }
+}
+
+.session-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid $border;
+
+  h3 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: $text-dark;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    i {
+      color: $primary;
+    }
+  }
+
+  .btn-icon-small {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    color: $text-gray;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      background: $bg-page;
+    }
+  }
+}
+
+.session-panel-actions {
+  padding: 12px 16px;
+  border-bottom: 1px solid $border;
+}
+
+.btn-new-session {
+  width: 100%;
+  padding: 10px 16px;
+  background: $primary;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.session-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba($primary, 0.04);
+  }
+
+  &.active {
+    background: rgba($primary, 0.08);
+    border-left-color: $primary;
+  }
+}
+
+.session-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.session-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-dark;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.session-date {
+  font-size: 11px;
+  color: $text-light;
+}
+
+.btn-delete-session {
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: $text-light;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s ease;
+
+  .session-item:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: rgba($danger, 0.1);
+    color: $danger;
+  }
+}
+
+.session-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  text-align: center;
+  color: $text-light;
+
+  i {
+    font-size: 32px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+  }
+
+  span {
+    font-size: 13px;
+  }
+}
+
+.session-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  color: $text-gray;
+  font-size: 13px;
+
+  i {
+    color: $primary;
+  }
+}
