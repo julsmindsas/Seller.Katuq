@@ -462,6 +462,20 @@ export class NavService implements OnDestroy {
       ],
     },
     {
+      title: "Lista de precios",
+      icon: "dollar-sign",
+      type: "sub",
+      active: false,
+      children: [
+        {
+          path: "lista-precios/lista-precios",
+          title: "Lista de precios",
+          type: "link",
+          icon: "list",
+        },
+      ],
+    },
+    {
       title: "Picking y packing",
       icon: "layers",
       type: "sub",
