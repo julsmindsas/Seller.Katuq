@@ -10,6 +10,7 @@ import { CrearVariablesComponent } from './variables/crear-variables/crear-varia
 import { CanalesComponent } from './canales/canales.component';
 import { CrearCanalesComponent } from './canales/crear-canales/crear-canales.component';
 import { BodegasPorCanalComponent } from './bodegas-por-canal/bodegas-por-canal.component';
+import { TiposClienteComponent } from './tipos-cliente/tipos-cliente.component';
 
 const routes: Routes = [
   {
@@ -47,6 +48,10 @@ const routes: Routes = [
   {
     path: 'bodegas-por-canal',
     component: BodegasPorCanalComponent
+  },
+  {
+    path: 'tipos-cliente',
+    component: TiposClienteComponent
   }
 ];
 

@@ -589,6 +589,7 @@ export class NavService implements OnDestroy {
       children: [
         { path: "proceso/ocasiones", title: "Ocasiones", type: "link", icon: "gift" },
         { path: "proceso/generos", title: "Géneros", type: "link", icon: "users" },
+        { path: "proceso/tipos-cliente", title: "Tipos de Cliente", type: "link", icon: "user-check" },
       ],
     },
     {
