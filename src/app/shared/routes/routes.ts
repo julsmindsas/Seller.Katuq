@@ -181,6 +181,14 @@ export const content: Routes = [
     canActivate: [AuthGuard], // Agregar el guard
   },
   {
+    path: "lista-precios",
+    loadChildren: () =>
+      import("../../components/lista-precios/lista-precios.module").then(
+        (m) => m.ListaPreciosModule,
+      ),
+    canActivate: [AuthGuard], // Agregar el guard
+  },
+  {
     path: "picking-packing",
     loadChildren: () =>
       import("../../components/picking-packing/picking-packing.module").then(

@@ -1,0 +1,29 @@
+.fc-secondary {
+  color: var(--theme-secondary);
+}
+
+.fc-primary {
+  color: var(--theme-primary);
+}
+
+.fc-danger {
+  color: #dc3545;
+}
+
+.fs-24 {
+  font-size: 24px;
+}
+
+.fs-18 {
+  font-size: 18px;
+}
+
+.loader-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 50px;
+}
+
+
+

@@ -1,0 +1,264 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12 p-4">
+      <!-- Header -->
+      <div class="card mb-4">
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-6">
+              <h4 class="mb-1 fw-bold">Gestión de Precios</h4>
+              <p class="text-muted mb-0">Administra los precios de tus productos</p>
+            </div>
+            <div class="col-md-6 text-end">
+              <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()">
+                <i class="icofont icofont-upload"></i> Importar
+              </button>
+              <button class="btn btn-outline-success me-2">
+                <i class="icofont icofont-file-excel"></i> Descargar Excel
+              </button>
+              <button class="btn btn-success" (click)="descargarFormatoExcel()" *ngIf="activeTab === 0">
+                <i class="icofont icofont-download"></i> Exportar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="card">
+        <p-tabView (onChange)="onTabChange($event)" [activeIndex]="activeTab">
+          <!-- Tab 1: Precio tipo clientes -->
+          <p-tabPanel header="Precio tipo clientes">
+            <div class="p-3">
+              <!-- Buscador -->
+              <div class="mb-3">
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="icofont icofont-search"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="Buscar producto (presiona Enter)..."
+                    [(ngModel)]="searchTerm"
+                    (keyup.enter)="buscarProducto($event)"
+                  />
+                </div>
+              </div>
+
+              <!-- Tabla de productos -->
+              <p-table 
+                [value]="productosFiltrados" 
+                [loading]="cargando"
+                [paginator]="true" 
+                [rows]="pageSize"
+                [rowsPerPageOptions]="[10, 20, 50, 100]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
+                styleClass="p-datatable-gridlines p-datatable-striped">
+                
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 80px;" class="text-center">IMAGEN</th>
+                    <th>REFERENCIA</th>
+                    <th>PRECIO</th>
+                    <th>ÚLTIMA EDICIÓN</th>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-producto>
+                  <tr>
+                    <td class="text-center">
+                      <img 
+                        *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
+                        [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
+                        [alt]="producto.crearProducto?.titulo"
+                        width="50"
+                        height="50"
+                        style="border-radius: 8px; object-fit: cover; cursor: pointer;"
+                        (click)="editarPrecio(producto)"
+                      />
+                      <img 
+                        *ngIf="!producto.crearProducto?.imagenesPrincipales?.length"
+                        src="assets/img/placeholder.png"
+                        width="50"
+                        height="50"
+                        style="border-radius: 8px; opacity: 0.5;"
+                      />
+                    </td>
+                    <td>
+                      <div class="fw-bold">{{ producto.crearProducto?.titulo }}</div>
+                      <small class="text-muted">{{ producto.identificacion?.referencia }}</small>
+                    </td>
+                    <td>
+                      <span class="text-primary fw-bold" style="cursor: pointer;" (click)="editarPrecio(producto)">
+                        $ {{ obtenerPrecio(producto) | number:'1.0-0' }}
+                      </span>
+                    </td>
+                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="4" class="text-center">No hay productos disponibles</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-tabPanel>
+
+          <!-- Tab 2: Precio por volumen -->
+          <p-tabPanel header="Precio por volumen">
+            <div class="p-3">
+              <div class="mb-3">
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="icofont icofont-search"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="Buscar producto (presiona Enter)..."
+                    [(ngModel)]="searchTerm"
+                    (keyup.enter)="buscarProducto($event)"
+                  />
+                </div>
+              </div>
+
+              <p-table 
+                [value]="productosFiltrados" 
+                [loading]="cargando"
+                [paginator]="true" 
+                [rows]="pageSize"
+                [rowsPerPageOptions]="[10, 20, 50, 100]"
+                styleClass="p-datatable-gridlines p-datatable-striped">
+                
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 80px;" class="text-center">IMAGEN</th>
+                    <th>REFERENCIA</th>
+                    <th>PRECIO</th>
+                    <th>ÚLTIMA EDICIÓN</th>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-producto>
+                  <tr>
+                    <td class="text-center">
+                      <img 
+                        *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
+                        [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
+                        width="50"
+                        height="50"
+                        style="border-radius: 8px; object-fit: cover; cursor: pointer;"
+                        (click)="editarPrecio(producto)"
+                      />
+                      <img 
+                        *ngIf="!producto.crearProducto?.imagenesPrincipales?.length"
+                        src="assets/img/placeholder.png"
+                        width="50"
+                        height="50"
+                        style="border-radius: 8px; opacity: 0.5;"
+                      />
+                    </td>
+                    <td>
+                      <div class="fw-bold">{{ producto.crearProducto?.titulo }}</div>
+                      <small class="text-muted">{{ producto.identificacion?.referencia }}</small>
+                    </td>
+                    <td>
+                      <span class="text-primary fw-bold" style="cursor: pointer;" (click)="editarPrecio(producto)">
+                        $ {{ obtenerPrecio(producto) | number:'1.0-0' }}
+                      </span>
+                    </td>
+                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-tabPanel>
+
+          <!-- Tab 3: Precio tipo canal -->
+          <p-tabPanel header="Precio tipo canal">
+            <div class="p-3">
+              <div class="mb-3">
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="icofont icofont-search"></i>
+                  </span>
+                  <input 
+                    type="text" 
+                    class="form-control" 
+                    placeholder="Buscar producto (presiona Enter)..."
+                    [(ngModel)]="searchTerm"
+                    (keyup.enter)="buscarProducto($event)"
+                  />
+                </div>
+              </div>
+
+              <p-table 
+                [value]="productosFiltrados" 
+                [loading]="cargando"
+                [paginator]="true" 
+                [rows]="pageSize"
+                [rowsPerPageOptions]="[10, 20, 50, 100]"
+                styleClass="p-datatable-gridlines p-datatable-striped">
+                
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 80px;" class="text-center">IMAGEN</th>
+                    <th>REFERENCIA</th>
+                    <th>PRECIO</th>
+                    <th>ÚLTIMA EDICIÓN</th>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-producto>
+                  <tr>
+                    <td class="text-center">
+                      <img 
+                        *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
+                        [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
+                        width="50"
+                        height="50"
+                        style="border-radius: 8px; object-fit: cover; cursor: pointer;"
+                        (click)="editarPrecio(producto)"
+                      />
+                      <img 
+                        *ngIf="!producto.crearProducto?.imagenesPrincipales?.length"
+                        src="assets/img/placeholder.png"
+                        width="50"
+                        height="50"
+                        style="border-radius: 8px; opacity: 0.5;"
+                      />
+                    </td>
+                    <td>
+                      <div class="fw-bold">{{ producto.crearProducto?.titulo }}</div>
+                      <small class="text-muted">{{ producto.identificacion?.referencia }}</small>
+                    </td>
+                    <td>
+                      <span class="text-primary fw-bold" style="cursor: pointer;" (click)="editarPrecio(producto)">
+                        $ {{ obtenerPrecio(producto) | number:'1.0-0' }}
+                      </span>
+                    </td>
+                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-tabPanel>
+        </p-tabView>
+      </div>
+
+      <!-- Input oculto para importar archivos -->
+      <input 
+        #fileInput 
+        type="file" 
+        accept=".xlsx,.xls" 
+        style="display: none;" 
+        (change)="onFileSelected($event)"
+      />
+    </div>
+  </div>
+</div>
+

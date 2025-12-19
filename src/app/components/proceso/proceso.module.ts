@@ -14,6 +14,8 @@ import { CrearVariablesComponent } from './variables/crear-variables/crear-varia
 import { CanalesComponent } from './canales/canales.component';
 import { CrearCanalesComponent } from './canales/crear-canales/crear-canales.component';
 import { BodegasPorCanalComponent } from './bodegas-por-canal/bodegas-por-canal.component';
+import { TiposClienteComponent } from './tipos-cliente/tipos-cliente.component';
+import { CrearTipoClienteComponent } from './tipos-cliente/crear-tipo-cliente/crear-tipo-cliente.component';
 import { TableModule } from 'primeng/table';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -37,7 +39,9 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     CrearVariablesComponent,
     CanalesComponent,
     CrearCanalesComponent,
-    BodegasPorCanalComponent
+    BodegasPorCanalComponent,
+    TiposClienteComponent,
+    CrearTipoClienteComponent
   ]
 })
 export class ProcesoModule { }

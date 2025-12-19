@@ -1,0 +1,55 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ mostrarCrear ? 'Crear Tipo de Cliente' : 'Editar Tipo de Cliente' }}</h5>
+  <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <form [formGroup]="tipoClienteForm">
+    <div class="row g-4">
+      <!-- Nombre -->
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label for="nombre" class="form-label fw-bold">Nombre</label>
+          <input class="form-control" type="text" id="nombre" formControlName="nombre" placeholder="Nombre del tipo de cliente">
+          <div *ngIf="tipoClienteForm.get('nombre')?.invalid && tipoClienteForm.get('nombre')?.touched" class="text-danger">
+            Este campo es requerido
+          </div>
+        </div>
+      </div>
+      
+      <!-- Activo -->
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label d-block fw-bold mb-2">Activo</label>
+          <div class="d-flex align-items-center">
+            <label class="toggle-switch me-3">
+              <input type="checkbox" id="active" formControlName="active">
+              <span class="slider round"></span>
+            </label>
+            <span class="text-muted">{{ tipoClienteForm.get('active')?.value ? 'Activado' : 'Inactivo' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="col-12">
+        <div class="mb-3">
+          <label for="descripcion" class="form-label fw-bold">Descripción</label>
+          <textarea class="form-control" id="descripcion" formControlName="descripcion" 
+                    placeholder="Describe el tipo de cliente y sus características" rows="3"></textarea>
+          <div *ngIf="tipoClienteForm.get('descripcion')?.invalid && tipoClienteForm.get('descripcion')?.touched" class="text-danger">
+            Este campo es requerido
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-primary" (click)="mostrarCrear ? guardar() : editar()">
+    {{ mostrarCrear ? 'Crear' : 'Actualizar' }}
+  </button>
+</div>
+

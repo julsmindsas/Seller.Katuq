@@ -153,6 +153,23 @@ export class MaestroService {
   public consultarOcasion() {
     return this.http.get(this.urlBase + '/v1/ocasion/all', this.httpOptions);
   }
+
+  // Tipos de Cliente (usando API de tipos-precios)
+  public consultarTiposCliente() {
+    return this.http.get(this.urlBase + '/v1/tipos-precios/all', this.httpOptions);
+  }
+  public consultarTiposClienteActivos() {
+    return this.http.get(this.urlBase + '/v1/tipos-precios/active', this.httpOptions);
+  }
+  public createTipoCliente(tipoCliente: any) {
+    return this.http.post(this.urlBase + '/v1/tipos-precios/create', tipoCliente, this.httpOptions);
+  }
+  public editTipoCliente(tipoCliente: any) {
+    return this.http.post(this.urlBase + '/v1/tipos-precios/edit', tipoCliente, this.httpOptions);
+  }
+  public deleteTipoCliente(tipoCliente: any) {
+    return this.http.post(this.urlBase + '/v1/tipos-precios/remove', tipoCliente, this.httpOptions);
+  }
   public createCompany(company: any) {
     return this.http.post(this.urlBase + '/v1/companies/create', company, this.httpOptions);
   }
