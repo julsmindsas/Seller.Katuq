@@ -25,6 +25,94 @@ interface ImportConfig {
   fieldLabels: { [key: string]: string };
 }
 
+// Valores por defecto para productos que no vienen en el Excel
+const PRODUCT_DEFAULTS = {
+  identificacion: {
+    tipoProducto: 'propio',
+    tipoReferencia: 'propio',
+    marca: '',
+    codigoBarras: '',
+    referencia: ''
+  },
+  crearProducto: {
+    titulo: '',
+    descripcion: '',
+    garantiasProducto: '',
+    restriccionesProducto: '',
+    fechaInicial: new Date().toISOString().split('T')[0],
+    fechaFinal: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0],
+    caracAdicionales: '',
+    cuidadoConsumo: '',
+    imagenesPrincipales: [],
+    imagenesSecundarias: [],
+    paraProduccion: false
+  },
+  precio: {
+    precioUnitarioSinIva: 0,
+    precioUnitarioIva: '0',
+    valorIva: 0,
+    precioUnitarioConIva: 0,
+    precioPorVolumenSinIva: '',
+    precioIvaPorVolumen: '',
+    precioTotalVolumenConIva: '',
+    preciosVolumen: []
+  },
+  disponibilidad: {
+    tipoEntrega: 'seleccione',
+    tiempoEntrega: 'seleccione',
+    cantidadDisponible: 0,
+    cantidadMinVenta: 1,
+    inventarioSeguridad: 0,
+    inventariable: true
+  },
+  dimensiones: {
+    largoProductoCm: '',
+    altoProductoCm: '',
+    anchoProductoCm: '',
+    pesoUnitarioProductoKg: ''
+  },
+  exposicion: {
+    activar: false,
+    posicion: 0,
+    disponible: false,
+    recomendado: false,
+    destacado: false,
+    oferta: false,
+    nuevo: false,
+    masvendido: false,
+    etiquetas: []
+  },
+  marketplace: {
+    sellerCenter: false,
+    paginaWeb: false,
+    puntoDeVenta: true,
+    campos: []
+  },
+  ciudades: {
+    ciudadesOrigen: [],
+    ciudadesEntrega: []
+  },
+  procesoComercial: {
+    aceptaOcasion: false,
+    ocasion: [],
+    aceptaGenero: false,
+    genero: [],
+    generoMap: null,
+    ocasionesMap: null,
+    aceptaComentarios: false,
+    aceptaColorDecoracion: false,
+    colorDecoracion: [],
+    llevaTarjeta: false,
+    llevaArchivo: false,
+    aceptaVariable: false,
+    aceptaAdiciones: false,
+    pago: [],
+    variablesForm: '',
+    llevaCalendario: false,
+    configProcesoComercialActivo: false
+  }
+};
+
 @Component({
   selector: 'app-import-modal',
   templateUrl: './import-modal.component.html',
@@ -107,13 +195,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     templateColumns: [
       { field: 'referencia', header: 'Referencia/SKU', required: true, example: 'PROD001' },
       { field: 'titulo', header: 'Titulo', required: true, example: 'Camiseta Basica' },
-      { field: 'descripcion', header: 'Descripcion', required: true, example: 'Camiseta de algodon' },
+      { field: 'descripcion', header: 'Descripcion', required: false, example: 'Camiseta de algodon' },
       { field: 'precioUnitarioSinIva', header: 'Precio Sin IVA', required: true, example: '50000' },
-      { field: 'valorIva', header: 'IVA (%)', required: true, example: '19' },
-      { field: 'cantidadDisponible', header: 'Cantidad Disponible', required: true, example: '100' },
+      { field: 'valorIva', header: 'IVA (%)', required: false, example: '19' },
+      { field: 'cantidadDisponible', header: 'Cantidad Disponible', required: false, example: '100' },
       { field: 'marca', header: 'Marca', required: false, example: 'MiMarca' },
       { field: 'codigoBarras', header: 'Codigo de Barras', required: false, example: '7701234567890' },
-      { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' }
+      { field: 'categoria', header: 'Categoria', required: false, example: 'Ropa' },
+      { field: 'cantidadMinVenta', header: 'Cantidad Minima Venta', required: false, example: '1' },
+      { field: 'inventarioSeguridad', header: 'Inventario Seguridad', required: false, example: '10' },
+      { field: 'garantiasProducto', header: 'Garantias', required: false, example: 'Garantia de 1 año' },
+      { field: 'caracAdicionales', header: 'Caracteristicas Adicionales', required: false, example: 'Material 100% algodon' },
+      { field: 'tipoEntrega', header: 'Tipo de Entrega', required: false, example: 'Envio nacional' },
+      { field: 'tiempoEntrega', header: 'Tiempo de Entrega', required: false, example: '3-5 dias' },
+      { field: 'activar', header: 'Activo (SI/NO)', required: false, example: 'SI' },
+      { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI' }
     ],
     fieldLabels: {
       'identificacion.referencia': 'Referencia/SKU',
@@ -123,21 +219,46 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'crearProducto.titulo': 'Titulo del Producto',
       'crearProducto.descripcion': 'Descripcion',
       'crearProducto.garantiasProducto': 'Garantias',
+      'crearProducto.caracAdicionales': 'Caracteristicas Adicionales',
+      'crearProducto.restriccionesProducto': 'Restricciones',
+      'crearProducto.cuidadoConsumo': 'Cuidado y Consumo',
       'precio.precioUnitarioSinIva': 'Precio sin IVA',
-      'precio.valorIva': 'Valor IVA (%)',
+      'precio.precioUnitarioIva': 'Porcentaje IVA',
+      'precio.valorIva': 'Valor IVA ($)',
       'precio.precioUnitarioConIva': 'Precio con IVA',
       'disponibilidad.cantidadDisponible': 'Cantidad Disponible',
       'disponibilidad.cantidadMinVenta': 'Cantidad Minima de Venta',
       'disponibilidad.inventarioSeguridad': 'Inventario de Seguridad',
+      'disponibilidad.tipoEntrega': 'Tipo de Entrega',
+      'disponibilidad.tiempoEntrega': 'Tiempo de Entrega',
+      'disponibilidad.inventariable': 'Es Inventariable',
+      'exposicion.activar': 'Activo',
+      'exposicion.disponible': 'Disponible',
+      'exposicion.posicion': 'Posicion',
+      'exposicion.nuevo': 'Producto Nuevo',
+      'exposicion.oferta': 'En Oferta',
+      'exposicion.destacado': 'Destacado',
+      'exposicion.recomendado': 'Recomendado',
+      'exposicion.masvendido': 'Mas Vendido',
+      'marketplace.puntoDeVenta': 'Disponible en POS',
+      'marketplace.paginaWeb': 'Disponible en Web',
       'referencia': 'Referencia/SKU',
       'titulo': 'Titulo',
       'descripcion': 'Descripcion',
       'precioUnitarioSinIva': 'Precio Sin IVA',
       'valorIva': 'IVA (%)',
       'cantidadDisponible': 'Cantidad Disponible',
+      'cantidadMinVenta': 'Cantidad Minima Venta',
+      'inventarioSeguridad': 'Inventario Seguridad',
       'marca': 'Marca',
       'codigoBarras': 'Codigo de Barras',
-      'categoria': 'Categoria'
+      'categoria': 'Categoria',
+      'garantiasProducto': 'Garantias',
+      'caracAdicionales': 'Caracteristicas Adicionales',
+      'tipoEntrega': 'Tipo de Entrega',
+      'tiempoEntrega': 'Tiempo de Entrega',
+      'activar': 'Activo',
+      'disponible': 'Disponible'
     }
   };
 
@@ -447,11 +568,22 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   }
 
   private transformDataWithMapping(data: any[], mappings: { [katuqField: string]: string }): any[] {
-    return data.map(row => {
-      const transformedRow: any = {};
+    return data.map((row, index) => {
+      // Para productos, iniciar con los valores por defecto
+      let transformedRow: any = this.type === 'product'
+        ? this.getProductDefaults(index)
+        : {};
 
       Object.entries(mappings).forEach(([katuqField, sourceColumn]) => {
-        const value = row[sourceColumn];
+        let value = row[sourceColumn];
+
+        // No procesar si el valor es undefined, null o string vacío
+        if (value === undefined || value === null || value === '') {
+          return;
+        }
+
+        // Convertir tipos de datos según el campo
+        value = this.convertFieldValue(katuqField, value);
 
         if (katuqField.includes('.')) {
           const parts = katuqField.split('.');
@@ -466,12 +598,181 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
           current[parts[parts.length - 1]] = value;
         } else {
-          transformedRow[katuqField] = value;
+          // Mapear campos simples a su estructura correcta para productos
+          if (this.type === 'product') {
+            this.mapSimpleFieldToProductStructure(transformedRow, katuqField, value);
+          } else {
+            transformedRow[katuqField] = value;
+          }
         }
       });
 
+      // Calcular campos derivados para productos
+      if (this.type === 'product') {
+        this.calculateDerivedFields(transformedRow);
+      }
+
       return transformedRow;
     });
+  }
+
+  /**
+   * Obtiene una copia de los valores por defecto para un producto
+   */
+  private getProductDefaults(index: number): any {
+    const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+    const companyPrefix = company.nomComercial
+      ? company.nomComercial.toString().substring(company.nomComercial.toString().length - 3).toUpperCase()
+      : 'IMP';
+
+    const timestamp = Date.now();
+    const paddedIndex = (index + 1).toString().padStart(6, '0');
+    const autoRef = `${companyPrefix}-IMP-${paddedIndex}-${timestamp.toString().slice(-4)}`;
+
+    return {
+      identificacion: {
+        ...PRODUCT_DEFAULTS.identificacion,
+        referencia: autoRef,
+        codigoBarras: autoRef
+      },
+      crearProducto: {
+        ...PRODUCT_DEFAULTS.crearProducto,
+        fechaInicial: new Date().toISOString().split('T')[0],
+        fechaFinal: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]
+      },
+      precio: { ...PRODUCT_DEFAULTS.precio },
+      disponibilidad: { ...PRODUCT_DEFAULTS.disponibilidad },
+      dimensiones: { ...PRODUCT_DEFAULTS.dimensiones },
+      exposicion: { ...PRODUCT_DEFAULTS.exposicion },
+      marketplace: { ...PRODUCT_DEFAULTS.marketplace },
+      ciudades: { ...PRODUCT_DEFAULTS.ciudades },
+      procesoComercial: { ...PRODUCT_DEFAULTS.procesoComercial }
+    };
+  }
+
+  /**
+   * Convierte el valor según el tipo de campo esperado
+   */
+  private convertFieldValue(katuqField: string, value: any): any {
+    // Campos booleanos
+    const booleanFields = [
+      'activar', 'disponible', 'recomendado', 'destacado', 'oferta', 'nuevo',
+      'masvendido', 'paraProduccion', 'inventariable', 'sellerCenter',
+      'paginaWeb', 'puntoDeVenta', 'exposicion.activar', 'exposicion.disponible',
+      'exposicion.recomendado', 'exposicion.destacado', 'exposicion.oferta',
+      'exposicion.nuevo', 'exposicion.masvendido', 'crearProducto.paraProduccion',
+      'disponibilidad.inventariable', 'marketplace.sellerCenter',
+      'marketplace.paginaWeb', 'marketplace.puntoDeVenta'
+    ];
+
+    if (booleanFields.includes(katuqField)) {
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') {
+        const lower = value.toLowerCase().trim();
+        return lower === 'si' || lower === 'sí' || lower === 'yes' ||
+               lower === 'true' || lower === '1' || lower === 'activo' ||
+               lower === 'disponible';
+      }
+      return !!value;
+    }
+
+    // Campos numéricos
+    const numericFields = [
+      'precioUnitarioSinIva', 'valorIva', 'precioUnitarioConIva', 'cantidadDisponible',
+      'cantidadMinVenta', 'inventarioSeguridad', 'posicion',
+      'precio.precioUnitarioSinIva', 'precio.valorIva', 'precio.precioUnitarioConIva',
+      'precio.precioUnitarioIva', 'disponibilidad.cantidadDisponible',
+      'disponibilidad.cantidadMinVenta', 'disponibilidad.inventarioSeguridad',
+      'exposicion.posicion'
+    ];
+
+    if (numericFields.includes(katuqField)) {
+      if (typeof value === 'number') return value;
+      if (typeof value === 'string') {
+        // Remover separadores de miles y convertir comas decimales
+        const cleaned = value.replace(/[,$]/g, '').replace(',', '.');
+        const parsed = parseFloat(cleaned);
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      return 0;
+    }
+
+    return value;
+  }
+
+  /**
+   * Mapea campos simples del Excel a la estructura anidada del producto
+   */
+  private mapSimpleFieldToProductStructure(product: any, field: string, value: any): void {
+    const fieldMappings: { [key: string]: string } = {
+      'referencia': 'identificacion.referencia',
+      'titulo': 'crearProducto.titulo',
+      'descripcion': 'crearProducto.descripcion',
+      'marca': 'identificacion.marca',
+      'codigoBarras': 'identificacion.codigoBarras',
+      'precioUnitarioSinIva': 'precio.precioUnitarioSinIva',
+      'valorIva': 'precio.precioUnitarioIva',
+      'cantidadDisponible': 'disponibilidad.cantidadDisponible',
+      'cantidadMinVenta': 'disponibilidad.cantidadMinVenta',
+      'inventarioSeguridad': 'disponibilidad.inventarioSeguridad',
+      'tipoEntrega': 'disponibilidad.tipoEntrega',
+      'tiempoEntrega': 'disponibilidad.tiempoEntrega',
+      'garantiasProducto': 'crearProducto.garantiasProducto',
+      'caracAdicionales': 'crearProducto.caracAdicionales',
+      'restriccionesProducto': 'crearProducto.restriccionesProducto',
+      'cuidadoConsumo': 'crearProducto.cuidadoConsumo',
+      'activar': 'exposicion.activar',
+      'disponible': 'exposicion.disponible',
+      'posicion': 'exposicion.posicion',
+      'nuevo': 'exposicion.nuevo',
+      'oferta': 'exposicion.oferta',
+      'destacado': 'exposicion.destacado',
+      'recomendado': 'exposicion.recomendado',
+      'masvendido': 'exposicion.masvendido'
+    };
+
+    const targetPath = fieldMappings[field];
+    if (targetPath) {
+      const parts = targetPath.split('.');
+      let current = product;
+
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!current[parts[i]]) {
+          current[parts[i]] = {};
+        }
+        current = current[parts[i]];
+      }
+
+      current[parts[parts.length - 1]] = value;
+    }
+  }
+
+  /**
+   * Calcula campos derivados como precio con IVA
+   */
+  private calculateDerivedFields(product: any): void {
+    if (product.precio) {
+      const precioSinIva = parseFloat(product.precio.precioUnitarioSinIva) || 0;
+      const porcentajeIva = parseFloat(product.precio.precioUnitarioIva) || 0;
+
+      const valorIva = precioSinIva * (porcentajeIva / 100);
+      const precioConIva = precioSinIva + valorIva;
+
+      product.precio.valorIva = valorIva;
+      product.precio.precioUnitarioConIva = precioConIva;
+    }
+
+    // Asegurar que el código de barras tenga valor si la referencia tiene
+    if (product.identificacion) {
+      if (!product.identificacion.codigoBarras && product.identificacion.referencia) {
+        product.identificacion.codigoBarras = product.identificacion.referencia;
+      }
+    }
+
+    // Asegurar que el título tenga valor
+    if (product.crearProducto && !product.crearProducto.titulo) {
+      product.crearProducto.titulo = product.identificacion?.referencia || 'Producto Importado';
+    }
   }
 
   downloadTemplate(): void {

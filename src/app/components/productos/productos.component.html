@@ -9,37 +9,68 @@
                 </div>
 
                 <!-- Header Moderno del Módulo -->
-                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
+                <div
+                    class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center"
+                >
                     <div>
                         <h5 class="mb-1 fw-bold text-primary">
-                            <i class="icofont icofont-box me-2"></i>{{ "Gestión de Productos" | translate }}
+                            <i class="icofont icofont-box me-2"></i
+                            >{{ "Gestión de Productos" | translate }}
                         </h5>
                         <p class="text-muted small mb-0">
-                            {{ "Administra tu catálogo de productos" | translate }}
+                            {{
+                                "Administra tu catálogo de productos"
+                                    | translate
+                            }}
                         </p>
                     </div>
                     <div class="d-none d-lg-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-primary btn-sm"
-                                (click)="crearProducto()">
-                            <i class="icofont icofont-plus"></i> {{ 'Crear Producto' | translate }}
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-sm"
+                            (click)="crearProducto()"
+                        >
+                            <i class="icofont icofont-plus"></i>
+                            {{ "Crear Producto" | translate }}
                         </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm"
-                                (click)="openImportModal()"
-                                ngbTooltip="{{ 'Importar productos desde Excel' | translate }}">
-                            <i class="icofont icofont-upload-alt"></i> {{ 'Importar' | translate }}
+                        <button
+                            type="button"
+                            class="btn btn-outline-primary btn-sm"
+                            (click)="openImportModal()"
+                            ngbTooltip="{{
+                                'Importar productos desde Excel' | translate
+                            }}"
+                        >
+                            <i class="icofont icofont-upload-alt"></i>
+                            {{ "Importar" | translate }}
                         </button>
-                        <button *ngIf="fulfillmentEnabled" type="button"
-                                class="btn btn-info btn-sm"
-                                (click)="importarProductosFulfillment()"
-                                [disabled]="importandoProductosFulfillment"
-                                ngbTooltip="Importar productos desde {{ fulfillmentProviderName }}">
-                            <i class="icofont icofont-cloud-download" *ngIf="!importandoProductosFulfillment"></i>
-                            <i class="fa fa-spinner fa-spin" *ngIf="importandoProductosFulfillment"></i>
-                            {{ 'Fulfillment' | translate }}
+                        <button
+                            *ngIf="fulfillmentEnabled"
+                            type="button"
+                            class="btn btn-info btn-sm"
+                            (click)="importarProductosFulfillment()"
+                            [disabled]="importandoProductosFulfillment"
+                            ngbTooltip="Importar productos desde {{
+                                fulfillmentProviderName
+                            }}"
+                        >
+                            <i
+                                class="icofont icofont-cloud-download"
+                                *ngIf="!importandoProductosFulfillment"
+                            ></i>
+                            <i
+                                class="fa fa-spinner fa-spin"
+                                *ngIf="importandoProductosFulfillment"
+                            ></i>
+                            {{ "Fulfillment" | translate }}
                         </button>
-                        <button type="button" class="btn btn-success btn-sm"
-                                (click)="exportToExcel()">
-                            <i class="icofont icofont-file-excel"></i> {{ 'Exportar' | translate }}
+                        <button
+                            type="button"
+                            class="btn btn-success btn-sm"
+                            (click)="exportToExcel()"
+                        >
+                            <i class="icofont icofont-file-excel"></i>
+                            {{ "Exportar" | translate }}
                         </button>
                         <!-- Botón Administrativo: Limpiar BD - COMENTADO PARA NO DESPLEGAR
                         <button type="button" class="btn btn-outline-danger btn-sm"
@@ -48,6 +79,18 @@
                             <i class="icofont icofont-trash"></i> {{ 'Limpiar BD' | translate }}
                         </button>
                         -->
+                        <button
+                            type="button"
+                            class="btn btn-outline-danger btn-sm"
+                            (click)="limpiarProductosComercio()"
+                            ngbTooltip="{{
+                                'Eliminar TODOS los productos (Admin/Dev)'
+                                    | translate
+                            }}"
+                        >
+                            <i class="icofont icofont-trash"></i>
+                            {{ "Limpiar BD" | translate }}
+                        </button>
                     </div>
                 </div>
 
@@ -59,29 +102,54 @@
                                 <span class="input-group-text">
                                     <i class="icofont icofont-search"></i>
                                 </span>
-                                <input type="text" class="form-control search-input"
-                                       placeholder="{{ 'Buscar producto (presiona Enter)...' | translate }}"
-                                       (keyup)="updateFilter($event)" />
+                                <input
+                                    type="text"
+                                    class="form-control search-input"
+                                    placeholder="{{
+                                        'Buscar producto (presiona Enter)...'
+                                            | translate
+                                    }}"
+                                    (keyup)="updateFilter($event)"
+                                />
                             </div>
                         </div>
                         <div class="col-lg-6 col-md-12 d-lg-none text-center">
-                            <button type="button" class="btn btn-primary btn-sm me-2"
-                                    (click)="crearProducto()">
-                                <i class="icofont icofont-plus"></i> {{ 'Crear' | translate }}
+                            <button
+                                type="button"
+                                class="btn btn-primary btn-sm me-2"
+                                (click)="crearProducto()"
+                            >
+                                <i class="icofont icofont-plus"></i>
+                                {{ "Crear" | translate }}
                             </button>
-                            <button type="button" class="btn btn-outline-primary btn-sm me-2"
-                                    (click)="openImportModal()">
+                            <button
+                                type="button"
+                                class="btn btn-outline-primary btn-sm me-2"
+                                (click)="openImportModal()"
+                            >
                                 <i class="icofont icofont-upload-alt"></i>
                             </button>
-                            <button *ngIf="fulfillmentEnabled" type="button"
-                                    class="btn btn-info btn-sm me-2"
-                                    (click)="importarProductosFulfillment()"
-                                    [disabled]="importandoProductosFulfillment">
-                                <i class="icofont icofont-cloud-download" *ngIf="!importandoProductosFulfillment"></i>
-                                <i class="fa fa-spinner fa-spin" *ngIf="importandoProductosFulfillment"></i>
+                            <button
+                                *ngIf="fulfillmentEnabled"
+                                type="button"
+                                class="btn btn-info btn-sm me-2"
+                                (click)="importarProductosFulfillment()"
+                                [disabled]="importandoProductosFulfillment"
+                            >
+                                <i
+                                    class="icofont icofont-cloud-download"
+                                    *ngIf="!importandoProductosFulfillment"
+                                ></i>
+                                <i
+                                    class="fa fa-spinner fa-spin"
+                                    *ngIf="importandoProductosFulfillment"
+                                ></i>
                             </button>
-                            <button type="button" class="btn btn-success btn-sm"
-                                    (click)="exportToExcel()">
+                            <button
+                                type="button"
+                                class="btn btn-success btn-sm"
+                                (click)="exportToExcel()"
+                            >
                                 <i class="icofont icofont-file-excel"></i>
                             </button>
                         </div>
@@ -122,50 +190,104 @@
                     </div> -->
 
                     <!-- La tabla de PrimeNG -->
-                    <p-table #dt [value]="rows" [paginator]="true" [resizableColumns]="true" [scrollable]="true"
-                        [loading]="cargando" [rowsPerPageOptions]="[10, 20, 50]" [paginator]="true"
-                        [rows]="pageSize" [totalRecords]="totalItems" [sortField]="'crearProducto.titulo'"
-                        [sortOrder]="1" styleClass="p-datatable-gridlines"  (onLazyLoad)="onPageChange($event)" [lazy]="true"
-                        [tableStyle]="{ 'min-width': '10rem' }" [rowHover]="true" [showCurrentPageReport]="true">
+                    <p-table
+                        #dt
+                        [value]="rows"
+                        [paginator]="true"
+                        [resizableColumns]="true"
+                        [scrollable]="true"
+                        [loading]="cargando"
+                        [rowsPerPageOptions]="[10, 20, 50]"
+                        [paginator]="true"
+                        [rows]="pageSize"
+                        [totalRecords]="totalItems"
+                        [sortField]="'crearProducto.titulo'"
+                        [sortOrder]="1"
+                        styleClass="p-datatable-gridlines"
+                        (onLazyLoad)="onPageChange($event)"
+                        [lazy]="true"
+                        [tableStyle]="{ 'min-width': '10rem' }"
+                        [rowHover]="true"
+                        [showCurrentPageReport]="true"
+                    >
                         <!-- ENCABEZADO -->
                         <ng-template pTemplate="header">
                             <tr>
                                 <!-- Imagen (sin ordenamiento) -->
-                                <th class="text-center" style="width: 80px;">
+                                <th class="text-center" style="width: 80px">
                                     {{ "Imagen" | translate }}
                                 </th>
 
-                                <th class="text-center" pSortableColumn="crearProducto.titulo">
+                                <th
+                                    class="text-center"
+                                    pSortableColumn="crearProducto.titulo"
+                                >
                                     {{ "Título" | translate }}
-                                    <p-sortIcon field="crearProducto.titulo"></p-sortIcon>
+                                    <p-sortIcon
+                                        field="crearProducto.titulo"
+                                    ></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="identificacion.referencia" *ngIf="!isMobile">
+                                <th
+                                    class="text-center"
+                                    pSortableColumn="identificacion.referencia"
+                                    *ngIf="!isMobile"
+                                >
                                     {{ "Referencia" | translate }}
-                                    <p-sortIcon field="identificacion.referencia"></p-sortIcon>
+                                    <p-sortIcon
+                                        field="identificacion.referencia"
+                                    ></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="exposicion.activar" *ngIf="!isMobile">
+                                <th
+                                    class="text-center"
+                                    pSortableColumn="exposicion.activar"
+                                    *ngIf="!isMobile"
+                                >
                                     {{ "Estado" | translate }}
-                                    <p-sortIcon field="exposicion.activar"></p-sortIcon>
+                                    <p-sortIcon
+                                        field="exposicion.activar"
+                                    ></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="exposicion.disponible" *ngIf="!isMobile">
+                                <th
+                                    class="text-center"
+                                    pSortableColumn="exposicion.disponible"
+                                    *ngIf="!isMobile"
+                                >
                                     {{ "Disponibilidad" | translate }}
-                                    <p-sortIcon field="exposicion.disponible"></p-sortIcon>
+                                    <p-sortIcon
+                                        field="exposicion.disponible"
+                                    ></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="crearProducto.paraProduccion" *ngIf="!isMobile">
+                                <th
+                                    class="text-center"
+                                    pSortableColumn="crearProducto.paraProduccion"
+                                    *ngIf="!isMobile"
+                                >
                                     {{ "Producción" | translate }}
-                                    <p-sortIcon field="crearProducto.paraProduccion"></p-sortIcon>
+                                    <p-sortIcon
+                                        field="crearProducto.paraProduccion"
+                                    ></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="precio.precioUnitarioSinIva" *ngIf="!isMobile">
+                                <th
+                                    class="text-center"
+                                    pSortableColumn="precio.precioUnitarioSinIva"
+                                    *ngIf="!isMobile"
+                                >
                                     {{ "Precio" | translate }}
-                                    <p-sortIcon field="precio.precioUnitarioSinIva"></p-sortIcon>
+                                    <p-sortIcon
+                                        field="precio.precioUnitarioSinIva"
+                                    ></p-sortIcon>
                                 </th>
 
-                                <th class="text-center" pSortableColumn="date_edit" *ngIf="!isMobile">
+                                <th
+                                    class="text-center"
+                                    pSortableColumn="date_edit"
+                                    *ngIf="!isMobile"
+                                >
                                     {{ "Última Edición" | translate }}
                                     <p-sortIcon field="date_edit"></p-sortIcon>
                                 </th>
@@ -175,7 +297,7 @@
                                     {{ "Tipo" | translate }}
                                 </th> -->
 
-                                <th class="text-center" style="width: 120px;">
+                                <th class="text-center" style="width: 120px">
                                     {{ "Acciones" | translate }}
                                 </th>
                             </tr>
@@ -186,64 +308,127 @@
                             <tr>
                                 <!-- Imagen -->
                                 <td class="text-center">
-                                    <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
-                                         [src]="row.crearProducto?.imagenesPrincipales[0]?.urls"
-                                         [alt]="row.crearProducto?.titulo"
-                                         width="50"
-                                         height="50"
-                                         class="product-thumbnail"
-                                         style="cursor: pointer; border-radius: 8px; object-fit: cover;"
-                                         (click)="viewProduct(row)" />
-                                    <img *ngIf="row.crearProducto?.imagenesPrincipales?.length == 0"
-                                         src="assets/img/placeholder.png"
-                                         [alt]="row.crearProducto?.titulo"
-                                         width="50"
-                                         height="50"
-                                         style="border-radius: 8px; opacity: 0.5;" />
+                                    <img
+                                        *ngIf="
+                                            row.crearProducto
+                                                ?.imagenesPrincipales?.length >
+                                            0
+                                        "
+                                        [src]="
+                                            row.crearProducto
+                                                ?.imagenesPrincipales[0]?.urls
+                                        "
+                                        [alt]="row.crearProducto?.titulo"
+                                        width="50"
+                                        height="50"
+                                        class="product-thumbnail"
+                                        style="
+                                            cursor: pointer;
+                                            border-radius: 8px;
+                                            object-fit: cover;
+                                        "
+                                        (click)="viewProduct(row)"
+                                    />
+                                    <img
+                                        *ngIf="
+                                            row.crearProducto
+                                                ?.imagenesPrincipales?.length ==
+                                            0
+                                        "
+                                        src="assets/img/placeholder.png"
+                                        [alt]="row.crearProducto?.titulo"
+                                        width="50"
+                                        height="50"
+                                        style="border-radius: 8px; opacity: 0.5"
+                                    />
                                 </td>
 
                                 <!-- Título -->
                                 <td>
-                                    <span class="fw-semibold">{{ row.crearProducto?.titulo }}</span>
+                                    <span class="fw-semibold">{{
+                                        row.crearProducto?.titulo
+                                    }}</span>
                                 </td>
 
                                 <!-- Referencia (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-center">
-                                    <span class="text-muted">{{ row.identificacion?.referencia || 'N/A' }}</span>
+                                    <span class="text-muted">{{
+                                        row.identificacion?.referencia || "N/A"
+                                    }}</span>
                                 </td>
 
                                 <!-- Estado Activo (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-center">
-                                    <span *ngIf="row.exposicion?.activar === true"
-                                          class="badge bg-success">
-                                        <i class="icofont icofont-check me-1"></i>{{ "Activo" | translate }}
+                                    <span
+                                        *ngIf="row.exposicion?.activar === true"
+                                        class="badge bg-success"
+                                    >
+                                        <i
+                                            class="icofont icofont-check me-1"
+                                        ></i
+                                        >{{ "Activo" | translate }}
                                     </span>
-                                    <span *ngIf="row.exposicion?.activar === false || !row.exposicion?.activar"
-                                          class="badge bg-danger">
-                                        <i class="icofont icofont-close me-1"></i>{{ "Inactivo" | translate }}
+                                    <span
+                                        *ngIf="
+                                            row.exposicion?.activar === false ||
+                                            !row.exposicion?.activar
+                                        "
+                                        class="badge bg-danger"
+                                    >
+                                        <i
+                                            class="icofont icofont-close me-1"
+                                        ></i
+                                        >{{ "Inactivo" | translate }}
                                     </span>
                                 </td>
 
                                 <!-- Disponibilidad (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-center">
-                                    <span *ngIf="row.exposicion?.disponible === true"
-                                          class="badge bg-info">
-                                        <i class="icofont icofont-check-circled me-1"></i>{{ "Disponible" | translate }}
+                                    <span
+                                        *ngIf="
+                                            row.exposicion?.disponible === true
+                                        "
+                                        class="badge bg-info"
+                                    >
+                                        <i
+                                            class="icofont icofont-check-circled me-1"
+                                        ></i
+                                        >{{ "Disponible" | translate }}
                                     </span>
-                                    <span *ngIf="row.exposicion?.disponible === false || !row.exposicion?.disponible"
-                                          class="badge bg-secondary">
-                                        <i class="icofont icofont-minus-circle me-1"></i>{{ "No disponible" | translate }}
+                                    <span
+                                        *ngIf="
+                                            row.exposicion?.disponible ===
+                                                false ||
+                                            !row.exposicion?.disponible
+                                        "
+                                        class="badge bg-secondary"
+                                    >
+                                        <i
+                                            class="icofont icofont-minus-circle me-1"
+                                        ></i
+                                        >{{ "No disponible" | translate }}
                                     </span>
                                 </td>
 
                                 <!-- Se produce (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-center">
-                                    <span *ngIf="row.crearProducto?.paraProduccion"
-                                          class="badge bg-warning text-dark">
-                                        <i class="icofont icofont-settings-alt me-1"></i>{{ "Sí" | translate }}
+                                    <span
+                                        *ngIf="
+                                            row.crearProducto?.paraProduccion
+                                        "
+                                        class="badge bg-warning text-dark"
+                                    >
+                                        <i
+                                            class="icofont icofont-settings-alt me-1"
+                                        ></i
+                                        >{{ "Sí" | translate }}
                                     </span>
-                                    <span *ngIf="!row.crearProducto?.paraProduccion"
-                                          class="badge bg-light text-dark">
+                                    <span
+                                        *ngIf="
+                                            !row.crearProducto?.paraProduccion
+                                        "
+                                        class="badge bg-light text-dark"
+                                    >
                                         {{ "No" | translate }}
                                     </span>
                                 </td>
@@ -251,13 +436,25 @@
                                 <!-- Precio unitario sin IVA (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-end">
                                     <span class="fw-bold text-primary">
-                                        {{ (row.precio?.precioUnitarioSinIva || 0) | currency:'USD':'symbol':'1.0-0' }}
+                                        {{
+                                            row.precio?.precioUnitarioSinIva ||
+                                                0
+                                                | currency
+                                                    : "USD"
+                                                    : "symbol"
+                                                    : "1.0-0"
+                                        }}
                                     </span>
                                 </td>
 
                                 <!-- Fecha editado (solo en desktop) -->
                                 <td *ngIf="!isMobile" class="text-center">
-                                    <small class="text-muted">{{ toDate(row.date_edit) ? (toDate(row.date_edit) | date: "dd/MM/yyyy") : 'N/A' }}</small>
+                                    <small class="text-muted">{{
+                                        toDate(row.date_edit)
+                                            ? (toDate(row.date_edit)
+                                              | date: "dd/MM/yyyy")
+                                            : "N/A"
+                                    }}</small>
                                 </td>
 
                                 <!-- Tipo de producto - OCULTO -->
@@ -274,12 +471,16 @@
 
                                 <!-- Acciones -->
                                 <td class="text-center action-buttons-table">
-                                    <button type="button"
-                                            class="btn btn-sm btn-action btn-action-info"
-                                            placement="top"
-                                            ngbTooltip="{{ 'Editar' | translate }}"
-                                            (click)="editarProducto(row)">
-                                        <i class="icofont icofont-pencil-alt-5"></i>
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-action btn-action-info"
+                                        placement="top"
+                                        ngbTooltip="{{ 'Editar' | translate }}"
+                                        (click)="editarProducto(row)"
+                                    >
+                                        <i
+                                            class="icofont icofont-pencil-alt-5"
+                                        ></i>
                                     </button>
                                     <!-- Botón Dropshipping - OCULTO -->
                                     <!-- <button type="button"
@@ -289,18 +490,26 @@
                                             (click)="configurarDropshipping(row)">
                                         <i class="icofont icofont-truck-loaded"></i>
                                     </button> -->
-                                    <button type="button"
-                                            class="btn btn-sm btn-action btn-action-success"
-                                            placement="top"
-                                            ngbTooltip="{{ 'Duplicar' | translate }}"
-                                            (click)="duplicarProducto(row)">
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-action btn-action-success"
+                                        placement="top"
+                                        ngbTooltip="{{
+                                            'Duplicar' | translate
+                                        }}"
+                                        (click)="duplicarProducto(row)"
+                                    >
                                         <i class="icofont icofont-copy"></i>
                                     </button>
-                                    <button type="button"
-                                            class="btn btn-sm btn-action btn-action-danger"
-                                            placement="top"
-                                            ngbTooltip="{{ 'Eliminar' | translate }}"
-                                            (click)="eliminarProducto(row)">
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-action btn-action-danger"
+                                        placement="top"
+                                        ngbTooltip="{{
+                                            'Eliminar' | translate
+                                        }}"
+                                        (click)="eliminarProducto(row)"
+                                    >
                                         <i class="icofont icofont-trash"></i>
                                     </button>
                                 </td>
@@ -316,8 +525,12 @@
                             </tr>
                         </ng-template>
                         <ng-template pTemplate="summary">
-                            <div class="flex align-items-center justify-content-between">
-                                {{ "Total en esta consulta" | translate }}: {{rows ? rows.length : 0 }} {{ "items" | translate }}.
+                            <div
+                                class="flex align-items-center justify-content-between"
+                            >
+                                {{ "Total en esta consulta" | translate }}:
+                                {{ rows ? rows.length : 0 }}
+                                {{ "items" | translate }}.
                             </div>
                         </ng-template>
                     </p-table>
@@ -328,11 +541,13 @@
 </div>
 
 <!-- Botón de Acción Flotante (FAB) para Móvil -->
-<button type="button"
-        class="btn btn-primary btn-fab d-lg-none"
-        placement="left"
-        ngbTooltip="{{ 'Crear Producto' | translate }}"
-        (click)="crearProducto()">
+<button
+    type="button"
+    class="btn btn-primary btn-fab d-lg-none"
+    placement="left"
+    ngbTooltip="{{ 'Crear Producto' | translate }}"
+    (click)="crearProducto()"
+>
     <i class="icofont icofont-plus"></i>
 </button>
 
@@ -340,5 +555,6 @@
 <app-import-modal
     [(visible)]="showImportModal"
     type="product"
-    (importComplete)="onImportComplete($event)">
+    (importComplete)="onImportComplete($event)"
+>
 </app-import-modal>
