@@ -1,0 +1,377 @@
+<div class="artifact-container" [ngClass]="'artifact-' + artifact?.type">
+    <!-- Title -->
+    <div class="artifact-header" *ngIf="artifact?.title">
+        <span class="artifact-title">{{ artifact.title }}</span>
+    </div>
+
+    <!-- Image Artifact -->
+    <div class="artifact-image" *ngIf="isImage">
+        <img
+            [src]="imageArtifact.data.url || imageArtifact.data.base64"
+            [alt]="imageArtifact.data.alt || 'Imagen'"
+            [style.max-width.px]="imageArtifact.data.width"
+            [style.max-height.px]="imageArtifact.data.height"
+        />
+    </div>
+
+    <!-- Map Artifact -->
+    <div class="artifact-map" *ngIf="isMap">
+        <div #mapContainer class="map-container"></div>
+        <div class="map-legend" *ngIf="mapArtifact.data.markers?.length">
+            <span class="legend-item">
+                <i class="pi pi-map-marker"></i>
+                {{ mapArtifact.data.markers?.length }} ubicaciones
+            </span>
+        </div>
+    </div>
+
+    <!-- 🗺️ Dispatch Map Artifact - Mapa Épico de Despachos -->
+    <div class="artifact-dispatch-map" *ngIf="isDispatchMap">
+        <!-- Map Container -->
+        <div #mapContainer class="dispatch-map-container"></div>
+
+        <!-- Summary Bar -->
+        <div class="dispatch-summary" *ngIf="dispatchMapArtifact.data.summary">
+            <div class="summary-item">
+                <i class="pi pi-box"></i>
+                <span class="value">{{ dispatchMapArtifact.data.summary.total_orders }}</span>
+                <span class="label">Pedidos</span>
+            </div>
+            <div class="summary-item">
+                <i class="pi pi-map"></i>
+                <span class="value">{{ dispatchMapArtifact.data.summary.total_zones }}</span>
+                <span class="label">Zonas</span>
+            </div>
+            <div class="summary-item">
+                <i class="pi pi-directions"></i>
+                <span class="value">{{ dispatchMapArtifact.data.summary.total_distance_km?.toFixed(1) }} km</span>
+                <span class="label">Distancia</span>
+            </div>
+            <div class="summary-item">
+                <i class="pi pi-clock"></i>
+                <span class="value">~{{ dispatchMapArtifact.data.summary.total_duration_minutes }} min</span>
+                <span class="label">Tiempo Est.</span>
+            </div>
+            <div class="summary-item highlight">
+                <i class="pi pi-dollar"></i>
+                <span class="value">{{ formatCurrency(dispatchMapArtifact.data.summary.total_value) }}</span>
+                <span class="label">Valor Total</span>
+            </div>
+        </div>
+
+        <!-- Routes Panel -->
+        <div class="dispatch-routes" *ngIf="dispatchMapArtifact.data.routes?.length">
+            <div class="routes-header">
+                <i class="pi pi-truck"></i>
+                <span>Rutas Optimizadas</span>
+            </div>
+
+            <div class="route-list">
+                <div class="route-item"
+                     *ngFor="let route of dispatchMapArtifact.data.routes; let i = index"
+                     [class.selected]="selectedRoute === route"
+                     (click)="selectRoute(route)">
+
+                    <div class="route-header">
+                        <div class="route-zone">
+                            <span class="zone-badge" [style.background]="route.color || '#3b82f6'">
+                                {{ route.zone }}
+                            </span>
+                            <span class="route-count">{{ route.orders_count }} pedidos</span>
+                        </div>
+                        <i class="pi" [ngClass]="selectedRoute === route ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+                    </div>
+
+                    <div class="route-metrics">
+                        <span><i class="pi pi-map-marker"></i> {{ route.metrics?.distance_km?.toFixed(1) }} km</span>
+                        <span><i class="pi pi-clock"></i> ~{{ route.metrics?.estimated_duration_min }} min</span>
+                        <span><i class="pi pi-dollar"></i> {{ formatCurrency(route.metrics?.total_value) }}</span>
+                    </div>
+
+                    <!-- Expanded Details -->
+                    <div class="route-details" *ngIf="selectedRoute === route">
+                        <div class="order-list">
+                            <div class="order-item" *ngFor="let order of route.orders; let j = index">
+                                <span class="order-sequence" [style.background]="getPriorityColor(order.prioridad)">
+                                    {{ order.sequence }}
+                                </span>
+                                <div class="order-info">
+                                    <span class="order-number">#{{ order.nroPedido }}</span>
+                                    <span class="order-customer">{{ order.cliente }}</span>
+                                    <span class="order-address">{{ order.direccion }}</span>
+                                </div>
+                                <span class="order-value">{{ formatCurrency(order.valorTotal) }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Suggested Transporter -->
+                        <div class="suggested-transporter" *ngIf="route.suggested_transporter">
+                            <div class="transporter-header">
+                                <i class="pi pi-user"></i>
+                                Transportador Sugerido
+                            </div>
+                            <div class="transporter-info">
+                                <span class="transporter-name">{{ route.suggested_transporter.nombre }}</span>
+                                <span class="transporter-phone" *ngIf="route.suggested_transporter.telefono">
+                                    <i class="pi pi-phone"></i> {{ route.suggested_transporter.telefono }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="dispatch-legend">
+            <span class="legend-title">Prioridad:</span>
+            <span class="legend-item">
+                <span class="legend-dot" style="background: #ef4444;"></span>
+                Alta
+            </span>
+            <span class="legend-item">
+                <span class="legend-dot" style="background: #f59e0b;"></span>
+                Media
+            </span>
+            <span class="legend-item">
+                <span class="legend-dot" style="background: #10b981;"></span>
+                Baja
+            </span>
+        </div>
+
+        <!-- 🚀 HITL Dispatch Actions -->
+        <div class="dispatch-actions" *ngIf="dispatchMapArtifact.data.routes?.length">
+            <div class="actions-header">
+                <i class="pi pi-send"></i>
+                <span>Acciones de Despacho</span>
+            </div>
+            <div class="actions-content">
+                <p class="actions-info">
+                    Se han identificado <strong>{{ dispatchMapArtifact.data.summary?.total_orders }}</strong> pedidos
+                    en <strong>{{ dispatchMapArtifact.data.summary?.total_zones }}</strong> zonas listas para despachar.
+                </p>
+                <div class="actions-buttons">
+                    <button class="btn-dispatch-all" (click)="onDispatchAll()">
+                        <i class="pi pi-truck"></i>
+                        Despachar Todo
+                    </button>
+                    <button class="btn-dispatch-selected"
+                            (click)="onDispatchSelected()"
+                            [disabled]="!selectedRoute">
+                        <i class="pi pi-send"></i>
+                        Despachar Ruta Seleccionada
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart Artifact -->
+    <div class="artifact-chart" *ngIf="isChart">
+        <canvas #chartCanvas width="400" height="250"></canvas>
+    </div>
+
+    <!-- Table Artifact -->
+    <div class="artifact-table" *ngIf="isTable">
+        <table>
+            <thead>
+                <tr>
+                    <th *ngFor="let header of tableArtifact.data.headers">{{ header }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let row of tableArtifact.data.rows">
+                    <td *ngFor="let cell of row">{{ cell }}</td>
+                </tr>
+            </tbody>
+            <tfoot *ngIf="tableArtifact.data.footer">
+                <tr>
+                    <td *ngFor="let footer of tableArtifact.data.footer">{{ footer }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+
+    <!-- Metric Artifact -->
+    <div class="artifact-metric" *ngIf="isMetric">
+        <div class="metric-icon" *ngIf="metricArtifact.data.icon">
+            <i class="pi" [ngClass]="metricArtifact.data.icon" [style.color]="metricArtifact.data.color"></i>
+        </div>
+        <div class="metric-content">
+            <div class="metric-value" [style.color]="metricArtifact.data.color">
+                {{ metricArtifact.data.value }}
+            </div>
+            <div class="metric-label">{{ metricArtifact.data.label }}</div>
+            <div class="metric-change" *ngIf="metricArtifact.data.change !== undefined" [ngClass]="getChangeClass(metricArtifact.data.changeType)">
+                <i class="pi" [ngClass]="getChangeIcon(metricArtifact.data.changeType)"></i>
+                {{ metricArtifact.data.change > 0 ? '+' : '' }}{{ metricArtifact.data.change }}%
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Card Artifact -->
+    <div class="artifact-product-card" *ngIf="isProductCard">
+        <div class="product-image" *ngIf="productCardArtifact.data.imageUrl">
+            <img [src]="productCardArtifact.data.imageUrl" [alt]="productCardArtifact.data.name" />
+        </div>
+        <div class="product-image product-placeholder" *ngIf="!productCardArtifact.data.imageUrl">
+            <i class="pi pi-box"></i>
+        </div>
+        <div class="product-info">
+            <div class="product-name">{{ productCardArtifact.data.name }}</div>
+            <div class="product-sku" *ngIf="productCardArtifact.data.sku">SKU: {{ productCardArtifact.data.sku }}</div>
+            <div class="product-category" *ngIf="productCardArtifact.data.category">
+                {{ productCardArtifact.data.category }}
+            </div>
+            <div class="product-details">
+                <span class="product-price">{{ formatCurrency(productCardArtifact.data.price) }}</span>
+                <span class="product-stock" [class.low-stock]="productCardArtifact.data.lowStock">
+                    <i class="pi pi-box"></i>
+                    {{ productCardArtifact.data.stock }} unidades
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Card Artifact -->
+    <div class="artifact-order-card" *ngIf="isOrderCard">
+        <div class="order-header">
+            <span class="order-number">#{{ orderCardArtifact.data.nroPedido }}</span>
+            <span class="order-status" [ngClass]="'status-' + orderCardArtifact.data.status?.toLowerCase()">
+                {{ orderCardArtifact.data.status }}
+            </span>
+        </div>
+        <div class="order-customer">
+            <i class="pi pi-user"></i>
+            {{ orderCardArtifact.data.customer }}
+        </div>
+        <div class="order-address">
+            <i class="pi pi-map-marker"></i>
+            {{ orderCardArtifact.data.address }}
+        </div>
+        <div class="order-items" *ngIf="orderCardArtifact.data.items?.length">
+            <div class="item" *ngFor="let item of orderCardArtifact.data.items">
+                <span class="item-name">{{ item.name }}</span>
+                <span class="item-qty">x{{ item.qty }}</span>
+                <span class="item-price">{{ formatCurrency(item.price) }}</span>
+            </div>
+        </div>
+        <div class="order-footer">
+            <span class="order-date" *ngIf="orderCardArtifact.data.deliveryDate">
+                <i class="pi pi-calendar"></i>
+                {{ orderCardArtifact.data.deliveryDate }}
+            </span>
+            <span class="order-total">
+                {{ formatCurrency(orderCardArtifact.data.total) }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Stock Alert Artifact -->
+    <div class="artifact-stock-alert" *ngIf="isStockAlert">
+        <div class="alert-header">
+            <i class="pi pi-exclamation-triangle"></i>
+            <span>Alertas de Stock</span>
+            <span class="alert-count">{{ stockAlertArtifact.data.products?.length }}</span>
+        </div>
+        <div class="alert-list">
+            <div class="alert-item"
+                 *ngFor="let product of stockAlertArtifact.data.products"
+                 [ngClass]="getStockStatusClass(product.status)">
+                <div class="item-info">
+                    <span class="item-name">{{ product.name }}</span>
+                    <span class="item-sku">{{ product.sku }}</span>
+                </div>
+                <div class="item-stock">
+                    <span class="current">{{ product.currentStock }}</span>
+                    <span class="separator">/</span>
+                    <span class="min">{{ product.minStock }}</span>
+                </div>
+                <span class="item-status">{{ getStockStatusLabel(product.status) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🎯 Human-in-the-Loop Confirmation - ChatGPT Style -->
+    <div class="hitl-container" *ngIf="confirmationRequest">
+        <div class="hitl-card">
+            <!-- Glow Effect -->
+            <div class="hitl-glow"></div>
+
+            <!-- Header with Icon -->
+            <div class="hitl-header">
+                <div class="hitl-icon-wrapper">
+                    <div class="hitl-icon pulse">
+                        <i class="pi pi-shield"></i>
+                    </div>
+                </div>
+                <div class="hitl-title-section">
+                    <span class="hitl-badge">Confirmación Requerida</span>
+                    <h3 class="hitl-title">{{ confirmationRequest.title }}</h3>
+                </div>
+            </div>
+
+            <!-- Message -->
+            <div class="hitl-body">
+                <p class="hitl-message">{{ confirmationRequest.message }}</p>
+
+                <!-- Details Card -->
+                <div class="hitl-details-card" *ngIf="confirmationRequest.details">
+                    <div class="details-header">
+                        <i class="pi pi-info-circle"></i>
+                        <span>Detalles de la operación</span>
+                    </div>
+                    <div class="details-content">
+                        {{ confirmationRequest.details }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons - Approve/Reject Style -->
+            <div class="hitl-actions" *ngIf="confirmationRequest.type === 'approve_reject'">
+                <button class="hitl-btn hitl-btn-reject" (click)="onReject()">
+                    <div class="btn-icon-wrapper reject">
+                        <i class="pi pi-times"></i>
+                    </div>
+                    <div class="btn-text">
+                        <span class="btn-label">Rechazar</span>
+                        <span class="btn-hint">Cancelar esta acción</span>
+                    </div>
+                </button>
+
+                <button class="hitl-btn hitl-btn-approve" (click)="onApprove()">
+                    <div class="btn-icon-wrapper approve">
+                        <i class="pi pi-check"></i>
+                    </div>
+                    <div class="btn-text">
+                        <span class="btn-label">Aprobar</span>
+                        <span class="btn-hint">Ejecutar acción</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Multi Choice Options -->
+            <div class="hitl-choices" *ngIf="confirmationRequest.type === 'multi_choice' && confirmationRequest.options">
+                <div class="choices-label">Selecciona una opción:</div>
+                <div class="choices-grid">
+                    <button class="hitl-choice"
+                            *ngFor="let option of confirmationRequest.options"
+                            [class.recommended]="option.isDefault"
+                            [class.danger]="option.isDangerous"
+                            (click)="onSelectOption(option.id)">
+                        <i class="pi" [ngClass]="option.icon || 'pi-angle-right'"></i>
+                        <span class="choice-label">{{ option.label }}</span>
+                        <span class="choice-badge recommended" *ngIf="option.isDefault">Recomendado</span>
+                        <span class="choice-badge danger" *ngIf="option.isDangerous">⚠️</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer hint -->
+            <div class="hitl-footer">
+                <i class="pi pi-lock"></i>
+                <span>Esta acción requiere tu aprobación para continuar</span>
+            </div>
+        </div>
+    </div>
+</div>

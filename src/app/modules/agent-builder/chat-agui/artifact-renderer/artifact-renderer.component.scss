@@ -1,0 +1,1355 @@
+/**
+ * Artifact Renderer Styles
+ * Estilos para renderizar artifacts ricos en el chat AG-UI
+ */
+
+// Colors (matching AG-UI chat theme)
+$primary: #a78bfa;
+$success: #10b981;
+$warning: #f59e0b;
+$danger: #ef4444;
+$info: #3b82f6;
+$text-dark: #242934;
+$text-gray: #64748b;
+$text-light: #94a3b8;
+$bg-page: #f8f8f8;
+$bg-white: #ffffff;
+$border: #e5e7eb;
+
+.artifact-container {
+    background: $bg-white;
+    border: 1px solid $border;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 8px 0;
+    max-width: 100%;
+}
+
+.artifact-header {
+    padding: 10px 14px;
+    background: $bg-page;
+    border-bottom: 1px solid $border;
+
+    .artifact-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: $text-dark;
+    }
+}
+
+// =============================================================================
+// IMAGE ARTIFACT
+// =============================================================================
+
+.artifact-image {
+    padding: 12px;
+    text-align: center;
+
+    img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+    }
+}
+
+// =============================================================================
+// MAP ARTIFACT
+// =============================================================================
+
+.artifact-map {
+    .map-container {
+        width: 100%;
+        height: 250px;
+        background: $bg-page;
+    }
+
+    .map-legend {
+        padding: 8px 12px;
+        background: $bg-page;
+        border-top: 1px solid $border;
+        font-size: 11px;
+        color: $text-gray;
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            i {
+                color: $info;
+            }
+        }
+    }
+}
+
+// =============================================================================
+// CHART ARTIFACT
+// =============================================================================
+
+.artifact-chart {
+    padding: 16px;
+
+    canvas {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 250px;
+    }
+}
+
+// =============================================================================
+// TABLE ARTIFACT
+// =============================================================================
+
+.artifact-table {
+    overflow-x: auto;
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid $border;
+        }
+
+        th {
+            background: $bg-page;
+            font-weight: 600;
+            color: $text-dark;
+            white-space: nowrap;
+        }
+
+        td {
+            color: $text-gray;
+        }
+
+        tbody tr:hover {
+            background: rgba($primary, 0.04);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tfoot {
+            td {
+                background: $bg-page;
+                font-weight: 600;
+                color: $text-dark;
+                border-top: 2px solid $border;
+            }
+        }
+    }
+}
+
+// =============================================================================
+// METRIC ARTIFACT
+// =============================================================================
+
+.artifact-metric {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+
+    .metric-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba($success, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        i {
+            font-size: 20px;
+        }
+    }
+
+    .metric-content {
+        flex: 1;
+    }
+
+    .metric-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: $text-dark;
+        line-height: 1;
+    }
+
+    .metric-label {
+        font-size: 12px;
+        color: $text-gray;
+        margin-top: 4px;
+    }
+
+    .metric-change {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        margin-top: 6px;
+        padding: 2px 8px;
+        border-radius: 12px;
+
+        &.change-increase {
+            color: $success;
+            background: rgba($success, 0.1);
+        }
+
+        &.change-decrease {
+            color: $danger;
+            background: rgba($danger, 0.1);
+        }
+
+        &.change-neutral {
+            color: $text-gray;
+            background: rgba($text-gray, 0.1);
+        }
+    }
+}
+
+// =============================================================================
+// PRODUCT CARD ARTIFACT
+// =============================================================================
+
+.artifact-product-card {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+
+        img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        &.product-placeholder {
+            background: $bg-page;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            i {
+                font-size: 24px;
+                color: $text-light;
+            }
+        }
+    }
+
+    .product-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .product-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: $text-dark;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .product-sku {
+        font-size: 11px;
+        color: $text-light;
+        margin-top: 2px;
+    }
+
+    .product-category {
+        font-size: 11px;
+        color: $primary;
+        margin-top: 4px;
+    }
+
+    .product-details {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 8px;
+
+        .product-price {
+            font-size: 16px;
+            font-weight: 700;
+            color: $success;
+        }
+
+        .product-stock {
+            font-size: 11px;
+            color: $text-gray;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            &.low-stock {
+                color: $danger;
+            }
+        }
+    }
+}
+
+// =============================================================================
+// ORDER CARD ARTIFACT
+// =============================================================================
+
+.artifact-order-card {
+    padding: 14px;
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+
+        .order-number {
+            font-size: 14px;
+            font-weight: 600;
+            color: $text-dark;
+        }
+
+        .order-status {
+            font-size: 10px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            text-transform: uppercase;
+            font-weight: 600;
+
+            &.status-pendiente,
+            &.status-pending {
+                background: rgba($warning, 0.1);
+                color: $warning;
+            }
+
+            &.status-listo,
+            &.status-ready {
+                background: rgba($success, 0.1);
+                color: $success;
+            }
+
+            &.status-enviado,
+            &.status-shipped {
+                background: rgba($info, 0.1);
+                color: $info;
+            }
+
+            &.status-entregado,
+            &.status-delivered {
+                background: rgba($success, 0.1);
+                color: $success;
+            }
+        }
+    }
+
+    .order-customer,
+    .order-address {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: $text-gray;
+        margin-bottom: 6px;
+
+        i {
+            color: $text-light;
+            font-size: 12px;
+        }
+    }
+
+    .order-items {
+        margin: 10px 0;
+        padding: 10px;
+        background: $bg-page;
+        border-radius: 8px;
+
+        .item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            padding: 4px 0;
+
+            &:not(:last-child) {
+                border-bottom: 1px solid $border;
+            }
+
+            .item-name {
+                flex: 1;
+                color: $text-dark;
+            }
+
+            .item-qty {
+                color: $text-light;
+            }
+
+            .item-price {
+                color: $text-gray;
+                font-weight: 500;
+            }
+        }
+    }
+
+    .order-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid $border;
+
+        .order-date {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            color: $text-light;
+        }
+
+        .order-total {
+            font-size: 16px;
+            font-weight: 700;
+            color: $text-dark;
+        }
+    }
+}
+
+// =============================================================================
+// STOCK ALERT ARTIFACT
+// =============================================================================
+
+.artifact-stock-alert {
+    .alert-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        background: rgba($danger, 0.05);
+        border-bottom: 1px solid rgba($danger, 0.1);
+
+        i {
+            color: $danger;
+        }
+
+        span {
+            font-size: 12px;
+            font-weight: 600;
+            color: $text-dark;
+        }
+
+        .alert-count {
+            margin-left: auto;
+            padding: 2px 8px;
+            background: $danger;
+            color: white;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+    }
+
+    .alert-list {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .alert-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        border-bottom: 1px solid $border;
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        .item-info {
+            flex: 1;
+            min-width: 0;
+
+            .item-name {
+                font-size: 12px;
+                font-weight: 500;
+                color: $text-dark;
+                display: block;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .item-sku {
+                font-size: 10px;
+                color: $text-light;
+            }
+        }
+
+        .item-stock {
+            font-size: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+
+            .current {
+                color: $text-dark;
+            }
+
+            .separator {
+                color: $text-light;
+                margin: 0 2px;
+            }
+
+            .min {
+                color: $text-light;
+            }
+        }
+
+        .item-status {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        &.status-critical {
+            background: rgba($danger, 0.03);
+
+            .item-stock .current {
+                color: $danger;
+            }
+
+            .item-status {
+                background: $danger;
+                color: white;
+            }
+        }
+
+        &.status-low {
+            background: rgba($warning, 0.03);
+
+            .item-stock .current {
+                color: $warning;
+            }
+
+            .item-status {
+                background: rgba($warning, 0.1);
+                color: $warning;
+            }
+        }
+
+        &.status-ok {
+            .item-status {
+                background: rgba($success, 0.1);
+                color: $success;
+            }
+        }
+    }
+}
+
+// =============================================================================
+// 🗺️ DISPATCH MAP ARTIFACT - Mapa Épico de Despachos
+// =============================================================================
+
+.artifact-dispatch-map {
+    .dispatch-map-container {
+        width: 100%;
+        height: 350px;
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        position: relative;
+    }
+
+    // Summary Bar
+    .dispatch-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        padding: 12px;
+        background: $bg-page;
+        border-bottom: 1px solid $border;
+
+        .summary-item {
+            flex: 1;
+            min-width: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px;
+            background: $bg-white;
+            border-radius: 8px;
+            border: 1px solid $border;
+
+            i {
+                font-size: 16px;
+                color: $info;
+                margin-bottom: 4px;
+            }
+
+            .value {
+                font-size: 14px;
+                font-weight: 700;
+                color: $text-dark;
+            }
+
+            .label {
+                font-size: 10px;
+                color: $text-light;
+                text-transform: uppercase;
+            }
+
+            &.highlight {
+                background: linear-gradient(135deg, $success 0%, #059669 100%);
+                border-color: $success;
+
+                i, .value, .label {
+                    color: white;
+                }
+            }
+        }
+    }
+
+    // Routes Panel
+    .dispatch-routes {
+        .routes-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            color: white;
+
+            i {
+                font-size: 16px;
+            }
+
+            span {
+                font-size: 13px;
+                font-weight: 600;
+            }
+        }
+
+        .route-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .route-item {
+            padding: 12px 14px;
+            border-bottom: 1px solid $border;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: rgba($primary, 0.04);
+            }
+
+            &.selected {
+                background: rgba($primary, 0.08);
+            }
+
+            &:last-child {
+                border-bottom: none;
+            }
+
+            .route-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+
+                .route-zone {
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+
+                    .zone-badge {
+                        padding: 3px 10px;
+                        border-radius: 12px;
+                        color: white;
+                        font-size: 11px;
+                        font-weight: 600;
+                    }
+
+                    .route-count {
+                        font-size: 12px;
+                        color: $text-gray;
+                    }
+                }
+
+                > i {
+                    color: $text-light;
+                    font-size: 12px;
+                }
+            }
+
+            .route-metrics {
+                display: flex;
+                gap: 12px;
+                font-size: 11px;
+                color: $text-gray;
+
+                span {
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+
+                    i {
+                        font-size: 12px;
+                        color: $text-light;
+                    }
+                }
+            }
+        }
+
+        // Expanded Details
+        .route-details {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px dashed $border;
+
+            .order-list {
+                background: $bg-page;
+                border-radius: 8px;
+                padding: 8px;
+            }
+
+            .order-item {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                padding: 8px;
+                background: $bg-white;
+                border-radius: 6px;
+                margin-bottom: 6px;
+
+                &:last-child {
+                    margin-bottom: 0;
+                }
+
+                .order-sequence {
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 11px;
+                    font-weight: bold;
+                    flex-shrink: 0;
+                }
+
+                .order-info {
+                    flex: 1;
+                    min-width: 0;
+
+                    .order-number {
+                        display: block;
+                        font-size: 12px;
+                        font-weight: 600;
+                        color: $text-dark;
+                    }
+
+                    .order-customer {
+                        display: block;
+                        font-size: 11px;
+                        color: $text-gray;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+
+                    .order-address {
+                        display: block;
+                        font-size: 10px;
+                        color: $text-light;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+
+                .order-value {
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: $success;
+                    white-space: nowrap;
+                }
+            }
+
+            .suggested-transporter {
+                margin-top: 12px;
+                padding: 10px;
+                background: rgba($info, 0.05);
+                border: 1px solid rgba($info, 0.2);
+                border-radius: 8px;
+
+                .transporter-header {
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-size: 11px;
+                    color: $info;
+                    font-weight: 600;
+                    margin-bottom: 6px;
+                }
+
+                .transporter-info {
+                    .transporter-name {
+                        display: block;
+                        font-size: 13px;
+                        font-weight: 600;
+                        color: $text-dark;
+                    }
+
+                    .transporter-phone {
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                        font-size: 11px;
+                        color: $text-gray;
+                        margin-top: 4px;
+                    }
+                }
+            }
+        }
+    }
+
+    // Legend
+    .dispatch-legend {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        background: $bg-page;
+        border-top: 1px solid $border;
+        font-size: 11px;
+
+        .legend-title {
+            color: $text-gray;
+            font-weight: 500;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: $text-gray;
+
+            .legend-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+            }
+        }
+    }
+
+    // 🚀 Dispatch Actions
+    .dispatch-actions {
+        border-top: 2px solid $success;
+
+        .actions-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 14px;
+            background: linear-gradient(135deg, $success 0%, #059669 100%);
+            color: white;
+
+            i {
+                font-size: 16px;
+            }
+
+            span {
+                font-size: 13px;
+                font-weight: 600;
+            }
+        }
+
+        .actions-content {
+            padding: 14px;
+            background: rgba($success, 0.03);
+        }
+
+        .actions-info {
+            font-size: 12px;
+            color: $text-gray;
+            margin: 0 0 14px 0;
+            line-height: 1.5;
+
+            strong {
+                color: $text-dark;
+            }
+        }
+
+        .actions-buttons {
+            display: flex;
+            gap: 10px;
+
+            button {
+                flex: 1;
+                padding: 12px 16px;
+                border: none;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                transition: all 0.2s ease;
+
+                i {
+                    font-size: 16px;
+                }
+
+                &:disabled {
+                    opacity: 0.5;
+                    cursor: not-allowed;
+                }
+            }
+
+            .btn-dispatch-all {
+                background: linear-gradient(135deg, $success 0%, #059669 100%);
+                color: white;
+                box-shadow: 0 4px 12px rgba($success, 0.3);
+
+                &:hover:not(:disabled) {
+                    transform: translateY(-2px);
+                    box-shadow: 0 6px 16px rgba($success, 0.4);
+                }
+            }
+
+            .btn-dispatch-selected {
+                background: $bg-white;
+                color: $info;
+                border: 2px solid $info;
+
+                &:hover:not(:disabled) {
+                    background: rgba($info, 0.05);
+                }
+            }
+        }
+    }
+}
+
+// =============================================================================
+// 🎯 HUMAN-IN-THE-LOOP CONFIRMATION - ChatGPT Style
+// =============================================================================
+
+.hitl-container {
+    padding: 16px;
+    animation: hitlSlideIn 0.3s ease-out;
+}
+
+@keyframes hitlSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba($warning, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba($warning, 0);
+    }
+}
+
+@keyframes glow {
+    0%, 100% {
+        opacity: 0.5;
+    }
+    50% {
+        opacity: 1;
+    }
+}
+
+.hitl-card {
+    position: relative;
+    background: linear-gradient(135deg, #fefce8 0%, #fef3c7 50%, #fde68a 100%);
+    border: 2px solid $warning;
+    border-radius: 16px;
+    overflow: hidden;
+
+    // Glow effect
+    .hitl-glow {
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba($warning, 0.15) 0%, transparent 70%);
+        animation: glow 2s ease-in-out infinite;
+        pointer-events: none;
+    }
+}
+
+.hitl-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.6);
+    border-bottom: 1px solid rgba($warning, 0.3);
+
+    .hitl-icon-wrapper {
+        .hitl-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, $warning 0%, #d97706 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba($warning, 0.4);
+
+            &.pulse {
+                animation: pulse 2s infinite;
+            }
+
+            i {
+                font-size: 22px;
+                color: white;
+            }
+        }
+    }
+
+    .hitl-title-section {
+        flex: 1;
+
+        .hitl-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba($warning, 0.2);
+            border: 1px solid rgba($warning, 0.4);
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .hitl-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 700;
+            color: #78350f;
+        }
+    }
+}
+
+.hitl-body {
+    padding: 16px 20px;
+
+    .hitl-message {
+        margin: 0;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #78350f;
+    }
+
+    .hitl-details-card {
+        margin-top: 14px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba($warning, 0.3);
+        border-radius: 10px;
+        overflow: hidden;
+
+        .details-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            background: rgba($warning, 0.1);
+            border-bottom: 1px solid rgba($warning, 0.2);
+            font-size: 11px;
+            font-weight: 600;
+            color: #92400e;
+
+            i {
+                font-size: 14px;
+            }
+        }
+
+        .details-content {
+            padding: 12px 14px;
+            font-size: 12px;
+            color: #78350f;
+            line-height: 1.5;
+            font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+            white-space: pre-wrap;
+        }
+    }
+}
+
+.hitl-actions {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-top: 1px solid rgba($warning, 0.2);
+
+    .hitl-btn {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        border: 2px solid transparent;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+
+        .btn-icon-wrapper {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+
+            i {
+                font-size: 18px;
+                color: white;
+            }
+
+            &.approve {
+                background: linear-gradient(135deg, $success 0%, #059669 100%);
+                box-shadow: 0 4px 12px rgba($success, 0.3);
+            }
+
+            &.reject {
+                background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+                box-shadow: 0 4px 12px rgba(#64748b, 0.3);
+            }
+        }
+
+        .btn-text {
+            flex: 1;
+
+            .btn-label {
+                display: block;
+                font-size: 14px;
+                font-weight: 700;
+                color: $text-dark;
+            }
+
+            .btn-hint {
+                display: block;
+                font-size: 11px;
+                color: $text-gray;
+                margin-top: 2px;
+            }
+        }
+
+        &.hitl-btn-approve {
+            background: rgba($success, 0.08);
+            border-color: rgba($success, 0.3);
+
+            &:hover {
+                background: rgba($success, 0.15);
+                border-color: $success;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 20px rgba($success, 0.25);
+            }
+        }
+
+        &.hitl-btn-reject {
+            background: rgba(#94a3b8, 0.08);
+            border-color: rgba(#94a3b8, 0.3);
+
+            &:hover {
+                background: rgba($danger, 0.08);
+                border-color: rgba($danger, 0.3);
+
+                .btn-icon-wrapper.reject {
+                    background: linear-gradient(135deg, $danger 0%, #dc2626 100%);
+                    box-shadow: 0 4px 12px rgba($danger, 0.3);
+                }
+
+                .btn-label {
+                    color: $danger;
+                }
+            }
+        }
+    }
+}
+
+.hitl-choices {
+    padding: 16px 20px;
+    background: rgba(255, 255, 255, 0.5);
+    border-top: 1px solid rgba($warning, 0.2);
+
+    .choices-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #92400e;
+        margin-bottom: 12px;
+    }
+
+    .choices-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .hitl-choice {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 16px;
+        background: white;
+        border: 2px solid rgba($warning, 0.3);
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+
+        i {
+            font-size: 16px;
+            color: $warning;
+        }
+
+        .choice-label {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 500;
+            color: $text-dark;
+        }
+
+        .choice-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+
+            &.recommended {
+                background: rgba($success, 0.15);
+                color: $success;
+            }
+
+            &.danger {
+                background: rgba($danger, 0.15);
+                color: $danger;
+            }
+        }
+
+        &:hover {
+            border-color: $warning;
+            background: rgba($warning, 0.05);
+            transform: translateX(4px);
+        }
+
+        &.recommended {
+            border-color: $success;
+            background: rgba($success, 0.05);
+
+            i {
+                color: $success;
+            }
+        }
+
+        &.danger {
+            &:hover {
+                border-color: $danger;
+                background: rgba($danger, 0.05);
+
+                i, .choice-label {
+                    color: $danger;
+                }
+            }
+        }
+    }
+}
+
+.hitl-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px 20px;
+    background: rgba(#78350f, 0.05);
+    border-top: 1px solid rgba($warning, 0.2);
+    font-size: 11px;
+    color: #92400e;
+
+    i {
+        font-size: 12px;
+    }
+}
+
+// =============================================================================
+// RESPONSIVE
+// =============================================================================
+
+@media (max-width: 480px) {
+    .artifact-metric {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .artifact-product-card {
+        flex-direction: column;
+
+        .product-image {
+            width: 100%;
+            height: 120px;
+        }
+    }
+
+    .artifact-map .map-container {
+        height: 200px;
+    }
+
+    // Responsive dispatch map
+    .artifact-dispatch-map {
+        .dispatch-map-container {
+            height: 250px;
+        }
+
+        .dispatch-summary {
+            .summary-item {
+                min-width: 70px;
+                padding: 6px;
+
+                .value {
+                    font-size: 12px;
+                }
+
+                .label {
+                    font-size: 9px;
+                }
+            }
+        }
+
+        .dispatch-routes .route-item {
+            .route-metrics {
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+        }
+
+        .dispatch-actions .actions-buttons {
+            flex-direction: column;
+        }
+    }
+}

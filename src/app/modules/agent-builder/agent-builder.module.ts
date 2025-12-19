@@ -38,14 +38,19 @@ import { StepReviewComponent } from './wizard/step-review/step-review.component'
 import { LibraryComponent } from './library/library.component';
 import { AgentCardComponent } from './library/agent-card/agent-card.component';
 import { GeneralChatProComponent } from './general-chat-pro/general-chat-pro.component';
+import { ChatAguiComponent } from './chat-agui/chat-agui.component';
 
 import { A2aMonitorComponent } from './monitoring/a2a-monitor.component';
+
+// Standalone Components
+import { ArtifactRendererComponent } from './chat-agui/artifact-renderer/artifact-renderer.component';
 
 @NgModule({
   declarations: [
     AgentBuilderComponent,
     GeneralChatComponent,
     GeneralChatProComponent,
+    ChatAguiComponent,
     WizardComponent,
     StepBasicInfoComponent,
     StepPromptComponent,
@@ -61,6 +66,8 @@ import { A2aMonitorComponent } from './monitoring/a2a-monitor.component';
     CommonModule,
     FormsModule,
     AgentBuilderRoutingModule,
+    // Standalone Components
+    ArtifactRendererComponent,
     // PrimeNG
     StepsModule,
     CardModule,

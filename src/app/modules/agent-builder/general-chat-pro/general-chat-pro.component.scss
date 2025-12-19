@@ -19,14 +19,22 @@ $danger: #dc3545;
   display: flex;
   flex-direction: column;
   height: 100%;
+  padding: 20px;
+  background: #f1f5f9;
+  box-sizing: border-box;
 }
 
 .chat-pro-container {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: $bg-page;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: $bg-white;
   font-family: 'Montserrat', sans-serif;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 // Header simple
