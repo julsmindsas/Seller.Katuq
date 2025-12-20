@@ -56,6 +56,22 @@ export class AgUiService {
     // Session management
     public currentSessionId: string | null = null;
 
+    // Negotiation state tracking
+    private negotiationStateSubject = new BehaviorSubject<{
+        isActive: boolean;
+        phase: 'idle' | 'voting' | 'resolving' | 'completed';
+        voters: { id: string; name: string; department: string; status: 'pending' | 'thinking' | 'voted'; vote?: string; }[];
+        currentRound: number;
+        maxRounds: number;
+    }>({
+        isActive: false,
+        phase: 'idle',
+        voters: [],
+        currentRound: 0,
+        maxRounds: 3
+    });
+    public negotiationState$ = this.negotiationStateSubject.asObservable();
+
     // Timeouts
     private executionTimeout: any = null;
     private idleTimeout: any = null;
@@ -247,8 +263,45 @@ export class AgUiService {
                     this.handleStateDelta(event);
                     break;
 
+                case 'AGENT_JOINED':
+                    this.handleAgentJoined(event);
+                    break;
+
+                case 'AGENT_THINKING':
+                    this.handleAgentThinking(event);
+                    break;
+
+                case 'DELEGATION':
+                    this.handleDelegation(event);
+                    break;
+
+                case 'VOTE':
+                    this.handleVote(event);
+                    break;
+
+                case 'CONSENSUS_REACHED':
+                    this.handleConsensusReached(event);
+                    break;
+
                 case 'CONFIRMATION_REQUEST':
                     this.handleConfirmationRequest(event);
+                    break;
+
+                // Chat Pro compatibility events
+                case 'USER_MESSAGE':
+                    this.handleUserMessage(event);
+                    break;
+
+                case 'AGENT_MESSAGE':
+                    this.handleAgentMessage(event);
+                    break;
+
+                case 'FINAL_RESPONSE':
+                    this.handleFinalResponse(event);
+                    break;
+
+                case 'NEGOTIATION_ROUND':
+                    this.handleNegotiationRound(event);
                     break;
 
                 default:
@@ -267,6 +320,14 @@ export class AgUiService {
     private handleRunStarted(event: AgUiEvent): void {
         console.log('[AgUiService] Run started:', event.threadId);
         this.threadIdSubject.next(event.threadId || null);
+
+        // RESET: Limpiar agentes activos y empezar fresco con el CEO
+        // Esto evita que se acumulen avatares de consultas anteriores
+        this.agentStateSubject.next({
+            activeAgents: ['general_manager'],
+            currentSpeaker: 'general_manager'
+        });
+        console.log('[AgUiService] 👔 Reset agents - CEO initialized as first active agent');
     }
 
     private handleRunFinished(event: AgUiEvent): void {
@@ -287,11 +348,46 @@ export class AgUiService {
     private handleTextMessageStart(event: AgUiEvent): void {
         console.log('[AgUiService] Message start:', event.messageId);
 
-        // Get current speaker from agent state
-        const currentAgentId = this.agentStateSubject.value.currentSpeaker;
-        const speaker = currentAgentId
-            ? getSpeakerConfig(currentAgentId)
-            : getSpeakerConfig('general_manager');
+        // Extended event to access speaker field
+        const extEvent = event as any;
+
+        // PRIORITY 1: Use speaker from event if available (sent by backend)
+        // PRIORITY 2: Use current speaker from agent state
+        // PRIORITY 3: Default to general_manager
+        let speaker: AgUiSpeaker;
+
+        if (extEvent.speaker) {
+            // Backend sent speaker config - convert to AgUiSpeaker format
+            const backendSpeaker = extEvent.speaker;
+            const dept = backendSpeaker.department || backendSpeaker.type;
+            const personName = this.mapDisplayNameToPersonName(backendSpeaker.display_name, dept);
+
+            speaker = {
+                id: backendSpeaker.agent_id || backendSpeaker.name || 'general_manager',
+                name: personName,
+                displayName: personName,
+                department: this.mapDepartment(dept),
+                color: backendSpeaker.color || '#6366f1',
+                icon: this.mapAvatarToIcon(backendSpeaker.avatar),
+                emoji: this.getEmojiForDepartment(dept)
+            };
+            console.log('[AgUiService] Using speaker from event:', speaker.name, speaker.emoji);
+
+            // Also update current speaker in agent state
+            const currentState = this.agentStateSubject.value;
+            if (!currentState.activeAgents.includes(speaker.id)) {
+                currentState.activeAgents.push(speaker.id);
+            }
+            currentState.currentSpeaker = speaker.id;
+            this.agentStateSubject.next({ ...currentState });
+        } else {
+            // Fallback to current speaker from state
+            const currentAgentId = this.agentStateSubject.value.currentSpeaker;
+            speaker = currentAgentId
+                ? getSpeakerConfig(currentAgentId)
+                : getSpeakerConfig('general_manager');
+            console.log('[AgUiService] Using speaker from state:', speaker.name);
+        }
 
         this.currentMessage = {
             id: event.messageId || `msg_${Date.now()}`,
@@ -301,6 +397,113 @@ export class AgUiService {
             timestamp: new Date(),
             isStreaming: true
         };
+    }
+
+    /**
+     * Maps backend department string to AgUiSpeaker department type
+     */
+    private mapDepartment(dept: string | null): 'ceo' | 'sales' | 'inventory' | 'logistics' | 'user' | null {
+        if (!dept) return 'ceo';
+        const deptLower = dept.toLowerCase();
+        if (deptLower === 'sales') return 'sales';
+        if (deptLower === 'inventory') return 'inventory';
+        if (deptLower === 'logistics') return 'logistics';
+        if (deptLower === 'user') return 'user';
+        if (deptLower === 'ceo' || deptLower === 'sub_agent' || deptLower === 'system') return 'ceo';
+        return null;
+    }
+
+    /**
+     * Maps backend avatar name to PrimeNG icon
+     */
+    private mapAvatarToIcon(avatar: string | undefined): string {
+        const iconMap: Record<string, string> = {
+            'briefcase': 'pi-briefcase',
+            'trending-up': 'pi-chart-line',
+            'package': 'pi-box',
+            'truck': 'pi-truck',
+            'layers': 'pi-sitemap',
+            'git-branch': 'pi-share-alt',
+            'zap': 'pi-bolt',
+            'user': 'pi-user'
+        };
+        return iconMap[avatar || 'user'] || 'pi-user';
+    }
+
+    /**
+     * Gets emoji for department
+     */
+    private getEmojiForDepartment(dept: string | null): string {
+        if (!dept) return '👔';
+        const deptLower = dept.toLowerCase();
+        const emojiMap: Record<string, string> = {
+            'ceo': '👔',
+            'sales': '📈',
+            'inventory': '📦',
+            'logistics': '🚚',
+            'sub_agent': '🤖',
+            'system': '⚙️',
+            'voter': '🗳️'
+        };
+        return emojiMap[deptLower] || '👔';
+    }
+
+    /**
+     * Maps backend display_name to person name (Carlos, Maria, etc.)
+     * Backend sends: 'CEO', 'Ventas', 'Inventario', 'Logistica'
+     * Frontend shows: 'Carlos', 'Maria', 'Pedro', 'Ana'
+     */
+    private mapDisplayNameToPersonName(displayName: string | null, dept: string | null): string {
+        if (!displayName) return 'Carlos';
+
+        const nameNormalized = displayName.toLowerCase();
+        const deptNormalized = (dept || '').toLowerCase();
+
+        // Map department-based display names to person names
+        const nameMap: Record<string, string> = {
+            'ceo': 'Carlos',
+            'ventas': 'Maria',
+            'inventario': 'Pedro',
+            'logistica': 'Ana',
+            'sintesis': 'Carlos',
+            'pipeline multi-dept': 'Carlos',
+            'ejecucion paralela': 'Carlos',
+            'votante ventas': 'Maria',
+            'votante inventario': 'Pedro',
+            'votante logistica': 'Ana',
+            'sistema de consenso': 'Carlos',
+            'ronda de votacion': 'Carlos',
+            'negociacion': 'Carlos'
+        };
+
+        // Check if displayName matches a known department name
+        if (nameMap[nameNormalized]) {
+            return nameMap[nameNormalized];
+        }
+
+        // Check by department type
+        const deptMap: Record<string, string> = {
+            'sales': 'Maria',
+            'inventory': 'Pedro',
+            'logistics': 'Ana',
+            'ceo': 'Carlos',
+            'sub_agent': 'Carlos',
+            'system': 'Carlos',
+            'voter': 'Carlos'
+        };
+
+        if (deptMap[deptNormalized]) {
+            return deptMap[deptNormalized];
+        }
+
+        // If displayName is already a person name, return it
+        const personNames = ['carlos', 'maria', 'pedro', 'ana'];
+        if (personNames.includes(nameNormalized)) {
+            return displayName.charAt(0).toUpperCase() + displayName.slice(1).toLowerCase();
+        }
+
+        // Default
+        return 'Carlos';
     }
 
     private handleTextMessageContent(event: AgUiEvent): void {
@@ -646,6 +849,318 @@ export class AgUiService {
     }
 
     // ==========================================================================
+    // Multi-Agent Event Handlers
+    // ==========================================================================
+
+    private handleAgentJoined(event: AgUiEvent): void {
+        const extEvent = event as any;
+        const agentId = extEvent.agent || 'unknown';
+        const displayName = extEvent.displayName || agentId;
+
+        console.log('[AgUiService] 🤝 Agent joined:', displayName);
+
+        // Update agent state
+        const currentState = this.agentStateSubject.value;
+        if (!currentState.activeAgents.includes(agentId)) {
+            currentState.activeAgents.push(agentId);
+        }
+        currentState.currentSpeaker = agentId;
+        this.agentStateSubject.next({ ...currentState });
+
+        // Optionally emit a system message (can be disabled if too verbose)
+        // This is similar to how chat_pro shows "Agent joined"
+    }
+
+    private handleAgentThinking(event: AgUiEvent): void {
+        const extEvent = event as any;
+        const agentId = extEvent.agent || 'unknown';
+        const displayName = extEvent.displayName || agentId;
+
+        console.log('[AgUiService] 💭 Agent thinking:', displayName);
+
+        // Update current speaker in state
+        const currentState = this.agentStateSubject.value;
+        currentState.currentSpeaker = agentId;
+        this.agentStateSubject.next({ ...currentState });
+
+        // Update negotiation state if a voter is thinking
+        const negState = this.negotiationStateSubject.value;
+        if (negState.isActive) {
+            const voterIndex = negState.voters.findIndex(v =>
+                v.id === agentId ||
+                agentId.includes(v.department) ||
+                displayName.toLowerCase().includes(v.department)
+            );
+
+            if (voterIndex >= 0) {
+                negState.voters[voterIndex].status = 'thinking';
+                this.negotiationStateSubject.next({ ...negState });
+                console.log('[AgUiService] 🗳️ Voter thinking:', negState.voters[voterIndex].name);
+            }
+
+            // Check if consensus_resolver is thinking
+            if (agentId.includes('consensus') || agentId.includes('resolver')) {
+                negState.phase = 'resolving';
+                this.negotiationStateSubject.next({ ...negState });
+                console.log('[AgUiService] 🗳️ Consensus resolver is working');
+            }
+        }
+    }
+
+    private handleDelegation(event: AgUiEvent): void {
+        const extEvent = event as any;
+        const fromAgent = extEvent.from || 'CEO';
+        const toAgent = extEvent.to || extEvent.toAgent || 'unknown';
+        const department = extEvent.department;
+
+        console.log('[AgUiService] 🔄 Delegation:', fromAgent, '→', toAgent);
+
+        // Check if delegation is to negotiation_loop - start negotiation tracking
+        if (toAgent === 'negotiation_loop' || toAgent.includes('negotiation')) {
+            console.log('[AgUiService] 🗳️ Starting negotiation tracking');
+            this.negotiationStateSubject.next({
+                isActive: true,
+                phase: 'voting',
+                voters: [
+                    { id: 'sales_voter', name: 'María', department: 'sales', status: 'pending' },
+                    { id: 'inventory_voter', name: 'Pedro', department: 'inventory', status: 'pending' },
+                    { id: 'logistics_voter', name: 'Ana', department: 'logistics', status: 'pending' }
+                ],
+                currentRound: 1,
+                maxRounds: 3
+            });
+        }
+
+        // Get speaker configs
+        const fromSpeaker = getSpeakerConfig(extEvent.from || 'general_manager');
+        const toSpeaker = getSpeakerConfig(extEvent.toAgent || toAgent);
+
+        // Create delegation message
+        const delegationMessage: AgUiMessage = {
+            id: extEvent.messageId || `delegation_${Date.now()}`,
+            role: 'assistant',
+            content: `Delegando a ${toAgent}...`,
+            speaker: fromSpeaker,
+            timestamp: new Date(),
+            eventType: 'delegation',
+            delegationTarget: toSpeaker,
+            delegationPurpose: department
+        };
+
+        // Add to messages
+        const messages = this.messagesSubject.value;
+        this.messagesSubject.next([...messages, delegationMessage]);
+    }
+
+    private handleVote(event: AgUiEvent): void {
+        const extEvent = event as any;
+        const vote = extEvent.vote; // 'APPROVE', 'REJECT', 'PENDING'
+        const reason = extEvent.reason;
+        const department = extEvent.department;
+        const agentName = extEvent.agent || department || 'unknown';
+
+        console.log('[AgUiService] 🗳️ Vote:', agentName, vote);
+
+        // Update negotiation state when a vote is received
+        const negState = this.negotiationStateSubject.value;
+        if (negState.isActive) {
+            const voterIndex = negState.voters.findIndex(v =>
+                v.department === department ||
+                agentName.includes(v.department) ||
+                v.id.includes(department || '')
+            );
+
+            if (voterIndex >= 0) {
+                negState.voters[voterIndex].status = 'voted';
+                negState.voters[voterIndex].vote = vote;
+                this.negotiationStateSubject.next({ ...negState });
+                console.log('[AgUiService] 🗳️ Vote recorded:', negState.voters[voterIndex].name, vote);
+            }
+        }
+
+        // Get speaker config
+        const speaker = getSpeakerConfig(
+            department ? `${department}_orchestrator` : 'general_manager'
+        );
+
+        // Create vote message
+        const voteMessage: AgUiMessage = {
+            id: extEvent.messageId || `vote_${Date.now()}`,
+            role: 'assistant',
+            content: reason || `Voto: ${vote}`,
+            speaker: speaker,
+            timestamp: new Date(),
+            eventType: 'vote',
+            vote: vote as 'APPROVE' | 'REJECT' | 'PENDING',
+            voteReason: reason
+        };
+
+        // Add to messages
+        const messages = this.messagesSubject.value;
+        this.messagesSubject.next([...messages, voteMessage]);
+    }
+
+    private handleConsensusReached(event: AgUiEvent): void {
+        const extEvent = event as any;
+        const decision = extEvent.decision || 'Consenso alcanzado';
+        const votesSummary = extEvent.votesSummary || {};
+
+        console.log('[AgUiService] ✅ Consensus reached:', decision);
+
+        // Mark negotiation as completed
+        const negState = this.negotiationStateSubject.value;
+        negState.isActive = false;
+        negState.phase = 'completed';
+        this.negotiationStateSubject.next({ ...negState });
+        console.log('[AgUiService] 🗳️ Negotiation completed');
+
+        // Get speaker config (consensus resolver or CEO)
+        const speaker = getSpeakerConfig('synthesis_agent');
+
+        // Create consensus message
+        const consensusMessage: AgUiMessage = {
+            id: extEvent.messageId || `consensus_${Date.now()}`,
+            role: 'assistant',
+            content: decision,
+            speaker: speaker,
+            timestamp: new Date(),
+            eventType: 'consensus_reached',
+            consensusDecision: decision,
+            votesSummary: votesSummary
+        };
+
+        // Add to messages
+        const messages = this.messagesSubject.value;
+        this.messagesSubject.next([...messages, consensusMessage]);
+    }
+
+    // ==========================================================================
+    // Chat Pro Compatibility Handlers
+    // ==========================================================================
+
+    private handleUserMessage(event: AgUiEvent): void {
+        // El mensaje del usuario ya se agregó en sendMessage() para UX instantánea
+        // Solo logueamos para debug, NO agregamos otro mensaje para evitar duplicación
+        console.log('[AgUiService] 👤 User message event received (already added locally)');
+    }
+
+    private handleAgentMessage(event: AgUiEvent): void {
+        const extEvent = event as any;
+        const backendSpeaker = extEvent.speaker;
+
+        console.log('[AgUiService] AGENT_MESSAGE:', {
+            messageId: extEvent.messageId,
+            speaker: backendSpeaker?.display_name || backendSpeaker?.name
+        });
+
+        // Convert backend speaker to AgUiSpeaker format
+        let speaker: AgUiSpeaker;
+        if (backendSpeaker) {
+            const dept = backendSpeaker.department || backendSpeaker.type;
+            const personName = this.mapDisplayNameToPersonName(backendSpeaker.display_name, dept);
+
+            speaker = {
+                id: backendSpeaker.agent_id || backendSpeaker.name || 'general_manager',
+                name: personName,
+                displayName: personName,
+                department: this.mapDepartment(dept),
+                color: backendSpeaker.color || '#6366f1',
+                icon: this.mapAvatarToIcon(backendSpeaker.avatar),
+                emoji: this.getEmojiForDepartment(dept)
+            };
+        } else {
+            speaker = getSpeakerConfig('general_manager');
+        }
+
+        // Update current speaker in agent state
+        const currentState = this.agentStateSubject.value;
+        if (!currentState.activeAgents.includes(speaker.id)) {
+            currentState.activeAgents.push(speaker.id);
+        }
+        currentState.currentSpeaker = speaker.id;
+        this.agentStateSubject.next({ ...currentState });
+
+        // CRITICAL: Update speaker in existing message if messageId matches
+        // This ensures the message shows the correct avatar even if TEXT_MESSAGE_START
+        // was processed before we knew the speaker
+        if (extEvent.messageId) {
+            const messages = this.messagesSubject.value;
+            const existingIndex = messages.findIndex(m => m.id === extEvent.messageId);
+
+            if (existingIndex >= 0) {
+                const existingMessage = messages[existingIndex];
+                // Only update if the speaker is different (better info from AGENT_MESSAGE)
+                if (existingMessage.speaker?.id !== speaker.id) {
+                    console.log('[AgUiService] Updating message speaker:', {
+                        messageId: extEvent.messageId,
+                        oldSpeaker: existingMessage.speaker?.name,
+                        newSpeaker: speaker.name
+                    });
+                    messages[existingIndex] = {
+                        ...existingMessage,
+                        speaker: speaker
+                    };
+                    this.messagesSubject.next([...messages]);
+                }
+            }
+        }
+
+        // Also update currentMessage if it's streaming
+        if (this.currentMessage && this.currentMessage.id === extEvent.messageId) {
+            this.currentMessage.speaker = speaker;
+        }
+    }
+
+    private handleFinalResponse(event: AgUiEvent): void {
+        const extEvent = event as any;
+        console.log('[AgUiService] 🏁 Final response received');
+
+        // Final response is typically already handled by TEXT_MESSAGE_END
+        // This is for compatibility with chat_pro frontend
+        // Only add if the message doesn't already exist
+        const messages = this.messagesSubject.value;
+        const existingMessage = messages.find(m => m.id === extEvent.messageId);
+
+        if (!existingMessage && extEvent.message) {
+            const speaker = extEvent.speaker || getSpeakerConfig('general_manager');
+            const finalMessage: AgUiMessage = {
+                id: extEvent.messageId || `final_${Date.now()}`,
+                role: 'assistant',
+                content: extEvent.message,
+                speaker: speaker,
+                timestamp: new Date(extEvent.timestamp || Date.now()),
+                eventType: 'final_response'
+            };
+            this.messagesSubject.next([...messages, finalMessage]);
+        }
+    }
+
+    private handleNegotiationRound(event: AgUiEvent): void {
+        const extEvent = event as any;
+        const round = extEvent.round || 1;
+        const newProposal = extEvent.newProposal;
+
+        console.log('[AgUiService] 🔄 Negotiation round:', round);
+
+        // Get speaker config
+        const speaker = extEvent.speaker || getSpeakerConfig('synthesis_agent');
+
+        // Create negotiation round message
+        const roundMessage: AgUiMessage = {
+            id: extEvent.messageId || `round_${Date.now()}`,
+            role: 'assistant',
+            content: extEvent.message || `Ronda ${round} de negociación`,
+            speaker: speaker,
+            timestamp: new Date(extEvent.timestamp || Date.now()),
+            eventType: 'negotiation_round'
+        };
+
+        // Add to messages
+        const messages = this.messagesSubject.value;
+        this.messagesSubject.next([...messages, roundMessage]);
+    }
+
+    // ==========================================================================
     // Helper Methods
     // ==========================================================================
 
@@ -708,6 +1223,20 @@ export class AgUiService {
         console.log('[AgUiService] Finishing execution');
         this.clearTimeouts();
         this.isRunningSubject.next(false);
+
+        // Reset negotiation state after a delay to allow UI to show completion
+        setTimeout(() => {
+            const negState = this.negotiationStateSubject.value;
+            if (negState.phase === 'completed') {
+                this.negotiationStateSubject.next({
+                    isActive: false,
+                    phase: 'idle',
+                    voters: [],
+                    currentRound: 0,
+                    maxRounds: 3
+                });
+            }
+        }, 3000);
     }
 
     private startExecutionTimeout(): void {
@@ -749,6 +1278,14 @@ export class AgUiService {
         this.currentMessage = null;
         // Reset session to force a new conversation context
         this.currentSessionId = null;
+        // Reset negotiation state
+        this.negotiationStateSubject.next({
+            isActive: false,
+            phase: 'idle',
+            voters: [],
+            currentRound: 0,
+            maxRounds: 3
+        });
         console.log('[AgUiService] 🗑️ Messages and session cleared');
     }
 

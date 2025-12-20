@@ -614,3 +614,5 @@ A: Implementamos Circuit Breaker pattern y retry logic para manejar fallos grace
 
 
 
+
+

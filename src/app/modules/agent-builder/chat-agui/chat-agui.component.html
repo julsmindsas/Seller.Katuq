@@ -82,15 +82,33 @@
        (click)="toggleSessionPanel()">
   </div>
 
-  <!-- Agent State Bar -->
-  <div class="agent-state-bar" *ngIf="agentState.activeAgents.length > 0">
-    <div class="state-item">
-      <i class="pi pi-users"></i>
-      <span>{{ getActiveAgentsDisplay() }}</span>
+  <!-- Agent Presence Bar - Chat Grupal Style -->
+  <div class="agent-presence-bar" *ngIf="agentState.activeAgents.length > 0 || isRunning">
+    <div class="presence-section participants">
+      <span class="presence-label">Participantes:</span>
+      <div class="agent-avatars">
+        <div class="agent-avatar-item"
+             *ngFor="let agentId of agentState.activeAgents"
+             [class.speaking]="agentState.currentSpeaker === agentId"
+             [class.thinking]="isAgentThinking(agentId)"
+             [style.--agent-color]="getAgentColor(agentId)">
+          <div class="avatar-circle" [style.background-color]="getAgentColor(agentId)">
+            <span class="avatar-emoji">{{ getAgentEmoji(agentId) }}</span>
+            <span class="status-indicator" *ngIf="agentState.currentSpeaker === agentId"></span>
+          </div>
+          <span class="avatar-name">{{ getAgentDisplayName(agentId) }}</span>
+        </div>
+      </div>
     </div>
-    <div class="state-item current-speaker" *ngIf="getCurrentSpeakerInfo() as speaker">
-      <span class="speaker-emoji">{{ speaker.emoji }}</span>
-      <span [style.color]="speaker.color">{{ speaker.displayName }}</span>
+    <div class="presence-section activity" *ngIf="getCurrentSpeakerInfo() as speaker">
+      <div class="activity-indicator" [style.--activity-color]="speaker.color">
+        <span class="activity-emoji">{{ speaker.emoji }}</span>
+        <span class="activity-text">
+          <strong>{{ speaker.displayName }}</strong>
+          <span class="activity-action">{{ getAgentActivity(speaker) }}</span>
+        </span>
+        <div class="activity-pulse"></div>
+      </div>
     </div>
   </div>
 
@@ -155,83 +173,242 @@
           </div>
         </div>
 
-        <!-- Delegation Notice -->
-        <div class="system-notice" *ngIf="isDelegation(message)">
-          <div class="notice-content">
-            <span class="notice-emoji">{{ getSpeakerEmoji(message) }}</span>
-            <span class="notice-text">
-              <strong>{{ getSpeakerName(message) }}</strong> →
-              <strong>{{ message.delegationTarget?.displayName || message.delegationTarget?.name }}</strong>
-            </span>
-            <span class="notice-emoji" *ngIf="message.delegationTarget">{{ message.delegationTarget.emoji }}</span>
+        <!-- Delegation Notice - Solo mostrar si NO hay respuesta después -->
+        <div class="delegation-notice animated"
+             *ngIf="isDelegation(message) && !hasResponseAfterDelegation(i)"
+             [class.completed]="hasResponseAfterDelegation(i)">
+          <div class="delegation-flow">
+            <!-- From Agent -->
+            <div class="delegation-agent from" [style.--agent-color]="getSpeakerColor(message)">
+              <div class="agent-avatar" [style.background-color]="getSpeakerColor(message)">
+                <span>{{ getSpeakerEmoji(message) }}</span>
+              </div>
+            </div>
+
+            <!-- Animated Arrow -->
+            <div class="delegation-arrow">
+              <div class="arrow-line"></div>
+              <div class="arrow-pulse"></div>
+              <i class="pi pi-arrow-right"></i>
+            </div>
+
+            <!-- To Agent -->
+            <div class="delegation-agent to" *ngIf="message.delegationTarget" [style.--agent-color]="message.delegationTarget.color">
+              <div class="agent-avatar" [style.background-color]="message.delegationTarget.color">
+                <span>{{ message.delegationTarget.emoji }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="delegation-purpose" *ngIf="message.delegationPurpose">
+            <i class="pi pi-info-circle"></i>
+            {{ getDelegationPurposeText(message.delegationPurpose) }}
           </div>
         </div>
 
-        <!-- Vote Events (grouped) -->
+        <!-- Vote Events (grouped) - Enhanced Visual -->
         <ng-container *ngIf="isVote(message) && isFirstVote(i)">
-          <div class="votes-container">
+          <div class="votes-container enhanced">
             <div class="votes-header">
-              <i class="pi pi-users"></i>
-              <span>Votación</span>
+              <div class="votes-title">
+                <i class="pi pi-users"></i>
+                <span>Votacion del Equipo</span>
+              </div>
+              <div class="votes-summary-mini">
+                <span class="vote-count approve">
+                  <i class="pi pi-check"></i>
+                  {{ countVotes(getConsecutiveVotes(i), 'APPROVE') }}
+                </span>
+                <span class="vote-count reject">
+                  <i class="pi pi-times"></i>
+                  {{ countVotes(getConsecutiveVotes(i), 'REJECT') }}
+                </span>
+              </div>
             </div>
-            <div class="votes-grid">
-              <div class="vote-chip"
-                   *ngFor="let vote of getConsecutiveVotes(i); trackBy: trackByMessageId"
+
+            <!-- Visual Vote Cards -->
+            <div class="votes-grid-enhanced">
+              <div class="vote-card"
+                   *ngFor="let vote of getConsecutiveVotes(i); let voteIdx = index; trackBy: trackByMessageId"
                    [class.approve]="vote.vote === 'APPROVE'"
                    [class.reject]="vote.vote === 'REJECT'"
-                   [class.pending]="vote.vote === 'PENDING'">
-                <span class="vote-emoji">{{ getSpeakerEmoji(vote) }}</span>
-                <span class="vote-name">{{ getSpeakerName(vote) }}</span>
-                <i class="pi" [ngClass]="getVoteIcon(vote.vote)"></i>
+                   [class.pending]="vote.vote === 'PENDING'"
+                   [style.animation-delay.ms]="voteIdx * 100">
+                <div class="vote-avatar" [style.background-color]="getSpeakerColor(vote)">
+                  <span class="avatar-emoji">{{ getSpeakerEmoji(vote) }}</span>
+                  <div class="vote-badge" [class.approve]="vote.vote === 'APPROVE'" [class.reject]="vote.vote === 'REJECT'">
+                    <i class="pi" [ngClass]="getVoteIcon(vote.vote)"></i>
+                  </div>
+                </div>
+                <div class="vote-info">
+                  <span class="vote-name">{{ getSpeakerName(vote) }}</span>
+                  <span class="vote-dept">{{ getSpeakerDepartment(vote) }}</span>
+                </div>
+                <div class="vote-reason" *ngIf="vote.voteReason">
+                  <i class="pi pi-comment"></i>
+                  {{ truncateText(vote.voteReason, 50) }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress Bar Visual -->
+            <div class="votes-progress">
+              <div class="progress-bar">
+                <div class="progress-approve" [style.width.%]="getApprovePercentage(getConsecutiveVotes(i))"></div>
+                <div class="progress-reject" [style.width.%]="getRejectPercentage(getConsecutiveVotes(i))"></div>
+              </div>
+              <div class="progress-labels">
+                <span class="label-approve">{{ getApprovePercentage(getConsecutiveVotes(i)) | number:'1.0-0' }}% Aprobar</span>
+                <span class="label-reject">{{ getRejectPercentage(getConsecutiveVotes(i)) | number:'1.0-0' }}% Rechazar</span>
               </div>
             </div>
           </div>
         </ng-container>
 
-        <!-- Negotiation Round -->
-        <div class="negotiation-notice" *ngIf="isNegotiationRound(message)">
+        <!-- Negotiation Round - Enhanced Visual -->
+        <div class="negotiation-notice enhanced" *ngIf="isNegotiationRound(message)">
           <div class="negotiation-card">
+            <!-- Header with Round Badge -->
             <div class="negotiation-header">
-              <i class="pi pi-sync"></i>
-              <span>Ronda {{ message.negotiationRound }}</span>
-            </div>
-            <div class="negotiation-progress" *ngIf="message.negotiationContext">
-              <div class="progress-bar">
-                <div class="progress-fill" [style.width.%]="getNegotiationProgress(message)"></div>
+              <div class="round-badge">
+                <i class="pi pi-sync spinning"></i>
+                <span class="round-number">Ronda {{ message.negotiationRound || message.negotiationContext?.currentRound || 1 }}</span>
               </div>
-              <span class="progress-text">
-                {{ message.negotiationContext.currentRound }}/{{ message.negotiationContext.maxRounds }}
-              </span>
+              <div class="negotiation-status">
+                <span class="status-text">Buscando consenso</span>
+                <div class="status-dots">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
             </div>
+
+            <!-- Round Progress Visual -->
+            <div class="negotiation-rounds-visual" *ngIf="message.negotiationContext">
+              <div class="rounds-track">
+                <div class="round-step"
+                     *ngFor="let round of getRoundsArray(message.negotiationContext.maxRounds); let roundIdx = index"
+                     [class.completed]="roundIdx < message.negotiationContext.currentRound"
+                     [class.current]="roundIdx === message.negotiationContext.currentRound - 1">
+                  <div class="step-circle">{{ roundIdx + 1 }}</div>
+                  <div class="step-line" *ngIf="roundIdx < message.negotiationContext.maxRounds - 1"></div>
+                </div>
+              </div>
+              <div class="rounds-label">
+                Ronda {{ message.negotiationContext.currentRound }} de {{ message.negotiationContext.maxRounds }}
+              </div>
+            </div>
+
+            <!-- Current Votes Summary -->
+            <div class="negotiation-current-votes" *ngIf="message.negotiationContext?.currentVotes">
+              <div class="current-votes-header">
+                <i class="pi pi-chart-bar"></i>
+                <span>Estado Actual de Votos</span>
+              </div>
+              <div class="current-votes-grid">
+                <div class="vote-mini"
+                     *ngFor="let dept of getVoteDepartments(message.negotiationContext.currentVotes)"
+                     [class.approve]="message.negotiationContext.currentVotes[dept] === 'APPROVE'"
+                     [class.reject]="message.negotiationContext.currentVotes[dept] === 'REJECT'"
+                     [class.pending]="message.negotiationContext.currentVotes[dept] === 'PENDING'">
+                  <span class="dept-emoji">{{ getDepartmentEmoji(dept) }}</span>
+                  <span class="dept-vote">{{ message.negotiationContext.currentVotes[dept] }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Reason for New Round -->
+            <div class="negotiation-reason" *ngIf="message.negotiationContext?.reasonForNewRound">
+              <i class="pi pi-info-circle"></i>
+              <span>{{ message.negotiationContext.reasonForNewRound }}</span>
+            </div>
+
+            <!-- New Proposal -->
             <div class="negotiation-proposal" *ngIf="message.newProposal">
-              {{ message.newProposal }}
+              <div class="proposal-header">
+                <i class="pi pi-lightbulb"></i>
+                <span>Nueva Propuesta</span>
+              </div>
+              <p class="proposal-text">{{ message.newProposal }}</p>
             </div>
           </div>
         </div>
 
-        <!-- Consensus Reached -->
-        <div class="consensus-notice" *ngIf="isConsensusReached(message)">
+        <!-- Consensus Reached - Celebration Style -->
+        <div class="consensus-notice enhanced" *ngIf="isConsensusReached(message)">
           <div class="consensus-card">
+            <!-- Celebration Effect -->
+            <div class="consensus-celebration">
+              <div class="confetti"></div>
+            </div>
+
+            <!-- Header with Success Animation -->
             <div class="consensus-header">
-              <i class="pi pi-check-circle"></i>
-              <span class="consensus-title">Consenso Alcanzado</span>
+              <div class="success-icon">
+                <i class="pi pi-check-circle"></i>
+                <div class="success-ring"></div>
+              </div>
+              <div class="consensus-title-section">
+                <span class="consensus-badge">Acuerdo Logrado</span>
+                <h3 class="consensus-title">Consenso del Equipo</h3>
+              </div>
             </div>
+
+            <!-- Decision -->
             <div class="consensus-decision">
-              {{ message.consensusDecision }}
+              <p>{{ message.consensusDecision }}</p>
             </div>
-            <div class="consensus-votes" *ngIf="message.votesSummary">
-              <span class="vote-stat approve" *ngIf="message.votesSummary.approve">
-                <i class="pi pi-check"></i> {{ message.votesSummary.approve }}
-              </span>
-              <span class="vote-stat reject" *ngIf="message.votesSummary.reject">
-                <i class="pi pi-times"></i> {{ message.votesSummary.reject }}
-              </span>
+
+            <!-- Team Approval Visual -->
+            <div class="consensus-team" *ngIf="message.consensusResult">
+              <div class="team-section approved" *ngIf="message.consensusResult.approvedBy?.length">
+                <span class="section-label">
+                  <i class="pi pi-check"></i> Aprobaron ({{ message.consensusResult.approvedBy.length }})
+                </span>
+                <div class="team-avatars">
+                  <div class="mini-avatar"
+                       *ngFor="let dept of message.consensusResult.approvedBy"
+                       [style.background-color]="getDepartmentColor(dept)">
+                    <span>{{ getDepartmentEmoji(dept) }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="team-section rejected" *ngIf="message.consensusResult.rejectedBy?.length">
+                <span class="section-label">
+                  <i class="pi pi-times"></i> Rechazaron ({{ message.consensusResult.rejectedBy.length }})
+                </span>
+                <div class="team-avatars">
+                  <div class="mini-avatar"
+                       *ngFor="let dept of message.consensusResult.rejectedBy"
+                       [style.background-color]="getDepartmentColor(dept)">
+                    <span>{{ getDepartmentEmoji(dept) }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            <!-- Vote Stats Bar -->
+            <div class="consensus-stats" *ngIf="message.votesSummary">
+              <div class="stats-bar">
+                <div class="stats-approve" [style.width.%]="getConsensusApprovePercent(message)">
+                  {{ message.votesSummary.approve || 0 }}
+                </div>
+                <div class="stats-reject" [style.width.%]="getConsensusRejectPercent(message)">
+                  {{ message.votesSummary.reject || 0 }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Next Steps -->
             <div class="consensus-next-steps" *ngIf="message.consensusResult?.nextSteps?.length">
-              <div class="next-steps-header">Próximos pasos:</div>
-              <ul>
-                <li *ngFor="let step of message.consensusResult.nextSteps">{{ step }}</li>
-              </ul>
+              <div class="next-steps-header">
+                <i class="pi pi-list"></i>
+                <span>Proximos Pasos</span>
+              </div>
+              <div class="steps-list">
+                <div class="step-item" *ngFor="let step of message.consensusResult.nextSteps; let stepIdx = index">
+                  <span class="step-number">{{ stepIdx + 1 }}</span>
+                  <span class="step-text">{{ step }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -242,10 +419,14 @@
              [class.grouped]="isGroupedMessage(i)"
              [class.final-message]="isFinalResponse(message)"
              [class.has-artifacts]="message.artifacts?.length">
-          <div class="message-avatar"
-               [style.background-color]="getSpeakerColor(message)"
-               *ngIf="shouldShowAvatar(i)">
-            <span>{{ getSpeakerEmoji(message) }}</span>
+          <div class="message-avatar-wrapper" *ngIf="shouldShowAvatar(i)">
+            <div class="message-avatar"
+                 [style.background-color]="getSpeakerColor(message)">
+              <span>{{ getSpeakerEmoji(message) }}</span>
+            </div>
+            <span class="avatar-label" [style.color]="getSpeakerColor(message)">
+              {{ getSpeakerName(message) }}
+            </span>
           </div>
           <div class="message-avatar-placeholder" *ngIf="!shouldShowAvatar(i)"></div>
           <div class="message-body">
@@ -256,6 +437,19 @@
               <span class="speaker-role" *ngIf="getSpeakerDepartment(message)">
                 {{ getSpeakerDepartment(message) }}
               </span>
+              <!-- Inline Tool Calls Pills -->
+              <div class="inline-tool-calls" *ngIf="message.toolCalls?.length">
+                <span class="tool-pill"
+                      *ngFor="let toolCall of message.toolCalls"
+                      [class.executing]="toolCall.status === 'executing'"
+                      [class.completed]="toolCall.status === 'completed'"
+                      [style.--tool-color]="getToolDisplay(toolCall.name).color">
+                  <i class="pi" [ngClass]="getToolDisplay(toolCall.name).icon"></i>
+                  <span class="tool-label">{{ getToolDisplay(toolCall.name).label }}</span>
+                  <i class="pi pi-spin pi-spinner" *ngIf="toolCall.status === 'executing'"></i>
+                  <i class="pi pi-check" *ngIf="toolCall.status === 'completed'"></i>
+                </span>
+              </div>
             </div>
             <div class="message-content">
               <!-- Text Content -->
@@ -297,39 +491,101 @@
         </div>
       </ng-container>
 
-      <!-- Typing Indicators -->
-      <div class="typing-indicators" *ngIf="typingAgents.length > 0">
-        <div class="typing-row" *ngFor="let agent of typingAgents">
+      <!-- Typing Indicators - Enhanced -->
+      <div class="typing-indicators enhanced" *ngIf="typingAgents.length > 0">
+        <div class="typing-row"
+             *ngFor="let agent of typingAgents"
+             [style.--agent-color]="agent.color">
           <div class="typing-avatar" [style.background-color]="agent.color">
-            <span>{{ getSpeakerEmojiDirect(agent) }}</span>
+            <span class="avatar-emoji">{{ getSpeakerEmojiDirect(agent) }}</span>
+            <div class="thinking-ring"></div>
           </div>
           <div class="typing-bubble">
-            <span class="typing-name">{{ agent.displayName || agent.name }}</span>
-            <span class="typing-text">{{ getTypingMessage(agent) }}</span>
-            <div class="typing-dots">
-              <span></span>
-              <span></span>
-              <span></span>
+            <div class="typing-header">
+              <span class="typing-name" [style.color]="agent.color">{{ agent.displayName || agent.name }}</span>
+              <span class="typing-dept">{{ getDepartmentLabel(agent.department) }}</span>
+            </div>
+            <div class="typing-activity">
+              <span class="activity-text">{{ getTypingMessage(agent) }}</span>
+              <div class="typing-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Running Indicator (fallback) -->
-      <div class="running-indicator" *ngIf="isRunning && typingAgents.length === 0 && (!messages.length || !messages[messages.length - 1]?.isStreaming)">
-        <div class="indicator-avatar" *ngIf="getCurrentSpeakerInfo() as speaker; else defaultIndicator"
-             [style.background-color]="speaker.color">
-          <span>{{ speaker.emoji }}</span>
-        </div>
-        <ng-template #defaultIndicator>
-          <div class="indicator-avatar">
-            <span>👔</span>
+      <!-- Negotiation Progress Indicator -->
+      <div class="negotiation-progress-indicator" *ngIf="negotiationState.isActive">
+        <div class="negotiation-progress-card" [class.resolving]="negotiationState.phase === 'resolving'">
+          <div class="negotiation-progress-header">
+            <div class="progress-icon">
+              <i class="pi" [ngClass]="negotiationState.phase === 'resolving' ? 'pi-sync pi-spin' : 'pi-users'"></i>
+            </div>
+            <div class="progress-title">
+              <span class="title-text">
+                {{ negotiationState.phase === 'voting' ? 'Votación en Curso' :
+                   negotiationState.phase === 'resolving' ? 'Analizando Votos' : 'Negociación' }}
+              </span>
+              <span class="round-badge" *ngIf="negotiationState.currentRound > 0">
+                Ronda {{ negotiationState.currentRound }}/{{ negotiationState.maxRounds }}
+              </span>
+            </div>
           </div>
-        </ng-template>
-        <div class="indicator-content">
-          <span class="indicator-name" *ngIf="getCurrentSpeakerInfo() as speaker">
-            {{ speaker.displayName }} está escribiendo
-          </span>
+
+          <div class="voters-progress">
+            <div class="voter-item"
+                 *ngFor="let voter of negotiationState.voters"
+                 [class.pending]="voter.status === 'pending'"
+                 [class.thinking]="voter.status === 'thinking'"
+                 [class.voted]="voter.status === 'voted'"
+                 [class.approve]="voter.vote === 'APPROVE'"
+                 [class.reject]="voter.vote === 'REJECT'">
+              <div class="voter-avatar" [style.background-color]="getDepartmentColor(voter.department)">
+                <span class="voter-emoji">{{ getDepartmentEmoji(voter.department) }}</span>
+                <div class="thinking-indicator" *ngIf="voter.status === 'thinking'"></div>
+                <div class="vote-indicator" *ngIf="voter.status === 'voted'">
+                  <i class="pi" [ngClass]="voter.vote === 'APPROVE' ? 'pi-check' : 'pi-times'"></i>
+                </div>
+              </div>
+              <div class="voter-info">
+                <span class="voter-name">{{ voter.name }}</span>
+                <span class="voter-status">
+                  {{ voter.status === 'pending' ? 'Esperando...' :
+                     voter.status === 'thinking' ? 'Analizando...' :
+                     voter.vote === 'APPROVE' ? '✓ Aprueba' : '✗ Rechaza' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="progress-bar-mini">
+            <div class="progress-fill"
+                 [style.width.%]="getVotedPercentage()">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Running Indicator con avatares de agentes activos -->
+      <div class="running-indicator enhanced" *ngIf="isRunning && !negotiationState.isActive && typingAgents.length === 0 && (!messages.length || !messages[messages.length - 1]?.isStreaming)">
+        <!-- Avatares de todos los agentes activos -->
+        <div class="active-agents-avatars">
+          <div class="mini-avatar"
+               *ngFor="let agentId of agentState.activeAgents"
+               [style.background-color]="getAgentColor(agentId)"
+               [class.speaking]="agentState.currentSpeaker === agentId"
+               [title]="getAgentDisplayName(agentId)">
+            <span>{{ getAgentEmoji(agentId) }}</span>
+          </div>
+        </div>
+        <!-- Indicador del agente actual -->
+        <div class="current-speaker-info">
+          <ng-container *ngIf="getCurrentSpeakerInfo() as speaker">
+            <span class="activity-text">{{ getAgentActivity(speaker) }}</span>
+          </ng-container>
           <div class="typing-dots">
             <span></span>
             <span></span>

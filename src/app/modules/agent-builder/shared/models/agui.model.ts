@@ -22,9 +22,21 @@ export type AgUiEventType =
     | 'TOOL_CALL_END'
     | 'STATE_SNAPSHOT'
     | 'STATE_DELTA'
+    // Multi-agent events
+    | 'AGENT_JOINED'
+    | 'AGENT_THINKING'
+    | 'DELEGATION'
+    // Voting/Consensus events
+    | 'VOTE'
+    | 'CONSENSUS_REACHED'
+    | 'NEGOTIATION_ROUND'
     // Human-in-the-Loop events
     | 'CONFIRMATION_REQUEST'
     | 'CONFIRMATION_RESPONSE'
+    // Chat Pro compatibility events
+    | 'USER_MESSAGE'
+    | 'AGENT_MESSAGE'
+    | 'FINAL_RESPONSE'
     // Artifact events
     | 'ARTIFACT_START'
     | 'ARTIFACT_CONTENT'
@@ -548,21 +560,44 @@ export interface AgUiHistoryMessage {
  * Configuración visual para tool calls
  */
 export const AGUI_TOOL_DISPLAY: Record<string, { icon: string; label: string; color: string }> = {
-    // Sales tools
+    // Sales tools (legacy)
     get_sales_today: { icon: 'pi-chart-line', label: 'Ventas del día', color: '#10b981' },
     get_top_products: { icon: 'pi-star', label: 'Top productos', color: '#f59e0b' },
     get_sales_by_period: { icon: 'pi-calendar', label: 'Ventas por período', color: '#10b981' },
     get_recent_orders: { icon: 'pi-shopping-cart', label: 'Pedidos recientes', color: '#10b981' },
 
-    // Inventory tools
+    // MCP Sales tools
+    get_orders: { icon: 'pi-shopping-cart', label: 'Pedidos', color: '#10b981' },
+    get_order_by_number: { icon: 'pi-search', label: 'Buscar pedido', color: '#10b981' },
+    search_orders: { icon: 'pi-filter', label: 'Buscar pedidos', color: '#10b981' },
+    get_order_analytics: { icon: 'pi-chart-bar', label: 'Analytics ventas', color: '#10b981' },
+    get_order_summary: { icon: 'pi-file', label: 'Resumen ventas', color: '#10b981' },
+
+    // Inventory tools (legacy)
     get_stock_levels: { icon: 'pi-box', label: 'Niveles de stock', color: '#f59e0b' },
     get_low_stock_alerts: { icon: 'pi-exclamation-triangle', label: 'Alertas stock bajo', color: '#ef4444' },
     get_product_info: { icon: 'pi-info-circle', label: 'Info producto', color: '#f59e0b' },
 
-    // Logistics tools
+    // MCP Inventory tools
+    get_warehouses: { icon: 'pi-home', label: 'Bodegas', color: '#f59e0b' },
+    get_inventory_by_warehouse: { icon: 'pi-box', label: 'Inventario bodega', color: '#f59e0b' },
+    get_product_stock: { icon: 'pi-database', label: 'Stock producto', color: '#f59e0b' },
+    get_inventory_movements: { icon: 'pi-history', label: 'Movimientos', color: '#f59e0b' },
+    get_product_catalog: { icon: 'pi-list', label: 'Catálogo', color: '#f59e0b' },
+    get_low_stock_products: { icon: 'pi-exclamation-triangle', label: 'Stock bajo', color: '#ef4444' },
+
+    // Logistics tools (legacy)
     get_pending_dispatches: { icon: 'pi-truck', label: 'Despachos pendientes', color: '#3b82f6' },
     get_transporters_available: { icon: 'pi-users', label: 'Transportadores', color: '#3b82f6' },
+
+    // MCP Logistics tools
     get_transporters: { icon: 'pi-users', label: 'Transportadores', color: '#3b82f6' },
+    get_delivery_status: { icon: 'pi-map-marker', label: 'Estado entrega', color: '#3b82f6' },
+
+    // MCP Write tools (HITL)
+    update_order_status: { icon: 'pi-pencil', label: 'Actualizar estado', color: '#8b5cf6' },
+    assign_transporter: { icon: 'pi-user-plus', label: 'Asignar transporte', color: '#8b5cf6' },
+    adjust_stock: { icon: 'pi-plus-circle', label: 'Ajustar stock', color: '#8b5cf6' },
     plan_routes: { icon: 'pi-map', label: 'Planificar rutas', color: '#3b82f6' },
 
     // Generic
@@ -863,6 +898,176 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
                     ])
                 }
             } as AgUiTableArtifact;
+        }
+    },
+
+    // =========================================================================
+    // MCP TOOLS - Tools del servidor MCP de Katuq
+    // =========================================================================
+
+    // MCP: get_orders - Lista de pedidos
+    {
+        toolName: 'get_orders',
+        artifactType: 'table',
+        transform: (result) => {
+            if (!result) return null;
+            const orders = Array.isArray(result) ? result : (result.orders || result.data || []);
+            if (!Array.isArray(orders) || orders.length === 0) return null;
+
+            return {
+                id: `table_orders_mcp_${Date.now()}`,
+                type: 'table',
+                title: `Pedidos (${orders.length})`,
+                data: {
+                    headers: ['# Pedido', 'Cliente', 'Total', 'Estado', 'Fecha'],
+                    rows: orders.slice(0, 15).map((o: any) => [
+                        o.nroPedido || o.referencia || o.id || 'N/A',
+                        o.cliente?.nombres_completos || o.cliente?.nombre || o.customer || 'N/A',
+                        `$${(o.totalPedido || o.totalPedidoSinDescuento || o.total || 0).toLocaleString()}`,
+                        o.estadoProceso || o.estado || o.status || 'Pendiente',
+                        o.fechaCreacion ? new Date(o.fechaCreacion).toLocaleDateString('es-CO') : 'N/A'
+                    ])
+                }
+            } as AgUiTableArtifact;
+        }
+    },
+
+    // MCP: get_order_analytics - Analytics de ventas con gráfica
+    {
+        toolName: 'get_order_analytics',
+        artifactType: 'sales_chart',
+        transform: (result) => {
+            if (!result) return null;
+
+            // Si tiene datos por período, mostrar gráfica de línea
+            const periodData = result.byPeriod || result.salesByPeriod || result.dailySales || [];
+            if (Array.isArray(periodData) && periodData.length > 0) {
+                return {
+                    id: `chart_analytics_${Date.now()}`,
+                    type: 'sales_chart',
+                    title: 'Analytics de Ventas',
+                    data: {
+                        chartType: 'line',
+                        labels: periodData.map((d: any) => d.date || d.period || d.label || 'Día'),
+                        datasets: [{
+                            label: 'Ventas',
+                            data: periodData.map((d: any) => d.total || d.amount || d.value || d.count || 0),
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            fill: true
+                        }]
+                    }
+                } as AgUiChartArtifact;
+            }
+
+            // Si tiene top productos, mostrar gráfica de barras
+            const topProducts = result.topProducts || result.products || [];
+            if (Array.isArray(topProducts) && topProducts.length > 0) {
+                return {
+                    id: `chart_top_products_${Date.now()}`,
+                    type: 'chart',
+                    title: 'Top Productos Vendidos',
+                    data: {
+                        chartType: 'bar',
+                        labels: topProducts.slice(0, 5).map((p: any) => p.name || p.producto || p.title || 'Producto'),
+                        datasets: [{
+                            label: 'Cantidad',
+                            data: topProducts.slice(0, 5).map((p: any) => p.quantity || p.count || p.sales || 0),
+                            backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+                        }]
+                    }
+                } as AgUiChartArtifact;
+            }
+
+            // Fallback: mostrar como métrica
+            return {
+                id: `metric_analytics_${Date.now()}`,
+                type: 'metric',
+                title: 'Resumen de Ventas',
+                data: {
+                    value: `$${(result.totalSales || result.total || 0).toLocaleString()}`,
+                    label: `${result.orderCount || result.count || 0} pedidos`,
+                    change: result.changePercent || 0,
+                    changeType: (result.changePercent || 0) >= 0 ? 'increase' : 'decrease',
+                    icon: 'pi-chart-line',
+                    color: '#10b981'
+                }
+            } as AgUiMetricArtifact;
+        }
+    },
+
+    // MCP: get_order_summary - Resumen ejecutivo
+    {
+        toolName: 'get_order_summary',
+        artifactType: 'metric',
+        transform: (result) => {
+            if (!result) return null;
+            return {
+                id: `metric_summary_${Date.now()}`,
+                type: 'metric',
+                title: 'Resumen de Ventas',
+                data: {
+                    value: `$${(result.totalSales || result.total || result.value || 0).toLocaleString()}`,
+                    label: `${result.orderCount || result.count || result.orders || 0} pedidos`,
+                    change: result.changePercent || result.growth || 0,
+                    changeType: (result.changePercent || result.growth || 0) >= 0 ? 'increase' : 'decrease',
+                    icon: 'pi-shopping-cart',
+                    color: '#10b981'
+                }
+            } as AgUiMetricArtifact;
+        }
+    },
+
+    // MCP: get_inventory_by_warehouse - Inventario por bodega
+    {
+        toolName: 'get_inventory_by_warehouse',
+        artifactType: 'chart',
+        transform: (result) => {
+            if (!result) return null;
+            const data = Array.isArray(result) ? result : (result.products || result.inventory || []);
+            if (!Array.isArray(data) || data.length === 0) return null;
+
+            return {
+                id: `chart_inventory_${Date.now()}`,
+                type: 'chart',
+                title: 'Inventario por Producto',
+                data: {
+                    chartType: 'bar',
+                    labels: data.slice(0, 10).map((d: any) => d.name || d.producto || d.title || 'Producto'),
+                    datasets: [{
+                        label: 'Stock',
+                        data: data.slice(0, 10).map((d: any) => d.stock || d.quantity || d.cantidad || 0),
+                        backgroundColor: '#f59e0b'
+                    }]
+                }
+            } as AgUiChartArtifact;
+        }
+    },
+
+    // MCP: get_low_stock_products - Productos con stock bajo
+    {
+        toolName: 'get_low_stock_products',
+        artifactType: 'stock_alert',
+        transform: (result) => {
+            if (!result) return null;
+            const products = Array.isArray(result) ? result : (result.products || result.alerts || []);
+            if (!Array.isArray(products) || products.length === 0) return null;
+
+            return {
+                id: `alert_low_stock_${Date.now()}`,
+                type: 'stock_alert',
+                title: `⚠️ ${products.length} Productos con Stock Bajo`,
+                data: {
+                    products: products.map((p: any) => ({
+                        name: p.name || p.producto || p.title || 'Producto',
+                        sku: p.sku || p.codigo || p.ref || '',
+                        currentStock: p.stock || p.cantidad || p.currentStock || 0,
+                        minStock: p.minStock || p.stockMinimo || p.minimum || 10,
+                        status: (p.stock || p.cantidad || 0) === 0 ? 'critical' :
+                                (p.stock || p.cantidad || 0) < (p.minStock || 10) ? 'low' : 'ok'
+                    }))
+                }
+            } as AgUiStockAlertArtifact;
         }
     },
 

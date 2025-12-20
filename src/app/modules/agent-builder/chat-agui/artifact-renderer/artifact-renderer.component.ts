@@ -1,8 +1,8 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { environment } from '../../../../../environments/environment';
 import {
     AgUiArtifact,
-    AgUiArtifactType,
     AgUiChartArtifact,
     AgUiMapArtifact,
     AgUiTableArtifact,
@@ -17,6 +17,11 @@ import {
 } from '../../shared/models/agui.model';
 
 declare var google: any;
+
+// Track if Google Maps is loading
+let googleMapsLoading = false;
+let googleMapsLoaded = false;
+const googleMapsCallbacks: (() => void)[] = [];
 
 @Component({
     selector: 'app-artifact-renderer',
@@ -79,15 +84,78 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
         if (!this.artifact) return;
 
         setTimeout(() => {
-            if (this.isDispatchMap && this.mapContainer) {
-                this.renderDispatchMap();
-            } else if (this.isMap && this.mapContainer) {
-                this.renderMap();
+            if ((this.isDispatchMap || this.isMap) && this.mapContainer) {
+                this.loadGoogleMapsAndRender();
             }
             if (this.isChart && this.chartCanvas) {
                 this.renderChart();
             }
         }, 100);
+    }
+
+    /**
+     * Carga Google Maps dinámicamente y luego renderiza el mapa
+     */
+    private loadGoogleMapsAndRender(): void {
+        // Si ya está cargado, renderizar directamente
+        if (googleMapsLoaded && typeof google !== 'undefined' && google.maps) {
+            this.renderMapAfterLoad();
+            return;
+        }
+
+        // Si ya está cargando, agregar callback
+        if (googleMapsLoading) {
+            googleMapsCallbacks.push(() => this.renderMapAfterLoad());
+            return;
+        }
+
+        // Verificar si ya existe el script
+        if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+            // Script existe pero puede no estar cargado aún
+            if (typeof google !== 'undefined' && google.maps) {
+                googleMapsLoaded = true;
+                this.renderMapAfterLoad();
+            } else {
+                // Esperar a que cargue
+                googleMapsCallbacks.push(() => this.renderMapAfterLoad());
+            }
+            return;
+        }
+
+        // Cargar el script
+        googleMapsLoading = true;
+        const script = document.createElement('script');
+        const apiKey = environment.geocoding?.googleMaps?.apiKey || '';
+
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
+        script.async = true;
+        script.defer = true;
+
+        script.onload = () => {
+            console.log('[ArtifactRenderer] ✅ Google Maps loaded');
+            googleMapsLoaded = true;
+            googleMapsLoading = false;
+            this.renderMapAfterLoad();
+            // Ejecutar callbacks pendientes
+            googleMapsCallbacks.forEach(cb => cb());
+            googleMapsCallbacks.length = 0;
+        };
+
+        script.onerror = () => {
+            console.error('[ArtifactRenderer] ❌ Failed to load Google Maps');
+            googleMapsLoading = false;
+            this.renderDispatchMapFallback();
+        };
+
+        document.head.appendChild(script);
+    }
+
+    private renderMapAfterLoad(): void {
+        if (this.isDispatchMap && this.mapContainer) {
+            this.renderDispatchMap();
+        } else if (this.isMap && this.mapContainer) {
+            this.renderMap();
+        }
     }
 
     // =============================================================================
@@ -394,6 +462,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
     }
 
     private renderChartJS(data: any): void {
+        if (!this.chartCanvas?.nativeElement) return;
         const ctx = this.chartCanvas.nativeElement.getContext('2d');
         if (this.chart) {
             this.chart.destroy();
@@ -419,6 +488,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
     }
 
     private renderSimpleChart(data: any): void {
+        if (!this.chartCanvas?.nativeElement) return;
         // Fallback simple chart rendering
         const canvas = this.chartCanvas.nativeElement;
         const ctx = canvas.getContext('2d');

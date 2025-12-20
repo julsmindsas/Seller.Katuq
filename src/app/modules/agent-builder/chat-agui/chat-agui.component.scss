@@ -135,31 +135,168 @@ $color-logistics: #3b82f6;
   }
 }
 
-// Agent State Bar
-.agent-state-bar {
+// =============================================================================
+// AGENT PRESENCE BAR - Chat Grupal Style
+// =============================================================================
+
+.agent-presence-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 8px 16px;
-  background: $bg-white;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, rgba($primary, 0.03) 0%, rgba($color-sales, 0.03) 100%);
   border-bottom: 1px solid $border;
-  font-size: 12px;
-  color: $text-gray;
+  gap: 16px;
+  flex-wrap: wrap;
 
-  .state-item {
+  .presence-section {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 10px;
 
-    i {
-      color: $primary;
-      font-size: 12px;
+    &.participants {
+      flex: 1;
+      min-width: 200px;
     }
 
-    .speaker-emoji {
-      font-size: 14px;
+    &.activity {
+      flex-shrink: 0;
     }
   }
+
+  .presence-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: $text-gray;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .agent-avatars {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .agent-avatar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.3s ease;
+
+    &.speaking {
+      .avatar-circle {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 3px rgba(var(--agent-color), 0.3);
+      }
+      .avatar-name {
+        font-weight: 600;
+      }
+    }
+
+    &.thinking {
+      .avatar-circle::after {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border: 2px solid var(--agent-color);
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: thinking-spin 1s linear infinite;
+      }
+    }
+
+    .avatar-circle {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+
+      .avatar-emoji {
+        font-size: 16px;
+      }
+
+      .status-indicator {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 10px;
+        height: 10px;
+        background: $success;
+        border: 2px solid $bg-white;
+        border-radius: 50%;
+        animation: pulse-status 2s ease-in-out infinite;
+      }
+    }
+
+    .avatar-name {
+      font-size: 10px;
+      color: $text-gray;
+      max-width: 50px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  .activity-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(var(--activity-color), 0.08);
+    border: 1px solid rgba(var(--activity-color), 0.2);
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+
+    .activity-emoji {
+      font-size: 14px;
+    }
+
+    .activity-text {
+      font-size: 12px;
+      color: $text-dark;
+
+      strong {
+        font-weight: 600;
+      }
+
+      .activity-action {
+        color: $text-gray;
+        margin-left: 4px;
+      }
+    }
+
+    .activity-pulse {
+      position: absolute;
+      right: 10px;
+      width: 8px;
+      height: 8px;
+      background: var(--activity-color, $primary);
+      border-radius: 50%;
+      animation: activity-pulse 1.5s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes thinking-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-status {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+}
+
+@keyframes activity-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.5; }
 }
 
 // Main content
@@ -479,289 +616,1200 @@ $color-logistics: #3b82f6;
   gap: 2px;
 }
 
-// System Notice (Delegation)
-.system-notice {
-  display: flex;
-  justify-content: center;
+// =============================================================================
+// DELEGATION NOTICE - Animated Flow
+// =============================================================================
 
-  .notice-content {
+.delegation-notice.animated {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  animation: delegation-slide-in 0.4s ease-out;
+
+  .delegation-flow {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: rgba($primary, 0.08);
-    border-radius: 12px;
-    font-size: 11px;
-    color: $text-gray;
+    gap: 16px;
+  }
 
-    strong {
+  .delegation-agent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+
+    .agent-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+    }
+
+    .agent-name {
+      font-size: 12px;
+      font-weight: 600;
       color: $text-dark;
     }
 
-    .notice-emoji {
+    &.from {
+      .agent-avatar {
+        animation: delegation-from 0.6s ease-out;
+      }
+    }
+
+    &.to {
+      .agent-avatar {
+        animation: delegation-to 0.6s ease-out 0.3s both;
+      }
+    }
+  }
+
+  .delegation-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 60px;
+
+    .arrow-line {
+      position: absolute;
+      left: 0;
+      right: 16px;
+      height: 3px;
+      background: linear-gradient(90deg, $primary 0%, $color-sales 100%);
+      border-radius: 2px;
+    }
+
+    .arrow-pulse {
+      display: none; // Ocultar la animación pulsante
+    }
+
+    i {
+      position: absolute;
+      right: 0;
+      color: $color-sales;
+      font-size: 18px;
+    }
+  }
+
+  .delegation-purpose {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba($primary, 0.06);
+    border-radius: 16px;
+    font-size: 11px;
+    color: $text-gray;
+    animation: fade-in 0.4s ease-out 0.6s both;
+
+    i {
+      color: $primary;
       font-size: 12px;
     }
   }
 }
 
-// Votes Container
-.votes-container {
-  padding: 8px 0;
+@keyframes delegation-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes delegation-from {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes delegation-to {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes arrow-grow {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes arrow-pulse-move {
+  0% {
+    left: 0;
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% - 28px);
+    opacity: 0;
+  }
+}
+
+@keyframes arrow-bounce {
+  0% {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(3px);
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// =============================================================================
+// VOTES CONTAINER - Enhanced Visual
+// =============================================================================
+
+.votes-container.enhanced {
+  padding: 16px 0;
   padding-left: 42px;
+  animation: votes-slide-in 0.4s ease-out;
+  max-width: 500px;
 
   .votes-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: $text-gray;
-    margin-bottom: 8px;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba($primary, 0.08) 0%, rgba($color-sales, 0.05) 100%);
+    border-radius: 12px;
 
-    i {
-      color: $primary;
+    .votes-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      color: $text-dark;
+
+      i {
+        color: $primary;
+        font-size: 18px;
+      }
+    }
+
+    .votes-summary-mini {
+      display: flex;
+      gap: 10px;
+
+      .vote-count {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 16px;
+
+        &.approve {
+          background: rgba($success, 0.15);
+          color: $success;
+        }
+
+        &.reject {
+          background: rgba($danger, 0.15);
+          color: $danger;
+        }
+
+        i {
+          font-size: 12px;
+        }
+      }
     }
   }
 
-  .votes-grid {
+  .votes-grid-enhanced {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 16px;
   }
 
-  .vote-chip {
+  .vote-card {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
+    gap: 14px;
+    padding: 14px 18px;
     background: $bg-white;
     border: 1px solid $border;
-    border-radius: 6px;
-    font-size: 11px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    animation: vote-card-in 0.4s ease-out both;
+    min-width: 280px;
 
-    .vote-emoji {
-      font-size: 12px;
+    &:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
     }
 
-    .vote-name {
-      color: $text-dark;
+    .vote-avatar {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+      .avatar-emoji {
+        font-size: 22px;
+      }
+
+      .vote-badge {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid $bg-white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+
+        i {
+          font-size: 11px;
+          color: white;
+        }
+
+        &.approve {
+          background: $success;
+        }
+
+        &.reject {
+          background: $danger;
+        }
+      }
+    }
+
+    .vote-info {
+      flex: 1;
+      min-width: 0;
+
+      .vote-name {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: $text-dark;
+      }
+
+      .vote-dept {
+        display: block;
+        font-size: 12px;
+        color: $text-gray;
+        margin-top: 2px;
+      }
+    }
+
+    .vote-reason {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: $text-gray;
+      max-width: 200px;
+
+      i {
+        color: $text-light;
+        font-size: 12px;
+        flex-shrink: 0;
+      }
     }
 
     &.approve {
-      background: rgba($success, 0.05);
-      border-color: rgba($success, 0.2);
-      i { color: $success; }
+      border-left: 3px solid $success;
+      background: rgba($success, 0.02);
     }
 
     &.reject {
-      background: rgba($danger, 0.05);
-      border-color: rgba($danger, 0.2);
-      i { color: $danger; }
+      border-left: 3px solid $danger;
+      background: rgba($danger, 0.02);
     }
 
     &.pending {
-      background: rgba($warning, 0.05);
-      border-color: rgba($warning, 0.2);
-      i { color: $warning; }
+      border-left: 3px solid $warning;
+      background: rgba($warning, 0.02);
+    }
+  }
+
+  .votes-progress {
+    padding-top: 12px;
+    border-top: 1px solid $border;
+
+    .progress-bar {
+      display: flex;
+      height: 12px;
+      background: $bg-page;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 8px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+
+      .progress-approve {
+        background: linear-gradient(90deg, $success 0%, #059669 100%);
+        transition: width 0.5s ease;
+        min-width: 2px;
+      }
+
+      .progress-reject {
+        background: linear-gradient(90deg, $danger 0%, #dc2626 100%);
+        transition: width 0.5s ease;
+        min-width: 2px;
+      }
+    }
+
+    .progress-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+
+      .label-approve {
+        color: $success;
+      }
+
+      .label-reject {
+        color: $danger;
+      }
     }
   }
 }
 
-// Negotiation Notice
-.negotiation-notice {
+@keyframes votes-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes vote-card-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+// =============================================================================
+// NEGOTIATION NOTICE - Enhanced Visual
+// =============================================================================
+
+.negotiation-notice.enhanced {
   padding-left: 42px;
+  animation: negotiation-slide-in 0.4s ease-out;
 
   .negotiation-card {
-    background: $bg-white;
-    border: 1px solid $border;
-    border-radius: 10px;
-    padding: 12px;
-    max-width: 320px;
+    background: linear-gradient(135deg, rgba($primary, 0.03) 0%, rgba($warning, 0.03) 100%);
+    border: 1px solid rgba($primary, 0.2);
+    border-radius: 14px;
+    padding: 16px;
+    max-width: 400px;
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, $primary 0%, $warning 50%, $color-sales 100%);
+    }
 
     .negotiation-header {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      color: $text-dark;
-      margin-bottom: 8px;
+      justify-content: space-between;
+      margin-bottom: 14px;
 
-      i {
-        color: $primary;
-      }
-    }
+      .round-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        background: linear-gradient(135deg, $primary 0%, #8b5cf6 100%);
+        border-radius: 20px;
+        color: white;
 
-    .negotiation-progress {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+        i.spinning {
+          animation: spin 2s linear infinite;
+        }
 
-      .progress-bar {
-        flex: 1;
-        height: 3px;
-        background: $border;
-        border-radius: 2px;
-
-        .progress-fill {
-          height: 100%;
-          background: $primary;
-          border-radius: 2px;
+        .round-number {
+          font-size: 12px;
+          font-weight: 600;
         }
       }
 
-      .progress-text {
-        font-size: 10px;
-        color: $text-light;
+      .negotiation-status {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        .status-text {
+          font-size: 11px;
+          color: $text-gray;
+        }
+
+        .status-dots {
+          display: flex;
+          gap: 3px;
+
+          span {
+            width: 4px;
+            height: 4px;
+            background: $primary;
+            border-radius: 50%;
+            animation: negotiation-dot 1.4s infinite;
+
+            &:nth-child(2) { animation-delay: 0.2s; }
+            &:nth-child(3) { animation-delay: 0.4s; }
+          }
+        }
+      }
+    }
+
+    .negotiation-rounds-visual {
+      margin-bottom: 14px;
+      padding: 12px;
+      background: rgba($bg-white, 0.8);
+      border-radius: 10px;
+
+      .rounds-track {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0;
+        margin-bottom: 8px;
+
+        .round-step {
+          display: flex;
+          align-items: center;
+
+          .step-circle {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 600;
+            background: $bg-page;
+            color: $text-light;
+            border: 2px solid $border;
+            transition: all 0.3s ease;
+          }
+
+          .step-line {
+            width: 30px;
+            height: 3px;
+            background: $border;
+            transition: all 0.3s ease;
+          }
+
+          &.completed {
+            .step-circle {
+              background: $success;
+              border-color: $success;
+              color: white;
+            }
+            .step-line {
+              background: $success;
+            }
+          }
+
+          &.current {
+            .step-circle {
+              background: $primary;
+              border-color: $primary;
+              color: white;
+              animation: current-step-pulse 1.5s ease-in-out infinite;
+            }
+          }
+        }
+      }
+
+      .rounds-label {
+        text-align: center;
+        font-size: 11px;
+        color: $text-gray;
+      }
+    }
+
+    .negotiation-current-votes {
+      margin-bottom: 14px;
+      padding: 10px;
+      background: rgba($bg-white, 0.6);
+      border-radius: 8px;
+
+      .current-votes-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: $text-gray;
+        margin-bottom: 8px;
+
+        i {
+          color: $primary;
+        }
+      }
+
+      .current-votes-grid {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .vote-mini {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: $bg-white;
+        border-radius: 12px;
+        font-size: 11px;
+        border: 1px solid $border;
+
+        .dept-emoji {
+          font-size: 14px;
+        }
+
+        .dept-vote {
+          font-weight: 600;
+          text-transform: uppercase;
+          font-size: 10px;
+        }
+
+        &.approve {
+          border-color: rgba($success, 0.3);
+          .dept-vote { color: $success; }
+        }
+
+        &.reject {
+          border-color: rgba($danger, 0.3);
+          .dept-vote { color: $danger; }
+        }
+
+        &.pending {
+          border-color: rgba($warning, 0.3);
+          .dept-vote { color: $warning; }
+        }
+      }
+    }
+
+    .negotiation-reason {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 10px;
+      background: rgba($warning, 0.08);
+      border-radius: 8px;
+      margin-bottom: 14px;
+      font-size: 12px;
+      color: $text-gray;
+
+      i {
+        color: $warning;
+        font-size: 14px;
+        margin-top: 1px;
       }
     }
 
     .negotiation-proposal {
-      font-size: 12px;
-      color: $text-gray;
+      padding: 12px;
+      background: rgba($color-sales, 0.05);
+      border: 1px solid rgba($color-sales, 0.15);
+      border-radius: 10px;
+
+      .proposal-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: $color-sales;
+        margin-bottom: 8px;
+
+        i {
+          color: $warning;
+        }
+      }
+
+      .proposal-text {
+        margin: 0;
+        font-size: 13px;
+        color: $text-dark;
+        line-height: 1.5;
+      }
     }
   }
 }
 
-// Consensus Notice
-.consensus-notice {
+@keyframes negotiation-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes negotiation-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes current-step-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba($primary, 0.4); }
+  50% { box-shadow: 0 0 0 6px rgba($primary, 0); }
+}
+
+// =============================================================================
+// CONSENSUS NOTICE - Celebration Style
+// =============================================================================
+
+.consensus-notice.enhanced {
   padding-left: 42px;
+  animation: consensus-pop-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
   .consensus-card {
-    background: rgba($success, 0.05);
-    border: 1px solid rgba($success, 0.2);
-    border-radius: 10px;
-    padding: 14px;
-    max-width: 360px;
+    background: linear-gradient(135deg, rgba($success, 0.05) 0%, rgba(#34d399, 0.08) 100%);
+    border: 2px solid rgba($success, 0.3);
+    border-radius: 16px;
+    padding: 18px;
+    max-width: 420px;
+    position: relative;
+    overflow: hidden;
+
+    .consensus-celebration {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+
+      .confetti {
+        position: absolute;
+        top: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        height: 60px;
+        background: linear-gradient(180deg,
+          rgba($success, 0.3) 0%,
+          transparent 100%);
+        animation: confetti-fall 0.8s ease-out;
+      }
+    }
 
     .consensus-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 14px;
+      margin-bottom: 16px;
+      position: relative;
+      z-index: 1;
 
-      i {
-        color: $success;
-        font-size: 18px;
+      .success-icon {
+        position: relative;
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        i {
+          font-size: 28px;
+          color: $success;
+          animation: check-bounce 0.5s ease-out 0.2s both;
+        }
+
+        .success-ring {
+          position: absolute;
+          inset: 0;
+          border: 3px solid $success;
+          border-radius: 50%;
+          animation: ring-expand 0.6s ease-out;
+        }
       }
 
-      .consensus-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: $success;
+      .consensus-title-section {
+        .consensus-badge {
+          display: inline-block;
+          padding: 3px 10px;
+          background: rgba($success, 0.15);
+          border-radius: 12px;
+          font-size: 10px;
+          font-weight: 700;
+          color: #059669;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 4px;
+        }
+
+        .consensus-title {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 700;
+          color: #047857;
+        }
       }
     }
 
     .consensus-decision {
-      font-size: 13px;
-      color: $text-dark;
-      margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
+      padding: 14px;
+      background: rgba($bg-white, 0.8);
+      border-radius: 10px;
+      margin-bottom: 14px;
+
+      p {
+        margin: 0;
+        font-size: 14px;
+        color: $text-dark;
+        line-height: 1.6;
+      }
     }
 
-    .consensus-votes {
+    .consensus-team {
       display: flex;
-      gap: 10px;
-      font-size: 12px;
+      gap: 12px;
+      margin-bottom: 14px;
 
-      .vote-stat {
+      .team-section {
+        flex: 1;
+        padding: 10px;
+        border-radius: 10px;
+
+        .section-label {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          font-size: 11px;
+          font-weight: 600;
+          margin-bottom: 8px;
+
+          i {
+            font-size: 10px;
+          }
+        }
+
+        .team-avatars {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+
+          .mini-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+          }
+        }
+
+        &.approved {
+          background: rgba($success, 0.08);
+
+          .section-label {
+            color: $success;
+          }
+        }
+
+        &.rejected {
+          background: rgba($danger, 0.08);
+
+          .section-label {
+            color: $danger;
+          }
+        }
+      }
+    }
+
+    .consensus-stats {
+      margin-bottom: 14px;
+
+      .stats-bar {
         display: flex;
-        align-items: center;
-        gap: 3px;
+        height: 12px;
+        background: rgba($bg-white, 0.5);
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 
-        &.approve { color: $success; }
-        &.reject { color: $danger; }
+        .stats-approve {
+          background: linear-gradient(90deg, $success 0%, #34d399 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          font-weight: 700;
+          color: white;
+          min-width: 20px;
+          transition: width 0.5s ease;
+        }
+
+        .stats-reject {
+          background: linear-gradient(90deg, #f87171 0%, $danger 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 10px;
+          font-weight: 700;
+          color: white;
+          min-width: 20px;
+          transition: width 0.5s ease;
+        }
       }
     }
 
     .consensus-next-steps {
-      margin-top: 10px;
-      padding-top: 10px;
-      border-top: 1px solid rgba($success, 0.15);
+      padding-top: 14px;
+      border-top: 1px solid rgba($success, 0.2);
 
       .next-steps-header {
-        font-size: 11px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 12px;
         font-weight: 600;
-        color: $text-gray;
-        margin-bottom: 6px;
+        color: #059669;
+        margin-bottom: 10px;
+
+        i {
+          font-size: 14px;
+        }
       }
 
-      ul {
-        margin: 0;
-        padding-left: 16px;
+      .steps-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
 
-        li {
-          font-size: 12px;
-          color: $text-dark;
-          margin: 3px 0;
+        .step-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 8px 12px;
+          background: rgba($bg-white, 0.6);
+          border-radius: 8px;
+
+          .step-number {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: $success;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+          }
+
+          .step-text {
+            font-size: 12px;
+            color: $text-dark;
+            line-height: 1.5;
+            padding-top: 2px;
+          }
         }
       }
     }
   }
 }
 
-// Typing Indicators
-.typing-indicators {
+@keyframes consensus-pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes check-bounce {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes ring-expand {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.3);
+    opacity: 0;
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateX(-50%) translateY(-100%);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0;
+  }
+}
+
+// =============================================================================
+// TYPING INDICATORS - Enhanced
+// =============================================================================
+
+.typing-indicators.enhanced {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+  padding: 8px 0;
 }
 
 .typing-row {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding-left: 42px;
+  align-items: flex-start;
+  gap: 12px;
+  padding-left: 10px;
 
   .typing-avatar {
-    width: 28px;
-    height: 28px;
+    position: relative;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    .avatar-emoji {
+      font-size: 18px;
+    }
+
+    .thinking-ring {
+      position: absolute;
+      inset: -3px;
+      border: 2px solid var(--agent-color, $primary);
+      border-radius: 50%;
+      opacity: 0.5;
+      animation: thinking-pulse-simple 1.5s ease-in-out infinite;
+    }
   }
 
   .typing-bubble {
     display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: $bg-white;
-    border: 1px solid $border;
-    border-radius: 12px;
-    font-size: 12px;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, rgba(var(--agent-color), 0.05) 0%, $bg-white 100%);
+    border: 1px solid rgba(var(--agent-color), 0.2);
+    border-radius: 14px;
+    border-top-left-radius: 4px;
+    min-width: 180px;
+    max-width: 300px;
 
-    .typing-name {
-      font-weight: 600;
-      color: $text-dark;
+    .typing-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .typing-name {
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .typing-dept {
+        font-size: 10px;
+        color: $text-gray;
+        padding: 2px 6px;
+        background: rgba($text-gray, 0.1);
+        border-radius: 8px;
+      }
     }
 
-    .typing-text {
-      color: $text-gray;
+    .typing-activity {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .activity-text {
+        font-size: 12px;
+        color: $text-gray;
+        font-style: italic;
+      }
     }
   }
 }
 
 .typing-dots {
   display: flex;
-  gap: 3px;
+  gap: 4px;
 
   span {
-    width: 5px;
-    height: 5px;
-    background: $primary;
+    width: 6px;
+    height: 6px;
+    background: var(--agent-color, $primary);
     border-radius: 50%;
-    animation: bounce 1.4s infinite;
+    animation: typing-bounce 1.4s infinite;
 
     &:nth-child(2) { animation-delay: 0.2s; }
     &:nth-child(3) { animation-delay: 0.4s; }
   }
 }
 
-@keyframes bounce {
+@keyframes thinking-ring-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes thinking-pulse-simple {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.05); }
+}
+
+@keyframes typing-bounce {
   0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-  30% { transform: translateY(-3px); opacity: 1; }
+  30% { transform: translateY(-4px); opacity: 1; }
+}
+
+// =============================================================================
+// INLINE TOOL CALLS PILLS
+// =============================================================================
+
+.inline-tool-calls {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-left: auto;
+
+  .tool-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    background: rgba(var(--tool-color), 0.08);
+    border: 1px solid rgba(var(--tool-color), 0.2);
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--tool-color, $text-gray);
+    transition: all 0.3s ease;
+
+    i:first-child {
+      font-size: 11px;
+    }
+
+    .tool-label {
+      white-space: nowrap;
+    }
+
+    &.executing {
+      background: rgba($primary, 0.1);
+      border-color: rgba($primary, 0.3);
+      color: $primary;
+      animation: tool-pulse 1.5s ease-in-out infinite;
+
+      i.pi-spinner {
+        font-size: 10px;
+      }
+    }
+
+    &.completed {
+      background: rgba($success, 0.1);
+      border-color: rgba($success, 0.3);
+      color: $success;
+
+      i.pi-check {
+        font-size: 10px;
+      }
+    }
+  }
+}
+
+@keyframes tool-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba($primary, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba($primary, 0);
+  }
 }
 
 // Running Indicator
@@ -1361,4 +2409,591 @@ $color-logistics: #3b82f6;
       }
     }
   }
+}
+
+// =============================================================================
+// OCULTAR NOMBRES DE AGENTES (excepto en barra de presencia)
+// Para reactivar, comentar esta sección
+// =============================================================================
+
+// Ocultar nombres en mensajes
+.message-header {
+  .speaker-name {
+    display: none !important;
+  }
+
+  .speaker-role {
+    display: none !important;
+  }
+}
+
+// Ocultar nombres en delegaciones
+.delegation-notice {
+  .agent-name {
+    display: none !important;
+  }
+}
+
+// Ocultar nombres en votos
+.votes-container,
+.votes-container.enhanced {
+  .vote-name {
+    display: none !important;
+  }
+}
+
+// Ocultar nombres en typing indicators (mantener solo avatar)
+.typing-indicators {
+  .typing-name {
+    display: none !important;
+  }
+
+  .typing-dept {
+    display: none !important;
+  }
+}
+
+// Ocultar texto en activity indicator (mantener emoji)
+.activity-indicator {
+  strong {
+    display: none !important;
+  }
+}
+
+// Ocultar nombres en running indicator
+.running-indicator {
+  .speaker-name {
+    display: none !important;
+  }
+}
+
+// =============================================================================
+// BARRA DE PRESENCIA DE AGENTES - Siempre visible cuando hay actividad
+// =============================================================================
+.agent-presence-bar {
+  display: flex !important;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid $border;
+  min-height: 60px;
+
+  .presence-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    &.participants {
+      flex: 1;
+    }
+  }
+
+  .presence-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: $text-gray;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .agent-avatars {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .agent-avatar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.3s ease;
+
+    &.speaking {
+      .avatar-circle {
+        transform: scale(1.15);
+        box-shadow: 0 0 0 3px rgba(var(--agent-color-rgb, 167, 139, 250), 0.3);
+      }
+    }
+
+    &.thinking {
+      .avatar-circle {
+        animation: thinking-pulse 1.5s ease-in-out infinite;
+        box-shadow: 0 0 0 3px rgba(var(--agent-color-rgb, 167, 139, 250), 0.2);
+      }
+    }
+  }
+
+  .avatar-circle {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+
+    .avatar-emoji {
+      font-size: 20px;
+    }
+
+    .status-indicator {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 12px;
+      height: 12px;
+      background: $success;
+      border: 2px solid white;
+      border-radius: 50%;
+      animation: status-pulse 2s ease-in-out infinite;
+    }
+  }
+
+  .avatar-name {
+    font-size: 10px;
+    font-weight: 500;
+    color: $text-gray;
+    max-width: 60px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .activity-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+
+    .activity-emoji {
+      font-size: 18px;
+    }
+
+    .activity-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      strong {
+        font-size: 12px;
+        font-weight: 600;
+        color: $text-dark;
+      }
+
+      .activity-action {
+        font-size: 11px;
+        color: $text-gray;
+      }
+    }
+
+    .activity-pulse {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--activity-color, $primary);
+      animation: activity-progress 2s ease-in-out infinite;
+    }
+  }
+}
+
+@keyframes thinking-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+@keyframes thinking-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes status-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+@keyframes activity-progress {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(100%); }
+}
+
+// =============================================================================
+// RUNNING INDICATOR MEJORADO - Muestra todos los agentes activos
+// =============================================================================
+.running-indicator.enhanced {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 12px;
+  margin: 8px 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  .active-agents-avatars {
+    display: flex;
+    gap: -8px; // Overlap avatars slightly
+
+    .mini-avatar {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+      transition: all 0.3s ease;
+      margin-left: -8px;
+
+      &:first-child {
+        margin-left: 0;
+      }
+
+      span {
+        font-size: 16px;
+      }
+
+      &.speaking {
+        transform: scale(1.15);
+        z-index: 10;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+        animation: speaking-pulse 1.5s ease-in-out infinite;
+      }
+    }
+  }
+
+  .current-speaker-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+
+    .activity-text {
+      font-size: 13px;
+      color: $text-gray;
+      font-style: italic;
+    }
+  }
+
+  .typing-dots {
+    display: flex;
+    gap: 4px;
+
+    span {
+      width: 6px;
+      height: 6px;
+      background: $primary;
+      border-radius: 50%;
+      animation: typing-bounce 1.4s infinite ease-in-out both;
+
+      &:nth-child(1) { animation-delay: -0.32s; }
+      &:nth-child(2) { animation-delay: -0.16s; }
+      &:nth-child(3) { animation-delay: 0s; }
+    }
+  }
+}
+
+@keyframes speaking-pulse {
+  0%, 100% { transform: scale(1.15); }
+  50% { transform: scale(1.2); }
+}
+
+@keyframes typing-bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+// =============================================================================
+// AVATAR CON LABEL - Muestra quién responde
+// =============================================================================
+.message.assistant {
+  .message-avatar-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    align-self: flex-start;
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      span {
+        font-size: 18px;
+      }
+    }
+
+    .avatar-label {
+      font-size: 10px;
+      font-weight: 600;
+      max-width: 60px;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      text-align: center;
+      opacity: 0.9;
+    }
+  }
+}
+
+// =============================================================================
+// NEGOTIATION PROGRESS INDICATOR - Real-time voting status
+// =============================================================================
+
+.negotiation-progress-indicator {
+  padding: 16px 16px 16px 52px;
+  animation: slide-in-up 0.3s ease-out;
+
+  .negotiation-progress-card {
+    background: linear-gradient(135deg, rgba($primary, 0.08) 0%, rgba($color-sales, 0.04) 100%);
+    border: 1px solid rgba($primary, 0.2);
+    border-radius: 16px;
+    padding: 16px;
+    max-width: 420px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+
+    &.resolving {
+      background: linear-gradient(135deg, rgba($color-inventory, 0.1) 0%, rgba($primary, 0.05) 100%);
+      border-color: rgba($color-inventory, 0.3);
+    }
+  }
+
+  .negotiation-progress-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+
+    .progress-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, $primary 0%, #8b5cf6 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba($primary, 0.3);
+
+      i {
+        color: white;
+        font-size: 20px;
+      }
+    }
+
+    .progress-title {
+      flex: 1;
+
+      .title-text {
+        display: block;
+        font-size: 16px;
+        font-weight: 700;
+        color: $text-dark;
+      }
+
+      .round-badge {
+        display: inline-block;
+        font-size: 11px;
+        font-weight: 600;
+        color: $primary;
+        background: rgba($primary, 0.12);
+        padding: 3px 10px;
+        border-radius: 10px;
+        margin-top: 4px;
+      }
+    }
+  }
+
+  .voters-progress {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .voter-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 14px;
+    background: $bg-white;
+    border-radius: 12px;
+    border: 1px solid $border;
+    transition: all 0.3s ease;
+
+    &.pending {
+      opacity: 0.6;
+
+      .voter-avatar {
+        filter: grayscale(40%);
+      }
+
+      .voter-status {
+        color: $text-light;
+      }
+    }
+
+    &.thinking {
+      border-color: rgba($primary, 0.5);
+      box-shadow: 0 0 0 3px rgba($primary, 0.12);
+      background: rgba($primary, 0.02);
+
+      .voter-avatar {
+        animation: voter-thinking-pulse 1.5s ease-in-out infinite;
+      }
+
+      .thinking-indicator {
+        position: absolute;
+        inset: -4px;
+        border: 2px solid $primary;
+        border-radius: 50%;
+        border-top-color: transparent;
+        animation: voter-spin 1s linear infinite;
+      }
+
+      .voter-status {
+        color: $primary;
+        font-weight: 600;
+      }
+    }
+
+    &.voted {
+      &.approve {
+        border-color: rgba($success, 0.5);
+        background: rgba($success, 0.06);
+
+        .vote-indicator {
+          background: $success;
+          box-shadow: 0 2px 8px rgba($success, 0.4);
+        }
+
+        .voter-status {
+          color: $success;
+          font-weight: 600;
+        }
+      }
+
+      &.reject {
+        border-color: rgba($danger, 0.5);
+        background: rgba($danger, 0.06);
+
+        .vote-indicator {
+          background: $danger;
+          box-shadow: 0 2px 8px rgba($danger, 0.4);
+        }
+
+        .voter-status {
+          color: $danger;
+          font-weight: 600;
+        }
+      }
+    }
+
+    .voter-avatar {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+      .voter-emoji {
+        font-size: 20px;
+      }
+
+      .vote-indicator {
+        position: absolute;
+        bottom: -3px;
+        right: -3px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid $bg-white;
+
+        i {
+          font-size: 10px;
+          color: white;
+        }
+      }
+    }
+
+    .voter-info {
+      flex: 1;
+      min-width: 0;
+
+      .voter-name {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: $text-dark;
+      }
+
+      .voter-status {
+        display: block;
+        font-size: 12px;
+        color: $text-gray;
+        margin-top: 3px;
+      }
+    }
+  }
+
+  .progress-bar-mini {
+    height: 8px;
+    background: rgba($primary, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, $primary 0%, $success 100%);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+  }
+}
+
+@keyframes slide-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes voter-thinking-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba($primary, 0.4); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba($primary, 0); }
+}
+
+@keyframes voter-spin {
+  to { transform: rotate(360deg); }
 }

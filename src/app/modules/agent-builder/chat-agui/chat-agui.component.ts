@@ -61,6 +61,15 @@ export class ChatAguiComponent implements OnInit, OnDestroy, AfterViewChecked {
     // Typing indicators
     typingAgents: AgUiSpeaker[] = [];
 
+    // Negotiation state
+    negotiationState: {
+        isActive: boolean;
+        phase: 'idle' | 'voting' | 'resolving' | 'completed';
+        voters: { id: string; name: string; department: string; status: 'pending' | 'thinking' | 'voted'; vote?: string; }[];
+        currentRound: number;
+        maxRounds: number;
+    } = { isActive: false, phase: 'idle', voters: [], currentRound: 0, maxRounds: 3 };
+
     constructor(
         private aguiService: AgUiService,
         private cdr: ChangeDetectorRef,
@@ -133,6 +142,14 @@ export class ChatAguiComponent implements OnInit, OnDestroy, AfterViewChecked {
             .subscribe(error => {
                 this.errorMessage = error;
                 setTimeout(() => this.errorMessage = null, 5000);
+            });
+
+        // Negotiation state
+        this.aguiService.negotiationState$
+            .pipe(takeUntil(this.destroy$))
+            .subscribe(state => {
+                this.negotiationState = state;
+                this.cdr.markForCheck();
             });
     }
 
@@ -639,6 +656,193 @@ Por favor asigna el transportador y actualiza el estado de estos pedidos a "Desp
     }
 
     // ==========================================================================
+    // Agent Presence Helpers (Enhanced)
+    // ==========================================================================
+
+    /**
+     * Obtiene el color de un agente por su ID
+     */
+    getAgentColor(agentId: string): string {
+        return getSpeakerConfig(agentId).color;
+    }
+
+    /**
+     * Obtiene el emoji de un agente por su ID
+     */
+    getAgentEmoji(agentId: string): string {
+        return getSpeakerConfig(agentId).emoji;
+    }
+
+    /**
+     * Obtiene el nombre para mostrar de un agente por su ID
+     */
+    getAgentDisplayName(agentId: string): string {
+        return getSpeakerConfig(agentId).displayName;
+    }
+
+    /**
+     * Verifica si un agente esta "pensando" (ejecutando herramientas)
+     */
+    isAgentThinking(agentId: string): boolean {
+        // Un agente esta pensando si hay tool calls en ejecucion
+        for (const toolCall of this.toolCalls.values()) {
+            if (toolCall.status === 'executing') {
+                return this.agentState.currentSpeaker === agentId;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Obtiene la actividad actual de un agente para mostrar
+     */
+    getAgentActivity(speaker: AgUiSpeaker): string {
+        // Buscar tool calls activos
+        for (const toolCall of this.toolCalls.values()) {
+            if (toolCall.status === 'executing') {
+                const toolInfo = getToolDisplay(toolCall.name);
+                return `consultando ${toolInfo.label}...`;
+            }
+        }
+
+        // Actividades por defecto segun departamento
+        const activities: Record<string, string> = {
+            'ceo': 'coordinando respuesta...',
+            'sales': 'analizando datos de ventas...',
+            'inventory': 'consultando inventario...',
+            'logistics': 'revisando despachos...'
+        };
+        return activities[speaker.department || ''] || 'procesando...';
+    }
+
+    /**
+     * Obtiene el texto descriptivo del proposito de delegacion
+     */
+    getDelegationPurposeText(purpose: string): string {
+        const purposes: Record<string, string> = {
+            'sales': 'Consulta de informacion de ventas',
+            'inventory': 'Verificacion de inventario',
+            'logistics': 'Gestion de despachos y rutas',
+            'analysis': 'Analisis de datos',
+            'default': 'Solicitud de informacion especializada'
+        };
+        return purposes[purpose] || purposes['default'];
+    }
+
+    /**
+     * Obtiene la etiqueta del departamento
+     */
+    getDepartmentLabel(department: string | null): string {
+        return getDepartmentLabel(department);
+    }
+
+    /**
+     * Obtiene el color de un departamento
+     */
+    getDepartmentColor(department: string): string {
+        const colors: Record<string, string> = {
+            'ceo': '#6366f1',
+            'sales': '#10b981',
+            'inventory': '#f59e0b',
+            'logistics': '#3b82f6'
+        };
+        return colors[department] || '#6b7280';
+    }
+
+    /**
+     * Obtiene el emoji de un departamento
+     */
+    getDepartmentEmoji(department: string): string {
+        const emojis: Record<string, string> = {
+            'ceo': '👔',
+            'sales': '📈',
+            'inventory': '📦',
+            'logistics': '🚚'
+        };
+        return emojis[department] || '🤖';
+    }
+
+    // ==========================================================================
+    // Vote/Negotiation Helpers (Enhanced)
+    // ==========================================================================
+
+    /**
+     * Cuenta votos de un tipo especifico
+     */
+    countVotes(votes: AgUiMessage[], voteType: string): number {
+        return votes.filter(v => v.vote === voteType).length;
+    }
+
+    /**
+     * Calcula el porcentaje de votos de aprobacion
+     */
+    getApprovePercentage(votes: AgUiMessage[]): number {
+        if (votes.length === 0) return 0;
+        const approveCount = this.countVotes(votes, 'APPROVE');
+        return (approveCount / votes.length) * 100;
+    }
+
+    /**
+     * Calcula el porcentaje de votos de rechazo
+     */
+    getRejectPercentage(votes: AgUiMessage[]): number {
+        if (votes.length === 0) return 0;
+        const rejectCount = this.countVotes(votes, 'REJECT');
+        return (rejectCount / votes.length) * 100;
+    }
+
+    /**
+     * Trunca texto a un numero maximo de caracteres
+     */
+    truncateText(text: string, maxLength: number): string {
+        if (!text || text.length <= maxLength) return text;
+        return text.substring(0, maxLength) + '...';
+    }
+
+    /**
+     * Genera un array de numeros para las rondas de negociacion
+     */
+    getRoundsArray(maxRounds: number): number[] {
+        return Array.from({ length: maxRounds }, (_, i) => i);
+    }
+
+    /**
+     * Calcula el porcentaje de votantes que ya votaron
+     */
+    getVotedPercentage(): number {
+        if (this.negotiationState.voters.length === 0) return 0;
+        const votedCount = this.negotiationState.voters.filter(v => v.status === 'voted').length;
+        return (votedCount / this.negotiationState.voters.length) * 100;
+    }
+
+    /**
+     * Obtiene los departamentos de un objeto de votos
+     */
+    getVoteDepartments(votes: Record<string, string>): string[] {
+        return Object.keys(votes);
+    }
+
+    /**
+     * Calcula el porcentaje de aprobacion para el consenso
+     */
+    getConsensusApprovePercent(message: AgUiMessage): number {
+        if (!message.votesSummary) return 0;
+        const total = (message.votesSummary.approve || 0) + (message.votesSummary.reject || 0);
+        if (total === 0) return 0;
+        return ((message.votesSummary.approve || 0) / total) * 100;
+    }
+
+    /**
+     * Calcula el porcentaje de rechazo para el consenso
+     */
+    getConsensusRejectPercent(message: AgUiMessage): number {
+        if (!message.votesSummary) return 0;
+        const total = (message.votesSummary.approve || 0) + (message.votesSummary.reject || 0);
+        if (total === 0) return 0;
+        return ((message.votesSummary.reject || 0) / total) * 100;
+    }
+
+    // ==========================================================================
     // Vote/Negotiation Helpers (from Chat Pro)
     // ==========================================================================
 
@@ -755,5 +959,24 @@ Por favor asigna el transportador y actualiza el estado de estos pedidos a "Desp
         if (this.isUserMessage(message)) return false;
         const specialTypes = ['vote', 'negotiation_round', 'consensus_reached', 'delegation'];
         return !specialTypes.includes(message.eventType || '');
+    }
+
+    /**
+     * Verifica si hay una respuesta de texto después de una delegación
+     * Usado para ocultar la notificación de delegación una vez que el agente responde
+     */
+    hasResponseAfterDelegation(delegationIndex: number): boolean {
+        // Buscar si hay algún mensaje de texto (no delegación) después de este índice
+        for (let i = delegationIndex + 1; i < this.messages.length; i++) {
+            const msg = this.messages[i];
+            // Si encontramos un mensaje de texto del asistente, hay respuesta
+            if (msg.role === 'assistant' && msg.content && msg.content.trim().length > 0) {
+                // Ignorar mensajes de delegación o eventos especiales sin contenido real
+                if (msg.eventType !== 'delegation') {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
