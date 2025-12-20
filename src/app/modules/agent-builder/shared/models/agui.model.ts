@@ -245,6 +245,8 @@ export interface AgUiChartArtifact extends AgUiArtifact {
             data: number[];
             backgroundColor?: string | string[];
             borderColor?: string;
+            fill?: boolean;
+            tension?: number;
         }>;
         options?: Record<string, any>;
     };

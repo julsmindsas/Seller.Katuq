@@ -23,6 +23,11 @@ let googleMapsLoading = false;
 let googleMapsLoaded = false;
 const googleMapsCallbacks: (() => void)[] = [];
 
+// Track if Chart.js is loading
+let chartJsLoading = false;
+let chartJsLoaded = false;
+const chartJsCallbacks: (() => void)[] = [];
+
 @Component({
     selector: 'app-artifact-renderer',
     standalone: true,
@@ -444,7 +449,7 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
     }
 
     // =============================================================================
-    // CHART RENDERING (usando Chart.js si está disponible, sino fallback simple)
+    // CHART RENDERING (carga Chart.js dinámicamente desde CDN)
     // =============================================================================
 
     private renderChart(): void {
@@ -452,13 +457,58 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
 
         const data = this.chartArtifact.data;
 
-        // Check if Chart.js is available
+        // Check if Chart.js is already available
         if (typeof (window as any).Chart !== 'undefined') {
             this.renderChartJS(data);
-        } else {
-            // Fallback: render simple bars
-            this.renderSimpleChart(data);
+            return;
         }
+
+        // If already loaded, render directly
+        if (chartJsLoaded) {
+            this.renderChartJS(data);
+            return;
+        }
+
+        // If loading, add callback
+        if (chartJsLoading) {
+            chartJsCallbacks.push(() => this.renderChartJS(data));
+            return;
+        }
+
+        // Check if script already exists
+        if (document.querySelector('script[src*="chart.js"]')) {
+            if (typeof (window as any).Chart !== 'undefined') {
+                chartJsLoaded = true;
+                this.renderChartJS(data);
+            } else {
+                chartJsCallbacks.push(() => this.renderChartJS(data));
+            }
+            return;
+        }
+
+        // Load Chart.js from CDN
+        chartJsLoading = true;
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js';
+        script.async = true;
+
+        script.onload = () => {
+            console.log('[ArtifactRenderer] ✅ Chart.js loaded from CDN');
+            chartJsLoaded = true;
+            chartJsLoading = false;
+            this.renderChartJS(data);
+            // Execute pending callbacks
+            chartJsCallbacks.forEach(cb => cb());
+            chartJsCallbacks.length = 0;
+        };
+
+        script.onerror = () => {
+            console.error('[ArtifactRenderer] ❌ Failed to load Chart.js, using fallback');
+            chartJsLoading = false;
+            this.renderSimpleChart(data);
+        };
+
+        document.head.appendChild(script);
     }
 
     private renderChartJS(data: any): void {
