@@ -610,11 +610,27 @@ export class AgUiService {
 
     /**
      * Maneja eventos CONFIRMATION_REQUEST del backend
+     *
+     * IMPORTANTE: Verifica si ya existe una confirmación con el mismo ID
+     * para evitar duplicados cuando TOOL_CALL_END también genera confirmación
      */
     private handleConfirmationRequest(event: AgUiEvent): void {
         console.log('[AgUiService] Confirmation request:', event);
 
         const extEvent = event as any;
+        const confirmId = extEvent.confirmationId || `confirm_${Date.now()}`;
+
+        // Check if this confirmation already exists (avoid duplicates)
+        const messages = this.messagesSubject.value;
+        const existingConfirm = messages.find(m =>
+            m.confirmationRequest?.id === confirmId ||
+            (m.confirmationRequest?.toolCallId && m.confirmationRequest.toolCallId === extEvent.toolCallId)
+        );
+
+        if (existingConfirm) {
+            console.log('[AgUiService] ⚠️ Confirmation already exists, skipping duplicate:', confirmId);
+            return; // Don't create duplicate
+        }
 
         // Get current speaker
         const currentAgentId = this.agentStateSubject.value.currentSpeaker;
@@ -624,7 +640,7 @@ export class AgUiService {
 
         // Create confirmation request from backend event
         const confirmationRequest: AgUiConfirmationRequest = {
-            id: extEvent.confirmationId || `confirm_${Date.now()}`,
+            id: confirmId,
             type: extEvent.confirmationType || 'approve_reject',
             title: extEvent.title || 'Confirmación requerida',
             message: extEvent.message || '¿Desea proceder con esta acción?',
@@ -647,7 +663,6 @@ export class AgUiService {
         };
 
         // Add to messages
-        const messages = this.messagesSubject.value;
         this.messagesSubject.next([...messages, confirmMessage]);
     }
 

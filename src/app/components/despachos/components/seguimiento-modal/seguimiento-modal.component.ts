@@ -34,28 +34,60 @@ export class SeguimientoModalComponent implements OnInit {
 
   // Método para obtener el estado del envío con icono
   getEstadoIcon(estado: string): string {
-    const estados = {
-      'En tránsito': 'pi pi-truck',
-      'Entregado': 'pi pi-check-circle',
-      'En ruta': 'pi pi-map-marker',
-      'Retenido': 'pi pi-exclamation-triangle',
-      'Devuelto': 'pi pi-undo',
-      'default': 'pi pi-info-circle'
+    if (!estado) return 'pi pi-info-circle';
+
+    const estadoNormalizado = estado.toLowerCase();
+    const estados: { [key: string]: string } = {
+      // Estados genéricos
+      'en tránsito': 'pi pi-truck',
+      'entregado': 'pi pi-check-circle',
+      'en ruta': 'pi pi-map-marker',
+      'retenido': 'pi pi-exclamation-triangle',
+      'devuelto': 'pi pi-undo',
+      // Estados de Prindel
+      'created': 'pi pi-box',
+      'picked_up': 'pi pi-send',
+      'in_transit': 'pi pi-truck',
+      'delivered': 'pi pi-check-circle',
+      'returned': 'pi pi-undo',
+      'failed': 'pi pi-times-circle',
+      // Estados normalizados de Katuq
+      'pending': 'pi pi-clock',
+      'processing': 'pi pi-spin pi-spinner',
+      'shipped': 'pi pi-truck',
+      'cancelled': 'pi pi-ban'
     };
-    return estados[estado] || estados['default'];
+
+    return estados[estadoNormalizado] || 'pi pi-info-circle';
   }
 
   // Método para obtener la clase CSS del estado
   getEstadoClass(estado: string): string {
-    const estados = {
-      'En tránsito': 'estado-transito',
-      'Entregado': 'estado-entregado',
-      'En ruta': 'estado-ruta',
-      'Retenido': 'estado-retenido',
-      'Devuelto': 'estado-devuelto',
-      'default': 'estado-default'
+    if (!estado) return 'estado-default';
+
+    const estadoNormalizado = estado.toLowerCase();
+    const estados: { [key: string]: string } = {
+      // Estados genéricos
+      'en tránsito': 'estado-transito',
+      'entregado': 'estado-entregado',
+      'en ruta': 'estado-ruta',
+      'retenido': 'estado-retenido',
+      'devuelto': 'estado-devuelto',
+      // Estados de Prindel
+      'created': 'estado-creado',
+      'picked_up': 'estado-recogido',
+      'in_transit': 'estado-transito',
+      'delivered': 'estado-entregado',
+      'returned': 'estado-devuelto',
+      'failed': 'estado-error',
+      // Estados normalizados de Katuq
+      'pending': 'estado-pendiente',
+      'processing': 'estado-procesando',
+      'shipped': 'estado-transito',
+      'cancelled': 'estado-cancelado'
     };
-    return estados[estado] || estados['default'];
+
+    return estados[estadoNormalizado] || 'estado-default';
   }
 
   // Método para refrescar el tracking

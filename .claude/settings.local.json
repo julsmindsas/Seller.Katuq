@@ -9,7 +9,12 @@
       "mcp__plugin_figma_figma__get_screenshot",
       "WebSearch",
       "Bash(git log:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(mv:*)",
+      "Bash(done)",
+      "WebFetch(domain:api.prindel.com.co)",
+      "Bash(node -c:*)",
+      "Bash(node -e:*)"
     ],
     "deny": [],
     "ask": []

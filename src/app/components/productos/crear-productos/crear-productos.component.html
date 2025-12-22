@@ -1387,30 +1387,126 @@
 
 						<p-tabPanel header="Ciudad">
 							<form [formGroup]="ciudades">
+								<!-- Toggle para usar DANE -->
+								<div class="row mb-3">
+									<div class="col-12">
+										<div class="form-check form-switch">
+											<input class="form-check-input" type="checkbox" id="usarDaneCiudades"
+												   [(ngModel)]="usarDaneCiudades" [ngModelOptions]="{standalone: true}">
+											<label class="form-check-label" for="usarDaneCiudades">
+												<i class="fa fa-database"></i> Usar base de datos DANE (1122 municipios de Colombia)
+											</label>
+										</div>
+									</div>
+								</div>
+
 								<div class="row">
 									<h5>Ciudad</h5>
-									<div class="col-sm-4">
-										<label class="form-label" for="validationCustom01">Ciudades de
-											Origen</label>
-										<ng-select [items]="empresaActual?.ciudadess?.ciudadesOrigen"
-											style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
-											formControlName="ciudadesOrigen" [closeOnSelect]="false">
 
-										</ng-select>
+									<!-- CIUDADES DE ORIGEN -->
+									<div class="col-sm-6 mb-3">
+										<label class="form-label">Ciudades de Origen</label>
+
+										<!-- Selector tradicional -->
+										<ng-container *ngIf="!usarDaneCiudades">
+											<ng-select [items]="empresaActual?.ciudadess?.ciudadesOrigen"
+												style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+												formControlName="ciudadesOrigen" [closeOnSelect]="false">
+											</ng-select>
+										</ng-container>
+
+										<!-- Búsqueda DANE -->
+										<ng-container *ngIf="usarDaneCiudades">
+											<div class="dane-search-box">
+												<div class="input-group input-group-sm mb-2">
+													<input type="text" class="form-control"
+														   [(ngModel)]="searchQueryDaneOrigen" [ngModelOptions]="{standalone: true}"
+														   placeholder="Buscar municipio..."
+														   (input)="buscarMunicipioDaneOrigen(searchQueryDaneOrigen)">
+													<select class="form-select" style="max-width: 140px;"
+															[(ngModel)]="departamentoDaneOrigenSeleccionado" [ngModelOptions]="{standalone: true}"
+															(ngModelChange)="onDepartamentoDaneOrigenChange($event)">
+														<option value="">Departamento...</option>
+														<option *ngFor="let depto of departamentosDane" [value]="depto">{{ depto }}</option>
+													</select>
+												</div>
+												<!-- Ciudades seleccionadas -->
+												<div class="selected-cities mb-2" *ngIf="ciudadesDaneOrigenSeleccionadas.length > 0">
+													<span *ngFor="let ciudad of ciudadesDaneOrigenSeleccionadas" class="badge bg-primary me-1 mb-1">
+														{{ ciudad.nombre }} - {{ ciudad.departamento }}
+														<i class="fa fa-times ms-1" style="cursor: pointer;" (click)="eliminarMunicipioDaneOrigen(ciudad)"></i>
+													</span>
+												</div>
+												<!-- Resultados de búsqueda -->
+												<div *ngIf="municipiosDaneOrigen.length > 0" class="dane-results" style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+													<div *ngFor="let municipio of municipiosDaneOrigen"
+														 class="dane-result-item p-2" style="cursor: pointer; border-bottom: 1px solid #eee;"
+														 (click)="seleccionarMunicipioDaneOrigen(municipio)">
+														<strong>{{ municipio.nombre }}</strong>
+														<small class="text-muted"> - {{ municipio.departamento }}</small>
+													</div>
+												</div>
+												<div *ngIf="cargandoDaneOrigen" class="text-center py-2">
+													<i class="fa fa-spinner fa-spin"></i> Cargando...
+												</div>
+											</div>
+										</ng-container>
+
 										<div *ngIf="ciudades.controls['ciudadesOrigen'].invalid && ciudades.controls['ciudadesOrigen'].touched"
 											class="error-message">
 											Campo requerido
 										</div>
-
 									</div>
-									<div class="col-sm-4">
-										<label class="form-label" for="validationCustom01">Ciudades de
-											Entrega</label>
-										<ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega"
-											style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
-											formControlName="ciudadesEntrega" [closeOnSelect]="false">
 
-										</ng-select>
+									<!-- CIUDADES DE ENTREGA -->
+									<div class="col-sm-6 mb-3">
+										<label class="form-label">Ciudades de Entrega</label>
+
+										<!-- Selector tradicional -->
+										<ng-container *ngIf="!usarDaneCiudades">
+											<ng-select [items]="empresaActual?.ciudadess?.ciudadesEntrega"
+												style="font-family: roboto;color: #ffffff !important;" [multiple]="true"
+												formControlName="ciudadesEntrega" [closeOnSelect]="false">
+											</ng-select>
+										</ng-container>
+
+										<!-- Búsqueda DANE -->
+										<ng-container *ngIf="usarDaneCiudades">
+											<div class="dane-search-box">
+												<div class="input-group input-group-sm mb-2">
+													<input type="text" class="form-control"
+														   [(ngModel)]="searchQueryDaneEntrega" [ngModelOptions]="{standalone: true}"
+														   placeholder="Buscar municipio..."
+														   (input)="buscarMunicipioDaneEntrega(searchQueryDaneEntrega)">
+													<select class="form-select" style="max-width: 140px;"
+															[(ngModel)]="departamentoDaneEntregaSeleccionado" [ngModelOptions]="{standalone: true}"
+															(ngModelChange)="onDepartamentoDaneEntregaChange($event)">
+														<option value="">Departamento...</option>
+														<option *ngFor="let depto of departamentosDane" [value]="depto">{{ depto }}</option>
+													</select>
+												</div>
+												<!-- Ciudades seleccionadas -->
+												<div class="selected-cities mb-2" *ngIf="ciudadesDaneEntregaSeleccionadas.length > 0">
+													<span *ngFor="let ciudad of ciudadesDaneEntregaSeleccionadas" class="badge bg-success me-1 mb-1">
+														{{ ciudad.nombre }} - {{ ciudad.departamento }}
+														<i class="fa fa-times ms-1" style="cursor: pointer;" (click)="eliminarMunicipioDaneEntrega(ciudad)"></i>
+													</span>
+												</div>
+												<!-- Resultados de búsqueda -->
+												<div *ngIf="municipiosDaneEntrega.length > 0" class="dane-results" style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+													<div *ngFor="let municipio of municipiosDaneEntrega"
+														 class="dane-result-item p-2" style="cursor: pointer; border-bottom: 1px solid #eee;"
+														 (click)="seleccionarMunicipioDaneEntrega(municipio)">
+														<strong>{{ municipio.nombre }}</strong>
+														<small class="text-muted"> - {{ municipio.departamento }}</small>
+													</div>
+												</div>
+												<div *ngIf="cargandoDaneEntrega" class="text-center py-2">
+													<i class="fa fa-spinner fa-spin"></i> Cargando...
+												</div>
+											</div>
+										</ng-container>
+
 										<div *ngIf="ciudades?.controls['ciudadesEntrega']?.invalid && ciudades?.controls['ciudadesEntrega']?.touched"
 											class="error-message">
 											Campo requerido

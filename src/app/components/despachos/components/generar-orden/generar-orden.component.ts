@@ -560,7 +560,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
                 o.carrito[0].configuracion.datosEntrega.formaEntrega) {
               formaEntregaValida = o.carrito[0].configuracion.datosEntrega.formaEntrega
                 .toLocaleUpperCase()
-                .includes("DOMICILIO");
+                .includes("DOMIC");
             }
           } catch (formaEntregaError) {
             console.error("Error verificando forma entrega para pedido:", o.nroPedido, formaEntregaError);

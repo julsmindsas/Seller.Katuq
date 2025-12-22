@@ -1881,6 +1881,57 @@ html {
         font-size: 0.875rem;
       }
     }
+
+    // Estilos para búsqueda DANE
+    .dane-search-wrapper {
+      .input-group {
+        .form-control {
+          border-radius: 6px 0 0 6px;
+          font-size: 0.8rem;
+          height: 36px;
+        }
+        .form-select {
+          border-radius: 0 6px 6px 0;
+          font-size: 0.75rem;
+          height: 36px;
+        }
+      }
+
+      .selected-city-badge {
+        margin-top: 0.25rem;
+        .badge {
+          font-size: 0.75rem;
+          padding: 0.35rem 0.5rem;
+        }
+      }
+
+      .dane-results {
+        margin-top: 0.25rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        background: #fff;
+
+        .dane-result-item {
+          padding: 0.4rem 0.6rem;
+          cursor: pointer;
+          font-size: 0.8rem;
+          border-bottom: 1px solid #f0f0f0;
+          transition: background 0.2s ease;
+
+          &:last-child {
+            border-bottom: none;
+          }
+
+          &:hover {
+            background: rgba(var(--secondary-rgb), 0.1);
+          }
+
+          strong {
+            color: #333;
+          }
+        }
+      }
+    }
   }
 
   // Componente de búsqueda de productos - Ultra compacto

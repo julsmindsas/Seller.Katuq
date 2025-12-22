@@ -188,23 +188,72 @@
                         <span class="label-text">Ciudad de Entrega</span>
                         <small class="label-hint">Destino del pedido</small>
                       </div>
+                      <!-- Toggle DANE -->
+                      <div class="form-check form-switch ms-auto" style="font-size: 0.75rem;">
+                        <input class="form-check-input" type="checkbox" id="usarDaneCiudad"
+                               [(ngModel)]="usarDaneCiudadEntrega" [disabled]="!selectedWarehouse">
+                        <label class="form-check-label text-muted" for="usarDaneCiudad">
+                          <i class="fa fa-database"></i> DANE
+                        </label>
+                      </div>
                     </div>
 
                     <div class="selector-body">
-                      <select (change)="onSelectCity($event)"
-                              class="form-select city-select"
-                              [class.has-value]="selectedCity && selectedCity !== 'seleccione'"
-                              [disabled]="!selectedWarehouse">
-                        <option value="seleccione">Seleccionar ciudad...</option>
-                        <option *ngFor="let ciudad of empresaActual.ciudadess.ciudadesEntrega"
-                                [value]="ciudad.value"
-                                [selected]="selectedCity === ciudad.value">
-                          {{ ciudad.label }}
-                        </option>
-                      </select>
-                      <div class="select-icon-wrapper">
-                        <i class="fa fa-chevron-down"></i>
-                      </div>
+                      <!-- Selector tradicional de ciudades empresa -->
+                      <ng-container *ngIf="!usarDaneCiudadEntrega">
+                        <select (change)="onSelectCity($event)"
+                                class="form-select city-select"
+                                [class.has-value]="selectedCity && selectedCity !== 'seleccione'"
+                                [disabled]="!selectedWarehouse">
+                          <option value="seleccione">Seleccionar ciudad...</option>
+                          <option *ngFor="let ciudad of empresaActual.ciudadess.ciudadesEntrega"
+                                  [value]="ciudad.value"
+                                  [selected]="selectedCity === ciudad.value">
+                            {{ ciudad.label }}
+                          </option>
+                        </select>
+                        <div class="select-icon-wrapper">
+                          <i class="fa fa-chevron-down"></i>
+                        </div>
+                      </ng-container>
+
+                      <!-- Búsqueda DANE (1122 municipios) -->
+                      <ng-container *ngIf="usarDaneCiudadEntrega">
+                        <div class="dane-search-wrapper">
+                          <div class="input-group input-group-sm mb-1">
+                            <input type="text" class="form-control"
+                                   [(ngModel)]="searchQueryCiudadDane"
+                                   placeholder="Buscar municipio..."
+                                   (input)="buscarMunicipioDane(searchQueryCiudadDane)"
+                                   [disabled]="!selectedWarehouse">
+                            <select class="form-select" style="max-width: 120px;"
+                                    [(ngModel)]="departamentoDaneSeleccionado"
+                                    (ngModelChange)="onDepartamentoDaneChange($event)"
+                                    [disabled]="!selectedWarehouse">
+                              <option value="">Depto...</option>
+                              <option *ngFor="let depto of departamentosDane" [value]="depto">{{ depto }}</option>
+                            </select>
+                          </div>
+                          <!-- Ciudad seleccionada -->
+                          <div *ngIf="selectedCity && selectedCity !== 'seleccione'" class="selected-city-badge">
+                            <span class="badge bg-success text-white">
+                              <i class="fa fa-check-circle"></i> {{ selectedCity }}
+                            </span>
+                          </div>
+                          <!-- Resultados de búsqueda DANE -->
+                          <div *ngIf="municipiosDane.length > 0" class="dane-results" style="max-height: 120px; overflow-y: auto;">
+                            <div *ngFor="let municipio of municipiosDane"
+                                 class="dane-result-item"
+                                 (click)="seleccionarMunicipioDane(municipio)">
+                              <strong>{{ municipio.nombre }}</strong>
+                              <small class="text-muted"> - {{ municipio.departamento }}</small>
+                            </div>
+                          </div>
+                          <div *ngIf="cargandoCiudadesDane" class="text-center py-1">
+                            <i class="fa fa-spinner fa-spin"></i>
+                          </div>
+                        </div>
+                      </ng-container>
                     </div>
                   </div>
                 </div>

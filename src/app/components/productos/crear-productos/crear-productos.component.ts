@@ -51,6 +51,10 @@ import { error } from "console";
 import { ProveedoresService } from "../../dropshipping/services/proveedores.service";
 import { Proveedor } from "../../dropshipping/interfaces";
 
+// DANE codes imports
+import { DaneCodesService } from "../../../shared/services/dane-codes.service";
+import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
+
 @Component({
   selector: "app-crear-productos",
   templateUrl: "./crear-productos.component.html",
@@ -99,6 +103,21 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     { value: "Cali", label: "Cali" },
     { value: "Cartagena", label: "Cartagena" },
   ];
+
+  // Propiedades para DANE codes
+  departamentosDane: string[] = [];
+  municipiosDaneOrigen: MunicipioDane[] = [];
+  municipiosDaneEntrega: MunicipioDane[] = [];
+  searchQueryDaneOrigen: string = '';
+  searchQueryDaneEntrega: string = '';
+  cargandoDaneOrigen: boolean = false;
+  cargandoDaneEntrega: boolean = false;
+  usarDaneCiudades: boolean = false;
+  departamentoDaneOrigenSeleccionado: string = '';
+  departamentoDaneEntregaSeleccionado: string = '';
+  ciudadesDaneOrigenSeleccionadas: MunicipioDane[] = [];
+  ciudadesDaneEntregaSeleccionadas: MunicipioDane[] = [];
+
   porcentajesIva: any = [
     { value: "19", label: "19%" },
     { value: "8", label: "8%" },
@@ -166,6 +185,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     private kaiService: KatuqintelligenceService,
     private imageService: ImagenService,
     private proveedoresService: ProveedoresService,
+    private daneCodesService: DaneCodesService,
   ) {
     this.kaiService.getKatuqPrompt().subscribe((res) => {
       this.kaiProductPrompt = res.promptProduct;
@@ -764,6 +784,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.setupFormSubscriptions();
     this.initializeVariables();
     this.loadMasterData();
+    this.cargarDepartamentosDane();
     this.handleEditMode();
     this.checkDropshippingMode();
   }
@@ -2568,6 +2589,133 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     } catch (error) {
       console.error('❌ Error auto-asignando currentCompany como proveedor:', error);
     }
+  }
+
+  // ========== MÉTODOS DANE CODES ==========
+
+  /**
+   * Carga departamentos DANE
+   */
+  cargarDepartamentosDane(): void {
+    this.daneCodesService.getDepartamentos().subscribe(deptos => {
+      this.departamentosDane = deptos;
+    });
+  }
+
+  /**
+   * Cambia departamento y carga municipios DANE para origen
+   */
+  onDepartamentoDaneOrigenChange(departamento: string): void {
+    this.departamentoDaneOrigenSeleccionado = departamento;
+    if (!departamento) {
+      this.municipiosDaneOrigen = [];
+      return;
+    }
+    this.cargandoDaneOrigen = true;
+    this.daneCodesService.getMunicipiosByDepartamento(departamento).subscribe(municipios => {
+      this.municipiosDaneOrigen = municipios;
+      this.cargandoDaneOrigen = false;
+    });
+  }
+
+  /**
+   * Cambia departamento y carga municipios DANE para entrega
+   */
+  onDepartamentoDaneEntregaChange(departamento: string): void {
+    this.departamentoDaneEntregaSeleccionado = departamento;
+    if (!departamento) {
+      this.municipiosDaneEntrega = [];
+      return;
+    }
+    this.cargandoDaneEntrega = true;
+    this.daneCodesService.getMunicipiosByDepartamento(departamento).subscribe(municipios => {
+      this.municipiosDaneEntrega = municipios;
+      this.cargandoDaneEntrega = false;
+    });
+  }
+
+  /**
+   * Busca municipios DANE para origen
+   */
+  buscarMunicipioDaneOrigen(query: string): void {
+    if (!query || query.length < 2) {
+      if (this.departamentoDaneOrigenSeleccionado) {
+        this.onDepartamentoDaneOrigenChange(this.departamentoDaneOrigenSeleccionado);
+      } else {
+        this.municipiosDaneOrigen = [];
+      }
+      return;
+    }
+    this.cargandoDaneOrigen = true;
+    this.daneCodesService.searchMunicipios(query, this.departamentoDaneOrigenSeleccionado || undefined).subscribe(resultados => {
+      this.municipiosDaneOrigen = resultados;
+      this.cargandoDaneOrigen = false;
+    });
+  }
+
+  /**
+   * Busca municipios DANE para entrega
+   */
+  buscarMunicipioDaneEntrega(query: string): void {
+    if (!query || query.length < 2) {
+      if (this.departamentoDaneEntregaSeleccionado) {
+        this.onDepartamentoDaneEntregaChange(this.departamentoDaneEntregaSeleccionado);
+      } else {
+        this.municipiosDaneEntrega = [];
+      }
+      return;
+    }
+    this.cargandoDaneEntrega = true;
+    this.daneCodesService.searchMunicipios(query, this.departamentoDaneEntregaSeleccionado || undefined).subscribe(resultados => {
+      this.municipiosDaneEntrega = resultados;
+      this.cargandoDaneEntrega = false;
+    });
+  }
+
+  /**
+   * Selecciona un municipio DANE para origen
+   */
+  seleccionarMunicipioDaneOrigen(municipio: MunicipioDane): void {
+    // Evitar duplicados
+    if (!this.ciudadesDaneOrigenSeleccionadas.find(m => m.codigo === municipio.codigo)) {
+      this.ciudadesDaneOrigenSeleccionadas.push(municipio);
+      this.daneCodesService.addMunicipioFrecuente(municipio);
+      // Actualizar el formulario
+      const ciudadesValue = this.ciudadesDaneOrigenSeleccionadas.map(m => ({ value: m.nombre, label: m.nombre }));
+      this.ciudades.patchValue({ ciudadesOrigen: ciudadesValue });
+    }
+  }
+
+  /**
+   * Selecciona un municipio DANE para entrega
+   */
+  seleccionarMunicipioDaneEntrega(municipio: MunicipioDane): void {
+    // Evitar duplicados
+    if (!this.ciudadesDaneEntregaSeleccionadas.find(m => m.codigo === municipio.codigo)) {
+      this.ciudadesDaneEntregaSeleccionadas.push(municipio);
+      this.daneCodesService.addMunicipioFrecuente(municipio);
+      // Actualizar el formulario
+      const ciudadesValue = this.ciudadesDaneEntregaSeleccionadas.map(m => ({ value: m.nombre, label: m.nombre }));
+      this.ciudades.patchValue({ ciudadesEntrega: ciudadesValue });
+    }
+  }
+
+  /**
+   * Elimina un municipio DANE de origen
+   */
+  eliminarMunicipioDaneOrigen(municipio: MunicipioDane): void {
+    this.ciudadesDaneOrigenSeleccionadas = this.ciudadesDaneOrigenSeleccionadas.filter(m => m.codigo !== municipio.codigo);
+    const ciudadesValue = this.ciudadesDaneOrigenSeleccionadas.map(m => ({ value: m.nombre, label: m.nombre }));
+    this.ciudades.patchValue({ ciudadesOrigen: ciudadesValue });
+  }
+
+  /**
+   * Elimina un municipio DANE de entrega
+   */
+  eliminarMunicipioDaneEntrega(municipio: MunicipioDane): void {
+    this.ciudadesDaneEntregaSeleccionadas = this.ciudadesDaneEntregaSeleccionadas.filter(m => m.codigo !== municipio.codigo);
+    const ciudadesValue = this.ciudadesDaneEntregaSeleccionadas.map(m => ({ value: m.nombre, label: m.nombre }));
+    this.ciudades.patchValue({ ciudadesEntrega: ciudadesValue });
   }
 
   ngOnDestroy() {

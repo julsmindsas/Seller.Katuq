@@ -20,6 +20,8 @@ import {
 } from "@angular/animations";
 import { InfoIndicativos } from "../../../../Mock/indicativosPais";
 import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
+import { DaneCodesService } from "../../../shared/services/dane-codes.service";
+import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 import { QuickViewComponent } from "../quick-view/quick-view.component";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
@@ -125,6 +127,14 @@ export class CrearVentasComponent
   departamento_entrega: string;
   ciudades1: string[];
   ciudadesOrigen1: { value: string; label: string }[];
+
+  // Propiedades para DANE codes
+  departamentosDane: string[] = [];
+  municipiosDane: MunicipioDane[] = [];
+  searchQueryCiudadDane: string = '';
+  cargandoCiudadesDane: boolean = false;
+  usarDaneCiudadEntrega: boolean = false;
+  departamentoDaneSeleccionado: string = '';
   bloqueado: boolean;
   facturacionElectronica: boolean = false;
   razon_social: any;
@@ -256,6 +266,7 @@ export class CrearVentasComponent
     private bodegaService: BodegaService,
     private inventarioService: InventarioService,
     private tourService: TourService,
+    private daneCodesService: DaneCodesService,
   ) {
     this.initForm();
 
@@ -446,6 +457,8 @@ export class CrearVentasComponent
   ngOnInit(): void {
     // Cargar zonas de cobro
     this.cargarZonasCobro();
+    // Cargar departamentos DANE para búsqueda de ciudades
+    this.cargarDepartamentosDane();
     // Inicializar indicativos con valores por defecto
     this.indicativo_celular_facturacion = "57";
     this.indicativo_celular_entrega = "57";
@@ -2355,13 +2368,84 @@ export class CrearVentasComponent
             this.ciudades1 = y.ciudades.map((c) => {
               return c;
             });
-            // this.ciudadesOrigen1 = this.ciudades.map(city => ({
-            //   value: city, label: city
-            // }))
           }
         });
       }
     });
+  }
+
+  // ========== MÉTODOS DANE CODES ==========
+
+  /**
+   * Carga departamentos DANE al iniciar
+   */
+  cargarDepartamentosDane(): void {
+    this.daneCodesService.getDepartamentos().subscribe(deptos => {
+      this.departamentosDane = deptos;
+    });
+  }
+
+  /**
+   * Cambia departamento y carga municipios DANE
+   */
+  onDepartamentoDaneChange(departamento: string): void {
+    this.departamentoDaneSeleccionado = departamento;
+    if (!departamento) {
+      this.municipiosDane = [];
+      return;
+    }
+    this.cargandoCiudadesDane = true;
+    this.daneCodesService.getMunicipiosByDepartamento(departamento).subscribe(municipios => {
+      this.municipiosDane = municipios;
+      this.cargandoCiudadesDane = false;
+    });
+  }
+
+  /**
+   * Busca municipios por texto (nombre o código DANE)
+   * Si hay un departamento seleccionado, filtra solo en ese departamento
+   */
+  buscarMunicipioDane(query: string): void {
+    if (!query || query.length < 2) {
+      // Si hay departamento seleccionado, mostrar municipios del departamento
+      if (this.departamentoDaneSeleccionado) {
+        this.onDepartamentoDaneChange(this.departamentoDaneSeleccionado);
+      } else {
+        this.municipiosDane = [];
+      }
+      return;
+    }
+    this.cargandoCiudadesDane = true;
+    // Pasar el departamento seleccionado para filtrar
+    this.daneCodesService.searchMunicipios(query, this.departamentoDaneSeleccionado || undefined).subscribe(resultados => {
+      this.municipiosDane = resultados;
+      this.cargandoCiudadesDane = false;
+    });
+  }
+
+  /**
+   * Selecciona un municipio DANE
+   */
+  seleccionarMunicipioDane(municipio: MunicipioDane): void {
+    this.pais_entrega = 'Colombia';
+    this.departamento_entrega = municipio.departamento;
+    this.ciudad_municipio_entrega = municipio.nombre;
+    this.ciudades1 = [municipio.nombre];
+    // Actualizar selectedCity para que la UI refleje la selección
+    this.selectedCity = municipio.nombre;
+    localStorage.setItem('selectedCity', municipio.nombre);
+    this.daneCodesService.addMunicipioFrecuente(municipio);
+    this.idBillingZone('');
+    // Limpiar búsqueda
+    this.searchQueryCiudadDane = '';
+    this.municipiosDane = [];
+    // Notificar al componente de productos si existe
+    if (this.productos) {
+      this.productos.ciudad = municipio.nombre;
+      if (typeof this.productos.cargarTodo === 'function') {
+        this.productos.cargarTodo();
+      }
+    }
   }
 
   idBillingZone(zona_cobro: any) {

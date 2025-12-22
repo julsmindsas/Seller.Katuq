@@ -17,6 +17,8 @@ import {
   BarrioInfo,
 } from "../../../../shared/services/colombia-address.service";
 import { InfoPaises } from "../../../../../Mock/pais-estado-ciudad";
+import { DaneCodesService } from "../../../../shared/services/dane-codes.service";
+import { MunicipioDane } from "../../../../shared/data/colombia-dane-codes";
 
 @Component({
   selector: "app-direccion-estructurada",
@@ -197,14 +199,19 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   // Suscripciones para liberar en OnDestroy
   private suscripciones: Subscription[] = [];
 
+  // Propiedades para DANE codes
+  municipiosDane: MunicipioDane[] = [];
+  departamentosDane: string[] = [];
+
   constructor(
     private fb: FormBuilder,
     public activeModal: NgbActiveModal,
     private geocodingService: GeocodingService,
     private colombiaAddressService: ColombiaAddressService,
-    private infoPaises: InfoPaises
+    private infoPaises: InfoPaises,
+    private daneCodesService: DaneCodesService
   ) {
-    // Inicializar datos de Colombia
+    // Inicializar datos de Colombia usando DANE codes
     this.inicializarDatosGeograficos();
   }
 
@@ -914,20 +921,55 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     return regionSeleccionada ? regionSeleccionada.ciudades : [];
   }
 
-  // Inicializar datos geográficos de Colombia
+  // Inicializar datos geográficos de Colombia usando DANE codes
   private inicializarDatosGeograficos(): void {
+    // Cargar departamentos desde DANE codes service
+    this.daneCodesService.getDepartamentos().subscribe(deptos => {
+      this.departamentosDane = deptos;
+      this.departamentos = deptos;
+    });
+
+    // Cargar todos los municipios DANE
+    // Usamos el fallback de InfoPaises para compatibilidad inicial
     const colombia = this.infoPaises.paises.find(p => p.Pais === 'Colombia');
     if (colombia && colombia.Regiones) {
       this.datosColombiaCompletos = colombia.Regiones;
-      this.departamentos = colombia.Regiones.map(region => region.departamento);
-      
-      // Obtener todos los municipios únicos
+
+      // Obtener todos los municipios únicos (para compatibilidad)
       this.municipios = [];
       colombia.Regiones.forEach(region => {
         this.municipios.push(...region.ciudades);
       });
-      // Eliminar duplicados y ordenar
       this.municipios = [...new Set(this.municipios)].sort();
     }
+
+    // Cargar municipios principales como sugerencias
+    this.daneCodesService.getMunicipiosPrincipales().subscribe(principales => {
+      this.municipiosDane = principales;
+    });
+  }
+
+  /**
+   * Busca municipios usando el servicio DANE
+   */
+  buscarMunicipioDane(query: string): void {
+    if (!query || query.length < 2) {
+      this.sugerenciasCiudad = [];
+      return;
+    }
+    this.daneCodesService.searchMunicipios(query).subscribe(resultados => {
+      this.municipiosDane = resultados;
+      this.sugerenciasCiudad = resultados.map(m => m.nombre);
+    });
+  }
+
+  /**
+   * Carga municipios de un departamento usando DANE codes
+   */
+  cargarMunicipiosDeDepartamento(departamento: string): void {
+    this.daneCodesService.getMunicipiosByDepartamento(departamento).subscribe(municipios => {
+      this.municipiosDane = municipios;
+      this.municipios = municipios.map(m => m.nombre);
+    });
   }
 }

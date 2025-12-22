@@ -87,6 +87,38 @@
       background: linear-gradient(135deg, #6c757d 0%, #95a5a6 100%);
       color: white;
     }
+
+    // Estados de Prindel
+    &.estado-creado {
+      background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+      color: white;
+    }
+
+    &.estado-recogido {
+      background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+      color: white;
+    }
+
+    &.estado-error {
+      background: linear-gradient(135deg, #dc3545 0%, #721c24 100%);
+      color: white;
+    }
+
+    // Estados normalizados
+    &.estado-pendiente {
+      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+      color: #212529;
+    }
+
+    &.estado-procesando {
+      background: linear-gradient(135deg, #6610f2 0%, #a78bfa 100%);
+      color: white;
+    }
+
+    &.estado-cancelado {
+      background: linear-gradient(135deg, #6c757d 0%, #343a40 100%);
+      color: white;
+    }
   }
 
   // Timeline para historial de eventos

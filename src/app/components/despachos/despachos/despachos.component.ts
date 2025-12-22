@@ -6192,24 +6192,35 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
   // Método para hacer seguimiento de pedidos despachados
   trackShipment(pedido: Pedido): void {
-    if (!pedido.shippingOrder) {
+    // Debug: ver qué valores tiene el pedido
+    console.log('🔍 DEBUG trackShipment - Pedido recibido:', {
+      nroPedido: pedido.nroPedido,
+      shippingOrder: pedido.shippingOrder,
+      transportador: pedido.transportador,
+      estadoProceso: pedido.estadoProceso
+    });
+
+    // Determinar el identificador de tracking: SIEMPRE usar nroPedido para buscar en prindel_shipments
+    const trackingId = pedido.nroPedido;
+    const provider = pedido.transportador || 'prindel'; // Prindel por defecto
+
+    if (!trackingId) {
       Swal.fire({
         icon: 'warning',
         title: 'Sin orden de envío',
-        text: 'Este pedido no tiene una orden de envío asociada para hacer seguimiento.',
+        text: 'Este pedido no tiene número de pedido para hacer seguimiento.',
         confirmButtonText: 'Entendido'
       });
       return;
     }
 
-    // Obtener información de la empresa y proveedor logístico
-    const companyId = this.getCompanyId(); // Método que debes implementar según tu lógica
-    const provider = pedido.transportador || 'default';
-    const order = pedido.shippingOrder;
+    // Obtener información de la empresa
+    const companyId = this.getCompanyId();
 
+    console.log(`📍 Iniciando tracking - ID: ${trackingId}, Provider: ${provider}`);
     this.loading = true;
 
-    this.logisticaService.trackDespachado(companyId, provider, order).subscribe({
+    this.logisticaService.trackDespachado(companyId, provider, trackingId).subscribe({
       next: (response) => {
         this.loading = false;
         console.log('📦 Seguimiento del envío:', response);
@@ -6253,13 +6264,13 @@ export class DespachosComponent implements OnInit, OnDestroy {
   // Método para refrescar el tracking
   private refrescarTracking(pedido: Pedido, modalRef: any): void {
     const companyId = this.getCompanyId();
-    const provider = pedido.transportador || 'default';
-    const order = pedido.shippingOrder;
+    const provider = pedido.transportador || 'prindel';
+    const trackingId = pedido.nroPedido; // Usar siempre nroPedido para buscar en prindel_shipments
 
     modalRef.componentInstance.loading = true;
     modalRef.componentInstance.error = '';
 
-    this.logisticaService.trackDespachado(companyId, provider, order).subscribe({
+    this.logisticaService.trackDespachado(companyId, provider, trackingId).subscribe({
       next: (response) => {
         modalRef.componentInstance.loading = false;
         modalRef.componentInstance.trackingInfo = response;
@@ -6273,11 +6284,26 @@ export class DespachosComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Método auxiliar para obtener el ID de la empresa (implementar según tu lógica)
+  // Método auxiliar para obtener el ID de la empresa
   private getCompanyId(): string {
-    // Implementar según tu lógica de obtención de companyId
-    // Por ejemplo, desde un servicio de autenticación o configuración
-    return 'default'; // Valor por defecto
+    // Primero intentar obtener el ID directo
+    const directCompanyId = localStorage.getItem('currentCompanyId');
+    if (directCompanyId) {
+      return directCompanyId;
+    }
+
+    // Si no hay ID directo, parsear currentCompany
+    const currentCompany = localStorage.getItem('currentCompany');
+    if (currentCompany) {
+      try {
+        const company = JSON.parse(currentCompany);
+        return company.nomComercial || company.nombreComercio || company.razonSocial || company.nombre || 'default_company';
+      } catch (error) {
+        console.error('Error parsing currentCompany:', error);
+      }
+    }
+
+    return 'default_company';
   }
 
   // Método para buscar shipment en logística

@@ -325,26 +325,40 @@
                                                     </div>
                                                 </ng-container>
 
-                                                <!-- STANDARD TRACKING ACTIONS (DESHABILITADO TEMPORALMENTE) -->
-                                                <ng-container *ngIf="false">
-                                                    <!-- Botón de Seguimiento Original (Deshabilitado) -->
-                                                    <button *ngIf="pedido.estadoProceso === 'Despachado' && pedido.shippingOrder"
+                                                <!-- PRINDEL SPECIFIC ACTIONS -->
+                                                <ng-container *ngIf="isPrindelShipment(pedido)">
+                                                    <div class="prindel-actions-group">
+                                                        <!-- Prindel Tracking Button -->
+                                                        <button *ngIf="canTrackPrindelShipment(pedido)"
+                                                            pButton pRipple type="button" icon="pi pi-search"
+                                                            class="p-button-outlined p-button-sm p-button-info mb-1"
+                                                            (click)="openPrindelTracking(pedido)"
+                                                            pTooltip="Ver seguimiento del envío Prindel"
+                                                            tooltipPosition="top">
+                                                            <i class="pi pi-search me-1"></i>
+                                                            {{ 'Ver Seguimiento' | translate }}
+                                                        </button>
+
+                                                        <!-- Prindel Badge -->
+                                                        <div class="mt-1">
+                                                            <small class="badge bg-success text-white">
+                                                                <i class="pi pi-truck me-1"></i>
+                                                                Prindel
+                                                            </small>
+                                                        </div>
+                                                    </div>
+                                                </ng-container>
+
+                                                <!-- STANDARD TRACKING ACTIONS (Para otras transportadoras) -->
+                                                <ng-container *ngIf="!isEnviameShipment(pedido) && !isPrindelShipment(pedido) && pedido.estadoProceso === 'Despachado'">
+                                                    <!-- Botón de Seguimiento Genérico -->
+                                                    <button
                                                         pButton pRipple type="button" icon="pi pi-search"
-                                                        class="p-button-outlined p-button-sm p-button-info mb-1"
+                                                        class="p-button-outlined p-button-sm p-button-secondary mb-1"
                                                         (click)="trackShipment(pedido)"
                                                         pTooltip="{{ 'Hacer seguimiento del envío' | translate }}"
                                                         tooltipPosition="top">
                                                         {{ 'Seguir' | translate }}
-                                                    </button>
-
-                                                    <!-- Botón de Búsqueda de Shipment -->
-                                                    <button *ngIf="pedido.estadoProceso === 'Despachado'"
-                                                        pButton pRipple type="button" icon="pi pi-map-marker"
-                                                        class="p-button-outlined p-button-sm p-button-success"
-                                                        (click)="findShipment(pedido)"
-                                                        pTooltip="{{ 'Buscar shipment en logística' | translate }}"
-                                                        tooltipPosition="top">
-                                                        {{ 'Buscar' | translate }}
                                                     </button>
                                                 </ng-container>
 

@@ -14,6 +14,8 @@ import { InfoPaises } from "../../../../Mock/pais-estado-ciudad";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { DireccionEstructuradaComponent } from "./direccion-estructurada/direccion-estructurada.component";
+import { DaneCodesService } from "../../../shared/services/dane-codes.service";
+import { MunicipioDane } from "../../../shared/data/colombia-dane-codes";
 
 @Component({
   selector: "pedido-entrega",
@@ -88,17 +90,29 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   latitud: string;
   longitud: string;
 
+  // Propiedades para DANE codes
+  departamentosDane: string[] = [];
+  municipiosDane: MunicipioDane[] = [];
+  searchQueryCiudadDane: string = '';
+  cargandoCiudadesDane: boolean = false;
+
   constructor(
     private inforPaises: InfoPaises,
     private modalService: NgbModal,
     private service: MaestroService,
     private infoIndicativo: InfoIndicativos,
+    private daneCodesService: DaneCodesService
   ) {
     this.paises = this.inforPaises.paises.map((x) => {
       return x.Pais;
     });
     this.indicativos = this.infoIndicativo.datos;
     this.datosEntregas = [];
+
+    // Cargar departamentos DANE
+    this.daneCodesService.getDepartamentos().subscribe(deptos => {
+      this.departamentosDane = deptos;
+    });
 
     // Inicializar data para el Excel con plantilla
     this.data = [
@@ -824,5 +838,62 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         console.log("Modal cerrado sin aplicar cambios:", reason);
       },
     );
+  }
+
+  // ========== MÉTODOS DANE CODES ==========
+
+  /**
+   * Cambia departamento y carga sus municipios usando DANE codes
+   */
+  onDepartamentoDaneChange(departamento: string): void {
+    if (!departamento) {
+      this.municipiosDane = [];
+      this.ciudades1 = [];
+      return;
+    }
+    this.cargandoCiudadesDane = true;
+    this.daneCodesService.getMunicipiosByDepartamento(departamento).subscribe(municipios => {
+      this.municipiosDane = municipios;
+      // También actualizar ciudades1 para compatibilidad
+      this.ciudades1 = municipios.map(m => m.nombre);
+      this.cargandoCiudadesDane = false;
+    });
+  }
+
+  /**
+   * Busca municipios por texto (nombre o código DANE)
+   */
+  buscarMunicipioDane(query: string): void {
+    if (!query || query.length < 2) {
+      this.municipiosDane = [];
+      return;
+    }
+    this.cargandoCiudadesDane = true;
+    this.daneCodesService.searchMunicipios(query).subscribe(resultados => {
+      this.municipiosDane = resultados;
+      this.cargandoCiudadesDane = false;
+    });
+  }
+
+  /**
+   * Selecciona un municipio DANE y actualiza los campos de entrega
+   */
+  seleccionarMunicipioDane(municipio: MunicipioDane): void {
+    this.pais_entrega = 'Colombia';
+    this.departamento_entrega = municipio.departamento;
+    this.ciudad_municipio_entrega = municipio.nombre;
+    // Actualizar ciudades1 para que el select muestre la opción correcta
+    this.ciudades1 = [municipio.nombre];
+    // Guardar como frecuente
+    this.daneCodesService.addMunicipioFrecuente(municipio);
+    // Actualizar zonas de cobro
+    this.idBillingZone('');
+  }
+
+  /**
+   * Formatea un municipio DANE para mostrar
+   */
+  formatMunicipioDane(municipio: MunicipioDane): string {
+    return `${municipio.nombre} - ${municipio.departamento} (${municipio.codigo})`;
   }
 }

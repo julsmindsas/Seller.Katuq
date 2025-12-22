@@ -4,10 +4,10 @@
 			"path": "."
 		},
 		{
-			"path": "katuq_admin_back_firebase"
+			"path": "../katuq_admin_back_firebase"
 		},
 		{
-			"path": "kai"
+			"path": "../kai"
 		}
 	],
 	"settings": {

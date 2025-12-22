@@ -313,6 +313,67 @@
                 />
             </div>
         </div>
+
+        <!-- Buscador DANE de municipios -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">
+                    <i class="fa fa-search"></i> Buscar ciudad/municipio (DANE)
+                </label>
+                <div class="input-group">
+                    <input
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="searchQueryCiudadDane"
+                        placeholder="Buscar por nombre o código DANE..."
+                        (input)="buscarMunicipioDane(searchQueryCiudadDane)"
+                    />
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+                <small class="text-muted">Base de datos DANE con 1122 municipios de Colombia</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Filtrar por departamento (DANE)</label>
+                <select
+                    class="form-control"
+                    (change)="onDepartamentoDaneChange($event.target.value)"
+                >
+                    <option value="">-- Todos los departamentos --</option>
+                    <option *ngFor="let depto of departamentosDane" [value]="depto">
+                        {{ depto }}
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Lista de municipios DANE encontrados -->
+        <div class="row mb-3" *ngIf="municipiosDane.length > 0">
+            <div class="col-12">
+                <label class="form-label">Municipios encontrados (click para seleccionar)</label>
+                <div class="d-flex flex-wrap gap-2" style="max-height: 150px; overflow-y: auto;">
+                    <span
+                        *ngFor="let municipio of municipiosDane"
+                        class="badge bg-light text-dark border p-2"
+                        style="cursor: pointer;"
+                        (click)="seleccionarMunicipioDane(municipio)"
+                    >
+                        <strong>{{ municipio.nombre }}</strong>
+                        <small class="text-muted"> - {{ municipio.departamento }} ({{ municipio.codigo }})</small>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2" *ngIf="cargandoCiudadesDane">
+            <div class="col-12 text-center">
+                <i class="fa fa-spinner fa-spin"></i> Cargando municipios...
+            </div>
+        </div>
+
+        <hr class="my-2">
+
         <div class="row">
             <div class="col-sm-4 mb-3">
                 <label
@@ -648,6 +709,67 @@
                 />
             </div>
         </div>
+
+        <!-- Buscador DANE de municipios -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">
+                    <i class="fa fa-search"></i> Buscar ciudad/municipio (DANE)
+                </label>
+                <div class="input-group">
+                    <input
+                        type="text"
+                        class="form-control"
+                        [(ngModel)]="searchQueryCiudadDane"
+                        placeholder="Buscar por nombre o código DANE..."
+                        (input)="buscarMunicipioDane(searchQueryCiudadDane)"
+                    />
+                    <button class="btn btn-outline-primary" type="button">
+                        <i class="fa fa-search"></i>
+                    </button>
+                </div>
+                <small class="text-muted">Base de datos DANE con 1122 municipios de Colombia</small>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Filtrar por departamento (DANE)</label>
+                <select
+                    class="form-control"
+                    (change)="onDepartamentoDaneChange($event.target.value)"
+                >
+                    <option value="">-- Todos los departamentos --</option>
+                    <option *ngFor="let depto of departamentosDane" [value]="depto">
+                        {{ depto }}
+                    </option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Lista de municipios DANE encontrados -->
+        <div class="row mb-3" *ngIf="municipiosDane.length > 0">
+            <div class="col-12">
+                <label class="form-label">Municipios encontrados (click para seleccionar)</label>
+                <div class="d-flex flex-wrap gap-2" style="max-height: 150px; overflow-y: auto;">
+                    <span
+                        *ngFor="let municipio of municipiosDane"
+                        class="badge bg-light text-dark border p-2"
+                        style="cursor: pointer;"
+                        (click)="seleccionarMunicipioDane(municipio)"
+                    >
+                        <strong>{{ municipio.nombre }}</strong>
+                        <small class="text-muted"> - {{ municipio.departamento }} ({{ municipio.codigo }})</small>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-2" *ngIf="cargandoCiudadesDane">
+            <div class="col-12 text-center">
+                <i class="fa fa-spinner fa-spin"></i> Cargando municipios...
+            </div>
+        </div>
+
+        <hr class="my-2">
+
         <div class="row">
             <div class="col-sm-4 mb-3">
                 <label

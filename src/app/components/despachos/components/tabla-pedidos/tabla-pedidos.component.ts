@@ -654,6 +654,36 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   // =====================================
+  // PRINDEL SPECIFIC METHODS
+  // =====================================
+
+  /**
+   * Checks if a pedido uses Prindel as shipping provider
+   */
+  isPrindelShipment(pedido: Pedido): boolean {
+    const transportador = pedido.transportador?.toLowerCase() || '';
+    const providerShipment = pedido.providerShipment?.toLowerCase() || '';
+    return transportador === 'prindel' || providerShipment === 'prindel';
+  }
+
+  /**
+   * Checks if we can track a Prindel shipment
+   * Prindel shipments can be tracked if estadoProceso is Despachado
+   */
+  canTrackPrindelShipment(pedido: Pedido): boolean {
+    if (!this.isPrindelShipment(pedido)) return false;
+    return pedido.estadoProceso === 'Despachado';
+  }
+
+  /**
+   * Opens tracking for Prindel shipments
+   */
+  openPrindelTracking(pedido: Pedido): void {
+    console.log('📍 TablaPedidos - Opening Prindel tracking for pedido:', pedido.nroPedido);
+    this.onTrackShipment.emit(pedido);
+  }
+
+  // =====================================
   // EVIDENCIA EMPACADO METHODS
   // =====================================
 

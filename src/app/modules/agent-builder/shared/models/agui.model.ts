@@ -600,7 +600,14 @@ export const AGUI_TOOL_DISPLAY: Record<string, { icon: string; label: string; co
     update_order_status: { icon: 'pi-pencil', label: 'Actualizar estado', color: '#8b5cf6' },
     assign_transporter: { icon: 'pi-user-plus', label: 'Asignar transporte', color: '#8b5cf6' },
     adjust_stock: { icon: 'pi-plus-circle', label: 'Ajustar stock', color: '#8b5cf6' },
+
+    // Dispatch/Routes tools (múltiples variaciones)
     plan_routes: { icon: 'pi-map', label: 'Planificar rutas', color: '#3b82f6' },
+    plan_dispatch_routes: { icon: 'pi-map', label: 'Rutas de despacho', color: '#3b82f6' },
+    planificar_rutas: { icon: 'pi-map', label: 'Planificar rutas', color: '#3b82f6' },
+    optimize_routes: { icon: 'pi-directions', label: 'Optimizar rutas', color: '#3b82f6' },
+    create_dispatch_plan: { icon: 'pi-truck', label: 'Plan de despacho', color: '#3b82f6' },
+    create_dispatch: { icon: 'pi-send', label: 'Crear despacho', color: '#3b82f6' },
 
     // Generic
     transfer_to_agent: { icon: 'pi-arrow-right', label: 'Transferir', color: '#6366f1' }
@@ -862,20 +869,64 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
         artifactType: 'sales_chart',
         transform: (result) => {
             if (!result) return null;
-            const data = Array.isArray(result) ? result : (result.data || []);
+
+            // El resultado tiene ventas_por_dia como objeto {fecha: {cantidad, total}}
+            // Convertir a array para Chart.js
+            let chartData: Array<{date: string, total: number}> = [];
+
+            if (result.ventas_por_dia && typeof result.ventas_por_dia === 'object') {
+                // Convertir objeto a array ordenado por fecha
+                chartData = Object.entries(result.ventas_por_dia)
+                    .map(([date, info]) => ({
+                        date,
+                        total: (info as any).total || 0
+                    }))
+                    .sort((a, b) => a.date.localeCompare(b.date));
+            } else if (Array.isArray(result.data)) {
+                // Fallback: si viene como array en result.data
+                chartData = result.data;
+            } else if (Array.isArray(result)) {
+                // Fallback: si el resultado es directamente un array
+                chartData = result;
+            }
+
+            // Si no hay datos, no crear el artifact (evita chart vacío que puede freezar)
+            if (chartData.length === 0) {
+                console.log('[AGUI_MODEL] ⚠️ get_sales_by_period: No chart data available');
+                return null;
+            }
+
+            // Formatear labels de fecha (solo día-mes para legibilidad)
+            const formatDate = (dateStr: string) => {
+                try {
+                    const [year, month, day] = dateStr.split('-');
+                    return `${day}/${month}`;
+                } catch {
+                    return dateStr;
+                }
+            };
+
             return {
                 id: `chart_sales_period_${Date.now()}`,
                 type: 'sales_chart',
-                title: 'Ventas por Período',
+                title: result.periodo ? `Ventas - ${result.periodo}` : 'Ventas por Período',
                 data: {
                     chartType: 'line',
-                    labels: data.map((d: any) => d.date || d.period || d.label),
+                    labels: chartData.map((d: any) => formatDate(d.date || d.period || d.label || '')),
                     datasets: [{
-                        label: 'Ventas',
-                        data: data.map((d: any) => d.total || d.amount || d.value || 0),
+                        label: 'Ventas (COP)',
+                        data: chartData.map((d: any) => d.total || d.amount || d.value || 0),
                         borderColor: '#10b981',
-                        backgroundColor: 'rgba(16, 185, 129, 0.1)'
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.3
                     }]
+                },
+                metadata: {
+                    periodo: result.periodo,
+                    total_ventas: result.total_ventas,
+                    cantidad_pedidos: result.cantidad_pedidos,
+                    ticket_promedio: result.ticket_promedio
                 }
             } as AgUiChartArtifact;
         }
@@ -1227,69 +1278,150 @@ export const AGUI_TOOL_ARTIFACT_MAP: AgUiToolArtifactConfig[] = [
         artifactType: 'dispatch_map',
         requiresConfirmation: true,
         confirmationMessage: '¿Aprobar estas rutas y crear los despachos?',
-        transform: (result) => {
-            console.log('[AGUI_MODEL] 🗺️ plan_dispatch_routes transform:', {
-                hasResult: !!result,
-                status: result?.status,
-                hasMapData: !!result?.map_data,
-                routesCount: result?.routes?.length
-            });
-
-            if (!result || result.status !== 'success') {
-                console.log('[AGUI_MODEL] ❌ Invalid result status:', result?.status);
-                return null;
-            }
-
-            const mapData = result.map_data;
-            if (!mapData) {
-                console.log('[AGUI_MODEL] ❌ No map_data in result');
-                return null;
-            }
-
-            console.log('[AGUI_MODEL] ✅ Creating dispatch_map artifact with data:', {
-                center: mapData.center,
-                markersCount: mapData.markers?.length || 0,
-                routesCount: result.routes?.length || 0,
-                summaryTotal: mapData.summary?.total_orders || 0
-            });
-
-            const artifact = {
-                id: `dispatch_map_${Date.now()}`,
-                type: 'dispatch_map',
-                title: '🗺️ Rutas de Despacho Optimizadas',
-                data: {
-                    center: mapData.center || { lat: 4.710989, lng: -74.072092 },
-                    zoom: mapData.zoom || 12,
-                    warehouse: mapData.warehouse || { lat: 4.710989, lng: -74.072092, address: 'Almacén' },
-                    markers: mapData.markers || [],
-                    polylines: mapData.polylines || [],
-                    routes: result.routes || [],
-                    summary: mapData.summary || {
-                        total_orders: 0,
-                        total_zones: 0,
-                        total_distance_km: 0,
-                        total_duration_minutes: 0,
-                        total_value: 0,
-                        available_transporters: 0
-                    }
-                },
-                metadata: {
-                    message: result.message,
-                    artifact_type: result.artifact_type
-                }
-            } as AgUiDispatchMapArtifact;
-
-            console.log('[AGUI_MODEL] 🎉 dispatch_map artifact created:', artifact.id);
-            return artifact;
-        }
+        transform: transformDispatchMapResult
+    },
+    // Alias para variaciones del nombre del tool
+    {
+        toolName: 'planificar_rutas',
+        artifactType: 'dispatch_map',
+        requiresConfirmation: true,
+        confirmationMessage: '¿Aprobar estas rutas y crear los despachos?',
+        transform: transformDispatchMapResult
+    },
+    {
+        toolName: 'plan_routes',
+        artifactType: 'dispatch_map',
+        requiresConfirmation: true,
+        confirmationMessage: '¿Aprobar estas rutas y crear los despachos?',
+        transform: transformDispatchMapResult
+    },
+    {
+        toolName: 'optimize_routes',
+        artifactType: 'dispatch_map',
+        requiresConfirmation: true,
+        confirmationMessage: '¿Aprobar estas rutas optimizadas?',
+        transform: transformDispatchMapResult
+    },
+    {
+        toolName: 'create_dispatch_plan',
+        artifactType: 'dispatch_map',
+        requiresConfirmation: true,
+        confirmationMessage: '¿Aprobar este plan de despacho?',
+        transform: transformDispatchMapResult
     }
 ];
 
 /**
+ * Función de transformación reutilizable para dispatch maps
+ * Soporta múltiples estructuras de resultado del backend
+ */
+function transformDispatchMapResult(result: any): AgUiDispatchMapArtifact | null {
+    console.log('[AGUI_MODEL] 🗺️ transformDispatchMapResult:', {
+        hasResult: !!result,
+        status: result?.status,
+        hasMapData: !!result?.map_data,
+        hasRoutes: !!result?.routes,
+        artifactType: result?.artifact_type,
+        keys: result ? Object.keys(result) : []
+    });
+
+    if (!result) {
+        console.log('[AGUI_MODEL] ❌ No result');
+        return null;
+    }
+
+    // Aceptar resultado si status es 'success' O si tiene map_data O si tiene routes
+    const isSuccess = result.status === 'success' ||
+                      result.map_data ||
+                      result.routes ||
+                      result.markers;
+
+    if (!isSuccess) {
+        console.log('[AGUI_MODEL] ❌ Invalid result - no success status or data');
+        return null;
+    }
+
+    // Soportar múltiples estructuras de datos
+    const mapData = result.map_data || result;
+    const routes = result.routes || mapData.routes || [];
+    const markers = mapData.markers || result.markers || [];
+    const polylines = mapData.polylines || result.polylines || [];
+
+    // Calcular centro si no está especificado
+    let center = mapData.center || result.center;
+    if (!center && markers.length > 0) {
+        center = { lat: markers[0].lat, lng: markers[0].lng };
+    }
+    if (!center) {
+        center = { lat: 4.710989, lng: -74.072092 }; // Bogotá default
+    }
+
+    // Construir summary si no existe
+    const summary = mapData.summary || result.summary || {
+        total_orders: markers.length || routes.reduce((acc: number, r: any) => acc + (r.orders_count || 0), 0),
+        total_zones: routes.length,
+        total_distance_km: routes.reduce((acc: number, r: any) => acc + (r.metrics?.total_distance_km || r.distance_km || 0), 0),
+        total_duration_minutes: routes.reduce((acc: number, r: any) => acc + (r.metrics?.estimated_duration_minutes || r.duration_min || 0), 0),
+        total_value: routes.reduce((acc: number, r: any) => acc + (r.metrics?.total_value || r.total_value || 0), 0),
+        available_transporters: result.available_transporters || 0
+    };
+
+    console.log('[AGUI_MODEL] ✅ Creating dispatch_map artifact:', {
+        center,
+        markersCount: markers.length,
+        routesCount: routes.length,
+        summaryTotal: summary.total_orders
+    });
+
+    const artifact: AgUiDispatchMapArtifact = {
+        id: `dispatch_map_${Date.now()}`,
+        type: 'dispatch_map',
+        title: '🗺️ Rutas de Despacho Optimizadas',
+        data: {
+            center,
+            zoom: mapData.zoom || 12,
+            warehouse: mapData.warehouse || result.warehouse || { lat: center.lat, lng: center.lng, address: 'Almacén' },
+            markers,
+            polylines,
+            routes,
+            summary
+        },
+        metadata: {
+            message: result.message,
+            artifact_type: result.artifact_type
+        }
+    };
+
+    console.log('[AGUI_MODEL] 🎉 dispatch_map artifact created:', artifact.id);
+    return artifact;
+}
+
+/**
  * Helper para obtener configuración de artifact por tool
+ * Busca de manera case-insensitive y soporta variaciones de nombres
  */
 export function getToolArtifactConfig(toolName: string): AgUiToolArtifactConfig | undefined {
-    return AGUI_TOOL_ARTIFACT_MAP.find(config => config.toolName === toolName);
+    // Normalizar el nombre del tool
+    const normalizedName = toolName.toLowerCase().trim();
+
+    // Buscar coincidencia exacta primero
+    let config = AGUI_TOOL_ARTIFACT_MAP.find(c => c.toolName === toolName);
+    if (config) return config;
+
+    // Buscar coincidencia case-insensitive
+    config = AGUI_TOOL_ARTIFACT_MAP.find(c => c.toolName.toLowerCase() === normalizedName);
+    if (config) return config;
+
+    // Buscar por patrones comunes de dispatch/routes
+    if (normalizedName.includes('dispatch') || normalizedName.includes('route') || normalizedName.includes('ruta')) {
+        config = AGUI_TOOL_ARTIFACT_MAP.find(c => c.toolName === 'plan_dispatch_routes');
+        if (config) {
+            console.log('[AGUI_MODEL] 🔍 Matched tool by pattern:', toolName, '→ plan_dispatch_routes');
+            return config;
+        }
+    }
+
+    return undefined;
 }
 
 /**
@@ -1337,11 +1469,19 @@ export function toolRequiresConfirmation(toolName: string): boolean {
  * Son acciones que modifican datos o tienen impacto significativo
  */
 export const AGUI_HITL_TOOLS: string[] = [
-    'plan_dispatch_routes',  // 🗺️ Planificación de rutas de despacho
+    // Dispatch/Routes tools (múltiples variaciones de nombres)
+    'plan_dispatch_routes',
+    'planificar_rutas',
+    'plan_routes',
+    'optimize_routes',
+    'create_dispatch_plan',
     'create_dispatch',
+    // Transporter tools
     'assign_transporter',
+    // Order tools
     'update_order_status',
     'cancel_order',
+    // Inventory tools
     'adjust_stock',
     'create_purchase_order'
 ];

@@ -35,19 +35,24 @@ export class DaneCodesService {
   /**
    * Buscar municipios por query
    */
-  searchMunicipios(query: string): Observable<MunicipioDane[]> {
+  searchMunicipios(query: string, departamento?: string): Observable<MunicipioDane[]> {
     if (!query || query.length < 2) {
       return of([]);
     }
 
     // Verificar cache
-    const cacheKey = query.toLowerCase();
+    const cacheKey = `${query.toLowerCase()}_${departamento || 'all'}`;
     if (this.searchCache.has(cacheKey)) {
       return of(this.searchCache.get(cacheKey) || []);
     }
 
     // Buscar municipios
-    const resultados = buscarMunicipio(query);
+    let resultados = buscarMunicipio(query);
+
+    // Filtrar por departamento si está especificado
+    if (departamento) {
+      resultados = resultados.filter(m => m.departamento === departamento);
+    }
 
     // Guardar en cache
     this.searchCache.set(cacheKey, resultados);

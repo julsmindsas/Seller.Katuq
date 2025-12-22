@@ -513,28 +513,67 @@ export class ArtifactRendererComponent implements OnInit, OnChanges, AfterViewIn
 
     private renderChartJS(data: any): void {
         if (!this.chartCanvas?.nativeElement) return;
+
+        // Validate data to prevent Chart.js from freezing
+        if (!data || !data.labels || !data.datasets) {
+            console.warn('[ArtifactRenderer] ⚠️ Invalid chart data - missing labels or datasets');
+            return;
+        }
+
+        // Ensure labels is an array with valid values
+        const labels = Array.isArray(data.labels)
+            ? data.labels.map((l: any) => l ?? '')
+            : [];
+
+        if (labels.length === 0) {
+            console.warn('[ArtifactRenderer] ⚠️ Empty labels array - skipping chart render');
+            return;
+        }
+
+        // Ensure datasets have valid data arrays
+        const datasets = (data.datasets || []).map((ds: any) => ({
+            ...ds,
+            data: Array.isArray(ds.data)
+                ? ds.data.map((v: any) => (typeof v === 'number' && !isNaN(v)) ? v : 0)
+                : []
+        }));
+
+        if (datasets.length === 0 || datasets[0].data.length === 0) {
+            console.warn('[ArtifactRenderer] ⚠️ Empty datasets - skipping chart render');
+            return;
+        }
+
         const ctx = this.chartCanvas.nativeElement.getContext('2d');
         if (this.chart) {
             this.chart.destroy();
         }
 
-        this.chart = new (window as any).Chart(ctx, {
-            type: data.chartType || 'bar',
-            data: {
-                labels: data.labels,
-                datasets: data.datasets
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: data.datasets.length > 1
-                    }
+        try {
+            this.chart = new (window as any).Chart(ctx, {
+                type: data.chartType || 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
                 },
-                ...data.options
-            }
-        });
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: datasets.length > 1
+                        }
+                    },
+                    ...data.options
+                }
+            });
+            console.log('[ArtifactRenderer] ✅ Chart rendered successfully:', {
+                type: data.chartType,
+                labelsCount: labels.length,
+                datasetsCount: datasets.length
+            });
+        } catch (error) {
+            console.error('[ArtifactRenderer] ❌ Chart.js error:', error);
+        }
     }
 
     private renderSimpleChart(data: any): void {

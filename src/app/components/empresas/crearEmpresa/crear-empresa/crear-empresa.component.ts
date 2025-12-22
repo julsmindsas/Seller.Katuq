@@ -8,6 +8,8 @@ import { finalize, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { DataStoreService } from '../../../../shared/services/dataStoreService';
+import { DaneCodesService } from '../../../../shared/services/dane-codes.service';
+import { MunicipioDane } from '../../../../shared/data/colombia-dane-codes';
 @Component({
   selector: 'app-crear-empresa',
   templateUrl: './crear-empresa.component.html',
@@ -41,6 +43,13 @@ export class CrearEmpresaComponent implements OnInit {
   departamentos: any;
   ciudades: string[];
   paises1: string[];
+
+  // Propiedades para DANE codes
+  departamentosDane: string[] = [];
+  municipiosDane: MunicipioDane[] = [];
+  municipiosFiltradosDane: MunicipioDane[] = [];
+  searchQueryCiudad: string = '';
+  cargandoCiudades: boolean = false;
 
   horarioPV: FormArray<any>;
   marketPlaces: FormArray<any>;
@@ -195,8 +204,16 @@ export class CrearEmpresaComponent implements OnInit {
   }
 
 
-  constructor(private fb: FormBuilder,
-    private storage: AngularFireStorage, private service: MaestroService, private inforPaises: InfoPaises, private infoIndicativo: InfoIndicativos, private router: Router, private dataStoreService: DataStoreService) {
+  constructor(
+    private fb: FormBuilder,
+    private storage: AngularFireStorage,
+    private service: MaestroService,
+    private inforPaises: InfoPaises,
+    private infoIndicativo: InfoIndicativos,
+    private router: Router,
+    private dataStoreService: DataStoreService,
+    private daneCodesService: DaneCodesService
+  ) {
 
     this.f = fb.group({
       nombre: ['', Validators.required],
@@ -480,6 +497,73 @@ export class CrearEmpresaComponent implements OnInit {
       return x.Pais
     })
     this.paises1 = this.paises
+
+    // Cargar departamentos DANE para Colombia
+    this.daneCodesService.getDepartamentos().subscribe(deptos => {
+      this.departamentosDane = deptos;
+    });
+
+    // Cargar municipios principales como sugerencias iniciales
+    this.daneCodesService.getMunicipiosPrincipales().subscribe(principales => {
+      this.municipiosFiltradosDane = principales;
+    });
+  }
+
+  // ========== MÉTODOS DANE CODES ==========
+
+  /**
+   * Cambia departamento y carga sus municipios usando DANE codes
+   */
+  onDepartamentoDaneChange(departamento: string): void {
+    if (!departamento) {
+      this.municipiosFiltradosDane = [];
+      return;
+    }
+    this.cargandoCiudades = true;
+    this.daneCodesService.getMunicipiosByDepartamento(departamento).subscribe(municipios => {
+      this.municipiosFiltradosDane = municipios;
+      this.cargandoCiudades = false;
+    });
+  }
+
+  /**
+   * Busca municipios por texto (nombre o código DANE)
+   */
+  buscarMunicipioDane(query: string): void {
+    if (!query || query.length < 2) {
+      this.municipiosFiltradosDane = [];
+      return;
+    }
+    this.cargandoCiudades = true;
+    this.daneCodesService.searchMunicipios(query).subscribe(resultados => {
+      this.municipiosFiltradosDane = resultados;
+      this.cargandoCiudades = false;
+    });
+  }
+
+  /**
+   * Selecciona un municipio DANE y actualiza el formulario
+   */
+  seleccionarMunicipioDane(municipio: MunicipioDane): void {
+    this.f.patchValue({
+      departamento: municipio.departamento,
+      ciudad: municipio.nombre
+    });
+    // También actualizar las ciudades de origen/entrega si es necesario
+    this.ciudadesOrigen = this.municipiosFiltradosDane.map(m => ({
+      value: m.nombre,
+      label: `${m.nombre} - ${m.departamento}`
+    }));
+    this.ciudadesEntrega = [...this.ciudadesOrigen];
+    // Agregar el municipio a frecuentes
+    this.daneCodesService.addMunicipioFrecuente(municipio);
+  }
+
+  /**
+   * Formatea un municipio para mostrar en select
+   */
+  formatMunicipioDane(municipio: MunicipioDane): string {
+    return this.daneCodesService.formatMunicipioLabel(municipio);
   }
   guardar() {
 
