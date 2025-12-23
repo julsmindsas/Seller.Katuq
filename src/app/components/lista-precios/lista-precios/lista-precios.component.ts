@@ -1,7 +1,9 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
+import { EditarPreciosTipoClienteComponent } from '../editar-precios-tipo-cliente/editar-precios-tipo-cliente.component';
 
 @Component({
   selector: 'app-lista-precios',
@@ -23,7 +25,10 @@ export class ListaPreciosComponent implements OnInit {
   currentPage = 0;
   totalRecords = 0;
 
-  constructor(private service: MaestroService) {}
+  constructor(
+    private service: MaestroService,
+    private modalService: NgbModal
+  ) {}
 
   ngOnInit(): void {
     this.cargarTiposCliente();
@@ -277,15 +282,63 @@ export class ListaPreciosComponent implements OnInit {
   }
 
   editarPrecio(producto: any) {
-    // TODO: Implementar modal de edición de precios
-    Swal.fire('Info', 'Funcionalidad de edición en desarrollo', 'info');
+    console.log('editarPrecio llamado', { producto, activeTab: this.activeTab });
+    
+    // Solo abrir modal en el tab de tipo de cliente
+    if (this.activeTab !== 0) {
+      Swal.fire('Info', 'Esta funcionalidad solo está disponible en el tab "Precio tipo clientes"', 'info');
+      return;
+    }
+
+    if (!producto) {
+      console.error('Producto no definido');
+      return;
+    }
+
+    try {
+      const modalRef = this.modalService.open(EditarPreciosTipoClienteComponent, {
+        size: 'lg',
+        centered: true,
+        backdrop: 'static'
+      });
+
+      if (!modalRef) {
+        console.error('No se pudo abrir el modal');
+        return;
+      }
+
+      modalRef.componentInstance.producto = producto;
+
+      modalRef.result.then((result) => {
+        if (result && result.success) {
+          console.log('Precios guardados exitosamente:', result);
+          // Actualizar el producto en la lista local
+          const index = this.productos.findIndex(p => p.cd === result.producto.cd || p._id === result.producto._id);
+          if (index !== -1) {
+            this.productos[index] = result.producto;
+            this.productosFiltrados = [...this.productos];
+          }
+          Swal.fire('Éxito', 'Precios por tipo de cliente guardados correctamente', 'success');
+        } else if (result && !result.success) {
+          console.error('Error al guardar:', result.error);
+          Swal.fire('Error', 'No se pudieron guardar los precios', 'error');
+        }
+      }).catch((error) => {
+        // Usuario canceló o hubo un error
+        console.log('Modal cerrado:', error);
+      });
+    } catch (error) {
+      console.error('Error al abrir modal:', error);
+      Swal.fire('Error', 'No se pudo abrir el modal de edición', 'error');
+    }
   }
 
   obtenerPrecio(producto: any): number {
-    if (this.activeTab === 0 && producto.preciosPorTipoCliente) {
-      // Retornar el primer precio disponible o el precio base
-      const primerPrecio = Object.values(producto.preciosPorTipoCliente)[0];
-      return primerPrecio as number || producto.precio?.precio || 0;
+    if (this.activeTab === 0 && producto.preciosPorTipoCliente && Array.isArray(producto.preciosPorTipoCliente)) {
+      // Si hay precios por tipo de cliente, mostrar el primero o el precio base
+      if (producto.preciosPorTipoCliente.length > 0) {
+        return producto.preciosPorTipoCliente[0].precio || producto.precio?.precio || 0;
+      }
     }
     return producto.precio?.precio || 0;
   }

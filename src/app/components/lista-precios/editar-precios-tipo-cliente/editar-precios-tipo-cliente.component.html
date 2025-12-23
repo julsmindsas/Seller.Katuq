@@ -1,0 +1,104 @@
+<div class="modal-header">
+  <h5 class="modal-title">Configurar Precios por Tipo de Cliente</h5>
+  <button type="button" class="btn-close" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <div *ngIf="cargando" class="text-center p-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!cargando">
+    <!-- Información del producto -->
+    <div class="mb-4 p-3 bg-light rounded">
+      <div class="row align-items-center">
+        <div class="col-auto">
+          <img 
+            *ngIf="producto?.crearProducto?.imagenesPrincipales?.length > 0"
+            [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
+            [alt]="producto?.crearProducto?.titulo"
+            width="60"
+            height="60"
+            style="border-radius: 8px; object-fit: cover;"
+          />
+          <img 
+            *ngIf="!producto?.crearProducto?.imagenesPrincipales?.length"
+            src="assets/img/placeholder.png"
+            width="60"
+            height="60"
+            style="border-radius: 8px; opacity: 0.5;"
+          />
+        </div>
+        <div class="col">
+          <h6 class="mb-1 fw-bold">{{ producto?.crearProducto?.titulo }}</h6>
+          <small class="text-muted">Referencia: {{ producto?.identificacion?.referencia }}</small>
+          <div *ngIf="producto?.precio?.precio" class="mt-1">
+            <small class="text-muted">Precio base: $ {{ producto.precio.precio | number:'1.0-0' }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de precios -->
+    <form [formGroup]="preciosForm">
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th style="width: 60%;">Tipo de Cliente</th>
+              <th style="width: 40%;">Precio</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let tipo of tiposCliente">
+              <td>
+                <div class="d-flex align-items-center">
+                  <div>
+                    <div class="fw-bold">{{ tipo.nombre }}</div>
+                    <small class="text-muted" *ngIf="tipo.descripcion">{{ tipo.descripcion }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="input-group">
+                  <span class="input-group-text">$</span>
+                  <input 
+                    type="number" 
+                    class="form-control" 
+                    [formControlName]="'precio_' + tipo.id"
+                    placeholder="0"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="tiposCliente.length === 0 && !cargando">
+              <td colspan="2" class="text-center text-muted py-4">
+                <div>
+                  <i class="icofont icofont-info-circle" style="font-size: 2rem; opacity: 0.5;"></i>
+                  <p class="mt-2 mb-0">No hay tipos de cliente disponibles</p>
+                  <small>Por favor, crea tipos de cliente en el maestro "Tipos de Cliente" primero</small>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
+  <button 
+    type="button" 
+    class="btn btn-primary" 
+    (click)="guardar()"
+    [disabled]="cargando || tiposCliente.length === 0">
+    Guardar Precios
+  </button>
+</div>
+

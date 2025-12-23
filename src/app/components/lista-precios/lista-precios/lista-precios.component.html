@@ -67,7 +67,7 @@
                 </ng-template>
 
                 <ng-template pTemplate="body" let-producto>
-                  <tr>
+                  <tr (click)="editarPrecio(producto)" style="cursor: pointer;">
                     <td class="text-center">
                       <img 
                         *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
@@ -83,7 +83,8 @@
                         src="assets/img/placeholder.png"
                         width="50"
                         height="50"
-                        style="border-radius: 8px; opacity: 0.5;"
+                        style="border-radius: 8px; opacity: 0.5; cursor: pointer;"
+                        (click)="editarPrecio(producto)"
                       />
                     </td>
                     <td>
@@ -144,7 +145,7 @@
                 </ng-template>
 
                 <ng-template pTemplate="body" let-producto>
-                  <tr>
+                  <tr (click)="editarPrecio(producto)" style="cursor: pointer;">
                     <td class="text-center">
                       <img 
                         *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
@@ -159,7 +160,8 @@
                         src="assets/img/placeholder.png"
                         width="50"
                         height="50"
-                        style="border-radius: 8px; opacity: 0.5;"
+                        style="border-radius: 8px; opacity: 0.5; cursor: pointer;"
+                        (click)="editarPrecio(producto)"
                       />
                     </td>
                     <td>
@@ -214,7 +216,7 @@
                 </ng-template>
 
                 <ng-template pTemplate="body" let-producto>
-                  <tr>
+                  <tr (click)="editarPrecio(producto)" style="cursor: pointer;">
                     <td class="text-center">
                       <img 
                         *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
@@ -229,7 +231,8 @@
                         src="assets/img/placeholder.png"
                         width="50"
                         height="50"
-                        style="border-radius: 8px; opacity: 0.5;"
+                        style="border-radius: 8px; opacity: 0.5; cursor: pointer;"
+                        (click)="editarPrecio(producto)"
                       />
                     </td>
                     <td>
