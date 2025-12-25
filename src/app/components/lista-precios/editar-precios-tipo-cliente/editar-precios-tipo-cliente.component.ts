@@ -2,6 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
+import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
 
 @Component({
   selector: 'app-editar-precios-tipo-cliente',
@@ -9,7 +10,7 @@ import { MaestroService } from 'src/app/shared/services/maestros/maestro.service
   styleUrls: ['./editar-precios-tipo-cliente.component.scss']
 })
 export class EditarPreciosTipoClienteComponent implements OnInit {
-  @Input() producto: any;
+  @Input() producto: Producto;
   
   preciosForm: FormGroup;
   tiposCliente: any[] = [];
@@ -86,7 +87,7 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
       
       if (this.producto?.preciosPorTipoCliente && Array.isArray(this.producto.preciosPorTipoCliente)) {
         const precioEncontrado = this.producto.preciosPorTipoCliente.find(
-          (p: any) => p.tipoClienteId === tipo.id
+          (p: PrecioPorTipoCliente) => p.tipoClienteId === tipo.id
         );
         if (precioEncontrado) {
           precioExistente = precioEncontrado.precio;
@@ -95,7 +96,9 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
       
       // Si no hay precio específico, usar precio base del producto
       if (precioExistente === 0) {
-        precioExistente = this.producto?.precio?.precio || 0;
+        precioExistente = this.producto?.precio?.precioUnitarioConIva || 
+                         this.producto?.precio?.precioUnitarioSinIva || 
+                         0;
       }
       
       formControls[`precio_${tipo.id}`] = [precioExistente];
@@ -117,7 +120,7 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
     }
 
     // Crear lista de precios por tipo de cliente
-    const preciosPorTipoCliente: any[] = [];
+    const preciosPorTipoCliente: PrecioPorTipoCliente[] = [];
     
     this.tiposCliente.forEach(tipo => {
       const precio = this.preciosForm.get(`precio_${tipo.id}`)?.value;

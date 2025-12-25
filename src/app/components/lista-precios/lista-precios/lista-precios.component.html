@@ -10,14 +10,14 @@
               <p class="text-muted mb-0">Administra los precios de tus productos</p>
             </div>
             <div class="col-md-6 text-end">
-              <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()">
+              <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()" *ngIf="activeTab === 0">
                 <i class="icofont icofont-upload"></i> Importar
               </button>
-              <button class="btn btn-outline-success me-2">
-                <i class="icofont icofont-file-excel"></i> Descargar Excel
+              <button class="btn btn-success me-2" (click)="descargarFormatoExcel()" *ngIf="activeTab === 0">
+                <i class="icofont icofont-download"></i> Descargar Plantilla
               </button>
-              <button class="btn btn-success" (click)="descargarFormatoExcel()" *ngIf="activeTab === 0">
-                <i class="icofont icofont-download"></i> Exportar
+              <button class="btn btn-outline-success" *ngIf="activeTab !== 0">
+                <i class="icofont icofont-file-excel"></i> Descargar Excel
               </button>
             </div>
           </div>

@@ -11,6 +11,13 @@ import { ProcesoComercial } from "./ProcesoComercial";
 import { OtrosProcesos } from "./otrosprocesos";
 import { DropshippingProductConfig } from "./DropshippingConfig";
 
+export interface PrecioPorTipoCliente {
+  tipoClienteId: string;
+  tipoClienteNombre: string;
+  precio: number;
+  activo: boolean;
+}
+
 export interface Producto {
   dimensiones?: Dimensiones;
   disponibilidad?: Disponibilidad;
@@ -29,6 +36,7 @@ export interface Producto {
   otrosProcesos?: OtrosProcesos;
   bodegaId?: string; // Agregado para relacionar el producto con una bodega
   dropshippingConfig?: DropshippingProductConfig; // Configuración dropshipping opcional
+  preciosPorTipoCliente?: PrecioPorTipoCliente[]; // Lista de precios por tipo de cliente
 }
 
 export interface ProductoCarrito {

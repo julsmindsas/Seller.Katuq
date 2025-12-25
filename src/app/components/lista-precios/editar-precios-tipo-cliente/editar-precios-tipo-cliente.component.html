@@ -56,8 +56,8 @@
               <td>
                 <div class="d-flex align-items-center">
                   <div>
-                    <div class="fw-bold">{{ tipo.nombre }}</div>
-                    <small class="text-muted" *ngIf="tipo.descripcion">{{ tipo.descripcion }}</small>
+                    <div class="fw-bold">{{ tipo.descripcion || tipo.nombre }}</div>
+                    <small class="text-muted" *ngIf="tipo.nombre && tipo.descripcion !== tipo.nombre">{{ tipo.nombre }}</small>
                   </div>
                 </div>
               </td>
