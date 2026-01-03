@@ -14,7 +14,15 @@
       "Bash(done)",
       "WebFetch(domain:api.prindel.com.co)",
       "Bash(node -c:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "WebFetch(domain:aliaddo.readme.io)",
+      "WebFetch(domain:ayuda.aliaddo.com)",
+      "WebFetch(domain:aliaddo.freshdesk.com)",
+      "WebFetch(domain:factura-electronica.aliaddo.dev)",
+      "WebFetch(domain:google.github.io)",
+      "Bash(./venv/Scripts/python.exe -c \"import sys; sys.path.insert\\(0, ''.''\\); exec\\(open\\(''endpoints/video_live_endpoint.py''\\).read\\(\\)\\)\")",
+      "Bash(cat:*)",
+      "Bash(PYTHONPATH=. ./venv/Scripts/python.exe:*)"
     ],
     "deny": [],
     "ask": []

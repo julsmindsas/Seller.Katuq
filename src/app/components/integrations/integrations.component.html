@@ -1563,6 +1563,28 @@
                 </div>
                 <small class="form-text text-muted">ID de la bodega predeterminada para operaciones de fulfillment</small>
               </div>
+
+              <div class="form-group mt-3">
+                <label for="terceroInternoId">
+                  <i class="fa fa-user-tag"></i> Tercero Interno (Requerido):
+                  <span class="required-badge">*</span>
+                </label>
+                <div class="input-with-icon">
+                  <i class="fa fa-id-card prefix-icon"></i>
+                  <input type="text" id="terceroInternoId" formControlName="terceroInternoId" placeholder="UUID del tercero en Aliaddo" autocomplete="off">
+                </div>
+                <div *ngIf="integrationForm.get('terceroInternoId')?.invalid && integrationForm.get('terceroInternoId')?.touched" class="text-danger">
+                  <i class="fa fa-exclamation-triangle"></i> El Tercero Interno es requerido para crear remisiones de venta
+                </div>
+                <small class="form-text text-muted">
+                  <strong>Importante:</strong> Crea un tercero/contacto "Ventas Katuq" en Aliaddo y pega aquí su UUID.
+                  Este tercero se usa para las remisiones de venta que descuentan el stock.
+                </small>
+                <div class="alert alert-info mt-2 py-2 px-3" style="font-size: 0.85rem;">
+                  <i class="fa fa-info-circle me-1"></i>
+                  <strong>¿Cómo obtenerlo?</strong> En Aliaddo: Contactos → Crear Contacto → Nombre: "Ventas Katuq" → Guardar → Copiar el ID/UUID
+                </div>
+              </div>
             </div>
           </div>
 

@@ -865,6 +865,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       environment: ['production', Validators.required],
       // Warehouse Configuration
       defaultWarehouseId: ['', []],
+      // Tercero Interno para Remisiones de Venta (REQUERIDO para sincronizar stock)
+      terceroInternoId: ['', [Validators.required]],
       // Advanced Settings
       timeout: [30, [Validators.min(5), Validators.max(300)]],
       retryAttempts: [3, [Validators.min(1), Validators.max(10)]],

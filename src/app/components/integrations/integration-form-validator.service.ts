@@ -537,6 +537,13 @@ export class IntegrationFormValidatorService {
       result.warnings!.push('Se recomienda usar HTTPS para la URL de la API');
     }
 
+    // Validar terceroInternoId (REQUERIDO para crear remisiones de venta)
+    if (!formValue.terceroInternoId || formValue.terceroInternoId.trim() === '') {
+      result.errors!['terceroInternoId'] = 'El Tercero Interno es requerido. Crea un contacto "Ventas Katuq" en Aliaddo y pega su UUID aquí.';
+    } else if (formValue.terceroInternoId.length < 10) {
+      result.errors!['terceroInternoId'] = 'El UUID del tercero parece inválido (muy corto)';
+    }
+
     // Validar timeout
     if (formValue.timeout && (formValue.timeout < 5 || formValue.timeout > 300)) {
       result.errors!['timeout'] = 'El timeout debe estar entre 5 y 300 segundos';
@@ -549,7 +556,7 @@ export class IntegrationFormValidatorService {
 
     // Success message
     if (Object.keys(result.errors!).length === 0) {
-      result.suggestions!.push('Configuración válida. Asegúrate de tener el token correcto desde tu panel de Aliaddo');
+      result.suggestions!.push('Configuración válida. El tercero interno se usará para crear remisiones de venta que descuentan stock.');
     }
   }
 

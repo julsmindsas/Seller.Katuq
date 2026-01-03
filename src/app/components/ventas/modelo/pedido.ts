@@ -91,6 +91,100 @@ export interface Pedido {
       dateCreated?: string;
     };
   };
+  // Información de fulfillment (Aliaddo u otros proveedores)
+  fulfillment?: FulfillmentInfo;
+}
+
+/**
+ * Información de fulfillment para órdenes despachadas por proveedores externos.
+ * Se actualiza automáticamente cuando la orden usa una bodega de fulfillment.
+ */
+export interface FulfillmentInfo {
+  /** Estado actual del fulfillment */
+  status: FulfillmentStatus;
+  /** Nombre del proveedor (ej: 'aliaddo') */
+  provider: string;
+  /** ID de la orden en el sistema del proveedor */
+  fulfillmentOrderId?: string;
+  /** Número de guía de envío */
+  trackingNumber?: string;
+  /** URL de seguimiento del envío */
+  trackingUrl?: string;
+  /** Nombre del transportador */
+  carrier?: string;
+  /** ID del warehouse en el proveedor */
+  warehouseId?: string;
+  /** ID de la bodega en Katuq */
+  bodegaId?: string;
+  /** Nombre de la bodega en Katuq */
+  bodegaNombre?: string;
+  /** Fecha/hora de envío al proveedor */
+  sentAt?: string;
+  /** Fecha/hora del último fallo */
+  failedAt?: string;
+  /** Fecha/hora de inicio del proceso */
+  startedAt?: string;
+  /** Última actualización del estado */
+  lastUpdate?: string;
+  /** Fecha estimada de entrega */
+  estimatedDelivery?: string;
+  /** Duración del proceso en ms */
+  durationMs?: number;
+  /** Mensaje de error si falló */
+  error?: string;
+  /** Código de error */
+  errorCode?: string;
+  /** Tipo de error */
+  errorType?: string;
+  /** Si el error permite reintento */
+  retryable?: boolean;
+  /** Número de reintentos realizados */
+  retryCount?: number;
+  /** Fecha del último reintento */
+  lastRetryAt?: string;
+  /** Indica si se recibió webhook */
+  webhookReceived?: boolean;
+  /** Eventos de tracking */
+  trackingEvents?: TrackingEvent[];
+  /** Respuesta original del proveedor */
+  response?: {
+    status?: string;
+    createdAt?: string;
+  };
+  /** Metadata adicional del proveedor */
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Estados posibles del fulfillment
+ */
+export type FulfillmentStatus =
+  | 'pending'      // Pendiente de envío
+  | 'sent'         // Enviado al proveedor
+  | 'processing'   // En proceso por el proveedor
+  | 'ready'        // Listo para despacho
+  | 'packed'       // Empacado
+  | 'shipped'      // Despachado
+  | 'in_transit'   // En tránsito
+  | 'out_for_delivery' // En camino de entrega
+  | 'delivered'    // Entregado
+  | 'failed'       // Falló el envío al proveedor
+  | 'error'        // Error de sistema
+  | 'cancelled'    // Cancelado
+  | 'returned';    // Devuelto
+
+/**
+ * Evento de tracking del envío
+ */
+export interface TrackingEvent {
+  /** Estado del evento */
+  status: string;
+  /** Descripción del evento */
+  description?: string;
+  /** Ubicación del evento */
+  location?: string;
+  /** Fecha/hora del evento */
+  timestamp: string;
 }
 
 export interface Shippment {
