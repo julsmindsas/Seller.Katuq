@@ -23,10 +23,28 @@
       "Bash(./venv/Scripts/python.exe -c \"import sys; sys.path.insert\\(0, ''.''\\); exec\\(open\\(''endpoints/video_live_endpoint.py''\\).read\\(\\)\\)\")",
       "Bash(cat:*)",
       "Bash(PYTHONPATH=. ./venv/Scripts/python.exe:*)",
+<<<<<<< Updated upstream
       "Bash(npm start)",
       "Bash(netstat:*)",
       "Bash(findstr:*)",
       "Bash(taskkill:*)"
+=======
+      "WebFetch(domain:docs.cloud.google.com)",
+      "Bash(gcloud config:*)",
+      "Bash(where:*)",
+      "Bash(gcloud auth list:*)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" auth list)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" projects list)",
+      "Bash(./venv/Scripts/pip.exe list:*)",
+      "Bash(./venv/Scripts/pip.exe install:*)",
+      "Bash(curl:*)",
+      "Bash(./venv/Scripts/python.exe:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gsutil.cmd\" ls -l gs://katuq-haceb-manuals/**/*.pdf)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" alpha discovery-engine data-stores create haceb-manuals-datastore --location=global --project=katuq-new --content-config=unstructured-documents --display-name=\"Haceb Manuals Data Store\")",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gsutil.cmd\" cp \"C:\\\\sourcecodejuls\\\\kai\\\\adk_agent\\\\data\\\\manuals\\\\metadata.jsonl\" gs://katuq-haceb-manuals/)"
+>>>>>>> Stashed changes
     ],
     "deny": [],
     "ask": []
