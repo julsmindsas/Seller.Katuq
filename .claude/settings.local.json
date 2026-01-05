@@ -22,7 +22,11 @@
       "WebFetch(domain:google.github.io)",
       "Bash(./venv/Scripts/python.exe -c \"import sys; sys.path.insert\\(0, ''.''\\); exec\\(open\\(''endpoints/video_live_endpoint.py''\\).read\\(\\)\\)\")",
       "Bash(cat:*)",
-      "Bash(PYTHONPATH=. ./venv/Scripts/python.exe:*)"
+      "Bash(PYTHONPATH=. ./venv/Scripts/python.exe:*)",
+      "Bash(npm start)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)"
     ],
     "deny": [],
     "ask": []

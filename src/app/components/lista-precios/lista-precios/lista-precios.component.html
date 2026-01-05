@@ -47,44 +47,58 @@
               </div>
 
               <!-- Tabla de productos -->
-              <p-table 
-                [value]="productosFiltrados" 
+              <p-table
+                [value]="productosFiltrados"
                 [loading]="cargando"
-                [paginator]="true" 
+                [paginator]="true"
                 [rows]="pageSize"
                 [rowsPerPageOptions]="[10, 20, 50, 100]"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
-                styleClass="p-datatable-gridlines p-datatable-striped">
-                
+                styleClass="p-datatable-gridlines p-datatable-striped"
+                dataKey="cd"
+                [expandedRowKeys]="expandedRows">
+
                 <ng-template pTemplate="header">
                   <tr>
+                    <th style="width: 50px;"></th>
                     <th style="width: 80px;" class="text-center">IMAGEN</th>
                     <th>REFERENCIA</th>
-                    <th>PRECIO</th>
+                    <th>PRECIO BASE</th>
+                    <th>PRECIOS POR TIPO</th>
                     <th>ÚLTIMA EDICIÓN</th>
+                    <th style="width: 120px;" class="text-center">ACCIONES</th>
                   </tr>
                 </ng-template>
 
-                <ng-template pTemplate="body" let-producto>
-                  <tr (click)="editarPrecio(producto)" style="cursor: pointer;">
+                <ng-template pTemplate="body" let-producto let-expanded="expanded">
+                  <tr>
+                    <td>
+                      <button
+                        type="button"
+                        pButton
+                        pRipple
+                        [pRowToggler]="producto"
+                        class="p-button-text p-button-rounded p-button-plain"
+                        [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                        pTooltip="Ver precios por tipo de cliente">
+                      </button>
+                    </td>
                     <td class="text-center">
-                      <img 
+                      <img
                         *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
                         [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
                         [alt]="producto.crearProducto?.titulo"
                         width="50"
                         height="50"
-                        style="border-radius: 8px; object-fit: cover; cursor: pointer;"
-                        (click)="editarPrecio(producto)"
+                        style="border-radius: 8px; object-fit: cover;"
                       />
-                      <img 
+                      <img
                         *ngIf="!producto.crearProducto?.imagenesPrincipales?.length"
                         src="assets/img/placeholder.png"
                         width="50"
                         height="50"
-                        style="border-radius: 8px; opacity: 0.5; cursor: pointer;"
-                        (click)="editarPrecio(producto)"
+                        style="border-radius: 8px; opacity: 0.5;"
                       />
                     </td>
                     <td>
@@ -92,17 +106,158 @@
                       <small class="text-muted">{{ producto.identificacion?.referencia }}</small>
                     </td>
                     <td>
-                      <span class="text-primary fw-bold" style="cursor: pointer;" (click)="editarPrecio(producto)">
-                        $ {{ obtenerPrecio(producto) | number:'1.0-0' }}
+                      <span class="text-primary fw-bold">
+                        $ {{ obtenerPrecioBase(producto) | number:'1.0-0' }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="d-flex flex-wrap gap-1" *ngIf="producto.preciosPorTipoCliente?.length > 0">
+                        <span
+                          *ngFor="let precio of producto.preciosPorTipoCliente | slice:0:3"
+                          class="badge bg-light text-dark border"
+                          style="font-size: 0.75rem;"
+                          [pTooltip]="'Sin IVA: $' + (precio.precio | number:'1.0-0') + ' + IVA ' + (precio.porcentajeIva || 0) + '%'"
+                          tooltipPosition="top">
+                          {{ precio.tipoClienteNombre }}: ${{ (precio.precioConIva || precio.precio) | number:'1.0-0' }}
+                        </span>
+                        <span
+                          *ngIf="producto.preciosPorTipoCliente?.length > 3"
+                          class="badge bg-secondary"
+                          style="font-size: 0.75rem;">
+                          +{{ producto.preciosPorTipoCliente.length - 3 }} más
+                        </span>
+                      </div>
+                      <span *ngIf="!producto.preciosPorTipoCliente?.length" class="text-muted small">
+                        <i class="pi pi-info-circle me-1"></i>Sin configurar
                       </span>
                     </td>
                     <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td class="text-center">
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="editarPrecio(producto)"
+                        pTooltip="Editar precios por tipo de cliente"
+                        tooltipPosition="left">
+                        <i class="pi pi-pencil"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="rowexpansion" let-producto>
+                  <tr>
+                    <td colspan="7">
+                      <div class="p-3" style="background-color: #f8f9fa;">
+                        <div class="row">
+                          <div class="col-12">
+                            <h6 class="mb-3">
+                              <i class="pi pi-tag me-2"></i>
+                              Precios por Tipo de Cliente - {{ producto.crearProducto?.titulo }}
+                              <span class="badge bg-info ms-2" *ngIf="producto.preciosPorTipoCliente?.length > 0">
+                                IVA: {{ producto.preciosPorTipoCliente[0]?.porcentajeIva || 0 }}%
+                              </span>
+                            </h6>
+                          </div>
+                        </div>
+
+                        <!-- Tabla detallada de precios -->
+                        <div class="table-responsive" *ngIf="producto.preciosPorTipoCliente?.length > 0">
+                          <table class="table table-sm table-bordered mb-0">
+                            <thead class="table-light">
+                              <tr>
+                                <th>Tipo de Cliente</th>
+                                <th class="text-end">Precio sin IVA</th>
+                                <th class="text-end">IVA ({{ producto.preciosPorTipoCliente[0]?.porcentajeIva || 0 }}%)</th>
+                                <th class="text-end">Precio con IVA</th>
+                                <th class="text-center">vs Base</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr *ngFor="let precio of producto.preciosPorTipoCliente">
+                                <td>
+                                  <span class="fw-bold">{{ precio.tipoClienteNombre }}</span>
+                                </td>
+                                <td class="text-end">
+                                  $ {{ precio.precio | number:'1.0-0' }}
+                                </td>
+                                <td class="text-end text-muted">
+                                  $ {{ (precio.valorIva || 0) | number:'1.0-0' }}
+                                </td>
+                                <td class="text-end">
+                                  <span class="fw-bold text-primary">
+                                    $ {{ (precio.precioConIva || precio.precio) | number:'1.0-0' }}
+                                  </span>
+                                </td>
+                                <td class="text-center">
+                                  <span
+                                    *ngIf="obtenerPrecioBase(producto) > 0"
+                                    [ngClass]="getPorcentajeDiferencia(producto, precio.precio) < 0 ? 'badge bg-success' : (getPorcentajeDiferencia(producto, precio.precio) > 0 ? 'badge bg-danger' : 'badge bg-secondary')">
+                                    {{ getPorcentajeDiferencia(producto, precio.precio) | number:'1.1-1' }}%
+                                  </span>
+                                </td>
+                              </tr>
+                            </tbody>
+                          </table>
+                        </div>
+
+                        <!-- Resumen visual en cards (opcional, debajo de la tabla) -->
+                        <div class="row mt-3" *ngIf="producto.preciosPorTipoCliente?.length > 0">
+                          <div class="col-md-3 col-sm-6 mb-2" *ngFor="let precio of producto.preciosPorTipoCliente">
+                            <div class="card h-100 border-primary">
+                              <div class="card-header bg-primary text-white py-1 text-center">
+                                <small class="fw-bold">{{ precio.tipoClienteNombre }}</small>
+                              </div>
+                              <div class="card-body p-2">
+                                <div class="d-flex justify-content-between small">
+                                  <span class="text-muted">Sin IVA:</span>
+                                  <span>$ {{ precio.precio | number:'1.0-0' }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between small">
+                                  <span class="text-muted">IVA ({{ precio.porcentajeIva || 0 }}%):</span>
+                                  <span>$ {{ (precio.valorIva || 0) | number:'1.0-0' }}</span>
+                                </div>
+                                <hr class="my-1">
+                                <div class="d-flex justify-content-between fw-bold">
+                                  <span>Total:</span>
+                                  <span class="text-primary">$ {{ (precio.precioConIva || precio.precio) | number:'1.0-0' }}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div class="row" *ngIf="!producto.preciosPorTipoCliente?.length">
+                          <div class="col-12">
+                            <div class="alert alert-info mb-0 d-flex align-items-center">
+                              <i class="pi pi-info-circle me-2"></i>
+                              <div>
+                                <strong>Sin precios configurados</strong>
+                                <p class="mb-0 small">Este producto aún no tiene precios diferenciados por tipo de cliente. Usa el botón de edición para configurarlos.</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <!-- Mostrar tipos de cliente sin precio configurado -->
+                        <div class="row mt-3" *ngIf="getTiposClienteSinPrecio(producto).length > 0 && producto.preciosPorTipoCliente?.length > 0">
+                          <div class="col-12">
+                            <small class="text-muted">
+                              <i class="pi pi-exclamation-triangle me-1 text-warning"></i>
+                              Tipos de cliente sin precio configurado:
+                              <span *ngFor="let tipo of getTiposClienteSinPrecio(producto); let last = last">
+                                {{ tipo.descripcion || tipo.nombre }}{{ !last ? ', ' : '' }}
+                              </span>
+                            </small>
+                          </div>
+                        </div>
+                      </div>
+                    </td>
                   </tr>
                 </ng-template>
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="4" class="text-center">No hay productos disponibles</td>
+                    <td colspan="7" class="text-center">No hay productos disponibles</td>
                   </tr>
                 </ng-template>
               </p-table>

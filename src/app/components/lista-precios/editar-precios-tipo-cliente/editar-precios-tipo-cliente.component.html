@@ -15,7 +15,7 @@
     <div class="mb-4 p-3 bg-light rounded">
       <div class="row align-items-center">
         <div class="col-auto">
-          <img 
+          <img
             *ngIf="producto?.crearProducto?.imagenesPrincipales?.length > 0"
             [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
             [alt]="producto?.crearProducto?.titulo"
@@ -23,7 +23,7 @@
             height="60"
             style="border-radius: 8px; object-fit: cover;"
           />
-          <img 
+          <img
             *ngIf="!producto?.crearProducto?.imagenesPrincipales?.length"
             src="assets/img/placeholder.png"
             width="60"
@@ -34,8 +34,45 @@
         <div class="col">
           <h6 class="mb-1 fw-bold">{{ producto?.crearProducto?.titulo }}</h6>
           <small class="text-muted">Referencia: {{ producto?.identificacion?.referencia }}</small>
-          <div *ngIf="producto?.precio?.precio" class="mt-1">
-            <small class="text-muted">Precio base: $ {{ producto.precio.precio | number:'1.0-0' }}</small>
+          <div *ngIf="producto?.precio?.precioUnitarioSinIva" class="mt-1">
+            <small class="text-muted">Precio base: $ {{ producto.precio.precioUnitarioSinIva | number:'1.0-0' }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Configuración de IVA -->
+    <div class="mb-4">
+      <div class="card border-primary">
+        <div class="card-header bg-primary text-white py-2">
+          <i class="pi pi-percentage me-2"></i>
+          Configuración de IVA
+        </div>
+        <div class="card-body">
+          <div class="row align-items-center">
+            <div class="col-md-4">
+              <label class="form-label fw-bold mb-0">Porcentaje de IVA</label>
+              <small class="text-muted d-block">Se aplicará a todos los precios</small>
+            </div>
+            <div class="col-md-4">
+              <p-dropdown
+                [options]="porcentajesIva"
+                [(ngModel)]="porcentajeIvaSeleccionado"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccione IVA"
+                styleClass="w-100"
+                (onChange)="onIvaChange()">
+              </p-dropdown>
+            </div>
+            <div class="col-md-4">
+              <div class="alert alert-info mb-0 py-2">
+                <small>
+                  <i class="pi pi-info-circle me-1"></i>
+                  IVA actual: <strong>{{ porcentajeIvaSeleccionado }}%</strong>
+                </small>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -45,10 +82,12 @@
     <form [formGroup]="preciosForm">
       <div class="table-responsive">
         <table class="table table-hover">
-          <thead>
+          <thead class="table-light">
             <tr>
-              <th style="width: 60%;">Tipo de Cliente</th>
-              <th style="width: 40%;">Precio</th>
+              <th style="width: 30%;">Tipo de Cliente</th>
+              <th style="width: 20%;" class="text-end">Precio sin IVA</th>
+              <th style="width: 15%;" class="text-end">IVA ({{ porcentajeIvaSeleccionado }}%)</th>
+              <th style="width: 20%;" class="text-end">Precio con IVA</th>
             </tr>
           </thead>
           <tbody>
@@ -62,21 +101,32 @@
                 </div>
               </td>
               <td>
-                <div class="input-group">
+                <div class="input-group input-group-sm">
                   <span class="input-group-text">$</span>
-                  <input 
-                    type="number" 
-                    class="form-control" 
+                  <input
+                    type="number"
+                    class="form-control text-end"
                     [formControlName]="'precio_' + tipo.id"
                     placeholder="0"
                     min="0"
-                    step="0.01"
+                    step="1"
+                    (input)="calcularIva(tipo.id)"
                   />
                 </div>
               </td>
+              <td class="text-end align-middle">
+                <span class="text-muted">
+                  $ {{ calcularValorIva(tipo.id) | number:'1.0-0' }}
+                </span>
+              </td>
+              <td class="text-end align-middle">
+                <span class="fw-bold text-primary">
+                  $ {{ calcularPrecioConIva(tipo.id) | number:'1.0-0' }}
+                </span>
+              </td>
             </tr>
             <tr *ngIf="tiposCliente.length === 0 && !cargando">
-              <td colspan="2" class="text-center text-muted py-4">
+              <td colspan="4" class="text-center text-muted py-4">
                 <div>
                   <i class="icofont icofont-info-circle" style="font-size: 2rem; opacity: 0.5;"></i>
                   <p class="mt-2 mb-0">No hay tipos de cliente disponibles</p>
@@ -93,11 +143,12 @@
 
 <div class="modal-footer">
   <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
-  <button 
-    type="button" 
-    class="btn btn-primary" 
+  <button
+    type="button"
+    class="btn btn-primary"
     (click)="guardar()"
     [disabled]="cargando || tiposCliente.length === 0">
+    <i class="pi pi-save me-1"></i>
     Guardar Precios
   </button>
 </div>

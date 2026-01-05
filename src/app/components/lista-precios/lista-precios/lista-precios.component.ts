@@ -26,6 +26,9 @@ export class ListaPreciosComponent implements OnInit {
   currentPage = 0;
   totalRecords = 0;
 
+  // Row expansion
+  expandedRows: { [key: string]: boolean } = {};
+
   constructor(
     private service: MaestroService,
     private modalService: NgbModal
@@ -339,10 +342,18 @@ export class ListaPreciosComponent implements OnInit {
         if (precio !== undefined && precio !== null && precio !== '' && !isNaN(precio)) {
           const precioNumero = parseFloat(precio.toString().replace(/[^0-9.-]/g, ''));
           if (precioNumero > 0) {
+            // Por defecto usar IVA 19% para importación
+            const porcentajeIva = 19;
+            const valorIva = precioNumero * (porcentajeIva / 100);
+            const precioConIva = precioNumero + valorIva;
+
             preciosPorTipo.push({
               tipoClienteId: tipo.id,
               tipoClienteNombre: tipo.descripcion || nombreTipo,
               precio: precioNumero,
+              porcentajeIva: porcentajeIva,
+              valorIva: Math.round(valorIva),
+              precioConIva: Math.round(precioConIva),
               activo: true
             });
           }
@@ -523,15 +534,37 @@ export class ListaPreciosComponent implements OnInit {
     if (this.activeTab === 0 && producto.preciosPorTipoCliente && Array.isArray(producto.preciosPorTipoCliente)) {
       // Si hay precios por tipo de cliente, mostrar el primero o el precio base
       if (producto.preciosPorTipoCliente.length > 0) {
-        return producto.preciosPorTipoCliente[0].precio || 
-               producto.precio?.precioUnitarioConIva || 
-               producto.precio?.precioUnitarioSinIva || 
+        return producto.preciosPorTipoCliente[0].precio ||
+               producto.precio?.precioUnitarioConIva ||
+               producto.precio?.precioUnitarioSinIva ||
                0;
       }
     }
-    return producto.precio?.precioUnitarioConIva || 
-           producto.precio?.precioUnitarioSinIva || 
+    return producto.precio?.precioUnitarioConIva ||
+           producto.precio?.precioUnitarioSinIva ||
            0;
+  }
+
+  obtenerPrecioBase(producto: Producto): number {
+    return producto.precio?.precioUnitarioConIva ||
+           producto.precio?.precioUnitarioSinIva ||
+           0;
+  }
+
+  getPorcentajeDiferencia(producto: Producto, precioTipo: number): number {
+    const precioBase = this.obtenerPrecioBase(producto);
+    if (precioBase === 0) return 0;
+    return ((precioTipo - precioBase) / precioBase) * 100;
+  }
+
+  getTiposClienteSinPrecio(producto: Producto): any[] {
+    if (!this.tiposCliente || this.tiposCliente.length === 0) return [];
+    if (!producto.preciosPorTipoCliente || producto.preciosPorTipoCliente.length === 0) {
+      return this.tiposCliente;
+    }
+
+    const tiposConPrecio = producto.preciosPorTipoCliente.map(p => p.tipoClienteId);
+    return this.tiposCliente.filter(tipo => !tiposConPrecio.includes(tipo.id));
   }
 
   obtenerFechaEdicion(producto: Producto): string {

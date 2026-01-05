@@ -14,7 +14,10 @@ import { DropshippingProductConfig } from "./DropshippingConfig";
 export interface PrecioPorTipoCliente {
   tipoClienteId: string;
   tipoClienteNombre: string;
-  precio: number;
+  precio: number; // Precio sin IVA
+  porcentajeIva: number;
+  valorIva: number;
+  precioConIva: number;
   activo: boolean;
 }
 
