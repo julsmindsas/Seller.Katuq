@@ -112,8 +112,8 @@
           <p>ESPERANDO CÁMARA...</p>
         </div>
 
-        <!-- Guía Visual Superpuesta MEJORADA (primeros 20 segundos o hasta que hable) -->
-        <div class="video-guide-overlay" *ngIf="isVideoStreaming && messages.length === 0 && sessionActive">
+        <!-- Guía Visual Superpuesta MEJORADA (visible hasta que el usuario hable) -->
+        <div class="video-guide-overlay" *ngIf="isVideoStreaming && !hasUserSpoken && sessionActive">
           <div class="guide-content">
             <i class="pi pi-video animated-icon"></i>
             <p class="guide-title">CÁMARA LISTA ✅</p>
@@ -149,8 +149,6 @@
         class="camera-switch-btn"
         (click)="switchCameraWithHaptic()"
         *ngIf="isVideoStreaming"
-        pTooltip="Cambia entre cámara trasera y frontal"
-        tooltipPosition="left"
       >
         <i class="pi pi-refresh"></i>
         <span class="btn-label">CAMBIAR CÁMARA</span>
@@ -230,10 +228,8 @@
     pButton
     type="button"
     class="fab-end-call"
-    (click)="endSessionWithConfirmation()"
+    (click)="openEndSessionDialog()"
     [disabled]="isLoading"
-    pTooltip="Presiona para terminar la llamada"
-    tooltipPosition="left"
   >
     <i class="pi pi-phone-slash"></i>
     <span class="fab-label">TERMINAR</span>
@@ -283,4 +279,37 @@
       (closePanel)="closeResultPanel()"
     ></app-agent-result>
   </p-sidebar>
+
+  <!-- FIX UX: Dialogo de confirmacion elegante (reemplaza confirm() nativo) -->
+  <p-dialog
+    header="Finalizar Diagnostico"
+    [(visible)]="showEndDialog"
+    [modal]="true"
+    [closable]="true"
+    [dismissableMask]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{width: '90vw', maxWidth: '400px'}"
+    [baseZIndex]="10000"
+    styleClass="elderly-confirmation-dialog">
+    <p style="font-size: 1.25rem; line-height: 1.6; margin: 0; text-align: center;">
+      ¿Está seguro que desea terminar la consulta con Kai?
+    </p>
+    <ng-template pTemplate="footer">
+      <div style="display: flex; gap: 1rem; justify-content: center; width: 100%;">
+        <button pButton
+                label="Cancelar"
+                icon="pi pi-times"
+                class="p-button-text p-button-lg p-button-secondary"
+                style="min-width: 120px; min-height: 56px; font-size: 1.125rem;"
+                (click)="cancelEndSession()"></button>
+        <button pButton
+                label="Si, terminar"
+                icon="pi pi-check"
+                class="p-button-danger p-button-lg"
+                style="min-width: 140px; min-height: 56px; font-size: 1.125rem;"
+                (click)="confirmEndSession()"></button>
+      </div>
+    </ng-template>
+  </p-dialog>
 </div>

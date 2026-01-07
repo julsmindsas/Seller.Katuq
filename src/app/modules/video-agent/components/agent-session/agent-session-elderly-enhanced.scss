@@ -379,6 +379,28 @@
     }
 }
 
+/* Ultra-compact for 320px screens */
+@media (max-width: 340px) {
+    .status-panel-persistent {
+        gap: 0.25rem !important;
+        padding: 0.5rem !important;
+
+        .status-item {
+            padding: 0.375rem !important;
+            gap: 0.25rem !important;
+
+            i {
+                font-size: 1.25rem !important;
+            }
+
+            span {
+                font-size: 0.5rem !important;
+                letter-spacing: 0 !important;
+            }
+        }
+    }
+}
+
 /* Standard phones (375px - 639px): 2x2 grid (default) */
 /* Already defined above */
 
@@ -550,4 +572,16 @@
         transform: translateY(-20px);
         pointer-events: none;
     }
+}
+
+/* ==============================================
+   FIX UX CRITICO: Status Panel SIEMPRE VISIBLE
+   El auto-hide confunde a usuarios mayores
+   ============================================== */
+.session-active-mode .status-panel-persistent {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    pointer-events: auto !important;
+    visibility: visible !important;
 }

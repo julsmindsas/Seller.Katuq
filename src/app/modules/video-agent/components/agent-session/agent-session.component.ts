@@ -4,6 +4,7 @@ import {
   OnDestroy,
   ViewChild,
   ElementRef,
+  ChangeDetectorRef,
 } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Subject } from "rxjs";
@@ -77,6 +78,10 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
   cameraFacingMode: "user" | "environment" = "environment";
   showSessionEndedOverlay = false;
 
+  // FIX UX: Propiedades para mejorar experiencia de personas mayores
+  hasUserSpoken = false;  // Controla si el usuario ya habló (para ocultar guía)
+  showEndDialog = false;  // Diálogo de confirmación elegante (reemplaza confirm() nativo)
+
   // Elderly-specific enhancements
   isElderlyMode = true; // Enable by default for 70+ users
   autoZoomEnabled = true; // Auto-zoom camera for better visibility
@@ -105,6 +110,7 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     private geolocationService: GeolocationService,
     private toastr: ToastrService,
     private audioFeedback: AudioFeedbackService,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -273,6 +279,9 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
         // 🔊 Beep cuando empieza a grabar (detecta voz)
         if (recording && this.sessionActive) {
           this.audioFeedback.playVoiceDetected();
+
+          // FIX UX: Marcar que el usuario ya habló (para ocultar guía visual)
+          this.hasUserSpoken = true;
         }
       });
 
@@ -344,6 +353,7 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
       this.errorMessage = "";
       this.messages = [];
       this.currentResult = null;
+      this.hasUserSpoken = false;  // FIX UX: Resetear para mostrar guía
 
       // FAB is now in fixed CSS position, no initialization needed
 
@@ -384,14 +394,19 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
       // Iniciar captura de video
       await this.videoService.startCapture(this.cameraFacingMode);
 
-      // Mostrar preview en UI
-      this.attachVideoPreview();
-
       // Iniciar captura de audio
       await this.audioService.startRecording();
 
+      // FIX CAMERA: Establecer sessionActive ANTES de attachVideoPreview
+      // para que el elemento #videoPreview exista en el DOM
       this.sessionActive = true;
       this.isLoading = false;
+
+      // Forzar detección de cambios para renderizar el elemento
+      this.cdr.detectChanges();
+
+      // Ahora sí mostrar preview en UI (el elemento ya existe)
+      this.attachVideoPreview();
 
       // 🔊 Reproducir beep de inicio
       this.audioFeedback.playSessionStart();
@@ -1068,15 +1083,25 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
 
   /**
    * End session - Called when FAB button is clicked
-   * Now with confirmation dialog for safety
+   * FIX UX: Usa diálogo elegante en lugar de confirm() nativo
    */
-  async endSessionWithConfirmation(): Promise<void> {
-    // Show confirmation dialog before ending
-    const userConfirmed = confirm('¿Estás seguro que deseas terminar la llamada?');
+  openEndSessionDialog(): void {
+    this.showEndDialog = true;
+  }
 
-    if (userConfirmed) {
-      this.hapticFeedback("medium");
-      await this.endSession();
-    }
+  /**
+   * Confirma finalización de sesión (llamado desde p-dialog)
+   */
+  async confirmEndSession(): Promise<void> {
+    this.showEndDialog = false;
+    this.hapticFeedback("medium");
+    await this.endSession();
+  }
+
+  /**
+   * Cancela el diálogo de finalización
+   */
+  cancelEndSession(): void {
+    this.showEndDialog = false;
   }
 }

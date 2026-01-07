@@ -11,6 +11,7 @@ import { ProgressSpinnerModule } from "primeng/progressspinner";
 import { TagModule } from "primeng/tag";
 import { ToastModule } from "primeng/toast";
 import { InputTextModule } from "primeng/inputtext";
+import { DialogModule } from "primeng/dialog";
 
 // Routing
 import { VideoAgentRoutingModule } from "./video-agent-routing.module";
@@ -43,6 +44,7 @@ import { AppointmentsListComponent } from "./components/appointments-list/appoin
     TagModule,
     ToastModule,
     InputTextModule,
+    DialogModule,
   ],
 })
 export class VideoAgentModule {}

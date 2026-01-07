@@ -529,7 +529,7 @@
     .camera-switch-btn {
         position: absolute;
         bottom: 1rem;
-        right: 1rem;
+        left: 1rem;  /* MOVED TO LEFT - FAB is on right */
         background: rgba(0, 0, 0, 0.7);
         color: white;
         border: 2px solid white;
@@ -1836,5 +1836,64 @@
         .fab-label {
             font-size: 0.875rem;
         }
+    }
+}
+
+/* ==============================================
+   SHORT SCREENS (< 600px height)
+   iPhone SE, older devices with small screens
+   ============================================== */
+@media (max-height: 600px) {
+    .video-section-elderly {
+        height: 30vh !important;
+        min-height: 180px !important;
+        max-height: 280px !important;
+    }
+
+    .chat-section-elderly {
+        min-height: 160px !important;
+    }
+
+    .instructions-card {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+}
+
+/* Very small width screens (320px - 360px) */
+@media (max-width: 360px) {
+    .video-section-elderly {
+        height: 35vh !important;
+        min-height: 200px !important;
+    }
+
+    .session-header-elderly {
+        padding: 0.5rem 0.75rem !important;
+
+        .company-title {
+            font-size: 1rem !important;
+        }
+    }
+}
+
+/* ==============================================
+   TABLETS IN LANDSCAPE (500px - 900px height)
+   Better support for horizontal tablets
+   ============================================== */
+@media (orientation: landscape) and (min-height: 500px) and (max-height: 900px) {
+    .video-section-elderly {
+        height: 55vh !important;
+        max-height: none !important;
+    }
+
+    .session-content-elderly {
+        flex-direction: row !important;
+        gap: 1rem;
+    }
+
+    .instructions-card {
+        display: block !important;
+        max-height: 250px;
+        overflow-y: auto;
     }
 }

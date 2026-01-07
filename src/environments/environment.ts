@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  version: "2025.12.23.1 - 23 de Diciembre 2025 (Beta)",
+  version: "2026.01.07.1 - 7 de Enero 2026 (Beta)",
   firebase: {
     apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
     authDomain: "julsmind-katuq.firebaseapp.com",
@@ -31,7 +31,8 @@ export const environment = {
 
   // KAI Backend WebSocket - Para Video Agent Live Streaming (ADK run_live)
   // kaiBackendWs: "wss://back.katuq.com/adk", // Produccion
-  kaiBackendWs: "ws://localhost:8081", // Local development
+  // kaiBackendWs: "ws://localhost:8081", // Local development (solo PC)
+  kaiBackendWs: "wss://kai-video-agent-295918419655.us-central1.run.app", // GCP Cloud Run
 
   wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
   voiceWsUrl: "wss://api.katuq.com/voice-websocket",
