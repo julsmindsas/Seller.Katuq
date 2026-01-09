@@ -5,11 +5,14 @@ import { SharedModule } from '../../shared/shared.module';
 import { ListaPreciosRoutingModule } from './lista-precios-routing.module';
 import { ListaPreciosComponent } from './lista-precios/lista-precios.component';
 import { EditarPreciosTipoClienteComponent } from './editar-precios-tipo-cliente/editar-precios-tipo-cliente.component';
+import { EditarPrecioUnitarioComponent } from './editar-precio-unitario/editar-precio-unitario.component';
+import { EditarPrecioVolumenComponent } from './editar-precio-volumen/editar-precio-volumen.component';
 import { TableModule } from 'primeng/table';
 import { PaginatorModule } from 'primeng/paginator';
 import { TabViewModule } from 'primeng/tabview';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ReactiveFormsModule } from '@angular/forms';
 
@@ -25,11 +28,14 @@ import { ReactiveFormsModule } from '@angular/forms';
     TabViewModule,
     InputTextModule,
     ButtonModule,
+    TooltipModule,
     NgbModule
   ],
   declarations: [
     ListaPreciosComponent,
-    EditarPreciosTipoClienteComponent
+    EditarPreciosTipoClienteComponent,
+    EditarPrecioUnitarioComponent,
+    EditarPrecioVolumenComponent
   ]
 })
 export class ListaPreciosModule { }

@@ -1,0 +1,122 @@
+<div class="modal-header">
+  <h5 class="modal-title">Editar Precio Unitario</h5>
+  <button type="button" class="btn-close" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <div *ngIf="cargando" class="text-center p-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!cargando">
+    <!-- Información del producto -->
+    <div class="mb-4 p-3 bg-light rounded">
+      <div class="row align-items-center">
+        <div class="col-auto">
+          <img
+            *ngIf="producto?.crearProducto?.imagenesPrincipales?.length > 0"
+            [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
+            [alt]="producto?.crearProducto?.titulo"
+            width="60"
+            height="60"
+            style="border-radius: 8px; object-fit: cover;"
+          />
+          <img
+            *ngIf="!producto?.crearProducto?.imagenesPrincipales?.length"
+            src="assets/img/placeholder.png"
+            width="60"
+            height="60"
+            style="border-radius: 8px; opacity: 0.5;"
+          />
+        </div>
+        <div class="col">
+          <h6 class="mb-1 fw-bold">{{ producto?.crearProducto?.titulo }}</h6>
+          <small class="text-muted">Referencia: {{ producto?.identificacion?.referencia }}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de precio unitario -->
+    <form [formGroup]="precioForm">
+      <h5 class="mb-3">Precio Unitario Individual</h5>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="precioUnitarioSinIva">
+            Precio unitario (sin IVA)<span class="text-danger">*</span>
+          </label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input
+              formControlName="precioUnitarioSinIva"
+              class="form-control"
+              id="precioUnitarioSinIva"
+              type="number"
+              placeholder="0"
+              required
+            />
+          </div>
+          <div *ngIf="precioForm.controls['precioUnitarioSinIva'].invalid && precioForm.controls['precioUnitarioSinIva'].touched"
+               class="text-danger small mt-1">
+            Campo requerido
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label" for="precioUnitarioIva">
+            Porcentaje IVA<span class="text-danger">*</span>
+          </label>
+          <select formControlName="precioUnitarioIva" required class="form-control" id="precioUnitarioIva">
+            <option value="19">19%</option>
+            <option value="8">8%</option>
+            <option value="5">5%</option>
+            <option value="0">0%</option>
+          </select>
+          <div *ngIf="precioForm.controls['precioUnitarioIva'].invalid && precioForm.controls['precioUnitarioIva'].touched"
+               class="text-danger small mt-1">
+            Campo requerido
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Valor IVA</label>
+          <div class="form-control bg-light text-end">
+            <strong>{{ precioForm.controls['valorIva'].value | currency:'USD':'symbol' }}</strong>
+          </div>
+        </div>
+
+        <div class="col-md-6 mb-3">
+          <label class="form-label">Precio unitario Total (con IVA)</label>
+          <div class="form-control bg-primary text-white text-end">
+            <strong>{{ precioForm.controls['precioUnitarioConIva'].value | currency:'USD':'symbol' }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="alert alert-info mt-3">
+        <small>
+          <strong>Nota:</strong> Este precio es por unidad; Si la cantidad no llega hasta donde
+          empieza la cantidad inicial de precio por volumen, siempre será el mismo precio.
+          Y si no hay precios por volumen configurados siempre será ese el precio base.
+        </small>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
+  <button
+    type="button"
+    class="btn btn-primary"
+    (click)="guardar()"
+    [disabled]="guardando || precioForm.invalid">
+    <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+    <i *ngIf="!guardando" class="pi pi-save me-1"></i>
+    Guardar Precio
+  </button>
+</div>

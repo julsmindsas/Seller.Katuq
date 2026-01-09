@@ -1,0 +1,171 @@
+<div class="modal-header">
+  <h5 class="modal-title">Editar Precio por Volumen</h5>
+  <button type="button" class="btn-close" (click)="cancelar()"></button>
+</div>
+
+<div class="modal-body">
+  <div *ngIf="cargando" class="text-center p-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+
+  <div *ngIf="!cargando">
+    <!-- Información del producto -->
+    <div class="mb-4 p-3 bg-light rounded">
+      <div class="row align-items-center">
+        <div class="col-auto">
+          <img
+            *ngIf="producto?.crearProducto?.imagenesPrincipales?.length > 0"
+            [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
+            [alt]="producto?.crearProducto?.titulo"
+            width="60"
+            height="60"
+            style="border-radius: 8px; object-fit: cover;"
+          />
+          <img
+            *ngIf="!producto?.crearProducto?.imagenesPrincipales?.length"
+            src="assets/img/placeholder.png"
+            width="60"
+            height="60"
+            style="border-radius: 8px; opacity: 0.5;"
+          />
+        </div>
+        <div class="col">
+          <h6 class="mb-1 fw-bold">{{ producto?.crearProducto?.titulo }}</h6>
+          <small class="text-muted">Referencia: {{ producto?.identificacion?.referencia }}</small>
+          <div *ngIf="producto?.precio?.precioUnitarioSinIva" class="mt-1">
+            <small class="text-muted">
+              Precio base: $ {{ producto.precio.precioUnitarioSinIva | number:'1.0-0' }}
+              (con IVA: $ {{ producto.precio.precioUnitarioConIva | number:'1.0-0' }})
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario de precios por volumen -->
+    <form [formGroup]="precioForm">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Precio Por Rango / Volumen</h5>
+        <button class="btn btn-primary btn-sm" type="button" (click)="addRow()">
+          <i class="pi pi-plus me-1"></i>
+          Añadir precio por Volumen
+        </button>
+      </div>
+
+      <div class="table-responsive" *ngIf="preciosVolumen.length > 0">
+        <table class="table table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Unidades Inicial</th>
+              <th scope="col">Limite Unidades</th>
+              <th scope="col">Precio Unitario (sin IVA)</th>
+              <th scope="col">% IVA</th>
+              <th scope="col">Valor IVA</th>
+              <th scope="col">Precio Total (con IVA)</th>
+              <th scope="col" style="width: 60px;"></th>
+            </tr>
+          </thead>
+          <tbody formArrayName="preciosVolumen">
+            <tr [formGroupName]="i" *ngFor="let item of preciosVolumen.controls; let i = index">
+              <td>
+                <input
+                  formControlName="numeroUnidadesInicial"
+                  placeholder="Desde"
+                  class="form-control form-control-sm"
+                  type="number"
+                  [attr.disabled]="i === 0 ? true : null"
+                />
+                <div *ngIf="item.get('numeroUnidadesInicial').errors">
+                  <small class="text-danger" *ngIf="item.get('numeroUnidadesInicial').hasError('required')">
+                    Requerido
+                  </small>
+                </div>
+              </td>
+              <td>
+                <input
+                  class="form-control form-control-sm"
+                  formControlName="numeroUnidadesLimite"
+                  placeholder="Hasta"
+                  type="number"
+                  [attr.disabled]="i === 0 ? true : null"
+                />
+                <div *ngIf="item.get('numeroUnidadesLimite').errors">
+                  <small class="text-danger" *ngIf="item.get('numeroUnidadesLimite').hasError('required')">
+                    Requerido
+                  </small>
+                </div>
+              </td>
+              <td>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text">$</span>
+                  <input
+                    class="form-control"
+                    formControlName="valorUnitarioPorVolumenSinIVA"
+                    type="number"
+                    placeholder="0"
+                  />
+                </div>
+              </td>
+              <td>
+                <select class="form-control form-control-sm" formControlName="valorIVAPorVolumen">
+                  <option value="19">19%</option>
+                  <option value="8">8%</option>
+                  <option value="5">5%</option>
+                  <option value="0">0%</option>
+                </select>
+              </td>
+              <td class="text-end align-middle">
+                <strong class="text-muted">
+                  {{ item.controls['valorUnitarioPorVolumenIva'].value | currency:'USD':'symbol' }}
+                </strong>
+              </td>
+              <td class="text-end align-middle">
+                <strong class="text-primary">
+                  {{ item.controls['valorUnitarioPorVolumenConIVA'].value | currency:'USD':'symbol' }}
+                </strong>
+              </td>
+              <td class="text-center">
+                <button
+                  class="btn btn-outline-danger btn-sm"
+                  type="button"
+                  (click)="lessRow(i)"
+                  [disabled]="i === 0 && preciosVolumen.length === 1"
+                  pTooltip="Eliminar fila">
+                  <i class="pi pi-times"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="preciosVolumen.length === 0" class="alert alert-info">
+        <i class="pi pi-info-circle me-2"></i>
+        No hay precios por volumen configurados. Haz clic en "Añadir precio por Volumen" para agregar rangos de precios.
+      </div>
+
+      <div class="alert alert-light mt-3 border">
+        <small>
+          <strong>Nota:</strong> Los precios por volumen se aplican cuando la cantidad comprada está dentro del rango
+          especificado. La primera fila representa el precio base (1 unidad). Las filas adicionales definen rangos
+          de cantidades con precios especiales.
+        </small>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
+  <button
+    type="button"
+    class="btn btn-primary"
+    (click)="guardar()"
+    [disabled]="guardando || preciosVolumen.length === 0">
+    <span *ngIf="guardando" class="spinner-border spinner-border-sm me-1"></span>
+    <i *ngIf="!guardando" class="pi pi-save me-1"></i>
+    Guardar Precios
+  </button>
+</div>

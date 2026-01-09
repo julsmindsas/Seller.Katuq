@@ -4,6 +4,8 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import * as XLSX from 'xlsx';
 import Swal from 'sweetalert2';
 import { EditarPreciosTipoClienteComponent } from '../editar-precios-tipo-cliente/editar-precios-tipo-cliente.component';
+import { EditarPrecioUnitarioComponent } from '../editar-precio-unitario/editar-precio-unitario.component';
+import { EditarPrecioVolumenComponent } from '../editar-precio-volumen/editar-precio-volumen.component';
 import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
 
 @Component({
@@ -19,7 +21,7 @@ export class ListaPreciosComponent implements OnInit {
   productosFiltrados: Producto[] = [];
   tiposCliente: any[] = [];
   searchTerm: string = '';
-  activeTab: number = 0; // 0: Tipo Cliente, 1: Volumen, 2: Canal
+  activeTab: number = 0; // 0: Tipo Cliente, 1: Precio Unitario, 2: Precio por Volumen
 
   // Paginación
   pageSize = 10;
@@ -93,46 +95,65 @@ export class ListaPreciosComponent implements OnInit {
 
   cargarProductos() {
     this.cargando = true;
-    // Cargar productos con paginación
-    this.service.getAllProductsPagination(1000, 1).subscribe({
+    this.productos = [];
+    this.cargarProductosPaginados(1, null);
+  }
+
+  private cargarProductosPaginados(page: number, lastDocId: string | null) {
+    const pageSize = 100; // Cargar de 100 en 100 para mejor rendimiento
+
+    this.service.getAllProductsPagination(pageSize, page, lastDocId ?? undefined).subscribe({
       next: (data: any) => {
-        this.productos = Array.isArray(data?.products) ? data.products : (Array.isArray(data) ? data : []);
-        this.productosFiltrados = [...this.productos];
-        this.totalRecords = this.productos.length;
-        this.cargando = false;
+        const productosNuevos = Array.isArray(data?.products) ? data.products : [];
+        this.productos = [...this.productos, ...productosNuevos];
+
+        // Verificar si hay más páginas
+        const totalPages = data?.pagination?.totalPages || 1;
+        const currentPage = data?.pagination?.currentPage || page;
+        const newLastDocId = data?.pagination?.lastDocId;
+
+        if (currentPage < totalPages && productosNuevos.length > 0) {
+          // Cargar siguiente página
+          this.cargarProductosPaginados(currentPage + 1, newLastDocId);
+        } else {
+          // Terminó de cargar todas las páginas
+          this.productosFiltrados = [...this.productos];
+          this.totalRecords = this.productos.length;
+          this.cargando = false;
+          console.log(`Total de productos cargados: ${this.productos.length}`);
+        }
       },
       error: (error) => {
         console.error('Error cargando productos:', error);
-        // Intentar método alternativo
-        this.service.getProductByBarcode('').subscribe({
-          next: (data: any) => {
-            this.productos = Array.isArray(data) ? data : [];
-            this.productosFiltrados = [...this.productos];
-            this.totalRecords = this.productos.length;
-            this.cargando = false;
-          },
-          error: (err) => {
-            console.error('Error cargando productos:', err);
-            this.cargando = false;
-          }
-        });
+        // Si hay error pero ya tenemos algunos productos, mostrarlos
+        if (this.productos.length > 0) {
+          this.productosFiltrados = [...this.productos];
+          this.totalRecords = this.productos.length;
+        }
+        this.cargando = false;
       }
     });
   }
 
-  buscarProducto(event?: any) {
-    if (event && event.key !== 'Enter') return;
-    
-    if (!this.searchTerm.trim()) {
+  buscarProducto() {
+    const term = this.searchTerm?.trim()?.toLowerCase() || '';
+
+    if (!term) {
       this.productosFiltrados = [...this.productos];
       return;
     }
 
-    const term = this.searchTerm.toLowerCase();
-    this.productosFiltrados = this.productos.filter(p => 
-      p.identificacion?.referencia?.toLowerCase().includes(term) ||
-      p.crearProducto?.titulo?.toLowerCase().includes(term)
-    );
+    this.productosFiltrados = this.productos.filter(p => {
+      const referencia = p.identificacion?.referencia?.toLowerCase() || '';
+      const titulo = p.crearProducto?.titulo?.toLowerCase() || '';
+      const codigoBarras = p.identificacion?.codigoBarras?.toLowerCase() || '';
+
+      return referencia.includes(term) ||
+             titulo.includes(term) ||
+             codigoBarras.includes(term);
+    });
+
+    console.log(`Búsqueda: "${term}" - Encontrados: ${this.productosFiltrados.length} de ${this.productos.length}`);
   }
 
   onTabChange(event: any) {
@@ -480,18 +501,29 @@ export class ListaPreciosComponent implements OnInit {
 
   editarPrecio(producto: Producto) {
     console.log('editarPrecio llamado', { producto, activeTab: this.activeTab });
-    
-    // Solo abrir modal en el tab de tipo de cliente
-    if (this.activeTab !== 0) {
-      Swal.fire('Info', 'Esta funcionalidad solo está disponible en el tab "Precio tipo clientes"', 'info');
-      return;
-    }
 
     if (!producto) {
       console.error('Producto no definido');
       return;
     }
 
+    // Redirigir según el tab activo
+    switch (this.activeTab) {
+      case 0: // Precio tipo clientes
+        this.editarPrecioTipoCliente(producto);
+        break;
+      case 1: // Precio unitario
+        this.editarPrecioUnitario(producto);
+        break;
+      case 2: // Precio por volumen
+        this.editarPrecioVolumen(producto);
+        break;
+      default:
+        Swal.fire('Info', 'Funcionalidad no disponible para esta pestaña', 'info');
+    }
+  }
+
+  editarPrecioTipoCliente(producto: Producto) {
     try {
       const modalRef = this.modalService.open(EditarPreciosTipoClienteComponent, {
         size: 'lg',
@@ -509,7 +541,6 @@ export class ListaPreciosComponent implements OnInit {
       modalRef.result.then((result) => {
         if (result && result.success) {
           console.log('Precios guardados exitosamente:', result);
-          // Actualizar el producto en la lista local
           const index = this.productos.findIndex(p => p.cd === result.producto.cd);
           if (index !== -1) {
             this.productos[index] = result.producto;
@@ -521,7 +552,80 @@ export class ListaPreciosComponent implements OnInit {
           Swal.fire('Error', 'No se pudieron guardar los precios', 'error');
         }
       }).catch((error) => {
-        // Usuario canceló o hubo un error
+        console.log('Modal cerrado:', error);
+      });
+    } catch (error) {
+      console.error('Error al abrir modal:', error);
+      Swal.fire('Error', 'No se pudo abrir el modal de edición', 'error');
+    }
+  }
+
+  editarPrecioUnitario(producto: Producto) {
+    try {
+      const modalRef = this.modalService.open(EditarPrecioUnitarioComponent, {
+        size: 'lg',
+        centered: true,
+        backdrop: 'static'
+      });
+
+      if (!modalRef) {
+        console.error('No se pudo abrir el modal');
+        return;
+      }
+
+      modalRef.componentInstance.producto = producto;
+
+      modalRef.result.then((result) => {
+        if (result && result.success) {
+          console.log('Precio unitario guardado exitosamente:', result);
+          const index = this.productos.findIndex(p => p.cd === result.producto.cd);
+          if (index !== -1) {
+            this.productos[index] = result.producto;
+            this.productosFiltrados = [...this.productos];
+          }
+          Swal.fire('Éxito', 'Precio unitario guardado correctamente', 'success');
+        } else if (result && !result.success) {
+          console.error('Error al guardar:', result.error);
+          Swal.fire('Error', 'No se pudo guardar el precio unitario', 'error');
+        }
+      }).catch((error) => {
+        console.log('Modal cerrado:', error);
+      });
+    } catch (error) {
+      console.error('Error al abrir modal:', error);
+      Swal.fire('Error', 'No se pudo abrir el modal de edición', 'error');
+    }
+  }
+
+  editarPrecioVolumen(producto: Producto) {
+    try {
+      const modalRef = this.modalService.open(EditarPrecioVolumenComponent, {
+        size: 'xl',
+        centered: true,
+        backdrop: 'static'
+      });
+
+      if (!modalRef) {
+        console.error('No se pudo abrir el modal');
+        return;
+      }
+
+      modalRef.componentInstance.producto = producto;
+
+      modalRef.result.then((result) => {
+        if (result && result.success) {
+          console.log('Precios por volumen guardados exitosamente:', result);
+          const index = this.productos.findIndex(p => p.cd === result.producto.cd);
+          if (index !== -1) {
+            this.productos[index] = result.producto;
+            this.productosFiltrados = [...this.productos];
+          }
+          Swal.fire('Éxito', 'Precios por volumen guardados correctamente', 'success');
+        } else if (result && !result.success) {
+          console.error('Error al guardar:', result.error);
+          Swal.fire('Error', 'No se pudieron guardar los precios por volumen', 'error');
+        }
+      }).catch((error) => {
         console.log('Modal cerrado:', error);
       });
     } catch (error) {
