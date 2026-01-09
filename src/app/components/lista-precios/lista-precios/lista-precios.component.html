@@ -111,9 +111,9 @@
                       </span>
                     </td>
                     <td>
-                      <div class="d-flex flex-wrap gap-1" *ngIf="producto.preciosPorTipoCliente?.length > 0">
+                      <div class="d-flex flex-wrap gap-1" *ngIf="getPreciosValidosPorTipoCliente(producto).length > 0">
                         <span
-                          *ngFor="let precio of producto.preciosPorTipoCliente | slice:0:3"
+                          *ngFor="let precio of getPreciosValidosPorTipoCliente(producto) | slice:0:3"
                           class="badge bg-light text-dark border"
                           style="font-size: 0.75rem;"
                           [pTooltip]="'Sin IVA: $' + (precio.precio | number:'1.0-0') + ' + IVA ' + (precio.porcentajeIva || 0) + '%'"
@@ -121,13 +121,13 @@
                           {{ precio.tipoClienteNombre }}: ${{ (precio.precioConIva || precio.precio) | number:'1.0-0' }}
                         </span>
                         <span
-                          *ngIf="producto.preciosPorTipoCliente?.length > 3"
+                          *ngIf="getPreciosValidosPorTipoCliente(producto).length > 3"
                           class="badge bg-secondary"
                           style="font-size: 0.75rem;">
-                          +{{ producto.preciosPorTipoCliente.length - 3 }} más
+                          +{{ getPreciosValidosPorTipoCliente(producto).length - 3 }} más
                         </span>
                       </div>
-                      <span *ngIf="!producto.preciosPorTipoCliente?.length" class="text-muted small">
+                      <span *ngIf="getPreciosValidosPorTipoCliente(producto).length === 0" class="text-muted small">
                         <i class="pi pi-info-circle me-1"></i>Sin configurar
                       </span>
                     </td>
@@ -153,27 +153,27 @@
                             <h6 class="mb-3">
                               <i class="pi pi-tag me-2"></i>
                               Precios por Tipo de Cliente - {{ producto.crearProducto?.titulo }}
-                              <span class="badge bg-info ms-2" *ngIf="producto.preciosPorTipoCliente?.length > 0">
-                                IVA: {{ producto.preciosPorTipoCliente[0]?.porcentajeIva || 0 }}%
+                              <span class="badge bg-info ms-2" *ngIf="getPreciosValidosPorTipoCliente(producto).length > 0">
+                                IVA: {{ getPreciosValidosPorTipoCliente(producto)[0]?.porcentajeIva || 0 }}%
                               </span>
                             </h6>
                           </div>
                         </div>
 
                         <!-- Tabla detallada de precios -->
-                        <div class="table-responsive" *ngIf="producto.preciosPorTipoCliente?.length > 0">
+                        <div class="table-responsive" *ngIf="getPreciosValidosPorTipoCliente(producto).length > 0">
                           <table class="table table-sm table-bordered mb-0">
                             <thead class="table-light">
                               <tr>
                                 <th>Tipo de Cliente</th>
                                 <th class="text-end">Precio sin IVA</th>
-                                <th class="text-end">IVA ({{ producto.preciosPorTipoCliente[0]?.porcentajeIva || 0 }}%)</th>
+                                <th class="text-end">IVA ({{ getPreciosValidosPorTipoCliente(producto)[0]?.porcentajeIva || 0 }}%)</th>
                                 <th class="text-end">Precio con IVA</th>
                                 <th class="text-center">vs Base</th>
                               </tr>
                             </thead>
                             <tbody>
-                              <tr *ngFor="let precio of producto.preciosPorTipoCliente">
+                              <tr *ngFor="let precio of getPreciosValidosPorTipoCliente(producto)">
                                 <td>
                                   <span class="fw-bold">{{ precio.tipoClienteNombre }}</span>
                                 </td>
@@ -201,8 +201,8 @@
                         </div>
 
                         <!-- Resumen visual en cards (opcional, debajo de la tabla) -->
-                        <div class="row mt-3" *ngIf="producto.preciosPorTipoCliente?.length > 0">
-                          <div class="col-md-3 col-sm-6 mb-2" *ngFor="let precio of producto.preciosPorTipoCliente">
+                        <div class="row mt-3" *ngIf="getPreciosValidosPorTipoCliente(producto).length > 0">
+                          <div class="col-md-3 col-sm-6 mb-2" *ngFor="let precio of getPreciosValidosPorTipoCliente(producto)">
                             <div class="card h-100 border-primary">
                               <div class="card-header bg-primary text-white py-1 text-center">
                                 <small class="fw-bold">{{ precio.tipoClienteNombre }}</small>
@@ -226,7 +226,7 @@
                           </div>
                         </div>
 
-                        <div class="row" *ngIf="!producto.preciosPorTipoCliente?.length">
+                        <div class="row" *ngIf="getPreciosValidosPorTipoCliente(producto).length === 0">
                           <div class="col-12">
                             <div class="alert alert-info mb-0 d-flex align-items-center">
                               <i class="pi pi-info-circle me-2"></i>
@@ -239,7 +239,7 @@
                         </div>
 
                         <!-- Mostrar tipos de cliente sin precio configurado -->
-                        <div class="row mt-3" *ngIf="getTiposClienteSinPrecio(producto).length > 0 && producto.preciosPorTipoCliente?.length > 0">
+                        <div class="row mt-3" *ngIf="getTiposClienteSinPrecio(producto).length > 0 && getPreciosValidosPorTipoCliente(producto).length > 0">
                           <div class="col-12">
                             <small class="text-muted">
                               <i class="pi pi-exclamation-triangle me-1 text-warning"></i>

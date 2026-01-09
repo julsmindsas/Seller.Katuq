@@ -671,6 +671,32 @@ export class ListaPreciosComponent implements OnInit {
     return this.tiposCliente.filter(tipo => !tiposConPrecio.includes(tipo.id));
   }
 
+  /**
+   * Obtiene los precios por tipo de cliente válidos (solo aquellos cuyo tipoClienteId
+   * existe en los tipos de cliente actuales cargados del servicio)
+   */
+  getPreciosValidosPorTipoCliente(producto: Producto): PrecioPorTipoCliente[] {
+    if (!producto.preciosPorTipoCliente || producto.preciosPorTipoCliente.length === 0) {
+      return [];
+    }
+    if (!this.tiposCliente || this.tiposCliente.length === 0) {
+      return [];
+    }
+
+    // Filtrar solo los precios cuyo tipoClienteId existe en los tipos de cliente actuales
+    const tiposClienteIds = this.tiposCliente.map(t => t.id);
+    return producto.preciosPorTipoCliente.filter(precio =>
+      tiposClienteIds.includes(precio.tipoClienteId)
+    ).map(precio => {
+      // Actualizar el nombre del tipo de cliente con el nombre actual del servicio
+      const tipoActual = this.tiposCliente.find(t => t.id === precio.tipoClienteId);
+      return {
+        ...precio,
+        tipoClienteNombre: tipoActual?.descripcion || tipoActual?.nombre || precio.tipoClienteNombre
+      };
+    });
+  }
+
   obtenerFechaEdicion(producto: Producto): string {
     return producto.date_edit || '-';
   }
