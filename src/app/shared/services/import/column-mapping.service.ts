@@ -33,15 +33,27 @@ export class ColumnMappingService {
 
   /**
    * Extrae las columnas de un array de objetos (datos Excel/JSON parseados)
+   * Recorre TODAS las filas para detectar columnas que pueden estar vacías en algunas filas
    * @param data Array de objetos con los datos
-   * @returns Array de nombres de columnas
+   * @returns Array de nombres de columnas (únicas)
    */
   extractColumns(data: any[]): string[] {
     if (!data || data.length === 0) {
       return [];
     }
 
-    return Object.keys(data[0]);
+    // Recopilar TODAS las columnas de TODAS las filas
+    // porque algunas columnas pueden estar vacías en la primera fila
+    const allColumns = new Set<string>();
+
+    data.forEach(row => {
+      Object.keys(row).forEach(key => allColumns.add(key));
+    });
+
+    const columns = Array.from(allColumns);
+    console.log('[ColumnMappingService] 📊 Columnas detectadas de', data.length, 'filas:', columns);
+
+    return columns;
   }
 
   /**

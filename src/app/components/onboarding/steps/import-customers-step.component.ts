@@ -175,7 +175,7 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
 
     try {
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      const sampleRows = this.columnMappingService.getSampleRows(this.parsedData, 3);
+      const sampleRows = this.columnMappingService.getSampleRows(this.parsedData, 10);
 
       const request: ColumnMappingRequest = {
         type: 'customer',
@@ -305,6 +305,12 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
    * Importa los clientes usando el mapeo confirmado
    */
   async importCustomers(): Promise<void> {
+    console.log('🚀 Iniciando importación de clientes...');
+    console.log('📁 Archivo:', this.uploadedFile?.name);
+    console.log('📊 Datos parseados:', this.parsedData?.length, 'filas');
+    console.log('🗺️ Mappings confirmados:', this.confirmedMappings);
+    console.log('🤖 Mappings KAI:', this.mappingResult?.mappings);
+
     if (!this.uploadedFile) {
       this.messageService.add({
         severity: 'warn',
@@ -314,13 +320,23 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
       return;
     }
 
+    // Si no hay mappings confirmados pero hay mappings sugeridos por KAI, usarlos automáticamente
     if (!this.confirmedMappings || Object.keys(this.confirmedMappings).length === 0) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Mapeo no confirmado',
-        detail: 'Por favor confirma el mapeo de columnas antes de importar'
-      });
-      return;
+      if (this.mappingResult?.mappings && Object.keys(this.mappingResult.mappings).length > 0) {
+        // Usar mappings sugeridos por KAI
+        this.confirmedMappings = {};
+        Object.entries(this.mappingResult.mappings).forEach(([katuqField, mapping]) => {
+          this.confirmedMappings[katuqField] = mapping.sourceColumn;
+        });
+        console.log('📋 Usando mappings sugeridos por KAI:', this.confirmedMappings);
+      } else {
+        this.messageService.add({
+          severity: 'warn',
+          summary: 'Mapeo no disponible',
+          detail: 'Por favor espera el análisis de columnas o confirma el mapeo manualmente'
+        });
+        return;
+      }
     }
 
     this.isUploading = true;
@@ -339,14 +355,29 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Transformar datos usando el mapeo confirmado
-      const transformedData = this.transformDataWithMapping(this.parsedData, this.confirmedMappings);
+      // Enviar datos RAW + mappings al backend
+      // El backend aplicará los mappings y creará la estructura correcta (datosEntrega como array)
+      // Convertir confirmedMappings a formato que espera el backend: { katuqField: { sourceColumn: "..." } }
+      const mappingsForBackend: { [key: string]: { sourceColumn: string; confidence: number; reasoning: string } } = {};
+      Object.entries(this.confirmedMappings).forEach(([katuqField, sourceColumn]) => {
+        mappingsForBackend[katuqField] = {
+          sourceColumn: sourceColumn,
+          confidence: 100,
+          reasoning: 'Mapeo confirmado por usuario'
+        };
+      });
 
       const payload = {
-        customers: transformedData,
+        customers: this.parsedData,  // Datos RAW sin transformar
         companyId: companyId,
-        mappings: this.confirmedMappings
+        mappings: mappingsForBackend  // Mappings en formato completo para el backend
       };
+
+      console.log('📤 Enviando payload al backend:', {
+        customersCount: payload.customers.length,
+        companyId: payload.companyId,
+        mappings: payload.mappings
+      });
 
       // Agregar header company explícitamente para onboarding
       const headers = new HttpHeaders({
@@ -485,9 +516,12 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
       'datosFacturacionElectronica.ciudad': 'Ciudad (Facturación)',
       'datosFacturacionElectronica.departamento': 'Departamento (Facturación)',
       'datosFacturacionElectronica.pais': 'País (Facturación)',
-      'datosEntrega.direccion': 'Dirección de Entrega',
+      'datosEntrega.direccionEntrega': 'Dirección de Entrega',
       'datosEntrega.ciudad': 'Ciudad de Entrega',
-      'datosEntrega.departamento': 'Departamento de Entrega'
+      'datosEntrega.departamento': 'Departamento de Entrega',
+      'datosEntrega.nombres': 'Nombres (Entrega)',
+      'datosEntrega.apellidos': 'Apellidos (Entrega)',
+      'datosEntrega.celular': 'Celular (Entrega)'
     };
     return customerLabels[katuqField] || katuqField;
   }
@@ -519,8 +553,11 @@ export class ImportCustomersStepComponent implements OnInit, OnDestroy {
    * Verifica si se puede importar
    */
   canImport(): boolean {
+    // Permitir importar si hay archivo Y (mappings confirmados O mappings sugeridos por KAI)
+    const hasMappings = Object.keys(this.confirmedMappings).length > 0 ||
+                        (this.mappingResult?.mappings && Object.keys(this.mappingResult.mappings).length > 0);
     return !!this.uploadedFile &&
-           Object.keys(this.confirmedMappings).length > 0 &&
+           hasMappings &&
            !this.isUploading &&
            !this.isAnalyzingColumns;
   }

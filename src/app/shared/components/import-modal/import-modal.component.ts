@@ -382,7 +382,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
     try {
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-      const sampleRows = this.columnMappingService.getSampleRows(this.parsedData, 3);
+      // Enviar hasta 10 filas de muestra para mejor detección de patrones
+      const sampleRows = this.columnMappingService.getSampleRows(this.parsedData, 10);
+      console.log('[ImportModal] 📊 Enviando', sampleRows.length, 'filas de muestra a KAI');
 
       const request: ColumnMappingRequest = {
         type: this.type,
@@ -417,12 +419,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   }
 
   private prepareMappingFields(): void {
-    if (!this.mappingResult) return;
+    console.log('[ImportModal] 🔧 Preparando campos de mapeo...');
+    console.log('[ImportModal] 📊 mappingResult:', this.mappingResult);
+
+    if (!this.mappingResult) {
+      console.log('[ImportModal] ⚠️ No hay mappingResult!');
+      return;
+    }
 
     this.availableColumns = this.sourceColumns.map(col => ({
       label: col,
       value: col
     }));
+
+    console.log('[ImportModal] 📋 Columnas disponibles:', this.availableColumns);
+    console.log('[ImportModal] 🗺️ Mappings del resultado:', this.mappingResult.mappings);
 
     this.mappingFields = Object.entries(this.mappingResult.mappings || {}).map(([katuqField, mapping]) => ({
       katuqField,
@@ -436,11 +447,18 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       icon: getConfidenceIcon(mapping.confidence)
     }));
 
+    console.log('[ImportModal] ✅ mappingFields generados:', this.mappingFields.length);
+    console.log('[ImportModal] 📋 Campos:', this.mappingFields.map(f => `${f.katuqField} ← ${f.sourceColumn}`));
+
     this.mappingFields.sort((a, b) => {
       if (a.isRequired && !b.isRequired) return -1;
       if (!a.isRequired && b.isRequired) return 1;
       return b.confidence - a.confidence;
     });
+
+    // Auto-confirmar los mapeos para que estén disponibles
+    this.updateConfirmedMappings();
+    console.log('[ImportModal] 🗺️ Mapeos confirmados automáticamente:', this.confirmedMappings);
   }
 
   onCardMappingChanged(event: { katuqField: string; sourceColumn: string }): void {
@@ -487,6 +505,11 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   }
 
   async importData(): Promise<void> {
+    console.log('[ImportModal] 🚀 Iniciando importación...');
+    console.log('[ImportModal] 📁 Archivo:', this.uploadedFile?.name);
+    console.log('[ImportModal] 📊 Datos parseados:', this.parsedData?.length, 'filas');
+    console.log('[ImportModal] 🗺️ Mapeos confirmados:', this.confirmedMappings);
+
     if (!this.uploadedFile) {
       this.messageService.add({
         severity: 'warn',
@@ -497,6 +520,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     }
 
     if (!this.confirmedMappings || Object.keys(this.confirmedMappings).length === 0) {
+      console.log('[ImportModal] ⚠️ No hay mapeos confirmados');
       this.messageService.add({
         severity: 'warn',
         summary: 'Mapeo no confirmado',
@@ -521,13 +545,22 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         return;
       }
 
+      console.log('[ImportModal] 🏢 Company:', companyId);
+      console.log('[ImportModal] 🔄 Transformando datos con mapeo...');
+
       const transformedData = this.transformDataWithMapping(this.parsedData, this.confirmedMappings);
+
+      console.log('[ImportModal] ✅ Datos transformados:', transformedData.length, 'registros');
+      console.log('[ImportModal] 📋 Muestra de datos transformados (primeros 3):', JSON.stringify(transformedData.slice(0, 3), null, 2));
 
       const payload: any = {
         companyId: companyId,
         mappings: this.confirmedMappings
       };
       payload[this.config!.payloadKey] = transformedData;
+
+      console.log('[ImportModal] 📤 PAYLOAD COMPLETO A ENVIAR:');
+      console.log(JSON.stringify(payload, null, 2));
 
       const headers = new HttpHeaders({
         'company': companyId
@@ -568,14 +601,24 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   }
 
   private transformDataWithMapping(data: any[], mappings: { [katuqField: string]: string }): any[] {
+    console.log('[ImportModal] 🔄 Transformando', data.length, 'filas con mappings:', mappings);
+
     return data.map((row, index) => {
       // Para productos, iniciar con los valores por defecto
       let transformedRow: any = this.type === 'product'
         ? this.getProductDefaults(index)
         : {};
 
+      if (index === 0) {
+        console.log('[ImportModal] 📝 Fila original (primera):', row);
+      }
+
       Object.entries(mappings).forEach(([katuqField, sourceColumn]) => {
         let value = row[sourceColumn];
+
+        if (index === 0) {
+          console.log(`[ImportModal]   ${katuqField} ← "${sourceColumn}" = "${value}"`);
+        }
 
         // No procesar si el valor es undefined, null o string vacío
         if (value === undefined || value === null || value === '') {
@@ -610,6 +653,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       // Calcular campos derivados para productos
       if (this.type === 'product') {
         this.calculateDerivedFields(transformedRow);
+      }
+
+      if (index === 0) {
+        console.log('[ImportModal] ✅ Fila transformada (primera):', transformedRow);
       }
 
       return transformedRow;

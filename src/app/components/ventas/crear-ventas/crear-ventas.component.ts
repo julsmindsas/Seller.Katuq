@@ -50,7 +50,6 @@ import { FacturacionIntegracionService } from "../../../shared/services/integrac
 import { environment } from "../../../../environments/environment";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 import { InventarioService } from "../../../shared/services/inventarios/inventario.service";
-import { TourService } from "../../../shared/services/tour.service";
 import { Subscription } from "rxjs";
 
 @Component({
@@ -278,7 +277,6 @@ export class CrearVentasComponent
     private facturacionElectronicaService: FacturacionIntegracionService,
     private bodegaService: BodegaService,
     private inventarioService: InventarioService,
-    private tourService: TourService,
     private daneCodesService: DaneCodesService,
   ) {
     this.initForm();
@@ -409,18 +407,6 @@ export class CrearVentasComponent
   ngAfterViewInit(): void {
     this.showSteper = !this.pedidoPrm;
     this.showPedidoConfirm = !!this.pedidoPrm;
-    
-    // Initialize tour after view is loaded only if not completed
-    const completedTours = JSON.parse(localStorage.getItem('katuq_completed_tours') || '[]');
-    if (!completedTours.includes('ventas')) {
-      setTimeout(() => {
-        this.tourService.startTour('ventas', this.tourService.getVentasTour());
-      }, 1500);
-    }
-  }
-
-  startVentasTour(): void {
-    this.tourService.startTour('ventas', this.tourService.getVentasTour());
   }
 
   redirectToPostalCode() {

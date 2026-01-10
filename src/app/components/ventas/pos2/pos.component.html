@@ -4,9 +4,6 @@
             <app-warehouse-selector (warehouseChange)="onWarehouseChanged()"></app-warehouse-selector>
         </div>
         <div class="action-buttons">
-            <button class="btn btn-success tour-btn me-2" (click)="startPosTour()">
-                <i class="fa fa-route"></i> Tour POS
-            </button>
             <button class="btn btn-primary cash-closing-btn" (click)="openCashClosingModal()">
                 <i class="fa fa-cash-register"></i> Cierre de Caja
             </button>
@@ -19,16 +16,16 @@
     <div class="row">
         <div class="col-xxl-9 col-xl-8 box-col-8">
             <div class="row">
-                <div class="col-xl-12" data-tour="pos-categories">
+                <div class="col-xl-12">
                     <app-product-category></app-product-category>
                 </div>
-                <div class="col-xl-12" data-tour="pos-products">
+                <div class="col-xl-12">
                     <app-product></app-product>
                 </div>
             </div>
         </div>
-        <div class="col-xxl-3 col-xl-4 box-col-4e" data-tour="pos-cart">
-            <app-pos-checkout data-tour="pos-checkout"></app-pos-checkout>
+        <div class="col-xxl-3 col-xl-4 box-col-4e">
+            <app-pos-checkout></app-pos-checkout>
         </div>
     </div>
 </div>

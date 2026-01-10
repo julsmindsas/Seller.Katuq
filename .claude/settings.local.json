@@ -24,7 +24,9 @@
       "mcp__plugin_figma_figma__generate_diagram",
       "Bash(gcloud storage cp:*)",
       "Bash(cat:*)",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "WebFetch(domain:aliaddo.readme.io)",
+      "Bash(find:*)"
     ]
   }
 }
