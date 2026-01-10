@@ -4,9 +4,14 @@ import { DEFAULT_STREAM_CONFIG } from '../models/agent-config.interface';
 
 /**
  * Service para captura y streaming de video a 1 fps
- * Optimizado para Gemini Live API: 768x768 @ 1fps JPEG (calidad 0.6)
+ * Optimizado para Gemini Live API: 512x512 @ 1fps JPEG (calidad 0.5)
  * Usa requestAnimationFrame para captura suave y sincronizada
  * Sincronizado con la velocidad de procesamiento del modelo
+ *
+ * OPTIMIZADO PARA BAJA LATENCIA:
+ * - Resolución: 512x512 (antes 768x768) - 55% menos datos
+ * - Calidad JPEG: 0.5 (antes 0.6) - ~20% menos datos
+ * - Total: ~65% reducción en tamaño de frame
  */
 @Injectable({
   providedIn: 'root'
@@ -150,15 +155,16 @@ export class VideoStreamService {
       this.ctx.fillStyle = '#000000';
       this.ctx.fillRect(0, 0, this.config.width, this.config.height);
 
-      // Dibujar video recortado y escalado a 768x768
+      // Dibujar video recortado y escalado a 512x512 (optimizado para baja latencia)
       this.ctx.drawImage(
         this.videoElement,
         x, y, size, size, // source rectangle (crop cuadrado)
-        0, 0, this.config.width, this.config.height // destination (768x768)
+        0, 0, this.config.width, this.config.height // destination (512x512)
       );
 
-      // Convertir a JPEG base64 con compresión optimizada (0.6 para reducir tamaño ~30%)
-      const base64Image = this.canvas.toDataURL('image/jpeg', 0.6);
+      // OPTIMIZADO: Calidad 0.5 para menor latencia (antes 0.6)
+      // Con 512x512 @ 0.5 = ~20-30KB vs 768x768 @ 0.6 = ~60-80KB
+      const base64Image = this.canvas.toDataURL('image/jpeg', 0.5);
 
       // Remover prefijo "data:image/jpeg;base64,"
       const base64Data = base64Image.split(',')[1];
@@ -242,7 +248,7 @@ export class VideoStreamService {
       return null;
     }
 
-    const base64Image = this.canvas.toDataURL('image/jpeg', 0.6);
+    const base64Image = this.canvas.toDataURL('image/jpeg', 0.5);
     return base64Image.split(',')[1];
   }
 

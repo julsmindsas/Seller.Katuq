@@ -90,6 +90,9 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
   highContrastMode = false; // Can be toggled for vision problems
   voiceGuidanceEnabled = true; // Audio instructions for each step
 
+  // Tool execution status (for UI indicator)
+  currentToolStatus: { name: string; displayName: string; status: string } | null = null;
+
   // Configuración de empresa
   companyConfig!: CompanyConfig;
 
@@ -243,6 +246,33 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
     // Audio del servidor - Ya no es necesario suscribirse aquí
     // El AudioStreamerService en gemini-live.service maneja la reproducción automáticamente
 
+    // Tool calls - Mostrar indicador de lo que está haciendo el modelo
+    this.geminiService.toolCall$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((toolEvent) => {
+        console.log('🔧 [UI] Tool event received:', toolEvent);
+        if (toolEvent) {
+          if (toolEvent.status === 'executing' || toolEvent.type === 'tool_call') {
+            // Tool iniciando - mostrar indicador
+            const displayName = toolEvent.display_name || toolEvent.displayName || `Procesando ${toolEvent.name || toolEvent.tool_name}...`;
+            console.log('🔧 [UI] Showing tool indicator:', displayName);
+            this.currentToolStatus = {
+              name: toolEvent.name || toolEvent.tool_name,
+              displayName: displayName,
+              status: 'executing'
+            };
+            this.cdr.detectChanges();
+          } else if (toolEvent.status === 'completed' || toolEvent.type === 'tool_result') {
+            // Tool completado - ocultar indicador después de un momento
+            console.log('🔧 [UI] Tool completed, hiding indicator');
+            setTimeout(() => {
+              this.currentToolStatus = null;
+              this.cdr.detectChanges();
+            }, 1000); // Aumentado a 1 segundo para que sea visible
+          }
+        }
+      });
+
     // Frames de video
     this.videoService.frame$
       .pipe(takeUntil(this.destroy$))
@@ -253,13 +283,13 @@ export class AgentSessionComponent implements OnInit, OnDestroy {
         }
       });
 
-    // Chunks de audio
-    this.audioService.audioChunk$
+    // Chunks de audio - usar rawAudioChunk$ para envío binario (33% más eficiente)
+    this.audioService.rawAudioChunk$
       .pipe(takeUntil(this.destroy$))
-      .subscribe((chunkBase64) => {
+      .subscribe((pcmData: Int16Array) => {
         // 🛡️ FIX: Verificar sessionActive para prevenir envío después de finalizar
         if (this.isConnected && this.sessionActive) {
-          this.geminiService.sendAudioChunk(chunkBase64);
+          this.geminiService.sendAudioPCM16(pcmData);
         }
       });
 

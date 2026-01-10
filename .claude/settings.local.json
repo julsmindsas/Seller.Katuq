@@ -8,7 +8,23 @@
       "WebFetch(domain:google.github.io)",
       "WebFetch(domain:docs.cloud.google.com)",
       "Bash(npm run build:prod:*)",
-      "Bash(firebase deploy:*)"
+      "Bash(firebase deploy:*)",
+      "Bash(gcloud run services update:*)",
+      "Bash(gcloud run services describe:*)",
+      "Bash(gcloud run deploy:*)",
+      "Bash(gsutil cat:*)",
+      "Bash(gsutil cp:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:www.falabella.com.co)",
+      "WebFetch(domain:www.grupomansion.com)",
+      "WebFetch(domain:issuu.com)",
+      "Bash(gcloud auth print-access-token:*)",
+      "Bash(powershell:*)",
+      "Bash(python scripts/seed_catalog_to_vector_search.py:*)",
+      "mcp__plugin_figma_figma__generate_diagram",
+      "Bash(gcloud storage cp:*)",
+      "Bash(cat:*)",
+      "Bash(xargs ls:*)"
     ]
   }
 }

@@ -4,13 +4,19 @@
  *
  * Convierte Float32 a Int16 (PCM16) y lo envía al thread principal
  * Basado en el demo oficial de Google
+ *
+ * OPTIMIZADO: Buffer de 800 samples = 50ms a 16kHz (baja latencia)
+ * (Google recomienda 50-100ms para conversación fluida)
+ * Historial: 4096 (256ms) -> 1600 (100ms) -> 800 (50ms)
  */
 
 export const audioRecordingWorkletCode = `
 class AudioRecordingProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
-    this.bufferSize = 4096;
+    // OPTIMIZADO: 800 samples = 50ms a 16kHz (baja latencia para conversación natural)
+    // Si hay problemas de audio, subir a 1600 (100ms)
+    this.bufferSize = 800;
     this.buffer = new Float32Array(this.bufferSize);
     this.bufferIndex = 0;
   }

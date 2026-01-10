@@ -90,6 +90,14 @@
     </div>
   </div>
 
+  <!-- Indicador de Tool en Ejecución - VISIBLE cuando el modelo está procesando -->
+  <div class="tool-activity-indicator" *ngIf="currentToolStatus && sessionActive">
+    <div class="tool-activity-content">
+      <i class="pi pi-spin pi-cog tool-icon"></i>
+      <span class="tool-text">{{ currentToolStatus.displayName }}</span>
+    </div>
+  </div>
+
   <!-- Contenido Principal - SIEMPRE VISIBLE -->
   <div class="session-content-elderly">
 

@@ -87,8 +87,11 @@ export interface StreamConfig {
 export const DEFAULT_STREAM_CONFIG: StreamConfig = {
   video: {
     fps: 1, // 1 FPS sincronizado con modelo para respuestas más naturales
-    width: 768,
-    height: 768,
+    // OPTIMIZADO: 512x512 en lugar de 768x768 para menor latencia
+    // 512x512 = ~262KB vs 768x768 = ~590KB por frame (55% menos datos)
+    // Google acepta hasta 768, pero 512 es suficiente para diagnóstico visual
+    width: 512,
+    height: 512,
     mimeType: 'image/jpeg'
   },
   audio: {

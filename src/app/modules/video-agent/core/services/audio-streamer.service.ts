@@ -29,8 +29,13 @@ export class AudioStreamerService {
   // Configuración
   private readonly sampleRate = 24000; // Output de Gemini es 24kHz
   private readonly bufferSize = 7680; // Tamaño de chunk óptimo
-  private readonly initialBufferTime = 0.1; // 100ms de buffer inicial
-  private readonly SCHEDULE_AHEAD_TIME = 0.2; // 200ms adelante
+  private readonly initialBufferTime = 0.08; // 80ms de buffer inicial (antes 100ms)
+
+  // Queue adaptativa - ajusta automáticamente basado en glitches
+  private scheduleAheadTime = 0.15; // 150ms (antes 200ms fijo)
+  private readonly MIN_SCHEDULE = 0.1; // Mínimo 100ms
+  private readonly MAX_SCHEDULE = 0.3; // Máximo 300ms
+  private underrunCount = 0; // Contador de glitches para ajuste adaptativo
 
   // Observables
   private volumeSubject = new BehaviorSubject<number>(0);
@@ -132,16 +137,31 @@ export class AudioStreamerService {
   /**
    * Programa buffers adelante para playback suave
    * Este es el corazón del sistema de queue management
+   * OPTIMIZADO: Usa scheduling adaptativo basado en glitches
    */
   private scheduleNextBuffer(): void {
     if (!this.audioContext || !this.gainNode) {
       return;
     }
 
+    // Detectar underrun (queue vacía cuando debería haber audio)
+    if (this.audioQueue.length === 0 && !this.isStreamComplete && this.isPlaying) {
+      this.underrunCount++;
+      // Ajustar hacia arriba si hay glitches frecuentes
+      if (this.underrunCount >= 3) {
+        this.scheduleAheadTime = Math.min(this.scheduleAheadTime + 0.05, this.MAX_SCHEDULE);
+        this.underrunCount = 0;
+        console.log(`⚠️ Audio underrun detected, increasing schedule to ${this.scheduleAheadTime * 1000}ms`);
+      }
+    } else if (this.audioQueue.length > 3) {
+      // Queue saludable - reducir gradualmente el schedule ahead time
+      this.scheduleAheadTime = Math.max(this.scheduleAheadTime - 0.01, this.MIN_SCHEDULE);
+    }
+
     // Programar todos los buffers que quepan en la ventana de scheduling
     while (
       this.audioQueue.length > 0 &&
-      this.scheduledTime < this.audioContext.currentTime + this.SCHEDULE_AHEAD_TIME
+      this.scheduledTime < this.audioContext.currentTime + this.scheduleAheadTime
     ) {
       const audioData = this.audioQueue.shift()!;
       const audioBuffer = this.createAudioBuffer(audioData);
@@ -234,6 +254,8 @@ export class AudioStreamerService {
     this.isPlaying = false;
     this.isStreamComplete = true;
     this.audioQueue = [];
+    this.underrunCount = 0;
+    this.scheduleAheadTime = 0.15; // Reset a valor inicial
 
     if (this.audioContext) {
       this.scheduledTime = this.audioContext.currentTime;

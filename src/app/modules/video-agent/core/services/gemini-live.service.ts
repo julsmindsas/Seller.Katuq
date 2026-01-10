@@ -48,6 +48,9 @@ export class GeminiLiveService {
   private userId: string = '';
   private sessionId: string = '';
 
+  // Binary audio optimization - reduces ~33% bandwidth overhead vs Base64
+  private useBinaryAudio: boolean = true;
+
   // Shared
   private currentAdapter: IAgentAdapter | null = null;
   private streamConfig: StreamConfig = DEFAULT_STREAM_CONFIG;
@@ -299,10 +302,11 @@ export class GeminiLiveService {
 
       case 'tool_call':
         // Tool siendo ejecutado en backend
-        console.log("🔧 ADK tool call:", event.tool_name || event.name);
+        console.log("🔧 ADK tool call:", event.tool_name || event.name, "display:", event.display_name);
         this.toolCallSubject.next({
           type: 'tool_call',
           name: event.tool_name || event.name,
+          display_name: event.display_name,  // FIX: Incluir display_name del backend
           arguments: event.arguments || event.args,
           status: 'executing'
         });
@@ -314,6 +318,7 @@ export class GeminiLiveService {
         this.toolCallSubject.next({
           type: 'tool_result',
           name: event.tool_name || event.name,
+          display_name: event.display_name,  // FIX: Incluir display_name
           result: event.result,
           status: 'completed'
         });
@@ -623,6 +628,7 @@ export class GeminiLiveService {
 
   /**
    * Envía chunk de audio (16kHz PCM)
+   * Soporta modo binario (33% menos overhead) con fallback a Base64
    */
   sendAudioChunk(base64Audio: string): void {
     if (!this.isConnected) {
@@ -631,7 +637,22 @@ export class GeminiLiveService {
     }
 
     if (this.connectionMode === ConnectionMode.BACKEND_ADK) {
-      // Enviar via Backend ADK WebSocket
+      // Intentar enviar como binario si está habilitado
+      if (this.useBinaryAudio && this.adkWebSocket?.readyState === WebSocket.OPEN) {
+        try {
+          // Convertir Base64 a ArrayBuffer y enviar directo (33% menos overhead)
+          const binaryData = this.base64ToUint8Array(base64Audio);
+          if (binaryData.length > 0) {
+            this.adkWebSocket.send(binaryData.buffer);
+            return; // Éxito - no continuar con fallback
+          }
+        } catch (e) {
+          console.warn("⚠️ Binary audio failed, falling back to Base64");
+          this.useBinaryAudio = false; // Deshabilitar para futuros chunks
+        }
+      }
+
+      // Fallback: enviar como JSON + Base64
       this.sendToBackend({
         type: 'audio',
         data: base64Audio,
@@ -646,6 +667,59 @@ export class GeminiLiveService {
       };
       this.session.sendRealtimeInput({ audio: blob });
     }
+  }
+
+  /**
+   * Envía audio PCM16 directamente como Int16Array (sin Base64)
+   * Más eficiente cuando el audio ya está en formato nativo
+   */
+  sendAudioPCM16(pcmData: Int16Array): void {
+    if (!this.isConnected) {
+      console.warn("⚠️ Cannot send audio, not connected");
+      return;
+    }
+
+    if (this.connectionMode === ConnectionMode.BACKEND_ADK) {
+      if (this.useBinaryAudio && this.adkWebSocket?.readyState === WebSocket.OPEN) {
+        try {
+          // Enviar ArrayBuffer directamente - máxima eficiencia
+          this.adkWebSocket.send(pcmData.buffer);
+          return;
+        } catch (e) {
+          console.warn("⚠️ Binary audio failed, falling back to Base64");
+          this.useBinaryAudio = false;
+        }
+      }
+
+      // Fallback: convertir a Base64 y enviar como JSON
+      const base64Audio = this.arrayBufferToBase64(pcmData.buffer);
+      this.sendToBackend({
+        type: 'audio',
+        data: base64Audio,
+        mime_type: 'audio/pcm;rate=16000'
+      });
+    } else {
+      // Modo directo a Gemini - convertir a Base64
+      if (!this.session) return;
+      const base64Audio = this.arrayBufferToBase64(pcmData.buffer);
+      const blob: Blob = {
+        data: base64Audio,
+        mimeType: "audio/pcm;rate=16000",
+      };
+      this.session.sendRealtimeInput({ audio: blob });
+    }
+  }
+
+  /**
+   * Convierte ArrayBuffer a Base64
+   */
+  private arrayBufferToBase64(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
   }
 
   /**

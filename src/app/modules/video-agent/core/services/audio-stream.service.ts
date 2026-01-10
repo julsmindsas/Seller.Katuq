@@ -29,8 +29,12 @@ export class AudioStreamService {
   private isRecordingSubject = new BehaviorSubject<boolean>(false);
   public isRecording$ = this.isRecordingSubject.asObservable();
 
-  private audioChunkSubject = new Subject<string>(); // Base64 PCM
+  private audioChunkSubject = new Subject<string>(); // Base64 PCM (legacy)
   public audioChunk$ = this.audioChunkSubject.asObservable();
+
+  // Raw PCM Subject - más eficiente para envío binario (33% menos overhead)
+  private rawAudioChunkSubject = new Subject<Int16Array>();
+  public rawAudioChunk$ = this.rawAudioChunkSubject.asObservable();
 
   private volumeSubject = new BehaviorSubject<number>(0);
   public volume$ = this.volumeSubject.asObservable();
@@ -126,7 +130,11 @@ export class AudioStreamService {
         const arrayBuffer = event.data.data.int16arrayBuffer;
 
         if (arrayBuffer) {
-          // Convertir ArrayBuffer a Base64
+          // Emitir raw PCM para envío binario (33% más eficiente)
+          const int16Data = new Int16Array(arrayBuffer);
+          this.rawAudioChunkSubject.next(int16Data);
+
+          // También emitir Base64 para retrocompatibilidad
           const base64Audio = this.arrayBufferToBase64(arrayBuffer);
           this.audioChunkSubject.next(base64Audio);
         }
