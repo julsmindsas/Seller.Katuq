@@ -6195,20 +6195,20 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Debug: ver qué valores tiene el pedido
     console.log('🔍 DEBUG trackShipment - Pedido recibido:', {
       nroPedido: pedido.nroPedido,
-      shippingOrder: pedido.shippingOrder,
+      shippment: pedido.shippment,
       transportador: pedido.transportador,
       estadoProceso: pedido.estadoProceso
     });
 
-    // Determinar el identificador de tracking: SIEMPRE usar nroPedido para buscar en prindel_shipments
-    const trackingId = pedido.nroPedido;
-    const provider = pedido.transportador || 'prindel'; // Prindel por defecto
+    // Determinar el identificador de tracking: usar la guía de Prindel del shippment
+    const trackingId = pedido.shippment?.trackingNumber;
+    const provider = pedido.transportador || pedido.shippment?.provider || 'prindel';
 
     if (!trackingId) {
       Swal.fire({
         icon: 'warning',
-        title: 'Sin orden de envío',
-        text: 'Este pedido no tiene número de pedido para hacer seguimiento.',
+        title: 'Sin número de guía',
+        text: 'Este pedido no tiene número de guía de Prindel para hacer seguimiento.',
         confirmButtonText: 'Entendido'
       });
       return;
@@ -6264,8 +6264,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
   // Método para refrescar el tracking
   private refrescarTracking(pedido: Pedido, modalRef: any): void {
     const companyId = this.getCompanyId();
-    const provider = pedido.transportador || 'prindel';
-    const trackingId = pedido.nroPedido; // Usar siempre nroPedido para buscar en prindel_shipments
+    const provider = pedido.transportador || pedido.shippment?.provider || 'prindel';
+    const trackingId = pedido.shippment?.trackingNumber;
 
     modalRef.componentInstance.loading = true;
     modalRef.componentInstance.error = '';
