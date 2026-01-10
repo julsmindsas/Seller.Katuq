@@ -248,6 +248,12 @@ export class CrearVentasComponent
 
   private subscription: Subscription;
 
+  /**
+   * Variable reactiva para rastrear si hay productos en el carrito.
+   * Se actualiza automáticamente cuando cambia el carrito.
+   */
+  public tieneProductosEnCarrito: boolean = false;
+
   constructor(
     private modalService: NgbModal,
     private service: MaestroService,
@@ -470,6 +476,9 @@ export class CrearVentasComponent
     // **NUEVA FUNCIONALIDAD: Suscribirse a los cambios del carrito**
     this.subscription = this.cartService.productInCartChanges$.subscribe(
       (products) => {
+        // Actualizar la variable reactiva para habilitar/deshabilitar el botón
+        this.tieneProductosEnCarrito = products && products.length > 0;
+
         if (this.pedidoGral && products && products.length > 0) {
           console.log(
             "📦 CREAR-VENTAS: Productos agregados al carrito -",
@@ -512,6 +521,10 @@ export class CrearVentasComponent
         }
       },
     );
+
+    // Inicializar tieneProductosEnCarrito con el estado actual del carrito
+    const carritoActual = this.cartService.productInCart.value;
+    this.tieneProductosEnCarrito = carritoActual && carritoActual.length > 0;
 
     // Verificar si hay una ciudad seleccionada previamente en localStorage
     const ciudadGuardada = localStorage.getItem("selectedCity");
@@ -1871,8 +1884,8 @@ export class CrearVentasComponent
   }
 
   private reviewStepAndExecute(index: number) {
-    if (index == 3) {
-      // Paso del cliente - Validar que existe un cliente
+    if (index == 1) {
+      // Paso del cliente - Validar que existe un cliente antes de ir a Productos
       if (!this.pedidoGral.cliente) {
         Swal.fire({
           title: "Advertencia",
@@ -1883,8 +1896,8 @@ export class CrearVentasComponent
       }
     }
 
-    if (index == 4) {
-      // Paso de envío - Preparar datos de envío
+    if (index == 3) {
+      // Paso de Carrito hacia Envío - Preparar datos de envío
       if (this.pedidoGral.cliente) {
         // Si hay cliente, intentar cargar sus datos de envío
         this.documentoBuscar = this.pedidoGral.cliente.documento;
@@ -1895,7 +1908,7 @@ export class CrearVentasComponent
       }
     }
 
-    if (index == 5) {
+    if (index == 4) {
       // Paso de facturación - Preparar datos de facturación
       if (this.pedidoGral.cliente) {
         // Si hay cliente, intentar cargar sus datos de facturación
@@ -1983,8 +1996,8 @@ export class CrearVentasComponent
       }
     }
 
-    if (index == 6) {
-      // Paso de resumen - Validar que existe información de facturación
+    if (index == 5) {
+      // Paso de resumen - Validar que existe información de facturación antes de ir a Pago
       if (!this.pedidoGral.facturacion) {
         Swal.fire({
           title: "Advertencia",

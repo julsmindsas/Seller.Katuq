@@ -198,10 +198,17 @@ export class EcomerceProductsComponent
   }
 
   ngOnInit(): void {
-    // this.listProducts();
-    // this.listView = false;
-    // this.col = '2';
-    // this.obtenerFiltros();
+    // Inicializar y cargar productos si tenemos bodega y ciudad
+    // Esto permite que funcione tanto para isRebuy=true como isRebuy=false
+    if (
+      this.bodega &&
+      this.bodega.idBodega &&
+      this.ciudad &&
+      this.ciudad !== "seleccione" &&
+      this.ciudad.trim() !== ""
+    ) {
+      this.cargarTodo();
+    }
   }
 
   obtenerFiltros() {
