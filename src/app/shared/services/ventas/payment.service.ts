@@ -209,7 +209,10 @@ export class PaymentService extends BaseService {
       const precioUnitarioSinIva =
         Number(producto?.precio?.precioUnitarioSinIva) || 0;
 
-      if (preciosVolumen.length > 0) {
+      // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
+      if (producto?._precioAplicadoPorCategoria) {
+        totalItemSinIVA = precioUnitarioSinIva * cantidad;
+      } else if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
         for (const x of preciosVolumen) {
           // Asegurar que los límites y el valor sean numéricos
@@ -326,7 +329,12 @@ export class PaymentService extends BaseService {
       let precioConIvaItem =
         Number(producto?.precio?.precioUnitarioConIva) || 0; // Precio unitario con IVA para cálculo base
 
-      if (preciosVolumen.length > 0) {
+      // 🔒 Si el producto tiene precio por categoría de cliente, NO escalar por volumen
+      // El precio ya está fijado en precioConIvaItem con el valor de la categoría
+      if (producto?._precioAplicadoPorCategoria) {
+        // Mantener precioConIvaItem y porcentajeIvaItemStr con valores base (ya asignados)
+        // No hacer nada adicional, saltamos la lógica de volumen
+      } else if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
         for (const x of preciosVolumen) {
           // Asegurar que los límites y valores sean numéricos

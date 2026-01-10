@@ -1231,9 +1231,55 @@ html {
 .formulario-cliente {
   border-left: 4px solid var(--primary-color);
   transition: all 0.3s ease;
-  
+
   &:hover {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  }
+}
+
+// Estilos para el selector de categoría de cliente
+.categoria-cliente-card {
+  border-left: 4px solid var(--secondary-color);
+  transition: all 0.3s ease;
+
+  .card-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+
+    h6 {
+      color: var(--dark-color);
+    }
+
+    small {
+      display: block;
+      margin-top: 0.25rem;
+    }
+  }
+
+  .form-select {
+    border-radius: var(--border-radius);
+    border: 2px solid #dee2e6;
+    padding: 0.625rem 1rem;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+
+    &:focus {
+      border-color: var(--secondary-color);
+      box-shadow: 0 0 0 0.2rem rgba(var(--secondary-rgb), 0.25);
+    }
+
+    &:hover:not(:focus):not(:disabled) {
+      border-color: var(--secondary-light);
+    }
+  }
+
+  .badge {
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+  }
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
 }
 

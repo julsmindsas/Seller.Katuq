@@ -348,13 +348,14 @@
                                     {{producto.crearProducto.titulo}}
                                 </h4>
 
-                                <!-- Precio con mejor jerarquía -->
+                                <!-- Precio con mejor jerarquía (considera categoría del cliente) -->
                                 <div class="product-pricing-modern">
                                     <div class="price-main">
-                                        {{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}
+                                        {{getPrecioParaMostrar(producto) | currency:'USD':'symbol':'1.0-0'}}
                                     </div>
-                                    <div class="price-discount" *ngIf="producto.precio.precioTotalVolumenConIva !== producto.precio.precioUnitarioConIva">
-                                        <del>{{producto.precio.precioTotalVolumenConIva | currency:'USD':'symbol':'1.0-0'}}</del>
+                                    <!-- Mostrar precio original tachado si hay descuento por categoría -->
+                                    <div class="price-discount" *ngIf="tienePrecioCategoria(producto)">
+                                        <del>{{producto.precio.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}</del>
                                     </div>
                                 </div>
                             </div>

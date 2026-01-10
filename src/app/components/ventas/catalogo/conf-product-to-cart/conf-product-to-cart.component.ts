@@ -1570,8 +1570,11 @@ export class ConfProductToCartComponent
         ocasionesDisponibles: this.ocasiones,
       });
 
+      // Obtener producto con precio ajustado según categoría del cliente (si aplica)
+      const productoParaCarrito = this.obtenerProductoConPrecioCategoria();
+
       let ProductoCompra: Carrito = {
-        producto: this.producto,
+        producto: productoParaCarrito,
         configuracion: this.productoConfiguradoForm.value,
         cantidad: this.cantidad,
       };
@@ -4167,18 +4170,165 @@ export class ConfProductToCartComponent
    */
   public forceReloadPreferences(): void {
     console.log('🔄 Forzando recarga de preferencias...');
-    
+
     if (!this.configuracionCarrito?.configuracion?.preferencias) {
       console.warn('⚠️ No hay configuración disponible para recargar');
       return;
     }
-    
+
     // Limpiar preferencias actuales
     this.productPreference = [];
-    
+
     // Procesar preferencias desde la configuración
     this.processExistingPreferences(this.configuracionCarrito.configuracion.preferencias);
-    
+
     console.log('✅ Preferencias recargadas exitosamente');
+  }
+
+  /**
+   * Obtiene el producto con el precio ajustado según la categoría del cliente.
+   *
+   * IMPORTANTE: Este método NO modifica el producto original (this.producto).
+   * Si el cliente tiene una categoría asignada y el producto tiene un precio
+   * configurado para esa categoría, retorna una COPIA TEMPORAL del producto
+   * con los precios ajustados. Si no aplica, retorna el producto original.
+   *
+   * La copia temporal:
+   * - Solo existe en memoria para este item del carrito
+   * - NO se guarda en ninguna base de datos
+   * - NO afecta al producto original ni a otros lugares que lo usen
+   *
+   * @returns Producto con precio ajustado (copia) o producto original
+   */
+  private obtenerProductoConPrecioCategoria(): any {
+    // 1. Obtener el cliente desde sessionStorage (donde se guarda en el paso 1)
+    let cliente: any = null;
+    try {
+      const clienteStr = sessionStorage.getItem('cliente');
+      if (clienteStr) {
+        cliente = JSON.parse(clienteStr);
+      }
+    } catch (e) {
+      console.warn('⚠️ Error al obtener cliente de sessionStorage:', e);
+    }
+
+    // 2. Verificar si el cliente tiene categoría asignada
+    const categoriaId = cliente?.categoria?.id;
+    if (!categoriaId) {
+      console.log('💰 Cliente sin categoría - usando precio estándar');
+      return this.producto; // Retorna el producto original sin modificar
+    }
+
+    // 3. Verificar si el producto tiene precios por tipo de cliente
+    const preciosPorTipo = this.producto?.preciosPorTipoCliente;
+    if (!preciosPorTipo || !Array.isArray(preciosPorTipo) || preciosPorTipo.length === 0) {
+      console.log('💰 Producto sin precios por categoría - usando precio estándar');
+      return this.producto; // Retorna el producto original sin modificar
+    }
+
+    // 4. Buscar el precio específico para la categoría del cliente
+    const precioCategoria = preciosPorTipo.find(
+      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+    );
+
+    if (!precioCategoria) {
+      console.log(`💰 No hay precio configurado para categoría "${cliente?.categoria?.nombre || categoriaId}" - usando precio estándar`);
+      return this.producto; // Retorna el producto original sin modificar
+    }
+
+    // 5. CREAR COPIA TEMPORAL del producto con el precio ajustado
+    // IMPORTANTE: Usamos spread operator para crear una copia superficial
+    // y luego creamos una nueva copia del objeto precio
+    console.log('💰 Aplicando precio por categoría:', {
+      categoria: precioCategoria.tipoClienteNombre || cliente?.categoria?.nombre,
+      precioOriginal: this.producto?.precio?.precioUnitarioConIva,
+      precioCategoria: precioCategoria.precioConIva,
+      descuento: this.producto?.precio?.precioUnitarioConIva
+        ? ((1 - (precioCategoria.precioConIva / this.producto.precio.precioUnitarioConIva)) * 100).toFixed(1) + '%'
+        : 'N/A'
+    });
+
+    // Crear copia temporal del producto (NO modifica this.producto)
+    const productoConPrecioAjustado = {
+      ...this.producto,
+      precio: {
+        ...this.producto.precio,
+        // Reemplazar los precios con los de la categoría
+        precioUnitarioConIva: precioCategoria.precioConIva,
+        precioUnitarioSinIva: precioCategoria.precio,
+        valorIva: precioCategoria.valorIva
+      },
+      // Guardar referencia a la categoría aplicada (para auditoría/debugging)
+      _precioAplicadoPorCategoria: {
+        tipoClienteId: precioCategoria.tipoClienteId,
+        tipoClienteNombre: precioCategoria.tipoClienteNombre,
+        precioOriginalConIva: this.producto?.precio?.precioUnitarioConIva,
+        precioOriginalSinIva: this.producto?.precio?.precioUnitarioSinIva
+      }
+    };
+
+    return productoConPrecioAjustado;
+  }
+
+  /**
+   * Obtiene el precio unitario a mostrar en la UI, considerando la categoría del cliente.
+   * Este método es para VISUALIZACIÓN solamente, no modifica el producto.
+   */
+  public getPrecioMostrar(): number {
+    // 1. Obtener cliente desde sessionStorage
+    let cliente: any = null;
+    try {
+      const clienteStr = sessionStorage.getItem('cliente');
+      if (clienteStr) {
+        cliente = JSON.parse(clienteStr);
+      }
+    } catch (e) {
+      return this.producto?.precio?.precioUnitarioConIva || 0;
+    }
+
+    // 2. Verificar si el cliente tiene categoría
+    const categoriaId = cliente?.categoria?.id;
+    if (!categoriaId) {
+      return this.producto?.precio?.precioUnitarioConIva || 0;
+    }
+
+    // 3. Verificar si el producto tiene precios por tipo de cliente
+    const preciosPorTipo = this.producto?.preciosPorTipoCliente;
+    if (!preciosPorTipo || !Array.isArray(preciosPorTipo) || preciosPorTipo.length === 0) {
+      return this.producto?.precio?.precioUnitarioConIva || 0;
+    }
+
+    // 4. Buscar precio para la categoría del cliente
+    const precioCategoria = preciosPorTipo.find(
+      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+    );
+
+    // 5. Retornar precio de categoría o precio estándar
+    return precioCategoria?.precioConIva || this.producto?.precio?.precioUnitarioConIva || 0;
+  }
+
+  /**
+   * Verifica si el producto tiene un precio especial aplicado por categoría de cliente
+   */
+  public tienePrecioCategoria(): boolean {
+    let cliente: any = null;
+    try {
+      const clienteStr = sessionStorage.getItem('cliente');
+      if (clienteStr) {
+        cliente = JSON.parse(clienteStr);
+      }
+    } catch (e) {
+      return false;
+    }
+
+    const categoriaId = cliente?.categoria?.id;
+    if (!categoriaId) return false;
+
+    const preciosPorTipo = this.producto?.preciosPorTipoCliente;
+    if (!preciosPorTipo || !Array.isArray(preciosPorTipo)) return false;
+
+    return preciosPorTipo.some(
+      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+    );
   }
 }

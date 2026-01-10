@@ -21,6 +21,17 @@ export interface PrecioPorTipoCliente {
   activo: boolean;
 }
 
+/**
+ * Información de auditoría cuando se aplica un precio por categoría de cliente.
+ * Se usa para rastrear que el precio fue modificado y cuál era el precio original.
+ */
+export interface PrecioAplicadoPorCategoria {
+  tipoClienteId: string;
+  tipoClienteNombre: string;
+  precioOriginalConIva: number;
+  precioOriginalSinIva: number;
+}
+
 export interface Producto {
   dimensiones?: Dimensiones;
   disponibilidad?: Disponibilidad;
@@ -40,6 +51,7 @@ export interface Producto {
   bodegaId?: string; // Agregado para relacionar el producto con una bodega
   dropshippingConfig?: DropshippingProductConfig; // Configuración dropshipping opcional
   preciosPorTipoCliente?: PrecioPorTipoCliente[]; // Lista de precios por tipo de cliente
+  _precioAplicadoPorCategoria?: PrecioAplicadoPorCategoria; // Auditoría de precio aplicado por categoría (temporal, no se guarda en BD)
 }
 
 export interface ProductoCarrito {
@@ -57,7 +69,5 @@ export interface ProductoCarrito {
   rating: number;
   bodegaId?: string; // Agregado para relacionar el producto con una bodega
   dropshippingConfig?: DropshippingProductConfig; // Configuración dropshipping opcional
+  _precioAplicadoPorCategoria?: PrecioAplicadoPorCategoria; // Auditoría de precio aplicado por categoría (temporal, no se guarda en BD)
 }
-
-
-

@@ -289,6 +289,12 @@ export enum EstadoProcesoFiltros {
   EnTransitoProveedor = "EnTransitoProveedor",
 }
 
+export interface CategoriaCliente {
+  id: string;
+  nombre?: string;
+  descripcion?: string;
+}
+
 export interface Cliente {
   estado?: string;
   tipo_documento_comprador?: string;
@@ -303,6 +309,7 @@ export interface Cliente {
   datosFacturacionElectronica?: Facturacion;
   datosEntrega?: Entrega;
   notas?: Notas;
+  categoria?: CategoriaCliente;
 }
 
 export interface NotasPedido {

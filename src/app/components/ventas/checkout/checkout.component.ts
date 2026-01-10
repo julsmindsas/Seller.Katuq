@@ -375,6 +375,11 @@ export class CheckOutComponent implements OnInit, OnChanges {
     const productoPrecio = item?.producto?.precio;
     if (!productoPrecio) return 0;
 
+    // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
+    if (item?.producto?._precioAplicadoPorCategoria) {
+      return productoPrecio.precioUnitarioSinIva || 0;
+    }
+
     if (productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
       const cantidad = parseInt(item.cantidad?.toString() || '0');
       
@@ -488,7 +493,19 @@ export class CheckOutComponent implements OnInit, OnChanges {
       const productoPrecio = itemCarrito?.producto?.precio;
       const porceDescuento = (this.pedido?.porceDescuento ?? 0) / 100;
 
-      if (productoPrecio && productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
+      // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
+      if (itemCarrito?.producto?._precioAplicadoPorCategoria && productoPrecio) {
+        const valorUnitarioConIVA = productoPrecio.valorIva || 0;
+        const valorIVABase = productoPrecio.precioUnitarioIva?.toString();
+        const precioItemConDescuento = (valorUnitarioConIVA * cantidadItem) * (1 - porceDescuento);
+        totalPrecioIVA += precioItemConDescuento;
+        switch (valorIVABase) {
+          case "0": totalExcluidos += precioItemConDescuento; break;
+          case "5": totalIva5 += precioItemConDescuento; break;
+          case "8": totalImpo += precioItemConDescuento; break;
+          case "19": totalIva19 += precioItemConDescuento; break;
+        }
+      } else if (productoPrecio && productoPrecio.preciosVolumen && productoPrecio.preciosVolumen.length > 0) {
         // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
         const rangosValidos = productoPrecio.preciosVolumen.filter(pv =>
           pv?.numeroUnidadesInicial !== undefined && pv?.numeroUnidadesInicial !== null &&

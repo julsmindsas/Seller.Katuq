@@ -538,13 +538,18 @@ export class PedidosUtilService {
     private calcularPrecioUnitarioSinIVA(itemCarrito: any): number {
         const producto = itemCarrito.producto;
         const cantidad = itemCarrito.cantidad;
-        
+
         if (!producto?.precio) {
             return 0;
         }
 
+        // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
+        if (producto._precioAplicadoPorCategoria) {
+            return Number(producto.precio.precioUnitarioSinIva) || 0;
+        }
+
         const preciosVolumen = producto.precio.preciosVolumen || [];
-        
+
         // Si no hay precios por volumen, usar precio base
         if (preciosVolumen.length === 0) {
             return Number(producto.precio.precioUnitarioSinIva) || 0;
@@ -578,13 +583,18 @@ export class PedidosUtilService {
     private calcularPrecioUnitarioConIVA(itemCarrito: any): number {
         const producto = itemCarrito.producto;
         const cantidad = itemCarrito.cantidad;
-        
+
         if (!producto?.precio) {
             return 0;
         }
 
+        // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
+        if (producto._precioAplicadoPorCategoria) {
+            return Number(producto.precio.precioUnitarioConIva) || 0;
+        }
+
         const preciosVolumen = producto.precio.preciosVolumen || [];
-        
+
         // Si no hay precios por volumen, usar precio base
         if (preciosVolumen.length === 0) {
             return Number(producto.precio.precioUnitarioConIva) || 0;
@@ -690,13 +700,18 @@ export class PedidosUtilService {
     private calcularIVAUnitario(itemCarrito: any): number {
         const producto = itemCarrito.producto;
         const cantidad = itemCarrito.cantidad;
-        
+
         if (!producto?.precio) {
             return 0;
         }
 
+        // 🔒 Si el producto tiene precio por categoría de cliente, usar IVA fijo SIN escalar por volumen
+        if (producto._precioAplicadoPorCategoria) {
+            return Number(producto.precio.valorIva) || 0;
+        }
+
         const preciosVolumen = producto.precio.preciosVolumen || [];
-        
+
         // Si no hay precios por volumen, usar IVA base
         if (preciosVolumen.length === 0) {
             return Number(producto.precio.valorIva) || 0;

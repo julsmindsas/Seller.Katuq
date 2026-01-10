@@ -708,4 +708,71 @@ export class EcomerceProductsComponent
     const ciudad = this.ciudadSelector.find(c => c.value === value);
     return ciudad ? ciudad.label : value;
   }
+
+  /**
+   * Obtiene el precio a mostrar para un producto, considerando la categoría del cliente
+   * Si el cliente tiene categoría y el producto tiene precio para esa categoría, muestra ese precio
+   * Si no, muestra el precio estándar
+   */
+  getPrecioParaMostrar(producto: Producto): number {
+    // 1. Obtener cliente desde sessionStorage
+    let cliente: any = null;
+    try {
+      const clienteStr = sessionStorage.getItem('cliente');
+      if (clienteStr) {
+        cliente = JSON.parse(clienteStr);
+      }
+    } catch (e) {
+      return producto?.precio?.precioUnitarioConIva || 0;
+    }
+
+    // 2. Verificar si el cliente tiene categoría
+    const categoriaId = cliente?.categoria?.id;
+    if (!categoriaId) {
+      return producto?.precio?.precioUnitarioConIva || 0;
+    }
+
+    // 3. Verificar si el producto tiene precios por tipo de cliente
+    const preciosPorTipo = producto?.preciosPorTipoCliente;
+    if (!preciosPorTipo || !Array.isArray(preciosPorTipo) || preciosPorTipo.length === 0) {
+      return producto?.precio?.precioUnitarioConIva || 0;
+    }
+
+    // 4. Buscar el precio para la categoría del cliente
+    const precioCategoria = preciosPorTipo.find(
+      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+    );
+
+    // 5. Retornar precio de categoría o precio estándar
+    if (precioCategoria) {
+      return precioCategoria.precioConIva || producto?.precio?.precioUnitarioConIva || 0;
+    }
+
+    return producto?.precio?.precioUnitarioConIva || 0;
+  }
+
+  /**
+   * Verifica si el producto tiene un precio especial por categoría de cliente
+   */
+  tienePrecioCategoria(producto: Producto): boolean {
+    let cliente: any = null;
+    try {
+      const clienteStr = sessionStorage.getItem('cliente');
+      if (clienteStr) {
+        cliente = JSON.parse(clienteStr);
+      }
+    } catch (e) {
+      return false;
+    }
+
+    const categoriaId = cliente?.categoria?.id;
+    if (!categoriaId) return false;
+
+    const preciosPorTipo = producto?.preciosPorTipoCliente;
+    if (!preciosPorTipo || !Array.isArray(preciosPorTipo)) return false;
+
+    return preciosPorTipo.some(
+      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+    );
+  }
 }

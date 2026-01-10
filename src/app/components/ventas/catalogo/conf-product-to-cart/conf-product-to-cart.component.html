@@ -56,9 +56,13 @@
                                 <div class="d-flex align-items-center justify-content-between mb-2">
                                     <div>
                                         <p class="product-price f-28 mb-0" title="{{'precio' | translate}}">
-                                            {{producto?.precio?.precioUnitarioConIva |
-                                            currency:'USD':'symbol':'1.0-0'}}*
+                                            {{getPrecioMostrar() | currency:'USD':'symbol':'1.0-0'}}*
                                         </p>
+                                        <!-- Mostrar precio original tachado si hay descuento por categoría -->
+                                        <small *ngIf="tienePrecioCategoria()" class="text-muted">
+                                            <del>{{producto?.precio?.precioUnitarioConIva | currency:'USD':'symbol':'1.0-0'}}</del>
+                                            <span class="badge bg-success ms-1">Precio especial</span>
+                                        </small>
                                     </div>
                                     <div>
                                         <button type="button" class="btn btn-secondary btn-sm" data-toggle="tooltip"

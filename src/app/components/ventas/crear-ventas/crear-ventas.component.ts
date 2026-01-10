@@ -254,6 +254,13 @@ export class CrearVentasComponent
    */
   public tieneProductosEnCarrito: boolean = false;
 
+  /**
+   * Variables para manejo de categoría/tipo de cliente
+   */
+  public tiposCliente: any[] = [];
+  public categoriaClienteSeleccionada: any = null;
+  public cargandoTiposCliente: boolean = false;
+
   constructor(
     private modalService: NgbModal,
     private service: MaestroService,
@@ -371,6 +378,7 @@ export class CrearVentasComponent
     this.selectedCity = "";
     this.selectedWarehouse = "";
     this.bodega = null;
+    this.categoriaClienteSeleccionada = null;
 
     // Limpiar arrays de datos
     this.datosEntregas = [];
@@ -472,6 +480,9 @@ export class CrearVentasComponent
 
     // Cargar bodegas y verificar si hay una bodega guardada en localStorage
     this.cargarBodegas();
+
+    // Cargar tipos de cliente para selector de categoría
+    this.cargarTiposCliente();
 
     // **NUEVA FUNCIONALIDAD: Suscribirse a los cambios del carrito**
     this.subscription = this.cartService.productInCartChanges$.subscribe(
@@ -634,6 +645,156 @@ export class CrearVentasComponent
       error: (err) => {
         this.allBillingZone = [];
       },
+    });
+  }
+
+  /**
+   * Carga los tipos de cliente (categorías) desde el servicio maestro.
+   * Solo carga tipos activos para el selector.
+   */
+  cargarTiposCliente(): void {
+    this.cargandoTiposCliente = true;
+    this.service.consultarTiposClienteActivos().subscribe({
+      next: (data: any) => {
+        // Procesar la respuesta según el formato que venga
+        if (Array.isArray(data)) {
+          this.tiposCliente = data;
+        } else if (data && Array.isArray(data.data)) {
+          this.tiposCliente = data.data;
+        } else if (data && data.results && Array.isArray(data.results)) {
+          this.tiposCliente = data.results;
+        } else {
+          this.tiposCliente = [];
+        }
+        this.cargandoTiposCliente = false;
+        console.log('Tipos de cliente cargados:', this.tiposCliente);
+      },
+      error: (error) => {
+        console.error('Error cargando tipos de cliente:', error);
+        this.tiposCliente = [];
+        this.cargandoTiposCliente = false;
+      }
+    });
+  }
+
+  /**
+   * Maneja el cambio de categoría de cliente seleccionada.
+   * Muestra un modal de confirmación antes de guardar.
+   */
+  onCategoriaClienteChange(event: any): void {
+    const tipoClienteId = event.target.value;
+    const selectElement = event.target;
+
+    if (!tipoClienteId || tipoClienteId === '') {
+      // Si selecciona "Sin categoría", mostrar confirmación para quitar categoría
+      if (this.categoriaClienteSeleccionada) {
+        Swal.fire({
+          title: '¿Quitar categoría?',
+          text: `¿Desea quitar la categoría "${this.categoriaClienteSeleccionada.descripcion || this.categoriaClienteSeleccionada.nombre}" de este cliente?`,
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#6c757d',
+          confirmButtonText: 'Sí, quitar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.categoriaClienteSeleccionada = null;
+            this.guardarCategoriaCliente(null);
+          } else {
+            // Restaurar el valor anterior en el select
+            selectElement.value = this.categoriaClienteSeleccionada?.id || '';
+          }
+        });
+      } else {
+        this.categoriaClienteSeleccionada = null;
+      }
+      return;
+    }
+
+    // Buscar el tipo de cliente seleccionado
+    const tipoSeleccionado = this.tiposCliente.find(t => t.id === tipoClienteId);
+
+    if (tipoSeleccionado) {
+      // Mostrar modal de confirmación
+      Swal.fire({
+        title: '¿Guardar categoría?',
+        html: `¿Desea guardar la categoría <strong>"${tipoSeleccionado.descripcion || tipoSeleccionado.nombre}"</strong> para este cliente?<br><br><small class="text-muted">Esta categoría se aplicará para futuras compras y determinará los precios especiales disponibles.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#28a745',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fa fa-save"></i> Sí, guardar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.categoriaClienteSeleccionada = tipoSeleccionado;
+          this.guardarCategoriaCliente(tipoSeleccionado);
+          console.log('Categoría de cliente confirmada:', tipoSeleccionado);
+        } else {
+          // Restaurar el valor anterior en el select
+          selectElement.value = this.categoriaClienteSeleccionada?.id || '';
+        }
+      });
+    }
+  }
+
+  /**
+   * Guarda la categoría del cliente en la base de datos.
+   * @param categoria - El tipo de cliente seleccionado o null para quitar
+   */
+  guardarCategoriaCliente(categoria: any): void {
+    if (!this.pedidoGral?.cliente?.documento) {
+      this.toastrService.error('No hay cliente seleccionado', 'Error');
+      return;
+    }
+
+    // Preparar el objeto cliente con la nueva categoría
+    const clienteActualizado = {
+      ...this.pedidoGral.cliente,
+      categoria: categoria ? {
+        id: categoria.id,
+        nombre: categoria.nombre,
+        descripcion: categoria.descripcion
+      } : null
+    };
+
+    // Actualizar el cliente usando el servicio
+    this.service.editClient(clienteActualizado).subscribe({
+      next: (response: any) => {
+        // Actualizar el cliente en el pedido
+        this.pedidoGral.cliente = clienteActualizado;
+
+        // ✅ CRÍTICO: Actualizar sessionStorage para que el paso de productos lea la categoría correcta
+        sessionStorage.setItem('cliente', JSON.stringify(clienteActualizado));
+        console.log('📦 sessionStorage actualizado con categoría:', clienteActualizado.categoria);
+
+        if (categoria) {
+          this.toastrService.success(
+            `Categoría "${categoria.descripcion || categoria.nombre}" asignada correctamente`,
+            'Categoría Guardada',
+            { closeButton: true, timeOut: 3000 }
+          );
+        } else {
+          this.toastrService.info(
+            'La categoría ha sido removida del cliente',
+            'Categoría Removida',
+            { closeButton: true, timeOut: 3000 }
+          );
+        }
+
+        console.log('Cliente actualizado con categoría:', clienteActualizado);
+      },
+      error: (error) => {
+        console.error('Error al guardar categoría del cliente:', error);
+        this.toastrService.error(
+          'No se pudo guardar la categoría. Intente nuevamente.',
+          'Error',
+          { closeButton: true, timeOut: 4000 }
+        );
+        // Restaurar la selección anterior
+        this.categoriaClienteSeleccionada = this.pedidoGral.cliente?.categoria || null;
+      }
     });
   }
 
@@ -1026,7 +1187,12 @@ export class CrearVentasComponent
       const data = { documento: this.documentoBusqueda.nativeElement.value };
       this.service.getClientByDocument(data).subscribe((res: any) => {
         console.log("🔍 Respuesta del servicio getClientByDocument:", res);
-        if (res.length == 0) {
+
+        // Manejar respuesta: puede ser array vacío, array con cliente, u objeto directo
+        const esArrayVacio = Array.isArray(res) && res.length === 0;
+        const noHayCliente = !res || esArrayVacio;
+
+        if (noHayCliente) {
           // Cliente no encontrado: se muestra el formulario de creación (incluyendo facturación y entrega)
           this.formulario.controls["documento"].setValue(
             this.documentoBusqueda.nativeElement.value,
@@ -1035,6 +1201,7 @@ export class CrearVentasComponent
           this.encontrado = false;
           this.bloqueado = false;
           this.mostrarFormularioCliente = true; // activar formulario de creación
+          this.categoriaClienteSeleccionada = null; // Resetear categoría para nuevo cliente
           Swal.fire({
             title: "No encontrado!",
             text: "No se encuentra el documento. Llene los datos para crear el cliente.",
@@ -1042,30 +1209,34 @@ export class CrearVentasComponent
             confirmButtonText: "Ok",
           });
         } else {
+          // Extraer cliente: puede venir como array o como objeto directo
+          const cliente = Array.isArray(res) ? res[0] : res;
+
           // Cliente encontrado: se oculta el formulario de creación
           console.log(
             "📋 Campos disponibles en el cliente encontrado:",
-            Object.keys(res),
+            Object.keys(cliente),
           );
           console.log("👤 Datos del cliente:", {
-            nombres: res.nombres_completos,
-            apellidos: res.apellidos_completos,
-            documento: res.documento,
+            nombres: cliente.nombres_completos,
+            apellidos: cliente.apellidos_completos,
+            documento: cliente.documento,
+            categoria: cliente.categoria,
           });
-          this.pedidoGral.cliente = res;
+          this.pedidoGral.cliente = cliente;
           this.ref.markForCheck();
-          sessionStorage.setItem("cliente", JSON.stringify(res));
+          sessionStorage.setItem("cliente", JSON.stringify(cliente));
           this.formulario.patchValue({
-            nombres_completos: res.nombres_completos,
-            apellidos_completos: res.apellidos_completos,
-            tipo_documento_comprador: res.tipo_documento_comprador,
-            documento: res.documento,
-            indicativo_celular_comprador: res.indicativo_celular_comprador,
-            numero_celular_comprador: res.numero_celular_comprador,
-            indicativo_celular_whatsapp: res.indicativo_celular_whatsapp,
-            numero_celular_whatsapp: res.numero_celular_whatsapp,
-            correo_electronico_comprador: res.correo_electronico_comprador,
-            estado: res.estado || "activo",
+            nombres_completos: cliente.nombres_completos,
+            apellidos_completos: cliente.apellidos_completos,
+            tipo_documento_comprador: cliente.tipo_documento_comprador,
+            documento: cliente.documento,
+            indicativo_celular_comprador: cliente.indicativo_celular_comprador,
+            numero_celular_comprador: cliente.numero_celular_comprador,
+            indicativo_celular_whatsapp: cliente.indicativo_celular_whatsapp,
+            numero_celular_whatsapp: cliente.numero_celular_whatsapp,
+            correo_electronico_comprador: cliente.correo_electronico_comprador,
+            estado: cliente.estado || "activo",
           });
           // Preservar notas existentes si ya existen, sino inicializar con las del cliente
           if (!this.pedidoGral.notasPedido) {
@@ -1098,7 +1269,7 @@ export class CrearVentasComponent
           // Cargar las notas del cliente desde la base de datos
           this.cargarNotasDelCliente();
 
-          this.datos = res;
+          this.datos = cliente;
           this.identificarDepto();
           this.identificarCiu();
           this.identificarDepto1();
@@ -1106,6 +1277,26 @@ export class CrearVentasComponent
           this.encontrado = true;
           this.mostrarFormularioCliente = false;
           this.clienteRecienCreado = false; // Asegurar que este flag esté en false para clientes encontrados
+
+          // Recuperar categoría existente del cliente si la tiene
+          console.log('🔍 DEBUG - Verificando categoría del cliente:', {
+            tieneCategoria: !!cliente.categoria,
+            categoriaCompleta: cliente.categoria,
+            categoriaId: cliente.categoria?.id,
+            tiposClienteCargados: this.tiposCliente?.length || 0
+          });
+
+          if (cliente.categoria && cliente.categoria.id) {
+            this.categoriaClienteSeleccionada = cliente.categoria;
+            console.log('📋 Categoría del cliente recuperada:', cliente.categoria);
+            console.log('✅ categoriaClienteSeleccionada asignada:', this.categoriaClienteSeleccionada);
+          } else {
+            this.categoriaClienteSeleccionada = null;
+            console.log('📋 Cliente sin categoría asignada - categoria en respuesta:', cliente.categoria);
+          }
+          // Forzar detección de cambios para actualizar el dropdown
+          this.ref.markForCheck();
+
           if (this.formulario.value.estado == "Bloqueado") {
             this.bloqueado = true;
           }
@@ -1121,9 +1312,11 @@ export class CrearVentasComponent
           );
           this.verDatosFacturacion();
           this.datosEntregas = [];
-          res.datosEntrega.map((x) => {
-            this.datosEntregas.push(x);
-          });
+          if (cliente.datosEntrega) {
+            cliente.datosEntrega.map((x) => {
+              this.datosEntregas.push(x);
+            });
+          }
           this.originalDataEntregas =
             this.utils.deepClone(this.datosEntregas) || [];
         }
