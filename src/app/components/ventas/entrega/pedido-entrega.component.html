@@ -388,7 +388,7 @@
                     class="form-control select-default"
                     name=""
                     id=""
-                    (change)="identificarDepto1()"
+                    (change)="onPaisChange()"
                 >
                     <option disabled selected>País</option>
                     <option *ngFor="let item of paises" value="{{ item }}">
@@ -411,7 +411,7 @@
                     type="text"
                     placeholder="Departamento"
                     required=""
-                    (change)="identificarCiu1()"
+                    (change)="onDepartamentoChange()"
                 >
                     <option disabled selected>Departamento</option>
                     <option
@@ -784,7 +784,7 @@
                     class="form-control select-default"
                     name=""
                     id=""
-                    (change)="identificarDepto1()"
+                    (change)="onPaisChange()"
                 >
                     <option disabled selected>País</option>
                     <option *ngFor="let item of paises" value="{{ item }}">
@@ -807,7 +807,7 @@
                     type="text"
                     placeholder="Departamento"
                     required=""
-                    (change)="identificarCiu1()"
+                    (change)="onDepartamentoChange()"
                 >
                     <option disabled selected>Departamento</option>
                     <option

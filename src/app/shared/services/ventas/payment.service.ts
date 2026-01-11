@@ -315,6 +315,9 @@ export class PaymentService extends BaseService {
     // Asegurar que porceDescuento sea numérico
     const porceDescuento = (Number(pedido.porceDescuento) || 0) / 100; // Calcular porcentaje una vez
 
+    // 🔒 Obtener categoría del cliente para precios especiales
+    const categoriaClienteId = (pedido as any).cliente?.categoria?.id;
+
     pedido.carrito.forEach((itemCarrito) => {
       const producto = itemCarrito?.producto;
       // Asegurar que cantidad sea numérico
@@ -329,11 +332,17 @@ export class PaymentService extends BaseService {
       let precioConIvaItem =
         Number(producto?.precio?.precioUnitarioConIva) || 0; // Precio unitario con IVA para cálculo base
 
-      // 🔒 Si el producto tiene precio por categoría de cliente, NO escalar por volumen
-      // El precio ya está fijado en precioConIvaItem con el valor de la categoría
-      if (producto?._precioAplicadoPorCategoria) {
-        // Mantener precioConIvaItem y porcentajeIvaItemStr con valores base (ya asignados)
-        // No hacer nada adicional, saltamos la lógica de volumen
+      // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
+      const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
+      const precioCategoria = categoriaClienteId
+        ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
+        : null;
+
+      if (precioCategoria) {
+        // Si hay precio por categoría, usarlo y su porcentaje de IVA
+        precioConIvaItem = Number(precioCategoria.precioConIva) || 0;
+        porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
+        // No aplicar precios por volumen cuando hay precio por categoría
       } else if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
         for (const x of preciosVolumen) {
@@ -384,6 +393,18 @@ export class PaymentService extends BaseService {
           itemCarrito,
         );
       }
+
+      // 🔍 DEBUG: Log para verificar clasificación de IVA
+      console.log('🧾 checkIVAPrice - Item:', {
+        titulo: producto?.crearProducto?.titulo,
+        categoriaClienteId,
+        precioCategoria: precioCategoria ? { porcentajeIva: precioCategoria.porcentajeIva, precioConIva: precioCategoria.precioConIva } : null,
+        porcentajeIvaItemStr,
+        porcentajeIvaUnitario,
+        valorIvaItem,
+        precioConIvaItem,
+        preciosPorTipoClienteCount: preciosPorTipoCliente.length
+      });
 
       // Acumular solo si valorIvaItem es un número válido
       if (!isNaN(valorIvaItem)) {
@@ -1137,12 +1158,26 @@ export class PaymentService extends BaseService {
         producto?.crearProducto?.titulo ?? "Producto no disponible";
       const referenciaProducto = producto?.identificacion?.referencia ?? "N/A";
 
-      // 🔄 NUEVO: Calcular precios considerando escalas de volumen
+      // 🔄 NUEVO: Calcular precios considerando escalas de volumen y precios por tipo de cliente
       const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
 
-      // Precio unitario sin IVA con escalas de volumen
+      // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
+      const categoriaClienteId = pedido.cliente?.categoria?.id;
+      const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
+      const precioCategoria = categoriaClienteId
+        ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
+        : null;
+
+      // Flag para indicar si se usa precio por categoría (no combinar con volumen)
+      const usaPrecioCategoria = precioCategoria !== null;
+
+      // Precio unitario sin IVA
       let precioUnitarioSinIva = Number(producto?.precio?.precioUnitarioSinIva) || 0;
-      if (preciosVolumen.length > 0) {
+      if (usaPrecioCategoria) {
+        // Si hay precio por categoría, usarlo directamente
+        precioUnitarioSinIva = Number(precioCategoria.precio) || 0;
+      } else if (preciosVolumen.length > 0) {
+        // Si no hay precio por categoría, verificar volumen
         const precioVolumen = preciosVolumen.find((x: any) => {
           const min = Number(x.numeroUnidadesInicial) || 0;
           const max = Number(x.numeroUnidadesLimite) || Infinity;
@@ -1153,9 +1188,13 @@ export class PaymentService extends BaseService {
         }
       }
 
-      // Precio unitario con IVA con escalas de volumen
+      // Precio unitario con IVA
       let precioUnitarioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
-      if (preciosVolumen.length > 0) {
+      if (usaPrecioCategoria) {
+        // Si hay precio por categoría, usarlo directamente
+        precioUnitarioConIva = Number(precioCategoria.precioConIva) || 0;
+      } else if (preciosVolumen.length > 0) {
+        // Si no hay precio por categoría, verificar volumen
         const precioVolumen = preciosVolumen.find((x: any) => {
           const min = Number(x.numeroUnidadesInicial) || 0;
           const max = Number(x.numeroUnidadesLimite) || Infinity;
@@ -1166,9 +1205,16 @@ export class PaymentService extends BaseService {
         }
       }
 
-      // IVA unitario con escalas de volumen
+      // IVA unitario
       let valorIva = Number(producto?.precio?.valorIva) || 0;
-      if (preciosVolumen.length > 0) {
+      let porcentajeIva = producto?.precio?.precioUnitarioIva ?? "0";
+
+      if (usaPrecioCategoria) {
+        // Si hay precio por categoría, usar su IVA
+        valorIva = Number(precioCategoria.valorIva) || 0;
+        porcentajeIva = precioCategoria.porcentajeIva?.toString() ?? producto?.precio?.precioUnitarioIva ?? "0";
+      } else if (preciosVolumen.length > 0) {
+        // Si no hay precio por categoría, verificar volumen
         const precioVolumen = preciosVolumen.find((x: any) => {
           const min = Number(x.numeroUnidadesInicial) || 0;
           const max = Number(x.numeroUnidadesLimite) || Infinity;
@@ -1178,8 +1224,6 @@ export class PaymentService extends BaseService {
           valorIva = Number(precioVolumen.valorUnitarioPorVolumenIva) || 0;
         }
       }
-
-      const porcentajeIva = producto?.precio?.precioUnitarioIva ?? "0";
 
       // Totales por cantidad (respetando precio unitario en las columnas unitarias)
       const valorIvaTotalProducto = valorIva * cantidad;
@@ -1690,12 +1734,12 @@ export class PaymentService extends BaseService {
       }
     });
 
-    // ✅ Usar valores por defecto para desglose de IVA
-    // Estas propiedades no existen en el modelo Pedido, se mantienen por compatibilidad
-    const excluidos = 0;
-    const totalIva5 = 0;
-    const totalImpo = 0;
-    const totalIva19 = totalIVA; // Usar el total de IVA del pedido
+    // ✅ Usar checkIVAPrice() para obtener el desglose correcto de IVA por rangos
+    const desgloseIVA = this.checkIVAPrice(pedido);
+    const excluidos = desgloseIVA.totalExcluidos;
+    const totalIva5 = desgloseIVA.totalIva5;
+    const totalImpo = desgloseIVA.totalImpo; // IVA 8%
+    const totalIva19 = desgloseIVA.totalIva19;
 
     // --- Log para depuración ---
     console.log("Valores para Totales HTML:", {

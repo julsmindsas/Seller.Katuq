@@ -2726,6 +2726,14 @@ export class ConfProductToCartComponent
     }
   }
   checkPriceScale() {
+    // 🔒 PRIMERO: Verificar si hay precio por categoría de cliente (tiene prioridad y NO escala por volumen)
+    const precioCategoria = this.obtenerPrecioPorCategoria();
+    if (precioCategoria !== null) {
+      this.precioproducto = precioCategoria;
+      return this.precioproducto;
+    }
+
+    // Si no hay precio por categoría, usar lógica de precios por volumen
     if (
       this.producto?.precio?.preciosVolumen &&
       this.producto.precio.preciosVolumen.length > 0
@@ -2747,6 +2755,43 @@ export class ConfProductToCartComponent
     return this.precioproducto;
   }
 
+  /**
+   * Obtiene el precio por categoría de cliente si existe.
+   * Retorna null si no hay categoría o no hay precio configurado.
+   */
+  private obtenerPrecioPorCategoria(): number | null {
+    // 1. Obtener cliente desde sessionStorage
+    let cliente: any = null;
+    try {
+      const clienteStr = sessionStorage.getItem('cliente');
+      if (clienteStr) {
+        cliente = JSON.parse(clienteStr);
+      }
+    } catch (e) {
+      return null;
+    }
+
+    // 2. Verificar si el cliente tiene categoría
+    const categoriaId = cliente?.categoria?.id;
+    if (!categoriaId) {
+      return null;
+    }
+
+    // 3. Verificar si el producto tiene precios por tipo de cliente
+    const preciosPorTipo = this.producto?.preciosPorTipoCliente;
+    if (!preciosPorTipo || !Array.isArray(preciosPorTipo) || preciosPorTipo.length === 0) {
+      return null;
+    }
+
+    // 4. Buscar precio para la categoría del cliente
+    const precioCategoria = preciosPorTipo.find(
+      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+    );
+
+    // 5. Retornar precio de categoría o null
+    return precioCategoria?.precioConIva || null;
+  }
+
   getMultiplicador() {
     const resultadoSumar1 = this.sumar1();
     if (
@@ -2765,11 +2810,13 @@ export class ConfProductToCartComponent
       quantity = 1;
     }
 
-    this.sumaTotalProducto =
-      (this.producto?.precio?.precioUnitarioConIva || 0) * quantity;
+    // Asegurar que precioproducto esté actualizado (considera categoría y volumen)
+    this.checkPriceScale();
+
+    this.sumaTotalProducto = (this.precioproducto || 0) * quantity;
     this.sumaTotalAdiciones =
       (this.getBigTotalProductWithPreferenceAndAdictions() -
-        (this.producto?.precio?.precioUnitarioConIva || 0)) *
+        (this.precioproducto || 0)) *
       quantity;
 
     this.sumaTotal =

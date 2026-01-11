@@ -170,6 +170,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
         this.agregarConsumidorFinal();
       }
 
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         this.datosFacturacionElectronica,
       );
@@ -336,6 +338,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       documento: this.formulario.value.documento,
     };
     this.service.getClientByDocument(data).subscribe((res: any) => {
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         this.datosFacturacionElectronica,
       );
@@ -370,39 +374,74 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     };
     this.datosFacturacionElectronica[this.idenxFacturacion] =
       datosFacturacionElec;
-    const data = {
-      documento: this.documentoBusqueda,
-    };
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      this.formulario.controls["datosFacturacionElectronica"].setValue(
-        this.datosFacturacionElectronica,
-      );
-      this.formulario.controls["datosEntrega"].setValue(res.datosEntregas);
-      this.formulario.controls["notas"].setValue(res.notas);
-      this.formulario.controls["estado"].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe((r) => {
-        console.log(r);
+    // Si los datos editados son los que están en uso en el pedido, actualizarlos
+    if (this.pedidoGral?.facturacion && this.pedidoGral.facturacion.alias === datosFacturacionElec.alias) {
+      this.pedidoGral.facturacion = { ...datosFacturacionElec };
+      this.pedidoGral = { ...this.pedidoGral };
+      // Emitir el cambio al componente padre
+      this.overridePedido.emit(this.pedidoGral);
+    }
+
+    // ✅ REFACTORIZADO: Actualizar solo el array de datosFacturacionElectronica en el formulario
+    // El cd ya está en el formulario desde cuando se buscó el cliente
+    this.formulario.controls["datosFacturacionElectronica"].setValue(
+      this.datosFacturacionElectronica,
+    );
+
+    // ✅ LLAMADA ÚNICA: Solo editClient() - el formulario ya tiene todos los datos
+    this.service.editClient(this.formulario.value).subscribe({
+      next: (r) => {
+        // Cerrar el modal después de guardar exitosamente
+        this.modalService.dismissAll();
+
+        // Resetear el flag de edición
+        this.editandodato = false;
+
+        // Recargar los datos del servidor para actualizar la lista
+        this.service
+          .getClientByDocument({ documento: this.documentoBusqueda })
+          .subscribe((clientRes: any) => {
+            if (
+              clientRes &&
+              clientRes.datosFacturacionElectronica &&
+              Array.isArray(clientRes.datosFacturacionElectronica)
+            ) {
+              this.datosFacturacionElectronica = clientRes.datosFacturacionElectronica;
+            }
+          });
+
         Swal.fire({
           title: "Editado!",
-          text: "Editado con exito",
+          text: "Editado con éxito",
           icon: "success",
           confirmButtonText: "Ok",
+          timer: 2000,
         });
-        this.alias_entrega = "";
-        this.nombres_entrega = "";
-        this.indicativo_celular_entrega = "";
-        this.numero_celular_entrega = "";
-        this.otro_numero_entrega = "";
-        this.direccion_entrega = "";
-        this.observaciones = "";
-        this.pais_entrega = "";
-        this.departamento_entrega = "";
-        this.ciudad_municipio_entrega = "";
-        this.zona_cobro = "";
-        this.valor_zona_cobro = "";
-        this.codigo_postal_entrega = "";
-      });
+
+        // Limpiar variables de facturación
+        this.alias_facturacion = "";
+        this.razon_social = "";
+        this.tipo_documento_facturacion = "";
+        this.numero_documento_facturacion = "";
+        this.indicativo_celular_facturacion = "";
+        this.numero_celular_facturacion = "";
+        this.correo_electronico_facturacion = "";
+        this.direccion_facturacion = "";
+        this.pais = "";
+        this.departamento = "";
+        this.ciudad_municipio = "";
+        this.codigo_postal = "";
+      },
+      error: (err) => {
+        console.error("Error al editar datos de facturación:", err);
+        Swal.fire({
+          title: "Error",
+          text: "No se pudieron guardar los datos de facturación. Por favor intente nuevamente.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      }
     });
   }
   limpiarVariables() {

@@ -480,26 +480,53 @@ export class CheckOutComponent implements OnInit, OnChanges {
       };
     }
 
+    // 🔒 Obtener categoría del cliente para precios especiales
+    const categoriaClienteId = this.pedido.cliente?.categoria?.id;
+
     this.pedido.carrito.forEach(itemCarrito => {
       totalExcluidos = 0;
       totalIva5 = 0;
       totalImpo = 0;
       totalIva19 = 0;
-      totalPrecioIVA = 0; 
+      totalPrecioIVA = 0;
 
       const cantidadItem = parseInt(itemCarrito?.cantidad?.toString() || '0');
-      if (cantidadItem === 0) return; 
+      if (cantidadItem === 0) return;
 
       const productoPrecio = itemCarrito?.producto?.precio;
       const porceDescuento = (this.pedido?.porceDescuento ?? 0) / 100;
 
-      // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
-      if (itemCarrito?.producto?._precioAplicadoPorCategoria && productoPrecio) {
-        const valorUnitarioConIVA = productoPrecio.valorIva || 0;
-        const valorIVABase = productoPrecio.precioUnitarioIva?.toString();
-        const precioItemConDescuento = (valorUnitarioConIVA * cantidadItem) * (1 - porceDescuento);
+      // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
+      const preciosPorTipoCliente = itemCarrito?.producto?.preciosPorTipoCliente ?? [];
+      const precioCategoria = categoriaClienteId
+        ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
+        : null;
+
+      // 🔍 DEBUG: Log para verificar valores
+      console.log('🧾 checkIVAPrice - Checkout:', {
+        titulo: itemCarrito?.producto?.crearProducto?.titulo,
+        categoriaClienteId,
+        preciosPorTipoClienteCount: preciosPorTipoCliente.length,
+        preciosPorTipoCliente: preciosPorTipoCliente,
+        precioCategoria,
+        productoPrecioIva: productoPrecio?.precioUnitarioIva,
+        productoValorIva: productoPrecio?.valorIva
+      });
+
+      if (precioCategoria) {
+        // Si hay precio por categoría, usar su IVA
+        const valorUnitarioIVA = precioCategoria.valorIva || 0;
+        const porcentajeIvaCategoria = precioCategoria.porcentajeIva?.toString() ?? productoPrecio?.precioUnitarioIva?.toString() ?? "0";
+        const precioItemConDescuento = (valorUnitarioIVA * cantidadItem) * (1 - porceDescuento);
         totalPrecioIVA += precioItemConDescuento;
-        switch (valorIVABase) {
+
+        console.log('🧾 Usando precio por categoría:', {
+          valorUnitarioIVA,
+          porcentajeIvaCategoria,
+          precioItemConDescuento
+        });
+
+        switch (porcentajeIvaCategoria) {
           case "0": totalExcluidos += precioItemConDescuento; break;
           case "5": totalIva5 += precioItemConDescuento; break;
           case "8": totalImpo += precioItemConDescuento; break;

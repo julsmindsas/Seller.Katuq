@@ -705,21 +705,38 @@ export class CrearVentasComponent
       // Mostrar modal de confirmación
       Swal.fire({
         title: '¿Guardar categoría?',
-        html: `¿Desea guardar la categoría <strong>"${tipoSeleccionado.descripcion || tipoSeleccionado.nombre}"</strong> para este cliente?<br><br><small class="text-muted">Esta categoría se aplicará para futuras compras y determinará los precios especiales disponibles.</small>`,
+        html: `¿Desea guardar la categoría <strong>"${tipoSeleccionado.descripcion || tipoSeleccionado.nombre}"</strong> para este cliente?<br><br><small class="text-muted">Si guarda, esta categoría se aplicará para futuras compras.<br>Si no guarda, se usará solo para esta venta.</small>`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#28a745',
         cancelButtonColor: '#6c757d',
         confirmButtonText: '<i class="fa fa-save"></i> Sí, guardar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'No, solo esta venta'
       }).then((result) => {
+        // En ambos casos, usar la categoría seleccionada para esta venta
+        this.categoriaClienteSeleccionada = tipoSeleccionado;
+
         if (result.isConfirmed) {
-          this.categoriaClienteSeleccionada = tipoSeleccionado;
+          // Guardar en la base de datos para futuras compras
           this.guardarCategoriaCliente(tipoSeleccionado);
-          console.log('Categoría de cliente confirmada:', tipoSeleccionado);
+          console.log('✅ Categoría guardada en cliente:', tipoSeleccionado);
         } else {
-          // Restaurar el valor anterior en el select
-          selectElement.value = this.categoriaClienteSeleccionada?.id || '';
+          // Solo usar para esta venta (actualizar sessionStorage sin guardar en BD)
+          const clienteTemporal = {
+            ...this.pedidoGral.cliente,
+            categoria: {
+              id: tipoSeleccionado.id,
+              nombre: tipoSeleccionado.nombre,
+              descripcion: tipoSeleccionado.descripcion
+            }
+          };
+          sessionStorage.setItem('cliente', JSON.stringify(clienteTemporal));
+          this.toastrService.info(
+            `Categoría "${tipoSeleccionado.descripcion || tipoSeleccionado.nombre}" aplicada solo para esta venta`,
+            'Categoría Temporal',
+            { closeButton: true, timeOut: 3000 }
+          );
+          console.log('📋 Categoría aplicada solo para esta venta:', tipoSeleccionado);
         }
       });
     }
@@ -876,6 +893,7 @@ export class CrearVentasComponent
       this.service.getClientByDocument(data).subscribe((res: any) => {
         sessionStorage.setItem("cliente", JSON.stringify(res));
         this.formulario.patchValue({
+          cd: res.cd, // ✅ IMPORTANTE: Setear el cd del cliente para identificarlo en ediciones
           nombres_completos: res.nombres_completos,
           apellidos_completos: res.apellidos_completos,
           tipo_documento_comprador: res.tipo_documento_comprador,
@@ -885,6 +903,9 @@ export class CrearVentasComponent
           indicativo_celular_whatsapp: res.indicativo_celular_whatsapp,
           numero_celular_whatsapp: res.numero_celular_whatsapp,
           correo_electronico_comprador: res.correo_electronico_comprador,
+          datosFacturacionElectronica: res.datosFacturacionElectronica || [],
+          datosEntrega: res.datosEntrega || [],
+          notas: res.notas || [],
           estado: res.estado || "activo",
         });
         this.datos = res;
@@ -1213,6 +1234,7 @@ export class CrearVentasComponent
           this.ref.markForCheck();
           sessionStorage.setItem("cliente", JSON.stringify(cliente));
           this.formulario.patchValue({
+            cd: cliente.cd, // ✅ IMPORTANTE: Setear el cd del cliente para identificarlo en ediciones
             nombres_completos: cliente.nombres_completos,
             apellidos_completos: cliente.apellidos_completos,
             tipo_documento_comprador: cliente.tipo_documento_comprador,
@@ -1222,6 +1244,9 @@ export class CrearVentasComponent
             indicativo_celular_whatsapp: cliente.indicativo_celular_whatsapp,
             numero_celular_whatsapp: cliente.numero_celular_whatsapp,
             correo_electronico_comprador: cliente.correo_electronico_comprador,
+            datosFacturacionElectronica: cliente.datosFacturacionElectronica || [],
+            datosEntrega: cliente.datosEntrega || [],
+            notas: cliente.notas || [],
             estado: cliente.estado || "activo",
           });
           // Preservar notas existentes si ya existen, sino inicializar con las del cliente
@@ -1347,41 +1372,87 @@ export class CrearVentasComponent
       departamento: this.departamento_entrega,
       ciudad: this.ciudad_municipio_entrega,
       zonaCobro: this.zona_cobro,
+      valorZonaCobro: this.valor_zona_cobro,
       codigoPV: this.codigo_postal_entrega,
     };
     this.datosEntregas[this.idenxEntrega] = datosEntreg;
-    const data = {
-      documento: this.documentoBusqueda.nativeElement.value,
-    };
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      this.formulario.controls["datosFacturacionElectronica"].setValue(
-        res.datosFacturacionElectronica,
-      );
-      this.formulario.controls["datosEntrega"].setValue(this.datosEntregas);
-      this.formulario.controls["notas"].setValue(res.notas);
-      this.formulario.controls["estado"].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe((r) => {
+    // Si la dirección editada es la que está en uso en el pedido, actualizarla
+    if (this.pedidoGral?.envio && this.pedidoGral.envio.alias === datosEntreg.alias) {
+      this.pedidoGral.envio = { ...datosEntreg };
+      this.pedidoGral = { ...this.pedidoGral };
+    }
+
+    // ✅ REFACTORIZADO: Actualizar solo el array de datosEntrega en el formulario
+    // El cd ya está en el formulario desde cuando se buscó el cliente en el paso 1
+    this.formulario.controls["datosEntrega"].setValue(this.datosEntregas);
+
+    // ✅ LLAMADA ÚNICA: Solo editClient() - el formulario ya tiene todos los datos
+    this.service.editClient(this.formulario.value).subscribe({
+      next: (r) => {
+        // Cerrar el modal después de guardar exitosamente
+        this.modalService.dismissAll();
+
+        // Resetear el flag de edición
+        this.editandodato = false;
+
+        // Recargar los datos del servidor para actualizar la lista
+        this.service
+          .getClientByDocument({ documento: this.documentoBusqueda.nativeElement.value })
+          .subscribe((clientRes: any) => {
+            if (
+              clientRes &&
+              clientRes.datosEntrega &&
+              Array.isArray(clientRes.datosEntrega)
+            ) {
+              // Filtrar por ciudad si hay un pedido con envío definido
+              if (this.pedidoGral?.envio?.ciudad) {
+                this.datosEntregas = clientRes.datosEntrega.filter((x) => {
+                  return x.ciudad == this.pedidoGral.envio.ciudad;
+                });
+              } else {
+                this.datosEntregas = clientRes.datosEntrega;
+              }
+            }
+          });
+
         Swal.fire({
           title: "Editado!",
-          text: "Editado con exito",
+          text: "Editado con éxito",
           icon: "success",
           confirmButtonText: "Ok",
+          timer: 2000,
         });
+
+        // Limpiar variables
         this.alias_entrega = "";
         this.nombres_entrega = "";
+        this.apellidos_entrega = "";
         this.indicativo_celular_entrega = "";
         this.numero_celular_entrega = "";
+        this.indicativo_celular_entrega2 = "";
         this.otro_numero_entrega = "";
         this.direccion_entrega = "";
         this.observaciones = "";
+        this.barrio = "";
+        this.nombreUnidad = "";
+        this.especificacionesInternas = "";
         this.pais_entrega = "";
         this.departamento_entrega = "";
         this.ciudad_municipio_entrega = "";
         this.zona_cobro = "";
         this.valor_zona_cobro = "";
         this.codigo_postal_entrega = "";
-      });
+      },
+      error: (err) => {
+        console.error("Error al editar dirección de entrega:", err);
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo guardar la dirección de entrega. Por favor intente nuevamente.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      }
     });
   }
   editarDatosFacturacion() {
@@ -1401,38 +1472,72 @@ export class CrearVentasComponent
     };
     this.datosFacturacionElectronica[this.idenxFacturacion] =
       datosFacturacionElec;
-    const data = {
-      documento: this.documentoBusqueda.nativeElement.value,
-    };
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      this.formulario.controls["datosFacturacionElectronica"].setValue(
-        this.datosFacturacionElectronica,
-      );
-      this.formulario.controls["datosEntrega"].setValue(res.datosEntrega);
-      this.formulario.controls["notas"].setValue(res.notas);
-      this.formulario.controls["estado"].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe((r) => {
+    // Si los datos de facturación editados son los que están en uso en el pedido, actualizarlos
+    if (this.pedidoGral?.facturacion && this.pedidoGral.facturacion.alias === datosFacturacionElec.alias) {
+      this.pedidoGral.facturacion = { ...datosFacturacionElec };
+      this.pedidoGral = { ...this.pedidoGral };
+    }
+
+    // ✅ REFACTORIZADO: Actualizar solo el array de datosFacturacionElectronica en el formulario
+    // El cd ya está en el formulario desde cuando se buscó el cliente en el paso 1
+    this.formulario.controls["datosFacturacionElectronica"].setValue(
+      this.datosFacturacionElectronica,
+    );
+
+    // ✅ LLAMADA ÚNICA: Solo editClient() - el formulario ya tiene todos los datos
+    this.service.editClient(this.formulario.value).subscribe({
+      next: (r) => {
+        // Cerrar el modal después de guardar exitosamente
+        this.modalService.dismissAll();
+
+        // Resetear el flag de edición
+        this.editandodato = false;
+
+        // Recargar los datos del servidor para actualizar la lista
+        this.service
+          .getClientByDocument({ documento: this.documentoBusqueda.nativeElement.value })
+          .subscribe((clientRes: any) => {
+            if (
+              clientRes &&
+              clientRes.datosFacturacionElectronica &&
+              Array.isArray(clientRes.datosFacturacionElectronica)
+            ) {
+              this.datosFacturacionElectronica = clientRes.datosFacturacionElectronica;
+            }
+          });
+
         Swal.fire({
           title: "Editado!",
-          text: "Editado con exito",
+          text: "Editado con éxito",
           icon: "success",
           confirmButtonText: "Ok",
+          timer: 2000,
         });
-        this.alias_entrega = "";
-        this.nombres_entrega = "";
-        this.indicativo_celular_entrega = "";
-        this.numero_celular_entrega = "";
-        this.otro_numero_entrega = "";
-        this.direccion_entrega = "";
-        this.observaciones = "";
-        this.pais_entrega = "";
-        this.departamento_entrega = "";
-        this.ciudad_municipio_entrega = "";
-        this.zona_cobro = "";
-        this.valor_zona_cobro = "";
-        this.codigo_postal_entrega = "";
-      });
+
+        // Limpiar variables de facturación
+        this.alias_facturacion = "";
+        this.razon_social = "";
+        this.tipo_documento_facturacion = "";
+        this.numero_documento_facturacion = "";
+        this.indicativo_celular_facturacion = "";
+        this.numero_celular_facturacion = "";
+        this.correo_electronico_facturacion = "";
+        this.direccion_facturacion = "";
+        this.pais = "";
+        this.departamento = "";
+        this.ciudad_municipio = "";
+        this.codigo_postal = "";
+      },
+      error: (err) => {
+        console.error("Error al editar datos de facturación:", err);
+        Swal.fire({
+          title: "Error",
+          text: "No se pudieron guardar los datos de facturación. Por favor intente nuevamente.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      }
     });
   }
 
@@ -1520,6 +1625,8 @@ export class CrearVentasComponent
           this.datosEntregas.push(x);
         });
 
+        // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+        this.formulario.controls["cd"].setValue(res.cd);
         this.formulario.controls["datosFacturacionElectronica"].setValue(
           res.datosFacturacionElectronica,
         );
@@ -1569,6 +1676,8 @@ export class CrearVentasComponent
       res.datosEntrega.map((x) => {
         this.datosEntregas.push(x);
       });
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         res.datosFacturacionElectronica,
       );
@@ -1628,6 +1737,8 @@ export class CrearVentasComponent
         this.datosFacturacionElectronica.push(x);
       });
       this.datosFacturacionElectronica.push(datosFacturacionElec);
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         this.datosFacturacionElectronica,
       );
@@ -1739,6 +1850,8 @@ export class CrearVentasComponent
       documento: this.formulario.value.documento,
     };
     this.service.getClientByDocument(data).subscribe((res: any) => {
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         this.datosFacturacionElectronica,
       );
@@ -1762,6 +1875,8 @@ export class CrearVentasComponent
       documento: this.formulario.value.documento,
     };
     this.service.getClientByDocument(data).subscribe((res: any) => {
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         res.datosFacturacionElectronica,
       );

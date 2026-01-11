@@ -252,6 +252,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
           });
         }
 
+        // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+        this.formulario.controls["cd"].setValue(res.cd);
         this.formulario.controls["datosFacturacionElectronica"].setValue(
           res.datosFacturacionElectronica,
         );
@@ -317,6 +319,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
           this.datosEntregas.push(x);
         });
       }
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         res.datosFacturacionElectronica,
       );
@@ -437,41 +441,88 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       departamento: this.departamento_entrega,
       ciudad: this.ciudad_municipio_entrega,
       zonaCobro: this.zona_cobro,
+      valorZonaCobro: this.valor_zona_cobro,
       codigoPV: this.codigo_postal_entrega,
     };
     this.datosEntregas[this.idenxEntrega] = datosEntreg;
-    let data = { documento: this.documentoBusqueda };
-    // data.documento = !this.isEdit ? this.documentoBusqueda.value : this.documentoBusqueda;
 
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-      this.formulario.controls["datosFacturacionElectronica"].setValue(
-        res.datosFacturacionElectronica,
-      );
-      this.formulario.controls["datosEntrega"].setValue(this.datosEntregas);
-      this.formulario.controls["notas"].setValue(res.notas);
-      this.formulario.controls["estado"].setValue(res.estado);
-      this.service.editClient(this.formulario.value).subscribe((r) => {
-        console.log(r);
+    // Si la dirección editada es la que está en uso en el pedido, actualizarla
+    if (this.pedidoGral?.envio && this.pedidoGral.envio.alias === datosEntreg.alias) {
+      this.pedidoGral.envio = { ...datosEntreg };
+      this.pedidoGral = { ...this.pedidoGral };
+      this.overridePedido.emit(this.pedidoGral);
+    }
+
+    // ✅ REFACTORIZADO: Actualizar solo el array de datosEntrega en el formulario
+    // El formulario ya tiene cd, datosFacturacionElectronica, notas y estado desde el paso 1
+    this.formulario.controls["datosEntrega"].setValue(this.datosEntregas);
+
+    // ✅ LLAMADA ÚNICA: Solo editClient() - el formulario ya tiene todos los datos
+    this.service.editClient(this.formulario.value).subscribe({
+      next: (r) => {
+        // Cerrar el modal después de guardar exitosamente
+        this.modalService.dismissAll();
+
+        // Resetear el flag de edición
+        this.editandodato = false;
+
+        // Recargar los datos del servidor para actualizar la lista
+        this.service
+          .getClientByDocument({ documento: this.documentoBusqueda })
+          .subscribe((clientRes: any) => {
+            if (
+              clientRes &&
+              clientRes.datosEntrega &&
+              Array.isArray(clientRes.datosEntrega)
+            ) {
+              // Filtrar por ciudad si hay un pedido con envío definido
+              if (this.pedidoGral?.envio?.ciudad) {
+                this.datosEntregas = clientRes.datosEntrega.filter((x) => {
+                  return x.ciudad == this.pedidoGral.envio.ciudad;
+                });
+              } else {
+                this.datosEntregas = clientRes.datosEntrega;
+              }
+            }
+          });
+
         Swal.fire({
           title: "Editado!",
-          text: "Editado con exito",
+          text: "Editado con éxito",
           icon: "success",
           confirmButtonText: "Ok",
+          timer: 2000,
         });
+
+        // Limpiar variables
         this.alias_entrega = "";
         this.nombres_entrega = "";
+        this.apellidos_entrega = "";
         this.indicativo_celular_entrega = "";
+        this.indicativo_celular_entrega2 = "";
         this.numero_celular_entrega = "";
         this.otro_numero_entrega = "";
         this.direccion_entrega = "";
         this.observaciones = "";
+        this.barrio = "";
+        this.nombreUnidad = "";
+        this.especificacionesInternas = "";
         this.pais_entrega = "";
         this.departamento_entrega = "";
         this.ciudad_municipio_entrega = "";
         this.zona_cobro = "";
         this.valor_zona_cobro = "";
         this.codigo_postal_entrega = "";
-      });
+      },
+      error: (err) => {
+        console.error("Error al editar dirección de entrega:", err);
+        Swal.fire({
+          title: "Error",
+          text: "No se pudo guardar la dirección. Intente nuevamente.",
+          icon: "error",
+          confirmButtonText: "Ok",
+        });
+      }
     });
   }
 
@@ -508,6 +559,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       documento: this.formulario.value.documento,
     };
     this.service.getClientByDocument(data).subscribe((res: any) => {
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         res.datosFacturacionElectronica,
       );
@@ -534,18 +587,53 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       }
     });
   }
+
+  // Método que se llama desde el evento (change) del dropdown de país
+  onPaisChange() {
+    console.log('🌍 onPaisChange - País seleccionado:', this.pais_entrega);
+    this.identificarDepto1();
+    // Limpiar campos dependientes cuando cambia el país
+    this.departamento_entrega = "";
+    this.ciudad_municipio_entrega = "";
+    this.ciudades1 = [];
+    this.zona_cobro = "";
+    this.valor_zona_cobro = "";
+    this.filteredResults = [];
+    console.log('🌍 onPaisChange - Después de limpiar:', {
+      departamento_entrega: this.departamento_entrega,
+      ciudad_municipio_entrega: this.ciudad_municipio_entrega,
+      zona_cobro: this.zona_cobro,
+      valor_zona_cobro: this.valor_zona_cobro
+    });
+  }
+
   identificarCiu1() {
     this.inforPaises.paises.map((x) => {
       if (x.Pais == this.pais_entrega) {
         x.Regiones.map((y) => {
           if (y.departamento == this.departamento_entrega) {
-            // .filter(c=> c == this.pedidoGral.envio?.ciudad)
             this.ciudades1 = y.ciudades.map((c) => {
               return c;
             });
           }
         });
       }
+    });
+  }
+
+  // Método que se llama desde el evento (change) del dropdown de departamento
+  onDepartamentoChange() {
+    console.log('🏛️ onDepartamentoChange - Departamento seleccionado:', this.departamento_entrega);
+    this.identificarCiu1();
+    // Limpiar campos dependientes cuando cambia el departamento
+    this.ciudad_municipio_entrega = "";
+    this.zona_cobro = "";
+    this.valor_zona_cobro = "";
+    this.filteredResults = [];
+    console.log('🏛️ onDepartamentoChange - Después de limpiar:', {
+      ciudad_municipio_entrega: this.ciudad_municipio_entrega,
+      zona_cobro: this.zona_cobro,
+      valor_zona_cobro: this.valor_zona_cobro
     });
   }
   idBillingZone(zona_cobro: any) {
@@ -658,6 +746,18 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     // this.zona_cobro = this.datosEntregas[index].zonaCobro
     this.codigo_postal_entrega = this.datosEntregas[index].codigoPV;
 
+    // DEBUG: Imprimir valores al abrir el modal
+    console.log('🔍 DEBUG editarDatos - Valores al abrir modal:', {
+      index: index,
+      datosEntrega: this.datosEntregas[index],
+      pais_entrega: this.pais_entrega,
+      departamento_entrega: this.departamento_entrega,
+      ciudad_municipio_entrega: this.ciudad_municipio_entrega,
+      zona_cobro: this.zona_cobro,
+      valor_zona_cobro: this.valor_zona_cobro,
+      filteredResults: this.filteredResults
+    });
+
     // Cargar coordenadas si existen
     this.latitud = this.datosEntregas[index].latitud || "";
     this.longitud = this.datosEntregas[index].longitud || "";
@@ -734,6 +834,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       }
       res.datosFacturacionElectronica.push(datosFacturacion);
 
+      // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
+      this.formulario.controls["cd"].setValue(res.cd);
       // Actualizar el formulario
       this.formulario.controls["datosFacturacionElectronica"].setValue(
         res.datosFacturacionElectronica,
@@ -771,7 +873,17 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
 
   // Método para manejar cambios en la selección de ciudad
   onCiudadChange() {
-    // Agregar un pequeño delay para asegurar que la ciudad se haya actualizado
+    console.log('🏙️ onCiudadChange - Ciudad seleccionada:', this.ciudad_municipio_entrega);
+    console.log('🏙️ onCiudadChange - ANTES de limpiar zona_cobro:', this.zona_cobro);
+
+    // Limpiar la zona de cobro cuando cambia la ciudad
+    this.zona_cobro = "";
+    this.valor_zona_cobro = "";
+    this.filteredResults = [];
+
+    console.log('🏙️ onCiudadChange - DESPUÉS de limpiar zona_cobro:', this.zona_cobro);
+
+    // Cargar las nuevas zonas de cobro para la ciudad seleccionada
     setTimeout(() => {
       this.idBillingZone("");
     }, 100);
@@ -808,6 +920,11 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
             if (resultado.estructura && resultado.estructura.departamento) {
               this.departamento_entrega = resultado.estructura.departamento;
             }
+
+            // Limpiar zona de cobro antes de cargar las nuevas opciones
+            this.zona_cobro = "";
+            this.valor_zona_cobro = "";
+            this.filteredResults = [];
 
             // Recargar zonas de cobro para la nueva ciudad
             setTimeout(() => {
@@ -879,6 +996,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
    * Selecciona un municipio DANE y actualiza los campos de entrega
    */
   seleccionarMunicipioDane(municipio: MunicipioDane): void {
+    console.log('📍 seleccionarMunicipioDane - Municipio seleccionado:', municipio);
+
     this.pais_entrega = 'Colombia';
     this.departamento_entrega = municipio.departamento;
     this.ciudad_municipio_entrega = municipio.nombre;
@@ -886,7 +1005,18 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     this.ciudades1 = [municipio.nombre];
     // Guardar como frecuente
     this.daneCodesService.addMunicipioFrecuente(municipio);
-    // Actualizar zonas de cobro
+
+    // Limpiar zona de cobro antes de cargar las nuevas opciones
+    this.zona_cobro = "";
+    this.valor_zona_cobro = "";
+    this.filteredResults = [];
+
+    console.log('📍 seleccionarMunicipioDane - Zona de cobro limpiada:', {
+      zona_cobro: this.zona_cobro,
+      valor_zona_cobro: this.valor_zona_cobro
+    });
+
+    // Actualizar zonas de cobro para la nueva ciudad
     this.idBillingZone('');
   }
 
