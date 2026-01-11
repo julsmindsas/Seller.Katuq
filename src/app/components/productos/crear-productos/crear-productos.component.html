@@ -1403,8 +1403,46 @@
 								<div class="row">
 									<h5>Ciudad</h5>
 
-									<!-- CIUDADES DE ORIGEN -->
+									<!-- Toggle Cobertura Nacional - ORIGEN -->
 									<div class="col-sm-6 mb-3">
+										<div class="alert" [ngClass]="coberturaNacionalOrigen ? 'alert-success' : 'alert-light border'">
+											<div class="form-check form-switch d-flex align-items-center">
+												<input class="form-check-input me-2" type="checkbox" role="switch"
+													   id="coberturaNacionalOrigen"
+													   [(ngModel)]="coberturaNacionalOrigen"
+													   [ngModelOptions]="{standalone: true}"
+													   (change)="onCoberturaNacionalOrigenChange()"
+													   style="width: 3em; height: 1.5em;">
+												<label class="form-check-label" for="coberturaNacionalOrigen">
+													<i class="fa fa-globe-americas me-1"></i>
+													<strong>Cobertura Nacional (Origen)</strong>
+													<span class="text-muted ms-2">- Disponible desde todo el país</span>
+												</label>
+											</div>
+										</div>
+									</div>
+
+									<!-- Toggle Cobertura Nacional - ENTREGA -->
+									<div class="col-sm-6 mb-3">
+										<div class="alert" [ngClass]="coberturaNacionalEntrega ? 'alert-success' : 'alert-light border'">
+											<div class="form-check form-switch d-flex align-items-center">
+												<input class="form-check-input me-2" type="checkbox" role="switch"
+													   id="coberturaNacionalEntrega"
+													   [(ngModel)]="coberturaNacionalEntrega"
+													   [ngModelOptions]="{standalone: true}"
+													   (change)="onCoberturaNacionalEntregaChange()"
+													   style="width: 3em; height: 1.5em;">
+												<label class="form-check-label" for="coberturaNacionalEntrega">
+													<i class="fa fa-globe-americas me-1"></i>
+													<strong>Cobertura Nacional (Entrega)</strong>
+													<span class="text-muted ms-2">- Entrega a todo el país</span>
+												</label>
+											</div>
+										</div>
+									</div>
+
+									<!-- CIUDADES DE ORIGEN -->
+									<div class="col-sm-6 mb-3" [class.disabled-section]="coberturaNacionalOrigen">
 										<label class="form-label">Ciudades de Origen</label>
 
 										<!-- Selector tradicional -->
@@ -1459,7 +1497,7 @@
 									</div>
 
 									<!-- CIUDADES DE ENTREGA -->
-									<div class="col-sm-6 mb-3">
+									<div class="col-sm-6 mb-3" [class.disabled-section]="coberturaNacionalEntrega">
 										<label class="form-label">Ciudades de Entrega</label>
 
 										<!-- Selector tradicional -->

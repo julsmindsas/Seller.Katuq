@@ -118,6 +118,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   ciudadesDaneOrigenSeleccionadas: MunicipioDane[] = [];
   ciudadesDaneEntregaSeleccionadas: MunicipioDane[] = [];
 
+  // Propiedades para Cobertura Nacional
+  coberturaNacionalOrigen: boolean = false;
+  coberturaNacionalEntrega: boolean = false;
+
   porcentajesIva: any = [
     { value: "19", label: "19%" },
     { value: "8", label: "8%" },
@@ -274,13 +278,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       paraProduccion: [false, [Validators.required]],
     });
     this.precio = this.fb.group({
-      precioUnitarioSinIva: ["", [Validators.required]],
-      precioUnitarioIva: ["0", Validators.required],
-      valorIva: ["0", Validators.required],
-      precioUnitarioConIva: ["0", [Validators.required]],
-      precioPorVolumenSinIva: ["", [Validators.required]],
-      precioIvaPorVolumen: ["", [Validators.required]],
-      precioTotalVolumenConIva: ["", [Validators.required]],
+      precioUnitarioSinIva: ["0"],
+      precioUnitarioIva: ["0"],
+      valorIva: ["0"],
+      precioUnitarioConIva: ["0"],
+      precioPorVolumenSinIva: ["0"],
+      precioIvaPorVolumen: ["0"],
+      precioTotalVolumenConIva: ["0"],
       preciosVolumen: this.fb.array([]),
     });
 
@@ -465,6 +469,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.ciudades = this.fb.group({
       ciudadesOrigen: [[], [Validators.required]],
       ciudadesEntrega: [[], Validators.required],
+      coberturaNacionalOrigen: [false],
+      coberturaNacionalEntrega: [false],
     });
 
     // Inicializar FormGroup para configuración de dropshipping
@@ -1060,66 +1066,24 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
               (r) => r.tipo == "secundaria",
             );
             if (ulrPrincipal.length > 0) {
-              if (
-                this.crearProducto.controls["imagenesPrincipales"].value
-                  .length > 0
-              ) {
-                this.fileUrls
-                  .filter((r) => r.tipo == "principal")
-                  .forEach((item) => {
-                    (
-                      this.crearProducto.controls["imagenesPrincipales"]
-                        .value as any[]
-                    ).push(item);
-                  });
-              } else {
-                this.fileUrls
-                  .filter((r) => r.tipo == "principal")
-                  .forEach((item) => {
-                    if (
-                      !this.crearProducto.controls["imagenesPrincipales"].value
-                    ) {
-                      this.crearProducto.controls[
-                        "imagenesPrincipales"
-                      ].setValue([]);
-                    }
-                    (
-                      this.crearProducto.controls["imagenesPrincipales"]
-                        .value as any[]
-                    ).push(item);
-                  });
-              }
+              // Obtener imágenes actuales y nuevas
+              const currentPrincipalImages = this.crearProducto.controls["imagenesPrincipales"].value || [];
+              const newPrincipalImages = this.fileUrls.filter((r) => r.tipo == "principal");
+              // Usar setValue para actualizar correctamente el FormControl
+              this.crearProducto.controls["imagenesPrincipales"].setValue([
+                ...currentPrincipalImages,
+                ...newPrincipalImages
+              ]);
             }
             if (ulrSecundaria.length > 0) {
-              if (
-                this.crearProducto.controls["imagenesSecundarias"].value
-                  .length > 0
-              ) {
-                this.fileUrls
-                  .filter((r) => r.tipo == "secundaria")
-                  .forEach((item) => {
-                    (
-                      this.crearProducto.controls["imagenesSecundarias"]
-                        .value as any[]
-                    ).push(item);
-                  });
-              } else {
-                this.fileUrls
-                  .filter((r) => r.tipo == "secundaria")
-                  .forEach((item) => {
-                    if (
-                      !this.crearProducto.controls["imagenesSecundarias"].value
-                    ) {
-                      this.crearProducto.controls[
-                        "imagenesSecundarias"
-                      ].setValue([]);
-                    }
-                    (
-                      this.crearProducto.controls["imagenesSecundarias"]
-                        .value as any[]
-                    ).push(item);
-                  });
-              }
+              // Obtener imágenes actuales y nuevas
+              const currentSecondaryImages = this.crearProducto.controls["imagenesSecundarias"].value || [];
+              const newSecondaryImages = this.fileUrls.filter((r) => r.tipo == "secundaria");
+              // Usar setValue para actualizar correctamente el FormControl
+              this.crearProducto.controls["imagenesSecundarias"].setValue([
+                ...currentSecondaryImages,
+                ...newSecondaryImages
+              ]);
             }
             this.editarProducto();
           }
@@ -1133,21 +1097,20 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
     this.saving = true;
-    //validar que todos los precios de volumen tengan precios
-
-    let preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
-    let preciosVolumenSinPrecio = preciosVolumen.controls.filter(
-      (p) => p.get("valorUnitarioPorVolumenSinIVA").value == 0,
-    );
-    if (preciosVolumenSinPrecio.length > 0) {
-      Swal.fire(
-        "Error",
-        "Todos los precios por volumen deben tener un valor",
-        "error",
-      );
-      this.saving = false;
-      return;
-    }
+    // Validación de precios por volumen deshabilitada para permitir precios en 0
+    // let preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
+    // let preciosVolumenSinPrecio = preciosVolumen.controls.filter(
+    //   (p) => p.get("valorUnitarioPorVolumenSinIVA").value == 0,
+    // );
+    // if (preciosVolumenSinPrecio.length > 0) {
+    //   Swal.fire(
+    //     "Error",
+    //     "Todos los precios por volumen deben tener un valor",
+    //     "error",
+    //   );
+    //   this.saving = false;
+    //   return;
+    // }
 
     // Validar si el producto tiene imágenes principales
     if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
@@ -1180,6 +1143,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     );
     this.formGeneral.controls["dropshippingConfig"].setValue(this.dropshippingConfig.value);
     this.formGeneral.controls["marketplace"].setValue(this.marketplace.value);
+    // Sincronizar cobertura nacional antes de guardar
+    this.ciudades.patchValue({
+      coberturaNacionalOrigen: this.coberturaNacionalOrigen,
+      coberturaNacionalEntrega: this.coberturaNacionalEntrega,
+    });
     this.formGeneral.controls["ciudades"].setValue(this.ciudades.value);
     this.formGeneral.controls["categorias"].setValue(
       stringify(this.categoriasForm.controls["categorias"].value),
@@ -1282,6 +1250,11 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     );
     this.formGeneral.controls["dropshippingConfig"].setValue(this.dropshippingConfig.value);
     this.formGeneral.controls["marketplace"].setValue(this.marketplace.value);
+    // Sincronizar cobertura nacional antes de editar
+    this.ciudades.patchValue({
+      coberturaNacionalOrigen: this.coberturaNacionalOrigen,
+      coberturaNacionalEntrega: this.coberturaNacionalEntrega,
+    });
     this.formGeneral.controls["ciudades"].setValue(this.ciudades.value);
     if (this.categoriasForm.controls["categorias"].value != null) {
       delete this.categoriasForm.controls["categorias"].value[
@@ -1302,16 +1275,16 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       if (res) {
         Swal.fire("Editato", "Producto editado correctamente", "success");
         sessionStorage.setItem("infoForms", JSON.stringify(this.edit));
-        // this.mostrarCrear = true
+        // Limpiar arrays DESPUÉS de que el servidor confirme éxito
+        this.filesPaths = [];
+        this.fileUrls = [];
+        this.files = null;
+        this.fileImg = [];
+        this.filesNames = [];
       } else {
         Swal.fire("Error", "Error al editar el producto", "error");
       }
     });
-    this.filesPaths = [];
-    this.fileUrls = [];
-    this.files = null;
-    this.fileImg = [];
-    this.filesNames = [];
   }
   onRadioClick() {
     if (this.opcionSeleccionada.nativeElement.value == "manual") {
@@ -2152,6 +2125,9 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       ciudadesEntrega: this.edit.ciudades.ciudadesEntrega,
       ciudadesOrigen: this.edit.ciudades.ciudadesOrigen,
     });
+    // Cargar cobertura nacional
+    this.coberturaNacionalOrigen = this.edit.ciudades?.coberturaNacionalOrigen || false;
+    this.coberturaNacionalEntrega = this.edit.ciudades?.coberturaNacionalEntrega || false;
   }
 
   private loadImageData() {
@@ -2716,6 +2692,28 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.ciudadesDaneEntregaSeleccionadas = this.ciudadesDaneEntregaSeleccionadas.filter(m => m.codigo !== municipio.codigo);
     const ciudadesValue = this.ciudadesDaneEntregaSeleccionadas.map(m => ({ value: m.nombre, label: m.nombre }));
     this.ciudades.patchValue({ ciudadesEntrega: ciudadesValue });
+  }
+
+  /**
+   * Maneja el cambio de cobertura nacional para origen
+   */
+  onCoberturaNacionalOrigenChange(): void {
+    if (this.coberturaNacionalOrigen) {
+      // Limpiar ciudades seleccionadas cuando se activa cobertura nacional
+      this.ciudadesDaneOrigenSeleccionadas = [];
+      this.ciudades.patchValue({ ciudadesOrigen: [] });
+    }
+  }
+
+  /**
+   * Maneja el cambio de cobertura nacional para entrega
+   */
+  onCoberturaNacionalEntregaChange(): void {
+    if (this.coberturaNacionalEntrega) {
+      // Limpiar ciudades seleccionadas cuando se activa cobertura nacional
+      this.ciudadesDaneEntregaSeleccionadas = [];
+      this.ciudades.patchValue({ ciudadesEntrega: [] });
+    }
   }
 
   ngOnDestroy() {
