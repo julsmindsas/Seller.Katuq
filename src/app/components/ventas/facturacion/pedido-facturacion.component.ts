@@ -186,6 +186,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
           icon: "success",
           confirmButtonText: "Ok",
         });
+
+        // Cambiar a la pestaña de listado (Mis Datos de Facturación)
+        this.activeIndex = 0;
+
+        // Limpiar TODOS los campos del formulario
         this.facturacionElectronica = false;
         this.alias_facturacion = "";
         this.razon_social = "";
@@ -445,7 +450,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     });
   }
   limpiarVariables() {
+    // Variables de control
     this.editandodato = false;
+    this.idenxFacturacion = null;
+
+    // Variables de entrega (si se usan en este componente)
     this.alias_entrega = "";
     this.nombres_entrega = "";
     this.indicativo_celular_entrega = "";
@@ -453,12 +462,14 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     this.otro_numero_entrega = "";
     this.direccion_entrega = "";
     this.observaciones = "";
-    this.alias_entrega = "";
+    this.pais_entrega = "";
     this.departamento_entrega = "";
     this.ciudad_municipio_entrega = "";
     this.zona_cobro = "";
     this.valor_zona_cobro = "";
     this.codigo_postal_entrega = "";
+
+    // Variables de facturación
     this.facturacionElectronica = false;
     this.alias_facturacion = "";
     this.razon_social = "";

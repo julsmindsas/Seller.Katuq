@@ -370,19 +370,35 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
             }
           });
 
+        // Cambiar a la pestaña de listado (Mis Direcciones de Entrega)
+        this.activeIndex = 0;
+
+        // Limpiar TODOS los campos del formulario
         this.alias_entrega = "";
         this.nombres_entrega = "";
+        this.apellidos_entrega = "";
         this.indicativo_celular_entrega = "";
+        this.indicativo_celular_entrega2 = "";
         this.numero_celular_entrega = "";
         this.otro_numero_entrega = "";
         this.direccion_entrega = "";
         this.observaciones = "";
+        this.barrio = "";
+        this.nombreUnidad = "";
+        this.especificacionesInternas = "";
         this.pais_entrega = "";
         this.departamento_entrega = "";
         this.ciudad_municipio_entrega = "";
         this.zona_cobro = "";
         this.valor_zona_cobro = "";
         this.codigo_postal_entrega = "";
+        this.latitud = "";
+        this.longitud = "";
+
+        // Limpiar variables DANE
+        this.searchQueryCiudadDane = "";
+        this.municipiosDane = [];
+        this.filteredResults = [];
       });
     });
   }
@@ -774,22 +790,42 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   }
 
   limpiarVariables() {
+    // Variables de control
     this.editandodato = false;
+    this.idenxEntrega = null;
+
+    // Variables de entrega básicas
     this.alias_entrega = "";
     this.nombres_entrega = "";
+    this.apellidos_entrega = "";
     this.indicativo_celular_entrega = "";
+    this.indicativo_celular_entrega2 = "";
     this.numero_celular_entrega = "";
     this.otro_numero_entrega = "";
     this.direccion_entrega = "";
     this.observaciones = "";
+    this.barrio = "";
+    this.nombreUnidad = "";
+    this.especificacionesInternas = "";
+
+    // Variables de ubicación de entrega
     this.pais_entrega = "";
     this.departamento_entrega = "";
     this.ciudad_municipio_entrega = "";
     this.zona_cobro = "";
     this.valor_zona_cobro = "";
     this.codigo_postal_entrega = "";
+
+    // Coordenadas
     this.latitud = "";
     this.longitud = "";
+
+    // Variables DANE
+    this.searchQueryCiudadDane = "";
+    this.municipiosDane = [];
+    this.filteredResults = [];
+
+    // Variables de facturación
     this.facturacionElectronica = false;
     this.alias_facturacion = "";
     this.razon_social = "";
