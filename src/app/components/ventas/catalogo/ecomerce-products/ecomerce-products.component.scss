@@ -1107,3 +1107,63 @@
   }
 }
 
+// ============================================================================
+// GRID OPTIONS - Selector de columnas limpio y ordenado
+// ============================================================================
+.grid-options-clean {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  margin-left: 0.5rem;
+
+  .grid-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+      background: #e5e7eb;
+    }
+
+    &.active {
+      background: #4361ee;
+
+      .grid-icon span {
+        background: white;
+      }
+    }
+
+    .grid-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      height: 14px;
+
+      span {
+        display: block;
+        width: 3px;
+        height: 100%;
+        background: #9ca3af;
+        border-radius: 1px;
+        transition: background 0.15s ease;
+      }
+    }
+  }
+
+  @media (max-width: 576px) {
+    display: none;
+  }
+}
+

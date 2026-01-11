@@ -50,32 +50,19 @@
                             <i class="toggle-data" data-feather="chevron-down"></i>
                         </span>
                     </span>
-                    <div class="grid-options d-inline-block">
-                        <ul>
-                            <li (click)="gridColumn(6)"><a class="product-2-layout-view"
-                                    href="javascript:void(0);"><span
-                                        class="line-grid line-grid-1 bg-primary"></span><span
-                                        class="line-grid line-grid-2 bg-primary"></span></a></li>
-                            <li (click)="gridColumn(4)"><a class="product-3-layout-view"
-                                    href="javascript:void(0);"><span
-                                        class="line-grid line-grid-3 bg-primary"></span><span
-                                        class="line-grid line-grid-4 bg-primary"></span><span
-                                        class="line-grid line-grid-5 bg-primary"></span></a></li>
-                            <li (click)="gridColumn(3)"><a class="product-4-layout-view"
-                                    href="javascript:void(0);"><span
-                                        class="line-grid line-grid-6 bg-primary"></span><span
-                                        class="line-grid line-grid-7 bg-primary"></span><span
-                                        class="line-grid line-grid-8 bg-primary"></span><span
-                                        class="line-grid line-grid-9 bg-primary"></span></a></li>
-                            <li (click)="gridColumn(2)"><a class="product-6-layout-view"
-                                    href="javascript:void(0);"><span
-                                        class="line-grid line-grid-10 bg-primary"></span><span
-                                        class="line-grid line-grid-11 bg-primary"></span><span
-                                        class="line-grid line-grid-12 bg-primary"></span><span
-                                        class="line-grid line-grid-13 bg-primary"></span><span
-                                        class="line-grid line-grid-14 bg-primary"></span><span
-                                        class="line-grid line-grid-15 bg-primary"></span></a></li>
-                        </ul>
+                    <div class="grid-options-clean">
+                        <button class="grid-btn" [class.active]="col === '6'" (click)="gridColumn(6)" title="2 columnas">
+                            <span class="grid-icon"><span></span><span></span></span>
+                        </button>
+                        <button class="grid-btn" [class.active]="col === '4'" (click)="gridColumn(4)" title="3 columnas">
+                            <span class="grid-icon"><span></span><span></span><span></span></span>
+                        </button>
+                        <button class="grid-btn" [class.active]="col === '3'" (click)="gridColumn(3)" title="4 columnas">
+                            <span class="grid-icon"><span></span><span></span><span></span><span></span></span>
+                        </button>
+                        <button class="grid-btn" [class.active]="col === '2'" (click)="gridColumn(2)" title="6 columnas">
+                            <span class="grid-icon"><span></span><span></span><span></span><span></span><span></span><span></span></span>
+                        </button>
                     </div>
                 </div>
 
