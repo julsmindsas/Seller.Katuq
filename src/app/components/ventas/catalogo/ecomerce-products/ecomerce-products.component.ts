@@ -454,41 +454,18 @@ export class EcomerceProductsComponent
   confProductToCartModal: TemplateRef<any>;
 
   /**
-   * Maneja la acción de comprar un producto
-   * Si el proceso comercial está activo, muestra el modal de configuración
-   * Si no, añade directamente al carrito
+   * Maneja la acción de comprar un producto.
+   * Si el producto requiere configuración, muestra el modal de configuración.
+   * Si no requiere configuración, usa agregarRapido() para añadir directamente.
    * @param producto Producto a comprar
    */
   comprarProducto(producto: Producto) {
-    // if (producto.procesoComercial?.configProcesoComercialActivo) {
-    if (true) {
-      // Abrir modal de configuración
+    if (this.requiereConfiguracion(producto)) {
+      // Abrir modal de configuración para productos que lo necesitan
       this.configurarProducto(producto);
     } else {
-      // Añadir directamente al carrito
-      const cantidadMinima = producto.disponibilidad?.cantidadMinVenta || 1;
-
-      // Crear un objeto básico para añadir al carrito
-      const productoCompra = {
-        producto: producto,
-        configuracion: {
-          producto: producto,
-          datosEntrega: null,
-          cantidad: cantidadMinima,
-          preferencias: [],
-          adiciones: [],
-          tarjetas: [],
-        },
-        cantidad: cantidadMinima,
-      };
-
-      this.cartService.addToCart(productoCompra);
-
-      this.toastrService.success("Producto agregado al carrito", "Éxito", {
-        timeOut: 5000,
-        progressBar: true,
-        positionClass: "toast-bottom-right",
-      });
+      // Añadir directamente al carrito usando agregarRapido
+      this.agregarRapido(producto);
     }
   }
 
@@ -774,5 +751,161 @@ export class EcomerceProductsComponent
     return preciosPorTipo.some(
       (p: any) => p.tipoClienteId === categoriaId && p.activo === true
     );
+  }
+
+  /**
+   * Verifica si el producto requiere configuración antes de agregarse al carrito.
+   * Un producto requiere configuración si tiene procesoComercial activo CON alguna opción habilitada.
+   */
+  requiereConfiguracion(producto: Producto): boolean {
+    const pc = producto?.procesoComercial;
+
+    // Si no hay proceso comercial o no está activo, no requiere configuración
+    if (!pc || !pc.configProcesoComercialActivo) {
+      return false;
+    }
+
+    // Verificar si alguna de las opciones de configuración está activa
+    const tieneCalendario = pc.llevaCalendario === true;
+    const tieneVariable = pc.aceptaVariable === true;
+    const tieneTarjeta = pc.llevaTarjeta === true;
+    const tieneAdiciones = pc.aceptaAdiciones === true;
+    const tieneOcasion = pc.aceptaOcasion === true;
+    const tieneGenero = pc.aceptaGenero === true;
+    const tieneComentarios = pc.aceptaComentarios === true;
+    const tieneColor = pc.aceptaColorDecoracion === true;
+
+    // Si tiene cualquier opción activa, requiere configuración
+    return tieneCalendario || tieneVariable || tieneTarjeta || tieneAdiciones ||
+           tieneOcasion || tieneGenero || tieneComentarios || tieneColor;
+  }
+
+  /**
+   * Obtiene una copia del producto con el precio ajustado por categoría de cliente.
+   * Si el cliente tiene categoría y el producto tiene precio para esa categoría,
+   * retorna una copia del producto con el precio modificado.
+   * Si no aplica, retorna el producto original sin modificar.
+   */
+  private obtenerProductoConPrecioCategoria(producto: Producto): any {
+    // 1. Obtener el cliente desde sessionStorage
+    let cliente: any = null;
+    try {
+      const clienteStr = sessionStorage.getItem('cliente');
+      if (clienteStr) {
+        cliente = JSON.parse(clienteStr);
+      }
+    } catch (e) {
+      console.warn('⚠️ QuickAdd: Error al obtener cliente de sessionStorage:', e);
+      return producto;
+    }
+
+    // 2. Verificar si el cliente tiene categoría asignada
+    const categoriaId = cliente?.categoria?.id;
+    if (!categoriaId) {
+      return producto; // Retorna el producto original sin modificar
+    }
+
+    // 3. Verificar si el producto tiene precios por tipo de cliente
+    const preciosPorTipo = (producto as any)?.preciosPorTipoCliente;
+    if (!preciosPorTipo || !Array.isArray(preciosPorTipo) || preciosPorTipo.length === 0) {
+      return producto; // Retorna el producto original sin modificar
+    }
+
+    // 4. Buscar el precio específico para la categoría del cliente
+    const precioCategoria = preciosPorTipo.find(
+      (p: any) => p.tipoClienteId === categoriaId && p.activo === true
+    );
+
+    if (!precioCategoria) {
+      return producto; // Retorna el producto original sin modificar
+    }
+
+    // 5. CREAR COPIA del producto con el precio ajustado
+    console.log('💰 QuickAdd: Aplicando precio por categoría:', {
+      producto: producto?.crearProducto?.titulo,
+      categoria: precioCategoria.tipoClienteNombre || cliente?.categoria?.nombre,
+      precioOriginal: producto?.precio?.precioUnitarioConIva,
+      precioCategoria: precioCategoria.precioConIva
+    });
+
+    const productoConPrecioAjustado = {
+      ...producto,
+      precio: {
+        ...producto.precio,
+        precioUnitarioConIva: precioCategoria.precioConIva,
+        precioUnitarioSinIva: precioCategoria.precio,
+        valorIva: precioCategoria.valorIva
+      },
+      // Guardar referencia a la categoría aplicada (para auditoría/debugging)
+      _precioAplicadoPorCategoria: {
+        tipoClienteId: precioCategoria.tipoClienteId,
+        tipoClienteNombre: precioCategoria.tipoClienteNombre,
+        precioOriginalConIva: producto?.precio?.precioUnitarioConIva,
+        precioOriginalSinIva: producto?.precio?.precioUnitarioSinIva
+      }
+    };
+
+    return productoConPrecioAjustado;
+  }
+
+  /**
+   * Agrega un producto directamente al carrito sin abrir el modal de configuración.
+   * Solo funciona para productos que NO requieren configuración.
+   * Aplica automáticamente:
+   * - Cantidad mínima de venta del producto
+   * - Precio por categoría de cliente si aplica
+   */
+  agregarRapido(producto: Producto): void {
+    // 1. Verificar que el producto no requiera configuración
+    if (this.requiereConfiguracion(producto)) {
+      // Si requiere configuración, abrir el modal en lugar de agregar directamente
+      this.configurarProducto(producto);
+      return;
+    }
+
+    // 2. Obtener la cantidad mínima de venta
+    const cantidadMinima = producto.disponibilidad?.cantidadMinVenta || 1;
+
+    // 3. Obtener el producto con precio ajustado por categoría (si aplica)
+    const productoConPrecio = this.obtenerProductoConPrecioCategoria(producto);
+
+    // 4. Crear el objeto para el carrito
+    // Estructura compatible con el carrito existente
+    const productoCompra = {
+      producto: productoConPrecio,
+      configuracion: {
+        producto: productoConPrecio,
+        datosEntrega: null,
+        cantidad: cantidadMinima,
+        preferencias: [],
+        adiciones: [],
+        tarjetas: []
+      },
+      cantidad: cantidadMinima
+    };
+
+    // 5. Agregar al carrito
+    this.cartService.addToCart(productoCompra);
+
+    // 6. Mostrar notificación de éxito
+    const nombreProducto = producto.crearProducto?.titulo || 'Producto';
+    const precioMostrar = productoConPrecio?.precio?.precioUnitarioConIva || 0;
+
+    this.toastrService.success(
+      `${nombreProducto} x${cantidadMinima} agregado ($${precioMostrar.toLocaleString('es-CO')})`,
+      'Agregado al carrito',
+      {
+        timeOut: 3000,
+        progressBar: true,
+        positionClass: 'toast-bottom-right'
+      }
+    );
+
+    console.log('⚡ QuickAdd: Producto agregado al carrito:', {
+      titulo: nombreProducto,
+      cantidad: cantidadMinima,
+      precioUnitario: precioMostrar,
+      tienePrecioCategoria: !!productoConPrecio._precioAplicadoPorCategoria
+    });
   }
 }

@@ -300,19 +300,21 @@
 
                                 <!-- Overlay de acciones MODERNIZADO -->
                                 <div class="product-actions-overlay">
-                                    <button class="btn-action btn-action-primary"
+                                    <!-- Botón Quick Add: Siempre visible para agregar rápido -->
+                                    <button class="btn-action btn-action-quick"
                                             type="button"
-                                            (click)="comprarProducto(producto)"
-                                            title="Agregar al carrito">
-                                        <i class="icon-shopping-cart"></i>
+                                            (click)="agregarRapido(producto)"
+                                            title="Agregar rápido al carrito">
+                                        <i class="fa fa-bolt"></i>
                                         <span class="btn-action-label">Agregar</span>
                                     </button>
-                                    <button class="btn-action btn-action-secondary"
+                                    <!-- Botón Configurar: Siempre visible para abrir modal -->
+                                    <button class="btn-action btn-action-config"
                                             type="button"
-                                            (click)="QuickView.openModal(producto)"
-                                            title="Vista rápida">
-                                        <i class="icon-eye"></i>
-                                        <span class="btn-action-label">Ver detalles</span>
+                                            (click)="configurarProducto(producto)"
+                                            title="Configurar producto">
+                                        <i class="fa fa-cog"></i>
+                                        <span class="btn-action-label">Configurar</span>
                                     </button>
                                 </div>
                             </div>

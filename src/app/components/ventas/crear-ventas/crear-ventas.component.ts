@@ -254,6 +254,14 @@ export class CrearVentasComponent
   public tieneProductosEnCarrito: boolean = false;
 
   /**
+   * Variables para el Sidebar del Carrito (Fase 2 - Quick View)
+   */
+  public productosCarritoSidebar: any[] = [];
+  public totalCarritoSidebar: number = 0;
+  public cantidadItemsCarrito: number = 0;
+  public sidebarCarritoVisible: boolean = true;
+
+  /**
    * Variables para manejo de categoría/tipo de cliente
    */
   public tiposCliente: any[] = [];
@@ -476,6 +484,13 @@ export class CrearVentasComponent
         // Actualizar la variable reactiva para habilitar/deshabilitar el botón
         this.tieneProductosEnCarrito = products && products.length > 0;
 
+        // **FASE 2: Actualizar sidebar del carrito**
+        this.productosCarritoSidebar = products || [];
+        this.cantidadItemsCarrito = this.productosCarritoSidebar.reduce(
+          (total, item) => total + (item.cantidad || 1), 0
+        );
+        this.totalCarritoSidebar = this.calcularTotalCarritoSidebar(products);
+
         if (this.pedidoGral && products && products.length > 0) {
           console.log(
             "📦 CREAR-VENTAS: Productos agregados al carrito -",
@@ -497,17 +512,6 @@ export class CrearVentasComponent
 
           // Forzar detección de cambios para actualizar la UI y notificar al componente de notas
           this.ref.detectChanges();
-
-          // Mostrar notificación toast cuando se agregen productos
-          this.toastrService.success(
-            `${products.length} producto(s) agregado(s). ¡Campos de notas de producción habilitados!`,
-            "Producto Agregado",
-            {
-              closeButton: true,
-              timeOut: 3000,
-              positionClass: "toast-bottom-right",
-            },
-          );
 
           console.log("✅ CREAR-VENTAS: Carrito sincronizado y UI actualizada");
         } else if (this.pedidoGral && (!products || products.length === 0)) {
@@ -3579,6 +3583,78 @@ export class CrearVentasComponent
         }
       });
     }
+  }
+
+  /**
+   * FASE 2: Calcula el total del carrito para el sidebar
+   * Usa la misma lógica que el carrito principal para consistencia
+   */
+  private calcularTotalCarritoSidebar(productos: any[]): number {
+    if (!productos || productos.length === 0) return 0;
+
+    return productos.reduce((total, item) => {
+      const precioUnitario = this.getPrecioProductoSidebar(item);
+      const cantidad = item.cantidad || 1;
+      const precioAdiciones = this.calcularPrecioAdiciones(item);
+      const precioPreferencias = this.calcularPrecioPreferencias(item);
+
+      return total + ((precioUnitario + precioAdiciones + precioPreferencias) * cantidad);
+    }, 0);
+  }
+
+  /**
+   * FASE 2: Obtiene el precio unitario de un producto considerando categoría de cliente
+   */
+  private getPrecioProductoSidebar(item: any): number {
+    if (!item?.producto?.precio) return 0;
+
+    // Si tiene precio por categoría, usar ese precio fijo
+    if (item?.producto?._precioAplicadoPorCategoria) {
+      return Number(item.producto.precio.precioUnitarioConIva) || 0;
+    }
+
+    // Precio estándar
+    return Number(item.producto.precio.precioUnitarioConIva) || 0;
+  }
+
+  /**
+   * FASE 2: Calcula el precio de las adiciones de un item
+   */
+  private calcularPrecioAdiciones(item: any): number {
+    const adiciones = item?.configuracion?.adiciones;
+    if (!adiciones || !Array.isArray(adiciones)) return 0;
+
+    return adiciones.reduce((total, adicion) => {
+      const precio = adicion?.referencia?.precioTotal || 0;
+      const cantidad = adicion?.cantidad || 1;
+      return total + (precio * cantidad);
+    }, 0);
+  }
+
+  /**
+   * FASE 2: Calcula el precio de las preferencias de un item
+   */
+  private calcularPrecioPreferencias(item: any): number {
+    const preferencias = item?.configuracion?.preferencias;
+    if (!preferencias || !Array.isArray(preferencias)) return 0;
+
+    return preferencias.reduce((total, pref) => {
+      return total + (pref?.precioTotalConIva || 0);
+    }, 0);
+  }
+
+  /**
+   * FASE 2: Elimina un producto del carrito desde el sidebar
+   */
+  eliminarDelCarritoSidebar(item: any): void {
+    this.cartService.removeProduct(item);
+  }
+
+  /**
+   * FASE 2: Toggle visibilidad del sidebar del carrito
+   */
+  toggleSidebarCarrito(): void {
+    this.sidebarCarritoVisible = !this.sidebarCarritoVisible;
   }
 
   ngOnDestroy(): void {

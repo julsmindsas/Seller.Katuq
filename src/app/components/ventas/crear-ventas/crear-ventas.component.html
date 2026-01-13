@@ -65,7 +65,7 @@
 
                   <div class="wizard-separator">→</div>
 
-                  <!-- Step 4: Envío -->
+                  <!-- Step 4: Envío y Datos (CONSOLIDADO - Fase 3) -->
                   <div class="wizard-step"
                        [class.current]="wizard?.currentStepIndex === 3"
                        [class.done]="wizard?.currentStepIndex > 3"
@@ -73,12 +73,12 @@
                        [class.clickeable]="wizard?.currentStepIndex > 3"
                        (click)="wizard?.currentStepIndex > 3 && wizard.goToStep(3)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 3">✓</span>
-                    <span class="step-text">Envío</span>
+                    <span class="step-text">Envío y Datos</span>
                   </div>
 
                   <div class="wizard-separator">→</div>
 
-                  <!-- Step 5: Facturación -->
+                  <!-- Step 5: Pago -->
                   <div class="wizard-step"
                        [class.current]="wizard?.currentStepIndex === 4"
                        [class.done]="wizard?.currentStepIndex > 4"
@@ -86,12 +86,12 @@
                        [class.clickeable]="wizard?.currentStepIndex > 4"
                        (click)="wizard?.currentStepIndex > 4 && wizard.goToStep(4)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 4">✓</span>
-                    <span class="step-text">Facturación</span>
+                    <span class="step-text">Pago</span>
                   </div>
 
                   <div class="wizard-separator">→</div>
 
-                  <!-- Step 6: Pago -->
+                  <!-- Step 6: Confirmación -->
                   <div class="wizard-step"
                        [class.current]="wizard?.currentStepIndex === 5"
                        [class.done]="wizard?.currentStepIndex > 5"
@@ -99,19 +99,6 @@
                        [class.clickeable]="wizard?.currentStepIndex > 5"
                        (click)="wizard?.currentStepIndex > 5 && wizard.goToStep(5)">
                     <span class="step-check" *ngIf="wizard?.currentStepIndex > 5">✓</span>
-                    <span class="step-text">Pago</span>
-                  </div>
-
-                  <div class="wizard-separator">→</div>
-
-                  <!-- Step 7: Confirmación -->
-                  <div class="wizard-step"
-                       [class.current]="wizard?.currentStepIndex === 6"
-                       [class.done]="wizard?.currentStepIndex > 6"
-                       [class.pending]="wizard?.currentStepIndex < 6"
-                       [class.clickeable]="wizard?.currentStepIndex > 6"
-                       (click)="wizard?.currentStepIndex > 6 && wizard.goToStep(6)">
-                    <span class="step-check" *ngIf="wizard?.currentStepIndex > 6">✓</span>
                     <span class="step-text">Confirmación</span>
                   </div>
                 </div>
@@ -489,28 +476,100 @@
                 </div>
               </ng-template>
 
-              <div class="card shadow-sm mb-4">
-                <div class="card-header bg-light">
-                  <h5 class="mb-0"><i class="fa fa-shopping-basket me-2 text-primary"></i>Catálogo de Productos</h5>
-                </div>
-                <div class="card-body p-0">
-                  <app-ecomerce-products #products
-                    [ciudadSelector]="empresaActual?.ciudadess?.ciudadesEntrega"
-                    [selectedCity]="selectedCity"
-                    [ciudad]="selectedCity"
-                    [bodega]="bodega"
-                    [mostrarBuscador]="false"
-                    [isRebuy]="false"
-                    (citySelected)="onCitySelect($event)"
-                    *ngIf="pedidoGral && bodega && selectedCity">
-                  </app-ecomerce-products>
-                </div>
-              </div>
+              <!-- FASE 2: Layout con Sidebar del Carrito -->
+              <div class="step2-layout-container">
+                <!-- Área principal de productos -->
+                <div class="step2-products-area" [class.with-sidebar]="sidebarCarritoVisible && tieneProductosEnCarrito">
+                  <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                      <h5 class="mb-0"><i class="fa fa-shopping-basket me-2 text-primary"></i>Catálogo de Productos</h5>
+                      <!-- Botón toggle sidebar en móvil -->
+                      <button *ngIf="tieneProductosEnCarrito"
+                              class="btn btn-sm btn-outline-primary d-lg-none"
+                              (click)="toggleSidebarCarrito()">
+                        <i class="fa fa-shopping-cart"></i>
+                        <span class="badge bg-primary ms-1">{{cantidadItemsCarrito}}</span>
+                      </button>
+                    </div>
+                    <div class="card-body p-0">
+                      <app-ecomerce-products #products
+                        [ciudadSelector]="empresaActual?.ciudadess?.ciudadesEntrega"
+                        [selectedCity]="selectedCity"
+                        [ciudad]="selectedCity"
+                        [bodega]="bodega"
+                        [mostrarBuscador]="false"
+                        [isRebuy]="false"
+                        (citySelected)="onCitySelect($event)"
+                        *ngIf="pedidoGral && bodega && selectedCity">
+                      </app-ecomerce-products>
+                    </div>
+                  </div>
 
-              <!-- Mensaje si no hay bodega o ciudad seleccionada -->
-              <div *ngIf="!bodega || !selectedCity" class="alert alert-info">
-                <i class="fa fa-info-circle me-2"></i>
-                Seleccione una bodega y ciudad en la barra de configuración para ver los productos disponibles.
+                  <!-- Mensaje si no hay bodega o ciudad seleccionada -->
+                  <div *ngIf="!bodega || !selectedCity" class="alert alert-info">
+                    <i class="fa fa-info-circle me-2"></i>
+                    Seleccione una bodega y ciudad en la barra de configuración para ver los productos disponibles.
+                  </div>
+                </div>
+
+                <!-- FASE 2: Sidebar del Carrito -->
+                <div class="step2-cart-sidebar"
+                     *ngIf="tieneProductosEnCarrito"
+                     [class.sidebar-visible]="sidebarCarritoVisible"
+                     [class.sidebar-hidden]="!sidebarCarritoVisible">
+
+                  <!-- Header del sidebar -->
+                  <div class="sidebar-header">
+                    <div class="sidebar-title">
+                      <i class="fa fa-shopping-cart"></i>
+                      <span>Mi Carrito</span>
+                      <span class="badge bg-primary ms-2">{{cantidadItemsCarrito}}</span>
+                    </div>
+                    <button class="sidebar-toggle-btn d-lg-none" (click)="toggleSidebarCarrito()">
+                      <i class="fa fa-times"></i>
+                    </button>
+                  </div>
+
+                  <!-- Lista de productos en el carrito -->
+                  <div class="sidebar-cart-items">
+                    <div class="cart-item" *ngFor="let item of productosCarritoSidebar; let i = index">
+                      <div class="cart-item-image">
+                        <img [src]="item?.producto?.crearProducto?.imagenes?.[0]?.imagenUrl || 'assets/images/placeholder.png'"
+                             [alt]="item?.producto?.crearProducto?.titulo"
+                             onerror="this.src='assets/images/placeholder.png'">
+                      </div>
+                      <div class="cart-item-info">
+                        <div class="cart-item-name">{{item?.producto?.crearProducto?.titulo | slice:0:30}}{{item?.producto?.crearProducto?.titulo?.length > 30 ? '...' : ''}}</div>
+                        <div class="cart-item-details">
+                          <span class="cart-item-qty">x{{item?.cantidad || 1}}</span>
+                          <span class="cart-item-price">${{(item?.producto?.precio?.precioUnitarioConIva || 0) | number:'1.0-0'}}</span>
+                        </div>
+                      </div>
+                      <button class="cart-item-remove" (click)="eliminarDelCarritoSidebar(item)" title="Eliminar">
+                        <i class="fa fa-trash-alt"></i>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Total del carrito -->
+                  <div class="sidebar-cart-total">
+                    <div class="total-row">
+                      <span class="total-label">Subtotal:</span>
+                      <span class="total-value">${{totalCarritoSidebar | number:'1.0-0'}}</span>
+                    </div>
+                  </div>
+
+                  <!-- Botón para continuar -->
+                  <div class="sidebar-cart-actions">
+                    <button class="btn-continue-checkout"
+                            type="button"
+                            awNextStep
+                            (click)="reviewStepAndExecute(2)">
+                      <i class="fa fa-arrow-right me-2"></i>
+                      Continuar al Carrito
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <!-- Botones de navegación - Paso 2 -->
@@ -578,97 +637,103 @@
               </div>
             </aw-wizard-step>
 
-            <!-- PASO 4: DIRECCIONES DE ENVÍO -->
+            <!-- PASO 4: ENVÍO Y FACTURACIÓN (CONSOLIDADO - Fase 3) -->
             <aw-wizard-step [navigationSymbol]="{ symbol: '4' }" (stepEnter)="enterStep($event,4)">
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
-                  <div class="f1-step-icon"><i class="fa fa-truck"></i></div>
-                  <p class="text-steper">Envío</p>
-                  <p *ngIf="pedidoGral?.formaEntrega == 'Recoge'" class="text-steper">(No se requiere envío)</p>
+                  <div class="f1-step-icon"><i class="fa fa-clipboard-list"></i></div>
+                  <p class="text-steper">Envío y Datos</p>
                 </div>
               </ng-template>
 
-              <!-- Información de Envío -->
-              <div class="step4-section mb-4">
-                <div class="section-header">
-                  <i class="fa fa-truck"></i>
-                  <span>Información de Envío</span>
+              <!-- TABS para Envío y Facturación - Diseño compacto -->
+              <div class="step4-consolidated">
+                <!-- Tab Navigation -->
+                <ul class="nav nav-tabs step4-tabs" role="tablist">
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-envio" data-bs-toggle="tab" data-bs-target="#panel-envio"
+                            type="button" role="tab" aria-controls="panel-envio" aria-selected="true">
+                      <i class="fa fa-truck me-2"></i>Envío
+                      <span class="tab-status" *ngIf="pedidoGral?.envio">
+                        <i class="fa fa-check-circle text-success"></i>
+                      </span>
+                    </button>
+                  </li>
+                  <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-facturacion" data-bs-toggle="tab" data-bs-target="#panel-facturacion"
+                            type="button" role="tab" aria-controls="panel-facturacion" aria-selected="false">
+                      <i class="fa fa-file-invoice me-2"></i>Facturación
+                      <span class="tab-status" *ngIf="pedidoGral?.facturacion">
+                        <i class="fa fa-check-circle text-success"></i>
+                      </span>
+                    </button>
+                  </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content step4-tab-content">
+                  <!-- Panel Envío -->
+                  <div class="tab-pane fade show active" id="panel-envio" role="tabpanel" aria-labelledby="tab-envio">
+                    <div class="step4-section">
+                      <pedido-entrega #entrega [pedidoGral]="pedidoGral" [formulario]="formulario"
+                        [datosEntregas]="datosEntregas" [documentoBusqueda]="documentoBuscar"
+                        [direccionEntrega]="direccion_facturacion" [paisInicial]="pais" [departamentoInicial]="departamento"
+                        [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
+                        [datosEntregaNoEncontradosParaCiudadSeleccionada]="datosEntregaNoEncontradosParaCiudadSeleccionada"
+                        (overridePedido)="overridePedido($event)" [activeIndex]="0" *ngIf="pedidoGral">
+                      </pedido-entrega>
+                    </div>
+                  </div>
+
+                  <!-- Panel Facturación -->
+                  <div class="tab-pane fade" id="panel-facturacion" role="tabpanel" aria-labelledby="tab-facturacion">
+                    <div class="step4-section">
+                      <app-pedido-facturacion #facturacion [pedidoGral]="pedidoGral" [formulario]="formulario"
+                        [datosFacturacionElectronica]="datosFacturacionElectronica"
+                        [direccionFacturacion]="direccion_facturacion" [paisInicial]="pais"
+                        [departamentoInicial]="departamento" [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
+                        (overridePedido)="overridePedido($event)" [generarFactura]="generarFacturaElectronica"
+                        [documentoBusqueda]="documentoBuscar" [activeIndex]="0" *ngIf="pedidoGral">
+                      </app-pedido-facturacion>
+                    </div>
+                  </div>
                 </div>
-                <div class="section-content">
-                  <pedido-entrega #entrega [pedidoGral]="pedidoGral" [formulario]="formulario"
-                    [datosEntregas]="datosEntregas" [documentoBusqueda]="documentoBuscar"
-                    [direccionEntrega]="direccion_facturacion" [paisInicial]="pais" [departamentoInicial]="departamento"
-                    [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
-                    [datosEntregaNoEncontradosParaCiudadSeleccionada]="datosEntregaNoEncontradosParaCiudadSeleccionada"
-                    (overridePedido)="overridePedido($event)" [activeIndex]="0" *ngIf="pedidoGral">
-                  </pedido-entrega>
+
+                <!-- Resumen rápido del estado -->
+                <div class="step4-status-bar" *ngIf="pedidoGral?.envio || pedidoGral?.facturacion">
+                  <div class="status-item" [class.completed]="pedidoGral?.envio">
+                    <i class="fa" [class.fa-check-circle]="pedidoGral?.envio" [class.fa-circle]="!pedidoGral?.envio"></i>
+                    <span>Envío</span>
+                  </div>
+                  <div class="status-item" [class.completed]="pedidoGral?.facturacion">
+                    <i class="fa" [class.fa-check-circle]="pedidoGral?.facturacion" [class.fa-circle]="!pedidoGral?.facturacion"></i>
+                    <span>Facturación</span>
+                  </div>
                 </div>
               </div>
 
-              <!-- Botones de navegación - Paso 4 -->
+              <!-- Botones de navegación - Paso 4 Consolidado -->
               <div class="step4-footer">
                 <button class="prev-step-btn" type="button" awPreviousStep>
                   <i class="fa fa-arrow-left"></i>
                   Volver al Carrito
                 </button>
-                <div class="footer-message" *ngIf="!pedidoGral?.envio">
+                <div class="footer-message" *ngIf="!pedidoGral?.envio || !pedidoGral?.facturacion">
                   <i class="fa fa-info-circle"></i>
-                  Seleccione los datos de envío para continuar
+                  <span *ngIf="!pedidoGral?.envio && !pedidoGral?.facturacion">Complete envío y facturación</span>
+                  <span *ngIf="pedidoGral?.envio && !pedidoGral?.facturacion">Falta completar facturación</span>
+                  <span *ngIf="!pedidoGral?.envio && pedidoGral?.facturacion">Falta completar envío</span>
                 </div>
                 <button class="next-step-btn" type="button" awNextStep (click)="reviewStepAndExecute(4)"
-                  [disabled]="!pedidoGral?.envio || !pedidoGral">
-                  Facturación
+                  [disabled]="!pedidoGral?.envio || !pedidoGral?.facturacion || !pedidoGral">
+                  Pago
                   <i class="fa fa-arrow-right"></i>
                 </button>
               </div>
             </aw-wizard-step>
 
-            <!-- PASO 5: FACTURACIÓN -->
-            <aw-wizard-step [navigationSymbol]="{ symbol: '5' }" (stepEnter)="enterStep($event,5)">
-              <ng-template awWizardStepSymbol>
-                <div class="f1-step">
-                  <div class="f1-step-icon"><i class="fa fa-file-invoice"></i></div>
-                  <p class="text-steper">Facturación</p>
-                </div>
-              </ng-template>
-
-              <!-- Información de Facturación -->
-              <div class="step5-section mb-4">
-                <div class="section-header">
-                  <i class="fa fa-file-invoice"></i>
-                  <span>Información de Facturación</span>
-                </div>
-                <div class="section-content">
-                  <app-pedido-facturacion #facturacion [pedidoGral]="pedidoGral" [formulario]="formulario"
-                    [datosFacturacionElectronica]="datosFacturacionElectronica"
-                    [direccionFacturacion]="direccion_facturacion" [paisInicial]="pais"
-                    [departamentoInicial]="departamento" [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
-                    (overridePedido)="overridePedido($event)" [generarFactura]="generarFacturaElectronica"
-                    [documentoBusqueda]="documentoBuscar" [activeIndex]="0" *ngIf="pedidoGral">
-                  </app-pedido-facturacion>
-                </div>
-              </div>
-
-              <!-- Botones de navegación - Paso 5 -->
-              <div class="step5-footer">
-                <button class="prev-step-btn" type="button" awPreviousStep>
-                  <i class="fa fa-arrow-left"></i>
-                  Volver al Envío
-                </button>
-                <div class="footer-message" *ngIf="!pedidoGral?.facturacion">
-                  <i class="fa fa-info-circle"></i>
-                  Seleccione los datos de facturación para continuar
-                </div>
-                <button class="next-step-btn" type="button" awNextStep (click)="reviewStepAndExecute(5)"
-                  [disabled]="!pedidoGral?.facturacion || !pedidoGral">
-                  Resumen y Pago
-                  <i class="fa fa-arrow-right"></i>
-                </button>
-              </div>
-            </aw-wizard-step>
-
-            <!-- PASO 6: RESUMEN Y PAGO -->
-            <aw-wizard-step [navigationSymbol]="{ symbol: '6' }">
+            <!-- PASO 5: RESUMEN Y PAGO -->
+            <aw-wizard-step [navigationSymbol]="{ symbol: '5' }">
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
                   <div class="f1-step-icon"><i class="fa fa-credit-card"></i></div>
@@ -677,7 +742,7 @@
               </ng-template>
 
               <!-- Resumen y Pago -->
-              <div class="step6-section mb-4">
+              <div class="step5-section mb-4">
                 <div class="section-header">
                   <i class="fa fa-credit-card"></i>
                   <span>Resumen y Pago</span>
@@ -688,18 +753,18 @@
                 </div>
               </div>
 
-              <!-- Botones de navegación - Paso 6 -->
-              <div class="step6-footer">
+              <!-- Botones de navegación - Paso 5 -->
+              <div class="step5-footer">
                 <button class="prev-step-btn" type="button" awPreviousStep>
                   <i class="fa fa-arrow-left"></i>
-                  Volver a Facturación
+                  Volver a Envío y Datos
                 </button>
                 <span></span>
               </div>
             </aw-wizard-step>
 
-            <!-- PASO 7: CONFIRMACIÓN DEL PEDIDO -->
-            <aw-wizard-step [navigationSymbol]="{ symbol: '7' }">
+            <!-- PASO 6: CONFIRMACIÓN DEL PEDIDO -->
+            <aw-wizard-step [navigationSymbol]="{ symbol: '6' }">
               <ng-template awWizardStepSymbol>
                 <div class="f1-step">
                   <div class="f1-step-icon"><i class="fa fa-check-circle"></i></div>
@@ -708,7 +773,7 @@
               </ng-template>
 
               <!-- Confirmación del pedido -->
-              <div *ngIf="showPedidoConfirm" class="step7-section step7-success mb-4">
+              <div *ngIf="showPedidoConfirm" class="step6-section step6-success mb-4">
                 <div class="section-header section-header-success">
                   <i class="fa fa-check-circle"></i>
                   <span>¡Pedido Procesado Exitosamente!</span>
@@ -721,7 +786,7 @@
               </div>
 
               <!-- Acciones finales -->
-              <div *ngIf="showPedidoConfirm" class="step7-footer">
+              <div *ngIf="showPedidoConfirm" class="step6-footer">
                 <button class="action-btn action-btn-secondary" type="button" (click)="imprimirPedido()">
                   <i class="fa fa-print"></i>
                   Imprimir

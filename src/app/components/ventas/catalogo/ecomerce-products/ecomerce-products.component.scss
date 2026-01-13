@@ -384,6 +384,36 @@
         background: white;
       }
     }
+
+    // Botón Quick Add - Verde para agregar rápido
+    &.btn-action-quick {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+
+      i {
+        color: #fbbf24; // Icono de rayo amarillo
+      }
+
+      &:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      }
+    }
+
+    // Botón Configurar - Azul para productos con configuración
+    &.btn-action-config {
+      background: linear-gradient(135deg, #4361ee 0%, #3730a3 100%);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+
+      &:hover {
+        background: linear-gradient(135deg, #3730a3 0%, #312e81 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(67, 97, 238, 0.4);
+      }
+    }
   }
 }
 
