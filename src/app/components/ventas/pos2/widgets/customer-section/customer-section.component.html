@@ -1,95 +1,101 @@
 <div class="card customer-sticky">
     <div class="card-header card-no-border p-3">
         <div class="header-top">
-            <h5 class="m-0">{{ "Cliente" | translate }}</h5>
-            <div class="card-header-right-icon create-right-btn m-l-5">
-                <a
-                    class="btn btn-primary f-w-500"
-                    href="javascript:void(0)"
-                    (click)="openModal()"
-                    >{{ "Crear +" | translate }}</a
-                >
-            </div>
+            <h5 class="m-0"><i class="fa fa-user-circle me-2"></i>{{ "Cliente" | translate }}</h5>
+            <button class="btn-nuevo-cliente" (click)="openModal()">
+                <i class="fa fa-plus"></i>
+                <span>{{ "Nuevo" | translate }}</span>
+            </button>
         </div>
     </div>
     <div class="card-body pt-0 order-details p-3">
-        <div class="search-items">
-            <div class="input-group common-search">
-                <span class="input-group-text">
-                    <i
-                        data-feather="search"
-                        height="16"
-                        width="16"
-                        class="fc-gray"
-                    ></i>
+        <div class="search-section">
+            <!-- Autocompletado de clientes -->
+            <div class="autocomplete-box">
+                <i class="fa fa-search search-icon-left"></i>
+                <p-autoComplete
+                    [(ngModel)]="selectedCliente"
+                    [suggestions]="clienteSuggestions"
+                    (completeMethod)="searchClientes($event)"
+                    (onSelect)="onClienteSelect($event)"
+                    (onClear)="onClienteClear()"
+                    field="displayLabel"
+                    [minLength]="3"
+                    [forceSelection]="false"
+                    [showClear]="true"
+                    placeholder="{{ 'Buscar por documento, nombre, correo...' | translate }}"
+                    styleClass="cliente-autocomplete"
+                    inputStyleClass="cliente-search-input"
+                >
+                    <ng-template let-cliente pTemplate="item">
+                        <div class="cliente-item">
+                            <div class="cliente-avatar">
+                                <i class="fa fa-user"></i>
+                            </div>
+                            <div class="cliente-info">
+                                <div class="cliente-nombre">
+                                    {{ cliente.nombres_completos }} {{ cliente.apellidos_completos }}
+                                </div>
+                                <div class="cliente-documento">
+                                    <span class="badge-doc">{{ cliente.documento }}</span>
+                                    <span class="cliente-contacto" *ngIf="cliente.numero_celular_comprador">
+                                        <i class="fa fa-phone"></i> {{ cliente.numero_celular_comprador }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-template>
+                    <ng-template pTemplate="empty">
+                        <div class="empty-results">
+                            <i class="fa fa-user-slash"></i>
+                            <span>{{ 'No se encontraron clientes' | translate }}</span>
+                        </div>
+                    </ng-template>
+                </p-autoComplete>
+                <span class="loading-spinner" *ngIf="isSearching">
+                    <i class="fa fa-circle-notch fa-spin"></i>
                 </span>
-                <input
-                    #clienteBuscar
-                    class="form-control"
-                    type="text"
-                    [(ngModel)]="documentoCliente"
-                    placeholder="{{
-                        'Buscar documento cliente...' | translate
-                    }}"
-                    (keyup.enter)="buscar()"
-                />
-            </div>
-            <div class="common-flex">
-                <a class="btn bc-primary ml-3 fc-white" (click)="buscar()">{{
-                    "Buscar" | translate
-                }}</a>
-                <a class="btn bc-secondary ml-3 fc-white" (click)="limpiar()">{{
-                    "Limpiar" | translate
-                }}</a>
             </div>
 
-            <div class="p-3 bg-light border rounded" *ngIf="datosCliente">
-                <div
-                    class="d-flex justify-content-between align-items-center mb-3"
-                >
-                    <div class="d-flex align-items-center">
-                        <i class="fa fa-check-circle text-success me-2"></i>
-                        <h6 class="mb-0 fw-bold text-success">
-                            Cliente Asociado a la Venta
-                        </h6>
+            <!-- Cliente seleccionado -->
+            <div class="cliente-card" *ngIf="datosCliente">
+                <div class="cliente-card-header">
+                    <div class="cliente-status">
+                        <i class="fa fa-check-circle"></i>
+                        <span>Cliente Asociado</span>
                     </div>
-                    <button
-                        class="btn btn-sm btn-outline-primary"
-                        (click)="editarCliente()"
-                        title="Editar cliente"
-                    >
-                        <i class="fa fa-edit"></i>
-                    </button>
+                    <div class="cliente-actions">
+                        <button class="btn-action" (click)="editarCliente()" title="Editar">
+                            <i class="fa fa-pen"></i>
+                        </button>
+                        <button class="btn-action btn-action-danger" (click)="limpiar()" title="Quitar">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-6">
-                        <p class="mb-2">
-                            <strong>Documento:</strong><br />
-                            <span class="text-muted">{{
-                                datosCliente?.documento
-                            }}</span>
-                        </p>
-                        <p class="mb-2">
-                            <strong>Nombre:</strong><br />
-                            <span class="text-muted"
-                                >{{ datosCliente?.nombres_completos }}
-                                {{ datosCliente?.apellidos_completos }}</span
-                            >
-                        </p>
+                <div class="cliente-card-body">
+                    <div class="cliente-main">
+                        <div class="cliente-avatar-lg">
+                            <i class="fa fa-user"></i>
+                        </div>
+                        <div class="cliente-data">
+                            <div class="cliente-name">
+                                {{ datosCliente?.nombres_completos }} {{ datosCliente?.apellidos_completos }}
+                            </div>
+                            <div class="cliente-doc">
+                                {{ datosCliente?.documento }}
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-6">
-                        <p class="mb-2">
-                            <strong>Celular:</strong><br />
-                            <span class="text-muted">{{
-                                datosCliente?.numero_celular_comprador
-                            }}</span>
-                        </p>
-                        <p class="mb-2">
-                            <strong>Correo:</strong><br />
-                            <span class="text-muted">{{
-                                datosCliente?.correo_electronico_comprador
-                            }}</span>
-                        </p>
+                    <div class="cliente-contact">
+                        <div class="contact-item" *ngIf="datosCliente?.numero_celular_comprador">
+                            <i class="fa fa-phone"></i>
+                            <span>{{ datosCliente?.numero_celular_comprador }}</span>
+                        </div>
+                        <div class="contact-item" *ngIf="datosCliente?.correo_electronico_comprador">
+                            <i class="fa fa-envelope"></i>
+                            <span>{{ datosCliente?.correo_electronico_comprador }}</span>
+                        </div>
                     </div>
                 </div>
             </div>

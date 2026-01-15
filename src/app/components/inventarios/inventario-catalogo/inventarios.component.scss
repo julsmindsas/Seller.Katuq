@@ -1216,11 +1216,187 @@ th.text-center .d-flex.align-items-center.justify-content-center {
   .table-container {
     border-radius: 6px;
   }
-  
+
   :host ::ng-deep .p-datatable {
     .p-datatable-thead > tr > th,
     .p-datatable-tbody > tr > td {
       padding: 0.5rem 0.4rem;
+    }
+  }
+}
+
+// =====================================================
+// BARRA DE FILTROS - VISTA CONSOLIDADA
+// =====================================================
+.filters-bar {
+  background: linear-gradient(to bottom, #f8f9fa, #ffffff);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .form-label {
+    font-weight: 600;
+    font-size: 0.75rem;
+    color: #495057;
+    margin-bottom: 0.35rem;
+  }
+
+  // Badges de filtros activos
+  .badge {
+    font-size: 0.75rem !important;
+    padding: 0.35rem 0.6rem !important;
+    border-radius: 20px !important;
+    font-weight: 500 !important;
+
+    i.pi-times {
+      font-size: 0.6rem;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+// Estilos para p-input-icon-left de PrimeNG
+:host ::ng-deep {
+  .filters-bar {
+    .p-input-icon-left {
+      display: block;
+      position: relative;
+
+      > i {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        color: #6c757d;
+        z-index: 1;
+      }
+
+      > .p-inputtext {
+        padding-left: 2.5rem;
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Cursor pointer utility
+.cursor-pointer {
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+// Stat cards clickables
+.stat-card.cursor-pointer {
+  &::after {
+    content: '\e967'; // pi-filter icon unicode
+    font-family: 'primeicons';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 0.65rem;
+    color: #adb5bd;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+}
+
+// Estilos para dropdowns de PrimeNG
+:host ::ng-deep {
+  .filters-bar {
+    .p-dropdown {
+      width: 100%;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: #b3b3b3;
+      }
+
+      &.p-focus {
+        border-color: $primary-color;
+        box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.15);
+      }
+
+      .p-dropdown-label {
+        font-size: 0.875rem;
+        padding: 0.5rem 0.75rem;
+      }
+
+      .p-dropdown-trigger {
+        width: 2rem;
+      }
+    }
+
+    .p-inputtext {
+      font-size: 0.875rem;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: #b3b3b3;
+      }
+
+      &:focus {
+        border-color: $primary-color;
+        box-shadow: 0 0 0 0.2rem rgba($primary-color, 0.15);
+      }
+    }
+  }
+}
+
+// Responsive para filtros
+@media screen and (max-width: 768px) {
+  .filters-bar {
+    .row.g-2 > div {
+      margin-bottom: 0.5rem;
+    }
+
+    .badge {
+      font-size: 0.7rem !important;
+      padding: 0.25rem 0.5rem !important;
+    }
+  }
+
+  .stats-bar {
+    .stat-card {
+      padding: 0.75rem !important;
+
+      h3, h4 {
+        font-size: 1.1rem !important;
+      }
+
+      small {
+        font-size: 0.65rem !important;
+      }
+
+      i {
+        font-size: 1.25rem !important;
+      }
     }
   }
 }

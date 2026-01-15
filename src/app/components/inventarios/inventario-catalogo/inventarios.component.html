@@ -55,48 +55,79 @@
 
                 <!-- Barra de estadísticas -->
                 <div class="stats-bar px-4 py-3 bg-light border-bottom" *ngIf="productosConsolidados.length > 0">
-                    <div class="row g-3">
-                        <div class="col-md-3">
+                    <div class="row g-2">
+                        <!-- Valor Total del Inventario - DESTACADO -->
+                        <div class="col-lg-3 col-md-6">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #5c6ac4 !important;">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="mb-0 fw-bold" style="color: #5c6ac4;">{{ formatearValorAbreviado(totalesGlobales.valorTotal) }}</h3>
+                                        <small class="text-muted">Valor Total Inventario</small>
+                                    </div>
+                                    <i class="pi pi-dollar" style="font-size: 1.75rem; opacity: 0.4; color: #5c6ac4;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Total Productos -->
+                        <div class="col-lg-2 col-md-6">
                             <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-primary border-2">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h3 class="mb-0 fw-bold text-primary">{{ totalItems }}</h3>
-                                        <small class="text-muted">Total Productos</small>
+                                        <small class="text-muted">SKUs</small>
                                     </div>
-                                    <i class="pi pi-box text-primary" style="font-size: 1.75rem; opacity: 0.4;"></i>
+                                    <i class="pi pi-box text-primary" style="font-size: 1.5rem; opacity: 0.4;"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
+                        <!-- Unidades en Stock -->
+                        <div class="col-lg-2 col-md-4">
                             <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-success border-2">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h3 class="mb-0 fw-bold text-success">{{ estadisticasConsolidadas.totalStock | number }}</h3>
-                                        <small class="text-muted">Unidades en Stock</small>
+                                        <small class="text-muted">Unidades</small>
                                     </div>
-                                    <i class="pi pi-check-circle text-success" style="font-size: 1.75rem; opacity: 0.4;"></i>
+                                    <i class="pi pi-check-circle text-success" style="font-size: 1.5rem; opacity: 0.4;"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-warning border-2">
+                        <!-- Stock Bajo -->
+                        <div class="col-lg-2 col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-warning border-2 cursor-pointer"
+                                 (click)="filtrosConsolidados.estadoStock = 'bajos'; aplicarFiltrosConsolidados()"
+                                 pTooltip="Click para filtrar">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h3 class="mb-0 fw-bold text-warning">{{ estadisticasConsolidadas.productosBajoStock }}</h3>
-                                        <small class="text-muted">Stock Bajo (≤5)</small>
+                                        <small class="text-muted">Stock Bajo</small>
                                     </div>
-                                    <i class="pi pi-exclamation-triangle text-warning" style="font-size: 1.75rem; opacity: 0.4;"></i>
+                                    <i class="pi pi-exclamation-triangle text-warning" style="font-size: 1.5rem; opacity: 0.4;"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-danger border-2">
+                        <!-- Agotados -->
+                        <div class="col-lg-2 col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-danger border-2 cursor-pointer"
+                                 (click)="filtrosConsolidados.estadoStock = 'agotados'; aplicarFiltrosConsolidados()"
+                                 pTooltip="Click para filtrar">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h3 class="mb-0 fw-bold text-danger">{{ estadisticasConsolidadas.productosSinStock }}</h3>
                                         <small class="text-muted">Agotados</small>
                                     </div>
-                                    <i class="pi pi-times-circle text-danger" style="font-size: 1.75rem; opacity: 0.4;"></i>
+                                    <i class="pi pi-times-circle text-danger" style="font-size: 1.5rem; opacity: 0.4;"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- % Cobertura (nuevo) -->
+                        <div class="col-lg-1 col-md-4 d-none d-lg-block">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-info border-2">
+                                <div class="text-center">
+                                    <h4 class="mb-0 fw-bold text-info">
+                                        {{ totalItems > 0 ? (((totalItems - estadisticasConsolidadas.productosSinStock) / totalItems) * 100).toFixed(0) : 0 }}%
+                                    </h4>
+                                    <small class="text-muted" style="font-size: 0.7rem;">Cobertura</small>
                                 </div>
                             </div>
                         </div>
@@ -140,11 +171,114 @@
                     <p-tabView [(activeIndex)]="activeTabIndex">
                         <!-- Tab 1: Inventario Consolidado (NUEVO) -->
                         <p-tabPanel header="Inventario Consolidado" leftIcon="pi pi-th-large">
-                            
+
+                            <!-- Barra de Filtros -->
+                            <div class="filters-bar mb-3 p-3 bg-light rounded border">
+                                <div class="row g-2 align-items-end">
+                                    <!-- Buscador -->
+                                    <div class="col-md-4 col-lg-3">
+                                        <label class="form-label small text-muted mb-1">Buscar</label>
+                                        <div class="p-input-icon-left w-100">
+                                            <i class="pi pi-search"></i>
+                                            <input pInputText
+                                                   type="text"
+                                                   [(ngModel)]="filtrosConsolidados.busqueda"
+                                                   (input)="aplicarFiltrosConsolidados()"
+                                                   placeholder="Nombre o referencia..."
+                                                   class="w-100">
+                                        </div>
+                                    </div>
+
+                                    <!-- Estado de Stock -->
+                                    <div class="col-md-3 col-lg-2">
+                                        <label class="form-label small text-muted mb-1">Estado Stock</label>
+                                        <p-dropdown [options]="[
+                                                      {label: 'Todos', value: ''},
+                                                      {label: 'Agotados (0)', value: 'agotados'},
+                                                      {label: 'Críticos (1-2)', value: 'criticos'},
+                                                      {label: 'Bajos (≤5)', value: 'bajos'},
+                                                      {label: 'Disponibles (>5)', value: 'disponibles'}
+                                                    ]"
+                                                    [(ngModel)]="filtrosConsolidados.estadoStock"
+                                                    (onChange)="aplicarFiltrosConsolidados()"
+                                                    placeholder="Seleccionar..."
+                                                    styleClass="w-100"
+                                                    [style]="{'width': '100%'}">
+                                        </p-dropdown>
+                                    </div>
+
+                                    <!-- Filtro por Bodega -->
+                                    <div class="col-md-3 col-lg-2">
+                                        <label class="form-label small text-muted mb-1">Bodega</label>
+                                        <p-dropdown [options]="opcionesBodegasFiltro"
+                                                    [(ngModel)]="filtrosConsolidados.bodegaId"
+                                                    (onChange)="aplicarFiltrosConsolidados()"
+                                                    placeholder="Todas..."
+                                                    styleClass="w-100"
+                                                    [style]="{'width': '100%'}">
+                                        </p-dropdown>
+                                    </div>
+
+                                    <!-- Filtro Fulfillment (solo si está habilitado) -->
+                                    <div class="col-md-2 col-lg-2" *ngIf="fulfillmentEnabled">
+                                        <label class="form-label small text-muted mb-1">Fulfillment</label>
+                                        <p-dropdown [options]="[
+                                                      {label: 'Todos', value: ''},
+                                                      {label: 'Con enlace', value: 'con'},
+                                                      {label: 'Sin enlace', value: 'sin'}
+                                                    ]"
+                                                    [(ngModel)]="filtrosConsolidados.fulfillment"
+                                                    (onChange)="aplicarFiltrosConsolidados()"
+                                                    placeholder="Todos..."
+                                                    styleClass="w-100"
+                                                    [style]="{'width': '100%'}">
+                                        </p-dropdown>
+                                    </div>
+
+                                    <!-- Botón Limpiar y contador -->
+                                    <div class="col-md-auto col-lg-auto d-flex align-items-end gap-2">
+                                        <button pButton
+                                                type="button"
+                                                icon="pi pi-filter-slash"
+                                                class="p-button-outlined p-button-secondary"
+                                                (click)="limpiarFiltrosConsolidados()"
+                                                [disabled]="!hayFiltrosActivos()"
+                                                pTooltip="Limpiar filtros">
+                                        </button>
+                                        <!-- Contador de resultados -->
+                                        <span class="badge bg-primary py-2 px-3" style="font-size: 0.85rem;">
+                                            {{ productosConsolidadosFiltrados.length }}
+                                            <span class="d-none d-md-inline">de {{ productosConsolidados.length }}</span>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- Indicadores de filtros activos -->
+                                <div class="mt-2 d-flex flex-wrap gap-1" *ngIf="hayFiltrosActivos()">
+                                    <span class="badge bg-info" *ngIf="filtrosConsolidados.busqueda">
+                                        <i class="pi pi-search me-1"></i>"{{ filtrosConsolidados.busqueda }}"
+                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.busqueda = ''; aplicarFiltrosConsolidados()"></i>
+                                    </span>
+                                    <span class="badge bg-warning text-dark" *ngIf="filtrosConsolidados.estadoStock">
+                                        <i class="pi pi-chart-bar me-1"></i>{{ filtrosConsolidados.estadoStock }}
+                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.estadoStock = ''; aplicarFiltrosConsolidados()"></i>
+                                    </span>
+                                    <span class="badge bg-secondary" *ngIf="filtrosConsolidados.bodegaId">
+                                        <i class="pi pi-box me-1"></i>{{ getNombreBodegaById(filtrosConsolidados.bodegaId) }}
+                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.bodegaId = ''; aplicarFiltrosConsolidados()"></i>
+                                    </span>
+                                    <span class="badge bg-primary" *ngIf="filtrosConsolidados.fulfillment">
+                                        <i class="pi pi-cloud me-1"></i>{{ filtrosConsolidados.fulfillment === 'con' ? 'Con enlace' : 'Sin enlace' }}
+                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.fulfillment = ''; aplicarFiltrosConsolidados()"></i>
+                                    </span>
+                                </div>
+                            </div>
+
                             <!-- Tabla Consolidada con Columnas Dinámicas por Bodega -->
                             <div class="table-container mb-4">
-                                <p-table [value]="productosConsolidados" 
-                                         [paginator]="true" 
+                                <p-table #dtConsolidado
+                                         [value]="productosConsolidadosFiltrados"
+                                         [paginator]="true"
                                          [rows]="20"
                                          [rowsPerPageOptions]="[10,20,50,100]"
                                          styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"

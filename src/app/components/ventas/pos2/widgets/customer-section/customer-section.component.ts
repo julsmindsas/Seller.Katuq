@@ -1,8 +1,7 @@
 import {
   Component,
-  ElementRef,
   OnInit,
-  ViewChild,
+  OnDestroy,
   ChangeDetectorRef,
 } from "@angular/core";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
@@ -10,17 +9,25 @@ import { PosCheckoutService } from "../../../../../shared/services/ventas/pos-ch
 import { MaestroService } from "../../../../../shared/services/maestros/maestro.service";
 import { CrearClienteModalComponent } from "../../../clientes/crear-cliente-modal/crear-cliente-modal.component";
 import Swal from "sweetalert2";
+import { Subject, Subscription } from "rxjs";
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from "rxjs/operators";
+import { of } from "rxjs";
 
 @Component({
   selector: "app-customer-section",
   templateUrl: "./customer-section.component.html",
   styleUrls: ["./customer-section.component.scss"],
 })
-export class CustomerSectionComponent implements OnInit {
-  @ViewChild("clienteBuscar") clienteBuscar: ElementRef;
-
+export class CustomerSectionComponent implements OnInit, OnDestroy {
   datosCliente: any = "";
   documentoCliente: string = "";
+
+  // Autocompletado
+  clienteSuggestions: any[] = [];
+  isSearching: boolean = false;
+  selectedCliente: any = null;
+  private searchSubject = new Subject<string>();
+  private searchSubscription: Subscription;
 
   constructor(
     private modal: NgbModal,
@@ -41,6 +48,78 @@ export class CustomerSectionComponent implements OnInit {
         console.log("❌ Cliente limpiado");
       }
     });
+
+    // Configurar búsqueda con debounce para autocompletado
+    this.searchSubscription = this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((term: string) => {
+        if (!term || term.length < 2) {
+          return of([]);
+        }
+        this.isSearching = true;
+        return this.service.searchClients(term, 10).pipe(
+          catchError((error) => {
+            console.error("Error en búsqueda de clientes:", error);
+            return of([]);
+          })
+        );
+      })
+    ).subscribe((results: any[]) => {
+      this.clienteSuggestions = results || [];
+      this.isSearching = false;
+      this.cdr.detectChanges();
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.searchSubscription) {
+      this.searchSubscription.unsubscribe();
+    }
+  }
+
+  /**
+   * Método para el autocompletado - se llama cuando el usuario escribe
+   */
+  searchClientes(event: any): void {
+    const query = event.query || "";
+    this.searchSubject.next(query);
+  }
+
+  /**
+   * Método cuando se selecciona un cliente del autocompletado
+   */
+  onClienteSelect(event: any): void {
+    const cliente = event;
+    if (cliente && cliente.cd) {
+      console.log("🎯 Cliente seleccionado del autocompletado:", cliente);
+      this.checkoutService.setCustomer(cliente);
+      this.datosCliente = cliente;
+      this.documentoCliente = cliente.documento || "";
+
+      // Forzar detección de cambios
+      setTimeout(() => {
+        this.cdr.detectChanges();
+      }, 100);
+
+      Swal.fire({
+        title: "¡Cliente encontrado!",
+        text: `${cliente.nombres_completos || ""} ${cliente.apellidos_completos || ""} ha sido asociado a la venta`,
+        icon: "success",
+        timer: 2000,
+        showConfirmButton: false,
+        position: "top-end",
+        toast: true,
+      });
+    }
+  }
+
+  /**
+   * Limpia el autocompletado cuando se borra el input
+   */
+  onClienteClear(): void {
+    this.selectedCliente = null;
+    this.clienteSuggestions = [];
   }
 
   /**
@@ -79,12 +158,10 @@ export class CustomerSectionComponent implements OnInit {
             console.log("🔄 Detección de cambios forzada después del timeout");
           }, 100);
 
-          // Actualizar el campo de búsqueda con el documento del cliente
+          // Actualizar el campo de búsqueda con el cliente creado
           if (result.cliente.documento) {
             this.documentoCliente = result.cliente.documento;
-            if (this.clienteBuscar && this.clienteBuscar.nativeElement) {
-              this.clienteBuscar.nativeElement.value = result.cliente.documento;
-            }
+            this.selectedCliente = result.cliente;
           }
 
           // Determinar el mensaje apropiado basado en la acción realizada
@@ -155,12 +232,10 @@ export class CustomerSectionComponent implements OnInit {
             );
           }, 100);
 
-          // Actualizar el campo de búsqueda con el documento del cliente
+          // Actualizar el campo de búsqueda con el cliente editado
           if (result.cliente.documento) {
             this.documentoCliente = result.cliente.documento;
-            if (this.clienteBuscar && this.clienteBuscar.nativeElement) {
-              this.clienteBuscar.nativeElement.value = result.cliente.documento;
-            }
+            this.selectedCliente = result.cliente;
           }
 
           // Mostrar mensaje de éxito
@@ -189,20 +264,28 @@ export class CustomerSectionComponent implements OnInit {
     this.checkoutService.clearCustomer();
     this.datosCliente = "";
     this.documentoCliente = "";
-    if (this.clienteBuscar) {
-      this.clienteBuscar.nativeElement.value = "";
-    }
+    this.selectedCliente = null;
+    this.clienteSuggestions = [];
     console.log("✅ Cliente limpiado completamente");
   }
 
   /**
-   * Busca un cliente por su documento
+   * Busca un cliente por su documento (búsqueda exacta)
+   * Se mantiene para búsqueda manual con el botón "Buscar"
    */
   buscar(): void {
-    // Obtener el valor actual del input
-    const documento =
-      this.clienteBuscar?.nativeElement?.value?.trim() ||
-      this.documentoCliente?.trim();
+    // Obtener el valor actual del input del autocompletado
+    let documento = "";
+
+    // Si selectedCliente es un string (el usuario escribió pero no seleccionó)
+    if (typeof this.selectedCliente === "string") {
+      documento = this.selectedCliente.trim();
+    } else if (this.selectedCliente?.documento) {
+      // Si ya tiene un cliente seleccionado, usar ese documento
+      documento = this.selectedCliente.documento;
+    } else if (this.documentoCliente) {
+      documento = this.documentoCliente.trim();
+    }
 
     if (!documento) {
       this.showAlert(
@@ -238,6 +321,7 @@ export class CustomerSectionComponent implements OnInit {
             this.checkoutService.setCustomer(res);
             // Forzar actualización inmediata
             this.datosCliente = res;
+            this.selectedCliente = res;
             console.log(
               "⚡ Cliente de búsqueda asignado directamente:",
               this.datosCliente,

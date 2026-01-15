@@ -224,24 +224,53 @@
                 </div>
               </ng-template>
 
-              <!-- Buscador de clientes - Diseño limpio -->
+              <!-- Buscador de clientes con Autocompletado PrimeNG -->
               <div class="step1-search-section mb-4">
                 <div class="search-row">
-                  <!-- Selector tipo búsqueda -->
-                  <select #buscarPor class="search-type-select">
-                    <option value="CC-NIT" selected>Documento</option>
-                    <option value="PA">Email</option>
-                    <option value="TI">Nombre</option>
-                  </select>
-
-                  <!-- Input de búsqueda -->
-                  <div class="search-input-wrapper">
-                    <i class="fa fa-search search-icon"></i>
-                    <input #documentoBusqueda class="search-input" type="text"
-                      placeholder="Buscar cliente por documento, email o nombre..." (keyup.enter)="buscar()" />
-                    <button class="search-btn" (click)="buscar()">
-                      Buscar
-                    </button>
+                  <div class="autocomplete-container">
+                    <i class="fa fa-search search-icon-left"></i>
+                    <p-autoComplete
+                      [(ngModel)]="selectedClienteAutocomplete"
+                      [suggestions]="clienteSuggestions"
+                      (completeMethod)="searchClientesAutocomplete($event)"
+                      (onSelect)="onClienteAutocompleteSelect($event)"
+                      (onClear)="onClienteAutocompleteClear()"
+                      field="displayLabel"
+                      [minLength]="3"
+                      [forceSelection]="false"
+                      [showClear]="true"
+                      placeholder="Buscar por documento, nombre, correo o celular..."
+                      styleClass="cliente-autocomplete-full"
+                      inputStyleClass="cliente-input"
+                    >
+                      <ng-template let-cliente pTemplate="item">
+                        <div class="cliente-item">
+                          <div class="cliente-avatar">
+                            <i class="fa fa-user"></i>
+                          </div>
+                          <div class="cliente-info">
+                            <div class="cliente-nombre">
+                              {{ cliente.nombres_completos }} {{ cliente.apellidos_completos }}
+                            </div>
+                            <div class="cliente-documento">
+                              <span class="badge-doc">{{ cliente.documento }}</span>
+                              <span class="cliente-contacto" *ngIf="cliente.numero_celular_comprador">
+                                <i class="fa fa-phone"></i> {{ cliente.numero_celular_comprador }}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </ng-template>
+                      <ng-template pTemplate="empty">
+                        <div class="empty-results">
+                          <i class="fa fa-user-slash"></i>
+                          <span>No se encontraron clientes</span>
+                        </div>
+                      </ng-template>
+                    </p-autoComplete>
+                    <span class="search-loading" *ngIf="isSearchingCliente">
+                      <i class="fa fa-circle-notch fa-spin"></i>
+                    </span>
                   </div>
 
                   <!-- Botón nuevo cliente -->
@@ -534,8 +563,12 @@
                   <div class="sidebar-cart-items">
                     <div class="cart-item" *ngFor="let item of productosCarritoSidebar; let i = index">
                       <div class="cart-item-image">
+<<<<<<< Updated upstream
                         <img *ngIf="item?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
                              [src]="item?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+=======
+                        <img [src]="item?.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholder.png'"
+>>>>>>> Stashed changes
                              [alt]="item?.producto?.crearProducto?.titulo"
                              (error)="$event.target.style.display='none'">
                         <div class="cart-item-no-image" *ngIf="!item?.producto?.crearProducto?.imagenesPrincipales?.length">

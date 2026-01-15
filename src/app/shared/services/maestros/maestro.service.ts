@@ -97,6 +97,16 @@ export class MaestroService {
   public getClientByDocument(data: any) {
     return this.http.post(this.urlBase + '/v1/clients/doc', data, this.httpOptions);
   }
+
+  /**
+   * Busca clientes por término (documento, nombre, correo, teléfono)
+   * Para autocompletado
+   * @param term Término de búsqueda (mínimo 2 caracteres)
+   * @param limit Número máximo de resultados (default 10)
+   */
+  public searchClients(term: string, limit: number = 10) {
+    return this.http.post(this.urlBase + '/v1/clients/search', { term, limit }, this.httpOptions);
+  }
   public editClient(data: any) {
     return this.http.post(this.urlBase + '/v1/clients/edit', data, this.httpOptions);
   }

@@ -61,7 +61,8 @@ interface PageReference {
   styleUrls: ['./inventarios.component.scss']
 })
 export class InventarioCatalogoComponent implements OnInit {
-  @ViewChild('dt') dt: Table; // Referencia a la tabla PrimeNG
+  @ViewChild('dt') dt: Table; // Referencia a la tabla PrimeNG (vista por bodega)
+  @ViewChild('dtConsolidado') dtConsolidado: Table; // Referencia a la tabla consolidada
 
   cargando = false;
   rows: ProductoInventario[] = [];
@@ -153,7 +154,16 @@ export class InventarioCatalogoComponent implements OnInit {
   // ============== VISTA CONSOLIDADA ==============
   vistaConsolidada: boolean = true; // Modo por defecto: vista consolidada
   productosConsolidados: ProductoConsolidado[] = [];
+  productosConsolidadosFiltrados: ProductoConsolidado[] = []; // Lista filtrada para mostrar
   bodegasConsolidadas: BodegaConsolidada[] = [];
+
+  // Filtros para vista consolidada
+  filtrosConsolidados = {
+    busqueda: '',
+    estadoStock: '', // 'agotados', 'bajos', 'disponibles', 'criticos', ''
+    bodegaId: '',    // ID de bodega específica o '' para todas
+    fulfillment: ''  // 'con', 'sin', '' para todos
+  };
   estadisticasConsolidadas: { totalStock: number; productosSinStock: number; productosBajoStock: number } = {
     totalStock: 0,
     productosSinStock: 0,
@@ -296,6 +306,8 @@ export class InventarioCatalogoComponent implements OnInit {
             // Reemplazar la lista
             this.productosConsolidados = response.productos;
           }
+          // Aplicar filtros actuales
+          this.aplicarFiltrosConsolidados();
           
           this.bodegasConsolidadas = response.bodegas;
           this.estadisticasConsolidadas = response.estadisticas;
@@ -334,6 +346,101 @@ export class InventarioCatalogoComponent implements OnInit {
     if (this.paginationConsolidada.hasMore && !this.loadingConsolidado) {
       this.cargarInventarioConsolidado(true);
     }
+  }
+
+  // ============== FILTROS VISTA CONSOLIDADA ==============
+
+  /**
+   * Aplica todos los filtros a la vista consolidada
+   */
+  aplicarFiltrosConsolidados(): void {
+    let resultados = [...this.productosConsolidados];
+
+    // Filtro de búsqueda (nombre o referencia)
+    if (this.filtrosConsolidados.busqueda?.trim()) {
+      const busqueda = this.filtrosConsolidados.busqueda.toLowerCase().trim();
+      resultados = resultados.filter(p =>
+        p.nombre?.toLowerCase().includes(busqueda) ||
+        p.referencia?.toLowerCase().includes(busqueda)
+      );
+    }
+
+    // Filtro por estado de stock
+    if (this.filtrosConsolidados.estadoStock) {
+      switch (this.filtrosConsolidados.estadoStock) {
+        case 'agotados':
+          resultados = resultados.filter(p => (p.stockTotal || 0) === 0);
+          break;
+        case 'criticos':
+          resultados = resultados.filter(p => (p.stockTotal || 0) > 0 && (p.stockTotal || 0) <= 2);
+          break;
+        case 'bajos':
+          resultados = resultados.filter(p => (p.stockTotal || 0) > 0 && (p.stockTotal || 0) <= 5);
+          break;
+        case 'disponibles':
+          resultados = resultados.filter(p => (p.stockTotal || 0) > 5);
+          break;
+      }
+    }
+
+    // Filtro por bodega específica (solo productos con stock en esa bodega)
+    if (this.filtrosConsolidados.bodegaId) {
+      resultados = resultados.filter(p =>
+        this.getStockBodega(p, this.filtrosConsolidados.bodegaId) > 0
+      );
+    }
+
+    // Filtro por estado de fulfillment
+    if (this.filtrosConsolidados.fulfillment && this.fulfillmentEnabled) {
+      if (this.filtrosConsolidados.fulfillment === 'con') {
+        resultados = resultados.filter(p => !!p.fulfillmentId);
+      } else if (this.filtrosConsolidados.fulfillment === 'sin') {
+        resultados = resultados.filter(p => !p.fulfillmentId);
+      }
+    }
+
+    this.productosConsolidadosFiltrados = resultados;
+
+    // Resetear paginación a la primera página
+    if (this.dtConsolidado) {
+      this.dtConsolidado.first = 0;
+    }
+  }
+
+  /**
+   * Limpia todos los filtros de la vista consolidada
+   */
+  limpiarFiltrosConsolidados(): void {
+    this.filtrosConsolidados = {
+      busqueda: '',
+      estadoStock: '',
+      bodegaId: '',
+      fulfillment: ''
+    };
+    this.aplicarFiltrosConsolidados();
+  }
+
+  /**
+   * Verifica si hay filtros activos
+   */
+  hayFiltrosActivos(): boolean {
+    return !!(
+      this.filtrosConsolidados.busqueda ||
+      this.filtrosConsolidados.estadoStock ||
+      this.filtrosConsolidados.bodegaId ||
+      this.filtrosConsolidados.fulfillment
+    );
+  }
+
+  /**
+   * Opciones para el dropdown de bodegas en filtros
+   */
+  get opcionesBodegasFiltro(): { label: string; value: string }[] {
+    const opciones = [{ label: 'Todas las bodegas', value: '' }];
+    this.bodegasConsolidadas.forEach(b => {
+      opciones.push({ label: b.nombre, value: b.id });
+    });
+    return opciones;
   }
 
   /**

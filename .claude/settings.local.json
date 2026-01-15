@@ -28,7 +28,11 @@
       "WebFetch(domain:aliaddo.readme.io)",
       "Bash(find:*)",
       "Bash(dir:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "WebFetch(domain:extensions.dev)",
+      "Bash(node scripts/mapProductsToAliaddo.js:*)",
+      "Bash(npx ng build)",
+      "WebFetch(domain:zapier.com)"
     ]
   }
 }

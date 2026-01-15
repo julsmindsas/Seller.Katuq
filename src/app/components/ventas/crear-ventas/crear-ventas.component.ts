@@ -51,7 +51,8 @@ import { FacturacionIntegracionService } from "../../../shared/services/integrac
 import { environment } from "../../../../environments/environment";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 import { InventarioService } from "../../../shared/services/inventarios/inventario.service";
-import { Subscription } from "rxjs";
+import { Subscription, Subject, of } from "rxjs";
+import { debounceTime, distinctUntilChanged, switchMap, catchError } from "rxjs/operators";
 
 @Component({
   selector: "app-pedido",
@@ -78,8 +79,6 @@ import { Subscription } from "rxjs";
 export class CrearVentasComponent
   implements OnInit, AfterViewChecked, OnChanges, OnDestroy
 {
-  @ViewChild("buscarPor") buscarPor: ElementRef;
-  @ViewChild("documentoBusqueda") documentoBusqueda: ElementRef;
   @ViewChild("quickView") QuickView: QuickViewComponent;
   @ViewChild("carrito") carrito: CarritoComponent;
   @ViewChild("products", { static: false })
@@ -167,6 +166,14 @@ export class CrearVentasComponent
   datosEntregas: any = [];
   activarDatosEntrega: boolean;
   editandodato: boolean;
+
+  // Autocompletado de clientes
+  clienteSuggestions: any[] = [];
+  isSearchingCliente: boolean = false;
+  selectedClienteAutocomplete: any = null;
+  private clienteSearchSubject = new Subject<string>();
+  private clienteSearchSubscription: Subscription;
+
   idenxFacturacion: any;
   idenxEntrega: any;
   @Input() pedidoGral: Pedido;
@@ -428,7 +435,7 @@ export class CrearVentasComponent
     this.datosFacturacionElectronica = [];
     this.originalDataFacturacionElectronica = [];
     const data = {
-      documento: this.documentoBusqueda.nativeElement.value,
+      documento: this.documentoBuscar,
     };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
@@ -574,6 +581,28 @@ export class CrearVentasComponent
         }
       }, 0);
     }
+
+    // Configurar búsqueda con debounce para autocompletado de clientes
+    this.clienteSearchSubscription = this.clienteSearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      switchMap((term: string) => {
+        if (!term || term.length < 2) {
+          return of([]);
+        }
+        this.isSearchingCliente = true;
+        return this.service.searchClients(term, 10).pipe(
+          catchError((error) => {
+            console.error("Error en búsqueda de clientes:", error);
+            return of([]);
+          })
+        );
+      })
+    ).subscribe((results: any[]) => {
+      this.clienteSuggestions = results || [];
+      this.isSearchingCliente = false;
+      this.ref.detectChanges();
+    });
   }
 
   // Método para cargar las zonas de cobro
@@ -1181,7 +1210,7 @@ export class CrearVentasComponent
     this.datosEntregas = [];
     this.originalDataEntregas = [];
     const data = {
-      documento: this.documentoBusqueda.nativeElement.value,
+      documento: this.documentoBuscar,
     };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
@@ -1195,10 +1224,20 @@ export class CrearVentasComponent
   buscar() {
     this.bloqueado = false;
     this.formulario.reset();
-    this.documentoBuscar = this.documentoBusqueda.nativeElement.value;
-    if (this.buscarPor.nativeElement.value == "CC-NIT") {
-      const data = { documento: this.documentoBusqueda.nativeElement.value };
-      this.service.getClientByDocument(data).subscribe((res: any) => {
+
+    // Obtener el valor del autocompletado (puede ser string u objeto)
+    let valorBusqueda = "";
+    if (typeof this.selectedClienteAutocomplete === "string") {
+      valorBusqueda = this.selectedClienteAutocomplete.trim();
+    } else if (this.selectedClienteAutocomplete?.documento) {
+      valorBusqueda = this.selectedClienteAutocomplete.documento;
+    }
+
+    this.documentoBuscar = valorBusqueda;
+
+    // Búsqueda por documento (comportamiento por defecto)
+    const data = { documento: valorBusqueda };
+    this.service.getClientByDocument(data).subscribe((res: any) => {
         console.log("🔍 Respuesta del servicio getClientByDocument:", res);
 
         // Manejar respuesta: puede ser array vacío, array con cliente, u objeto directo
@@ -1207,9 +1246,7 @@ export class CrearVentasComponent
 
         if (noHayCliente) {
           // Cliente no encontrado: se muestra el formulario de creación (incluyendo facturación y entrega)
-          this.formulario.controls["documento"].setValue(
-            this.documentoBusqueda.nativeElement.value,
-          );
+          this.formulario.controls["documento"].setValue(valorBusqueda);
           this.pedidoGral.cliente = undefined;
           this.encontrado = false;
           this.bloqueado = false;
@@ -1338,8 +1375,107 @@ export class CrearVentasComponent
             this.utils.deepClone(this.datosEntregas) || [];
         }
       });
+  }
+
+  /**
+   * Método para el autocompletado - se llama cuando el usuario escribe
+   */
+  searchClientesAutocomplete(event: any): void {
+    const query = event.query || "";
+    this.clienteSearchSubject.next(query);
+  }
+
+  /**
+   * Método cuando se selecciona un cliente del autocompletado
+   */
+  onClienteAutocompleteSelect(event: any): void {
+    const cliente = event;
+    if (cliente && cliente.cd) {
+      console.log("🎯 Cliente seleccionado del autocompletado:", cliente);
+
+      // Simular la búsqueda normal con el documento del cliente
+      this.documentoBuscar = cliente.documento;
+
+      // Asignar el cliente al pedido
+      this.pedidoGral.cliente = cliente;
+      this.ref.markForCheck();
+      sessionStorage.setItem("cliente", JSON.stringify(cliente));
+
+      // Actualizar el formulario con los datos del cliente
+      this.formulario.patchValue({
+        cd: cliente.cd,
+        nombres_completos: cliente.nombres_completos,
+        apellidos_completos: cliente.apellidos_completos,
+        tipo_documento_comprador: cliente.tipo_documento_comprador,
+        documento: cliente.documento,
+        indicativo_celular_comprador: cliente.indicativo_celular_comprador,
+        numero_celular_comprador: cliente.numero_celular_comprador,
+        indicativo_celular_whatsapp: cliente.indicativo_celular_whatsapp,
+        numero_celular_whatsapp: cliente.numero_celular_whatsapp,
+        correo_electronico_comprador: cliente.correo_electronico_comprador,
+        datosFacturacionElectronica: cliente.datosFacturacionElectronica || [],
+        datosEntrega: cliente.datosEntrega || [],
+        notas: cliente.notas || [],
+        estado: cliente.estado || "activo",
+      });
+
+      // Inicializar notas del pedido
+      if (!this.pedidoGral.notasPedido) {
+        this.pedidoGral.notasPedido = {
+          notasCliente: this.formulario.value.notas as Notas[],
+          notasDespachos: [] as Notas[],
+          notasEntregas: [] as Notas[],
+          notasProduccion: [] as Notas[],
+          notasFacturacionPagos: [] as Notas[],
+        };
+      }
+
+      this.datos = cliente;
+      this.encontrado = true;
+      this.mostrarFormularioCliente = false;
+      this.clienteRecienCreado = false;
+
+      // Cargar datos de facturación y entrega
+      this.verDatosFacturacion();
+      this.datosEntregas = [];
+      if (cliente.datosEntrega) {
+        cliente.datosEntrega.forEach((x) => {
+          this.datosEntregas.push(x);
+        });
+      }
+      this.originalDataEntregas = this.utils.deepClone(this.datosEntregas) || [];
+
+      // Verificar categoría del cliente
+      if (cliente.categoria && this.tiposCliente?.length > 0) {
+        const categoriaEncontrada = this.tiposCliente.find(
+          (tipo) => tipo.id === cliente.categoria?.id
+        );
+        if (categoriaEncontrada) {
+          this.categoriaClienteSeleccionada = categoriaEncontrada;
+        }
+      }
+
+      this.toastrService.success(
+        '<p class="mb-0 mt-1">Cliente encontrado!</p>',
+        "",
+        {
+          closeButton: true,
+          enableHtml: true,
+          positionClass: "toast-bottom-right",
+          timeOut: 1500,
+        }
+      );
     }
   }
+
+  /**
+   * Limpia el autocompletado cuando se borra el input
+   */
+  onClienteAutocompleteClear(): void {
+    this.selectedClienteAutocomplete = null;
+    this.clienteSuggestions = [];
+  }
+
   seleccionarDireccionFE(index) {
     this.pedidoGral.facturacion = this.datosFacturacionElectronica[index];
     this.pedidoGral = { ...this.pedidoGral };
@@ -1404,7 +1540,7 @@ export class CrearVentasComponent
 
         // Recargar los datos del servidor para actualizar la lista
         this.service
-          .getClientByDocument({ documento: this.documentoBusqueda.nativeElement.value })
+          .getClientByDocument({ documento: this.documentoBuscar })
           .subscribe((clientRes: any) => {
             if (
               clientRes &&
@@ -1502,7 +1638,7 @@ export class CrearVentasComponent
 
         // Recargar los datos del servidor para actualizar la lista
         this.service
-          .getClientByDocument({ documento: this.documentoBusqueda.nativeElement.value })
+          .getClientByDocument({ documento: this.documentoBuscar })
           .subscribe((clientRes: any) => {
             if (
               clientRes &&
@@ -1624,7 +1760,7 @@ export class CrearVentasComponent
         this.datosEntregas.push(datosEntreg);
       });
       const data = {
-        documento: this.documentoBusqueda.nativeElement.value,
+        documento: this.documentoBuscar,
       };
       this.service.getClientByDocument(data).subscribe((res: any) => {
         res.datosEntrega.map((x) => {
@@ -1674,7 +1810,7 @@ export class CrearVentasComponent
       codigoPV: this.codigo_postal_entrega,
     };
     const data = {
-      documento: this.documentoBusqueda.nativeElement.value,
+      documento: this.documentoBuscar,
     };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
@@ -1735,7 +1871,7 @@ export class CrearVentasComponent
       codigoPostal: this.codigo_postal,
     };
     const data = {
-      documento: this.documentoBusqueda.nativeElement.value,
+      documento: this.documentoBuscar,
     };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
@@ -3747,6 +3883,10 @@ export class CrearVentasComponent
     // Limpiar la suscripción cuando el componente se destruye
     if (this.subscription) {
       this.subscription.unsubscribe();
+    }
+    // Limpiar suscripción del autocompletado de clientes
+    if (this.clienteSearchSubscription) {
+      this.clienteSearchSubscription.unsubscribe();
     }
   }
 }

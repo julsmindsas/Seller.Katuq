@@ -2366,6 +2366,236 @@ $step1-radius: 8px;
 }
 
 // ============================================================================
+// AUTOCOMPLETADO DE CLIENTES - Diseño moderno
+// ============================================================================
+.autocomplete-container {
+  flex: 1;
+  position: relative;
+  min-width: 300px;
+
+  .search-icon-left {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    font-size: 1rem;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  .search-loading {
+    position: absolute;
+    right: 45px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $step1-accent;
+    font-size: 1rem;
+    z-index: 10;
+  }
+}
+
+::ng-deep .cliente-autocomplete-full {
+  width: 100%;
+
+  .p-autocomplete-input,
+  .cliente-input,
+  input.p-inputtext,
+  input.p-inputtext:enabled:focus {
+    width: 100% !important;
+    height: 52px !important;
+    min-height: 52px !important;
+    padding: 14px 45px 14px 44px !important;
+    border: 2px solid #d1d5db;
+    border-radius: 12px !important;
+    font-size: 1rem !important;
+    background: white !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    box-sizing: border-box !important;
+
+    &::placeholder {
+      color: #9ca3af;
+    }
+  }
+
+  input.p-inputtext:enabled:focus {
+    outline: none !important;
+    border-color: $step1-accent !important;
+    box-shadow: 0 0 0 4px rgba($step1-accent, 0.1) !important;
+  }
+
+  .p-autocomplete-panel {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    max-height: 320px;
+    overflow-y: auto;
+    margin-top: 8px;
+
+    .p-autocomplete-items {
+      padding: 8px;
+
+      .p-autocomplete-item {
+        padding: 0;
+        border-radius: 8px;
+        margin-bottom: 4px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        background: transparent;
+
+        &:hover {
+          background: #f3f4f6;
+        }
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        &.p-highlight {
+          background: rgba($step1-accent, 0.1);
+        }
+      }
+    }
+  }
+
+  .p-autocomplete-clear-icon {
+    right: 14px;
+    color: #9ca3af;
+    cursor: pointer;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: #6b7280;
+    }
+  }
+}
+
+// Estilos para los items del dropdown
+.cliente-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+
+  .cliente-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, lighten($step1-accent, 35%) 0%, lighten($step1-accent, 25%) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    i {
+      color: $step1-accent;
+      font-size: 1rem;
+    }
+  }
+
+  .cliente-info {
+    flex: 1;
+    min-width: 0;
+
+    .cliente-nombre {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cliente-documento {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+
+      .badge-doc {
+        display: inline-block;
+        padding: 2px 8px;
+        background: lighten($step1-accent, 35%);
+        color: $step1-accent;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+      }
+
+      .cliente-contacto {
+        color: #6b7280;
+        font-size: 0.8rem;
+
+        i {
+          font-size: 0.7rem;
+          margin-right: 4px;
+        }
+      }
+    }
+  }
+}
+
+// Empty results
+.empty-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  color: #9ca3af;
+  gap: 8px;
+
+  i {
+    font-size: 2rem;
+    color: #d1d5db;
+  }
+
+  span {
+    font-size: 0.9rem;
+  }
+}
+
+// Mantener compatibilidad con estilos antiguos
+.autocomplete-item {
+  .item-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    i {
+      font-size: 0.875rem;
+      color: $step1-accent;
+    }
+
+    strong {
+      color: $step1-accent;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    span {
+      color: #374151;
+      font-size: 0.875rem;
+    }
+  }
+
+  .item-details {
+    margin-top: 4px;
+    padding-left: 1.75rem;
+
+    small {
+      font-size: 0.8rem;
+      color: #6b7280;
+
+      i {
+        font-size: 0.7rem;
+        color: #9ca3af;
+      }
+    }
+  }
+}
+
+// ============================================================================
 // TARJETA DE CLIENTE ENCONTRADO - DISEÑO LIMPIO
 // ============================================================================
 .step1-client-card {
