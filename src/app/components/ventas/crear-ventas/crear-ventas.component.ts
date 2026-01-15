@@ -38,6 +38,7 @@ import {
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { NotasComponent } from "../notas/notas/notas.component";
 import { CheckOutComponent } from "../checkout/checkout.component";
+import { ConfirmComponent } from "../confirm/confirm.component";
 import { MovingDirection, WizardComponent } from "angular-archwizard";
 import { ActivatedRoute } from "@angular/router";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
@@ -85,6 +86,7 @@ export class CrearVentasComponent
   productos: EcomerceProductsComponent;
   @ViewChild("notaspedidos") notaspedido: NotasComponent;
   @ViewChild("resumen") resumen: CheckOutComponent;
+  @ViewChild("confirmacion") confirmacion: ConfirmComponent;
   @ViewChild("wizard") mywizard: WizardComponent;
   @ViewChild(WizardComponent) public wizard: WizardComponent;
   @ViewChild("whatsapp") whatsapp: ElementRef;
@@ -3655,6 +3657,90 @@ export class CrearVentasComponent
    */
   toggleSidebarCarrito(): void {
     this.sidebarCarritoVisible = !this.sidebarCarritoVisible;
+  }
+
+  /**
+   * Imprime el contenido del pedido confirmado
+   */
+  imprimirPedido(): void {
+    if (this.confirmacion) {
+      this.confirmacion.printContent();
+    } else {
+      // Fallback: imprimir usando el contenido del DOM
+      const printContents = document.getElementById('contentToPrint');
+      if (printContents) {
+        const printWindow = window.open('', '_blank');
+        if (printWindow) {
+          printWindow.document.write(`
+            <html>
+              <head>
+                <title>Pedido #${this.pedidoGral?.nroPedido || 'N/A'}</title>
+                <style>
+                  body { font-family: Arial, sans-serif; padding: 20px; }
+                  table { width: 100%; border-collapse: collapse; }
+                  th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                  th { background-color: #f4f4f4; }
+                  .header { text-align: center; margin-bottom: 20px; }
+                  @media print {
+                    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+                  }
+                </style>
+              </head>
+              <body>
+                ${printContents.innerHTML}
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+          printWindow.focus();
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+          }, 250);
+        }
+      }
+    }
+  }
+
+  /**
+   * Reinicia el formulario para crear un nuevo pedido
+   */
+  nuevoPedido(): void {
+    // Limpiar completamente el caché y resetear variables
+    this.limpiarCacheCompleto();
+
+    // Resetear el formulario
+    this.formulario.reset();
+
+    // Ocultar la confirmación y mostrar el stepper
+    this.showPedidoConfirm = false;
+    this.showSteper = true;
+
+    // Resetear variables del carrito sidebar
+    this.productosCarritoSidebar = [];
+    this.cantidadItemsCarrito = 0;
+    this.totalCarritoSidebar = 0;
+    this.tieneProductosEnCarrito = false;
+    this.sidebarCarritoVisible = true;
+
+    // Obtener nuevo número de pedido
+    this.ventasService
+      .getNextRef(this.empresaActual.nomComercial)
+      .subscribe((res: any) => {
+        const texto = this.empresaActual.nomComercial.toString();
+        const ultimasLetras = texto.substring(texto.length - 3);
+        this.pedidoGral.nroPedido =
+          ultimasLetras + "-" + res.nextConsecutive.toString().padStart(6, "0");
+        this.pedidoGral.referencia = "";
+      });
+
+    // Volver al paso 1 del wizard
+    if (this.wizard) {
+      this.wizard.goToStep(0);
+    }
+
+    // Forzar detección de cambios
+    this.ref.detectChanges();
   }
 
   ngOnDestroy(): void {

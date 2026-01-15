@@ -3464,6 +3464,17 @@ $step1-radius: 8px;
     height: 100%;
     object-fit: cover;
   }
+
+  .cart-item-no-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-200);
+    color: var(--gray-500);
+    font-size: 1.25rem;
+  }
 }
 
 .cart-item-info {
@@ -3899,6 +3910,62 @@ $step1-radius: 8px;
 
 .step6-footer {
   @extend .step3-footer;
+}
+
+// Acciones del paso 6 (Confirmación)
+.step6-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  margin-top: 1rem;
+
+  @media (max-width: 576px) {
+    flex-direction: column;
+
+    .btn {
+      width: 100%;
+    }
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    i {
+      font-size: 1rem;
+    }
+
+    &.btn-outline-secondary {
+      border-color: var(--gray-300);
+      color: var(--gray-700);
+
+      &:hover {
+        background: var(--gray-100);
+        border-color: var(--gray-400);
+      }
+    }
+
+    &.btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, darken(#5c6bc0, 8%) 100%);
+      border: none;
+      box-shadow: 0 2px 8px rgba(92, 107, 192, 0.3);
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(92, 107, 192, 0.4);
+      }
+    }
+  }
 }
 
 // ============================================================================

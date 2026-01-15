@@ -534,9 +534,13 @@
                   <div class="sidebar-cart-items">
                     <div class="cart-item" *ngFor="let item of productosCarritoSidebar; let i = index">
                       <div class="cart-item-image">
-                        <img [src]="item?.producto?.crearProducto?.imagenes?.[0]?.imagenUrl || 'assets/images/placeholder.png'"
+                        <img *ngIf="item?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
+                             [src]="item?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
                              [alt]="item?.producto?.crearProducto?.titulo"
-                             onerror="this.src='assets/images/placeholder.png'">
+                             (error)="$event.target.style.display='none'">
+                        <div class="cart-item-no-image" *ngIf="!item?.producto?.crearProducto?.imagenesPrincipales?.length">
+                          <i class="fa fa-box"></i>
+                        </div>
                       </div>
                       <div class="cart-item-info">
                         <div class="cart-item-name">{{item?.producto?.crearProducto?.titulo | slice:0:30}}{{item?.producto?.crearProducto?.titulo?.length > 30 ? '...' : ''}}</div>
@@ -781,19 +785,19 @@
                 </div>
                 <div class="section-content">
                   <!-- Componente de confirmación que muestra el HTML del pedido -->
-                  <app-confirm [pedido]="pedidoGral" *ngIf="pedidoGral"></app-confirm>
+                  <app-confirm #confirmacion [pedido]="pedidoGral" *ngIf="pedidoGral"></app-confirm>
                 </div>
               </div>
 
-              <!-- Acciones finales -->
-              <div *ngIf="showPedidoConfirm" class="step6-footer">
-                <button class="action-btn action-btn-secondary" type="button" (click)="imprimirPedido()">
-                  <i class="fa fa-print"></i>
-                  Imprimir
+              <!-- Acciones finales - Diseño mejorado -->
+              <div *ngIf="showPedidoConfirm" class="step6-actions">
+                <button class="btn btn-outline-secondary btn-lg" type="button" (click)="imprimirPedido()">
+                  <i class="fa fa-print me-2"></i>
+                  Imprimir Pedido
                 </button>
-                <button class="action-btn action-btn-primary" type="button" (click)="nuevoPedido()">
-                  <i class="fa fa-plus-circle"></i>
-                  Nuevo Pedido
+                <button class="btn btn-primary btn-lg" type="button" (click)="nuevoPedido()">
+                  <i class="fa fa-plus-circle me-2"></i>
+                  Crear Nuevo Pedido
                 </button>
               </div>
             </aw-wizard-step>
