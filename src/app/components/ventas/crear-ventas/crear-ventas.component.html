@@ -563,12 +563,7 @@
                   <div class="sidebar-cart-items">
                     <div class="cart-item" *ngFor="let item of productosCarritoSidebar; let i = index">
                       <div class="cart-item-image">
-<<<<<<< Updated upstream
-                        <img *ngIf="item?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
-                             [src]="item?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
-=======
                         <img [src]="item?.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholder.png'"
->>>>>>> Stashed changes
                              [alt]="item?.producto?.crearProducto?.titulo"
                              (error)="$event.target.style.display='none'">
                         <div class="cart-item-no-image" *ngIf="!item?.producto?.crearProducto?.imagenesPrincipales?.length">
