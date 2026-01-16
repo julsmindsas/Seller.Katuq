@@ -940,12 +940,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   canAssignSeller(order: Pedido): boolean {
     // Solo administradores pueden asignar asesores
-    return !!(
-      this.UserLogged?.rol &&
-      (this.UserLogged.rol.toLowerCase() === "administrador" ||
-        this.UserLogged.rol.toLowerCase() === "admin" ||
-        this.UserLogged.rol.toLowerCase() === "super administrador")
-    );
+    // Usa includes() para soportar variantes como "ADMINISTRADOR FULL OH"
+    if (!this.UserLogged?.rol) return false;
+    const rol = this.UserLogged.rol.toLowerCase();
+    return rol.includes("admin") || rol.includes("administrador");
   }
 
   /**

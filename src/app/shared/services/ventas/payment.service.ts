@@ -1169,7 +1169,7 @@ export class PaymentService extends BaseService {
         : null;
 
       // Flag para indicar si se usa precio por categoría (no combinar con volumen)
-      const usaPrecioCategoria = precioCategoria !== null;
+      const usaPrecioCategoria = precioCategoria != null;
 
       // Precio unitario sin IVA
       let precioUnitarioSinIva = Number(producto?.precio?.precioUnitarioSinIva) || 0;
