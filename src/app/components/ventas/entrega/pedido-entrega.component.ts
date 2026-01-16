@@ -684,9 +684,21 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
 
       console.log(`Zonas encontradas para ${ciudad}:`, context.filteredResults);
 
+      // Si zona_cobro es un objeto con datos (carga de dirección existente)
       if (zona_cobro && zona_cobro.zonaCobro) {
         context.zona_cobro = zona_cobro.zonaCobro;
         context.valor_zona_cobro = zona_cobro.valorZonaCobro;
+      }
+      // Si el usuario seleccionó del dropdown, this.zona_cobro ya tiene el nombre (por ngModel)
+      // Buscar el valorZonaCobro correspondiente en filteredResults
+      else if (context.zona_cobro && context.filteredResults && context.filteredResults.length > 0) {
+        const zonaSeleccionada = context.filteredResults.find(
+          (item) => item.nombreZonaCobro === context.zona_cobro
+        );
+        if (zonaSeleccionada) {
+          context.valor_zona_cobro = zonaSeleccionada.valorZonaCobro;
+          console.log(`Zona seleccionada: ${context.zona_cobro}, Valor: ${context.valor_zona_cobro}`);
+        }
       }
     } catch (error) {
       console.error("Error al filtrar zonas de cobro:", error);
