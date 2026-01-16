@@ -16,9 +16,29 @@
         </div>
       </div>
       <div class="row">
-        <h3>  
-          {{ 'Datos de facturacion seleccionada:' | translate}} {{ pedidoGral?.facturacion?.direccion}}
-        </h3>
+        <div class="col-12">
+          <h5 class="mb-2">{{ 'Datos de facturacion seleccionada:' | translate}}</h5>
+          <div *ngIf="pedidoGral?.facturacion; else sinFacturacion" class="alert alert-success py-2">
+            <div class="d-flex align-items-center">
+              <i class="fa fa-check-circle me-2" style="font-size: 1.2rem;"></i>
+              <div>
+                <strong>{{ pedidoGral?.facturacion?.alias || 'Sin referencia' }}</strong>
+                <span class="mx-2">|</span>
+                <span>{{ pedidoGral?.facturacion?.nombres }}</span>
+                <span class="mx-2">|</span>
+                <span>{{ pedidoGral?.facturacion?.tipoDocumento }}: {{ pedidoGral?.facturacion?.documento }}</span>
+                <span *ngIf="pedidoGral?.facturacion?.correoElectronico" class="mx-2">|</span>
+                <span *ngIf="pedidoGral?.facturacion?.correoElectronico">{{ pedidoGral?.facturacion?.correoElectronico }}</span>
+              </div>
+            </div>
+          </div>
+          <ng-template #sinFacturacion>
+            <div class="alert alert-warning py-2">
+              <i class="fa fa-exclamation-triangle me-2"></i>
+              {{ 'No ha seleccionado datos de facturación. Por favor seleccione uno de la lista.' | translate }}
+            </div>
+          </ng-template>
+        </div>
       </div>
     </div>
 

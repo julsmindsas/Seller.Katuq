@@ -158,9 +158,63 @@ export class CrearClienteModalComponent implements OnInit {
       console.log("✏️ Ejecutando edición de cliente");
       this.editarCliente(clienteData);
     } else {
-      console.log("➕ Ejecutando creación de cliente");
-      this.crearCliente(clienteData);
+      console.log("➕ Ejecutando creación de cliente - verificando si ya existe");
+      this.verificarYCrearCliente(clienteData);
     }
+  }
+
+  private verificarYCrearCliente(clienteData: any) {
+    // Primero verificar si el cliente ya existe por documento
+    const documentoCliente = clienteData.documento;
+    console.log("🔍 Verificando si el cliente ya existe con documento:", documentoCliente);
+
+    this.maestroService.getClientByDocument({ documento: documentoCliente }).subscribe({
+      next: (res: any) => {
+        // Verificar si el cliente ya existe
+        const esArrayVacio = Array.isArray(res) && res.length === 0;
+        const clienteExiste = res && !esArrayVacio;
+
+        if (clienteExiste) {
+          // Cliente ya existe - mostrar error y devolver los datos del cliente existente
+          console.log("⚠️ Cliente ya existe:", res);
+
+          // Obtener el cliente (puede ser objeto directo o primer elemento del array)
+          const clienteEncontrado = Array.isArray(res) ? res[0] : res;
+
+          // Mostrar mensaje de error informativo
+          Swal.fire({
+            title: "Cliente ya registrado",
+            html: `
+              <div class="text-start">
+                <p>El documento <strong>${documentoCliente}</strong> ya se encuentra registrado.</p>
+                <p><strong>Cliente:</strong> ${clienteEncontrado.nombres_completos} ${clienteEncontrado.apellidos_completos || ""}</p>
+                <p>Se cargarán los datos del cliente existente.</p>
+              </div>
+            `,
+            icon: "info",
+            confirmButtonText: "Entendido",
+          }).then(() => {
+            // Cerrar el modal y devolver el cliente existente con acción especial
+            const resultadoModal = {
+              cliente: clienteEncontrado,
+              isEdit: false,
+              action: "existing_found",
+            };
+            console.log("📦 Cliente existente encontrado, cerrando modal:", resultadoModal);
+            this.activeModal.close(resultadoModal);
+          });
+        } else {
+          // Cliente no existe - proceder con la creación
+          console.log("✅ Cliente no existe, procediendo con creación");
+          this.crearCliente(clienteData);
+        }
+      },
+      error: (error: any) => {
+        // En caso de error en la búsqueda, intentar crear el cliente de todas formas
+        console.warn("⚠️ Error al verificar cliente existente, procediendo con creación:", error);
+        this.crearCliente(clienteData);
+      },
+    });
   }
 
   private crearCliente(clienteData: any) {

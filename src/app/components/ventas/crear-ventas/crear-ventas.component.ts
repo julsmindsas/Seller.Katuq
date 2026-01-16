@@ -701,17 +701,26 @@ export class CrearVentasComponent
   /**
    * Maneja el cambio de categoría de cliente seleccionada.
    * Muestra un modal de confirmación antes de guardar.
+   * Si hay productos en el carrito, los limpia automáticamente.
    */
   onCategoriaClienteChange(event: any): void {
     const tipoClienteId = event.target.value;
     const selectElement = event.target;
+    const categoriaAnterior = this.categoriaClienteSeleccionada;
+
+    // Verificar si hay productos en el carrito
+    const hayProductosEnCarrito = this.tieneProductosEnCarrito;
 
     if (!tipoClienteId || tipoClienteId === '') {
       // Si selecciona "Sin categoría", mostrar confirmación para quitar categoría
       if (this.categoriaClienteSeleccionada) {
+        const mensajeCarrito = hayProductosEnCarrito
+          ? '<br><br><strong class="text-danger">⚠️ Atención: El carrito será vaciado al cambiar la categoría.</strong>'
+          : '';
+
         Swal.fire({
           title: '¿Quitar categoría?',
-          text: `¿Desea quitar la categoría "${this.categoriaClienteSeleccionada.descripcion || this.categoriaClienteSeleccionada.nombre}" de este cliente?`,
+          html: `¿Desea quitar la categoría "${this.categoriaClienteSeleccionada.descripcion || this.categoriaClienteSeleccionada.nombre}" de este cliente?${mensajeCarrito}`,
           icon: 'question',
           showCancelButton: true,
           confirmButtonColor: '#3085d6',
@@ -722,6 +731,10 @@ export class CrearVentasComponent
           if (result.isConfirmed) {
             this.categoriaClienteSeleccionada = null;
             this.guardarCategoriaCliente(null);
+            // Limpiar el carrito si había productos
+            if (hayProductosEnCarrito) {
+              this.limpiarCarritoPorCambioCategoria(categoriaAnterior, null);
+            }
           } else {
             // Restaurar el valor anterior en el select
             selectElement.value = this.categoriaClienteSeleccionada?.id || '';
@@ -737,26 +750,44 @@ export class CrearVentasComponent
     const tipoSeleccionado = this.tiposCliente.find(t => t.id === tipoClienteId);
 
     if (tipoSeleccionado) {
+      // Verificar si realmente está cambiando la categoría (no es la misma)
+      const esMismaCategoria = categoriaAnterior?.id === tipoSeleccionado.id;
+
+      if (esMismaCategoria) {
+        // Si es la misma categoría, no hacer nada
+        return;
+      }
+
+      const mensajeCarrito = hayProductosEnCarrito
+        ? '<br><br><strong class="text-danger">⚠️ Atención: El carrito será vaciado al cambiar la categoría.</strong>'
+        : '';
+
       // Mostrar modal de confirmación
       Swal.fire({
         title: '¿Guardar categoría?',
-        html: `¿Desea guardar la categoría <strong>"${tipoSeleccionado.descripcion || tipoSeleccionado.nombre}"</strong> para este cliente?<br><br><small class="text-muted">Si guarda, esta categoría se aplicará para futuras compras.<br>Si no guarda, se usará solo para esta venta.</small>`,
+        html: `¿Desea guardar la categoría <strong>"${tipoSeleccionado.descripcion || tipoSeleccionado.nombre}"</strong> para este cliente?<br><br><small class="text-muted">Si guarda, esta categoría se aplicará para futuras compras.<br>Si no guarda, se usará solo para esta venta.</small>${mensajeCarrito}`,
         icon: 'question',
         showCancelButton: true,
+        showDenyButton: true,
         confirmButtonColor: '#28a745',
-        cancelButtonColor: '#6c757d',
+        denyButtonColor: '#6c757d',
+        cancelButtonColor: '#dc3545',
         confirmButtonText: '<i class="fa fa-save"></i> Sí, guardar',
-        cancelButtonText: 'No, solo esta venta'
+        denyButtonText: 'Solo esta venta',
+        cancelButtonText: 'Cancelar'
       }).then((result) => {
-        // En ambos casos, usar la categoría seleccionada para esta venta
-        this.categoriaClienteSeleccionada = tipoSeleccionado;
-
         if (result.isConfirmed) {
           // Guardar en la base de datos para futuras compras
+          this.categoriaClienteSeleccionada = tipoSeleccionado;
           this.guardarCategoriaCliente(tipoSeleccionado);
           console.log('✅ Categoría guardada en cliente:', tipoSeleccionado);
-        } else {
+          // Limpiar el carrito si había productos
+          if (hayProductosEnCarrito) {
+            this.limpiarCarritoPorCambioCategoria(categoriaAnterior, tipoSeleccionado);
+          }
+        } else if (result.isDenied) {
           // Solo usar para esta venta (actualizar sessionStorage sin guardar en BD)
+          this.categoriaClienteSeleccionada = tipoSeleccionado;
           const clienteTemporal = {
             ...this.pedidoGral.cliente,
             categoria: {
@@ -772,9 +803,52 @@ export class CrearVentasComponent
             { closeButton: true, timeOut: 3000 }
           );
           console.log('📋 Categoría aplicada solo para esta venta:', tipoSeleccionado);
+          // Limpiar el carrito si había productos
+          if (hayProductosEnCarrito) {
+            this.limpiarCarritoPorCambioCategoria(categoriaAnterior, tipoSeleccionado);
+          }
+        } else {
+          // Cancelado - restaurar el valor anterior en el select
+          selectElement.value = categoriaAnterior?.id || '';
         }
       });
     }
+  }
+
+  /**
+   * Limpia el carrito cuando se cambia la categoría del cliente.
+   * Muestra una notificación informativa al usuario.
+   */
+  private limpiarCarritoPorCambioCategoria(categoriaAnterior: any, categoriaNueva: any): void {
+    // Limpiar el carrito usando el servicio
+    this.cartService.clearCart();
+
+    // Limpiar también el carrito del pedido
+    if (this.pedidoGral) {
+      this.pedidoGral.carrito = [];
+    }
+
+    // Mostrar notificación
+    const nombreCategoriaAnterior = categoriaAnterior?.descripcion || categoriaAnterior?.nombre || 'Sin categoría';
+    const nombreCategoriaNueva = categoriaNueva?.descripcion || categoriaNueva?.nombre || 'Sin categoría';
+
+    this.toastrService.warning(
+      `El carrito ha sido vaciado debido al cambio de categoría de "${nombreCategoriaAnterior}" a "${nombreCategoriaNueva}". Los precios pueden variar según la categoría del cliente.`,
+      'Carrito Vaciado',
+      {
+        closeButton: true,
+        timeOut: 5000,
+        enableHtml: true
+      }
+    );
+
+    console.log('🛒 Carrito limpiado por cambio de categoría:', {
+      categoriaAnterior: nombreCategoriaAnterior,
+      categoriaNueva: nombreCategoriaNueva
+    });
+
+    // Forzar detección de cambios
+    this.ref.detectChanges();
   }
 
   /**
@@ -2953,6 +3027,143 @@ export class CrearVentasComponent
     // Activar indicador de carga
     this.creandoCliente = true;
 
+    // Primero verificar si el cliente ya existe por documento
+    const documentoCliente = this.formulario.value.documento;
+    this.service.getClientByDocument({ documento: documentoCliente }).subscribe({
+      next: (res: any) => {
+        // Verificar si el cliente ya existe
+        const esArrayVacio = Array.isArray(res) && res.length === 0;
+        const clienteExiste = res && !esArrayVacio;
+
+        if (clienteExiste) {
+          // Cliente ya existe - cargar sus datos como si fuera una consulta normal
+          this.creandoCliente = false;
+
+          // Obtener el cliente (puede ser objeto directo o primer elemento del array)
+          const cliente = Array.isArray(res) ? res[0] : res;
+
+          // === Replicar la misma lógica del método buscar() ===
+
+          // Actualizar pedidoGral con el cliente
+          this.pedidoGral.cliente = cliente;
+          this.ref.markForCheck();
+          sessionStorage.setItem("cliente", JSON.stringify(cliente));
+
+          // Cargar los datos del cliente existente en el formulario
+          this.formulario.patchValue({
+            cd: cliente.cd,
+            nombres_completos: cliente.nombres_completos,
+            apellidos_completos: cliente.apellidos_completos,
+            tipo_documento_comprador: cliente.tipo_documento_comprador,
+            documento: cliente.documento,
+            indicativo_celular_comprador: cliente.indicativo_celular_comprador,
+            numero_celular_comprador: cliente.numero_celular_comprador,
+            indicativo_celular_whatsapp: cliente.indicativo_celular_whatsapp,
+            numero_celular_whatsapp: cliente.numero_celular_whatsapp,
+            correo_electronico_comprador: cliente.correo_electronico_comprador,
+            datosFacturacionElectronica: cliente.datosFacturacionElectronica || [],
+            datosEntrega: cliente.datosEntrega || [],
+            notas: cliente.notas || [],
+            estado: cliente.estado || "activo",
+          });
+
+          // Preservar notas existentes si ya existen, sino inicializar con las del cliente
+          if (!this.pedidoGral.notasPedido) {
+            this.pedidoGral.notasPedido = {
+              notasCliente: this.formulario.value.notas as Notas[],
+              notasDespachos: [] as Notas[],
+              notasEntregas: [] as Notas[],
+              notasProduccion: [] as Notas[],
+              notasFacturacionPagos: [] as Notas[],
+            };
+          } else {
+            this.pedidoGral.notasPedido.notasCliente = this.formulario.value.notas as Notas[];
+            if (!this.pedidoGral.notasPedido.notasDespachos) {
+              this.pedidoGral.notasPedido.notasDespachos = [];
+            }
+            if (!this.pedidoGral.notasPedido.notasEntregas) {
+              this.pedidoGral.notasPedido.notasEntregas = [];
+            }
+            if (!this.pedidoGral.notasPedido.notasProduccion) {
+              this.pedidoGral.notasPedido.notasProduccion = [];
+            }
+            if (!this.pedidoGral.notasPedido.notasFacturacionPagos) {
+              this.pedidoGral.notasPedido.notasFacturacionPagos = [];
+            }
+          }
+
+          // Cargar las notas del cliente desde la base de datos
+          this.cargarNotasDelCliente();
+
+          // Actualizar datos auxiliares
+          this.datos = cliente;
+          this.documentoBuscar = cliente.documento;
+          this.identificarDepto();
+          this.identificarCiu();
+          this.identificarDepto1();
+          this.identificarCiu1();
+
+          // Cambiar a modo consulta (cliente encontrado)
+          this.encontrado = true;
+          this.mostrarFormularioCliente = false;
+          this.clienteRecienCreado = false;
+
+          // Recuperar categoría existente del cliente si la tiene
+          if (cliente.categoria && cliente.categoria.id) {
+            this.categoriaClienteSeleccionada = cliente.categoria;
+          } else {
+            this.categoriaClienteSeleccionada = null;
+          }
+          this.ref.markForCheck();
+
+          // Verificar si el cliente está bloqueado
+          if (this.formulario.value.estado == "Bloqueado") {
+            this.bloqueado = true;
+          }
+
+          // Cargar datos de facturación
+          this.verDatosFacturacion();
+
+          // Cargar datos de entrega
+          this.datosEntregas = [];
+          if (cliente.datosEntrega) {
+            cliente.datosEntrega.map((x) => {
+              this.datosEntregas.push(x);
+            });
+          }
+          this.originalDataEntregas = this.utils.deepClone(this.datosEntregas) || [];
+
+          // Mostrar mensaje informativo
+          Swal.fire({
+            title: "Cliente ya registrado",
+            html: `
+              <div class="text-start">
+                <p>El documento <strong>${documentoCliente}</strong> ya se encuentra registrado.</p>
+                <p><strong>Cliente:</strong> ${cliente.nombres_completos} ${cliente.apellidos_completos || ""}</p>
+                <p>Se han cargado los datos del cliente existente.</p>
+              </div>
+            `,
+            icon: "info",
+            confirmButtonText: "Entendido",
+          });
+
+          // Forzar detección de cambios
+          this.ref.detectChanges();
+        } else {
+          // Cliente no existe - proceder con la creación
+          this.procederConCreacionCliente();
+        }
+      },
+      error: (error: any) => {
+        // En caso de error en la búsqueda, intentar crear el cliente de todas formas
+        console.warn("Error al verificar cliente existente, procediendo con creación:", error);
+        this.procederConCreacionCliente();
+      },
+    });
+  }
+
+  // Método privado para proceder con la creación del cliente
+  private procederConCreacionCliente() {
     // Recopilar datos mínimos para la creación del cliente
     const clienteData = {
       ...this.formulario.value,
