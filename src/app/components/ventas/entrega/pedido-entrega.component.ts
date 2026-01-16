@@ -706,6 +706,29 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     }
   }
 
+  /**
+   * Método llamado cuando el usuario selecciona una zona de cobro del dropdown.
+   * Se ejecuta DESPUÉS de que ngModel actualiza zona_cobro.
+   */
+  onZonaCobroSelected(): void {
+    if (!this.zona_cobro || !this.filteredResults || this.filteredResults.length === 0) {
+      this.valor_zona_cobro = '';
+      return;
+    }
+
+    const zonaSeleccionada = this.filteredResults.find(
+      (item) => item.nombreZonaCobro === this.zona_cobro
+    );
+
+    if (zonaSeleccionada) {
+      this.valor_zona_cobro = zonaSeleccionada.valorZonaCobro;
+      console.log(`✅ Zona seleccionada: ${this.zona_cobro}, Valor: ${this.valor_zona_cobro}`);
+    } else {
+      this.valor_zona_cobro = '';
+      console.warn(`⚠️ No se encontró valor para la zona: ${this.zona_cobro}`);
+    }
+  }
+
   datosEntregass(event) {
     console.log(event);
     if (this.entregar === true) {

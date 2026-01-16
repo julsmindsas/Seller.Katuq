@@ -782,30 +782,49 @@ export class PedidosUtilService {
     }
 
     getShippingCost(allBillingZone): number {
-        if (!allBillingZone || !Array.isArray(allBillingZone)) {
-            return 0;
+        // Si el pedido ya tiene valorZonaCobro, usarlo directamente como prioridad
+        if (this.pedido?.envio?.valorZonaCobro && this.pedido.envio.valorZonaCobro > 0) {
+            return this.pedido.envio.valorZonaCobro;
         }
 
-        if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
-            const valorFlete = allBillingZone.filter((item => item.ciudad === this.pedido.envio?.ciudad && item.nombreZonaCobro === this.pedido.envio?.zonaCobro))
-            if (valorFlete.length > 0)
-                return valorFlete[0].valorZonaCobro;
-            else
-                return 0;
+        // Intentar buscar en allBillingZone si está disponible
+        if (allBillingZone && Array.isArray(allBillingZone) && allBillingZone.length > 0) {
+            if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
+                const ciudadPedido = this.pedido.envio.ciudad?.toString().toLowerCase().trim();
+                const zonaPedido = this.pedido.envio.zonaCobro?.toString().toLowerCase().trim();
+
+                const valorFlete = allBillingZone.filter((item) => {
+                    const ciudadItem = item.ciudad?.toString().toLowerCase().trim();
+                    const zonaItem = item.nombreZonaCobro?.toString().toLowerCase().trim();
+                    return ciudadItem === ciudadPedido && zonaItem === zonaPedido;
+                });
+
+                if (valorFlete.length > 0) {
+                    return valorFlete[0].valorZonaCobro || 0;
+                }
+            }
         }
+
         return 0;
     }
     getShippingTaxCost(allBillingZone): number {
-        if (!allBillingZone || !Array.isArray(allBillingZone)) {
+        if (!allBillingZone || !Array.isArray(allBillingZone) || allBillingZone.length === 0) {
             return 0;
         }
 
         if (this.pedido && this.pedido.envio?.zonaCobro && this.pedido.envio?.ciudad) {
-            const valorFlete = allBillingZone.filter((item => item.ciudad === this.pedido.envio?.ciudad && item.nombreZonaCobro === this.pedido.envio?.zonaCobro))
-            if (valorFlete.length > 0)
-                return valorFlete[0].impuesto;
-            else
-                return 0;
+            const ciudadPedido = this.pedido.envio.ciudad?.toString().toLowerCase().trim();
+            const zonaPedido = this.pedido.envio.zonaCobro?.toString().toLowerCase().trim();
+
+            const valorFlete = allBillingZone.filter((item) => {
+                const ciudadItem = item.ciudad?.toString().toLowerCase().trim();
+                const zonaItem = item.nombreZonaCobro?.toString().toLowerCase().trim();
+                return ciudadItem === ciudadPedido && zonaItem === zonaPedido;
+            });
+
+            if (valorFlete.length > 0) {
+                return valorFlete[0].impuesto || 0;
+            }
         }
         return 0;
     }

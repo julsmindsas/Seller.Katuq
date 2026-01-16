@@ -230,6 +230,7 @@ export class CrearVentasComponent
   valor_zona_cobro: any;
   carrito1: any;
   activarEntrega: boolean = true;
+  esRecogeEnTienda: boolean = false;
   documentoBuscar: any;
 
   @Input("icon") public icon;
@@ -472,6 +473,9 @@ export class CrearVentasComponent
     }
   }
   ngOnInit(): void {
+    // Inicializar estado de recoge en tienda
+    this.esRecogeEnTienda = false;
+
     // Cargar zonas de cobro
     this.cargarZonasCobro();
     // Cargar departamentos DANE para búsqueda de ciudades
@@ -2208,15 +2212,12 @@ export class CrearVentasComponent
       }
     }
 
-    // Verificar si debemos saltar el paso de envío (4) cuando la forma de entrega es "recoge"
+    // Verificar si es "recoge en tienda" para configurar la UI correctamente
     if (index === 4) {
-      // Estamos en el paso del cliente
-      // Cargar datos del carrito para verificar la forma de entrega
       const carrito = localStorage.getItem("carrito");
       try {
         if (carrito) {
           const carritoObj = JSON.parse(carrito);
-          // Verificar si la forma de entrega contiene la palabra "recoge"
           if (carritoObj && carritoObj.length > 0) {
             const formaEntrega =
               carritoObj[0]?.configuracion?.datosEntrega?.formaEntrega
@@ -2249,28 +2250,24 @@ export class CrearVentasComponent
               this.pedidoGral.envio = envioRecoge;
               this.pedidoGral.formaEntrega = "Recoge";
 
-              // Si se ha validado el cliente y estamos avanzando al siguiente paso,
-              // saltar directamente al paso 5 (facturación)
-              if (
-                this.pedidoGral.cliente &&
-                $event === MovingDirection.Forwards
-              ) {
-                // setTimeout(() => {
-                // }, 100);
-                this.mywizard.goToNextStep(); // El índice interno del wizard es 0-based, así que 4 es el paso 5 (Facturación)
+              // Marcar que es recoge en tienda para ocultar tab de envío
+              this.esRecogeEnTienda = true;
 
-                return;
-              } else if (
-                this.pedidoGral.cliente &&
-                $event === MovingDirection.Backwards
-              ) {
-                this.mywizard.goToPreviousStep();
-                return;
-              }
+              // Activar directamente el tab de facturación
+              setTimeout(() => {
+                const tabFacturacion = document.getElementById('tab-facturacion');
+                if (tabFacturacion) {
+                  tabFacturacion.click();
+                }
+              }, 100);
+            } else {
+              this.esRecogeEnTienda = false;
             }
           }
         }
-      } catch (error) {}
+      } catch (error) {
+        this.esRecogeEnTienda = false;
+      }
     }
 
     // Actualizar el estado en función del paso actual
@@ -2303,21 +2300,16 @@ export class CrearVentasComponent
     }
 
     if (index == 4) {
-      // Paso de envío - Cargar datos de dirección del cliente
+      // Paso de envío y facturación - Cargar datos del cliente
       if (this.pedidoGral && this.pedidoGral.cliente) {
         this.documentoBuscar = this.pedidoGral.cliente.documento;
 
-        // Verificar si se necesitan cargar datos de entrega
-        this.cargarDatosEntregaCliente();
-      }
-    }
+        // Cargar datos de entrega (solo si NO es recoge en tienda)
+        if (!this.esRecogeEnTienda) {
+          this.cargarDatosEntregaCliente();
+        }
 
-    if (index == 5) {
-      // Paso de facturación
-      if (this.pedidoGral && this.pedidoGral.cliente) {
-        // Intentar cargar datos de facturación si no se han cargado
-        this.documentoBuscar = this.pedidoGral.cliente.documento;
-
+        // Cargar datos de facturación
         if (
           !this.datosFacturacionElectronica ||
           this.datosFacturacionElectronica.length === 0
@@ -2337,12 +2329,16 @@ export class CrearVentasComponent
                   this.ref.detectChanges();
                 }
               },
-              error: (err) => {},
+              error: (err) => {
+                console.error('Error al cargar datos de facturación:', err);
+              },
             });
         }
       }
+    }
 
-      // Si ya había datos previos de entrega, asegurarnos que se muestran
+    if (index == 5) {
+      // Paso de pago - Ya no necesita cargar facturación (se carga en paso 4)
       if (this.pedidoGral && this.pedidoGral.envio) {
         this.ref.detectChanges();
       }

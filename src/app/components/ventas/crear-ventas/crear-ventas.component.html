@@ -682,9 +682,10 @@
               <div class="step4-consolidated">
                 <!-- Tab Navigation -->
                 <ul class="nav nav-tabs step4-tabs" role="tablist">
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="tab-envio" data-bs-toggle="tab" data-bs-target="#panel-envio"
-                            type="button" role="tab" aria-controls="panel-envio" aria-selected="true">
+                  <!-- Tab Envío - Se oculta cuando es Recoge en Tienda -->
+                  <li class="nav-item" role="presentation" *ngIf="!esRecogeEnTienda">
+                    <button class="nav-link" [class.active]="!esRecogeEnTienda" id="tab-envio" data-bs-toggle="tab" data-bs-target="#panel-envio"
+                            type="button" role="tab" aria-controls="panel-envio" [attr.aria-selected]="!esRecogeEnTienda">
                       <i class="fa fa-truck me-2"></i>Envío
                       <span class="tab-status" *ngIf="pedidoGral?.envio">
                         <i class="fa fa-check-circle text-success"></i>
@@ -692,8 +693,8 @@
                     </button>
                   </li>
                   <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="tab-facturacion" data-bs-toggle="tab" data-bs-target="#panel-facturacion"
-                            type="button" role="tab" aria-controls="panel-facturacion" aria-selected="false">
+                    <button class="nav-link" [class.active]="esRecogeEnTienda" id="tab-facturacion" data-bs-toggle="tab" data-bs-target="#panel-facturacion"
+                            type="button" role="tab" aria-controls="panel-facturacion" [attr.aria-selected]="esRecogeEnTienda">
                       <i class="fa fa-file-invoice me-2"></i>Facturación
                       <span class="tab-status" *ngIf="pedidoGral?.facturacion">
                         <i class="fa fa-check-circle text-success"></i>
@@ -702,10 +703,17 @@
                   </li>
                 </ul>
 
+                <!-- Mensaje informativo cuando es Recoge en Tienda -->
+                <div class="alert alert-info mt-2 mb-2" *ngIf="esRecogeEnTienda">
+                  <i class="fa fa-info-circle me-2"></i>
+                  <strong>Recoge en Tienda:</strong> No se requieren datos de envío. Por favor configure los datos de facturación.
+                </div>
+
                 <!-- Tab Content -->
                 <div class="tab-content step4-tab-content">
-                  <!-- Panel Envío -->
-                  <div class="tab-pane fade show active" id="panel-envio" role="tabpanel" aria-labelledby="tab-envio">
+                  <!-- Panel Envío - Se oculta cuando es Recoge en Tienda -->
+                  <div class="tab-pane fade" [class.show]="!esRecogeEnTienda" [class.active]="!esRecogeEnTienda"
+                       id="panel-envio" role="tabpanel" aria-labelledby="tab-envio" *ngIf="!esRecogeEnTienda">
                     <div class="step4-section">
                       <pedido-entrega #entrega [pedidoGral]="pedidoGral" [formulario]="formulario"
                         [datosEntregas]="datosEntregas" [documentoBusqueda]="documentoBuscar"
@@ -718,7 +726,8 @@
                   </div>
 
                   <!-- Panel Facturación -->
-                  <div class="tab-pane fade" id="panel-facturacion" role="tabpanel" aria-labelledby="tab-facturacion">
+                  <div class="tab-pane fade" [class.show]="esRecogeEnTienda" [class.active]="esRecogeEnTienda"
+                       id="panel-facturacion" role="tabpanel" aria-labelledby="tab-facturacion">
                     <div class="step4-section">
                       <app-pedido-facturacion #facturacion [pedidoGral]="pedidoGral" [formulario]="formulario"
                         [datosFacturacionElectronica]="datosFacturacionElectronica"
