@@ -5949,6 +5949,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.scrollStack.push(window.scrollY);
     this.pedidoUtilService.pedido = order;
     this.ciudadSeleccionada = order.envio?.ciudad;
+
+    // Pre-seleccionar la primera bodega disponible para que los productos se muestren inmediatamente
+    if (this.bodegas && this.bodegas.length > 0 && !this.selectedWarehouse) {
+      this.selectedWarehouse = this.bodegas[0];
+    }
+
     this.modalService
       .open(content, {
         size: "xl",
