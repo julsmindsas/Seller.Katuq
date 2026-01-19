@@ -854,6 +854,7 @@ export class EcomerceProductsComponent
    * Aplica automáticamente:
    * - Cantidad mínima de venta del producto
    * - Precio por categoría de cliente si aplica
+   * - Datos de entrega por defecto (fecha actual, envío a domicilio, lo más pronto posible)
    */
   agregarRapido(producto: Producto): void {
     // 1. Verificar que el producto no requiera configuración
@@ -869,13 +870,30 @@ export class EcomerceProductsComponent
     // 3. Obtener el producto con precio ajustado por categoría (si aplica)
     const productoConPrecio = this.obtenerProductoConPrecioCategoria(producto);
 
-    // 4. Crear el objeto para el carrito
+    // 4. Crear datos de entrega por defecto
+    const hoy = new Date();
+    const datosEntregaPorDefecto = {
+      fechaEntrega: {
+        day: hoy.getDate(),
+        month: hoy.getMonth() + 1,
+        year: hoy.getFullYear()
+      },
+      formaEntrega: "Envío a Domicilio",
+      horarioEntrega: "LO MAS PRONTO POSIBLE",
+      tipoEntrega: null,
+      genero: null,
+      ocasion: null,
+      colores: [],
+      observaciones: null
+    };
+
+    // 5. Crear el objeto para el carrito con datosEntrega incluidos
     // Estructura compatible con el carrito existente
     const productoCompra = {
       producto: productoConPrecio,
       configuracion: {
         producto: productoConPrecio,
-        datosEntrega: null,
+        datosEntrega: datosEntregaPorDefecto,
         cantidad: cantidadMinima,
         preferencias: [],
         adiciones: [],
@@ -884,10 +902,10 @@ export class EcomerceProductsComponent
       cantidad: cantidadMinima
     };
 
-    // 5. Agregar al carrito
+    // 6. Agregar al carrito
     this.cartService.addToCart(productoCompra);
 
-    // 6. Mostrar notificación de éxito
+    // 7. Mostrar notificación de éxito
     const nombreProducto = producto.crearProducto?.titulo || 'Producto';
     const precioMostrar = productoConPrecio?.precio?.precioUnitarioConIva || 0;
 
@@ -905,7 +923,8 @@ export class EcomerceProductsComponent
       titulo: nombreProducto,
       cantidad: cantidadMinima,
       precioUnitario: precioMostrar,
-      tienePrecioCategoria: !!productoConPrecio._precioAplicadoPorCategoria
+      tienePrecioCategoria: !!productoConPrecio._precioAplicadoPorCategoria,
+      datosEntrega: datosEntregaPorDefecto
     });
   }
 }
