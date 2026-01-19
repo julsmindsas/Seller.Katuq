@@ -5,7 +5,7 @@
       <i class="pi pi-search me-2"></i>
       Seguimiento del Envío
     </h5>
-    <button type="button" class="btn-close btn-close-white" aria-label="Close"></button>
+    <button type="button" class="btn-close btn-close-white" aria-label="Close" (click)="close()"></button>
   </div>
 
   <!-- Cuerpo del modal -->
@@ -101,7 +101,7 @@
 
   <!-- Footer del modal -->
   <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+    <button type="button" class="btn btn-secondary" (click)="close()">
       <i class="pi pi-times me-1"></i>
       Cerrar
     </button>

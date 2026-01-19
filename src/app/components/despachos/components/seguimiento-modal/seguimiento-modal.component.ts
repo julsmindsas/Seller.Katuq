@@ -1,4 +1,5 @@
 import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { Pedido } from '../../../ventas/modelo/pedido';
 
 @Component({
@@ -14,7 +15,7 @@ export class SeguimientoModalComponent implements OnInit {
   loading: boolean = false;
   error: string = '';
   
-  constructor() { }
+  constructor(public activeModal: NgbActiveModal) { }
 
   ngOnInit(): void {
   }
@@ -93,5 +94,10 @@ export class SeguimientoModalComponent implements OnInit {
   // Método para refrescar el tracking
   refreshTracking(): void {
     this.onRefresh.emit();
+  }
+
+  // Método para cerrar el modal
+  close(): void {
+    this.activeModal.close();
   }
 }
