@@ -210,16 +210,16 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
   seleccionarDireccionFE(index) {
     this.pedidoGral.facturacion = this.datosFacturacionElectronica[index];
-    
+
     // Recalcular el costo de envío (domicilio) si hay información de envío
     if (this.pedidoGral.envio && this.pedidoGral.envio.zonaCobro) {
       // Aquí deberías llamar al servicio para recalcular el totalEnvio
       // Por ahora, mantenemos el valor actual
       console.log('Dirección de facturación seleccionada, se debe recalcular totalEnvio');
     }
-    
+
     this.pedidoGral = { ...this.pedidoGral };
-    
+
     Swal.fire({
       title: "Datos Seleccionados!",
       text: this.datosFacturacionElectronica[index].alias,
@@ -227,10 +227,11 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       confirmButtonText: "Ok",
     });
 
+    // Siempre emitir el pedido actualizado para que el componente padre pueda guardarlo
+    this.overridePedido.emit(this.pedidoGral);
+
     if (this.isEdit) {
       this.modalService.dismissAll();
-    } else {
-      this.overridePedido.emit(this.pedidoGral);
     }
   }
 
@@ -486,20 +487,25 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   }
 
   // Método para verificar si ya existe un consumidor final en la lista
+  // Busca por documento "222222222222" o por alias "Consumidor Final" para evitar duplicados
   existeConsumidorFinal(): boolean {
     if (!this.datosFacturacionElectronica) return false;
     return this.datosFacturacionElectronica.some(
-      (item) => item.documento === "222222222222",
+      (item) =>
+        item.documento === "222222222222" ||
+        item.alias?.toLowerCase() === "consumidor final" ||
+        item.nombres?.toLowerCase() === "consumidor final",
     );
   }
 
   // Método para agregar un consumidor final a la lista de facturación
+  // IMPORTANTE: Usar documento "222222222222" consistente con crear-ventas.component
   agregarConsumidorFinal(): void {
     const consumidorFinal = {
       alias: "Consumidor Final",
       nombres: "Consumidor Final",
       tipoDocumento: "CC-NIT",
-      documento: "99999999",
+      documento: "222222222222",
       indicativoCel: "57",
       celular: "0000000000",
       correoElectronico: "consumidor@final.com",

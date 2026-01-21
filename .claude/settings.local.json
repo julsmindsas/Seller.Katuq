@@ -32,7 +32,8 @@
       "WebFetch(domain:extensions.dev)",
       "Bash(node scripts/mapProductsToAliaddo.js:*)",
       "Bash(npx ng build)",
-      "WebFetch(domain:zapier.com)"
+      "WebFetch(domain:zapier.com)",
+      "Bash(lsof:*)"
     ]
   }
 }

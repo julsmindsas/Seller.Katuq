@@ -1,5 +1,3 @@
-<app-breadcrumb [title]="'Inventario Catalogo' | translate" [items]="['Inventarios' | translate]"
-    [active_item]="'Consolidado' | translate"></app-breadcrumb>
 
 <div class="container-fluid">
     <div class="row">
@@ -24,30 +22,30 @@
                             </p>
                         </div>
                         <div class="d-flex align-items-center gap-2">
+                            <!-- Botón Refrescar -->
                             <button pButton type="button"
                                     icon="pi pi-refresh"
-                                    class="p-button-rounded p-button-text p-button-lg"
-                                    style="color: #5c6ac4;"
+                                    class="p-button-rounded p-button-outlined"
+                                    style="border-color: #5c6ac4; color: #5c6ac4; width: 2.5rem; height: 2.5rem;"
                                     (click)="cargarInventarioConsolidado()"
                                     [disabled]="loadingConsolidado"
                                     pTooltip="Actualizar datos"></button>
                             <!-- Botón Análisis IA -->
                             <button pButton type="button"
                                     icon="pi pi-bolt"
-                                    class="p-button-rounded ia-analysis-btn"
+                                    label="IA"
+                                    class="p-button-sm"
+                                    style="background: #5c6ac4; border-color: #5c6ac4;"
                                     (click)="analizarConIA()"
                                     [disabled]="analizandoIA || loadingConsolidado || bodegasConsolidadas.length === 0"
                                     [loading]="analizandoIA"
                                     pTooltip="Analizar inventario con IA"
                                     tooltipPosition="bottom"></button>
                             <!-- Última análisis IA -->
-                            <span *ngIf="iaLastAnalysis" class="badge bg-secondary d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                            <span *ngIf="iaLastAnalysis" class="badge d-flex align-items-center gap-1"
+                                  style="background: #e8eaf6; color: #5c6ac4; font-size: 0.75rem;">
                                 <i class="pi pi-clock"></i>
-                                IA: {{ iaLastAnalysis | date:'shortTime' }}
-                            </span>
-                            <!-- Indicador de Fulfillment -->
-                            <span class="badge bg-primary d-flex align-items-center gap-1 px-3 py-2" *ngIf="fulfillmentEnabled">
-                                <i class="pi pi-cloud"></i> {{ fulfillmentProviderName }} Conectado
+                                {{ iaLastAnalysis | date:'shortTime' }}
                             </span>
                         </div>
                     </div>
@@ -172,56 +170,60 @@
                         <!-- Tab 1: Inventario Consolidado (NUEVO) -->
                         <p-tabPanel header="Inventario Consolidado" leftIcon="pi pi-th-large">
 
-                            <!-- Barra de Filtros -->
-                            <div class="filters-bar mb-3 p-3 bg-light rounded border">
-                                <div class="row g-2 align-items-end">
+                            <!-- Barra de Filtros - Diseño limpio -->
+                            <div class="filters-bar mb-3 p-3 bg-white rounded border shadow-sm">
+                                <!-- Fila 1: Filtros -->
+                                <div class="row g-2 align-items-end mb-2">
                                     <!-- Buscador -->
-                                    <div class="col-md-4 col-lg-3">
-                                        <label class="form-label small text-muted mb-1">Buscar</label>
-                                        <div class="p-input-icon-left w-100">
-                                            <i class="pi pi-search"></i>
-                                            <input pInputText
-                                                   type="text"
-                                                   [(ngModel)]="filtrosConsolidados.busqueda"
-                                                   (input)="aplicarFiltrosConsolidados()"
-                                                   placeholder="Nombre o referencia..."
-                                                   class="w-100">
-                                        </div>
+                                    <div class="col-6 col-md-3">
+                                        <label class="form-label small text-muted mb-1">
+                                            <i class="pi pi-search me-1"></i>Buscar
+                                        </label>
+                                        <input pInputText
+                                               type="text"
+                                               [(ngModel)]="filtrosConsolidados.busqueda"
+                                               (input)="aplicarFiltrosConsolidados()"
+                                               placeholder="Nombre o referencia..."
+                                               class="w-100 p-inputtext-sm">
                                     </div>
 
                                     <!-- Estado de Stock -->
-                                    <div class="col-md-3 col-lg-2">
-                                        <label class="form-label small text-muted mb-1">Estado Stock</label>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small text-muted mb-1">
+                                            <i class="pi pi-chart-bar me-1"></i>Estado
+                                        </label>
                                         <p-dropdown [options]="[
                                                       {label: 'Todos', value: ''},
                                                       {label: 'Agotados (0)', value: 'agotados'},
                                                       {label: 'Críticos (1-2)', value: 'criticos'},
                                                       {label: 'Bajos (≤5)', value: 'bajos'},
-                                                      {label: 'Disponibles (>5)', value: 'disponibles'}
+                                                      {label: 'Disponibles', value: 'disponibles'}
                                                     ]"
                                                     [(ngModel)]="filtrosConsolidados.estadoStock"
                                                     (onChange)="aplicarFiltrosConsolidados()"
-                                                    placeholder="Seleccionar..."
-                                                    styleClass="w-100"
-                                                    [style]="{'width': '100%'}">
+                                                    placeholder="Todos"
+                                                    styleClass="w-100 p-inputtext-sm">
                                         </p-dropdown>
                                     </div>
 
                                     <!-- Filtro por Bodega -->
-                                    <div class="col-md-3 col-lg-2">
-                                        <label class="form-label small text-muted mb-1">Bodega</label>
+                                    <div class="col-6 col-md-2">
+                                        <label class="form-label small text-muted mb-1">
+                                            <i class="pi pi-box me-1"></i>Bodega
+                                        </label>
                                         <p-dropdown [options]="opcionesBodegasFiltro"
                                                     [(ngModel)]="filtrosConsolidados.bodegaId"
                                                     (onChange)="aplicarFiltrosConsolidados()"
-                                                    placeholder="Todas..."
-                                                    styleClass="w-100"
-                                                    [style]="{'width': '100%'}">
+                                                    placeholder="Todas"
+                                                    styleClass="w-100 p-inputtext-sm">
                                         </p-dropdown>
                                     </div>
 
-                                    <!-- Filtro Fulfillment (solo si está habilitado) -->
-                                    <div class="col-md-2 col-lg-2" *ngIf="fulfillmentEnabled">
-                                        <label class="form-label small text-muted mb-1">Fulfillment</label>
+                                    <!-- Filtro Fulfillment -->
+                                    <div class="col-6 col-md-2" *ngIf="fulfillmentEnabled">
+                                        <label class="form-label small text-muted mb-1">
+                                            <i class="pi pi-cloud me-1"></i>Fulfillment
+                                        </label>
                                         <p-dropdown [options]="[
                                                       {label: 'Todos', value: ''},
                                                       {label: 'Con enlace', value: 'con'},
@@ -229,28 +231,94 @@
                                                     ]"
                                                     [(ngModel)]="filtrosConsolidados.fulfillment"
                                                     (onChange)="aplicarFiltrosConsolidados()"
-                                                    placeholder="Todos..."
-                                                    styleClass="w-100"
-                                                    [style]="{'width': '100%'}">
+                                                    placeholder="Todos"
+                                                    styleClass="w-100 p-inputtext-sm">
                                         </p-dropdown>
                                     </div>
 
-                                    <!-- Botón Limpiar y contador -->
-                                    <div class="col-md-auto col-lg-auto d-flex align-items-end gap-2">
-                                        <button pButton
-                                                type="button"
+                                    <!-- Limpiar filtros -->
+                                    <div class="col-auto">
+                                        <button pButton type="button"
                                                 icon="pi pi-filter-slash"
-                                                class="p-button-outlined p-button-secondary"
+                                                class="p-button-sm p-button-text p-button-secondary"
                                                 (click)="limpiarFiltrosConsolidados()"
                                                 [disabled]="!hayFiltrosActivos()"
                                                 pTooltip="Limpiar filtros">
                                         </button>
-                                        <!-- Contador de resultados -->
-                                        <span class="badge bg-primary py-2 px-3" style="font-size: 0.85rem;">
+                                    </div>
+
+                                    <!-- Contador -->
+                                    <div class="col-auto ms-auto">
+                                        <span class="badge py-2 px-3"
+                                              style="background: #5c6ac4; font-size: 0.85rem;">
                                             {{ productosConsolidadosFiltrados.length }}
-                                            <span class="d-none d-md-inline">de {{ productosConsolidados.length }}</span>
+                                            <span class="d-none d-sm-inline text-white-50">/ {{ productosConsolidados.length }}</span>
                                         </span>
                                     </div>
+                                </div>
+
+                                <!-- Fila 2: Acciones (solo si hay fulfillment) -->
+                                <div class="d-flex align-items-center gap-2 pt-2 border-top" *ngIf="fulfillmentEnabled">
+                                    <!-- Sync por bodega -->
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span class="text-muted small d-none d-md-inline">
+                                            <i class="pi pi-sync me-1"></i>Sincronizar:
+                                        </span>
+                                        <p-dropdown [options]="getBodegasConFulfillment()"
+                                                    [(ngModel)]="bodegaSyncSeleccionada"
+                                                    optionLabel="nombre"
+                                                    placeholder="Bodega..."
+                                                    [style]="{'min-width': '150px'}"
+                                                    styleClass="p-inputtext-sm"
+                                                    [showClear]="true">
+                                        </p-dropdown>
+                                        <button pButton type="button"
+                                                icon="pi pi-sync"
+                                                [label]="syncingAllProducts ? syncAllProgress.current + '/' + syncAllProgress.total : 'Bodega'"
+                                                class="p-button-sm p-button-outlined"
+                                                style="border-color: #5c6ac4; color: #5c6ac4;"
+                                                (click)="syncBodegaDesdeConsolidada()"
+                                                [disabled]="syncingAllProducts || !bodegaSyncSeleccionada"
+                                                [loading]="syncingAllProducts"
+                                                pTooltip="Sincronizar productos de esta bodega">
+                                        </button>
+                                        <button pButton type="button"
+                                                icon="pi pi-cloud-download"
+                                                [label]="syncingAllProducts ? '' : 'Todo'"
+                                                class="p-button-sm"
+                                                style="background: #5c6ac4; border-color: #5c6ac4;"
+                                                (click)="syncAllProductsFulfillment()"
+                                                [disabled]="syncingAllProducts || getProductosConFulfillment().length === 0"
+                                                [loading]="syncingAllProducts"
+                                                [pTooltip]="'Sincronizar ' + getProductosConFulfillment().length + ' productos'">
+                                        </button>
+                                    </div>
+
+                                    <!-- Separador visual -->
+                                    <div class="vr mx-2 d-none d-md-block" style="height: 24px;"></div>
+
+                                    <!-- Exportar -->
+                                    <button pButton type="button"
+                                            icon="pi pi-file-excel"
+                                            label="Excel"
+                                            class="p-button-sm p-button-outlined"
+                                            style="border-color: #5c6ac4; color: #5c6ac4;"
+                                            (click)="exportarExcelConsolidado()"
+                                            [disabled]="productosConsolidadosFiltrados.length === 0"
+                                            pTooltip="Exportar a Excel">
+                                    </button>
+                                </div>
+
+                                <!-- Fila 2 alternativa: Solo Excel si no hay fulfillment -->
+                                <div class="d-flex align-items-center gap-2 pt-2 border-top" *ngIf="!fulfillmentEnabled">
+                                    <button pButton type="button"
+                                            icon="pi pi-file-excel"
+                                            label="Exportar Excel"
+                                            class="p-button-sm p-button-outlined"
+                                            style="border-color: #5c6ac4; color: #5c6ac4;"
+                                            (click)="exportarExcelConsolidado()"
+                                            [disabled]="productosConsolidadosFiltrados.length === 0">
+                                    </button>
                                 </div>
 
                                 <!-- Indicadores de filtros activos -->
@@ -282,12 +350,12 @@
                                          [rows]="20"
                                          [rowsPerPageOptions]="[10,20,50,100]"
                                          styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
-                                         [responsive]="true" 
+                                         [responsive]="true"
                                          [loading]="loadingConsolidado"
                                          [scrollable]="true"
                                          scrollHeight="60vh"
                                          dataKey="id">
-                                    
+
                                     <!-- Header de la tabla -->
                                     <ng-template pTemplate="header">
                                         <tr>
@@ -301,16 +369,19 @@
                                             <th style="width: 120px;">Referencia</th>
                                             <!-- Columna Nombre -->
                                             <th style="min-width: 200px;">Nombre</th>
+                                            <!-- Columna Total (después del nombre) -->
+                                            <th style="width: 80px;" class="text-center text-primary fw-bold">TOTAL</th>
                                             <!-- Columnas Dinámicas por Bodega -->
-                                            <th *ngFor="let bodega of bodegasConsolidadas" 
-                                                style="width: 100px;" 
-                                                class="text-center bg-light"
-                                                [pTooltip]="bodega.tipo + (bodega.fulfillmentId ? ' - Fulfillment: ' + bodega.fulfillmentId : '')">
-                                                {{ bodega.nombre }}
-                                                <i *ngIf="bodega.fulfillmentId" class="pi pi-cloud ms-1 text-info" style="font-size: 0.7rem;"></i>
+                                            <th *ngFor="let bodega of bodegasConsolidadas"
+                                                style="width: 100px; max-width: 100px; vertical-align: middle;"
+                                                class="text-center bg-light px-1"
+                                                [pTooltip]="bodega.nombre + (bodega.fulfillmentId ? ' ✓ Fulfillment' : '')"
+                                                tooltipPosition="top">
+                                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.75rem; display: block;"
+                                                      [style.color]="bodega.fulfillmentId ? '#7c3aed' : '#374151'">
+                                                    {{ bodega.nombre }}
+                                                </span>
                                             </th>
-                                            <!-- Columna Total -->
-                                            <th style="width: 90px;" class="text-center bg-light text-primary fw-bold">TOTAL</th>
                                             <!-- Columna Precio -->
                                             <th style="width: 160px; min-width: 160px;" class="text-end pe-3">Precio</th>
                                             <!-- Columna Acciones -->
@@ -318,103 +389,57 @@
                                                 <i class="pi pi-cog"></i>
                                             </th>
                                         </tr>
-                                        <!-- Fila de Métricas Globales por Bodega (Diseño Compacto) -->
-                                        <tr class="bg-light border-bottom" style="font-size: 0.75rem;">
+                                        <!-- Fila de Métricas por Bodega (Diseño Limpio) -->
+                                        <tr class="border-bottom" style="font-size: 0.8rem; background: #f8fafc;">
                                             <!-- Columnas fijas vacías -->
                                             <th style="width: 50px;"></th>
                                             <th style="width: 70px;"></th>
                                             <th style="width: 120px;"></th>
                                             <th style="min-width: 200px;"></th>
-                                            <!-- Métricas por cada Bodega (Compacto: 2-3 líneas) -->
-                                            <th *ngFor="let bodega of bodegasConsolidadas" class="text-center py-1 bg-light">
-                                                <div class="d-flex flex-column align-items-center" style="line-height: 1.3;">
-                                                    <!-- Línea 1: Valor · Unidades -->
-                                                    <span>
-                                                        <span class="text-primary fw-bold" pTooltip="Valor del inventario en esta bodega">{{ formatearValorAbreviado(bodega.metricas?.valorTotal || 0) }}</span>
-                                                        <span class="text-muted mx-1">·</span>
-                                                        <span class="text-muted" pTooltip="Unidades almacenadas en esta bodega">{{ bodega.metricas?.totalUnidades | number }}u</span>
-                                                    </span>
-                                                    <!-- Línea 2: % · Badges -->
-                                                    <span>
-                                                        <span class="text-info" pTooltip="Porcentaje del valor total del inventario">{{ bodega.metricas?.porcentajeInventario || 0 }}%</span>
-                                                        <span class="text-muted mx-1">·</span>
-                                                        <span class="badge bg-success" style="font-size: 0.55rem;" pTooltip="Productos con inventario disponible">{{ bodega.metricas?.totalProductos }}</span>
-                                                        <span class="badge bg-warning text-dark ms-1" style="font-size: 0.55rem;" pTooltip="Productos con stock bajo (5 o menos)">{{ bodega.metricas?.productosBajoStock }}</span>
-                                                    </span>
-                                                    <!-- Línea 3: Indicadores IA (solo si hay análisis) -->
-                                                    <span *ngIf="bodega.metricas?.ia?.alertaReorden || bodega.metricas?.ia?.tendencia" class="mt-1">
-                                                        <!-- Alerta de reorden -->
-                                                        <span *ngIf="bodega.metricas?.ia?.alertaReorden"
-                                                              class="badge"
-                                                              [ngClass]="{
-                                                                  'bg-danger': bodega.metricas.ia.alertaReorden === 'URGENTE',
-                                                                  'bg-warning text-dark': bodega.metricas.ia.alertaReorden === 'PRONTO'
-                                                              }"
-                                                              style="font-size: 0.5rem;"
-                                                              [pTooltip]="getIASugerenciasTooltip(bodega)"
-                                                              tooltipPosition="bottom">
-                                                            {{ bodega.metricas.ia.alertaReorden }}
-                                                        </span>
-                                                        <!-- Predicción de agotamiento -->
-                                                        <span *ngIf="bodega.metricas?.ia?.prediccionAgotamiento"
-                                                              class="badge bg-info ms-1"
-                                                              style="font-size: 0.45rem;"
-                                                              pTooltip="Días estimados hasta agotamiento"
-                                                              tooltipPosition="bottom">
-                                                            ~{{ bodega.metricas.ia.prediccionAgotamiento }}d
-                                                        </span>
-                                                        <!-- Tendencia -->
-                                                        <span *ngIf="bodega.metricas?.ia?.tendencia"
-                                                              class="badge bg-light text-dark ms-1"
-                                                              style="font-size: 0.45rem;"
-                                                              pTooltip="Tendencia del inventario">
-                                                            <i class="pi"
-                                                               [ngClass]="{
-                                                                   'pi-arrow-up text-success': bodega.metricas.ia.tendencia === 'SUBIENDO',
-                                                                   'pi-arrow-down text-danger': bodega.metricas.ia.tendencia === 'BAJANDO',
-                                                                   'pi-minus text-muted': bodega.metricas.ia.tendencia === 'ESTABLE'
-                                                               }"></i>
-                                                        </span>
-                                                    </span>
-                                                </div>
-                                            </th>
-                                            <!-- Columna Total - Desde backend -->
-                                            <th style="width: 90px;" class="text-center bg-primary-subtle py-1">
-                                                <span class="text-primary fw-bold" pTooltip="Total de unidades en todas las bodegas">
-                                                    {{ totalesGlobales.totalUnidades | number }}
+                                            <!-- Columna Total (después del nombre) - suma real de bodegas -->
+                                            <th style="width: 80px;" class="text-center py-2">
+                                                <span class="text-primary fw-bold">
+                                                    {{ calcularTotalUnidadesBodegas() | number }}
                                                 </span>
-                                                <span class="text-muted d-block" style="font-size: 0.65rem;">uds</span>
                                             </th>
-                                            <!-- Columna Precio - Valor total desde backend -->
-                                            <th style="width: 160px;" class="text-end pe-3 bg-success-subtle py-1">
-                                                <span class="text-success fw-bold" pTooltip="Valor total de todo el inventario">
-                                                    {{ formatearValorAbreviado(totalesGlobales.valorTotal) }}
+                                            <!-- Métricas por cada Bodega (basado en productos filtrados) -->
+                                            <th *ngFor="let bodega of bodegasConsolidadas"
+                                                class="text-center py-2"
+                                                style="background: #f8fafc; cursor: help;"
+                                                [pTooltip]="'📦 ' + (calcularTotalBodegaFiltrado(bodega.id) | number) + ' unidades (filtrado)'"
+                                                tooltipPosition="bottom">
+                                                <span class="fw-semibold" style="color: #475569;">
+                                                    {{ calcularTotalBodegaFiltrado(bodega.id) | number }}
                                                 </span>
-                                                <span class="text-muted d-block" style="font-size: 0.65rem;">valor total</span>
                                             </th>
+                                            <!-- Columna Precio -->
+                                            <th style="width: 160px;" class="text-end pe-3 py-2" style="background: #f0fdf4;"></th>
                                             <!-- Columna Acciones vacía -->
                                             <th style="width: 60px;"></th>
                                         </tr>
                                     </ng-template>
-                                    
+
                                     <!-- Body de la tabla -->
                                     <ng-template pTemplate="body" let-producto let-expanded="expanded">
                                         <tr>
                                             <!-- Expandir -->
                                             <td class="text-center">
-                                                <button pButton pRipple type="button" 
-                                                        [icon]="producto.expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" 
+                                                <button pButton pRipple type="button"
+                                                        [icon]="producto.expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
                                                         class="p-button-text p-button-rounded p-button-sm"
                                                         (click)="toggleExpansion(producto)">
                                                 </button>
                                             </td>
                                             <!-- Imagen -->
-                                            <td class="text-center">
-                                                <img *ngIf="producto.imagen" 
-                                                     [src]="producto.imagen" 
-                                                     [alt]="producto.nombre"
-                                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">
-                                                <i *ngIf="!producto.imagen" class="pi pi-image text-muted" style="font-size: 1.5rem;"></i>
+                                            <td class="text-center" style="vertical-align: middle;">
+                                                <div style="width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; background-color: #f8f9fa; border-radius: 4px; overflow: hidden;">
+                                                    <img *ngIf="producto.imagen"
+                                                         [src]="producto.imagen"
+                                                         [alt]="producto.nombre"
+                                                         style="width: 100%; height: 100%; object-fit: cover;"
+                                                         (error)="producto.imagen = null">
+                                                    <i *ngIf="!producto.imagen" class="pi pi-box text-muted" style="font-size: 1.2rem;"></i>
+                                                </div>
                                             </td>
                                             <!-- Referencia -->
                                             <td>
@@ -424,19 +449,19 @@
                                             <td>
                                                 <span class="fw-semibold">{{ producto.nombre }}</span>
                                             </td>
+                                            <!-- Total (después del nombre) -->
+                                            <td class="text-center" style="vertical-align: middle;">
+                                                <span class="fw-bold text-primary" style="font-size: 1.1rem;">{{ producto.stockTotal }}</span>
+                                            </td>
                                             <!-- Stock por cada Bodega -->
-                                            <td *ngFor="let bodega of bodegasConsolidadas" class="text-center">
-                                                <span class="badge" [ngClass]="{
-                                                    'bg-secondary': getStockBodega(producto, bodega.id) === 0,
-                                                    'bg-warning': getStockBodega(producto, bodega.id) > 0 && getStockBodega(producto, bodega.id) <= 5,
-                                                    'bg-success': getStockBodega(producto, bodega.id) > 5
+                                            <td *ngFor="let bodega of bodegasConsolidadas" class="text-center" style="vertical-align: middle;">
+                                                <span class="fw-semibold" [ngClass]="{
+                                                    'text-muted': getStockBodega(producto, bodega.id) === 0,
+                                                    'text-warning': getStockBodega(producto, bodega.id) > 0 && getStockBodega(producto, bodega.id) <= 5,
+                                                    'text-success': getStockBodega(producto, bodega.id) > 5
                                                 }">
                                                     {{ getStockBodega(producto, bodega.id) }}
                                                 </span>
-                                            </td>
-                                            <!-- Total -->
-                                            <td class="text-center">
-                                                <span class="badge bg-primary fs-6">{{ producto.stockTotal }}</span>
                                             </td>
                                             <!-- Precio -->
                                             <td class="text-end" style="white-space: nowrap;">
@@ -453,7 +478,7 @@
                                                 </button>
                                             </td>
                                         </tr>
-                                        
+
                                         <!-- Row Expansion - Detalles por Bodega -->
                                         <tr *ngIf="producto.expanded">
                                             <td [attr.colspan]="bodegasConsolidadas.length + 7" class="p-0">
@@ -463,7 +488,7 @@
                                                         <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem;"></i>
                                                         <p class="mt-2 mb-0">Cargando datos de fulfillment...</p>
                                                     </div>
-                                                    
+
                                                     <!-- SIN FULFILLMENT: Solo mostrar stock Katuq -->
                                                     <div *ngIf="!fulfillmentEnabled && !producto.fulfillmentLoading">
                                                         <h6 class="mb-3">
@@ -483,10 +508,10 @@
                                                                     <td>{{ bodega.nombre }}</td>
                                                                     <td>{{ bodega.tipo }}</td>
                                                                     <td class="text-center">
-                                                                        <span class="badge" [ngClass]="{
-                                                                            'bg-secondary': getStockBodega(producto, bodega.id) === 0,
-                                                                            'bg-warning': getStockBodega(producto, bodega.id) > 0 && getStockBodega(producto, bodega.id) <= 5,
-                                                                            'bg-success': getStockBodega(producto, bodega.id) > 5
+                                                                        <span class="fw-semibold" [ngClass]="{
+                                                                            'text-muted': getStockBodega(producto, bodega.id) === 0,
+                                                                            'text-warning': getStockBodega(producto, bodega.id) > 0 && getStockBodega(producto, bodega.id) <= 5,
+                                                                            'text-success': getStockBodega(producto, bodega.id) > 5
                                                                         }">{{ getStockBodega(producto, bodega.id) }}</span>
                                                                     </td>
                                                                 </tr>
@@ -499,7 +524,7 @@
                                                             </tfoot>
                                                         </table>
                                                     </div>
-                                                    
+
                                                     <!-- CON FULFILLMENT: Comparativa Katuq vs Fulfillment -->
                                                     <div *ngIf="fulfillmentEnabled && !producto.fulfillmentLoading">
                                                         <h6 class="mb-3">
@@ -528,7 +553,7 @@
                                                                     <td class="text-center">{{ getStockBodega(producto, bodega.id) }}</td>
                                                                     <td>
                                                                         <span *ngIf="bodega.fulfillmentId">
-                                                                            {{ bodega.nombre }} ({{ bodega.id }})
+                                                                            {{ bodega.nombre }}
                                                                         </span>
                                                                         <span *ngIf="!bodega.fulfillmentId" class="text-muted">
                                                                             Sin enlace
@@ -580,7 +605,7 @@
                                                         <!-- Mensaje si no tiene fulfillment -->
                                                         <div *ngIf="!producto.fulfillmentId" class="alert alert-secondary mb-0">
                                                             <i class="pi pi-info-circle me-2"></i>
-                                                            Este producto no está enlazado a {{ fulfillmentProviderName }}. 
+                                                            Este producto no está enlazado a {{ fulfillmentProviderName }}.
                                                             Stock disponible solo en Katuq: <strong>{{ producto.stockTotal }}</strong> unidades.
                                                         </div>
                                                     </div>
@@ -588,7 +613,7 @@
                                             </td>
                                         </tr>
                                     </ng-template>
-                                    
+
                                     <!-- Mensaje cuando no hay datos -->
                                     <ng-template pTemplate="emptymessage">
                                         <tr>
@@ -598,7 +623,7 @@
                                             </td>
                                         </tr>
                                     </ng-template>
-                                    
+
                                     <!-- Footer con botón cargar más -->
                                     <ng-template pTemplate="summary" *ngIf="paginationConsolidada.hasMore">
                                         <div class="text-center py-2">
@@ -635,23 +660,11 @@
                                     (click)="obtenerProductosPorBodega(bodegaSeleccionada?.idBodega)"
                                     [disabled]="!bodegaSeleccionada"
                                     pTooltip="Actualizar datos"></button>
-                            <!-- Botones de Fulfillment para vista por bodega -->
-                            <ng-container *ngIf="fulfillmentEnabled && bodegaSeleccionada">
-                                <button pButton type="button"
-                                        icon="pi pi-cloud-download"
-                                        label="Cargar Stock FF"
-                                        class="p-button-info p-button-sm"
-                                        (click)="loadFulfillmentStock()"
-                                        [disabled]="rowsFiltradas.length === 0 || loadingFulfillmentStock"
-                                        [loading]="loadingFulfillmentStock"></button>
-                                <button pButton type="button"
-                                        icon="pi pi-sync"
-                                        label="Sincronizar Bodega"
-                                        class="p-button-warning p-button-sm"
-                                        (click)="syncBodegaCompleta()"
-                                        [disabled]="rowsFiltradas.length === 0 || syncingBodega"
-                                        [loading]="syncingBodega"></button>
-                            </ng-container>
+                            <!-- Mensaje: Usar Vista Consolidada para sincronizar -->
+                            <span *ngIf="fulfillmentEnabled && bodegaSeleccionada" class="text-muted small ms-2">
+                                <i class="pi pi-info-circle me-1"></i>
+                                Para sincronizar, usa la Vista Consolidada
+                            </span>
                         </div>
                     </div>
 
@@ -849,14 +862,16 @@
                                                 [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
                                                 pTooltip="Ver stock por bodega"></button>
                                     </td>
-                                    <td style="width: 80px; min-width: 80px;" class="text-center" [frozen]="true">
-                                        <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
-                                            [src]="row.crearProducto.imagenesPrincipales[0].urls"
-                                            [alt]="row.crearProducto?.titulo" class="img-thumbnail"
-                                            style="width: 50px; height: 50px; object-fit: cover;"
-                                            [ngbTooltip]="row.crearProducto?.titulo">
-                                        <i *ngIf="!row.crearProducto?.imagenesPrincipales?.length"
-                                            class="pi pi-image text-muted" style="font-size: 2rem;"></i>
+                                    <td style="width: 80px; min-width: 80px;" class="text-center vertical-align: middle;" [frozen]="true">
+                                        <div style="width: 50px; height: 50px; display: inline-flex; align-items: center; justify-content: center; background-color: #f8f9fa; border-radius: 4px; overflow: hidden;">
+                                            <img *ngIf="row.crearProducto?.imagenesPrincipales?.length > 0"
+                                                [src]="row.crearProducto.imagenesPrincipales[0].urls"
+                                                [alt]="row.crearProducto?.titulo"
+                                                style="width: 100%; height: 100%; object-fit: cover;"
+                                                [ngbTooltip]="row.crearProducto?.titulo">
+                                            <i *ngIf="!row.crearProducto?.imagenesPrincipales?.length"
+                                                class="pi pi-box text-muted" style="font-size: 1.5rem;"></i>
+                                        </div>
                                     </td>
                                     <td style="width: 120px; min-width: 120px;" [frozen]="true">
                                         <span class="badge bg-light text-dark">
@@ -906,15 +921,11 @@
                                             </span>
                                         </ng-container>
                                     </td>
-                                    <!-- Sync button -->
+                                    <!-- Info: Usar Vista Consolidada para sync -->
                                     <td *ngIf="fulfillmentEnabled" style="width: 80px; min-width: 80px;" class="text-center bg-light">
-                                        <button pButton type="button"
-                                                icon="pi pi-sync"
-                                                class="p-button-text p-button-sm p-button-secondary"
-                                                [loading]="syncingProduct === row._id"
-                                                [disabled]="syncingProduct !== null || !row.disponibilidad?.inventariable"
-                                                (click)="syncProduct(row)"
-                                                pTooltip="Sincronizar inventario"></button>
+                                        <i class="pi pi-info-circle text-muted"
+                                           pTooltip="Para sincronizar, usa Vista Consolidada"
+                                           tooltipPosition="left"></i>
                                     </td>
                                     <td style="width: 130px; min-width: 130px;" class="text-end">
                                         <strong>${{ row.precio?.precioUnitarioConIva | number:'1.0-0' }}</strong>
@@ -1072,15 +1083,10 @@
                                                                     {{ getDiferenciaTotal(row) > 0 ? '+' : '' }}{{ getDiferenciaTotal(row) }} unidades
                                                                 </span>
                                                             </div>
-                                                            <button pButton type="button"
-                                                                    icon="pi pi-sync"
-                                                                    label="Sincronizar"
-                                                                    class="p-button-sm"
-                                                                    [class.p-button-success]="getDiferenciaTotal(row) === 0"
-                                                                    [class.p-button-warning]="getDiferenciaTotal(row) !== 0"
-                                                                    [loading]="syncingProduct === row._id"
-                                                                    [disabled]="syncingProduct !== null || !row.disponibilidad?.inventariable"
-                                                                    (click)="syncProduct(row)"></button>
+                                                            <span class="text-muted small">
+                                                                <i class="pi pi-info-circle me-1"></i>
+                                                                Sincronizar desde Vista Consolidada
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1103,7 +1109,7 @@
                                                         {{ 'Bodega de Fulfillment sin Inventario' | translate }}
                                                     </h5>
                                                     <p class="text-muted mb-3">
-                                                        La bodega <strong>{{ bodegaSeleccionada.nombre }}</strong> está vinculada a 
+                                                        La bodega <strong>{{ bodegaSeleccionada.nombre }}</strong> está vinculada a
                                                         <strong>{{ fulfillmentProviderName }}</strong> pero aún no tiene productos registrados.
                                                     </p>
                                                     <p class="small text-muted mb-4">
@@ -1489,9 +1495,13 @@
             <i class="pi pi-arrow-down me-1"></i>
             {{ fulfillmentProviderName }} tiene {{ diferenciaSyncTotal * -1 }} unidades menos
         </p>
-        <p *ngIf="diferenciaSyncTotal === 0" class="text-success mb-0 fw-semibold">
+        <p *ngIf="diferenciaSyncTotal === 0 && !hayDiferenciasPorBodega" class="text-success mb-0 fw-semibold">
             <i class="pi pi-check-circle me-1"></i>
             Stock sincronizado correctamente
+        </p>
+        <p *ngIf="diferenciaSyncTotal === 0 && hayDiferenciasPorBodega" class="text-warning mb-0 fw-semibold">
+            <i class="pi pi-exclamation-triangle me-1"></i>
+            Total igual pero hay diferencias por bodega - Requiere sincronización
         </p>
     </div>
 
@@ -1503,11 +1513,131 @@
                 (click)="closeSyncModal()">
         </button>
         <button pButton
-                [label]="diferenciaSyncTotal === 0 ? 'Ya está sincronizado' : 'Sincronizar (' + (diferenciaSyncTotal > 0 ? '+' : '') + diferenciaSyncTotal + ')'"
-                [icon]="diferenciaSyncTotal === 0 ? 'pi pi-check' : 'pi pi-sync'"
-                [disabled]="loadingSyncModal || diferenciaSyncTotal === 0 || errorSyncModal"
+                [label]="!hayDiferenciasPorBodega && diferenciaSyncTotal === 0 ? 'Ya está sincronizado' : 'Sincronizar bodegas (' + bodegasConDiferenciaCount + ')'"
+                [icon]="!hayDiferenciasPorBodega && diferenciaSyncTotal === 0 ? 'pi pi-check' : 'pi pi-sync'"
+                [disabled]="loadingSyncModal || (!hayDiferenciasPorBodega && diferenciaSyncTotal === 0) || errorSyncModal"
                 [loading]="loadingSyncModal"
                 (click)="ejecutarSincronizacion()">
+        </button>
+    </ng-template>
+</p-dialog>
+
+<!-- Modal de Sincronización por Bodega (Vista Consolidada) -->
+<p-dialog [(visible)]="syncBodegaModalVisible"
+          [modal]="true"
+          [closable]="true"
+          [style]="{width: '800px', maxHeight: '90vh'}"
+          [header]="'Sincronizar Bodega: ' + (bodegaSyncSeleccionada?.nombre || '')"
+          (onHide)="cerrarModalSyncBodega()">
+
+    <!-- Loading -->
+    <div *ngIf="loadingSyncBodegaModal" class="text-center py-5">
+        <i class="pi pi-spin pi-spinner text-primary" style="font-size: 3rem;"></i>
+        <p class="mt-3 mb-0">Consultando stock en {{ fulfillmentProviderName }}...</p>
+        <p class="text-muted small">{{ productosSyncBodega.length }} productos cargados</p>
+    </div>
+
+    <!-- Contenido -->
+    <div *ngIf="!loadingSyncBodegaModal">
+        <!-- Resumen -->
+        <div class="row mb-4">
+            <div class="col-3 text-center">
+                <div class="p-3 bg-light rounded">
+                    <h3 class="mb-0 text-primary">{{ resumenSyncBodega.total }}</h3>
+                    <small class="text-muted">Productos</small>
+                </div>
+            </div>
+            <div class="col-3 text-center">
+                <div class="p-3 bg-light rounded">
+                    <h3 class="mb-0" [ngClass]="{'text-warning': resumenSyncBodega.conDiferencia > 0, 'text-success': resumenSyncBodega.conDiferencia === 0}">
+                        {{ resumenSyncBodega.conDiferencia }}
+                    </h3>
+                    <small class="text-muted">Con diferencia</small>
+                </div>
+            </div>
+            <div class="col-3 text-center">
+                <div class="p-3 bg-light rounded">
+                    <h3 class="mb-0" [ngClass]="{'text-danger': resumenSyncBodega.totalDiferencia < 0, 'text-success': resumenSyncBodega.totalDiferencia >= 0}">
+                        {{ resumenSyncBodega.totalDiferencia > 0 ? '+' : '' }}{{ resumenSyncBodega.totalDiferencia }}
+                    </h3>
+                    <small class="text-muted">Diferencia total</small>
+                </div>
+            </div>
+            <div class="col-3 text-center">
+                <div class="p-3 bg-light rounded">
+                    <h3 class="mb-0 text-secondary">{{ resumenSyncBodega.sinEnlace }}</h3>
+                    <small class="text-muted">Sin datos FF</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de productos -->
+        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light sticky-top">
+                    <tr>
+                        <th>Referencia</th>
+                        <th>Producto</th>
+                        <th class="text-center">Stock Katuq</th>
+                        <th class="text-center">Stock {{ fulfillmentProviderName }}</th>
+                        <th class="text-center">Diferencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngFor="let producto of productosSyncBodega"
+                        [ngClass]="{'table-warning': producto.diferencia !== null && producto.diferencia !== 0}">
+                        <td class="font-monospace small">{{ producto.referencia || '-' }}</td>
+                        <td>{{ producto.nombre }}</td>
+                        <td class="text-center fw-bold">{{ producto.stockKatuq }}</td>
+                        <td class="text-center">
+                            <span *ngIf="producto.stockFulfillment !== null" class="fw-bold text-primary">
+                                {{ producto.stockFulfillment }}
+                            </span>
+                            <span *ngIf="producto.stockFulfillment === null" class="text-muted">-</span>
+                        </td>
+                        <td class="text-center">
+                            <span *ngIf="producto.diferencia !== null"
+                                  class="badge"
+                                  [ngClass]="{
+                                      'bg-success': producto.diferencia === 0,
+                                      'bg-warning text-dark': producto.diferencia! > 0,
+                                      'bg-danger': producto.diferencia! < 0
+                                  }">
+                                {{ producto.diferencia! > 0 ? '+' : '' }}{{ producto.diferencia }}
+                            </span>
+                            <span *ngIf="producto.diferencia === null" class="text-muted">-</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Info -->
+        <div class="alert alert-info mt-3 mb-0 small" *ngIf="resumenSyncBodega.conDiferencia > 0">
+            <i class="pi pi-info-circle me-2"></i>
+            Se ajustará el stock de Katuq para que coincida con {{ fulfillmentProviderName }}.
+        </div>
+        <div class="alert alert-success mt-3 mb-0 small" *ngIf="resumenSyncBodega.conDiferencia === 0 && resumenSyncBodega.total > 0">
+            <i class="pi pi-check-circle me-2"></i>
+            Todos los productos ya están sincronizados.
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <ng-template pTemplate="footer">
+        <button pButton
+                label="Cancelar"
+                icon="pi pi-times"
+                class="p-button-text"
+                (click)="cerrarModalSyncBodega()">
+        </button>
+        <button pButton
+                [label]="resumenSyncBodega.conDiferencia === 0 ? 'Ya sincronizado' : 'Sincronizar ' + resumenSyncBodega.conDiferencia + ' productos'"
+                [icon]="resumenSyncBodega.conDiferencia === 0 ? 'pi pi-check' : 'pi pi-sync'"
+                [disabled]="loadingSyncBodegaModal || resumenSyncBodega.conDiferencia === 0"
+                [loading]="syncingAllProducts"
+                class="p-button-warning"
+                (click)="confirmarSyncBodegaModal()">
         </button>
     </ng-template>
 </p-dialog>

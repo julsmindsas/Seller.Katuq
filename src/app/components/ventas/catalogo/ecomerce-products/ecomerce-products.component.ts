@@ -656,6 +656,9 @@ export class EcomerceProductsComponent
         console.log("Ciudad cambiada a:", this.ciudad);
         // selectedCity controla visualización del selector
         this.selectedCity = this.ciudad;
+
+        // Verificar y limpiar productos del carrito que no estén disponibles en la nueva ciudad
+        this.verificarYLimpiarCarritoPorCiudad(this.ciudad, changes["ciudad"].previousValue);
       }
 
       // Solo filtrar si tenemos tanto bodega como ciudad
@@ -684,6 +687,54 @@ export class EcomerceProductsComponent
   getCityLabel(value: string): string {
     const ciudad = this.ciudadSelector.find(c => c.value === value);
     return ciudad ? ciudad.label : value;
+  }
+
+  /**
+   * Verifica y limpia los productos del carrito que no estén disponibles en la nueva ciudad.
+   * Si hay productos en el carrito de una ciudad diferente, pregunta al usuario si desea limpiarlos.
+   * @param nuevaCiudad La nueva ciudad seleccionada
+   * @param ciudadAnterior La ciudad anterior (opcional)
+   */
+  private verificarYLimpiarCarritoPorCiudad(nuevaCiudad: string, ciudadAnterior?: string): void {
+    // Obtener productos del carrito
+    const productosEnCarrito = this.cartService.productInCart.value;
+
+    // Si no hay productos en el carrito, no hay nada que verificar
+    if (!productosEnCarrito || productosEnCarrito.length === 0) {
+      console.log('🛒 No hay productos en el carrito para verificar');
+      return;
+    }
+
+    // Verificar si hay productos que podrían no estar disponibles en la nueva ciudad
+    // Los productos tienen la ciudad de entrega en configuracion.datosEntrega.ciudad
+    const productosOtraCiudad = productosEnCarrito.filter(item => {
+      const ciudadProducto = item?.configuracion?.datosEntrega?.ciudad;
+      // Si el producto tiene una ciudad asignada y es diferente a la nueva ciudad
+      return ciudadProducto && ciudadProducto.toLowerCase() !== nuevaCiudad?.toLowerCase();
+    });
+
+    if (productosOtraCiudad.length > 0) {
+      console.log(`⚠️ Se encontraron ${productosOtraCiudad.length} productos de otra ciudad en el carrito`);
+
+      // Mostrar mensaje y preguntar al usuario
+      const mensaje = `Hay ${productosOtraCiudad.length} producto(s) en el carrito que pertenecen a otra ciudad. ¿Desea limpiar el carrito para la nueva ciudad "${nuevaCiudad}"?`;
+
+      // Usar confirm nativo para preguntar (se puede mejorar con un modal más elegante)
+      if (confirm(mensaje)) {
+        this.cartService.clearCart();
+        this.toastrService.info(
+          `El carrito ha sido limpiado al cambiar a ${nuevaCiudad}`,
+          'Carrito limpiado'
+        );
+      } else {
+        this.toastrService.warning(
+          'Los productos del carrito podrían no estar disponibles en la nueva ciudad',
+          'Advertencia'
+        );
+      }
+    } else {
+      console.log('✅ Todos los productos del carrito son compatibles con la nueva ciudad');
+    }
   }
 
   /**
