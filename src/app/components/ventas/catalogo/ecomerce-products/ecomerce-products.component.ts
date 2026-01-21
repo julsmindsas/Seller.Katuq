@@ -902,29 +902,52 @@ export class EcomerceProductsComponent
       cantidad: cantidadMinima
     };
 
-    // 6. Agregar al carrito
-    this.cartService.addToCart(productoCompra);
-
-    // 7. Mostrar notificación de éxito
+    // 6. Agregar al carrito - DIFERENCIADO POR MODO
     const nombreProducto = producto.crearProducto?.titulo || 'Producto';
     const precioMostrar = productoConPrecio?.precio?.precioUnitarioConIva || 0;
 
-    this.toastrService.success(
-      `${nombreProducto} x${cantidadMinima} agregado ($${precioMostrar.toLocaleString('es-CO')})`,
-      'Agregado al carrito',
-      {
-        timeOut: 3000,
-        progressBar: true,
-        positionClass: 'toast-bottom-right'
-      }
-    );
+    if (this.isRebuy) {
+      // MODO RECOMPRA: Cerrar modal y pasar producto al componente padre (list.component.ts)
+      // El padre recibirá el producto en addProductToCart() y lo agregará al pedido
+      console.log('🔄 QuickAdd RECOMPRA: Cerrando modal y pasando producto al pedido:', {
+        titulo: nombreProducto,
+        cantidad: cantidadMinima,
+        precioUnitario: precioMostrar
+      });
 
-    console.log('⚡ QuickAdd: Producto agregado al carrito:', {
-      titulo: nombreProducto,
-      cantidad: cantidadMinima,
-      precioUnitario: precioMostrar,
-      tienePrecioCategoria: !!productoConPrecio._precioAplicadoPorCategoria,
-      datosEntrega: datosEntregaPorDefecto
-    });
+      this.toastrService.success(
+        `${nombreProducto} x${cantidadMinima} agregado al pedido ($${precioMostrar.toLocaleString('es-CO')})`,
+        'Agregado al pedido',
+        {
+          timeOut: 3000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        }
+      );
+
+      // Cerrar todos los modales pasando el producto configurado
+      this.modalService.dismissAll(productoCompra);
+    } else {
+      // MODO NORMAL: Agregar al carrito global (CartSingletonService)
+      this.cartService.addToCart(productoCompra);
+
+      this.toastrService.success(
+        `${nombreProducto} x${cantidadMinima} agregado ($${precioMostrar.toLocaleString('es-CO')})`,
+        'Agregado al carrito',
+        {
+          timeOut: 3000,
+          progressBar: true,
+          positionClass: 'toast-bottom-right'
+        }
+      );
+
+      console.log('⚡ QuickAdd: Producto agregado al carrito:', {
+        titulo: nombreProducto,
+        cantidad: cantidadMinima,
+        precioUnitario: precioMostrar,
+        tienePrecioCategoria: !!productoConPrecio._precioAplicadoPorCategoria,
+        datosEntrega: datosEntregaPorDefecto
+      });
+    }
   }
 }

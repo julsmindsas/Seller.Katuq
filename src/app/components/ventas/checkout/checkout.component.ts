@@ -670,13 +670,39 @@ export class CheckOutComponent implements OnInit, OnChanges {
       this.pedido.totalEnvio = this.pedidoUtilService.getShippingCost(this.allBillingZone);
 
       // Calcular impuestos
-      const ivaBreakdown = this.checkIVAPrice(); 
-      this.pedido.totalImpuesto = ivaBreakdown.totalPrecioIVADef; 
+      const ivaBreakdown = this.checkIVAPrice();
+      this.pedido.totalImpuesto = ivaBreakdown.totalPrecioIVADef;
 
       // Calcular subtotal y total
-      this.pedido.totalPedidoSinDescuento = this.checkPriceScale(); 
+      this.pedido.totalPedidoSinDescuento = this.checkPriceScale();
       this.pedido.subtotal = this.pedido.totalPedidoSinDescuento; // Asegurar que subtotal esté explícitamente definido
       this.pedido.totalPedididoConDescuento = this.pedido.totalPedidoSinDescuento + this.pedido.totalImpuesto + this.pedido.totalEnvio - this.pedido.totalDescuento;
+
+      // 🔍 DEBUG: Logs para diagnosticar IVA y Domicilio en 0
+      console.group('🔍 DEBUG - Cálculo de valores del pedido');
+      console.log('📦 allBillingZone cargado:', this.allBillingZone?.length > 0 ? `${this.allBillingZone.length} zonas` : '❌ VACÍO o NO CARGADO');
+      console.log('📦 allBillingZone completo:', this.allBillingZone);
+      console.log('🚚 Datos de envío del pedido:', {
+        ciudad: this.pedido?.envio?.ciudad || '❌ NO DEFINIDO',
+        zonaCobro: this.pedido?.envio?.zonaCobro || '❌ NO DEFINIDO',
+        valorZonaCobro: this.pedido?.envio?.valorZonaCobro || '❌ NO DEFINIDO'
+      });
+      console.log('💰 Valores calculados:', {
+        totalEnvio: this.pedido.totalEnvio,
+        totalImpuesto: this.pedido.totalImpuesto,
+        totalDescuento: this.pedido.totalDescuento,
+        totalPedidoSinDescuento: this.pedido.totalPedidoSinDescuento,
+        subtotal: this.pedido.subtotal,
+        totalPedididoConDescuento: this.pedido.totalPedididoConDescuento
+      });
+      console.log('🧾 IVA Breakdown:', ivaBreakdown);
+      console.log('🛒 Carrito:', this.pedido?.carrito?.map(item => ({
+        referencia: item?.producto?.identificacion?.referencia,
+        cantidad: item?.cantidad,
+        precioUnitarioConIva: item?.producto?.precio?.precioUnitarioConIva,
+        valorIva: item?.producto?.precio?.valorIva
+      })));
+      console.groupEnd();
 
       // Asignar forma de pago
       let opcionSeleccionadaId = this.form.value.opcionSeleccionada;
