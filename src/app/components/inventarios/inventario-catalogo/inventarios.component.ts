@@ -138,6 +138,27 @@ export class InventarioCatalogoComponent implements OnInit {
   syncingBodega: boolean = false;
   stockFulfillmentCargado: boolean = false; // Indica si ya se cargó el stock de fulfillment
 
+  // Sync masivo desde Vista Consolidada
+  syncingAllProducts: boolean = false;
+  syncAllProgress: { current: number; total: number; errors: number; success: number } = { current: 0, total: 0, errors: 0, success: 0 };
+  bodegaSyncSeleccionada: BodegaConsolidada | null = null; // Bodega seleccionada para sync
+
+  // Modal de sincronización por bodega
+  syncBodegaModalVisible: boolean = false;
+  loadingSyncBodegaModal: boolean = false;
+  productosSyncBodega: {
+    id: string;
+    referencia: string;
+    nombre: string;
+    stockKatuq: number;
+    stockFulfillment: number | null;
+    diferencia: number | null;
+    fulfillmentId: string | null;
+  }[] = [];
+  resumenSyncBodega: { total: number; conDiferencia: number; sinEnlace: number; totalDiferencia: number } = {
+    total: 0, conDiferencia: 0, sinEnlace: 0, totalDiferencia: 0
+  };
+
   // ============== MENÚ DE ACCIONES ==============
   rowMenuItems: MenuItem[] = [];
   selectedMenuProducto: ProductoConsolidado | null = null;
@@ -170,7 +191,7 @@ export class InventarioCatalogoComponent implements OnInit {
     productosBajoStock: 0
   };
   paginationConsolidada: { limit: number; hasMore: boolean; lastDoc: string | null } = {
-    limit: 100,
+    limit: 500, // Max permitido por el backend
     hasMore: false,
     lastDoc: null
   };
@@ -193,11 +214,22 @@ export class InventarioCatalogoComponent implements OnInit {
   errorSyncModal: string | null = null;
   // Desglose por bodega
   bodegasDesglose: {
+    idBodega: string;
     nombre: string;
     stockKatuq: number;
     stockAliaddo: number;
     diferencia: number;
   }[] = [];
+
+  // 🔧 FIX: Verifica si hay diferencias en alguna bodega individual
+  get hayDiferenciasPorBodega(): boolean {
+    return this.bodegasDesglose.some(b => b.diferencia !== 0);
+  }
+
+  // 🔧 FIX: Cuenta las bodegas con diferencias
+  get bodegasConDiferenciaCount(): number {
+    return this.bodegasDesglose.filter(b => b.diferencia !== 0).length;
+  }
 
   // ============== ANÁLISIS IA ==============
   analizandoIA: boolean = false;
@@ -682,6 +714,7 @@ export class InventarioCatalogoComponent implements OnInit {
               const stockAliaddo = wh.quantity || wh.stock || 0;
 
               this.bodegasDesglose.push({
+                idBodega: bodegaKatuq?.id || wh.code || '',
                 nombre: bodegaKatuq?.nombre || wh.name || 'Sin mapear',
                 stockKatuq,
                 stockAliaddo,
@@ -717,47 +750,68 @@ export class InventarioCatalogoComponent implements OnInit {
 
   /**
    * Ejecuta la sincronización del producto con Aliaddo
-   * Actualiza el stock de Katuq para que coincida con Aliaddo
+   * 🔧 FIX: Sincroniza TODAS las bodegas que tienen diferencias, no solo una
    */
   ejecutarSincronizacion(): void {
-    if (!this.productoSyncSeleccionado || this.diferenciaSyncTotal === 0) {
+    // Permitir sincronización si hay diferencias por bodega O diferencia total
+    if (!this.productoSyncSeleccionado || (!this.hayDiferenciasPorBodega && this.diferenciaSyncTotal === 0)) {
       return;
     }
 
     this.loadingSyncModal = true;
 
-    // Sincronizar en la bodega principal (primera con fulfillmentId)
-    const bodegaDestino = this.bodegasConsolidadas.find(b => b.fulfillmentId);
+    // Filtrar bodegas que tienen diferencias
+    const bodegasConDiferencia = this.bodegasDesglose.filter(b => b.diferencia !== 0 && b.idBodega);
 
-    if (!bodegaDestino) {
-      this.toastr.error('No hay bodega configurada para fulfillment');
+    if (bodegasConDiferencia.length === 0) {
+      this.toastr.warning('No hay bodegas con diferencias para sincronizar');
       this.loadingSyncModal = false;
       return;
     }
 
-    this.fulfillmentService.syncProductInventory(
-      this.productoSyncSeleccionado.id,
-      bodegaDestino.id,
-      this.fulfillmentProvider,
-      { fulfillmentProductId: this.productoSyncSeleccionado.fulfillmentId! }
-    ).subscribe({
-      next: (result) => {
-        if (result.success) {
-          const signo = this.diferenciaSyncTotal > 0 ? '+' : '';
-          this.toastr.success(`Sincronizado: ${signo}${this.diferenciaSyncTotal} unidades`);
+    // Sincronizar cada bodega con diferencia en secuencia
+    let completadas = 0;
+    let errores = 0;
+
+    const sincronizarSiguiente = (index: number) => {
+      if (index >= bodegasConDiferencia.length) {
+        // Todas las bodegas procesadas
+        this.loadingSyncModal = false;
+        if (errores === 0) {
+          this.toastr.success(`${completadas} bodega(s) sincronizada(s) correctamente`);
           this.closeSyncModal();
-          this.cargarInventarioConsolidado(); // Recargar datos
+          this.cargarInventarioConsolidado();
         } else {
-          this.toastr.error(result.error || 'Error al sincronizar');
+          this.toastr.warning(`${completadas} sincronizadas, ${errores} con errores`);
         }
-        this.loadingSyncModal = false;
-      },
-      error: (error) => {
-        console.error('Error sincronizando producto:', error);
-        this.toastr.error('Error al sincronizar con Aliaddo');
-        this.loadingSyncModal = false;
+        return;
       }
-    });
+
+      const bodega = bodegasConDiferencia[index];
+      this.fulfillmentService.syncProductInventory(
+        this.productoSyncSeleccionado!.referencia,
+        bodega.idBodega,
+        this.fulfillmentProvider,
+        { fulfillmentProductId: this.productoSyncSeleccionado!.fulfillmentId! }
+      ).subscribe({
+        next: (result) => {
+          if (result.success) {
+            completadas++;
+          } else {
+            errores++;
+            console.error(`Error sincronizando bodega ${bodega.nombre}:`, result.error);
+          }
+          sincronizarSiguiente(index + 1);
+        },
+        error: (error) => {
+          errores++;
+          console.error(`Error sincronizando bodega ${bodega.nombre}:`, error);
+          sincronizarSiguiente(index + 1);
+        }
+      });
+    };
+
+    sincronizarSiguiente(0);
   }
 
   /**
@@ -766,6 +820,48 @@ export class InventarioCatalogoComponent implements OnInit {
   calcularTotalFulfillment(producto: ProductoConsolidado): number {
     if (!producto.fulfillmentStock) return 0;
     return Object.values(producto.fulfillmentStock).reduce((sum, qty) => sum + qty, 0);
+  }
+
+  /**
+   * Calcula el total de unidades sumando las métricas de las bodegas
+   * Respeta el filtro de fulfillment si está activo
+   */
+  /**
+   * Calcula el total de unidades de una bodega específica basado en productos filtrados
+   */
+  calcularTotalBodegaFiltrado(bodegaId: string): number {
+    return this.productosConsolidadosFiltrados.reduce((total, producto) => {
+      return total + (producto.stockPorBodega?.[bodegaId] ?? 0);
+    }, 0);
+  }
+
+  /**
+   * Calcula el total general basado en productos filtrados y bodegas filtradas
+   */
+  calcularTotalUnidadesBodegas(): number {
+    // Determinar qué bodegas incluir según filtro
+    let bodegas = this.bodegasConsolidadas;
+
+    if (this.filtrosConsolidados.fulfillment === 'con') {
+      bodegas = bodegas.filter(b => !!b.fulfillmentId);
+    } else if (this.filtrosConsolidados.fulfillment === 'sin') {
+      bodegas = bodegas.filter(b => !b.fulfillmentId);
+    }
+
+    // Si hay filtro de bodega específica
+    if (this.filtrosConsolidados.bodegaId) {
+      bodegas = bodegas.filter(b => b.id === this.filtrosConsolidados.bodegaId);
+    }
+
+    const bodegaIds = new Set(bodegas.map(b => b.id));
+
+    // Sumar stocks de los productos FILTRADOS solo de las bodegas FILTRADAS
+    return this.productosConsolidadosFiltrados.reduce((total, producto) => {
+      const stockEnBodegasFiltradas = Object.entries(producto.stockPorBodega || {})
+        .filter(([bodegaId]) => bodegaIds.has(bodegaId))
+        .reduce((sum, [, stock]) => sum + ((stock as number) || 0), 0);
+      return total + stockEnBodegasFiltradas;
+    }, 0);
   }
 
   // ============== FIN MÉTODOS VISTA CONSOLIDADA ==============
@@ -920,6 +1016,75 @@ export class InventarioCatalogoComponent implements OnInit {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario');
     XLSX.writeFile(workbook, 'Inventario_Detallado.xlsx');
+  }
+
+  /**
+   * Exporta la vista consolidada a Excel con columnas dinámicas por bodega
+   */
+  exportarExcelConsolidado() {
+    if (this.productosConsolidadosFiltrados.length === 0) {
+      this.toastr.warning('No hay datos para exportar', 'Advertencia');
+      return;
+    }
+
+    // Determinar las bodegas a incluir (respetando filtros)
+    let bodegasExportar = this.bodegasConsolidadas;
+    if (this.filtrosConsolidados.fulfillment === 'con') {
+      bodegasExportar = bodegasExportar.filter(b => !!b.fulfillmentId);
+    } else if (this.filtrosConsolidados.fulfillment === 'sin') {
+      bodegasExportar = bodegasExportar.filter(b => !b.fulfillmentId);
+    }
+    if (this.filtrosConsolidados.bodegaId) {
+      bodegasExportar = bodegasExportar.filter(b => b.id === this.filtrosConsolidados.bodegaId);
+    }
+
+    // Crear datos para Excel con columnas dinámicas
+    const excelData = this.productosConsolidadosFiltrados.map(producto => {
+      const row: any = {
+        'Referencia': producto.referencia || '',
+        'Nombre': producto.nombre || '',
+      };
+
+      // Agregar columna por cada bodega
+      bodegasExportar.forEach(bodega => {
+        const stock = producto.stockPorBodega?.[bodega.id] ?? 0;
+        row[bodega.nombre] = stock;
+      });
+
+      // Calcular total basado en bodegas filtradas
+      const totalFiltrado = bodegasExportar.reduce((total, bodega) => {
+        return total + (producto.stockPorBodega?.[bodega.id] ?? 0);
+      }, 0);
+
+      row['TOTAL'] = totalFiltrado;
+      row['Precio'] = producto.precio || 0;
+      row['Valor Total'] = totalFiltrado * (producto.precio || 0);
+
+      return row;
+    });
+
+    // Crear hoja de Excel
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Ajustar anchos de columna
+    const colWidths = [
+      { wch: 15 }, // Referencia
+      { wch: 40 }, // Nombre
+      ...bodegasExportar.map(() => ({ wch: 12 })), // Bodegas
+      { wch: 10 }, // TOTAL
+      { wch: 12 }, // Precio
+      { wch: 15 }, // Valor Total
+    ];
+    worksheet['!cols'] = colWidths;
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Inventario Consolidado');
+
+    // Generar nombre de archivo con fecha
+    const fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `Inventario_Consolidado_${fecha}.xlsx`);
+
+    this.toastr.success(`${excelData.length} productos exportados`, 'Excel generado');
   }
 
   // Métodos auxiliares para la plantilla
@@ -1325,8 +1490,11 @@ export class InventarioCatalogoComponent implements OnInit {
 
     this.syncingProduct = producto.id;
 
+    // Obtener la referencia del producto (el backend busca por identificacion.referencia)
+    const referenciaProducto = producto.identificacion?.referencia || producto.id;
+
     this.fulfillmentService.syncProductInventory(
-      producto.id,
+      referenciaProducto,
       this.bodegaSeleccionada.idBodega,
       this.fulfillmentProvider
     ).subscribe({
@@ -1487,6 +1655,263 @@ export class InventarioCatalogoComponent implements OnInit {
       }
       return total;
     }, 0);
+  }
+
+  // ============== SYNC MASIVO VISTA CONSOLIDADA ==============
+
+  /**
+   * Obtiene los productos con fulfillment habilitado para sincronizar
+   */
+  getProductosConFulfillment(): ProductoConsolidado[] {
+    return this.productosConsolidadosFiltrados.filter(p => p.fulfillmentId);
+  }
+
+  /**
+   * Obtiene las bodegas con fulfillment habilitado
+   */
+  getBodegasConFulfillment(): BodegaConsolidada[] {
+    return this.bodegasConsolidadas.filter(b => b.fulfillmentId);
+  }
+
+  /**
+   * Abre el modal de sincronización para una bodega específica
+   */
+  syncBodegaDesdeConsolidada(): void {
+    if (!this.bodegaSyncSeleccionada || !this.fulfillmentProvider) {
+      this.toastr.warning('Selecciona una bodega para sincronizar', 'Advertencia');
+      return;
+    }
+
+    this.abrirModalSyncBodega();
+  }
+
+  /**
+   * Abre el modal y carga los datos de stock para la bodega seleccionada
+   */
+  private async abrirModalSyncBodega(): Promise<void> {
+    const bodega = this.bodegaSyncSeleccionada!;
+    this.syncBodegaModalVisible = true;
+    this.loadingSyncBodegaModal = true;
+    this.productosSyncBodega = [];
+    this.resumenSyncBodega = { total: 0, conDiferencia: 0, sinEnlace: 0, totalDiferencia: 0 };
+
+    const productosConFF = this.getProductosConFulfillment();
+
+    // Cargar stock de fulfillment para cada producto
+    for (const producto of productosConFF) {
+      const stockKatuq = this.getStockBodegaById(producto, bodega.id);
+
+      let stockFulfillment: number | null = null;
+      let diferencia: number | null = null;
+
+      // Consultar stock de fulfillment
+      try {
+        const response = await this.fulfillmentService.getProductStock(
+          this.fulfillmentProvider,
+          producto.fulfillmentId!
+        ).toPromise();
+
+        if (response?.success && response.warehouses) {
+          // Buscar la bodega específica
+          const whMatch = response.warehouses.find((wh: any) =>
+            wh.id === bodega.fulfillmentId ||
+            wh.code === bodega.id ||
+            (wh.name && wh.name.toUpperCase().includes(bodega.nombre.toUpperCase()))
+          );
+          if (whMatch) {
+            stockFulfillment = whMatch.quantity || whMatch.stock || 0;
+            diferencia = stockFulfillment - stockKatuq;
+          }
+        }
+      } catch (error) {
+        console.error(`Error obteniendo stock FF para ${producto.nombre}:`, error);
+      }
+
+      this.productosSyncBodega.push({
+        id: producto.id,
+        referencia: producto.referencia || '',
+        nombre: producto.nombre,
+        stockKatuq,
+        stockFulfillment,
+        diferencia,
+        fulfillmentId: producto.fulfillmentId
+      });
+    }
+
+    // Calcular resumen
+    this.resumenSyncBodega.total = this.productosSyncBodega.length;
+    this.resumenSyncBodega.conDiferencia = this.productosSyncBodega.filter(p => p.diferencia !== null && p.diferencia !== 0).length;
+    this.resumenSyncBodega.sinEnlace = this.productosSyncBodega.filter(p => p.stockFulfillment === null).length;
+    this.resumenSyncBodega.totalDiferencia = this.productosSyncBodega.reduce((acc, p) => acc + (p.diferencia || 0), 0);
+
+    this.loadingSyncBodegaModal = false;
+  }
+
+  /**
+   * Obtiene el stock de un producto en una bodega específica por ID
+   */
+  private getStockBodegaById(producto: ProductoConsolidado, bodegaId: string): number {
+    if (!producto.stockPorBodega) return 0;
+    return producto.stockPorBodega[bodegaId] || 0;
+  }
+
+  /**
+   * Cierra el modal de sync bodega
+   */
+  cerrarModalSyncBodega(): void {
+    this.syncBodegaModalVisible = false;
+    this.productosSyncBodega = [];
+  }
+
+  /**
+   * Ejecuta la sincronización desde el modal
+   */
+  confirmarSyncBodegaModal(): void {
+    if (!this.bodegaSyncSeleccionada) return;
+
+    const productosASincronizar = this.productosSyncBodega.filter(p => p.fulfillmentId && p.diferencia !== null);
+
+    if (productosASincronizar.length === 0) {
+      this.toastr.info('No hay productos para sincronizar', 'Info');
+      return;
+    }
+
+    this.syncBodegaModalVisible = false;
+
+    // Convertir a formato esperado
+    const productos = productosASincronizar.map(p => ({
+      id: p.id,
+      referencia: p.referencia,
+      nombre: p.nombre,
+      fulfillmentId: p.fulfillmentId
+    })) as ProductoConsolidado[];
+
+    this.ejecutarSyncBodegaConsolidada(this.bodegaSyncSeleccionada, productos);
+  }
+
+  /**
+   * Ejecuta la sincronización de una bodega específica para todos los productos
+   */
+  private async ejecutarSyncBodegaConsolidada(bodega: BodegaConsolidada, productos: ProductoConsolidado[]): Promise<void> {
+    this.syncingAllProducts = true;
+    this.syncAllProgress = { current: 0, total: productos.length, errors: 0, success: 0 };
+
+    for (const producto of productos) {
+      this.syncAllProgress.current++;
+
+      try {
+        const referenciaProducto = producto.referencia || producto.id;
+
+        await this.fulfillmentService.syncProductInventory(
+          referenciaProducto,
+          bodega.id,
+          this.fulfillmentProvider
+        ).toPromise();
+
+        this.syncAllProgress.success++;
+      } catch (error) {
+        console.error(`Error sincronizando ${producto.nombre} en ${bodega.nombre}:`, error);
+        this.syncAllProgress.errors++;
+      }
+    }
+
+    this.syncingAllProducts = false;
+
+    Swal.fire({
+      title: 'Sincronización Completada',
+      html: `
+        <p>Bodega: <strong>${bodega.nombre}</strong></p>
+        <p><i class="pi pi-check-circle text-success me-2"></i>${this.syncAllProgress.success} productos sincronizados</p>
+        ${this.syncAllProgress.errors > 0 ? `<p><i class="pi pi-times-circle text-danger me-2"></i>${this.syncAllProgress.errors} errores</p>` : ''}
+      `,
+      icon: this.syncAllProgress.errors > 0 ? 'warning' : 'success'
+    });
+
+    this.cargarInventarioConsolidado();
+  }
+
+  /**
+   * Sincroniza TODOS los productos con fulfillment desde Vista Consolidada
+   * Recorre cada producto y sincroniza todas sus bodegas con fulfillment
+   */
+  syncAllProductsFulfillment(): void {
+    if (!this.fulfillmentEnabled || !this.fulfillmentProvider) {
+      this.toastr.warning('Fulfillment no está configurado', 'Advertencia');
+      return;
+    }
+
+    const productosConFF = this.getProductosConFulfillment();
+    if (productosConFF.length === 0) {
+      this.toastr.info('No hay productos con enlace a fulfillment', 'Info');
+      return;
+    }
+
+    // Confirmar antes de sincronizar
+    Swal.fire({
+      title: 'Sincronizar Todo el Inventario',
+      html: `
+        <p>¿Desea sincronizar <strong>${productosConFF.length}</strong> productos con ${this.fulfillmentProviderName}?</p>
+        <p class="text-muted small">Se sincronizarán todas las bodegas de cada producto.</p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, sincronizar todo',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#7c3aed'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.ejecutarSyncMasivo(productosConFF);
+      }
+    });
+  }
+
+  /**
+   * Ejecuta la sincronización masiva de todos los productos
+   */
+  private async ejecutarSyncMasivo(productos: ProductoConsolidado[]): Promise<void> {
+    this.syncingAllProducts = true;
+    this.syncAllProgress = { current: 0, total: productos.length, errors: 0, success: 0 };
+
+    // Obtener bodegas con fulfillment
+    const bodegasConFF = this.bodegasConsolidadas.filter(b => b.fulfillmentId);
+
+    for (const producto of productos) {
+      this.syncAllProgress.current++;
+
+      try {
+        // Sincronizar cada bodega del producto
+        for (const bodega of bodegasConFF) {
+          const referenciaProducto = producto.referencia || producto.id;
+
+          await this.fulfillmentService.syncProductInventory(
+            referenciaProducto,
+            bodega.id, // idBodega
+            this.fulfillmentProvider
+          ).toPromise();
+        }
+        this.syncAllProgress.success++;
+      } catch (error) {
+        console.error(`Error sincronizando producto ${producto.nombre}:`, error);
+        this.syncAllProgress.errors++;
+      }
+    }
+
+    this.syncingAllProducts = false;
+
+    // Mostrar resultado
+    Swal.fire({
+      title: 'Sincronización Completada',
+      html: `
+        <div class="text-start">
+          <p><i class="pi pi-check-circle text-success me-2"></i><strong>${this.syncAllProgress.success}</strong> productos sincronizados</p>
+          ${this.syncAllProgress.errors > 0 ? `<p><i class="pi pi-times-circle text-danger me-2"></i><strong>${this.syncAllProgress.errors}</strong> errores</p>` : ''}
+        </div>
+      `,
+      icon: this.syncAllProgress.errors > 0 ? 'warning' : 'success'
+    });
+
+    // Recargar inventario
+    this.cargarInventarioConsolidado();
   }
 
   // ============== MÉTODOS DE ROW EXPANSION ==============

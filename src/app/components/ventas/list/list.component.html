@@ -1355,7 +1355,8 @@
     </div>
     <div class="modal-body">
         <app-pedido-facturacion #facturacion [pedidoGral]="pedidoSeleccionado" [formulario]="formulario" [isEdit]="true"
-            [documentoBusqueda]="clienteSeleccionado.documento"></app-pedido-facturacion>
+            [documentoBusqueda]="clienteSeleccionado.documento"
+            (overridePedido)="overridePedidoByFacturacion($event)"></app-pedido-facturacion>
     </div>
 </ng-template>
 

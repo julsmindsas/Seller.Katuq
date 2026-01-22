@@ -815,22 +815,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns true si se puede editar (solo si forma de entrega contiene "domicilio")
    */
   canEditDeliveryAddressByDeliveryType(order: Pedido): boolean {
-    if (!order?.formaEntrega) return false;
+    // Si no hay forma de entrega definida, permitir edición por defecto
+    if (!order?.formaEntrega) return true;
 
     const formaEntregaLower = order.formaEntrega.toLowerCase();
 
-    // Bloquear si contiene "recoge"
+    // Bloquear SOLO si contiene "recoge" (recoge en tienda no necesita dirección)
     if (formaEntregaLower.includes("recoge")) {
       return false;
     }
 
-    // Activar si contiene "domicilio"
-    if (formaEntregaLower.includes("domicilio")) {
-      return true;
-    }
-
-    // Por defecto bloquear si no coincide con ninguna condición
-    return false;
+    // Permitir edición para domicilio y cualquier otra forma de entrega
+    return true;
   }
 
   /**
@@ -924,12 +920,23 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     );
   }
 
-  /** Devuelve estados de pago disponibles según permisos (usuarios normales: Pendiente, PreAprobado) */
+  /**
+   * Devuelve estados de pago disponibles según permisos
+   * - Super Admin/Admin: TODOS los estados
+   * - Vendedores: Pendiente, Pospendiente, PreAprobado, Aprobado
+   */
   getAvailablePaymentStates(): EstadoPago[] {
-    if (this.canDeleteOrder()) {
+    // Super admins y administradores ven todos los estados
+    if (this.canDeleteOrder() || this.isAdminUser()) {
       return this.estadosPago as EstadoPago[];
     }
-    return [EstadoPago.Pendiente, EstadoPago.PreAprobado];
+    // Vendedores ven estados básicos (sin Rechazado, Precancelado, Cancelado)
+    return [
+      EstadoPago.Pendiente,
+      EstadoPago.Pospendiente,
+      EstadoPago.PreAprobado,
+      EstadoPago.Aprobado
+    ];
   }
 
   /**
@@ -2942,7 +2949,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
             const ivaResult = this.checkIVAPrice(order);
-            order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || 0);
+            // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
+            order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || order.totalImpuesto || 0);
 
             // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
             order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -3319,7 +3327,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
               // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
               const ivaResultSinPag = this.checkIVAPrice(order);
-              order.totalImpuesto = Number(ivaResultSinPag.totalPrecioIVADef || 0);
+              // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
+              order.totalImpuesto = Number(ivaResultSinPag.totalPrecioIVADef || order.totalImpuesto || 0);
 
               // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
               order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -4715,7 +4724,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
     const ivaResultTotales = this.checkIVAPrice(pedido);
-    const totalImpuesto = Number(ivaResultTotales.totalPrecioIVADef || 0);
+    // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
+    const totalImpuesto = Number(ivaResultTotales.totalPrecioIVADef || pedido.totalImpuesto || 0);
     pedido.totalImpuesto = totalImpuesto;
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
@@ -4832,7 +4842,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
     const ivaResultRecalc = this.checkIVAPrice(order);
-    order.totalImpuesto = Number(ivaResultRecalc.totalPrecioIVADef || 0);
+    // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
+    order.totalImpuesto = Number(ivaResultRecalc.totalPrecioIVADef || order.totalImpuesto || 0);
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
     order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -6723,7 +6734,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado)
     const ivaResult = this.checkIVAPrice(order);
-    order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || 0);
+    // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
+    order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || order.totalImpuesto || 0);
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
     order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
@@ -7051,6 +7063,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Actualiza el pedido con los datos de facturación seleccionados y lo guarda
+   * @param event Pedido actualizado con datos de facturación
+   */
+  overridePedidoByFacturacion(event: Pedido) {
+    this.pedidoSeleccionado = event;
+    // Guardar el pedido con los nuevos datos de facturación
+    this.editOrder(this.pedidoSeleccionado);
+    console.log('📧 Datos de facturación actualizados y guardados:', this.pedidoSeleccionado.facturacion);
+  }
+
+  /**
    * Exporta pedidos a Excel usando endpoint dedicado SIN LÍMITE de paginación
    * Obtiene TODOS los pedidos que coincidan con el filtro de fechas
    * @since 2025.11.24 - Nuevo endpoint dedicado para exportación sin límites
@@ -7117,7 +7140,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
           const ivaResultExport = this.checkIVAPrice(order);
-          order.totalImpuesto = Number(ivaResultExport.totalPrecioIVADef || 0);
+          // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
+          order.totalImpuesto = Number(ivaResultExport.totalPrecioIVADef || order.totalImpuesto || 0);
 
           // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
           order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
