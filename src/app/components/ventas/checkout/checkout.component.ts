@@ -44,6 +44,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
   // Emite el evento de comprar y pagar al componente padre
   @Output() comprarYPagar = new EventEmitter<any>();
 
+  // Emite el evento cuando cambia la forma de entrega
+  @Output() formaEntregaChange = new EventEmitter<string>();
+
   // Datos del pedido recibidos del componente padre
   @Input()
   public pedido: Pedido;
@@ -51,7 +54,16 @@ export class CheckOutComponent implements OnInit, OnChanges {
   // Zonas de cobro
   @Input()
   allBillingZone: any[] = [];
-  
+
+  // Opciones de forma de entrega disponibles
+  formasEntregaOptions: { value: string; label: string; icon: string }[] = [
+    { value: 'Domicilio', label: 'Envío a Domicilio', icon: 'fa-truck' },
+    { value: 'Recoge', label: 'Recoge en Tienda', icon: 'fa-store' }
+  ];
+
+  // Forma de entrega seleccionada
+  selectedFormaEntrega: string = 'Domicilio';
+
   // Cálculos de precio
   precioproducto: any;
 
@@ -243,14 +255,17 @@ export class CheckOutComponent implements OnInit, OnChanges {
     if (changes['pedido'] && changes['pedido'].currentValue) {
       this.pedido = { ...this.pedido };
       this.pedidoUtilService.pedido = this.pedido;
-      
+
+      // Inicializar la forma de entrega
+      this.inicializarFormaEntrega();
+
       // Refrescar carrito
       this.actualizarCarrito();
-      
+
       // Determinar el paso del acordeón inicial basado en datos del pedido
       this.determinarPasoInicial();
     }
-    
+
     // Si cambian las zonas de cobro, actualizar cálculos
     if (changes['allBillingZone'] && changes['allBillingZone'].currentValue) {
       this.ref.detectChanges();
@@ -305,17 +320,71 @@ export class CheckOutComponent implements OnInit, OnChanges {
     // Inicializar el pedido en el servicio
     if (this.pedido) {
       this.pedidoUtilService.pedido = this.pedido;
+      // Inicializar la forma de entrega desde el pedido o el primer producto
+      this.inicializarFormaEntrega();
     }
-    
+
     // Asegurarse de que allBillingZone está inicializado
     if (!this.allBillingZone || this.allBillingZone.length === 0) {
       this.cargarZonasDeCobro();
     }
-    
+
     // Determinar el paso inicial del acordeón
     setTimeout(() => {
       this.determinarPasoInicial();
     }, 100);
+  }
+
+  /**
+   * Inicializa la forma de entrega desde el pedido existente
+   */
+  private inicializarFormaEntrega(): void {
+    if (this.pedido?.formaEntrega) {
+      this.selectedFormaEntrega = this.pedido.formaEntrega;
+    } else if (this.pedido?.carrito?.[0]?.configuracion?.datosEntrega?.formaEntrega) {
+      this.selectedFormaEntrega = this.pedido.carrito[0].configuracion.datosEntrega.formaEntrega;
+    } else {
+      this.selectedFormaEntrega = 'Domicilio';
+    }
+  }
+
+  /**
+   * Maneja el cambio de forma de entrega
+   * @param nuevaFormaEntrega La nueva forma de entrega seleccionada
+   */
+  onFormaEntregaChange(nuevaFormaEntrega: string): void {
+    this.selectedFormaEntrega = nuevaFormaEntrega;
+
+    // Actualizar el pedido
+    if (this.pedido) {
+      this.pedido.formaEntrega = nuevaFormaEntrega;
+
+      // Actualizar la configuración de todos los productos del carrito
+      if (this.pedido.carrito && this.pedido.carrito.length > 0) {
+        this.pedido.carrito.forEach(item => {
+          if (!item.configuracion) {
+            (item as any).configuracion = {};
+          }
+          if (!item.configuracion.datosEntrega) {
+            (item.configuracion as any).datosEntrega = {};
+          }
+          item.configuracion.datosEntrega.formaEntrega = nuevaFormaEntrega;
+        });
+      }
+
+      // Si es "Recoge en Tienda", limpiar costo de envío
+      if (nuevaFormaEntrega === 'Recoge') {
+        this.pedido.totalEnvio = 0;
+      }
+
+      // Emitir el evento al componente padre
+      this.formaEntregaChange.emit(nuevaFormaEntrega);
+
+      // Actualizar el servicio
+      this.pedidoUtilService.pedido = this.pedido;
+    }
+
+    this.ref.detectChanges();
   }
   
   /**

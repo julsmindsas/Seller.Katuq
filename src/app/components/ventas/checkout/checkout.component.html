@@ -21,12 +21,12 @@
       </div>
     </div>
 
-    <!-- Indicador de fecha estimada de entrega -->
+    <!-- Indicador de fecha estimada de entrega y selector de forma de entrega -->
     <div class="delivery-estimate mb-4">
       <div class="card shadow-sm border-0">
         <div class="card-body py-3">
           <div class="row align-items-center">
-            <div class="col-md-8">
+            <div class="col-md-5">
               <div class="d-flex align-items-center">
                 <div class="delivery-icon me-3">
                   <i class="fa fa-shipping-fast text-primary fs-3"></i>
@@ -37,9 +37,23 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-4 text-md-end">
-              <span class="badge bg-primary-light text-primary">Entrega en {{
-                pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega || 'Domicilio' }}</span>
+            <div class="col-md-7">
+              <!-- Selector de forma de entrega global -->
+              <div class="forma-entrega-selector">
+                <label class="selector-label mb-2">
+                  <i class="fa fa-truck-loading me-1"></i> Forma de Entrega
+                </label>
+                <div class="btn-group w-100" role="group" aria-label="Forma de entrega">
+                  <button *ngFor="let opcion of formasEntregaOptions"
+                    type="button"
+                    class="btn forma-entrega-btn"
+                    [ngClass]="{'active': selectedFormaEntrega === opcion.value}"
+                    (click)="onFormaEntregaChange(opcion.value)">
+                    <i class="fa {{opcion.icon}} me-2"></i>
+                    {{opcion.label}}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -139,7 +153,7 @@
           </div>
 
           <!-- Acordeón: Datos de envío -->
-          <div class="accordion-item" *ngIf="pedido?.formaEntrega != 'Recoge'">
+          <div class="accordion-item" *ngIf="selectedFormaEntrega !== 'Recoge'">
             <h2 class="accordion-header" id="headingEnvio">
               <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEnvio"
                 [attr.aria-expanded]="activeStep === 'envio'" aria-controls="collapseEnvio"
@@ -327,9 +341,8 @@
                         {{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.day}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.month}}/{{pedido?.carrito[0]?.configuracion?.datosEntrega?.fechaEntrega?.year}}</span>
                     </div>
                     <div class="info-summary-item">
-                      <i class="fa fa-truck"></i>
-                      <span><strong>Forma:</strong> {{pedido?.carrito[0]?.configuracion?.datosEntrega?.formaEntrega ||
-                        '-'}}</span>
+                      <i class="fa" [ngClass]="{'fa-truck': selectedFormaEntrega === 'Domicilio', 'fa-store': selectedFormaEntrega === 'Recoge'}"></i>
+                      <span><strong>Forma:</strong> {{ selectedFormaEntrega === 'Recoge' ? 'Recoge en Tienda' : 'Domicilio' }}</span>
                     </div>
                     <div class="info-summary-item">
                       <i class="fa fa-clock"></i>

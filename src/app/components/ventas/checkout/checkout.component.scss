@@ -78,6 +78,79 @@
   color: var(--primary-color);
 }
 
+/* Selector de forma de entrega global */
+.forma-entrega-selector {
+  .selector-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--gray-700);
+    display: block;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .forma-entrega-btn {
+    flex: 1;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--gray-600);
+    background-color: var(--gray-100);
+    border: 2px solid var(--gray-200);
+    border-radius: var(--border-radius) !important;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    i {
+      font-size: 1rem;
+    }
+
+    &:hover {
+      background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.05);
+      border-color: var(--primary-light);
+      color: var(--primary-color);
+    }
+
+    &.active {
+      background-color: rgba(var(--primary-rgb, 67, 97, 238), 0.1);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(67, 97, 238, 0.2);
+
+      i {
+        color: var(--primary-color);
+      }
+    }
+
+    &:focus {
+      box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+    }
+  }
+}
+
+/* Responsive para el selector de forma de entrega */
+@media (max-width: 767.98px) {
+  .forma-entrega-selector {
+    margin-top: 1rem;
+
+    .btn-group {
+      flex-direction: column;
+    }
+
+    .forma-entrega-btn {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+    }
+  }
+}
+
 /* Estilos para acordeón */
 .accordion-item {
   border: none;
