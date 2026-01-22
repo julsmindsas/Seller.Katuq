@@ -33,7 +33,9 @@
       "Bash(node scripts/mapProductsToAliaddo.js:*)",
       "Bash(npx ng build)",
       "WebFetch(domain:zapier.com)",
-      "Bash(lsof:*)"
+      "Bash(lsof:*)",
+      "mcp__acp__Bash",
+      "mcp__acp__Edit"
     ]
   }
 }
