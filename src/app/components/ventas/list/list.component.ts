@@ -1370,6 +1370,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       type: "text",
       filterable: true,
     },
+    // Columna para mostrar número de factura electrónica con enlace
+    {
+      field: "nroFactura",
+      header: "Factura",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
     {
       field: "fechaEntrega",
       header: "Fecha entrega",
@@ -1508,14 +1516,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     {
       field: "channel",
       header: "Canal",
-      visible: true,
-      type: "text",
-      filterable: true,
-    },
-    // Columna para mostrar número de factura electrónica con enlace
-    {
-      field: "nroFactura",
-      header: "Factura",
       visible: true,
       type: "text",
       filterable: true,

@@ -304,6 +304,17 @@
                                                 </p-columnFilter>
                                             </th>
 
+                                            <!-- Columna Factura Electrónica -->
+                                            <th *ngIf="isColumnVisible('nroFactura')" class="text-center" pSortableColumn="nroFactura"
+                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
+                                                {{ 'Factura' | translate }}
+                                                <p-sortIcon field="nroFactura"></p-sortIcon>
+                                                <p-columnFilter type="text" field="nroFactura"
+                                                    matchMode="contains" placeholder="{{'Factura' | translate}}"
+                                                    [showMenu]="true" display="menu">
+                                                </p-columnFilter>
+                                            </th>
+
                                             <!-- Columna Fecha Entrega (mostrar en sm+) -->
                                             <th *ngIf="isColumnVisible('fechaEntrega')" class="text-center d-none d-sm-table-cell" pSortableColumn="fechaEntrega"
                                                 style="width: 7rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
@@ -566,17 +577,6 @@
                                                 </p-columnFilter>
                                             </th>
 
-                                            <!-- Columna Factura Electrónica (ocultar en móvil) -->
-                                            <th *ngIf="isColumnVisible('nroFactura')" class="text-center d-none d-lg-table-cell" pSortableColumn="nroFactura"
-                                                style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
-                                                {{ 'Factura' | translate }}
-                                                <p-sortIcon field="nroFactura"></p-sortIcon>
-                                                <p-columnFilter type="text" field="nroFactura"
-                                                    matchMode="contains" placeholder="{{'Factura' | translate}}"
-                                                    [showMenu]="true" display="menu">
-                                                </p-columnFilter>
-                                            </th>
-
                                             <!-- Columna Vendedor (ocultar en móvil) -->
                                             <th *ngIf="isColumnVisible('vendedor') && !isFromProduction" class="text-center d-none d-lg-table-cell" pSortableColumn="asesorAsignado.name"
                                                 style="white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">
@@ -692,6 +692,28 @@
                                                         {{ getExternalOrderNumber(pedido) }}
                                                     </span>
                                                 </div>
+                                            </td>
+
+                                            <!-- Columna Factura Electrónica -->
+                                            <td *ngIf="isColumnVisible('nroFactura')" class="text-nowrap">
+                                                <ng-container *ngIf="pedido.nroFactura; else sinFactura">
+                                                    <a *ngIf="pedido.pdfUrlInvoice || pedido.facturacionElectronica?.pdfUrl; else soloNumero"
+                                                       [href]="pedido.pdfUrlInvoice || pedido.facturacionElectronica?.pdfUrl"
+                                                       target="_blank"
+                                                       class="text-primary"
+                                                       pTooltip="Ver factura electrónica"
+                                                       tooltipPosition="top">
+                                                        <i class="pi pi-file-pdf mr-1"></i>{{ pedido.nroFactura }}
+                                                    </a>
+                                                    <ng-template #soloNumero>
+                                                        <span class="text-success">
+                                                            <i class="pi pi-check-circle mr-1"></i>{{ pedido.nroFactura }}
+                                                        </span>
+                                                    </ng-template>
+                                                </ng-container>
+                                                <ng-template #sinFactura>
+                                                    <span class="text-muted">-</span>
+                                                </ng-template>
                                             </td>
 
                                             <!-- Columna Fecha Entrega (mostrar en sm+) -->
@@ -869,28 +891,6 @@
                                             <!-- Columna Canal (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('channel')" class="text-nowrap d-none d-lg-table-cell">{{
                                                 pedido.channel?.name || 'Regular' }}</td>
-
-                                            <!-- Columna Factura Electrónica (ocultar en móvil) -->
-                                            <td *ngIf="isColumnVisible('nroFactura')" class="text-nowrap d-none d-lg-table-cell">
-                                                <ng-container *ngIf="pedido.nroFactura; else sinFactura">
-                                                    <a *ngIf="pedido.pdfUrlInvoice || pedido.facturacionElectronica?.pdfUrl; else soloNumero"
-                                                       [href]="pedido.pdfUrlInvoice || pedido.facturacionElectronica?.pdfUrl"
-                                                       target="_blank"
-                                                       class="text-primary"
-                                                       pTooltip="Ver factura electrónica"
-                                                       tooltipPosition="top">
-                                                        <i class="pi pi-file-pdf mr-1"></i>{{ pedido.nroFactura }}
-                                                    </a>
-                                                    <ng-template #soloNumero>
-                                                        <span class="text-success">
-                                                            <i class="pi pi-check-circle mr-1"></i>{{ pedido.nroFactura }}
-                                                        </span>
-                                                    </ng-template>
-                                                </ng-container>
-                                                <ng-template #sinFactura>
-                                                    <span class="text-muted">-</span>
-                                                </ng-template>
-                                            </td>
 
                                             <!-- Columna Vendedor (ocultar en móvil) -->
                                             <td *ngIf="isColumnVisible('vendedor') && !isFromProduction"
@@ -1095,6 +1095,11 @@
                                     </div>
                                 </td>
 
+                                <!-- Columna Factura -->
+                                <td *ngIf="isColumnVisible('nroFactura')" class="summary-cell">
+                                    <!-- Vacía -->
+                                </td>
+
                                 <!-- Columna Fecha Entrega -->
                                 <td *ngIf="isColumnVisible('fechaEntrega')" class="summary-cell" style="width: 7rem;">
                                     <!-- Vacía -->
@@ -1270,11 +1275,6 @@
 
                                 <!-- Columna Canal -->
                                 <td *ngIf="isColumnVisible('channel')" class="summary-cell d-none d-lg-table-cell">
-                                    <!-- Vacía -->
-                                </td>
-
-                                <!-- Columna Factura -->
-                                <td *ngIf="isColumnVisible('nroFactura')" class="summary-cell d-none d-lg-table-cell">
                                     <!-- Vacía -->
                                 </td>
 
