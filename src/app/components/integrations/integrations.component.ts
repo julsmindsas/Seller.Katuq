@@ -974,28 +974,42 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       takeUntil(this.destroy$)
     ).subscribe({
       next: (result: any) => {
+        this.isSaving = false;
+
         // El backend ahora responde { success, configId, message }
-        if (result && result.success && result.configId) {
-          this.isSaving = false;
-          this.showStatus('success', result.message || 'Configuración guardada');
-          // Notificar lista para refrescar (emitir evento)
+        if (result && result.success) {
+          const successMessage = result.message || 'Configuración guardada exitosamente';
+
+          // Usar uiHelper para mostrar toast que persiste después de cerrar modal
+          this.uiHelper.showSuccess(successMessage);
+
+          // Debug: verificar estado del modal
+          console.log('=== SAVE SUCCESS ===');
+          console.log('isModalMode:', this.isModalMode);
+          console.log('activeModal defined:', !!this.activeModal);
+
+          // Cerrar modal si está en modo modal
           if (this.isModalMode && this.activeModal) {
+            console.log('Closing modal...');
             this.activeModal.close('saved');
+          } else {
+            console.log('Modal NOT closed - isModalMode:', this.isModalMode, 'activeModal:', this.activeModal);
           }
           return;
         }
 
         // Compatibilidad retro con estructura anterior (Integration)
         const message = this.editingIntegrationId ? 'Integración actualizada correctamente' : 'Integración creada correctamente';
-        this.handleSaveSuccess(result as any, message);
-        // DESHABILITADO: Health check automático después de guardar
-        // this.performHealthCheck();
+        this.uiHelper.showSuccess(message);
+
         if (this.isModalMode && this.activeModal) {
           this.activeModal.close('success');
         }
       },
       error: (error) => {
-        this.handleSaveError(error);
+        this.isSaving = false;
+        const errorMessage = error?.error?.message || error?.message || 'Error al guardar la integración';
+        this.uiHelper.showError(errorMessage);
       }
     });
   }
@@ -1188,6 +1202,27 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           defaultRate: formData.defaultRate,
           estimatedDays: formData.estimatedDays,
           testMode: formData.testMode
+        };
+        break;
+      case 'siigo':
+        credentials = {
+          username: formData.username,
+          accessKey: formData.accessKey,
+          partnerId: formData.partnerId || 'Katuq',
+          testMode: formData.testMode || false,
+          defaultWarehouse: formData.defaultWarehouse,
+          defaultCostCenter: formData.defaultCostCenter,
+          documentTypeId: formData.documentTypeId,
+          defaultPriceList: formData.defaultPriceList || 1,
+          defaultTaxRate: formData.defaultTaxRate || 19,
+          enableAutoInvoicing: formData.enableAutoInvoicing || false,
+          autoSyncInventory: formData.autoSyncInventory || false,
+          syncFrequency: formData.syncFrequency || 'manual',
+          accountGroup: formData.accountGroup,
+          incomeAccount: formData.incomeAccount,
+          costAccount: formData.costAccount,
+          inventoryAccount: formData.inventoryAccount,
+          discountAccount: formData.discountAccount
         };
         break;
     }

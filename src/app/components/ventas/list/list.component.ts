@@ -57,6 +57,7 @@ import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interfa
 import { Subject, forkJoin, of } from "rxjs";
 import { debounceTime, distinctUntilChanged, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
+import { IntegrationsService } from "../../integrations/integrations.service";
 
 @Component({
   selector: "app-list-orders",
@@ -116,6 +117,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   datosEntregaDelCliente: any[] = [];
   estadosPago = Object.values(EstadoPago);
   ciudadSeleccionada: any;
+
+  // Integración de facturación electrónica
+  hasInvoicingIntegration: boolean = false;
 
   // Variables temporales para el modal de cambio de estado
   tempEstadoPago: EstadoPago;
@@ -479,6 +483,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
+    // Agregar opción de facturación electrónica si el pedido está pagado y no tiene factura
+    if (!this.isFromProduction && this.puedeFacturarSiigo(pedido)) {
+      items.push({
+        label: 'Facturar',
+        icon: 'pi pi-file-export',
+        command: () => this.facturarPedidoSiigo(this.selectedMenuPedido)
+      });
+    }
+
     // Separador y más opciones al final
     items.push(
       { separator: true },
@@ -747,6 +760,303 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   isPedidoPOS(pedido: Pedido): boolean {
     return pedido?.typeOrder === 'POS';
+  }
+
+  /**
+   * Verifica si hay una integración de facturación electrónica configurada
+   */
+  private checkInvoicingIntegration(): void {
+    console.log('🔄 [List] Verificando integración de facturación...');
+    this.integrationsService.loadSiigoConfig().subscribe({
+      next: (response) => {
+        console.log('📦 [List] Respuesta de Siigo config:', response);
+
+        // La respuesta del backend tiene estructura:
+        // { success: true, config: { provider, config: { username, ... }, status } }
+        // NOTA: accessKey no se envía al frontend por seguridad
+        const siigoConfig = response?.config;
+        const credentials = siigoConfig?.config;
+
+        // Verificar si hay configuración válida:
+        // - Debe existir la config
+        // - Debe tener username (el accessKey está en el backend pero no se envía por seguridad)
+        // - El status debe ser "active" o enabled debe ser true
+        const isConfigured = siigoConfig &&
+                            credentials?.username &&
+                            (siigoConfig.status === 'active' || credentials.enabled === true);
+
+        if (isConfigured) {
+          this.hasInvoicingIntegration = true;
+          console.log('✅ [List] Integración Siigo detectada - username:', credentials.username, '- status:', siigoConfig.status);
+        } else {
+          this.hasInvoicingIntegration = false;
+          console.log('⚠️ [List] Siigo no está correctamente configurado');
+        }
+      },
+      error: (err) => {
+        // Si hay error (404 o cualquier otro), no hay integración configurada
+        this.hasInvoicingIntegration = false;
+        console.log('ℹ️ [List] No hay integración Siigo configurada:', err?.status || err?.message);
+      }
+    });
+  }
+
+  /**
+   * Verifica si un pedido puede ser facturado electrónicamente
+   * Condiciones:
+   * - Debe haber una integración de facturación configurada
+   * - El pago debe estar aprobado o pre-aprobado
+   * - No debe tener ya una factura generada
+   * @param pedido Pedido a verificar
+   * @returns true si se puede facturar
+   */
+  puedeFacturarSiigo(pedido: Pedido): boolean {
+    console.log('🔍 [puedeFacturarSiigo] Verificando pedido:', pedido?.nroPedido);
+    console.log('   - hasInvoicingIntegration:', this.hasInvoicingIntegration);
+    console.log('   - estadoPago:', pedido?.estadoPago);
+    console.log('   - nroFactura:', pedido?.nroFactura);
+    console.log('   - pdfUrlInvoice:', pedido?.pdfUrlInvoice);
+    console.log('   - isFromProduction:', this.isFromProduction);
+
+    // Verificar si hay integración de facturación configurada
+    if (!this.hasInvoicingIntegration) {
+      console.log('   ❌ No hay integración de facturación');
+      return false;
+    }
+    // Solo pedidos con pago aprobado o pre-aprobado
+    const estadosPermitidos = [EstadoPago.Aprobado, EstadoPago.PreAprobado];
+    if (!estadosPermitidos.includes(pedido?.estadoPago as EstadoPago)) {
+      console.log('   ❌ Estado de pago no permitido:', pedido?.estadoPago, 'Permitidos:', estadosPermitidos);
+      return false;
+    }
+    // No mostrar si ya tiene factura (verificar por nroFactura o pdfUrlInvoice)
+    if (pedido?.nroFactura || pedido?.pdfUrlInvoice) {
+      console.log('   ❌ Ya tiene factura');
+      return false;
+    }
+    console.log('   ✅ Puede facturar');
+    return true;
+  }
+
+  /**
+   * Genera una factura electrónica para un pedido
+   * @param pedido Pedido a facturar
+   */
+  facturarPedidoSiigo(pedido: Pedido): void {
+    // Cargar tipos de documento de Siigo primero
+    Swal.fire({
+      title: 'Cargando tipos de documento...',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    this.integrationsService.getSiigoDocumentTypes().subscribe({
+      next: (response) => {
+        Swal.close();
+        console.log('📄 [Siigo] Respuesta document-types:', response);
+
+        // El backend devuelve { success, data: { documentTypes: [...] } }
+        let documentTypes: any[] = [];
+        if (Array.isArray(response?.data?.documentTypes)) {
+          documentTypes = response.data.documentTypes;
+        } else if (Array.isArray(response?.data?.data?.documentTypes)) {
+          documentTypes = response.data.data.documentTypes;
+        } else if (Array.isArray(response?.data)) {
+          documentTypes = response.data;
+        } else if (Array.isArray(response?.documentTypes)) {
+          documentTypes = response.documentTypes;
+        } else if (Array.isArray(response)) {
+          documentTypes = response;
+        }
+
+        console.log('📄 [Siigo] Document types procesados:', documentTypes);
+
+        if (!documentTypes || documentTypes.length === 0) {
+          Swal.fire({
+            title: 'Error',
+            text: 'No se encontraron tipos de documento en Siigo. Verifique la configuración.',
+            icon: 'error'
+          });
+          return;
+        }
+
+        // Construir opciones para el select
+        const inputOptions: { [key: string]: string } = {};
+        documentTypes.forEach((dt: any) => {
+          // Siigo devuelve 'id' y 'name'
+          const id = dt.id;
+          const name = dt.name || `Documento ${id}`;
+          if (id) {
+            inputOptions[id] = `${name}`;
+          }
+        });
+
+        // Mostrar modal con selector de tipo de documento
+        Swal.fire({
+          title: '¿Generar Factura Electrónica?',
+          html: `
+            <p>Se generará una factura electrónica para el pedido:</p>
+            <p><strong>${pedido.nroPedido}</strong></p>
+            <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
+            <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
+            <hr>
+            <p><strong>Seleccione el tipo de documento:</strong></p>
+          `,
+          input: 'select',
+          inputOptions: inputOptions,
+          inputPlaceholder: 'Seleccione un tipo de documento',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#3085d6',
+          cancelButtonColor: '#d33',
+          confirmButtonText: 'Generar factura',
+          cancelButtonText: 'Cancelar',
+          inputValidator: (value) => {
+            if (!value) {
+              return 'Debe seleccionar un tipo de documento';
+            }
+            return null;
+          }
+        }).then((result) => {
+          if (result.isConfirmed && result.value) {
+            const selectedDocumentTypeId = parseInt(result.value, 10);
+            this.ejecutarFacturacionSiigo(pedido, selectedDocumentTypeId);
+          }
+        });
+      },
+      error: (error) => {
+        Swal.close();
+        console.error('Error cargando tipos de documento:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudieron cargar los tipos de documento de Siigo',
+          icon: 'error'
+        });
+      }
+    });
+  }
+
+  /**
+   * Ejecuta la facturación electrónica
+   * Utiliza el nuevo endpoint que maneja automáticamente:
+   * 1. Obtención del pedido completo
+   * 2. Verificación/creación del cliente en Siigo
+   * 3. Transformación del pedido a factura
+   * 4. Actualización del pedido con datos de facturación
+   *
+   * @param pedido Pedido a facturar
+   */
+  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number): void {
+    // Mostrar loader
+    Swal.fire({
+      title: 'Generando factura...',
+      html: `
+        <p>Por favor espere mientras se procesa la facturación electrónica.</p>
+        <p class="text-muted small">Verificando cliente y creando factura en Siigo...</p>
+      `,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    // Preparar opciones con el tipo de documento seleccionado
+    const options = documentTypeId ? { documentTypeId } : undefined;
+
+    // Usar el nuevo método que maneja todo el flujo automáticamente
+    this.integrationsService.createSiigoInvoiceFromOrder(pedido._id, options).subscribe({
+      next: (response: any) => {
+        Swal.close();
+
+        if (response.success) {
+          // Actualizar el pedido en la lista con la información de la factura
+          const invoiceData = response.data?.invoice || response.invoice;
+          const customerData = response.data?.customer || response.customer;
+          const productsData = response.data?.products || response.products;
+
+          if (invoiceData) {
+            pedido.nroFactura = invoiceData.number || invoiceData.id;
+            pedido.pdfUrlInvoice = invoiceData.pdfUrl;
+          }
+
+          // Construir mensaje de éxito
+          let successHtml = '<p>La factura electrónica se ha creado exitosamente.</p>';
+
+          if (invoiceData?.number) {
+            successHtml += `<p><strong>Número de factura:</strong> ${invoiceData.number}</p>`;
+          }
+
+          // Mostrar información de sincronización
+          const syncItems: string[] = [];
+
+          if (customerData?.created) {
+            syncItems.push('<i class="fa fa-user-plus text-success"></i> Cliente creado');
+          }
+
+          if (productsData?.created > 0) {
+            syncItems.push(`<i class="fa fa-cube text-success"></i> ${productsData.created} producto(s) creado(s)`);
+          }
+
+          if (syncItems.length > 0) {
+            successHtml += `<div class="alert alert-info mt-2 p-2 small">
+              <strong>Sincronizado con Siigo:</strong><br>
+              ${syncItems.join('<br>')}
+            </div>`;
+          }
+
+          if (invoiceData?.pdfUrl) {
+            successHtml += `<p><a href="${invoiceData.pdfUrl}" target="_blank" class="btn btn-sm btn-primary mt-2"><i class="fa fa-file-pdf-o"></i> Ver PDF</a></p>`;
+          }
+
+          Swal.fire({
+            title: '¡Factura Generada!',
+            html: successHtml,
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+          });
+
+          // Refrescar la lista
+          this.refrescar(this.table);
+        } else {
+          Swal.fire({
+            title: 'Error',
+            text: response.message || 'No se pudo generar la factura',
+            icon: 'error',
+            confirmButtonText: 'Aceptar'
+          });
+        }
+      },
+      error: (error) => {
+        Swal.close();
+        console.error('Error al facturar pedido:', error);
+
+        // Extraer mensaje de error más específico
+        const errorMessage = error.error?.message || error.message || 'Error desconocido';
+        const errorDetails = error.error?.details;
+
+        let errorHtml = `<p>No se pudo generar la factura electrónica.</p>`;
+        errorHtml += `<p class="text-danger">${errorMessage}</p>`;
+
+        // Mostrar sugerencias si el error es sobre configuración
+        if (errorMessage.includes('documento') || errorMessage.includes('cliente')) {
+          errorHtml += `<p class="text-muted small mt-2">
+            <i class="fa fa-info-circle"></i> Verifique que el cliente tenga número de documento configurado en los datos de facturación.
+          </p>`;
+        } else if (errorMessage.includes('configuración') || errorMessage.includes('documentTypeId')) {
+          errorHtml += `<p class="text-muted small mt-2">
+            <i class="fa fa-info-circle"></i> Verifique la configuración de Siigo en Integraciones → Contabilidad.
+          </p>`;
+        }
+
+        Swal.fire({
+          title: 'Error de Facturación',
+          html: errorHtml,
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        });
+      }
+    });
   }
 
   /**
@@ -1202,6 +1512,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       type: "text",
       filterable: true,
     },
+    // Columna para mostrar número de factura electrónica con enlace
+    {
+      field: "nroFactura",
+      header: "Factura",
+      visible: true,
+      type: "text",
+      filterable: true,
+    },
     {
       field: "vendedor",
       header: "Vendedor",
@@ -1562,6 +1880,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private toastrService: ToastrService,
     private loaderService: LoaderService,
     private changeDetectorRef: ChangeDetectorRef,
+    private integrationsService: IntegrationsService,
   ) {
     console.log("🔧 Constructor - Registrando filtros personalizados...");
     this.registerCustomFilters();
@@ -2088,6 +2407,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     ).subscribe(({ value, filterCallback }) => {
       filterCallback(value);
     });
+
+    // Verificar si hay integración de facturación configurada
+    this.checkInvoicingIntegration();
 
     // Initialize dates first before subscribing to service
     const today = new Date();
@@ -7353,7 +7675,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         const parsed = JSON.parse(savedColumns);
         // Validar que las columnas guardadas coincidan con las actuales
         if (Array.isArray(parsed) && parsed.length > 0) {
-          this.displayedColumns = parsed;
+          // Fusionar columnas guardadas con columnas por defecto (para agregar nuevas columnas)
+          const defaultColumns = [...this.displayedColumns];
+          const savedFields = parsed.map((col: any) => col.field);
+
+          // Agregar columnas nuevas que no existen en las guardadas
+          const newColumns = defaultColumns.filter(col => !savedFields.includes(col.field));
+          if (newColumns.length > 0) {
+            console.log('📋 Nuevas columnas detectadas:', newColumns.map(c => c.field).join(', '));
+            // Insertar nuevas columnas antes de la última columna (generalmente 'opciones')
+            this.displayedColumns = [...parsed, ...newColumns];
+          } else {
+            this.displayedColumns = parsed;
+          }
         }
       } catch (e) {
         console.error("Error parsing saved columns configuration", e);

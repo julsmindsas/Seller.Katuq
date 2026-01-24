@@ -957,12 +957,101 @@ export class IntegrationsService {
   }
 
   /**
-   * Crear factura en Siigo
+   * Crear factura en Siigo (método legacy - requiere datos de factura completos)
    */
   createSiigoInvoice(invoiceData: any): Observable<any> {
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/siigo/invoices`,
       invoiceData,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Crear factura en Siigo desde un pedido de Katuq
+   * Este método maneja el flujo completo:
+   * 1. Obtiene el pedido completo de Firestore
+   * 2. Verifica/crea el cliente en Siigo automáticamente
+   * 3. Transforma el pedido al formato de factura de Siigo
+   * 4. Crea la factura en Siigo
+   * 5. Actualiza el pedido con la información de facturación
+   *
+   * @param orderId ID del pedido en Firestore
+   * @param options Opciones adicionales (documentTypeId, paymentTypeId, etc.)
+   */
+  createSiigoInvoiceFromOrder(orderId: string, options?: {
+    documentTypeId?: number;
+    paymentTypeId?: number;
+    costCenterId?: number;
+    sellerId?: number;
+  }): Observable<any> {
+    const body: any = { orderId };
+
+    if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
+    if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
+    if (options?.costCenterId) body.costCenterId = options.costCenterId;
+    if (options?.sellerId) body.sellerId = options.sellerId;
+
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/siigo/invoices/from-order`,
+      body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Encolar facturación Siigo en background (async)
+   * Este método NO bloquea - retorna inmediatamente con un jobId.
+   * El usuario recibe una notificación cuando la facturación termine.
+   *
+   * Flujo async:
+   * 1. Encola el proceso de facturación
+   * 2. Retorna inmediatamente con jobId (HTTP 202 Accepted)
+   * 3. Worker procesa: cliente, productos, factura
+   * 4. Notifica al usuario cuando termina
+   *
+   * @param orderId ID del pedido en Firestore
+   * @param options Opciones adicionales (documentTypeId, paymentTypeId, etc.)
+   * @returns Observable con { success, jobId, message }
+   */
+  createSiigoInvoiceFromOrderAsync(orderId: string, options?: {
+    documentTypeId?: number;
+    paymentTypeId?: number;
+    costCenterId?: number;
+    sellerId?: number;
+    userEmail?: string;
+  }): Observable<{
+    success: boolean;
+    jobId: string;
+    orderId: string;
+    provider: string;
+    message: string;
+    alreadyQueued?: boolean;
+    timestamp: string;
+  }> {
+    const body: any = { orderId };
+
+    if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
+    if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
+    if (options?.costCenterId) body.costCenterId = options.costCenterId;
+    if (options?.sellerId) body.sellerId = options.sellerId;
+    if (options?.userEmail) body.userEmail = options.userEmail;
+
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/siigo/invoices/from-order-async`,
+      body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener estado de un job de facturación async
+   * @param jobId ID del job de facturación
+   * @returns Observable con estado del job
+   */
+  getSiigoInvoiceJobStatus(jobId: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/siigo/invoices/job/${jobId}`,
       { headers: this.getApiHeaders() }
     );
   }

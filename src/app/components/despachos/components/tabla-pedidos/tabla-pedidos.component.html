@@ -246,7 +246,26 @@
                                         
                                         <!-- Datos básicos -->
                                         <td *ngIf="col.field === 'nroPedido'" class="text-nowrap col-nroPedido" [attr.data-label]="col.header | translate">{{ pedido.nroPedido }}</td>
-                                        <td *ngIf="col.field === 'nroFactura'" class="text-nowrap col-nroFactura" [attr.data-label]="col.header | translate">{{ pedido?.nroFactura }}</td>
+                                        <td *ngIf="col.field === 'nroFactura'" class="text-nowrap col-nroFactura" [attr.data-label]="col.header | translate">
+                                            <ng-container *ngIf="pedido?.nroFactura; else sinFacturaDespachos">
+                                                <a *ngIf="pedido.pdfUrlInvoice || pedido.facturacionElectronica?.pdfUrl; else soloNumeroDespachos"
+                                                   [href]="pedido.pdfUrlInvoice || pedido.facturacionElectronica?.pdfUrl"
+                                                   target="_blank"
+                                                   class="text-primary"
+                                                   pTooltip="Ver factura electrónica"
+                                                   tooltipPosition="top">
+                                                    <i class="pi pi-file-pdf mr-1"></i>{{ pedido.nroFactura }}
+                                                </a>
+                                                <ng-template #soloNumeroDespachos>
+                                                    <span class="text-success">
+                                                        <i class="pi pi-check-circle mr-1"></i>{{ pedido.nroFactura }}
+                                                    </span>
+                                                </ng-template>
+                                            </ng-container>
+                                            <ng-template #sinFacturaDespachos>
+                                                <span class="text-muted">-</span>
+                                            </ng-template>
+                                        </td>
                                         <td *ngIf="col.field === 'shippingOrder'" class="text-nowrap col-shippingOrder" [attr.data-label]="col.header | translate">{{ pedido?.shippingOrder }}</td>
                                         <td *ngIf="col.field === 'ciudad'" class="text-nowrap col-ciudad" [attr.data-label]="col.header | translate">{{ pedido.envio?.ciudad }}</td>
                                         <td *ngIf="col.field === 'zonaCobro'" class="text-nowrap col-zonaCobro" [attr.data-label]="col.header | translate">{{ pedido.envio?.zonaCobro }}</td>

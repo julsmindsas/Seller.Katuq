@@ -1,0 +1,387 @@
+.siigo-config-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+}
+
+// Header
+.config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .siigo-logo {
+    width: 80px;
+    height: auto;
+  }
+
+  .header-text {
+    h2 {
+      margin: 0 0 4px 0;
+      font-size: 1.5rem;
+      color: #333;
+    }
+
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+  }
+}
+
+// Connection Status
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  &.idle {
+    background-color: #f5f5f5;
+    color: #666;
+  }
+
+  &.testing {
+    background-color: #fff8e1;
+    color: #f57c00;
+  }
+
+  &.success {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.error {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+// Loading Overlay
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 100;
+
+  i {
+    font-size: 2rem;
+    color: #3b82f6;
+  }
+
+  span {
+    color: #666;
+  }
+}
+
+// Cards
+.config-card {
+  margin-bottom: 20px;
+
+  ::ng-deep .p-card-header {
+    padding: 16px 20px;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 600;
+  }
+
+  ::ng-deep .p-card-body {
+    padding: 20px;
+  }
+}
+
+// Form Grid
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Form Fields
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-weight: 500;
+    color: #333;
+    font-size: 0.9rem;
+
+    i {
+      margin-right: 6px;
+      color: #666;
+    }
+  }
+
+  input,
+  ::ng-deep .p-inputtext,
+  ::ng-deep .p-dropdown {
+    width: 100%;
+  }
+
+  .field-hint {
+    color: #888;
+    font-size: 0.8rem;
+  }
+
+  &.checkbox-field {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 10px;
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      strong {
+        font-weight: 600;
+      }
+
+      small {
+        font-weight: normal;
+        color: #666;
+      }
+    }
+  }
+}
+
+// Section Description
+.section-description {
+  color: #666;
+  margin-bottom: 20px;
+  font-size: 0.9rem;
+}
+
+// Action Buttons
+.action-buttons {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+// Loading Section
+.loading-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  color: #666;
+
+  i {
+    font-size: 1.5rem;
+    color: #3b82f6;
+  }
+}
+
+// Tax IDs Section
+.tax-ids-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+
+  h4 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    color: #333;
+
+    i {
+      margin-right: 8px;
+      color: #10b981;
+    }
+  }
+
+  .section-description {
+    color: #666;
+    margin-bottom: 16px;
+    font-size: 0.85rem;
+  }
+}
+
+// PUC Guide
+.puc-guide {
+  margin-top: 24px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+
+  h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.95rem;
+    color: #333;
+
+    i {
+      margin-right: 8px;
+      color: #3b82f6;
+    }
+  }
+
+  .puc-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
+
+  .puc-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .puc-code {
+      background-color: #e3f2fd;
+      color: #1565c0;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: 600;
+    }
+
+    .puc-name {
+      color: #555;
+      font-size: 0.85rem;
+    }
+  }
+}
+
+// Sync Section
+.sync-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e9ecef;
+
+  h4 {
+    margin: 0 0 8px 0;
+  }
+
+  p {
+    color: #666;
+    margin-bottom: 16px;
+  }
+}
+
+.sync-progress {
+  margin-top: 16px;
+
+  ::ng-deep .p-progressbar {
+    height: 20px;
+    border-radius: 10px;
+  }
+}
+
+.sync-result {
+  margin-top: 20px;
+
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+
+    @media (max-width: 600px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .result-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    border-radius: 8px;
+    text-align: center;
+
+    .result-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .result-label {
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    &.success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+
+    &.created {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &.updated {
+      background-color: #fff8e1;
+      color: #f57c00;
+    }
+
+    &.error {
+      background-color: #ffebee;
+      color: #c62828;
+    }
+  }
+}
+
+// Form Actions
+.form-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+
+  button {
+    min-width: 200px;
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 600px) {
+  .config-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .connection-status {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .form-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+}

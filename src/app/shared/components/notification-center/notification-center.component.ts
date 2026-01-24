@@ -293,8 +293,11 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    * Marca una notificación como leída
    */
   public async markAsRead(notification: KatuqNotification): Promise<void> {
-    if (notification.status !== NotificationStatus.READ) {
-      await this.notificationManager.markAsRead(notification.id!);
+    if (notification.status !== NotificationStatus.READ && notification.id) {
+      await this.notificationManager.markAsRead(notification.id);
+      // Actualizar estado local inmediatamente para feedback visual rápido
+      notification.status = NotificationStatus.READ;
+      notification.readAt = new Date();
     }
   }
 
@@ -309,19 +312,28 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    * Elimina una notificación
    */
   public async deleteNotification(notification: KatuqNotification): Promise<void> {
-    await this.notificationManager.deleteNotification(notification.id!);
+    if (notification.id) {
+      await this.notificationManager.deleteNotification(notification.id);
+    }
   }
 
   /**
    * Maneja click en una notificación
    */
-  public onNotificationClick(notification: KatuqNotification): void {
-    // Marcar como leída
-    this.markAsRead(notification);
+  public async onNotificationClick(notification: KatuqNotification): Promise<void> {
+    // Marcar como leída y esperar a que se complete
+    await this.markAsRead(notification);
 
     // Navegar si tiene URL de acción
     if (notification.actionUrl) {
-      window.location.href = notification.actionUrl;
+      // Cerrar el panel antes de navegar
+      this.closePanel();
+      // Usar Router para navegación interna si es posible
+      if (notification.actionUrl.startsWith('/')) {
+        window.location.href = notification.actionUrl;
+      } else {
+        window.open(notification.actionUrl, '_blank');
+      }
     }
   }
 
@@ -373,7 +385,14 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       
       [NotificationType.SUPPLIER_ORDER_ACCEPTED]: 'fa-handshake-o',
       [NotificationType.SUPPLIER_ORDER_REJECTED]: 'fa-times-circle',
-      [NotificationType.SUPPLIER_ORDER_DISPATCHED]: 'fa-truck'
+      [NotificationType.SUPPLIER_ORDER_DISPATCHED]: 'fa-truck',
+
+      // Siigo / Contabilidad notifications (📄)
+      [NotificationType.SIIGO_INVOICE_CREATED]: 'fa-file-text-o',
+      [NotificationType.SIIGO_INVOICE_FAILED]: 'fa-file-excel-o',
+      [NotificationType.SIIGO_INVOICE_PROCESSING]: 'fa-spinner',
+      [NotificationType.SIIGO_CUSTOMER_CREATED]: 'fa-user-plus',
+      [NotificationType.SIIGO_PRODUCT_SYNCED]: 'fa-refresh'
     };
 
     return iconMap[type] || 'fa-info-circle';
@@ -394,7 +413,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     if (type.includes('SYSTEM') || type.includes('ALERT')) return 'icon-alert';
     if (type.includes('POS') || type.includes('CASH')) return 'icon-payment';
     if (type.includes('SUPPLIER')) return 'icon-shipping';
-    
+    if (type.includes('SIIGO')) return 'icon-accounting';
+
     return 'icon-info';
   }
 
@@ -489,7 +509,14 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       
       [NotificationType.SUPPLIER_ORDER_ACCEPTED]: 'Pedido Aceptado',
       [NotificationType.SUPPLIER_ORDER_REJECTED]: 'Pedido Rechazado',
-      [NotificationType.SUPPLIER_ORDER_DISPATCHED]: 'Pedido Despachado'
+      [NotificationType.SUPPLIER_ORDER_DISPATCHED]: 'Pedido Despachado',
+
+      // Siigo / Contabilidad
+      [NotificationType.SIIGO_INVOICE_CREATED]: 'Factura Siigo Creada',
+      [NotificationType.SIIGO_INVOICE_FAILED]: 'Error Facturación Siigo',
+      [NotificationType.SIIGO_INVOICE_PROCESSING]: 'Procesando Factura',
+      [NotificationType.SIIGO_CUSTOMER_CREATED]: 'Cliente Siigo Creado',
+      [NotificationType.SIIGO_PRODUCT_SYNCED]: 'Producto Sincronizado'
     };
 
     return nameMap[type] || type;

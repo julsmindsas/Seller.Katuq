@@ -734,6 +734,7 @@
                         [direccionFacturacion]="direccion_facturacion" [paisInicial]="pais"
                         [departamentoInicial]="departamento" [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
                         (overridePedido)="overridePedido($event)" [generarFactura]="generarFacturaElectronica"
+                        (generarFacturaChange)="onGenerarFacturaChange($event)"
                         [documentoBusqueda]="documentoBuscar" [activeIndex]="0" *ngIf="pedidoGral">
                       </app-pedido-facturacion>
                     </div>

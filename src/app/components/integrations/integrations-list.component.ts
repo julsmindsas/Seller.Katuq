@@ -13,6 +13,7 @@ import { IntegrationsComponent } from "./integrations.component";
 import { Subject, combineLatest } from "rxjs";
 import { takeUntil, debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { IntegrationManualControlService } from "./integration-manual-control.service";
+import { Router } from "@angular/router";
 
 interface Toast {
   type: "success" | "error" | "warning" | "info";
@@ -64,6 +65,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     public uiHelper: IntegrationUIHelperService,
     private modal: NgbModal,
     private manualControlService: IntegrationManualControlService,
+    private router: Router,
   ) {}
 
   ngOnInit(): void {

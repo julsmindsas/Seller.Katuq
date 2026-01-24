@@ -550,6 +550,92 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
       }
     },
     persistInNotificationCenter: true
+  },
+
+  // CONTABILIDAD / FACTURACIÓN ELECTRÓNICA (SIIGO)
+  [NotificationType.SIIGO_INVOICE_CREATED]: {
+    type: NotificationType.SIIGO_INVOICE_CREATED,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.HIGH,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '📄 Factura Siigo creada',
+        message: 'Factura {invoiceNumber} generada para pedido #{nroPedido}',
+        actionText: 'Ver pedido',
+        actionUrl: '/ventas/pedidos/{orderId}'
+      }
+    },
+    persistInNotificationCenter: true,
+    expiresInMinutes: 4320 // 3 días
+  },
+
+  [NotificationType.SIIGO_INVOICE_FAILED]: {
+    type: NotificationType.SIIGO_INVOICE_FAILED,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.CRITICAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '❌ Error facturando en Siigo',
+        message: 'No se pudo crear factura para pedido #{nroPedido}: {error}',
+        actionText: 'Ver pedido',
+        actionUrl: '/ventas/pedidos/{orderId}'
+      }
+    },
+    requiresUserInteraction: true,
+    persistInNotificationCenter: true,
+    expiresInMinutes: 10080 // 7 días
+  },
+
+  [NotificationType.SIIGO_INVOICE_PROCESSING]: {
+    type: NotificationType.SIIGO_INVOICE_PROCESSING,
+    channels: [NotificationChannel.IN_APP],
+    priority: NotificationPriority.NORMAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '🔄 Facturando en Siigo',
+        message: 'Generando factura para pedido #{nroPedido}...',
+        actionText: 'Ver estado'
+      }
+    },
+    throttlePeriodMinutes: 5,
+    persistInNotificationCenter: false,
+    expiresInMinutes: 30
+  },
+
+  [NotificationType.SIIGO_CUSTOMER_CREATED]: {
+    type: NotificationType.SIIGO_CUSTOMER_CREATED,
+    channels: [NotificationChannel.IN_APP],
+    priority: NotificationPriority.LOW,
+    targetRoles: [UserRole.ADMIN],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '👤 Cliente creado en Siigo',
+        message: 'Cliente {customerName} sincronizado con Siigo',
+        actionText: 'Ver detalles'
+      }
+    },
+    persistInNotificationCenter: true,
+    expiresInMinutes: 1440
+  },
+
+  [NotificationType.SIIGO_PRODUCT_SYNCED]: {
+    type: NotificationType.SIIGO_PRODUCT_SYNCED,
+    channels: [NotificationChannel.IN_APP],
+    priority: NotificationPriority.LOW,
+    targetRoles: [UserRole.ADMIN],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: '📦 Productos sincronizados con Siigo',
+        message: '{count} productos sincronizados exitosamente',
+        actionText: 'Ver productos'
+      }
+    },
+    throttlePeriodMinutes: 30,
+    persistInNotificationCenter: true,
+    expiresInMinutes: 1440
   }
 };
 

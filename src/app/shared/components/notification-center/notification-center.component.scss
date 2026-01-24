@@ -744,6 +744,12 @@
   color: #6366f1;
 }
 
+// Accounting / Siigo (📄)
+.notification-icon.icon-accounting {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.08) 100%);
+  color: #10b981;
+}
+
 @keyframes alertShake {
   0%, 100% { transform: translateX(0); }
   10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }

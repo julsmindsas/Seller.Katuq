@@ -1,0 +1,438 @@
+<div class="siigo-config-container">
+  <p-toast></p-toast>
+
+  <!-- Header -->
+  <div class="config-header">
+    <div class="header-content">
+      <img src="assets/images/logos/siigo.svg" alt="Siigo" class="siigo-logo">
+      <div class="header-text">
+        <h2>Configuracion de Siigo</h2>
+        <p>Conecta tu cuenta de Siigo para facturacion electronica y sincronizacion de inventario</p>
+      </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="connection-status" [ngClass]="getConnectionStatusClass()">
+      <i class="pi" [ngClass]="getConnectionStatusIcon()"></i>
+      <span>{{ getConnectionStatusMessage() }}</span>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Cargando configuracion...</span>
+  </div>
+
+  <form [formGroup]="siigoForm" (ngSubmit)="saveConfig()">
+
+    <!-- Section 1: Credentials -->
+    <p-card header="Credenciales de Siigo" styleClass="config-card">
+      <div class="form-grid">
+        <div class="form-field">
+          <label for="username">Usuario / Email *</label>
+          <input
+            pInputText
+            id="username"
+            formControlName="username"
+            placeholder="tu-email@empresa.com"
+            [ngClass]="{'ng-invalid ng-dirty': siigoForm.get('username')?.invalid && siigoForm.get('username')?.touched}">
+          <small class="p-error" *ngIf="siigoForm.get('username')?.invalid && siigoForm.get('username')?.touched">
+            Usuario requerido (minimo 5 caracteres)
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="accessKey">Access Key *</label>
+          <span class="p-input-icon-right w-full">
+            <i class="pi" [ngClass]="showAccessKey ? 'pi-eye-slash' : 'pi-eye'"
+               style="cursor: pointer;" (click)="showAccessKey = !showAccessKey"></i>
+            <input
+              pInputText
+              id="accessKey"
+              [type]="showAccessKey ? 'text' : 'password'"
+              formControlName="accessKey"
+              placeholder="Tu Access Key de Siigo API"
+              class="w-full">
+          </span>
+          <small class="p-error" *ngIf="siigoForm.get('accessKey')?.invalid && siigoForm.get('accessKey')?.touched">
+            Access Key requerido (minimo 10 caracteres)
+          </small>
+        </div>
+
+        <div class="form-field">
+          <label for="partnerId">Partner ID</label>
+          <input
+            pInputText
+            id="partnerId"
+            formControlName="partnerId"
+            readonly>
+          <small class="field-hint">Identificador de partner asignado por Siigo</small>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <p-checkbox
+            formControlName="testMode"
+            [binary]="true"
+            inputId="testMode">
+          </p-checkbox>
+          <label for="testMode">Modo de prueba (Sandbox)</label>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button
+          pButton
+          type="button"
+          label="Probar Conexion"
+          icon="pi pi-bolt"
+          class="p-button-outlined"
+          [loading]="connectionStatus === 'testing'"
+          (click)="testConnection()">
+        </button>
+      </div>
+    </p-card>
+
+    <!-- Section 2: Accounting Configuration (only visible after successful connection) -->
+    <p-card header="Configuracion Contable" styleClass="config-card" *ngIf="connectionStatus === 'success'">
+      <div class="loading-section" *ngIf="isLoadingMasterData">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Cargando datos maestros de Siigo...</span>
+      </div>
+
+      <div class="form-grid" *ngIf="!isLoadingMasterData">
+        <div class="form-field">
+          <label for="defaultWarehouse">Bodega Predeterminada</label>
+          <p-dropdown
+            id="defaultWarehouse"
+            formControlName="defaultWarehouse"
+            [options]="masterData.warehouses"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Selecciona bodega"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-dropdown>
+        </div>
+
+        <div class="form-field">
+          <label for="defaultCostCenter">Centro de Costo</label>
+          <p-dropdown
+            id="defaultCostCenter"
+            formControlName="defaultCostCenter"
+            [options]="masterData.costCenters"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Selecciona centro de costo"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-dropdown>
+        </div>
+
+        <div class="form-field">
+          <label for="documentTypeId">Tipo de Documento para Facturas *</label>
+          <p-dropdown
+            id="documentTypeId"
+            formControlName="documentTypeId"
+            [options]="masterData.documentTypes"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Selecciona tipo de documento"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-dropdown>
+          <small class="field-hint">Requerido para facturacion electronica</small>
+        </div>
+
+        <div class="form-field">
+          <label for="defaultPaymentTypeId">Tipo de Pago por Defecto</label>
+          <p-dropdown
+            id="defaultPaymentTypeId"
+            formControlName="defaultPaymentTypeId"
+            [options]="masterData.paymentTypes"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Selecciona tipo de pago"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-dropdown>
+          <small class="field-hint">Forma de pago predeterminada en facturas</small>
+        </div>
+
+        <div class="form-field">
+          <label for="defaultPriceList">Lista de Precios</label>
+          <p-dropdown
+            id="defaultPriceList"
+            formControlName="defaultPriceList"
+            [options]="masterData.priceLists"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Selecciona lista de precios"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-dropdown>
+        </div>
+
+        <div class="form-field">
+          <label for="defaultTaxRate">Tasa de IVA (%)</label>
+          <input
+            pInputText
+            type="number"
+            id="defaultTaxRate"
+            formControlName="defaultTaxRate"
+            placeholder="19">
+          <small class="field-hint">Tasa de IVA predeterminada para productos</small>
+        </div>
+      </div>
+
+      <!-- Tax IDs Section -->
+      <div class="tax-ids-section" *ngIf="!isLoadingMasterData && masterData.taxes.length > 0">
+        <h4><i class="pi pi-percentage"></i> IDs de Impuestos de Siigo</h4>
+        <p class="section-description">
+          Selecciona los impuestos correspondientes a cada tasa de IVA. Estos IDs son requeridos para crear facturas correctamente.
+        </p>
+
+        <div class="form-grid">
+          <div class="form-field">
+            <label for="tax0Id">Impuesto 0% (Excluido/Exento)</label>
+            <p-dropdown
+              id="tax0Id"
+              formControlName="tax0Id"
+              [options]="masterData.taxes"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Selecciona impuesto 0%"
+              [showClear]="true"
+              [filter]="true"
+              filterBy="name"
+              styleClass="w-full">
+            </p-dropdown>
+            <small class="field-hint">Para productos exentos o excluidos de IVA</small>
+          </div>
+
+          <div class="form-field">
+            <label for="tax5Id">Impuesto 5%</label>
+            <p-dropdown
+              id="tax5Id"
+              formControlName="tax5Id"
+              [options]="masterData.taxes"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Selecciona impuesto 5%"
+              [showClear]="true"
+              [filter]="true"
+              filterBy="name"
+              styleClass="w-full">
+            </p-dropdown>
+            <small class="field-hint">Para productos con IVA reducido del 5%</small>
+          </div>
+
+          <div class="form-field">
+            <label for="tax19Id">Impuesto 19% (IVA General)</label>
+            <p-dropdown
+              id="tax19Id"
+              formControlName="tax19Id"
+              [options]="masterData.taxes"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Selecciona impuesto 19%"
+              [showClear]="true"
+              [filter]="true"
+              filterBy="name"
+              styleClass="w-full">
+            </p-dropdown>
+            <small class="field-hint">Para productos con IVA general del 19%</small>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Section 3: Account Mapping (only visible after successful connection) -->
+    <p-card header="Mapeo de Cuentas Contables" styleClass="config-card" *ngIf="connectionStatus === 'success'">
+      <p class="section-description">
+        Configura las cuentas contables PUC para la integracion con Siigo
+      </p>
+
+      <div formGroupName="accountsMapping" class="form-grid">
+        <div class="form-field">
+          <label for="accountGroup">Grupo de Cuentas</label>
+          <p-dropdown
+            id="accountGroup"
+            formControlName="accountGroup"
+            [options]="masterData.accountGroups"
+            optionLabel="name"
+            optionValue="id"
+            placeholder="Selecciona grupo"
+            [showClear]="true"
+            styleClass="w-full">
+          </p-dropdown>
+        </div>
+
+        <div class="form-field">
+          <label for="incomeAccount">
+            <i class="pi pi-dollar"></i> Cuenta de Ingresos
+          </label>
+          <input
+            pInputText
+            id="incomeAccount"
+            formControlName="incomeAccount"
+            placeholder="Ej: 4135">
+          <small class="field-hint">Cuentas 4xxx para ventas</small>
+        </div>
+
+        <div class="form-field">
+          <label for="costAccount">
+            <i class="pi pi-money-bill"></i> Cuenta de Costos
+          </label>
+          <input
+            pInputText
+            id="costAccount"
+            formControlName="costAccount"
+            placeholder="Ej: 6135">
+          <small class="field-hint">Cuentas 6xxx para costos de venta</small>
+        </div>
+
+        <div class="form-field">
+          <label for="inventoryAccount">
+            <i class="pi pi-box"></i> Cuenta de Inventario
+          </label>
+          <input
+            pInputText
+            id="inventoryAccount"
+            formControlName="inventoryAccount"
+            placeholder="Ej: 1435">
+          <small class="field-hint">Cuentas 1xxx para inventarios</small>
+        </div>
+
+        <div class="form-field">
+          <label for="discountAccount">
+            <i class="pi pi-percentage"></i> Cuenta de Descuentos
+          </label>
+          <input
+            pInputText
+            id="discountAccount"
+            formControlName="discountAccount"
+            placeholder="Ej: 4175">
+          <small class="field-hint">Cuentas 4xxx para descuentos</small>
+        </div>
+      </div>
+
+      <!-- PUC Guide -->
+      <div class="puc-guide">
+        <h4><i class="pi pi-info-circle"></i> Guia de Cuentas PUC Colombia</h4>
+        <div class="puc-items">
+          <div class="puc-item">
+            <span class="puc-code">1xxx</span>
+            <span class="puc-name">Activos (Inventarios, Cuentas por Cobrar)</span>
+          </div>
+          <div class="puc-item">
+            <span class="puc-code">4xxx</span>
+            <span class="puc-name">Ingresos (Ventas, Descuentos)</span>
+          </div>
+          <div class="puc-item">
+            <span class="puc-code">6xxx</span>
+            <span class="puc-name">Costos de Ventas</span>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Section 4: Automation & Sync (only visible after successful connection) -->
+    <p-card header="Automatizacion y Sincronizacion" styleClass="config-card" *ngIf="connectionStatus === 'success'">
+      <div class="form-grid">
+        <div class="form-field checkbox-field">
+          <p-checkbox
+            formControlName="enableAutoInvoicing"
+            [binary]="true"
+            inputId="enableAutoInvoicing">
+          </p-checkbox>
+          <label for="enableAutoInvoicing">
+            <strong>Facturacion Automatica</strong>
+            <small>Crear factura en Siigo automaticamente cuando se apruebe el pago</small>
+          </label>
+        </div>
+
+        <div class="form-field checkbox-field">
+          <p-checkbox
+            formControlName="autoSyncInventory"
+            [binary]="true"
+            inputId="autoSyncInventory">
+          </p-checkbox>
+          <label for="autoSyncInventory">
+            <strong>Sincronizar Inventario</strong>
+            <small>Mantener el inventario sincronizado entre Katuq y Siigo</small>
+          </label>
+        </div>
+
+        <div class="form-field" *ngIf="siigoForm.get('autoSyncInventory')?.value">
+          <label for="syncFrequency">Frecuencia de Sincronizacion</label>
+          <p-dropdown
+            id="syncFrequency"
+            formControlName="syncFrequency"
+            [options]="syncFrequencyOptions"
+            optionLabel="label"
+            optionValue="value"
+            styleClass="w-full">
+          </p-dropdown>
+        </div>
+      </div>
+
+      <!-- Manual Sync -->
+      <div class="sync-section">
+        <h4>Sincronizacion Manual de Productos</h4>
+        <p>Sincroniza todos los productos de Katuq con Siigo</p>
+
+        <button
+          pButton
+          type="button"
+          label="Sincronizar Ahora"
+          icon="pi pi-sync"
+          class="p-button-secondary"
+          [loading]="isSyncing"
+          [disabled]="connectionStatus !== 'success'"
+          (click)="syncProducts()">
+        </button>
+
+        <!-- Sync Progress -->
+        <div class="sync-progress" *ngIf="isSyncing">
+          <p-progressBar [value]="syncProgress" [showValue]="true"></p-progressBar>
+        </div>
+
+        <!-- Sync Result -->
+        <div class="sync-result" *ngIf="syncResult">
+          <div class="result-grid">
+            <div class="result-item success">
+              <span class="result-value">{{ syncResult.total || 0 }}</span>
+              <span class="result-label">Total</span>
+            </div>
+            <div class="result-item created">
+              <span class="result-value">{{ syncResult.created || 0 }}</span>
+              <span class="result-label">Creados</span>
+            </div>
+            <div class="result-item updated">
+              <span class="result-value">{{ syncResult.updated || 0 }}</span>
+              <span class="result-label">Actualizados</span>
+            </div>
+            <div class="result-item error" *ngIf="syncResult.failed">
+              <span class="result-value">{{ syncResult.failed }}</span>
+              <span class="result-label">Errores</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-card>
+
+    <!-- Save Button -->
+    <div class="form-actions">
+      <button
+        pButton
+        type="submit"
+        label="Guardar Configuracion"
+        icon="pi pi-save"
+        class="p-button-success"
+        [loading]="isSaving"
+        [disabled]="connectionStatus !== 'success'">
+      </button>
+    </div>
+  </form>
+</div>

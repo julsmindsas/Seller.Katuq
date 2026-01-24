@@ -1,0 +1,75 @@
+.mapping-container {
+  padding: 16px;
+  background-color: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.mapping-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mapping-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  label {
+    font-weight: 500;
+    color: #333;
+    font-size: 0.9rem;
+
+    i {
+      margin-right: 6px;
+      color: #666;
+    }
+  }
+
+  input {
+    width: 100%;
+  }
+
+  small {
+    color: #888;
+    font-size: 0.75rem;
+  }
+}
+
+.puc-guide {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: #e3f2fd;
+  border-radius: 6px;
+
+  h4 {
+    margin: 0 0 10px 0;
+    font-size: 0.85rem;
+    color: #1565c0;
+
+    i {
+      margin-right: 6px;
+    }
+  }
+
+  .puc-items {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .puc-item {
+    font-size: 0.8rem;
+    color: #333;
+
+    strong {
+      color: #1565c0;
+      margin-right: 4px;
+    }
+  }
+}

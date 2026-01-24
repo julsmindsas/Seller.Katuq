@@ -1,0 +1,72 @@
+<div class="mapping-container" [formGroup]="mappingForm">
+  <div class="mapping-grid">
+    <div class="mapping-field">
+      <label for="accountGroup">
+        <i class="pi pi-folder"></i> Grupo de Cuenta
+      </label>
+      <input
+        pInputText
+        id="accountGroup"
+        formControlName="accountGroup"
+        placeholder="Codigo de grupo contable">
+    </div>
+
+    <div class="mapping-field">
+      <label for="incomeAccount">
+        <i class="pi pi-dollar"></i> Cuenta de Ingresos
+      </label>
+      <input
+        pInputText
+        id="incomeAccount"
+        formControlName="incomeAccount"
+        placeholder="Ej: 4135">
+      <small>Cuentas 4xxx para ventas</small>
+    </div>
+
+    <div class="mapping-field">
+      <label for="costAccount">
+        <i class="pi pi-money-bill"></i> Cuenta de Costos
+      </label>
+      <input
+        pInputText
+        id="costAccount"
+        formControlName="costAccount"
+        placeholder="Ej: 6135">
+      <small>Cuentas 6xxx para costos</small>
+    </div>
+
+    <div class="mapping-field">
+      <label for="inventoryAccount">
+        <i class="pi pi-box"></i> Cuenta de Inventario
+      </label>
+      <input
+        pInputText
+        id="inventoryAccount"
+        formControlName="inventoryAccount"
+        placeholder="Ej: 1435">
+      <small>Cuentas 1xxx para inventarios</small>
+    </div>
+
+    <div class="mapping-field">
+      <label for="discountAccount">
+        <i class="pi pi-percentage"></i> Cuenta de Descuentos
+      </label>
+      <input
+        pInputText
+        id="discountAccount"
+        formControlName="discountAccount"
+        placeholder="Ej: 4175">
+      <small>Cuentas 4xxx para descuentos</small>
+    </div>
+  </div>
+
+  <!-- PUC Guide -->
+  <div class="puc-guide">
+    <h4><i class="pi pi-info-circle"></i> Codigos PUC Colombia</h4>
+    <div class="puc-items">
+      <span class="puc-item"><strong>1xxx</strong> Activos</span>
+      <span class="puc-item"><strong>4xxx</strong> Ingresos</span>
+      <span class="puc-item"><strong>6xxx</strong> Costos</span>
+    </div>
+  </div>
+</div>

@@ -24,6 +24,10 @@ import { IntegrationStateService } from './integration-state.service';
 import { IntegrationCacheService } from './integration-cache.service';
 import { IntegrationManualControlService } from './integration-manual-control.service';
 
+// Siigo Components
+import { SiigoConfigComponent } from './siigo-config/siigo-config.component';
+import { SiigoMappingComponent } from './siigo-config/siigo-mapping/siigo-mapping.component';
+
 const routes: Routes = [
   // Vista principal de listado
   { path: '', component: IntegrationsListComponent, pathMatch: 'full' },
@@ -31,6 +35,8 @@ const routes: Routes = [
   { path: 'list', redirectTo: '', pathMatch: 'full' },
   // Formulario de configuración / edición
   { path: 'configure', component: IntegrationsComponent },
+  // Siigo configuration
+  { path: 'siigo', component: SiigoConfigComponent },
   // Fallback: redirigir rutas desconocidas de este módulo al listado
   { path: '**', redirectTo: '' }
 ];
@@ -40,7 +46,9 @@ const routes: Routes = [
     IntegrationsComponent,
     IntegrationsListComponent,
     IntegrationNotificationsComponent,
-    CredentialStrengthIndicatorComponent
+    CredentialStrengthIndicatorComponent,
+    SiigoConfigComponent,
+    SiigoMappingComponent
   ],
   imports: [
     CommonModule,

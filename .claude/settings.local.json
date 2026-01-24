@@ -35,7 +35,11 @@
       "WebFetch(domain:zapier.com)",
       "Bash(lsof:*)",
       "mcp__acp__Bash",
-      "mcp__acp__Edit"
+      "mcp__acp__Edit",
+      "WebFetch(domain:siigoapi.docs.apiary.io)",
+      "WebFetch(domain:siigonube.portaldeclientes.siigo.com)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:developer.siigo.com)"
     ]
   }
 }

@@ -51,6 +51,7 @@ import { FacturacionIntegracionService } from "../../../shared/services/integrac
 import { environment } from "../../../../environments/environment";
 import { BodegaService } from "../../../shared/services/bodegas/bodega.service";
 import { InventarioService } from "../../../shared/services/inventarios/inventario.service";
+import { IntegrationsService } from "../../integrations/integrations.service";
 import { Subscription, Subject, of } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap, catchError } from "rxjs/operators";
 
@@ -278,6 +279,12 @@ export class CrearVentasComponent
   public categoriaClienteSeleccionada: any = null;
   public cargandoTiposCliente: boolean = false;
 
+  /**
+   * Configuración de Siigo para facturación automática
+   */
+  public siigoConfig: any = null;
+  public siigoEnabled: boolean = false;
+
   constructor(
     private modalService: NgbModal,
     private service: MaestroService,
@@ -296,6 +303,7 @@ export class CrearVentasComponent
     private bodegaService: BodegaService,
     private inventarioService: InventarioService,
     private daneCodesService: DaneCodesService,
+    private integrationsService: IntegrationsService,
   ) {
     this.initForm();
 
@@ -353,6 +361,7 @@ export class CrearVentasComponent
       envio: undefined,
       estadoPago: EstadoPago.Pendiente,
       estadoProceso: EstadoProceso.SinProducir,
+      generarFacturaElectronica: this.generarFacturaElectronica,
     };
   }
 
@@ -490,6 +499,9 @@ export class CrearVentasComponent
 
     // Cargar tipos de cliente para selector de categoría
     this.cargarTiposCliente();
+
+    // Cargar configuración de Siigo para facturación automática
+    this.cargarConfiguracionSiigo();
 
     // **NUEVA FUNCIONALIDAD: Suscribirse a los cambios del carrito**
     this.subscription = this.cartService.productInCartChanges$.subscribe(
@@ -700,6 +712,88 @@ export class CrearVentasComponent
         this.cargandoTiposCliente = false;
       }
     });
+  }
+
+  /**
+   * Carga la configuración de Siigo para facturación automática.
+   * Verifica si la integración está habilitada y configurada para auto-facturación.
+   */
+  cargarConfiguracionSiigo(): void {
+    this.integrationsService.loadSiigoConfig().subscribe({
+      next: (response: any) => {
+        if (response?.success && response?.config) {
+          this.siigoConfig = response.config.config || response.config;
+          // Verificar si está habilitada y tiene facturación automática
+          this.siigoEnabled = response.config.status === 'active' &&
+                             (this.siigoConfig?.enableAutoInvoicing === true ||
+                              this.siigoConfig?.facturacionAutomatica === true);
+
+          if (this.siigoEnabled) {
+            console.log('✅ Siigo habilitado con facturación automática');
+          } else {
+            console.log('ℹ️ Siigo configurado pero facturación automática deshabilitada');
+          }
+        } else {
+          this.siigoConfig = null;
+          this.siigoEnabled = false;
+          console.log('ℹ️ Siigo no configurado para esta empresa');
+        }
+      },
+      error: (error) => {
+        // Error silencioso - Siigo simplemente no está configurado
+        this.siigoConfig = null;
+        this.siigoEnabled = false;
+        console.log('ℹ️ Siigo no disponible:', error?.message || 'No configurado');
+      }
+    });
+  }
+
+  /**
+   * Encola facturación Siigo en background después de crear el pedido.
+   * Solo se ejecuta si Siigo está habilitado con facturación automática.
+   *
+   * @param orderId ID del pedido creado
+   * @param nroPedido Número de pedido para logs
+   */
+  encolarFacturacionSiigo(orderId: string, nroPedido: string): void {
+    if (!this.siigoEnabled || !orderId) {
+      return;
+    }
+
+    console.log(`📄 Encolando facturación Siigo para pedido ${nroPedido}...`);
+
+    // Obtener opciones de facturación de la configuración de Siigo
+    const options: any = {};
+    if (this.siigoConfig?.documentTypeId) {
+      options.documentTypeId = this.siigoConfig.documentTypeId;
+    }
+    if (this.siigoConfig?.defaultPaymentTypeId) {
+      options.paymentTypeId = this.siigoConfig.defaultPaymentTypeId;
+    }
+    if (this.siigoConfig?.costCenterId) {
+      options.costCenterId = this.siigoConfig.costCenterId;
+    }
+    if (this.siigoConfig?.sellerId) {
+      options.sellerId = this.siigoConfig.sellerId;
+    }
+
+    this.integrationsService.createSiigoInvoiceFromOrderAsync(orderId, options)
+      .subscribe({
+        next: (response) => {
+          console.log(`🔄 Facturación Siigo encolada - Job ID: ${response.jobId}`);
+          // Mostrar mensaje informativo al usuario
+          this.toastrService.info(
+            'La factura se generará en segundo plano. Recibirás una notificación cuando esté lista.',
+            'Facturación en proceso',
+            { timeOut: 5000 }
+          );
+        },
+        error: (error) => {
+          console.warn('⚠️ No se pudo encolar facturación Siigo:', error?.message || error);
+          // No bloquear el flujo - solo advertir
+          // El usuario puede facturar manualmente después
+        }
+      });
   }
 
   /**
@@ -2713,6 +2807,11 @@ export class CrearVentasComponent
                   // Actualizar con información adicional que pueda haber agregado el backend
                   this.pedidoGral = { ...this.pedidoGral, ...res.order };
                 }
+
+                // Obtener el ID del pedido creado
+                const orderId = res.order?._id || res.orderId || res.id;
+                const nroPedido = this.pedidoGral.nroPedido || this.pedidoGral.referencia || '';
+
                 context.cartService.clearCart();
                 context.pedidoSinGuardar = false;
                 this.mywizard.goToNextStep();
@@ -2724,6 +2823,12 @@ export class CrearVentasComponent
                   icon: "success",
                   confirmButtonText: "Ok",
                 });
+
+                // Encolar facturación Siigo en background si está habilitada
+                if (orderId && context.siigoEnabled) {
+                  context.encolarFacturacionSiigo(orderId, nroPedido);
+                }
+
                 // ir al siguiente paso (confirmación)
                 this.mywizard.goToNextStep();
               },
@@ -2803,6 +2908,18 @@ export class CrearVentasComponent
     } else {
       this.nextAvailable = false;
     }
+  }
+
+  /**
+   * Maneja el cambio del checkbox de generar factura electrónica
+   * @param value - Nuevo valor del checkbox (true/false)
+   */
+  onGenerarFacturaChange(value: boolean): void {
+    this.generarFacturaElectronica = value;
+    if (this.pedidoGral) {
+      this.pedidoGral.generarFacturaElectronica = value;
+    }
+    console.log('📄 Generar Factura Electrónica:', value);
   }
 
   onBillingSame(event: Event): void {
@@ -3391,6 +3508,16 @@ export class CrearVentasComponent
                     context.pedidoGral = { ...context.pedidoGral };
                   }
                   context.pedidoSinGuardar = false;
+
+                  // Obtener el ID del pedido creado
+                  const orderId = res.order?._id || res.orderId || res.id;
+                  const nroPedido = context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
+
+                  // Encolar facturación Siigo en background si está habilitada
+                  if (orderId && context.siigoEnabled) {
+                    context.encolarFacturacionSiigo(orderId, nroPedido);
+                  }
+
                   resolve(true); // Pedido guardado exitosamente
                 },
                 error: (err: any) => {

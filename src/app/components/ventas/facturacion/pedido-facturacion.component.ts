@@ -57,6 +57,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   ciudades: string[];
   ciudadesOrigen: any;
   @Output() overridePedido = new EventEmitter<Pedido>();
+  @Output() generarFacturaChange = new EventEmitter<boolean>();
   idenxFacturacion: any;
   editandodato: boolean;
   alias_entrega: string;
@@ -562,5 +563,13 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     // basado en la zona de cobro. Por ahora retorno 0 como valor por defecto
     // TODO: Implementar cálculo real del costo de envío
     return 0;
+  }
+
+  /**
+   * Emite el cambio del checkbox de generar factura electrónica
+   * @param value - Nuevo valor del checkbox
+   */
+  onGenerarFacturaChange(value: boolean): void {
+    this.generarFacturaChange.emit(value);
   }
 }

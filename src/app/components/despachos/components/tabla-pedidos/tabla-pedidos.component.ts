@@ -99,7 +99,21 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
     const savedColumns = localStorage.getItem('despachosColumns');
     if (savedColumns) {
       try {
-        this.displayedColumns = JSON.parse(savedColumns);
+        const parsed = JSON.parse(savedColumns);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Fusionar columnas guardadas con columnas por defecto (para agregar nuevas columnas)
+          const defaultColumns = [...this.displayedColumns];
+          const savedFields = parsed.map((col: any) => col.field);
+
+          // Agregar columnas nuevas que no existen en las guardadas
+          const newColumns = defaultColumns.filter(col => !savedFields.includes(col.field));
+          if (newColumns.length > 0) {
+            console.log('📋 [Despachos] Nuevas columnas detectadas:', newColumns.map(c => c.field).join(', '));
+            this.displayedColumns = [...parsed, ...newColumns];
+          } else {
+            this.displayedColumns = parsed;
+          }
+        }
       } catch (e) {
         console.error('Error parsing saved columns configuration', e);
       }
