@@ -9,37 +9,48 @@
 ## Resumen Ejecutivo
 Integración de facturación electrónica con Siigo completamente funcional. Soporta creación automática de clientes (NIT/CC), productos, **costo de envío**, envío automático a **DIAN** y **correo al cliente**.
 
-**Última factura creada exitosamente:** LUMK-2443 (2026-01-24)
+**Última factura creada exitosamente:** LUMK-2449 (2026-01-24)
 
 ---
 
-## ✅ NUEVA FUNCIONALIDAD: Envío a DIAN y Email al Cliente
+## ✅ Envío a DIAN y Email al Cliente
 
 ### Envío Automático a DIAN
 Las facturas se envían automáticamente a la DIAN usando el parámetro `stamp: { send: true }`.
 
-**Referencia**: [Siigo API - Create Invoice](https://developers.siigo.com/docs/siigoapi/invoice/1-create-invoice/)
+```javascript
+// siigoDataMapper.js - Al crear factura
+stamp: { send: true }  // Envía a DIAN automáticamente
+```
+
+### Envío de Factura por Email al Cliente
+El email se envía automáticamente al crear la factura usando `mail: { send: true }` en el payload:
+
+```javascript
+// siigoDataMapper.js - Al crear factura
+mail: { send: !!customerEmail }  // true si hay email
+```
+
+**Flujo**:
+1. Mapper extrae email de: `cliente.correo_electronico_comprador || facturacion.correoElectronico`
+2. Si hay email → `mail: { send: true }` → Siigo envía automáticamente
+3. Si no hay email → `mail: { send: false }` → No se envía (no falla)
+
+**Nota**: El endpoint separado `POST /invoices/{id}/mail` no se usa porque requiere parámetros adicionales que causan errores. Es mejor usar `mail.send` en la creación.
+
+### Fecha Colombia (UTC-5)
+La DIAN requiere que la fecha de la factura sea la fecha actual de envío. El servidor usa UTC, así que se resta 5 horas:
 
 ```javascript
 // siigoDataMapper.js
-stamp: {
-    send: sendToDian // true por defecto
+#getColombiaDate() {
+    const now = new Date();
+    return new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString().split('T')[0];
 }
-```
 
-**⚠️ Importante**: La fecha de la factura DEBE ser la fecha actual (fecha de envío a DIAN). No se pueden enviar facturas con fecha futura o pasada.
-
-### Envío de Factura por Email al Cliente
-Después de crear la factura, se envía automáticamente al email del cliente usando:
+// siigoProvider.js
+const colombiaDate = new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString().split('T')[0];
 ```
-POST /v1/invoices/{id}/mail
-Body: { "mail_to": "cliente@email.com" }
-```
-
-**Flujo de email**:
-1. `siigoDataMapper.js` extrae email de: `cliente.correo_electronico_comprador || facturacion.correoElectronico`
-2. `siigoProvider.js` llama a `/invoices/{id}/mail` con el email
-3. Si no hay email, solo muestra advertencia (no falla la factura)
 
 ### Observations (Publicidad)
 Cada factura incluye texto promocional:
@@ -121,8 +132,8 @@ if (totalEnvio > 0) {
 | 5 | `identification already exists` | Búsqueda con guión, Siigo sin guión | Limpiar identificación antes de buscar |
 | 6 | `customer doesn't exist` en factura | Factura usaba NIT con guión | Usar identificación de Siigo encontrada |
 | 7 | `invalid_array` en campo `name` | Nombre como array con >2 elementos | Formato exacto: Person=2 elementos, Company=1 |
-| 8 | `The field mail_to is required` | Email no pasado al endpoint de correo | Agregar `customerEmail` al invoice desde mapper |
-| 9 | Fecha no coincide con DIAN | Fecha del pedido diferente a fecha actual | Usar siempre `new Date()` en siigoProvider |
+| 8 | `document.id invalid` en `/mail` | Endpoint POST /mail tiene requisitos complejos | Usar `mail: { send: true }` en creación |
+| 9 | Fecha no coincide con DIAN | Servidor en UTC, Colombia UTC-5 | Restar 5 horas: `Date.now() - 5*60*60*1000` |
 
 ### Archivos Modificados
 
@@ -549,9 +560,11 @@ Seller.Katuq/src/app/components/ventas/
 
 ### Último punto de trabajo (2026-01-24):
 - ✅ Facturación funcionando end-to-end
-- ✅ Factura LUMK-2443 creada exitosamente
-- ✅ Cliente NIT 901832344 creado/encontrado correctamente
-- ✅ Producto JCR4216 creado en Siigo
+- ✅ Factura LUMK-2449 creada exitosamente
+- ✅ Envío a DIAN automático (`stamp: { send: true }`)
+- ✅ Email al cliente automático (`mail: { send: true }`)
+- ✅ Fecha ajustada a Colombia (UTC-5)
+- ✅ Costo de envío incluido como ítem de servicio
 
 ### Funcionalidades implementadas:
 1. ✅ Configuración de credenciales Siigo
@@ -567,11 +580,18 @@ Seller.Katuq/src/app/components/ventas/
 11. ✅ Códigos fiscales DIAN válidos (R-99-PN)
 12. ✅ Columna "Factura" en lista de pedidos con link a PDF
 13. ✅ Columna "Factura" en despachos con link a PDF
+14. ✅ Envío automático a DIAN (stamp.send)
+15. ✅ Envío automático de email al cliente (mail.send)
+16. ✅ Fecha Colombia UTC-5 para cumplir DIAN
+17. ✅ Costo de envío como ítem de servicio (ENVIO)
+18. ✅ Texto promocional en observaciones
 
 ### Estado actual:
 - **PRODUCCIÓN LISTA** - Facturación funcionando correctamente
 - PDF de facturas accesible via `public_url` de Siigo
 - Pedidos actualizados con `nroFactura` y `pdfUrlInvoice`
+- Email enviado automáticamente al cliente
+- Factura enviada automáticamente a DIAN
 
 ---
 

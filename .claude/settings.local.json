@@ -39,7 +39,8 @@
       "WebFetch(domain:siigoapi.docs.apiary.io)",
       "WebFetch(domain:siigonube.portaldeclientes.siigo.com)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:developer.siigo.com)"
+      "WebFetch(domain:developer.siigo.com)",
+      "Bash(git log:*)"
     ]
   }
 }

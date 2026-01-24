@@ -1476,14 +1476,12 @@
                         <i class="pi pi-credit-card"></i>
                         {{ 'Nuevo estado de pago' | translate }}
                     </label>
-                    <p-dropdown
-                        [options]="getAvailablePaymentStates()"
-                        [(ngModel)]="tempEstadoPago"
-                        [placeholder]="'Seleccionar estado' | translate"
-                        [style]="{'width':'100%'}"
-                        [panelStyle]="{'width':'100%'}"
-                        appendTo="body">
-                    </p-dropdown>
+                    <select class="form-select estado-select" [(ngModel)]="tempEstadoPago">
+                        <option value="" disabled>{{ 'Seleccionar estado' | translate }}</option>
+                        <option *ngFor="let estado of getAvailablePaymentStates()" [value]="estado">
+                            {{ estado }}
+                        </option>
+                    </select>
                 </div>
 
                 <!-- Estado de Proceso -->
@@ -1495,15 +1493,13 @@
                             <i class="pi pi-lock"></i>
                         </span>
                     </label>
-                    <p-dropdown
-                        [options]="estadosProcesos"
-                        [(ngModel)]="tempEstadoProceso"
-                        [placeholder]="'Seleccionar estado' | translate"
-                        [disabled]="!canEditProcessStatus(pedidoSeleccionado)"
-                        [style]="{'width':'100%'}"
-                        [panelStyle]="{'width':'100%'}"
-                        appendTo="body">
-                    </p-dropdown>
+                    <select class="form-select estado-select" [(ngModel)]="tempEstadoProceso"
+                        [disabled]="!canEditProcessStatus(pedidoSeleccionado)">
+                        <option value="" disabled>{{ 'Seleccionar estado' | translate }}</option>
+                        <option *ngFor="let estado of estadosProcesos" [value]="estado">
+                            {{ estado }}
+                        </option>
+                    </select>
                     <small class="selector-hint" *ngIf="!canEditProcessStatus(pedidoSeleccionado)">
                         <i class="pi pi-info-circle"></i>
                         {{ 'Solo administradores pueden cambiar el estado de proceso' | translate }}
