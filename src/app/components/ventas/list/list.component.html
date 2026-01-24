@@ -1423,95 +1423,142 @@
 </ng-template>
 
 <ng-template #cambioEstadoPagoModal let-modal>
-    <div class="modal-header">
-        <h4 *ngIf="!isFromProduction" class="modal-title" id="modal-basic-title">
-            <i class="fa fa-credit-card-alt me-2"></i>
-            {{'Cambiar estado de pago y proceso' | translate}}
-        </h4>
-        <h4 *ngIf="isFromProduction" class="modal-title" id="modal-basic-title">
-            <i class="fa fa-credit-card-alt me-2"></i>
-            {{'Cambiar estado de proceso' | translate}}
-        </h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <div class="alert alert-info d-flex align-items-center mb-3">
-            <i class="fa fa-info-circle me-2"></i>
-            <div>
-                <strong>{{ 'Pedido #' | translate }}{{ pedidoSeleccionado?.nroPedido }}</strong>
-                <br>
-                <small>{{ 'Estado actual: ' | translate }}{{ pedidoSeleccionado?.estadoPago }}</small>
-                <br>
-                <small>{{ 'Estado proceso: ' | translate }}{{ pedidoSeleccionado?.estadoProceso }}</small>
+    <div class="estado-modal">
+        <!-- Header -->
+        <div class="estado-modal-header">
+            <div class="header-icon">
+                <i class="pi pi-sync"></i>
+            </div>
+            <div class="header-content">
+                <h4 class="header-title">
+                    {{ isFromProduction ? ('Cambiar estado de proceso' | translate) : ('Cambiar estado' | translate) }}
+                </h4>
+                <span class="header-subtitle">{{ 'Pedido' | translate }} #{{ pedidoSeleccionado?.nroPedido }}</span>
+            </div>
+            <button type="button" class="btn-close-custom" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <i class="pi pi-times"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="estado-modal-body">
+            <!-- Estado actual card -->
+            <div class="current-status-card">
+                <div class="status-row">
+                    <div class="status-item">
+                        <span class="status-label">{{ 'Estado de pago' | translate }}</span>
+                        <span class="status-badge" [ngClass]="{
+                            'badge-warning': pedidoSeleccionado?.estadoPago === 'Pendiente' || pedidoSeleccionado?.estadoPago === 'Pospendiente',
+                            'badge-success': pedidoSeleccionado?.estadoPago === 'Aprobado',
+                            'badge-info': pedidoSeleccionado?.estadoPago === 'PreAprobado',
+                            'badge-danger': pedidoSeleccionado?.estadoPago === 'Rechazado' || pedidoSeleccionado?.estadoPago === 'Cancelado'
+                        }">
+                            {{ pedidoSeleccionado?.estadoPago }}
+                        </span>
+                    </div>
+                    <div class="status-arrow">
+                        <i class="pi pi-arrow-right"></i>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">{{ 'Estado de proceso' | translate }}</span>
+                        <span class="status-badge badge-process">
+                            {{ pedidoSeleccionado?.estadoProceso }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selectores -->
+            <div class="selectors-container">
+                <!-- Estado de Pago -->
+                <div class="selector-group" *ngIf="!isFromProduction">
+                    <label class="selector-label">
+                        <i class="pi pi-credit-card"></i>
+                        {{ 'Nuevo estado de pago' | translate }}
+                    </label>
+                    <p-dropdown
+                        [options]="getAvailablePaymentStates()"
+                        [(ngModel)]="tempEstadoPago"
+                        [placeholder]="'Seleccionar estado' | translate"
+                        [style]="{'width':'100%'}"
+                        [panelStyle]="{'width':'100%'}"
+                        appendTo="body">
+                    </p-dropdown>
+                </div>
+
+                <!-- Estado de Proceso -->
+                <div class="selector-group">
+                    <label class="selector-label">
+                        <i class="pi pi-cog"></i>
+                        {{ 'Estado de proceso' | translate }}
+                        <span class="lock-indicator" *ngIf="!canEditProcessStatus(pedidoSeleccionado)">
+                            <i class="pi pi-lock"></i>
+                        </span>
+                    </label>
+                    <p-dropdown
+                        [options]="estadosProcesos"
+                        [(ngModel)]="tempEstadoProceso"
+                        [placeholder]="'Seleccionar estado' | translate"
+                        [disabled]="!canEditProcessStatus(pedidoSeleccionado)"
+                        [style]="{'width':'100%'}"
+                        [panelStyle]="{'width':'100%'}"
+                        appendTo="body">
+                    </p-dropdown>
+                    <small class="selector-hint" *ngIf="!canEditProcessStatus(pedidoSeleccionado)">
+                        <i class="pi pi-info-circle"></i>
+                        {{ 'Solo administradores pueden cambiar el estado de proceso' | translate }}
+                    </small>
+                </div>
+            </div>
+
+            <!-- Alertas -->
+            <div class="alerts-container">
+                <div class="custom-alert alert-info-custom" *ngIf="isPedidoGrupo1(pedidoSeleccionado)">
+                    <i class="pi pi-snowflake"></i>
+                    <div>
+                        <strong>{{ 'GRUPO 1' | translate }}</strong>
+                        <p>{{ 'Se congelarán: Productos, Notas de producción, Personalizaciones' | translate }}</p>
+                    </div>
+                </div>
+
+                <div class="custom-alert alert-warning-custom" *ngIf="isPedidoGrupo2(pedidoSeleccionado)">
+                    <i class="pi pi-lock"></i>
+                    <div>
+                        <strong>{{ 'GRUPO 2' | translate }}</strong>
+                        <p>{{ 'Se congelará: Dirección de entrega' | translate }}</p>
+                    </div>
+                </div>
+
+                <div class="custom-alert alert-warning-custom" *ngIf="tempEstadoPago === 'PreAprobado'">
+                    <i class="pi pi-exclamation-triangle"></i>
+                    <div>
+                        <strong>{{ 'Nota' | translate }}</strong>
+                        <p>{{ 'Se marcará como aprobación manual.' | translate }}</p>
+                    </div>
+                </div>
+
+                <div class="custom-alert alert-danger-custom"
+                    *ngIf="tempEstadoPago === 'Cancelado' || tempEstadoPago === 'Rechazado'">
+                    <i class="pi pi-exclamation-circle"></i>
+                    <div>
+                        <strong>{{ 'Advertencia' | translate }}</strong>
+                        <p>{{ 'Este cambio afectará el pedido permanentemente.' | translate }}</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label fw-bold">{{ 'Nuevo estado de pago:' | translate }}</label>
-            <select class="form-select" [(ngModel)]="tempEstadoPago">
-                <option *ngFor="let estado of getAvailablePaymentStates()" [value]="estado">
-                    {{ estado }}
-                </option>
-            </select>
+        <!-- Footer -->
+        <div class="estado-modal-footer">
+            <button type="button" class="btn-cancel" (click)="modal.dismiss('cancel')">
+                {{ 'Cancelar' | translate }}
+            </button>
+            <button type="button" class="btn-confirm" (click)="cambiarEstadoPago(pedidoSeleccionado)"
+                [disabled]="!tempEstadoPago && !isFromProduction">
+                <i class="pi pi-check"></i>
+                {{ 'Confirmar' | translate }}
+            </button>
         </div>
-
-        <div class="mb-3">
-            <label class="form-label fw-bold">{{ 'Estado de proceso:' | translate }}</label>
-            <select class="form-select" [(ngModel)]="tempEstadoProceso"
-                [disabled]="!canEditProcessStatus(pedidoSeleccionado)">
-                <option *ngFor="let estado of estadosProcesos" [value]="estado">
-                    {{ estado }}
-                </option>
-            </select>
-            <small class="form-text text-muted">
-                {{ 'GRUPO 1 (Congela productos): EnProduccion, ProducidoParcialmente, ProducidoTotalmente, Empacado, Despachado' | translate }}
-            </small>
-            <small class="form-text text-muted">
-                {{ 'GRUPO 2 (Congela dirección): Entregado, Cerrado' | translate }}
-            </small>
-            <small class="form-text text-muted" *ngIf="!canEditProcessStatus(pedidoSeleccionado)">
-                <i class="fa fa-lock me-1"></i>
-                {{ 'Solo administradores pueden cambiar el estado de proceso' | translate }}
-            </small>
-        </div>
-
-        <div class="alert alert-info" *ngIf="isPedidoGrupo1(pedidoSeleccionado)">
-            <i class="fa fa-snowflake-o me-2"></i>
-            <strong>{{ 'Pedido en GRUPO 1:' | translate }}</strong>
-            {{ 'Se congelarán: Editar notas de producción, Agregar productos, Observaciones de personalización, Preferencias, Adiciones y Cantidades' | translate }}
-        </div>
-
-        <div class="alert alert-warning" *ngIf="isPedidoGrupo2(pedidoSeleccionado)">
-            <i class="fa fa-lock me-2"></i>
-            <strong>{{ 'Pedido en GRUPO 2:' | translate }}</strong>
-            {{ 'Se congelará: Editar dirección de entrega' | translate }}
-        </div>
-
-        <div class="alert alert-warning" *ngIf="pedidoSeleccionado?.estadoPago === 'PreAprobado'">
-            <i class="fa fa-exclamation-triangle me-2"></i>
-            <strong>{{ 'Nota:' | translate }}</strong>
-            {{ 'Al seleccionar PreAprobado, se marcará como aprobación manual.' | translate }}
-        </div>
-
-        <div class="alert alert-danger"
-            *ngIf="pedidoSeleccionado?.estadoPago === 'Cancelado' || pedidoSeleccionado?.estadoPago === 'Rechazado'">
-            <i class="fa fa-exclamation-triangle me-2"></i>
-            <strong>{{ 'Advertencia:' | translate }}</strong>
-            {{ 'Este cambio afectará el estado del pedido permanentemente.' | translate }}
-        </div>
-    </div>
-    <div class="modal-footer">
-        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
-            <i class="fa fa-times me-1"></i>
-            {{'Cancelar' | translate}}
-        </button>
-        <button type="button" class="btn btn-primary" (click)="cambiarEstadoPago(pedidoSeleccionado)"
-            [disabled]="!tempEstadoPago">
-            <i class="fa fa-check me-1"></i>
-            {{'Confirmar cambio' | translate}}
-        </button>
     </div>
 </ng-template>
 
