@@ -1,13 +1,255 @@
 # Bitácora de Integración Siigo - Katuq
 
-## Estado Actual: IDs DE IMPUESTOS CONFIGURABLES
-**Última actualización**: 2026-01-23
-**Fase**: Funcionalidad Completa + Corrección de IDs de Impuestos
+## Estado Actual: ✅ FACTURACIÓN FUNCIONANDO
+**Última actualización**: 2026-01-24
+**Fase**: Producción - Facturación Completa Operativa
 
 ---
 
 ## Resumen Ejecutivo
-Se implementó el control de facturación electrónica tanto en venta asistida (checkbox) como facturación manual desde la lista de pedidos (botón "Facturar Siigo").
+Integración de facturación electrónica con Siigo completamente funcional. Soporta creación automática de clientes (NIT/CC), productos, **costo de envío**, envío automático a **DIAN** y **correo al cliente**.
+
+**Última factura creada exitosamente:** LUMK-2443 (2026-01-24)
+
+---
+
+## ✅ NUEVA FUNCIONALIDAD: Envío a DIAN y Email al Cliente
+
+### Envío Automático a DIAN
+Las facturas se envían automáticamente a la DIAN usando el parámetro `stamp: { send: true }`.
+
+**Referencia**: [Siigo API - Create Invoice](https://developers.siigo.com/docs/siigoapi/invoice/1-create-invoice/)
+
+```javascript
+// siigoDataMapper.js
+stamp: {
+    send: sendToDian // true por defecto
+}
+```
+
+**⚠️ Importante**: La fecha de la factura DEBE ser la fecha actual (fecha de envío a DIAN). No se pueden enviar facturas con fecha futura o pasada.
+
+### Envío de Factura por Email al Cliente
+Después de crear la factura, se envía automáticamente al email del cliente usando:
+```
+POST /v1/invoices/{id}/mail
+Body: { "mail_to": "cliente@email.com" }
+```
+
+**Flujo de email**:
+1. `siigoDataMapper.js` extrae email de: `cliente.correo_electronico_comprador || facturacion.correoElectronico`
+2. `siigoProvider.js` llama a `/invoices/{id}/mail` con el email
+3. Si no hay email, solo muestra advertencia (no falla la factura)
+
+### Observations (Publicidad)
+Cada factura incluye texto promocional:
+```
+"Pedido #123 | Factura generada automaticamente desde katuq.com integrando Siigo"
+```
+
+---
+
+## ✅ NUEVA FUNCIONALIDAD: Facturación de Costo de Envío
+
+### Problema
+Siigo **NO tiene un campo nativo para cargos de envío/flete**. El `totalEnvio` del pedido no se incluía en la factura.
+
+### Solución Implementada
+El costo de envío se agrega como un **ítem adicional de tipo Servicio** en la factura.
+
+**Referencia**: [Documentación Plugin Siigo WooCommerce](https://vivamente.co/documentacion-plugin-siigo-con-woocommerce/)
+
+### Configuración
+
+**No requiere configuración manual.** El sistema automáticamente:
+
+1. Verifica si existe el producto `ENVIO` en Siigo
+2. Si no existe, lo crea como tipo `Service` (sin inventario)
+3. Agrega el costo de envío del pedido a la factura
+
+### Flujo Automático
+
+```
+Pedido Katuq:
+  - Productos: $100,000
+  - totalEnvio: $8,000
+
+Factura Siigo:
+  items: [
+    { code: "PROD-001", price: 100000 },  // Productos
+    { code: "ENVIO", price: 8000 }        // Envío como ítem adicional
+  ]
+  total: $108,000 ✅
+```
+
+### Archivos Modificados
+
+| Archivo | Cambio |
+|---------|--------|
+| `siigoDataMapper.js` | Agregar `totalEnvio` como ítem de servicio |
+| `accountingManager.js` | Configuración de `shippingProductCode`, `shippingDescription`, `shippingTaxId` |
+
+### Código Implementado
+
+```javascript
+// siigoDataMapper.js - mapOrderToInvoice()
+const totalEnvio = katuqPedido.totalEnvio || 0;
+if (totalEnvio > 0) {
+    items.push({
+        code: config.shippingProductCode || 'ENVIO',
+        description: config.shippingDescription || 'Servicio de envío a domicilio',
+        quantity: 1,
+        price: totalEnvio,
+        discount: 0,
+        taxes: config.shippingTaxId ? [{ id: config.shippingTaxId }] : []
+    });
+}
+```
+
+---
+
+## ✅ FIXES CRÍTICOS (2026-01-24) - Creación de Clientes y Facturas
+
+### Problemas Resueltos
+
+| # | Error | Causa | Solución |
+|---|-------|-------|----------|
+| 1 | `Invalid email: 3104082376` | Teléfono en campo email | Validación regex `isValidEmail()` |
+| 2 | `fiscal_responsibilities required` | Campo no mapeado correctamente | Soporte snake_case + camelCase en `createCustomer` |
+| 3 | `Code doesn't exist: R-00-PN` | Código fiscal inválido | Usar `R-99-PN` (comodín DIAN válido) |
+| 4 | `identification invalid format` | NIT con guión `901832344-7` | Separar en `identification` + `check_digit` |
+| 5 | `identification already exists` | Búsqueda con guión, Siigo sin guión | Limpiar identificación antes de buscar |
+| 6 | `customer doesn't exist` en factura | Factura usaba NIT con guión | Usar identificación de Siigo encontrada |
+| 7 | `invalid_array` en campo `name` | Nombre como array con >2 elementos | Formato exacto: Person=2 elementos, Company=1 |
+| 8 | `The field mail_to is required` | Email no pasado al endpoint de correo | Agregar `customerEmail` al invoice desde mapper |
+| 9 | Fecha no coincide con DIAN | Fecha del pedido diferente a fecha actual | Usar siempre `new Date()` en siigoProvider |
+
+### Archivos Modificados
+
+#### `siigoDataMapper.js`
+```javascript
+// 1. Validación de email
+isValidEmail(email) {
+    if (!email || typeof email !== 'string') return false;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+}
+
+// 2. Detección automática de NIT
+#isNitFormat(documento) {
+    // Detecta NITs por guión o formato 9-10 dígitos
+    if (documento.includes('-')) return true;
+    // NITs empiezan con 8 o 9
+    ...
+}
+
+// 3. Separación de dígito de verificación
+#extractIdentificationParts(documento, isCompany) {
+    // "901832344-7" → { cleanIdentification: "901832344", checkDigit: "7" }
+}
+
+// 4. Códigos fiscales válidos DIAN
+const fiscalResponsibility = { code: 'R-99-PN', name: 'No responsable' };
+// Solo O-13, O-15, O-23, O-47, R-99-PN son válidos
+
+// 7. Formato correcto de nombre según tipo de persona
+// Documentación: https://developers.siigo.com/docs/siigoapi/customer/1-create-customer/
+if (isCompany) {
+    // Empresa (NIT): EXACTAMENTE 1 elemento
+    nameArray = [rawName.trim()]; // ["Empresa ABC S.A.S."]
+} else {
+    // Persona (CC/CE): EXACTAMENTE 2 elementos [nombre, apellido]
+    const parts = rawName.trim().split(/\s+/);
+    if (parts.length === 1) {
+        nameArray = [parts[0], 'N/A'];
+    } else if (parts.length === 2) {
+        nameArray = parts;
+    } else {
+        // "Jairo Alberto Pérez" → ["Jairo", "Alberto Pérez"]
+        nameArray = [parts[0], parts.slice(1).join(' ')];
+    }
+}
+```
+
+#### `siigoProvider.js`
+```javascript
+// 5. Búsqueda con identificación limpia
+async findCustomerByIdentification(identification, ...) {
+    let cleanIdentification = identification;
+    if (cleanIdentification.includes('-')) {
+        cleanIdentification = cleanIdentification.split('-')[0];
+    }
+    // Buscar con "901832344" no "901832344-7"
+}
+
+// 6. Crear cliente con soporte snake_case
+const payload = {
+    person_type: customer.person_type || customer.personType || 'Person',
+    fiscal_responsibilities: customer.fiscal_responsibilities || customer.fiscalResponsibilities || [],
+    check_digit: checkDigit || undefined, // Solo si existe
+    ...
+};
+```
+
+#### `accountingManager.js`
+```javascript
+// 7. Pasar identificación de Siigo a la factura
+invoiceConfig.customerIdentification = customerResult.customer?.identification;
+// Usa "901832344" que Siigo devolvió, no el del pedido
+```
+
+### Códigos Fiscales Válidos DIAN
+
+| Código | Descripción |
+|--------|-------------|
+| `O-13` | Gran contribuyente |
+| `O-15` | Autorretenedor |
+| `O-23` | Agente de retención IVA |
+| `O-47` | Régimen simple de tributación |
+| `R-99-PN` | No responsable (comodín para todos los demás) |
+
+⚠️ **El código `R-00-PN` NO EXISTE.** Usar `R-99-PN` para empresas normales.
+
+### Formato del Campo `name` en Clientes
+
+Según la [documentación oficial de Siigo](https://developers.siigo.com/docs/siigoapi/customer/1-create-customer/), el campo `name` es un **array de strings** con formato específico:
+
+| Tipo | Elementos | Ejemplo |
+|------|-----------|---------|
+| `Person` (CC, CE) | **Exactamente 2** | `["Juan", "Pérez Gómez"]` |
+| `Company` (NIT) | **Exactamente 1** | `["Mi Empresa S.A.S."]` |
+
+#### Transformación de nombres:
+
+```
+Persona: "Jairo Alberto Pérez" → ["Jairo", "Alberto Pérez"]
+Persona: "María" → ["María", "N/A"]
+Empresa: "LUMINOS SAS" → ["LUMINOS SAS"]
+```
+
+⚠️ **Enviar más de 2 elementos para Person o más de 1 para Company causa `invalid_array`.**
+
+### Flujo de Creación de Cliente Corregido
+
+```
+1. Pedido tiene cliente: NIT 901832344-7
+
+2. findCustomerByIdentification("901832344-7")
+   └─ Limpia: "901832344"
+   └─ Busca en Siigo
+   └─ ✅ Encontrado → Usa ese cliente
+
+3. Si no existe, mapCustomerToSiigo():
+   └─ Detecta NIT automáticamente (tiene guión)
+   └─ Separa: identification="901832344", check_digit="7"
+   └─ fiscal_responsibilities=[{code:"R-99-PN", name:"No responsable"}]
+   └─ Valida email (ignora si es teléfono)
+   └─ ✅ Crea cliente en Siigo
+
+4. createInvoice():
+   └─ Usa customerResult.customer.identification ("901832344")
+   └─ ✅ Factura creada exitosamente
+```
 
 ---
 
@@ -305,30 +547,68 @@ Seller.Katuq/src/app/components/ventas/
 ## Contexto para Retomar
 **Si la conversación se compacta, leer este archivo primero.**
 
-### Último punto de trabajo:
-- IDs de impuestos ahora configurables desde UI
-- Dropdowns para seleccionar tax0Id, tax5Id, tax19Id
-- Backend actualizado para pasar IDs al SiigoDataMapper
+### Último punto de trabajo (2026-01-24):
+- ✅ Facturación funcionando end-to-end
+- ✅ Factura LUMK-2443 creada exitosamente
+- ✅ Cliente NIT 901832344 creado/encontrado correctamente
+- ✅ Producto JCR4216 creado en Siigo
 
 ### Funcionalidades implementadas:
 1. ✅ Configuración de credenciales Siigo
 2. ✅ Facturación automática al aprobar pagos
 3. ✅ Checkbox para control por pedido
 4. ✅ Facturación manual desde lista de pedidos
-5. ✅ Creación automática de clientes en Siigo
+5. ✅ Creación automática de clientes en Siigo (NIT y CC)
 6. ✅ Creación automática de productos en Siigo
 7. ✅ IDs de impuestos configurables (tax0Id, tax5Id, tax19Id)
+8. ✅ Validación de email (ignora teléfonos en campo email)
+9. ✅ Detección automática de NIT por formato
+10. ✅ Separación de dígito de verificación para NITs
+11. ✅ Códigos fiscales DIAN válidos (R-99-PN)
+12. ✅ Columna "Factura" en lista de pedidos con link a PDF
+13. ✅ Columna "Factura" en despachos con link a PDF
 
-### Lo que falta:
-- Usuario configure credenciales de Siigo API
-- Usuario seleccione los IDs de impuestos correctos de su cuenta
-- Probar flujo completo end-to-end
-- Verificar respuesta del backend al crear facturas
+### Estado actual:
+- **PRODUCCIÓN LISTA** - Facturación funcionando correctamente
+- PDF de facturas accesible via `public_url` de Siigo
+- Pedidos actualizados con `nroFactura` y `pdfUrlInvoice`
+
+---
+
+## ✅ UI - Columna Factura en Listas (2026-01-24)
+
+### Lista de Pedidos (`list.component`)
+- Columna "Factura" agregada después de "# Pedido"
+- Muestra número de factura con icono PDF
+- Link directo al PDF si `pdfUrlInvoice` existe
+- Lógica de merge para columnas nuevas en localStorage
+
+### Tabla de Despachos (`tabla-pedidos.component`)
+- Misma funcionalidad que lista de pedidos
+- Columna "Factura" con link a PDF
+
+### Campos del Pedido Actualizados
+```typescript
+interface Pedido {
+  nroFactura?: string;           // Número de factura (ej: "2443")
+  pdfUrlInvoice?: string;        // URL al PDF de Siigo
+  facturacionElectronica?: {
+    provider: string;            // "siigo"
+    invoiceId: string;           // UUID de Siigo
+    invoiceNumber: string;       // Número de factura
+    pdfUrl?: string;             // URL alternativa al PDF
+    createdAt: string;
+    customerId: string;
+    customerCreated: boolean;
+  };
+}
+```
 
 ---
 
 ## Referencias
-- [Siigo API Docs](https://siigoapi.docs.apiary.io/)
+- [Siigo API Docs](https://developers.siigo.com/)
+- [Códigos Fiscales DIAN](https://soporte.misfacturas.com.co/hc/es-419/articles/4401755703956)
 - Documentación backend: `katuq_admin_back_firebase/docs/Integraciones/SIIGO_INTEGRATION_FINAL.md`
 - Ruta frontend configuración: `/integrations/siigo`
 - Ruta frontend pedidos: `/ventas/pedidos`
