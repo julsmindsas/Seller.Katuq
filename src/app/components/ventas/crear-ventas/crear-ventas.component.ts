@@ -756,7 +756,8 @@ export class CrearVentasComponent
    * @param nroPedido Número de pedido para logs
    */
   encolarFacturacionSiigo(orderId: string, nroPedido: string): void {
-    if (!this.siigoEnabled || !orderId) {
+    // Validar: debe tener orderId Y (siigoEnabled O checkbox marcado)
+    if (!orderId || (!this.siigoEnabled && !this.generarFacturaElectronica)) {
       return;
     }
 
@@ -2824,8 +2825,8 @@ export class CrearVentasComponent
                   confirmButtonText: "Ok",
                 });
 
-                // Encolar facturación Siigo en background si está habilitada
-                if (orderId && context.siigoEnabled) {
+                // Encolar facturación Siigo en background si está habilitada globalmente o si el checkbox está marcado
+                if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {
                   context.encolarFacturacionSiigo(orderId, nroPedido);
                 }
 
@@ -3513,8 +3514,8 @@ export class CrearVentasComponent
                   const orderId = res.order?._id || res.orderId || res.id;
                   const nroPedido = context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
 
-                  // Encolar facturación Siigo en background si está habilitada
-                  if (orderId && context.siigoEnabled) {
+                  // Encolar facturación Siigo en background si está habilitada globalmente o si el checkbox está marcado
+                  if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {
                     context.encolarFacturacionSiigo(orderId, nroPedido);
                   }
 
