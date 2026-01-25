@@ -782,6 +782,16 @@ export class PedidosUtilService {
     }
 
     getShippingCost(allBillingZone): number {
+        // Si es "Recoge en Tienda", el envío es 0
+        if (this.pedido?.formaEntrega?.toLowerCase()?.includes('recoge')) {
+            return 0;
+        }
+
+        // Si el pedido tiene totalEnvio en 0 explícitamente (para recoge), respetar eso
+        if (this.pedido?.totalEnvio === 0 && this.pedido?.envio?.valorZonaCobro === 0) {
+            return 0;
+        }
+
         // Si el pedido ya tiene valorZonaCobro, usarlo directamente como prioridad
         if (this.pedido?.envio?.valorZonaCobro && this.pedido.envio.valorZonaCobro > 0) {
             return this.pedido.envio.valorZonaCobro;
@@ -808,6 +818,11 @@ export class PedidosUtilService {
         return 0;
     }
     getShippingTaxCost(allBillingZone): number {
+        // Si es "Recoge en Tienda", no hay impuesto de envío
+        if (this.pedido?.formaEntrega?.toLowerCase()?.includes('recoge')) {
+            return 0;
+        }
+
         if (!allBillingZone || !Array.isArray(allBillingZone) || allBillingZone.length === 0) {
             return 0;
         }

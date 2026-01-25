@@ -234,6 +234,14 @@ export class CrearVentasComponent
   esRecogeEnTienda: boolean = false;
   documentoBuscar: any;
 
+  // Propiedades para selector de forma de entrega (pedidos sin configuración)
+  formasEntregaOptions: { value: string; label: string; icon: string }[] = [
+    { value: 'Domicilio', label: 'Envío a Domicilio', icon: 'fa-truck' },
+    { value: 'Recoge', label: 'Recoge en Tienda', icon: 'fa-store' }
+  ];
+  selectedFormaEntrega: string = 'Domicilio';
+  pedidoSinConfiguracion: boolean = false;
+
   @Input("icon") public icon;
 
   public col1: string = "4";
@@ -449,14 +457,20 @@ export class CrearVentasComponent
     };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
-      // Agregar el consumidor final si no existe
+      // Primero cargar los datos del servidor
+      if (res.datosFacturacionElectronica && Array.isArray(res.datosFacturacionElectronica)) {
+        res.datosFacturacionElectronica.forEach((x) => {
+          this.datosFacturacionElectronica.push(x);
+        });
+      }
+
+      // Eliminar duplicados de consumidor final que puedan venir del servidor
+      this.eliminarDuplicadosConsumidorFinal();
+
+      // DESPUÉS de cargar los datos, verificar si existe el consumidor final
       if (!this.existeConsumidorFinal()) {
         this.agregarConsumidorFinal();
       }
-
-      res.datosFacturacionElectronica.map((x) => {
-        this.datosFacturacionElectronica.push(x);
-      });
     });
   }
   datosFacElect(event) {
@@ -2218,6 +2232,46 @@ export class CrearVentasComponent
       return;
     }
 
+    // Obtener la ciudad anterior para comparar
+    const ciudadAnterior = this.selectedCity;
+
+    // Verificar si hay productos en el carrito y la ciudad está cambiando
+    if (this.tieneProductosEnCarrito && ciudadAnterior && ciudadAnterior !== "" && ciudadAnterior !== value) {
+      // Mostrar confirmación antes de cambiar la ciudad
+      Swal.fire({
+        title: "Cambio de Ciudad",
+        html: `
+          <div class="text-start">
+            <p>Está cambiando la ciudad de <strong>${this.getCityLabel(ciudadAnterior)}</strong> a <strong>${this.getCityLabel(value)}</strong>.</p>
+            <p class="text-danger"><strong>⚠️ Atención:</strong> Los productos en el carrito serán eliminados porque los precios y disponibilidad varían según la ciudad.</p>
+          </div>
+        `,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, cambiar ciudad",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Limpiar el carrito
+          this.limpiarCarritoPorCambioCiudad(ciudadAnterior, value);
+          // Proceder con el cambio de ciudad
+          this.aplicarCambioCiudad(value);
+        }
+        // Si cancela, no hacer nada (mantener la ciudad anterior)
+      });
+      return;
+    }
+
+    // Si no hay productos en el carrito o es la primera selección, proceder directamente
+    this.aplicarCambioCiudad(value);
+  }
+
+  /**
+   * Aplica el cambio de ciudad actualizando todas las referencias necesarias.
+   */
+  private aplicarCambioCiudad(value: string): void {
     // Guardar la ciudad seleccionada
     this.selectedCity = value;
 
@@ -2251,6 +2305,40 @@ export class CrearVentasComponent
       this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
       this.activarDatosEntrega = false;
     }
+  }
+
+  /**
+   * Limpia el carrito cuando se cambia la ciudad.
+   * Muestra una notificación informativa al usuario.
+   */
+  private limpiarCarritoPorCambioCiudad(ciudadAnterior: string, ciudadNueva: string): void {
+    // Limpiar el carrito usando el servicio
+    this.cartService.clearCart();
+
+    // Limpiar también el carrito del pedido
+    if (this.pedidoGral) {
+      this.pedidoGral.carrito = [];
+    }
+
+    // Obtener labels de las ciudades para el mensaje
+    const nombreCiudadAnterior = this.getCityLabel(ciudadAnterior) || ciudadAnterior;
+    const nombreCiudadNueva = this.getCityLabel(ciudadNueva) || ciudadNueva;
+
+    // Mostrar notificación
+    this.toastrService.warning(
+      `El carrito ha sido vaciado debido al cambio de ciudad de "${nombreCiudadAnterior}" a "${nombreCiudadNueva}". Los productos y precios pueden variar según la ciudad.`,
+      'Carrito Vaciado',
+      {
+        closeButton: true,
+        timeOut: 5000,
+        enableHtml: true
+      }
+    );
+
+    console.log('🛒 Carrito limpiado por cambio de ciudad:', {
+      ciudadAnterior: nombreCiudadAnterior,
+      ciudadNueva: nombreCiudadNueva
+    });
   }
 
   // Método para obtener el label de la ciudad seleccionada (para badge de confirmación)
@@ -2318,6 +2406,19 @@ export class CrearVentasComponent
               carritoObj[0]?.configuracion?.datosEntrega?.formaEntrega
                 ?.toString()
                 .toLowerCase();
+
+            // Verificar si el pedido tiene configuración de forma de entrega
+            this.pedidoSinConfiguracion = !formaEntrega || formaEntrega === '';
+
+            // Inicializar selectedFormaEntrega basándose en el estado actual
+            if (this.pedidoGral?.formaEntrega) {
+              this.selectedFormaEntrega = this.pedidoGral.formaEntrega;
+            } else if (formaEntrega) {
+              this.selectedFormaEntrega = formaEntrega.includes("recoge") ? 'Recoge' : 'Domicilio';
+            } else {
+              this.selectedFormaEntrega = 'Domicilio';
+            }
+
             if (formaEntrega && formaEntrega.includes("recoge")) {
               // Crear datos de envío simplificados para recogida en tienda
               const envioRecoge = {
@@ -2344,6 +2445,7 @@ export class CrearVentasComponent
               // Asignar al pedido
               this.pedidoGral.envio = envioRecoge;
               this.pedidoGral.formaEntrega = "Recoge";
+              this.pedidoGral.totalEnvio = 0;
 
               // Marcar que es recoge en tienda para ocultar tab de envío
               this.esRecogeEnTienda = true;
@@ -2355,10 +2457,19 @@ export class CrearVentasComponent
                   tabFacturacion.click();
                 }
               }, 100);
+            } else if (this.selectedFormaEntrega === 'Recoge') {
+              // Si ya se había seleccionado "Recoge" manualmente (pedido sin configuración)
+              this.esRecogeEnTienda = true;
             } else {
               this.esRecogeEnTienda = false;
             }
+          } else {
+            // Carrito vacío o sin elementos, es un pedido sin configuración
+            this.pedidoSinConfiguracion = true;
           }
+        } else {
+          // No hay carrito, es un pedido sin configuración
+          this.pedidoSinConfiguracion = true;
         }
       } catch (error) {
         this.esRecogeEnTienda = false;
@@ -2417,6 +2528,10 @@ export class CrearVentasComponent
                   this.datosFacturacionElectronica = res;
                   this.originalDataFacturacionElectronica =
                     this.utils.deepClone(res);
+
+                  // Eliminar duplicados de consumidor final que puedan venir del servidor
+                  this.eliminarDuplicadosConsumidorFinal();
+
                   // Agregar el consumidor final si no existe
                   if (!this.existeConsumidorFinal()) {
                     this.agregarConsumidorFinal();
@@ -2451,15 +2566,47 @@ export class CrearVentasComponent
   }
 
   // Método para verificar si ya existe un consumidor final en la lista
+  // Busca por documento "222222222222" o por alias/nombres "Consumidor Final" para evitar duplicados
   existeConsumidorFinal(): boolean {
-    if (!this.datosFacturacionElectronica) return false;
+    if (!this.datosFacturacionElectronica || !Array.isArray(this.datosFacturacionElectronica)) return false;
     return this.datosFacturacionElectronica.some(
-      (item) => item.documento === "222222222222",
+      (item) =>
+        item.documento === "222222222222" ||
+        item.alias?.toLowerCase() === "consumidor final" ||
+        item.nombres?.toLowerCase() === "consumidor final",
     );
+  }
+
+  // Método para eliminar duplicados de consumidor final de la lista
+  eliminarDuplicadosConsumidorFinal(): void {
+    if (!this.datosFacturacionElectronica || !Array.isArray(this.datosFacturacionElectronica)) return;
+
+    let encontradoPrimero = false;
+    this.datosFacturacionElectronica = this.datosFacturacionElectronica.filter((item) => {
+      const esConsumidorFinal =
+        item.documento === "222222222222" ||
+        item.alias?.toLowerCase() === "consumidor final" ||
+        item.nombres?.toLowerCase() === "consumidor final";
+
+      if (esConsumidorFinal) {
+        if (encontradoPrimero) {
+          // Ya encontramos uno antes, este es duplicado, eliminarlo
+          return false;
+        }
+        encontradoPrimero = true;
+      }
+      return true;
+    });
   }
 
   // Método para agregar un consumidor final a la lista de facturación
   agregarConsumidorFinal(): void {
+    // Primero eliminar duplicados si existen
+    this.eliminarDuplicadosConsumidorFinal();
+
+    // Si ya existe después de limpiar duplicados, no agregar
+    if (this.existeConsumidorFinal()) return;
+
     const consumidorFinal = {
       alias: "Consumidor Final",
       nombres: "Consumidor Final",
@@ -2921,6 +3068,148 @@ export class CrearVentasComponent
       this.pedidoGral.generarFacturaElectronica = value;
     }
     console.log('📄 Generar Factura Electrónica:', value);
+    }
+  verificarPedidoSinConfiguracion(): boolean {
+    try {
+      const carrito = localStorage.getItem("carrito");
+      if (carrito) {
+        const carritoObj = JSON.parse(carrito);
+        if (carritoObj && carritoObj.length > 0) {
+          const formaEntrega = carritoObj[0]?.configuracion?.datosEntrega?.formaEntrega;
+          // Si no hay formaEntrega configurada, es un pedido sin configuración
+          return !formaEntrega;
+        }
+      }
+      return true; // Si no hay carrito, asumir sin configuración
+    } catch (error) {
+      console.error("Error al verificar configuración del pedido:", error);
+      return true;
+    }
+  }
+
+  /**
+   * Maneja el cambio de forma de entrega para pedidos sin configuración
+   * @param nuevaFormaEntrega La nueva forma de entrega seleccionada ('Domicilio' o 'Recoge')
+   */
+  onFormaEntregaChange(nuevaFormaEntrega: string): void {
+    this.selectedFormaEntrega = nuevaFormaEntrega;
+
+    if (nuevaFormaEntrega === 'Recoge') {
+      // Configurar como recoge en tienda
+      this.esRecogeEnTienda = true;
+
+      // Crear datos de envío simplificados para recogida en tienda
+      const envioRecoge = {
+        alias: "Recoge",
+        nombres: "N/A",
+        apellidos: "N/A",
+        indicativoCel: "N/A",
+        celular: "N/A",
+        indicativoOtroNumero: "N/A",
+        otroNumero: "N/A",
+        direccionEntrega: "N/A",
+        observaciones: "N/A",
+        barrio: "N/A",
+        nombreUnidad: "N/A",
+        especificacionesInternas: "N/A",
+        pais: "N/A",
+        departamento: "N/A",
+        ciudad: this.selectedCity || "N/A",
+        zonaCobro: "N/A",
+        valorZonaCobro: 0,
+        codigoPV: "N/A",
+      };
+
+      // Asignar al pedido
+      this.pedidoGral.envio = envioRecoge;
+      this.pedidoGral.formaEntrega = "Recoge";
+      this.pedidoGral.totalEnvio = 0;
+
+      // Actualizar configuración de todos los productos del carrito
+      if (this.pedidoGral.carrito && this.pedidoGral.carrito.length > 0) {
+        this.pedidoGral.carrito.forEach(item => {
+          if (!item.configuracion) {
+            (item as any).configuracion = {};
+          }
+          if (!item.configuracion.datosEntrega) {
+            (item.configuracion as any).datosEntrega = {};
+          }
+          item.configuracion.datosEntrega.formaEntrega = "Recoge";
+        });
+      }
+
+      // Actualizar también en localStorage
+      this.actualizarFormaEntregaEnCarritoLocalStorage("Recoge");
+
+      // Activar directamente el tab de facturación
+      setTimeout(() => {
+        const tabFacturacion = document.getElementById('tab-facturacion');
+        if (tabFacturacion) {
+          tabFacturacion.click();
+        }
+      }, 100);
+
+    } else {
+      // Configurar como domicilio
+      this.esRecogeEnTienda = false;
+
+      // Limpiar datos de envío para que el usuario los configure
+      this.pedidoGral.envio = null;
+      this.pedidoGral.formaEntrega = "Domicilio";
+
+      // Actualizar configuración de todos los productos del carrito
+      if (this.pedidoGral.carrito && this.pedidoGral.carrito.length > 0) {
+        this.pedidoGral.carrito.forEach(item => {
+          if (!item.configuracion) {
+            (item as any).configuracion = {};
+          }
+          if (!item.configuracion.datosEntrega) {
+            (item.configuracion as any).datosEntrega = {};
+          }
+          item.configuracion.datosEntrega.formaEntrega = "Domicilio";
+        });
+      }
+
+      // Actualizar también en localStorage
+      this.actualizarFormaEntregaEnCarritoLocalStorage("Domicilio");
+
+      // Activar el tab de envío
+      setTimeout(() => {
+        const tabEnvio = document.getElementById('tab-envio');
+        if (tabEnvio) {
+          tabEnvio.click();
+        }
+      }, 100);
+    }
+
+    this.ref.detectChanges();
+  }
+
+  /**
+   * Actualiza la forma de entrega en el carrito del localStorage
+   * @param formaEntrega La forma de entrega a establecer
+   */
+  private actualizarFormaEntregaEnCarritoLocalStorage(formaEntrega: string): void {
+    try {
+      const carrito = localStorage.getItem("carrito");
+      if (carrito) {
+        const carritoObj = JSON.parse(carrito);
+        if (carritoObj && carritoObj.length > 0) {
+          carritoObj.forEach((item: any) => {
+            if (!item.configuracion) {
+              item.configuracion = {};
+            }
+            if (!item.configuracion.datosEntrega) {
+              item.configuracion.datosEntrega = {};
+            }
+            item.configuracion.datosEntrega.formaEntrega = formaEntrega;
+          });
+          localStorage.setItem("carrito", JSON.stringify(carritoObj));
+        }
+      }
+    } catch (error) {
+      console.error("Error al actualizar forma de entrega en localStorage:", error);
+    }
   }
 
   onBillingSame(event: Event): void {
@@ -3442,38 +3731,40 @@ export class CrearVentasComponent
     );
 
     if (selected) {
-      this.selectedWarehouse = selected.nombre;
-      this.bodega = selected;
-      localStorage.setItem("warehouse", JSON.stringify(selected));
+      // Obtener la bodega anterior para comparar
+      const bodegaAnterior = this.bodega;
 
-      // Actualizar el bodegaId en el pedido
-      if (this.pedidoGral) {
-        this.pedidoGral.bodegaId = selected.idBodega;
+      // Verificar si hay productos en el carrito y la bodega está cambiando
+      if (this.tieneProductosEnCarrito && bodegaAnterior && bodegaAnterior.idBodega !== selected.idBodega) {
+        // Mostrar confirmación antes de cambiar la bodega
+        Swal.fire({
+          title: "Cambio de Bodega",
+          html: `
+            <div class="text-start">
+              <p>Está cambiando la bodega de <strong>${bodegaAnterior.nombre}</strong> a <strong>${selected.nombre}</strong>.</p>
+              <p class="text-danger"><strong>⚠️ Atención:</strong> Los productos en el carrito serán eliminados porque la disponibilidad varía según la bodega.</p>
+            </div>
+          `,
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonColor: "#3085d6",
+          cancelButtonColor: "#d33",
+          confirmButtonText: "Sí, cambiar bodega",
+          cancelButtonText: "Cancelar"
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Limpiar el carrito
+            this.limpiarCarritoPorCambioBodega(bodegaAnterior, selected);
+            // Proceder con el cambio de bodega
+            this.aplicarCambioBodega(selected);
+          }
+          // Si cancela, no hacer nada (mantener la bodega anterior)
+        });
+        return;
       }
 
-      // Actualizar productos con la nueva bodega seleccionada
-      if (this.productos) {
-        this.productos.bodega = selected;
-
-        // Si también hay una ciudad seleccionada, aplicarla junto con la bodega
-        if (this.selectedCity && this.selectedCity !== "seleccione") {
-          this.productos.ciudad = this.selectedCity;
-          // Refrescar la lista de productos con los nuevos filtros
-          if (typeof this.productos.cargarTodo === "function") {
-            this.productos.cargarTodo();
-          }
-        } else {
-          // Si no hay ciudad, solo actualizar con la bodega
-          if (typeof this.productos.cargarTodo === "function") {
-            this.productos.cargarTodo();
-          }
-        }
-
-        this.toastrService.success(
-          "Bodega seleccionada: " + selected.nombre,
-          "Éxito",
-        );
-      }
+      // Si no hay productos en el carrito o es la primera selección, proceder directamente
+      this.aplicarCambioBodega(selected);
     } else {
       this.selectedWarehouse = "";
       this.bodega = null;
@@ -3481,6 +3772,78 @@ export class CrearVentasComponent
         this.pedidoGral.bodegaId = undefined;
       }
     }
+  }
+
+  /**
+   * Aplica el cambio de bodega actualizando todas las referencias necesarias.
+   */
+  private aplicarCambioBodega(selected: any): void {
+    this.selectedWarehouse = selected.nombre;
+    this.bodega = selected;
+    localStorage.setItem("warehouse", JSON.stringify(selected));
+
+    // Actualizar el bodegaId en el pedido
+    if (this.pedidoGral) {
+      this.pedidoGral.bodegaId = selected.idBodega;
+    }
+
+    // Actualizar productos con la nueva bodega seleccionada
+    if (this.productos) {
+      this.productos.bodega = selected;
+
+      // Si también hay una ciudad seleccionada, aplicarla junto con la bodega
+      if (this.selectedCity && this.selectedCity !== "seleccione") {
+        this.productos.ciudad = this.selectedCity;
+        // Refrescar la lista de productos con los nuevos filtros
+        if (typeof this.productos.cargarTodo === "function") {
+          this.productos.cargarTodo();
+        }
+      } else {
+        // Si no hay ciudad, solo actualizar con la bodega
+        if (typeof this.productos.cargarTodo === "function") {
+          this.productos.cargarTodo();
+        }
+      }
+
+      this.toastrService.success(
+        "Bodega seleccionada: " + selected.nombre,
+        "Éxito",
+      );
+    }
+  }
+
+  /**
+   * Limpia el carrito cuando se cambia la bodega.
+   * Muestra una notificación informativa al usuario.
+   */
+  private limpiarCarritoPorCambioBodega(bodegaAnterior: any, bodegaNueva: any): void {
+    // Limpiar el carrito usando el servicio
+    this.cartService.clearCart();
+
+    // Limpiar también el carrito del pedido
+    if (this.pedidoGral) {
+      this.pedidoGral.carrito = [];
+    }
+
+    // Obtener nombres de las bodegas para el mensaje
+    const nombreBodegaAnterior = bodegaAnterior?.nombre || 'Sin bodega';
+    const nombreBodegaNueva = bodegaNueva?.nombre || 'Sin bodega';
+
+    // Mostrar notificación
+    this.toastrService.warning(
+      `El carrito ha sido vaciado debido al cambio de bodega de "${nombreBodegaAnterior}" a "${nombreBodegaNueva}". Los productos disponibles varían según la bodega.`,
+      'Carrito Vaciado',
+      {
+        closeButton: true,
+        timeOut: 5000,
+        enableHtml: true
+      }
+    );
+
+    console.log('🛒 Carrito limpiado por cambio de bodega:', {
+      bodegaAnterior: nombreBodegaAnterior,
+      bodegaNueva: nombreBodegaNueva
+    });
   }
 
   // Nuevo método para guardar el pedido antes de iniciar el pago con Wompi

@@ -37,8 +37,8 @@
                 </div>
               </div>
             </div>
-            <div class="col-md-7">
-              <!-- Selector de forma de entrega global -->
+            <!-- Selector de forma de entrega (solo si no se definió en paso anterior) -->
+            <div class="col-md-7" *ngIf="mostrarSelectorFormaEntrega">
               <div class="forma-entrega-selector">
                 <label class="selector-label mb-2">
                   <i class="fa fa-truck-loading me-1"></i> Forma de Entrega
@@ -52,6 +52,20 @@
                     <i class="fa {{opcion.icon}} me-2"></i>
                     {{opcion.label}}
                   </button>
+                </div>
+              </div>
+            </div>
+            <!-- Mostrar forma de entrega seleccionada (cuando ya se definió en paso anterior) -->
+            <div class="col-md-7" *ngIf="!mostrarSelectorFormaEntrega">
+              <div class="forma-entrega-info">
+                <label class="selector-label mb-2">
+                  <i class="fa fa-truck-loading me-1"></i> Forma de Entrega
+                </label>
+                <div class="d-flex align-items-center">
+                  <span class="badge bg-primary fs-6 py-2 px-3">
+                    <i class="fa" [ngClass]="{'fa-truck': selectedFormaEntrega === 'Domicilio', 'fa-store': selectedFormaEntrega === 'Recoge'}" class="me-2"></i>
+                    {{ selectedFormaEntrega === 'Recoge' ? 'Recoge en Tienda' : 'Envío a Domicilio' }}
+                  </span>
                 </div>
               </div>
             </div>

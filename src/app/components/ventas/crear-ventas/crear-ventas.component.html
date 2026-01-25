@@ -680,6 +680,37 @@
 
               <!-- TABS para Envío y Facturación - Diseño compacto -->
               <div class="step4-consolidated">
+
+                <!-- Selector de Forma de Entrega -->
+                <div class="forma-entrega-selector-container mb-4">
+                  <div class="card shadow-sm border-0">
+                    <div class="card-body py-3">
+                      <div class="row align-items-center">
+                        <div class="col-12">
+                          <label class="selector-label mb-2 d-block">
+                            <i class="fa fa-truck-loading me-2 text-primary"></i>
+                            <strong>Forma de Entrega</strong>
+                          </label>
+                          <div class="btn-group w-100" role="group" aria-label="Forma de entrega">
+                            <button *ngFor="let opcion of formasEntregaOptions"
+                              type="button"
+                              class="btn forma-entrega-btn"
+                              [ngClass]="{'btn-primary': selectedFormaEntrega === opcion.value, 'btn-outline-primary': selectedFormaEntrega !== opcion.value}"
+                              (click)="onFormaEntregaChange(opcion.value)">
+                              <i class="fa {{opcion.icon}} me-2"></i>
+                              {{opcion.label}}
+                            </button>
+                          </div>
+                          <small class="text-muted mt-2 d-block">
+                            <i class="fa fa-info-circle me-1"></i>
+                            Seleccione cómo desea recibir el pedido
+                          </small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Tab Navigation -->
                 <ul class="nav nav-tabs step4-tabs" role="tablist">
                   <!-- Tab Envío - Se oculta cuando es Recoge en Tienda -->
@@ -791,6 +822,7 @@
                 </div>
                 <div class="section-content">
                   <app-checkout #resumen [pedido]="pedidoGral" [allBillingZone]="allBillingZone"
+                    [formaEntregaYaDefinida]="pedidoSinConfiguracion"
                     (comprarYPagar)="comprarYPagar($event)" *ngIf="pedidoGral"></app-checkout>
                 </div>
               </div>

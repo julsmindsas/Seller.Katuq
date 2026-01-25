@@ -557,6 +557,84 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
 
   crearCliente() {
+    // Primero verificar si el cliente ya existe
+    const documentoCliente = this.formulario.value.documento;
+
+    if (!documentoCliente) {
+      Swal.fire({
+        title: 'Error',
+        text: 'Por favor ingrese un número de documento',
+        icon: 'error',
+        confirmButtonText: 'Ok'
+      });
+      return;
+    }
+
+    console.log("🔍 Verificando si el cliente ya existe con documento:", documentoCliente);
+
+    this.service.getClientByDocument({ documento: documentoCliente }).subscribe({
+      next: (res: any) => {
+        // Verificar si el cliente ya existe
+        const clienteExiste = res && res.company;
+
+        if (clienteExiste) {
+          // Cliente ya existe - mostrar alerta informativa
+          console.log("⚠️ Cliente ya existe:", res);
+
+          Swal.fire({
+            title: "Cliente ya registrado",
+            html: `
+              <div class="text-start">
+                <p>El documento <strong>${documentoCliente}</strong> ya se encuentra registrado.</p>
+                <p><strong>Cliente:</strong> ${res.nombres_completos} ${res.apellidos_completos || ""}</p>
+                <p>Se cargarán los datos del cliente existente.</p>
+              </div>
+            `,
+            icon: "info",
+            confirmButtonText: "Entendido",
+          }).then(() => {
+            // Cargar los datos del cliente existente en el formulario
+            sessionStorage.setItem('cliente', JSON.stringify(res));
+            this.formulario.patchValue(res);
+            this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
+            this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
+            this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
+            this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
+            this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
+            this.formulario.controls['apellidos_completos'].setValue(res.apellidos_completos);
+            this.formulario.controls['nombres_completos'].setValue(res.nombres_completos);
+            this.formulario.controls['documento'].setValue(res.documento);
+            this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
+            this.formulario.controls['estado'].setValue(res.estado);
+
+            this.datos = res;
+            this.formularioFacturacion.patchValue(res.datosFacturacionElectronica);
+            this.formularioEntrega.patchValue(res.datosEntrega);
+            this.identificarDepto();
+            this.identificarCiu();
+            this.identificarDepto1();
+            this.identificarCiu1();
+            this.encontrado = true;
+
+            if (res.estado == 'bloqueado') {
+              this.bloqueado = true;
+            }
+          });
+        } else {
+          // Cliente no existe - proceder con la creación
+          console.log("✅ Cliente no existe, procediendo con creación");
+          this.ejecutarCreacionCliente();
+        }
+      },
+      error: (error: any) => {
+        // En caso de error en la búsqueda, intentar crear el cliente de todas formas
+        console.warn("⚠️ Error al verificar cliente existente, procediendo con creación:", error);
+        this.ejecutarCreacionCliente();
+      },
+    });
+  }
+
+  private ejecutarCreacionCliente() {
     this.formulario.controls['datosFacturacionElectronica'].setValue([]);
     this.formulario.controls['datosEntrega'].setValue([]);
     this.formulario.controls['notas'].setValue([])

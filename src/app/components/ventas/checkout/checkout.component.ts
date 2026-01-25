@@ -55,6 +55,11 @@ export class CheckOutComponent implements OnInit, OnChanges {
   @Input()
   allBillingZone: any[] = [];
 
+  // Indica si el pedido ya tiene forma de entrega definida (desde el paso anterior)
+  // Si es true, NO se muestra el selector de forma de entrega en checkout
+  @Input()
+  formaEntregaYaDefinida: boolean = false;
+
   // Opciones de forma de entrega disponibles
   formasEntregaOptions: { value: string; label: string; icon: string }[] = [
     { value: 'Domicilio', label: 'Envío a Domicilio', icon: 'fa-truck' },
@@ -63,6 +68,16 @@ export class CheckOutComponent implements OnInit, OnChanges {
 
   // Forma de entrega seleccionada
   selectedFormaEntrega: string = 'Domicilio';
+
+  /**
+   * Determina si se debe mostrar el selector de forma de entrega
+   * El selector ahora está en el Step 4 (Envío y Datos), por lo que aquí nunca se muestra
+   */
+  get mostrarSelectorFormaEntrega(): boolean {
+    // El selector de forma de entrega ahora está en el Step 4 (Envío y Datos)
+    // Por lo tanto, nunca se muestra en el checkout (Step 5 - Pago)
+    return false;
+  }
 
   // Cálculos de precio
   precioproducto: any;

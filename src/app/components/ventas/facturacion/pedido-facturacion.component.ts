@@ -93,9 +93,12 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.service.getClientByDocument(data).subscribe((res: any) => {
         if (res.datosFacturacionElectronica && Array.isArray(res.datosFacturacionElectronica)) {
           res.datosFacturacionElectronica.forEach((x: any) => {
-          this.datosFacturacionElectronica.push(x);
-        });
+            this.datosFacturacionElectronica.push(x);
+          });
         }
+
+        // Eliminar duplicados de consumidor final que puedan venir del servidor
+        this.eliminarDuplicadosConsumidorFinal();
 
         // Agregar el consumidor final si no existe cuando se abre desde la lista
         if (!this.existeConsumidorFinal()) {
@@ -156,15 +159,20 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       const nuevaLista = [];
 
       // Agregar datos del servidor
-      res.datosFacturacionElectronica.forEach((x) => {
-        nuevaLista.push(x);
-      });
+      if (res.datosFacturacionElectronica && Array.isArray(res.datosFacturacionElectronica)) {
+        res.datosFacturacionElectronica.forEach((x) => {
+          nuevaLista.push(x);
+        });
+      }
 
       // Agregar el nuevo dato
       nuevaLista.push(datosFacturacionElec);
 
       // Actualizar la lista
       this.datosFacturacionElectronica = nuevaLista;
+
+      // Eliminar duplicados de consumidor final
+      this.eliminarDuplicadosConsumidorFinal();
 
       // Verificar y agregar consumidor final si no existe
       if (!this.existeConsumidorFinal()) {
@@ -490,7 +498,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   // Método para verificar si ya existe un consumidor final en la lista
   // Busca por documento "222222222222" o por alias "Consumidor Final" para evitar duplicados
   existeConsumidorFinal(): boolean {
-    if (!this.datosFacturacionElectronica) return false;
+    if (!this.datosFacturacionElectronica || !Array.isArray(this.datosFacturacionElectronica)) return false;
     return this.datosFacturacionElectronica.some(
       (item) =>
         item.documento === "222222222222" ||
@@ -499,9 +507,37 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     );
   }
 
+  // Método para eliminar duplicados de consumidor final de la lista
+  eliminarDuplicadosConsumidorFinal(): void {
+    if (!this.datosFacturacionElectronica || !Array.isArray(this.datosFacturacionElectronica)) return;
+
+    let encontradoPrimero = false;
+    this.datosFacturacionElectronica = this.datosFacturacionElectronica.filter((item) => {
+      const esConsumidorFinal =
+        item.documento === "222222222222" ||
+        item.alias?.toLowerCase() === "consumidor final" ||
+        item.nombres?.toLowerCase() === "consumidor final";
+
+      if (esConsumidorFinal) {
+        if (encontradoPrimero) {
+          // Ya encontramos uno antes, este es duplicado, eliminarlo
+          return false;
+        }
+        encontradoPrimero = true;
+      }
+      return true;
+    });
+  }
+
   // Método para agregar un consumidor final a la lista de facturación
   // IMPORTANTE: Usar documento "222222222222" consistente con crear-ventas.component
   agregarConsumidorFinal(): void {
+    // Primero eliminar duplicados si existen
+    this.eliminarDuplicadosConsumidorFinal();
+
+    // Si ya existe después de limpiar duplicados, no agregar
+    if (this.existeConsumidorFinal()) return;
+
     const consumidorFinal = {
       alias: "Consumidor Final",
       nombres: "Consumidor Final",
@@ -516,6 +552,12 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       ciudad: "N/A",
       codigoPostal: "000000",
     };
+
+    // Asegurar que la lista esté inicializada
+    if (!this.datosFacturacionElectronica) {
+      this.datosFacturacionElectronica = [];
+    }
+
     this.datosFacturacionElectronica.push(consumidorFinal);
   }
 

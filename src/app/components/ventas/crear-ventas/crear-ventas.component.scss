@@ -4354,3 +4354,95 @@ $step7-success-border: rgba(16, 185, 129, 0.3);
     }
   }
 }
+
+// ========== SELECTOR DE FORMA DE ENTREGA (Step 4) ==========
+.forma-entrega-selector-container {
+  .card {
+    border-radius: var(--border-radius-lg);
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+
+    .card-body {
+      padding: 1.25rem 1.5rem;
+    }
+  }
+
+  .selector-label {
+    font-size: 1rem;
+    color: var(--gray-700);
+
+    i {
+      font-size: 1.125rem;
+    }
+  }
+
+  .btn-group {
+    .forma-entrega-btn {
+      flex: 1;
+      padding: 0.875rem 1.5rem;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      border-radius: 0.5rem;
+      transition: all 0.25s ease;
+
+      &:first-child {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+
+      &:last-child {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+      }
+
+      i {
+        font-size: 1.125rem;
+      }
+
+      &.btn-primary {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+
+        &:hover {
+          background: var(--primary-dark);
+          border-color: var(--primary-dark);
+          transform: translateY(-1px);
+        }
+      }
+
+      &.btn-outline-primary {
+        background: white;
+        border-color: var(--gray-300);
+        color: var(--gray-600);
+
+        &:hover {
+          background: var(--gray-100);
+          border-color: var(--primary-light);
+          color: var(--primary-color);
+        }
+      }
+    }
+  }
+
+  small.text-muted {
+    font-size: 0.8125rem;
+  }
+}
+
+// Responsive para el selector de forma de entrega
+@media (max-width: 576px) {
+  .forma-entrega-selector-container {
+    .btn-group {
+      flex-direction: column;
+
+      .forma-entrega-btn {
+        border-radius: 0.5rem !important;
+        margin-bottom: 0.5rem;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}
