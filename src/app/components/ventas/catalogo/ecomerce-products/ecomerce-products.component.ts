@@ -9,7 +9,10 @@ import {
   ViewChild,
   OnChanges,
   SimpleChanges,
+  OnDestroy,
 } from "@angular/core";
+import { Subject } from "rxjs";
+import { takeUntil, debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { QuickViewComponent } from "../../quick-view/quick-view.component";
 import { VentasService } from "../../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
@@ -37,8 +40,13 @@ import { ToastrService } from "ngx-toastr";
   styleUrls: ["./ecomerce-products.component.scss"],
 })
 export class EcomerceProductsComponent
-  implements OnInit, AfterViewInit, OnChanges
+  implements OnInit, AfterViewInit, OnChanges, OnDestroy
 {
+  // Subject para cleanup de suscripciones
+  private destroy$ = new Subject<void>();
+
+  // Subject para debounce de búsqueda
+  private searchSubject$ = new Subject<string>();
   @Input() public ciudad: string;
   @Input() public bodega: any;
   @Output() onRender = new EventEmitter<void>();
@@ -72,13 +80,24 @@ export class EcomerceProductsComponent
   @Input() isRebuy: boolean = false;
   temp: Producto[];
 
-  // Propiedades para la paginación
-  productosCompletos: Producto[] = []; // Almacena todos los productos
-  productosPaginados: Producto[] = []; // Almacena los productos de la página actual
+  // Propiedades para la paginación SERVER-SIDE
+  productosCompletos: Producto[] = []; // Cache local de productos cargados
+  productosPaginados: Producto[] = []; // Productos de la página actual
   paginaActual: number = 1;
-  productosPorPagina: number = 8; // Cantidad de productos por página
+  productosPorPagina: number = 12; // Cantidad de productos por página (aumentado para server-side)
   totalPaginas: number = 0;
+  totalProductos: number = 0; // Total de productos en el servidor
   Math = Math; // Exponer Math para usarlo en la plantilla
+
+  // Estados de carga para paginación server-side
+  cargandoProductos: boolean = false;
+  errorCarga: string | null = null;
+
+  // Flag para usar paginación server-side (feature flag)
+  usarPaginacionServidor: boolean = true;
+
+  // Cache de filtros actuales para paginación
+  private filtrosActuales: any = null;
 
   constructor(
     private ventasService: VentasService,
@@ -198,6 +217,17 @@ export class EcomerceProductsComponent
   }
 
   ngOnInit(): void {
+    // Configurar debounce para búsqueda
+    this.searchSubject$
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((searchTerm) => {
+        this.ejecutarBusqueda(searchTerm);
+      });
+
     // Inicializar y cargar productos si tenemos bodega y ciudad
     // Esto permite que funcione tanto para isRebuy=true como isRebuy=false
     if (
@@ -209,6 +239,11 @@ export class EcomerceProductsComponent
     ) {
       this.cargarTodo();
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   obtenerFiltros() {
@@ -401,34 +436,112 @@ export class EcomerceProductsComponent
     filter.bodegaId = this.bodega.idBodega || this.bodega;
     filter.isChannelManual = true;
 
+    // Guardar filtros actuales
+    this.filtrosActuales = { ...filter };
+
     console.log("Filtrando productos con:", {
       ciudad: this.ciudad,
       bodega: this.bodega?.nombre || this.bodega?.idBodega,
       filtros: filter,
+      usandoPaginacionServidor: this.usarPaginacionServidor,
     });
 
-    this.ventasService.getProductsByFilter(filter).subscribe({
-      next: (data) => {
-        console.log(data);
-        console.log("productos", JSON.stringify([data[0], data[1], data[2]]));
-        this.productosCompletos = data;
-        this.productos = data; // Mantener para compatibilidad
-        this.temp = [...data];
+    // Reiniciar a página 1 con nuevos filtros
+    this.paginaActual = 1;
 
-        // Reiniciar paginación y actualizar los productos paginados
-        this.paginaActual = 1;
-        this.configurarPaginacion();
-      },
-      error: (error) => {
-        console.error("Error al filtrar productos:", error);
-        Swal.fire({
-          title: "Error!",
-          text: "Error al cargar los productos. Verifique que haya seleccionado una bodega y ciudad válidas.",
-          icon: "error",
-          confirmButtonText: "Aceptar",
-        });
-      },
-    });
+    if (this.usarPaginacionServidor) {
+      this.cargarPaginaServidor(1);
+    } else {
+      // Fallback a carga completa (modo legacy)
+      this.cargarTodosLosProductos(filter);
+    }
+  }
+
+  /**
+   * Carga una página específica desde el servidor
+   * @param pagina Número de página a cargar
+   */
+  private cargarPaginaServidor(pagina: number): void {
+    this.cargandoProductos = true;
+    this.errorCarga = null;
+
+    const startTime = performance.now();
+
+    this.ventasService
+      .getProductsByFilterPaginated(this.filtrosActuales, pagina, this.productosPorPagina)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const duration = Math.round(performance.now() - startTime);
+          console.log(`✅ Página ${pagina} cargada en ${duration}ms:`, {
+            productos: response.products?.length || 0,
+            total: response.pagination?.totalItems,
+            paginas: response.pagination?.totalPages,
+          });
+
+          // Actualizar productos de la página actual
+          this.productosPaginados = response.products || [];
+          this.productos = this.productosPaginados; // Compatibilidad
+          this.temp = [...this.productosPaginados];
+
+          // Actualizar metadatos de paginación
+          this.totalProductos = response.pagination?.totalItems || 0;
+          this.totalPaginas = response.pagination?.totalPages || 0;
+          this.paginaActual = response.pagination?.currentPage || pagina;
+
+          this.cargandoProductos = false;
+        },
+        error: (error) => {
+          const duration = Math.round(performance.now() - startTime);
+          console.error(`❌ Error cargando página ${pagina} (${duration}ms):`, error);
+
+          this.cargandoProductos = false;
+          this.errorCarga = "Error al cargar productos. Intente nuevamente.";
+
+          // Fallback a modo legacy si falla el servidor
+          if (this.usarPaginacionServidor) {
+            console.warn("⚠️ Fallback a modo legacy por error en paginación servidor");
+            this.usarPaginacionServidor = false;
+            this.cargarTodosLosProductos(this.filtrosActuales);
+          }
+        },
+      });
+  }
+
+  /**
+   * Modo legacy: carga todos los productos de una vez (fallback)
+   */
+  private cargarTodosLosProductos(filter: any): void {
+    this.cargandoProductos = true;
+
+    this.ventasService
+      .getProductsByFilter(filter)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          console.log("Productos cargados (modo legacy):", data?.length || 0);
+          this.productosCompletos = data;
+          this.productos = data;
+          this.temp = [...data];
+          this.totalProductos = data?.length || 0;
+
+          // Reiniciar paginación cliente-side
+          this.paginaActual = 1;
+          this.configurarPaginacion();
+          this.cargandoProductos = false;
+        },
+        error: (error) => {
+          console.error("Error al filtrar productos:", error);
+          this.cargandoProductos = false;
+          this.errorCarga = "Error al cargar los productos.";
+          Swal.fire({
+            title: "Error!",
+            text: "Error al cargar los productos. Verifique que haya seleccionado una bodega y ciudad válidas.",
+            icon: "error",
+            confirmButtonText: "Aceptar",
+          });
+        },
+      });
   }
 
   sidebarToggle() {
@@ -498,6 +611,40 @@ export class EcomerceProductsComponent
   updateFilter(event: any) {
     const val = event.target.value.toLowerCase();
 
+    // Usar debounce para búsqueda server-side
+    if (this.usarPaginacionServidor) {
+      this.searchSubject$.next(val);
+      return;
+    }
+
+    // Búsqueda cliente-side (modo legacy)
+    this.ejecutarBusquedaLocal(val);
+  }
+
+  /**
+   * Ejecuta búsqueda en el servidor con el término dado
+   */
+  private ejecutarBusqueda(searchTerm: string): void {
+    if (!this.filtrosActuales) {
+      this.filtrosActuales = this.filterForm.value;
+      this.filtrosActuales.deliveryCity = { label: this.ciudad, value: this.ciudad };
+      this.filtrosActuales.bodega = this.bodega;
+      this.filtrosActuales.bodegaId = this.bodega?.idBodega || this.bodega;
+      this.filtrosActuales.isChannelManual = true;
+    }
+
+    // Agregar término de búsqueda al filtro
+    this.filtrosActuales.searchTerm = searchTerm;
+
+    // Recargar desde página 1
+    this.paginaActual = 1;
+    this.cargarPaginaServidor(1);
+  }
+
+  /**
+   * Búsqueda local en los productos ya cargados (modo legacy)
+   */
+  private ejecutarBusquedaLocal(val: string): void {
     // Filtrar productos
     const productosFiltrados = this.temp.filter((d) => {
       return (
@@ -552,8 +699,15 @@ export class EcomerceProductsComponent
    */
   cambiarPagina(pagina: number) {
     if (pagina < 1) pagina = 1;
-    if (pagina > this.totalPaginas) pagina = this.totalPaginas;
+    if (this.totalPaginas > 0 && pagina > this.totalPaginas) pagina = this.totalPaginas;
 
+    // Si es paginación server-side, cargar del servidor
+    if (this.usarPaginacionServidor && this.filtrosActuales) {
+      this.cargarPaginaServidor(pagina);
+      return;
+    }
+
+    // Paginación cliente-side (modo legacy)
     this.paginaActual = pagina;
 
     // Calcular índices para la página actual

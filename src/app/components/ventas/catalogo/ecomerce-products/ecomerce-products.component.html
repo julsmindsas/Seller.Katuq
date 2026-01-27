@@ -67,11 +67,22 @@
                 </div>
 
                 <div class="col-md-6 text-right">
-                    <span class="f-w-600 m-r-5">{{ 'Mostrando productos' | translate }}
-                        {{ (paginaActual - 1) * productosPorPagina + 1 }} -
-                        {{ Math.min(paginaActual * productosPorPagina, productosCompletos?.length || 0) }}
-                        {{ 'de' | translate }} {{ productosCompletos?.length || 0 }}
-                        {{ 'Resultados' | translate }}</span>
+                    <!-- Indicador de carga -->
+                    <span *ngIf="cargandoProductos" class="text-muted me-3">
+                        <i class="fa fa-spinner fa-spin"></i> Cargando...
+                    </span>
+                    <!-- Contador de productos -->
+                    <span class="f-w-600 m-r-5" *ngIf="!cargandoProductos && (totalProductos > 0 || productosPaginados?.length > 0)">
+                        {{ 'Mostrando productos' | translate }}
+                        {{ productosPaginados?.length > 0 ? (paginaActual - 1) * productosPorPagina + 1 : 0 }} -
+                        {{ Math.min(paginaActual * productosPorPagina, usarPaginacionServidor ? totalProductos : productosCompletos?.length || 0) }}
+                        {{ 'de' | translate }} {{ usarPaginacionServidor ? totalProductos : productosCompletos?.length || 0 }}
+                        {{ 'Resultados' | translate }}
+                    </span>
+                    <!-- Badge de modo server-side -->
+                    <span *ngIf="usarPaginacionServidor" class="badge bg-success ms-2" title="Paginación optimizada desde el servidor">
+                        <i class="fa fa-server"></i>
+                    </span>
                     <div class="select2-drpdwn-product select-options d-inline-block">
                         <select class="form-control btn-square" name="select">
                             <option value="opt1">{{ 'Destacado' | translate }}</option>
@@ -261,8 +272,30 @@
             </div>
         </div>
 
+        <!-- Indicador de carga principal -->
+        <div *ngIf="cargandoProductos && productosPaginados?.length === 0" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="mt-3 text-muted">Cargando productos...</p>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div *ngIf="errorCarga && !cargandoProductos" class="alert alert-danger mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fa fa-exclamation-triangle fa-2x me-3"></i>
+                <div>
+                    <h6 class="mb-1">Error al cargar productos</h6>
+                    <p class="mb-0">{{ errorCarga }}</p>
+                    <button class="btn btn-sm btn-outline-danger mt-2" (click)="filtrarProductos()">
+                        <i class="fa fa-refresh"></i> Reintentar
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Mensaje cuando no hay productos -->
-        <div *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosCompletos.length === 0" class="alert alert-secondary mb-4">
+        <div *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && !cargandoProductos && productosPaginados?.length === 0 && !errorCarga" class="alert alert-secondary mb-4">
             <div class="d-flex align-items-center">
                 <i class="fa fa-box-open fa-2x me-3 text-secondary"></i>
                 <div>
@@ -273,7 +306,8 @@
         </div>
 
         <div class="product-wrapper-grid" [class.list-view]="listView"
-             *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosCompletos.length > 0">
+             [class.loading-overlay]="cargandoProductos && productosPaginados?.length > 0"
+             *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosPaginados?.length > 0">
             <div class="row">
                 <div [class]="'col-xl-'+col+' col-sm-'+col" [class.col-xl-12]="listView"
                     *ngFor="let producto of productosPaginados">

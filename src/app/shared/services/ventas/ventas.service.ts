@@ -97,6 +97,86 @@ export class VentasService extends BaseService {
     return this.post<Producto[]>('/v1/productos/all/filter', filter);
   }
 
+  /**
+   * Obtiene productos con paginacion server-side
+   *
+   * @since 2026.01.24 - Implementacion de paginacion optimizada para POS y catalogo
+   * @param filter Filtros de busqueda (compatibles con getProductsByFilter)
+   * @param page Numero de pagina (1-indexed)
+   * @param pageSize Items por pagina (default 12, max 100)
+   * @returns Observable con respuesta paginada incluyendo productos y metadatos
+   *
+   * @example
+   * ```typescript
+   * this.ventasService.getProductsByFilterPaginated(
+   *   { bodegaId: 'abc123', searchText: 'manzana' },
+   *   1,
+   *   12
+   * ).subscribe(response => {
+   *   console.log(response.products); // Productos de la pagina
+   *   console.log(response.pagination.totalPages); // Total de paginas
+   * });
+   * ```
+   */
+  public getProductsByFilterPaginated(
+    filter: any,
+    page: number = 1,
+    pageSize: number = 12
+  ): Observable<{
+    success: boolean;
+    products: Producto[];
+    pagination: {
+      totalItems: number;
+      itemsPerPage: number;
+      currentPage: number;
+      totalPages: number;
+      hasNextPage: boolean;
+      hasPreviousPage: boolean;
+      nextCursor?: string | null;
+    };
+    metrics?: {
+      totalProductos: number;
+      conStock: number;
+      sinStock: number;
+      bajoStock: number;
+    };
+  }> {
+    // Construir query params para paginacion
+    let queryParams = `page=${page}&pageSize=${Math.min(pageSize, 100)}`;
+
+    // Agregar ordenamiento si existe en el filtro
+    if (filter.sortField) {
+      queryParams += `&sortField=${encodeURIComponent(filter.sortField)}`;
+      queryParams += `&sortOrder=${filter.sortOrder || 1}`;
+    }
+
+    // Agregar cursor para paginacion basada en cursor (opcional)
+    if (filter.cursor) {
+      queryParams += `&cursor=${encodeURIComponent(filter.cursor)}`;
+    }
+
+    // Incluir metricas solo en primera pagina para optimizar
+    if (page === 1 || filter.includeMetrics) {
+      queryParams += '&includeMetrics=true';
+    }
+
+    const endpoint = `/v1/productos/all/filter/paginated?${queryParams}`;
+
+    console.log(`[VentasService] Solicitando productos paginados: pagina ${page}, tamanio ${pageSize}`);
+
+    return this.post<any>(endpoint, filter).pipe(
+      tap(response => {
+        if (response.success) {
+          console.log(`[VentasService] Pagina ${page}/${response.pagination?.totalPages || '?'} recibida: ${response.products?.length || 0} productos`);
+        }
+      }),
+      catchError(error => {
+        console.error('[VentasService] Error en getProductsByFilterPaginated:', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
   getProductByNumber(productNumber: string) {
     return this.post<any>('/v1/catalog/getProductByNumber', { productNumber });
   }

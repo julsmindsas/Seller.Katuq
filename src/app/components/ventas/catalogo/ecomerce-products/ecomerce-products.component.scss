@@ -1197,3 +1197,63 @@
   }
 }
 
+/* =================================================================
+   LOADING OVERLAY - Paginación Server-Side
+   ================================================================= */
+
+.loading-overlay {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.6;
+  transition: opacity 0.2s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.5);
+    z-index: 10;
+  }
+}
+
+// Badge de modo servidor
+.badge.bg-success {
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  vertical-align: middle;
+
+  i {
+    font-size: 0.65rem;
+  }
+}
+
+// Spinner de carga principal
+.spinner-border.text-primary {
+  color: var(--primary-color, #4361ee) !important;
+}
+
+// Alerta de error con botón de reintentar
+.alert-danger {
+  background: rgba(220, 53, 69, 0.1);
+  border-color: #dc3545;
+  color: #721c24;
+
+  h6 {
+    color: #721c24;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+
+  .btn-outline-danger {
+    font-size: 0.8rem;
+    padding: 0.25rem 0.75rem;
+
+    i {
+      margin-right: 0.25rem;
+    }
+  }
+}
+
