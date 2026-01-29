@@ -86,7 +86,20 @@ export class HttpInterceptor2 implements HttpInterceptor {
   private handleAccess(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const userString = localStorage.getItem('user');
 
-    if (userString) {
+    // Lista de URLs del backend de Katuq que necesitan los headers personalizados
+    const katuqBackendUrls = [
+      'back.katuq.com',
+      'api.katuq.com',
+      'localhost:3300',
+      '100.27.36.49:3300',
+      'us-central1-katuq-new.cloudfunctions.net',
+      'us-central1-bluerp-107bd.cloudfunctions.net'
+    ];
+
+    // Verificar si la request va al backend de Katuq
+    const isKatuqBackend = katuqBackendUrls.some(url => request.url.includes(url));
+
+    if (userString && isKatuqBackend) {
       try {
         const user = JSON.parse(userString);
         const token = user.token;

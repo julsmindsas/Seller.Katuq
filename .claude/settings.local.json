@@ -40,7 +40,8 @@
       "WebFetch(domain:siigonube.portaldeclientes.siigo.com)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:developer.siigo.com)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npm start)"
     ]
   }
 }

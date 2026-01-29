@@ -2942,6 +2942,20 @@ export class CrearVentasComponent
             context.pedidoGral,
           );
 
+          // DEBUG: Log antes de crear el pedido
+          console.log('🚀 ===== CREAR PEDIDO - DATOS ANTES DE ENVIAR =====');
+          console.log('📦 Pedido completo:', JSON.parse(JSON.stringify(this.pedidoGral)));
+          console.log('📧 Email HTML:', htmlSanizado ? 'Generado ✅' : 'No generado ❌');
+          console.log('🏢 Empresa:', this.pedidoGral.company);
+          console.log('👤 Cliente:', this.pedidoGral.cliente);
+          console.log('🛒 Carrito items:', this.pedidoGral.carrito?.length || 0);
+          console.log('💰 Total pedido:', this.pedidoGral.totalPedididoConDescuento);
+          console.log('📍 Dirección entrega:', this.pedidoGral.envio);
+          console.log('💳 Forma de pago:', this.pedidoGral.formaDePago);
+          console.log('🔄 Estado proceso:', this.pedidoGral.estadoProceso);
+          console.log('💵 Estado pago:', this.pedidoGral.estadoPago);
+          console.log('===============================================');
+
           // Crear el pedido en el sistema
           context.ventasService
             .createOrder({ order: this.pedidoGral, emailHtml: htmlSanizado })
@@ -3857,6 +3871,18 @@ export class CrearVentasComponent
             const htmlSanizado = context.pyamentService.getHtmlContent(
               context.pedidoGral,
             );
+
+            // DEBUG: Log antes de guardar pedido para Wompi
+            console.log('💳 ===== GUARDAR PEDIDO PARA WOMPI =====');
+            console.log('📦 Pedido completo:', JSON.parse(JSON.stringify(this.pedidoGral)));
+            console.log('📧 Email HTML:', htmlSanizado ? 'Generado ✅' : 'No generado ❌');
+            console.log('🏢 Empresa:', this.pedidoGral.company);
+            console.log('👤 Cliente:', this.pedidoGral.cliente);
+            console.log('🛒 Carrito items:', this.pedidoGral.carrito?.length || 0);
+            console.log('💰 Total pedido:', this.pedidoGral.totalPedididoConDescuento);
+            console.log('💳 Forma de pago:', this.pedidoGral.formaDePago);
+            console.log('💵 Estado pago:', this.pedidoGral.estadoPago);
+            console.log('=========================================');
 
             // Guardar pedido con estado de pago pendiente
             context.ventasService

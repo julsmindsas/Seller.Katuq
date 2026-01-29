@@ -47,6 +47,7 @@ interface NominatimResponse {
 }
 
 enum GeocodingProvider {
+  GEO_BLR = 'geo_blr',
   FIREBASE = 'firebase',
   GOOGLE_MAPS = 'google_maps',
   OPEN_ROUTE = 'open_route',
@@ -73,13 +74,14 @@ export class GeocodingService {
   }
 
   /**
-   * Geocodifica una dirección usando el sistema de fallback con múltiples proveedores
+   * Geocodifica una dirección usando el sistema de fallback optimizado
    *
-   * ORDEN DE FALLBACK:
-   * 1. Google Maps API (directa) - Calidad 95
-   * 2. Firebase Backend Proxy - Calidad 85
-   * 3. Nominatim OpenStreetMap - Calidad 60
-   * 4. Geocodificación aproximada - Calidad 50
+   * ORDEN DE FALLBACK SIMPLIFICADO (Enero 2026):
+   * 1. GeoBlr API (Latinoamérica) - Calidad 98 - PRIORIDAD MÁXIMA ⭐
+   * 2. Google Maps API (directa) - Calidad 95
+   * 3. Geocodificación aproximada - Calidad 50 (último recurso)
+   *
+   * Sistema optimizado: Solo 2 proveedores premium + fallback local
    *
    * @param direccion La dirección a geocodificar
    * @param ciudad La ciudad de la dirección
@@ -141,12 +143,20 @@ export class GeocodingService {
 
   /**
    * Lógica principal de fallback entre proveedores
+   *
+   * ORDEN DE FALLBACK OPTIMIZADO (Enero 2026):
+   * 1. GeoBlr (Latinoamérica) - Calidad 98 - PRIORIDAD MÁXIMA ⭐
+   * 2. Google Maps API (directa) - Calidad 95
+   * 3. Geocodificación aproximada - Calidad 50 (último recurso)
+   *
+   * ELIMINADOS:
+   * - Firebase Backend Proxy (redundante con GeoBlr)
+   * - Nominatim OpenStreetMap (baja precisión)
    */
   private async geocodeWithFallback(direccion: string, ciudad: string): Promise<GeocodingResponse> {
     const providers = [
-      GeocodingProvider.GOOGLE_MAPS,
-      GeocodingProvider.FIREBASE,
-      GeocodingProvider.NOMINATIM
+      GeocodingProvider.GEO_BLR,
+      GeocodingProvider.GOOGLE_MAPS
     ];
 
     console.log(`🗺️ Iniciando geocodificación con fallback: ${direccion}, ${ciudad}`);
@@ -185,20 +195,100 @@ export class GeocodingService {
    */
   private async geocodeWithProvider(provider: GeocodingProvider, direccion: string, ciudad: string): Promise<GeocodingResponse> {
     switch (provider) {
+      case GeocodingProvider.GEO_BLR:
+        return this.geocodeWithGeoBlr(direccion, ciudad);
+
       case GeocodingProvider.FIREBASE:
         return this.geocodeWithFirebase(direccion, ciudad);
-      
+
       case GeocodingProvider.GOOGLE_MAPS:
         return this.geocodeWithGoogleMaps(direccion, ciudad);
-      
+
       case GeocodingProvider.OPEN_ROUTE:
         return this.geocodeWithOpenRoute(direccion, ciudad);
-      
+
       case GeocodingProvider.NOMINATIM:
         return this.geocodeWithNominatim(direccion, ciudad);
-      
+
       default:
         throw new Error(`Proveedor no soportado: ${provider}`);
+    }
+  }
+
+  /**
+   * Geocodificación con GeoBlr - Proveedor prioritario para Latinoamérica
+   *
+   * GeoBlr (GEO + Booster Lightning Results) es un servicio de geocodificación
+   * especializado en direcciones latinoamericanas con IA avanzada.
+   *
+   * Características:
+   * - Optimizado para Colombia y Latinoamérica
+   * - Powered by Google Gemini AI
+   * - Alta precisión (calidad 98)
+   * - Baja latencia
+   */
+  private async geocodeWithGeoBlr(direccion: string, ciudad: string): Promise<GeocodingResponse> {
+    const geoBlrConfig = environment.geocoding.geoBlr;
+
+    if (!geoBlrConfig || !geoBlrConfig.apiKey) {
+      console.warn('GeoBlr no configurado correctamente en environment');
+      throw new Error('GeoBlr API not configured');
+    }
+
+    const url = `${geoBlrConfig.baseUrl}/${geoBlrConfig.endpoint}`;
+
+    console.log(`🌎 Geocodificando con GeoBlr: ${direccion}, ${ciudad}`);
+
+    try {
+      const response = await this.http.post<any>(url, {
+        direccion: direccion.trim(),
+        ciudad: ciudad.trim(),
+        pais: 'Colombia'
+      }, {
+        headers: {
+          'X-API-Key': geoBlrConfig.apiKey,
+          'Content-Type': 'application/json'
+        }
+      }).pipe(
+        timeout(8000), // 8 segundos timeout
+        catchError(error => {
+          console.warn('GeoBlr geocoding failed:', error);
+          if (error.status === 400) {
+            throw new Error('GeoBlr API error: Bad Request - Invalid address format');
+          }
+          if (error.status === 401) {
+            throw new Error('GeoBlr API error: Invalid API Key');
+          }
+          if (error.status === 403) {
+            throw new Error('GeoBlr API error: ORIGIN not authorized');
+          }
+          if (error.status === 429) {
+            throw new Error('GeoBlr API error: Rate limit exceeded');
+          }
+          throw new Error(`GeoBlr API error: ${error.message || 'Service unavailable'}`);
+        })
+      ).toPromise();
+
+      if (!response) {
+        throw new Error('GeoBlr API error: Empty response');
+      }
+
+      console.log(`✅ GeoBlr geocoding exitoso: ${response.latitud}, ${response.longitud}`);
+
+      // Normalizar la respuesta al formato GeocodingResponse
+      return {
+        id: `geoblr_${Date.now()}`,
+        direccion: response.direccion || direccion,
+        ciudad: response.ciudad || ciudad,
+        pais: response.pais || 'Colombia',
+        latitud: response.latitud?.toString() || '0',
+        longitud: response.longitud?.toString() || '0',
+        coordDestino: `${response.latitud},${response.longitud}`,
+        quality: 98 // Alta calidad para GeoBlr
+      };
+    } catch (error) {
+      console.warn('GeoBlr geocoding error:', error);
+      throw error;
     }
   }
 

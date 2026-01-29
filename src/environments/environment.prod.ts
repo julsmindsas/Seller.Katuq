@@ -40,6 +40,13 @@ export const environment = {
   },
   useModelBig: false,
   geocoding: {
+    // GeoBlr - Proveedor prioritario para Latinoamérica (PRODUCCIÓN)
+    geoBlr: {
+      apiKey: "geoblr_live_tDttVxHzyNZ8o3Zsup1QkoaMIzQDEDAT166foJ_ein4", // GeoBlr API Key
+      origin: "https://sellercenter.katuq.com", // Dominio autorizado en producción
+      baseUrl: "https://apibluerp-107bd.web.app/v1",
+      endpoint: "addresses/geocoder",
+    },
     openRouteService: {
       apiKey: "AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I",
       endpoint: "openroute-proxy",

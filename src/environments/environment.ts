@@ -51,6 +51,13 @@ export const environment = {
   },
   useModelBig: false,
   geocoding: {
+    // GeoBlr - Proveedor prioritario para Latinoamérica
+    geoBlr: {
+      apiKey: "geoblr_live_tDttVxHzyNZ8o3Zsup1QkoaMIzQDEDAT166foJ_ein4", // GeoBlr API Key
+      origin: "http://localhost:4200", // Dominio autorizado para desarrollo
+      baseUrl: "https://apibluerp-107bd.web.app/v1",
+      endpoint: "addresses/geocoder",
+    },
     openRouteService: {
       apiKey: "5b3ce3597851110001cf6248b2c4b1e9f8dd42fc8a1b4f7d1e2bb38c", // OpenRouteService API Key
       endpoint: "openroute-proxy",
