@@ -4,6 +4,7 @@ import { IntegrationsService } from '../integrations.service';
 import { MessageService } from 'primeng/api';
 import { Subject, forkJoin, of } from 'rxjs';
 import { takeUntil, catchError, finalize } from 'rxjs/operators';
+import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 
 interface SiigoMasterData {
   costCenters: any[];
@@ -62,6 +63,10 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
   // Existing config
   existingConfig: any = null;
 
+  // Katuq payment methods (loaded from the merchant's configuration)
+  katuqPaymentMethods: any[] = [];
+  isLoadingPaymentMethods = false;
+
   // Toggle for password visibility
   showAccessKey = false;
 
@@ -70,13 +75,94 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private integrationsService: IntegrationsService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private maestroService: MaestroService
   ) {
     this.siigoForm = this.createForm();
   }
 
   ngOnInit(): void {
+    this.loadKatuqPaymentMethods();
     this.loadExistingConfig();
+  }
+
+  /**
+   * Loads the merchant's configured payment methods from Katuq
+   */
+  loadKatuqPaymentMethods(): void {
+    this.isLoadingPaymentMethods = true;
+
+    this.maestroService.consultarFormaPago()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError(error => {
+          console.error('Error loading payment methods:', error);
+          return of([]);
+        }),
+        finalize(() => this.isLoadingPaymentMethods = false)
+      )
+      .subscribe((paymentMethods: any[]) => {
+        this.katuqPaymentMethods = paymentMethods || [];
+        console.log('Katuq payment methods loaded:', this.katuqPaymentMethods);
+
+        // Create form controls for each payment method
+        this.createPaymentMethodsMappingControls();
+
+        // If we have existing config, apply the mapping
+        if (this.existingConfig?.paymentMethodsMapping) {
+          this.applyPaymentMethodsMapping(this.existingConfig.paymentMethodsMapping);
+        }
+      });
+  }
+
+  /**
+   * Creates form controls dynamically based on loaded payment methods
+   */
+  private createPaymentMethodsMappingControls(): void {
+    const mappingGroup = this.siigoForm.get('paymentMethodsMapping') as FormGroup;
+
+    // Clear existing controls
+    Object.keys(mappingGroup.controls).forEach(key => {
+      mappingGroup.removeControl(key);
+    });
+
+    // Add a control for each payment method
+    this.katuqPaymentMethods.forEach(method => {
+      const controlName = this.sanitizeControlName(method.nombre);
+      mappingGroup.addControl(controlName, this.fb.control(''));
+    });
+  }
+
+  /**
+   * Applies saved mapping to form controls
+   */
+  private applyPaymentMethodsMapping(mapping: any): void {
+    const mappingGroup = this.siigoForm.get('paymentMethodsMapping') as FormGroup;
+
+    Object.keys(mapping).forEach(key => {
+      if (mappingGroup.contains(key)) {
+        mappingGroup.get(key)?.setValue(mapping[key]);
+      }
+    });
+  }
+
+  /**
+   * Sanitizes payment method name to be used as form control name
+   */
+  private sanitizeControlName(name: string): string {
+    return name?.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents
+      .replace(/[^a-z0-9]/g, '_') // Replace special chars with underscore
+      .replace(/_+/g, '_') // Remove multiple underscores
+      .replace(/^_|_$/g, '') || 'unknown'; // Remove leading/trailing underscores
+  }
+
+  /**
+   * Gets the sanitized control name for a payment method
+   */
+  getPaymentMethodControlName(method: any): string {
+    return this.sanitizeControlName(method.nombre);
   }
 
   ngOnDestroy(): void {
@@ -117,7 +203,13 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
         costAccount: [''],
         inventoryAccount: [''],
         discountAccount: ['']
-      })
+      }),
+
+      // Payment Methods Mapping (Katuq → Siigo payment type IDs)
+      // Maps each Katuq payment method (by name) to a Siigo payment type ID
+      // This determines which account (e.g., 13050501 - Clientes nacionales) is used
+      // This will be dynamically populated based on the merchant's configured payment methods
+      paymentMethodsMapping: this.fb.group({})
     });
   }
 
@@ -174,6 +266,10 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
 
     if (config.accountsMapping) {
       this.siigoForm.get('accountsMapping')?.patchValue(config.accountsMapping);
+    }
+
+    if (config.paymentMethodsMapping) {
+      this.siigoForm.get('paymentMethodsMapping')?.patchValue(config.paymentMethodsMapping);
     }
   }
 
@@ -327,7 +423,8 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
       enableAutoInvoicing: formValue.enableAutoInvoicing,
       autoSyncInventory: formValue.autoSyncInventory,
       syncFrequency: formValue.syncFrequency,
-      accountsMapping: formValue.accountsMapping
+      accountsMapping: formValue.accountsMapping,
+      paymentMethodsMapping: formValue.paymentMethodsMapping
     };
 
     console.log('Config to save:', config);
@@ -446,4 +543,5 @@ export class SiigoConfigComponent implements OnInit, OnDestroy {
     { label: 'Diariamente', value: 'daily' },
     { label: 'Semanalmente', value: 'weekly' }
   ];
+
 }

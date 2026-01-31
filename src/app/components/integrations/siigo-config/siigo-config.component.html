@@ -338,6 +338,83 @@
       </div>
     </p-card>
 
+    <!-- Section: Payment Methods Mapping -->
+    <p-card header="Mapeo de Formas de Pago" styleClass="config-card" *ngIf="connectionStatus === 'success'">
+      <p class="section-description">
+        <i class="pi pi-info-circle"></i>
+        Configura que tipo de pago de Siigo se usara para cada forma de pago en Katuq.
+        <strong>Importante:</strong> Cada tipo de pago en Siigo tiene asociada una cuenta contable (ej: 13050501 - Clientes nacionales).
+        Asegurate de seleccionar el tipo de pago correcto para que los asientos contables se generen en la cuenta deseada.
+      </p>
+
+      <div class="payment-mapping-info">
+        <div class="info-box">
+          <i class="pi pi-lightbulb"></i>
+          <div>
+            <strong>¿Como funciona?</strong>
+            <p>En Siigo, cada forma de pago tiene configurada una cuenta por cobrar (ej: 13050501 - Clientes nacionales).
+            Al mapear las formas de pago de Katuq a Siigo, las facturas generadas usaran la cuenta contable correcta.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading payment methods -->
+      <div class="loading-section" *ngIf="isLoadingPaymentMethods">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Cargando formas de pago configuradas...</span>
+      </div>
+
+      <!-- No payment methods configured -->
+      <div class="empty-state" *ngIf="!isLoadingPaymentMethods && katuqPaymentMethods.length === 0">
+        <i class="pi pi-exclamation-circle"></i>
+        <p>No tienes formas de pago configuradas en Katuq.</p>
+        <small>Ve a <strong>Extras → Formas de Pago</strong> para configurar tus formas de pago primero.</small>
+      </div>
+
+      <!-- Payment methods mapping -->
+      <div formGroupName="paymentMethodsMapping" class="payment-mapping-grid" *ngIf="!isLoadingPaymentMethods && katuqPaymentMethods.length > 0">
+        <div class="payment-mapping-item" *ngFor="let method of katuqPaymentMethods">
+          <div class="payment-method-label">
+            <i class="pi pi-credit-card"></i>
+            <div class="method-info">
+              <span class="method-name">{{ method.nombre }}</span>
+              <small class="method-description" *ngIf="method.integracion">{{ method.integracion }}</small>
+              <small class="method-classification" [ngClass]="{'online': method.online === 'Online', 'pos': method.online === 'POS'}">
+                {{ method.online }}
+              </small>
+            </div>
+          </div>
+          <div class="payment-mapping-dropdown">
+            <p-dropdown
+              [formControlName]="getPaymentMethodControlName(method)"
+              [options]="masterData.paymentTypes"
+              optionLabel="name"
+              optionValue="id"
+              [placeholder]="'Selecciona tipo de pago en Siigo'"
+              [showClear]="true"
+              [filter]="masterData.paymentTypes.length > 5"
+              filterBy="name"
+              styleClass="w-full">
+              <ng-template let-item pTemplate="item">
+                <div class="payment-option">
+                  <span>{{ item.name }}</span>
+                  <small class="payment-type-badge">ID: {{ item.id }}</small>
+                </div>
+              </ng-template>
+            </p-dropdown>
+          </div>
+        </div>
+      </div>
+
+      <div class="mapping-tip" *ngIf="katuqPaymentMethods.length > 0">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>
+          <strong>Tip:</strong> Si no mapeas una forma de pago, se usara el "Tipo de Pago por Defecto" configurado arriba.
+          Verifica en Siigo (Configuracion → Formas de Pago) que cuenta contable tiene asociada cada forma de pago.
+        </span>
+      </div>
+    </p-card>
+
     <!-- Section 4: Automation & Sync (only visible after successful connection) -->
     <p-card header="Automatizacion y Sincronizacion" styleClass="config-card" *ngIf="connectionStatus === 'success'">
       <div class="form-grid">

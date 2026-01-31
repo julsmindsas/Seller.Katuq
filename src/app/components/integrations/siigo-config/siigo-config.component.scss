@@ -366,6 +366,174 @@
   }
 }
 
+// Payment Methods Mapping Section
+.payment-mapping-info {
+  margin-bottom: 20px;
+
+  .info-box {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background-color: #e8f4fd;
+    border-radius: 8px;
+    border-left: 4px solid #2196f3;
+
+    > i {
+      font-size: 1.5rem;
+      color: #2196f3;
+      flex-shrink: 0;
+    }
+
+    strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #1565c0;
+    }
+
+    p {
+      margin: 0;
+      color: #555;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+  }
+}
+
+.payment-mapping-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.payment-mapping-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.payment-method-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+  flex-shrink: 0;
+
+  > i {
+    font-size: 1.2rem;
+    color: #666;
+  }
+
+  .method-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .method-name {
+    font-weight: 600;
+    color: #333;
+  }
+
+  .method-description {
+    color: #888;
+    font-size: 0.8rem;
+  }
+
+  .method-classification {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    width: fit-content;
+
+    &.online {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+
+    &.pos {
+      background-color: #fff3e0;
+      color: #e65100;
+    }
+  }
+}
+
+.payment-mapping-dropdown {
+  flex: 1;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+}
+
+.payment-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+
+  .payment-type-badge {
+    color: #888;
+    font-size: 0.75rem;
+    background-color: #f0f0f0;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+}
+
+.mapping-tip {
+  margin-top: 16px;
+  padding: 12px 16px;
+  background-color: #fff8e1;
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+
+  > i {
+    color: #ff9800;
+    flex-shrink: 0;
+  }
+
+  span {
+    color: #5d4037;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 32px 16px;
+  color: #666;
+
+  > i {
+    font-size: 2.5rem;
+    color: #ccc;
+    margin-bottom: 16px;
+  }
+
+  p {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+  }
+
+  small {
+    color: #888;
+  }
+}
+
 // Responsive adjustments
 @media (max-width: 600px) {
   .config-header {
