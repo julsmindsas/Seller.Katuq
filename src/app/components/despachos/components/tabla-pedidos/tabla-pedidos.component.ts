@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output, ViewChild, OnChanges, SimpleChanges, OnDestroy } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild, OnChanges, SimpleChanges, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { Table } from 'primeng/table';
 import { LazyLoadEvent } from 'primeng/api';
 import { Pedido, EstadoProceso, EstadoPago, EstadoProcesoFiltros } from '../../../ventas/modelo/pedido';
@@ -6,7 +6,7 @@ import { ColumnDefinition } from '../../interfaces/column-definition.interface';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { FilterService, MenuItem } from 'primeng/api';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { DialogService } from 'primeng/dynamicdialog';
 import { EnviameHelperService } from '../enviame/services/enviame-helper.service';
 import { TrackingDetailsModalComponent } from '../enviame/tracking-details/tracking-details-modal.component';
@@ -16,7 +16,8 @@ import { EvidenciaEmpacadoModalComponent } from '../evidencia-empacado-modal/evi
 @Component({
   selector: 'app-tabla-pedidos',
   templateUrl: './tabla-pedidos.component.html',
-  styleUrls: ['./tabla-pedidos.component.scss']
+  styleUrls: ['./tabla-pedidos.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('dt1') dt1: Table;
@@ -88,12 +89,16 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   
   selectedColumns: ColumnDefinition[] = [];
   public rowMenuItems: MenuItem[];
-  
+
+  // Subject para cleanup de subscripciones (evita memory leaks)
+  private destroy$ = new Subject<void>();
+
   constructor(
     private filterService: FilterService,
     private formBuilder: FormBuilder,
     private dialogService: DialogService,
-    private enviameHelper: EnviameHelperService
+    private enviameHelper: EnviameHelperService,
+    private cdr: ChangeDetectorRef
   ) {
     // Cargar configuración guardada si existe
     const savedColumns = localStorage.getItem('despachosColumns');
@@ -140,11 +145,16 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
     // Detectar cambios en rowsPerPage para sincronizar con la tabla
     if (changes['rowsPerPage'] && this.useLazyMode && this.dt1) {
       console.log(`🔄 TablaPedidos - rowsPerPage changed from ${changes['rowsPerPage'].previousValue} to ${changes['rowsPerPage'].currentValue}`);
-      
+
       // Si hay una discrepancia entre el valor del input y el estado interno, corregirla
       if (changes['rowsPerPage'].currentValue !== this.rowsPerPage) {
         this.rowsPerPage = changes['rowsPerPage'].currentValue;
       }
+    }
+
+    // Marcar para detección de cambios cuando hay nuevos datos (OnPush strategy)
+    if (changes['orders'] || changes['loading'] || changes['totalRecords']) {
+      this.cdr.markForCheck();
     }
   }
   
@@ -153,6 +163,9 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
     if (this.filterSubscription) {
       this.filterSubscription.unsubscribe();
     }
+    // Emitir en destroy$ para cancelar todas las subscripciones pendientes
+    this.destroy$.next();
+    this.destroy$.complete();
   }
   
   /**
@@ -252,6 +265,27 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
     this.onClearFilters.emit(this.dt1);
   }
   
+  // TrackBy functions para optimizar rendering de *ngFor
+  trackByColumnField(index: number, col: ColumnDefinition): string {
+    return col.field;
+  }
+
+  trackByPedidoId(index: number, pedido: Pedido): string {
+    return pedido._id || pedido.nroPedido || `pedido-${index}`;
+  }
+
+  trackByCarritoIndex(index: number, item: any): string {
+    return item?.productoId || item?.producto?._id || `carrito-${index}`;
+  }
+
+  trackByPreferenciaIndex(index: number, pref: any): string {
+    return pref?.id || pref?.titulo || `pref-${index}`;
+  }
+
+  trackByAdicionIndex(index: number, adicion: any): string {
+    return adicion?.id || adicion?.titulo || `adicion-${index}`;
+  }
+
   // Helpers para componente padre
   hasTags(pedido: Pedido): boolean {
     if (!pedido.carrito || pedido.carrito.length === 0) {
@@ -566,13 +600,15 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       }
     });
 
-    ref.onClose.subscribe((result) => {
-      if (result) {
-        console.log('🔄 TablaPedidos - Tracking modal closed with result:', result);
-        // Refresh order data if needed
-        this.onRefreshData.emit(this.dt1);
-      }
-    });
+    ref.onClose
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((result) => {
+        if (result) {
+          console.log('🔄 TablaPedidos - Tracking modal closed with result:', result);
+          // Refresh order data if needed
+          this.onRefreshData.emit(this.dt1);
+        }
+      });
 
     // Emit event for parent component tracking
     this.onEnviameTrackingDetails.emit(pedido);
@@ -601,13 +637,15 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       }
     });
 
-    ref.onClose.subscribe((result) => {
-      if (result && result.cancelled) {
-        console.log('✅ TablaPedidos - Enviame shipment cancelled successfully');
-        // Refresh order data
-        this.onRefreshData.emit(this.dt1);
-      }
-    });
+    ref.onClose
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((result) => {
+        if (result && result.cancelled) {
+          console.log('✅ TablaPedidos - Enviame shipment cancelled successfully');
+          // Refresh order data
+          this.onRefreshData.emit(this.dt1);
+        }
+      });
 
     // Emit event for parent component tracking
     this.onEnviameCancelShipment.emit(pedido);
@@ -718,13 +756,15 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       }
     });
 
-    ref.onClose.subscribe((result) => {
-      if (result && result.updated) {
-        console.log('✅ TablaPedidos - Evidencia empacado modal closed with update');
-        // Refresh order data
-        this.onRefreshData.emit(this.dt1);
-      }
-    });
+    ref.onClose
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((result) => {
+        if (result && result.updated) {
+          console.log('✅ TablaPedidos - Evidencia empacado modal closed with update');
+          // Refresh order data
+          this.onRefreshData.emit(this.dt1);
+        }
+      });
 
     // Emit event for parent component tracking
     this.onUploadEvidenciaEmpacado.emit(pedido);

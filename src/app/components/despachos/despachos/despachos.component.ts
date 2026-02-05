@@ -57,7 +57,7 @@ import { Integration, IntegrationCategory, IntegrationsService } from "../../int
 import { PaginatedOrdersResponse } from "../interfaces/paginated-orders.interface";
 import { ZonaGestionModalComponent } from "../components/zona-gestion-modal/zona-gestion-modal.component";
 import { ToastrService } from 'ngx-toastr';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
 interface MapaMetricas {
@@ -188,6 +188,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
   
   // NEW - Lazy loading properties (2025.09.05)
   useOptimizedLoading: boolean = true; // Flag to enable/disable optimized loading
+  userRequestedLoad: boolean = false;  // Flag to prevent auto-load on init - requires user to click "Buscar"
   totalRecords: number = 0;            // Total records from server
   currentPage: number = 1;             // Current page number
   currentPageSize: number = 50;        // Current page size
@@ -537,10 +538,17 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   refrescarDatos(mostrarAlertas: boolean = false) {
+    // No cargar datos hasta que el usuario haga clic en "Buscar"
+    if (!this.userRequestedLoad) {
+      console.log('⏸️ Despachos - Esperando que el usuario haga clic en Buscar para cargar datos');
+      this.loading = false;
+      return;
+    }
+
     // Set loading indicator
     this.loading = true;
-    
-    // Build filter using the extracted method  
+
+    // Build filter using the extracted method
     const filter = this.buildCurrentFilter();
 
     // Inicializar vendors para evitar errores
@@ -550,19 +558,53 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
     // Choose between optimized and legacy loading
     if (this.useOptimizedLoading) {
-      this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.currentPageSize).subscribe({
-        next: (response) => {
-          this.processOrdersData(response.orders as PedidoPriorizado[], response.pagination, response.metrics);
-        },
-        error: (error) => {
-          console.error('❌ Despachos - Error in optimized API call:', error);
-          this.loading = false;
-          // TODO: Show user-friendly error message
-        }
-      });
+      // Cargar pedidos Y métricas globales en paralelo
+      // Pasar filtros de fecha a las métricas para que coincidan con los pedidos mostrados
+      // Convertir fechas a formato ISO (YYYY-MM-DD) para el API
+      const formatDateForApi = (date: any): string | undefined => {
+        if (!date) return undefined;
+        if (typeof date === 'string') return date.split('T')[0];
+        if (date instanceof Date) return date.toISOString().split('T')[0];
+        return undefined;
+      };
+
+      forkJoin({
+        ordersResponse: this.ventasService.getOrdersByFilterOptimized(filter, this.currentPage, this.currentPageSize),
+        globalMetrics: this.logisticaService.getShippingMetrics({
+          fechaInicio: formatDateForApi(filter.fechaInicial),
+          fechaFin: formatDateForApi(filter.fechaFinal)
+        })
+      })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: ({ ordersResponse, globalMetrics }) => {
+            // Procesar pedidos de la página actual
+            this.processOrdersData(
+              ordersResponse.orders as PedidoPriorizado[],
+              ordersResponse.pagination,
+              ordersResponse.metrics
+            );
+
+            // Actualizar métricas GLOBALES del backend (sobre TODOS los pedidos, no solo la página)
+            if (globalMetrics) {
+              console.log('📊 Métricas globales del backend:', globalMetrics);
+              this.metricasLogistica.pedidosUrgentes = globalMetrics.pedidosUrgentes || 0;
+              this.metricasLogistica.pedidosEnRuta = globalMetrics.pedidosEnRuta || 0;
+              this.metricasLogistica.pedidosDespacho = globalMetrics.pedidosParaDespacho || 0;
+              this.metricasLogistica.pedidosSinProducir = globalMetrics.pedidosSinProducir || 0;
+            }
+          },
+          error: (error) => {
+            console.error('❌ Despachos - Error in optimized API call:', error);
+            this.loading = false;
+            // TODO: Show user-friendly error message
+          }
+        });
     } else {
       // Use legacy endpoint (backward compatibility)
-      this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
+      this.ventasService.getOrdersByFilter(filter)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe((data: Pedido[]) => {
       this.orders = data as PedidoPriorizado[];
       /*   this.orders.forEach((order) => {
            if (order.fechaCreacion) {
@@ -589,9 +631,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
       });
     }
 
-    this.logisticaService.getTransportadores().subscribe((data) => {
-      this.vendors = data || [];
-    });
+    this.logisticaService.getTransportadores()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        this.vendors = data || [];
+      });
   }
 
   // Algoritmo principal de priorización
@@ -959,73 +1003,85 @@ export class DespachosComponent implements OnInit, OnDestroy {
     };
   }
 
-  // Calcular métricas para análisis KAI
+  // Calcular métricas para análisis KAI - OPTIMIZADO: Single-pass O(N)
   calcularMetricas() {
-    // Clasificar pedidos por estado de despacho
-    this.pedidosEnRuta = this.orders.filter(
-      (p) => p.estadoProceso === EstadoProceso.Despachado,
-    );
-    this.pedidosParaDespacho = this.orders.filter(
-      (p) =>
-        p.estadoProceso === EstadoProceso.ParaDespachar ||
-        p.estadoProceso === EstadoProceso.Empacado ||
-        p.estadoProceso === EstadoProceso.ProducidoTotalmente,
-    );
+    // Reset arrays y contadores
+    this.pedidosEnRuta = [];
+    this.pedidosParaDespacho = [];
 
-    // Contar pedidos por categoría
-    this.metricasLogistica.pedidosUrgentes = this.pedidosUrgentes.length;
-    this.metricasLogistica.pedidosEnRiesgo = this.pedidosEnRiesgo.length;
-    this.metricasLogistica.pedidosNormales = this.pedidosNormales.length;
-    this.metricasLogistica.pedidosSinProducir = this.pedidosSinProducir.length; // Actualizar contador
-    this.metricasLogistica.pedidosEnRuta = this.pedidosEnRuta.length;
-    this.metricasLogistica.pedidosDespacho = this.pedidosParaDespacho.length;
+    // Contadores para single-pass
+    let entregadosCount = 0;
+    let entregadosATiempoCount = 0;
 
-    // Calcular porcentaje de entregas a tiempo (simulado para demostración)
-    const entregados = this.orders.filter(
-      (p) => p.estadoProceso === "Entregado",
-    );
-    const entregadosATiempo = entregados.filter(
-      (p) => p.diasRestantes !== undefined && p.diasRestantes >= 0,
-    );
-    this.metricasLogistica.porcentajeEntregasTiempo =
-      entregados.length > 0
-        ? (entregadosATiempo.length / entregados.length) * 100
-        : 100;
-
-    // Tiempo promedio de despacho (simulado)
-    this.metricasLogistica.tiempoPromedioDespacho = 35; // 35 minutos en promedio
-
-    // Identificar zonas con más retrasos
+    // Estructura para zonas - acumular en single-pass
     const zonasPedidos: {
       [zona: string]: { total: number; retrasados: number };
     } = {};
 
-    this.orders.forEach((pedido) => {
+    // SINGLE PASS - O(N) en lugar de múltiples filter() O(N) cada uno
+    for (const pedido of this.orders) {
+      const estadoProceso = pedido.estadoProceso;
       const zona = pedido.envio?.zonaCobro || "Sin zona";
+
+      // Clasificar por estado de proceso
+      switch (estadoProceso) {
+        case EstadoProceso.Despachado:
+          this.pedidosEnRuta.push(pedido);
+          break;
+        case EstadoProceso.ParaDespachar:
+        case EstadoProceso.Empacado:
+        case EstadoProceso.ProducidoTotalmente:
+          this.pedidosParaDespacho.push(pedido);
+          break;
+        case EstadoProceso.Entregado:
+          entregadosCount++;
+          if (pedido.diasRestantes !== undefined && pedido.diasRestantes >= 0) {
+            entregadosATiempoCount++;
+          }
+          break;
+      }
+
+      // Acumular datos de zonas
       if (!zonasPedidos[zona]) {
         zonasPedidos[zona] = { total: 0, retrasados: 0 };
       }
-
       zonasPedidos[zona].total++;
 
       if (
         pedido.diasRestantes !== undefined &&
         pedido.diasRestantes < 0 &&
-        pedido.estadoProceso !== "Entregado" &&
-        pedido.estadoProceso !== "Despachado"
+        estadoProceso !== EstadoProceso.Entregado &&
+        estadoProceso !== EstadoProceso.Despachado
       ) {
         zonasPedidos[zona].retrasados++;
       }
-    });
+    }
 
-    // Calcular porcentaje de retrasos por zona
-    Object.keys(zonasPedidos).forEach((zona) => {
+    // Actualizar métricas con los contadores ya calculados
+    this.metricasLogistica.pedidosUrgentes = this.pedidosUrgentes.length;
+    this.metricasLogistica.pedidosEnRiesgo = this.pedidosEnRiesgo.length;
+    this.metricasLogistica.pedidosNormales = this.pedidosNormales.length;
+    this.metricasLogistica.pedidosSinProducir = this.pedidosSinProducir.length;
+    this.metricasLogistica.pedidosEnRuta = this.pedidosEnRuta.length;
+    this.metricasLogistica.pedidosDespacho = this.pedidosParaDespacho.length;
+
+    // Calcular porcentaje de entregas a tiempo
+    this.metricasLogistica.porcentajeEntregasTiempo =
+      entregadosCount > 0
+        ? (entregadosATiempoCount / entregadosCount) * 100
+        : 100;
+
+    // Tiempo promedio de despacho (simulado)
+    this.metricasLogistica.tiempoPromedioDespacho = 35; // 35 minutos en promedio
+
+    // Calcular porcentaje de retrasos por zona (ya tenemos los datos acumulados)
+    for (const zona of Object.keys(zonasPedidos)) {
       if (zonasPedidos[zona].total > 0) {
         const porcentajeRetraso =
           (zonasPedidos[zona].retrasados / zonasPedidos[zona].total) * 100;
         this.metricasLogistica.zonasConRetrasos[zona] = porcentajeRetraso;
       }
-    });
+    }
 
     // Eficiencia de transportadores (simulado)
     if (this.vendors && Array.isArray(this.vendors)) {
@@ -1979,6 +2035,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   refrescar(table?: Table) {
+    this.userRequestedLoad = true; // Usuario solicitó carga de datos
     this.refrescarDatos(false); // No mostrar alertas en refrescar manual
     if (table) {
       table.clear();
@@ -2163,10 +2220,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
     });
   }
   deleteTransporter(item: any) {
-    this.logisticaService.deleteTrasportadora(item).subscribe((data) => {
-      Swal.fire("Exitio", "Transportador eliminado con exito", "success");
-      this.refrescarDatos();
-    });
+    this.logisticaService.deleteTrasportadora(item)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        Swal.fire("Exitio", "Transportador eliminado con exito", "success");
+        this.refrescarDatos();
+      });
   }
 
   editDatosClientes(content: any, order: Pedido) {
@@ -2375,15 +2434,17 @@ export class DespachosComponent implements OnInit, OnDestroy {
       }
     }
 
-    this.ventasService.editOrder(order).subscribe((data) => {
-      this.refrescarDatos(false); // No mostrar alertas al editar pedido
-      Swal.fire({
-        icon: "success",
-        title: "Pedido actualizado correctamente",
-        showConfirmButton: false,
-        timer: 1500,
+    this.ventasService.editOrder(order)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        this.refrescarDatos(false); // No mostrar alertas al editar pedido
+        Swal.fire({
+          icon: "success",
+          title: "Pedido actualizado correctamente",
+          showConfirmButton: false,
+          timer: 1500,
+        });
       });
-    });
   }
   // Método para verificar si un pedido puede ser manipulado
   puedeManipularPedido(pedido: Pedido): boolean {
@@ -2499,36 +2560,38 @@ export class DespachosComponent implements OnInit, OnDestroy {
         break;
     }
 
-    this.ventasService.editOrder(order).subscribe((data) => {
-      this.refrescarDatos(false); // No mostrar alertas al cambiar estado
+    this.ventasService.editOrder(order)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data) => {
+        this.refrescarDatos(false); // No mostrar alertas al cambiar estado
 
-      // Si el pedido se cambió a "Despachado", intentar geocodificarlo automáticamente
-      if (order.estadoProceso === EstadoProceso.Despachado) {
-        console.log(`🚚 Pedido ${order.nroPedido} cambió a Despachado - Verificando geocodificación...`);
+        // Si el pedido se cambió a "Despachado", intentar geocodificarlo automáticamente
+        if (order.estadoProceso === EstadoProceso.Despachado) {
+          console.log(`🚚 Pedido ${order.nroPedido} cambió a Despachado - Verificando geocodificación...`);
 
-        // Geocodificar específicamente este pedido si no tiene coordenadas
-        if (order.envio?.direccionEntrega && order.envio?.ciudad &&
-          (!order.envio?.latitud || !order.envio?.longitud)) {
-          console.log(`📍 Geocodificando pedido despachado: ${order.nroPedido}`);
-          this.geocodificarPedido(order).then(() => {
-            console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
+          // Geocodificar específicamente este pedido si no tiene coordenadas
+          if (order.envio?.direccionEntrega && order.envio?.ciudad &&
+            (!order.envio?.latitud || !order.envio?.longitud)) {
+            console.log(`📍 Geocodificando pedido despachado: ${order.nroPedido}`);
+            this.geocodificarPedido(order).then(() => {
+              console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${order.nroPedido}`);
+              this.actualizarConfiguracionMapa();
+            }).catch(error => {
+              console.error(`❌ Error geocodificando pedido ${order.nroPedido}:`, error);
+            });
+          } else {
+            // Si ya tiene coordenadas, solo actualizar el mapa
             this.actualizarConfiguracionMapa();
-          }).catch(error => {
-            console.error(`❌ Error geocodificando pedido ${order.nroPedido}:`, error);
-          });
-        } else {
-          // Si ya tiene coordenadas, solo actualizar el mapa
-          this.actualizarConfiguracionMapa();
+          }
         }
-      }
 
-      Swal.fire({
-        icon: "success",
-        title: "Pedido actualizado correctamente",
-        showConfirmButton: false,
-        timer: 1500,
+        Swal.fire({
+          icon: "success",
+          title: "Pedido actualizado correctamente",
+          showConfirmButton: false,
+          timer: 1500,
+        });
       });
-    });
   }
 
   actualizarValoresPedido(order: Pedido) {
@@ -2566,10 +2629,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
       confirmButtonText: "Sí, eliminarlo",
     }).then((result) => {
       if (result.isConfirmed) {
-        this.ventasService.deleteOrder(order).subscribe((data) => {
-          this.refrescarDatos(false); // No mostrar alertas al eliminar pedido
-          Swal.fire("Eliminado", "El pedido ha sido eliminado.", "success");
-        });
+        this.ventasService.deleteOrder(order)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe((data) => {
+            this.refrescarDatos(false); // No mostrar alertas al eliminar pedido
+            Swal.fire("Eliminado", "El pedido ha sido eliminado.", "success");
+          });
       }
     });
   }
@@ -2681,28 +2746,30 @@ export class DespachosComponent implements OnInit, OnDestroy {
     };
 
     this.loading = true;
-    this.ventasService.getOrdersByFilter(filter).subscribe((data: Pedido[]) => {
-      this.orders = data as PedidoPriorizado[];
-      /* this.orders.forEach((order) => {
-          if (order.fechaCreacion) {
-            order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
-          }
-          order.anticipo = order.anticipo ?? 0;
-          order.faltaPorPagar =
-            (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
-        });*/
+    this.ventasService.getOrdersByFilter(filter)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: Pedido[]) => {
+        this.orders = data as PedidoPriorizado[];
+        /* this.orders.forEach((order) => {
+            if (order.fechaCreacion) {
+              order.fechaCreacion = new Date(order.fechaCreacion).toISOString();
+            }
+            order.anticipo = order.anticipo ?? 0;
+            order.faltaPorPagar =
+              (order.totalPedididoConDescuento ?? 0) - (order.anticipo ?? 0);
+          });*/
 
-      // Aplicar algoritmo de priorización sin mostrar alertas en buscarPorFechas
-      this.aplicarAlgoritmoPriorizacion(false);
+        // Aplicar algoritmo de priorización sin mostrar alertas en buscarPorFechas
+        this.aplicarAlgoritmoPriorizacion(false);
 
-      // Calcular métricas para análisis KAI
-      this.calcularMetricas();
+        // Calcular métricas para análisis KAI
+        this.calcularMetricas();
 
-      // Actualizar mapa
-      this.actualizarConfiguracionMapa();
+        // Actualizar mapa
+        this.actualizarConfiguracionMapa();
 
-      this.loading = false;
-    });
+        this.loading = false;
+      });
 
     if (table) {
       table.clear();
@@ -2839,20 +2906,22 @@ export class DespachosComponent implements OnInit, OnDestroy {
       transportador.date_edit = this.dataEditTransporter.date_edit;
     }
 
-    this.logisticaService.createTrasportadora(transportador).subscribe(
-      (response) => {
-        Swal.fire("Éxito", "Transportador guardado exitosamente", "success");
-        this.refrescarDatos();
-        this.modalRef.dismiss();
-      },
-      (error) => {
-        Swal.fire(
-          "Error",
-          "Hubo un problema al guardar el transportador",
-          "error",
-        );
-      },
-    );
+    this.logisticaService.createTrasportadora(transportador)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        (response) => {
+          Swal.fire("Éxito", "Transportador guardado exitosamente", "success");
+          this.refrescarDatos();
+          this.modalRef.dismiss();
+        },
+        (error) => {
+          Swal.fire(
+            "Error",
+            "Hubo un problema al guardar el transportador",
+            "error",
+          );
+        },
+      );
   }
 
   onEditTransportador(transportador: any) {
@@ -3500,68 +3569,71 @@ export class DespachosComponent implements OnInit, OnDestroy {
         }
 
         // Guardar los cambios
-        this.ventasService.editOrder(pedido).subscribe(
-          (response) => {
-            console.log(`🚚 Pedido ${pedido.nroPedido} despachado exitosamente - Verificando geocodificación...`);
+        this.ventasService.editOrder(pedido)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe(
+            (response) => {
+              console.log(`🚚 Pedido ${pedido.nroPedido} despachado exitosamente - Verificando geocodificación...`);
 
-            // Geocodificar automáticamente el pedido despachado si no tiene coordenadas
-            if (pedido.envio?.direccionEntrega && pedido.envio?.ciudad &&
-              (!pedido.envio?.latitud || !pedido.envio?.longitud)) {
-              console.log(`📍 Geocodificando pedido recién despachado: ${pedido.nroPedido}`);
-              this.geocodificarPedido(pedido).then(() => {
-                console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${pedido.nroPedido}`);
-                this.actualizarConfiguracionMapa();
-              }).catch(error => {
-                console.error(`❌ Error geocodificando pedido ${pedido.nroPedido}:`, error);
-              });
-            } else {
-              // Si ya tiene coordenadas, solo actualizar el mapa
-              this.actualizarConfiguracionMapa();
-            }
-
-            Swal.fire("Éxito", "Pedido despachado exitosamente", "success");
-            // Simplemente refrescar los datos de todas las órdenes
-            this.refrescarDatos();
-            // Cerrar y volver a abrir el diálogo
-            this.modalService.dismissAll();
-            setTimeout(() => {
-              // Volver a consultar las órdenes
-              // TODO: Optimizar con getShippingOrdersPaginated
-              this.logisticaService
-                .getShippingOrders()
-                .subscribe((data: Pedido[]) => {
-                  const currentCompanyStr =
-                    localStorage.getItem("currentCompany");
-                  const companyName = currentCompanyStr
-                    ? JSON.parse(currentCompanyStr).nomComercial
-                    : "";
-
-                  this.dispatchOrders = data
-                    .filter((x) => x.company == companyName)
-                    .sort((a, b) => {
-                      const aNum = a.nroShippingOrder
-                        ? parseInt(a.nroShippingOrder)
-                        : 0;
-                      const bNum = b.nroShippingOrder
-                        ? parseInt(b.nroShippingOrder)
-                        : 0;
-                      return bNum - aNum;
-                    });
-                  this.modalService.open(this.dispatchOrdersModal, {
-                    size: "xl",
-                    fullscreen: false,
-                  });
+              // Geocodificar automáticamente el pedido despachado si no tiene coordenadas
+              if (pedido.envio?.direccionEntrega && pedido.envio?.ciudad &&
+                (!pedido.envio?.latitud || !pedido.envio?.longitud)) {
+                console.log(`📍 Geocodificando pedido recién despachado: ${pedido.nroPedido}`);
+                this.geocodificarPedido(pedido).then(() => {
+                  console.log(`🗺️ Actualizando mapa después de geocodificar pedido despachado: ${pedido.nroPedido}`);
+                  this.actualizarConfiguracionMapa();
+                }).catch(error => {
+                  console.error(`❌ Error geocodificando pedido ${pedido.nroPedido}:`, error);
                 });
-            }, 500);
-          },
-          (error) => {
-            Swal.fire(
-              "Error",
-              "Hubo un problema al despachar el pedido",
-              "error",
-            );
-          },
-        );
+              } else {
+                // Si ya tiene coordenadas, solo actualizar el mapa
+                this.actualizarConfiguracionMapa();
+              }
+
+              Swal.fire("Éxito", "Pedido despachado exitosamente", "success");
+              // Simplemente refrescar los datos de todas las órdenes
+              this.refrescarDatos();
+              // Cerrar y volver a abrir el diálogo
+              this.modalService.dismissAll();
+              setTimeout(() => {
+                // Volver a consultar las órdenes
+                // TODO: Optimizar con getShippingOrdersPaginated
+                this.logisticaService
+                  .getShippingOrders()
+                  .pipe(takeUntil(this.destroy$))
+                  .subscribe((data: Pedido[]) => {
+                    const currentCompanyStr =
+                      localStorage.getItem("currentCompany");
+                    const companyName = currentCompanyStr
+                      ? JSON.parse(currentCompanyStr).nomComercial
+                      : "";
+
+                    this.dispatchOrders = data
+                      .filter((x) => x.company == companyName)
+                      .sort((a, b) => {
+                        const aNum = a.nroShippingOrder
+                          ? parseInt(a.nroShippingOrder)
+                          : 0;
+                        const bNum = b.nroShippingOrder
+                          ? parseInt(b.nroShippingOrder)
+                          : 0;
+                        return bNum - aNum;
+                      });
+                    this.modalService.open(this.dispatchOrdersModal, {
+                      size: "xl",
+                      fullscreen: false,
+                    });
+                  });
+              }, 500);
+            },
+            (error) => {
+              Swal.fire(
+                "Error",
+                "Hubo un problema al despachar el pedido",
+                "error",
+              );
+            },
+          );
       }
     });
   }
@@ -3637,6 +3709,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
         this.logisticaService
           .dispatchShippingOrder(this.nuevaOrdenEnvio)
+          .pipe(takeUntil(this.destroy$))
           .subscribe(
             (response) => {
               Swal.fire("Éxito", "Orden despachada exitosamente", "success");
@@ -3699,6 +3772,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
   // Métodos para manejo de transportadores integrados
   loadLogisticsIntegrations(): void {
     this.integrationsService.getIntegrationsByCategory(IntegrationCategory.LOGISTICS)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (integrations) => {
           this.availableTransporters = integrations;
@@ -3713,8 +3787,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
   loadDispatchOrders(openModal: boolean = false) {
     // TODO: Migrar a getShippingOrdersPaginated para mejor rendimiento
     // Por ahora mantenemos compatibilidad con el método existente
-    this.logisticaService.getShippingOrders().subscribe(
-      (data: Pedido[]) => {
+    this.logisticaService.getShippingOrders()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        (data: Pedido[]) => {
         const currentCompanyStr = localStorage.getItem("currentCompany");
         const companyName = currentCompanyStr
           ? JSON.parse(currentCompanyStr).nomComercial
@@ -3791,8 +3867,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
       limit: 100,
       fields: 'full',
       fechaInicio: fechaInicio.toISOString().split('T')[0]
-    }).subscribe(
-      (response) => {
+    })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
+        (response) => {
         if (!response || !response.data) {
           console.error('Respuesta inválida del servidor');
           this.dispatchOrders = [];
@@ -3924,7 +4002,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
       page: 1,
       limit: 100,
       fields: 'full'
-    }).subscribe(
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(
       (response) => {
         if (response && response.data) {
           const currentCompanyStr = localStorage.getItem("currentCompany");
@@ -4044,21 +4124,23 @@ export class DespachosComponent implements OnInit, OnDestroy {
     }
 
     // Si no existe en cache o ha expirado, hacer la petición
-    this.logisticaService.getShippingOrder(orderId).subscribe({
-      next: (response) => {
-        // Guardar en cache
-        this.orderCache.set(cacheKey, {
-          data: response,
-          timestamp: Date.now(),
-        });
+    this.logisticaService.getShippingOrder(orderId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          // Guardar en cache
+          this.orderCache.set(cacheKey, {
+            data: response,
+            timestamp: Date.now(),
+          });
 
-        this.procesarOrdenParaImprimir(response);
-      },
-      error: (error) => {
-        console.error("Error obteniendo orden:", error);
-        Swal.fire("Error", "No se pudo obtener la orden", "error");
-      },
-    });
+          this.procesarOrdenParaImprimir(response);
+        },
+        error: (error) => {
+          console.error("Error obteniendo orden:", error);
+          Swal.fire("Error", "No se pudo obtener la orden", "error");
+        },
+      });
   }
 
   private procesarOrdenParaImprimir(response: any) {
@@ -4431,10 +4513,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    this.logisticaService.getShippingOrder(orderIdNumber).subscribe({
-      next: (response) => {
-        // Debug: Analizar respuesta del backend
-        console.log('📡 BACKEND RESPONSE - handleOrderView:');
+    this.logisticaService.getShippingOrder(orderIdNumber)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          // Debug: Analizar respuesta del backend
+          console.log('📡 BACKEND RESPONSE - handleOrderView:');
         console.log('Response completa:', response);
         console.log('Campos de método de envío en response:', {
           metodoEnvio: response?.metodoEnvio,
@@ -4665,10 +4749,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
     if (esNuevaOrden) {
       this.crearOrdenEnvio(debeAbrirModalTransportadora);
     } else {
-      this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
-        next: (response) => {
-          // Si backend retorna nroShippingOrder, actualizar referencia local
-          if (response && response.nroShippingOrder) {
+      this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            // Si backend retorna nroShippingOrder, actualizar referencia local
+            if (response && response.nroShippingOrder) {
             this.nroShippingOrder = response.nroShippingOrder;
             this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
           }
@@ -4798,9 +4884,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
     });
 
     // Crear la orden
-    this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
-      next: (response) => {
-        console.log("✅ Orden creada exitosamente:", response);
+    this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          console.log("✅ Orden creada exitosamente:", response);
 
         // Actualizar nroShippingOrder
         if (response && response.nroShippingOrder) {
@@ -4871,26 +4959,28 @@ export class DespachosComponent implements OnInit, OnDestroy {
     console.log("Creando nueva orden de envío:", this.nuevaOrdenEnvio);
     console.log('🚀 Flag abrirModalTransportadora en crearOrdenEnvio:', debeAbrirModalTransportadora);
 
-    this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio).subscribe({
-      next: (response) => {
-        console.log("Respuesta exitosa del servidor:", response);
+    this.logisticaService.createShippingOrder(this.nuevaOrdenEnvio)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          console.log("Respuesta exitosa del servidor:", response);
 
-        // Actualizar nroShippingOrder
-        if (response && response.nroShippingOrder) {
-          this.nroShippingOrder = response.nroShippingOrder;
-          this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
-        }
+          // Actualizar nroShippingOrder
+          if (response && response.nroShippingOrder) {
+            this.nroShippingOrder = response.nroShippingOrder;
+            this.nuevaOrdenEnvio.nroShippingOrder = response.nroShippingOrder;
+          }
 
-        Swal.fire({
-          title: "Éxito",
-          text: `La orden de envío ${response.nroShippingOrder || ""} ha sido creada exitosamente`,
-          icon: "success",
-          timer: 2000,
-          showConfirmButton: false,
-        });
+          Swal.fire({
+            title: "Éxito",
+            text: `La orden de envío ${response.nroShippingOrder || ""} ha sido creada exitosamente`,
+            icon: "success",
+            timer: 2000,
+            showConfirmButton: false,
+          });
 
-        // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
-        if (debeAbrirModalTransportadora) {
+          // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
+          if (debeAbrirModalTransportadora) {
           console.log('🚀 Llamando al método del hijo para abrir modal de transportadora...');
 
           setTimeout(() => {
@@ -5005,8 +5095,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
     }
 
     // Manejar el cierre del modal
-    modalRef.onClose.subscribe((result) => {
-      console.log('🔄 Modal de Enviame cerrado, resultado:', result);
+    modalRef.onClose
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((result) => {
+        console.log('🔄 Modal de Enviame cerrado, resultado:', result);
 
       if (result && result.confirmed) {
         console.log('✅ Proceso con Enviame completado:', result);
@@ -5105,6 +5197,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Enviar la orden al servidor
     this.logisticaService
       .dispatchShippingOrder(this.nuevaOrdenEnvio)
+      .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           console.log("Respuesta exitosa del servidor:", response);
@@ -5197,27 +5290,29 @@ export class DespachosComponent implements OnInit, OnDestroy {
         this.vendors.length === 0
       ) {
         // Intentar cargar transportadores si no están disponibles
-        this.logisticaService.getTransportadores().subscribe({
-          next: (data) => {
-            this.vendors = data || [];
-            if (this.vendors.length === 0) {
-              console.error(
-                "No hay transportadores disponibles después de cargar",
+        this.logisticaService.getTransportadores()
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (data) => {
+              this.vendors = data || [];
+              if (this.vendors.length === 0) {
+                console.error(
+                  "No hay transportadores disponibles después de cargar",
+                );
+                Swal.fire("Error", "No hay transportadores disponibles", "error");
+                resolve("");
+                return;
+              }
+              this.mostrarDialogoSeleccionTransportador(resolve);
+            },
+            error: (error) => {
+              console.error("Error al cargar transportadores:", error);
+              Swal.fire(
+                "Error",
+                "No se pudieron cargar los transportadores",
+                "error",
               );
-              Swal.fire("Error", "No hay transportadores disponibles", "error");
               resolve("");
-              return;
-            }
-            this.mostrarDialogoSeleccionTransportador(resolve);
-          },
-          error: (error) => {
-            console.error("Error al cargar transportadores:", error);
-            Swal.fire(
-              "Error",
-              "No se pudieron cargar los transportadores",
-              "error",
-            );
-            resolve("");
           },
         });
       } else {
@@ -6220,22 +6315,24 @@ export class DespachosComponent implements OnInit, OnDestroy {
     console.log(`📍 Iniciando tracking - ID: ${trackingId}, Provider: ${provider}`);
     this.loading = true;
 
-    this.logisticaService.trackDespachado(companyId, provider, trackingId).subscribe({
-      next: (response) => {
-        this.loading = false;
-        console.log('📦 Seguimiento del envío:', response);
+    this.logisticaService.trackDespachado(companyId, provider, trackingId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.loading = false;
+          console.log('📦 Seguimiento del envío:', response);
 
-        // Mostrar modal de seguimiento con la información obtenida
-        this.mostrarModalSeguimiento(pedido, response);
-      },
-      error: (error) => {
-        this.loading = false;
-        console.error('❌ Error al hacer seguimiento:', error);
+          // Mostrar modal de seguimiento con la información obtenida
+          this.mostrarModalSeguimiento(pedido, response);
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('❌ Error al hacer seguimiento:', error);
 
-        // Mostrar modal de seguimiento con error
-        this.mostrarModalSeguimiento(pedido, null, error);
-      }
-    });
+          // Mostrar modal de seguimiento con error
+          this.mostrarModalSeguimiento(pedido, null, error);
+        }
+      });
   }
 
   // Método para mostrar el modal de seguimiento
@@ -6256,9 +6353,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
     }
 
     // Manejar el evento de refrescar
-    modalRef.componentInstance.onRefresh.subscribe(() => {
-      this.refrescarTracking(pedido, modalRef);
-    });
+    modalRef.componentInstance.onRefresh
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.refrescarTracking(pedido, modalRef);
+      });
   }
 
   // Método para refrescar el tracking
@@ -6270,18 +6369,20 @@ export class DespachosComponent implements OnInit, OnDestroy {
     modalRef.componentInstance.loading = true;
     modalRef.componentInstance.error = '';
 
-    this.logisticaService.trackDespachado(companyId, provider, trackingId).subscribe({
-      next: (response) => {
-        modalRef.componentInstance.loading = false;
-        modalRef.componentInstance.trackingInfo = response;
-        console.log('📦 Seguimiento actualizado:', response);
-      },
-      error: (error) => {
-        modalRef.componentInstance.loading = false;
-        modalRef.componentInstance.error = 'Error al actualizar la información de seguimiento';
-        console.error('❌ Error al actualizar seguimiento:', error);
-      }
-    });
+    this.logisticaService.trackDespachado(companyId, provider, trackingId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          modalRef.componentInstance.loading = false;
+          modalRef.componentInstance.trackingInfo = response;
+          console.log('📦 Seguimiento actualizado:', response);
+        },
+        error: (error) => {
+          modalRef.componentInstance.loading = false;
+          modalRef.componentInstance.error = 'Error al actualizar la información de seguimiento';
+          console.error('❌ Error al actualizar seguimiento:', error);
+        }
+      });
   }
 
   // Método auxiliar para obtener el ID de la empresa
@@ -6329,21 +6430,23 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Debug: mostrar el payload que se envía
     console.log('🔍 Enviando payload para findShipment:', shipmentPayload);
 
-    this.logisticaService.findShipment(shipmentPayload).subscribe({
-      next: (response) => {
-        this.loading = false;
-        console.log('🔍 Shipment encontrado:', response);
+    this.logisticaService.findShipment(shipmentPayload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.loading = false;
+          console.log('🔍 Shipment encontrado:', response);
 
-        // Mostrar información del shipment encontrado
-        this.mostrarInformacionShipment(pedido, response);
-      },
-      error: (error) => {
-        this.loading = false;
-        console.error('❌ Error al buscar shipment:', error);
+          // Mostrar información del shipment encontrado
+          this.mostrarInformacionShipment(pedido, response);
+        },
+        error: (error) => {
+          this.loading = false;
+          console.error('❌ Error al buscar shipment:', error);
 
-        Swal.fire({
-          icon: 'error',
-          title: 'Error en búsqueda',
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en búsqueda',
           text: 'No se pudo encontrar información del shipment en logística.',
           confirmButtonText: 'Entendido'
         });

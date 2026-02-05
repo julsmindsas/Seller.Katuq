@@ -46,8 +46,8 @@
                         <!-- HEADER: Encabezados y filtros -->
                         <ng-template pTemplate="header">
                             <tr class="p-table-tr-th" style="font-size: 0.8rem; background-color: #f8f9fa; font-weight: 600;">
-                                <!-- Recorremos todas las columnas -->
-                                <ng-container *ngFor="let col of selectedColumns">
+                                <!-- Recorremos todas las columnas con trackBy para optimizar rendering -->
+                                <ng-container *ngFor="let col of selectedColumns; trackBy: trackByColumnField">
                                     <!-- Columnas especiales sin ordenamiento -->
                                     <th *ngIf="isColumnVisible(col.field) && (col.field === 'detalles' || col.field === 'opciones')"
                                         class="text-center"
@@ -135,8 +135,8 @@
                                     <button pButton pRipple type="button" icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" (click)="onRowMenuClick($event, rowMenu, pedido)"></button>
                                 </td>
                                 
-                                <!-- Columnas dinámicas -->
-                                <ng-container *ngFor="let col of selectedColumns">
+                                <!-- Columnas dinámicas con trackBy para optimizar rendering -->
+                                <ng-container *ngFor="let col of selectedColumns; trackBy: trackByColumnField">
                                     <ng-container *ngIf="col.field !== 'detalles' && col.field !== 'opciones' && isColumnVisible(col.field)">
                                         <!-- Estado de Pago - Optimizado y Compacto -->
                                         <td *ngIf="col.field === 'estadoPago'" class="estado-cell text-center col-estadoPago" [attr.data-label]="col.header | translate" style="padding: 0.5rem;">

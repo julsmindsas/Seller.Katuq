@@ -345,4 +345,42 @@ export class LogisticaServiceV2 extends BaseService {
         return this.http.post(`${this.apiUrl}/v1/logistics/shipments/label`, payload);
     }
 
+    // ========== MÉTRICAS AGREGADAS ==========
+
+    /**
+     * Obtiene métricas agregadas de despachos calculadas en el backend
+     * Esto evita cálculos en frontend y asegura métricas sobre los pedidos filtrados
+     * @param params Filtros de fecha opcionales (deben coincidir con los filtros de la tabla)
+     * @returns Observable con métricas precalculadas
+     */
+    getShippingMetrics(params?: {
+        fechaInicio?: string;
+        fechaFin?: string;
+    }): Observable<{
+        pedidosUrgentes: number;
+        pedidosEnRuta: number;
+        pedidosParaDespacho: number;
+        pedidosEntregados: number;
+        pedidosSinProducir: number;
+        totalPedidosActivos: number;
+        filtrosAplicados?: { fechaInicio: string | null; fechaFin: string | null };
+        calculadoEn: string;
+    }> {
+        let url = `${this.apiUrl}/v1/logistica/shippingorders/metrics`;
+        const queryParams: string[] = [];
+
+        if (params?.fechaInicio) {
+            queryParams.push(`fechaInicio=${params.fechaInicio}`);
+        }
+        if (params?.fechaFin) {
+            queryParams.push(`fechaFin=${params.fechaFin}`);
+        }
+
+        if (queryParams.length > 0) {
+            url += '?' + queryParams.join('&');
+        }
+
+        return this.http.get<any>(url);
+    }
+
 } 

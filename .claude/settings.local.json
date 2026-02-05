@@ -42,7 +42,16 @@
       "WebFetch(domain:developer.siigo.com)",
       "Bash(git log:*)",
       "Bash(npm start)",
-      "Bash(npm run start-express:*)"
+      "Bash(npm run start-express:*)",
+      "Bash(node --check:*)",
+      "Bash(npx tsc:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(cmd //c \"taskkill /F /PID 51444\")",
+      "Bash(del \"C:\\\\sourcecodejuls\\\\Seller.Katuq\\\\src\\\\assets\\\\scss\\\\primeng-filter-fix.scss\")",
+      "Bash(npx ng serve:*)"
     ]
   }
 }
