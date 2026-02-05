@@ -3102,6 +3102,42 @@ export class CrearVentasComponent
   }
 
   /**
+   * Determina si debe mostrar el selector de forma de entrega
+   * El selector NO debe mostrarse cuando:
+   * 1. El pedido ya tiene calendario configurado (fechaEntrega)
+   * 2. El pedido ya tiene forma de entrega configurada (recoge en tienda o domicilio)
+   */
+  get mostrarSelectorFormaEntrega(): boolean {
+    try {
+      const carrito = localStorage.getItem("carrito");
+      if (carrito) {
+        const carritoObj = JSON.parse(carrito);
+        if (carritoObj && carritoObj.length > 0) {
+          const datosEntrega = carritoObj[0]?.configuracion?.datosEntrega;
+
+          // Si ya tiene calendario configurado (fechaEntrega), NO mostrar selector
+          if (datosEntrega?.fechaEntrega) {
+            console.log('🚫 Selector de forma de entrega ocultado: Pedido ya tiene calendario configurado');
+            return false;
+          }
+
+          // Si ya tiene forma de entrega configurada, NO mostrar selector
+          if (datosEntrega?.formaEntrega) {
+            console.log('🚫 Selector de forma de entrega ocultado: Pedido ya tiene forma de entrega configurada:', datosEntrega.formaEntrega);
+            return false;
+          }
+        }
+      }
+
+      // Si no hay configuración previa, SÍ mostrar selector
+      return true;
+    } catch (error) {
+      console.error("Error al verificar si mostrar selector de forma de entrega:", error);
+      return true; // En caso de error, mostrar selector por defecto
+    }
+  }
+
+  /**
    * Maneja el cambio de forma de entrega para pedidos sin configuración
    * @param nuevaFormaEntrega La nueva forma de entrega seleccionada ('Domicilio' o 'Recoge')
    */
