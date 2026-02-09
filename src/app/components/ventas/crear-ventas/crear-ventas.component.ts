@@ -3403,6 +3403,43 @@ export class CrearVentasComponent
    * Selecciona un municipio DANE
    */
   seleccionarMunicipioDane(municipio: MunicipioDane): void {
+    const ciudadAnterior = this.selectedCity;
+    const ciudadNueva = municipio.nombre;
+
+    // Verificar si hay productos en el carrito y la ciudad está cambiando
+    if (this.tieneProductosEnCarrito && ciudadAnterior && ciudadAnterior !== '' && ciudadAnterior !== ciudadNueva) {
+      Swal.fire({
+        title: "Cambio de Ciudad",
+        html: `
+          <div class="text-start">
+            <p>Está cambiando la ciudad de <strong>${ciudadAnterior}</strong> a <strong>${ciudadNueva}</strong>.</p>
+            <p class="text-danger"><strong>⚠️ Atención:</strong> Los productos en el carrito serán eliminados porque los precios y disponibilidad varían según la ciudad.</p>
+          </div>
+        `,
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sí, cambiar ciudad",
+        cancelButtonText: "Cancelar"
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.limpiarCarritoPorCambioCiudad(ciudadAnterior, ciudadNueva);
+          this.aplicarCambioCiudadDane(municipio);
+        }
+        // Si cancela, no hacer nada (mantener la ciudad anterior)
+      });
+      return;
+    }
+
+    // Si no hay productos en el carrito o es la primera selección, proceder directamente
+    this.aplicarCambioCiudadDane(municipio);
+  }
+
+  /**
+   * Aplica el cambio de ciudad DANE actualizando todas las referencias necesarias.
+   */
+  private aplicarCambioCiudadDane(municipio: MunicipioDane): void {
     this.pais_entrega = 'Colombia';
     this.departamento_entrega = municipio.departamento;
     this.ciudad_municipio_entrega = municipio.nombre;
