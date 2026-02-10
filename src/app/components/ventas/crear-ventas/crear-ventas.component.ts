@@ -3818,39 +3818,7 @@ export class CrearVentasComponent
     );
 
     if (selected) {
-      // Obtener la bodega anterior para comparar
-      const bodegaAnterior = this.bodega;
-
-      // Verificar si hay productos en el carrito y la bodega está cambiando
-      if (this.tieneProductosEnCarrito && bodegaAnterior && bodegaAnterior.idBodega !== selected.idBodega) {
-        // Mostrar confirmación antes de cambiar la bodega
-        Swal.fire({
-          title: "Cambio de Bodega",
-          html: `
-            <div class="text-start">
-              <p>Está cambiando la bodega de <strong>${bodegaAnterior.nombre}</strong> a <strong>${selected.nombre}</strong>.</p>
-              <p class="text-danger"><strong>⚠️ Atención:</strong> Los productos en el carrito serán eliminados porque la disponibilidad varía según la bodega.</p>
-            </div>
-          `,
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#3085d6",
-          cancelButtonColor: "#d33",
-          confirmButtonText: "Sí, cambiar bodega",
-          cancelButtonText: "Cancelar"
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Limpiar el carrito
-            this.limpiarCarritoPorCambioBodega(bodegaAnterior, selected);
-            // Proceder con el cambio de bodega
-            this.aplicarCambioBodega(selected);
-          }
-          // Si cancela, no hacer nada (mantener la bodega anterior)
-        });
-        return;
-      }
-
-      // Si no hay productos en el carrito o es la primera selección, proceder directamente
+      // Cambiar de bodega no limpia el carrito, se permite cambiar libremente
       this.aplicarCambioBodega(selected);
     } else {
       this.selectedWarehouse = "";

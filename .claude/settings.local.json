@@ -42,7 +42,13 @@
       "WebFetch(domain:developer.siigo.com)",
       "Bash(git log:*)",
       "Bash(npm start)",
-      "Bash(npm run start-express:*)"
+      "Bash(npm run start-express:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(npx ng build:*)",
+      "Bash(npx ng serve --port 4200)",
+      "Bash(npx kill-port:*)"
     ]
   }
 }
