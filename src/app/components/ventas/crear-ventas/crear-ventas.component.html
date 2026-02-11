@@ -681,8 +681,8 @@
               <!-- TABS para Envío y Facturación - Diseño compacto -->
               <div class="step4-consolidated">
 
-                <!-- Selector de Forma de Entrega -->
-                <div class="forma-entrega-selector-container mb-4">
+                <!-- Selector de Forma de Entrega (solo si no está configurada previamente) -->
+                <div class="forma-entrega-selector-container mb-4" *ngIf="mostrarSelectorFormaEntrega">
                   <div class="card shadow-sm border-0">
                     <div class="card-body py-3">
                       <div class="row align-items-center">
@@ -709,6 +709,14 @@
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <!-- Mensaje informativo cuando la forma de entrega ya está configurada -->
+                <div class="alert alert-info mb-4" *ngIf="!mostrarSelectorFormaEntrega">
+                  <i class="fa fa-info-circle me-2"></i>
+                  <strong>Forma de entrega ya configurada:</strong> Este pedido ya tiene su forma de entrega definida.
+                  <span *ngIf="selectedFormaEntrega === 'Recoge'">El cliente recogerá en tienda.</span>
+                  <span *ngIf="selectedFormaEntrega === 'Domicilio'">Se enviará a domicilio.</span>
                 </div>
 
                 <!-- Tab Navigation -->
