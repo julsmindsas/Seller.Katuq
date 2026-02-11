@@ -13,8 +13,23 @@
 .p-button:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-danger):not(.p-button-help):not(.p-button-text):not(.p-button-outlined):not(.p-button-link) {
   background: $katuq-primary;
   border-color: $katuq-primary;
+  color: #fff;
   &:enabled:hover { background: $katuq-primary-dark; border-color: $katuq-primary-dark; }
   &:focus { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba($katuq-primary, 0.3); }
+}
+
+// Restore splitButton variant styling (inner .p-button lacks parent's variant classes)
+.p-splitbutton.p-button-secondary > .p-button,
+.p-splitbutton.p-button-outlined > .p-button {
+  background: transparent;
+  color: #64748b;
+  border-color: #64748b;
+}
+.p-splitbutton.p-button-secondary > .p-button:enabled:hover,
+.p-splitbutton.p-button-outlined > .p-button:enabled:hover {
+  background: rgba(100, 116, 139, 0.04);
+  color: #64748b;
+  border-color: #64748b;
 }
 
 // Checkbox, radio, toggle switch
