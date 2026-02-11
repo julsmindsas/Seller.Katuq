@@ -1,0 +1,181 @@
+// ==========================================
+// KATUQ DESIGN TOKENS v1.0
+// Fuente unica de verdad para la identidad visual de Katuq
+// Logo: Purple (#8b5cf6) + Cyan (#00e5cc)
+// ==========================================
+
+// ==========================================
+// 1. ESCALA PURPLE (color primario de marca)
+// ==========================================
+$katuq-purple-50:  #f5f3ff;
+$katuq-purple-100: #ede9fe;
+$katuq-purple-200: #ddd6fe;
+$katuq-purple-300: #c4b5fd;
+$katuq-purple-400: #a78bfa;
+$katuq-purple-500: #8b5cf6;
+$katuq-purple-600: #7c3aed;
+$katuq-purple-700: #6d28d9;
+$katuq-purple-800: #5b21b6;
+$katuq-purple-900: #4c1d95;
+
+// ==========================================
+// 2. ESCALA CYAN (color acento de marca)
+// ==========================================
+$katuq-cyan-50:  #ecfdf5;
+$katuq-cyan-100: #d1fae5;
+$katuq-cyan-200: #a7f3d0;
+$katuq-cyan-300: #6ee7b7;
+$katuq-cyan-400: #34d399;
+$katuq-cyan-500: #00e5cc;
+$katuq-cyan-600: #00b8a9;
+$katuq-cyan-700: #009688;
+$katuq-cyan-800: #00796b;
+$katuq-cyan-900: #004d40;
+
+// ==========================================
+// 3. ALIASES SEMANTICOS
+// ==========================================
+$katuq-primary:        $katuq-purple-500; // #8b5cf6
+$katuq-primary-light:  $katuq-purple-400; // #a78bfa
+$katuq-primary-dark:   $katuq-purple-600; // #7c3aed
+$katuq-primary-bg:     $katuq-purple-50;  // #f5f3ff
+$katuq-primary-border: $katuq-purple-200; // #ddd6fe
+
+$katuq-accent:       $katuq-cyan-500; // #00e5cc
+$katuq-accent-light: $katuq-cyan-200; // #a7f3d0
+$katuq-accent-dark:  $katuq-cyan-600; // #00b8a9
+
+// ==========================================
+// 4. COLORES SEMANTICOS DE ESTADO
+// ==========================================
+
+// Success
+$katuq-success:       #10b981;
+$katuq-success-dark:  #059669;
+$katuq-success-light: #d1fae5;
+$katuq-success-text:  #065f46;
+
+// Warning
+$katuq-warning:       #f59e0b;
+$katuq-warning-dark:  #d97706;
+$katuq-warning-light: #fef3c7;
+$katuq-warning-text:  #92400e;
+
+// Danger
+$katuq-danger:        #ef4444;
+$katuq-danger-dark:   #dc2626;
+$katuq-danger-light:  #fee2e2;
+$katuq-danger-text:   #991b1b;
+
+// Info (alineado con marca purple)
+$katuq-info:       $katuq-purple-400; // #a78bfa
+$katuq-info-dark:  $katuq-purple-500; // #8b5cf6
+$katuq-info-light: $katuq-purple-100; // #ede9fe
+$katuq-info-text:  $katuq-purple-800; // #5b21b6
+
+// ==========================================
+// 5. ESCALA NEUTRAL
+// ==========================================
+$katuq-gray-50:  #fafafa;
+$katuq-gray-100: #f4f4f5;
+$katuq-gray-200: #e4e4e7;
+$katuq-gray-300: #d4d4d8;
+$katuq-gray-400: #a1a1aa;
+$katuq-gray-500: #71717a;
+$katuq-gray-600: #52525b;
+$katuq-gray-700: #3f3f46;
+$katuq-gray-800: #27272a;
+$katuq-gray-900: #18181b;
+
+// ==========================================
+// 6. TOKENS DE BADGES POR ESTADO DE PROCESO
+// ==========================================
+
+// Sin Producir
+$badge-sinproducir-bg:     $katuq-gray-100;
+$badge-sinproducir-text:   $katuq-gray-600;
+$badge-sinproducir-border: $katuq-gray-300;
+
+// En Produccion / Producido Parcialmente
+$badge-enproduccion-bg:     #faf5ff;
+$badge-enproduccion-text:   $katuq-purple-700;
+$badge-enproduccion-border: $katuq-purple-200;
+
+// Producido Totalmente
+$badge-producido-bg:     $katuq-purple-50;
+$badge-producido-text:   $katuq-purple-700;
+$badge-producido-border: $katuq-purple-200;
+
+// Empacado
+$badge-empacado-bg:     $katuq-cyan-50;
+$badge-empacado-text:   $katuq-cyan-800;
+$badge-empacado-border: $katuq-cyan-200;
+
+// Para Despachar
+$badge-paradespachar-bg:     $katuq-warning-light;
+$badge-paradespachar-text:   $katuq-warning-text;
+$badge-paradespachar-border: #fde68a;
+
+// Despachado
+$badge-despachado-bg:     $katuq-purple-100;
+$badge-despachado-text:   $katuq-purple-800;
+$badge-despachado-border: $katuq-purple-300;
+
+// Entregado
+$badge-entregado-bg:     $katuq-success-light;
+$badge-entregado-text:   $katuq-success-text;
+$badge-entregado-border: $katuq-success;
+
+// Rechazado
+$badge-rechazado-bg:     $katuq-danger-light;
+$badge-rechazado-text:   $katuq-danger-text;
+$badge-rechazado-border: $katuq-danger;
+
+// Cerrado
+$badge-cerrado-bg:     $katuq-gray-700;
+$badge-cerrado-text:   #fff;
+$badge-cerrado-border: $katuq-gray-700;
+
+// === Badges de Estado de Pago ===
+$badge-pago-pendiente-bg:     $katuq-warning-light;
+$badge-pago-pendiente-text:   $katuq-warning-text;
+$badge-pago-pendiente-border: #fde68a;
+
+$badge-pago-aprobado-bg:     $katuq-success-light;
+$badge-pago-aprobado-text:   $katuq-success-text;
+$badge-pago-aprobado-border: #6ee7b7;
+
+$badge-pago-rechazado-bg:     $katuq-danger-light;
+$badge-pago-rechazado-text:   $katuq-danger-text;
+$badge-pago-rechazado-border: #fca5a5;
+
+$badge-pago-preaprobado-bg:     $katuq-purple-50;
+$badge-pago-preaprobado-text:   $katuq-purple-700;
+$badge-pago-preaprobado-border: $katuq-purple-200;
+
+// ==========================================
+// 7. TOKENS DE COMPONENTES
+// ==========================================
+
+// Botones
+$btn-primary-bg:     $katuq-primary;
+$btn-primary-hover:  $katuq-primary-dark;
+$btn-primary-shadow: rgba($katuq-primary, 0.3);
+
+// Cards
+$card-border:       $katuq-gray-200;
+$card-shadow:       0 1px 3px rgba(0, 0, 0, 0.06);
+$card-hover-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+$card-radius:       8px;
+
+// Gradientes para stat cards
+$stat-primary-gradient:    linear-gradient(135deg, $katuq-purple-500, $katuq-purple-600);
+$stat-success-gradient:    linear-gradient(135deg, $katuq-success, $katuq-success-dark);
+$stat-warning-gradient:    linear-gradient(135deg, $katuq-warning, $katuq-warning-dark);
+$stat-danger-gradient:     linear-gradient(135deg, $katuq-danger, $katuq-danger-dark);
+$stat-info-gradient:       linear-gradient(135deg, $katuq-purple-400, $katuq-purple-500);
+$stat-production-gradient: linear-gradient(135deg, $katuq-purple-600, $katuq-purple-700);
+$stat-packed-gradient:     linear-gradient(135deg, $katuq-cyan-500, $katuq-cyan-600);
+
+// Focus ring
+$focus-ring: 0 0 0 3px rgba($katuq-primary, 0.15);

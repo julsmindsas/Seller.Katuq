@@ -19,29 +19,29 @@
     font-style: normal;
 }
 
+// Katuq Design Tokens — single source of truth
+@import 'katuq-tokens';
+
 // General variables
 $theme-font-color: #242934;
 $theme-body-font-color: #2b2b2b;
 $theme-body-sub-title-color: rgba($theme-body-font-color, 0.7);
 $body-color: #f8f8f8;
 
-// Theme colors variables
-// Old: #659A85, #85659A, #9A8565
-// Old 2: #459BD1 (blue) → New: #a78bfa (purple light Katuq)
-$primary-color: #a78bfa; // Purple light Katuq
-$secondary-color: #4555D1; // Mantener original
-$tertiary-color: #00a5d2; // Mantener original
+// Theme colors variables — mapped from Katuq tokens
+$primary-color: $katuq-primary-light;  // #a78bfa (mantiene compatibilidad)
+$secondary-color: #4555D1;             // Mantener original
+$tertiary-color: $katuq-accent-dark;   // #00b8a9
 
 $primary-light-color: rgba($primary-color, 0.2);
 $secondary-light-color: rgba($secondary-color, 0.2);
 $tertiary-light-color: rgba($tertiary-color, 0.2);
 
+$success-color: $katuq-success;   // #10b981
+$info-color: $katuq-primary;      // #8b5cf6 (alineado con marca)
 
-$success-color: #51bb25;
-$info-color : #a927f9;
-
-$warning-color: #f8d62b;
-$danger-color: #dc3545;
+$warning-color: $katuq-warning;   // #f59e0b
+$danger-color: $katuq-danger;     // #ef4444
 $light-color : #f4f4f4;
 $light-gray : #ecf3fa;
 $light-slate: #e3e5e7;

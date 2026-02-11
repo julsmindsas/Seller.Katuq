@@ -1,3 +1,6 @@
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
 :host ::ng-deep .dispatch-rules-dialog {
   .p-dialog-content {
     padding: 1rem 1.5rem;
@@ -101,8 +104,8 @@
 }
 
 .rule-form-card {
-  background: #f0f4ff;
-  border: 1px solid #b8d0ff;
+  background: $katuq-primary-bg;
+  border: 1px solid $katuq-primary-border;
   border-radius: 8px;
   padding: 1rem 1.25rem;
 }

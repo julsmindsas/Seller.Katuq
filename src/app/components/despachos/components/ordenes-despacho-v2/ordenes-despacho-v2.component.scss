@@ -1,3 +1,6 @@
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
 /* ========== COMPACT INFO BAR ========== */
 .compact-info-bar {
   display: flex;
@@ -324,23 +327,23 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #6366f1;
+      color: $katuq-primary;
       transition: all 0.15s;
       cursor: pointer;
       font-size: 0.75rem;
 
       &:hover {
-        background: rgba(99, 102, 241, 0.1);
+        background: rgba($katuq-primary, 0.1);
       }
 
       &.expanded {
-        background: rgba(99, 102, 241, 0.1);
+        background: rgba($katuq-primary, 0.1);
       }
     }
 
     .order-number {
       font-weight: 600;
-      color: #4f46e5;
+      color: $katuq-primary;
       font-size: 0.825rem;
     }
 
@@ -351,7 +354,7 @@
 
     .total-amount {
       font-weight: 600;
-      color: #059669;
+      color: $katuq-success-dark;
       font-size: 0.825rem;
     }
 
@@ -390,7 +393,7 @@
       .order-info {
         .order-number {
           font-weight: 600;
-          color: #2196f3;
+          color: $katuq-primary;
           margin: 0;
           font-size: 1rem;
         }
@@ -421,7 +424,7 @@
 
         &.total {
           font-weight: 600;
-          color: #28a745;
+          color: $katuq-success;
           border-top: 1px solid #e9ecef;
           padding-top: 0.75rem;
           margin-top: 0.75rem;
@@ -429,7 +432,7 @@
         }
 
         i {
-          color: #2196f3;
+          color: $katuq-primary;
           width: 16px;
         }
       }
@@ -562,8 +565,8 @@
         transition: all 0.2s;
 
         &:focus {
-          border-color: #2196f3;
-          box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+          border-color: $katuq-primary;
+          box-shadow: 0 0 0 0.2rem rgba($katuq-primary, 0.25);
         }
       }
 
@@ -589,21 +592,20 @@
         transition: all 0.2s;
 
         &.btn-primary {
-          background-color: #2196f3 !important;
-          border-color: #2196f3 !important;
+          background-color: $katuq-primary !important;
+          border-color: $katuq-primary !important;
           color: #ffffff !important;
 
-          // Forzar color blanco en todos los elementos internos
           span, i {
             color: #ffffff !important;
           }
 
           &:hover:not(:disabled) {
-            background-color: #1976d2 !important;
-            border-color: #1976d2 !important;
+            background-color: $katuq-primary-dark !important;
+            border-color: $katuq-primary-dark !important;
             color: #ffffff !important;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+            box-shadow: 0 4px 12px rgba($katuq-primary, 0.3);
 
             span, i {
               color: #ffffff !important;
@@ -612,8 +614,8 @@
 
           &:disabled {
             opacity: 0.6;
-            background-color: #bdbdbd !important;
-            border-color: #bdbdbd !important;
+            background-color: $katuq-gray-400 !important;
+            border-color: $katuq-gray-400 !important;
             color: #ffffff !important;
             cursor: not-allowed;
 
@@ -757,9 +759,9 @@
         font-size: 0.8rem;
 
         &.active {
-          background-color: #2196f3;
+          background-color: $katuq-primary;
           color: white;
-          border-color: #2196f3;
+          border-color: $katuq-primary;
         }
       }
     }
@@ -857,8 +859,8 @@
     .alert {
       border: none;
       border-radius: 12px;
-      background: #e3f2fd;
-      border-left: 4px solid #2196f3;
+      background: $katuq-primary-bg;
+      border-left: 4px solid $katuq-primary;
     }
   }
 
@@ -889,13 +891,13 @@
     &:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-      border-color: #a78bfa;
+      border-color: $katuq-primary-light;
     }
 
     &.selected {
-      border-color: #2196f3;
-      background: #f0f7ff;
-      box-shadow: 0 4px 15px rgba(33, 150, 243, 0.15);
+      border-color: $katuq-primary;
+      background: $katuq-primary-bg;
+      box-shadow: 0 4px 15px rgba($katuq-primary, 0.15);
 
       &::before {
         content: '';
@@ -904,7 +906,7 @@
         left: 0;
         right: 0;
         height: 4px;
-        background: #2196f3;
+        background: $katuq-primary;
         border-radius: 12px 12px 0 0;
       }
     }
@@ -1003,7 +1005,7 @@
       }
 
       &:hover {
-        background: #e3f2fd;
+        background: $katuq-primary-bg;
         transform: translateX(5px);
       }
 
@@ -1027,18 +1029,18 @@
       transition: all 0.3s ease;
 
       &.btn-primary {
-        background: #2196f3;
+        background: $katuq-primary;
         border: none;
 
         &:hover:not(:disabled) {
-          background: #1976d2;
+          background: $katuq-primary-dark;
           transform: translateY(-1px);
-          box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+          box-shadow: 0 4px 12px rgba($katuq-primary, 0.3);
         }
 
         &:disabled {
           opacity: 0.6;
-          background: #6c757d;
+          background: $katuq-gray-500;
         }
       }
 
@@ -1117,23 +1119,23 @@
     gap: 1rem;
 
     &:hover {
-      border-color: #2196f3;
-      box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
+      border-color: $katuq-primary;
+      box-shadow: 0 2px 8px rgba($katuq-primary, 0.1);
     }
 
     &.transporter-selected {
-      border-color: #2196f3;
-      background-color: #f0f7ff;
-      box-shadow: 0 2px 12px rgba(33, 150, 243, 0.15);
+      border-color: $katuq-primary;
+      background-color: $katuq-primary-bg;
+      box-shadow: 0 2px 12px rgba($katuq-primary, 0.15);
 
       .transporter-icon {
-        color: #2196f3;
-        background-color: #e3f2fd;
+        color: $katuq-primary;
+        background-color: $katuq-purple-100;
       }
 
       .transporter-radio .form-check-input {
-        background-color: #2196f3;
-        border-color: #2196f3;
+        background-color: $katuq-primary;
+        border-color: $katuq-primary;
       }
     }
 

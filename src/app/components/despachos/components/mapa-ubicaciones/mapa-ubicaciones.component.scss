@@ -1,9 +1,12 @@
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
 // Variables para el mapa
-$primary-color: #2196F3;
-$success-color: #28a745;
-$warning-color: #ffc107;
-$info-color: #c4b5fd;
-$danger-color: #dc3545;
+$primary-color: $katuq-primary;
+$success-color: $katuq-success;
+$warning-color: $katuq-warning;
+$info-color: $katuq-purple-300;
+$danger-color: $katuq-danger;
 $border-radius: 8px;
 
 // Contenedor principal del mapa
@@ -162,7 +165,7 @@ $border-radius: 8px;
             
             i {
               font-size: 18px;
-              color: #2196F3;
+              color: $katuq-primary;
               animation: bounce 1.5s infinite;
             }
           }
@@ -283,7 +286,7 @@ $border-radius: 8px;
       
       .progress-line {
         height: 100%;
-        background: linear-gradient(90deg, #2196F3, #4CAF50);
+        background: linear-gradient(90deg, $katuq-primary, $katuq-success);
         border-radius: 3px 3px 0 0;
         transition: width 0.3s ease;
         position: relative;
@@ -645,7 +648,7 @@ $border-radius: 8px;
         transform: translate(-50%, -50%);
         width: 20px;
         height: 20px;
-        background: #2196F3;
+        background: $katuq-primary;
         border-radius: 50%;
         display: flex;
         align-items: center;

@@ -1,12 +1,14 @@
-// Variables
-$primary-color: #2196F3;
-$success-color: #66BB6A;
-$info-color: #42A5F5;
-$warning-color: #FFA726;
-$danger-color: #FF5252;
-$secondary-color: #78909C;
-$light-color: #f8f9fa;
-$dark-color: #343a40;
+// Katuq Design Tokens
+@import '../../../../assets/scss/utils/katuq-tokens';
+
+$primary-color: $katuq-primary;
+$success-color: $katuq-success;
+$info-color: $katuq-info;
+$warning-color: $katuq-warning;
+$danger-color: $katuq-danger;
+$secondary-color: $katuq-gray-500;
+$light-color: $katuq-gray-50;
+$dark-color: $katuq-gray-800;
 $border-radius: 8px;
 
 // Animaciones
@@ -85,51 +87,51 @@ $border-radius: 8px;
 
   &.stat-primary {
     .stat-icon {
-      background-color: #5c77ff;
+      background-color: $katuq-primary;
     }
 
     .stat-value {
-      color: #5c77ff;
+      color: $katuq-primary;
     }
   }
 
   &.stat-success {
     .stat-icon {
-      background-color: #2dce89;
+      background-color: $katuq-success;
     }
 
     .stat-value {
-      color: #2dce89;
+      color: $katuq-success;
     }
   }
 
   &.stat-info {
     .stat-icon {
-      background-color: #11cdef;
+      background-color: $katuq-info;
     }
 
     .stat-value {
-      color: #11cdef;
+      color: $katuq-info;
     }
   }
 
   &.stat-warning {
     .stat-icon {
-      background-color: #fb6340;
+      background-color: $katuq-warning;
     }
 
     .stat-value {
-      color: #fb6340;
+      color: $katuq-warning;
     }
   }
 
   &.stat-danger {
     .stat-icon {
-      background-color: #f5365c;
+      background-color: $katuq-danger;
     }
 
     .stat-value {
-      color: #f5365c;
+      color: $katuq-danger;
     }
   }
 
@@ -210,51 +212,51 @@ $border-radius: 8px;
     // Colores para diferentes tipos de cards
     &.stat-primary {
       .stat-icon {
-        background: linear-gradient(135deg, #5c77ff 0%, #3d5afe 100%);
+        background: linear-gradient(135deg, $katuq-purple-500 0%, $katuq-purple-600 100%);
       }
 
       .stat-value {
-        color: #5c77ff;
+        color: $katuq-primary;
       }
     }
 
     &.stat-success {
       .stat-icon {
-        background: linear-gradient(135deg, #2dce89 0%, #26a69a 100%);
+        background: linear-gradient(135deg, $katuq-success 0%, $katuq-success-dark 100%);
       }
 
       .stat-value {
-        color: #2dce89;
+        color: $katuq-success;
       }
     }
 
     &.stat-info {
       .stat-icon {
-        background: linear-gradient(135deg, #11cdef 0%, #00acc1 100%);
+        background: linear-gradient(135deg, $katuq-purple-400 0%, $katuq-purple-500 100%);
       }
 
       .stat-value {
-        color: #11cdef;
+        color: $katuq-info;
       }
     }
 
     &.stat-warning {
       .stat-icon {
-        background: linear-gradient(135deg, #fb6340 0%, #f5365c 100%);
+        background: linear-gradient(135deg, $katuq-warning 0%, $katuq-warning-dark 100%);
       }
 
       .stat-value {
-        color: #fb6340;
+        color: $katuq-warning;
       }
     }
 
     &.stat-danger {
       .stat-icon {
-        background: linear-gradient(135deg, #f5365c 0%, #ec0c38 100%);
+        background: linear-gradient(135deg, $katuq-danger 0%, $katuq-danger-dark 100%);
       }
 
       .stat-value {
-        color: #f5365c;
+        color: $katuq-danger;
       }
     }
 
@@ -270,21 +272,21 @@ $border-radius: 8px;
 
     &.stat-production {
       .stat-icon {
-        background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+        background: linear-gradient(135deg, $katuq-purple-600 0%, $katuq-purple-700 100%);
       }
 
       .stat-value {
-        color: #9c27b0;
+        color: $katuq-purple-600;
       }
     }
 
     &.stat-packed {
       .stat-icon {
-        background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+        background: linear-gradient(135deg, $katuq-cyan-500 0%, $katuq-cyan-600 100%);
       }
 
       .stat-value {
-        color: #00bcd4;
+        color: $katuq-cyan-500;
       }
     }
   }
@@ -482,21 +484,21 @@ $border-radius: 8px;
   font-weight: 600;
 
   &.prioridad-alta {
-    background-color: rgba(255, 62, 62, 0.15);
-    color: #de2a2a;
-    border: 1px solid rgba(255, 62, 62, 0.3);
+    background-color: rgba($katuq-danger, 0.15);
+    color: $katuq-danger;
+    border: 1px solid rgba($katuq-danger, 0.3);
   }
 
   &.prioridad-media {
-    background-color: rgba(255, 187, 51, 0.15);
-    color: #e09c0e;
-    border: 1px solid rgba(255, 187, 51, 0.3);
+    background-color: rgba($katuq-warning, 0.15);
+    color: $katuq-warning;
+    border: 1px solid rgba($katuq-warning, 0.3);
   }
 
   &.prioridad-baja {
-    background-color: rgba(39, 194, 76, 0.15);
-    color: #19a03e;
-    border: 1px solid rgba(39, 194, 76, 0.3);
+    background-color: rgba($katuq-success, 0.15);
+    color: $katuq-success;
+    border: 1px solid rgba($katuq-success, 0.3);
   }
 }
 
@@ -525,21 +527,21 @@ $border-radius: 8px;
 
   &.estado-pago {
     &.estado-warning {
-      background-color: rgba(255, 187, 51, 0.15);
-      color: #e09c0e;
-      border: 1px solid rgba(255, 187, 51, 0.3);
+      background-color: rgba($katuq-warning, 0.15);
+      color: $katuq-warning;
+      border: 1px solid rgba($katuq-warning, 0.3);
     }
 
     &.estado-success {
-      background-color: rgba(39, 194, 76, 0.15);
-      color: #19a03e;
-      border: 1px solid rgba(39, 194, 76, 0.3);
+      background-color: rgba($katuq-success, 0.15);
+      color: $katuq-success;
+      border: 1px solid rgba($katuq-success, 0.3);
     }
 
     &.estado-danger {
-      background-color: rgba(255, 62, 62, 0.15);
-      color: #de2a2a;
-      border: 1px solid rgba(255, 62, 62, 0.3);
+      background-color: rgba($katuq-danger, 0.15);
+      color: $katuq-danger;
+      border: 1px solid rgba($katuq-danger, 0.3);
     }
   }
 
@@ -551,33 +553,33 @@ $border-radius: 8px;
     }
 
     &.estado-info {
-      background-color: rgba(23, 162, 184, 0.15);
-      color: #c4b5fd;
-      border: 1px solid rgba(23, 162, 184, 0.3);
+      background-color: rgba($katuq-primary, 0.15);
+      color: $katuq-purple-300;
+      border: 1px solid rgba($katuq-primary, 0.3);
     }
 
     &.estado-primary {
-      background-color: rgba(13, 110, 253, 0.15);
-      color: #8b5cf6;
-      border: 1px solid rgba(13, 110, 253, 0.3);
+      background-color: rgba($katuq-primary, 0.15);
+      color: $katuq-primary;
+      border: 1px solid rgba($katuq-primary, 0.3);
     }
 
     &.estado-warning {
-      background-color: rgba(255, 187, 51, 0.15);
-      color: #e09c0e;
-      border: 1px solid rgba(255, 187, 51, 0.3);
+      background-color: rgba($katuq-warning, 0.15);
+      color: $katuq-warning;
+      border: 1px solid rgba($katuq-warning, 0.3);
     }
 
     &.estado-success {
-      background-color: rgba(39, 194, 76, 0.15);
-      color: #19a03e;
-      border: 1px solid rgba(39, 194, 76, 0.3);
+      background-color: rgba($katuq-success, 0.15);
+      color: $katuq-success;
+      border: 1px solid rgba($katuq-success, 0.3);
     }
 
     &.estado-danger {
-      background-color: rgba(255, 62, 62, 0.15);
-      color: #de2a2a;
-      border: 1px solid rgba(255, 62, 62, 0.3);
+      background-color: rgba($katuq-danger, 0.15);
+      color: $katuq-danger;
+      border: 1px solid rgba($katuq-danger, 0.3);
     }
   }
 }
@@ -619,11 +621,11 @@ $border-radius: 8px;
   }
 
   &.alert-info {
-    background-color: rgba(13, 202, 240, 0.15);
+    background-color: rgba($katuq-cyan-500, 0.15);
     color: #087990;
 
     i {
-      color: #0dcaf0;
+      color: $katuq-cyan-500;
     }
   }
 }
@@ -759,7 +761,7 @@ $border-radius: 8px;
 
     &:hover {
       border-color: #8b5cf6 !important;
-      box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+      box-shadow: 0 2px 8px rgba($katuq-primary, 0.15);
     }
 
     .card-body {
@@ -781,16 +783,16 @@ $border-radius: 8px;
       padding: 0.25em 0.5em;
 
       &.bg-success {
-        background-color: #198754 !important;
+        background-color: $katuq-success !important;
       }
 
       &.bg-warning {
-        background-color: #ffc107 !important;
+        background-color: $katuq-warning !important;
         color: #000 !important;
       }
 
       &.bg-info {
-        background-color: #0dcaf0 !important;
+        background-color: $katuq-cyan-500 !important;
         color: #000 !important;
       }
     }
@@ -827,7 +829,7 @@ $border-radius: 8px;
       }
 
       &.text-success {
-        color: #198754 !important;
+        color: $katuq-success !important;
       }
     }
 
@@ -876,7 +878,7 @@ $border-radius: 8px;
       }
 
       &.text-success {
-        color: #198754 !important;
+        color: $katuq-success !important;
       }
     }
 
@@ -892,10 +894,10 @@ $border-radius: 8px;
     border-left: 4px solid;
 
     &.en-ruta {
-      border-left-color: #0dcaf0;
+      border-left-color: $katuq-cyan-500;
 
       .stat-icon {
-        background: linear-gradient(45deg, #0dcaf0, #c4b5fd);
+        background: linear-gradient(45deg, $katuq-cyan-500, $katuq-purple-300);
       }
     }
 
@@ -912,15 +914,15 @@ $border-radius: 8px;
 /* Animaciones para indicadores en tiempo real */
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.7);
+    box-shadow: 0 0 0 0 rgba($katuq-cyan-500, 0.7);
   }
 
   70% {
-    box-shadow: 0 0 0 10px rgba(13, 202, 240, 0);
+    box-shadow: 0 0 0 10px rgba($katuq-cyan-500, 0);
   }
 
   100% {
-    box-shadow: 0 0 0 0 rgba(13, 202, 240, 0);
+    box-shadow: 0 0 0 0 rgba($katuq-cyan-500, 0);
   }
 }
 
@@ -1416,8 +1418,8 @@ $border-radius: 8px;
               }
 
               &:focus-within {
-                box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-                border-color: #8b5cf6;
+                box-shadow: 0 0 0 0.2rem rgba($katuq-primary, 0.25);
+                border-color: $katuq-primary;
               }
 
               .p-inputgroup-addon {
@@ -1545,12 +1547,12 @@ $border-radius: 8px;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: #e3f2fd;
-            color: #1976d2;
+            background: $katuq-purple-50;
+            color: $katuq-primary;
             padding: 0.25rem 0.75rem;
             border-radius: 16px;
             font-size: 0.875rem;
-            border: 1px solid #bbdefb;
+            border: 1px solid $katuq-purple-200;
 
             .status-dot {
               width: 8px;
@@ -1559,19 +1561,19 @@ $border-radius: 8px;
               display: inline-block;
 
               &.status-warning {
-                background: #ff9800;
+                background: $katuq-warning;
               }
 
               &.status-success {
-                background: #4caf50;
+                background: $katuq-success;
               }
 
               &.status-info {
-                background: #2196f3;
+                background: $katuq-primary;
               }
 
               &.status-danger {
-                background: #f44336;
+                background: $katuq-danger;
               }
 
               &.status-secondary {
@@ -1579,18 +1581,18 @@ $border-radius: 8px;
               }
 
               &.status-primary {
-                background: #9c27b0;
+                background: $katuq-purple-600;
               }
 
               &.status-dark {
-                background: #343a40;
+                background: $katuq-gray-800;
               }
             }
 
             .tag-remove {
               background: none;
               border: none;
-              color: #1976d2;
+              color: $katuq-primary;
               padding: 0;
               margin-left: 0.25rem;
               width: 16px;
@@ -1602,7 +1604,7 @@ $border-radius: 8px;
               transition: all 0.2s ease;
 
               &:hover {
-                background: #1976d2;
+                background: $katuq-danger;
                 color: white;
               }
             }
@@ -1647,19 +1649,19 @@ $border-radius: 8px;
     display: inline-block;
 
     &.status-warning {
-      background: #ff9800;
+      background: $katuq-warning;
     }
 
     &.status-success {
-      background: #4caf50;
+      background: $katuq-success;
     }
 
     &.status-info {
-      background: #2196f3;
+      background: $katuq-primary;
     }
 
     &.status-danger {
-      background: #f44336;
+      background: $katuq-danger;
     }
 
     &.status-secondary {
@@ -1667,11 +1669,11 @@ $border-radius: 8px;
     }
 
     &.status-primary {
-      background: #9c27b0;
+      background: $katuq-purple-600;
     }
 
     &.status-dark {
-      background: #343a40;
+      background: $katuq-gray-800;
     }
   }
 }
@@ -1817,7 +1819,7 @@ $border-radius: 8px;
     font-size: 0.9rem;
 
     i {
-      color: #2196F3;
+      color: $katuq-primary;
     }
   }
 
@@ -1966,122 +1968,122 @@ $border-radius: 8px;
 
   // Variantes de color
   &.metric-chip-primary {
-    background-color: #e3f2fd;
-    color: #1976d2;
+    background-color: $katuq-purple-50;
+    color: $katuq-primary;
 
     .metric-badge {
-      background-color: #1976d2;
+      background-color: $katuq-primary;
       color: white;
     }
 
     &:hover {
-      background-color: #bbdefb;
-      border-color: #1976d2;
+      background-color: $katuq-purple-200;
+      border-color: $katuq-primary;
     }
   }
 
   &.metric-chip-success {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: $katuq-success-light;
+    color: $katuq-success-text;
 
     .metric-badge {
-      background-color: #2e7d32;
+      background-color: $katuq-success;
       color: white;
     }
 
     &:hover {
       background-color: #c8e6c9;
-      border-color: #2e7d32;
+      border-color: $katuq-success-text;
     }
   }
 
   &.metric-chip-info {
-    background-color: #e1f5fe;
-    color: #0277bd;
+    background-color: $katuq-info-light;
+    color: $katuq-info-text;
 
     .metric-badge {
-      background-color: #0277bd;
+      background-color: $katuq-info-dark;
       color: white;
     }
 
     &:hover {
-      background-color: #b3e5fc;
-      border-color: #0277bd;
+      background-color: $katuq-purple-200;
+      border-color: $katuq-info-text;
     }
   }
 
   &.metric-chip-warning {
-    background-color: #fff3e0;
-    color: #ef6c00;
+    background-color: $katuq-warning-light;
+    color: $katuq-warning-text;
 
     .metric-badge {
-      background-color: #ef6c00;
+      background-color: $katuq-warning;
       color: white;
     }
 
     &:hover {
       background-color: #ffe0b2;
-      border-color: #ef6c00;
+      border-color: $katuq-warning-text;
     }
   }
 
   &.metric-chip-danger {
-    background-color: #ffebee;
-    color: #c62828;
+    background-color: $katuq-danger-light;
+    color: $katuq-danger-text;
 
     .metric-badge {
-      background-color: #c62828;
+      background-color: $katuq-danger;
       color: white;
     }
 
     &:hover {
       background-color: #ffcdd2;
-      border-color: #c62828;
+      border-color: $katuq-danger-text;
     }
   }
 
   &.metric-chip-secondary {
-    background-color: #f5f5f5;
-    color: #616161;
+    background-color: $katuq-gray-100;
+    color: $katuq-gray-600;
 
     .metric-badge {
-      background-color: #616161;
+      background-color: $katuq-gray-600;
       color: white;
     }
 
     &:hover {
-      background-color: #eeeeee;
-      border-color: #616161;
+      background-color: $katuq-gray-200;
+      border-color: $katuq-gray-600;
     }
   }
 
   &.metric-chip-production {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
+    background-color: $katuq-purple-100;
+    color: $katuq-purple-700;
 
     .metric-badge {
-      background-color: #7b1fa2;
+      background-color: $katuq-purple-600;
       color: white;
     }
 
     &:hover {
       background-color: #e1bee7;
-      border-color: #7b1fa2;
+      border-color: $katuq-purple-700;
     }
   }
 
   &.metric-chip-packed {
-    background-color: #e0f2f1;
-    color: #00695c;
+    background-color: $katuq-cyan-50;
+    color: $katuq-cyan-800;
 
     .metric-badge {
-      background-color: #00695c;
+      background-color: $katuq-cyan-700;
       color: white;
     }
 
     &:hover {
       background-color: #b2dfdb;
-      border-color: #00695c;
+      border-color: $katuq-cyan-800;
     }
   }
 }

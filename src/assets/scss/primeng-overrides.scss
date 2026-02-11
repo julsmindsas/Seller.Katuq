@@ -1,7 +1,66 @@
 /**
- * PrimeNG Component Font Size Overrides
- * Este archivo contiene reglas específicas para reducir el tamaño de fuente de todos los componentes PrimeNG
+ * PrimeNG Component Overrides
+ * Font size overrides + Katuq brand color overrides
  */
+@import 'utils/katuq-tokens';
+
+// ==========================================
+// KATUQ BRAND COLOR OVERRIDES FOR PRIMENG
+// ==========================================
+
+// Primary buttons
+.p-button.p-button-primary,
+.p-button:not(.p-button-secondary):not(.p-button-success):not(.p-button-info):not(.p-button-warning):not(.p-button-danger):not(.p-button-help):not(.p-button-text):not(.p-button-outlined):not(.p-button-link) {
+  background: $katuq-primary;
+  border-color: $katuq-primary;
+  &:enabled:hover { background: $katuq-primary-dark; border-color: $katuq-primary-dark; }
+  &:focus { box-shadow: 0 0 0 2px #fff, 0 0 0 4px rgba($katuq-primary, 0.3); }
+}
+
+// Checkbox, radio, toggle switch
+.p-checkbox .p-checkbox-box.p-highlight,
+.p-radiobutton .p-radiobutton-box.p-highlight,
+.p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
+  background: $katuq-primary;
+  border-color: $katuq-primary;
+}
+
+// Focus rings globales
+.p-inputtext:enabled:focus,
+.p-dropdown:not(.p-disabled).p-focus,
+.p-multiselect:not(.p-disabled).p-focus,
+.p-calendar .p-inputtext:enabled:focus {
+  border-color: $katuq-primary;
+  box-shadow: 0 0 0 1px rgba($katuq-primary, 0.2);
+}
+
+// Paginator highlight
+.p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background: rgba($katuq-primary, 0.1);
+  color: $katuq-primary;
+  border-color: rgba($katuq-primary, 0.1);
+}
+
+// Datatable sortable column highlight
+.p-datatable .p-sortable-column.p-highlight {
+  color: $katuq-primary;
+}
+
+// Datatable row selection
+.p-datatable .p-datatable-tbody > tr.p-highlight {
+  background: rgba($katuq-primary, 0.08);
+  color: $katuq-primary-dark;
+}
+
+// TabView active tab
+.p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  color: $katuq-primary;
+  border-color: $katuq-primary;
+}
+
+// ==========================================
+// FONT SIZE OVERRIDES
+// ==========================================
 
 /* === REGLAS GLOBALES === */
 :root {

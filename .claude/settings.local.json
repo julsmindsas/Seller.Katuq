@@ -54,7 +54,10 @@
       "Bash(npx ng serve:*)",
       "Bash(npx ng build:*)",
       "Bash(tasklist:*)",
-      "Bash(if exist \".angular\\\\cache\" rmdir /s /q \".angular\\\\cache\")"
+      "Bash(if exist \".angular\\\\cache\" rmdir /s /q \".angular\\\\cache\")",
+      "Bash(test:*)",
+      "Bash(identify:*)",
+      "Bash(npx sass:*)"
     ]
   }
 }

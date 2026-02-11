@@ -1,10 +1,12 @@
-// Variables
-$primary-color: #2563eb;
-$success-color: #10b981;
-$warning-color: #f59e0b;
-$danger-color: #ef4444;
-$info-color: #0ea5e9;
-$secondary-color: #64748b;
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
+$primary-color: $katuq-primary;
+$success-color: $katuq-success;
+$warning-color: $katuq-warning;
+$danger-color: $katuq-danger;
+$info-color: $katuq-info;
+$secondary-color: $katuq-gray-500;
 $border-radius: 6px;
 
 // Estilos para la tabla
@@ -239,7 +241,7 @@ $border-radius: 6px;
       margin-bottom: 0.5rem;
       margin-top: 0.5rem;
       padding-left: 0.5rem;
-      border-left: 3px solid #a78bfa;
+      border-left: 3px solid $katuq-primary-light;
     }
   }
 }
@@ -272,15 +274,9 @@ $border-radius: 6px;
   text-overflow: ellipsis;
   line-height: 1.2;                 // ✅ Mejor alineación vertical
 
-  // Material Design shadows y transiciones
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  // Transiciones
   transition: all 0.3s ease;
   cursor: default;
-
-  &:hover {
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-    transform: translateY(-1px);
-  }
 
   .status-icon {
     font-size: 0.75rem;
@@ -290,59 +286,52 @@ $border-radius: 6px;
 
   // Estados de Pago y Proceso - Diseño Cuadrado con Acento Inferior
   &.badge-success {
-    background-color: #4CAF50;
-    color: white;
-    border-bottom: 2px solid #388E3C;
-    border-left: 1px solid #388E3C;
-    .status-icon { color: rgba(255, 255, 255, 0.9); }
+    background-color: $badge-entregado-bg;
+    color: $badge-entregado-text;
+    border: 1px solid $badge-entregado-border;
+    .status-icon { color: $badge-entregado-text; }
   }
 
   &.badge-warning {
-    background-color: #FF9800;
-    color: white;
-    border-bottom: 2px solid #F57C00;
-    border-left: 1px solid #F57C00;
-    .status-icon { color: rgba(255, 255, 255, 0.9); }
+    background-color: $badge-paradespachar-bg;
+    color: $badge-paradespachar-text;
+    border: 1px solid $badge-paradespachar-border;
+    .status-icon { color: $badge-paradespachar-text; }
   }
 
   &.badge-danger {
-    background-color: #F44336;
-    color: white;
-    border-bottom: 2px solid #C62828;
-    border-left: 1px solid #C62828;
-    .status-icon { color: rgba(255, 255, 255, 0.9); }
+    background-color: $badge-rechazado-bg;
+    color: $badge-rechazado-text;
+    border: 1px solid $badge-rechazado-border;
+    .status-icon { color: $badge-rechazado-text; }
   }
 
   &.badge-info {
-    background-color: #2196F3;
-    color: white;
-    border-bottom: 2px solid #1565C0;
-    border-left: 1px solid #1565C0;
-    .status-icon { color: rgba(255, 255, 255, 0.9); }
+    background-color: $badge-despachado-bg;
+    color: $badge-despachado-text;
+    border: 1px solid $badge-despachado-border;
+    .status-icon { color: $badge-despachado-text; }
   }
 
   &.badge-primary {
-    background-color: $primary-color;
-    color: white;
-    border-bottom: 2px solid darken($primary-color, 15%);
-    border-left: 1px solid darken($primary-color, 15%);
-    .status-icon { color: rgba(255, 255, 255, 0.9); }
+    background-color: $badge-producido-bg;
+    color: $badge-producido-text;
+    border: 1px solid $badge-producido-border;
+    .status-icon { color: $badge-producido-text; }
   }
 
   &.badge-secondary {
-    background-color: #607D8B;
-    color: white;
-    border-bottom: 2px solid #455A64;
-    border-left: 1px solid #455A64;
-    .status-icon { color: rgba(255, 255, 255, 0.9); }
+    background-color: $badge-sinproducir-bg;
+    color: $badge-sinproducir-text;
+    border: 1px solid $badge-sinproducir-border;
+    .status-icon { color: $badge-sinproducir-text; }
   }
   
   &.badge-dark {
-    background-color: #424242;
-    color: white;
-    border-bottom: 2px solid #212121;
-    border-left: 1px solid #212121;
-    .status-icon { color: rgba(255, 255, 255, 0.9); }
+    background-color: $badge-cerrado-bg;
+    color: $badge-cerrado-text;
+    border: 1px solid $badge-cerrado-border;
+    .status-icon { color: $badge-cerrado-text; }
   }
 }
 
@@ -429,7 +418,7 @@ $border-radius: 6px;
   
   .pi {
     font-size: 0.875rem;
-    color: #424242;
+    color: $katuq-gray-700;
   }
 }
 
@@ -489,21 +478,21 @@ $border-radius: 6px;
     }
     
     &.p-button-info {
-      border-color: #2196F3 !important;
-      color: #2196F3 !important;
-      
+      border-color: $katuq-primary !important;
+      color: $katuq-primary !important;
+
       &:hover {
-        background-color: #2196F3 !important;
+        background-color: $katuq-primary !important;
         color: white !important;
       }
     }
     
     &.p-button-success {
-      border-color: #4CAF50 !important;
-      color: #4CAF50 !important;
-      
+      border-color: $katuq-success !important;
+      color: $katuq-success !important;
+
       &:hover {
-        background-color: #4CAF50 !important;
+        background-color: $katuq-success !important;
         color: white !important;
       }
     }
@@ -524,10 +513,10 @@ $border-radius: 6px;
     }
     
     &.p-button-secondary {
-      color: #424242 !important;
-      
+      color: $katuq-gray-700 !important;
+
       &:hover {
-        background-color: rgba(66, 66, 66, 0.04) !important;
+        background-color: rgba($katuq-gray-700, 0.04) !important;
       }
     }
   }
@@ -1010,15 +999,15 @@ $border-radius: 6px;
 
     // Primary button (Tracking) - SOLID COLOR, BETTER CONTRAST
     &.p-button-primary {
-      background: #2563eb !important; // Katuq primary blue - solid color
-      border: 1px solid #2563eb !important;
+      background: $katuq-primary !important;
+      border: 1px solid $katuq-primary !important;
       color: #ffffff !important; // Ensure white text for contrast
 
       &:hover:not(:disabled) {
-        background: #1d4ed8 !important; // Darker on hover
-        border-color: #1d4ed8 !important;
+        background: $katuq-primary-dark !important;
+        border-color: $katuq-primary-dark !important;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 4px 12px rgba($katuq-primary, 0.25);
       }
 
       &:active:not(:disabled) {
@@ -1028,28 +1017,28 @@ $border-radius: 6px;
       // Outlined variant
       &.p-button-outlined {
         background: transparent !important;
-        color: #2563eb !important;
-        border: 1px solid #2563eb !important;
+        color: $katuq-primary !important;
+        border: 1px solid $katuq-primary !important;
 
         &:hover:not(:disabled) {
-          background: rgba(37, 99, 235, 0.08) !important;
-          border-color: #1d4ed8 !important;
-          color: #1d4ed8 !important;
+          background: rgba($katuq-primary, 0.08) !important;
+          border-color: $katuq-primary-dark !important;
+          color: $katuq-primary-dark !important;
         }
       }
     }
 
     // Warning button (Cancel) - BETTER CONTRAST WITH WHITE TEXT
     &.p-button-warning {
-      background: #f59e0b !important; // Katuq warning amber - solid color
-      border: 1px solid #f59e0b !important;
+      background: $katuq-warning !important;
+      border: 1px solid $katuq-warning !important;
       color: #ffffff !important; // White text for better contrast
 
       &:hover:not(:disabled) {
-        background: #d97706 !important;
-        border-color: #d97706 !important;
+        background: $katuq-warning-dark !important;
+        border-color: $katuq-warning-dark !important;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+        box-shadow: 0 4px 12px rgba($katuq-warning, 0.25);
       }
 
       &:active:not(:disabled) {
@@ -1059,28 +1048,28 @@ $border-radius: 6px;
       // Outlined variant
       &.p-button-outlined {
         background: transparent !important;
-        color: #f59e0b !important;
-        border: 1px solid #f59e0b !important;
+        color: $katuq-warning !important;
+        border: 1px solid $katuq-warning !important;
 
         &:hover:not(:disabled) {
-          background: rgba(245, 158, 11, 0.08) !important;
-          border-color: #d97706 !important;
-          color: #d97706 !important;
+          background: rgba($katuq-warning, 0.08) !important;
+          border-color: $katuq-warning-dark !important;
+          color: $katuq-warning-dark !important;
         }
       }
     }
 
     // Secondary button (Label Download) - BETTER CONTRAST
     &.p-button-secondary {
-      background: #6b7280 !important; // Neutral gray - solid color
-      border: 1px solid #6b7280 !important;
+      background: $katuq-gray-500 !important;
+      border: 1px solid $katuq-gray-500 !important;
       color: #ffffff !important; // White text for contrast
 
       &:hover:not(:disabled) {
-        background: #4b5563 !important;
-        border-color: #4b5563 !important;
+        background: $katuq-gray-600 !important;
+        border-color: $katuq-gray-600 !important;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(107, 114, 128, 0.25);
+        box-shadow: 0 4px 12px rgba($katuq-gray-500, 0.25);
       }
 
       &:active:not(:disabled) {
@@ -1090,13 +1079,13 @@ $border-radius: 6px;
       // Outlined variant
       &.p-button-outlined {
         background: transparent !important;
-        color: #6b7280 !important;
-        border: 1px solid #6b7280 !important;
+        color: $katuq-gray-500 !important;
+        border: 1px solid $katuq-gray-500 !important;
 
         &:hover:not(:disabled) {
-          background: rgba(107, 114, 128, 0.08) !important;
-          border-color: #4b5563 !important;
-          color: #4b5563 !important;
+          background: rgba($katuq-gray-500, 0.08) !important;
+          border-color: $katuq-gray-600 !important;
+          color: $katuq-gray-600 !important;
         }
       }
     }
@@ -1137,9 +1126,9 @@ $border-radius: 6px;
     display: inline-flex;
     align-items: center;
     gap: 4px; // Consistent gap
-    background: #0891b2 !important; // Solid cyan color
+    background: $katuq-cyan-600 !important;
     color: #ffffff !important; // Ensure white text
-    box-shadow: 0 2px 4px rgba(8, 145, 178, 0.2);
+    box-shadow: 0 2px 4px rgba($katuq-cyan-600, 0.2);
     transition: transform 0.2s ease;
 
     .pi {
@@ -1148,7 +1137,7 @@ $border-radius: 6px;
 
     &:hover {
       transform: scale(1.02); // Subtle scale on hover
-      box-shadow: 0 3px 6px rgba(8, 145, 178, 0.3);
+      box-shadow: 0 3px 6px rgba($katuq-cyan-600, 0.3);
     }
   }
 }
@@ -1430,7 +1419,7 @@ $border-radius: 6px;
   box-shadow: none !important;
 
   &:focus {
-    border-color: #2563eb !important;
+    border-color: $katuq-primary !important;
     box-shadow: none !important;
   }
 }

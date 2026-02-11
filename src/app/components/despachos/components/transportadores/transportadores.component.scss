@@ -1,14 +1,17 @@
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
 // Variables para el tema
 :root {
-  --primary-color: #2196f3;
-  --primary-dark: #0d8aee;
-  --secondary-color: #6c757d;
-  --success-color: #28a745;
-  --danger-color: #f44336;
-  --warning-color: #ffc107;
-  --info-color: #c4b5fd;
-  --light-color: #f8f9fa;
-  --dark-color: #343a40;
+  --primary-color: #{$katuq-primary};
+  --primary-dark: #{$katuq-primary-dark};
+  --secondary-color: #{$katuq-gray-500};
+  --success-color: #{$katuq-success};
+  --danger-color: #{$katuq-danger};
+  --warning-color: #{$katuq-warning};
+  --info-color: #{$katuq-purple-300};
+  --light-color: #{$katuq-gray-50};
+  --dark-color: #{$katuq-gray-800};
   --border-radius: 8px;
   --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -184,7 +187,7 @@
     
     &:focus {
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 0.2rem rgba(33, 150, 243, 0.25);
+      box-shadow: 0 0 0 0.2rem rgba($katuq-primary, 0.25);
       background-color: #ffffff;
     }
     
@@ -194,7 +197,7 @@
     
     &.ng-invalid.ng-touched {
       border-color: var(--danger-color);
-      box-shadow: 0 0 0 0.2rem rgba(244, 67, 54, 0.25);
+      box-shadow: 0 0 0 0.2rem rgba($katuq-danger, 0.25);
     }
     
     &.ng-valid.ng-touched {
@@ -249,7 +252,7 @@
     transition: var(--transition);
     
     &:hover {
-      background-color: rgba(33, 150, 243, 0.05);
+      background-color: rgba($katuq-primary, 0.05);
       transform: scale(1.01);
     }
     
@@ -289,12 +292,12 @@
   &.btn-primary {
     background: var(--primary-color);
     color: white;
-    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+    box-shadow: 0 2px 8px rgba($katuq-primary, 0.2);
     
     &:hover {
       background: var(--primary-dark);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+      box-shadow: 0 4px 12px rgba($katuq-primary, 0.3);
     }
     
     &:active {
@@ -323,7 +326,7 @@
       background: var(--primary-color);
       color: white;
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(33, 150, 243, 0.2);
+      box-shadow: 0 2px 8px rgba($katuq-primary, 0.2);
     }
   }
   
@@ -336,7 +339,7 @@
       background: var(--danger-color);
       color: white;
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(244, 67, 54, 0.2);
+      box-shadow: 0 2px 8px rgba($katuq-danger, 0.2);
     }
   }
   
