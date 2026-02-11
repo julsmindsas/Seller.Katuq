@@ -1,10 +1,13 @@
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
 // Variables
-$primary-color: #2196f3;
-$secondary-color: #6c757d;
-$success-color: #4caf50;
-$warning-color: #ff9800;
-$danger-color: #f44336;
-$light-color: #f8f9fa;
+$primary-color: $katuq-primary;
+$secondary-color: $katuq-gray-500;
+$success-color: $katuq-success;
+$warning-color: $katuq-warning;
+$danger-color: $katuq-danger;
+$light-color: $katuq-gray-50;
 
 // Estilos generales
 .modal-header {

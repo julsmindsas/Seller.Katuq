@@ -1,8 +1,11 @@
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
 // Variables
-$primary-color: #2196F3;
-$success-color: #4CAF50;
-$warning-color: #FF9800;
-$danger-color: #f44336;
+$primary-color: $katuq-primary;
+$success-color: $katuq-success;
+$warning-color: $katuq-warning;
+$danger-color: $katuq-danger;
 $border-radius: 6px;
 $transition: all 0.3s ease;
 

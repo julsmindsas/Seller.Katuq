@@ -16,39 +16,15 @@
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- NUEVO: Encabezado del módulo simplificado -->
-                <div class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-1 fw-bold text-primary">
-                            <i class="pi pi-truck me-2"></i>{{ "Gestión de Despachos" | translate }}
-                        </h5>
-                        <p class="text-muted small mb-0">
-                            {{ "Administra pedidos y órdenes de envío" | translate }}
-                        </p>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <!-- Botón de acción principal -->
-                        <button pButton type="button" icon="pi pi-send" label="{{ 'Generar Orden' | translate }}" class="p-button-primary p-button-sm d-none d-lg-flex" (click)="openModal(generarOrdenEnvioModal)"></button>
-                        <!-- Menú de acciones secundarias -->
-                        <p-splitButton label="{{ 'Acciones' | translate }}" icon="pi pi-cog" (onClick)="mostrarRecomendacionesOptimizacion()" [model]="accionesMenu" styleClass="p-button-secondary p-button-sm p-button-outlined d-none d-lg-flex"></p-splitButton>
-                        <!-- Botón para menú en móvil -->
-                        <div class="d-lg-none">
-                            <button pButton type="button" icon="pi pi-ellipsis-v" class="p-button-secondary p-button-sm" (click)="menuAcciones.toggle($event)"></button>
-                            <p-menu #menuAcciones [model]="accionesMenu" [popup]="true"></p-menu>
-                        </div>
-                    </div>
-                </div>
-
-
                 <!-- Indicador de progreso de geocodificación -->
-                <div class="px-4 py-2 bg-info text-white" *ngIf="geocodingInProgress">
+                <div class="px-3 py-1 bg-info text-white" *ngIf="geocodingInProgress">
                     <div class="d-flex align-items-center">
                         <i class="pi pi-spin pi-spinner me-2"></i>
                         <div class="flex-grow-1">
                             <small class="fw-bold">{{ 'Geocodificando direcciones...' | translate }}</small>
-                            <div class="progress bg-white bg-opacity-25 mt-1" style="height: 4px;">
-                                <div class="progress-bar bg-white" 
-                                     [style.width.%]="geocodingProgress" 
+                            <div class="progress bg-white bg-opacity-25 mt-1" style="height: 3px;">
+                                <div class="progress-bar bg-white"
+                                     [style.width.%]="geocodingProgress"
                                      role="progressbar">
                                 </div>
                             </div>
@@ -57,13 +33,12 @@
                     </div>
                 </div>
 
-                <!-- NUEVO: Contenido principal con Pestañas -->
+                <!-- Pestañas -->
                 <p-tabView styleClass="modern-tabs" (onChange)="onTabChange($event)">
                     <p-tabPanel>
                         <ng-template pTemplate="header">
-                            <i class="pi pi-list me-2"></i>
+                            <i class="pi pi-list me-1"></i>
                             <span>{{ 'Pedidos' | translate }}</span>
-                            <span *ngIf="orders.length > 0" class="p-badge ms-2" [value]="orders.length"></span>
                         </ng-template>
                         
                         <!-- Filtros compartidos de Katuq -->
@@ -71,7 +46,7 @@
                           [showDateFilters]="true"
                           [showStatusFilters]="true"
                           [showExportButton]="true"
-                          [showColumnSelector]="true"
+                          [showColumnSelector]="false"
                           [searchPlaceholder]="'Buscar pedido por número...'"
                           [filterButtonLabel]="'Filtrar'"
                           [exportButtonTooltip]="'Exportar Excel'"
@@ -99,9 +74,9 @@
                           (resetColumns)="resetColumnConfig()">
                         </app-shared-filters>
 
-                        <!-- Panel de Métricas Estilo Breadcrumb (movido debajo de filtros) -->
-                        <div class="metrics-breadcrumb-panel bg-white border-top border-bottom py-2 px-3">
-                            <div class="d-flex flex-wrap align-items-center gap-2">
+                        <!-- Panel de Métricas + Acciones -->
+                        <div class="metrics-actions-bar">
+                            <div class="metrics-chips-row">
                                 <!-- Total Pedidos -->
                                 <div class="metric-chip metric-chip-primary"
                                      (click)="onMetricClick('all')"
@@ -112,7 +87,6 @@
                                     <span class="metric-badge">{{ metricasLogistica?.totalPedidos || orders.length }}</span>
                                 </div>
 
-                                <span class="separator">/</span>
 
                                 <!-- En Producción -->
                                 <div class="metric-chip metric-chip-production metric-chip-compact"
@@ -125,7 +99,6 @@
                                     <span class="metric-badge">{{ metricasLogistica?.enProduccion || contarPedidosPorEstado('EnProduccion') }}</span>
                                 </div>
 
-                                <span class="separator">/</span>
 
                                 <!-- Empacados -->
                                 <div class="metric-chip metric-chip-packed metric-chip-compact"
@@ -138,7 +111,6 @@
                                     <span class="metric-badge">{{ metricasLogistica?.empacados || contarPedidosPorEstado('Empacado') }}</span>
                                 </div>
 
-                                <span class="separator">/</span>
 
                                 <!-- Para Despacho -->
                                 <div class="metric-chip metric-chip-warning metric-chip-compact"
@@ -151,7 +123,6 @@
                                     <span class="metric-badge">{{ metricasLogistica?.paraDespachar || metricasLogistica?.pedidosDespacho || 0 }}</span>
                                 </div>
 
-                                <span class="separator">/</span>
 
                                 <!-- En Ruta -->
                                 <div class="metric-chip metric-chip-info metric-chip-compact"
@@ -164,7 +135,6 @@
                                     <span class="metric-badge">{{ metricasLogistica?.enRuta || metricasLogistica?.pedidosEnRuta || 0 }}</span>
                                 </div>
 
-                                <span class="separator">/</span>
 
                                 <!-- Entregados -->
                                 <div class="metric-chip metric-chip-success metric-chip-compact"
@@ -177,8 +147,8 @@
                                     <span class="metric-badge">{{ metricasLogistica?.entregados || contarPedidosPorEstado('Entregado') }}</span>
                                 </div>
 
-                                <!-- Divider -->
-                                <div class="metric-divider"></div>
+                                <!-- Separador visual entre estados y alertas -->
+                                <div class="metric-divider" style="display:none"></div>
 
                                 <!-- Urgentes -->
                                 <div class="metric-chip metric-chip-danger metric-chip-compact"
@@ -199,6 +169,14 @@
                                     <span class="metric-label-short">PC</span>
                                     <span class="metric-label-full">{{ "Por Cobrar" | translate }}</span>
                                     <span class="metric-badge">{{ metricasLogistica?.porCobrar || calculateFaltaPorPagar() | currency:'USD':'symbol':'1.0-0' }}</span>
+                                </div>
+                            </div>
+                            <div class="actions-group">
+                                <button pButton type="button" icon="pi pi-send" label="{{ 'Generar Orden' | translate }}" class="p-button-primary p-button-sm d-none d-md-flex" (click)="openModal(generarOrdenEnvioModal)"></button>
+                                <p-splitButton label="{{ 'Acciones' | translate }}" icon="pi pi-cog" (onClick)="mostrarRecomendacionesOptimizacion()" [model]="accionesMenu" styleClass="p-button-secondary p-button-sm p-button-outlined d-none d-md-flex"></p-splitButton>
+                                <div class="d-md-none">
+                                    <button pButton type="button" icon="pi pi-ellipsis-v" class="p-button-text p-button-sm" (click)="menuAcciones.toggle($event)"></button>
+                                    <p-menu #menuAcciones [model]="accionesMenu" [popup]="true"></p-menu>
                                 </div>
                             </div>
                         </div>
@@ -224,6 +202,9 @@
                                 (onTrackShipment)="trackShipment($event)"
                                 (onFindShipment)="findShipment($event)"
                                 (onLazyLoad)="onTableLazyLoad($event)"
+                                (onBatchAction)="onBatchAction($event)"
+                                (onQuickStateChange)="onQuickStateChange($event)"
+                                (onBatchStateChange)="onBatchStateChange($event)"
                             ></app-tabla-pedidos>
                         </div>
                     </p-tabPanel>
@@ -302,6 +283,13 @@
     </app-transportadores>
 </ng-template>
 
+<!-- Modal para reglas de despacho -->
+<app-dispatch-rules-config
+    [(visible)]="showDispatchRulesConfig"
+    [vendors]="vendors"
+    (onClose)="showDispatchRulesConfig = false"
+></app-dispatch-rules-config>
+
 <!-- Modal de contenido para imprimir PDF -->
 <ng-template #modalContent let-modal>
     <app-imprimir-pdf
@@ -323,6 +311,8 @@
         [ordenesExistentes]="dispatchOrders"
         [isGeneratingPDF]="isGeneratingPDF"
         [pdfProgress]="pdfProgress"
+        [triggerTransportadora]="triggerTransportadoraCounter"
+        [triggerResetSaving]="triggerResetSavingCounter"
         (onClose)="modal.dismiss('Cross click')"
         (onSave)="onSubmitOrdenEnvio($event)"
         (onSaveAndDispatch)="onGuardarYDespacharOrden($event)"
@@ -347,6 +337,8 @@
         [ordenesExistentes]="dispatchOrders"
         [isGeneratingPDF]="isGeneratingPDF"
         [pdfProgress]="pdfProgress"
+        [triggerTransportadora]="triggerTransportadoraCounter"
+        [triggerResetSaving]="triggerResetSavingCounter"
         (onClose)="modal.dismiss('Cross click')"
         (onSave)="onSubmitOrdenEnvio($event)"
         (onSaveAndDispatch)="onGuardarYDespacharOrden($event)"
@@ -409,6 +401,16 @@
         </div>
     </div>
 </div>
+
+<!-- Despacho Express Modal -->
+<app-despacho-express-modal
+    [pedidos]="pedidosParaDespachoExpress"
+    [vendors]="vendors"
+    [ordenesExistentes]="dispatchOrders"
+    [visible]="showDespachoExpress"
+    (onClose)="showDespachoExpress = false"
+    (onDispatch)="onDespachoExpressDispatch($event)">
+</app-despacho-express-modal>
 
 <!-- Hidden PDF Template for Printing -->
 <div #pdfTemplateContainer style="position: absolute; left: -9999px; top: -9999px; width: 210mm; visibility: hidden;">

@@ -8,6 +8,7 @@ import { VentasService } from "../../../../shared/services/ventas/ventas.service
 import { IntegrationsService, Integration, IntegrationCategory } from '../../../integrations/integrations.service';
 import { DialogService } from 'primeng/dynamicdialog';
 import { EnviameRatesModalComponent } from '../enviame/rates-modal/enviame-rates-modal.component';
+import { DispatchRulesService } from '../../services/dispatch-rules.service';
 import Swal from "sweetalert2";
 
 interface ColumnDefinition {
@@ -36,6 +37,34 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   @Input() pdfProgress: number = 0;
   @Input() generandoRotuloPara: Set<string> = new Set();
   @Input() ordenesExistentes: any[] = []; // Órdenes del componente padre
+
+  // Signal del padre para abrir modal de transportadora (incrementar el counter para disparar)
+  private _triggerTransportadora: number = -1; // -1 = no inicializado
+  @Input() set triggerTransportadora(value: number) {
+    if (this._triggerTransportadora === -1) {
+      // Primer binding (init del componente) — solo registrar, no actuar
+      this._triggerTransportadora = value;
+      return;
+    }
+    if (value > 0 && value !== this._triggerTransportadora) {
+      this._triggerTransportadora = value;
+      console.log('📡 triggerTransportadora recibido desde el padre:', value);
+      setTimeout(() => this.abrirModalTransportadora(), 50);
+    }
+  }
+
+  // Signal del padre para resetear isSaving (cuando falla el guardado)
+  private _triggerResetSaving: number = -1; // -1 = no inicializado
+  @Input() set triggerResetSaving(value: number) {
+    if (this._triggerResetSaving === -1) {
+      this._triggerResetSaving = value;
+      return;
+    }
+    if (value > 0 && value !== this._triggerResetSaving) {
+      this._triggerResetSaving = value;
+      this.isSaving = false;
+    }
+  }
 
   @Output() onClose = new EventEmitter<void>();
   @Output() onSave = new EventEmitter<any>();
@@ -70,6 +99,9 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   selectedColumns: ColumnDefinition[] = [];
   mostrarPedidosEnOrdenes: boolean = false; // Controla si mostrar pedidos que ya están en órdenes
+  // Mapa ligero: nroPedido -> nroShippingOrder (cargado desde endpoint ultraligero)
+  pedidoRefsMap: Map<string, string> = new Map();
+  private ordenesFullLoaded: boolean = false; // Flag para evitar recargas innecesarias de datos completos
   pedidosMovidos: Map<string, string> = new Map(); // Mapa para rastrear pedidos movidos: nroPedido -> ordenAnterior
   hayPedidosMovidos: boolean = false; // Flag para indicar si hay pedidos movidos
   pedidoSeleccionadoDetalle: Pedido | null = null; // Pedido seleccionado para mostrar detalles
@@ -95,6 +127,9 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   selectedTransporter: string = '';
   isDispatchingShipment: boolean = false;
 
+  // Zone grouping
+  groupByZona: boolean = true;
+
   // Modal específico de opciones Enviame
   showEnviameOptionsModal: boolean = false;
   enviameSelectedOption: 'quote' | 'other' | '' = '';
@@ -105,7 +140,8 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     private logisticaService: LogisticaServiceV2,
     private ventasService: VentasService, // NUEVO - para modo independiente
     private integrationsService: IntegrationsService,
-    private dialogService: DialogService
+    private dialogService: DialogService,
+    private dispatchRulesService: DispatchRulesService
   ) {}
 
   // Computed getter para determinar si estamos en modo edición
@@ -121,17 +157,51 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     this.loadLogisticsIntegrations();
 
     // Detectar modo de operación
+    // Pre-select default shipping method from dispatch rules
+    this.dispatchRulesService.getRules().pipe(takeUntil(this.destroy$)).subscribe(config => {
+      if (config.defaultMetodoEnvio && !this.metodoEnvio) {
+        this.ordenEnvioForm.patchValue({ metodoEnvio: config.defaultMetodoEnvio });
+      }
+    });
+
     if (!this.usarPedidosPadre) {
       // MODO INDEPENDIENTE: Inicializar fechas por defecto y cargar pedidos
       this.inicializarFechasPorDefecto();
       this.configurarSuscripcionesFechas();
 
-      // Cargar órdenes existentes para detectar pedidos duplicados
-      // y permitir mover pedidos entre órdenes
-      this.cargarOrdenesExistentes();
+      // Cargar solo referencias ligeras para validar duplicados (sin batch fetch de pedidos)
+      this.cargarPedidoRefs();
+
+      // Si estamos en modo edición, inicializar metodoEnvio y fechas desde la orden existente
+      if (this.isEditMode && this.nuevaOrdenEnvio) {
+        console.log('📝 MODO INDEPENDIENTE + EDIT: Inicializando desde orden existente');
+        this.metodoEnvio = this.getShippingMethodFromOrder(this.nuevaOrdenEnvio);
+        this.ordenEnvioForm.patchValue({
+          metodoEnvio: this.metodoEnvio,
+        });
+        if (this.nuevaOrdenEnvio.fecha) {
+          const fechaOrden = new Date(this.nuevaOrdenEnvio.fecha);
+          this.ordenEnvioForm.patchValue({
+            fechaInicio: fechaOrden,
+            fechaFin: fechaOrden
+          });
+        }
+        this.ordenEnvioForm.updateValueAndValidity();
+        console.log('📝 Form state after edit init:', {
+          metodoEnvio: this.ordenEnvioForm.get('metodoEnvio')?.value,
+          formValid: this.ordenEnvioForm.valid,
+          pedidos: this.pedidosSeleccionados?.length
+        });
+      }
+
+      // Auto-load pedidos on init (F7 improvement)
+      setTimeout(() => this.filtrarPedidos(), 500);
     } else {
-      // MODO DEPENDIENTE: Funciona como actualmente
-      // NO cargar órdenes aquí - esperar a que se seleccione una fecha
+      // MODO DEPENDIENTE: Usar datos del padre si están disponibles
+      // Construir mapa de refs desde los datos del padre (sin llamada HTTP)
+      if (this.ordenesExistentes && this.ordenesExistentes.length > 0) {
+        this.buildRefsMapFromOrdenesExistentes();
+      }
       // Las órdenes se cargarán cuando:
       // 1. El usuario seleccione una fecha (mediante valueChanges)
       // 2. Si viene en modo edición con fecha precargada
@@ -186,9 +256,9 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
         // Refrescar la lista de pedidos disponibles
         this.actualizarPedidosDisponibles();
 
-        // Cargar órdenes existentes ahora que tenemos fecha
-        if (!this.ordenesExistentes || this.ordenesExistentes.length === 0) {
-          this.cargarOrdenesExistentes();
+        // Cargar solo refs ligeras si no hay datos del padre
+        if (this.pedidoRefsMap.size === 0) {
+          this.cargarPedidoRefs();
         }
       } else {
         // En modo creación, inicializar con valores por defecto
@@ -429,37 +499,50 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     const fechaFinStr = formatDate(finMes);
 
     
+    // Usar datos del padre si ya están disponibles (evita llamada HTTP duplicada)
+    if (this.usarPedidosPadre && this.ordenesExistentes && this.ordenesExistentes.length > 0) {
+      console.log('✅ Usando órdenes del padre (sin llamada HTTP):', this.ordenesExistentes.length);
+      this.ordenesFullLoaded = true;
+      this.buildRefsMapFromOrdenesExistentes();
+      this.actualizarPedidosDisponibles();
+      return;
+    }
+
     let params: any = {
       page: 1,
       limit: 50,
-      fields: 'full', // Solo campos necesarios para validación,
-      estado: 'Despachado',
+      fields: 'full', // Full: necesario para mostrar pedidos de otras órdenes en el toggle
       fechaInicio: fechaInicioStr,
       fechaFin: fechaFinStr
     };
-    
-    console.log('Cargando órdenes con parámetros:', params);
-    
-    this.logisticaService.getShippingOrdersPaginated(params).subscribe(
+
+    console.log('🔄 Cargando órdenes para merge (minimal):', params);
+
+    this.logisticaService.getShippingOrdersPaginated(params)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(
       (response) => {
         // Manejar respuesta paginada
         if (response && response.data) {
           this.ordenesExistentes = response.data;
         } else if (Array.isArray(response)) {
-          // Fallback para formato antiguo
           this.ordenesExistentes = response;
         } else {
           this.ordenesExistentes = [];
         }
+        this.ordenesFullLoaded = true;
+        // Actualizar refs map con los datos completos
+        this.buildRefsMapFromOrdenesExistentes();
         console.log(
-          "Órdenes existentes cargadas (optimizado):",
+          "✅ Órdenes cargadas para merge:",
           this.ordenesExistentes.length,
         );
+        this.actualizarPedidosDisponibles();
       },
       (error) => {
         console.error("Error al cargar órdenes existentes:", error);
         this.ordenesExistentes = [];
-        
+
         // Intentar con el método optimizado como fallback
         console.log("Intentando cargar con paginación...");
         this.cargarOrdenesConPaginacion();
@@ -476,7 +559,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       page: 1,
       limit: 100,
       fields: 'minimal' // Solo necesitamos info básica para validación
-    }).subscribe(
+    }).pipe(takeUntil(this.destroy$)).subscribe(
       (response) => {
         if (response && response.data) {
           this.ordenesExistentes = response.data;
@@ -518,6 +601,139 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * Carga solo las referencias ligeras (nroShippingOrder + pedidoIds) desde el endpoint ultraligero.
+   * Costo: Solo N lecturas de shipping_orders (SIN batch fetch de pedidos completos).
+   */
+  private cargarPedidoRefs(): void {
+    const fechaFin = this.ordenEnvioForm.get('fechaFin')?.value;
+    const fecha = fechaFin ? new Date(fechaFin) : new Date();
+
+    const inicioMes = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
+    const finMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0);
+
+    const formatDate = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    this.logisticaService.getShippingOrderPedidoRefs({
+      fechaInicio: formatDate(inicioMes),
+      fechaFin: formatDate(finMes)
+    }).pipe(takeUntil(this.destroy$)).subscribe(
+      (refs) => {
+        this.pedidoRefsMap.clear();
+        (refs || []).forEach(ref => {
+          const nroOrden = String(ref.nroShippingOrder || '');
+          (ref.pedidoIds || []).forEach(pedidoId => {
+            // Excluir la orden actual en modo edición
+            if (this.isEditMode && nroOrden === String(this.nroShippingOrder)) {
+              return;
+            }
+            this.pedidoRefsMap.set(String(pedidoId), nroOrden);
+          });
+        });
+        console.log(`📋 Refs ligeras cargadas: ${this.pedidoRefsMap.size} pedidos en ${refs?.length || 0} órdenes`);
+        // Refrescar lista disponible con la info de refs
+        this.actualizarPedidosDisponibles();
+      },
+      (error) => {
+        console.warn('⚠️ Endpoint pedido-refs no disponible, usando fallback minimal:', error.status);
+        // Fallback: construir refs desde datos del padre si hay
+        if (this.ordenesExistentes?.length > 0) {
+          this.buildRefsMapFromOrdenesExistentes();
+          this.actualizarPedidosDisponibles();
+        } else {
+          // Fallback 2: cargar con endpoint existente (fields: minimal)
+          this.cargarRefsDesdeMinimal();
+        }
+      }
+    );
+  }
+
+  /**
+   * Fallback: Construye pedidoRefsMap desde el endpoint paginado con fields: 'minimal'.
+   * Más costoso que pedido-refs pero funciona si el endpoint nuevo no está desplegado aún.
+   */
+  private cargarRefsDesdeMinimal(): void {
+    const fechaFin = this.ordenEnvioForm.get('fechaFin')?.value;
+    const fecha = fechaFin ? new Date(fechaFin) : new Date();
+    const inicioMes = new Date(fecha.getFullYear(), fecha.getMonth(), 1);
+    const finMes = new Date(fecha.getFullYear(), fecha.getMonth() + 1, 0);
+
+    const formatDate = (d: Date, isStart: boolean = false) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return isStart ? `${y}-${m}-${day}T00:00:00.000Z` : `${y}-${m}-${day}T23:59:59.999Z`;
+    };
+
+    this.logisticaService.getShippingOrdersPaginated({
+      page: 1,
+      limit: 50,
+      fields: 'minimal',
+      fechaInicio: formatDate(inicioMes, true),
+      fechaFin: formatDate(finMes)
+    }).pipe(takeUntil(this.destroy$)).subscribe(
+      (response) => {
+        const ordenes = response?.data || (Array.isArray(response) ? response : []);
+        this.pedidoRefsMap.clear();
+        ordenes.forEach((orden: any) => {
+          const nroOrden = String(orden.nroShippingOrder || '');
+          if (this.isEditMode && nroOrden === String(this.nroShippingOrder)) return;
+          const pedidos = orden.pedidos || [];
+          pedidos.forEach((p: any) => {
+            const nroPedido = String(p.nroPedido || '');
+            if (nroPedido) this.pedidoRefsMap.set(nroPedido, nroOrden);
+          });
+        });
+        console.log(`📋 Refs (fallback minimal): ${this.pedidoRefsMap.size} pedidos`);
+        this.actualizarPedidosDisponibles();
+      },
+      (error) => {
+        console.error('Error en fallback minimal:', error);
+      }
+    );
+  }
+
+  /**
+   * Construye el mapa de refs desde los datos que ya tiene el padre (sin llamada HTTP).
+   */
+  private buildRefsMapFromOrdenesExistentes(): void {
+    this.pedidoRefsMap.clear();
+    (this.ordenesExistentes || []).forEach(orden => {
+      const nroOrden = String(this.getNumeroOrdenFromObject(orden));
+      // Excluir la orden actual en modo edición
+      if (this.isEditMode && nroOrden === String(this.nroShippingOrder)) {
+        return;
+      }
+      const pedidos = this.getPedidosFromOrden(orden);
+      pedidos.forEach((p: any) => {
+        const nroPedido = String(p.nroPedido || p.numero || p.id || p.orderNumber || '');
+        if (nroPedido) {
+          this.pedidoRefsMap.set(nroPedido, nroOrden);
+        }
+      });
+    });
+    console.log(`📋 Refs construidas desde padre: ${this.pedidoRefsMap.size} pedidos`);
+  }
+
+  /**
+   * Handler del toggle "Mostrar en órdenes".
+   * Solo carga datos completos cuando se activa (lazy load).
+   */
+  onToggleMostrarPedidosEnOrdenes(): void {
+    if (this.mostrarPedidosEnOrdenes && !this.ordenesFullLoaded) {
+      // Primera vez que se activa: cargar datos completos para poder mostrar pedidos de otras órdenes
+      console.log('🔄 Toggle activado: cargando órdenes completas para merge...');
+      this.cargarOrdenesExistentes();
+    } else {
+      this.actualizarPedidosDisponibles();
+    }
+  }
+
   actualizarPedidosDisponibles(): void {
     this.pedidosDisponibles = this.loadPedidosDisponibles();
   }
@@ -543,30 +759,6 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
             (p) => p.nroPedido === o.nroPedido,
           );
 
-          // Verificar todas las condiciones
-          const estadoValido =
-            o.estadoProceso !== EstadoProceso.Entregado &&
-            o.estadoProceso !== EstadoProceso.Despachado &&
-            o.estadoProceso !== EstadoProceso.EnProduccion &&
-            o.estadoProceso !== EstadoProceso.SinProducir;
-          let formaEntregaValida = false;
-          try {
-            if (o.carrito && 
-                Array.isArray(o.carrito) && 
-                o.carrito.length > 0 &&
-                o.carrito[0] &&
-                o.carrito[0].configuracion &&
-                o.carrito[0].configuracion.datosEntrega &&
-                o.carrito[0].configuracion.datosEntrega.formaEntrega) {
-              formaEntregaValida = o.carrito[0].configuracion.datosEntrega.formaEntrega
-                .toLocaleUpperCase()
-                .includes("DOMIC");
-            }
-          } catch (formaEntregaError) {
-            console.error("Error verificando forma entrega para pedido:", o.nroPedido, formaEntregaError);
-            formaEntregaValida = false;
-          }
-
           // Verificar si el pedido existe en otra orden
           let existeEnOtraOrden = false;
           try {
@@ -579,6 +771,53 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
           // Si no queremos mostrar pedidos en órdenes y este pedido está en una orden, ocultarlo
           if (!this.mostrarPedidosEnOrdenes && existeEnOtraOrden) {
             return false;
+          }
+
+          // Verificar estado del pedido
+          const estadoValido =
+            o.estadoProceso !== EstadoProceso.Entregado &&
+            o.estadoProceso !== EstadoProceso.Despachado &&
+            o.estadoProceso !== EstadoProceso.EnProduccion &&
+            o.estadoProceso !== EstadoProceso.SinProducir;
+
+          // Pedidos que vienen de otra orden (toggle activo):
+          // Saltar formaEntregaValida (vienen sin carrito en modo minimal).
+          // Solo excluir Despachados y respetar rango de fechaEntrega.
+          if (this.mostrarPedidosEnOrdenes && existeEnOtraOrden) {
+            if (o.estadoProceso === EstadoProceso.Despachado || yaSeleccionado) {
+              return false;
+            }
+            // Respetar fechaEntrega dentro del rango seleccionado
+            const fechaInicio = this.ordenEnvioForm.get('fechaInicio')?.value;
+            const fechaFin = this.ordenEnvioForm.get('fechaFin')?.value;
+            if (fechaInicio && fechaFin && o.fechaEntrega) {
+              const entrega = new Date(o.fechaEntrega).getTime();
+              const inicio = new Date(fechaInicio).getTime();
+              const fin = new Date(fechaFin).getTime();
+              if (entrega < inicio || entrega > fin) {
+                return false;
+              }
+            }
+            return true;
+          }
+
+          // Verificar formaEntrega para pedidos normales (no en órdenes)
+          let formaEntregaValida = false;
+          try {
+            if (o.carrito &&
+                Array.isArray(o.carrito) &&
+                o.carrito.length > 0 &&
+                o.carrito[0] &&
+                o.carrito[0].configuracion &&
+                o.carrito[0].configuracion.datosEntrega &&
+                o.carrito[0].configuracion.datosEntrega.formaEntrega) {
+              formaEntregaValida = o.carrito[0].configuracion.datosEntrega.formaEntrega
+                .toLocaleUpperCase()
+                .includes("DOMIC");
+            }
+          } catch (formaEntregaError) {
+            console.error("Error verificando forma entrega para pedido:", o.nroPedido, formaEntregaError);
+            formaEntregaValida = false;
           }
 
           return (
@@ -600,6 +839,15 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
           return false;
         }
       });
+
+      // Assign zonaKey and sort by zone for grouping
+      pedidosFiltrados.forEach(p => {
+        p['zonaKey'] = this.getZonaKey(p);
+      });
+
+      if (this.groupByZona) {
+        pedidosFiltrados.sort((a, b) => (a['zonaKey'] as string).localeCompare(b['zonaKey'] as string));
+      }
 
       return pedidosFiltrados;
     } catch (err) {
@@ -666,6 +914,29 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     }
   }
 
+  // ===== ZONE GROUPING METHODS =====
+
+  getZonaKey(pedido: any): string {
+    const ciudad = pedido.envio?.ciudad || pedido.ciudad || 'Sin ciudad';
+    const zona = pedido.envio?.zonaCobro || pedido.zonaCobro || 'Sin zona';
+    return `${ciudad} - ${zona}`;
+  }
+
+  addZoneGroup(zonaKey: string): void {
+    const pedidosInZone = this.pedidosDisponibles.filter(p => this.getZonaKey(p) === zonaKey);
+    for (const pedido of pedidosInZone) {
+      this.onAddOrder.emit(pedido);
+    }
+    this.actualizarPedidosDisponibles();
+  }
+
+  addAllPedidos(): void {
+    for (const pedido of [...this.pedidosDisponibles]) {
+      this.onAddOrder.emit(pedido);
+    }
+    this.actualizarPedidosDisponibles();
+  }
+
   agregarPedido(pedido: Pedido): void {
     this.onAddOrder.emit(pedido);
     // Actualizar pedidos disponibles después de agregar uno
@@ -673,12 +944,32 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   }
 
   retirarPedido(pedido: Pedido): void {
+    console.log('🗑️ retirarPedido INICIO:', {
+      nroPedido: pedido.nroPedido,
+      pedidosAntes: this.pedidosSeleccionados.length,
+      isSaving: this.isSaving,
+      formInvalid: this.ordenEnvioForm?.invalid,
+      formErrors: this.ordenEnvioForm?.errors
+    });
+
     // Si es un pedido movido, quitarlo del tracking
     if (pedido.nroPedido && this.pedidosMovidos.has(pedido.nroPedido)) {
       this.pedidosMovidos.delete(pedido.nroPedido);
       // Actualizar flag de pedidos movidos
       this.hayPedidosMovidos = this.pedidosMovidos.size > 0;
     }
+
+    // Remover localmente para feedback inmediato en la UI
+    this.pedidosSeleccionados = this.pedidosSeleccionados.filter(
+      (p) => p.nroPedido !== pedido.nroPedido
+    );
+
+    console.log('🗑️ retirarPedido DESPUÉS de filter:', {
+      pedidosDespués: this.pedidosSeleccionados.length,
+      isSaving: this.isSaving,
+      formInvalid: this.ordenEnvioForm?.invalid,
+      botonGuardarDisabled: this.ordenEnvioForm?.invalid || this.pedidosSeleccionados.length === 0 || this.isSaving
+    });
 
     this.onRemoveOrder.emit(pedido);
     // Actualizar pedidos disponibles después de retirar uno
@@ -695,6 +986,10 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       this.totalPedidosEncontrados = 0;
     }
 
+    // Resetear estado de carga completa para próxima apertura
+    this.ordenesFullLoaded = false;
+    this.pedidoRefsMap.clear();
+
     this.onClose.emit();
   }
 
@@ -706,7 +1001,8 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   guardarOrden(): void {
     // Prevenir múltiples clics
-    if (this.isSaving || this.ordenEnvioForm.invalid || this.pedidosSeleccionados.length === 0) {
+    // En modo edición, permitir guardar con 0 pedidos (el usuario quitó pedidos de la orden)
+    if (this.isSaving || this.ordenEnvioForm.invalid || (!this.isEditMode && this.pedidosSeleccionados.length === 0)) {
       return;
     }
 
@@ -924,6 +1220,8 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
    * Ejecuta el guardado y despacho con transportadora
    */
   private ejecutarGuardarYDespacharConTransportadora(): void {
+    this.isSaving = true;
+
     const ordenData = {
       ...this.ordenEnvioForm.value,
       pedidos: this.pedidosSeleccionados,
@@ -934,17 +1232,13 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
           ordenAnterior,
         }),
       ),
-      autoDispatch: true, // Flag para indicar que se debe despachar automáticamente
-      autoOpenTransporterFlow: true, // Flag para abrir el flujo de transportadora
+      autoDispatch: true,
+      // Usar el patrón callback del padre en vez de setTimeout
+      abrirModalTransportadora: true,
     };
 
-    // Guardar primero, luego abrir flujo de transportadora
+    // Guardar primero — el padre llamará abrirModalTransportadora() cuando termine
     this.onSave.emit(ordenData);
-
-    // Después de guardar, abrir el flujo de despacho según la transportadora
-    setTimeout(() => {
-      this.iniciarProcesoDespachoTransportadora();
-    }, 500);
   }
 
   /**
@@ -1019,6 +1313,12 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
    * Abrir modal de Enviame para despacho
    */
   private openEnviameRatesModalForDispatch(): void {
+    if (!this.pedidosSeleccionados || this.pedidosSeleccionados.length === 0) {
+      Swal.fire({ icon: 'warning', title: 'Sin pedidos', text: 'Agrega al menos un pedido antes de despachar con Enviame.', confirmButtonText: 'Entendido' });
+      this.isSaving = false;
+      return;
+    }
+
     const orderData = {
       nroShippingOrder: this.nroShippingOrder || 'TEMP',
       fecha: this.ordenEnvioForm.get('fechaFin')?.value || new Date(),
@@ -1039,7 +1339,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       styleClass: 'enviame-rates-compact-modal'
     });
 
-    modalRef.onClose.subscribe((result) => {
+    modalRef.onClose.pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (result && result.confirmed) {
         console.log('✅ Despacho con Enviame completado:', result);
 
@@ -1264,73 +1564,71 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   }
 
   // Método para verificar si un pedido ya existe en una orden
+  // Optimizado: usa el mapa ligero (O(1)) en vez de iterar todas las órdenes
+  pedidoYaSeleccionado(pedido: Pedido): boolean {
+    if (!pedido?.nroPedido) return false;
+    return this.pedidosSeleccionados.some(p => p.nroPedido === pedido.nroPedido);
+  }
+
   pedidoExisteEnOrden(pedido: Pedido): boolean {
-    // Usar órdenes del padre si están disponibles, sino las cargadas localmente
-    const ordenesParaVerificar = (this.ordenesExistentes && this.ordenesExistentes.length > 0) 
-      ? this.ordenesExistentes 
+    if (!pedido?.nroPedido) return false;
+
+    // Búsqueda O(1) en el mapa ligero
+    if (this.pedidoRefsMap.size > 0) {
+      return this.pedidoRefsMap.has(String(pedido.nroPedido));
+    }
+
+    // Fallback: iterar ordenesExistentes si el mapa aún no se cargó
+    const ordenesParaVerificar = (this.ordenesExistentes && this.ordenesExistentes.length > 0)
+      ? this.ordenesExistentes
       : [];
-    
-    if (!ordenesParaVerificar || ordenesParaVerificar.length === 0) {
+
+    if (ordenesParaVerificar.length === 0) {
       return false;
     }
 
     try {
-      const existe = ordenesParaVerificar.some((orden) => {
-        // Obtener el número de orden correctamente - maneja múltiples formatos
+      return ordenesParaVerificar.some((orden) => {
         const numeroOrden = this.getNumeroOrdenFromObject(orden);
-
-        // Excluir la orden actual si estamos en modo edición
-        if (
-          this.isEditMode &&
-          String(numeroOrden) === String(this.nroShippingOrder)
-        ) {
+        if (this.isEditMode && String(numeroOrden) === String(this.nroShippingOrder)) {
           return false;
         }
-
-        // Verificar si el pedido está en esta orden - maneja múltiples formatos
         const pedidosOrden = this.getPedidosFromOrden(orden);
         return pedidosOrden.some((p: any) => {
-          const nroPedidoOrden =
-            p.nroPedido || p.numero || p.id || p.orderNumber;
+          const nroPedidoOrden = p.nroPedido || p.numero || p.id || p.orderNumber;
           return String(nroPedidoOrden) === String(pedido.nroPedido);
         });
       });
-
-      return existe;
     } catch (error) {
-      console.error(
-        "Error verificando si pedido existe en orden:",
-        error,
-        pedido,
-      );
+      console.error("Error verificando si pedido existe en orden:", error, pedido);
       return false;
     }
   }
 
   // Método para obtener el número de orden donde existe el pedido
+  // Optimizado: usa el mapa ligero (O(1)) primero
   getNumeroOrdenPedido(pedido: Pedido): string {
+    if (!pedido?.nroPedido) return "";
+
+    // Búsqueda O(1) en el mapa ligero
+    if (this.pedidoRefsMap.size > 0) {
+      return this.pedidoRefsMap.get(String(pedido.nroPedido)) || "";
+    }
+
+    // Fallback: iterar ordenesExistentes
     if (!this.ordenesExistentes || this.ordenesExistentes.length === 0) {
       return "";
     }
 
     try {
       const ordenEncontrada = this.ordenesExistentes.find((orden) => {
-        // Obtener el número de orden correctamente
         const numeroOrden = this.getNumeroOrdenFromObject(orden);
-
-        // Excluir la orden actual si estamos en modo edición
-        if (
-          this.isEditMode &&
-          String(numeroOrden) === String(this.nroShippingOrder)
-        ) {
+        if (this.isEditMode && String(numeroOrden) === String(this.nroShippingOrder)) {
           return false;
         }
-
-        // Verificar si el pedido está en esta orden
         const pedidosOrden = this.getPedidosFromOrden(orden);
         return pedidosOrden.some((p: any) => {
-          const nroPedidoOrden =
-            p.nroPedido || p.numero || p.id || p.orderNumber;
+          const nroPedidoOrden = p.nroPedido || p.numero || p.id || p.orderNumber;
           return String(nroPedidoOrden) === String(pedido.nroPedido);
         });
       });
@@ -2076,9 +2374,11 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   /**
    * Cerrar modal de transportadoras
    */
-  closeTransporterModal(): void {
+  closeTransporterModal(clearSelection: boolean = false): void {
     this.showTransporterModal = false;
-    this.selectedTransporter = '';
+    if (clearSelection) {
+      this.selectedTransporter = '';
+    }
   }
 
   /**
@@ -2194,10 +2494,22 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       abrirModalTransportadora: true,
     };
 
+    console.log('⏳ Guardando orden con transportadora...', {
+      selectedTransporter: this.selectedTransporter,
+      pedidos: this.pedidosSeleccionados.length,
+      formValid: this.ordenEnvioForm.valid
+    });
+
     // Guardar la orden - el padre llamará abrirModalTransportadora() cuando termine
     this.onSave.emit(ordenData);
 
-    console.log('⏳ Guardando orden con transportadora...');
+    // Timeout de seguridad: si el padre nunca responde, desbloquear el botón
+    setTimeout(() => {
+      if (this.isSaving) {
+        console.warn('⚠️ Timeout de seguridad: isSaving reseteado después de 15s sin respuesta del padre');
+        this.isSaving = false;
+      }
+    }, 15000);
   }
 
   /**
@@ -2213,7 +2525,14 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
    * Abre el flujo específico de la transportadora seleccionada
    */
   private abrirFlujoTransportadora(): void {
+    console.log('🔍 abrirFlujoTransportadora:', {
+      selectedTransporter: this.selectedTransporter,
+      availableTransporters: this.availableTransporters?.length,
+      nroShippingOrder: this.nroShippingOrder
+    });
+
     if (!this.selectedTransporter) {
+      console.warn('⚠️ No hay selectedTransporter, reseteando isSaving');
       this.isSaving = false;
       return;
     }
@@ -2223,9 +2542,14 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       t => (t.provider || t.type) === this.selectedTransporter
     );
 
-    // Validar que la integración tenga isModalRate = true antes de abrir modal
-    if (selectedIntegration?.isModalRate === true) {
-      // Si requiere modal de cotización (como Enviame)
+    console.log('🔍 selectedIntegration:', {
+      found: !!selectedIntegration,
+      isModalRate: selectedIntegration?.isModalRate,
+      provider: selectedIntegration?.provider || selectedIntegration?.type
+    });
+
+    // Enviame siempre requiere modal de cotización, independientemente de isModalRate
+    if (this.selectedTransporter === 'enviame' || selectedIntegration?.isModalRate === true) {
       if (this.selectedTransporter === 'enviame') {
         this.abrirModalEnviameParaCotizacion();
       } else {
@@ -2258,6 +2582,12 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
    * Abre el modal de Enviame para cotización y despacho
    */
   private abrirModalEnviameParaCotizacion(): void {
+    if (!this.pedidosSeleccionados || this.pedidosSeleccionados.length === 0) {
+      Swal.fire({ icon: 'warning', title: 'Sin pedidos', text: 'Agrega al menos un pedido antes de cotizar con Enviame.', confirmButtonText: 'Entendido' });
+      this.isSaving = false;
+      return;
+    }
+
     console.log('🚀 Abriendo modal de cotización de Enviame...');
     console.log('📦 Número de orden:', this.nroShippingOrder);
     console.log('📋 Pedidos seleccionados:', this.pedidosSeleccionados.length);
@@ -2290,7 +2620,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
     // El usuario ya puede interactuar con el modal de cotización
     this.isSaving = false;
 
-    modalRef.onClose.subscribe((result) => {
+    modalRef.onClose.pipe(takeUntil(this.destroy$)).subscribe((result) => {
       // Ya no es necesario resetear aquí, pero lo dejamos por seguridad
       this.isSaving = false;
 
@@ -2414,7 +2744,7 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
       styleClass: 'enviame-rates-compact-modal'
     });
 
-    modalRef.onClose.subscribe((result) => {
+    modalRef.onClose.pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (result && result.confirmed) {
         console.log('✅ Cotización de Enviame completada:', result);
 
