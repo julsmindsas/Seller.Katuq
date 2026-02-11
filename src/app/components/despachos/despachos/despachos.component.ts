@@ -3908,6 +3908,14 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
           this.refrescar();
 
+          // Invalidar caché y recargar órdenes generadas
+          this.logisticaService.clearShippingOrdersCache();
+          if (this.ordenesDespachoV2Component) {
+            setTimeout(() => {
+              this.ordenesDespachoV2Component.loadInitialOrders();
+            }, 1500);
+          }
+
           // Auto-imprimir cada orden creada con impresión nativa (instantánea)
           if (result.ordenesCreadas?.length > 0) {
             this.imprimirOrdenesExpressNativa(event.grupos, result.ordenesCreadas);
