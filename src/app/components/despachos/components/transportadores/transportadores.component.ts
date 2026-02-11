@@ -10,6 +10,9 @@ export class TransportadoresComponent implements OnInit, OnChanges {
   @Input() vendors: any[] = [];
   @Input() editMode: boolean = false;
   @Input() selectedTransporter: any = null;
+  @Input() zonasCobroDisponibles: string[] = [];
+
+  zonasCobroOptions: string[] = [];
 
   @Output() onSave = new EventEmitter<any>();
   @Output() onEdit = new EventEmitter<any>();
@@ -27,8 +30,14 @@ export class TransportadoresComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['zonasCobroDisponibles'] && this.zonasCobroDisponibles) {
+      this.zonasCobroOptions = this.zonasCobroDisponibles;
+    }
     if (changes['selectedTransporter'] && this.selectedTransporter && this.editMode) {
-      this.transportadorForm.patchValue(this.selectedTransporter);
+      this.transportadorForm.patchValue({
+        ...this.selectedTransporter,
+        zonasCobertura: this.selectedTransporter.zonasCobertura || []
+      });
       this.showForm = true;
     }
   }
@@ -50,6 +59,7 @@ export class TransportadoresComponent implements OnInit, OnChanges {
       placa: [''],
       capacidadCarga: [5, [Validators.required, Validators.min(1), Validators.max(50)]],
       pwd: ['', Validators.required],
+      zonasCobertura: [[]],
     });
   }
 

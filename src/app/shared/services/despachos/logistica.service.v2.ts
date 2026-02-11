@@ -251,16 +251,22 @@ export class LogisticaServiceV2 extends BaseService {
     }
 
     createShippingOrder(shippingOrder: any): Observable<any> {
-        return this.http.post(`${this.apiUrl}/v1/logistica/shippingorders/create`, shippingOrder);
+        return this.http.post(`${this.apiUrl}/v1/logistica/shippingorders/create`, shippingOrder).pipe(
+            tap(() => this.clearShippingOrdersCache())
+        );
     }
 
     updateShippingOrder(nroShippingOrder: number | string, shippingOrder: any): Observable<any> {
         const payload = { nroShippingOrder, ...shippingOrder };
-        return this.http.post(`${this.apiUrl}/v1/logistica/shippingorders/update`, payload);
+        return this.http.post(`${this.apiUrl}/v1/logistica/shippingorders/update`, payload).pipe(
+            tap(() => this.clearShippingOrdersCache())
+        );
     }
 
     dispatchShippingOrder(shippingOrder: any): Observable<any> {
-        return this.http.post(`${this.apiUrl}/v1/logistica/shippingorders/dispatch`, shippingOrder);
+        return this.http.post(`${this.apiUrl}/v1/logistica/shippingorders/dispatch`, shippingOrder).pipe(
+            tap(() => this.clearShippingOrdersCache())
+        );
     }
 
     // Shipments (transportadoras)
@@ -383,4 +389,30 @@ export class LogisticaServiceV2 extends BaseService {
         return this.http.get<any>(url);
     }
 
-} 
+    /**
+     * Endpoint ultraligero: Solo nroShippingOrder + pedidoIds por orden.
+     * NO hace batch fetch de pedidos — solo lee shipping_orders.
+     * Costo: ~N lecturas de shipping_orders (sin lecturas de orders).
+     */
+    getShippingOrderPedidoRefs(params?: {
+        fechaInicio?: string;
+        fechaFin?: string;
+    }): Observable<{ nroShippingOrder: string; pedidoIds: string[] }[]> {
+        let url = `${this.apiUrl}/v1/logistica/shippingorders/pedido-refs`;
+        const queryParams: string[] = [];
+
+        if (params?.fechaInicio) {
+            queryParams.push(`fechaInicio=${params.fechaInicio}`);
+        }
+        if (params?.fechaFin) {
+            queryParams.push(`fechaFin=${params.fechaFin}`);
+        }
+
+        if (queryParams.length > 0) {
+            url += '?' + queryParams.join('&');
+        }
+
+        return this.http.get<{ nroShippingOrder: string; pedidoIds: string[] }[]>(url);
+    }
+
+}

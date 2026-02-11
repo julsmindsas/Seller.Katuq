@@ -39,6 +39,9 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { InputTextModule } from 'primeng/inputtext';
 import { DividerModule } from 'primeng/divider';
 import { ProgressBarModule } from 'primeng/progressbar';
+import { DialogModule } from 'primeng/dialog';
+import { InputSwitchModule } from 'primeng/inputswitch';
+import { ChipsModule } from 'primeng/chips';
 
 // Componentes
 import { TablaPedidosComponent } from "./components/tabla-pedidos/tabla-pedidos.component";
@@ -61,6 +64,8 @@ import { EnviameCancelModalComponent } from "./components/enviame/cancel-modal/e
 import { TrackingDetailsModalComponent } from "./components/enviame/tracking-details/tracking-details-modal.component";
 import { EnviameHelperService } from "./components/enviame/services/enviame-helper.service";
 import { EvidenciaEmpacadoModalComponent } from "./components/evidencia-empacado-modal/evidencia-empacado-modal.component";
+import { DespachoExpressModalComponent } from "./components/despacho-express-modal/despacho-express-modal.component";
+import { DispatchRulesConfigComponent } from "./components/dispatch-rules-config/dispatch-rules-config.component";
 
 // Servicios para códigos DANE
 import { DaneCodesService } from "../../shared/services/dane-codes.service";
@@ -104,6 +109,9 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     InputTextModule,
     DividerModule,
     ProgressBarModule,
+    DialogModule,
+    InputSwitchModule,
+    ChipsModule,
     NgbNavModule,
     NgxHotkeysModule.forRoot(),
     NgxStarRatingModule,
@@ -136,6 +144,8 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     EnviameCancelModalComponent,
     TrackingDetailsModalComponent,
     EvidenciaEmpacadoModalComponent,
+    DespachoExpressModalComponent,
+    DispatchRulesConfigComponent,
   ],
   exports: [DetalleEntregaComponent],
 })

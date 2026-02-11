@@ -1,0 +1,14 @@
+:host {
+  display: block;
+}
+
+details summary {
+  user-select: none;
+  &:hover {
+    color: #4338ca;
+  }
+}
+
+details[open] summary {
+  margin-bottom: 4px;
+}

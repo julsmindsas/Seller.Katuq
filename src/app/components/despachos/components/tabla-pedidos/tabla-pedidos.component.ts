@@ -52,6 +52,13 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   // NEW - Evidencia empacado action
   @Output() onUploadEvidenciaEmpacado = new EventEmitter<Pedido>();
 
+  // NEW - Batch actions output
+  @Output() onBatchAction = new EventEmitter<{ action: string; pedidos: any[] }>();
+
+  // NEW - Quick state change & batch state change outputs
+  @Output() onQuickStateChange = new EventEmitter<{ pedido: any; nuevoEstado: string }>();
+  @Output() onBatchStateChange = new EventEmitter<{ pedidos: any[]; nuevoEstado: string }>();
+
   // NEW - Lazy loading output (2025.09.05)
   @Output() onLazyLoad = new EventEmitter<LazyLoadEvent>();
   
@@ -89,6 +96,38 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   
   selectedColumns: ColumnDefinition[] = [];
   public rowMenuItems: MenuItem[];
+
+  // Batch selection properties
+  selectedPedidos: any[] = [];
+
+  // State machine: maps current state to the next logical state
+  private readonly NEXT_STATE: { [key: string]: string } = {
+    'SinProducir': 'EnProduccion',
+    'EnProduccion': 'ProducidoTotalmente',
+    'ProducidoParcialmente': 'ProducidoTotalmente',
+    'ProducidoTotalmente': 'Empacado',
+    'Empacado': 'ParaDespachar',
+    'ParaDespachar': 'Despachado',
+    'Despachado': 'Entregado'
+  };
+
+  private readonly STATE_LABELS: { [key: string]: string } = {
+    'EnProduccion': 'Producir',
+    'ProducidoTotalmente': 'Producido',
+    'Empacado': 'Empacar',
+    'ParaDespachar': 'Listo Despacho',
+    'Despachado': 'Despachar',
+    'Entregado': 'Entregar'
+  };
+
+  private readonly STATE_ICONS: { [key: string]: string } = {
+    'EnProduccion': 'pi pi-cog',
+    'ProducidoTotalmente': 'pi pi-check',
+    'Empacado': 'pi pi-box',
+    'ParaDespachar': 'pi pi-truck',
+    'Despachado': 'pi pi-send',
+    'Entregado': 'pi pi-check-circle'
+  };
 
   // Subject para cleanup de subscripciones (evita memory leaks)
   private destroy$ = new Subject<void>();
@@ -345,6 +384,55 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
     this.onFindShipment.emit(pedido);
   }
   
+  // Batch selection methods
+  onSelectionChange(event: any): void {
+    this.selectedPedidos = event;
+  }
+
+  clearSelection(): void {
+    this.selectedPedidos = [];
+  }
+
+  emitBatchAction(action: string): void {
+    if (this.selectedPedidos.length === 0) return;
+    this.onBatchAction.emit({ action, pedidos: [...this.selectedPedidos] });
+  }
+
+  // =====================================
+  // QUICK STATE CHANGE METHODS
+  // =====================================
+
+  getNextState(estadoActual: string): string | null {
+    return this.NEXT_STATE[estadoActual] || null;
+  }
+
+  getNextStateLabel(estadoActual: string): string {
+    const next = this.NEXT_STATE[estadoActual];
+    return next ? (this.STATE_LABELS[next] || next) : '';
+  }
+
+  getNextStateIcon(estadoActual: string): string {
+    const next = this.NEXT_STATE[estadoActual];
+    return next ? (this.STATE_ICONS[next] || 'pi pi-arrow-right') : '';
+  }
+
+  quickChangeState(pedido: any): void {
+    const next = this.getNextState(pedido.estadoProceso);
+    if (next) {
+      this.onQuickStateChange.emit({ pedido, nuevoEstado: next });
+    }
+  }
+
+  emitBatchStateChange(estado: string): void {
+    if (this.selectedPedidos?.length > 0) {
+      this.onBatchStateChange.emit({ pedidos: [...this.selectedPedidos], nuevoEstado: estado });
+    }
+  }
+
+  getTotalValorSeleccionados(): number {
+    return this.selectedPedidos.reduce((sum, p) => sum + (p.faltaPorPagar || p.totalPedidoConDescuento || 0), 0);
+  }
+
   // Método para verificar si un pedido puede ser manipulado
   puedeManipularPedido(pedido: Pedido): boolean {
     // Los pedidos en estado "Sin Producir" no pueden ser manipulados

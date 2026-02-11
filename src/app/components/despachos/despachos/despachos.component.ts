@@ -57,6 +57,7 @@ import { Integration, IntegrationCategory, IntegrationsService } from "../../int
 import { PaginatedOrdersResponse } from "../interfaces/paginated-orders.interface";
 import { ZonaGestionModalComponent } from "../components/zona-gestion-modal/zona-gestion-modal.component";
 import { ToastrService } from 'ngx-toastr';
+import { DispatchRulesService } from '../services/dispatch-rules.service';
 import { Subject, forkJoin } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 
@@ -250,6 +251,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
   transportadorSeleccionado: any;
   vendors: any;
   nroShippingOrder: any;
+  triggerTransportadoraCounter: number = 0; // Signal para que el hijo abra modal transportadora
+  triggerResetSavingCounter: number = 0; // Signal para resetear isSaving en el hijo
   nuevaOrdenEnvio: any;
   dispatchOrders: Pedido[] = [];
   modalRef: any;
@@ -264,6 +267,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
   todasLasTarjetas: TarjetaInfo[] = [];
   tienetarjetas: boolean = true;
   detallePedidoEntregado: PedidoEntrega;
+
+  // --- Propiedades para Despacho Express ---
+  showDespachoExpress: boolean = false;
+  pedidosParaDespachoExpress: any[] = [];
 
   // --- Propiedades para Menús Responsivos ---
   itemsGeocodificacion: MenuItem[];
@@ -297,6 +304,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
   diasUmbralRiesgo: number = 3; // Pedidos con 3 días o menos para entrega
   mostrarAlertasAvanzadas: boolean = true;
   kaiPredicciones: any = null;
+
+  // Dispatch Rules Config modal
+  showDispatchRulesConfig = false;
 
   // Control de frecuencia para modales de advertencia
   private ultimaAlertaPedidosUrgentes: Date | null = null;
@@ -384,7 +394,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
     private geocodingService: GeocodingService,
     private cdr: ChangeDetectorRef,
     private integrationsService: IntegrationsService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private dispatchRulesService: DispatchRulesService
   ) {
     // Las fechas se inicializan en ngOnInit mediante initializeDefaultDates()
     // para evitar conflictos y asegurar consistencia
@@ -428,9 +439,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Configurar debounce para búsqueda
     this.setupSearchDebounce();
 
-    // Inicializar fechas por defecto al mismo día (hoy)
+    // Inicializar fechas por defecto: 3 días atrás hasta 7 días adelante
     this.initializeDefaultDates();
-    
+
     // Inicializar las columnas seleccionadas al cargar
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
 
@@ -443,7 +454,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
       this.configurarIntervaloAlertas(parseInt(alertInterval));
     }
 
-    // En ngOnInit, mostrar alertas automáticas
+    // Auto-cargar datos al inicializar el componente con el rango de fechas por defecto
+    this.userRequestedLoad = true;
     // Para modo optimizado, dejar que la tabla PrimeNG dispare onLazyLoad automáticamente
     // Para modo legacy, llamar refrescarDatos directamente
     if (!this.useOptimizedLoading) {
@@ -492,6 +504,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
         label: 'Administrar Transportadores',
         icon: 'pi pi-truck',
         command: () => this.openModal(this.transportadoresModal)
+      },
+      {
+        label: 'Reglas de Despacho',
+        icon: 'pi pi-sliders-h',
+        command: () => this.showDispatchRulesConfig = true
       },
      /* {
         label: 'Ver Órdenes de Despacho',
@@ -3517,10 +3534,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
       this.nuevaOrdenEnvio = {
         id: order.id || "",
         nroShippingOrder: order.nroShippingOrder,
-        fecha: new Date().toISOString(),
+        fecha: order.fecha || new Date().toISOString(),
+        metodoEnvio: order.metodoEnvio || '',
         transportador: order.transportador,
         company: companyName,
         pedidos: [],
+        pedidosMovidos: [],
       };
     }
 
@@ -3698,9 +3717,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
           this.nuevaOrdenEnvio = {
             id: "",
             nroShippingOrder: this.nroShippingOrder,
+            fecha: new Date().toISOString(),
+            metodoEnvio: this.nuevaOrdenEnvio?.metodoEnvio || 'mensajeroPropio',
             transportador: this.transportadorSeleccionado,
             company: companyName,
             pedidos: [],
+            pedidosMovidos: [],
           };
         }
 
@@ -3714,19 +3736,18 @@ export class DespachosComponent implements OnInit, OnDestroy {
             (response) => {
               Swal.fire("Éxito", "Orden despachada exitosamente", "success");
 
-              // Guardar una copia de los datos antes de cerrar el modal
+              // Guardar datos antes de cerrar el modal
               const pedidosParaImprimir = [...this.pedidosSeleccionados];
               const nroOrdenParaImprimir = this.nroShippingOrder;
               const transportadorParaImprimir = this.transportadorSeleccionado;
 
-     
-              // Cerrar el modal primero
+              // Cerrar el modal
               this.modalService.dismissAll();
 
-              // Ejecutar impresión después de cerrar el modal con los datos guardados
+              // Impresión nativa instantánea
               setTimeout(() => {
-                this.imprimirOrdenConDatosEspecificos(pedidosParaImprimir, nroOrdenParaImprimir, transportadorParaImprimir);
-              }, 1000); // Delay de 1 segundo para asegurar que el modal se cierre completamente
+                this.imprimirOrdenNativa(pedidosParaImprimir, String(nroOrdenParaImprimir), typeof transportadorParaImprimir === 'string' ? transportadorParaImprimir : transportadorParaImprimir?.nombre || 'N/A');
+              }, 500);
 
               // Recargar el componente ordenes-despacho-v2 para reflejar los cambios
               setTimeout(() => {
@@ -3766,6 +3787,355 @@ export class DespachosComponent implements OnInit, OnDestroy {
     } catch (error) {
       console.error("Error al parsear información de usuario:", error);
       return null;
+    }
+  }
+
+  // --- Métodos para Despacho Express ---
+  onBatchAction(event: { action: string; pedidos: any[] }): void {
+    if (event.action === 'despachoRapido') {
+      this.pedidosParaDespachoExpress = event.pedidos;
+      this.showDespachoExpress = true;
+    } else if (event.action === 'cambiarEstado') {
+      this.batchCambiarEstadoConSelector(event.pedidos);
+    }
+  }
+
+  // Cambio de estado individual inline (botón next-state)
+  onQuickStateChange(event: { pedido: any; nuevoEstado: string }): void {
+    const order = event.pedido;
+    order.estadoProceso = event.nuevoEstado;
+    order.date_edit = new Date().toISOString();
+
+    const userLite = this.getCurrentUser();
+    if (userLite) {
+      if (event.nuevoEstado === 'Empacado') {
+        order.empacador = userLite;
+        order.fechaHoraEmpacado = new Date().toISOString();
+      } else if (event.nuevoEstado === 'Despachado') {
+        order.despachador = userLite;
+        order.fechaYHorarioDespachado = new Date().toISOString();
+      }
+    }
+
+    this.ventasService.editOrder(order)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          this.toastr.success(`Pedido ${order.nroPedido} → ${event.nuevoEstado}`);
+          this.refrescarDatos(false);
+        },
+        error: (err) => {
+          this.toastr.error(`Error al cambiar estado: ${err.message || 'Error'}`);
+        }
+      });
+  }
+
+  // Cambio de estado batch
+  onBatchStateChange(event: { pedidos: any[]; nuevoEstado: string }): void {
+    for (const pedido of event.pedidos) {
+      pedido.estadoProceso = event.nuevoEstado;
+      pedido.date_edit = new Date().toISOString();
+    }
+    // Usar editOrder secuencialmente para cada pedido
+    let completed = 0;
+    for (const pedido of event.pedidos) {
+      this.ventasService.editOrder(pedido)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            completed++;
+            if (completed === event.pedidos.length) {
+              this.toastr.success(`${completed} pedidos cambiados a ${event.nuevoEstado}`);
+              this.refrescarDatos(false);
+            }
+          },
+          error: (err) => console.error('Error batch estado:', err)
+        });
+    }
+  }
+
+  // Selector de estado para batch
+  private batchCambiarEstadoConSelector(pedidos: any[]): void {
+    const estados = [
+      { value: 'ProducidoTotalmente', label: 'Producido' },
+      { value: 'Empacado', label: 'Empacado' },
+      { value: 'ParaDespachar', label: 'Listo para Despacho' },
+      { value: 'Despachado', label: 'Despachado' },
+      { value: 'Entregado', label: 'Entregado' },
+    ];
+    const inputOptions: any = {};
+    estados.forEach(e => inputOptions[e.value] = e.label);
+
+    Swal.fire({
+      title: `Cambiar estado de ${pedidos.length} pedido(s)`,
+      input: 'select',
+      inputOptions,
+      inputPlaceholder: 'Seleccionar nuevo estado',
+      showCancelButton: true,
+      confirmButtonText: 'Cambiar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.onBatchStateChange({ pedidos, nuevoEstado: result.value });
+      }
+    });
+  }
+
+  // Impresión batch - imprime cada pedido secuencialmente
+
+  onDespachoExpressDispatch(event: { grupos: Array<{ pedidos: string[]; transportadorId: string; transportadorNombre: string; metodoEnvio: string; zona: string }> }): void {
+    this.dispatchRulesService.batchDispatch(event.grupos)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (result) => {
+          this.showDespachoExpress = false;
+
+          if (result.errores?.length > 0) {
+            Swal.fire('Despacho Express', `${result.pedidosDespachados} pedidos despachados. Errores: ${result.errores.join(', ')}`, 'warning');
+          } else {
+            Swal.fire('Despacho Express', `${result.ordenesCreadas?.length || 0} orden(es) creada(s), ${result.pedidosDespachados} pedidos despachados`, 'success');
+          }
+
+          this.refrescar();
+
+          // Auto-imprimir cada orden creada con impresión nativa (instantánea)
+          if (result.ordenesCreadas?.length > 0) {
+            this.imprimirOrdenesExpressNativa(event.grupos, result.ordenesCreadas);
+          }
+        },
+        error: (err) => {
+          console.error('Error en batch dispatch:', err);
+          Swal.fire('Error', err.error?.message || err.message || 'Error al despachar', 'error');
+          this.showDespachoExpress = false;
+        }
+      });
+  }
+
+  private imprimirOrdenesExpressNativa(
+    grupos: Array<{ pedidos: string[]; transportadorNombre: string }>,
+    ordenesCreadas: Array<{ nroShippingOrder: number; pedidosCount: number; transportador: string; zona: string }>
+  ): void {
+    // Pequeño delay para que el modal se cierre primero
+    setTimeout(() => {
+      for (let i = 0; i < ordenesCreadas.length; i++) {
+        const orden = ordenesCreadas[i];
+        const grupo = grupos[i];
+        if (!orden || !grupo) continue;
+
+        const pedidosParaImprimir = this.orders.filter(o => grupo.pedidos.includes(o._id));
+        if (pedidosParaImprimir.length > 0) {
+          this.imprimirOrdenNativa(pedidosParaImprimir, String(orden.nroShippingOrder), orden.transportador);
+        }
+      }
+    }, 500);
+  }
+
+  /** @deprecated Usa imprimirOrdenesExpressNativa en su lugar */
+  private imprimirOrdenesExpressSecuencial(
+    grupos: Array<{ pedidos: string[]; transportadorNombre: string }>,
+    ordenesCreadas: Array<{ nroShippingOrder: number; pedidosCount: number; transportador: string; zona: string }>,
+    index: number
+  ): void {
+    if (index >= ordenesCreadas.length) return;
+
+    const orden = ordenesCreadas[index];
+    const grupo = grupos[index];
+    if (!grupo || !orden) return;
+
+    // Buscar los pedidos en la lista local
+    const pedidosParaImprimir = this.orders.filter(o => grupo.pedidos.includes(o._id));
+
+    setTimeout(() => {
+      this.imprimirOrdenConDatosEspecificos(
+        pedidosParaImprimir,
+        String(orden.nroShippingOrder),
+        orden.transportador
+      );
+
+      // Imprimir la siguiente orden después de un delay
+      if (index + 1 < ordenesCreadas.length) {
+        setTimeout(() => {
+          this.imprimirOrdenesExpressSecuencial(grupos, ordenesCreadas, index + 1);
+        }, 3000);
+      }
+    }, index === 0 ? 1500 : 0);
+  }
+
+  /**
+   * Impresión nativa usando window.print() - Instantánea, sin html2pdf/html2canvas.
+   * Abre una ventana nueva con el HTML de la orden y lanza el diálogo de impresión del navegador.
+   */
+  imprimirOrdenNativa(pedidos: any[], nroOrden: string, transportador: string): void {
+    const userName = this.getCurrentUser()?.name || 'N/A';
+    const totalPendiente = pedidos.reduce((sum, p) => sum + (p.faltaPorPagar || 0), 0);
+    const fechaActual = new Date().toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' });
+    const fechaHoraActual = new Date().toLocaleString('es-CO', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+    // Obtener logo y nombre de la empresa
+    let companyLogo = '';
+    let companyName = 'Katuq Seller';
+    try {
+      const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      companyName = companyData.nomComercial || companyData.nombre || 'Katuq Seller';
+      companyLogo = companyData.logo || '';
+    } catch (e) { /* ignore */ }
+
+    const formatCurrency = (amount: number) => {
+      return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(amount || 0);
+    };
+
+    const getClienteNombre = (p: any) => {
+      const envioNombre = `${p.envio?.nombres || ''} ${p.envio?.apellidos || ''}`.trim();
+      return envioNombre || p.cliente?.nombres_completos || '-';
+    };
+
+    const getTelefono = (p: any) => p.envio?.celular || p.cliente?.numero_celular_comprador || '-';
+
+    const getDireccion = (p: any) => {
+      return [p.envio?.direccionEntrega, p.envio?.nombreUnidad, p.envio?.especificacionesInternas, p.envio?.barrio].filter(Boolean).join(', ') || '-';
+    };
+
+    const getObservaciones = (p: any) => p.envio?.observaciones?.trim() || '';
+
+    const getNotasDespacho = (p: any) => {
+      const notas = p.notasPedido?.notasDespachos;
+      if (!notas || !Array.isArray(notas) || notas.length === 0) return '';
+      return notas.map((n: any) => `${n.fecha ? new Date(n.fecha).toLocaleDateString('es-CO') : ''}: ${n.nota || n.descripcion || ''}`).join(' | ');
+    };
+
+    const getNotasEntrega = (p: any) => {
+      const notas = p.notasPedido?.notasEntregas;
+      if (!notas || !Array.isArray(notas) || notas.length === 0) return '';
+      return notas.map((n: any) => `${n.fecha ? new Date(n.fecha).toLocaleDateString('es-CO') : ''}: ${n.nota || n.descripcion || ''}`).join(' | ');
+    };
+
+    const escapeHtml = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // Agrupar pedidos por zona para separadores visuales
+    const pedidosPorZona = new Map<string, any[]>();
+    for (const p of pedidos) {
+      const zona = p.envio?.zonaCobro || 'Sin zona';
+      if (!pedidosPorZona.has(zona)) pedidosPorZona.set(zona, []);
+      pedidosPorZona.get(zona)!.push(p);
+    }
+    const multipleZonas = pedidosPorZona.size > 1;
+
+    let pedidosHtml = '';
+    let rowIndex = 0;
+    for (const [zona, pedidosZona] of pedidosPorZona) {
+      // Subheader de zona (solo si hay mas de una zona)
+      if (multipleZonas) {
+        const subtotalZona = pedidosZona.reduce((s, p) => s + (p.faltaPorPagar || 0), 0);
+        pedidosHtml += `
+          <tr>
+            <td colspan="6" style="padding:3px 6px;background:#eef2ff;border:1px solid #c7d2fe;font-weight:700;font-size:10px;color:#4338ca;">
+              ${escapeHtml(zona)} <span style="font-weight:400;color:#6366f1;margin-left:8px;">${pedidosZona.length} pedido${pedidosZona.length > 1 ? 's' : ''} &bull; ${formatCurrency(subtotalZona)}</span>
+            </td>
+          </tr>`;
+      }
+      for (const p of pedidosZona) {
+        const obs = getObservaciones(p);
+        const notasDesp = getNotasDespacho(p);
+        const notasEntr = getNotasEntrega(p);
+        pedidosHtml += `
+          <tr style="${rowIndex % 2 !== 0 ? 'background:#f8fafc;' : ''}">
+            <td style="padding:2px 4px;border:1px solid #e2e8f0;font-weight:700;">${escapeHtml(p.nroPedido || '-')}</td>
+            <td style="padding:2px 4px;border:1px solid #e2e8f0;">
+              <div><b>Nombre:</b> ${escapeHtml(getClienteNombre(p))} &nbsp;<b>Tel:</b> ${escapeHtml(getTelefono(p))}</div>
+              <div style="color:#475569;"><b>Dir:</b> ${escapeHtml(getDireccion(p))}</div>
+              ${obs ? `<div><b>Obs:</b> <span style="color:#0891b2;font-style:italic;">${escapeHtml(obs)}</span></div>` : ''}
+              ${notasDesp ? `<div><b>Despacho:</b> <span style="color:#d97706;font-style:italic;">${escapeHtml(notasDesp)}</span></div>` : ''}
+              ${notasEntr ? `<div><b>Entrega:</b> <span style="color:#d97706;font-style:italic;">${escapeHtml(notasEntr)}</span></div>` : ''}
+            </td>
+            <td style="padding:2px 4px;border:1px solid #e2e8f0;">${escapeHtml(p.envio?.zonaCobro || '-')}</td>
+            <td style="padding:2px 4px;border:1px solid #e2e8f0;">${p.horarioEntrega || '-'}</td>
+            <td style="padding:2px 4px;border:1px solid #e2e8f0;text-align:right;font-weight:700;white-space:nowrap;">${formatCurrency(p.faltaPorPagar || 0)}</td>
+            <td style="padding:2px 4px;border:1px solid #e2e8f0;text-align:center;color:#aaa;">__________</td>
+          </tr>`;
+        rowIndex++;
+      }
+    }
+
+    const logoHeaderHtml = companyLogo
+      ? `<img src="${escapeHtml(companyLogo)}" alt="" style="max-height:36px;max-width:120px;object-fit:contain;" onerror="this.style.display='none'">`
+      : '';
+
+    const html = `<!DOCTYPE html>
+<html><head><title>Orden de Envio #${nroOrden}</title>
+<style>
+  @page { size: landscape; margin: 8mm; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11px; color: #1f2937; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  table { border-collapse: collapse; }
+  b { font-size: inherit; }
+</style></head><body>
+<div style="padding:10px;max-width:100%;">
+
+  <!-- Header compacto: logo + empresa | info | orden -->
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-bottom:2px solid #e2e8f0;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      ${logoHeaderHtml}
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#1a1a2e;">${escapeHtml(companyName)}</div>
+        <div style="font-size:9px;color:#64748b;">${fechaActual}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="text-align:center;">
+        <div style="font-size:8px;text-transform:uppercase;color:#94a3b8;font-weight:600;">Transportador</div>
+        <div style="font-size:11px;font-weight:600;color:#1e293b;">${escapeHtml(transportador || 'N/A')}</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:8px;text-transform:uppercase;color:#94a3b8;font-weight:600;">Despachador</div>
+        <div style="font-size:11px;font-weight:600;color:#1e293b;">${escapeHtml(userName)}</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:8px;text-transform:uppercase;color:#94a3b8;font-weight:600;">Pedidos</div>
+        <div style="font-size:11px;font-weight:600;color:#1e293b;">${pedidos.length}</div>
+      </div>
+      <div style="border:2px solid #1e293b;padding:4px 10px;border-radius:4px;text-align:center;">
+        <div style="font-size:8px;font-weight:600;color:#64748b;text-transform:uppercase;">Orden</div>
+        <div style="font-size:16px;font-weight:700;color:#1e293b;font-family:monospace;">${escapeHtml(nroOrden)}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:8px;text-transform:uppercase;color:#991b1b;font-weight:600;">Total a Recaudar</div>
+        <div style="font-size:15px;font-weight:800;color:#dc2626;font-family:monospace;">${formatCurrency(totalPendiente)}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Pedidos -->
+  <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;border:1px solid #e2e8f0;">
+    <thead>
+      <tr>
+        <th style="width:7%;background:#f1f5f9;color:#334155;padding:3px 4px;text-align:left;border:1px solid #e2e8f0;font-size:10px;">Pedido</th>
+        <th style="width:40%;background:#f1f5f9;color:#334155;padding:3px 4px;text-align:left;border:1px solid #e2e8f0;font-size:10px;">Cliente y Direccion</th>
+        <th style="width:10%;background:#f1f5f9;color:#334155;padding:3px 4px;text-align:left;border:1px solid #e2e8f0;font-size:10px;">Zona</th>
+        <th style="width:10%;background:#f1f5f9;color:#334155;padding:3px 4px;text-align:left;border:1px solid #e2e8f0;font-size:10px;">Horario</th>
+        <th style="width:11%;background:#f1f5f9;color:#334155;padding:3px 4px;text-align:right;border:1px solid #e2e8f0;font-size:10px;">Valor</th>
+        <th style="width:10%;background:#f1f5f9;color:#334155;padding:3px 4px;text-align:center;border:1px solid #e2e8f0;font-size:10px;">Firma</th>
+      </tr>
+    </thead>
+    <tbody>${pedidosHtml}</tbody>
+  </table>
+
+  <!-- Footer -->
+  <div style="margin-top:10px;padding-top:6px;border-top:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+    <span style="font-size:9px;color:#94a3b8;">Documento generado por Katuq Seller | ${fechaHoraActual}</span>
+    <img src="${window.location.origin}/assets/images/logo/Katuq/katuq_dark.svg" alt="Katuq" style="height:18px;width:auto;opacity:0.5;">
+  </div>
+</div>
+</body></html>`;
+
+    const printWindow = window.open('', '_blank', 'width=1100,height=700');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    } else {
+      this.toastr.error('No se pudo abrir la ventana de impresion. Revisa que no este bloqueada por el navegador.');
     }
   }
 
@@ -4073,44 +4443,60 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   descargarRotulo(pedido: any): void {
-    this.pdfSize = "5x5";
-    const size = this.pdfSize.split("x").map(Number);
-    const width = size[0];
-    const height = size[1];
+    const escapeHtml = (text: string) => (text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const recibe = `${pedido.envio?.nombres || ''} ${pedido.envio?.apellidos || ''}`.trim() || pedido.cliente?.nombres_completos || '-';
+    const direccion = [pedido.envio?.direccionEntrega, pedido.envio?.nombreUnidad, pedido.envio?.especificacionesInternas, pedido.envio?.barrio].filter(Boolean).join(', ') || '-';
+    const zona = pedido.envio?.zonaCobro || '';
+    const obs = pedido.envio?.observaciones?.trim() || '';
+    const telefono = pedido.envio?.celular || pedido.cliente?.numero_celular_comprador || '';
+    const fechaEntrega = pedido.fechaEntrega ? pedido.fechaEntrega.split('T')[0] : 'N/A';
+    const valorCobrar = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(pedido.faltaPorPagar || 0);
 
-    const rotuloContent = `
-    <div style="font-family: Arial, sans-serif; padding: 3px; border: 2px solid #ddd;">
-      <div>
-          <div style="margin-bottom: 2px;">
-            <p style="font-size: 100px; line-height:1.2;"><strong>Número de Pedido:</strong> ${pedido.nroPedido}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Fecha Entrega:</strong> ${pedido.fechaEntrega ? pedido.fechaEntrega.split("T")[0] : "N/A"}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Horario de Entrega:</strong> ${pedido.horarioEntrega || "N/A"}</p>
-            <p style="font-size: 100px; line-height:1.2;"><strong>Recibe:</strong> ${pedido.envio?.nombres || ""} ${pedido.envio?.apellidos || ""}</p>
-            <p style="font-size: 100px; line-height:1.2;">${pedido.envio?.direccionEntrega || ""}, ${pedido.envio?.nombreUnidad || ""}, ${pedido.envio?.especificacionesInternas || ""}, ${pedido.envio?.observaciones || ""}, ${pedido.envio?.zonaCobro || ""}</p>
-          </div>
-        </div>
+    // Obtener nombre empresa
+    let companyName = '';
+    try { companyName = JSON.parse(localStorage.getItem('currentCompany') || '{}').nomComercial || ''; } catch (e) { /* ignore */ }
+
+    const html = `<!DOCTYPE html>
+<html><head><title>Rotulo #${pedido.nroPedido}</title>
+<style>
+  @page { size: 10cm 10cm; margin: 2mm; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; font-size: 11px; color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+</style></head><body>
+<div style="border:2px solid #333;padding:6px;height:100%;display:flex;flex-direction:column;">
+  <!-- Header rotulo -->
+  <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #333;padding-bottom:4px;margin-bottom:4px;">
+    <div style="font-size:9px;color:#555;">${escapeHtml(companyName)}</div>
+    <div style="font-size:18px;font-weight:900;font-family:monospace;letter-spacing:1px;">#${escapeHtml(pedido.nroPedido || '-')}</div>
+  </div>
+
+  <!-- Datos -->
+  <div style="flex:1;line-height:1.4;">
+    <div style="font-size:13px;font-weight:700;margin-bottom:2px;">${escapeHtml(recibe)}</div>
+    ${telefono ? `<div style="font-size:11px;margin-bottom:2px;"><b>Tel:</b> ${escapeHtml(telefono)}</div>` : ''}
+    <div style="font-size:11px;margin-bottom:2px;">${escapeHtml(direccion)}</div>
+    ${zona ? `<div style="font-size:10px;color:#555;margin-bottom:2px;"><b>Zona:</b> ${escapeHtml(zona)}</div>` : ''}
+    ${obs ? `<div style="font-size:10px;color:#0891b2;font-style:italic;margin-bottom:2px;">${escapeHtml(obs)}</div>` : ''}
+  </div>
+
+  <!-- Footer rotulo -->
+  <div style="display:flex;justify-content:space-between;align-items:flex-end;border-top:1px solid #ccc;padding-top:3px;margin-top:auto;">
+    <div style="font-size:10px;">
+      <div><b>Entrega:</b> ${escapeHtml(fechaEntrega)} ${pedido.horarioEntrega ? '/ ' + escapeHtml(pedido.horarioEntrega) : ''}</div>
     </div>
-    `;
+    <div style="font-size:13px;font-weight:800;font-family:monospace;color:#c62828;">${valorCobrar}</div>
+  </div>
+</div>
+</body></html>`;
 
-    const element = document.createElement("div");
-    element.innerHTML = rotuloContent;
-    document.body.appendChild(element);
-
-    html2canvas(element).then((canvas) => {
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF({
-        orientation: "landscape",
-        unit: "cm",
-        format: [width, height],
-      });
-      pdf.addImage(imgData, "PNG", 0, 0, 5, 4);
-      const pdfBlob = pdf.output("blob");
-      const url = URL.createObjectURL(pdfBlob);
-
-      window.open(url);
-
-      document.body.removeChild(element);
-    });
+    const printWindow = window.open('', '_blank', 'width=400,height=400');
+    if (printWindow) {
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.onload = () => { printWindow.print(); };
+    } else {
+      this.toastr.error('No se pudo abrir la ventana de impresion. Revisa que no este bloqueada por el navegador.');
+    }
   }
 
   imprimirOrderToAction(orderId: any) {
@@ -4144,17 +4530,16 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   private procesarOrdenParaImprimir(response: any) {
-    this.nuevaOrdenEnvio = response;
-    this.pedidosSeleccionados = this.optimizarDatosPedidos(response.pedidos);
-    this.transportadorSeleccionado = response.pedidos[0]?.transportador;
-    this.nroShippingOrder = response.nroShippingOrder;
+    const pedidos = this.optimizarDatosPedidos(response.pedidos);
+    const nroOrden = String(response.nroShippingOrder || '');
+    const transportador = response.pedidos?.[0]?.transportador || response.transportador || 'N/A';
 
-    // Validar datos antes de imprimir
-    if (this.validateOrderData()) {
-      this.imprimirOrden();
-    } else {
+    if (!pedidos || pedidos.length === 0 || !nroOrden) {
       this.showErrorMessage("Error: Datos de orden incompletos");
+      return;
     }
+
+    this.imprimirOrdenNativa(pedidos, nroOrden, transportador);
   }
 
   // Métodos auxiliares para las optimizaciones
@@ -4653,13 +5038,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
     if (!event) {
       console.error("Error: No se recibieron datos de la orden de envío");
 
-      // Resetear flag de guardado en caso de error
-      if (this.generarOrdenComponent) {
-        this.generarOrdenComponent.resetSavingState();
-      }
-      if (this.editarOrdenComponent) {
-        this.editarOrdenComponent.resetSavingState();
-      }
+      // Resetear flag de guardado en caso de error (via @Input signal)
+      this.triggerResetSavingCounter++;
 
       Swal.fire(
         "Error",
@@ -4671,7 +5051,14 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
     // 🔥 CAPTURAR el flag de abrirModalTransportadora ANTES de cualquier operación
     const debeAbrirModalTransportadora = event.abrirModalTransportadora === true;
-    console.log('🚀 Flag abrirModalTransportadora:', debeAbrirModalTransportadora);
+    console.log('🚀 onSubmitOrdenEnvio:', {
+      debeAbrirModalTransportadora,
+      nroShippingOrder: this.nroShippingOrder,
+      tieneGenerarOrden: !!this.generarOrdenComponent,
+      tieneEditarOrden: !!this.editarOrdenComponent,
+      transportadora: event.transportadora,
+      pedidos: event.pedidos?.length
+    });
 
     // Determinar si es una nueva orden o una existente
     const esNuevaOrden = !this.nroShippingOrder || this.nroShippingOrder === "";
@@ -4686,16 +5073,16 @@ export class DespachosComponent implements OnInit, OnDestroy {
       this.nuevaOrdenEnvio = {
         id: "",
         nroShippingOrder: this.nroShippingOrder || "",
-        fecha: event.fechaEnvio || new Date().toISOString(),
+        fecha: event.fechaFin || event.fechaInicio || new Date().toISOString(),
         metodoEnvio: event.metodoEnvio,
-        transportador: this.transportadorSeleccionado || "",
+        transportador: event.transportadora || this.transportadorSeleccionado || "",
         company: companyName,
-        pedidos: this.pedidosSeleccionados || [],
+        pedidos: event.pedidos || this.pedidosSeleccionados || [],
         pedidosMovidos: event.pedidosMovidos || [],
       };
     } else {
       // Actualizar la orden existente con datos del formulario
-      this.nuevaOrdenEnvio.fechaEnvio = event.fechaEnvio;
+      this.nuevaOrdenEnvio.fechaEnvio = event.fechaFin || event.fechaInicio;
 
       // ✅ ASEGURAR que metodoEnvio siempre exista y se actualice
       if (!this.nuevaOrdenEnvio.hasOwnProperty('metodoEnvio')) {
@@ -4707,35 +5094,33 @@ export class DespachosComponent implements OnInit, OnDestroy {
       this.nuevaOrdenEnvio._forceUpdate = true;
       this.nuevaOrdenEnvio._metodoEnvioChanged = true;
 
-      if (this.transportadorSeleccionado) {
+      if (event.transportadora) {
+        this.nuevaOrdenEnvio.transportador = event.transportadora;
+      } else if (this.transportadorSeleccionado) {
         this.nuevaOrdenEnvio.transportador = this.transportadorSeleccionado;
       }
-      this.nuevaOrdenEnvio.fecha = event.fechaEnvio || new Date().toISOString();
-      this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados || [];
+      this.nuevaOrdenEnvio.fecha = event.fechaFin || event.fechaInicio || new Date().toISOString();
+      this.nuevaOrdenEnvio.pedidos = event.pedidos || this.pedidosSeleccionados || [];
       this.nuevaOrdenEnvio.pedidosMovidos = event.pedidosMovidos || [];
 
       console.log('✅ ORDEN ACTUALIZADA con metodoEnvio:', {
         metodoEnvio: this.nuevaOrdenEnvio.metodoEnvio,
-        fechaEnvio: this.nuevaOrdenEnvio.fechaEnvio,
+        fecha: this.nuevaOrdenEnvio.fecha,
         nroShippingOrder: this.nuevaOrdenEnvio.nroShippingOrder,
         pedidosMovidos: this.nuevaOrdenEnvio.pedidosMovidos,
         _forceUpdate: this.nuevaOrdenEnvio._forceUpdate
       });
     }
 
-    // Validar que haya pedidos seleccionados
-    if (!this.pedidosSeleccionados || this.pedidosSeleccionados.length === 0) {
+    // Validar que haya pedidos seleccionados (preferir los del evento, luego los del padre)
+    const pedidosParaValidar = event.pedidos || this.pedidosSeleccionados;
+    if (!pedidosParaValidar || pedidosParaValidar.length === 0) {
       console.error(
         "Error: No hay pedidos seleccionados para la orden de envío",
       );
 
-      // Resetear flag de guardado en caso de error
-      if (this.generarOrdenComponent) {
-        this.generarOrdenComponent.resetSavingState();
-      }
-      if (this.editarOrdenComponent) {
-        this.editarOrdenComponent.resetSavingState();
-      }
+      // Resetear flag de guardado en caso de error (via @Input signal)
+      this.triggerResetSavingCounter++;
 
       Swal.fire(
         "Error",
@@ -4769,24 +5154,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
           // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
           if (debeAbrirModalTransportadora) {
-            console.log('🚀 Llamando al método del hijo para abrir modal de transportadora...');
-
-            setTimeout(() => {
-              // Llamar al método público del hijo que tiene la lógica correcta
-              if (this.generarOrdenComponent) {
-                this.generarOrdenComponent.abrirModalTransportadora();
-              } else if (this.editarOrdenComponent) {
-                this.editarOrdenComponent.abrirModalTransportadora();
-              }
-            }, 100);
+            console.log('🚀 Enviando signal al hijo para abrir modal de transportadora...');
+            // Usar @Input signal en vez de ViewChild (ng-bootstrap renderiza fuera del view tree)
+            this.triggerTransportadoraCounter++;
           } else {
-            // Solo resetear y cerrar si NO se va a abrir modal de transportadora
-            if (this.generarOrdenComponent) {
-              this.generarOrdenComponent.resetSavingState();
-            }
-            if (this.editarOrdenComponent) {
-              this.editarOrdenComponent.resetSavingState();
-            }
             this.modalService.dismissAll();
           }
 
@@ -4800,13 +5171,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
         },
         error: (error) => {
           console.error("Error al actualizar la orden de envío:", error);
-          // Resetear flag de guardado en caso de error
-          if (this.generarOrdenComponent) {
-            this.generarOrdenComponent.resetSavingState();
-          }
-          if (this.editarOrdenComponent) {
-            this.editarOrdenComponent.resetSavingState();
-          }
+          // Resetear flag de guardado en caso de error (via @Input signal)
+          this.triggerResetSavingCounter++;
 
           Swal.fire(
             "Error",
@@ -4832,12 +5198,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     if (!event) {
       console.error("Error: No se recibieron datos de la orden de envío");
 
-      if (this.generarOrdenComponent) {
-        this.generarOrdenComponent.resetSavingState();
-      }
-      if (this.editarOrdenComponent) {
-        this.editarOrdenComponent.resetSavingState();
-      }
+      this.triggerResetSavingCounter++;
 
       Swal.fire("Error", "No se recibieron datos para la orden de envío", "error");
       return;
@@ -4846,12 +5207,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     if (!this.pedidosSeleccionados || this.pedidosSeleccionados.length === 0) {
       console.error("Error: No hay pedidos seleccionados para la orden de envío");
 
-      if (this.generarOrdenComponent) {
-        this.generarOrdenComponent.resetSavingState();
-      }
-      if (this.editarOrdenComponent) {
-        this.editarOrdenComponent.resetSavingState();
-      }
+      this.triggerResetSavingCounter++;
 
       Swal.fire("Error", "No hay pedidos seleccionados para la orden de envío", "error");
       return;
@@ -4869,9 +5225,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
     this.nuevaOrdenEnvio = {
       id: "",
       nroShippingOrder: "",
-      fecha: event.fechaFin || event.fechaEnvio || new Date().toISOString(),
+      fecha: event.fechaFin || event.fechaInicio || new Date().toISOString(),
       metodoEnvio: event.metodoEnvio,
-      transportador: this.transportadorSeleccionado || "",
+      transportador: event.transportadora || this.transportadorSeleccionado || "",
       company: companyName,
       pedidos: pedidosParaDespacho,
       pedidosMovidos: event.pedidosMovidos || [],
@@ -4905,12 +5261,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         this.nuevaOrdenEnvio.pedidos = pedidosParaDespacho;
 
         // Resetear flag de guardado
-        if (this.generarOrdenComponent) {
-          this.generarOrdenComponent.resetSavingState();
-        }
-        if (this.editarOrdenComponent) {
-          this.editarOrdenComponent.resetSavingState();
-        }
+        this.triggerResetSavingCounter++;
 
         // Actualizar datos
         this.refrescarDatos();
@@ -4938,12 +5289,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error("❌ Error al crear la orden:", error);
 
-        if (this.generarOrdenComponent) {
-          this.generarOrdenComponent.resetSavingState();
-        }
-        if (this.editarOrdenComponent) {
-          this.editarOrdenComponent.resetSavingState();
-        }
+        this.triggerResetSavingCounter++;
 
         Swal.fire(
           "Error",
@@ -4981,26 +5327,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
           // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
           if (debeAbrirModalTransportadora) {
-          console.log('🚀 Llamando al método del hijo para abrir modal de transportadora...');
-
-          setTimeout(() => {
-            // Llamar al método público del hijo que tiene la lógica correcta
-            if (this.generarOrdenComponent) {
-              this.generarOrdenComponent.abrirModalTransportadora();
-            } else if (this.editarOrdenComponent) {
-              this.editarOrdenComponent.abrirModalTransportadora();
-            }
-          }, 100);
-        } else {
-          // Solo resetear y cerrar si NO se va a abrir modal de transportadora
-          if (this.generarOrdenComponent) {
-            this.generarOrdenComponent.resetSavingState();
+            console.log('🚀 Enviando signal al hijo para abrir modal de transportadora...');
+            // Usar @Input signal en vez de ViewChild (ng-bootstrap renderiza fuera del view tree)
+            this.triggerTransportadoraCounter++;
+          } else {
+            this.modalService.dismissAll();
           }
-          if (this.editarOrdenComponent) {
-            this.editarOrdenComponent.resetSavingState();
-          }
-          this.modalService.dismissAll();
-        }
 
         // Actualizar la lista de órdenes
         this.refrescarDatos();
@@ -5014,12 +5346,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       error: (error) => {
         console.error("Error al crear la orden de envío:", error);
         // Resetear flag de guardado en caso de error
-        if (this.generarOrdenComponent) {
-          this.generarOrdenComponent.resetSavingState();
-        }
-        if (this.editarOrdenComponent) {
-          this.editarOrdenComponent.resetSavingState();
-        }
+        this.triggerResetSavingCounter++;
 
         Swal.fire(
           "Error",
@@ -5779,6 +6106,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
     this.transportadorSeleccionado = null;
     this.pedidosSeleccionados = [];
     this.metodoEnvio = undefined;
+    this.triggerTransportadoraCounter = 0;
+    this.triggerResetSavingCounter = 0;
 
     // Resetear formularios si existen
     if (this.ordenEnvioForm) {
@@ -7129,24 +7458,26 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Inicializa las fechas por defecto al mismo día (hoy)
+   * Inicializa las fechas por defecto: 3 días atrás hasta 7 días adelante
    */
   initializeDefaultDates(): void {
     const today = new Date();
 
-    // Crear fechas para el inicio del día (00:00:00)
+    // Crear fecha de inicio: 3 días atrás (00:00:00)
     const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 3);
     startDate.setHours(0, 0, 0, 0);
 
-    // Crear fechas para el final del día (23:59:59.999)
+    // Crear fecha final: 7 días adelante (23:59:59.999)
     const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 7);
     endDate.setHours(23, 59, 59, 999);
 
-    // Establecer la misma fecha para desde y hasta (hoy) con tiempos correctos
+    // Establecer rango de fechas por defecto
     this.fechaInicial = startDate;
     this.fechaFinal = endDate;
-    this.fechaInicialDate = new Date(today); // Para el calendar UI (sin modificar tiempo)
-    this.fechaFinalDate = new Date(today);   // Para el calendar UI (sin modificar tiempo)
+    this.fechaInicialDate = new Date(startDate); // Para el calendar UI (sin modificar tiempo)
+    this.fechaFinalDate = new Date(endDate);     // Para el calendar UI (sin modificar tiempo)
 
     console.log('📅 Fechas inicializadas:', {
       fechaInicial: this.fechaInicial,

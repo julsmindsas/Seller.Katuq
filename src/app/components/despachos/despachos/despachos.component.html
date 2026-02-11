@@ -224,6 +224,9 @@
                                 (onTrackShipment)="trackShipment($event)"
                                 (onFindShipment)="findShipment($event)"
                                 (onLazyLoad)="onTableLazyLoad($event)"
+                                (onBatchAction)="onBatchAction($event)"
+                                (onQuickStateChange)="onQuickStateChange($event)"
+                                (onBatchStateChange)="onBatchStateChange($event)"
                             ></app-tabla-pedidos>
                         </div>
                     </p-tabPanel>
@@ -302,6 +305,13 @@
     </app-transportadores>
 </ng-template>
 
+<!-- Modal para reglas de despacho -->
+<app-dispatch-rules-config
+    [(visible)]="showDispatchRulesConfig"
+    [vendors]="vendors"
+    (onClose)="showDispatchRulesConfig = false"
+></app-dispatch-rules-config>
+
 <!-- Modal de contenido para imprimir PDF -->
 <ng-template #modalContent let-modal>
     <app-imprimir-pdf
@@ -323,6 +333,8 @@
         [ordenesExistentes]="dispatchOrders"
         [isGeneratingPDF]="isGeneratingPDF"
         [pdfProgress]="pdfProgress"
+        [triggerTransportadora]="triggerTransportadoraCounter"
+        [triggerResetSaving]="triggerResetSavingCounter"
         (onClose)="modal.dismiss('Cross click')"
         (onSave)="onSubmitOrdenEnvio($event)"
         (onSaveAndDispatch)="onGuardarYDespacharOrden($event)"
@@ -347,6 +359,8 @@
         [ordenesExistentes]="dispatchOrders"
         [isGeneratingPDF]="isGeneratingPDF"
         [pdfProgress]="pdfProgress"
+        [triggerTransportadora]="triggerTransportadoraCounter"
+        [triggerResetSaving]="triggerResetSavingCounter"
         (onClose)="modal.dismiss('Cross click')"
         (onSave)="onSubmitOrdenEnvio($event)"
         (onSaveAndDispatch)="onGuardarYDespacharOrden($event)"
@@ -409,6 +423,16 @@
         </div>
     </div>
 </div>
+
+<!-- Despacho Express Modal -->
+<app-despacho-express-modal
+    [pedidos]="pedidosParaDespachoExpress"
+    [vendors]="vendors"
+    [ordenesExistentes]="dispatchOrders"
+    [visible]="showDespachoExpress"
+    (onClose)="showDespachoExpress = false"
+    (onDispatch)="onDespachoExpressDispatch($event)">
+</app-despacho-express-modal>
 
 <!-- Hidden PDF Template for Printing -->
 <div #pdfTemplateContainer style="position: absolute; left: -9999px; top: -9999px; width: 210mm; visibility: hidden;">
