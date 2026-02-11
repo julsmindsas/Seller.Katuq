@@ -53,7 +53,8 @@
       "Bash(del \"C:\\\\sourcecodejuls\\\\Seller.Katuq\\\\src\\\\assets\\\\scss\\\\primeng-filter-fix.scss\")",
       "Bash(npx ng serve:*)",
       "Bash(npx ng build:*)",
-      "Bash(tasklist:*)"
+      "Bash(tasklist:*)",
+      "Bash(if exist \".angular\\\\cache\" rmdir /s /q \".angular\\\\cache\")"
     ]
   }
 }

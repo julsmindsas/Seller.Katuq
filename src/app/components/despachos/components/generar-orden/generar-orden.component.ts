@@ -39,8 +39,13 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   @Input() ordenesExistentes: any[] = []; // Órdenes del componente padre
 
   // Signal del padre para abrir modal de transportadora (incrementar el counter para disparar)
-  private _triggerTransportadora: number = 0;
+  private _triggerTransportadora: number = -1; // -1 = no inicializado
   @Input() set triggerTransportadora(value: number) {
+    if (this._triggerTransportadora === -1) {
+      // Primer binding (init del componente) — solo registrar, no actuar
+      this._triggerTransportadora = value;
+      return;
+    }
     if (value > 0 && value !== this._triggerTransportadora) {
       this._triggerTransportadora = value;
       console.log('📡 triggerTransportadora recibido desde el padre:', value);
@@ -49,8 +54,12 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   }
 
   // Signal del padre para resetear isSaving (cuando falla el guardado)
-  private _triggerResetSaving: number = 0;
+  private _triggerResetSaving: number = -1; // -1 = no inicializado
   @Input() set triggerResetSaving(value: number) {
+    if (this._triggerResetSaving === -1) {
+      this._triggerResetSaving = value;
+      return;
+    }
     if (value > 0 && value !== this._triggerResetSaving) {
       this._triggerResetSaving = value;
       this.isSaving = false;
@@ -162,6 +171,28 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
       // Cargar solo referencias ligeras para validar duplicados (sin batch fetch de pedidos)
       this.cargarPedidoRefs();
+
+      // Si estamos en modo edición, inicializar metodoEnvio y fechas desde la orden existente
+      if (this.isEditMode && this.nuevaOrdenEnvio) {
+        console.log('📝 MODO INDEPENDIENTE + EDIT: Inicializando desde orden existente');
+        this.metodoEnvio = this.getShippingMethodFromOrder(this.nuevaOrdenEnvio);
+        this.ordenEnvioForm.patchValue({
+          metodoEnvio: this.metodoEnvio,
+        });
+        if (this.nuevaOrdenEnvio.fecha) {
+          const fechaOrden = new Date(this.nuevaOrdenEnvio.fecha);
+          this.ordenEnvioForm.patchValue({
+            fechaInicio: fechaOrden,
+            fechaFin: fechaOrden
+          });
+        }
+        this.ordenEnvioForm.updateValueAndValidity();
+        console.log('📝 Form state after edit init:', {
+          metodoEnvio: this.ordenEnvioForm.get('metodoEnvio')?.value,
+          formValid: this.ordenEnvioForm.valid,
+          pedidos: this.pedidosSeleccionados?.length
+        });
+      }
 
       // Auto-load pedidos on init (F7 improvement)
       setTimeout(() => this.filtrarPedidos(), 500);
@@ -913,12 +944,32 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
   }
 
   retirarPedido(pedido: Pedido): void {
+    console.log('🗑️ retirarPedido INICIO:', {
+      nroPedido: pedido.nroPedido,
+      pedidosAntes: this.pedidosSeleccionados.length,
+      isSaving: this.isSaving,
+      formInvalid: this.ordenEnvioForm?.invalid,
+      formErrors: this.ordenEnvioForm?.errors
+    });
+
     // Si es un pedido movido, quitarlo del tracking
     if (pedido.nroPedido && this.pedidosMovidos.has(pedido.nroPedido)) {
       this.pedidosMovidos.delete(pedido.nroPedido);
       // Actualizar flag de pedidos movidos
       this.hayPedidosMovidos = this.pedidosMovidos.size > 0;
     }
+
+    // Remover localmente para feedback inmediato en la UI
+    this.pedidosSeleccionados = this.pedidosSeleccionados.filter(
+      (p) => p.nroPedido !== pedido.nroPedido
+    );
+
+    console.log('🗑️ retirarPedido DESPUÉS de filter:', {
+      pedidosDespués: this.pedidosSeleccionados.length,
+      isSaving: this.isSaving,
+      formInvalid: this.ordenEnvioForm?.invalid,
+      botonGuardarDisabled: this.ordenEnvioForm?.invalid || this.pedidosSeleccionados.length === 0 || this.isSaving
+    });
 
     this.onRemoveOrder.emit(pedido);
     // Actualizar pedidos disponibles después de retirar uno
@@ -950,7 +1001,8 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   guardarOrden(): void {
     // Prevenir múltiples clics
-    if (this.isSaving || this.ordenEnvioForm.invalid || this.pedidosSeleccionados.length === 0) {
+    // En modo edición, permitir guardar con 0 pedidos (el usuario quitó pedidos de la orden)
+    if (this.isSaving || this.ordenEnvioForm.invalid || (!this.isEditMode && this.pedidosSeleccionados.length === 0)) {
       return;
     }
 
@@ -1513,6 +1565,11 @@ export class GenerarOrdenComponent implements OnInit, OnDestroy {
 
   // Método para verificar si un pedido ya existe en una orden
   // Optimizado: usa el mapa ligero (O(1)) en vez de iterar todas las órdenes
+  pedidoYaSeleccionado(pedido: Pedido): boolean {
+    if (!pedido?.nroPedido) return false;
+    return this.pedidosSeleccionados.some(p => p.nroPedido === pedido.nroPedido);
+  }
+
   pedidoExisteEnOrden(pedido: Pedido): boolean {
     if (!pedido?.nroPedido) return false;
 

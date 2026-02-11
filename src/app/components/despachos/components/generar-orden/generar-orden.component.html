@@ -246,7 +246,7 @@
                                                     class="p-button-sm p-button-success p-button-text"
                                                     icon="pi pi-plus"
                                                     (click)="agregarPedido(pedido)"
-                                                    [disabled]="pedidoExisteEnOrden(pedido)"
+                                                    [disabled]="pedidoYaSeleccionado(pedido)"
                                                     pTooltip="{{ 'Agregar' | translate }}"
                                                     tooltipPosition="top">
                                                 </button>
@@ -458,7 +458,7 @@
                     class="p-button-primary btn-footer"
                     [icon]="isSaving ? 'pi pi-spin pi-spinner' : 'pi pi-save'"
                     [label]="isSaving ? 'Guardando...' : 'Guardar'"
-                    [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0 || isSaving"
+                    [disabled]="ordenEnvioForm.invalid || (!isEditMode && pedidosSeleccionados.length === 0) || isSaving"
                     (click)="guardarOrden()">
                 </button>
 

@@ -1196,75 +1196,152 @@ $border-radius: 8px;
 
 // NUEVOS ESTILOS PARA FASE 1
 
-// Panel de Métricas
-.metrics-panel {
-  background-color: #f8f9fa; // Un fondo suave para el panel
-  border-bottom: 1px solid #e9ecef;
+// Barra de métricas + acciones en la misma fila
+.metrics-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.75rem;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 0.75rem;
+
+  .metrics-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .actions-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
 }
 
-// Estilos para las pestañas modernas
+// Pestañas estilo segmented control
 :host ::ng-deep .modern-tabs {
+  border: none;
+
+  .p-tabview-nav-container {
+    background: #eef0f4;
+    padding: 0.3rem 0.75rem;
+    border-bottom: 1px solid #dde0e6;
+  }
+
+  .p-tabview-nav-content {
+    overflow-x: hidden;
+  }
+
+  .p-tabview-ink-bar {
+    display: none !important;
+  }
+
   .p-tabview-nav {
-    background: #ffffff;
-    border-bottom: 1px solid #dee2e6;
-    padding: 0 1rem;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    gap: 0.25rem;
+
+    li {
+      margin: 0;
+
+      &.p-highlight .p-tabview-nav-link {
+        background: #fff !important;
+        color: #1e3a5f;
+        font-weight: 600;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+        border-radius: 6px;
+        border: 1px solid #d1d5db !important;
+      }
+    }
 
     .p-tabview-nav-link {
       border: none !important;
       background: transparent !important;
-      color: #6c757d;
+      color: #6b7280;
       font-weight: 500;
-      padding: 1rem 0.5rem;
-      margin: 0 0.5rem;
-      position: relative;
-      transition: color 0.2s;
+      font-size: 0.825rem;
+      padding: 0.45rem 0.85rem;
+      transition: all 0.15s ease;
+      border-radius: 6px;
+      white-space: nowrap;
 
       &:not(.p-disabled):focus {
         box-shadow: none;
       }
 
-      &::after {
-        content: '';
-        position: absolute;
-        bottom: -1px;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: #8b5cf6;
-        transform: scaleX(0);
-        transition: transform 0.3s ease-out;
-      }
-    }
-
-    li.p-highlight .p-tabview-nav-link {
-      color: #8b5cf6;
-
-      &::after {
-        transform: scaleX(1);
+      &:hover {
+        background: rgba(255, 255, 255, 0.5) !important;
+        color: #374151;
       }
     }
   }
 
   .p-tabview-panels {
-    padding: 0; // El padding se manejará en los componentes hijos o wrappers
-    background-color: #ffffff;
+    padding: 0;
+    background: #fff;
+    border: none;
+  }
+}
+
+// Filtros embebidos: compactar dentro de despachos
+:host ::ng-deep app-shared-filters .filters-inline-row {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0;
+  background: #fafbfc;
+  border-bottom: 1px solid #e5e7eb;
+
+  &::before {
+    display: none;
+  }
+
+  // Ocultar elementos que se desbordan a segunda fila
+  .filter-counter-inline {
+    display: none !important;
+  }
+
+  // Ocultar boton config (ya existe selector columnas en tabla)
+  .btn-secondary {
+    display: none !important;
+  }
+
+  // Ocultar boton clear inline (se usa el de la tabla)
+  .btn-clear {
+    display: none !important;
   }
 }
 
 @media (max-width: 576px) {
 
   // Estilos para pantallas extra pequeñas
+  :host ::ng-deep .modern-tabs .p-tabview-nav-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   :host ::ng-deep .modern-tabs .p-tabview-nav {
-    flex-wrap: wrap;
-    justify-content: center; // Centrar las pestañas
+    flex-wrap: nowrap;
+    padding: 0 0.25rem;
   }
 
   :host ::ng-deep .modern-tabs .p-tabview-nav li {
-    flex-basis: 50%; // Cada pestaña ocupa el 50% del ancho
-    text-align: center;
+    flex-basis: auto;
+    flex-shrink: 0;
 
     .p-tabview-nav-link {
       justify-content: center;
+      white-space: nowrap;
+      padding: 0.45rem 0.5rem;
+      font-size: 0.8rem;
     }
   }
 
@@ -1806,7 +1883,12 @@ $border-radius: 8px;
   .d-flex {
     overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+    padding: 0.25rem 0;
+
+    .metric-chip {
+      flex-shrink: 0;
+    }
 
     &::-webkit-scrollbar {
       height: 4px;
@@ -1826,41 +1908,41 @@ $border-radius: 8px;
 .metric-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   user-select: none;
-  border: 1.5px solid transparent;
+  border: 1px solid transparent;
   background-color: #f1f3f5;
   color: #495057;
 
   i {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     opacity: 0.8;
   }
 
   .metric-label {
     font-weight: 600;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
   }
 
   .metric-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
-    height: 20px;
-    padding: 0 0.4rem;
-    border-radius: 10px;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 0.3rem;
+    border-radius: 9px;
     background-color: rgba(255, 255, 255, 0.9);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
   // Hover effect
@@ -2101,7 +2183,7 @@ $border-radius: 8px;
 .metric-chip-compact {
   padding: 0.25rem 0.5rem !important;
   gap: 0.25rem !important;
-  max-width: 80px;
+  max-width: 90px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   white-space: nowrap;
@@ -2132,11 +2214,16 @@ $border-radius: 8px;
       display: inline;
     }
   }
+
+  // Chips info-only (montos) necesitan mas espacio base
+  &.metric-chip-info-only {
+    max-width: 120px;
+  }
 }
 
 // Extra compact for process metrics
 .metric-chip-sm.metric-chip-compact {
-  max-width: 65px;
+  max-width: 75px;
   padding: 0.2rem 0.4rem !important;
 
   &:hover {

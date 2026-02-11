@@ -1,24 +1,22 @@
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card p-0">
-                <div class="card-body pb-0 px-0">
+<div class="tabla-pedidos-container">
+            <div class="card p-0 shadow-none border-0">
+                <div class="card-body p-0">
                     <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="rowsPerPage" [showCurrentPageReport]="true"
                         [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [resizableColumns]="true"
                         [reorderableColumns]="true" [autoLayout]="true" [scrollable]="true"
-                        [scrollHeight]="'calc(100vh - 400px)'" [paginator]="true"
+                        [scrollHeight]="'calc(100vh - 290px)'" [paginator]="true"
                         [lazy]="useLazyMode" [totalRecords]="useLazyMode ? totalRecords : orders.length"
                         (onLazyLoad)="loadOrdersLazy($event)"
                         [(selection)]="selectedPedidos" (selectionChange)="onSelectionChange($event)"
                         currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords} pedidos' | translate }}"
                         [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadoPago']"
                         styleClass="p-datatable-sm p-datatable-customers p-datatable-gridlines p-datatable-striped"
-                        [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }"
+                        [tableStyle]="{ 'min-width': '100%' }"
                         style="font-size: 0.8em; table-layout: auto;">
 
                         <ng-template pTemplate="caption">
-                            <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center p-2 table-header-actions">
-                                <h5 class="m-0 fw-bold mb-3 mb-md-0">{{ 'Pedidos para Despachar' | translate }}</h5>
+                            <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center px-2 py-1 table-header-actions">
+                                <h6 class="m-0 fw-bold mb-1 mb-md-0" style="font-size: 0.85rem;">{{ 'Pedidos para Despachar' | translate }}</h6>
                                 <div class="d-flex align-items-center gap-2">
                                     <!-- Column Selector - ✅ Responsive multiselect -->
                                     <p-multiSelect [options]="displayedColumns"
@@ -56,8 +54,8 @@
                                     <!-- Columnas especiales sin ordenamiento -->
                                     <th *ngIf="isColumnVisible(col.field) && (col.field === 'detalles' || col.field === 'opciones')"
                                         class="text-center"
-                                        style="padding: 0.75rem 0.5rem; vertical-align: middle;">
-                                        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        style="width: 38px; padding: 0.4rem 0.15rem; vertical-align: middle;">
+                                        <span style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.3px; opacity: 0.7;">
                                             {{ col.header | translate }}
                                         </span>
                                     </th>
@@ -65,8 +63,8 @@
                                     <th *ngIf="isColumnVisible(col.field) && col.field !== 'detalles' && col.field !== 'opciones'"
                                         class="text-center"
                                         [pSortableColumn]="col.field"
-                                        style="padding: 0.75rem 0.5rem; vertical-align: middle; white-space: nowrap;">
-                                        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        style="padding: 0.4rem 0.25rem; vertical-align: middle; white-space: nowrap;">
+                                        <span style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.3px;">
                                             {{ col.header | translate }}
                                         </span>
                                         <p-sortIcon [field]="col.field" style="margin-left: 0.25rem;"></p-sortIcon>
@@ -575,6 +573,4 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div> 
+</div>

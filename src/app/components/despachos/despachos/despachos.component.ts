@@ -3484,6 +3484,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
   }
 
   retirarPedido(pedido: Pedido) {
+    console.log('🗑️ PARENT retirarPedido INICIO:', {
+      nroPedido: pedido.nroPedido,
+      estadoProceso: pedido.estadoProceso,
+      pedidosAntes: this.pedidosSeleccionados?.length
+    });
+
     const pedidocambiar = pedido;
     this.cambiarEstado(pedidocambiar, 3);
     this.pedidosSeleccionados = this.pedidosSeleccionados.filter(
@@ -3492,6 +3498,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
     if (this.nuevaOrdenEnvio) {
       this.nuevaOrdenEnvio.pedidos = this.pedidosSeleccionados;
     }
+
+    console.log('🗑️ PARENT retirarPedido FIN:', {
+      pedidosDespués: this.pedidosSeleccionados?.length
+    });
   }
 
   verPedidosAgregados() {
@@ -4925,6 +4935,10 @@ export class DespachosComponent implements OnInit, OnDestroy {
           nroShippingOrder: this.nroShippingOrder
         });
 
+        // Resetear signals antes de abrir el modal de edición
+        this.triggerTransportadoraCounter = 0;
+        this.triggerResetSavingCounter = 0;
+
         // Cerrar el modal de listado de órdenes
         this.modalService.dismissAll();
 
@@ -5112,9 +5126,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Validar que haya pedidos seleccionados (preferir los del evento, luego los del padre)
+    // Validar que haya pedidos seleccionados (solo para ordenes nuevas; en edición se permite 0)
     const pedidosParaValidar = event.pedidos || this.pedidosSeleccionados;
-    if (!pedidosParaValidar || pedidosParaValidar.length === 0) {
+    if (esNuevaOrden && (!pedidosParaValidar || pedidosParaValidar.length === 0)) {
       console.error(
         "Error: No hay pedidos seleccionados para la orden de envío",
       );
@@ -5151,6 +5165,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
             timer: 2000,
             showConfirmButton: false,
           });
+
+          // ✅ Resetear flag de guardado SIEMPRE en éxito (antes de abrir transportadora o cerrar modal)
+          this.triggerResetSavingCounter++;
 
           // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
           if (debeAbrirModalTransportadora) {
@@ -5325,6 +5342,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
             showConfirmButton: false,
           });
 
+          // ✅ Resetear flag de guardado SIEMPRE en éxito (antes de abrir transportadora o cerrar modal)
+          this.triggerResetSavingCounter++;
+
           // 🔥 ABRIR MODAL DE TRANSPORTADORA si el flag está activo
           if (debeAbrirModalTransportadora) {
             console.log('🚀 Enviando signal al hijo para abrir modal de transportadora...');
@@ -5413,13 +5433,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
     console.log('✅ Modal de Enviame abierto correctamente desde el padre');
 
-    // Resetear isSaving inmediatamente después de abrir el modal
-    if (this.generarOrdenComponent) {
-      this.generarOrdenComponent.isSaving = false;
-    }
-    if (this.editarOrdenComponent) {
-      this.editarOrdenComponent.isSaving = false;
-    }
+    // Resetear isSaving inmediatamente después de abrir el modal (via @Input signal)
+    this.triggerResetSavingCounter++;
 
     // Manejar el cierre del modal
     modalRef.onClose
