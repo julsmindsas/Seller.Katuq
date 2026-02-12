@@ -464,13 +464,6 @@ export class CrearVentasComponent
         });
       }
 
-      // Eliminar duplicados de consumidor final que puedan venir del servidor
-      this.eliminarDuplicadosConsumidorFinal();
-
-      // DESPUÉS de cargar los datos, verificar si existe el consumidor final
-      if (!this.existeConsumidorFinal()) {
-        this.agregarConsumidorFinal();
-      }
     });
   }
   datosFacElect(event) {
@@ -2529,13 +2522,6 @@ export class CrearVentasComponent
                   this.originalDataFacturacionElectronica =
                     this.utils.deepClone(res);
 
-                  // Eliminar duplicados de consumidor final que puedan venir del servidor
-                  this.eliminarDuplicadosConsumidorFinal();
-
-                  // Agregar el consumidor final si no existe
-                  if (!this.existeConsumidorFinal()) {
-                    this.agregarConsumidorFinal();
-                  }
                   this.ref.detectChanges();
                 }
               },
@@ -3103,9 +3089,10 @@ export class CrearVentasComponent
 
   /**
    * Determina si debe mostrar el selector de forma de entrega
-   * El selector NO debe mostrarse cuando:
-   * 1. El pedido ya tiene calendario configurado (fechaEntrega)
-   * 2. El pedido ya tiene forma de entrega configurada (recoge en tienda o domicilio)
+   * El selector NO debe mostrarse cuando todos los productos del carrito
+   * tienen llevaCalendario activado (procesoComercial.llevaCalendario = true),
+   * ya que el calendario maneja la configuración de entrega.
+   * Si al menos un producto NO tiene calendario activado, SÍ se muestra el selector.
    */
   get mostrarSelectorFormaEntrega(): boolean {
     try {
@@ -3113,27 +3100,27 @@ export class CrearVentasComponent
       if (carrito) {
         const carritoObj = JSON.parse(carrito);
         if (carritoObj && carritoObj.length > 0) {
-          const datosEntrega = carritoObj[0]?.configuracion?.datosEntrega;
+          // Verificar si al menos un producto tiene calendario desactivado
+          const tieneProductoSinCalendario = carritoObj.some(
+            (item: any) => !item.producto?.procesoComercial?.llevaCalendario
+          );
 
-          // Si ya tiene calendario configurado (fechaEntrega), NO mostrar selector
-          if (datosEntrega?.fechaEntrega) {
-            console.log('🚫 Selector de forma de entrega ocultado: Pedido ya tiene calendario configurado');
-            return false;
+          if (tieneProductoSinCalendario) {
+            console.log('✅ Selector de forma de entrega visible: Producto(s) sin calendario activado');
+            return true;
           }
 
-          // Si ya tiene forma de entrega configurada, NO mostrar selector
-          if (datosEntrega?.formaEntrega) {
-            console.log('🚫 Selector de forma de entrega ocultado: Pedido ya tiene forma de entrega configurada:', datosEntrega.formaEntrega);
-            return false;
-          }
+          // Todos los productos tienen calendario activado
+          console.log('🚫 Selector de forma de entrega ocultado: Todos los productos tienen calendario activado');
+          return false;
         }
       }
 
-      // Si no hay configuración previa, SÍ mostrar selector
+      // Si no hay carrito, mostrar selector por defecto
       return true;
     } catch (error) {
       console.error("Error al verificar si mostrar selector de forma de entrega:", error);
-      return true; // En caso de error, mostrar selector por defecto
+      return true;
     }
   }
 
@@ -4618,41 +4605,11 @@ export class CrearVentasComponent
    * Reinicia el formulario para crear un nuevo pedido
    */
   nuevoPedido(): void {
-    // Limpiar completamente el caché y resetear variables
+    // Limpiar caché antes de recargar
     this.limpiarCacheCompleto();
 
-    // Resetear el formulario
-    this.formulario.reset();
-
-    // Ocultar la confirmación y mostrar el stepper
-    this.showPedidoConfirm = false;
-    this.showSteper = true;
-
-    // Resetear variables del carrito sidebar
-    this.productosCarritoSidebar = [];
-    this.cantidadItemsCarrito = 0;
-    this.totalCarritoSidebar = 0;
-    this.tieneProductosEnCarrito = false;
-    this.sidebarCarritoVisible = true;
-
-    // Obtener nuevo número de pedido
-    this.ventasService
-      .getNextRef(this.empresaActual.nomComercial)
-      .subscribe((res: any) => {
-        const texto = this.empresaActual.nomComercial.toString();
-        const ultimasLetras = texto.substring(texto.length - 3);
-        this.pedidoGral.nroPedido =
-          ultimasLetras + "-" + res.nextConsecutive.toString().padStart(6, "0");
-        this.pedidoGral.referencia = "";
-      });
-
-    // Volver al paso 1 del wizard
-    if (this.wizard) {
-      this.wizard.goToStep(0);
-    }
-
-    // Forzar detección de cambios
-    this.ref.detectChanges();
+    // Recargar la página para reiniciar completamente el flujo
+    window.location.reload();
   }
 
   ngOnDestroy(): void {

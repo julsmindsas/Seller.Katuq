@@ -97,13 +97,6 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
           });
         }
 
-        // Eliminar duplicados de consumidor final que puedan venir del servidor
-        this.eliminarDuplicadosConsumidorFinal();
-
-        // Agregar el consumidor final si no existe cuando se abre desde la lista
-        if (!this.existeConsumidorFinal()) {
-          this.agregarConsumidorFinal();
-        }
       });
     }
   }
@@ -170,14 +163,6 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
 
       // Actualizar la lista
       this.datosFacturacionElectronica = nuevaLista;
-
-      // Eliminar duplicados de consumidor final
-      this.eliminarDuplicadosConsumidorFinal();
-
-      // Verificar y agregar consumidor final si no existe
-      if (!this.existeConsumidorFinal()) {
-        this.agregarConsumidorFinal();
-      }
 
       // ✅ IMPORTANTE: Setear el cd del cliente para que el backend pueda identificarlo
       this.formulario.controls["cd"].setValue(res.cd);
@@ -559,6 +544,23 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
     }
 
     this.datosFacturacionElectronica.push(consumidorFinal);
+  }
+
+  seleccionarConsumidorFinal(): void {
+    // Asegurar que el consumidor final exista en la lista
+    this.agregarConsumidorFinal();
+
+    // Buscar el índice del consumidor final
+    const index = this.datosFacturacionElectronica.findIndex(
+      (item) =>
+        item.documento === "222222222222" ||
+        item.alias?.toLowerCase() === "consumidor final" ||
+        item.nombres?.toLowerCase() === "consumidor final"
+    );
+
+    if (index >= 0) {
+      this.seleccionarDireccionFE(index);
+    }
   }
 
   quitarDireccionFacturacion(): void {

@@ -48,7 +48,8 @@
       "Bash(taskkill:*)",
       "Bash(npx ng build:*)",
       "Bash(npx ng serve --port 4200)",
-      "Bash(npx kill-port:*)"
+      "Bash(npx kill-port:*)",
+      "Bash(npx ng serve:*)"
     ]
   }
 }
