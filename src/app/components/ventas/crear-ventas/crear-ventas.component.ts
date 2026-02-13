@@ -2590,22 +2590,20 @@ export class CrearVentasComponent
     // Primero eliminar duplicados si existen
     this.eliminarDuplicadosConsumidorFinal();
 
-    // Si ya existe después de limpiar duplicados, no agregar
-    if (this.existeConsumidorFinal()) return;
-
+    // Datos actualizados del consumidor final según normativa colombiana
     const consumidorFinal = {
       alias: "Consumidor Final",
-      nombres: "Consumidor Final",
-      tipoDocumento: "CC-NIT",
+      nombres: "CONSUMIDOR FINAL",
+      tipoDocumento: "CC",
       documento: "222222222222",
-      indicativoCel: "",
-      celular: "",
-      correoElectronico: "",
-      direccion: this.direccion_facturacion || "N/A",
-      pais: this.pais || "Colombia",
-      departamento: this.departamento || "",
-      ciudad: this.ciudad_municipio || "",
-      codigoPostal: this.codigo_postal || "",
+      indicativoCel: "57",
+      celular: "0000000000",
+      correoElectronico: "consumidorfinal@katuq.com",
+      direccion: "N/A",
+      pais: "Colombia",
+      departamento: "N/A",
+      ciudad: "N/A",
+      codigoPostal: "000000",
     };
 
     // Si la lista no está inicializada, crearla
@@ -2613,8 +2611,21 @@ export class CrearVentasComponent
       this.datosFacturacionElectronica = [];
     }
 
-    // Agregar el consumidor final
-    this.datosFacturacionElectronica.push(consumidorFinal);
+    // Buscar si ya existe un consumidor final para actualizarlo
+    const index = this.datosFacturacionElectronica.findIndex(
+      (item) =>
+        item.documento === "222222222222" ||
+        item.alias?.toLowerCase() === "consumidor final" ||
+        item.nombres?.toLowerCase() === "consumidor final"
+    );
+
+    if (index >= 0) {
+      // Actualizar el consumidor final existente con los nuevos datos
+      this.datosFacturacionElectronica[index] = consumidorFinal;
+    } else {
+      // Agregar un nuevo consumidor final
+      this.datosFacturacionElectronica.push(consumidorFinal);
+    }
   }
 
   private reviewStepAndExecute(index: number) {
@@ -3219,6 +3230,9 @@ export class CrearVentasComponent
       }, 100);
     }
 
+    // Forzar detección de cambios creando una nueva referencia del pedido
+    // Esto dispara ngOnChanges en el componente checkout para actualizar la forma de entrega
+    this.pedidoGral = { ...this.pedidoGral };
     this.ref.detectChanges();
   }
 
