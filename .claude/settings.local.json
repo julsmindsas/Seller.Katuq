@@ -49,7 +49,10 @@
       "Bash(npx ng build:*)",
       "Bash(npx ng serve --port 4200)",
       "Bash(npx kill-port:*)",
-      "Bash(npx ng serve:*)"
+      "Bash(npx ng serve:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }

@@ -2619,6 +2619,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Obtener porcentaje de descuento del pedido
     const porceDescuento = (Number(pedido.porceDescuento) || 0) / 100;
 
+    // Obtener categoría del cliente para precios especiales
+    const categoriaClienteId = pedido?.cliente?.categoria?.id;
+
     pedido.carrito.forEach((itemCarrito) => {
       const producto = itemCarrito?.producto;
       const cantidad = Number(itemCarrito?.cantidad) || 0;
@@ -2628,8 +2631,20 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       let precioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
       let porcentajeIvaStr = (producto?.precio?.precioUnitarioIva ?? "0").toString();
 
-      // Buscar precio por volumen si aplica
-      if (preciosVolumen.length > 0) {
+      // PRIORIDAD 1: Verificar si hay precio por categoría de cliente
+      const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
+      const precioCategoria = categoriaClienteId
+        ? preciosPorTipoCliente.find((p: any) =>
+            p.tipoClienteId === categoriaClienteId && p.activo === true)
+        : null;
+
+      if (precioCategoria) {
+        // Si hay precio por categoría, usarlo y su porcentaje de IVA
+        precioConIva = Number(precioCategoria.precioConIva) || 0;
+        porcentajeIvaStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaStr;
+        // No aplicar precios por volumen cuando hay precio por categoría
+      } else if (preciosVolumen.length > 0) {
+        // PRIORIDAD 2: Buscar precio por volumen si aplica
         // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
         const rangosValidos = preciosVolumen.filter((x: any) => {
           const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
