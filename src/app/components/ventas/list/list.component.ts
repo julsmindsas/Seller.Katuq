@@ -671,17 +671,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns true si se pueden eliminar productos, false si no
    */
   canDeleteProducts(order: Pedido): boolean {
-    if (!order || !order.estadoProceso) {
+    if (!order) {
       return false;
     }
 
-    // Solo permitir eliminación en estados muy tempranos del proceso
-    const estadosPermitidos = [
-      "Pendiente", // Pedido recién creado
-      "SinProducir", // Pedido confirmado pero sin iniciar producción
-    ];
+    // Permitir eliminación si el pago está pendiente O si el proceso no ha iniciado
+    const pagoPermitido = order.estadoPago === "Pendiente";
+    const procesoPermitido = order.estadoProceso === "SinProducir";
 
-    return estadosPermitidos.includes(order.estadoProceso);
+    return pagoPermitido || procesoPermitido;
   }
 
   /**
@@ -6836,7 +6834,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // EXCEPTO para productos fantasma que siempre se pueden eliminar
     if (!this.canDeleteProducts(pedido) && !this.isGhostProduct(item)) {
       this.toastrService.warning(
-        `No se pueden eliminar productos. Solo se permiten eliminaciones en pedidos con estado "Pendiente" o "SinProducir". Estado actual: ${pedido.estadoProceso}`,
+        `No se pueden eliminar productos. Solo se permiten eliminaciones cuando el estado de pago es "Pendiente" o el estado de proceso es "SinProducir". Estado actual - Pago: ${pedido.estadoPago}, Proceso: ${pedido.estadoProceso}`,
         "Eliminación No Permitida",
       );
       return;
