@@ -1,0 +1,153 @@
+<p-toast></p-toast>
+
+<div class="field-mapping">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h3 class="mb-1">Mapeo de Campos</h3>
+      <p class="text-muted mb-0">Configuracion del mapeo entre campos de Katuq y Shopify</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <p-tabView [(activeIndex)]="activeTabIndex">
+    <!-- Tab 1: Variants -->
+    <p-tabPanel header="Variantes" leftIcon="pi pi-tag">
+      <div class="tab-content-inner">
+        <div class="alert alert-info d-flex align-items-start mb-3">
+          <i class="pi pi-info-circle me-2 mt-1"></i>
+          <div>
+            <strong>Mapeo automatico de variantes</strong>
+            <p class="mb-0 small">El mapeo de campos entre productos Katuq y Shopify se realiza automaticamente.
+              A continuacion se muestra la estructura de mapeo actual (solo lectura).</p>
+          </div>
+        </div>
+
+        <div *ngIf="loadingVariants" class="text-center py-4">
+          <p-progressBar mode="indeterminate" [style]="{'height': '6px'}"></p-progressBar>
+          <p class="text-muted mt-2">Cargando estructura de variantes...</p>
+        </div>
+
+        <p-card *ngIf="!loadingVariants" styleClass="mapping-card">
+          <p-tree [value]="variantTree" [style]="{'border': 'none'}"></p-tree>
+        </p-card>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab 2: Locations -->
+    <p-tabPanel header="Bodegas / Locations" leftIcon="pi pi-map-marker">
+      <div class="tab-content-inner">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <p class="text-muted mb-0">Mapea las bodegas de Katuq con las ubicaciones (locations) de Shopify</p>
+          <div class="d-flex gap-2">
+            <button pButton type="button" label="Auto-mapear" icon="pi pi-bolt"
+              class="p-button-outlined p-button-sm"
+              [loading]="autoMapping"
+              (click)="autoMapLocations()"></button>
+            <button pButton type="button" label="Agregar" icon="pi pi-plus"
+              class="p-button-outlined p-button-success p-button-sm"
+              (click)="addLocationMapping()"></button>
+          </div>
+        </div>
+
+        <div *ngIf="loadingLocations" class="text-center py-4">
+          <p-progressBar mode="indeterminate" [style]="{'height': '6px'}"></p-progressBar>
+          <p class="text-muted mt-2">Cargando ubicaciones...</p>
+        </div>
+
+        <p-card *ngIf="!loadingLocations" styleClass="mapping-card">
+          <p-table [value]="locationMappings" styleClass="p-datatable-sm"
+            *ngIf="locationMappings.length > 0">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Bodega Katuq</th>
+                <th><i class="pi pi-arrow-right mx-2"></i></th>
+                <th>Location Shopify</th>
+                <th style="width: 60px;"></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-mapping let-rowIndex="rowIndex">
+              <tr>
+                <td>
+                  <p-dropdown [options]="katuqWarehouses"
+                    [(ngModel)]="mapping.katuqWarehouseId"
+                    placeholder="Seleccionar bodega"
+                    [showClear]="true" styleClass="w-100"
+                    (onChange)="onWarehouseChange(mapping, $event)"></p-dropdown>
+                </td>
+                <td class="text-center">
+                  <i class="pi pi-arrow-right" style="color: #6366F1;"></i>
+                </td>
+                <td>
+                  <p-dropdown [options]="shopifyLocations"
+                    [(ngModel)]="mapping.shopifyLocationId"
+                    placeholder="Seleccionar location"
+                    [showClear]="true" styleClass="w-100"
+                    (onChange)="onLocationChange(mapping, $event)"></p-dropdown>
+                </td>
+                <td>
+                  <button pButton type="button" icon="pi pi-trash"
+                    class="p-button-text p-button-danger p-button-sm p-button-rounded"
+                    (click)="removeLocationMapping(rowIndex)"
+                    pTooltip="Eliminar mapeo"></button>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <div *ngIf="locationMappings.length === 0" class="text-center py-4">
+            <i class="pi pi-map-marker" style="font-size: 2rem; color: #ccc;"></i>
+            <p class="text-muted mt-2 mb-0">No hay mapeos configurados. Usa "Auto-mapear" o agrega uno manualmente.</p>
+          </div>
+
+          <div class="text-end mt-3" *ngIf="locationMappings.length > 0">
+            <button pButton type="button" label="Guardar Mapeos" icon="pi pi-save"
+              class="p-button-sm"
+              [loading]="savingLocations"
+              (click)="saveLocationMappings()"></button>
+          </div>
+        </p-card>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab 3: Status Mapping (read-only) -->
+    <p-tabPanel header="Estados" leftIcon="pi pi-th-large">
+      <div class="tab-content-inner">
+        <div class="alert alert-info d-flex align-items-start mb-3">
+          <i class="pi pi-info-circle me-2 mt-1"></i>
+          <div>
+            <strong>Mapeo de estados (solo lectura)</strong>
+            <p class="mb-0 small">Los estados de Shopify se mapean automaticamente a estados internos de Katuq.</p>
+          </div>
+        </div>
+
+        <p-card styleClass="mapping-card">
+          <p-table [value]="statusMappings" styleClass="p-datatable-sm p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Campo Shopify</th>
+                <th></th>
+                <th>Campo Katuq</th>
+                <th>Descripcion</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-mapping>
+              <tr>
+                <td>
+                  <code class="shopify-field">{{ mapping.shopifyField }}</code>
+                </td>
+                <td class="text-center">
+                  <i class="pi pi-arrow-right" style="color: #6366F1;"></i>
+                </td>
+                <td>
+                  <code class="katuq-field">{{ mapping.katuqField }}</code>
+                </td>
+                <td class="small text-muted">{{ mapping.description }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>

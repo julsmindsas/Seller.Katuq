@@ -1066,6 +1066,137 @@ export class IntegrationsService {
     );
   }
 
+  // ===== SHOPIFY DASHBOARD METHODS =====
+
+  /**
+   * Obtener estado de sincronización del dashboard Shopify
+   */
+  getShopifySyncStatus(): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/shopify/dashboard/${companyId}`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener logs de sincronización Shopify con filtros y paginación
+   */
+  getShopifySyncLogs(filters: {
+    type?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    page?: number;
+    limit?: number;
+  }): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    let params: any = {};
+    if (filters.type) params.type = filters.type;
+    if (filters.status) params.status = filters.status;
+    if (filters.dateFrom) params.dateFrom = filters.dateFrom;
+    if (filters.dateTo) params.dateTo = filters.dateTo;
+    if (filters.page) params.page = filters.page;
+    if (filters.limit) params.limit = filters.limit;
+
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/shopify/sync-logs/${companyId}`,
+      { headers: this.getApiHeaders(), params }
+    );
+  }
+
+  /**
+   * Disparar sincronización manual de Shopify
+   */
+  triggerShopifySync(resource: string): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/shopify/sync/trigger`,
+      { companyId, resource },
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener webhooks registrados en Shopify
+   */
+  getShopifyWebhooks(): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/shopify/webhooks/${companyId}`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Registrar todos los webhooks de Shopify
+   */
+  registerShopifyWebhooks(): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/shopify/webhooks/register`,
+      { companyId },
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Desregistrar un webhook específico de Shopify
+   */
+  unregisterShopifyWebhook(webhookId: string): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.delete<any>(
+      `${environment.urlApi}/v1/shopify/webhooks/${companyId}/${webhookId}`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener mapeos de ubicaciones Shopify
+   */
+  getShopifyLocationMappings(): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/shopify/locations/${companyId}`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Guardar mapeos de ubicaciones Shopify
+   */
+  saveShopifyLocationMapping(mappings: any[]): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/shopify/locations/map`,
+      { companyId, mappings },
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Auto-mapear ubicaciones Shopify con bodegas Katuq
+   */
+  autoMapShopifyLocations(): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/shopify/locations/auto-map`,
+      { companyId },
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtener mapeos de campos Shopify (variantes, estados)
+   */
+  getShopifyFieldMapping(): Observable<any> {
+    const companyId = this.getCurrentCompanyId();
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/shopify/field-mapping/${companyId}`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
   // Método para obtener las integraciones disponibles por categoría
   getAvailableIntegrations(): {
     [category: string]: Array<{

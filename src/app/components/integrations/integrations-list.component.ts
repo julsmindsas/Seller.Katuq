@@ -925,5 +925,10 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     setTimeout(() => this.clearToast(), 3000);
   }
 
+  navigateToShopifyDashboard(event: Event): void {
+    event.stopPropagation();
+    this.router.navigate(['/integrations/shopify']);
+  }
+
   // Métodos para formularios dinámicos
 }

@@ -1,0 +1,172 @@
+<p-toast></p-toast>
+
+<div class="sync-logs">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <h3 class="mb-1">Logs de Sincronizacion</h3>
+          <p class="text-muted mb-0">Historial de eventos de sincronizacion con Shopify</p>
+        </div>
+        <button pButton type="button" label="Recargar" icon="pi pi-refresh"
+          class="p-button-outlined p-button-sm"
+          [loading]="loading"
+          (click)="loadLogs()"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="row mb-3">
+    <div class="col-12 col-md-3 mb-2">
+      <label class="form-label small fw-bold">Tipo</label>
+      <p-dropdown [options]="typeOptions" [(ngModel)]="typeFilter"
+        placeholder="Todos los tipos" [showClear]="true"
+        (onChange)="onFilterChange()" styleClass="w-100"></p-dropdown>
+    </div>
+    <div class="col-12 col-md-3 mb-2">
+      <label class="form-label small fw-bold">Estado</label>
+      <p-dropdown [options]="statusOptions" [(ngModel)]="statusFilter"
+        placeholder="Todos los estados" [showClear]="true"
+        (onChange)="onFilterChange()" styleClass="w-100"></p-dropdown>
+    </div>
+    <div class="col-12 col-md-4 mb-2">
+      <label class="form-label small fw-bold">Rango de Fechas</label>
+      <p-calendar [(ngModel)]="dateRange" selectionMode="range"
+        [readonlyInput]="true" placeholder="Seleccionar rango"
+        dateFormat="dd/mm/yy" [showIcon]="true"
+        (onClose)="onFilterChange()" styleClass="w-100"></p-calendar>
+    </div>
+    <div class="col-12 col-md-2 mb-2 d-flex align-items-end">
+      <button pButton type="button" label="Limpiar" icon="pi pi-filter-slash"
+        class="p-button-text p-button-sm"
+        (click)="clearFilters()"></button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <p-card styleClass="logs-card">
+    <p-table [value]="events" [lazy]="true" [paginator]="true"
+      [rows]="rows" [totalRecords]="totalRecords" [loading]="loading"
+      [first]="first" (onLazyLoad)="loadLogs($event)"
+      [rowHover]="true" [showCurrentPageReport]="true"
+      currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} eventos"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      selectionMode="single" (onRowSelect)="showDetail($event.data)"
+      styleClass="p-datatable-sm">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 40px;"></th>
+          <th>Tipo</th>
+          <th>Estado</th>
+          <th>Descripcion</th>
+          <th>Fecha</th>
+          <th style="width: 80px;">Accion</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-event>
+        <tr [pSelectableRow]="event" class="cursor-pointer">
+          <td>
+            <i [class]="getTypeIcon(event.type)" [style.color]="event.status === 'error' ? '#EF4444' : '#6366F1'"></i>
+          </td>
+          <td>
+            <span class="fw-medium">{{ getTypeLabel(event.type) }}</span>
+          </td>
+          <td>
+            <p-tag [value]="getStatusLabel(event.status)" [severity]="getStatusSeverity(event.status)"></p-tag>
+          </td>
+          <td>
+            <span class="text-truncate d-inline-block" style="max-width: 300px;">
+              {{ event.description || event.detail || '--' }}
+            </span>
+          </td>
+          <td>
+            <span class="small text-muted">{{ event.date | date:'medium' }}</span>
+          </td>
+          <td>
+            <button pButton type="button" icon="pi pi-eye"
+              class="p-button-text p-button-sm p-button-rounded"
+              (click)="showDetail(event); $event.stopPropagation()"
+              pTooltip="Ver detalle"></button>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center py-4">
+            <i class="pi pi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+            <p class="text-muted mt-2 mb-0">No se encontraron eventos</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+</div>
+
+<!-- Detail Dialog -->
+<p-dialog header="Detalle del Evento" [(visible)]="showDetailDialog"
+  [modal]="true" [style]="{'width': '700px', 'max-width': '95vw'}"
+  [draggable]="false" [resizable]="false">
+
+  <div *ngIf="selectedEvent" class="event-detail">
+    <div class="row mb-3">
+      <div class="col-6">
+        <label class="small fw-bold text-muted">Tipo</label>
+        <p class="mb-0">
+          <i [class]="getTypeIcon(selectedEvent.type)" class="me-2"></i>
+          {{ getTypeLabel(selectedEvent.type) }}
+        </p>
+      </div>
+      <div class="col-6">
+        <label class="small fw-bold text-muted">Estado</label>
+        <p class="mb-0">
+          <p-tag [value]="getStatusLabel(selectedEvent.status)"
+            [severity]="getStatusSeverity(selectedEvent.status)"></p-tag>
+        </p>
+      </div>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-6">
+        <label class="small fw-bold text-muted">Fecha</label>
+        <p class="mb-0">{{ selectedEvent.date | date:'full' }}</p>
+      </div>
+      <div class="col-6">
+        <label class="small fw-bold text-muted">ID</label>
+        <p class="mb-0 text-monospace small">{{ selectedEvent.id || '--' }}</p>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label class="small fw-bold text-muted">Descripcion</label>
+      <p class="mb-0">{{ selectedEvent.description || selectedEvent.detail || '--' }}</p>
+    </div>
+
+    <div *ngIf="selectedEvent.error" class="mb-3">
+      <label class="small fw-bold text-muted">Error</label>
+      <div class="alert alert-danger small mb-0">
+        {{ selectedEvent.error }}
+      </div>
+    </div>
+
+    <div *ngIf="selectedEvent.payload || selectedEvent.data" class="mb-3">
+      <label class="small fw-bold text-muted">Datos (JSON)</label>
+      <pre class="json-viewer">{{ formatJson(selectedEvent.payload || selectedEvent.data) }}</pre>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cerrar" icon="pi pi-times"
+      class="p-button-text"
+      (click)="showDetailDialog = false"></button>
+    <button pButton type="button" label="Reprocesar" icon="pi pi-refresh"
+      class="p-button-warning"
+      *ngIf="selectedEvent?.status === 'error'"
+      [loading]="reprocessing"
+      (click)="reprocessEvent(selectedEvent)"></button>
+  </ng-template>
+</p-dialog>

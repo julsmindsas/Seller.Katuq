@@ -1,0 +1,171 @@
+<p-toast></p-toast>
+
+<div class="shopify-dashboard">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="dashboard-header d-flex align-items-center justify-content-between">
+        <div>
+          <h2 class="mb-1">Dashboard Shopify</h2>
+          <p class="text-muted mb-0">Monitoreo y gestion de la integracion con Shopify</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button pButton type="button" label="Verificar Conexion" icon="pi pi-refresh"
+            class="p-button-outlined p-button-sm"
+            [loading]="connectionStatus === 'checking'"
+            (click)="verifyConnection()"></button>
+          <button pButton type="button" label="Recargar" icon="pi pi-sync"
+            class="p-button-outlined p-button-secondary p-button-sm"
+            [loading]="loading"
+            (click)="loadDashboardData()"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connection Status + Metrics -->
+  <div class="row mb-4">
+    <!-- Connection Card -->
+    <div class="col-12 col-md-6 col-lg-3 mb-3">
+      <p-card styleClass="dashboard-card status-card">
+        <div class="card-content text-center">
+          <div class="status-icon mb-2" [ngClass]="{
+            'status-connected': connectionStatus === 'connected',
+            'status-disconnected': connectionStatus === 'disconnected',
+            'status-checking': connectionStatus === 'checking'
+          }">
+            <i class="pi" [ngClass]="{
+              'pi-check-circle': connectionStatus === 'connected',
+              'pi-times-circle': connectionStatus === 'disconnected',
+              'pi-spin pi-spinner': connectionStatus === 'checking'
+            }" style="font-size: 2rem;"></i>
+          </div>
+          <p-tag [value]="getStatusLabel()" [severity]="getStatusSeverity()"></p-tag>
+          <p class="text-muted mt-2 mb-0 small" *ngIf="lastChecked">
+            Ultima verificacion: {{ lastChecked | date:'short' }}
+          </p>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Products Metric -->
+    <div class="col-12 col-md-6 col-lg-3 mb-3">
+      <p-card styleClass="dashboard-card metric-card">
+        <div class="card-content text-center">
+          <i class="pi pi-box metric-icon mb-2" style="font-size: 2rem; color: #6366F1;"></i>
+          <h3 class="metric-value mb-1">{{ syncMetrics.products }}</h3>
+          <p class="text-muted mb-0">Productos Sincronizados</p>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Orders Metric -->
+    <div class="col-12 col-md-6 col-lg-3 mb-3">
+      <p-card styleClass="dashboard-card metric-card">
+        <div class="card-content text-center">
+          <i class="pi pi-shopping-cart metric-icon mb-2" style="font-size: 2rem; color: #22C55E;"></i>
+          <h3 class="metric-value mb-1">{{ syncMetrics.orders }}</h3>
+          <p class="text-muted mb-0">Ordenes Recibidas</p>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Last Sync -->
+    <div class="col-12 col-md-6 col-lg-3 mb-3">
+      <p-card styleClass="dashboard-card metric-card">
+        <div class="card-content text-center">
+          <i class="pi pi-clock metric-icon mb-2" style="font-size: 2rem; color: #F59E0B;"></i>
+          <h3 class="metric-value mb-1" *ngIf="syncMetrics.lastSync">
+            {{ syncMetrics.lastSync | date:'short' }}
+          </h3>
+          <h3 class="metric-value mb-1" *ngIf="!syncMetrics.lastSync">--</h3>
+          <p class="text-muted mb-0">Ultima Sincronizacion</p>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <!-- Quick Actions + Recent Events -->
+  <div class="row">
+    <!-- Quick Actions -->
+    <div class="col-12 col-lg-5 mb-4">
+      <p-card header="Acciones Rapidas" styleClass="dashboard-card">
+        <div class="actions-grid">
+          <button pButton type="button" label="Sync Productos" icon="pi pi-box"
+            class="p-button-outlined action-btn mb-2 w-100"
+            [loading]="isSyncing('products')"
+            (click)="triggerSync('products')"></button>
+          <button pButton type="button" label="Sync Inventario" icon="pi pi-database"
+            class="p-button-outlined p-button-success action-btn mb-2 w-100"
+            [loading]="isSyncing('inventory')"
+            (click)="triggerSync('inventory')"></button>
+          <button pButton type="button" label="Sync Ordenes" icon="pi pi-shopping-cart"
+            class="p-button-outlined p-button-warning action-btn mb-2 w-100"
+            [loading]="isSyncing('orders')"
+            (click)="triggerSync('orders')"></button>
+        </div>
+        <hr>
+        <div class="nav-links">
+          <button pButton type="button" label="Ver Logs de Sync" icon="pi pi-list"
+            class="p-button-text p-button-sm w-100 text-start mb-1"
+            (click)="navigateTo('logs')"></button>
+          <button pButton type="button" label="Mapeo de Campos" icon="pi pi-map"
+            class="p-button-text p-button-sm w-100 text-start mb-1"
+            (click)="navigateTo('mapping')"></button>
+          <button pButton type="button" label="Configuracion Webhooks" icon="pi pi-bell"
+            class="p-button-text p-button-sm w-100 text-start"
+            (click)="navigateTo('webhooks')"></button>
+        </div>
+      </p-card>
+    </div>
+
+    <!-- Recent Events -->
+    <div class="col-12 col-lg-7 mb-4">
+      <p-card header="Eventos Recientes" styleClass="dashboard-card">
+        <div *ngIf="loading" class="text-center py-4">
+          <p-progressBar mode="indeterminate" [style]="{'height': '6px'}"></p-progressBar>
+          <p class="text-muted mt-2">Cargando eventos...</p>
+        </div>
+
+        <div *ngIf="!loading && recentEvents.length === 0" class="text-center py-4">
+          <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+          <p class="text-muted mt-2">No hay eventos recientes</p>
+        </div>
+
+        <p-timeline [value]="recentEvents" *ngIf="!loading && recentEvents.length > 0">
+          <ng-template pTemplate="marker" let-event>
+            <span class="timeline-marker" [ngClass]="{
+              'marker-success': event.status === 'success',
+              'marker-error': event.status === 'error',
+              'marker-info': event.status !== 'success' && event.status !== 'error'
+            }">
+              <i [class]="getEventIcon(event)"></i>
+            </span>
+          </ng-template>
+          <ng-template pTemplate="content" let-event>
+            <div class="event-item">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <strong>{{ event.description || event.type }}</strong>
+                  <p class="text-muted small mb-0">
+                    {{ event.detail || '' }}
+                  </p>
+                </div>
+                <p-tag [value]="event.status === 'success' ? 'OK' : 'Error'"
+                  [severity]="event.status === 'success' ? 'success' : 'danger'"
+                  class="ms-2"></p-tag>
+              </div>
+              <small class="text-muted">{{ event.date | date:'medium' }}</small>
+            </div>
+          </ng-template>
+        </p-timeline>
+
+        <div class="text-end mt-3" *ngIf="recentEvents.length > 0">
+          <button pButton type="button" label="Ver todos los logs" icon="pi pi-arrow-right"
+            class="p-button-text p-button-sm"
+            (click)="navigateTo('logs')"></button>
+        </div>
+      </p-card>
+    </div>
+  </div>
+</div>
