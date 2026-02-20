@@ -3121,9 +3121,9 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
   imprimirTarjeta(tarjeta) {
     const doc = new jsPDF({
-      orientation: "landscape",
+      orientation: "portrait",
       unit: "cm",
-      format: [10, 15],
+      format: [15, 20],
     });
 
     // Configurar fuente que soporte caracteres especiales
@@ -3133,8 +3133,8 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Width of the document
     const pageWidth = doc.internal.pageSize.getWidth();
 
-    // Starting y position
-    let yPos = 2;
+    // Starting y position — texto en la parte inferior
+    let yPos = 14;
 
     // Función helper para limpiar y normalizar texto preservando ñ y tildes
     const limpiarTexto = (texto) => {

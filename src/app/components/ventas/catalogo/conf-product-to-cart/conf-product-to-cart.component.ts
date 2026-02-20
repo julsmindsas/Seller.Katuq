@@ -1379,13 +1379,15 @@ export class ConfProductToCartComponent
           const tituloVariable = pref.titulo;
           const opcionElegida = pref.subtitulo || pref.titulo;
 
-          // Buscar el grupo de la variable por título
+          // Buscar el grupo de la variable por título (trimear ambos lados para evitar diferencias de espacios)
           const idxVar = variablesArray.controls.findIndex((ctrl: any) => {
             const data = ctrl.get('data')?.value;
-            return data && data.titulo === tituloVariable;
+            return data && (data.titulo || '').trim() === (tituloVariable || '').trim();
           });
 
           if (idxVar === -1) {
+            // No se encontró el grupo: la preferencia queda tal como la cargó
+            // processExistingPreferences (se muestra en pantalla sin reconstruir)
             console.debug('[CONF DEBUG] pref sin variable matching', pref);
             return;
           }
@@ -1452,6 +1454,13 @@ export class ConfProductToCartComponent
             // No subimos archivo. Solo reflejamos la imagen si existe en la preferencia
             grupo.get('imagenIngresado')?.setValue('');
           }
+
+          // Antes de actualizar, eliminar entradas existentes con cualquiera de los dos
+          // posibles títulos (el guardado y el del grupo) para evitar duplicados
+          const grupoTitulo = dataGrupo?.titulo || '';
+          this.productPreference = this.productPreference.filter(
+            p => p.tipo !== 'preferencia' || (p.titulo !== tituloVariable && p.titulo !== grupoTitulo)
+          );
 
           this.updateProductPreference(grupo as any, selectedValue);
         });
@@ -1614,7 +1623,13 @@ export class ConfProductToCartComponent
    * Normaliza las preferencias a la forma esperada por el backend/UI histórico
    */
   private normalizeProductPreferences(preferences: any[]): any[] {
-    return (preferences || []).map((p) => {
+    // Deduplicar por titulo: si hay dos entradas con el mismo titulo, conservar la última
+    const deduped = new Map<string, any>();
+    (preferences || []).forEach(p => {
+      const key = (p?.titulo || '').trim();
+      if (key) deduped.set(key, p);
+    });
+    return Array.from(deduped.values()).map((p) => {
       const titulo = (p?.titulo || "").trim();
       const subtitulo = p?.subtitulo || "";
       const valorUnitarioSinIva = Number(p?.valorUnitarioSinIva || 0);
@@ -2030,19 +2045,21 @@ export class ConfProductToCartComponent
 
   private handleTextInput(event: any, item: FormControl, selectedIndex: string) {
     const textValue = event.target?.value || selectedIndex;
-    
-    item.value.children.data = {
-      imagen: "assets/images/other-images/sinimagen.webp",
-      porcentajeIva: item.value.data.porcentajeIva || 0,
-      precioTotalConIva: item.value.data.precioTotalConIva || 0,
-      subtitulo: textValue,
-      tipoImagen: "texto",
-      titulo: textValue,
-      valorIva: item.value.data.valorIva || 0,
-      valorUnitarioSinIva: item.value.data.valorUnitarioSinIva || 0,
+
+    const selectedValue = {
+      data: {
+        imagen: "assets/images/other-images/sinimagen.webp",
+        porcentajeIva: item.value.data.porcentajeIva || 0,
+        precioTotalConIva: item.value.data.precioTotalConIva || 0,
+        subtitulo: textValue,
+        tipoImagen: "texto",
+        titulo: textValue,
+        valorIva: item.value.data.valorIva || 0,
+        valorUnitarioSinIva: item.value.data.valorUnitarioSinIva || 0,
+      }
     };
 
-    this.updateProductPreference(item, item.value.children);
+    this.updateProductPreference(item, selectedValue);
   }
 
   private handleImageUpload(event: any, item: FormControl, selectedIndex: string) {
@@ -2092,18 +2109,30 @@ export class ConfProductToCartComponent
       finalize(() => {
         fileRef.getDownloadURL().subscribe({
           next: (url) => {
-            item.value.children.data = {
-              imagen: url,
-              porcentajeIva: item.value.data.porcentajeIva || 0,
-              precioTotalConIva: item.value.data.precioTotalConIva || 0,
-              subtitulo: file.name,
-              tipoImagen: "imagen",
-              titulo: file.name,
-              valorIva: item.value.data.valorIva || 0,
-              valorUnitarioSinIva: item.value.data.valorUnitarioSinIva || 0,
+            const grupoTituloImg = item.value?.data?.titulo || '';
+
+            // Eliminar entradas previas para evitar duplicados al subir imagen
+            this.productPreference = this.productPreference.filter(p => {
+              if (p.tipo !== 'preferencia') return true;
+              if (grupoTituloImg && p.titulo === grupoTituloImg) return false;
+              if (p.titulo && p.titulo === p.subtitulo) return false;
+              return true;
+            });
+
+            const selectedValue = {
+              data: {
+                imagen: url,
+                porcentajeIva: item.value.data.porcentajeIva || 0,
+                precioTotalConIva: item.value.data.precioTotalConIva || 0,
+                subtitulo: file.name,
+                tipoImagen: "imagen",
+                titulo: file.name,
+                valorIva: item.value.data.valorIva || 0,
+                valorUnitarioSinIva: item.value.data.valorUnitarioSinIva || 0,
+              }
             };
 
-            this.updateProductPreference(item, item.value.children);
+            this.updateProductPreference(item, selectedValue);
             Swal.close();
           },
           error: (error) => {
@@ -2130,7 +2159,7 @@ export class ConfProductToCartComponent
 
   private updateProductPreference(item: FormControl, selectedValue: any) {
     const preference = {
-      titulo: item.value.data.titulo,
+      titulo: (item.value.data.titulo || '').trim(),
       subtitulo: selectedValue?.data?.titulo || selectedValue?.data?.subtitulo || "",
       valorUnitarioSinIva: selectedValue?.data?.valorUnitarioSinIva || 0,
       valorIva: selectedValue?.data?.valorIva || 0,
@@ -3963,7 +3992,7 @@ export class ConfProductToCartComponent
       // Procesar cada preferencia existente
       preferencias.forEach((preferencia, index) => {
         console.log(`📋 Preferencia ${index + 1}:`, preferencia);
-        
+
         // Agregar la preferencia al array
         this.productPreference.push(preferencia);
         
@@ -4094,10 +4123,13 @@ export class ConfProductToCartComponent
         if (index < itemsArray.length) {
           const control = itemsArray.at(index) as FormGroup;
           
-          // Aplicar valores guardados
+          // Aplicar valores guardados SIN sobreescribir titulo.
+          // El titulo del formulario viene de la definición del producto (crearItem) y nunca
+          // debe ser sobreescrito con datos guardados, ya que podría contener texto del usuario.
           if (savedVar.data) {
+            const { titulo: _ignorarTitulo, ...dataWithoutTitulo } = savedVar.data;
             control.patchValue({
-              data: savedVar.data
+              data: dataWithoutTitulo
             });
           }
           
