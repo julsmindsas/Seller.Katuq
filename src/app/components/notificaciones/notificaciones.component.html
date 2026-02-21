@@ -1,0 +1,99 @@
+<div class="container-fluid padding-top-notif">
+    <div class="row">
+        <div class="col-sm-12">
+            <!-- Título de la vista -->
+            <div class="page-title">
+                <div class="row">
+                    <div class="col-6">
+                        <h3>Ajustes de notificaciones</h3>
+                    </div>
+                    <div class="col-6">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item">
+                                <a routerLink="/"><app-feather-icons [icon]="'home'"></app-feather-icons></a>
+                            </li>
+                            <li class="breadcrumb-item">Perfil</li>
+                            <li class="breadcrumb-item active">Ajustes de notificaciones</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Texto descriptivo de política de privacidad -->
+            <div class="privacy-note mb-4">
+                <p class="text-muted">
+                    Al activar los permisos de comunicación, aceptas que usemos tu número de teléfono o email, como se
+                    describe en nuestra <a href="javascript:void(0)" class="text-primary font-weight-bold">Política de
+                        privacidad</a>. El contenido enviado por email y otros canales puede variar. Puedes retirar tu
+                    consentimiento en cualquier momento.
+                </p>
+            </div>
+
+            <!-- Tarjeta principal de configuración -->
+            <div class="card notification-card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table preferences-table">
+
+                            <!-- Cabeceras (Solo a la derecha) -->
+                            <thead>
+                                <tr>
+                                    <th class="td-category"></th>
+                                    <th class="td-channel text-center">
+                                        <div class="channel-header">Mensaje de<br>texto</div>
+                                    </th>
+                                    <th class="td-channel text-center">
+                                        <div class="channel-header">WhatsApp</div>
+                                    </th>
+                                    <th class="td-channel text-center">
+                                        <div class="channel-header">Email</div>
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <!-- Cuerpo de la tabla (Preferencias) -->
+                            <tbody>
+                                <tr *ngFor="let pref of preferences; let last = last" [class.border-bottom-0]="last">
+                                    <td class="td-category">
+                                        <h6 class="font-weight-bold mb-1">{{ pref.title }}</h6>
+                                        <p class="text-muted mb-0 font-sm">{{ pref.description }}</p>
+                                    </td>
+
+                                    <td class="td-channel text-center align-middle">
+                                        <div class="checkbox-container">
+                                            <input type="checkbox" class="custom-checkbox" [id]="'sms-' + pref.id"
+                                                [checked]="pref.channels.sms"
+                                                (change)="togglePreference(pref.id, 'sms')">
+                                            <label [for]="'sms-' + pref.id"></label>
+                                        </div>
+                                    </td>
+
+                                    <td class="td-channel text-center align-middle">
+                                        <div class="checkbox-container">
+                                            <input type="checkbox" class="custom-checkbox" [id]="'wa-' + pref.id"
+                                                [checked]="pref.channels.whatsapp"
+                                                (change)="togglePreference(pref.id, 'whatsapp')">
+                                            <label [for]="'wa-' + pref.id"></label>
+                                        </div>
+                                    </td>
+
+                                    <td class="td-channel text-center align-middle">
+                                        <div class="checkbox-container">
+                                            <!-- Email checkboxes are currently shown locked/disabled in the reference image (with checkmark but muted) -->
+                                            <input type="checkbox" class="custom-checkbox disabled-email"
+                                                [id]="'email-' + pref.id" [checked]="true" [disabled]="true"
+                                                (change)="togglePreference(pref.id, 'email')">
+                                            <label [for]="'email-' + pref.id"></label>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
