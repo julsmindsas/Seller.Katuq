@@ -35,7 +35,6 @@
                     <div class="table-responsive">
                         <table class="table preferences-table">
 
-                            <!-- Cabeceras (Solo a la derecha) -->
                             <thead>
                                 <tr>
                                     <th class="td-category"></th>
@@ -51,7 +50,7 @@
                                 </tr>
                             </thead>
 
-                            <!-- Cuerpo de la tabla (Preferencias) -->
+                            <!-- Cuerpo de la tabla -->
                             <tbody>
                                 <tr *ngFor="let pref of preferences; let last = last" [class.border-bottom-0]="last">
                                     <td class="td-category">

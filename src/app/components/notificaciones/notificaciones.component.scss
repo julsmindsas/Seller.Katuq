@@ -8,11 +8,11 @@
     p {
         font-size: 13.5px;
         line-height: 1.6;
-        color: #6c757d; // muted gray
+        color: #6c757d; 
     }
 
     a {
-        color: #5c62d6 !important; // primary purple/blue color
+        color: #5c62d6 !important;
         text-decoration: none;
 
         &:hover {
@@ -111,8 +111,8 @@
             width: 22px;
             height: 22px;
             background: white;
-            border: 2px solid #5c62d6; // Purple border
-            border-radius: 4px; // Rounded square
+            border: 2px solid #5c62d6; 
+            border-radius: 4px; 
             transition: all 0.2s ease;
 
             // The checkmark
@@ -131,7 +131,7 @@
         }
 
         &:checked+label {
-            background-color: #5c62d6; // Purple background when checked
+            background-color: #5c62d6; 
             border-color: #5c62d6;
 
             &::after {
@@ -139,14 +139,11 @@
             }
         }
 
-        // Default unchecked state in reference image has slightly lighter/gray border? 
-        // Actually the reference image shows them purple border when checked, and when unchecked it's an empty dark gray border.
         &:not(:checked)+label {
             border: 2px solid #a3a3a3;
             background: white;
         }
 
-        // Disabled/Locked state (Like the Email column in the image)
         &.disabled-email {
             &+label {
                 cursor: not-allowed;
