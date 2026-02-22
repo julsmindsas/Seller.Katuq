@@ -79,9 +79,8 @@
 
                                     <td class="td-channel text-center align-middle">
                                         <div class="checkbox-container">
-                                            <!-- Email checkboxes are currently shown locked/disabled in the reference image (with checkmark but muted) -->
-                                            <input type="checkbox" class="custom-checkbox disabled-email"
-                                                [id]="'email-' + pref.id" [checked]="true" [disabled]="true"
+                                            <input type="checkbox" class="custom-checkbox" [id]="'email-' + pref.id"
+                                                [checked]="pref.channels.email"
                                                 (change)="togglePreference(pref.id, 'email')">
                                             <label [for]="'email-' + pref.id"></label>
                                         </div>
