@@ -21,6 +21,7 @@ import { AngularFireStorage } from "@angular/fire/compat/storage";
 import { CarouselLibConfig, Image } from "@ks89/angular-modal-gallery";
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
 import {
+  AbstractControl,
   Form,
   FormArray,
   FormBuilder,
@@ -1551,6 +1552,8 @@ export class ConfProductToCartComponent
         this.datosEntrega.value,
       );
       this.productoConfiguradoForm.controls.cantidad.setValue(this.cantidad);
+      // Sincronizar preferencias desde los form controls antes de guardar
+      this.sincronizarPreferencias();
       // Normalizar preferencias antes de guardar (como se llenaba originalmente)
       const preferenciasRaw = this.productPreference.filter(
         (preference) => preference.tipo === "preferencia",
@@ -2026,14 +2029,6 @@ export class ConfProductToCartComponent
 
   selectedProductPreference(event: any, item: FormControl) {
     const selectedIndex = event.target?.value;
-    let selectedValue = null;
-
-    // Si existen opciones predefinidas, usar el índice seleccionado
-    if (item.value.children.length > 0) {
-      selectedValue = item.value.children[selectedIndex];
-      this.updateProductPreference(item, selectedValue);
-      return;
-    }
 
     // Manejar entrada personalizada según el tipo
     if (item.value.data.tipoImagen === "texto") {
@@ -2182,6 +2177,98 @@ export class ConfProductToCartComponent
     }
   }
 
+
+  /**
+   * Recorre los form controls de variables y sincroniza los valores ingresados
+   * al array productPreference antes de agregar al carrito.
+   * Cubre todos los tipos: texto (textarea), imagen, archivo y selección de hijos (ng-select).
+   */
+  private sincronizarPreferencias() {
+    const variablesArray = this.formulario.get("variables") as FormArray;
+    if (!variablesArray) return;
+
+    variablesArray.controls.forEach((item: AbstractControl) => {
+      const tipoImagen = item.get('data')?.get('tipoImagen')?.value;
+      const tituloVariable = (item.get('data')?.get('titulo')?.value || '').trim();
+      if (!tituloVariable) return;
+
+      // Caso 1: Preferencia con hijos seleccionados (ng-select)
+      const childrenArray = item.get('children') as FormArray;
+      const childrenSelectedIdx = item.get('childrenSelected')?.value;
+      if (childrenArray?.length > 0 && childrenSelectedIdx >= 0 && childrenSelectedIdx < childrenArray.length) {
+        const childCtrl = childrenArray.at(childrenSelectedIdx);
+        const childValue = childCtrl?.value;
+        if (childValue) {
+          const preference = {
+            titulo: tituloVariable,
+            subtitulo: childValue?.data?.titulo || "",
+            valorUnitarioSinIva: childValue?.data?.valorUnitarioSinIva || 0,
+            valorIva: childValue?.data?.valorIva || 0,
+            porcentajeIva: childValue?.data?.porcentajeIva || 0,
+            precioTotalConIva: childValue?.data?.precioTotalConIva || 0,
+            imagen: childValue?.data?.titulo
+              ? this.getImgAdicion(childValue.data.titulo)
+              : "assets/images/other-images/sinimagen.webp",
+            tipo: "preferencia",
+            paraProduccion: true,
+            cantidad: 1,
+          };
+          const idx = this.productPreference.findIndex(p => p.titulo === preference.titulo);
+          if (idx !== -1) {
+            this.productPreference[idx] = preference;
+          } else {
+            this.productPreference.push(preference);
+          }
+        }
+        return;
+      }
+
+      // Caso 2: Preferencia de tipo texto (textarea)
+      if (tipoImagen === 'texto') {
+        const textoIngresado = item.get('textoIngresado')?.value;
+        if (!textoIngresado) return;
+        const selectedValue = {
+          data: {
+            imagen: "assets/images/other-images/sinimagen.webp",
+            porcentajeIva: item.get('data')?.get('porcentajeIva')?.value || 0,
+            precioTotalConIva: item.get('data')?.get('precioTotalConIva')?.value || 0,
+            subtitulo: textoIngresado,
+            tipoImagen: "texto",
+            titulo: textoIngresado,
+            valorIva: item.get('data')?.get('valorIva')?.value || 0,
+            valorUnitarioSinIva: item.get('data')?.get('valorUnitarioSinIva')?.value || 0,
+          }
+        };
+        this.updateProductPreference(item as FormControl, selectedValue);
+        return;
+      }
+
+      // Caso 3: Preferencia de tipo imagen o archivo (ya subido via upload)
+      // Si ya existe en productPreference (fue seteada por el callback de upload), no tocar.
+      // Si no existe pero el form control tiene valor, significa que se cargó previamente.
+      if (tipoImagen === 'imagen' || tipoImagen === 'archivo') {
+        const yaExiste = this.productPreference.some(p => p.titulo === tituloVariable);
+        if (yaExiste) return;
+        // Verificar si hay una imagen/archivo previamente cargado en los datos del item
+        const imagenActual = item.get('data')?.get('imagen')?.value;
+        if (imagenActual && imagenActual !== 'assets/images/other-images/sinimagen.webp') {
+          const selectedValue = {
+            data: {
+              imagen: imagenActual,
+              porcentajeIva: item.get('data')?.get('porcentajeIva')?.value || 0,
+              precioTotalConIva: item.get('data')?.get('precioTotalConIva')?.value || 0,
+              subtitulo: item.get('data')?.get('subtitulo')?.value || tituloVariable,
+              tipoImagen: tipoImagen,
+              titulo: item.get('data')?.get('subtitulo')?.value || tituloVariable,
+              valorIva: item.get('data')?.get('valorIva')?.value || 0,
+              valorUnitarioSinIva: item.get('data')?.get('valorUnitarioSinIva')?.value || 0,
+            }
+          };
+          this.updateProductPreference(item as FormControl, selectedValue);
+        }
+      }
+    });
+  }
 
   getImgAdicion(adicion: any) {
     const adiciones = this.adicionesPreferencias.find(
