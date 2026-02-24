@@ -3123,7 +3123,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
     const doc = new jsPDF({
       orientation: "portrait",
       unit: "cm",
-      format: [15, 20],
+      format: [15, 23],
     });
 
     // Configurar fuente que soporte caracteres especiales
