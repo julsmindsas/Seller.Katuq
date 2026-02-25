@@ -86,11 +86,32 @@
     .td-channel {
         width: 13.33%;
         text-align: center;
+
+        &.td-email {
+            min-width: 100px;
+        }
+
+        &.td-decorative {
+            opacity: 0.7;
+
+            .channel-header {
+                font-size: 12px;
+            }
+        }
     }
 
     .channel-header {
         display: inline-block;
         line-height: 1.3;
+    }
+
+    .badge-decorative {
+        font-size: 10px;
+        font-weight: 600;
+        padding: 2px 6px;
+        background: #e9ecef;
+        color: #6c757d;
+        vertical-align: middle;
     }
 }
 
@@ -155,6 +176,20 @@
 
                 &::after {
                     border-color: #a1a1a1;
+                }
+            }
+        }
+
+        // Columnas decorativas (SMS, WhatsApp): checkbox deshabilitado
+        &.decorative {
+            input:disabled + label,
+            input[disabled] + label {
+                cursor: not-allowed;
+                border-color: #dee2e6;
+                background: #f8f9fa;
+
+                &::after {
+                    border-color: #adb5bd;
                 }
             }
         }

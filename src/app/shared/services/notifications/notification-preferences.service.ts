@@ -108,20 +108,16 @@ export class NotificationPreferencesService {
   }
 
   /**
-   * Guarda preferencias en el servidor
+   * Guarda preferencias en el servidor (PUT /v1/notification-preferences/:userId)
    */
   private async saveToServer(preferences: NotificationPreferences): Promise<void> {
-    // Si la API está deshabilitada, no intentar guardar
-    if (!NOTIFICATION_CONFIG.api.enabled) {
+    if (!NOTIFICATION_CONFIG.api.enabled || !this.currentUserId) {
       return;
     }
-    
-    const endpoint = `${NOTIFICATION_CONFIG.api.baseUrl}${NOTIFICATION_CONFIG.api.endpoints.preferences}`;
-    
+    const endpoint = `${NOTIFICATION_CONFIG.api.baseUrl}${NOTIFICATION_CONFIG.api.endpoints.preferences}/${this.currentUserId}`;
     try {
       await this.http.put(endpoint, preferences).toPromise();
     } catch (error: any) {
-      // Silenciar errores de guardado en el servidor
       console.warn('No se pudieron guardar las preferencias en el servidor:', error?.message || error);
     }
   }

@@ -6,6 +6,7 @@ import { environment } from '../../../../environments/environment';
 import { SecurityService } from '../../services/security/security.service';
 import { CompanyInformation } from '../../models/User/CompanyInformation';
 import { NotificationManagerService } from '../../services/notifications/notification-manager.service';
+import { NotificationStatus } from '../../services/notifications/notification.types';
 import { Subject, Subscription } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SubscriptionService } from '../../services/subscription.service';
@@ -3222,7 +3223,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.notificationManager) {
       this.notificationSubscription = this.notificationManager.notifications$.subscribe(notifications => {
         // Contar notificaciones no leídas
-        this.unreadNotificationCount = notifications.filter(n => n.status !== 'READ').length;
+        this.unreadNotificationCount = notifications.filter(n => n.status !== NotificationStatus.READ).length;
 
         // Obtener la última notificación para el preview
         if (notifications.length > 0) {

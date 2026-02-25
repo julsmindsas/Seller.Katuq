@@ -5,15 +5,15 @@
             <div class="page-title">
                 <div class="row">
                     <div class="col-6">
-                        <h3>Ajustes de notificaciones</h3>
+                        <h3>{{ 'Ajustes de notificaciones' | translate }}</h3>
                     </div>
                     <div class="col-6">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item">
                                 <a routerLink="/"><app-feather-icons [icon]="'home'"></app-feather-icons></a>
                             </li>
-                            <li class="breadcrumb-item">Perfil</li>
-                            <li class="breadcrumb-item active">Ajustes de notificaciones</li>
+                            <li class="breadcrumb-item">{{ 'Perfil' | translate }}</li>
+                            <li class="breadcrumb-item active">{{ 'Ajustes de notificaciones' | translate }}</li>
                         </ol>
                     </div>
                 </div>
@@ -22,35 +22,50 @@
             <!-- Texto descriptivo de política de privacidad -->
             <div class="privacy-note mb-4">
                 <p class="text-muted">
-                    Al activar los permisos de comunicación, aceptas que usemos tu número de teléfono o email, como se
-                    describe en nuestra <a href="javascript:void(0)" class="text-primary font-weight-bold">Política de
-                        privacidad</a>. El contenido enviado por email y otros canales puede variar. Puedes retirar tu
-                    consentimiento en cualquier momento.
+                    {{ 'notificaciones.privacy_note_1' | translate }}
+                    <a routerLink="/privacy-policy" class="text-primary font-weight-bold">{{ 'Política de privacidad' | translate }}</a>.
+                    {{ 'notificaciones.privacy_note_2' | translate }}
                 </p>
             </div>
 
+            <!-- Estado de carga -->
+            <div *ngIf="isLoading" class="text-center py-5">
+                <p class="text-muted">{{ 'Cargando...' | translate }}</p>
+            </div>
+
             <!-- Tarjeta principal de configuración -->
-            <div class="card notification-card">
+            <div class="card notification-card" *ngIf="!isLoading">
                 <div class="card-body">
+                    <p class="text-muted small mb-3">{{ 'notificaciones.email_active_hint' | translate }}</p>
                     <div class="table-responsive">
                         <table class="table preferences-table">
 
                             <thead>
                                 <tr>
                                     <th class="td-category"></th>
-                                    <th class="td-channel text-center">
-                                        <div class="channel-header">Mensaje de<br>texto</div>
+                                    <th class="td-channel text-center td-email">
+                                        <div class="channel-header">
+                                            <i class="fa fa-envelope me-1" aria-hidden="true"></i>
+                                            {{ 'Email' | translate }}
+                                        </div>
                                     </th>
-                                    <th class="td-channel text-center">
-                                        <div class="channel-header">WhatsApp</div>
+                                    <th class="td-channel text-center td-decorative">
+                                        <div class="channel-header">
+                                            <i class="fa fa-comment me-1" aria-hidden="true"></i>
+                                            {{ 'Mensaje de texto' | translate }}
+                                            <span class="badge badge-decorative ms-1">{{ 'Próximamente' | translate }}</span>
+                                        </div>
                                     </th>
-                                    <th class="td-channel text-center">
-                                        <div class="channel-header">Email</div>
+                                    <th class="td-channel text-center td-decorative">
+                                        <div class="channel-header">
+                                            <i class="fa fa-whatsapp me-1" aria-hidden="true"></i>
+                                            WhatsApp
+                                            <span class="badge badge-decorative ms-1">{{ 'Próximamente' | translate }}</span>
+                                        </div>
                                     </th>
                                 </tr>
                             </thead>
 
-                            <!-- Cuerpo de la tabla -->
                             <tbody>
                                 <tr *ngFor="let pref of preferences; let last = last" [class.border-bottom-0]="last">
                                     <td class="td-category">
@@ -58,30 +73,28 @@
                                         <p class="text-muted mb-0 font-sm">{{ pref.description }}</p>
                                     </td>
 
-                                    <td class="td-channel text-center align-middle">
-                                        <div class="checkbox-container">
-                                            <input type="checkbox" class="custom-checkbox" [id]="'sms-' + pref.id"
-                                                [checked]="pref.channels.sms"
-                                                (change)="togglePreference(pref.id, 'sms')">
-                                            <label [for]="'sms-' + pref.id"></label>
-                                        </div>
-                                    </td>
-
-                                    <td class="td-channel text-center align-middle">
-                                        <div class="checkbox-container">
-                                            <input type="checkbox" class="custom-checkbox" [id]="'wa-' + pref.id"
-                                                [checked]="pref.channels.whatsapp"
-                                                (change)="togglePreference(pref.id, 'whatsapp')">
-                                            <label [for]="'wa-' + pref.id"></label>
-                                        </div>
-                                    </td>
-
-                                    <td class="td-channel text-center align-middle">
+                                    <td class="td-channel td-email text-center align-middle">
                                         <div class="checkbox-container">
                                             <input type="checkbox" class="custom-checkbox" [id]="'email-' + pref.id"
                                                 [checked]="pref.channels.email"
-                                                (change)="togglePreference(pref.id, 'email')">
+                                                (change)="toggleEmail(pref.id)">
                                             <label [for]="'email-' + pref.id"></label>
+                                        </div>
+                                    </td>
+
+                                    <td class="td-channel td-decorative text-center align-middle">
+                                        <div class="checkbox-container decorative">
+                                            <input type="checkbox" class="custom-checkbox" [id]="'sms-' + pref.id"
+                                                disabled [attr.checked]="false">
+                                            <label [for]="'sms-' + pref.id" [attr.title]="'Próximamente' | translate"></label>
+                                        </div>
+                                    </td>
+
+                                    <td class="td-channel td-decorative text-center align-middle">
+                                        <div class="checkbox-container decorative">
+                                            <input type="checkbox" class="custom-checkbox" [id]="'wa-' + pref.id"
+                                                disabled [attr.checked]="false">
+                                            <label [for]="'wa-' + pref.id" [attr.title]="'Próximamente' | translate"></label>
                                         </div>
                                     </td>
                                 </tr>

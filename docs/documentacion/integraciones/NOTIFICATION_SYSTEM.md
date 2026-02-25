@@ -516,6 +516,56 @@ this.notificationManager.triggerNotification({
 
 El sistema legacy sigue funcionando para retrocompatibilidad, pero se recomienda migrar al nuevo sistema para aprovechar todas las características.
 
+## Diagnóstico: Emails que no se envían o no llegan al cliente
+
+### Causas identificadas (frontend + contrato con backend)
+
+1. **Destinatario no enviado al backend**  
+   El frontend no enviaba ningún campo explícito de destinatario (`toEmail` / `recipientEmail`). Para notificaciones al **cliente** (ej. "Tu pedido fue despachado", "Tu pedido fue entregado"), el backend no puede saber a qué correo enviar si no lo recibe en el payload.  
+   **Solución:** Incluir en `event.data` el email del cliente cuando exista (`clienteEmail` o `toEmail`) y enviar en el body del `POST /v1/notifications/send` un campo `toEmail` que el backend use como destinatario.
+
+2. **Datos del pedido sin email del cliente**  
+   En `VentasService`, al disparar notificaciones de cambio de estado (despachado, entregado, pago aprobado/rechazado) se enviaba `nroPedido`, `cliente` (nombre), `orderId`, etc., pero **no** `cliente.correo_electronico_comprador`.  
+   **Solución:** Añadir a `event.data` el email del cliente cuando el pedido lo tenga: `clienteEmail: order.cliente?.correo_electronico_comprador`.
+
+3. **ORDER_CREATED sin canal EMAIL**  
+   En `triggerOrderCreatedNotification` los canales se fijaban solo a `IN_APP` y `FIREBASE_REALTIME`, por lo que el template con EMAIL nunca se usaba para nuevos pedidos desde ese flujo.  
+   **Nota:** Si se desea email al vendedor en nuevo pedido, hay que incluir EMAIL en `channels` o no sobrescribir los canales del template.
+
+4. **Envío sin validar destinatario**  
+   Si la notificación es para el cliente y no hay email en los datos, se llamaba al backend igual, pudiendo generar errores o correos no enviados sin feedback claro.  
+   **Solución:** No llamar al endpoint de email (o avisar al backend) cuando sea notificación al cliente y falte `toEmail`/`clienteEmail`; registrar en consola para diagnóstico.
+
+5. **Errores del backend silenciosos**  
+   El frontend usa `Promise.allSettled` y no registraba fallos por canal; un 4xx/5xx del endpoint de email pasaba desapercibido.  
+   **Solución:** Hacer log (o reporte) cuando el POST a `/v1/notifications/send` falle.
+
+6. **Backend debe usar `toEmail`**  
+   El backend que implementa `POST /v1/notifications/send` debe:
+   - Usar el campo `toEmail` del body cuando venga informado (notificaciones al cliente).
+   - Para notificaciones al vendedor (ej. pago rechazado, nuevo pedido), puede derivar el destinatario del usuario autenticado si no se envía `toEmail`.
+
+### Contrato recomendado para el payload de email
+
+```json
+{
+  "type": "email",
+  "toEmail": "cliente@ejemplo.com",
+  "notification": {
+    "type": "ORDER_DISPATCHED",
+    "title": "...",
+    "message": "...",
+    "data": { "nroPedido": "...", "cliente": "...", "clienteEmail": "...", "orderId": "..." },
+    "template": { "title": "...", "message": "..." }
+  }
+}
+```
+
+- Si `toEmail` está presente, el backend debe enviar el correo a esa dirección.
+- Si no está presente, el backend puede asumir destinatario = usuario de la sesión (vendedor/admin).
+
+---
+
 ## Contacto y Soporte
 
 Para dudas o problemas con el sistema de notificaciones:
