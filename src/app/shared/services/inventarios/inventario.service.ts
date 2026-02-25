@@ -220,6 +220,18 @@ export class InventarioService {
     );
   }
 
+  /**
+   * Busca un producto por codigo de barras en una bodega especifica (POS V2)
+   * @param bodegaId ID de la bodega
+   * @param barcode Codigo de barras del producto
+   * @returns Observable con el producto y disponibilidad
+   */
+  buscarProductoPorBarcode(bodegaId: string, barcode: string): Observable<any> {
+    return this.http.get<any>(
+      `${this.apiUrl}/inventory/bodega/${bodegaId}/barcode/${encodeURIComponent(barcode)}`
+    );
+  }
+
   getBodegas(): Observable<Bodega[]> {
     return this.http.get<Bodega[]>(`${this.apiUrl}/bodegas/all`);
   }

@@ -81,6 +81,7 @@ import { ListProduccionComponent } from "./list/list-produccion.component";
 import { OrderHistoryTimelineComponent } from "./order-history-timeline/order-history-timeline.component";
 import { OrdenVentaComponent } from "./orden-venta/orden-venta.component";
 import { ImportModalModule } from "../../shared/components/import-modal/import-modal.module";
+import { ScannerModeComponent } from "./pos2/widgets/scanner-mode/scanner-mode.component";
 
 @NgModule({
   imports: [
@@ -160,6 +161,7 @@ import { ImportModalModule } from "../../shared/components/import-modal/import-m
     PaymentSelectorComponent,
     ListProduccionComponent,
     OrdenVentaComponent, // NUEVO: 2025-10-21 - Componente de orden de venta profesional
+    ScannerModeComponent,
   ],
   exports: [
     CrearVentasComponent,

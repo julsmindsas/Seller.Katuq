@@ -394,14 +394,18 @@ export class ProductComponent implements OnInit {
    */
   getProductImageUrl(product: any): string {
     // Verificar que existan todas las propiedades necesarias
-    if (product?.crearProducto?.imagenesPrincipales && 
+    if (product?.crearProducto?.imagenesPrincipales &&
         Array.isArray(product.crearProducto.imagenesPrincipales) &&
         product.crearProducto.imagenesPrincipales.length > 0 &&
         product.crearProducto.imagenesPrincipales[0]?.urls) {
       return product.crearProducto.imagenesPrincipales[0].urls;
     }
-    
+
     // Si no hay imagen disponible, retornar imagen por defecto
     return this.defaultImage;
+  }
+
+  trackByProductId(index: number, product: any): string {
+    return product._id || index.toString();
   }
 }

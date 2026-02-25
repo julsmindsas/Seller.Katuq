@@ -1,0 +1,173 @@
+.scanner-mode {
+  padding: 1rem;
+}
+
+// --- Scanner Input ---
+.scanner-input-container {
+  margin-bottom: 1.5rem;
+}
+
+.scanner-input-group {
+  .scanner-icon {
+    background-color: var(--primary-color, #a78bfa);
+    color: #fff;
+    border-color: var(--primary-color, #a78bfa);
+    font-size: 1.2rem;
+    padding: 0.75rem 1rem;
+  }
+
+  .scanner-input {
+    font-size: 1.1rem;
+    padding: 0.75rem 1rem;
+    min-height: 52px;
+    border: 2px solid #e2e8f0;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      border-color: var(--primary-color, #a78bfa);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
+    }
+
+    &:disabled {
+      background-color: #f8f9fa;
+    }
+  }
+}
+
+.scanner-error {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  animation: shake 0.3s ease;
+}
+
+.scanner-warning {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background-color: #fffbeb;
+  color: #d97706;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// --- Scan Log ---
+.scan-log {
+  .scan-log-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .scan-log-list {
+    max-height: calc(100vh - 350px);
+    overflow-y: auto;
+  }
+}
+
+.scan-entry {
+  display: flex;
+  align-items: center;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.4rem;
+  transition: background-color 0.15s ease;
+
+  &-success {
+    background-color: #f0fdf4;
+    .scan-entry-icon { color: #22c55e; }
+  }
+
+  &-error {
+    background-color: #fef2f2;
+    .scan-entry-icon { color: #ef4444; }
+  }
+
+  &-icon {
+    font-size: 1rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  &-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &-title {
+    font-weight: 500;
+    font-size: 0.85rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &-barcode {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-family: monospace;
+  }
+
+  &-price {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--primary-color, #a78bfa);
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+  }
+}
+
+// --- Empty State ---
+.scanner-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #94a3b8;
+
+  &-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    opacity: 0.4;
+  }
+
+  p {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+}
+
+// --- Animations ---
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+// --- Responsive ---
+@media (max-width: 576px) {
+  .scanner-mode {
+    padding: 0.75rem;
+  }
+
+  .scanner-input-group .scanner-input {
+    font-size: 1rem;
+    min-height: 48px;
+  }
+}

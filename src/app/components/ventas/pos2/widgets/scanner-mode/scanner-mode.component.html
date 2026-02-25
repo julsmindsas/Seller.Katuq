@@ -1,0 +1,70 @@
+<div class="scanner-mode">
+  <!-- Scanner Input -->
+  <div class="scanner-input-container">
+    <div class="input-group scanner-input-group">
+      <span class="input-group-text scanner-icon">
+        <i class="fa fa-barcode"></i>
+      </span>
+      <input
+        #barcodeInput
+        class="form-control scanner-input"
+        type="text"
+        [(ngModel)]="barcodeValue"
+        (keyup.enter)="onBarcodeEnter()"
+        [disabled]="isProcessing"
+        placeholder="{{ 'Escanea o escribe el codigo de barras...' | translate }}"
+        autocomplete="off"
+        autofocus
+      >
+      <span class="input-group-text" *ngIf="isProcessing">
+        <i class="fa fa-spinner fa-spin"></i>
+      </span>
+    </div>
+
+    <!-- Error message -->
+    <div class="scanner-error" *ngIf="lastError">
+      <i class="fa fa-exclamation-triangle"></i>
+      {{ lastError }}
+    </div>
+
+    <!-- No warehouse warning -->
+    <div class="scanner-warning" *ngIf="!bodegaId">
+      <i class="fa fa-warehouse"></i>
+      {{ 'Selecciona una bodega para comenzar a escanear' | translate }}
+    </div>
+  </div>
+
+  <!-- Scan Log -->
+  <div class="scan-log" *ngIf="scanLog.length > 0">
+    <h6 class="scan-log-title">
+      <i class="fa fa-list"></i>
+      {{ 'Ultimos escaneos' | translate }}
+    </h6>
+    <div class="scan-log-list custom-scrollbar">
+      <div
+        *ngFor="let entry of scanLog; trackBy: trackByIndex"
+        class="scan-entry"
+        [class.scan-entry-success]="entry.success"
+        [class.scan-entry-error]="!entry.success"
+      >
+        <div class="scan-entry-icon">
+          <i [class]="entry.success ? 'fa fa-check-circle' : 'fa fa-times-circle'"></i>
+        </div>
+        <div class="scan-entry-info">
+          <span class="scan-entry-title">{{ entry.title }}</span>
+          <span class="scan-entry-barcode">{{ entry.barcode }}</span>
+        </div>
+        <div class="scan-entry-price" *ngIf="entry.success">
+          ${{ entry.price | number:'1.2-2' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty state -->
+  <div class="scanner-empty" *ngIf="scanLog.length === 0 && bodegaId">
+    <i class="fa fa-barcode scanner-empty-icon"></i>
+    <p>{{ 'Escanea un producto para comenzar' | translate }}</p>
+    <small class="text-muted">{{ 'El producto se agregara automaticamente al carrito' | translate }}</small>
+  </div>
+</div>

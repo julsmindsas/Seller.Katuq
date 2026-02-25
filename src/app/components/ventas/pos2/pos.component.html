@@ -1,31 +1,108 @@
-<div class="container-fluid">
-    <div class="pos-header">
-        <div class="warehouse-selector">
-            <app-warehouse-selector (warehouseChange)="onWarehouseChanged()"></app-warehouse-selector>
-        </div>
-        <div class="action-buttons">
-            <button class="btn btn-primary cash-closing-btn" (click)="openCashClosingModal()">
-                <i class="fa fa-cash-register"></i> Cierre de Caja
-            </button>
-            <button class="btn btn-info history-btn" (click)="openCashClosingHistoryModal()">
-                <i class="fa fa-history"></i> Historial
-            </button>
-        </div>
+<div class="pos-v2">
+  <!-- POS Header -->
+  <div class="pos-header">
+    <div class="pos-header-left">
+      <app-warehouse-selector (warehouseChange)="onWarehouseChanged()"></app-warehouse-selector>
     </div>
 
-    <div class="row">
-        <div class="col-xxl-9 col-xl-8 box-col-8">
-            <div class="row">
-                <div class="col-xl-12">
-                    <app-product-category></app-product-category>
-                </div>
-                <div class="col-xl-12">
-                    <app-product></app-product>
-                </div>
-            </div>
-        </div>
-        <div class="col-xxl-3 col-xl-4 box-col-4e">
-            <app-pos-checkout></app-pos-checkout>
-        </div>
+    <div class="pos-header-center">
+      <!-- Mode Toggle -->
+      <div class="mode-toggle" role="tablist">
+        <button
+          class="mode-toggle-btn"
+          [class.active]="activeMode === 'scanner'"
+          (click)="setMode('scanner')"
+          role="tab"
+          title="Modo Escaner (F4)"
+        >
+          <i class="fa fa-barcode"></i>
+          <span class="mode-label">{{ 'Escaner' | translate }}</span>
+        </button>
+        <button
+          class="mode-toggle-btn"
+          [class.active]="activeMode === 'catalog'"
+          (click)="setMode('catalog')"
+          role="tab"
+          title="Modo Catalogo (F4)"
+        >
+          <i class="fa fa-th"></i>
+          <span class="mode-label">{{ 'Catalogo' | translate }}</span>
+        </button>
+      </div>
     </div>
+
+    <div class="pos-header-right">
+      <button class="btn-pos-action btn-new-sale" (click)="nuevaVenta()" title="Nueva Venta (F5)">
+        <i class="fa fa-plus-circle"></i>
+        <span>{{ 'Nueva Venta' | translate }}</span>
+      </button>
+      <button class="btn-pos-action btn-cash-closing" (click)="openCashClosingModal()">
+        <i class="fa fa-cash-register"></i>
+        <span class="hide-mobile">{{ 'Cierre' | translate }}</span>
+      </button>
+      <button class="btn-pos-action btn-history" (click)="openCashClosingHistoryModal()">
+        <i class="fa fa-history"></i>
+        <span class="hide-mobile">{{ 'Historial' | translate }}</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- POS Body -->
+  <div class="pos-body">
+    <!-- Left Panel: Mode Content -->
+    <div class="pos-main-panel">
+      <!-- Scanner Mode (Modo A) -->
+      <div *ngIf="activeMode === 'scanner'">
+        <app-scanner-mode></app-scanner-mode>
+      </div>
+
+      <!-- Catalog Mode (Modo B) -->
+      <div *ngIf="activeMode === 'catalog'">
+        <app-product-category></app-product-category>
+        <app-product></app-product>
+      </div>
+    </div>
+
+    <!-- Right Panel: Checkout (desktop/tablet only) -->
+    <div class="pos-checkout-panel">
+      <app-pos-checkout></app-pos-checkout>
+    </div>
+  </div>
+
+  <!-- Mobile FAB (Cart Button) -->
+  <button
+    class="pos-fab"
+    (click)="toggleMobileCart()"
+    *ngIf="(posItemCount$ | async) as count"
+  >
+    <i class="fa fa-shopping-cart"></i>
+    <span class="pos-fab-badge">{{ count }}</span>
+    <span class="pos-fab-total">{{ posSubTotalFormatted$ | async }}</span>
+  </button>
+
+  <!-- Mobile Cart Bottom Sheet -->
+  <div
+    class="pos-mobile-overlay"
+    [class.active]="showMobileCart"
+    (click)="closeMobileCart()"
+  ></div>
+  <div class="pos-mobile-cart" [class.active]="showMobileCart">
+    <div class="pos-mobile-cart-header">
+      <h6>{{ 'Carrito' | translate }}</h6>
+      <button class="btn-close-sheet" (click)="closeMobileCart()">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+    <div class="pos-mobile-cart-body">
+      <app-pos-checkout></app-pos-checkout>
+    </div>
+  </div>
+
+  <!-- Keyboard Shortcuts Hint (desktop only) -->
+  <div class="pos-shortcuts-hint hide-mobile">
+    <span><kbd>F2</kbd> {{ 'Pagar' | translate }}</span>
+    <span><kbd>F4</kbd> {{ 'Modo' | translate }}</span>
+    <span><kbd>F5</kbd> {{ 'Nueva' | translate }}</span>
+    <span><kbd>F8</kbd> {{ 'Buscar' | translate }}</span>
+  </div>
 </div>

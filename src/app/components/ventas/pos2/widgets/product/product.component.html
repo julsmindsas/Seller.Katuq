@@ -42,9 +42,9 @@
         </div>
 
         <!-- Productos Paginados -->
-        <div class="row g-3">
-            <div class="col-xxl-3 col-md-4 col-sm-6 box-col-4"
-                *ngFor="let product of paginatedProducts; track product;let i = index">
+        <div class="row g-2 g-md-3">
+            <div class="col-6 col-sm-6 col-md-4 col-lg-3"
+                *ngFor="let product of paginatedProducts; trackBy: trackByProductId; let i = index">
                 <div class="our-product-wrapper h-100 widget-hover shadow-sm rounded">
                     <!-- Imagen del producto con badge de disponibilidad -->
                     <div class="our-product-img position-relative">

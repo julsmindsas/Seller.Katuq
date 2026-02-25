@@ -30,6 +30,10 @@ export class CartSummaryComponent {
    * @param item El item del carrito del cual obtener la imagen
    * @returns URL de la imagen o imagen por defecto si no existe
    */
+  trackByTitle(index: number, item: any): string {
+    return item?.crearProducto?.titulo || index.toString();
+  }
+
   getCartItemImageUrl(item: any): string {
     // Verificar que existan todas las propiedades necesarias
     if (item?.crearProducto?.imagenesPrincipales && 
