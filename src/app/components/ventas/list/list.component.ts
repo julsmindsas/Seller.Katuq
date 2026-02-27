@@ -9055,4 +9055,140 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.currentOrderHistory = [];
     this.historyError = null;
   }
+
+  /**
+   * Limpia notas de producción huérfanas de un pedido.
+   * Las notas huérfanas son aquellas que referencian productos que ya no existen en el carrito.
+   * @param pedido Pedido a limpiar
+   */
+  limpiarNotasHuerfanasPedido(pedido: Pedido) {
+    if (!pedido) {
+      this.toastrService.warning('No se seleccionó un pedido', 'Aviso');
+      return;
+    }
+
+    const notasProduccion = pedido.notasPedido?.notasProduccion;
+    if (!notasProduccion || notasProduccion.length === 0) {
+      this.toastrService.info(
+        'Este pedido no tiene notas de producción.',
+        'Sin notas'
+      );
+      return;
+    }
+
+    const productosCarrito = pedido.carrito || [];
+
+    // Recolectar todos los identificadores de los productos actuales del carrito
+    const identificadoresCarrito = new Set<string>();
+    const titulosCarrito = new Set<string>();
+    const cdsCarrito = new Set<string>();
+    const bodegaIdsCarrito = new Set<string>();
+
+    productosCarrito.forEach((item) => {
+      const ref = item.producto?.identificacion?.referencia;
+      const titulo = item.producto?.crearProducto?.titulo;
+      const cd = item.producto?.cd || (item.producto?.crearProducto as any)?.cd;
+      const bodegaId = item.producto?.bodegaId;
+
+      if (ref) identificadoresCarrito.add(ref);
+      if (titulo) titulosCarrito.add(titulo);
+      if (cd) cdsCarrito.add(cd);
+      if (bodegaId) bodegaIdsCarrito.add(bodegaId);
+    });
+
+    // Identificar notas huérfanas usando la misma estrategia jerárquica que notas.component
+    const notasHuerfanas: any[] = [];
+    const notasValidas: any[] = [];
+
+    notasProduccion.forEach((nota: any) => {
+      let perteneceAProductoExistente = false;
+
+      // 1. Si la nota tiene productoId, verificar si existe en el carrito
+      if (nota.productoId) {
+        perteneceAProductoExistente = identificadoresCarrito.has(nota.productoId);
+      }
+      // 2. Si tiene productoCD, verificar
+      else if (nota.productoCD) {
+        perteneceAProductoExistente = cdsCarrito.has(nota.productoCD);
+      }
+      // 3. Si tiene productoBodegaId + producto (título), verificar ambos
+      else if (nota.productoBodegaId && nota.producto) {
+        perteneceAProductoExistente =
+          bodegaIdsCarrito.has(nota.productoBodegaId) &&
+          titulosCarrito.has(nota.producto);
+      }
+      // 4. Si solo tiene título (producto), verificar
+      else if (nota.producto) {
+        perteneceAProductoExistente = titulosCarrito.has(nota.producto);
+      }
+      // 5. Notas sin ningún identificador de producto se consideran huérfanas
+      //    solo si el carrito tiene productos (para no borrar notas genéricas en pedidos vacíos)
+      else if (productosCarrito.length > 0) {
+        // Nota sin ningún identificador - no se puede vincular, se marca como huérfana
+        perteneceAProductoExistente = false;
+      } else {
+        // Pedido sin productos, conservar la nota
+        perteneceAProductoExistente = true;
+      }
+
+      if (perteneceAProductoExistente) {
+        notasValidas.push(nota);
+      } else {
+        notasHuerfanas.push(nota);
+      }
+    });
+
+    if (notasHuerfanas.length === 0) {
+      this.toastrService.info(
+        'No se encontraron notas huérfanas en este pedido. Todas las notas corresponden a productos existentes.',
+        'Sin notas huérfanas'
+      );
+      return;
+    }
+
+    // Mostrar detalle de las notas huérfanas encontradas
+    const detalleNotas = notasHuerfanas
+      .map((n: any) => `- "${n.descripcion || n.nota || 'Sin texto'}" (Producto: ${n.producto || n.productoId || 'Desconocido'})`)
+      .join('\n');
+
+    Swal.fire({
+      title: `Se encontraron ${notasHuerfanas.length} nota(s) huérfana(s)`,
+      html: `<p>Las siguientes notas de producción no están vinculadas a ningún producto actual del pedido <b>${pedido.nroPedido || ''}</b>:</p>
+             <div style="text-align:left; max-height:200px; overflow-y:auto; font-size:0.85em; background:#f8f9fa; padding:10px; border-radius:5px;">
+               ${notasHuerfanas.map((n: any) =>
+                 `<div style="margin-bottom:6px; padding:4px; border-bottom:1px solid #dee2e6;">
+                    <b>${n.producto || n.productoId || 'Producto desconocido'}</b><br>
+                    <span>${n.descripcion || n.nota || 'Sin texto'}</span>
+                    ${n.archivos?.length ? '<br><small>(' + n.archivos.length + ' archivo(s) adjunto(s))</small>' : ''}
+                  </div>`
+               ).join('')}
+             </div>
+             <p class="mt-2">Notas válidas que se conservarán: <b>${notasValidas.length}</b></p>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#3085d6',
+      confirmButtonText: `Sí, eliminar ${notasHuerfanas.length} nota(s)`,
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // Reemplazar con solo las notas válidas
+        pedido.notasPedido!.notasProduccion = notasValidas;
+
+        // Guardar el pedido
+        this.editOrder(pedido);
+
+        this.toastrService.success(
+          `Se eliminaron ${notasHuerfanas.length} nota(s) huérfana(s) del pedido ${pedido.nroPedido || ''}.`,
+          'Notas limpiadas'
+        );
+
+        console.log(`🧹 Notas huérfanas eliminadas del pedido ${pedido.nroPedido}:`, {
+          eliminadas: notasHuerfanas.length,
+          conservadas: notasValidas.length,
+          detalle: notasHuerfanas,
+        });
+      }
+    });
+  }
 }

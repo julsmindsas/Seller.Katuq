@@ -1615,6 +1615,10 @@ export class CrearVentasComponent
       this.mostrarFormularioCliente = false;
       this.clienteRecienCreado = false;
 
+      // Limpiar dirección de envío del cliente anterior para evitar contaminación
+      this.pedidoGral.envio = undefined;
+      this.pedidoGral.facturacion = undefined;
+
       // Cargar datos de facturación y entrega
       this.verDatosFacturacion();
       this.datosEntregas = [];
@@ -2503,6 +2507,13 @@ export class CrearVentasComponent
       if (this.pedidoGral && this.pedidoGral.cliente) {
         this.documentoBuscar = this.pedidoGral.cliente.documento;
 
+        // Limpiar envío previo para forzar re-selección con datos frescos del cliente
+        // Esto evita que una dirección de otro cliente persista si la carga asíncrona falla
+        if (!this.pedidoGral.envio?.direccionEntrega ||
+            !this.datosEntregas?.some(d => d.direccionEntrega === this.pedidoGral.envio?.direccionEntrega)) {
+          this.pedidoGral.envio = undefined;
+        }
+
         // Cargar datos de entrega (solo si NO es recoge en tienda)
         if (!this.esRecogeEnTienda) {
           this.cargarDatosEntregaCliente();
@@ -2825,6 +2836,24 @@ export class CrearVentasComponent
   comprarYPagar(pedidoProcesado: Pedido) {
     // Asegurarnos de mantener la información correcta del pedido
     this.pedidoGral = { ...pedidoProcesado };
+
+    // Validar que la dirección de envío pertenezca al cliente actual
+    if (this.pedidoGral.envio?.direccionEntrega && this.pedidoGral.formaEntrega !== 'Recoge en tienda') {
+      const envioActual = this.pedidoGral.envio;
+      const direccionExisteEnCliente = this.originalDataEntregas?.some(
+        (d) => d.direccionEntrega === envioActual.direccionEntrega
+      );
+      if (!direccionExisteEnCliente && this.originalDataEntregas?.length > 0) {
+        Swal.fire({
+          title: 'Dirección no corresponde al cliente',
+          html: `<p>La dirección de envío <b>"${envioActual.direccionEntrega}"</b> no está registrada para el cliente <b>${this.pedidoGral.cliente?.nombres_completos || ''} ${this.pedidoGral.cliente?.apellidos_completos || ''}</b>.</p>
+                 <p>Por favor regrese al paso de envío y seleccione una dirección válida.</p>`,
+          icon: 'error',
+          confirmButtonText: 'Entendido',
+        });
+        return;
+      }
+    }
 
     // Detectar si hay productos dropshipping en el carrito
     const hasDropshippingProducts = this.detectDropshippingProducts();
@@ -4392,6 +4421,8 @@ export class CrearVentasComponent
         error: (err) => {
           this.originalDataEntregas = [];
           this.datosEntregas = [];
+          // Limpiar envío para evitar que persista una dirección de otro cliente
+          this.pedidoGral.envio = undefined;
           this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
           this.ref.detectChanges();
         },
