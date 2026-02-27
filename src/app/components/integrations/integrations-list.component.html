@@ -242,10 +242,6 @@
                           <span class="label">Última Actividad</span>
                           <span class="value">{{ isDateValid(integration.updatedAt) ? (integration.updatedAt | date:'dd MMM, HH:mm') : 'N/A' }}</span>
                         </div>
-                        <div class="info-item">
-                          <span class="label">Credencial</span>
-                          <span class="value credential-masked">{{ getMaskedCredential(integration) }}</span>
-                        </div>
                       </div>
                     </div>
 

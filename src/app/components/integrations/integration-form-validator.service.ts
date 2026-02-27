@@ -42,7 +42,7 @@ export class IntegrationFormValidatorService {
   
   // Patrones de validación comunes
   private readonly patterns = {
-    shopifyUrl: /^[a-zA-Z0-9][a-zA-Z0-9-]*\.myshopify\.com$/,
+    shopifyUrl: /^(https?:\/\/)?[a-zA-Z0-9][a-zA-Z0-9-]*(\.[a-zA-Z0-9][a-zA-Z0-9-]*)*\.[a-zA-Z]{2,}\/?$/,
     email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     url: /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/,
     phone: /^\+?[\d\s\-\(\)]{10,}$/,
@@ -65,7 +65,7 @@ export class IntegrationFormValidatorService {
     minlength: 'Debe tener al menos {requiredLength} caracteres',
     maxlength: 'No puede exceder {actualLength} caracteres',
     pattern: 'El formato no es válido',
-    shopifyUrl: 'Debe ser una URL de Shopify válida (ej: mitienda.myshopify.com)',
+    shopifyUrl: 'Ingrese una URL de tienda Shopify válida (ej: mitienda.myshopify.com o tudominio.com)',
     wompiPublicKey: 'La clave pública debe comenzar con pub_test_ o pub_prod_',
     wompiPrivateKey: 'La clave privada debe comenzar con prv_test_ o prv_prod_',
     paypalClientId: 'El Client ID de PayPal debe comenzar con A y tener al menos 80 caracteres',
@@ -288,32 +288,28 @@ export class IntegrationFormValidatorService {
   }
 
   private validateShopifyForm(formValue: any, result: ValidationResult): void {
-    // Validar URL de tienda
+    // Validar URL de tienda (requerido)
     if (formValue.shopUrl) {
       if (!this.patterns.shopifyUrl.test(formValue.shopUrl)) {
         result.errors!['shopUrl'] = this.errorMessages.shopifyUrl;
       }
     }
 
-    // Validar API Key y Secret
-    if (!formValue.apiKey || formValue.apiKey.length < 32) {
-      result.errors!['apiKey'] = 'La API Key debe tener al menos 32 caracteres';
+    // Validar Client ID (requerido - OAuth client_credentials)
+    if (!formValue.clientId || formValue.clientId.trim().length === 0) {
+      result.errors!['clientId'] = 'El Client ID es requerido (se obtiene del Dev Dashboard de Shopify)';
     }
 
-    if (!formValue.apiSecret || formValue.apiSecret.length < 32) {
-      result.errors!['apiSecret'] = 'El API Secret debe tener al menos 32 caracteres';
-    }
-
-    // Validar Access Token
-    if (!formValue.accessToken || !formValue.accessToken.startsWith('shpat_')) {
-      result.errors!['accessToken'] = 'El Access Token de Shopify debe comenzar con "shpat_"';
-    } else if (formValue.accessToken.length < 32) {
-      result.errors!['accessToken'] = 'El Access Token parece ser demasiado corto';
+    // Validar Client Secret (requerido)
+    if (!formValue.clientSecret || formValue.clientSecret.trim().length === 0) {
+      result.errors!['clientSecret'] = 'El Client Secret es requerido';
+    } else if (formValue.clientSecret.length < 20) {
+      result.warnings!.push('El Client Secret parece ser demasiado corto');
     }
 
     // Sugerencias
-    if (formValue.apiVersion && formValue.apiVersion < '2023-01') {
-      result.warnings!.push('Se recomienda usar una versión más reciente de la API');
+    if (formValue.apiVersion && formValue.apiVersion < '2025-10') {
+      result.warnings!.push('Se recomienda usar una versión más reciente de la API (2026-01 o superior)');
     }
   }
 
@@ -872,8 +868,10 @@ export class IntegrationFormValidatorService {
 
   private getShopifySecurityScore(credentials: any): number {
     let score = 0;
-    if (credentials.apiVersion && credentials.apiVersion >= '2023-01') score += 10;
-    if (credentials.shopUrl && credentials.shopUrl.includes('.myshopify.com')) score += 15;
+    if (credentials.shopUrl && credentials.shopUrl.includes('.')) score += 10;
+    if (credentials.clientId && credentials.clientSecret) score += 15; // OAuth client_credentials (tokens rotativos)
+    if (credentials.webhookSecret) score += 10; // HMAC validation enabled
+    if (credentials.apiVersion && credentials.apiVersion >= '2025-10') score += 5;
     return score;
   }
 

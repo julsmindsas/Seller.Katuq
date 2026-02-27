@@ -508,7 +508,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
 
     switch (integration.type) {
       case "shopify":
-        key = creds.apiKey;
+        key = creds.clientId || creds.apiKey;
         break;
       case "wompi":
       case "stripe":

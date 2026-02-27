@@ -312,17 +312,17 @@
           </div>
         </div>
 
-        <!-- Shopify Fields -->
+        <!-- Shopify Fields (OAuth client_credentials - modelo 2026) -->
         <ng-container *ngIf="selectedIntegrationType === 'shopify'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
-            <span>Para configurar esta integración, necesitarás crear una app en tu tienda Shopify y obtener las
-              credenciales de API.</span>
-            <a href="https://shopify.dev/docs/admin-api/getting-started" target="_blank" class="learn-more">
+            <span>Crea una app desde el Dev Dashboard de Shopify Partners y copia el Client ID y Client Secret.</span>
+            <a href="https://shopify.dev/docs/apps/build/authentication-authorization/client-secrets" target="_blank" class="learn-more">
               <i class="fa fa-external-link"></i> Ver documentación
             </a>
           </div>
 
+          <!-- URL de la tienda -->
           <div class="form-group">
             <label for="shopUrl">
               <i class="fa fa-link"></i> URL de la tienda:
@@ -330,60 +330,68 @@
             </label>
             <span class="p-input-icon-left">
               <i class="fa fa-globe"></i>
-              <input pInputText id="shopUrl" formControlName="shopUrl" placeholder="mitienda.myshopify.com" autocomplete="off">
+              <input pInputText id="shopUrl" formControlName="shopUrl" placeholder="mitienda.myshopify.com o tudominio.com" autocomplete="off">
             </span>
             <div *ngIf="integrationForm.get('shopUrl')?.invalid && integrationForm.get('shopUrl')?.touched"
               class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL de tienda Shopify válida
+              <i class="fa fa-exclamation-triangle"></i> Ingrese una URL de tienda válida (ej: mitienda.myshopify.com o tudominio.com)
             </div>
-            <small class="form-text text-muted">Ejemplo: mitienda.myshopify.com</small>
+            <small class="form-text text-muted">Dominio de Shopify (.myshopify.com) o dominio personalizado</small>
           </div>
 
+          <!-- Credenciales OAuth -->
           <div class="field-row">
             <div class="field-col form-group">
-              <label for="apiKey">
-                <i class="fa fa-key"></i> API Key:
+              <label for="clientId">
+                <i class="fa fa-id-card"></i> Client ID:
                 <span class="field-required">*</span>
               </label>
-              <p-password id="apiKey" formControlName="apiKey" [feedback]="false" [toggleMask]="true"></p-password>
-              <div *ngIf="integrationForm.get('apiKey')?.invalid && integrationForm.get('apiKey')?.touched"
+              <span class="p-input-icon-left">
+                <i class="fa fa-fingerprint"></i>
+                <input pInputText id="clientId" formControlName="clientId" placeholder="Client ID de la app" autocomplete="off">
+              </span>
+              <div *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> API Key es requerida
+                <i class="fa fa-exclamation-triangle"></i> Client ID es requerido
               </div>
             </div>
 
             <div class="field-col form-group">
-              <label for="apiSecret">
-                <i class="fa fa-lock"></i> API Secret:
+              <label for="clientSecret">
+                <i class="fa fa-lock"></i> Client Secret:
                 <span class="field-required">*</span>
               </label>
-              <p-password id="apiSecret" formControlName="apiSecret" [feedback]="false" [toggleMask]="true" autocomplete="off"></p-password>
-              <div *ngIf="integrationForm.get('apiSecret')?.invalid && integrationForm.get('apiSecret')?.touched"
+              <p-password id="clientSecret" formControlName="clientSecret" [feedback]="false" [toggleMask]="true" autocomplete="off" placeholder="Client Secret de la app"></p-password>
+              <div *ngIf="integrationForm.get('clientSecret')?.invalid && integrationForm.get('clientSecret')?.touched"
                 class="text-danger">
-                <i class="fa fa-exclamation-triangle"></i> API Secret es requerido
+                <i class="fa fa-exclamation-triangle"></i> Client Secret es requerido
               </div>
             </div>
           </div>
 
-          <div class="form-group">
-            <label for="accessToken">
-              <i class="fa fa-shield-alt"></i> Access Token:
-              <span class="field-required">*</span>
-            </label>
-            <p-password id="accessToken" formControlName="accessToken" [feedback]="false" [toggleMask]="true" placeholder="shpat_..." autocomplete="off"></p-password>
-            <div *ngIf="integrationForm.get('accessToken')?.invalid && integrationForm.get('accessToken')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> El Access Token es requerido y debe empezar con shpat_
-            </div>
-            <small class="form-text text-muted">Token de acceso de la app privada (comienza con shpat_)</small>
-          </div>
+          <!-- Configuración avanzada -->
+          <details class="mt-3 mb-3">
+            <summary class="text-muted" style="cursor: pointer; font-size: 0.9rem;">
+              <i class="fa fa-cog"></i> Configuración avanzada (opcional)
+            </summary>
+            <div class="mt-2">
+              <div class="form-group">
+                <label for="webhookSecret">
+                  <i class="fa fa-bell"></i> Webhook Secret:
+                </label>
+                <p-password id="webhookSecret" formControlName="webhookSecret" [feedback]="false" [toggleMask]="true" autocomplete="off" placeholder="Opcional"></p-password>
+                <small class="form-text text-muted">Para verificar la autenticidad de los webhooks (HMAC)</small>
+              </div>
 
-          <div class="form-group">
-            <label for="apiVersion">
-              <i class="fa fa-code-branch"></i> Versión de API:
-            </label>
-            <p-dropdown id="apiVersion" formControlName="apiVersion" [options]="apiVersionOptions" optionLabel="label" optionValue="value" placeholder="Seleccione versión" autocomplete="off"></p-dropdown>
-            <small class="form-text text-muted">Seleccione la versión de la API de Shopify a utilizar</small>
-          </div>
+              <div class="form-group">
+                <label for="apiVersion">
+                  <i class="fa fa-code-branch"></i> Versión de API:
+                </label>
+                <p-dropdown id="apiVersion" formControlName="apiVersion" [options]="apiVersionOptions" optionLabel="label" optionValue="value" placeholder="Seleccione versión" autocomplete="off"></p-dropdown>
+                <small class="form-text text-muted">Versión de la API de Shopify Admin</small>
+              </div>
+            </div>
+          </details>
         </ng-container>
 
         <!-- Wompi Fields -->
@@ -2123,7 +2131,7 @@
                   {{ getFieldDisplayName(field.name) }} es requerido
                 </span>
                 <span *ngIf="integrationForm.get(field.name)?.errors?.['invalidShopifyUrl']">
-                  URL de Shopify inválida (debe terminar en .myshopify.com)
+                  URL de tienda inválida (ej: mitienda.myshopify.com o tudominio.com)
                 </span>
                 <span *ngIf="integrationForm.get(field.name)?.errors?.['invalidWompiKey']">
                   Clave de Wompi inválida (debe comenzar con {{

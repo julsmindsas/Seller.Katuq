@@ -48,17 +48,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   ];
 
   apiVersionOptions = [
-    { label: '2025-07 (Recomendada)', value: '2025-07' },
+    { label: '2026-01 (Recomendada)', value: '2026-01' },
+    { label: '2025-10', value: '2025-10' },
+    { label: '2025-07', value: '2025-07' },
     { label: '2025-04', value: '2025-04' },
     { label: '2025-01', value: '2025-01' },
-    { label: '2024-10', value: '2024-10' },
-    { label: '2024-07', value: '2024-07' },
-    { label: '2024-04', value: '2024-04' },
-    { label: '2024-01', value: '2024-01' },
-    { label: '2023-10', value: '2023-10' },
-    { label: '2023-07', value: '2023-07' },
-    { label: '2023-04', value: '2023-04' },
-    { label: '2023-01', value: '2023-01' }
   ];
   
   selectedIntegrationType = 'shopify';
@@ -701,10 +695,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       name: ['', Validators.required],
       enabled: [true],
       shopUrl: ['', [Validators.required, this.formValidator.createShopifyUrlValidator()]],
-      apiKey: ['', Validators.required],
-      apiSecret: ['', Validators.required],
-      accessToken: ['', Validators.required],
-      apiVersion: ['2025-07']
+      clientId: ['', Validators.required],
+      clientSecret: ['', Validators.required],
+      webhookSecret: [''],
+      apiVersion: ['2026-01']
     });
   }
 
@@ -1058,12 +1052,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     switch (this.selectedIntegrationType) {
       case 'shopify':
         credentials = {
-          shopUrl: formData.shopUrl,
-          apiKey: formData.apiKey,
-          apiSecret: formData.apiSecret,
-          accessToken: formData.accessToken,
-          apiVersion: formData.apiVersion
+          shopUrl: (formData.shopUrl || '').replace(/^https?:\/\//, '').replace(/\/$/, ''),
+          clientId: formData.clientId,
+          clientSecret: formData.clientSecret,
+          apiVersion: formData.apiVersion || '2026-01'
         };
+        if (formData.webhookSecret) credentials.webhookSecret = formData.webhookSecret;
         break;
       case 'wompi':
         credentials = {
