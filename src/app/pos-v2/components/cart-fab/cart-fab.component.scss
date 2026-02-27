@@ -1,0 +1,75 @@
+@import '../../pos-v2-design-tokens';
+
+:host {
+  display: none;
+
+  @media (max-width: $pos-bp-md - 1) {
+    display: block;
+  }
+}
+
+.cart-fab {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  background: $pos-primary;
+  color: #fff;
+  cursor: pointer;
+  z-index: $pos-z-cart-fab;
+  box-shadow: 0 4px 16px rgba($pos-primary, 0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  transition: transform 0.15s, box-shadow 0.15s;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba($pos-primary, 0.5);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+  }
+}
+
+.fab-icon {
+  font-size: 20px;
+}
+
+.fab-badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 11px;
+  background: $pos-danger;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.fab-total {
+  font-size: 9px;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 56px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

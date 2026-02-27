@@ -1,0 +1,47 @@
+<div class="terminal-selector">
+  <div class="terminal-selector__card">
+    <div class="terminal-selector__header">
+      <i class="pi pi-building terminal-selector__icon"></i>
+      <h2 class="terminal-selector__title">Seleccionar Bodega</h2>
+      <p class="terminal-selector__subtitle">Elige la bodega para iniciar tu turno</p>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="terminal-selector__loading">
+      <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+      <span>Cargando bodegas...</span>
+    </div>
+
+    <!-- Error message -->
+    <div *ngIf="!loading && loadError" class="terminal-selector__error">
+      <i class="pi pi-exclamation-triangle" style="color: #f59e0b;"></i>
+      <span>No se pudieron cargar las bodegas.</span>
+      <button pButton type="button" label="Reintentar" icon="pi pi-refresh"
+        class="p-button-text p-button-sm" (click)="loadBodegas()"></button>
+    </div>
+
+    <!-- Bodega List -->
+    <div *ngIf="!loading && !loadError" class="terminal-selector__list" role="list" aria-label="Lista de bodegas">
+      <button
+        *ngFor="let bodega of bodegas"
+        class="terminal-selector__item"
+        role="listitem"
+        type="button"
+        (click)="selectBodega(bodega)">
+        <div class="terminal-selector__item-info">
+          <span class="terminal-selector__item-name">{{ bodega.nombre || bodega.name }}</span>
+          <span *ngIf="bodega.direccion || bodega.ubicacion" class="terminal-selector__item-branch">
+            <i class="pi pi-map-marker"></i>
+            {{ bodega.direccion || bodega.ubicacion }}
+          </span>
+        </div>
+        <i class="pi pi-chevron-right terminal-selector__item-arrow"></i>
+      </button>
+
+      <div *ngIf="bodegas.length === 0" class="terminal-selector__empty">
+        <i class="pi pi-info-circle"></i>
+        <span>No hay bodegas disponibles. Configura una bodega primero.</span>
+      </div>
+    </div>
+  </div>
+</div>

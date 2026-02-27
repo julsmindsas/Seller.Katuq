@@ -59,7 +59,7 @@ import { ProductCategoryComponent } from "./pos2/widgets/product-category/produc
 import { ProductComponent } from "./pos2/widgets/product/product.component";
 import { CreateCustomerModalComponent } from "./pos2/widgets/create-customer-modal/create-customer-modal.component";
 import { PosCheckoutComponent } from "./pos2/widgets/pos-checkout/pos-checkout.component";
-import { CrearClienteModalComponent } from "./clientes/crear-cliente-modal/crear-cliente-modal.component";
+import { CrearClienteModalModule } from "./clientes/crear-cliente-modal/crear-cliente-modal.module";
 import { CardPaymentComponent } from "./pos2/widgets/card-payment/card-payment";
 import { CashPaymentComponent } from "./pos2/widgets/cash-payment/cash-payment";
 import { EWalletPaymentComponent } from "./pos2/widgets/ewallet-payment/ewallet-payment";
@@ -123,6 +123,7 @@ import { ImportModalModule } from "../../shared/components/import-modal/import-m
     CardModule,
     MenuModule,
     ImportModalModule,
+    CrearClienteModalModule,
   ],
   declarations: [
     PedidoFacturacionComponent,
@@ -145,7 +146,6 @@ import { ImportModalModule } from "../../shared/components/import-modal/import-m
     ProductComponent,
     CreateCustomerModalComponent,
     PosCheckoutComponent,
-    CrearClienteModalComponent,
     CardPaymentComponent,
     CashPaymentComponent,
     EWalletPaymentComponent,

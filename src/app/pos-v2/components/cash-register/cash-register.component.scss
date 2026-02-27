@@ -1,0 +1,328 @@
+@use '../../pos-v2-design-tokens' as tokens;
+
+.cash-register {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: tokens.$pos-space-base;
+  background: tokens.$pos-bg;
+
+  &__card {
+    width: 100%;
+    max-width: 520px;
+    background: tokens.$pos-surface;
+    border-radius: tokens.$pos-radius;
+    box-shadow: tokens.$pos-shadow-lg;
+    padding: tokens.$pos-space-lg;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  // Header
+  &__header {
+    text-align: center;
+    margin-bottom: tokens.$pos-space-lg;
+  }
+
+  &__icon {
+    font-size: 48px;
+    margin-bottom: tokens.$pos-space-md;
+    display: block;
+
+    &--success { color: tokens.$pos-success; }
+    &--danger { color: tokens.$pos-danger; }
+  }
+
+  &__title {
+    margin: 0 0 tokens.$pos-space-xs;
+    font-size: tokens.$pos-font-xl;
+    color: tokens.$pos-text;
+    font-weight: 600;
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: tokens.$pos-font-base;
+    color: tokens.$pos-text-muted;
+  }
+
+  // Loading
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: tokens.$pos-space-md;
+    padding: tokens.$pos-space-xl;
+    color: tokens.$pos-text-muted;
+  }
+
+  // Form
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-base;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-xs;
+  }
+
+  &__label {
+    font-size: tokens.$pos-font-sm;
+    font-weight: 600;
+    color: tokens.$pos-text;
+  }
+
+  &__input-group {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-sm;
+  }
+
+  &__currency {
+    font-size: tokens.$pos-font-lg;
+    font-weight: 600;
+    color: tokens.$pos-text-muted;
+  }
+
+  &__input {
+    width: 100%;
+    min-height: tokens.$pos-touch-target;
+    font-size: tokens.$pos-font-md;
+  }
+
+  &__submit {
+    width: 100%;
+    min-height: tokens.$pos-touch-target;
+    margin-top: tokens.$pos-space-sm;
+  }
+
+  // Summary
+  &__summary {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-sm;
+    padding: tokens.$pos-space-base;
+    background: tokens.$pos-bg;
+    border-radius: tokens.$pos-radius;
+    margin-bottom: tokens.$pos-space-base;
+  }
+
+  &__summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: tokens.$pos-space-xs 0;
+  }
+
+  &__summary-label {
+    font-size: tokens.$pos-font-base;
+    color: tokens.$pos-text-muted;
+  }
+
+  &__summary-value {
+    font-size: tokens.$pos-font-base;
+    font-weight: 600;
+    color: tokens.$pos-text;
+  }
+
+  // Section Title
+  &__section-title {
+    font-size: tokens.$pos-font-md;
+    font-weight: 600;
+    color: tokens.$pos-text;
+    margin: tokens.$pos-space-base 0 tokens.$pos-space-sm;
+  }
+
+  // Movements
+  &__movements {
+    margin-bottom: tokens.$pos-space-base;
+  }
+
+  &__movement-list {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-xs;
+  }
+
+  &__movement {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-sm;
+    padding: tokens.$pos-space-sm tokens.$pos-space-md;
+    border-radius: tokens.$pos-radius;
+    font-size: tokens.$pos-font-sm;
+
+    &--in {
+      background: rgba(tokens.$pos-success, 0.08);
+    }
+
+    &--out {
+      background: rgba(tokens.$pos-danger, 0.08);
+    }
+  }
+
+  &__movement-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+
+    .cash-register__movement--in & {
+      color: tokens.$pos-success;
+    }
+
+    .cash-register__movement--out & {
+      color: tokens.$pos-danger;
+    }
+  }
+
+  &__movement-reason {
+    flex: 1;
+    color: tokens.$pos-text;
+  }
+
+  &__movement-amount {
+    font-weight: 600;
+
+    .cash-register__movement--in & {
+      color: tokens.$pos-success;
+    }
+
+    .cash-register__movement--out & {
+      color: tokens.$pos-danger;
+    }
+  }
+
+  // Add Movement
+  &__add-movement {
+    width: 100%;
+    min-height: tokens.$pos-touch-target;
+    margin-bottom: tokens.$pos-space-base;
+  }
+
+  // Movement Form
+  &__movement-form {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-md;
+    padding: tokens.$pos-space-base;
+    background: tokens.$pos-bg;
+    border-radius: tokens.$pos-radius;
+    margin-bottom: tokens.$pos-space-base;
+  }
+
+  &__movement-type {
+    display: flex;
+    gap: tokens.$pos-space-sm;
+  }
+
+  &__type-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: tokens.$pos-space-xs;
+    min-height: tokens.$pos-touch-target;
+    padding: tokens.$pos-space-sm;
+    border: 1px solid tokens.$pos-border;
+    border-radius: tokens.$pos-radius;
+    background: tokens.$pos-surface;
+    color: tokens.$pos-text-muted;
+    cursor: pointer;
+    font-size: tokens.$pos-font-base;
+    transition: all 0.15s ease;
+
+    &:focus-visible {
+      outline: 2px solid tokens.$pos-primary;
+      outline-offset: 2px;
+    }
+
+    &--active-in {
+      border-color: tokens.$pos-success;
+      background: rgba(tokens.$pos-success, 0.08);
+      color: tokens.$pos-success;
+      font-weight: 600;
+    }
+
+    &--active-out {
+      border-color: tokens.$pos-danger;
+      background: rgba(tokens.$pos-danger, 0.08);
+      color: tokens.$pos-danger;
+      font-weight: 600;
+    }
+  }
+
+  &__form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: tokens.$pos-space-sm;
+  }
+
+  // Closing Section
+  &__closing-section {
+    border-top: 1px solid tokens.$pos-border;
+    padding-top: tokens.$pos-space-base;
+  }
+
+  &__expected {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: tokens.$pos-space-md tokens.$pos-space-base;
+    background: tokens.$pos-bg;
+    border-radius: tokens.$pos-radius;
+    margin-bottom: tokens.$pos-space-base;
+  }
+
+  &__expected-label {
+    font-size: tokens.$pos-font-base;
+    color: tokens.$pos-text-muted;
+  }
+
+  &__expected-value {
+    font-size: tokens.$pos-font-lg;
+    font-weight: 700;
+    color: tokens.$pos-text;
+  }
+
+  // Difference
+  &__difference {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: tokens.$pos-space-md tokens.$pos-space-base;
+    border-radius: tokens.$pos-radius;
+
+    &--positive {
+      background: rgba(tokens.$pos-success, 0.08);
+    }
+
+    &--negative {
+      background: rgba(tokens.$pos-danger, 0.08);
+    }
+  }
+
+  &__difference-label {
+    font-size: tokens.$pos-font-base;
+    color: tokens.$pos-text-muted;
+  }
+
+  &__difference-value {
+    font-size: tokens.$pos-font-lg;
+    font-weight: 700;
+
+    .cash-register__difference--positive & {
+      color: tokens.$pos-success;
+    }
+
+    .cash-register__difference--negative & {
+      color: tokens.$pos-danger;
+    }
+  }
+}

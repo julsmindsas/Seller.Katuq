@@ -1,0 +1,10 @@
+<button
+  *ngIf="!(isEmpty$ | async)"
+  type="button"
+  class="cart-fab"
+  (click)="onTap()"
+  aria-label="Abrir carrito">
+  <i class="pi pi-shopping-cart fab-icon"></i>
+  <span class="fab-badge" *ngIf="(itemCount$ | async) as count">{{ count }}</span>
+  <span class="fab-total">${{ total$ | async | number:'1.0-0' }}</span>
+</button>

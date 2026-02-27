@@ -1,0 +1,274 @@
+<div class="z-report">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando reporte Z...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="!loading && error">
+    <i class="pi pi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button
+      pButton
+      type="button"
+      label="Reintentar"
+      icon="pi pi-refresh"
+      class="p-button-outlined"
+      (click)="loadReport()">
+    </button>
+  </div>
+
+  <!-- Report Content -->
+  <div class="report-content" *ngIf="!loading && !error && report">
+
+    <!-- 1. Header -->
+    <div class="report-header">
+      <h2 class="report-title">REPORTE Z - CIERRE DE CAJA</h2>
+      <div class="report-meta">
+        <div class="meta-item">
+          <i class="pi pi-building"></i>
+          <span>{{ report.terminalName }}</span>
+        </div>
+        <div class="meta-item">
+          <i class="pi pi-user"></i>
+          <span>{{ report.cashierName }}</span>
+        </div>
+        <div class="meta-item">
+          <i class="pi pi-clock"></i>
+          <span>{{ report.shiftPeriod?.from | date:'short' }} - {{ report.shiftPeriod?.to | date:'short' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Sales Summary -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <span class="card-label">Total Ventas</span>
+        <span class="card-value primary">${{ report.totalSales | number:'1.0-0' }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="card-label">Total Ordenes</span>
+        <span class="card-value">{{ report.totalOrders }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="card-label">Ticket Promedio</span>
+        <span class="card-value success">${{ report.averageTicket | number:'1.0-0' }}</span>
+      </div>
+    </div>
+
+    <!-- 3. Ventas por Medio de Pago -->
+    <section class="report-section">
+      <h3 class="section-title">Ventas por Medio de Pago</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Medio de Pago</th>
+            <th class="text-right">Cantidad</th>
+            <th class="text-right">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of report.salesByMethod; trackBy: trackByIndex">
+            <td>{{ entry.label }}</td>
+            <td class="text-right">{{ entry.count }}</td>
+            <td class="text-right">${{ entry.total | number:'1.0-0' }}</td>
+          </tr>
+          <tr *ngIf="report.salesByMethod?.length === 0">
+            <td colspan="3" class="empty-row">Sin ventas registradas</td>
+          </tr>
+        </tbody>
+        <tfoot *ngIf="report.salesByMethod?.length > 0">
+          <tr>
+            <td><strong>Total</strong></td>
+            <td></td>
+            <td class="text-right"><strong>${{ report.totalSales | number:'1.0-0' }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <!-- 4. Ventas por Vendedor -->
+    <section class="report-section" *ngIf="report.salesBySeller?.length > 0">
+      <h3 class="section-title">Ventas por Vendedor</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Vendedor</th>
+            <th class="text-right">Ordenes</th>
+            <th class="text-right">Total</th>
+            <th class="text-right">Promedio</th>
+            <th class="text-right">%</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of report.salesBySeller; trackBy: trackByIndex">
+            <td>{{ entry.seller?.nombre || entry.seller?.name || '-' }}</td>
+            <td class="text-right">{{ entry.orderCount }}</td>
+            <td class="text-right">${{ entry.totalSales | number:'1.0-0' }}</td>
+            <td class="text-right">${{ entry.averageTicket | number:'1.0-0' }}</td>
+            <td class="text-right">{{ entry.percentage | number:'1.1-1' }}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 5. Descuentos Aplicados -->
+    <section class="report-section">
+      <h3 class="section-title">Descuentos Aplicados</h3>
+      <div class="detail-pair">
+        <div class="detail-item">
+          <span class="detail-label">Total descuentos</span>
+          <span class="detail-value danger">${{ report.totalDiscounts | number:'1.0-0' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Ordenes con descuento</span>
+          <span class="detail-value">{{ report.discountedOrdersCount }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Devoluciones y Anulaciones -->
+    <section class="report-section">
+      <h3 class="section-title">Devoluciones y Anulaciones</h3>
+      <div class="detail-pair">
+        <div class="detail-item">
+          <span class="detail-label">Total devoluciones</span>
+          <span class="detail-value danger">${{ report.totalReturns | number:'1.0-0' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Ordenes devueltas</span>
+          <span class="detail-value">{{ report.returnsCount }}</span>
+        </div>
+      </div>
+      <div class="detail-pair" *ngIf="report.cashRefunds > 0">
+        <div class="detail-item">
+          <span class="detail-label">Reembolsos en efectivo</span>
+          <span class="detail-value danger">${{ report.cashRefunds | number:'1.0-0' }}</span>
+        </div>
+      </div>
+      <table class="report-table" *ngIf="report.returns?.length > 0">
+        <thead>
+          <tr>
+            <th>Orden</th>
+            <th>Tipo Movimiento</th>
+            <th>Producto</th>
+            <th class="text-right">Cantidad</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ret of report.returns; trackBy: trackByIndex">
+            <td>{{ ret.ordenId || '-' }}</td>
+            <td>{{ ret.tipoMovimiento || ret.tipo || '-' }}</td>
+            <td>{{ ret.productoId || '-' }}</td>
+            <td class="text-right">{{ ret.cantidad }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 7. Propinas (only if totalTips > 0) -->
+    <section class="report-section" *ngIf="report.totalTips > 0">
+      <h3 class="section-title">Propinas</h3>
+      <div class="detail-pair">
+        <div class="detail-item">
+          <span class="detail-label">Total propinas</span>
+          <span class="detail-value success">${{ report.totalTips | number:'1.0-0' }}</span>
+        </div>
+        <div class="detail-item">
+          <span class="detail-label">Ordenes con propina</span>
+          <span class="detail-value">{{ report.tipsCount }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Movimientos de Caja -->
+    <section class="report-section" *ngIf="report.cashMovements?.length > 0">
+      <h3 class="section-title">Movimientos de Caja</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Motivo</th>
+            <th class="text-right">Monto</th>
+            <th>Hora</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let movement of report.cashMovements; trackBy: trackByIndex">
+            <td>
+              <span class="movement-type" [class.type-in]="movement.type === 'in'" [class.type-out]="movement.type === 'out'">
+                {{ movement.type === 'in' ? 'Entrada' : 'Salida' }}
+              </span>
+            </td>
+            <td>{{ movement.reason }}</td>
+            <td class="text-right">${{ movement.amount | number:'1.0-0' }}</td>
+            <td>{{ movement.timestamp | date:'shortTime' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="2"><strong>Total entradas / salidas</strong></td>
+            <td class="text-right">
+              <span class="movement-type type-in">${{ report.totalCashIn | number:'1.0-0' }}</span>
+              /
+              <span class="movement-type type-out">${{ report.totalCashOut | number:'1.0-0' }}</span>
+            </td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <!-- 9. Arqueo de Caja -->
+    <section class="report-section arqueo-section">
+      <h3 class="section-title">Arqueo de Caja</h3>
+      <div class="arqueo-grid">
+        <div class="arqueo-item">
+          <span class="arqueo-label">Monto inicial</span>
+          <span class="arqueo-value">${{ report.initialAmount | number:'1.0-0' }}</span>
+        </div>
+        <div class="arqueo-item">
+          <span class="arqueo-label">Efectivo esperado en caja</span>
+          <span class="arqueo-value">${{ report.expectedCashInDrawer | number:'1.0-0' }}</span>
+        </div>
+        <div class="arqueo-item">
+          <span class="arqueo-label">Efectivo real</span>
+          <span class="arqueo-value">
+            <ng-container *ngIf="report.actualCash != null">${{ report.actualCash | number:'1.0-0' }}</ng-container>
+            <ng-container *ngIf="report.actualCash == null">--</ng-container>
+          </span>
+        </div>
+        <div class="arqueo-item">
+          <span class="arqueo-label">Diferencia</span>
+          <span class="arqueo-value"
+            [class.positive]="report.cashDifference != null && report.cashDifference >= 0"
+            [class.negative]="report.cashDifference != null && report.cashDifference < 0">
+            <ng-container *ngIf="report.cashDifference != null">${{ report.cashDifference | number:'1.0-0' }}</ng-container>
+            <ng-container *ngIf="report.cashDifference == null">--</ng-container>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Actions (no-print) -->
+    <div class="report-actions no-print">
+      <button
+        pButton
+        type="button"
+        label="Imprimir Reporte"
+        icon="pi pi-print"
+        class="p-button-lg print-btn"
+        (click)="printReport()">
+      </button>
+      <button
+        pButton
+        type="button"
+        label="Volver al POS"
+        icon="pi pi-arrow-left"
+        class="p-button-lg p-button-outlined back-btn"
+        (click)="goBack()">
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,169 @@
+<div class="catalog-container">
+
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner loading-icon"></i>
+    <p>Cargando productos...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="empty-state" *ngIf="!loading && loadError">
+    <i class="pi pi-exclamation-triangle empty-icon" style="color: #f59e0b;"></i>
+    <p class="empty-title">Error al cargar productos</p>
+    <button pButton type="button" label="Reintentar" icon="pi pi-refresh"
+      class="p-button-outlined retry-btn" (click)="loadProducts()"></button>
+  </div>
+
+  <ng-container *ngIf="!loading && !loadError">
+    <!-- Search & Filters -->
+    <div class="catalog-toolbar">
+      <div class="search-wrapper">
+        <div class="search-field">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange()"
+            placeholder="Buscar producto..."
+            autocomplete="off"
+            aria-label="Buscar producto por nombre o referencia"
+          />
+        </div>
+        <button
+          *ngIf="searchTerm || selectedCategory"
+          pButton
+          type="button"
+          class="p-button-text clear-filter-btn"
+          icon="pi pi-filter-slash"
+          (click)="clearFilters()"
+          pTooltip="Limpiar filtros"
+          aria-label="Limpiar filtros de busqueda"
+        ></button>
+      </div>
+
+      <!-- Category Chips -->
+      <div class="category-chips" *ngIf="categories.length > 0">
+        <button
+          *ngFor="let cat of categories"
+          type="button"
+          class="category-chip"
+          [class.category-chip--active]="selectedCategory === cat"
+          (click)="onCategorySelect(cat)"
+          [attr.aria-pressed]="selectedCategory === cat"
+        >
+          {{ cat }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Results Info -->
+    <div class="results-info" *ngIf="filteredProducts.length !== products.length">
+      <span class="results-count">{{ filteredProducts.length }} de {{ products.length }} productos</span>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid" *ngIf="pagedProducts.length > 0">
+      <div
+        *ngFor="let product of pagedProducts; trackBy: trackByProductId"
+        class="product-card"
+        [class.product-card--out-of-stock]="isOutOfStock(product)"
+        (click)="!isOutOfStock(product) && addToCart(product)"
+        [attr.role]="isOutOfStock(product) ? null : 'button'"
+        [attr.tabindex]="isOutOfStock(product) ? null : 0"
+        (keyup.enter)="!isOutOfStock(product) && addToCart(product)"
+      >
+        <div class="product-image-wrapper">
+          <img
+            *ngIf="getProductImage(product) as imgUrl"
+            [src]="imgUrl"
+            [alt]="product?.crearProducto?.titulo || 'Producto'"
+            class="product-image"
+            loading="lazy"
+          />
+          <div *ngIf="!getProductImage(product)" class="product-image-placeholder">
+            <i class="pi pi-box"></i>
+          </div>
+          <!-- Ref Badge -->
+          <span class="ref-badge" *ngIf="product?.identificacion?.referencia">
+            {{ product.identificacion.referencia }}
+          </span>
+          <!-- Stock Badge -->
+          <span
+            *ngIf="getStock(product) !== null"
+            class="stock-badge"
+            [class.stock-badge--ok]="!isOutOfStock(product)"
+            [class.stock-badge--out]="isOutOfStock(product)"
+          >
+            {{ isOutOfStock(product) ? 'Agotado' : getStock(product) + ' disp.' }}
+          </span>
+        </div>
+
+        <div class="product-info">
+          <p class="product-title" [title]="product?.crearProducto?.titulo">
+            {{ product?.crearProducto?.titulo || 'Sin nombre' }}
+          </p>
+          <span class="product-ref" *ngIf="product?.identificacion?.referencia">
+            {{ product.identificacion.referencia }}
+          </span>
+          <span class="product-price">
+            {{ getProductPrice(product) | currency:'COP':'symbol-narrow':'1.0-0' }}
+          </span>
+        </div>
+
+        <div class="product-action">
+          <i class="pi pi-plus"></i>
+          <span>Agregar</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="pagedProducts.length === 0 && !loading">
+      <i class="pi pi-search empty-icon"></i>
+      <p class="empty-title">No se encontraron productos</p>
+      <p class="empty-subtitle" *ngIf="searchTerm || selectedCategory">
+        Intente con otros criterios de busqueda
+      </p>
+      <p class="empty-subtitle" *ngIf="!searchTerm && !selectedCategory && products.length === 0">
+        No hay productos disponibles en esta bodega
+      </p>
+    </div>
+
+    <!-- Pagination -->
+    <nav class="pagination" *ngIf="totalPages > 1" aria-label="Paginacion de productos">
+      <button
+        type="button"
+        class="page-btn"
+        [disabled]="currentPage === 1"
+        (click)="goToPage(currentPage - 1)"
+        aria-label="Pagina anterior"
+      >
+        <i class="pi pi-chevron-left"></i>
+      </button>
+
+      <button
+        *ngFor="let p of pageNumbers"
+        type="button"
+        class="page-btn"
+        [class.page-btn--active]="p === currentPage"
+        (click)="goToPage(p)"
+        [attr.aria-label]="'Pagina ' + p"
+        [attr.aria-current]="p === currentPage ? 'page' : null"
+      >
+        {{ p }}
+      </button>
+
+      <button
+        type="button"
+        class="page-btn"
+        [disabled]="currentPage === totalPages"
+        (click)="goToPage(currentPage + 1)"
+        aria-label="Pagina siguiente"
+      >
+        <i class="pi pi-chevron-right"></i>
+      </button>
+    </nav>
+  </ng-container>
+
+</div>

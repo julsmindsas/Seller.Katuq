@@ -1,0 +1,96 @@
+<div class="scanner-container" [class.flash-success]="flashState === 'success'" [class.flash-error]="flashState === 'error'">
+
+  <!-- Scan Input Area -->
+  <div class="scan-input-area">
+    <div class="scan-icon">
+      <i class="pi pi-qrcode"></i>
+    </div>
+    <h3 class="scan-title">Escanear Producto</h3>
+    <p class="scan-subtitle">Escanee o escriba el codigo y presione Enter</p>
+
+    <div class="input-wrapper">
+      <div class="input-field-wrapper">
+        <i class="pi pi-search input-icon"></i>
+        <input
+          #barcodeInput
+          type="text"
+          class="scan-input"
+          [(ngModel)]="barcode"
+          (keyup.enter)="onScan()"
+          [disabled]="scanning"
+          placeholder="Codigo de barras..."
+          autocomplete="off"
+          aria-label="Codigo de barras del producto"
+        />
+      </div>
+      <button
+        pButton
+        type="button"
+        class="scan-btn"
+        icon="pi pi-arrow-right"
+        [disabled]="!barcode.trim() || scanning"
+        [loading]="scanning"
+        (click)="onScan()"
+        aria-label="Escanear producto"
+      ></button>
+    </div>
+  </div>
+
+  <!-- Scan Result Feedback -->
+  <div class="scan-feedback" *ngIf="lastResult">
+    <div class="feedback-card" [class.feedback-success]="lastResult.found" [class.feedback-error]="!lastResult.found">
+      <i class="feedback-icon pi" [class.pi-check-circle]="lastResult.found" [class.pi-times-circle]="!lastResult.found"></i>
+      <div class="feedback-content">
+        <span class="feedback-title" *ngIf="lastResult.found">
+          {{ lastResult.product?.crearProducto?.titulo || 'Producto agregado' }}
+        </span>
+        <span class="feedback-title" *ngIf="!lastResult.found">
+          {{ lastResult.message || 'Producto no encontrado' }}
+        </span>
+        <span class="feedback-price" *ngIf="lastResult.found && lastResult.product?.precio?.precioUnitarioConIva">
+          {{ lastResult.product.precio.precioUnitarioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scan History -->
+  <div class="scan-history" *ngIf="scanHistory.length > 0">
+    <div class="history-header">
+      <h4 class="history-title">Ultimos escaneos</h4>
+      <button
+        pButton
+        type="button"
+        class="p-button-text p-button-sm history-clear-btn"
+        label="Limpiar"
+        icon="pi pi-trash"
+        (click)="clearHistory()"
+        aria-label="Limpiar historial de escaneos"
+      ></button>
+    </div>
+    <ul class="history-list">
+      <li
+        *ngFor="let entry of scanHistory; trackBy: trackByTimestamp"
+        class="history-item"
+        [class.history-success]="entry.success"
+        [class.history-error]="!entry.success"
+      >
+        <i class="pi history-item-icon" [class.pi-check]="entry.success" [class.pi-times]="!entry.success"></i>
+        <div class="history-item-info">
+          <span class="history-item-name">{{ entry.productName }}</span>
+          <span class="history-item-barcode">{{ entry.barcode }}</span>
+        </div>
+        <span class="history-item-time">
+          {{ entry.timestamp | date:'shortTime' }}
+        </span>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="scanHistory.length === 0 && !lastResult">
+    <i class="pi pi-inbox empty-icon"></i>
+    <p class="empty-text">Escanee un producto para comenzar</p>
+  </div>
+
+</div>

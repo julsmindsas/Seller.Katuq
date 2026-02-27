@@ -1,0 +1,54 @@
+// POS V2 Design Tokens
+// Centralized design variables for consistent styling
+
+// --- Colors ---
+$pos-primary: #8b5cf6;
+$pos-primary-light: #a78bfa;
+$pos-success: #27AE60;
+$pos-danger: #d12b38;
+$pos-warning: #f59e0b;
+
+// --- Surfaces ---
+$pos-bg: #f8f9fa;
+$pos-surface: #ffffff;
+
+// --- Text ---
+$pos-text: #1f2937;
+$pos-text-muted: #6b7280;
+
+// --- Borders ---
+$pos-border: #e5e7eb;
+
+// --- Sizing ---
+$pos-touch-target: 44px;
+$pos-radius: 12px;
+
+// --- Shadows ---
+$pos-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+$pos-shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+// --- Spacing scale (4px base) ---
+$pos-space-xs: 4px;
+$pos-space-sm: 8px;
+$pos-space-md: 12px;
+$pos-space-base: 16px;
+$pos-space-lg: 24px;
+$pos-space-xl: 32px;
+
+// --- Typography ---
+$pos-font-sm: 12px;
+$pos-font-base: 14px;
+$pos-font-md: 16px;
+$pos-font-lg: 20px;
+$pos-font-xl: 24px;
+
+// --- Breakpoints ---
+$pos-bp-sm: 576px;
+$pos-bp-md: 768px;
+$pos-bp-lg: 992px;
+$pos-bp-xl: 1200px;
+
+// --- Z-index layers ---
+$pos-z-cart-fab: 100;
+$pos-z-bottom-sheet: 200;
+$pos-z-dialog: 300;

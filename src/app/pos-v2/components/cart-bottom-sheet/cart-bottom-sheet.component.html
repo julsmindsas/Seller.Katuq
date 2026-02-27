@@ -1,0 +1,16 @@
+<div
+  class="bottom-sheet-backdrop"
+  [class.is-open]="isOpen"
+  (click)="onBackdropClick()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Carrito de compras">
+
+  <div class="bottom-sheet" [class.is-open]="isOpen" (click)="onSheetClick($event)">
+    <div class="drag-handle">
+      <span class="handle-bar"></span>
+    </div>
+
+    <app-pos-v2-cart-panel (openPayment)="onCheckout()"></app-pos-v2-cart-panel>
+  </div>
+</div>

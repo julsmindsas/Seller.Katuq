@@ -271,4 +271,12 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "Katuq Flow CRM" },
   },
+  {
+    path: "pos-v2",
+    loadChildren: () =>
+      import("../../pos-v2/pos-v2.module").then(
+        (m) => m.PosV2Module,
+      ),
+    canActivate: [AuthGuard],
+  },
 ];

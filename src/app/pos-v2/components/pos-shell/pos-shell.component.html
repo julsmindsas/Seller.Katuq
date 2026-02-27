@@ -1,0 +1,300 @@
+<!-- Terminal Selector (step 1) -->
+<app-pos-v2-terminal-selector
+  *ngIf="showTerminalSelector"
+  (terminalSelected)="onTerminalSelected()">
+</app-pos-v2-terminal-selector>
+
+<!-- Cash Register Opening (step 2) -->
+<app-pos-v2-cash-register
+  *ngIf="!showTerminalSelector && showCashRegister"
+  [mode]="cashRegisterMode"
+  (registerOpened)="onCashRegisterOpened()"
+  (registerClosed)="onShiftClosed()">
+</app-pos-v2-cash-register>
+
+<!-- Main POS Interface (step 3 - ready) -->
+<ng-container *ngIf="(isReady$ | async) && !showTerminalSelector && !showCashRegister">
+  <!-- Top Bar -->
+  <header class="pos-header">
+    <div class="pos-header__left">
+      <span class="pos-header__terminal" *ngIf="currentTerminal$ | async as terminal">
+        <i class="pi pi-building"></i>
+        {{ terminal.name }}
+      </span>
+    </div>
+
+    <nav class="pos-header__tabs" role="tablist" aria-label="Modo de operacion">
+      <button
+        class="pos-header__tab"
+        role="tab"
+        [attr.aria-selected]="activeMode === 'scanner'"
+        [class.pos-header__tab--active]="activeMode === 'scanner'"
+        (click)="activeMode = 'scanner'"
+        type="button">
+        <i class="pi pi-barcode"></i>
+        <span class="pos-header__tab-label">Scanner</span>
+        <kbd class="pos-header__kbd">F1</kbd>
+      </button>
+      <button
+        class="pos-header__tab"
+        role="tab"
+        [attr.aria-selected]="activeMode === 'catalog'"
+        [class.pos-header__tab--active]="activeMode === 'catalog'"
+        (click)="activeMode = 'catalog'"
+        type="button">
+        <i class="pi pi-th-large"></i>
+        <span class="pos-header__tab-label">Catalogo</span>
+        <kbd class="pos-header__kbd">F1</kbd>
+      </button>
+    </nav>
+
+    <div class="pos-header__right">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-chart-bar"
+        class="p-button-text p-button-sm"
+        pTooltip="Ver Reportes (F9)"
+        tooltipPosition="bottom"
+        (click)="goToReports()"
+        aria-label="Ver Reportes">
+      </button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-refresh"
+        class="p-button-text p-button-sm"
+        pTooltip="Nueva venta (F8)"
+        tooltipPosition="bottom"
+        (click)="newSale()"
+        aria-label="Nueva venta">
+      </button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-lock"
+        class="p-button-text p-button-sm p-button-danger"
+        pTooltip="Cerrar turno"
+        tooltipPosition="bottom"
+        (click)="onCloseShift()"
+        aria-label="Cerrar turno">
+      </button>
+    </div>
+  </header>
+
+  <!-- Content Area -->
+  <div class="pos-container">
+    <!-- Main Area: Scanner or Catalog -->
+    <main class="pos-main" role="main">
+      <app-pos-v2-scanner-mode
+        *ngIf="activeMode === 'scanner'"
+        #scannerInput>
+      </app-pos-v2-scanner-mode>
+
+      <app-pos-v2-catalog-mode
+        *ngIf="activeMode === 'catalog'">
+      </app-pos-v2-catalog-mode>
+    </main>
+
+    <!-- Cart Sidebar (desktop) -->
+    <aside class="pos-sidebar" role="complementary" aria-label="Carrito de compras">
+      <app-pos-v2-cart-panel
+        (openPayment)="openPayment()">
+      </app-pos-v2-cart-panel>
+    </aside>
+  </div>
+
+  <!-- Cart FAB (mobile only) -->
+  <app-pos-v2-cart-fab
+    class="pos-fab-wrapper"
+    (fabClicked)="toggleCartBottomSheet()">
+  </app-pos-v2-cart-fab>
+
+  <!-- Cart Bottom Sheet (mobile only) -->
+  <app-pos-v2-cart-bottom-sheet
+    *ngIf="showCartBottomSheet"
+    class="pos-bottom-sheet-wrapper"
+    (closed)="showCartBottomSheet = false"
+    (openPayment)="openPayment()">
+  </app-pos-v2-cart-bottom-sheet>
+
+  <!-- Payment Method Selector -->
+  <p-dialog
+    *ngIf="showPaymentSelector"
+    [visible]="true"
+    header="Forma de pago"
+    [modal]="true"
+    [closable]="true"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '480px', maxWidth: '95vw' }"
+    [baseZIndex]="300"
+    (onHide)="closePaymentSelector()">
+
+    <div class="payment-selector">
+      <div class="payment-selector__total">
+        <span>Total a cobrar</span>
+        <strong>${{ cartTotal | number:'1.0-0' }}</strong>
+      </div>
+
+      <!-- Customer Section -->
+      <div class="payment-selector__customer">
+        <div class="customer-header">
+          <label class="payment-selector__label">Cliente</label>
+          <button
+            type="button"
+            class="btn-nuevo-cliente"
+            (click)="openCreateCustomerModal()"
+            pTooltip="Crear nuevo cliente"
+            tooltipPosition="top">
+            <i class="pi pi-plus"></i>
+            <span>Nuevo</span>
+          </button>
+        </div>
+        <div *ngIf="!selectedCustomer" class="customer-search-row">
+          <div class="autocomplete-box">
+            <i class="pi pi-search search-icon-left"></i>
+            <p-autoComplete
+              [(ngModel)]="selectedCustomer"
+              [suggestions]="customerSuggestions"
+              (completeMethod)="searchCustomer($event)"
+              (onSelect)="onCustomerSelect($event)"
+              [field]="'nombres_completos'"
+              placeholder="Buscar por documento, nombre, correo..."
+              [minLength]="2"
+              [forceSelection]="false"
+              [showClear]="true"
+              [style]="{ width: '100%' }"
+              [inputStyle]="{ width: '100%', height: '44px', fontSize: '15px', paddingLeft: '36px' }">
+              <ng-template let-client pTemplate="item">
+                <div class="customer-suggestion">
+                  <div class="customer-suggestion__avatar">
+                    <i class="pi pi-user"></i>
+                  </div>
+                  <div class="customer-suggestion__info">
+                    <span class="customer-suggestion__name">
+                      {{ client.nombres_completos }} {{ client.apellidos_completos }}
+                    </span>
+                    <div class="customer-suggestion__meta">
+                      <span class="customer-suggestion__doc-badge">{{ client.documento }}</span>
+                      <span class="customer-suggestion__phone" *ngIf="client.numero_celular_comprador">
+                        <i class="pi pi-phone"></i> {{ client.numero_celular_comprador }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+              <ng-template pTemplate="empty">
+                <div class="customer-suggestion__empty">
+                  <i class="pi pi-user-minus"></i>
+                  <span>No se encontraron clientes</span>
+                </div>
+              </ng-template>
+            </p-autoComplete>
+            <span class="loading-spinner" *ngIf="isSearchingCustomer">
+              <i class="pi pi-spin pi-spinner"></i>
+            </span>
+          </div>
+          <button
+            type="button"
+            class="consumidor-final-btn"
+            (click)="setConsumidorFinal()"
+            pTooltip="Consumidor Final"
+            tooltipPosition="top">
+            <i class="pi pi-user"></i>
+          </button>
+        </div>
+        <!-- Cliente seleccionado -->
+        <div *ngIf="selectedCustomer" class="customer-selected">
+          <div class="customer-selected__status">
+            <i class="pi pi-check-circle"></i>
+            <span>Cliente Asociado</span>
+          </div>
+          <div class="customer-selected__body">
+            <div class="customer-selected__info">
+              <div class="customer-selected__avatar">
+                <i class="pi pi-user"></i>
+              </div>
+              <div>
+                <strong>{{ selectedCustomer.nombres_completos }} {{ selectedCustomer.apellidos_completos }}</strong>
+                <small *ngIf="selectedCustomer.documento" class="customer-selected__doc">{{ selectedCustomer.documento }}</small>
+              </div>
+            </div>
+            <div class="customer-selected__contact" *ngIf="selectedCustomer.numero_celular_comprador || selectedCustomer.correo_electronico_comprador">
+              <span *ngIf="selectedCustomer.numero_celular_comprador">
+                <i class="pi pi-phone"></i> {{ selectedCustomer.numero_celular_comprador }}
+              </span>
+              <span *ngIf="selectedCustomer.correo_electronico_comprador">
+                <i class="pi pi-envelope"></i> {{ selectedCustomer.correo_electronico_comprador }}
+              </span>
+            </div>
+          </div>
+          <div class="customer-selected__actions">
+            <button type="button" class="customer-selected__action-btn" (click)="editCustomer()" pTooltip="Editar cliente" tooltipPosition="top">
+              <i class="pi pi-pencil"></i>
+            </button>
+            <button type="button" class="customer-selected__action-btn customer-selected__action-btn--danger" (click)="clearCustomer()">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="payment-selector__divider">
+        <span>Seleccione forma de pago</span>
+      </div>
+
+      <div class="payment-selector__methods">
+        <button type="button" class="payment-method-btn" (click)="selectPaymentMethod('cash')">
+          <i class="pi pi-wallet"></i>
+          <span>Efectivo</span>
+        </button>
+        <button type="button" class="payment-method-btn" (click)="selectPaymentMethod('card')">
+          <i class="pi pi-credit-card"></i>
+          <span>Tarjeta</span>
+        </button>
+        <button type="button" class="payment-method-btn" (click)="selectPaymentMethod('ewallet')">
+          <i class="pi pi-mobile"></i>
+          <span>Nequi / Daviplata</span>
+        </button>
+        <button type="button" class="payment-method-btn" (click)="selectPaymentMethod('transfer')">
+          <i class="pi pi-send"></i>
+          <span>Transferencia</span>
+        </button>
+      </div>
+
+      <!-- Formas de pago configuradas por la empresa -->
+      <ng-container *ngIf="customPaymentMethods.length > 0">
+        <div class="payment-selector__divider">
+          <span>Otros métodos configurados</span>
+        </div>
+        <div class="payment-selector__methods">
+          <button
+            type="button"
+            class="payment-method-btn payment-method-btn--custom"
+            *ngFor="let metodo of customPaymentMethods"
+            (click)="selectCustomPaymentMethod(metodo)">
+            <img
+              *ngIf="metodo.iconPath"
+              [src]="metodo.iconPath"
+              [alt]="metodo.nombre"
+              class="payment-method-btn__img"
+              (error)="$event.target.style.display='none'">
+            <i *ngIf="!metodo.iconPath" class="pi pi-money-bill"></i>
+            <span>{{ metodo.nombre }}</span>
+          </button>
+        </div>
+      </ng-container>
+    </div>
+  </p-dialog>
+
+  <!-- Payment Dialog (cash/card/ewallet/transfer details) -->
+  <app-pos-v2-payment-dialog
+    *ngIf="showPaymentDialog"
+    [visible]="true"
+    [paymentMethod]="selectedPaymentMethod"
+    [total]="cartTotal"
+    (confirmed)="onPaymentConfirmed($event)"
+    (closed)="closePayment()">
+  </app-pos-v2-payment-dialog>
+</ng-container>

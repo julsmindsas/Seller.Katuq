@@ -1,0 +1,355 @@
+@import '../../pos-v2-design-tokens';
+
+.returns-report {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: $pos-space-base;
+}
+
+// Loading & Error States
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $pos-space-xl * 2;
+  text-align: center;
+  color: $pos-text-muted;
+
+  i {
+    font-size: 48px;
+    margin-bottom: $pos-space-base;
+  }
+
+  p {
+    margin: 0 0 $pos-space-base;
+    font-size: $pos-font-md;
+  }
+}
+
+.error-state {
+  i {
+    color: $pos-danger;
+  }
+}
+
+// Empty State
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $pos-space-xl * 2;
+  text-align: center;
+  color: $pos-text-muted;
+
+  i {
+    font-size: 48px;
+    margin-bottom: $pos-space-base;
+    opacity: 0.4;
+  }
+
+  p {
+    margin: 0;
+    font-size: $pos-font-md;
+  }
+}
+
+// Report Header
+.report-header {
+  text-align: center;
+  margin-bottom: $pos-space-lg;
+  padding-bottom: $pos-space-lg;
+  border-bottom: 2px solid $pos-border;
+}
+
+.report-title {
+  margin: 0 0 $pos-space-md;
+  font-size: $pos-font-xl;
+  font-weight: 700;
+  color: $pos-text;
+}
+
+.report-meta {
+  display: flex;
+  justify-content: center;
+  gap: $pos-space-lg;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-sm;
+  font-size: $pos-font-base;
+  color: $pos-text-muted;
+}
+
+// Period Filter
+.period-filter {
+  margin-bottom: $pos-space-lg;
+}
+
+.period-buttons {
+  display: flex;
+  gap: $pos-space-sm;
+  flex-wrap: wrap;
+  margin-bottom: $pos-space-md;
+}
+
+.custom-dates {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-sm;
+  flex-wrap: wrap;
+}
+
+.date-input {
+  padding: $pos-space-sm $pos-space-md;
+  border: 1px solid $pos-border;
+  border-radius: $pos-radius;
+  font-size: $pos-font-base;
+  color: $pos-text;
+  background: $pos-surface;
+  min-height: $pos-touch-target;
+
+  &:focus {
+    outline: 2px solid $pos-primary;
+    outline-offset: -1px;
+    border-color: $pos-primary;
+  }
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $pos-space-base;
+  margin-bottom: $pos-space-lg;
+
+  @media (max-width: $pos-bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $pos-space-lg;
+  background: $pos-bg;
+  border-radius: $pos-radius;
+  text-align: center;
+
+  .card-label {
+    font-size: $pos-font-sm;
+    color: $pos-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: $pos-space-xs;
+  }
+
+  .card-value {
+    font-size: $pos-font-xl;
+    font-weight: 700;
+    color: $pos-text;
+
+    &.primary {
+      color: $pos-primary;
+    }
+
+    &.success {
+      color: $pos-success;
+    }
+
+    &.danger {
+      color: $pos-danger;
+    }
+
+    &.muted {
+      font-size: $pos-font-md;
+      color: $pos-text-muted;
+    }
+  }
+}
+
+// Action Bar
+.action-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: $pos-space-base;
+}
+
+.new-return-btn {
+  min-height: $pos-touch-target;
+  font-weight: 600;
+
+  &:focus-visible {
+    outline: 2px solid $pos-danger;
+    outline-offset: 2px;
+  }
+}
+
+// Report Section
+.report-section {
+  margin-bottom: $pos-space-lg;
+}
+
+.section-title {
+  margin: 0 0 $pos-space-md;
+  font-size: $pos-font-md;
+  font-weight: 600;
+  color: $pos-text;
+}
+
+// Report Table
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $pos-font-base;
+
+  th, td {
+    padding: $pos-space-md $pos-space-base;
+    text-align: left;
+    border-bottom: 1px solid $pos-border;
+  }
+
+  th {
+    font-weight: 600;
+    color: $pos-text-muted;
+    font-size: $pos-font-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: $pos-bg;
+  }
+
+  tbody tr {
+    &:nth-child(even) {
+      background: rgba($pos-bg, 0.5);
+    }
+
+    &:hover {
+      background: rgba($pos-primary, 0.02);
+    }
+  }
+
+  tfoot {
+    td {
+      border-top: 2px solid $pos-border;
+      border-bottom: none;
+      font-size: $pos-font-md;
+    }
+  }
+
+  .text-right {
+    text-align: right;
+  }
+}
+
+.order-number {
+  font-family: monospace;
+  font-size: $pos-font-sm;
+  color: $pos-primary;
+}
+
+.amount-cell {
+  font-weight: 600;
+  color: $pos-danger;
+}
+
+.reason-badge {
+  display: inline-block;
+  padding: 2px $pos-space-sm;
+  border-radius: 4px;
+  font-size: $pos-font-sm;
+  font-weight: 600;
+  background: rgba($pos-warning, 0.1);
+  color: darken($pos-warning, 10%);
+}
+
+// Report Actions
+.report-actions {
+  display: flex;
+  justify-content: center;
+  gap: $pos-space-md;
+  padding: $pos-space-lg 0;
+}
+
+.print-btn,
+.back-btn {
+  min-height: $pos-touch-target;
+  min-width: 140px;
+  font-weight: 600;
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: 2px;
+  }
+}
+
+// Responsive
+@media (max-width: $pos-bp-md) {
+  .period-buttons {
+    justify-content: center;
+  }
+
+  .custom-dates {
+    justify-content: center;
+  }
+
+  .report-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+
+    th, td {
+      padding: $pos-space-sm $pos-space-md;
+      white-space: nowrap;
+    }
+  }
+}
+
+// Print Styles
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .returns-report {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .summary-card {
+    border: 1px solid #ccc;
+  }
+
+  .report-table {
+    th {
+      background: #f0f0f0 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9f9f9 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
+  .reason-badge {
+    color: #000;
+    background: none;
+    border: 1px solid #ccc;
+  }
+
+  .amount-cell {
+    color: #000;
+  }
+}

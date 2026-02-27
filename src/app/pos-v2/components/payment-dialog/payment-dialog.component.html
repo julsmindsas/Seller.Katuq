@@ -1,0 +1,143 @@
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px', maxWidth: '95vw' }"
+  [baseZIndex]="300"
+  (onHide)="onClose()">
+
+  <div class="payment-content">
+    <!-- Total Display -->
+    <div class="total-display">
+      <span class="total-label">Total a pagar</span>
+      <span class="total-amount">${{ total | number:'1.0-0' }}</span>
+    </div>
+
+    <!-- Cash Payment -->
+    <ng-container *ngIf="paymentMethod === 'cash'">
+      <div class="form-group">
+        <label for="amountReceived" class="form-label">Monto recibido</label>
+        <div class="amount-input-wrapper">
+          <span class="currency-prefix">$</span>
+          <input
+            id="amountReceived"
+            type="number"
+            class="amount-input"
+            [(ngModel)]="amountReceived"
+            placeholder="0"
+            min="0"
+            autofocus />
+        </div>
+      </div>
+
+      <div class="quick-amounts">
+        <button
+          *ngFor="let amount of quickAmounts"
+          type="button"
+          class="quick-amount-btn"
+          [class.active]="amountReceived === amount"
+          (click)="setQuickAmount(amount)">
+          ${{ amount | number:'1.0-0' }}
+        </button>
+        <button
+          type="button"
+          class="quick-amount-btn exact"
+          [class.active]="amountReceived === total"
+          (click)="setExactAmount()">
+          Exacto
+        </button>
+      </div>
+
+      <div class="change-display" *ngIf="amountReceived && amountReceived >= total">
+        <span class="change-label">Cambio</span>
+        <span class="change-amount">${{ change | number:'1.0-0' }}</span>
+      </div>
+
+      <div class="insufficient-warning" *ngIf="amountReceived && amountReceived < total">
+        <i class="pi pi-exclamation-triangle"></i>
+        <span>Monto insuficiente</span>
+      </div>
+    </ng-container>
+
+    <!-- Card Payment -->
+    <ng-container *ngIf="paymentMethod === 'card'">
+      <div class="form-group">
+        <label for="cardReference" class="form-label">Numero de referencia</label>
+        <input
+          id="cardReference"
+          type="text"
+          class="reference-input"
+          [(ngModel)]="transactionReference"
+          placeholder="Ingrese el numero de referencia"
+          autofocus />
+      </div>
+    </ng-container>
+
+    <!-- E-wallet Payment -->
+    <ng-container *ngIf="paymentMethod === 'ewallet'">
+      <div class="form-group">
+        <label for="ewalletReference" class="form-label">Referencia de transaccion</label>
+        <input
+          id="ewalletReference"
+          type="text"
+          class="reference-input"
+          [(ngModel)]="transactionReference"
+          placeholder="Ingrese la referencia"
+          autofocus />
+      </div>
+    </ng-container>
+
+    <!-- Transfer Payment -->
+    <ng-container *ngIf="paymentMethod === 'transfer'">
+      <div class="form-group">
+        <label for="transferReference" class="form-label">Referencia de transferencia</label>
+        <input
+          id="transferReference"
+          type="text"
+          class="reference-input"
+          [(ngModel)]="transactionReference"
+          placeholder="Ingrese la referencia de transferencia"
+          autofocus />
+      </div>
+    </ng-container>
+
+    <!-- Propina -->
+    <div class="tip-section">
+      <label class="tip-label">Propina (opcional)</label>
+      <div class="tip-quick-buttons">
+        <button *ngFor="let pct of quickTipPercentages" pButton type="button"
+          [label]="pct + '%'" class="p-button-outlined p-button-sm"
+          [class.p-button-success]="tipAmount === (total * pct / 100 | number:'1.0-0')"
+          (click)="setTipPercentage(pct)">
+        </button>
+        <button pButton type="button" label="Sin propina" class="p-button-text p-button-sm" (click)="clearTip()"></button>
+      </div>
+      <div class="tip-custom" *ngIf="tipAmount > 0">
+        <span>Propina: ${{ tipAmount | number:'1.0-0' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      type="button"
+      label="Cancelar"
+      icon="pi pi-times"
+      class="p-button-outlined p-button-secondary cancel-btn"
+      (click)="onClose()">
+    </button>
+    <button
+      pButton
+      type="button"
+      label="Confirmar pago"
+      icon="pi pi-check"
+      class="p-button-lg confirm-payment-btn"
+      [disabled]="!canConfirm"
+      (click)="onConfirm()">
+    </button>
+  </ng-template>
+</p-dialog>

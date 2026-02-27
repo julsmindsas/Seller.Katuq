@@ -1,0 +1,188 @@
+<div class="returns-report">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando devoluciones...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="!loading && error">
+    <i class="pi pi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button
+      pButton
+      type="button"
+      label="Reintentar"
+      icon="pi pi-refresh"
+      class="p-button-outlined"
+      (click)="loadReturns()">
+    </button>
+  </div>
+
+  <!-- Report Content -->
+  <div class="report-content" *ngIf="!loading && !error">
+    <!-- Header -->
+    <div class="report-header">
+      <h2 class="report-title">Devoluciones y Anulaciones</h2>
+      <div class="report-meta">
+        <div class="meta-item">
+          <i class="pi pi-calendar"></i>
+          <span *ngIf="selectedPeriod === 'today'">Hoy</span>
+          <span *ngIf="selectedPeriod === 'week'">Esta semana</span>
+          <span *ngIf="selectedPeriod === 'custom'">{{ customFrom }} - {{ customTo }}</span>
+        </div>
+        <div class="meta-item">
+          <i class="pi pi-replay"></i>
+          <span>{{ returns.length }} devoluciones</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Period Filter -->
+    <div class="period-filter no-print">
+      <div class="period-buttons">
+        <button
+          pButton
+          type="button"
+          label="Hoy"
+          [class]="selectedPeriod === 'today' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="onPeriodChange('today')">
+        </button>
+        <button
+          pButton
+          type="button"
+          label="Esta semana"
+          [class]="selectedPeriod === 'week' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="onPeriodChange('week')">
+        </button>
+        <button
+          pButton
+          type="button"
+          label="Personalizado"
+          [class]="selectedPeriod === 'custom' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="onPeriodChange('custom')">
+        </button>
+      </div>
+      <div class="custom-dates" *ngIf="selectedPeriod === 'custom'">
+        <input
+          type="date"
+          class="date-input"
+          [(ngModel)]="customFrom"
+          aria-label="Fecha desde"
+          placeholder="Desde" />
+        <input
+          type="date"
+          class="date-input"
+          [(ngModel)]="customTo"
+          aria-label="Fecha hasta"
+          placeholder="Hasta" />
+        <button
+          pButton
+          type="button"
+          label="Aplicar"
+          icon="pi pi-check"
+          class="p-button-sm p-button-success"
+          [disabled]="!customFrom || !customTo"
+          (click)="onCustomDateApply()">
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <span class="card-label">Total devoluciones</span>
+        <span class="card-value">{{ returns.length }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="card-label">Total reembolsado</span>
+        <span class="card-value danger">${{ totalRefunded | number:'1.0-0' }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="card-label">Razon mas comun</span>
+        <span class="card-value muted">{{ mostCommonReason }}</span>
+      </div>
+    </div>
+
+    <!-- New Return Button -->
+    <div class="action-bar no-print">
+      <button
+        pButton
+        type="button"
+        label="Nueva Devolucion"
+        icon="pi pi-plus"
+        class="p-button-danger new-return-btn"
+        (click)="openReturnDialog()">
+      </button>
+    </div>
+
+    <!-- Returns Table -->
+    <section class="report-section" *ngIf="returns.length > 0">
+      <h3 class="section-title">Historial de Devoluciones</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Orden #</th>
+            <th>Items</th>
+            <th class="text-right">Monto</th>
+            <th>Razon</th>
+            <th>Procesado por</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ret of returns; trackBy: trackByReturnId">
+            <td>{{ ret.returnInfo?.returnedAt || ret.fechaCreacion | date:'short' }}</td>
+            <td class="order-number">{{ ret.nroPedido || '-' }}</td>
+            <td>{{ ret.returnInfo?.items?.length || 0 }} item(s)</td>
+            <td class="text-right amount-cell">${{ ret.returnInfo?.totalRefunded || 0 | number:'1.0-0' }}</td>
+            <td>
+              <span class="reason-badge">{{ getReasonLabel(ret.returnInfo?.reason) }}</span>
+            </td>
+            <td>{{ ret.returnInfo?.returnedBy || ret.asesorAsignado?.nombre || '-' }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td colspan="3"><strong>Total</strong></td>
+            <td class="text-right"><strong>${{ totalRefunded | number:'1.0-0' }}</strong></td>
+            <td colspan="2"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="returns.length === 0">
+      <i class="pi pi-inbox"></i>
+      <p>No hay devoluciones registradas</p>
+    </div>
+
+    <!-- Report Actions -->
+    <div class="report-actions no-print">
+      <button
+        pButton
+        type="button"
+        label="Imprimir"
+        icon="pi pi-print"
+        class="p-button-outlined print-btn"
+        (click)="printReport()">
+      </button>
+      <button
+        pButton
+        type="button"
+        label="Volver"
+        icon="pi pi-arrow-left"
+        class="p-button-outlined back-btn"
+        (click)="goBack()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Return Dialog -->
+  <app-pos-v2-return-dialog
+    [visible]="showReturnDialog"
+    (created)="onReturnCreated()"
+    (closed)="onReturnDialogClosed()">
+  </app-pos-v2-return-dialog>
+</div>

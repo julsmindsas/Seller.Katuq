@@ -1,0 +1,399 @@
+@import '../../pos-v2-design-tokens';
+
+.checkout-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: $pos-surface;
+  border-radius: $pos-radius;
+  overflow: hidden;
+}
+
+.checkout-header {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-md;
+  padding: $pos-space-base;
+  border-bottom: 1px solid $pos-border;
+  flex-shrink: 0;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: $pos-touch-target;
+  height: $pos-touch-target;
+  border: 1px solid $pos-border;
+  border-radius: $pos-radius;
+  background: $pos-surface;
+  color: $pos-text;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: $pos-primary;
+    color: $pos-primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: 2px;
+  }
+}
+
+.checkout-title {
+  margin: 0;
+  font-size: $pos-font-lg;
+  font-weight: 600;
+  color: $pos-text;
+}
+
+.checkout-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: $pos-space-base;
+}
+
+.checkout-section {
+  margin-bottom: $pos-space-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-sm;
+  margin: 0 0 $pos-space-md;
+  font-size: $pos-font-base;
+  font-weight: 600;
+  color: $pos-text;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Customer search
+.customer-search {
+  display: flex;
+  flex-direction: column;
+  gap: $pos-space-sm;
+}
+
+:host ::ng-deep .customer-autocomplete {
+  width: 100%;
+
+  .p-autocomplete-input {
+    width: 100%;
+    min-height: $pos-touch-target;
+    font-size: $pos-font-base;
+    border-radius: $pos-radius;
+  }
+}
+
+.customer-suggestion {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $pos-space-xs 0;
+
+  .customer-name {
+    font-weight: 500;
+    color: $pos-text;
+  }
+
+  .customer-doc {
+    font-size: $pos-font-sm;
+    color: $pos-text-muted;
+  }
+}
+
+.consumidor-final-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $pos-space-sm;
+  min-height: $pos-touch-target;
+  padding: $pos-space-sm $pos-space-base;
+  border: 1px dashed $pos-border;
+  border-radius: $pos-radius;
+  background: $pos-bg;
+  color: $pos-text-muted;
+  font-size: $pos-font-base;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: $pos-primary;
+    color: $pos-primary;
+    background: rgba($pos-primary, 0.03);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: 2px;
+  }
+}
+
+.selected-customer {
+  .customer-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $pos-space-md;
+    background: rgba($pos-primary, 0.05);
+    border: 1px solid rgba($pos-primary, 0.2);
+    border-radius: $pos-radius;
+  }
+
+  .customer-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .customer-name {
+      font-weight: 600;
+      color: $pos-text;
+      font-size: $pos-font-base;
+    }
+
+    .customer-detail {
+      font-size: $pos-font-sm;
+      color: $pos-text-muted;
+    }
+  }
+
+  .change-customer-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: $pos-text-muted;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover {
+      background: rgba($pos-danger, 0.1);
+      color: $pos-danger;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $pos-primary;
+      outline-offset: 2px;
+    }
+  }
+}
+
+// Discount controls
+.discount-controls {
+  display: flex;
+  gap: $pos-space-sm;
+  align-items: center;
+}
+
+.discount-type-toggle {
+  display: flex;
+  border: 2px solid $pos-border;
+  border-radius: $pos-radius;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.toggle-btn {
+  min-width: 44px;
+  min-height: $pos-touch-target;
+  padding: $pos-space-sm;
+  border: none;
+  background: $pos-surface;
+  color: $pos-text-muted;
+  font-size: $pos-font-md;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &.active {
+    background: $pos-primary;
+    color: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: -2px;
+  }
+}
+
+.discount-input-wrapper {
+  flex: 1;
+}
+
+.discount-input {
+  width: 100%;
+  height: $pos-touch-target;
+  padding: 0 $pos-space-md;
+  border: 2px solid $pos-border;
+  border-radius: $pos-radius;
+  font-size: $pos-font-base;
+  color: $pos-text;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: $pos-primary;
+  }
+
+  &::placeholder {
+    color: lighten($pos-text-muted, 20%);
+  }
+
+  // Hide number input spinners
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+}
+
+.discount-preview {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $pos-space-sm $pos-space-md;
+  margin-top: $pos-space-sm;
+  background: rgba($pos-danger, 0.06);
+  border: 1px solid rgba($pos-danger, 0.15);
+  border-radius: $pos-radius;
+
+  .discount-label {
+    font-size: $pos-font-sm;
+    color: $pos-text-muted;
+  }
+
+  .discount-value {
+    font-size: $pos-font-base;
+    font-weight: 600;
+    color: $pos-danger;
+  }
+}
+
+// Payment methods
+.payment-methods {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $pos-space-sm;
+
+  @media (max-width: $pos-bp-sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.payment-method-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $pos-space-sm;
+  padding: $pos-space-base;
+  min-height: 80px;
+  border: 2px solid $pos-border;
+  border-radius: $pos-radius;
+  background: $pos-surface;
+  color: $pos-text-muted;
+  cursor: pointer;
+  font-size: $pos-font-base;
+  font-weight: 500;
+  transition: all 0.15s;
+
+  i {
+    font-size: $pos-font-xl;
+  }
+
+  &:hover {
+    border-color: $pos-primary-light;
+    color: $pos-primary;
+  }
+
+  &.active {
+    border-color: $pos-primary;
+    background: rgba($pos-primary, 0.05);
+    color: $pos-primary;
+
+    i {
+      color: $pos-primary;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: 2px;
+  }
+}
+
+// Order summary
+.order-summary {
+  background: $pos-bg;
+  border-radius: $pos-radius;
+  padding: $pos-space-base;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $pos-space-xs 0;
+  font-size: $pos-font-base;
+  color: $pos-text-muted;
+}
+
+.discount-row {
+  .discount-text {
+    color: $pos-danger;
+    font-weight: 500;
+  }
+}
+
+.total-row {
+  padding-top: $pos-space-sm;
+  margin-top: $pos-space-sm;
+  border-top: 2px solid $pos-border;
+  font-size: $pos-font-lg;
+  font-weight: 700;
+  color: $pos-text;
+
+  .total-value {
+    color: $pos-primary;
+  }
+}
+
+// Footer
+.checkout-footer {
+  flex-shrink: 0;
+  padding: $pos-space-base;
+  border-top: 1px solid $pos-border;
+  background: $pos-surface;
+}
+
+.confirm-btn {
+  width: 100%;
+  min-height: $pos-touch-target;
+  font-size: $pos-font-md;
+  font-weight: 600;
+  background: $pos-success;
+  border-color: $pos-success;
+
+  &:hover {
+    background: darken($pos-success, 8%);
+    border-color: darken($pos-success, 8%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-success;
+    outline-offset: 2px;
+  }
+}

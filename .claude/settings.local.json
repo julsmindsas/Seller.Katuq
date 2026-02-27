@@ -52,7 +52,15 @@
       "Bash(npx ng serve:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(head:*)",
+      "Bash(grep:*)",
+      "Bash(cd:*)",
+      "Bash(cd /Users/danielga/Downloads/_Organizado/01_Katuq/Codigo/Seller.Katuq && export NODE_OPTIONS=\"--max-old-space-size=8192\" && npx ng serve --port 4200 2>&1)",
+      "Bash(tail:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=8192\" npx ng:*)",
+      "Bash(sleep 1:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

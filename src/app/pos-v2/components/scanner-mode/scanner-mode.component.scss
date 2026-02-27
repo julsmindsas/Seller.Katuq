@@ -1,0 +1,337 @@
+@import '../../pos-v2-design-tokens';
+
+// Senior-friendly sizes
+$scan-input-height: 56px;
+$scan-btn-size: 56px;
+$scan-icon-size: 20px;
+$font-title: 24px;
+$font-subtitle: 16px;
+$font-input: 18px;
+$font-feedback-title: 18px;
+$font-feedback-price: 16px;
+$font-history-name: 16px;
+$font-history-barcode: 14px;
+$history-item-height: 52px;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.scanner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $pos-space-lg $pos-space-base;
+  flex: 1;
+  min-height: 0;
+  transition: background-color 0.3s ease;
+  border-radius: $pos-radius;
+
+  &.flash-success {
+    animation: flashGreen 0.6s ease;
+  }
+
+  &.flash-error {
+    animation: flashRed 0.6s ease;
+  }
+}
+
+// --- Scan Input Area ---
+.scan-input-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 560px;
+  padding: $pos-space-xl 0 $pos-space-lg;
+}
+
+.scan-icon {
+  font-size: 56px;
+  color: $pos-primary;
+  margin-bottom: $pos-space-base;
+
+  .pi {
+    font-size: inherit;
+  }
+}
+
+.scan-title {
+  font-size: $font-title;
+  font-weight: 700;
+  color: $pos-text;
+  margin: 0 0 $pos-space-sm;
+}
+
+.scan-subtitle {
+  font-size: $font-subtitle;
+  color: $pos-text-muted;
+  margin: 0 0 $pos-space-lg;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.input-wrapper {
+  display: flex;
+  gap: $pos-space-md;
+  width: 100%;
+}
+
+.input-field-wrapper {
+  flex: 1;
+  position: relative;
+
+  .input-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: $scan-icon-size;
+    color: $pos-text-muted;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .scan-input {
+    width: 100%;
+    height: $scan-input-height;
+    font-size: $font-input;
+    border-radius: $pos-radius;
+    border: 2px solid $pos-border;
+    padding: 0 $pos-space-base 0 48px; // 48px = icon space
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background: $pos-surface;
+    color: $pos-text;
+
+    &::placeholder {
+      color: darken($pos-border, 10%);
+      font-size: $font-input;
+    }
+
+    &:focus {
+      border-color: $pos-primary;
+      box-shadow: 0 0 0 3px rgba($pos-primary, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.scan-btn {
+  width: $scan-btn-size;
+  height: $scan-btn-size;
+  flex-shrink: 0;
+  border-radius: $pos-radius !important;
+  font-size: 20px;
+
+  .pi {
+    font-size: 20px;
+  }
+}
+
+// --- Scan Feedback ---
+.scan-feedback {
+  width: 100%;
+  max-width: 560px;
+  margin-top: $pos-space-lg;
+}
+
+.feedback-card {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-base;
+  padding: $pos-space-base $pos-space-lg;
+  border-radius: $pos-radius;
+  border-left: 5px solid;
+
+  &.feedback-success {
+    background: rgba($pos-success, 0.08);
+    border-left-color: $pos-success;
+  }
+
+  &.feedback-error {
+    background: rgba($pos-danger, 0.08);
+    border-left-color: $pos-danger;
+  }
+}
+
+.feedback-icon {
+  font-size: 28px;
+
+  .feedback-success & {
+    color: $pos-success;
+  }
+
+  .feedback-error & {
+    color: $pos-danger;
+  }
+}
+
+.feedback-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.feedback-title {
+  font-size: $font-feedback-title;
+  font-weight: 600;
+  color: $pos-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.feedback-price {
+  font-size: $font-feedback-price;
+  color: $pos-primary;
+  font-weight: 700;
+}
+
+// --- Scan History ---
+.scan-history {
+  width: 100%;
+  max-width: 560px;
+  margin-top: $pos-space-xl;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $pos-space-md;
+}
+
+.history-title {
+  font-size: $font-history-name;
+  font-weight: 700;
+  color: $pos-text;
+  margin: 0;
+}
+
+.history-clear-btn {
+  font-size: $pos-font-base !important;
+  min-height: 40px;
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $pos-space-sm;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-md;
+  padding: $pos-space-md $pos-space-base;
+  background: $pos-surface;
+  border-radius: $pos-radius;
+  border: 1px solid $pos-border;
+  min-height: $history-item-height;
+
+  &.history-success .history-item-icon {
+    color: $pos-success;
+  }
+
+  &.history-error .history-item-icon {
+    color: $pos-danger;
+  }
+}
+
+.history-item-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.history-item-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.history-item-name {
+  font-size: $font-history-name;
+  font-weight: 500;
+  color: $pos-text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.history-item-barcode {
+  font-size: $font-history-barcode;
+  color: $pos-text-muted;
+  font-family: monospace;
+}
+
+.history-item-time {
+  font-size: $font-history-barcode;
+  color: $pos-text-muted;
+  flex-shrink: 0;
+}
+
+// --- Empty State ---
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: $pos-space-xl;
+  color: $pos-text-muted;
+}
+
+.empty-icon {
+  font-size: 48px;
+  margin-bottom: $pos-space-md;
+  opacity: 0.3;
+}
+
+.empty-text {
+  font-size: $font-subtitle;
+  margin: 0;
+}
+
+// --- Animations ---
+@keyframes flashGreen {
+  0% { background-color: transparent; }
+  30% { background-color: rgba($pos-success, 0.12); }
+  100% { background-color: transparent; }
+}
+
+@keyframes flashRed {
+  0% { background-color: transparent; }
+  30% { background-color: rgba($pos-danger, 0.12); }
+  100% { background-color: transparent; }
+}
+
+// --- Mobile adjustments ---
+@media (max-width: $pos-bp-sm) {
+  .scan-input-area {
+    padding: $pos-space-lg 0 $pos-space-base;
+  }
+
+  .scan-icon {
+    font-size: 44px;
+  }
+
+  .scan-title {
+    font-size: 20px;
+  }
+
+  .scan-subtitle {
+    font-size: 15px;
+  }
+}

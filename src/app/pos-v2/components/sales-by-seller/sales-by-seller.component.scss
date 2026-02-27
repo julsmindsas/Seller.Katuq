@@ -1,0 +1,375 @@
+@import '../../pos-v2-design-tokens';
+
+.sales-by-seller {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: $pos-space-base;
+}
+
+// Loading & Error States
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $pos-space-xl * 2;
+  text-align: center;
+  color: $pos-text-muted;
+
+  i {
+    font-size: 48px;
+    margin-bottom: $pos-space-base;
+  }
+
+  p {
+    margin: 0 0 $pos-space-base;
+    font-size: $pos-font-md;
+  }
+}
+
+.error-state {
+  i {
+    color: $pos-danger;
+  }
+}
+
+// Report Header
+.report-header {
+  text-align: center;
+  margin-bottom: $pos-space-lg;
+  padding-bottom: $pos-space-lg;
+  border-bottom: 2px solid $pos-border;
+}
+
+.report-title {
+  margin: 0 0 $pos-space-md;
+  font-size: $pos-font-xl;
+  font-weight: 700;
+  color: $pos-text;
+}
+
+.report-meta {
+  display: flex;
+  justify-content: center;
+  gap: $pos-space-lg;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-sm;
+  font-size: $pos-font-base;
+  color: $pos-text-muted;
+}
+
+// Period Filter
+.period-filter {
+  margin-bottom: $pos-space-lg;
+}
+
+.period-buttons {
+  display: flex;
+  gap: $pos-space-sm;
+  flex-wrap: wrap;
+  margin-bottom: $pos-space-md;
+}
+
+.custom-dates {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-sm;
+  flex-wrap: wrap;
+}
+
+.date-input {
+  padding: $pos-space-sm $pos-space-md;
+  border: 1px solid $pos-border;
+  border-radius: $pos-radius;
+  font-size: $pos-font-base;
+  color: $pos-text;
+  background: $pos-surface;
+  min-height: $pos-touch-target;
+
+  &:focus {
+    outline: 2px solid $pos-primary;
+    outline-offset: -1px;
+    border-color: $pos-primary;
+  }
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $pos-space-base;
+  margin-bottom: $pos-space-lg;
+
+  @media (max-width: $pos-bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $pos-space-lg;
+  background: $pos-bg;
+  border-radius: $pos-radius;
+  text-align: center;
+
+  .card-label {
+    font-size: $pos-font-sm;
+    color: $pos-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: $pos-space-xs;
+  }
+
+  .card-value {
+    font-size: $pos-font-xl;
+    font-weight: 700;
+    color: $pos-text;
+
+    &.primary {
+      color: $pos-primary;
+    }
+
+    &.success {
+      color: $pos-success;
+    }
+  }
+}
+
+// Report Section
+.report-section {
+  margin-bottom: $pos-space-lg;
+}
+
+.section-title {
+  margin: 0 0 $pos-space-md;
+  font-size: $pos-font-md;
+  font-weight: 600;
+  color: $pos-text;
+}
+
+// Table Wrapper for horizontal scroll on mobile
+.table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+// Report Table
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $pos-font-base;
+  min-width: 600px;
+
+  th, td {
+    padding: $pos-space-md $pos-space-base;
+    text-align: left;
+    border-bottom: 1px solid $pos-border;
+  }
+
+  th {
+    font-weight: 600;
+    color: $pos-text-muted;
+    font-size: $pos-font-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: $pos-bg;
+    white-space: nowrap;
+
+    &.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s ease;
+
+      &:hover {
+        background: darken($pos-bg, 4%);
+      }
+
+      i {
+        margin-left: $pos-space-xs;
+        font-size: $pos-font-sm;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  tbody tr {
+    &:nth-child(even) {
+      background: rgba($pos-bg, 0.5);
+    }
+
+    &:hover {
+      background: rgba($pos-primary, 0.03);
+    }
+  }
+
+  tfoot {
+    td {
+      border-top: 2px solid $pos-border;
+      border-bottom: none;
+      font-size: $pos-font-md;
+    }
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .empty-row {
+    text-align: center;
+    color: $pos-text-muted;
+    font-style: italic;
+    padding: $pos-space-lg;
+  }
+}
+
+// Seller Info Cell
+.seller-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seller-name {
+  font-weight: 600;
+  color: $pos-text;
+}
+
+.seller-email {
+  font-size: $pos-font-sm;
+  color: $pos-text-muted;
+}
+
+// Percentage Cell
+.percentage-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: $pos-space-xs;
+}
+
+.percentage-value {
+  font-weight: 600;
+  font-size: $pos-font-sm;
+}
+
+.percentage-bar {
+  width: 80px;
+  height: 6px;
+  background: $pos-border;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.percentage-fill {
+  height: 100%;
+  background: $pos-primary;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+// Actions
+.report-actions {
+  display: flex;
+  justify-content: center;
+  gap: $pos-space-base;
+  padding: $pos-space-lg 0;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  min-height: $pos-touch-target;
+  min-width: 180px;
+  font-size: $pos-font-md;
+  font-weight: 600;
+
+  &:not(.p-button-outlined) {
+    background: $pos-primary;
+    border-color: $pos-primary;
+
+    &:hover {
+      background: darken($pos-primary, 8%);
+      border-color: darken($pos-primary, 8%);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: 2px;
+  }
+}
+
+// Responsive
+@media (max-width: $pos-bp-md) {
+  .period-buttons {
+    justify-content: center;
+  }
+
+  .custom-dates {
+    justify-content: center;
+  }
+
+  .report-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .action-btn {
+    width: 100%;
+    max-width: 300px;
+  }
+}
+
+// Print Styles
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .sales-by-seller {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .summary-card {
+    border: 1px solid #ccc;
+  }
+
+  .report-table {
+    min-width: auto;
+
+    th {
+      background: #f0f0f0 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9f9f9 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
+  .percentage-bar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .percentage-fill {
+    background: #333 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

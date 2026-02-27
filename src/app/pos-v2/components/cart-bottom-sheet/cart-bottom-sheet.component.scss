@@ -1,0 +1,60 @@
+@import '../../pos-v2-design-tokens';
+
+.bottom-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: $pos-z-bottom-sheet;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 85vh;
+  background: $pos-surface;
+  border-radius: 16px 16px 0 0;
+  z-index: $pos-z-bottom-sheet + 1;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .is-open & {
+    transform: translateY(0);
+  }
+}
+
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $pos-space-md 0 $pos-space-sm;
+  flex-shrink: 0;
+  cursor: grab;
+}
+
+.handle-bar {
+  width: 32px;
+  height: 4px;
+  border-radius: 2px;
+  background: $pos-border;
+}
+
+:host {
+  display: none;
+
+  @media (max-width: $pos-bp-md - 1) {
+    display: block;
+  }
+}

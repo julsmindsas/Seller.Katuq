@@ -1,0 +1,228 @@
+<div class="cash-register">
+  <div class="cash-register__card">
+
+    <!-- ====== OPENING MODE ====== -->
+    <ng-container *ngIf="mode === 'opening'">
+      <div class="cash-register__header">
+        <i class="pi pi-lock-open cash-register__icon cash-register__icon--success"></i>
+        <h2 class="cash-register__title">Apertura de Caja</h2>
+        <p class="cash-register__subtitle">Ingresa el monto inicial para comenzar tu turno</p>
+      </div>
+
+      <form [formGroup]="openingForm" (ngSubmit)="openRegister()" class="cash-register__form">
+        <div class="cash-register__field">
+          <label for="initialAmount" class="cash-register__label">Monto inicial en caja</label>
+          <div class="cash-register__input-group">
+            <span class="cash-register__currency">$</span>
+            <input
+              id="initialAmount"
+              type="number"
+              pInputText
+              formControlName="initialAmount"
+              placeholder="0.00"
+              min="0"
+              step="0.01"
+              class="cash-register__input"
+              autocomplete="off">
+          </div>
+        </div>
+
+        <button
+          pButton
+          type="submit"
+          label="Abrir Caja"
+          icon="pi pi-lock-open"
+          class="cash-register__submit"
+          [loading]="loading"
+          [disabled]="openingForm.invalid || loading">
+        </button>
+      </form>
+    </ng-container>
+
+    <!-- ====== CLOSING MODE ====== -->
+    <ng-container *ngIf="mode === 'closing'">
+      <div class="cash-register__header">
+        <i class="pi pi-lock cash-register__icon cash-register__icon--danger"></i>
+        <h2 class="cash-register__title">Cierre de Caja</h2>
+        <p class="cash-register__subtitle">Resumen del turno y cierre de caja</p>
+      </div>
+
+      <!-- Loading Report -->
+      <div *ngIf="loading && !shiftReport" class="cash-register__loading">
+        <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+        <span>Cargando reporte...</span>
+      </div>
+
+      <!-- Shift Summary -->
+      <div *ngIf="shiftReport" class="cash-register__summary">
+        <div class="cash-register__summary-row">
+          <span class="cash-register__summary-label">Total Ventas</span>
+          <span class="cash-register__summary-value">{{ shiftReport.totalSales | number:'1.0-0' }}</span>
+        </div>
+        <div class="cash-register__summary-row">
+          <span class="cash-register__summary-label">Total Ordenes</span>
+          <span class="cash-register__summary-value">{{ shiftReport.totalOrders }}</span>
+        </div>
+        <ng-container *ngIf="shiftReport.salesByPaymentMethod as methods">
+          <div class="cash-register__summary-row" *ngFor="let entry of methods | keyvalue">
+            <span class="cash-register__summary-label">{{ entry.key }}</span>
+            <span class="cash-register__summary-value">{{ entry.value.total | number:'1.0-0' }} ({{ entry.value.count }})</span>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Cash Movements -->
+      <div *ngIf="currentRegister?.movements?.length" class="cash-register__movements">
+        <h3 class="cash-register__section-title">Movimientos de Caja</h3>
+        <div class="cash-register__movement-list">
+          <div
+            *ngFor="let mov of currentRegister.movements"
+            class="cash-register__movement"
+            [class.cash-register__movement--in]="mov.type === 'in'"
+            [class.cash-register__movement--out]="mov.type === 'out'">
+            <span class="cash-register__movement-icon">
+              <i [class]="mov.type === 'in' ? 'pi pi-arrow-down' : 'pi pi-arrow-up'"></i>
+            </span>
+            <span class="cash-register__movement-reason">{{ mov.reason }}</span>
+            <span class="cash-register__movement-amount">
+              {{ mov.type === 'in' ? '+' : '-' }}{{ mov.amount | number:'1.0-0' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Movement -->
+      <button
+        *ngIf="!showMovementForm"
+        pButton
+        type="button"
+        label="Agregar movimiento"
+        icon="pi pi-plus"
+        class="p-button-outlined p-button-sm cash-register__add-movement"
+        (click)="toggleMovementForm()">
+      </button>
+
+      <form
+        *ngIf="showMovementForm"
+        [formGroup]="movementForm"
+        (ngSubmit)="addMovement()"
+        class="cash-register__movement-form">
+
+        <div class="cash-register__movement-type">
+          <button
+            type="button"
+            class="cash-register__type-btn"
+            [class.cash-register__type-btn--active-in]="movementForm.value.type === 'in'"
+            (click)="movementForm.patchValue({ type: 'in' })">
+            <i class="pi pi-arrow-down"></i> Ingreso
+          </button>
+          <button
+            type="button"
+            class="cash-register__type-btn"
+            [class.cash-register__type-btn--active-out]="movementForm.value.type === 'out'"
+            (click)="movementForm.patchValue({ type: 'out' })">
+            <i class="pi pi-arrow-up"></i> Egreso
+          </button>
+        </div>
+
+        <div class="cash-register__field">
+          <label for="movAmount" class="cash-register__label">Monto</label>
+          <div class="cash-register__input-group">
+            <span class="cash-register__currency">$</span>
+            <input
+              id="movAmount"
+              type="number"
+              pInputText
+              formControlName="amount"
+              placeholder="0.00"
+              min="0.01"
+              step="0.01"
+              class="cash-register__input"
+              autocomplete="off">
+          </div>
+        </div>
+
+        <div class="cash-register__field">
+          <label for="movReason" class="cash-register__label">Motivo</label>
+          <input
+            id="movReason"
+            type="text"
+            pInputText
+            formControlName="reason"
+            placeholder="Ej: Cambio de moneda"
+            class="cash-register__input"
+            autocomplete="off">
+        </div>
+
+        <div class="cash-register__form-actions">
+          <button
+            pButton
+            type="button"
+            label="Cancelar"
+            icon="pi pi-times"
+            class="p-button-text p-button-sm"
+            (click)="toggleMovementForm()">
+          </button>
+          <button
+            pButton
+            type="submit"
+            label="Registrar"
+            icon="pi pi-check"
+            class="p-button-sm"
+            [loading]="loading"
+            [disabled]="movementForm.invalid || loading">
+          </button>
+        </div>
+      </form>
+
+      <!-- Closing Section -->
+      <div class="cash-register__closing-section">
+        <h3 class="cash-register__section-title">Cerrar Caja</h3>
+
+        <div class="cash-register__expected">
+          <span class="cash-register__expected-label">Efectivo esperado en caja</span>
+          <span class="cash-register__expected-value">$ {{ expectedCash | number:'1.0-0' }}</span>
+        </div>
+
+        <form [formGroup]="closingForm" (ngSubmit)="closeRegister()" class="cash-register__form">
+          <div class="cash-register__field">
+            <label for="actualCash" class="cash-register__label">Efectivo real contado</label>
+            <div class="cash-register__input-group">
+              <span class="cash-register__currency">$</span>
+              <input
+                id="actualCash"
+                type="number"
+                pInputText
+                formControlName="actualCash"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+                class="cash-register__input"
+                autocomplete="off">
+            </div>
+          </div>
+
+          <div
+            class="cash-register__difference"
+            [class.cash-register__difference--positive]="cashDifference >= 0"
+            [class.cash-register__difference--negative]="cashDifference < 0">
+            <span class="cash-register__difference-label">Diferencia</span>
+            <span class="cash-register__difference-value">
+              {{ cashDifference >= 0 ? '+' : '' }}{{ cashDifference | number:'1.0-0' }}
+            </span>
+          </div>
+
+          <button
+            pButton
+            type="submit"
+            label="Cerrar Caja"
+            icon="pi pi-lock"
+            class="p-button-danger cash-register__submit"
+            [loading]="loading"
+            [disabled]="closingForm.invalid || loading">
+          </button>
+        </form>
+      </div>
+    </ng-container>
+  </div>
+</div>

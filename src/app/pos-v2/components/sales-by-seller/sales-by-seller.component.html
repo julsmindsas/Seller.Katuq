@@ -1,0 +1,193 @@
+<div class="sales-by-seller">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando reporte de vendedores...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="!loading && error">
+    <i class="pi pi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button
+      pButton
+      type="button"
+      label="Reintentar"
+      icon="pi pi-refresh"
+      class="p-button-outlined"
+      (click)="loadReport()">
+    </button>
+  </div>
+
+  <!-- Report Content -->
+  <div class="report-content" *ngIf="!loading && !error">
+    <!-- Header -->
+    <div class="report-header">
+      <h2 class="report-title">Ventas por Vendedor</h2>
+      <div class="report-meta">
+        <div class="meta-item">
+          <i class="pi pi-users"></i>
+          <span>{{ sellers.length }} vendedores activos</span>
+        </div>
+        <div class="meta-item">
+          <i class="pi pi-calendar"></i>
+          <span *ngIf="selectedPeriod === 'today'">Hoy</span>
+          <span *ngIf="selectedPeriod === 'week'">Esta semana</span>
+          <span *ngIf="selectedPeriod === 'custom'">{{ customFrom }} - {{ customTo }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Period Filter -->
+    <div class="period-filter no-print">
+      <div class="period-buttons">
+        <button
+          pButton
+          type="button"
+          label="Hoy"
+          [class]="selectedPeriod === 'today' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="onPeriodChange('today')">
+        </button>
+        <button
+          pButton
+          type="button"
+          label="Esta semana"
+          [class]="selectedPeriod === 'week' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="onPeriodChange('week')">
+        </button>
+        <button
+          pButton
+          type="button"
+          label="Personalizado"
+          [class]="selectedPeriod === 'custom' ? 'p-button-sm' : 'p-button-sm p-button-outlined'"
+          (click)="onPeriodChange('custom')">
+        </button>
+      </div>
+      <div class="custom-dates" *ngIf="selectedPeriod === 'custom'">
+        <input
+          type="date"
+          class="date-input"
+          [(ngModel)]="customFrom"
+          aria-label="Fecha desde"
+          placeholder="Desde" />
+        <input
+          type="date"
+          class="date-input"
+          [(ngModel)]="customTo"
+          aria-label="Fecha hasta"
+          placeholder="Hasta" />
+        <button
+          pButton
+          type="button"
+          label="Aplicar"
+          icon="pi pi-check"
+          class="p-button-sm p-button-success"
+          [disabled]="!customFrom || !customTo"
+          (click)="onCustomDateApply()">
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <span class="card-label">Vendedores activos</span>
+        <span class="card-value">{{ sellers.length }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="card-label">Total ventas</span>
+        <span class="card-value primary">${{ totalSales | number:'1.0-0' }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="card-label">Total ordenes</span>
+        <span class="card-value">{{ totalOrders }}</span>
+      </div>
+    </div>
+
+    <!-- Sellers Table -->
+    <section class="report-section">
+      <h3 class="section-title">Detalle por vendedor</h3>
+      <div class="table-wrapper">
+        <table class="report-table">
+          <thead>
+            <tr>
+              <th class="sortable" (click)="toggleSort('name')">
+                Vendedor
+                <i [class]="getSortIcon('name')"></i>
+              </th>
+              <th class="sortable text-right" (click)="toggleSort('orderCount')">
+                Ordenes
+                <i [class]="getSortIcon('orderCount')"></i>
+              </th>
+              <th class="sortable text-right" (click)="toggleSort('totalSales')">
+                Total Ventas
+                <i [class]="getSortIcon('totalSales')"></i>
+              </th>
+              <th class="sortable text-right" (click)="toggleSort('averageTicket')">
+                Ticket Promedio
+                <i [class]="getSortIcon('averageTicket')"></i>
+              </th>
+              <th class="sortable text-right" (click)="toggleSort('percentage')">
+                % del Total
+                <i [class]="getSortIcon('percentage')"></i>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let seller of sellers; trackBy: trackByIndex">
+              <td>
+                <div class="seller-info">
+                  <span class="seller-name">{{ seller.name }}</span>
+                  <span class="seller-email" *ngIf="seller.email">{{ seller.email }}</span>
+                </div>
+              </td>
+              <td class="text-right">{{ seller.orderCount }}</td>
+              <td class="text-right">${{ seller.totalSales | number:'1.0-0' }}</td>
+              <td class="text-right">${{ seller.averageTicket | number:'1.0-0' }}</td>
+              <td class="text-right">
+                <div class="percentage-cell">
+                  <span class="percentage-value">{{ seller.percentage | number:'1.1-1' }}%</span>
+                  <div class="percentage-bar">
+                    <div class="percentage-fill" [style.width.%]="seller.percentage"></div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            <tr *ngIf="sellers.length === 0">
+              <td colspan="5" class="empty-row">Sin ventas en este periodo</td>
+            </tr>
+          </tbody>
+          <tfoot *ngIf="sellers.length > 0">
+            <tr>
+              <td><strong>Total</strong></td>
+              <td class="text-right"><strong>{{ totalOrders }}</strong></td>
+              <td class="text-right"><strong>${{ totalSales | number:'1.0-0' }}</strong></td>
+              <td class="text-right">-</td>
+              <td class="text-right"><strong>100%</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <div class="report-actions no-print">
+      <button
+        pButton
+        type="button"
+        label="Imprimir reporte"
+        icon="pi pi-print"
+        class="p-button-lg action-btn"
+        (click)="printReport()">
+      </button>
+      <button
+        pButton
+        type="button"
+        label="Volver al POS"
+        icon="pi pi-arrow-left"
+        class="p-button-lg p-button-outlined action-btn"
+        (click)="goBack()">
+      </button>
+    </div>
+  </div>
+</div>

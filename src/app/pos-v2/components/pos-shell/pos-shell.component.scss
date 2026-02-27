@@ -1,0 +1,571 @@
+@use '../../pos-v2-design-tokens' as tokens;
+
+:host {
+  display: flex;
+  flex-direction: column;
+  // Fill the available area from .page-body (which has its own padding)
+  height: calc(100vh - 80px);
+  background: tokens.$pos-bg;
+  overflow: hidden;
+  border-radius: tokens.$pos-radius;
+  border: 1px solid tokens.$pos-border;
+  box-shadow: tokens.$pos-shadow;
+
+  @media (max-width: tokens.$pos-bp-md) {
+    height: calc(100vh - 130px); // account for bottom nav on mobile
+    border-radius: tokens.$pos-radius - 4px;
+  }
+}
+
+// --- Header ---
+.pos-header {
+  display: flex;
+  align-items: center;
+  gap: tokens.$pos-space-sm;
+  padding: tokens.$pos-space-sm tokens.$pos-space-base;
+  background: tokens.$pos-surface;
+  border-bottom: 1px solid tokens.$pos-border;
+  min-height: tokens.$pos-touch-target;
+  flex-shrink: 0;
+  border-radius: tokens.$pos-radius tokens.$pos-radius 0 0;
+
+  &__left {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-sm;
+  }
+
+  &__terminal {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-xs;
+    font-size: tokens.$pos-font-sm;
+    color: tokens.$pos-text-muted;
+
+    i {
+      color: tokens.$pos-primary;
+    }
+  }
+
+  &__tabs {
+    display: flex;
+    gap: tokens.$pos-space-xs;
+    margin-left: auto;
+  }
+
+  &__tab {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-xs;
+    padding: tokens.$pos-space-sm tokens.$pos-space-md;
+    min-height: tokens.$pos-touch-target;
+    border: 1px solid tokens.$pos-border;
+    border-radius: tokens.$pos-radius;
+    background: tokens.$pos-surface;
+    color: tokens.$pos-text-muted;
+    cursor: pointer;
+    font-size: tokens.$pos-font-sm;
+    transition: all 0.15s ease;
+
+    &:hover {
+      border-color: tokens.$pos-primary-light;
+      color: tokens.$pos-primary;
+    }
+
+    &:focus-visible {
+      outline: 2px solid tokens.$pos-primary;
+      outline-offset: 2px;
+    }
+
+    &--active {
+      background: tokens.$pos-primary;
+      color: #fff;
+      border-color: tokens.$pos-primary;
+
+      &:hover {
+        background: tokens.$pos-primary-light;
+        color: #fff;
+        border-color: tokens.$pos-primary-light;
+      }
+    }
+  }
+
+  &__tab-label {
+    display: none;
+
+    @media (min-width: tokens.$pos-bp-md) {
+      display: inline;
+    }
+  }
+
+  &__kbd {
+    display: none;
+    padding: 1px 4px;
+    font-size: 10px;
+    border-radius: 3px;
+    background: rgba(0, 0, 0, 0.1);
+    font-family: monospace;
+
+    @media (min-width: tokens.$pos-bp-md) {
+      display: inline;
+    }
+  }
+
+  &__right {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-xs;
+    margin-left: tokens.$pos-space-sm;
+  }
+}
+
+// --- Container ---
+.pos-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+
+  @media (min-width: tokens.$pos-bp-md) {
+    flex-direction: row;
+  }
+}
+
+// --- Main Area ---
+.pos-main {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  padding: tokens.$pos-space-sm;
+
+  @media (min-width: tokens.$pos-bp-md) {
+    padding: tokens.$pos-space-base;
+  }
+
+  > * {
+    flex: 1;
+    min-height: 0;
+  }
+}
+
+// --- Sidebar (desktop only) ---
+.pos-sidebar {
+  display: none;
+
+  @media (min-width: tokens.$pos-bp-md) {
+    display: flex;
+    flex-direction: column;
+    width: 30%;
+    min-width: 360px;
+    border-left: 1px solid tokens.$pos-border;
+    background: tokens.$pos-surface;
+    overflow: hidden;
+  }
+}
+
+// --- Mobile FAB Wrapper ---
+.pos-fab-wrapper {
+  @media (min-width: tokens.$pos-bp-md) {
+    display: none;
+  }
+}
+
+// --- Mobile Bottom Sheet Wrapper ---
+.pos-bottom-sheet-wrapper {
+  @media (min-width: tokens.$pos-bp-md) {
+    display: none;
+  }
+}
+
+// --- Payment Method Selector ---
+.payment-selector {
+  display: flex;
+  flex-direction: column;
+  gap: tokens.$pos-space-lg;
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: tokens.$pos-space-base tokens.$pos-space-md;
+    background: tokens.$pos-bg;
+    border-radius: tokens.$pos-radius;
+    border: 1px solid tokens.$pos-border;
+
+    span {
+      font-size: 16px;
+      color: tokens.$pos-text-muted;
+    }
+
+    strong {
+      font-size: 28px;
+      font-weight: 700;
+      color: tokens.$pos-text;
+    }
+  }
+
+  &__methods {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: tokens.$pos-space-base;
+  }
+
+  &__label {
+    font-size: 14px;
+    font-weight: 600;
+    color: tokens.$pos-text;
+    margin-bottom: tokens.$pos-space-sm;
+    display: block;
+  }
+
+  &__customer {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-sm;
+    color: tokens.$pos-text-muted;
+    font-size: 13px;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: tokens.$pos-border;
+    }
+  }
+}
+
+// Customer header (label + nuevo btn)
+.customer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: tokens.$pos-space-sm;
+}
+
+.btn-nuevo-cliente {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border: 1px solid tokens.$pos-primary;
+  border-radius: tokens.$pos-radius;
+  background: transparent;
+  color: tokens.$pos-primary;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.15s ease;
+
+  i { font-size: 12px; }
+
+  &:hover {
+    background: tokens.$pos-primary;
+    color: #fff;
+  }
+}
+
+// Customer search row
+.customer-search-row {
+  display: flex;
+  gap: tokens.$pos-space-sm;
+  align-items: center;
+
+  .autocomplete-box {
+    flex: 1;
+    position: relative;
+
+    .search-icon-left {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: tokens.$pos-text-muted;
+      font-size: 14px;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: tokens.$pos-primary;
+      font-size: 14px;
+    }
+
+    p-autoComplete {
+      display: block;
+      width: 100%;
+    }
+  }
+}
+
+.consumidor-final-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: tokens.$pos-touch-target;
+  height: tokens.$pos-touch-target;
+  border: 1px solid tokens.$pos-border;
+  border-radius: tokens.$pos-radius;
+  background: tokens.$pos-surface;
+  color: tokens.$pos-primary;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+
+  i { font-size: 18px; }
+
+  &:hover {
+    border-color: tokens.$pos-primary;
+    background: #f5f0ff;
+  }
+}
+
+// Customer selected card
+.customer-selected {
+  background: #f5f0ff;
+  border: 1px solid tokens.$pos-primary-light;
+  border-radius: tokens.$pos-radius;
+  overflow: hidden;
+
+  &__status {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-xs;
+    padding: tokens.$pos-space-xs tokens.$pos-space-base;
+    background: tokens.$pos-primary;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+
+    i { font-size: 14px; }
+  }
+
+  &__body {
+    padding: tokens.$pos-space-sm tokens.$pos-space-base;
+  }
+
+  &__info {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-sm;
+
+    strong {
+      display: block;
+      font-size: 15px;
+      color: tokens.$pos-text;
+    }
+  }
+
+  &__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: tokens.$pos-primary;
+    color: #fff;
+    flex-shrink: 0;
+
+    i { font-size: 16px; }
+  }
+
+  &__doc {
+    display: block;
+    font-size: 12px;
+    color: tokens.$pos-text-muted;
+  }
+
+  &__contact {
+    display: flex;
+    gap: tokens.$pos-space-base;
+    margin-top: tokens.$pos-space-xs;
+    padding-left: 48px; // align with text after avatar
+
+    span {
+      font-size: 12px;
+      color: tokens.$pos-text-muted;
+
+      i {
+        font-size: 11px;
+        margin-right: 2px;
+      }
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: tokens.$pos-space-xs;
+    padding: 0 tokens.$pos-space-base tokens.$pos-space-sm;
+  }
+
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border: 1px solid tokens.$pos-border;
+    border-radius: 50%;
+    background: tokens.$pos-surface;
+    color: tokens.$pos-text-muted;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    i { font-size: 13px; }
+
+    &:hover {
+      border-color: tokens.$pos-primary;
+      color: tokens.$pos-primary;
+      background: #f5f0ff;
+    }
+
+    &--danger:hover {
+      border-color: tokens.$pos-danger;
+      color: tokens.$pos-danger;
+      background: #fff5f5;
+    }
+  }
+}
+
+// Customer suggestion dropdown
+.customer-suggestion {
+  display: flex;
+  align-items: center;
+  gap: tokens.$pos-space-sm;
+  padding: tokens.$pos-space-xs 0;
+
+  &__avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #f0ebff;
+    color: tokens.$pos-primary;
+    flex-shrink: 0;
+
+    i { font-size: 14px; }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: tokens.$pos-text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-sm;
+    margin-top: 2px;
+  }
+
+  &__doc-badge {
+    display: inline-block;
+    padding: 1px 6px;
+    font-size: 11px;
+    font-weight: 600;
+    background: #e8e0ff;
+    color: tokens.$pos-primary;
+    border-radius: 4px;
+  }
+
+  &__phone {
+    font-size: 12px;
+    color: tokens.$pos-text-muted;
+
+    i {
+      font-size: 10px;
+      margin-right: 2px;
+    }
+  }
+
+  &__empty {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-sm;
+    padding: tokens.$pos-space-sm 0;
+    color: tokens.$pos-text-muted;
+    font-size: 13px;
+
+    i { font-size: 16px; }
+  }
+}
+
+.payment-method-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$pos-space-sm;
+  padding: tokens.$pos-space-lg tokens.$pos-space-base;
+  min-height: 100px;
+  border: 2px solid tokens.$pos-border;
+  border-radius: tokens.$pos-radius;
+  background: tokens.$pos-surface;
+  color: tokens.$pos-text;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  i {
+    font-size: 28px;
+    color: tokens.$pos-primary;
+  }
+
+  span {
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &:hover {
+    border-color: tokens.$pos-primary;
+    background: #f5f0ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  &:active {
+    transform: translateY(0);
+    background: #ede5ff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid tokens.$pos-primary;
+    outline-offset: 2px;
+  }
+
+  &__img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+  }
+
+  &--custom {
+    min-height: 80px;
+    border-style: dashed;
+  }
+}

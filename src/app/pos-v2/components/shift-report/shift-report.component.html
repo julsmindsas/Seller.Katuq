@@ -1,0 +1,181 @@
+<div class="shift-report">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Cargando reporte...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="!loading && error">
+    <i class="pi pi-exclamation-circle"></i>
+    <p>{{ error }}</p>
+    <button
+      pButton
+      type="button"
+      label="Reintentar"
+      icon="pi pi-refresh"
+      class="p-button-outlined"
+      (click)="loadReport()">
+    </button>
+  </div>
+
+  <!-- Report Content -->
+  <div class="report-content" *ngIf="!loading && !error && report">
+    <!-- Back Button -->
+    <div class="report-back no-print">
+      <button
+        type="button"
+        class="back-link"
+        (click)="goBack()"
+        aria-label="Volver al POS">
+        <i class="pi pi-arrow-left"></i>
+        <span>Volver al POS</span>
+      </button>
+    </div>
+
+    <!-- Header -->
+    <div class="report-header">
+      <h2 class="report-title">Reporte de Turno</h2>
+      <div class="report-meta">
+        <div class="meta-item">
+          <i class="pi pi-building"></i>
+          <span>{{ terminalName || 'Terminal' }}</span>
+        </div>
+        <div class="meta-item">
+          <i class="pi pi-clock"></i>
+          <span>{{ report.from | date:'short' }} - {{ report.to | date:'short' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <span class="card-label">Total ventas</span>
+        <span class="card-value primary">${{ report.totalSales | number:'1.0-0' }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="card-label">Total ordenes</span>
+        <span class="card-value">{{ report.totalOrders }}</span>
+      </div>
+      <div class="summary-card">
+        <span class="card-label">Efectivo esperado</span>
+        <span class="card-value success">${{ expectedCash | number:'1.0-0' }}</span>
+      </div>
+    </div>
+
+    <!-- Sales by Payment Method -->
+    <section class="report-section">
+      <h3 class="section-title">Ventas por forma de pago</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Forma de pago</th>
+            <th class="text-right">Transacciones</th>
+            <th class="text-right">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let entry of salesMethodEntries; trackBy: trackByIndex">
+            <td>{{ entry.method }}</td>
+            <td class="text-right">{{ entry.count }}</td>
+            <td class="text-right">${{ entry.total | number:'1.0-0' }}</td>
+          </tr>
+          <tr *ngIf="salesMethodEntries.length === 0">
+            <td colspan="3" class="empty-row">Sin ventas en este turno</td>
+          </tr>
+        </tbody>
+        <tfoot *ngIf="salesMethodEntries.length > 0">
+          <tr>
+            <td><strong>Total</strong></td>
+            <td class="text-right"><strong>{{ report.totalOrders }}</strong></td>
+            <td class="text-right"><strong>${{ report.totalSales | number:'1.0-0' }}</strong></td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <!-- Cash Movements -->
+    <section class="report-section" *ngIf="report.cashMovements && report.cashMovements.length > 0">
+      <h3 class="section-title">Movimientos de caja</h3>
+      <table class="report-table">
+        <thead>
+          <tr>
+            <th>Tipo</th>
+            <th>Razon</th>
+            <th class="text-right">Monto</th>
+            <th>Hora</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let movement of report.cashMovements; trackBy: trackByIndex">
+            <td>
+              <span class="movement-type" [class.type-in]="movement.type === 'in'" [class.type-out]="movement.type === 'out'">
+                {{ movement.type === 'in' ? 'Entrada' : 'Salida' }}
+              </span>
+            </td>
+            <td>{{ movement.reason }}</td>
+            <td class="text-right">${{ movement.amount | number:'1.0-0' }}</td>
+            <td>{{ movement.timestamp | date:'shortTime' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Discounts, Tips & Returns Summary -->
+    <section class="report-section" *ngIf="report.totalDiscounts || report.totalTips || report.totalReturns">
+      <h3 class="section-title">Resumen adicional</h3>
+      <div class="additional-summary">
+        <div class="additional-summary-row" *ngIf="report.totalDiscounts">
+          <div class="additional-summary-icon discount-icon">
+            <i class="pi pi-percentage"></i>
+          </div>
+          <div class="additional-summary-info">
+            <span class="additional-summary-label">Descuentos aplicados</span>
+          </div>
+          <span class="additional-summary-value discount-value">-${{ report.totalDiscounts | number:'1.0-0' }}</span>
+        </div>
+        <div class="additional-summary-row" *ngIf="report.totalTips">
+          <div class="additional-summary-icon tip-icon">
+            <i class="pi pi-heart"></i>
+          </div>
+          <div class="additional-summary-info">
+            <span class="additional-summary-label">Propinas recibidas</span>
+          </div>
+          <span class="additional-summary-value tip-value">${{ report.totalTips | number:'1.0-0' }}</span>
+        </div>
+        <div class="additional-summary-row" *ngIf="report.totalReturns">
+          <div class="additional-summary-icon return-icon">
+            <i class="pi pi-replay"></i>
+          </div>
+          <div class="additional-summary-info">
+            <span class="additional-summary-label">Devoluciones ({{ report.returnsCount || 0 }})</span>
+          </div>
+          <span class="additional-summary-value return-value">-${{ report.totalReturns | number:'1.0-0' }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Report Navigation Links -->
+    <section class="report-section report-nav no-print">
+      <h3 class="section-title">Reportes Detallados</h3>
+      <div class="report-nav-grid">
+        <button pButton type="button" label="Reporte Z (Cierre)" icon="pi pi-file" class="p-button-outlined report-nav-btn" (click)="goToZReport()"></button>
+        <button pButton type="button" label="Ventas por Vendedor" icon="pi pi-users" class="p-button-outlined report-nav-btn" (click)="goToSalesBySeller()"></button>
+        <button pButton type="button" label="Devoluciones" icon="pi pi-replay" class="p-button-outlined report-nav-btn" (click)="goToReturns()"></button>
+      </div>
+    </section>
+
+    <!-- Print Button -->
+    <div class="report-actions no-print">
+      <button
+        pButton
+        type="button"
+        label="Imprimir reporte"
+        icon="pi pi-print"
+        class="p-button-lg print-btn"
+        (click)="printReport()">
+      </button>
+    </div>
+  </div>
+</div>

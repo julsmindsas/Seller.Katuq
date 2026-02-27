@@ -1,0 +1,124 @@
+<p-dialog
+  header="Nueva Devolucion"
+  [(visible)]="visible"
+  [modal]="true"
+  [closable]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '600px', maxWidth: '95vw' }"
+  [baseZIndex]="300"
+  (onHide)="onClose()">
+
+  <div class="return-content">
+    <!-- Step 1: Search Order -->
+    <div class="return-step">
+      <h4 class="step-title">
+        <span class="step-number">1</span>
+        Buscar Orden
+      </h4>
+      <div class="search-row">
+        <input
+          type="text"
+          class="search-input"
+          [(ngModel)]="orderSearchQuery"
+          placeholder="Numero de orden (POS-XXXXXXXX-XXXX)"
+          (keyup.enter)="searchOrder()" />
+        <button
+          pButton
+          type="button"
+          icon="pi pi-search"
+          class="p-button-outlined search-btn"
+          [loading]="searchLoading"
+          (click)="searchOrder()">
+        </button>
+      </div>
+      <p class="search-error" *ngIf="searchError">
+        <i class="pi pi-exclamation-triangle"></i>
+        {{ searchError }}
+      </p>
+      <div class="order-found" *ngIf="orderFound">
+        <i class="pi pi-check-circle"></i>
+        <span>Orden <strong>{{ orderFound.nroPedido }}</strong> encontrada</span>
+      </div>
+    </div>
+
+    <!-- Step 2: Select Items -->
+    <div class="return-step" *ngIf="orderFound">
+      <h4 class="step-title">
+        <span class="step-number">2</span>
+        Seleccionar Items a Devolver
+      </h4>
+      <div class="return-items-list">
+        <div class="return-item" *ngFor="let item of returnableItems; trackBy: trackByIndex">
+          <label class="item-check">
+            <input type="checkbox" [(ngModel)]="item.selected" />
+            <span class="item-info">
+              <span class="item-name">{{ item.productName }}</span>
+              <span class="item-ref" *ngIf="item.productRef">Ref: {{ item.productRef }}</span>
+            </span>
+          </label>
+          <div class="item-controls" *ngIf="item.selected">
+            <div class="qty-controls">
+              <button
+                pButton
+                type="button"
+                icon="pi pi-minus"
+                class="p-button-text p-button-sm qty-btn"
+                [disabled]="item.quantity <= 1"
+                (click)="updateItemQuantity(item, -1)">
+              </button>
+              <span class="qty-value">{{ item.quantity }}</span>
+              <button
+                pButton
+                type="button"
+                icon="pi pi-plus"
+                class="p-button-text p-button-sm qty-btn"
+                [disabled]="item.quantity >= item.maxQuantity"
+                (click)="updateItemQuantity(item, 1)">
+              </button>
+            </div>
+            <span class="item-price">${{ item.unitPrice * item.quantity | number:'1.0-0' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Reason -->
+    <div class="return-step" *ngIf="selectedItems.length > 0">
+      <h4 class="step-title">
+        <span class="step-number">3</span>
+        Motivo de Devolucion
+      </h4>
+      <div class="reason-options">
+        <label class="reason-option" *ngFor="let r of reasons">
+          <input type="radio" name="reason" [value]="r.value" [(ngModel)]="selectedReason" />
+          <span class="reason-label">{{ r.label }}</span>
+        </label>
+      </div>
+      <textarea
+        class="return-notes"
+        [(ngModel)]="notes"
+        placeholder="Notas adicionales (opcional)"
+        rows="2">
+      </textarea>
+    </div>
+
+    <!-- Total & Submit -->
+    <div class="return-footer" *ngIf="selectedItems.length > 0">
+      <div class="return-total">
+        <span class="total-label">Total a reembolsar:</span>
+        <strong class="total-amount">${{ totalRefund | number:'1.0-0' }}</strong>
+      </div>
+      <button
+        pButton
+        type="button"
+        label="Procesar Devolucion"
+        icon="pi pi-check"
+        class="p-button-danger p-button-lg submit-btn"
+        [loading]="submitting"
+        [disabled]="!canSubmit || submitting"
+        (click)="submitReturn()">
+      </button>
+    </div>
+  </div>
+</p-dialog>

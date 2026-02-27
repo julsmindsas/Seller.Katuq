@@ -1,0 +1,102 @@
+<div class="cart-panel">
+  <div class="cart-header">
+    <h3 class="cart-title">
+      <i class="pi pi-shopping-cart"></i>
+      Carrito
+      <span class="item-count" *ngIf="(itemCount$ | async) as count">({{ count }})</span>
+    </h3>
+    <button
+      type="button"
+      class="clear-btn"
+      *ngIf="!(isEmpty$ | async)"
+      (click)="clearCart()"
+      aria-label="Vaciar carrito">
+      <i class="pi pi-trash"></i>
+      Vaciar
+    </button>
+  </div>
+
+  <div class="cart-items" *ngIf="(items$ | async) as items">
+    <div class="empty-state" *ngIf="items.length === 0">
+      <i class="pi pi-shopping-cart empty-icon"></i>
+      <p>El carrito esta vacio</p>
+      <span class="empty-hint">Agrega productos para comenzar</span>
+    </div>
+
+    <div class="cart-item" *ngFor="let item of items; trackBy: trackByCartItemId">
+      <div class="item-row">
+        <div class="item-thumb">
+          <img
+            *ngIf="getProductImage(item) as imgUrl"
+            [src]="imgUrl"
+            [alt]="getProductName(item)"
+            class="item-thumb-img"
+            loading="lazy" />
+          <div *ngIf="!getProductImage(item)" class="item-thumb-placeholder">
+            <i class="pi pi-box"></i>
+          </div>
+        </div>
+
+        <div class="item-details">
+          <span class="item-name" [title]="getProductName(item)">{{ getProductName(item) }}</span>
+          <span class="item-ref" *ngIf="getProductRef(item) as ref">{{ ref }}</span>
+          <span class="item-unit-price">${{ item.unitPriceWithTax | number:'1.0-0' }} c/u</span>
+        </div>
+
+        <button
+          type="button"
+          class="remove-btn"
+          (click)="removeItem(item)"
+          [attr.aria-label]="'Eliminar ' + getProductName(item)">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+
+      <div class="item-controls">
+        <div class="qty-controls">
+          <button
+            type="button"
+            class="qty-btn"
+            (click)="decreaseQty(item)"
+            [attr.aria-label]="'Disminuir cantidad de ' + getProductName(item)">
+            <i class="pi pi-minus"></i>
+          </button>
+          <span class="qty-value">{{ item.quantity }}</span>
+          <button
+            type="button"
+            class="qty-btn"
+            (click)="increaseQty(item)"
+            [attr.aria-label]="'Aumentar cantidad de ' + getProductName(item)">
+            <i class="pi pi-plus"></i>
+          </button>
+        </div>
+
+        <span class="item-total">${{ item.total | number:'1.0-0' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cart-summary" *ngIf="!(isEmpty$ | async)">
+    <div class="summary-row">
+      <span>Subtotal</span>
+      <span>${{ subtotal$ | async | number:'1.0-0' }}</span>
+    </div>
+    <div class="summary-row">
+      <span>Impuesto</span>
+      <span>${{ tax$ | async | number:'1.0-0' }}</span>
+    </div>
+    <div class="summary-row total-row">
+      <span>Total</span>
+      <span class="total-value">${{ total$ | async | number:'1.0-0' }}</span>
+    </div>
+
+    <button
+      pButton
+      type="button"
+      label="Cobrar"
+      icon="pi pi-check"
+      class="p-button-lg checkout-btn"
+      (click)="onCheckout()">
+    </button>
+  </div>
+</div>

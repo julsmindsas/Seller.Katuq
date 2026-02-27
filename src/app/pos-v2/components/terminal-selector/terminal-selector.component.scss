@@ -1,0 +1,181 @@
+@use '../../pos-v2-design-tokens' as tokens;
+
+.terminal-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: tokens.$pos-space-base;
+  background: tokens.$pos-bg;
+
+  &__card {
+    width: 100%;
+    max-width: 480px;
+    background: tokens.$pos-surface;
+    border-radius: tokens.$pos-radius;
+    box-shadow: tokens.$pos-shadow-lg;
+    padding: tokens.$pos-space-lg;
+  }
+
+  &__header {
+    text-align: center;
+    margin-bottom: tokens.$pos-space-lg;
+  }
+
+  &__icon {
+    font-size: 48px;
+    color: tokens.$pos-primary;
+    margin-bottom: tokens.$pos-space-md;
+    display: block;
+  }
+
+  &__title {
+    margin: 0 0 tokens.$pos-space-xs;
+    font-size: tokens.$pos-font-xl;
+    color: tokens.$pos-text;
+    font-weight: 600;
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: tokens.$pos-font-base;
+    color: tokens.$pos-text-muted;
+  }
+
+  // Loading
+  &__loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: tokens.$pos-space-md;
+    padding: tokens.$pos-space-xl;
+    color: tokens.$pos-text-muted;
+  }
+
+  // Terminal List
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-sm;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: tokens.$pos-touch-target;
+    padding: tokens.$pos-space-md tokens.$pos-space-base;
+    border: 1px solid tokens.$pos-border;
+    border-radius: tokens.$pos-radius;
+    background: tokens.$pos-surface;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+
+    &:hover {
+      border-color: tokens.$pos-primary-light;
+      box-shadow: tokens.$pos-shadow;
+    }
+
+    &:focus-visible {
+      outline: 2px solid tokens.$pos-primary;
+      outline-offset: 2px;
+    }
+  }
+
+  &__item-info {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-xs;
+  }
+
+  &__item-name {
+    font-size: tokens.$pos-font-md;
+    font-weight: 600;
+    color: tokens.$pos-text;
+  }
+
+  &__item-branch {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-xs;
+    font-size: tokens.$pos-font-sm;
+    color: tokens.$pos-text-muted;
+  }
+
+  &__item-arrow {
+    color: tokens.$pos-text-muted;
+    font-size: tokens.$pos-font-sm;
+  }
+
+  &__empty {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-sm;
+    padding: tokens.$pos-space-base;
+    color: tokens.$pos-text-muted;
+    font-size: tokens.$pos-font-base;
+    text-align: center;
+    justify-content: center;
+  }
+
+  // Divider
+  &__divider {
+    display: flex;
+    align-items: center;
+    gap: tokens.$pos-space-md;
+    margin: tokens.$pos-space-lg 0;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: tokens.$pos-border;
+    }
+
+    span {
+      font-size: tokens.$pos-font-sm;
+      color: tokens.$pos-text-muted;
+      text-transform: uppercase;
+    }
+  }
+
+  // Create Button
+  &__create-btn {
+    width: 100%;
+    min-height: tokens.$pos-touch-target;
+  }
+
+  // Create Form
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-base;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: tokens.$pos-space-xs;
+  }
+
+  &__label {
+    font-size: tokens.$pos-font-sm;
+    font-weight: 600;
+    color: tokens.$pos-text;
+  }
+
+  &__input {
+    width: 100%;
+    min-height: tokens.$pos-touch-target;
+  }
+
+  &__form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: tokens.$pos-space-sm;
+    margin-top: tokens.$pos-space-sm;
+  }
+}

@@ -1,0 +1,262 @@
+@import '../../pos-v2-design-tokens';
+
+.payment-content {
+  padding: $pos-space-sm 0;
+}
+
+.total-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $pos-space-lg;
+  margin-bottom: $pos-space-lg;
+  background: $pos-bg;
+  border-radius: $pos-radius;
+  text-align: center;
+
+  .total-label {
+    font-size: $pos-font-sm;
+    color: $pos-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: $pos-space-xs;
+  }
+
+  .total-amount {
+    font-size: 36px;
+    font-weight: 700;
+    color: $pos-text;
+  }
+}
+
+.form-group {
+  margin-bottom: $pos-space-base;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: $pos-space-sm;
+  font-size: $pos-font-base;
+  font-weight: 500;
+  color: $pos-text;
+}
+
+.amount-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 2px solid $pos-border;
+  border-radius: $pos-radius;
+  overflow: hidden;
+  transition: border-color 0.15s;
+
+  &:focus-within {
+    border-color: $pos-primary;
+  }
+}
+
+.currency-prefix {
+  padding: 0 $pos-space-md;
+  font-size: $pos-font-lg;
+  font-weight: 600;
+  color: $pos-text-muted;
+  background: $pos-bg;
+  height: $pos-touch-target;
+  display: flex;
+  align-items: center;
+}
+
+.amount-input {
+  flex: 1;
+  height: $pos-touch-target;
+  border: none;
+  outline: none;
+  padding: 0 $pos-space-md;
+  font-size: $pos-font-lg;
+  font-weight: 600;
+  color: $pos-text;
+  background: transparent;
+
+  &::placeholder {
+    color: $pos-border;
+  }
+
+  // Hide number input spinners
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+}
+
+.reference-input {
+  width: 100%;
+  height: $pos-touch-target;
+  padding: 0 $pos-space-md;
+  border: 2px solid $pos-border;
+  border-radius: $pos-radius;
+  font-size: $pos-font-base;
+  color: $pos-text;
+  outline: none;
+  transition: border-color 0.15s;
+
+  &:focus {
+    border-color: $pos-primary;
+  }
+
+  &::placeholder {
+    color: lighten($pos-text-muted, 20%);
+  }
+}
+
+.quick-amounts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $pos-space-sm;
+  margin-bottom: $pos-space-lg;
+
+  @media (max-width: $pos-bp-sm) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.quick-amount-btn {
+  min-height: $pos-touch-target;
+  padding: $pos-space-sm $pos-space-md;
+  border: 2px solid $pos-border;
+  border-radius: 24px;
+  background: $pos-surface;
+  color: $pos-text;
+  font-size: $pos-font-base;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    border-color: $pos-primary-light;
+    color: $pos-primary;
+  }
+
+  &.active {
+    border-color: $pos-primary;
+    background: rgba($pos-primary, 0.08);
+    color: $pos-primary;
+    font-weight: 600;
+  }
+
+  &.exact {
+    grid-column: span 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: 2px;
+  }
+}
+
+.change-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: $pos-space-base;
+  background: rgba($pos-success, 0.08);
+  border: 1px solid rgba($pos-success, 0.2);
+  border-radius: $pos-radius;
+  margin-bottom: $pos-space-base;
+
+  .change-label {
+    font-size: $pos-font-base;
+    font-weight: 500;
+    color: $pos-text;
+  }
+
+  .change-amount {
+    font-size: $pos-font-xl;
+    font-weight: 700;
+    color: $pos-success;
+  }
+}
+
+.insufficient-warning {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-sm;
+  padding: $pos-space-md;
+  background: rgba($pos-danger, 0.08);
+  border: 1px solid rgba($pos-danger, 0.2);
+  border-radius: $pos-radius;
+  color: $pos-danger;
+  font-size: $pos-font-base;
+  font-weight: 500;
+  margin-bottom: $pos-space-base;
+}
+
+// Tip Section
+.tip-section {
+  padding: $pos-space-base 0;
+  border-top: 1px solid $pos-border;
+  margin-top: $pos-space-base;
+}
+
+.tip-label {
+  display: block;
+  margin-bottom: $pos-space-sm;
+  font-size: $pos-font-base;
+  font-weight: 500;
+  color: $pos-text;
+}
+
+.tip-quick-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $pos-space-sm;
+  margin-bottom: $pos-space-sm;
+}
+
+.tip-custom {
+  display: flex;
+  align-items: center;
+  padding: $pos-space-sm $pos-space-md;
+  background: rgba($pos-success, 0.08);
+  border: 1px solid rgba($pos-success, 0.2);
+  border-radius: $pos-radius;
+  font-size: $pos-font-base;
+  font-weight: 600;
+  color: $pos-success;
+}
+
+// Footer buttons
+:host ::ng-deep .p-dialog-footer {
+  display: flex;
+  gap: $pos-space-sm;
+  padding: $pos-space-base !important;
+  border-top: 1px solid $pos-border;
+}
+
+.cancel-btn {
+  min-height: $pos-touch-target;
+}
+
+.confirm-payment-btn {
+  flex: 1;
+  min-height: $pos-touch-target;
+  font-size: $pos-font-md;
+  font-weight: 600;
+  background: $pos-success;
+  border-color: $pos-success;
+
+  &:hover:not(:disabled) {
+    background: darken($pos-success, 8%);
+    border-color: darken($pos-success, 8%);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-success;
+    outline-offset: 2px;
+  }
+}

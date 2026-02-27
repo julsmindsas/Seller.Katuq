@@ -32,7 +32,8 @@ export class HttpInterceptor2 implements HttpInterceptor {
                          request.url.includes('/diagnostico') ||
                          window.location.pathname.includes('/nuevo-registro') ||
                          window.location.pathname.includes('/video-agent') ||
-                         window.location.pathname.includes('/servicios/agendamiento');
+                         window.location.pathname.includes('/servicios/agendamiento') ||
+                         window.location.pathname.includes('/pos-v2');
 
     return this.handleAccess(request, next)
       .pipe(
@@ -50,9 +51,11 @@ export class HttpInterceptor2 implements HttpInterceptor {
 
           // No redirigir al login si es una ruta pública
           if ([401, 403].indexOf(err.status) !== -1 && !isPublicRoute) {
-            // auto logout if 401 Unauthorized or 403 Forbidden response returned from api
+            console.error('🚨 [INTERCEPTOR] SIGN OUT triggered by:', err.status, request.url, '| isPublicRoute:', isPublicRoute, '| pathname:', window.location.pathname);
             this.service.signOut();
             this.router.navigate(['/login']);
+          } else if ([401, 403].indexOf(err.status) !== -1) {
+            console.warn('🛡️ [INTERCEPTOR] 401/403 but NOT signing out (public route):', request.url);
           }
 
           return throwError(err);
@@ -98,6 +101,14 @@ export class HttpInterceptor2 implements HttpInterceptor {
 
     // Verificar si la request va al backend de Katuq
     const isKatuqBackend = katuqBackendUrls.some(url => request.url.includes(url));
+
+    // DEBUG: Log para requests POS
+    if (request.url.includes('/v1/pos/')) {
+      console.warn('🔍 [INTERCEPTOR] POS request:', request.method, request.url,
+        '| userExists:', !!userString,
+        '| isKatuqBackend:', isKatuqBackend,
+        '| tokenPrefix:', userString ? JSON.parse(userString)?.token?.substring(0, 20) : 'NO_USER');
+    }
 
     if (userString && isKatuqBackend) {
       try {

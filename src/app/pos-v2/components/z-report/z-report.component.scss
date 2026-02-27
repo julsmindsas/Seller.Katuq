@@ -1,0 +1,406 @@
+@import '../../pos-v2-design-tokens';
+
+.z-report {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: $pos-space-base;
+}
+
+// Loading & Error States
+.loading-state,
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $pos-space-xl * 2;
+  text-align: center;
+  color: $pos-text-muted;
+
+  i {
+    font-size: 48px;
+    margin-bottom: $pos-space-base;
+  }
+
+  p {
+    margin: 0 0 $pos-space-base;
+    font-size: $pos-font-md;
+  }
+}
+
+.error-state {
+  i {
+    color: $pos-danger;
+  }
+}
+
+// Report Header
+.report-header {
+  text-align: center;
+  margin-bottom: $pos-space-lg;
+  padding-bottom: $pos-space-lg;
+  border-bottom: 2px solid $pos-border;
+}
+
+.report-title {
+  margin: 0 0 $pos-space-md;
+  font-size: $pos-font-xl;
+  font-weight: 700;
+  color: $pos-text;
+  letter-spacing: 0.5px;
+}
+
+.report-meta {
+  display: flex;
+  justify-content: center;
+  gap: $pos-space-lg;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: $pos-space-sm;
+  font-size: $pos-font-base;
+  color: $pos-text-muted;
+}
+
+// Summary Cards
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $pos-space-base;
+  margin-bottom: $pos-space-lg;
+
+  @media (max-width: $pos-bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.summary-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $pos-space-lg;
+  background: $pos-bg;
+  border-radius: $pos-radius;
+  text-align: center;
+
+  .card-label {
+    font-size: $pos-font-sm;
+    color: $pos-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: $pos-space-xs;
+  }
+
+  .card-value {
+    font-size: $pos-font-xl;
+    font-weight: 700;
+    color: $pos-text;
+
+    &.primary {
+      color: $pos-primary;
+    }
+
+    &.success {
+      color: $pos-success;
+    }
+  }
+}
+
+// Report Section
+.report-section {
+  margin-bottom: $pos-space-lg;
+}
+
+.section-title {
+  margin: 0 0 $pos-space-md;
+  font-size: $pos-font-md;
+  font-weight: 600;
+  color: $pos-text;
+}
+
+// Detail Pair (side-by-side values for discounts, returns, tips)
+.detail-pair {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $pos-space-base;
+  margin-bottom: $pos-space-base;
+
+  @media (max-width: $pos-bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $pos-space-base;
+  background: $pos-bg;
+  border-radius: $pos-radius;
+  text-align: center;
+
+  .detail-label {
+    font-size: $pos-font-sm;
+    color: $pos-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: $pos-space-xs;
+  }
+
+  .detail-value {
+    font-size: $pos-font-lg;
+    font-weight: 700;
+    color: $pos-text;
+
+    &.danger {
+      color: $pos-danger;
+    }
+
+    &.success {
+      color: $pos-success;
+    }
+  }
+}
+
+// Report Table
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: $pos-font-base;
+
+  th, td {
+    padding: $pos-space-md $pos-space-base;
+    text-align: left;
+    border-bottom: 1px solid $pos-border;
+  }
+
+  th {
+    font-weight: 600;
+    color: $pos-text-muted;
+    font-size: $pos-font-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background: $pos-bg;
+  }
+
+  tbody tr {
+    &:nth-child(even) {
+      background: rgba($pos-bg, 0.5);
+    }
+
+    &:hover {
+      background: rgba($pos-primary, 0.02);
+    }
+  }
+
+  tfoot {
+    td {
+      border-top: 2px solid $pos-border;
+      border-bottom: none;
+      font-size: $pos-font-md;
+    }
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .empty-row {
+    text-align: center;
+    color: $pos-text-muted;
+    font-style: italic;
+    padding: $pos-space-lg;
+  }
+}
+
+.movement-type {
+  display: inline-block;
+  padding: 2px $pos-space-sm;
+  border-radius: 4px;
+  font-size: $pos-font-sm;
+  font-weight: 600;
+
+  &.type-in {
+    background: rgba($pos-success, 0.1);
+    color: $pos-success;
+  }
+
+  &.type-out {
+    background: rgba($pos-danger, 0.1);
+    color: $pos-danger;
+  }
+}
+
+// Arqueo de Caja Section
+.arqueo-section {
+  border: 2px solid $pos-border;
+  border-radius: $pos-radius;
+  padding: $pos-space-lg;
+  background: $pos-bg;
+}
+
+.arqueo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $pos-space-base;
+
+  @media (max-width: $pos-bp-sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.arqueo-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: $pos-space-base;
+  background: $pos-surface;
+  border-radius: $pos-radius;
+  text-align: center;
+
+  .arqueo-label {
+    font-size: $pos-font-sm;
+    color: $pos-text-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: $pos-space-xs;
+  }
+
+  .arqueo-value {
+    font-size: $pos-font-lg;
+    font-weight: 700;
+    color: $pos-text;
+
+    &.positive {
+      color: $pos-success;
+    }
+
+    &.negative {
+      color: $pos-danger;
+    }
+  }
+}
+
+// Actions
+.report-actions {
+  display: flex;
+  justify-content: center;
+  gap: $pos-space-base;
+  padding: $pos-space-lg 0;
+
+  @media (max-width: $pos-bp-sm) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.print-btn {
+  min-height: $pos-touch-target;
+  min-width: 200px;
+  font-size: $pos-font-md;
+  font-weight: 600;
+  background: $pos-primary;
+  border-color: $pos-primary;
+
+  &:hover {
+    background: darken($pos-primary, 8%);
+    border-color: darken($pos-primary, 8%);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: 2px;
+  }
+}
+
+.back-btn {
+  min-height: $pos-touch-target;
+  min-width: 200px;
+  font-size: $pos-font-md;
+  font-weight: 600;
+  color: $pos-text-muted;
+  border-color: $pos-border;
+
+  &:hover {
+    background: $pos-bg;
+    border-color: $pos-text-muted;
+    color: $pos-text;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $pos-primary;
+    outline-offset: 2px;
+  }
+}
+
+// Print Styles
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .z-report {
+    padding: 0;
+    max-width: 100%;
+  }
+
+  .summary-cards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .summary-card,
+  .detail-item,
+  .arqueo-item {
+    border: 1px solid #ccc;
+  }
+
+  .arqueo-section {
+    border-color: #ccc;
+    background: none;
+  }
+
+  .arqueo-item {
+    background: #f9f9f9;
+  }
+
+  .report-table {
+    th {
+      background: #f0f0f0 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9f9f9 !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+
+  .movement-type {
+    &.type-in {
+      color: #000;
+      background: none;
+      &::before { content: '+ '; }
+    }
+    &.type-out {
+      color: #000;
+      background: none;
+      &::before { content: '- '; }
+    }
+  }
+
+  .arqueo-value {
+    &.positive {
+      color: #000;
+      &::before { content: '+ '; }
+    }
+    &.negative {
+      color: #000;
+      &::before { content: '- '; }
+    }
+  }
+}

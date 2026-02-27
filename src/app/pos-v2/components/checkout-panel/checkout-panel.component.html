@@ -1,0 +1,180 @@
+<div class="checkout-panel">
+  <div class="checkout-header">
+    <button
+      type="button"
+      class="back-btn"
+      (click)="goBack()"
+      aria-label="Volver al carrito">
+      <i class="pi pi-arrow-left"></i>
+    </button>
+    <h3 class="checkout-title">Cobro</h3>
+  </div>
+
+  <div class="checkout-body">
+    <!-- Customer Section -->
+    <section class="checkout-section">
+      <h4 class="section-title">
+        <i class="pi pi-user"></i>
+        Cliente
+      </h4>
+
+      <div class="customer-search" *ngIf="!selectedCustomer">
+        <p-autoComplete
+          [(ngModel)]="selectedCustomer"
+          [suggestions]="customerSuggestions"
+          (completeMethod)="searchCustomer($event)"
+          (onSelect)="onCustomerSelect($event)"
+          field="nombres_completos"
+          placeholder="Buscar por nombre, documento o telefono..."
+          [minLength]="2"
+          [forceSelection]="true"
+          [inputStyleClass]="'customer-input'"
+          styleClass="customer-autocomplete">
+          <ng-template let-customer pTemplate="item">
+            <div class="customer-suggestion">
+              <span class="customer-name">{{ customer.nombres_completos }}</span>
+              <span class="customer-doc">{{ customer.documento }}</span>
+            </div>
+          </ng-template>
+        </p-autoComplete>
+
+        <button
+          type="button"
+          class="consumidor-final-btn"
+          (click)="setConsumidorFinal()">
+          <i class="pi pi-user-plus"></i>
+          Consumidor Final
+        </button>
+      </div>
+
+      <div class="selected-customer" *ngIf="selectedCustomer">
+        <div class="customer-card">
+          <div class="customer-info">
+            <span class="customer-name">{{ selectedCustomer.nombres_completos }}</span>
+            <span class="customer-detail" *ngIf="selectedCustomer.documento">
+              Doc: {{ selectedCustomer.documento }}
+            </span>
+            <span class="customer-detail" *ngIf="selectedCustomer.numero_celular_comprador">
+              Tel: {{ selectedCustomer.numero_celular_comprador }}
+            </span>
+          </div>
+          <button
+            type="button"
+            class="change-customer-btn"
+            (click)="clearCustomer()"
+            aria-label="Cambiar cliente">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Discount Section -->
+    <section class="checkout-section">
+      <h4 class="section-title">
+        <i class="pi pi-percentage"></i>
+        Descuento
+      </h4>
+
+      <div class="discount-controls">
+        <div class="discount-type-toggle">
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="discountType === 'percentage'"
+            (click)="discountType = 'percentage'">
+            %
+          </button>
+          <button
+            type="button"
+            class="toggle-btn"
+            [class.active]="discountType === 'fixed'"
+            (click)="discountType = 'fixed'">
+            $
+          </button>
+        </div>
+        <div class="discount-input-wrapper">
+          <input
+            type="number"
+            class="discount-input"
+            [(ngModel)]="discountValue"
+            [placeholder]="discountType === 'percentage' ? '0%' : '$0'"
+            min="0"
+            [max]="discountType === 'percentage' ? 100 : currentTotal" />
+        </div>
+      </div>
+
+      <div class="discount-preview" *ngIf="discountAmount > 0">
+        <span class="discount-label">Descuento aplicado</span>
+        <span class="discount-value">-${{ discountAmount | number:'1.0-0' }}</span>
+      </div>
+    </section>
+
+    <!-- Payment Method Section -->
+    <section class="checkout-section">
+      <h4 class="section-title">
+        <i class="pi pi-credit-card"></i>
+        Forma de pago
+      </h4>
+
+      <div class="payment-methods">
+        <button
+          *ngFor="let method of paymentMethods"
+          type="button"
+          class="payment-method-card"
+          [class.active]="selectedPaymentMethod === method.value"
+          (click)="selectPaymentMethod(method.value)"
+          [attr.aria-pressed]="selectedPaymentMethod === method.value">
+          <i [class]="method.icon"></i>
+          <span>{{ method.label }}</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Order Summary -->
+    <section class="checkout-section">
+      <h4 class="section-title">
+        <i class="pi pi-list"></i>
+        Resumen
+      </h4>
+
+      <div class="order-summary">
+        <div class="summary-row">
+          <span>Subtotal</span>
+          <span>${{ subtotal$ | async | number:'1.0-0' }}</span>
+        </div>
+        <div class="summary-row">
+          <span>Impuesto</span>
+          <span>${{ tax$ | async | number:'1.0-0' }}</span>
+        </div>
+        <div class="summary-row discount-row" *ngIf="discountAmount > 0">
+          <span>Descuento</span>
+          <span class="discount-text">-${{ discountAmount | number:'1.0-0' }}</span>
+        </div>
+        <div class="summary-row total-row">
+          <span>Total a cobrar</span>
+          <span class="total-value">${{ totalAfterDiscount | number:'1.0-0' }}</span>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="checkout-footer">
+    <button
+      pButton
+      type="button"
+      label="Confirmar pago"
+      icon="pi pi-check-circle"
+      class="p-button-lg confirm-btn"
+      (click)="openPaymentDialog()">
+    </button>
+  </div>
+</div>
+
+<app-pos-v2-payment-dialog
+  [visible]="showPaymentDialog"
+  [paymentMethod]="selectedPaymentMethod"
+  [total]="totalAfterDiscount"
+  (confirmed)="onPaymentCompleted($event)"
+  (closed)="onPaymentDialogClosed()">
+</app-pos-v2-payment-dialog>
