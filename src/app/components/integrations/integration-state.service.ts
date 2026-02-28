@@ -204,10 +204,14 @@ export class IntegrationStateService {
 
   removeIntegration(integrationId: string): void {
     this.updateState(state => ({
-      integrations: (state.integrations || []).filter(i => i.id !== integrationId),
-      selectedIntegration: state.selectedIntegration?.id === integrationId 
-        ? null 
-        : state.selectedIntegration,
+      integrations: (state.integrations || []).filter(i =>
+        i.id !== integrationId && (i.provider || i.type) !== integrationId
+      ),
+      selectedIntegration:
+        state.selectedIntegration?.id === integrationId ||
+        (state.selectedIntegration?.provider || state.selectedIntegration?.type) === integrationId
+          ? null
+          : state.selectedIntegration,
       cache: {
         ...state.cache,
         lastUpdated: Date.now()

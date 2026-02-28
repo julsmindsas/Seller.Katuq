@@ -372,7 +372,7 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
     if (
       confirm(`¿Estás seguro de eliminar la integración "${integration.name}"?`)
     ) {
-      this.integrationsService.deleteIntegration(integration.id!).subscribe({
+      this.integrationsService.deleteIntegration(integration.provider || integration.type).subscribe({
         next: () => {
           this.uiHelper.showSuccess("Integración eliminada correctamente");
         },

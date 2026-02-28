@@ -661,7 +661,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   deleteIntegration(integration: Integration): void {
     if (confirm(`¿Está seguro que desea eliminar la integración "${integration.name}"?`)) {
-      this.integrationsService.deleteIntegration(integration.id!).subscribe({
+      this.integrationsService.deleteIntegration(integration.provider || integration.type).subscribe({
         next: () => {
           this.savedIntegrations = this.savedIntegrations.filter(i => i.id !== integration.id);
           this.showStatus('success', 'Integración eliminada correctamente');
