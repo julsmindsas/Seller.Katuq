@@ -2509,9 +2509,12 @@ export class CrearVentasComponent
 
         // Limpiar envío previo para forzar re-selección con datos frescos del cliente
         // Esto evita que una dirección de otro cliente persista si la carga asíncrona falla
-        if (!this.pedidoGral.envio?.direccionEntrega ||
-            !this.datosEntregas?.some(d => d.direccionEntrega === this.pedidoGral.envio?.direccionEntrega)) {
-          this.pedidoGral.envio = undefined;
+        // NO limpiar si es recoge en tienda, porque el envío ya fue configurado con datos de N/A
+        if (!this.esRecogeEnTienda) {
+          if (!this.pedidoGral.envio?.direccionEntrega ||
+              !this.datosEntregas?.some(d => d.direccionEntrega === this.pedidoGral.envio?.direccionEntrega)) {
+            this.pedidoGral.envio = undefined;
+          }
         }
 
         // Cargar datos de entrega (solo si NO es recoge en tienda)
@@ -2838,7 +2841,7 @@ export class CrearVentasComponent
     this.pedidoGral = { ...pedidoProcesado };
 
     // Validar que la dirección de envío pertenezca al cliente actual
-    if (this.pedidoGral.envio?.direccionEntrega && this.pedidoGral.formaEntrega !== 'Recoge en tienda') {
+    if (this.pedidoGral.envio?.direccionEntrega && this.pedidoGral.formaEntrega !== 'Recoge' && !this.esRecogeEnTienda) {
       const envioActual = this.pedidoGral.envio;
       const direccionExisteEnCliente = this.originalDataEntregas?.some(
         (d) => d.direccionEntrega === envioActual.direccionEntrega
