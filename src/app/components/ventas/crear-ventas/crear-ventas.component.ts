@@ -2966,6 +2966,21 @@ export class CrearVentasComponent
           this.showPedidoConfirm = true;
           this.showSteper = true; // Mantener el wizard visible para mostrar el paso de confirmación
 
+          // Recalcular totales con la lógica correcta del frontend antes de enviar al backend.
+          // Esto respeta: precio por tipo de cliente (sin escala) y precio por volumen.
+          // El backend puede recalcular con precio base sin aplicar estas reglas.
+          const subtotalFrontend = context.pyamentService.checkPriceScale(context.pedidoGral);
+          context.pedidoGral.totalPedidoSinDescuento = subtotalFrontend;
+          context.pedidoGral.totalPedididoConDescuento =
+            subtotalFrontend
+            - (Number(context.pedidoGral.totalDescuento) || 0)
+            + (Number(context.pedidoGral.totalEnvio) || 0)
+            + (Number(context.pedidoGral.totalImpuesto) || 0);
+          context.pedidoGral.faltaPorPagar = Math.max(
+            0,
+            context.pedidoGral.totalPedididoConDescuento - (Number(context.pedidoGral.anticipo) || 0)
+          );
+
           // Generar contenido HTML del pedido
           const htmlSanizado = context.pyamentService.getHtmlContent(
             context.pedidoGral,
@@ -3942,6 +3957,20 @@ export class CrearVentasComponent
         .validateNroPedido(context.pedidoGral.nroPedido as string)
         .subscribe({
           next: (res: any) => {
+            // Recalcular totales con la lógica correcta del frontend antes de enviar al backend.
+            // Esto respeta: precio por tipo de cliente (sin escala) y precio por volumen.
+            const subtotalFrontendW = context.pyamentService.checkPriceScale(context.pedidoGral);
+            context.pedidoGral.totalPedidoSinDescuento = subtotalFrontendW;
+            context.pedidoGral.totalPedididoConDescuento =
+              subtotalFrontendW
+              - (Number(context.pedidoGral.totalDescuento) || 0)
+              + (Number(context.pedidoGral.totalEnvio) || 0)
+              + (Number(context.pedidoGral.totalImpuesto) || 0);
+            context.pedidoGral.faltaPorPagar = Math.max(
+              0,
+              context.pedidoGral.totalPedididoConDescuento - (Number(context.pedidoGral.anticipo) || 0)
+            );
+
             const htmlSanizado = context.pyamentService.getHtmlContent(
               context.pedidoGral,
             );
