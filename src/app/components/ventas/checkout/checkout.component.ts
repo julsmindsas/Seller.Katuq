@@ -459,6 +459,15 @@ export class CheckOutComponent implements OnInit, OnChanges {
     const productoPrecio = item?.producto?.precio;
     if (!productoPrecio) return 0;
 
+    // Si tiene precio manual override, calcular el equivalente sin IVA
+    if (item._precioManualOverride !== undefined && item._precioManualOverride !== null) {
+      const precioConIva = Number(item._precioManualOverride) || 0;
+      const porcentajeIva = (item._ivaManualOverride !== undefined && item._ivaManualOverride !== null)
+        ? Number(item._ivaManualOverride)
+        : Number(productoPrecio.precioUnitarioIva) || 0;
+      return precioConIva / (1 + porcentajeIva / 100);
+    }
+
     // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
     if (item?.producto?._precioAplicadoPorCategoria) {
       return productoPrecio.precioUnitarioSinIva || 0;
@@ -580,6 +589,25 @@ export class CheckOutComponent implements OnInit, OnChanges {
       const productoPrecio = itemCarrito?.producto?.precio;
       const porceDescuento = (this.pedido?.porceDescuento ?? 0) / 100;
 
+      // PRIORIDAD 0: Si tiene precio manual override, calcular IVA basado en el precio manual
+      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+        const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
+        const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
+          ? Number(itemCarrito._ivaManualOverride)
+          : Number(productoPrecio?.precioUnitarioIva) || 0;
+        const precioManualSinIva = precioManualConIva / (1 + porcentajeIva / 100);
+        const valorIvaManual = precioManualConIva - precioManualSinIva;
+        const precioItemConDescuento = (valorIvaManual * cantidadItem) * (1 - porceDescuento);
+        totalPrecioIVA += precioItemConDescuento;
+        const ivaKey = porcentajeIva.toString();
+        switch (ivaKey) {
+          case "0": totalExcluidos += precioItemConDescuento; break;
+          case "5": totalIva5 += precioItemConDescuento; break;
+          case "8": totalImpo += precioItemConDescuento; break;
+          case "19": totalIva19 += precioItemConDescuento; break;
+        }
+      }
+
       // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
       const preciosPorTipoCliente = itemCarrito?.producto?.preciosPorTipoCliente ?? [];
       const precioCategoria = categoriaClienteId
@@ -597,7 +625,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
         productoValorIva: productoPrecio?.valorIva
       });
 
-      if (precioCategoria) {
+      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+        // Ya procesado arriba - saltar lógica normal de precio
+      } else if (precioCategoria) {
         // Si hay precio por categoría, usar su IVA
         const valorUnitarioIVA = precioCategoria.valorIva || 0;
         const porcentajeIvaCategoria = precioCategoria.porcentajeIva?.toString() ?? productoPrecio?.precioUnitarioIva?.toString() ?? "0";

@@ -160,7 +160,7 @@ export class CarritoComponent implements OnInit {
     }, 0);
   }
 
-  private getProductPriceWithScale(producto: any): number {
+  getProductPriceWithScale(producto: any): number {
     if (!producto?.producto?.precio) {
       console.log('⚠️ CARRITO: Producto sin precio', producto);
       return 0;
@@ -237,7 +237,7 @@ export class CarritoComponent implements OnInit {
     if (!this.productos || this.productos.length === 0) return 0;
 
     return this.productos.reduce((total, producto) => {
-      const precioBase = Number(this.getProductPriceWithScale(producto)) || 0;
+      const precioBase = Number(this.checkPriceScale(producto)) || 0;
       const precioAdiciones = Number(this.calculateAdicionesPrice(producto?.configuracion?.adiciones)) || 0;
       const precioPreferencias = Number(this.calculatePreferenciasPrice(producto?.configuracion?.preferencias)) || 0;
       const cantidad = Number(producto?.cantidad) || 0;
@@ -249,7 +249,63 @@ export class CarritoComponent implements OnInit {
 
   checkPriceScale(itemCarrito: any): number {
     if (!itemCarrito?.producto?.precio) return 0;
+    // Si tiene precio manual override, usarlo
+    if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+      return Number(itemCarrito._precioManualOverride) || 0;
+    }
     return this.getProductPriceWithScale(itemCarrito);
+  }
+
+  permitePrecioManual(itemCarrito: any): boolean {
+    return itemCarrito?.producto?.procesoComercial?.permitePrecioManual === true;
+  }
+
+  onPrecioManualInput(itemCarrito: any, value: any): void {
+    if (!itemCarrito) return;
+    // Guardar valor temporal tal cual (permite vacío mientras escribe)
+    itemCarrito._precioManualTemp = value;
+    if (value !== '' && value !== null && value !== undefined) {
+      itemCarrito._precioManualOverride = Number(value);
+    }
+  }
+
+  onPrecioManualConfirm(itemCarrito: any): void {
+    if (!itemCarrito) return;
+    const temp = itemCarrito._precioManualTemp;
+    // Si quedó vacío o inválido, restaurar al precio original
+    if (temp === '' || temp === null || temp === undefined || isNaN(Number(temp)) || Number(temp) < 0) {
+      itemCarrito._precioManualOverride = undefined;
+    } else {
+      itemCarrito._precioManualOverride = Number(temp);
+    }
+    delete itemCarrito._precioManualTemp;
+    this.carsingleton.updateProductQuantity(itemCarrito);
+  }
+
+  getPrecioSinIva(itemCarrito: any): number {
+    const precioConIva = this.checkPriceScale(itemCarrito);
+    const porcentajeIva = this.getIvaActual(itemCarrito);
+    return precioConIva / (1 + porcentajeIva / 100);
+  }
+
+  getValorIva(itemCarrito: any): number {
+    const precioConIva = this.checkPriceScale(itemCarrito);
+    return precioConIva - this.getPrecioSinIva(itemCarrito);
+  }
+
+  getIvaActual(itemCarrito: any): number {
+    if (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null) {
+      return itemCarrito._ivaManualOverride;
+    }
+    return Number(itemCarrito?.producto?.precio?.precioUnitarioIva) || 0;
+  }
+
+  onIvaManualChange(itemCarrito: any, value: any): void {
+    if (!itemCarrito) return;
+    const iva = Number(value);
+    if (isNaN(iva) || iva < 0) return;
+    itemCarrito._ivaManualOverride = iva;
+    this.carsingleton.updateProductQuantity(itemCarrito);
   }
 
   checkAditionPrice(item: any): boolean {

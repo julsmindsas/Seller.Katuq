@@ -14,4 +14,5 @@ export interface ProcesoComercial {
     configProcesoComercialActivo?: boolean;
     aceptaGenero?: boolean;
     aceptaOcasion?: boolean;
+    permitePrecioManual?: boolean;
 }

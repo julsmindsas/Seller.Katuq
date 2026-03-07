@@ -410,7 +410,8 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       pago: [[], [Validators.required]],
       variablesForm: [""],
       llevaCalendario: [false, [Validators.required]],
-      configProcesoComercialActivo: [false, [Validators.required]] // Nuevo campo para guardar el estado de activación
+      configProcesoComercialActivo: [false, [Validators.required]], // Nuevo campo para guardar el estado de activación
+      permitePrecioManual: [false]
     });
 
     this.subs.add(

@@ -44,7 +44,36 @@
                         </div>
                       </td>
                       <td class="align-middle text-center">
-                        <span class="price-value">{{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</span>
+                        <ng-container *ngIf="permitePrecioManual(itemCarrito); else precioSoloLectura">
+                          <input class="form-control form-control-sm text-center"
+                                 type="number"
+                                 [ngModel]="itemCarrito._precioManualTemp !== undefined ? itemCarrito._precioManualTemp : (itemCarrito._precioManualOverride !== undefined ? itemCarrito._precioManualOverride : checkPriceScale(itemCarrito))"
+                                 (ngModelChange)="onPrecioManualInput(itemCarrito, $event)"
+                                 (blur)="onPrecioManualConfirm(itemCarrito)"
+                                 (keyup.enter)="onPrecioManualConfirm(itemCarrito)"
+                                 [min]="0"
+                                 step="100"
+                                 style="max-width: 120px; display: inline-block;">
+                          <select class="form-select form-select-sm mt-1"
+                                  [ngModel]="getIvaActual(itemCarrito)"
+                                  (ngModelChange)="onIvaManualChange(itemCarrito, $event)"
+                                  style="max-width: 120px; display: inline-block;">
+                            <option [ngValue]="0">IVA 0%</option>
+                            <option [ngValue]="5">IVA 5%</option>
+                            <option [ngValue]="8">IVA 8%</option>
+                            <option [ngValue]="19">IVA 19%</option>
+                          </select>
+                          <small class="d-block text-muted mt-1">
+                            Sin IVA: {{getPrecioSinIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}
+                            | IVA: {{getValorIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}
+                          </small>
+                          <small class="d-block text-muted" *ngIf="itemCarrito._precioManualOverride !== undefined || itemCarrito._ivaManualOverride !== undefined">
+                            Original: {{getProductPriceWithScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}} (IVA {{itemCarrito?.producto?.precio?.precioUnitarioIva || 0}}%)
+                          </small>
+                        </ng-container>
+                        <ng-template #precioSoloLectura>
+                          <span class="price-value">{{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</span>
+                        </ng-template>
                       </td>
                       <td class="align-middle">
                         <div class="qty-box">

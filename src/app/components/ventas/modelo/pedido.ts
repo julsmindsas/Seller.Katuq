@@ -326,6 +326,8 @@ export interface Carrito {
   configuracion?: Configuracion;
   cantidad?: number;
   notaProduccion?: Notas[];
+  _precioManualOverride?: number;
+  _ivaManualOverride?: number;
 }
 
 export interface Facturacion {
