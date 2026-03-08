@@ -3457,7 +3457,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             // Esta lógica causaba el problema reportado donde pedidos aprobados cambiaban automáticamente
             // a pendiente al refrescar la página, debido a discrepancias en el cálculo de faltaPorPagar
             // Si el estado es "Aprobado", SIEMPRE respetarlo (es un estado final establecido manualmente)
-            if (order.estadoPago === "Aprobado") {
+            if (order.estadoPago === "Aprobado" && faltaPorPagarReal <= 0) {
               console.log(`🔒 ESTADO APROBADO PROTEGIDO - Pedido ${order.nroPedido}:`, {
                 estadoPreservado: order.estadoPago,
                 razon: "Estado Aprobado es inmutable - No se recalcula automáticamente",
@@ -3467,6 +3467,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 tienePagosAsentados: (order.PagosAsentados?.length || 0) > 0
               });
               // NO HACER NADA - Preservar el estado "Aprobado"
+            } else if (order.estadoPago === "Aprobado" && faltaPorPagarReal > 0) {
+              // El pedido fue aprobado pero se añadieron productos y quedó saldo pendiente
+              order.estadoPago = EstadoPago.PreAprobado;
+              console.log(`🔄 APROBADO → PREAPROBADO - Pedido ${order.nroPedido}: se añadieron productos, faltaPorPagar=${faltaPorPagarReal}`);
             } else if (
               order.estadoPago === "PreAprobado" &&
               faltaPorPagarReal <= 0
@@ -7106,6 +7110,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         0,
         order.totalPedididoConDescuento - anticipoReal,
       );
+
+      // Si el orden estaba Aprobado pero ahora queda saldo pendiente (se añadieron productos),
+      // debe volver a PreAprobado
+      if (order.faltaPorPagar > 0 && order.estadoPago === EstadoPago.Aprobado) {
+        order.estadoPago = EstadoPago.PreAprobado;
+      }
     }
 
     return order;
