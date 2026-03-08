@@ -217,7 +217,8 @@ export class PosOrderCreatorService {
   private updateProductStates(pedido: Pedido): void {
     pedido.carrito?.forEach((x: any) => {
       if (!x.producto?.crearProducto?.paraProduccion) {
-        x.estadoProcesoProducto = 'ParaDespachar';
+        // En POS todos los ítems se entregan en el momento, quedan Entregado
+        x.estadoProcesoProducto = EstadoProceso.Entregado;
       }
     });
   }

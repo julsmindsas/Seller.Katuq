@@ -107,24 +107,42 @@ export class PosCheckoutComponent implements OnInit, OnDestroy {
 
         // Iniciar el widget de Wompi con el pedido actualizado
         this.checkoutService.iniciarPagoConWompi(pedidoParaWompi).then(pagoExitoso => {
+          const pedidoActual = this.checkoutService.pedido$.getValue();
           if (pagoExitoso) {
-            // ✅ INFORMATIVO: El widget se completó, pero el webhook actualizará el estado
-            console.log("✅ [Wompi Widget] Pago iniciado exitosamente. El webhook actualizará el estado.");
+            // Pago aprobado: actualizar estados en BD
+            if (pedidoActual) {
+              pedidoActual.estadoPago = EstadoPago.Aprobado;
+              pedidoActual.estadoProceso = EstadoProceso.Entregado;
+              pedidoActual.carrito?.forEach((item: any) => {
+                item.estadoProcesoProducto = EstadoProceso.Entregado;
+              });
+              pedidoActual.anticipo = pedidoActual.totalPedididoConDescuento || 0;
+              pedidoActual.faltaPorPagar = 0;
+              this.ventasService.editOrder(pedidoActual).subscribe({
+                next: () => console.log('✅ [Wompi] Pedido actualizado: Aprobado / Entregado'),
+                error: (err: any) => console.error('❌ [Wompi] Error actualizando estado:', err)
+              });
+            }
             Swal.fire({
-              title: "Procesando pago",
-              text: "El pago está siendo procesado. Recibirás confirmación en unos momentos.",
-              icon: "info",
+              title: "Pago aprobado",
+              text: "El pago fue aprobado exitosamente.",
+              icon: "success",
               confirmButtonText: "Ok",
             });
-
-            // Limpiar el estado de procesamiento
             this.limpiarDatosDespuesDeVenta();
           } else {
-            // El usuario canceló o cerró el widget
+            // Pago rechazado o cancelado: marcar como Rechazado en BD
+            if (pedidoActual) {
+              pedidoActual.estadoPago = EstadoPago.Rechazado;
+              this.ventasService.editOrder(pedidoActual).subscribe({
+                next: () => console.log('🚫 [Wompi] Pedido actualizado: Rechazado'),
+                error: (err: any) => console.error('❌ [Wompi] Error actualizando estado:', err)
+              });
+            }
             console.log("ℹ️ [Wompi Widget] Pago no completado por el usuario.");
             Swal.fire({
-              title: "Pago cancelado",
-              text: "El proceso de pago fue cancelado. El pedido se guardó con estado pendiente.",
+              title: "Pago rechazado",
+              text: "El pago fue rechazado o cancelado.",
               icon: "warning",
               confirmButtonText: "Ok",
             });
