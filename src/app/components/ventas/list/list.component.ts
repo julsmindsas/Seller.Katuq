@@ -5496,7 +5496,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     inicializar();
   }
 
-  private editOrder(order: Pedido) {
+  private editOrder(order: Pedido, skipEstadoPagoCheck = false) {
     if (order.carrito && order.carrito.length > 0) {
       const fechaEntrega =
         order.carrito?.[0]?.configuracion?.datosEntrega?.fechaEntrega;
@@ -5537,6 +5537,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 🔄 Sincronizar forma de entrega y actualizar datos de envío si es necesario
     this.sincronizarFormaEntrega(order);
+
+    // 🔄 Si el pedido estaba Aprobado pero el precio aumentó (p.ej. nuevo producto,
+    // cambio de zona de envío, modificación de descuento), recalcular faltaPorPagar
+    // desde los pagos reales y bajar a PreAprobado si queda saldo pendiente.
+    // skipEstadoPagoCheck=true cuando el usuario cambia el estado manualmente.
+    if (!skipEstadoPagoCheck && order.estadoPago === EstadoPago.Aprobado && (order.totalPedididoConDescuento || 0) > 0) {
+      const anticipoRecalculado = (order.PagosAsentados || []).reduce((sum, pago) => {
+        if (pago.formaPago?.toLowerCase().includes('wompi') && pago.estadoVerificacion === 'Pendiente') {
+          return sum;
+        }
+        return sum + (pago.valor || pago.valorRegistrado || 0);
+      }, 0);
+      const faltaPorPagarRecalculado = Math.max(0, (order.totalPedididoConDescuento || 0) - anticipoRecalculado);
+      if (faltaPorPagarRecalculado > 0) {
+        order.estadoPago = EstadoPago.PreAprobado;
+        order.anticipo = anticipoRecalculado;
+        order.faltaPorPagar = faltaPorPagarRecalculado;
+        console.log(`🔄 APROBADO → PREAPROBADO en editOrder - Pedido ${order.nroPedido}: faltaPorPagar=${faltaPorPagarRecalculado}`);
+      }
+    }
 
     // Log del payload que se envía al servicio
     console.log("📤 PAYLOAD EDIT ORDER:", {
@@ -6053,8 +6073,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       (order as any).preAprobadoManual = true;
     }
 
-    // Actualizar el pedido
-    this.editOrder(order);
+    // Actualizar el pedido (skip check: el usuario cambió el estado manualmente)
+    this.editOrder(order, true);
 
     // Cerrar el modal
     this.modalService.dismissAll();
