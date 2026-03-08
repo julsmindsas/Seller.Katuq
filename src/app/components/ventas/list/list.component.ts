@@ -3402,7 +3402,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               typeof formaEntregaActual === "string" &&
               formaEntregaActual.toLowerCase().includes("recoge");
 
-            if (esRecoge) {
+            // "Recoge en tienda" sin ningún pago registrado → Pendiente
+            // Si ya hay pagos (anticipo > 0), calcular según pagos reales
+            if (esRecoge && Number(order.anticipo || 0) <= 0) {
               order.estadoPago = "Pendiente";
             } else {
               // Evitar marcar como Aprobado pedidos con total 0
