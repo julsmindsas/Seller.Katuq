@@ -309,7 +309,7 @@
              [class.loading-overlay]="cargandoProductos && productosPaginados?.length > 0"
              *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosPaginados?.length > 0">
             <div class="row">
-                <div [class]="'col-xl-'+col+' col-sm-'+col" [class.col-xl-12]="listView"
+                <div [class]="'col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
                     *ngFor="let producto of productosPaginados">
                     <div class="card product-card-modern">
                         <div class="product-box-modern">
@@ -447,9 +447,7 @@
     <ng-template #confProductToCartModal let-modal>
         <div class="modal-header">
             <h4 class="modal-title" id="modal-basic-title">{{ 'Configurar producto' | translate }}</h4>
-            <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-                <span aria-hidden="true">&times;</span>
-            </button>
+            <button type="button" class="btn-close" aria-label="Close" (click)="modal.dismiss('Cross click')"></button>
         </div>
         <div class="modal-body">
             <app-conf-product-to-cart #confProduct [producto]="productoSeleccionado"

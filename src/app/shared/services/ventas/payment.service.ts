@@ -209,8 +209,17 @@ export class PaymentService extends BaseService {
       const precioUnitarioSinIva =
         Number(producto?.precio?.precioUnitarioSinIva) || 0;
 
-      // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
-      if (producto?._precioAplicadoPorCategoria) {
+      // 🔒 PRIORIDAD 0: Si tiene precio manual override, calcular sin IVA a partir del precio con IVA manual
+      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+        const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
+        const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
+          ? Number(itemCarrito._ivaManualOverride)
+          : Number(producto?.precio?.precioUnitarioIva) || 0;
+        const precioManualSinIva = precioManualConIva / (1 + porcentajeIva / 100);
+        totalItemSinIVA = precioManualSinIva * cantidad;
+      }
+      // 🔒 PRIORIDAD 1: Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
+      else if (producto?._precioAplicadoPorCategoria) {
         totalItemSinIVA = precioUnitarioSinIva * cantidad;
       } else if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
@@ -332,11 +341,19 @@ export class PaymentService extends BaseService {
       let precioConIvaItem =
         Number(producto?.precio?.precioUnitarioConIva) || 0; // Precio unitario con IVA para cálculo base
 
+      // 🔒 PRIORIDAD 0: Si tiene precio manual override, usarlo directamente
+      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+        precioConIvaItem = Number(itemCarrito._precioManualOverride) || 0;
+        porcentajeIvaItemStr = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
+          ? itemCarrito._ivaManualOverride.toString()
+          : porcentajeIvaUnitario;
+      }
       // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
-      const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
-      const precioCategoria = categoriaClienteId
-        ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
-        : null;
+      else {
+        const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
+        const precioCategoria = categoriaClienteId
+          ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
+          : null;
 
       if (precioCategoria) {
         // Si hay precio por categoría, usarlo y su porcentaje de IVA
@@ -371,6 +388,7 @@ export class PaymentService extends BaseService {
       // Si no hay precios de volumen, usar precio base - ya está asignado
       // precioConIvaItem = (Number(producto?.precio?.precioUnitarioConIva) || 0);
       // }
+      } // Cierre del else de PRIORIDAD 0 (precio manual)
 
       // Calcular valor total con IVA del producto principal (antes de descuento)
       let valorTotalConIvaProducto = precioConIvaItem * cantidad;
@@ -1158,13 +1176,16 @@ export class PaymentService extends BaseService {
         producto?.crearProducto?.titulo ?? "Producto no disponible";
       const referenciaProducto = producto?.identificacion?.referencia ?? "N/A";
 
-      // 🔄 NUEVO: Calcular precios considerando escalas de volumen y precios por tipo de cliente
+      // 🔄 NUEVO: Calcular precios considerando precio manual, escalas de volumen y precios por tipo de cliente
       const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
+
+      // 🔒 PRIORIDAD 0: Verificar si hay precio manual override
+      const tienePrecioManual = item._precioManualOverride !== undefined && item._precioManualOverride !== null;
 
       // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
       const categoriaClienteId = pedido.cliente?.categoria?.id;
       const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
-      const precioCategoria = categoriaClienteId
+      const precioCategoria = (!tienePrecioManual && categoriaClienteId)
         ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
         : null;
 
@@ -1173,11 +1194,29 @@ export class PaymentService extends BaseService {
 
       // Precio unitario sin IVA
       let precioUnitarioSinIva = Number(producto?.precio?.precioUnitarioSinIva) || 0;
-      if (usaPrecioCategoria) {
+      // IVA unitario
+      let valorIva = Number(producto?.precio?.valorIva) || 0;
+      let porcentajeIva = producto?.precio?.precioUnitarioIva ?? "0";
+      // Precio unitario con IVA
+      let precioUnitarioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
+
+      if (tienePrecioManual) {
+        // Precio manual: calcular sin IVA a partir del precio con IVA ingresado
+        precioUnitarioConIva = Number(item._precioManualOverride) || 0;
+        porcentajeIva = (item._ivaManualOverride !== undefined && item._ivaManualOverride !== null)
+          ? item._ivaManualOverride.toString()
+          : (producto?.precio?.precioUnitarioIva ?? "0");
+        const porcentajeIvaNum = Number(porcentajeIva) || 0;
+        precioUnitarioSinIva = precioUnitarioConIva / (1 + porcentajeIvaNum / 100);
+        valorIva = precioUnitarioConIva - precioUnitarioSinIva;
+      } else if (usaPrecioCategoria) {
         // Si hay precio por categoría, usarlo directamente
         precioUnitarioSinIva = Number(precioCategoria.precio) || 0;
+        precioUnitarioConIva = Number(precioCategoria.precioConIva) || 0;
+        valorIva = Number(precioCategoria.valorIva) || 0;
+        porcentajeIva = precioCategoria.porcentajeIva?.toString() ?? producto?.precio?.precioUnitarioIva ?? "0";
       } else if (preciosVolumen.length > 0) {
-        // Si no hay precio por categoría, verificar volumen
+        // Si no hay precio por categoría ni manual, verificar volumen
         const precioVolumen = preciosVolumen.find((x: any) => {
           const min = Number(x.numeroUnidadesInicial) || 0;
           const max = Number(x.numeroUnidadesLimite) || Infinity;
@@ -1185,42 +1224,7 @@ export class PaymentService extends BaseService {
         });
         if (precioVolumen) {
           precioUnitarioSinIva = Number(precioVolumen.valorUnitarioPorVolumenSinIVA) || 0;
-        }
-      }
-
-      // Precio unitario con IVA
-      let precioUnitarioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
-      if (usaPrecioCategoria) {
-        // Si hay precio por categoría, usarlo directamente
-        precioUnitarioConIva = Number(precioCategoria.precioConIva) || 0;
-      } else if (preciosVolumen.length > 0) {
-        // Si no hay precio por categoría, verificar volumen
-        const precioVolumen = preciosVolumen.find((x: any) => {
-          const min = Number(x.numeroUnidadesInicial) || 0;
-          const max = Number(x.numeroUnidadesLimite) || Infinity;
-          return cantidad >= min && cantidad <= max;
-        });
-        if (precioVolumen) {
           precioUnitarioConIva = Number(precioVolumen.valorUnitarioPorVolumenConIVA) || 0;
-        }
-      }
-
-      // IVA unitario
-      let valorIva = Number(producto?.precio?.valorIva) || 0;
-      let porcentajeIva = producto?.precio?.precioUnitarioIva ?? "0";
-
-      if (usaPrecioCategoria) {
-        // Si hay precio por categoría, usar su IVA
-        valorIva = Number(precioCategoria.valorIva) || 0;
-        porcentajeIva = precioCategoria.porcentajeIva?.toString() ?? producto?.precio?.precioUnitarioIva ?? "0";
-      } else if (preciosVolumen.length > 0) {
-        // Si no hay precio por categoría, verificar volumen
-        const precioVolumen = preciosVolumen.find((x: any) => {
-          const min = Number(x.numeroUnidadesInicial) || 0;
-          const max = Number(x.numeroUnidadesLimite) || Infinity;
-          return cantidad >= min && cantidad <= max;
-        });
-        if (precioVolumen) {
           valorIva = Number(precioVolumen.valorUnitarioPorVolumenIva) || 0;
         }
       }
