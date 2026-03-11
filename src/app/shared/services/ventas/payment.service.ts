@@ -341,6 +341,12 @@ export class PaymentService extends BaseService {
       let precioConIvaItem =
         Number(producto?.precio?.precioUnitarioConIva) || 0; // Precio unitario con IVA para cálculo base
 
+      // Variables de precio por categoría (declaradas fuera para acceso en debug log)
+      const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
+      const precioCategoria = categoriaClienteId
+        ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
+        : null;
+
       // 🔒 PRIORIDAD 0: Si tiene precio manual override, usarlo directamente
       if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
         precioConIvaItem = Number(itemCarrito._precioManualOverride) || 0;
@@ -349,13 +355,7 @@ export class PaymentService extends BaseService {
           : porcentajeIvaUnitario;
       }
       // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
-      else {
-        const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
-        const precioCategoria = categoriaClienteId
-          ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
-          : null;
-
-      if (precioCategoria) {
+      else if (precioCategoria) {
         // Si hay precio por categoría, usarlo y su porcentaje de IVA
         precioConIvaItem = Number(precioCategoria.precioConIva) || 0;
         porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
@@ -388,7 +388,6 @@ export class PaymentService extends BaseService {
       // Si no hay precios de volumen, usar precio base - ya está asignado
       // precioConIvaItem = (Number(producto?.precio?.precioUnitarioConIva) || 0);
       // }
-      } // Cierre del else de PRIORIDAD 0 (precio manual)
 
       // Calcular valor total con IVA del producto principal (antes de descuento)
       let valorTotalConIvaProducto = precioConIvaItem * cantidad;

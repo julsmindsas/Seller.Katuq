@@ -73,7 +73,9 @@ export interface POSCarrito {
     estadoProcesoProducto?: EstadoProceso;
     producto?: Producto,
     configuracion?: POSConfiguracion,
-    cantidad?: number
+    cantidad?: number,
+    _precioManualOverride?: number,
+    _ivaManualOverride?: number
 }
 
 
