@@ -44,7 +44,6 @@ import { CatalogModeComponent } from './components/catalog-mode/catalog-mode.com
 import { CartPanelComponent } from './components/cart-panel/cart-panel.component';
 import { CartFabComponent } from './components/cart-fab/cart-fab.component';
 import { CartBottomSheetComponent } from './components/cart-bottom-sheet/cart-bottom-sheet.component';
-import { CheckoutPanelComponent } from './components/checkout-panel/checkout-panel.component';
 import { PaymentDialogComponent } from './components/payment-dialog/payment-dialog.component';
 import { ShiftReportComponent } from './components/shift-report/shift-report.component';
 import { ZReportComponent } from './components/z-report/z-report.component';
@@ -84,7 +83,6 @@ import { ReturnDialogComponent } from './components/returns/return-dialog.compon
     CartPanelComponent,
     CartFabComponent,
     CartBottomSheetComponent,
-    CheckoutPanelComponent,
     PaymentDialogComponent,
     ShiftReportComponent,
     ZReportComponent,

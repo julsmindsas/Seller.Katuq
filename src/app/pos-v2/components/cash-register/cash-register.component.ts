@@ -221,8 +221,8 @@ export class CashRegisterComponent implements OnInit, OnDestroy {
       type: this.movementForm.value.type,
       amount: this.movementForm.value.amount,
       reason: this.movementForm.value.reason.trim(),
-      timestamp: new Date().toISOString(),
-      userId: '',
+      createdAt: new Date().toISOString(),
+      createdBy: '',
     };
 
     this.apiService.addCashMovement(register.id, movement)

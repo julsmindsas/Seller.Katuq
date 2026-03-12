@@ -12,8 +12,8 @@ export interface PosV2CashMovement {
   type: 'in' | 'out';
   amount: number;
   reason: string;
-  timestamp: string;
-  userId: string;
+  createdAt: string;
+  createdBy: string;
 }
 
 export interface PosV2ClosingReport {

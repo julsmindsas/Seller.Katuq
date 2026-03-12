@@ -568,4 +568,45 @@
     min-height: 80px;
     border-style: dashed;
   }
+
+  &--gateway {
+    border-color: #16a34a;
+
+    i {
+      color: #16a34a;
+    }
+
+    &:hover {
+      border-color: #16a34a;
+      background: #f0fdf4;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(22, 163, 74, 0.12);
+    }
+
+    &:active {
+      background: #dcfce7;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+.payment-selector__processing {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: tokens.$pos-space-sm;
+  padding: tokens.$pos-space-lg;
+  color: tokens.$pos-primary;
+  font-size: 15px;
+  font-weight: 500;
+
+  i {
+    font-size: 20px;
+  }
 }

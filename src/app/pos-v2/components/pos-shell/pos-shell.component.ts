@@ -6,7 +6,6 @@ import {
   OnInit,
   OnDestroy,
   ViewChild,
-  ElementRef,
 } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
@@ -18,8 +17,17 @@ import { MaestroService } from '../../../shared/services/maestros/maestro.servic
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { FacturaTirillaComponent } from '../../../components/pos/factura-tirilla/factura-tirilla.component';
 import { CrearClienteModalComponent } from '../../../components/ventas/clientes/crear-cliente-modal/crear-cliente-modal.component';
+import { ScannerModeComponent } from '../scanner-mode/scanner-mode.component';
 import { PosV2Terminal, PosV2CashRegister, PosV2PaymentInfo } from '../../models/pos-v2.models';
+import {
+  IntegrationsService,
+  Integration,
+  IntegrationCategory,
+} from '../../../components/integrations/integrations.service';
+import { environment } from '../../../../environments/environment';
 import Swal from 'sweetalert2';
+
+declare var WidgetCheckout: any;
 
 export type PosMode = 'scanner' | 'catalog';
 
@@ -31,7 +39,7 @@ export type PosMode = 'scanner' | 'catalog';
 })
 export class PosShellComponent implements OnInit, OnDestroy {
 
-  @ViewChild('scannerInput') scannerInput: ElementRef<HTMLInputElement>;
+  @ViewChild('scannerInput') scannerInput: ScannerModeComponent;
 
   isReady$: Observable<boolean>;
   currentTerminal$: Observable<PosV2Terminal | null>;
@@ -51,6 +59,10 @@ export class PosShellComponent implements OnInit, OnDestroy {
   isProcessingPayment = false;
   customPaymentMethods: any[] = [];
 
+  // Payment gateways
+  paymentIntegrations: Integration[] = [];
+  isProcessingGatewayPayment = false;
+
   // Customer
   selectedCustomer: any = null;
   customerSuggestions: any[] = [];
@@ -63,6 +75,7 @@ export class PosShellComponent implements OnInit, OnDestroy {
     private cartService: PosV2CartService,
     private apiService: PosV2ApiService,
     private maestroService: MaestroService,
+    private integrationsService: IntegrationsService,
     private modalService: NgbModal,
     private cdr: ChangeDetectorRef,
     private router: Router,
@@ -100,6 +113,7 @@ export class PosShellComponent implements OnInit, OnDestroy {
       });
 
     this.loadCustomPaymentMethods();
+    this.loadPaymentIntegrations();
   }
 
   private loadCustomPaymentMethods(): void {
@@ -115,6 +129,141 @@ export class PosShellComponent implements OnInit, OnDestroy {
         error: () => {
           this.customPaymentMethods = [];
         }
+      });
+  }
+
+  private loadPaymentIntegrations(): void {
+    this.integrationsService
+      .getIntegrationsByCategory(IntegrationCategory.PAYMENT)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (integrations) => {
+          this.paymentIntegrations = (integrations || []).filter(i => i.enabled);
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.paymentIntegrations = [];
+        },
+      });
+  }
+
+  selectGatewayPayment(integration: Integration): void {
+    if (this.isProcessingGatewayPayment) return;
+
+    this.cartTotal = this.cartService.getTotal();
+    if (this.cartTotal <= 0) return;
+
+    this.isProcessingGatewayPayment = true;
+    this.showPaymentSelector = false;
+    this.cdr.markForCheck();
+
+    const terminal = this.terminalService.getTerminalSnapshot();
+    const cashRegister = this.terminalService.getCashRegisterSnapshot();
+    const cartItems = this.cartService.getSnapshot();
+
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const asesor = {
+      name: user.name || '',
+      nombre: user.name || '',
+      email: user.email || '',
+      nit: user.nit || '',
+    };
+
+    const orderPayload = {
+      carrito: cartItems,
+      cliente: this.selectedCustomer || { documento: '0000000000', nombres_completos: 'Consumidor Final' },
+      terminalId: terminal?.id || terminal?.['_id'] || '',
+      cashRegisterId: cashRegister?.id || cashRegister?.['_id'] || '',
+      paymentMethod: integration.name || integration.provider || 'Pago online',
+      paymentDetails: {
+        method: 'gateway',
+        amount: this.cartTotal,
+        change: 0,
+        reference: '',
+      },
+      asesor,
+      useOnlinePayment: true,
+    };
+
+    this.apiService.createOrder(orderPayload as any)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res: any) => {
+          const order = res?.order || res;
+
+          if (!order?.pagoInformation?.integridad) {
+            this.isProcessingGatewayPayment = false;
+            this.cdr.markForCheck();
+            Swal.fire({
+              title: 'Error',
+              text: 'No se pudo preparar el pago online. La orden fue creada como pendiente.',
+              icon: 'warning',
+              confirmButtonColor: '#7c3aed',
+            }).then(() => this.openReceipt(order));
+            return;
+          }
+
+          const publicKey =
+            integration.config?.publicKey ||
+            integration.credentials?.publicKey ||
+            environment.wompi.public_key;
+
+          const customer = this.selectedCustomer || {};
+
+          try {
+            const checkout = new WidgetCheckout({
+              currency: 'COP',
+              amountInCents: Math.round(this.cartTotal * 100),
+              reference: order.nroPedido,
+              publicKey,
+              signature: { integrity: order.pagoInformation.integridad },
+              customerData: {
+                fullName: customer.nombres_completos || 'Consumidor Final',
+                email: customer.correo_electronico_comprador || '',
+                phoneNumber: customer.numero_celular_comprador || '',
+                phoneNumberPrefix: '57',
+              },
+            });
+
+            checkout.open((result: any) => {
+              this.isProcessingGatewayPayment = false;
+              this.cdr.markForCheck();
+
+              const txStatus = result?.transaction?.status;
+              if (txStatus === 'APPROVED') {
+                this.openReceipt(order);
+              } else {
+                Swal.fire({
+                  title: 'Pago no completado',
+                  text: `Estado: ${txStatus || 'Desconocido'}. La orden ${order.nroPedido} queda pendiente.`,
+                  icon: 'warning',
+                  confirmButtonColor: '#7c3aed',
+                }).then(() => this.newSale());
+              }
+            });
+          } catch (widgetErr) {
+            console.error('Error opening payment widget:', widgetErr);
+            this.isProcessingGatewayPayment = false;
+            this.cdr.markForCheck();
+            Swal.fire({
+              title: 'Error',
+              text: 'No se pudo abrir el widget de pago. Verifique su conexión.',
+              icon: 'error',
+              confirmButtonColor: '#7c3aed',
+            }).then(() => this.openReceipt(order));
+          }
+        },
+        error: (err) => {
+          console.error('Error creating POS order for gateway payment:', err);
+          this.isProcessingGatewayPayment = false;
+          this.cdr.markForCheck();
+          Swal.fire({
+            title: 'Error',
+            text: 'No se pudo crear la orden. Intente nuevamente.',
+            icon: 'error',
+            confirmButtonColor: '#7c3aed',
+          });
+        },
       });
   }
 
@@ -161,7 +310,7 @@ export class PosShellComponent implements OnInit, OnDestroy {
     this.activeMode = 'scanner';
     this.cdr.markForCheck();
     setTimeout(() => {
-      this.scannerInput?.nativeElement?.focus();
+      this.scannerInput?.focusInput();
     });
   }
 
@@ -332,9 +481,10 @@ export class PosShellComponent implements OnInit, OnDestroy {
       || methodLabels[paymentInfo.method]
       || paymentInfo.method;
 
-    // Obtener asesor (usuario logueado) igual que el POS viejo
+    // Obtener asesor (usuario logueado) igual que el POS viejo (UserLite: name, email, nit)
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const asesor = {
+      name: user.name || '',
       nombre: user.name || '',
       email: user.email || '',
       nit: user.nit || '',

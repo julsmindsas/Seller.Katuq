@@ -33,8 +33,9 @@ export class ZReportComponent implements OnInit {
 
   loadReport(): void {
     const register = this.terminalService.getCashRegisterSnapshot();
-    if (!register?.id) {
-      this.error = 'No hay caja abierta para generar el reporte Z';
+    const registerId = register?.id || this.terminalService.getLastClosedRegisterId();
+    if (!registerId) {
+      this.error = 'No hay caja para generar el reporte Z';
       this.loading = false;
       this.cdr.markForCheck();
       return;
@@ -42,7 +43,7 @@ export class ZReportComponent implements OnInit {
 
     this.loading = true;
     this.error = '';
-    this.apiService.getZReport(register.id).subscribe({
+    this.apiService.getZReport(registerId).subscribe({
       next: (report) => {
         this.report = report;
         this.loading = false;

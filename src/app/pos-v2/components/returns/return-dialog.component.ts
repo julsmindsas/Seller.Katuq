@@ -88,8 +88,8 @@ export class ReturnDialogComponent {
         this.searchLoading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
-        this.searchError = 'Error al buscar la orden';
+      error: (err) => {
+        this.searchError = err?.status === 404 ? 'Orden no encontrada' : 'Error al buscar la orden';
         this.searchLoading = false;
         this.cdr.markForCheck();
       }

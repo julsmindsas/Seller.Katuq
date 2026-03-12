@@ -112,8 +112,8 @@
 
   <!-- Cart Bottom Sheet (mobile only) -->
   <app-pos-v2-cart-bottom-sheet
-    *ngIf="showCartBottomSheet"
     class="pos-bottom-sheet-wrapper"
+    [isOpen]="showCartBottomSheet"
     (closed)="showCartBottomSheet = false"
     (openPayment)="openPayment()">
   </app-pos-v2-cart-bottom-sheet>
@@ -285,13 +285,41 @@
           </button>
         </div>
       </ng-container>
+
+      <!-- Pasarelas de pago online -->
+      <ng-container *ngIf="paymentIntegrations.length > 0">
+        <div class="payment-selector__divider">
+          <span>Pago online</span>
+        </div>
+        <div class="payment-selector__methods">
+          <button
+            *ngFor="let gw of paymentIntegrations"
+            type="button"
+            class="payment-method-btn payment-method-btn--gateway"
+            (click)="selectGatewayPayment(gw)"
+            [disabled]="isProcessingGatewayPayment">
+            <img
+              [src]="'assets/images/logos/' + (gw.provider || gw.type) + '.svg'"
+              [alt]="gw.name"
+              class="payment-method-btn__img"
+              (error)="$event.target.style.display='none'">
+            <i *ngIf="!(gw.provider || gw.type)" class="pi pi-globe"></i>
+            <span>{{ gw.name }}</span>
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- Processing overlay -->
+      <div *ngIf="isProcessingGatewayPayment" class="payment-selector__processing">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Procesando pago...</span>
+      </div>
     </div>
   </p-dialog>
 
   <!-- Payment Dialog (cash/card/ewallet/transfer details) -->
   <app-pos-v2-payment-dialog
-    *ngIf="showPaymentDialog"
-    [visible]="true"
+    [visible]="showPaymentDialog"
     [paymentMethod]="selectedPaymentMethod"
     [total]="cartTotal"
     (confirmed)="onPaymentConfirmed($event)"

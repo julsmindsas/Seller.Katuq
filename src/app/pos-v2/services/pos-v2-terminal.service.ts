@@ -8,6 +8,7 @@ export class PosV2TerminalService {
 
   private readonly TERMINAL_KEY = 'posV2Terminal';
   private readonly REGISTER_KEY = 'posV2CashRegister';
+  private readonly LAST_REGISTER_KEY = 'posV2LastClosedRegister';
 
   private terminalSubject = new BehaviorSubject<PosV2Terminal | null>(null);
   currentTerminal$ = this.terminalSubject.asObservable();
@@ -59,8 +60,16 @@ export class PosV2TerminalService {
   }
 
   clearCashRegister(): void {
+    const current = this.registerSubject.value;
+    if (current?.id) {
+      localStorage.setItem(this.LAST_REGISTER_KEY, current.id);
+    }
     this.registerSubject.next(null);
     localStorage.removeItem(this.REGISTER_KEY);
+  }
+
+  getLastClosedRegisterId(): string | null {
+    return localStorage.getItem(this.LAST_REGISTER_KEY);
   }
 
   getTerminalSnapshot(): PosV2Terminal | null {

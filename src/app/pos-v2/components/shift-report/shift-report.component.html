@@ -116,7 +116,7 @@
             </td>
             <td>{{ movement.reason }}</td>
             <td class="text-right">${{ movement.amount | number:'1.0-0' }}</td>
-            <td>{{ movement.timestamp | date:'shortTime' }}</td>
+            <td>{{ movement.createdAt | date:'shortTime' }}</td>
           </tr>
         </tbody>
       </table>
