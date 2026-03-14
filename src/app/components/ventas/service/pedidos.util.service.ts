@@ -543,6 +543,15 @@ export class PedidosUtilService {
             return 0;
         }
 
+        // PRIORIDAD 0: Si tiene precio manual override, calcular sin IVA a partir del precio con IVA manual
+        if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+            const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
+            const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
+                ? Number(itemCarrito._ivaManualOverride)
+                : Number(producto?.precio?.precioUnitarioIva) || 0;
+            return precioManualConIva / (1 + porcentajeIva / 100);
+        }
+
         // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
         if (producto._precioAplicadoPorCategoria) {
             return Number(producto.precio.precioUnitarioSinIva) || 0;
@@ -586,6 +595,11 @@ export class PedidosUtilService {
 
         if (!producto?.precio) {
             return 0;
+        }
+
+        // PRIORIDAD 0: Si tiene precio manual override, usarlo directamente
+        if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+            return Number(itemCarrito._precioManualOverride) || 0;
         }
 
         // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen

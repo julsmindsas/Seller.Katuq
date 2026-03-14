@@ -2515,6 +2515,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return 0;
     }
 
+    // PRIORIDAD 0: Si tiene precio manual override, calcular sin IVA a partir del precio con IVA manual
+    if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+      const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
+      const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
+        ? Number(itemCarrito._ivaManualOverride)
+        : Number(producto?.precio?.precioUnitarioIva) || 0;
+      return precioManualConIva / (1 + porcentajeIva / 100);
+    }
+
     const preciosVolumen = producto.precio.preciosVolumen || [];
 
     // Si no hay precios por volumen, usar precio base
@@ -2629,19 +2638,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       let precioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
       let porcentajeIvaStr = (producto?.precio?.precioUnitarioIva ?? "0").toString();
 
+      // PRIORIDAD 0: Si tiene precio manual override, usarlo directamente
+      const tienePrecioManual = itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null;
+      if (tienePrecioManual) {
+        precioConIva = Number(itemCarrito._precioManualOverride) || 0;
+        porcentajeIvaStr = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
+          ? itemCarrito._ivaManualOverride.toString()
+          : porcentajeIvaStr;
+      }
+
       // PRIORIDAD 1: Verificar si hay precio por categoría de cliente
       const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
-      const precioCategoria = categoriaClienteId
+      const precioCategoria = (!tienePrecioManual && categoriaClienteId)
         ? preciosPorTipoCliente.find((p: any) =>
             p.tipoClienteId === categoriaClienteId && p.activo === true)
         : null;
 
-      if (precioCategoria) {
+      if (!tienePrecioManual && precioCategoria) {
         // Si hay precio por categoría, usarlo y su porcentaje de IVA
         precioConIva = Number(precioCategoria.precioConIva) || 0;
         porcentajeIvaStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaStr;
         // No aplicar precios por volumen cuando hay precio por categoría
-      } else if (preciosVolumen.length > 0) {
+      } else if (!tienePrecioManual && preciosVolumen.length > 0) {
         // PRIORIDAD 2: Buscar precio por volumen si aplica
         // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
         const rangosValidos = preciosVolumen.filter((x: any) => {

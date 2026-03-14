@@ -540,6 +540,9 @@ export class CrearVentasComponent
             crearProducto: item.producto?.crearProducto,
             precio: item.producto?.precio,
             disponibilidad: item.producto?.disponibilidad,
+            // Preservar precios custom por pedido (no modifica el producto original)
+            _precioManualOverride: item._precioManualOverride,
+            _ivaManualOverride: item._ivaManualOverride,
           }));
 
           // Forzar detección de cambios para actualizar la UI y notificar al componente de notas
