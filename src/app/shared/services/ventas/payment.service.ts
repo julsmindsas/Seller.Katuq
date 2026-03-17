@@ -209,8 +209,9 @@ export class PaymentService extends BaseService {
       const precioUnitarioSinIva =
         Number(producto?.precio?.precioUnitarioSinIva) || 0;
 
-      // 🔒 PRIORIDAD 0: Si tiene precio manual override, calcular sin IVA a partir del precio con IVA manual
-      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+      // 🔒 PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+          && producto?.procesoComercial?.permitePrecioManual === true) {
         const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
         const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
           ? Number(itemCarrito._ivaManualOverride)
@@ -347,8 +348,9 @@ export class PaymentService extends BaseService {
         ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
         : null;
 
-      // 🔒 PRIORIDAD 0: Si tiene precio manual override, usarlo directamente
-      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+      // 🔒 PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+          && producto?.procesoComercial?.permitePrecioManual === true) {
         precioConIvaItem = Number(itemCarrito._precioManualOverride) || 0;
         porcentajeIvaItemStr = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
           ? itemCarrito._ivaManualOverride.toString()
@@ -1178,8 +1180,9 @@ export class PaymentService extends BaseService {
       // 🔄 NUEVO: Calcular precios considerando precio manual, escalas de volumen y precios por tipo de cliente
       const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
 
-      // 🔒 PRIORIDAD 0: Verificar si hay precio manual override
-      const tienePrecioManual = item._precioManualOverride !== undefined && item._precioManualOverride !== null;
+      // 🔒 PRIORIDAD 0: Verificar si hay precio manual override Y el producto lo permite
+      const tienePrecioManual = item._precioManualOverride !== undefined && item._precioManualOverride !== null
+        && producto?.procesoComercial?.permitePrecioManual === true;
 
       // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
       const categoriaClienteId = pedido.cliente?.categoria?.id;

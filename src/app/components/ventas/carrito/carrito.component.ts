@@ -249,8 +249,9 @@ export class CarritoComponent implements OnInit {
 
   checkPriceScale(itemCarrito: any): number {
     if (!itemCarrito?.producto?.precio) return 0;
-    // Si tiene precio manual override, usarlo
-    if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+    // Si tiene precio manual override Y el producto permite precio manual, usarlo
+    if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+        && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true) {
       return Number(itemCarrito._precioManualOverride) || 0;
     }
     return this.getProductPriceWithScale(itemCarrito);

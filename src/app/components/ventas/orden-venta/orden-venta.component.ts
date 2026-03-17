@@ -117,6 +117,11 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
    */
   calcularTotalProducto(item: any): number {
     const cantidad = item.cantidad || 0;
+    // Respetar precio manual si el producto lo permite y tiene override definido
+    if (item._precioManualOverride !== undefined && item._precioManualOverride !== null
+        && item.producto?.procesoComercial?.permitePrecioManual === true) {
+      return cantidad * (Number(item._precioManualOverride) || 0);
+    }
     const precioUnitario =
       item.producto?.precio?.precioUnitarioConIva ||
       item.producto?.precio?.precioConIva ||

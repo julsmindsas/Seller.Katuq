@@ -543,8 +543,9 @@ export class PedidosUtilService {
             return 0;
         }
 
-        // PRIORIDAD 0: Si tiene precio manual override, calcular sin IVA a partir del precio con IVA manual
-        if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+        // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+        if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+            && producto?.procesoComercial?.permitePrecioManual === true) {
             const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
             const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
                 ? Number(itemCarrito._ivaManualOverride)
@@ -597,8 +598,9 @@ export class PedidosUtilService {
             return 0;
         }
 
-        // PRIORIDAD 0: Si tiene precio manual override, usarlo directamente
-        if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+        // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+        if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+            && producto?.procesoComercial?.permitePrecioManual === true) {
             return Number(itemCarrito._precioManualOverride) || 0;
         }
 

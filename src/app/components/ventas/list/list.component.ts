@@ -2505,6 +2505,17 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Verifica si un pedido tiene algún ítem con precio manual activo.
+   * Cuando es true, los totales deben recalcularse en frontend aunque el backend ya los haya calculado.
+   */
+  private tienePreciosManualActivos(order: any): boolean {
+    return (order?.carrito || []).some((item: any) =>
+      item._precioManualOverride !== undefined && item._precioManualOverride !== null
+      && item.producto?.procesoComercial?.permitePrecioManual === true
+    );
+  }
+
+  /**
    * Calcula el precio unitario sin IVA considerando escalas de volumen
    */
   private calcularPrecioUnitarioSinIVA(itemCarrito: any): number {
@@ -2515,8 +2526,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return 0;
     }
 
-    // PRIORIDAD 0: Si tiene precio manual override, calcular sin IVA a partir del precio con IVA manual
-    if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+    // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+    if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+        && producto?.procesoComercial?.permitePrecioManual === true) {
       const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
       const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
         ? Number(itemCarrito._ivaManualOverride)
@@ -2638,8 +2650,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       let precioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
       let porcentajeIvaStr = (producto?.precio?.precioUnitarioIva ?? "0").toString();
 
-      // PRIORIDAD 0: Si tiene precio manual override, usarlo directamente
-      const tienePrecioManual = itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null;
+      // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+      const tienePrecioManual = itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+        && producto?.procesoComercial?.permitePrecioManual === true;
       if (tienePrecioManual) {
         precioConIva = Number(itemCarrito._precioManualOverride) || 0;
         porcentajeIvaStr = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
@@ -3279,8 +3292,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         allOrders.forEach((order: any) => {
           // Verificar si el backend ya calculó los totales (optimización de rendimiento)
-          if (!order._calculadoEnBackend) {
-            // Recalcular montos base con consistencia (solo si backend no lo hizo)
+          // Excepción: si hay precios manuales activos, siempre recalcular en frontend
+          if (!order._calculadoEnBackend || this.tienePreciosManualActivos(order)) {
+            // Recalcular montos base con consistencia (solo si backend no lo hizo, o hay precios manuales)
             // Consistente con PaymentService
             const subtotalProductos = Number(this.checkPriceScale(order) || 0);
             const envio = Number(order.totalEnvio || 0);
@@ -3365,8 +3379,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           }
 
           // 🚚 RECALCULAR ENVÍO Y TOTALIZAR solo si el backend NO lo calculó
-          // Si _calculadoEnBackend === true, confiamos en los valores del backend (fórmula correcta)
-          if (!order._calculadoEnBackend) {
+          // Excepción: si hay precios manuales activos, forzar recálculo en frontend
+          if (!order._calculadoEnBackend || this.tienePreciosManualActivos(order)) {
             this.recalcularEnvioYTotalizarPedido(order);
           }
 
@@ -3663,8 +3677,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           allOrders.forEach((order: any) => {
             // Verificar si el backend ya calculó los totales (optimización de rendimiento)
-            if (!order._calculadoEnBackend) {
-              // Recalcular montos base con consistencia (solo si backend no lo hizo)
+            // Excepción: si hay precios manuales activos, siempre recalcular en frontend
+            if (!order._calculadoEnBackend || this.tienePreciosManualActivos(order)) {
+              // Recalcular montos base con consistencia (solo si backend no lo hizo, o hay precios manuales)
               // Consistente con PaymentService y recalcularEnvioYTotalizarPedido
               const subtotalProductos = Number(this.checkPriceScale(order) || 0);
               const envio = Number(order.totalEnvio || 0);
@@ -5115,11 +5130,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private recalcularEnvioYTotalizarPedido(order: Pedido): void {
     if (!order) return;
 
-    // Guard: Si el backend ya calculó los totales, no recalcular
-    // El backend usa calculateOrderTotals() que tiene la fórmula correcta:
-    // subtotal = productos - descuento + envío
-    // total = subtotal + IVA
-    if (order._calculadoEnBackend) {
+    // Guard: Si el backend ya calculó los totales, no recalcular...
+    // EXCEPCIÓN: si hay precios manuales activos, siempre recalcular en frontend
+    if (order._calculadoEnBackend && !this.tienePreciosManualActivos(order)) {
       console.log(`⚠️ RECÁLCULO OMITIDO - Backend ya calculó totales para pedido: ${order.nroPedido}`);
       return;
     }

@@ -459,8 +459,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
     const productoPrecio = item?.producto?.precio;
     if (!productoPrecio) return 0;
 
-    // Si tiene precio manual override, calcular el equivalente sin IVA
-    if (item._precioManualOverride !== undefined && item._precioManualOverride !== null) {
+    // Si tiene precio manual override Y el producto permite precio manual
+    if (item._precioManualOverride !== undefined && item._precioManualOverride !== null
+        && item.producto?.procesoComercial?.permitePrecioManual === true) {
       const precioConIva = Number(item._precioManualOverride) || 0;
       const porcentajeIva = (item._ivaManualOverride !== undefined && item._ivaManualOverride !== null)
         ? Number(item._ivaManualOverride)
@@ -589,8 +590,9 @@ export class CheckOutComponent implements OnInit, OnChanges {
       const productoPrecio = itemCarrito?.producto?.precio;
       const porceDescuento = (this.pedido?.porceDescuento ?? 0) / 100;
 
-      // PRIORIDAD 0: Si tiene precio manual override, calcular IVA basado en el precio manual
-      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+      // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+          && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true) {
         const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
         const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
           ? Number(itemCarrito._ivaManualOverride)
@@ -625,7 +627,8 @@ export class CheckOutComponent implements OnInit, OnChanges {
         productoValorIva: productoPrecio?.valorIva
       });
 
-      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null) {
+      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+          && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true) {
         // Ya procesado arriba - saltar lógica normal de precio
       } else if (precioCategoria) {
         // Si hay precio por categoría, usar su IVA
