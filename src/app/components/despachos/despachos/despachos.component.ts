@@ -3034,6 +3034,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
       });
     }
 
+    // Función helper para capitalizar cada palabra
+    const toTitleCaseSwal = (texto: string): string => {
+      if (!texto) return '';
+      return texto.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+    };
+
     // Función helper para escapar HTML y caracteres especiales
     const escapeHtml = (text) => {
       if (!text) return '';
@@ -3069,11 +3075,11 @@ export class DespachosComponent implements OnInit, OnDestroy {
               </div>
               <div style="margin-bottom: 8px;">
                 <strong style="color: #2c3e50;">De:</strong> 
-                <span style="color: #34495e;">${escapeHtml(tarjeta.tarjeta.de) || 'No especificado'}</span>
+                <span style="color: #34495e;">${escapeHtml(toTitleCaseSwal(tarjeta.tarjeta.de)) || 'No especificado'}</span>
               </div>
               <div style="margin-bottom: 8px;">
-                <strong style="color: #2c3e50;">Para:</strong> 
-                <span style="color: #34495e;">${escapeHtml(tarjeta.tarjeta.para) || 'No especificado'}</span>
+                <strong style="color: #2c3e50;">Para:</strong>
+                <span style="color: #34495e;">${escapeHtml(toTitleCaseSwal(tarjeta.tarjeta.para)) || 'No especificado'}</span>
               </div>
               <div style="margin-bottom: 15px;">
                 <strong style="color: #2c3e50;">Mensaje:</strong>
@@ -3136,6 +3142,12 @@ export class DespachosComponent implements OnInit, OnDestroy {
     // Starting y position — texto en la parte inferior
     let yPos = 14;
 
+    // Función helper para capitalizar cada palabra (Title Case)
+    const toTitleCase = (texto: string): string => {
+      if (!texto) return '';
+      return texto.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
+    };
+
     // Función helper para limpiar y normalizar texto preservando ñ y tildes
     const limpiarTexto = (texto) => {
       if (!texto) return '';
@@ -3196,7 +3208,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       doc.text("Para:", (pageWidth - paraLabelWidth) / 2, yPos);
       yPos += 0.6; // Espacio fijo entre label y texto
 
-      const paraTexto = limpiarTexto(tarjeta.para);
+      const paraTexto = toTitleCase(limpiarTexto(tarjeta.para));
       const paraTextWidth = doc.getTextWidth(paraTexto);
       doc.text(paraTexto, (pageWidth - paraTextWidth) / 2, yPos);
       yPos += 1.5; // Espacio fijo después del texto "Para"
@@ -3221,7 +3233,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
       doc.text("De:", (pageWidth - deLabelWidth) / 2, yPos);
       yPos += 0.6; // Espacio fijo entre label y texto
 
-      const deTexto = limpiarTexto(tarjeta.de);
+      const deTexto = toTitleCase(limpiarTexto(tarjeta.de));
       const deTextWidth = doc.getTextWidth(deTexto);
       doc.text(deTexto, (pageWidth - deTextWidth) / 2, yPos);
     }

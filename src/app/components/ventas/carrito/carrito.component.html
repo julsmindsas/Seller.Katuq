@@ -1,239 +1,189 @@
-<div class="row">
-  <div class="order-history table-responsive">
-    <table class="table table-hover">
-                <tbody>
-                  <tr *ngIf="productos.length === 0" class="text-center empty-cart">
-                    <td colspan="6" class="py-5">
-                      <i class="pi pi-shopping-cart" style="font-size: 3rem"></i>
-                      <h5 class="text-muted mb-3" translate="No hay productos en el carrito">Tu carrito está vacío</h5>
-                      <p class="text-muted mb-0">Agrega productos para comenzar tu compra</p>
-                    </td>
-                  </tr>
-                  <ng-container *ngFor="let itemCarrito of productos">
-                    <tr class="product-header">
-                      <th class="text-center" translate="Producto"></th>
-                      <th class="text-center" translate="Detalles"></th>
-                      <th class="text-center" translate="Precio"></th>
-                      <th class="text-center" translate="Cantidad"></th>
-                      <th class="text-center" translate="Accion"></th>
-                      <th class="text-center" translate="Subtotal"></th>
-                    </tr>
-                    <tr class="product-row">
-                      <td class="align-middle">
-                        <div class="product-image-container">
-                          <img class="img-fluid rounded"
-                            *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
-                            [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
-                            [alt]="itemCarrito?.producto?.crearProducto?.titulo" 
-                            appImageOptimizer 
-                            [quality]="0.3"
-                            [width]="80" 
-                            [height]="80" 
-                            [lazy]="true" 
-                            loading="lazy" 
-                            priority>
-                          <div class="no-image-placeholder" *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length == 0">
-                            <i class="pi pi-box" style="font-size: 2rem"></i>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle">
-                        <div class="product-details">
-                          <h6 class="product-name mb-1">{{ itemCarrito?.producto?.crearProducto?.titulo }}</h6>
-                          <small class="text-muted">SKU: {{itemCarrito?.producto?.identificacion?.referencia || 'N/A'}}</small>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center">
-                        <ng-container *ngIf="permitePrecioManual(itemCarrito); else precioSoloLectura">
-                          <input class="form-control form-control-sm text-center"
-                                 type="number"
-                                 [ngModel]="itemCarrito._precioManualTemp !== undefined ? itemCarrito._precioManualTemp : (itemCarrito._precioManualOverride !== undefined ? itemCarrito._precioManualOverride : checkPriceScale(itemCarrito))"
-                                 (ngModelChange)="onPrecioManualInput(itemCarrito, $event)"
-                                 (blur)="onPrecioManualConfirm(itemCarrito)"
-                                 (keyup.enter)="onPrecioManualConfirm(itemCarrito)"
-                                 [min]="0"
-                                 step="100"
-                                 style="max-width: 120px; display: inline-block;">
-                          <select class="form-select form-select-sm mt-1"
-                                  [ngModel]="getIvaActual(itemCarrito)"
-                                  (ngModelChange)="onIvaManualChange(itemCarrito, $event)"
-                                  style="max-width: 120px; display: inline-block;">
-                            <option [ngValue]="0">IVA 0%</option>
-                            <option [ngValue]="5">IVA 5%</option>
-                            <option [ngValue]="8">IVA 8%</option>
-                            <option [ngValue]="19">IVA 19%</option>
-                          </select>
-                          <small class="d-block text-muted mt-1">
-                            Sin IVA: {{getPrecioSinIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}
-                            | IVA: {{getValorIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}
-                          </small>
-                          <small class="d-block text-muted" *ngIf="itemCarrito._precioManualOverride !== undefined || itemCarrito._ivaManualOverride !== undefined">
-                            Original: {{getProductPriceWithScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}} (IVA {{itemCarrito?.producto?.precio?.precioUnitarioIva || 0}}%)
-                          </small>
-                        </ng-container>
-                        <ng-template #precioSoloLectura>
-                          <span class="price-value">{{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</span>
-                        </ng-template>
-                      </td>
-                      <td class="align-middle">
-                        <div class="qty-box">
-                          <div class="input-group">
-                            <button class="btn btn-outline-secondary" 
-                                    type="button" 
-                                    (click)="menosCantidad(itemCarrito)"
-                                    [disabled]="itemCarrito.cantidad <= itemCarrito?.producto?.disponibilidad?.cantidadMinVenta">
-                              <i class="pi pi-minus"></i>
-                            </button>
-                            <input class="form-control text-center" 
-                                   type="number" 
-                                   [(ngModel)]="itemCarrito.cantidad"
-                                   (ngModelChange)="onCantidadInputChange(itemCarrito, $event)"
-                                   (blur)="onCantidadChange(itemCarrito)"
-                                   (keyup.enter)="onCantidadChange(itemCarrito)"
-                                   [min]="itemCarrito?.producto?.disponibilidad?.cantidadMinVenta || 1"
-                                   step="1">
-                            <button class="btn btn-outline-secondary" 
-                                    type="button" 
-                                    (click)="masCantidad(itemCarrito)">
-                              <i class="pi pi-plus"></i>
-                            </button>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center">
-                        <div class="btn-group">
-                          <button class="btn btn-outline-danger btn-sm" 
-                                  (click)="removeThisProduct(itemCarrito)"
-                                  title="Eliminar del carrito">
-                            <i class="pi pi-trash"></i>
-                          </button>
-                          <button class="btn btn-outline-primary btn-sm"
-                                  (click)="agregarNotaProduccion(itemCarrito)"
-                                  title="Agregar nota de producción">
-                            <i class="pi pi-pencil"></i>
-                          </button>
-                          <button class="btn btn-outline-info btn-sm"
-                                  (click)="mostrarNotasExistentes(itemCarrito)"
-                                  [disabled]="contarNotasDelProducto(itemCarrito) === 0"
-                                  title="Ver notas de producción">
-                            <i class="pi pi-list"></i>
-                            <span *ngIf="contarNotasDelProducto(itemCarrito) > 0" 
-                                  class="badge bg-danger rounded-pill ms-1">
-                              {{contarNotasDelProducto(itemCarrito)}}
-                            </span>
-                          </button>
-                        </div>
-                      </td>
-                      <td class="align-middle text-center">
-                        <span class="total-value">
-                          {{ checkPriceScale(itemCarrito) * (itemCarrito?.cantidad) | currency:'USD':'symbol':'1.0-0' }}
-                        </span>
-                      </td>
-                    </tr>
+<div class="cart-wrap">
 
-                    <ng-container *ngIf="itemCarrito.configuracion.adiciones.length > 0">
-                      <tr *ngIf="checkAditionPrice(itemCarrito)" class="addition-header">
-                        <td colspan="6" class="bg-light">
-                          <div class="d-flex align-items-center">
-                            <i class="pi pi-plus-circle me-2 text-primary"></i>
-                            <span class="fw-bold" translate="Adiciones"></span>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr *ngFor="let item of itemCarrito?.configuracion?.adiciones" class="addition-row">
-                        <td></td>
-                        <td>{{item.titulo}}</td>
-                        <td class="text-center">{{item.referencia.precioTotal | currency:'USD':'symbol':'1.0-0'}}</td>
-                        <td class="text-center">{{item.cantidad * itemCarrito?.cantidad}}</td>
-                        <td></td>
-                        <td class="text-center">{{item.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0'}}</td>
-                      </tr>
-                    </ng-container>
+  <!-- Carrito vacío -->
+  <div *ngIf="productos.length === 0" class="cart-empty">
+    <i class="pi pi-shopping-cart"></i>
+    <p>Tu carrito está vacío</p>
+    <small>Agrega productos para comenzar</small>
+  </div>
 
-                    <ng-container *ngIf="itemCarrito.configuracion.preferencias.length > 0">
-                      <tr *ngIf="checkPreferencePrice(itemCarrito)" class="preference-header">
-                        <td colspan="6" class="bg-light">
-                          <div class="d-flex align-items-center">
-                            <i class="pi pi-star me-2 text-warning"></i>
-                            <span class="fw-bold" translate="Preferencias"></span>
-                          </div>
-                        </td>
-                      </tr>
-                      <tr *ngFor="let itempref of itemCarrito?.configuracion?.preferencias" class="preference-row">
-                        <ng-container *ngIf="itempref.precioTotalConIva !== 0">
-                          <td></td>
-                          <td>{{itempref.titulo}}</td>
-                          <td class="text-center">{{itempref.precioTotalConIva | currency:'USD':'symbol':'1.0-0'}}</td>
-                          <td class="text-center">{{itempref.cantidad * itemCarrito?.cantidad}}</td>
-                          <td></td>
-                          <td class="text-center">{{itempref.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0'}}</td>
-                        </ng-container>
-                      </tr>
-                    </ng-container>
-                  </ng-container>
+  <!-- Tabla de productos -->
+  <div *ngIf="productos.length > 0" class="cart-table-wrap">
+    <table class="cart-table">
+      <thead>
+        <tr>
+          <th>Producto</th>
+          <th class="col-price">Precio</th>
+          <th class="col-qty text-center">Cant.</th>
+          <th class="col-subtotal text-center">Subtotal</th>
+          <th class="col-actions"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <ng-container *ngFor="let itemCarrito of productos">
 
-                  <tr class="summary-row">
-                    <td colspan="6">
-                      <div class="coupon-section">
-                        <div class="input-group">
-                          <span class="input-group-text">
-                            <i class="pi pi-ticket"></i>
-                          </span>
-                          <input class="form-control" 
-                                 [(ngModel)]="cupon" 
-                                 type="text"
-                                 placeholder="{{ 'Ingresa tu código de cupón' | translate }}"
-                                 [class.is-invalid]="!cupon">
-                          <button class="btn btn-primary" 
-                                  (click)="validarCuponYAplica()"
-                                  [disabled]="!cupon">
-                            <i class="pi pi-check me-2"></i>
-                            <span translate="Aplicar"></span>
-                          </button>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
+          <!-- Fila principal del producto -->
+          <tr class="cart-row">
+            <!-- Imagen + nombre -->
+            <td>
+              <div class="item-info">
+                <div class="item-thumb">
+                  <img *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length > 0"
+                    [src]="itemCarrito?.producto?.crearProducto?.imagenesPrincipales[0]?.urls"
+                    [alt]="itemCarrito?.producto?.crearProducto?.titulo"
+                    appImageOptimizer [quality]="0.3" [width]="44" [height]="44" [lazy]="true" loading="lazy">
+                  <div class="item-thumb-empty" *ngIf="itemCarrito?.producto?.crearProducto?.imagenesPrincipales?.length == 0">
+                    <i class="pi pi-box"></i>
+                  </div>
+                </div>
+                <div class="item-meta">
+                  <span class="item-name">{{ itemCarrito?.producto?.crearProducto?.titulo }}</span>
+                  <span class="item-sku">{{ itemCarrito?.producto?.identificacion?.referencia || 'N/A' }}</span>
+                </div>
+              </div>
+            </td>
 
-                  <tr class="total-row">
-                    <td colspan="4"></td>
-                    <td class="text-end">
-                      <span class="fw-bold" translate="Subtotal"></span>
-                    </td>
-                    <td class="text-center">
-                      <span class="fw-bold">{{getTotalProductPriceInCart() | currency:'USD':'symbol':'1.0-0'}}</span>
-                    </td>
-                  </tr>
+            <!-- Precio -->
+            <td class="col-price">
+              <ng-container *ngIf="permitePrecioManual(itemCarrito); else precioSoloLectura">
+                <div class="price-editable">
+                  <input class="price-input" type="number"
+                         [ngModel]="itemCarrito._precioManualTemp !== undefined ? itemCarrito._precioManualTemp : (itemCarrito._precioManualOverride !== undefined ? itemCarrito._precioManualOverride : checkPriceScale(itemCarrito))"
+                         (ngModelChange)="onPrecioManualInput(itemCarrito, $event)"
+                         (blur)="onPrecioManualConfirm(itemCarrito)"
+                         (keyup.enter)="onPrecioManualConfirm(itemCarrito)"
+                         [min]="0" step="100">
+                  <select class="iva-select"
+                          [ngModel]="getIvaActual(itemCarrito)"
+                          (ngModelChange)="onIvaManualChange(itemCarrito, $event)">
+                    <option [ngValue]="0">0%</option>
+                    <option [ngValue]="5">5%</option>
+                    <option [ngValue]="8">8%</option>
+                    <option [ngValue]="19">19%</option>
+                  </select>
+                  <div class="price-breakdown">
+                    {{getPrecioSinIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}
+                    + {{getValorIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}} IVA
+                  </div>
+                  <div class="price-original" *ngIf="itemCarrito._precioManualOverride !== undefined || itemCarrito._ivaManualOverride !== undefined">
+                    <s>{{getProductPriceWithScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</s>
+                    <span>(IVA {{itemCarrito?.producto?.precio?.precioUnitarioIva || 0}}%)</span>
+                  </div>
+                </div>
+              </ng-container>
+              <ng-template #precioSoloLectura>
+                <span class="price-value">{{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</span>
+              </ng-template>
+            </td>
 
-                  <tr class="discount-row">
-                    <td colspan="4"></td>
-                    <td class="text-end">
-                      <span class="fw-bold text-success" translate="Descuento"></span>
-                    </td>
-                    <td class="text-center">
-                      <span class="text-success">{{ valorDescuento | currency:'USD':'symbol':'1.0-0'}}</span>
-                    </td>
-                  </tr>
+            <!-- Cantidad -->
+            <td class="col-qty">
+              <div class="qty-spinner">
+                <button type="button" (click)="menosCantidad(itemCarrito)"
+                        [disabled]="itemCarrito.cantidad <= itemCarrito?.producto?.disponibilidad?.cantidadMinVenta">
+                  <i class="pi pi-minus"></i>
+                </button>
+                <input type="number"
+                       [(ngModel)]="itemCarrito.cantidad"
+                       (ngModelChange)="onCantidadInputChange(itemCarrito, $event)"
+                       (blur)="onCantidadChange(itemCarrito)"
+                       (keyup.enter)="onCantidadChange(itemCarrito)"
+                       [min]="itemCarrito?.producto?.disponibilidad?.cantidadMinVenta || 1">
+                <button type="button" (click)="masCantidad(itemCarrito)">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </td>
 
-                  <tr class="final-total-row">
-                    <td colspan="4"></td>
-                    <td class="text-end">
-                      <span class="fw-bold" translate="Total"></span>
-                    </td>
-                    <td class="text-center">
-                      <span class="fw-bold text-primary total-amount">{{ getTotalProductPriceWithDescountInCart() | currency:'USD':'symbol':'1.0-0'}}</span>
-                    </td>
-                  </tr>
+            <!-- Subtotal -->
+            <td class="col-subtotal text-center">
+              <span class="subtotal-value">
+                {{ checkPriceScale(itemCarrito) * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0' }}
+              </span>
+            </td>
 
-                  <tr class="tax-info-row">
-                    <td colspan="6" class="text-end">
-                      <small class="text-muted">
-                        <i class="pi pi-info-circle me-1"></i>
-                        <span >Este valor incluye impuestos, no incluye valor del envío.</span>
-                      </small>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+            <!-- Acciones -->
+            <td class="col-actions">
+              <div class="item-actions">
+                <button class="act-btn act-danger" (click)="removeThisProduct(itemCarrito)" title="Eliminar">
+                  <i class="pi pi-trash"></i>
+                </button>
+                <button class="act-btn" (click)="agregarNotaProduccion(itemCarrito)" title="Agregar nota">
+                  <i class="pi pi-pencil"></i>
+                </button>
+                <button class="act-btn" (click)="mostrarNotasExistentes(itemCarrito)"
+                        [disabled]="contarNotasDelProducto(itemCarrito) === 0" title="Ver notas">
+                  <i class="pi pi-list"></i>
+                  <span *ngIf="contarNotasDelProducto(itemCarrito) > 0" class="act-badge">
+                    {{contarNotasDelProducto(itemCarrito)}}
+                  </span>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Adiciones -->
+          <ng-container *ngIf="itemCarrito.configuracion.adiciones.length > 0 && checkAditionPrice(itemCarrito)">
+            <tr *ngFor="let item of itemCarrito?.configuracion?.adiciones" class="extra-row">
+              <td colspan="2">
+                <span class="extra-label add-label">
+                  <i class="pi pi-plus-circle"></i> {{item.titulo}}
+                  <span class="extra-unit-price">{{item.referencia.precioTotal | currency:'USD':'symbol':'1.0-0'}}</span>
+                </span>
+              </td>
+              <td class="text-center extra-qty">×{{item.cantidad * itemCarrito?.cantidad}}</td>
+              <td class="text-center">{{item.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0'}}</td>
+              <td></td>
+            </tr>
+          </ng-container>
+
+          <!-- Preferencias -->
+          <ng-container *ngIf="itemCarrito.configuracion.preferencias.length > 0 && checkPreferencePrice(itemCarrito)">
+            <tr *ngFor="let itempref of itemCarrito?.configuracion?.preferencias" class="extra-row">
+              <ng-container *ngIf="itempref.precioTotalConIva !== 0">
+                <td colspan="2">
+                  <span class="extra-label pref-label">
+                    <i class="pi pi-star"></i> {{itempref.titulo}}
+                  </span>
+                </td>
+                <td class="text-center extra-qty">×{{itempref.cantidad * itemCarrito?.cantidad}}</td>
+                <td class="text-center">{{itempref.precioTotalConIva * itemCarrito?.cantidad | currency:'USD':'symbol':'1.0-0'}}</td>
+                <td></td>
+              </ng-container>
+            </tr>
+          </ng-container>
+
+        </ng-container>
+      </tbody>
+    </table>
+
+    <!-- Footer: cupón + resumen -->
+    <div class="cart-footer">
+      <div class="coupon-row">
+        <i class="pi pi-ticket"></i>
+        <input [(ngModel)]="cupon" type="text"
+               placeholder="Código de cupón">
+        <button (click)="validarCuponYAplica()" [disabled]="!cupon">Aplicar</button>
+      </div>
+
+      <div class="cart-summary">
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <span>{{getTotalProductPriceInCart() | currency:'USD':'symbol':'1.0-0'}}</span>
+        </div>
+        <div class="summary-line discount" *ngIf="valorDescuento > 0">
+          <span>Descuento</span>
+          <span>− {{valorDescuento | currency:'USD':'symbol':'1.0-0'}}</span>
+        </div>
+        <div class="summary-line total">
+          <span>Total</span>
+          <span>{{getTotalProductPriceWithDescountInCart() | currency:'USD':'symbol':'1.0-0'}}</span>
+        </div>
+        <small class="tax-note">
+          <i class="pi pi-info-circle"></i> Incluye impuestos · No incluye envío
+        </small>
+      </div>
+    </div>
+  </div>
+
+</div>

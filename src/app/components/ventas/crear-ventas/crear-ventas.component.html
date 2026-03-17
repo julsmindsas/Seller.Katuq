@@ -281,77 +281,46 @@
                 </div>
               </div>
 
-              <!-- Cliente encontrado - Diseño limpio -->
-              <div *ngIf="encontrado" class="step1-client-card mb-4"
+              <!-- Cliente seleccionado - Barra compacta inline -->
+              <div *ngIf="encontrado" class="client-inline-bar mb-3"
                    [ngClass]="{'client-just-created': clienteRecienCreado}">
-                <div class="client-card-header">
-                  <div class="client-status">
-                    <i class="fa fa-check-circle"></i>
-                    <span>{{ clienteRecienCreado ? 'Cliente Creado' : 'Cliente Seleccionado' }}</span>
-                  </div>
-                  <button class="edit-btn" (click)="abrirFormularioEdicion()">
-                    <i class="fa fa-pencil"></i> Editar
-                  </button>
+                <i class="fa fa-check-circle client-ok-icon"></i>
+                <div class="client-inline-info">
+                  <span class="client-inline-name">
+                    {{ pedidoGral.cliente?.nombres_completos }} {{ pedidoGral.cliente?.apellidos_completos }}
+                  </span>
+                  <span class="client-inline-sep">·</span>
+                  <span class="client-inline-doc">
+                    {{ pedidoGral.cliente?.tipo_documento_comprador }} {{ pedidoGral.cliente?.documento }}
+                  </span>
+                  <ng-container *ngIf="pedidoGral.cliente?.numero_celular_comprador">
+                    <span class="client-inline-sep">·</span>
+                    <span class="client-inline-meta">
+                      <i class="fa fa-phone"></i> +{{ pedidoGral.cliente?.indicativo_celular_comprador }} {{ pedidoGral.cliente?.numero_celular_comprador }}
+                    </span>
+                  </ng-container>
+                  <ng-container *ngIf="pedidoGral.cliente?.correo_electronico_comprador">
+                    <span class="client-inline-sep">·</span>
+                    <span class="client-inline-meta">
+                      <i class="fa fa-envelope"></i> {{ pedidoGral.cliente?.correo_electronico_comprador }}
+                    </span>
+                  </ng-container>
                 </div>
-
-                <div class="client-card-body">
-                  <div class="client-main-info">
-                    <div class="client-name">
-                      {{ pedidoGral.cliente?.nombres_completos }} {{ pedidoGral.cliente?.apellidos_completos }}
-                    </div>
-                    <div class="client-document">
-                      {{ pedidoGral.cliente?.tipo_documento_comprador }} {{ pedidoGral.cliente?.documento }}
-                    </div>
-                  </div>
-
-                  <div class="client-contact-grid">
-                    <div class="contact-item">
-                      <i class="fa fa-envelope"></i>
-                      <span>{{ pedidoGral.cliente?.correo_electronico_comprador || 'Sin email' }}</span>
-                    </div>
-                    <div class="contact-item">
-                      <i class="fa fa-phone"></i>
-                      <span>+{{ pedidoGral.cliente?.indicativo_celular_comprador }} {{ pedidoGral.cliente?.numero_celular_comprador }}</span>
-                    </div>
-                    <div class="contact-item">
-                      <i class="fa fa-whatsapp"></i>
-                      <span>+{{ pedidoGral.cliente?.indicativo_celular_whatsapp }} {{ pedidoGral.cliente?.numero_celular_whatsapp }}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Mensaje para cliente recién creado -->
-                <div *ngIf="clienteRecienCreado" class="client-created-notice">
-                  <i class="fa fa-info-circle"></i>
-                  Cliente guardado correctamente. Puede continuar con el pedido.
-                </div>
-              </div>
-
-              <!-- Selector de Categoría de Cliente - Diseño compacto -->
-              <div *ngIf="encontrado && tiposCliente.length > 0" class="step1-category-section mb-4">
-                <div class="category-row">
-                  <div class="category-label">
-                    <i class="fa fa-tag"></i>
-                    <span>Categoría de precio:</span>
-                  </div>
-                  <select class="category-select"
+                <div class="client-inline-actions">
+                  <select *ngIf="tiposCliente.length > 0" class="category-inline-select"
                           (change)="onCategoriaClienteChange($event)"
                           [disabled]="cargandoTiposCliente"
                           #categoriaSelect>
-                    <option value="" [selected]="!categoriaClienteSeleccionada">Sin categoría (precio estándar)</option>
+                    <option value="" [selected]="!categoriaClienteSeleccionada">Sin categoría</option>
                     <option *ngFor="let tipo of tiposCliente"
                             [value]="tipo.id"
                             [selected]="categoriaClienteSeleccionada?.id === tipo.id">
                       {{ tipo.descripcion || tipo.nombre }}
                     </option>
                   </select>
-                  <div *ngIf="categoriaClienteSeleccionada" class="category-badge">
-                    {{ categoriaClienteSeleccionada.descripcion || categoriaClienteSeleccionada.nombre }}
-                  </div>
-                </div>
-                <div *ngIf="cargandoTiposCliente" class="category-loading">
-                  <span class="spinner-border spinner-border-sm"></span>
-                  Cargando...
+                  <button class="edit-inline-btn" (click)="abrirFormularioEdicion()">
+                    <i class="fa fa-pencil"></i>
+                  </button>
                 </div>
               </div>
 
@@ -445,40 +414,37 @@
                 </form>
               </div>
 
-              <!-- Sección de Notas del Cliente - Diseño compacto -->
-              <div *ngIf="encontrado" class="step1-notes-section mb-4">
-                <div class="notes-header">
+              <!-- Notas del Cliente - Colapsable -->
+              <div *ngIf="encontrado" class="step1-notes-section mb-3">
+                <button type="button" class="notes-toggle-btn" (click)="notasClienteExpanded = !notasClienteExpanded">
                   <i class="fa fa-comment-alt"></i>
-                  <span>Notas del Cliente</span>
-                  <span class="notes-count" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length">
-                    ({{ pedidoGral.notasPedido.notasCliente.length }})
+                  <span>Notas del cliente</span>
+                  <span class="notes-count-badge" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length">
+                    {{ pedidoGral.notasPedido.notasCliente.length }}
                   </span>
-                </div>
-
-                <!-- Formulario para agregar nota -->
-                <form [formGroup]="notasClienteForm" (ngSubmit)="onSubmitCliente()" class="notes-input-area">
-                  <textarea formControlName="nota" placeholder="Agregar nota sobre el cliente..." rows="2"></textarea>
-                  <button type="submit" [disabled]="notasClienteForm.invalid">
-                    <i class="fa fa-plus"></i> Agregar
-                  </button>
-                </form>
-
-                <!-- Lista de notas -->
-                <div class="notes-list" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length > 0">
-                  <div class="note-item" *ngFor="let nota of pedidoGral.notasPedido?.notasCliente; let i = index">
-                    <div class="note-content">
-                      <span class="note-date">{{ nota.fecha | date:'dd/MM/yy HH:mm' }}</span>
-                      <span class="note-text">{{ nota.nota }}</span>
-                    </div>
-                    <button class="note-delete" (click)="eliminarNotaCliente(i)">
-                      <i class="fa fa-times"></i>
+                  <i class="fa notes-chevron" [ngClass]="notasClienteExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
+                <div *ngIf="notasClienteExpanded" class="notes-body">
+                  <form [formGroup]="notasClienteForm" (ngSubmit)="onSubmitCliente()" class="notes-input-area">
+                    <textarea formControlName="nota" placeholder="Agregar nota sobre el cliente..." rows="2"></textarea>
+                    <button type="submit" [disabled]="notasClienteForm.invalid">
+                      <i class="fa fa-plus"></i> Agregar
                     </button>
+                  </form>
+                  <div class="notes-list" *ngIf="pedidoGral?.notasPedido?.notasCliente?.length > 0">
+                    <div class="note-item" *ngFor="let nota of pedidoGral.notasPedido?.notasCliente; let i = index">
+                      <div class="note-content">
+                        <span class="note-date">{{ nota.fecha | date:'dd/MM/yy HH:mm' }}</span>
+                        <span class="note-text">{{ nota.nota }}</span>
+                      </div>
+                      <button class="note-delete" (click)="eliminarNotaCliente(i)">
+                        <i class="fa fa-times"></i>
+                      </button>
+                    </div>
                   </div>
-                </div>
-
-                <!-- Sin notas -->
-                <div class="notes-empty" *ngIf="!pedidoGral?.notasPedido?.notasCliente?.length">
-                  Sin notas registradas
+                  <div class="notes-empty" *ngIf="!pedidoGral?.notasPedido?.notasCliente?.length">
+                    Sin notas registradas
+                  </div>
                 </div>
               </div>
 
@@ -643,13 +609,14 @@
                 </div>
               </div>
 
-              <!-- Notas del pedido -->
-              <div class="step3-section mb-4">
-                <div class="section-header">
+              <!-- Notas del pedido - Acordeón -->
+              <div class="step3-notes-accordion mb-4">
+                <button type="button" class="accordion-toggle" (click)="notasPedidoExpanded = !notasPedidoExpanded">
                   <i class="fa fa-comment-alt"></i>
                   <span>Notas del pedido</span>
-                </div>
-                <div class="section-content">
+                  <i class="fa accordion-chevron" [ngClass]="notasPedidoExpanded ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                </button>
+                <div *ngIf="notasPedidoExpanded" class="accordion-body">
                   <app-notas #notaspedidos [pedido]="pedidoGral" [carrito]="carrito1" [isEdit]="isEditing"
                     (notasActualizadas)="onNotasActualizadas($event)" *ngIf="pedidoGral"></app-notas>
                 </div>

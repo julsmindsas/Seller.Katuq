@@ -253,6 +253,8 @@ export class CrearVentasComponent
   datosEntregaNoEncontradosParaCiudadSeleccionada: boolean;
   mostrarFormularioCliente: boolean = false;
   clienteRecienCreado: boolean = false;
+  notasClienteExpanded: boolean = false;
+  notasPedidoExpanded: boolean = false;
   creandoCliente: boolean = false;
   public bodegas: any[] = [];
   public selectedWarehouse: string = "";
