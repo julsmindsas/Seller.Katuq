@@ -1560,15 +1560,23 @@
 
 <!--modal pára app-conf-product-to-cart-->
 <ng-template #confProductToCartModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">{{'Configurar producto' | translate}}</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
-    </div>
-    <div class="modal-body">
-        <app-conf-product-to-cart #confProductToCart [producto]="configuracionCarritoSeleccionado?.producto || productoSeleccionado"
-            [configuracionCarrito]="configuracionCarritoSeleccionado" [isEdit]="true" [modalRef]="modal"></app-conf-product-to-cart>
+    <div class="estado-modal">
+        <div class="estado-modal-header">
+            <div class="header-icon">
+                <i class="pi pi-cog"></i>
+            </div>
+            <div class="header-content">
+                <h4 class="header-title">{{'Configurar producto' | translate}}</h4>
+                <span class="header-subtitle">{{ configuracionCarritoSeleccionado?.producto?.crearProducto?.titulo }}</span>
+            </div>
+            <button type="button" class="btn-close-custom" aria-label="Close" (click)="modal.dismiss('Cross click')">
+                <i class="pi pi-times"></i>
+            </button>
+        </div>
+        <div class="estado-modal-body p-0" style="overflow-y: auto; max-height: calc(100vh - 80px);">
+            <app-conf-product-to-cart #confProductToCart [producto]="configuracionCarritoSeleccionado?.producto || productoSeleccionado"
+                [configuracionCarrito]="configuracionCarritoSeleccionado" [isEdit]="true" [modalRef]="modal"></app-conf-product-to-cart>
+        </div>
     </div>
 </ng-template>
 

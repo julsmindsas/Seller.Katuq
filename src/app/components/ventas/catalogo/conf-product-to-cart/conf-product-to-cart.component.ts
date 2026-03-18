@@ -2298,6 +2298,18 @@ export class ConfProductToCartComponent
       cantidad: 1,
     };
 
+    // Actualizar childrenSelected en el formulario para que sincronizarPreferencias()
+    // lea el índice correcto al guardar
+    const childrenArray = (item as any).get?.('children') as FormArray;
+    if (childrenArray) {
+      const selectedIdx = childrenArray.controls.findIndex(
+        (ctrl) => ctrl === selectedControl || ctrl === event
+      );
+      if (selectedIdx !== -1) {
+        (item as any).get?.('childrenSelected')?.setValue(selectedIdx);
+      }
+    }
+
     const index = this.productPreference.findIndex(
       (p) => p.titulo === preference.titulo,
     );
