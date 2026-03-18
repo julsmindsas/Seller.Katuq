@@ -424,4 +424,12 @@ export class MaestroService {
   removerBodegaDeCanal(canalId: string, bodegaId: string): Observable<any> {
     return this.http.delete<any>(`${this.urlBase}/v1/canales/${canalId}/canales/${bodegaId}`);
   }
+
+  getCompanyNotificationPreferences(companyName: string): Observable<any> {
+    return this.http.get<any>(`${this.urlBase}/v1/notification-preferences/company/${encodeURIComponent(companyName)}`);
+  }
+
+  saveCompanyNotificationPreferences(companyName: string, preferences: any): Observable<any> {
+    return this.http.put<any>(`${this.urlBase}/v1/notification-preferences/company/${encodeURIComponent(companyName)}`, preferences);
+  }
 }

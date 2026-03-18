@@ -13,7 +13,7 @@ export const environment = {
   },
   urlPermitidas:
     "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
-  //urlApi: "http://localhost:3300", // API Local - Backend Principal Katuq,
+  //urlApi: "http://localhost:3300", // API Local - Backend Principal Katuq
   urlApi: "https://back.katuq.com",
   //urlApi: "https://us-central1-katuq-new.cloudfunctions.net/api", // API GCP
 
