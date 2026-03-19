@@ -581,31 +581,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param order Pedido a verificar
    * @returns true si está congelado, false si permite modificaciones
    */
+  private static readonly ESTADOS_CONGELADOS = new Set([
+    EstadoProcesoFiltros.EnProduccion,
+    EstadoProcesoFiltros.ProducidoParcialmente,
+    EstadoProcesoFiltros.ProducidoTotalmente,
+    EstadoProcesoFiltros.Empacado,
+    EstadoProcesoFiltros.Despachado,
+    EstadoProcesoFiltros.Entregado,
+    EstadoProcesoFiltros.Cerrado,
+  ]);
+
   isPedidoCongelado(order: Pedido): boolean {
     if (!order || !order.estadoProceso) {
       return false;
     }
-
-    const estadosGrupo1 = [
-      EstadoProcesoFiltros.EnProduccion,
-      EstadoProcesoFiltros.ProducidoParcialmente,
-      EstadoProcesoFiltros.ProducidoTotalmente,
-      EstadoProcesoFiltros.Empacado,
-      EstadoProcesoFiltros.Despachado,
-    ];
-
-    const estadosGrupo2 = [
-      EstadoProcesoFiltros.Entregado,
-      EstadoProcesoFiltros.Cerrado,
-    ];
-
-    return (
-      estadosGrupo1.includes(
-        order.estadoProceso as unknown as EstadoProcesoFiltros,
-      ) ||
-      estadosGrupo2.includes(
-        order.estadoProceso as unknown as EstadoProcesoFiltros,
-      )
+    return ListOrdersComponent.ESTADOS_CONGELADOS.has(
+      order.estadoProceso as unknown as EstadoProcesoFiltros,
     );
   }
 
@@ -1556,6 +1547,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   selectedColumns: ColumnDefinition[] = [];
+  /** Set de campos visibles para O(1) en isColumnVisible() */
+  private visibleColumnsSet: Set<string> = new Set();
 
   // Configuración de columnas específica para producción
   displayedColumnsProduccion: ColumnDefinition[] = [
@@ -2366,6 +2359,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   onSharedColumnSelectionChange(columns: any[]): void {
     this.selectedColumns = columns;
+    this.updateVisibleColumnsSet();
     this.onColumnSelectionChange();
   }
 
@@ -3977,92 +3971,40 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Helper para mostrar estados de proceso abreviados con tooltips
    * Utilizado para optimizar el espacio visual en la tabla
    */
+  private static readonly PROCESO_STATUS_MAP: { [key: string]: { short: string; full: string } } = {
+    ProducidoTotalmente: { short: "Prod. Total", full: "Producido Totalmente - Producción completada al 100%" },
+    ProducidoParcialmente: { short: "Prod. Parcial", full: "Producido Parcialmente - Producción en progreso parcial" },
+    SinProducir: { short: "Sin Producir", full: "Sin Producir - Pendiente de iniciar producción" },
+    EnProduccion: { short: "En Prod.", full: "En Producción - Actualmente en fabricación" },
+    ParaDespachar: { short: "P. Despachar", full: "Para Despachar - Listo para envío" },
+    Despachado: { short: "Despachado", full: "Despachado - Enviado al cliente" },
+    Entregado: { short: "Entregado", full: "Entregado - Entregado al cliente" },
+    Empacado: { short: "Empacado", full: "Empacado - Empacado y listo" },
+    Producido: { short: "Producido", full: "Producido - Producción finalizada" },
+    Rechazado: { short: "Rechazado", full: "Rechazado - Proceso rechazado" },
+    Cerrado: { short: "Cerrado", full: "Cerrado - Pedido finalizado" },
+  };
+
   getStatusDisplay(status: string): { short: string; full: string } {
-    const statusMap: { [key: string]: { short: string; full: string } } = {
-      ProducidoTotalmente: {
-        short: "Prod. Total",
-        full: "Producido Totalmente - Producción completada al 100%",
-      },
-      ProducidoParcialmente: {
-        short: "Prod. Parcial",
-        full: "Producido Parcialmente - Producción en progreso parcial",
-      },
-      SinProducir: {
-        short: "Sin Producir",
-        full: "Sin Producir - Pendiente de iniciar producción",
-      },
-      EnProduccion: {
-        short: "En Prod.",
-        full: "En Producción - Actualmente en fabricación",
-      },
-      ParaDespachar: {
-        short: "P. Despachar",
-        full: "Para Despachar - Listo para envío",
-      },
-      Despachado: {
-        short: "Despachado",
-        full: "Despachado - Enviado al cliente",
-      },
-      Entregado: {
-        short: "Entregado",
-        full: "Entregado - Entregado al cliente",
-      },
-      Empacado: {
-        short: "Empacado",
-        full: "Empacado - Empacado y listo",
-      },
-      Producido: {
-        short: "Producido",
-        full: "Producido - Producción finalizada",
-      },
-      Rechazado: {
-        short: "Rechazado",
-        full: "Rechazado - Proceso rechazado",
-      },
-      Cerrado: {
-        short: "Cerrado",
-        full: "Cerrado - Pedido finalizado",
-      },
-    };
-    return statusMap[status] || { short: status, full: status };
+    return ListOrdersComponent.PROCESO_STATUS_MAP[status] || { short: status, full: status };
   }
+
+  private static readonly PAGO_STATUS_MAP: { [key: string]: { short: string; full: string } } = {
+    Pospendiente: { short: "Pendiente", full: "Pospendiente - Pago en validación posterior" },
+    Pendiente: { short: "Pendiente", full: "Pendiente - Pago pendiente de confirmación" },
+    PreAprobado: { short: "Pre-Aprob.", full: "Pre-Aprobado - Pago pre-aprobado, verificando" },
+    Aprobado: { short: "Aprobado", full: "Aprobado - Pago confirmado y exitoso" },
+    Rechazado: { short: "Rechazado", full: "Rechazado - Pago rechazado por la entidad" },
+    Cancelado: { short: "Cancelado", full: "Cancelado - Pedido cancelado manualmente" },
+    Precancelado: { short: "Pre-Cancel", full: "Pre-Cancelado - En proceso de cancelación" },
+  };
 
   /**
    * Helper para mostrar estados de pago abreviados con tooltips
    * Utilizado para optimizar el espacio visual en la tabla
    */
   getPaymentStatusDisplay(status: string): { short: string; full: string } {
-    const statusMap: { [key: string]: { short: string; full: string } } = {
-      Pospendiente: {
-        short: "Pendiente",
-        full: "Pospendiente - Pago en validación posterior",
-      },
-      Pendiente: {
-        short: "Pendiente",
-        full: "Pendiente - Pago pendiente de confirmación",
-      },
-      PreAprobado: {
-        short: "Pre-Aprob.",
-        full: "Pre-Aprobado - Pago pre-aprobado, verificando",
-      },
-      Aprobado: {
-        short: "Aprobado",
-        full: "Aprobado - Pago confirmado y exitoso",
-      },
-      Rechazado: {
-        short: "Rechazado",
-        full: "Rechazado - Pago rechazado por la entidad",
-      },
-      Cancelado: {
-        short: "Cancelado",
-        full: "Cancelado - Pedido cancelado manualmente",
-      },
-      Precancelado: {
-        short: "Pre-Cancel",
-        full: "Pre-Cancelado - En proceso de cancelación",
-      },
-    };
-    return statusMap[status] || { short: status, full: status };
+    return ListOrdersComponent.PAGO_STATUS_MAP[status] || { short: status, full: status };
   }
 
   /**
@@ -7793,6 +7735,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Inicializar columnas seleccionadas manteniendo el orden
     // La columna 'detalles' debe estar siempre incluida y primera
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
+    this.updateVisibleColumnsSet();
 
     // Verificar que 'detalles' esté en selectedColumns y sea la primera
     const detallesInSelected = this.selectedColumns.findIndex(
@@ -7824,11 +7767,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   isColumnVisible(field: string): boolean {
-    // La columna 'detalles' siempre debe ser visible
-    if (field === "detalles") {
-      return true;
-    }
-    return this.selectedColumns.some((col) => col.field === field);
+    return field === "detalles" || this.visibleColumnsSet.has(field);
+  }
+
+  private updateVisibleColumnsSet(): void {
+    this.visibleColumnsSet = new Set(this.selectedColumns.map((col) => col.field));
   }
 
   onColumnSelectionChange(): void {
@@ -8027,6 +7970,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Asegurar que selectedColumns mantenga el orden correcto con 'detalles' primero
     this.selectedColumns = this.displayedColumns.filter((col) => col.visible);
+    this.updateVisibleColumnsSet();
     this.saveColumnConfiguration();
   }
 
@@ -9261,5 +9205,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
     });
+  }
+
+  // ─── trackBy helpers ──────────────────────────────────────────────────────
+  // Evitan que Angular destruya y recree nodos del DOM en cada ciclo de
+  // detección de cambios cuando los datos no han cambiado.
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  trackByNroPedido(index: number, item: any): string | number {
+    return item?.nroPedido ?? index;
+  }
+
+  trackByCartItem(index: number, item: any): string | number {
+    return item?.cartItemId ?? item?._cartUuid ?? item?.producto?.identificacion?.referencia ?? index;
+  }
+
+  trackByPref(index: number, item: any): string | number {
+    return item?.titulo ?? index;
+  }
+
+  trackByAddon(index: number, item: any): string | number {
+    return item?.titulo ?? index;
+  }
+
+  trackByEstado(index: number, item: string): string | number {
+    return item ?? index;
+  }
+
+  trackByBodega(index: number, item: any): string | number {
+    return item?.idBodega ?? index;
   }
 }
