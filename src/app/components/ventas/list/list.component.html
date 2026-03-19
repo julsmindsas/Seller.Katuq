@@ -646,7 +646,7 @@
 
                                     <!-- SKELETON LOADING: Feedback visual inmediato mientras carga -->
                                     <ng-template pTemplate="loadingbody">
-                                        <tr *ngFor="let i of skeletonRows" class="skeleton-row">
+                                        <tr *ngFor="let i of skeletonRows; trackBy: trackByIndex" class="skeleton-row">
                                             <td style="width: 2.5rem;"><p-skeleton width="2rem" height="2rem" borderRadius="4px"></p-skeleton></td>
                                             <td style="width: 8rem;"><p-skeleton width="70px" height="1rem"></p-skeleton></td>
                                             <td style="width: 7rem;"><p-skeleton width="60px" height="1rem"></p-skeleton></td>
@@ -945,7 +945,7 @@
                                                         <div class="card-body p-2">
                                                             <!-- Lista vertical de productos sin tabla -->
                                                             <div class="products-vertical-list">
-                                                                <div *ngFor="let item of pedido.carrito; let i = index" 
+                                                                <div *ngFor="let item of pedido.carrito; let i = index; trackBy: trackByCartItem"
                                                                      class="product-item-row">
                                                                     
                                                                     <!-- Información principal del producto en una sola fila -->
@@ -1008,7 +1008,7 @@
                                                                         <div *ngIf="item?.configuracion?.preferencias?.length > 0" class="config-subsection">
                                                                             <h6 class="config-title">{{ 'Preferencias' | translate }}</h6>
                                                                             <div class="config-items">
-                                                                                <div *ngFor="let pref of item?.configuracion?.preferencias" class="config-item">
+                                                                                <div *ngFor="let pref of item?.configuracion?.preferencias; trackBy: trackByPref" class="config-item">
                                                                                     <img [src]="pref.imagen" class="config-thumb" [alt]="pref.titulo" />
                                                                                     <div class="config-info">
                                                                                         <span class="config-name">{{ pref.titulo }}</span>
@@ -1032,7 +1032,7 @@
                                                                         <div *ngIf="item?.configuracion?.adiciones?.length > 0" class="config-subsection">
                                                                             <h6 class="config-title">{{ 'Adiciones' | translate }}</h6>
                                                                             <div class="config-items">
-                                                                                <div *ngFor="let addon of item?.configuracion?.adiciones" class="config-item">
+                                                                                <div *ngFor="let addon of item?.configuracion?.adiciones; trackBy: trackByAddon" class="config-item">
                                                                                     <img [src]="addon.imagen" class="config-thumb" [alt]="addon.titulo" />
                                                                                     <div class="config-info">
                                                                                         <span class="config-name">{{ addon.titulo }}</span>
@@ -1478,7 +1478,7 @@
                     </label>
                     <select class="form-select estado-select" [(ngModel)]="tempEstadoPago">
                         <option value="" disabled>{{ 'Seleccionar estado' | translate }}</option>
-                        <option *ngFor="let estado of getAvailablePaymentStates()" [value]="estado">
+                        <option *ngFor="let estado of getAvailablePaymentStates(); trackBy: trackByEstado" [value]="estado">
                             {{ estado }}
                         </option>
                     </select>
@@ -1496,7 +1496,7 @@
                     <select class="form-select estado-select" [(ngModel)]="tempEstadoProceso"
                         [disabled]="!canEditProcessStatus(pedidoSeleccionado)">
                         <option value="" disabled>{{ 'Seleccionar estado' | translate }}</option>
-                        <option *ngFor="let estado of estadosProcesos" [value]="estado">
+                        <option *ngFor="let estado of estadosProcesos; trackBy: trackByEstado" [value]="estado">
                             {{ estado }}
                         </option>
                     </select>
@@ -1603,7 +1603,7 @@
                     <div class="position-relative">
                         <select class="form-select custom-select" (change)="onWarehouseChange($event)">
                             <option value="">{{ 'Seleccione una bodega' | translate }}</option>
-                            <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+                            <option *ngFor="let bodega of bodegas; trackBy: trackByBodega" [value]="bodega.idBodega">
                                 {{ bodega.nombre }} ({{ bodega.idBodega }})
                             </option>
                         </select>
