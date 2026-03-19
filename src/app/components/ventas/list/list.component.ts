@@ -6490,28 +6490,25 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // Aplicar el descuento al pedido
           const porcentajeDescuento = parseFloat(value[0]?.valor) || 0;
-          const totalSinDescuento = this.getTotalProductPriceInCart(pedido);
-          const valorDescuento =
-            (totalSinDescuento * porcentajeDescuento) / 100;
 
-          // Actualizar el pedido
+          // Registrar cupón y porcentaje; actualizarValoresPedido calculará
+          // el descuento exacto, totales con IVA/envío, faltaPorPagar y estadoPago
           pedido.cuponAplicado = this.codigoDescuentoIngresado;
           pedido.porceDescuento = porcentajeDescuento;
-          pedido.totalDescuento = valorDescuento;
-          pedido.totalPedididoConDescuento = totalSinDescuento - valorDescuento;
+          pedido = this.actualizarValoresPedido(pedido);
 
           // Mostrar información del descuento aplicado
           this.descuentoAplicado = {
             codigo: this.codigoDescuentoIngresado,
             porcentaje: porcentajeDescuento,
-            valor: valorDescuento,
+            valor: pedido.totalDescuento || 0,
           };
 
           // Actualizar el pedido en la base de datos
           this.editOrder(pedido);
 
           this.toastrService.success(
-            `Cupón "${this.codigoDescuentoIngresado}" aplicado exitosamente. Descuento: $${valorDescuento.toLocaleString()}`,
+            `Cupón "${this.codigoDescuentoIngresado}" aplicado exitosamente. Descuento: $${(pedido.totalDescuento || 0).toLocaleString()}`,
             "Descuento Aplicado",
             {
               timeOut: 5000,
@@ -7145,7 +7142,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       ),
     });
 
-    // Recalcular falta por pagar si hay anticipos
+    // Recalcular falta por pagar y estado de pago si hay anticipos registrados
     if (order.PagosAsentados && order.PagosAsentados.length > 0) {
       const anticipoReal = order.PagosAsentados.reduce((sum, pago) => {
         if (
@@ -7153,6 +7150,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           pago.estadoVerificacion === "Pendiente"
         ) {
           return sum; // No sumar pagos de Wompi pendientes
+        }
+        if (
+          pago.estadoVerificacion === "Rechazado" ||
+          pago.estadoVerificacion === "Cancelado"
+        ) {
+          return sum; // No sumar pagos rechazados o cancelados
         }
         const valorPago = pago.valor || pago.valorRegistrado || 0;
         return sum + valorPago;
@@ -7164,10 +7167,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         order.totalPedididoConDescuento - anticipoReal,
       );
 
-      // Si el orden estaba Aprobado pero ahora queda saldo pendiente (se añadieron productos),
-      // debe volver a PreAprobado
-      if (order.faltaPorPagar > 0 && order.estadoPago === EstadoPago.Aprobado) {
+      // Recalcular estadoPago completo según nuevo total vs lo pagado
+      if (order.faltaPorPagar <= 0) {
+        order.estadoPago = EstadoPago.Aprobado;
+      } else if (anticipoReal > 0 && order.faltaPorPagar < order.totalPedididoConDescuento) {
         order.estadoPago = EstadoPago.PreAprobado;
+      } else {
+        order.estadoPago = EstadoPago.Pendiente;
       }
     }
 
@@ -7184,6 +7190,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (index !== -1) {
       order.carrito?.splice(index, 1);
     }
+    // Recalcular totales y estado de pago tras eliminar producto
+    order = this.actualizarValoresPedido(order);
     this.editOrder(order);
   }
 
