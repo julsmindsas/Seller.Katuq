@@ -429,6 +429,12 @@
 
                                     </div>
                                     <div class="col-md-6 mb-3">
+                                        <label class="form-label" for="validationCustom01">Teléfono logística</label>
+                                        <input #telefonoLogisticaContacto class="form-control" id="validationCustom01"
+                                            type="text" placeholder="Teléfono logística" required="">
+
+                                    </div>
+                                    <div class="col-md-6 mb-3">
                                         <label class="form-label" for="validationCustom01">Cargo</label>
                                         <select #cargoContacto class="form-control select-default"
                                             id="validationCustom01" type="text">
@@ -456,6 +462,7 @@
                                                     <th>Fijo</th>
                                                     <th>Extension</th>
                                                     <th>Email</th>
+                                                    <th>Teléfono logística</th>
                                                     <th>Cargo</th>
                                                 </tr>
 
@@ -470,6 +477,7 @@
                                                     <td>{{item.fijoContacto}}</td>
                                                     <td>{{item.extensionFijoContacto}}</td>
                                                     <td>{{item.emailContacto}}</td>
+                                                    <td>{{item.telefonoLogisticaContacto}}</td>
                                                     <td>{{item.cargoContacto}}</td>
                                                     <td><i class="fa fa-trash-o" (click)="deleteItemContact(i)"></i>
                                                     </td>

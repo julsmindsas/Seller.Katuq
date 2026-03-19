@@ -33,6 +33,7 @@ export class CrearEmpresaComponent implements OnInit {
   @ViewChild('indicativoFijoContacto') indicativoFijoContacto: ElementRef
   @ViewChild('fijoContacto') fijoContacto: ElementRef
   @ViewChild('extensionFijoContacto') extensionFijoContacto: ElementRef
+  @ViewChild('telefonoLogisticaContacto') telefonoLogisticaContacto: ElementRef
   @ViewChild('emailContacto') emailContacto: ElementRef
   @ViewChild('cargoContacto') cargoContacto: ElementRef
   @ViewChild('linkGoogleMapsSede') linkGoogleMapsSede: ElementRef
@@ -189,7 +190,7 @@ export class CrearEmpresaComponent implements OnInit {
   edit: any;
   mostrarCrear: boolean;
   sedess: { nombreSede: string; direccionSede: string; paisSede: string; dptoSede: string; ciudadSede: string; codigoPostalSede: string; rotuloDireccionSede: string; comoLlegarSede: string; linkGoogleMaps: string; barrio: string }[] = [];
-  contactos: { nomCompletoContacto: any; indicativoTelContacto: any; telContacto: any; indicativoFijoContacto: any; fijoContacto: any; extensionFijoContacto: any; emailContacto: any; cargoContacto: any }[] = [];
+  contactos: { nomCompletoContacto: any; indicativoTelContacto: any; telContacto: any; indicativoFijoContacto: any; fijoContacto: any; extensionFijoContacto: any; telefonoLogisticaContacto: any; emailContacto: any; cargoContacto: any }[] = [];
   ciudadesss: any;
   frmPersonificaTuMarca: FormGroup
   archivos: any[];
@@ -235,6 +236,7 @@ export class CrearEmpresaComponent implements OnInit {
       indicativoFijoContacto: [''],
       fijoContacto: [''],
       extensionFijoContacto: [''],
+      telefonoLogisticaContacto: [''],
       emailContacto: [''],
       cargoContacto: [''],
 
@@ -395,6 +397,7 @@ export class CrearEmpresaComponent implements OnInit {
       indicativoFijoContacto: this.indicativoFijoContacto.nativeElement.value,
       fijoContacto: this.fijoContacto.nativeElement.value,
       extensionFijoContacto: this.extensionFijoContacto.nativeElement.value,
+      telefonoLogisticaContacto: this.telefonoLogisticaContacto.nativeElement.value,
       emailContacto: this.emailContacto.nativeElement.value,
       cargoContacto: this.cargoContacto.nativeElement.value
 
