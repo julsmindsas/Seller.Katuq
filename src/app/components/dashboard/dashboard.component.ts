@@ -14,6 +14,8 @@ import {
   TiemposProcesamientoResponse,
   PerformanceEntregasResponse,
   AnalisisGeograficoResponse,
+  InventarioSnapshotResponse,
+  InventarioMovimientosResponse,
   EstadoCarga,
   TicketPromedioCanal,
   TicketPromedioVendedor,
@@ -33,10 +35,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // === Estados de carga según nueva arquitectura ===
   estadoCarga: EstadoCarga = {
-    core: false, // ✅ CAMBIO: No mostrar loading inicialmente
-    details: false, // ✅ CAMBIO: No mostrar loading inicialmente
+    core: false,
+    details: false,
     pedidos: false,
     logistica: false,
+    inventario: false,
     error: null
   };
 
@@ -44,14 +47,16 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   modulosHabilitados = {
     ventas: true,
     logistica: true,
+    inventario: true,
     produccion: true,
     financiero: true
   };
 
   // === Estado de expansión de módulos (acordeón) ===
   modulosExpandidos = {
-    ventas: true,      // Módulo de ventas expandido por defecto
-    logistica: false,  // Otros módulos contraídos por defecto
+    ventas: true,
+    logistica: false,
+    inventario: false,
     produccion: false,
     financiero: false
   };
@@ -78,6 +83,17 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     performanceEntregas: null,
     analisisGeografico: null
   };
+
+  inventarioData: {
+    snapshot: InventarioSnapshotResponse | null;
+    movimientos: InventarioMovimientosResponse | null;
+  } = {
+    snapshot: null,
+    movimientos: null
+  };
+
+  inventarioBodegasChartOption: EChartsOption = {};
+  inventarioMovimientosChartOption: EChartsOption = {};
 
   // === Datos legacy (mantener compatibilidad) ===
   topProductsMasVendidos: any[] = [];
@@ -254,6 +270,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   cargarDatos(): void {
     this.estadoCarga.error = null;
     this.resetAnalysis();
+    // Reset inventario para recargar con nuevas fechas
+    this.inventarioData = { snapshot: null, movimientos: null };
 
     // 1. CARGA INMEDIATA - Datos críticos
     this.loadCoreData();
@@ -265,9 +283,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.modulosExpandidos.ventas) {
       this.loadPedidosData();
     }
-    
     if (this.modulosExpandidos.logistica) {
       this.loadLogisticaData();
+    }
+    if (this.modulosExpandidos.inventario) {
+      this.loadInventarioData();
     }
   }
 
@@ -932,7 +952,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Alterna el estado de expansión/contracción de un módulo
    */
-  toggleModule(modulo: 'ventas' | 'logistica' | 'produccion' | 'financiero'): void {
+  toggleModule(modulo: 'ventas' | 'logistica' | 'inventario' | 'produccion' | 'financiero'): void {
     console.log(`🎯 Toggling módulo: ${modulo}`);
     
     // Verificar si el módulo está habilitado
@@ -1060,9 +1080,15 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             this.renderLogisticaCharts();
           }
           break;
+        case 'inventario':
+          if (!this.inventarioData.snapshot && !this.estadoCarga.inventario) {
+            this.loadInventarioData();
+          } else {
+            this.renderInventarioCharts();
+          }
+          break;
         case 'produccion':
         case 'financiero':
-          // Módulos futuros - placeholder
           break;
       }
     }, 300); // Dar tiempo para que la animación CSS termine
@@ -1091,17 +1117,68 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private renderLogisticaCharts(): void {
     if (!this.logisticaData.performanceEntregas) return;
+    console.log('📈 Datos logística disponibles:', this.logisticaData.performanceEntregas);
+  }
 
-    console.log('🚚 Renderizando gráficos de logística...');
-    
-    // Aquí se implementarían los gráficos de logística
-    // Por ahora solo loggeamos los datos para debug
-    console.log('📈 Datos de performance de entregas disponibles:', this.logisticaData.performanceEntregas);
-    
-    // TODO: Implementar gráficos de:
-    // - Performance de transportadores (bar chart)
-    // - Zonas de entrega (pie chart)
-    // - Horarios de entrega (line chart)
+  private loadInventarioData(): void {
+    this.estadoCarga.inventario = true;
+
+    this.analyticsService.getInventarioSnapshot()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.inventarioData.snapshot = data;
+          this.renderInventarioCharts();
+        },
+        error: (e) => console.error('❌ Error cargando snapshot inventario:', e)
+      });
+
+    this.analyticsService.getInventarioMovimientos(this.fechaInicial, this.fechaFinal)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data) => {
+          this.inventarioData.movimientos = data;
+          this.estadoCarga.inventario = false;
+          this.renderInventarioMovimientosChart();
+        },
+        error: (e) => {
+          console.error('❌ Error cargando movimientos inventario:', e);
+          this.estadoCarga.inventario = false;
+        }
+      });
+  }
+
+  private renderInventarioCharts(): void {
+    const bodegas = this.inventarioData.snapshot?.distribucionBodegas;
+    if (!bodegas?.length) return;
+
+    this.inventarioBodegasChartOption = {
+      tooltip: { trigger: 'item', formatter: '{b}: {c} uds ({d}%)' },
+      legend: { orient: 'vertical', left: 'left', textStyle: { fontSize: 11 } },
+      series: [{
+        type: 'pie',
+        radius: ['40%', '70%'],
+        data: bodegas.map(b => ({ name: b.nombre, value: b.unidades })),
+        label: { show: false },
+        emphasis: { label: { show: true, fontWeight: 'bold' } }
+      }]
+    };
+  }
+
+  private renderInventarioMovimientosChart(): void {
+    const tendencia = this.inventarioData.movimientos?.tendenciaDiaria;
+    if (!tendencia?.length) return;
+
+    this.inventarioMovimientosChartOption = {
+      tooltip: { trigger: 'axis' },
+      legend: { data: ['Ingresos', 'Salidas'] },
+      xAxis: { type: 'category', data: tendencia.map(d => d.fecha), axisLabel: { rotate: 30, fontSize: 10 } },
+      yAxis: { type: 'value', name: 'Unidades' },
+      series: [
+        { name: 'Ingresos', type: 'bar', data: tendencia.map(d => d.ingresos), color: '#00E396', stack: 'total' },
+        { name: 'Salidas', type: 'bar', data: tendencia.map(d => d.salidas), color: '#FF4560', stack: 'total' }
+      ]
+    };
   }
 
   // === EVENTOS DE UI ===
@@ -1319,48 +1396,21 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         switch (this.rolUsuario.toLowerCase()) {
           case 'vendedor':
           case 'comercial':
-            this.modulosHabilitados = {
-              ventas: true,
-              logistica: false,
-              produccion: false,
-              financiero: false
-            };
-            console.log('📊 Módulos configurados para rol comercial');
+            this.modulosHabilitados = { ventas: true, logistica: false, inventario: false, produccion: false, financiero: false };
             break;
-            
           case 'logistica':
           case 'despachos':
-            this.modulosHabilitados = {
-              ventas: true,
-              logistica: true,
-              produccion: false,
-              financiero: false
-            };
-            console.log('🚚 Módulos configurados para rol logística');
+            this.modulosHabilitados = { ventas: true, logistica: true, inventario: false, produccion: false, financiero: false };
             break;
-            
           case 'produccion':
           case 'inventario':
-            this.modulosHabilitados = {
-              ventas: false,
-              logistica: true,
-              produccion: true,
-              financiero: false
-            };
-            console.log('🏭 Módulos configurados para rol producción');
+            this.modulosHabilitados = { ventas: false, logistica: true, inventario: true, produccion: true, financiero: false };
             break;
-            
           case 'admin':
           case 'administrador':
           case 'gerente':
           default:
-            this.modulosHabilitados = {
-              ventas: true,
-              logistica: true,
-              produccion: true,
-              financiero: true
-            };
-            console.log('👨‍💼 Módulos configurados para rol administrativo');
+            this.modulosHabilitados = { ventas: true, logistica: true, inventario: true, produccion: true, financiero: true };
             break;
         }
         
@@ -1372,12 +1422,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     } catch (error) {
       console.error('❌ Error configurando módulos por rol:', error);
       // Fallback: habilitar todos los módulos
-      this.modulosHabilitados = {
-        ventas: true,
-        logistica: true,
-        produccion: true,
-        financiero: true
-      };
+      this.modulosHabilitados = { ventas: true, logistica: true, inventario: true, produccion: true, financiero: true };
     }
     
     console.log('============================\n');

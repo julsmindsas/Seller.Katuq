@@ -5,7 +5,7 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { IntegrationFormValidatorService, ValidationResult } from './integration-form-validator.service';
 import { IntegrationUIHelperService } from './integration-ui-helper.service';
 import { Subject, timer, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError, filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-integrations',
@@ -69,6 +69,15 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   isSaving = false;
   isTesting = false;
+
+  // World Office master data (loaded after successful test connection)
+  woEmpresas: any[] = [];
+  woPaymentTypes: any[] = [];
+  woDocumentTypes: any[] = [];
+  woMonedas: any[] = [];
+  woBodegas: any[] = [];
+  woMasterDataLoading: boolean = false;
+  woMasterDataLoaded: boolean = false;
   
   statusMessage: { type: 'success' | 'error', message: string } | null = null;
 
@@ -537,6 +546,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'prindel':
         this.integrationForm = this.createPrindelForm();
         break;
+      case 'world_office':
+        this.integrationForm = this.createWorldOfficeForm();
+        this.setupWOAutoLoad();
+        break;
       default:
         this.integrationForm = this.createShopifyForm();
         break;
@@ -615,6 +628,11 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'prindel':
         this.integrationForm = this.createPrindelForm();
+        break;
+      case 'world_office':
+        this.integrationForm = this.createWorldOfficeForm();
+        // Auto-load usando config guardada en Firestore (sin necesidad de token)
+        setTimeout(() => this.loadWOMasterData(), 0);
         break;
       default:
         this.integrationForm = this.createShopifyForm();
@@ -930,6 +948,33 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     });
   }
 
+  createWorldOfficeForm(): FormGroup {
+    return this.fb.group({
+      name: ['World Office', Validators.required],
+      enabled: [true],
+      // Credenciales
+      apiToken: ['', [Validators.required, Validators.minLength(10)]],
+      apiUrl: ['https://api.worldoffice.cloud'],
+      // Configuración de empresa (requeridos por API WO)
+      idEmpresa: ['', Validators.required],
+      idTerceroInterno: [''],
+      // Facturación (requeridos por API WO para crear documentos)
+      idFormaPago: [''],
+      prefijo: [''],
+      idMoneda: [''],
+      idBodega: [''],
+      concepto: ['Venta Katuq'],
+      // Configuración avanzada de inventario (IDs de WO para crear productos)
+      idCiudadDefault: [''],
+      unidadMedidaDefault: ['UND'],
+      // Automatización
+      enableAutoInvoicing: [false],
+      sendToDian: [true],
+      sendEmail: [false],
+      testMode: [false]
+    });
+  }
+
   onSubmit(): void {
     if (this.integrationForm.invalid) {
       this.integrationForm.markAllAsTouched();
@@ -1037,9 +1082,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         this.isTesting = false;
         if (result.success) {
           this.showStatus('success', '✅ Conexión exitosa: ' + result.message);
-          
-          // DESHABILITADO: Health check automático después de test exitoso
-          // this.performHealthCheck();
+
+          // Cargar datos maestros de World Office tras conexión exitosa
+          if (this.selectedIntegrationType === 'world_office') {
+            const formData = this.integrationForm.value;
+            this.loadWOMasterData({ apiToken: formData.apiToken, apiUrl: formData.apiUrl });
+          }
         } else {
           this.showStatus('error', '❌ Error de conexión: ' + result.message);
         }
@@ -1048,6 +1096,54 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         this.isTesting = false;
         this.showStatus('error', '❌ Error al probar la conexión: ' + error.message);
       }
+    });
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.id ?? index;
+  }
+
+  /**
+   * Carga todos los datos maestros de World Office en una sola llamada.
+   * Sin credentials → usa config guardada en Firestore (modo edición).
+   * Con credentials → los pasa al backend (nueva integración aún no guardada).
+   */
+  private loadWOMasterData(credentials?: { apiToken?: string; apiUrl?: string }): void {
+    this.woMasterDataLoading = true;
+    this.integrationsService.getWOMasterData(credentials).pipe(
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (result: any) => {
+        this.woMasterDataLoading = false;
+        const data = result.data || result;
+        if (data.empresas?.length)     { this.woEmpresas = data.empresas; }
+        if (data.paymentTypes?.length) { this.woPaymentTypes = data.paymentTypes; }
+        if (data.documentTypes?.length){ this.woDocumentTypes = data.documentTypes; }
+        if (data.currencies?.length)   { this.woMonedas = data.currencies; }
+        if (data.warehouses?.length)   { this.woBodegas = data.warehouses; }
+        this.woMasterDataLoaded = true;
+        console.log(`✅ [WO] Datos maestros cargados: ${this.woEmpresas.length} empresas, ${this.woPaymentTypes.length} formas de pago, ${this.woMonedas.length} monedas, ${this.woBodegas.length} bodegas`);
+      },
+      error: () => {
+        this.woMasterDataLoading = false;
+        console.warn('⚠️ [WO] No se pudieron cargar los datos maestros');
+      }
+    });
+  }
+
+  /**
+   * Suscribe al campo apiToken para auto-cargar datos maestros al escribir (nueva integración).
+   * Debounce de 1.2s, mínimo 10 chars.
+   */
+  private setupWOAutoLoad(): void {
+    this.integrationForm.get('apiToken')?.valueChanges.pipe(
+      debounceTime(1200),
+      distinctUntilChanged(),
+      filter((token: string) => !!token && token.length >= 10),
+      takeUntil(this.destroy$)
+    ).subscribe(token => {
+      const apiUrl = this.integrationForm.get('apiUrl')?.value || 'https://api.worldoffice.cloud';
+      this.loadWOMasterData({ apiToken: token, apiUrl });
     });
   }
 
@@ -1223,6 +1319,25 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           costAccount: formData.costAccount,
           inventoryAccount: formData.inventoryAccount,
           discountAccount: formData.discountAccount
+        };
+        break;
+      case 'world_office':
+        credentials = {
+          apiToken: formData.apiToken,
+          apiUrl: formData.apiUrl || 'https://api.worldoffice.cloud',
+          idEmpresa: formData.idEmpresa,
+          idTerceroInterno: formData.idTerceroInterno,
+          idFormaPago: formData.idFormaPago,
+          prefijo: formData.prefijo,
+          idMoneda: formData.idMoneda,
+          idBodega: formData.idBodega,
+          idCiudadDefault: formData.idCiudadDefault,
+          unidadMedidaDefault: formData.unidadMedidaDefault || 'UND',
+          concepto: formData.concepto || 'Venta Katuq',
+          enableAutoInvoicing: formData.enableAutoInvoicing || false,
+          sendToDian: formData.sendToDian !== false,
+          sendEmail: formData.sendEmail || false,
+          testMode: formData.testMode || false
         };
         break;
     }
@@ -1658,6 +1773,41 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             placeholder: 'Código de cuenta de inventario',
             icon: 'fa-boxes',
             tooltip: 'Código de la cuenta contable para inventario'
+          }
+        ];
+      case 'world_office':
+        return [
+          {
+            id: 'idTerceroInterno',
+            label: 'Tercero Interno',
+            type: 'text',
+            placeholder: 'ID del tercero interno en WO',
+            icon: 'fa-user-tie',
+            tooltip: 'ID del tercero interno (empresa) en World Office'
+          },
+          {
+            id: 'idFormaPago',
+            label: 'Forma de Pago',
+            type: 'text',
+            placeholder: 'ID de la forma de pago',
+            icon: 'fa-credit-card',
+            tooltip: 'ID de la forma de pago por defecto en World Office'
+          },
+          {
+            id: 'prefijo',
+            label: 'Prefijo de Factura',
+            type: 'text',
+            placeholder: 'Ej: FE, FV',
+            icon: 'fa-hashtag',
+            tooltip: 'Prefijo para numeración de facturas electrónicas'
+          },
+          {
+            id: 'concepto',
+            label: 'Concepto',
+            type: 'text',
+            placeholder: 'Venta Katuq',
+            icon: 'fa-file-alt',
+            tooltip: 'Concepto por defecto para las facturas'
           }
         ];
       default:

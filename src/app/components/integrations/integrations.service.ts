@@ -761,6 +761,7 @@ export class IntegrationsService {
         return IntegrationCategory.CRM;
       case "quickbooks":
       case "siigo":
+      case "world_office":
         return IntegrationCategory.ACCOUNTING;
       default:
         return IntegrationCategory.OTHER;
@@ -994,6 +995,58 @@ export class IntegrationsService {
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/siigo/invoices/from-order`,
+      body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Crear factura desde un pedido usando cualquier proveedor contable.
+   * Endpoint genérico: POST /v1/accounting/:provider/invoices/from-order
+   */
+  createAccountingInvoiceFromOrder(provider: string, orderId: string, options?: any): Observable<any> {
+    const body: any = { orderId };
+    if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
+    if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
+
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order`,
+      body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtiene formas de pago disponibles en el proveedor contable.
+   * Para World Office: GET /v1/accounting/world_office/payment-types
+   */
+  getAccountingPaymentTypes(provider: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/payment-types`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Obtiene tipos de documento disponibles en el proveedor contable.
+   * Para World Office: GET /v1/accounting/world_office/document-types
+   */
+  getAccountingDocumentTypes(provider: string): Observable<any> {
+    return this.http.get<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/document-types`,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Carga todos los datos maestros de World Office en una sola llamada.
+   * Si se pasan credentials (nueva integración aún no guardada), las usa directamente.
+   * Sin credentials, el backend usa la config guardada en Firestore (modo edición).
+   */
+  getWOMasterData(credentials?: { apiToken?: string; apiUrl?: string }): Observable<any> {
+    const body = credentials?.apiToken ? { credentials } : {};
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/world_office/master-data`,
       body,
       { headers: this.getApiHeaders() }
     );
@@ -1276,6 +1329,13 @@ export class IntegrationsService {
           name: "Siigo",
           description: "Software contable y administrativo colombiano",
           logo: "assets/images/logos/siigo.svg",
+          active: true,
+        },
+        {
+          id: "world_office",
+          name: "World Office",
+          description: "Software contable y de facturación electrónica colombiano con soporte DIAN",
+          logo: "assets/images/logos/world-office.svg",
           active: true,
         },
       ],

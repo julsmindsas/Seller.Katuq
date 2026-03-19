@@ -427,6 +427,67 @@ export interface InsightsGeograficos {
 }
 
 // ============================================================================
+// MÓDULO INVENTARIO BI
+// ============================================================================
+
+export interface InventarioBodega {
+  idBodega: string;
+  nombre: string;
+  unidades: number;
+  productos: number;
+  porcentaje: number;
+}
+
+export interface AlertaProducto {
+  productoId: string;
+  nombre: string;
+  referencia: string;
+  stockActual: number;
+  valorEstimado: number;
+}
+
+export interface InventarioSnapshotResponse {
+  resumen: {
+    totalProductosUnicos: number;
+    conStock: number;
+    enRuptura: number;
+    stockBajo: number;
+    productosDormidos: number;
+    totalUnidades: number;
+    totalBodegas: number;
+    diasDormidoUmbral: number;
+  };
+  distribucionBodegas: InventarioBodega[];
+  alertas: {
+    sinStock: AlertaProducto[];
+    stockBajo: AlertaProducto[];
+    dormidos: AlertaProducto[];
+  };
+}
+
+export interface MovimientoPeriodoProducto {
+  productoId: string;
+  nombre: string;
+  referencia: string;
+  unidadesEntradas: number;
+  unidadesSalidas: number;
+}
+
+export interface InventarioMovimientosResponse {
+  periodo: PeriodoInfo;
+  resumen: {
+    totalMovimientos: number;
+    totalIngresosUnidades: number;
+    totalSalidasUnidades: number;
+    balanceNeto: number;
+    productosMovidos: number;
+  };
+  porTipoMovimiento: { tipo: string; movimientos: number; unidades: number; categoria: string }[];
+  tendenciaDiaria: { fecha: string; ingresos: number; salidas: number; movimientos: number }[];
+  topProductosMovidos: MovimientoPeriodoProducto[];
+}
+
+// ============================================================================
 // INTERFACES AUXILIARES PARA FRONTEND
 // ============================================================================
 
@@ -443,11 +504,12 @@ export interface FiltrosDashboard {
  * Estado de carga del dashboard ampliado para nuevos módulos
  */
 export interface EstadoCarga {
-  core: boolean;                // Si están cargando los datos críticos
-  details: boolean;             // Si están cargando los datos detallados
-  pedidos: boolean;             // Si están cargando los datos de pedidos
-  logistica: boolean;           // Si están cargando los datos de logística
-  error: string | null;         // Mensaje de error si ocurre alguno
+  core: boolean;
+  details: boolean;
+  pedidos: boolean;
+  logistica: boolean;
+  inventario: boolean;
+  error: string | null;
 }
 
 /**

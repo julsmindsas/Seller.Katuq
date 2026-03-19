@@ -120,6 +120,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Integración de facturación electrónica
   hasInvoicingIntegration: boolean = false;
+  activeAccountingProvider: string = null;
 
   // Variables temporales para el modal de cambio de estado
   tempEstadoPago: EstadoPago;
@@ -765,38 +766,63 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private checkInvoicingIntegration(): void {
     console.log('🔄 [List] Verificando integración de facturación...');
-    this.integrationsService.loadSiigoConfig().subscribe({
-      next: (response) => {
-        console.log('📦 [List] Respuesta de Siigo config:', response);
 
-        // La respuesta del backend tiene estructura:
-        // { success: true, config: { provider, config: { username, ... }, status } }
-        // NOTA: accessKey no se envía al frontend por seguridad
-        const siigoConfig = response?.config;
-        const credentials = siigoConfig?.config;
+    // Verificar proveedores contables: SIIGO y World Office
+    const accountingProviders = ['siigo', 'world_office'];
+    let found = false;
 
-        // Verificar si hay configuración válida:
-        // - Debe existir la config
-        // - Debe tener username (el accessKey está en el backend pero no se envía por seguridad)
-        // - El status debe ser "active" o enabled debe ser true
-        const isConfigured = siigoConfig &&
-                            credentials?.username &&
-                            (siigoConfig.status === 'active' || credentials.enabled === true);
-
-        if (isConfigured) {
-          this.hasInvoicingIntegration = true;
-          console.log('✅ [List] Integración Siigo detectada - username:', credentials.username, '- status:', siigoConfig.status);
-        } else {
+    const checkProvider = (index: number) => {
+      if (index >= accountingProviders.length) {
+        if (!found) {
           this.hasInvoicingIntegration = false;
-          console.log('⚠️ [List] Siigo no está correctamente configurado');
+          this.activeAccountingProvider = null;
+          console.log('ℹ️ [List] No hay integración de facturación configurada');
         }
-      },
-      error: (err) => {
-        // Si hay error (404 o cualquier otro), no hay integración configurada
-        this.hasInvoicingIntegration = false;
-        console.log('ℹ️ [List] No hay integración Siigo configurada:', err?.status || err?.message);
+        return;
       }
-    });
+
+      const provider = accountingProviders[index];
+      this.integrationsService.getIntegration(provider).subscribe({
+        next: (response: any) => {
+          const providerConfig = response?.config || response?.credentials;
+          const isActive = response?.enabled || response?.config?.status === 'active';
+
+          // Verificar que tenga credenciales válidas según el proveedor
+          let isConfigured = false;
+          if (provider === 'siigo') {
+            isConfigured = isActive && providerConfig?.username;
+          } else if (provider === 'world_office') {
+            isConfigured = isActive && (providerConfig?.apiToken || providerConfig?.idEmpresa);
+          }
+
+          if (isConfigured && !found) {
+            found = true;
+            this.hasInvoicingIntegration = true;
+            this.activeAccountingProvider = provider;
+            console.log(`✅ [List] Integración ${provider} detectada - status: active`);
+          } else {
+            checkProvider(index + 1);
+          }
+        },
+        error: () => {
+          checkProvider(index + 1);
+        }
+      });
+    };
+
+    checkProvider(0);
+  }
+
+  /**
+   * Retorna el nombre legible del proveedor contable activo
+   */
+  private getAccountingProviderDisplayName(): string {
+    const names: { [key: string]: string } = {
+      'siigo': 'Siigo',
+      'world_office': 'World Office',
+      'alegra': 'Alegra'
+    };
+    return names[this.activeAccountingProvider] || 'Sistema Contable';
   }
 
   /**
@@ -841,7 +867,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param pedido Pedido a facturar
    */
   facturarPedidoSiigo(pedido: Pedido): void {
-    // Cargar tipos de documento de Siigo primero
+    const providerDisplayName = this.getAccountingProviderDisplayName();
+    // Cargar tipos de documento del proveedor contable
     Swal.fire({
       title: 'Cargando tipos de documento...',
       allowOutsideClick: false,
@@ -872,7 +899,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!documentTypes || documentTypes.length === 0) {
           Swal.fire({
             title: 'Error',
-            text: 'No se encontraron tipos de documento en Siigo. Verifique la configuración.',
+            text: `No se encontraron tipos de documento en ${providerDisplayName}. Verifique la configuración.`,
             icon: 'error'
           });
           return;
@@ -927,7 +954,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         console.error('Error cargando tipos de documento:', error);
         Swal.fire({
           title: 'Error',
-          text: 'No se pudieron cargar los tipos de documento de Siigo',
+          text: `No se pudieron cargar los tipos de documento de ${providerDisplayName}`,
           icon: 'error'
         });
       }
@@ -936,21 +963,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   /**
    * Ejecuta la facturación electrónica
-   * Utiliza el nuevo endpoint que maneja automáticamente:
+   * Utiliza el endpoint genérico que maneja automáticamente:
    * 1. Obtención del pedido completo
-   * 2. Verificación/creación del cliente en Siigo
+   * 2. Verificación/creación del cliente en el proveedor contable
    * 3. Transformación del pedido a factura
    * 4. Actualización del pedido con datos de facturación
    *
    * @param pedido Pedido a facturar
    */
   private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number): void {
+    const providerDisplayName = this.getAccountingProviderDisplayName();
     // Mostrar loader
     Swal.fire({
       title: 'Generando factura...',
       html: `
         <p>Por favor espere mientras se procesa la facturación electrónica.</p>
-        <p class="text-muted small">Verificando cliente y creando factura en Siigo...</p>
+        <p class="text-muted small">Verificando cliente y creando factura electrónica...</p>
       `,
       allowOutsideClick: false,
       allowEscapeKey: false,
@@ -962,8 +990,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Preparar opciones con el tipo de documento seleccionado
     const options = documentTypeId ? { documentTypeId } : undefined;
 
-    // Usar el nuevo método que maneja todo el flujo automáticamente
-    this.integrationsService.createSiigoInvoiceFromOrder(pedido._id, options).subscribe({
+    // Usar el endpoint genérico de facturación con el provider activo
+    const provider = this.activeAccountingProvider || 'siigo';
+    const invoiceCall = provider === 'world_office'
+      ? this.integrationsService.createAccountingInvoiceFromOrder(provider, pedido._id, options)
+      : this.integrationsService.createSiigoInvoiceFromOrder(pedido._id, options);
+
+    invoiceCall.subscribe({
       next: (response: any) => {
         Swal.close();
 
@@ -998,7 +1031,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           if (syncItems.length > 0) {
             successHtml += `<div class="alert alert-info mt-2 p-2 small">
-              <strong>Sincronizado con Siigo:</strong><br>
+              <strong>Sincronizado con ${providerDisplayName}:</strong><br>
               ${syncItems.join('<br>')}
             </div>`;
           }
@@ -1043,7 +1076,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           </p>`;
         } else if (errorMessage.includes('configuración') || errorMessage.includes('documentTypeId')) {
           errorHtml += `<p class="text-muted small mt-2">
-            <i class="fa fa-info-circle"></i> Verifique la configuración de Siigo en Integraciones → Contabilidad.
+            <i class="fa fa-info-circle"></i> Verifique la configuración de ${providerDisplayName} en Integraciones → Contabilidad.
           </p>`;
         }
 

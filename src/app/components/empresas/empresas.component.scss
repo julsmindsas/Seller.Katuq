@@ -1,3 +1,65 @@
+// Botón-badge de plan (columna Plan del superadmin)
+.btn-plan {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) { opacity: 0.8; transform: scale(1.04); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  &--premium {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #6ee7b7;
+  }
+  &--freemium {
+    background: #f3f4f6;
+    color: #6b7280;
+    border-color: #d1d5db;
+    &:hover:not(:disabled) { background: #e0f2fe; border-color: #7dd3fc; color: #0369a1; }
+  }
+}
+
+// Botones de acción compactos (icono puro)
+.action-btns {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+.action-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  padding: 0;
+  flex-shrink: 0;
+
+  &:hover { background: #e0e7ff; border-color: #818cf8; color: #4f46e5; }
+
+  &--warn {
+    &:hover { background: #fef3c7; border-color: #fbbf24; color: #92400e; }
+  }
+  &--danger {
+    &:hover { background: #fee2e2; border-color: #fca5a5; color: #b91c1c; }
+  }
+}
+
 // Estilos mejorados para el componente de empresas usando PrimeNG
 
 // Estilo general del contenedor

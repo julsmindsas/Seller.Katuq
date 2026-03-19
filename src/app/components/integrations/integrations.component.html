@@ -1961,6 +1961,292 @@
           </div>
         </ng-container>
 
+        <!-- ===== WORLD OFFICE - SOFTWARE CONTABLE COLOMBIANO ===== -->
+        <ng-container *ngIf="selectedIntegrationType === 'world_office'">
+          <!-- Credenciales World Office -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-key me-2"></i>Credenciales World Office
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="woApiToken">
+                    <i class="fa fa-key"></i> API Token: <span class="field-required">*</span>
+                  </label>
+                  <div class="input-with-icon password-field">
+                    <i class="fa fa-key prefix-icon"></i>
+                    <input [type]="showApiSecret ? 'text' : 'password'" id="woApiToken" formControlName="apiToken" placeholder="Token JWT de World Office" autocomplete="off">
+                    <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiSecretVisibility()"></i>
+                  </div>
+                  <div *ngIf="integrationForm.get('apiToken')?.invalid && integrationForm.get('apiToken')?.touched" class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i> El API Token es requerido (mínimo 10 caracteres)
+                  </div>
+                  <small class="form-text text-muted">Token JWT obtenido desde el panel de administración de World Office</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="woApiUrl">
+                    <i class="fa fa-globe"></i> URL de la API:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-globe prefix-icon"></i>
+                    <input type="text" id="woApiUrl" formControlName="apiUrl" placeholder="https://api.worldoffice.cloud">
+                  </div>
+                  <small class="form-text text-muted">URL base de la API de World Office (no cambiar a menos que sea necesario)</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="woIdEmpresa">
+                    <i class="fa fa-building"></i> ID Empresa: <span class="field-required">*</span>
+                  </label>
+                  <!-- Dropdown cuando hay empresas cargadas -->
+                  <ng-container *ngIf="woEmpresas.length > 0; else woEmpresaTextInput">
+                    <select id="woIdEmpresa" formControlName="idEmpresa" class="form-control">
+                      <option value="">-- Seleccionar empresa --</option>
+                      <option *ngFor="let empresa of woEmpresas; trackBy: trackById" [value]="empresa.id">
+                        {{ empresa.nombre || empresa.name || empresa.razonSocial || empresa.id }}
+                      </option>
+                    </select>
+                    <small class="form-text text-muted">
+                      <i class="fa fa-check-circle text-success"></i> {{ woEmpresas.length }} empresa(s) cargada(s)
+                    </small>
+                  </ng-container>
+                  <!-- Input texto cuando no hay datos cargados -->
+                  <ng-template #woEmpresaTextInput>
+                    <div class="input-with-icon">
+                      <i class="fa fa-building prefix-icon"></i>
+                      <input type="text" id="woIdEmpresaText" formControlName="idEmpresa" placeholder="Prueba la conexión para cargar empresas">
+                    </div>
+                    <small class="form-text text-muted">Prueba la conexión para cargar el listado de empresas</small>
+                  </ng-template>
+                  <div *ngIf="integrationForm.get('idEmpresa')?.invalid && integrationForm.get('idEmpresa')?.touched" class="text-danger">
+                    <i class="fa fa-exclamation-triangle"></i> El ID de empresa es requerido
+                  </div>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="woTestMode">
+                    <i class="fa fa-flask"></i> Modo de Prueba:
+                  </label>
+                  <div class="toggle-container">
+                    <label class="switch">
+                      <input type="checkbox" formControlName="testMode" id="woTestMode">
+                      <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" [ngClass]="{'active': integrationForm.get('testMode')?.value, 'inactive': !integrationForm.get('testMode')?.value}">
+                      {{ integrationForm.get('testMode')?.value ? 'Pruebas Activadas' : 'Producción' }}
+                    </span>
+                  </div>
+                  <small class="form-text text-muted">Activa el modo de pruebas para World Office</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Configuración de Facturación -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-file-invoice me-2"></i>Configuración de Facturación
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="woIdTerceroInterno">
+                    <i class="fa fa-user-tie"></i> Tercero Interno:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-user-tie prefix-icon"></i>
+                    <input type="text" id="woIdTerceroInterno" formControlName="idTerceroInterno" placeholder="ID del tercero interno">
+                  </div>
+                  <small class="form-text text-muted">ID del tercero interno (empresa vendedora) en World Office</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="woIdFormaPago">
+                    <i class="fa fa-credit-card"></i> Forma de Pago:
+                  </label>
+                  <!-- Dropdown cuando hay formas de pago cargadas -->
+                  <ng-container *ngIf="woPaymentTypes.length > 0; else woFormaPagoTextInput">
+                    <select id="woIdFormaPago" formControlName="idFormaPago" class="form-control">
+                      <option value="">-- Seleccionar forma de pago --</option>
+                      <option *ngFor="let fp of woPaymentTypes; trackBy: trackById" [value]="fp.id">
+                        {{ fp.nombre || fp.name || fp.descripcion || fp.id }}
+                      </option>
+                    </select>
+                    <small class="form-text text-muted">
+                      <i class="fa fa-check-circle text-success"></i> {{ woPaymentTypes.length }} forma(s) de pago cargada(s)
+                    </small>
+                  </ng-container>
+                  <!-- Input texto cuando no hay datos cargados -->
+                  <ng-template #woFormaPagoTextInput>
+                    <div class="input-with-icon">
+                      <i class="fa fa-credit-card prefix-icon"></i>
+                      <input type="text" id="woIdFormaPagoText" formControlName="idFormaPago" placeholder="Prueba la conexión para cargar formas de pago">
+                    </div>
+                    <small class="form-text text-muted">Prueba la conexión para cargar el listado de formas de pago</small>
+                  </ng-template>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="woPrefijo">
+                    <i class="fa fa-hashtag"></i> Prefijo de Factura:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-hashtag prefix-icon"></i>
+                    <input type="text" id="woPrefijo" formControlName="prefijo" placeholder="Ej: FE, FV">
+                  </div>
+                  <small class="form-text text-muted">Prefijo para la numeración de facturas electrónicas</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="woConcepto">
+                    <i class="fa fa-file-alt"></i> Concepto:
+                  </label>
+                  <div class="input-with-icon">
+                    <i class="fa fa-file-alt prefix-icon"></i>
+                    <input type="text" id="woConcepto" formControlName="concepto" placeholder="Venta Katuq">
+                  </div>
+                  <small class="form-text text-muted">Concepto por defecto para las facturas generadas</small>
+                </div>
+              </div>
+
+              <!-- Loading indicator para datos maestros -->
+              <div *ngIf="woMasterDataLoading" class="alert alert-info py-2 mb-3 d-flex align-items-center gap-2">
+                <i class="fa fa-spinner fa-spin"></i>
+                <small>Cargando opciones de configuración...</small>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="woIdMoneda">
+                    <i class="fa fa-coins"></i> Moneda: <span class="text-danger">*</span>
+                  </label>
+                  <!-- Dropdown cuando hay monedas cargadas -->
+                  <ng-container *ngIf="woMonedas.length > 0; else woMonedaTextInput">
+                    <select id="woIdMoneda" formControlName="idMoneda" class="form-control">
+                      <option value="">-- Seleccionar moneda --</option>
+                      <option *ngFor="let m of woMonedas; trackBy: trackById" [value]="m.id">
+                        {{ m.nombre || m.descripcion || m.codigo || m.id }}
+                      </option>
+                    </select>
+                    <small class="form-text text-muted">
+                      <i class="fa fa-check-circle text-success"></i> {{ woMonedas.length }} moneda(s) disponible(s)
+                    </small>
+                  </ng-container>
+                  <ng-template #woMonedaTextInput>
+                    <div class="input-with-icon">
+                      <i class="fa fa-coins prefix-icon"></i>
+                      <input type="text" id="woIdMonedaText" formControlName="idMoneda" placeholder="Ingrese el token para cargar monedas">
+                    </div>
+                    <small class="form-text text-muted"><span class="text-danger">Requerido para facturar.</span> Se carga automáticamente al ingresar el token.</small>
+                  </ng-template>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="woIdBodega">
+                    <i class="fa fa-warehouse"></i> Bodega: <span class="text-danger">*</span>
+                  </label>
+                  <!-- Dropdown cuando hay bodegas cargadas -->
+                  <ng-container *ngIf="woBodegas.length > 0; else woBodegaTextInput">
+                    <select id="woIdBodega" formControlName="idBodega" class="form-control">
+                      <option value="">-- Seleccionar bodega --</option>
+                      <option *ngFor="let b of woBodegas; trackBy: trackById" [value]="b.id">
+                        {{ b.nombre || b.descripcion || b.codigo || b.id }}
+                      </option>
+                    </select>
+                    <small class="form-text text-muted">
+                      <i class="fa fa-check-circle text-success"></i> {{ woBodegas.length }} bodega(s) disponible(s)
+                    </small>
+                  </ng-container>
+                  <ng-template #woBodegaTextInput>
+                    <div class="input-with-icon">
+                      <i class="fa fa-warehouse prefix-icon"></i>
+                      <input type="text" id="woIdBodegaText" formControlName="idBodega" placeholder="Ingrese el token para cargar bodegas">
+                    </div>
+                    <small class="form-text text-muted"><span class="text-danger">Requerido para facturar.</span> Se carga automáticamente al ingresar el token.</small>
+                  </ng-template>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Automatización -->
+          <div class="card mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="fa fa-robot me-2"></i>Automatización
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="woEnableAutoInvoicing">
+                    <i class="fa fa-magic"></i> Facturación Automática:
+                  </label>
+                  <div class="toggle-container">
+                    <label class="switch">
+                      <input type="checkbox" formControlName="enableAutoInvoicing" id="woEnableAutoInvoicing">
+                      <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" [ngClass]="{'active': integrationForm.get('enableAutoInvoicing')?.value, 'inactive': !integrationForm.get('enableAutoInvoicing')?.value}">
+                      {{ integrationForm.get('enableAutoInvoicing')?.value ? 'Activado' : 'Desactivado' }}
+                    </span>
+                  </div>
+                  <small class="form-text text-muted">Crear factura automáticamente al aprobar el pago del pedido</small>
+                </div>
+
+                <div class="field-col form-group">
+                  <label for="woSendToDian">
+                    <i class="fa fa-paper-plane"></i> Enviar a DIAN:
+                  </label>
+                  <div class="toggle-container">
+                    <label class="switch">
+                      <input type="checkbox" formControlName="sendToDian" id="woSendToDian">
+                      <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" [ngClass]="{'active': integrationForm.get('sendToDian')?.value, 'inactive': !integrationForm.get('sendToDian')?.value}">
+                      {{ integrationForm.get('sendToDian')?.value ? 'Enviar Automáticamente' : 'No Enviar' }}
+                    </span>
+                  </div>
+                  <small class="form-text text-muted">Enviar la factura electrónica a la DIAN automáticamente después de crearla</small>
+                </div>
+              </div>
+
+              <div class="field-row">
+                <div class="field-col form-group">
+                  <label for="woSendEmail">
+                    <i class="fa fa-envelope"></i> Enviar Email:
+                  </label>
+                  <div class="toggle-container">
+                    <label class="switch">
+                      <input type="checkbox" formControlName="sendEmail" id="woSendEmail">
+                      <span class="slider"></span>
+                    </label>
+                    <span class="toggle-label" [ngClass]="{'active': integrationForm.get('sendEmail')?.value, 'inactive': !integrationForm.get('sendEmail')?.value}">
+                      {{ integrationForm.get('sendEmail')?.value ? 'Enviar' : 'No Enviar' }}
+                    </span>
+                  </div>
+                  <small class="form-text text-muted">Enviar copia de la factura por email al cliente</small>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-lightbulb"></i>
+            <span><strong>Tip:</strong> Obtén tu API Token desde el panel de administración de World Office. Asegúrate de tener habilitada la facturación electrónica DIAN en tu cuenta.</span>
+          </div>
+        </ng-container>
+
         <!-- Prindel Fields -->
         <ng-container *ngIf="selectedIntegrationType === 'prindel'">
           <div class="integration-info-box">

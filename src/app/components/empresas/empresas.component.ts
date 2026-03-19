@@ -8,6 +8,8 @@ import { DataStoreService } from '../../shared/services/dataStoreService';
 import { FormControl } from '@angular/forms';
 import { Table } from 'primeng/table';
 import { MessageService } from 'primeng/api';
+import { SubscriptionService } from '../../shared/services/subscription.service';
+import Swal from 'sweetalert2';
 
 // Interfaz mejorada basada en el modelo completo de Empresa
 export interface Empresa {
@@ -78,6 +80,7 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   isMobile = false;
   isJulsmind = false;
   isAdminUser = false;
+  upgradingPlan = new Set<string>(); // NITs en proceso de cambio de plan
   
   // Filtros
   filtros: FiltrosAvanzados = {
@@ -113,7 +116,8 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     private router: Router,
     private breakpointObserver: BreakpointObserver,
     private dataStoreService: DataStoreService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private subscriptionService: SubscriptionService
   ) {
     const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
     this.isJulsmind = currentCompany.nomComercial === 'Julsmind';
@@ -440,6 +444,50 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   }
 
   // Eliminar empresa y todos sus datos relacionados (solo para dgarciah@julsmind.com)
+  cambiarPlan(empresa: Empresa): void {
+    const nombre = empresa.nomComercial || empresa.nombre;
+    const planActual = empresa.subscriptionPlan || 'freemium';
+    const nuevoPlan: 'premium' | 'freemium' = planActual === 'premium' ? 'freemium' : 'premium';
+    const key = empresa.nit || nombre;
+    const subiendo = nuevoPlan === 'premium';
+
+    Swal.fire({
+      title: subiendo ? '¿Activar Premium?' : '¿Bajar a Freemium?',
+      html: `<b>${nombre}</b><br><small class="text-muted">${planActual.toUpperCase()} → ${nuevoPlan.toUpperCase()}</small>`,
+      icon: subiendo ? 'success' : 'warning',
+      showCancelButton: true,
+      confirmButtonText: subiendo ? '★ Activar Premium' : 'Bajar a Freemium',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: subiendo ? '#059669' : '#6b7280',
+      cancelButtonColor: '#e5e7eb',
+      reverseButtons: true
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      this.upgradingPlan.add(key);
+
+      this.subscriptionService.adminUpgradePlan(nombre, nuevoPlan)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: () => {
+            empresa.subscriptionPlan = nuevoPlan;
+            this.upgradingPlan.delete(key);
+            Swal.fire({
+              title: '¡Listo!',
+              text: `"${nombre}" ahora está en plan ${nuevoPlan.toUpperCase()}`,
+              icon: 'success',
+              timer: 2000,
+              showConfirmButton: false
+            });
+          },
+          error: (err) => {
+            this.upgradingPlan.delete(key);
+            Swal.fire('Error', err?.error?.message || 'No se pudo actualizar el plan', 'error');
+          }
+        });
+    });
+  }
+
   eliminarEmpresa(empresa: Empresa): void {
     const nombreEmpresa = empresa.nomComercial || empresa.nombre;
 

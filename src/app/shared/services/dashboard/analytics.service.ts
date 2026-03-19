@@ -2,14 +2,16 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
-import { 
-  DashboardCoreResponse, 
-  DashboardDetailsResponse, 
+import {
+  DashboardCoreResponse,
+  DashboardDetailsResponse,
   FiltrosDashboard,
   FlujoEstadosResponse,
   TiemposProcesamientoResponse,
   PerformanceEntregasResponse,
-  AnalisisGeograficoResponse
+  AnalisisGeograficoResponse,
+  InventarioSnapshotResponse,
+  InventarioMovimientosResponse
 } from '../../../components/dashboard/model/dashboard-interfaces';
 import { environment } from '../../../../environments/environment';
 
@@ -268,6 +270,24 @@ export class AnalyticsService {
   getLogisticaAnalisisGeograficoWithFilters(filtros: FiltrosDashboard): Observable<AnalisisGeograficoResponse> {
     const params = this.buildParamsFromFilters(filtros);
     return this.http.get<AnalisisGeograficoResponse>(`${this.baseUrl}/logistica/analisis-geografico`, { params });
+  }
+
+  // ============================================================================
+  // MÓDULO INVENTARIO
+  // ============================================================================
+
+  getInventarioSnapshot(diasDormido = 60): Observable<InventarioSnapshotResponse> {
+    return this.http.get<InventarioSnapshotResponse>(
+      `${this.baseUrl}/inventario/snapshot`,
+      { params: new HttpParams().set('diasDormido', diasDormido.toString()) }
+    ).pipe(catchError(this.handleAuthError.bind(this)));
+  }
+
+  getInventarioMovimientos(fechaInicio: string, fechaFin: string): Observable<InventarioMovimientosResponse> {
+    const params = new HttpParams().set('fechaInicio', fechaInicio).set('fechaFin', fechaFin);
+    return this.http.get<InventarioMovimientosResponse>(
+      `${this.baseUrl}/inventario/movimientos`, { params }
+    ).pipe(catchError(this.handleAuthError.bind(this)));
   }
 
   // ============================================================================

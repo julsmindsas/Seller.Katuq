@@ -199,10 +199,10 @@
           </div>
 
           <!-- Tabla principal -->
-          <p-table 
+          <p-table
             #dt
-            [value]="rows" 
-            [paginator]="true" 
+            [value]="rows"
+            [paginator]="true"
             [rows]="10"
             [rowsPerPageOptions]="rowsPerPageOptions"
             [loading]="cargando"
@@ -210,27 +210,29 @@
             [sortOrder]="1"
             [responsive]="true"
             styleClass="p-datatable-sm p-datatable-striped"
+            [tableStyle]="{'min-width': '900px'}"
             [globalFilterFields]="['nit', 'nombre', 'nomComercial', 'emailContactoGeneral', 'pais']">
             
             <ng-template pTemplate="header">
               <tr>
-                <th *ngIf="!isMobile" pSortableColumn="nit" style="width: 12%">
+                <th *ngIf="!isMobile" pSortableColumn="nit" style="width: 10%">
                   {{ 'NIT' | translate }}
                   <p-sortIcon field="nit"></p-sortIcon>
                 </th>
-                <th pSortableColumn="nombre" [style.width]="isMobile ? '30%' : '20%'">
+                <th pSortableColumn="nombre" [style.width]="isMobile ? '35%' : '18%'">
                   {{ 'Razón Social' | translate }}
                   <p-sortIcon field="nombre"></p-sortIcon>
                 </th>
-                <th pSortableColumn="nomComercial" [style.width]="isMobile ? '30%' : '18%'">
+                <th pSortableColumn="nomComercial" [style.width]="isMobile ? '25%' : '16%'">
                   {{ 'Nombre Comercial' | translate }}
                   <p-sortIcon field="nomComercial"></p-sortIcon>
                 </th>
-                <th *ngIf="!isMobile" style="width: 10%">{{ 'Teléfono' | translate }}</th>
-                <th *ngIf="!isMobile" style="width: 15%">{{ 'Email' | translate }}</th>
-                <th *ngIf="!isMobile" style="width: 10%">{{ 'País' | translate }}</th>
-                <th *ngIf="!isMobile" style="width: 8%">{{ 'Estado' | translate }}</th>
-                <th [style.width]="isMobile ? '40%' : '7%'">{{ 'Acciones' | translate }}</th>
+                <th *ngIf="!isMobile" style="width: 9%">{{ 'Teléfono' | translate }}</th>
+                <th *ngIf="!isMobile" style="width: 14%">{{ 'Email' | translate }}</th>
+                <th *ngIf="!isMobile" style="width: 7%">{{ 'País' | translate }}</th>
+                <th *ngIf="!isMobile" style="width: 7%">{{ 'Estado' | translate }}</th>
+                <th *ngIf="isAdminUser && !isMobile" style="width: 9%">{{ 'Plan' | translate }}</th>
+                <th [style.width]="isMobile ? '40%' : '10%'" class="text-center">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
 
@@ -268,8 +270,8 @@
                 
                 <!-- Email -->
                 <td *ngIf="!isMobile">
-                  <a [href]="'mailto:' + empresa.emailContactoGeneral" 
-                     class="text-decoration-none"
+                  <a [href]="'mailto:' + empresa.emailContactoGeneral"
+                     class="text-decoration-none text-dark"
                      *ngIf="empresa.emailContactoGeneral">
                     {{ empresa.emailContactoGeneral }}
                   </a>
@@ -289,41 +291,42 @@
                   </p-tag>
                 </td>
                 
+                <!-- Plan - Solo para superadmin, desktop -->
+                <td *ngIf="isAdminUser && !isMobile">
+                  <button class="btn-plan"
+                    [class.btn-plan--premium]="empresa.subscriptionPlan === 'premium'"
+                    [class.btn-plan--freemium]="empresa.subscriptionPlan !== 'premium'"
+                    (click)="cambiarPlan(empresa)"
+                    [disabled]="upgradingPlan.has(empresa.nit || empresa.nomComercial)"
+                    [title]="empresa.subscriptionPlan === 'premium' ? 'Click para bajar a Freemium' : 'Click para subir a Premium'">
+                    <span *ngIf="!upgradingPlan.has(empresa.nit || empresa.nomComercial)">
+                      {{ empresa.subscriptionPlan === 'premium' ? '★ Premium' : 'Freemium' }}
+                    </span>
+                    <i *ngIf="upgradingPlan.has(empresa.nit || empresa.nomComercial)"
+                       class="fa fa-spinner fa-spin"></i>
+                  </button>
+                </td>
+
                 <!-- Acciones -->
-                <td>
-                  <div class="d-flex gap-2" [class.flex-column]="isMobile">
-                    <button 
-                      class="btn btn-outline-primary btn-sm" 
+                <td class="text-center">
+                  <div class="action-btns" [class.flex-column]="isMobile">
+                    <button class="action-btn-icon"
                       (click)="editarEmpresa(empresa)"
-                      [title]="'Editar empresa' | translate">
+                      title="{{ 'Editar empresa' | translate }}">
                       <i class="icofont icofont-pencil-alt-5"></i>
-                      <span *ngIf="isMobile" class="ms-1">{{ 'Editar' | translate }}</span>
-                    </button>
-                    
-                    <button 
-                      class="btn btn-outline-info btn-sm" 
-                      *ngIf="isMobile"
-                      [title]="'Ver detalles' | translate">
-                      <i class="icofont icofont-eye"></i>
-                      <span class="ms-1">{{ 'Detalles' | translate }}</span>
                     </button>
 
-                    <button
-                      class="btn btn-outline-warning btn-sm"
+                    <button class="action-btn-icon action-btn-icon--warn"
                       (click)="toggleEstado(empresa)"
-                      [title]="empresa.activo ? ('Desactivar empresa' | translate) : ('Activar empresa' | translate)">
+                      [title]="empresa.activo ? 'Desactivar' : 'Activar'">
                       <i class="icofont" [ngClass]="empresa.activo ? 'icofont-ban' : 'icofont-check-circled'"></i>
-                      <span *ngIf="isMobile" class="ms-1">{{ empresa.activo ? ('Desactivar' | translate) : ('Activar' | translate) }}</span>
                     </button>
 
-                    <!-- Botón de eliminar - Solo visible para dgarciah@julsmind.com -->
-                    <button
-                      class="btn btn-outline-danger btn-sm"
+                    <button class="action-btn-icon action-btn-icon--danger"
                       *ngIf="isAdminUser"
                       (click)="eliminarEmpresa(empresa)"
-                      [title]="'Eliminar empresa y todos sus datos' | translate">
+                      title="Eliminar empresa">
                       <i class="icofont icofont-trash"></i>
-                      <span *ngIf="isMobile" class="ms-1">{{ 'Eliminar' | translate }}</span>
                     </button>
                   </div>
                 </td>
@@ -332,7 +335,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td [attr.colspan]="isMobile ? 3 : 8" class="text-center py-4">
+                <td [attr.colspan]="isMobile ? 3 : (isAdminUser ? 9 : 8)" class="text-center py-4">
                   <div class="text-muted">
                     <i class="icofont icofont-search-document display-4"></i>
                     <p class="mt-2 mb-0">{{ 'No se encontraron empresas' | translate }}</p>

@@ -173,6 +173,13 @@ export class SubscriptionService {
   }
 
   /**
+   * Cambiar plan de CUALQUIER empresa — solo superadmin (Julsmind)
+   */
+  adminUpgradePlan(targetCompany: string, plan: 'premium' | 'freemium'): Observable<any> {
+    return this.http.post(`${this.baseUrl}/admin-upgrade`, { targetCompany, plan });
+  }
+
+  /**
    * Cambiar plan (upgrade/downgrade)
    */
   upgradePlan(newPlan: 'premium' | 'freemium'): Observable<UpgradeResponse> {

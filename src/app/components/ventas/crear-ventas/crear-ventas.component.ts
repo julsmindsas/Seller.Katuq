@@ -290,10 +290,12 @@ export class CrearVentasComponent
   public cargandoTiposCliente: boolean = false;
 
   /**
-   * Configuración de Siigo para facturación automática
+   * Configuración de facturación electrónica (Siigo, World Office, etc.)
    */
   public siigoConfig: any = null;
   public siigoEnabled: boolean = false;
+  public activeAccountingProvider: string = null;
+  public accountingProviderName: string = 'Sistema Contable';
 
   constructor(
     private modalService: NgbModal,
@@ -509,7 +511,7 @@ export class CrearVentasComponent
     // Cargar tipos de cliente para selector de categoría
     this.cargarTiposCliente();
 
-    // Cargar configuración de Siigo para facturación automática
+    // Cargar configuración de facturación electrónica (Siigo, World Office, etc.)
     this.cargarConfiguracionSiigo();
 
     // **NUEVA FUNCIONALIDAD: Suscribirse a los cambios del carrito**
@@ -727,42 +729,85 @@ export class CrearVentasComponent
   }
 
   /**
-   * Carga la configuración de Siigo para facturación automática.
-   * Verifica si la integración está habilitada y configurada para auto-facturación.
+   * Carga la configuración de facturación electrónica.
+   * Verifica proveedores contables (Siigo, World Office) en orden de prioridad.
    */
   cargarConfiguracionSiigo(): void {
-    this.integrationsService.loadSiigoConfig().subscribe({
-      next: (response: any) => {
-        if (response?.success && response?.config) {
-          this.siigoConfig = response.config.config || response.config;
-          // Verificar si está habilitada y tiene facturación automática
-          this.siigoEnabled = response.config.status === 'active' &&
-                             (this.siigoConfig?.enableAutoInvoicing === true ||
-                              this.siigoConfig?.facturacionAutomatica === true);
+    const accountingProviders = ['siigo', 'world_office'];
+    let found = false;
 
-          if (this.siigoEnabled) {
-            console.log('✅ Siigo habilitado con facturación automática');
-          } else {
-            console.log('ℹ️ Siigo configurado pero facturación automática deshabilitada');
-          }
-        } else {
+    const checkProvider = (index: number) => {
+      if (index >= accountingProviders.length) {
+        if (!found) {
           this.siigoConfig = null;
           this.siigoEnabled = false;
-          console.log('ℹ️ Siigo no configurado para esta empresa');
+          this.activeAccountingProvider = null;
+          this.accountingProviderName = 'Sistema Contable';
+          console.log('ℹ️ No hay integración de facturación configurada para esta empresa');
         }
-      },
-      error: (error) => {
-        // Error silencioso - Siigo simplemente no está configurado
-        this.siigoConfig = null;
-        this.siigoEnabled = false;
-        console.log('ℹ️ Siigo no disponible:', error?.message || 'No configurado');
+        return;
       }
-    });
+
+      const provider = accountingProviders[index];
+      this.integrationsService.getIntegration(provider).subscribe({
+        next: (response: any) => {
+          const providerConfig = response?.config || response?.credentials;
+          const isActive = response?.enabled || response?.config?.status === 'active';
+
+          // Verificar credenciales válidas según el proveedor
+          let isConfigured = false;
+          let hasAutoInvoicing = false;
+
+          if (provider === 'siigo') {
+            isConfigured = isActive && !!providerConfig?.username;
+            hasAutoInvoicing = providerConfig?.enableAutoInvoicing === true ||
+                               providerConfig?.facturacionAutomatica === true;
+          } else if (provider === 'world_office') {
+            isConfigured = isActive && !!(providerConfig?.apiToken || providerConfig?.idEmpresa);
+            hasAutoInvoicing = providerConfig?.enableAutoInvoicing === true ||
+                               providerConfig?.facturacionAutomatica === true;
+          }
+
+          if (isConfigured && !found) {
+            found = true;
+            this.siigoConfig = providerConfig;
+            this.siigoEnabled = hasAutoInvoicing;
+            this.activeAccountingProvider = provider;
+            this.accountingProviderName = this.getAccountingProviderDisplayName(provider);
+
+            if (this.siigoEnabled) {
+              console.log(`✅ ${this.accountingProviderName} habilitado con facturación automática`);
+            } else {
+              console.log(`ℹ️ ${this.accountingProviderName} configurado pero facturación automática deshabilitada`);
+            }
+          } else {
+            checkProvider(index + 1);
+          }
+        },
+        error: () => {
+          checkProvider(index + 1);
+        }
+      });
+    };
+
+    checkProvider(0);
   }
 
   /**
-   * Encola facturación Siigo en background después de crear el pedido.
-   * Solo se ejecuta si Siigo está habilitado con facturación automática.
+   * Retorna el nombre legible del proveedor contable.
+   */
+  private getAccountingProviderDisplayName(provider: string): string {
+    const names: { [key: string]: string } = {
+      'siigo': 'Siigo',
+      'world_office': 'World Office',
+      'alegra': 'Alegra'
+    };
+    return names[provider] || 'Sistema Contable';
+  }
+
+  /**
+   * Encola facturación electrónica en background después de crear el pedido.
+   * Soporta Siigo (async) y World Office (generic endpoint).
    *
    * @param orderId ID del pedido creado
    * @param nroPedido Número de pedido para logs
@@ -773,9 +818,12 @@ export class CrearVentasComponent
       return;
     }
 
-    console.log(`📄 Encolando facturación Siigo para pedido ${nroPedido}...`);
+    const providerName = this.accountingProviderName || 'Sistema Contable';
+    const provider = this.activeAccountingProvider || 'siigo';
 
-    // Obtener opciones de facturación de la configuración de Siigo
+    console.log(`📄 Encolando facturación ${providerName} para pedido ${nroPedido}...`);
+
+    // Obtener opciones de facturación de la configuración
     const options: any = {};
     if (this.siigoConfig?.documentTypeId) {
       options.documentTypeId = this.siigoConfig.documentTypeId;
@@ -790,19 +838,23 @@ export class CrearVentasComponent
       options.sellerId = this.siigoConfig.sellerId;
     }
 
-    this.integrationsService.createSiigoInvoiceFromOrderAsync(orderId, options)
-      .subscribe({
-        next: (response) => {
-          console.log(`🔄 Facturación Siigo encolada - Job ID: ${response.jobId}`);
+    // Usar endpoint async de Siigo o genérico para otros proveedores
+    const invoiceCall = provider === 'world_office'
+      ? this.integrationsService.createAccountingInvoiceFromOrder(provider, orderId, options)
+      : this.integrationsService.createSiigoInvoiceFromOrderAsync(orderId, options);
+
+    invoiceCall.subscribe({
+        next: (response: any) => {
+          console.log(`🔄 Facturación ${providerName} encolada - Job ID: ${response.jobId || response.id || 'N/A'}`);
           // Mostrar mensaje informativo al usuario
           this.toastrService.info(
             'La factura se generará en segundo plano. Recibirás una notificación cuando esté lista.',
-            'Facturación en proceso',
+            `Facturación ${providerName} en proceso`,
             { timeOut: 5000 }
           );
         },
         error: (error) => {
-          console.warn('⚠️ No se pudo encolar facturación Siigo:', error?.message || error);
+          console.warn(`⚠️ No se pudo encolar facturación ${providerName}:`, error?.message || error);
           // No bloquear el flujo - solo advertir
           // El usuario puede facturar manualmente después
         }
@@ -3035,7 +3087,7 @@ export class CrearVentasComponent
                   confirmButtonText: "Ok",
                 });
 
-                // Encolar facturación Siigo en background si está habilitada globalmente o si el checkbox está marcado
+                // Encolar facturación electrónica en background si está habilitada globalmente o si el checkbox está marcado
                 if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {
                   context.encolarFacturacionSiigo(orderId, nroPedido);
                 }
@@ -4011,7 +4063,7 @@ export class CrearVentasComponent
                   const orderId = res.order?._id || res.orderId || res.id;
                   const nroPedido = context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
 
-                  // Encolar facturación Siigo en background si está habilitada globalmente o si el checkbox está marcado
+                  // Encolar facturación electrónica en background si está habilitada globalmente o si el checkbox está marcado
                   if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {
                     context.encolarFacturacionSiigo(orderId, nroPedido);
                   }

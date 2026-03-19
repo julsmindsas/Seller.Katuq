@@ -331,6 +331,173 @@
                 </div>
             </div>
 
+            <!-- INVENTORY MODULE -->
+            <div class="operational-module-modern" *ngIf="modulosHabilitados.inventario">
+                <div class="module-header-modern" (click)="toggleModule('inventario')" [attr.aria-expanded]="modulosExpandidos.inventario">
+                    <div class="module-title-wrapper">
+                        <h3 class="module-title-modern">
+                            <i class="fa fa-boxes me-2"></i>
+                            {{ 'Módulo de Inventario' | translate }}
+                        </h3>
+                        <p class="module-description-modern">{{ 'Stock, rotación, alertas y movimientos' | translate }}</p>
+                    </div>
+                    <i class="fa fa-chevron-down toggle-icon" [class.rotated]="modulosExpandidos.inventario"></i>
+                </div>
+                <div class="module-content-modern" [class.collapsed]="!modulosExpandidos.inventario">
+
+                    <!-- Loading -->
+                    <div class="text-center py-4" *ngIf="estadoCarga.inventario">
+                        <div class="spinner-border" role="status"></div>
+                        <p class="mt-2 text-muted">{{ 'Cargando inventario...' | translate }}</p>
+                    </div>
+
+                    <!-- Datos cargados -->
+                    <div *ngIf="!estadoCarga.inventario && inventarioData.snapshot" class="p-3">
+
+                        <!-- KPI Cards -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-6 col-md-3">
+                                <div class="kpi-card-modern text-center p-3">
+                                    <div class="kpi-label">{{ 'Productos con Stock' | translate }}</div>
+                                    <div class="kpi-value text-success">{{ inventarioData.snapshot.resumen.conStock | number }}</div>
+                                    <small class="text-muted">de {{ inventarioData.snapshot.resumen.totalProductosUnicos | number }}</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="kpi-card-modern text-center p-3">
+                                    <div class="kpi-label">{{ 'En Ruptura' | translate }}</div>
+                                    <div class="kpi-value text-danger">{{ inventarioData.snapshot.resumen.enRuptura | number }}</div>
+                                    <small class="text-muted">{{ 'Sin stock' | translate }}</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="kpi-card-modern text-center p-3">
+                                    <div class="kpi-label">{{ 'Stock Bajo' | translate }}</div>
+                                    <div class="kpi-value text-warning">{{ inventarioData.snapshot.resumen.stockBajo | number }}</div>
+                                    <small class="text-muted">≤ 5 unidades</small>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="kpi-card-modern text-center p-3">
+                                    <div class="kpi-label">{{ 'Dormidos' | translate }}</div>
+                                    <div class="kpi-value text-secondary">{{ inventarioData.snapshot.resumen.productosDormidos | number }}</div>
+                                    <small class="text-muted">sin salidas {{ inventarioData.snapshot.resumen.diasDormidoUmbral }}d</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Gráficos: Bodegas + Movimientos -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-5" *ngIf="inventarioBodegasChartOption && inventarioData.snapshot.distribucionBodegas.length">
+                                <div class="kpi-card-modern p-3">
+                                    <h6 class="mb-3"><i class="fa fa-warehouse me-2"></i>{{ 'Distribución por Bodega' | translate }}</h6>
+                                    <div echarts [options]="inventarioBodegasChartOption" style="height: 220px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-7" *ngIf="inventarioMovimientosChartOption && inventarioData.movimientos">
+                                <div class="kpi-card-modern p-3">
+                                    <h6 class="mb-2"><i class="fa fa-exchange-alt me-2"></i>{{ 'Movimientos del Período' | translate }}</h6>
+                                    <div class="d-flex gap-3 mb-2">
+                                        <span class="badge bg-success">+{{ inventarioData.movimientos.resumen.totalIngresosUnidades | number }} ingresos</span>
+                                        <span class="badge bg-danger">-{{ inventarioData.movimientos.resumen.totalSalidasUnidades | number }} salidas</span>
+                                        <span class="badge" [class.bg-primary]="inventarioData.movimientos.resumen.balanceNeto >= 0" [class.bg-warning]="inventarioData.movimientos.resumen.balanceNeto < 0">
+                                            Balance: {{ inventarioData.movimientos.resumen.balanceNeto | number }}
+                                        </span>
+                                    </div>
+                                    <div echarts [options]="inventarioMovimientosChartOption" style="height: 180px;"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Alertas -->
+                        <div class="row g-3 mb-4" *ngIf="inventarioData.snapshot.alertas.sinStock.length || inventarioData.snapshot.alertas.stockBajo.length">
+                            <!-- Sin stock -->
+                            <div class="col-md-6" *ngIf="inventarioData.snapshot.alertas.sinStock.length">
+                                <div class="kpi-card-modern p-3">
+                                    <h6 class="text-danger mb-2"><i class="fa fa-exclamation-circle me-2"></i>{{ 'En Ruptura' | translate }} ({{ inventarioData.snapshot.alertas.sinStock.length }})</h6>
+                                    <div style="max-height:180px; overflow-y:auto;">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <tbody>
+                                                <tr *ngFor="let p of inventarioData.snapshot.alertas.sinStock">
+                                                    <td><small>{{ p.nombre }}</small></td>
+                                                    <td><small class="text-muted">{{ p.referencia }}</small></td>
+                                                    <td class="text-end"><span class="badge bg-danger">0</span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Stock bajo -->
+                            <div class="col-md-6" *ngIf="inventarioData.snapshot.alertas.stockBajo.length">
+                                <div class="kpi-card-modern p-3">
+                                    <h6 class="text-warning mb-2"><i class="fa fa-exclamation-triangle me-2"></i>{{ 'Stock Bajo' | translate }} ({{ inventarioData.snapshot.alertas.stockBajo.length }})</h6>
+                                    <div style="max-height:180px; overflow-y:auto;">
+                                        <table class="table table-sm table-hover mb-0">
+                                            <tbody>
+                                                <tr *ngFor="let p of inventarioData.snapshot.alertas.stockBajo">
+                                                    <td><small>{{ p.nombre }}</small></td>
+                                                    <td><small class="text-muted">{{ p.referencia }}</small></td>
+                                                    <td class="text-end"><span class="badge bg-warning text-dark">{{ p.stockActual }}</span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Top productos con movimiento -->
+                        <div class="kpi-card-modern p-3 mb-3" *ngIf="inventarioData.movimientos?.topProductosMovidos?.length">
+                            <h6 class="mb-3"><i class="fa fa-sort-amount-down me-2"></i>{{ 'Top Productos por Movimiento' | translate }}</h6>
+                            <div style="overflow-x:auto;">
+                                <table class="table table-sm table-hover mb-0">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>{{ 'Producto' | translate }}</th>
+                                            <th>{{ 'Ref.' | translate }}</th>
+                                            <th class="text-end text-success">{{ 'Entradas' | translate }}</th>
+                                            <th class="text-end text-danger">{{ 'Salidas' | translate }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr *ngFor="let p of inventarioData.movimientos.topProductosMovidos">
+                                            <td><small>{{ p.nombre }}</small></td>
+                                            <td><small class="text-muted">{{ p.referencia }}</small></td>
+                                            <td class="text-end text-success"><small>+{{ p.unidadesEntradas | number }}</small></td>
+                                            <td class="text-end text-danger"><small>-{{ p.unidadesSalidas | number }}</small></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Productos dormidos -->
+                        <div class="kpi-card-modern p-3" *ngIf="inventarioData.snapshot.alertas.dormidos.length">
+                            <h6 class="text-secondary mb-2"><i class="fa fa-moon me-2"></i>{{ 'Productos Dormidos' | translate }} ({{ inventarioData.snapshot.alertas.dormidos.length }})</h6>
+                            <p class="text-muted small mb-2">{{ 'Sin salidas en los últimos' | translate }} {{ inventarioData.snapshot.resumen.diasDormidoUmbral }} {{ 'días' | translate }}</p>
+                            <div style="max-height:200px; overflow-y:auto;">
+                                <table class="table table-sm table-hover mb-0">
+                                    <tbody>
+                                        <tr *ngFor="let p of inventarioData.snapshot.alertas.dormidos">
+                                            <td><small>{{ p.nombre }}</small></td>
+                                            <td><small class="text-muted">{{ p.referencia }}</small></td>
+                                            <td class="text-end"><span class="badge bg-secondary">{{ p.stockActual }}</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sin datos -->
+                    <div *ngIf="!estadoCarga.inventario && !inventarioData.snapshot" class="text-center text-muted py-4">
+                        <i class="fa fa-boxes fa-2x mb-3"></i>
+                        <p>{{ 'Expande el módulo para cargar datos de inventario' | translate }}</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- PRODUCTION MODULE (placeholder structure) -->
             <div class="operational-module-modern" *ngIf="modulosHabilitados.produccion">
                 <div class="module-header-modern" (click)="toggleModule('produccion')" [attr.aria-expanded]="modulosExpandidos.produccion">
