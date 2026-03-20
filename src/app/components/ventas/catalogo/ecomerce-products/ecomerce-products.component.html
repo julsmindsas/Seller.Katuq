@@ -110,7 +110,7 @@
                                                     <div class="checkbox-animated mt-0">
                                                         <h6 class="f-w-600">{{ 'Géneros' | translate }}</h6>
                                                         <label class="d-block"
-                                                            *ngFor="let genero of generos; let i = index">
+                                                            *ngFor="let genero of generos; let i = index; trackBy: trackByGenero">
                                                             <input class="checkbox_animated" type="checkbox"
                                                                 [id]="'genero-' + genero.id" [value]="genero.id"
                                                                 (change)="onGenreChange($event, i)">
@@ -125,7 +125,7 @@
                                                     <div class="checkbox-animated mt-0">
                                                         <h6 class="f-w-600">{{ 'Ocasiones' | translate }}</h6>
                                                         <label class="d-block"
-                                                            *ngFor="let ocasion of ocasiones; let i = index">
+                                                            *ngFor="let ocasion of ocasiones; let i = index; trackBy: trackByOcasion">
                                                             <input class="checkbox_animated" type="checkbox"
                                                                 [id]="'ocasion-' + ocasion.id" [value]="ocasion.id"
                                                                 (change)="onOccasionChange($event, i)">
@@ -141,7 +141,7 @@
                                                     <h6 class="f-w-600">{{ 'Tiempos de entrega' | translate }}</h6>
                                                     <div class="checkbox-animated mt-0">
                                                         <label class="d-block"
-                                                            *ngFor="let tiempo of tiempoEntrega; let i = index">
+                                                            *ngFor="let tiempo of tiempoEntrega; let i = index; trackBy: trackByTiempo">
                                                             <input class="checkbox_animated" type="checkbox"
                                                                 [id]="'tiempo-' + tiempo.nombreInterno"
                                                                 [value]="tiempo.nombreInterno"
@@ -310,7 +310,7 @@
              *ngIf="bodega && bodega.idBodega && ciudad && ciudad !== 'seleccione' && ciudad.trim() !== '' && productosPaginados?.length > 0">
             <div class="row">
                 <div [class]="'col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
-                    *ngFor="let producto of productosPaginados">
+                    *ngFor="let producto of productosPaginados; trackBy: trackByProducto">
                     <div class="card product-card-modern">
                         <div class="product-box-modern">
                             <div class="product-img-wrapper">
@@ -406,7 +406,7 @@
                                 </li>
 
                                 <!-- Páginas numéricas -->
-                                <ng-container *ngFor="let page of [].constructor(totalPaginas); let i = index">
+                                <ng-container *ngFor="let page of [].constructor(totalPaginas); let i = index; trackBy: trackByIndex">
                                     <li class="page-item" [class.active]="paginaActual === i+1"
                                         *ngIf="(i+1 >= paginaActual - 1 && i+1 <= paginaActual + 1) ||
                                                i+1 === 1 || i+1 === totalPaginas">

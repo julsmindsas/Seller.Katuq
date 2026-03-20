@@ -96,6 +96,19 @@ export class EcomerceProductsComponent
   // Flag para usar paginación server-side (feature flag)
   usarPaginacionServidor: boolean = true;
 
+  // Cache de precio por categoría del cliente (evita parsear sessionStorage en cada CD cycle)
+  private _cachedCategoriaClienteId: string | null = null;
+  private _clienteCacheInitialized: boolean = false;
+
+  // Flag para evitar recargar filtros estáticos
+  private _filtrosCargados: boolean = false;
+
+  // Flag para evitar doble carga cuando cargarTodo() ya disparó filtrarProductos()
+  private _skipNextOnChanges: boolean = false;
+
+  // Subject para debounce de cambios de filtros (checkboxes)
+  private filterSubject$ = new Subject<void>();
+
   // Cache de filtros actuales para paginación
   private filtrosActuales: any = null;
 
@@ -122,6 +135,8 @@ export class EcomerceProductsComponent
     this.listView = false;
     this.col = "2";
     this.obtenerFiltros();
+    // Refrescar cache de cliente al recargar todo
+    this.refreshClienteCache();
 
     // Solo filtrar si tenemos bodega y ciudad
     if (
@@ -131,6 +146,7 @@ export class EcomerceProductsComponent
       this.ciudad !== "seleccione" &&
       this.ciudad.trim() !== ""
     ) {
+      this._skipNextOnChanges = true; // Evitar doble carga desde ngOnChanges
       this.filtrarProductos();
     } else {
       console.log(
@@ -155,28 +171,24 @@ export class EcomerceProductsComponent
     const genres = this.filterForm.get("genres") as FormGroup;
 
     if (event.target.checked) {
-      // Si la ocasión está seleccionada, establecer su valor en el objeto a true.
       genres.addControl(event.target.value, new FormControl(true));
     } else {
-      // Si la ocasión no está seleccionada, eliminar su entrada en el objeto.
       genres.removeControl(event.target.value);
     }
 
-    this.filtrarProductos();
+    this.filterSubject$.next();
   }
 
   onOccasionChange(event: any, index: number) {
     const occasions = this.filterForm.get("occasions") as FormGroup;
 
     if (event.target.checked) {
-      // Si la ocasión está seleccionada, establecer su valor en el objeto a true.
       occasions.addControl(event.target.value, new FormControl(true));
     } else {
-      // Si la ocasión no está seleccionada, eliminar su entrada en el objeto.
       occasions.removeControl(event.target.value);
     }
 
-    this.filtrarProductos();
+    this.filterSubject$.next();
   }
 
   onDeliveryTimeChange(event: any, index: number) {
@@ -197,7 +209,7 @@ export class EcomerceProductsComponent
       });
     }
 
-    this.filtrarProductos();
+    this.filterSubject$.next();
   }
 
   private initForm() {
@@ -217,6 +229,9 @@ export class EcomerceProductsComponent
   }
 
   ngOnInit(): void {
+    // Inicializar cache de categoría de cliente
+    this.refreshClienteCache();
+
     // Configurar debounce para búsqueda
     this.searchSubject$
       .pipe(
@@ -228,8 +243,17 @@ export class EcomerceProductsComponent
         this.ejecutarBusqueda(searchTerm);
       });
 
+    // Configurar debounce para cambios de filtros (checkboxes)
+    this.filterSubject$
+      .pipe(
+        debounceTime(400),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.filtrarProductos();
+      });
+
     // Inicializar y cargar productos si tenemos bodega y ciudad
-    // Esto permite que funcione tanto para isRebuy=true como isRebuy=false
     if (
       this.bodega &&
       this.bodega.idBodega &&
@@ -241,23 +265,54 @@ export class EcomerceProductsComponent
     }
   }
 
+  // ── TrackBy functions para optimizar *ngFor ──
+  trackByGenero(index: number, genero: any): any { return genero.id; }
+  trackByOcasion(index: number, ocasion: any): any { return ocasion.id; }
+  trackByTiempo(index: number, tiempo: any): string { return tiempo.nombreInterno; }
+  trackByProducto(index: number, producto: Producto): string { return producto.cd; }
+  trackByIndex(index: number): number { return index; }
+
+  /**
+   * Refresca la cache de categoría del cliente desde sessionStorage.
+   * Llamar solo cuando cambia el cliente, no en cada CD cycle.
+   */
+  refreshClienteCache(): void {
+    try {
+      const clienteStr = sessionStorage.getItem('cliente');
+      if (clienteStr) {
+        const cliente = JSON.parse(clienteStr);
+        this._cachedCategoriaClienteId = cliente?.categoria?.id || null;
+      } else {
+        this._cachedCategoriaClienteId = null;
+      }
+    } catch (e) {
+      this._cachedCategoriaClienteId = null;
+    }
+    this._clienteCacheInitialized = true;
+  }
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
   obtenerFiltros() {
-    // this.getAllFilters();
-    this.pedidoUtilService.getAllMaestro$().subscribe((data: any) => {
-      this.empresaActual = data.empresaActual;
-      this.formaEntrega = data.formaEntrega;
-      this.tiempoEntrega = data.tiempoEntrega;
-      this.tipoEntrega = data.tipoEntrega;
-      this.ocasiones = data.ocasiones;
-      this.generos = data.generos;
-      this.formasPago = data.formasPago;
-      this.categorias = data.categorias;
-    });
+    // Los filtros son datos maestros estáticos, solo cargarlos una vez
+    if (this._filtrosCargados) return;
+
+    this.pedidoUtilService.getAllMaestro$()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: any) => {
+        this.empresaActual = data.empresaActual;
+        this.formaEntrega = data.formaEntrega;
+        this.tiempoEntrega = data.tiempoEntrega;
+        this.tipoEntrega = data.tipoEntrega;
+        this.ocasiones = data.ocasiones;
+        this.generos = data.generos;
+        this.formasPago = data.formasPago;
+        this.categorias = data.categorias;
+        this._filtrosCargados = true;
+      });
   }
 
   getAllFilters() {
@@ -788,6 +843,12 @@ export class EcomerceProductsComponent
     const bodegaChanged = changes["bodega"] && !changes["bodega"].firstChange;
     const ciudadChanged = changes["ciudad"] && !changes["ciudad"].firstChange;
 
+    // Si cargarTodo() ya disparó filtrarProductos(), saltar este ciclo
+    if (this._skipNextOnChanges && (bodegaChanged || ciudadChanged)) {
+      this._skipNextOnChanges = false;
+      return;
+    }
+
     if ((bodegaChanged || ciudadChanged) && this.filterForm) {
       // Actualizar campos del formulario de filtros antes de filtrar
       if (bodegaChanged) {
@@ -897,35 +958,22 @@ export class EcomerceProductsComponent
    * Si no, muestra el precio estándar
    */
   getPrecioParaMostrar(producto: Producto): number {
-    // 1. Obtener cliente desde sessionStorage
-    let cliente: any = null;
-    try {
-      const clienteStr = sessionStorage.getItem('cliente');
-      if (clienteStr) {
-        cliente = JSON.parse(clienteStr);
-      }
-    } catch (e) {
-      return producto?.precio?.precioUnitarioConIva || 0;
-    }
+    if (!this._clienteCacheInitialized) this.refreshClienteCache();
 
-    // 2. Verificar si el cliente tiene categoría
-    const categoriaId = cliente?.categoria?.id;
+    const categoriaId = this._cachedCategoriaClienteId;
     if (!categoriaId) {
       return producto?.precio?.precioUnitarioConIva || 0;
     }
 
-    // 3. Verificar si el producto tiene precios por tipo de cliente
     const preciosPorTipo = producto?.preciosPorTipoCliente;
     if (!preciosPorTipo || !Array.isArray(preciosPorTipo) || preciosPorTipo.length === 0) {
       return producto?.precio?.precioUnitarioConIva || 0;
     }
 
-    // 4. Buscar el precio para la categoría del cliente
     const precioCategoria = preciosPorTipo.find(
       (p: any) => p.tipoClienteId === categoriaId && p.activo === true
     );
 
-    // 5. Retornar precio de categoría o precio estándar
     if (precioCategoria) {
       return precioCategoria.precioConIva || producto?.precio?.precioUnitarioConIva || 0;
     }
@@ -937,17 +985,9 @@ export class EcomerceProductsComponent
    * Verifica si el producto tiene un precio especial por categoría de cliente
    */
   tienePrecioCategoria(producto: Producto): boolean {
-    let cliente: any = null;
-    try {
-      const clienteStr = sessionStorage.getItem('cliente');
-      if (clienteStr) {
-        cliente = JSON.parse(clienteStr);
-      }
-    } catch (e) {
-      return false;
-    }
+    if (!this._clienteCacheInitialized) this.refreshClienteCache();
 
-    const categoriaId = cliente?.categoria?.id;
+    const categoriaId = this._cachedCategoriaClienteId;
     if (!categoriaId) return false;
 
     const preciosPorTipo = producto?.preciosPorTipoCliente;

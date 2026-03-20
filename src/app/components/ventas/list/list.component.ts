@@ -2543,6 +2543,26 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Verifica si un pedido tiene algún ítem con precios por volumen configurados.
+   * Cuando es true, los totales deben recalcularse en frontend para aplicar correctamente las escalas.
+   */
+  private tienePreciosPorVolumen(order: any): boolean {
+    return (order?.carrito || []).some((item: any) => {
+      const preciosVolumen = item?.producto?.precio?.preciosVolumen;
+      return Array.isArray(preciosVolumen) && preciosVolumen.length > 0;
+    });
+  }
+
+  /**
+   * Determina si un pedido necesita recálculo de totales en frontend.
+   */
+  private necesitaRecalculoFrontend(order: any): boolean {
+    return !order._calculadoEnBackend
+      || this.tienePreciosManualActivos(order)
+      || this.tienePreciosPorVolumen(order);
+  }
+
+  /**
    * Calcula el precio unitario sin IVA considerando escalas de volumen
    */
   private calcularPrecioUnitarioSinIVA(itemCarrito: any): number {
@@ -2713,7 +2733,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
 
           if (cantidad >= unidadesInicial && cantidad <= unidadesLimite) {
-            precioConIva = Number(x.valorUnitarioPorVolumenIva) || 0;
+            precioConIva = Number(x.valorUnitarioPorVolumenConIVA) || 0;
             porcentajeIvaStr = (x.valorIVAPorVolumen ?? "0").toString();
             break;
           }
@@ -3320,8 +3340,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         allOrders.forEach((order: any) => {
           // Verificar si el backend ya calculó los totales (optimización de rendimiento)
           // Excepción: si hay precios manuales activos, siempre recalcular en frontend
-          if (!order._calculadoEnBackend || this.tienePreciosManualActivos(order)) {
-            // Recalcular montos base con consistencia (solo si backend no lo hizo, o hay precios manuales)
+          if (this.necesitaRecalculoFrontend(order)) {
+            // Recalcular montos base con consistencia (solo si backend no lo hizo, o hay precios manuales/volumen)
             // Consistente con PaymentService
             const subtotalProductos = Number(this.checkPriceScale(order) || 0);
             const envio = Number(order.totalEnvio || 0);
@@ -3405,9 +3425,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             order.anticipo = 0;
           }
 
-          // 🚚 RECALCULAR ENVÍO Y TOTALIZAR solo si el backend NO lo calculó
-          // Excepción: si hay precios manuales activos, forzar recálculo en frontend
-          if (!order._calculadoEnBackend || this.tienePreciosManualActivos(order)) {
+          // 🚚 RECALCULAR ENVÍO Y TOTALIZAR
+          if (this.necesitaRecalculoFrontend(order)) {
             this.recalcularEnvioYTotalizarPedido(order);
           }
 
@@ -3704,10 +3723,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           allOrders.forEach((order: any) => {
             // Verificar si el backend ya calculó los totales (optimización de rendimiento)
-            // Excepción: si hay precios manuales activos, siempre recalcular en frontend
-            if (!order._calculadoEnBackend || this.tienePreciosManualActivos(order)) {
-              // Recalcular montos base con consistencia (solo si backend no lo hizo, o hay precios manuales)
-              // Consistente con PaymentService y recalcularEnvioYTotalizarPedido
+            if (this.necesitaRecalculoFrontend(order)) {
+              // Recalcular montos base con consistencia
               const subtotalProductos = Number(this.checkPriceScale(order) || 0);
               const envio = Number(order.totalEnvio || 0);
 
@@ -5105,10 +5122,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private recalcularEnvioYTotalizarPedido(order: Pedido): void {
     if (!order) return;
 
-    // Guard: Si el backend ya calculó los totales, no recalcular...
-    // EXCEPCIÓN: si hay precios manuales activos, siempre recalcular en frontend
-    if (order._calculadoEnBackend && !this.tienePreciosManualActivos(order)) {
-      console.log(`⚠️ RECÁLCULO OMITIDO - Backend ya calculó totales para pedido: ${order.nroPedido}`);
+    // Guard: Si el backend ya calculó los totales y no hay precios especiales, no recalcular
+    if (!this.necesitaRecalculoFrontend(order)) {
       return;
     }
 
@@ -6514,9 +6529,57 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return 0;
     }
 
+    const categoriaClienteId = (pedido as any)?.cliente?.categoria?.id;
+
     return pedido.carrito.reduce((total, item) => {
-      const precioUnitario = item.producto?.precio?.precioUnitarioConIva || 0;
-      const cantidad = item.cantidad || 0;
+      const cantidad = Number(item.cantidad) || 0;
+      const producto = item.producto;
+
+      // PRIORIDAD 0: Precio manual
+      if (item._precioManualOverride !== undefined && item._precioManualOverride !== null
+          && producto?.procesoComercial?.permitePrecioManual === true) {
+        return total + (Number(item._precioManualOverride) || 0) * cantidad;
+      }
+
+      // PRIORIDAD 1: Precio por categoría de cliente (desactiva volumen)
+      const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
+      if (categoriaClienteId && preciosPorTipoCliente.length > 0) {
+        const precioCategoria = preciosPorTipoCliente.find(
+          (p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true
+        );
+        if (precioCategoria) {
+          return total + (Number(precioCategoria.precioConIva) || 0) * cantidad;
+        }
+      }
+      if (producto?._precioAplicadoPorCategoria) {
+        return total + (Number(producto?.precio?.precioUnitarioConIva) || 0) * cantidad;
+      }
+
+      // PRIORIDAD 2: Precio por volumen
+      const preciosVolumen = producto?.precio?.preciosVolumen || [];
+      if (preciosVolumen.length > 0 && cantidad > 0) {
+        const rangosValidos = preciosVolumen.filter((x: any) => {
+          const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+          const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+          return tieneMinimo && tieneMaximo;
+        });
+
+        const precioVolumen = rangosValidos.find((x: any) => {
+          const min = Number(x.numeroUnidadesInicial) || 0;
+          const max = Number(x.numeroUnidadesLimite) || Infinity;
+          return cantidad >= min && cantidad <= max;
+        });
+
+        if (precioVolumen) {
+          const precio = Number(precioVolumen.valorUnitarioPorVolumenConIVA)
+                      || Number(precioVolumen.valorUnitarioPorVolumenIva)
+                      || 0;
+          return total + precio * cantidad;
+        }
+      }
+
+      // PRIORIDAD 3: Precio base
+      const precioUnitario = producto?.precio?.precioUnitarioConIva || 0;
       return total + precioUnitario * cantidad;
     }, 0);
   }

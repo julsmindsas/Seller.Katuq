@@ -224,8 +224,13 @@ export class PaymentService extends BaseService {
         totalItemSinIVA = precioUnitarioSinIva * cantidad;
       } else if (preciosVolumen.length > 0) {
         let precioVolumenEncontrado = false;
-        for (const x of preciosVolumen) {
-          // Asegurar que los límites y el valor sean numéricos
+        // Filtrar solo rangos con límites válidos definidos
+        const rangosValidos = preciosVolumen.filter((x: any) => {
+          const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+          const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+          return tieneMinimo && tieneMaximo;
+        });
+        for (const x of rangosValidos) {
           const unidadesInicial = Number(x.numeroUnidadesInicial) || 0;
           const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
           const valorVolumenSinIVA =
@@ -363,27 +368,24 @@ export class PaymentService extends BaseService {
         porcentajeIvaItemStr = precioCategoria.porcentajeIva?.toString() ?? porcentajeIvaUnitario;
         // No aplicar precios por volumen cuando hay precio por categoría
       } else if (preciosVolumen.length > 0) {
-        let precioVolumenEncontrado = false;
-        for (const x of preciosVolumen) {
-          // Asegurar que los límites y valores sean numéricos
+        // Filtrar solo rangos con límites válidos definidos
+        const rangosValidos = preciosVolumen.filter((x: any) => {
+          const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+          const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+          return tieneMinimo && tieneMaximo;
+        });
+        for (const x of rangosValidos) {
           const unidadesInicial = Number(x.numeroUnidadesInicial) || 0;
           const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
-          const valorVolumenConIVA = Number(x.valorUnitarioPorVolumenIva) || 0; // Precio unitario con IVA por volumen
-          const porcentajeVolumenIVA = (x.valorIVAPorVolumen ?? "0").toString(); // Porcentaje IVA por volumen
+          const valorVolumenConIVA = Number(x.valorUnitarioPorVolumenConIVA) || 0;
+          const porcentajeVolumenIVA = (x.valorIVAPorVolumen ?? "0").toString();
 
           if (cantidad >= unidadesInicial && cantidad <= unidadesLimite) {
-            // Usar valores de volumen si aplican
             precioConIvaItem = valorVolumenConIVA;
             porcentajeIvaItemStr = porcentajeVolumenIVA;
-            precioVolumenEncontrado = true;
             break;
           }
         }
-        // No es necesario el 'else' aquí porque precioConIvaItem ya tiene el valor base
-        // if (!precioVolumenEncontrado) {
-        // Si no aplica volumen, usar precio base - ya está asignado
-        // precioConIvaItem = (Number(producto?.precio?.precioUnitarioConIva) || 0);
-        // }
       }
       // Si no hay precios de volumen, precioConIvaItem mantiene el valor base inicializado
       // else {
@@ -1219,7 +1221,13 @@ export class PaymentService extends BaseService {
         porcentajeIva = precioCategoria.porcentajeIva?.toString() ?? producto?.precio?.precioUnitarioIva ?? "0";
       } else if (preciosVolumen.length > 0) {
         // Si no hay precio por categoría ni manual, verificar volumen
-        const precioVolumen = preciosVolumen.find((x: any) => {
+        // Filtrar solo rangos con límites válidos definidos
+        const rangosValidos = preciosVolumen.filter((x: any) => {
+          const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+          const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+          return tieneMinimo && tieneMaximo;
+        });
+        const precioVolumen = rangosValidos.find((x: any) => {
           const min = Number(x.numeroUnidadesInicial) || 0;
           const max = Number(x.numeroUnidadesLimite) || Infinity;
           return cantidad >= min && cantidad <= max;

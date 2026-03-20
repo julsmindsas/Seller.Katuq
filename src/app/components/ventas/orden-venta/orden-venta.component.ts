@@ -117,16 +117,7 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
    */
   calcularTotalProducto(item: any): number {
     const cantidad = item.cantidad || 0;
-    // Respetar precio manual si el producto lo permite y tiene override definido
-    if (item._precioManualOverride !== undefined && item._precioManualOverride !== null
-        && item.producto?.procesoComercial?.permitePrecioManual === true) {
-      return cantidad * (Number(item._precioManualOverride) || 0);
-    }
-    const precioUnitario =
-      item.producto?.precio?.precioUnitarioConIva ||
-      item.producto?.precio?.precioConIva ||
-      0;
-    return cantidad * precioUnitario;
+    return cantidad * this.getPrecioUnitario(item);
   }
 
   /**
@@ -141,17 +132,65 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Obtiene el precio unitario del producto
+   * Obtiene el precio unitario del producto respetando la jerarquía:
+   * 1. Precio manual override
+   * 2. Precio por categoría de cliente
+   * 3. Precio por volumen
+   * 4. Precio base
    */
   getPrecioUnitario(item: any): number {
     if (!item || !item.producto) return 0;
 
-    return (
-      item.producto?.precio?.precioUnitarioConIva ||
-      item.producto?.precio?.precioConIva ||
-      item.producto?.precio?.precioUnitarioSinIva ||
-      0
-    );
+    const producto = item.producto;
+    const cantidad = Number(item.cantidad) || 0;
+
+    // PRIORIDAD 0: Precio manual
+    if (item._precioManualOverride !== undefined && item._precioManualOverride !== null
+        && producto?.procesoComercial?.permitePrecioManual === true) {
+      return Number(item._precioManualOverride) || 0;
+    }
+
+    // PRIORIDAD 1: Precio por categoría de cliente (desactiva volumen)
+    const categoriaClienteId = this.pedido?.cliente?.categoria?.id;
+    const preciosPorTipoCliente = producto?.preciosPorTipoCliente ?? [];
+    if (categoriaClienteId && preciosPorTipoCliente.length > 0) {
+      const precioCategoria = preciosPorTipoCliente.find(
+        (p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true
+      );
+      if (precioCategoria) {
+        return Number(precioCategoria.precioConIva) || 0;
+      }
+    }
+
+    // Si el producto ya tiene marca de precio por categoría aplicado
+    if (producto?._precioAplicadoPorCategoria) {
+      return Number(producto?.precio?.precioUnitarioConIva) || 0;
+    }
+
+    // PRIORIDAD 2: Precio por volumen
+    const preciosVolumen = producto?.precio?.preciosVolumen || [];
+    if (preciosVolumen.length > 0 && cantidad > 0) {
+      const rangosValidos = preciosVolumen.filter((x: any) => {
+        const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+        const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+        return tieneMinimo && tieneMaximo;
+      });
+
+      const precioVolumen = rangosValidos.find((x: any) => {
+        const min = Number(x.numeroUnidadesInicial) || 0;
+        const max = Number(x.numeroUnidadesLimite) || Infinity;
+        return cantidad >= min && cantidad <= max;
+      });
+
+      if (precioVolumen) {
+        return Number(precioVolumen.valorUnitarioPorVolumenConIVA)
+            || Number(precioVolumen.valorUnitarioPorVolumenIva)
+            || 0;
+      }
+    }
+
+    // PRIORIDAD 3: Precio base
+    return Number(producto?.precio?.precioUnitarioConIva) || 0;
   }
 
   /**
