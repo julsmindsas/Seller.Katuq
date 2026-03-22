@@ -2096,6 +2096,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showSuggestions = false;
     this.filteredOrderNumbers = [];
 
+    // Recalcular totales si tiene precios por volumen o manuales
+    if (this.necesitaRecalculoFrontend(item)) {
+      const subtotalProductos = Number(this.checkPriceScale(item) || 0);
+      const envio = Number(item.totalEnvio || 0);
+      item.totalPedidoSinDescuento = subtotalProductos;
+      let descuento = 0;
+      if (item.porceDescuento) {
+        descuento = subtotalProductos * (Number(item.porceDescuento) / 100);
+        item.totalDescuento = descuento;
+      } else {
+        descuento = Number(item.totalDescuento || 0);
+      }
+      item.subtotal = subtotalProductos - descuento + envio;
+      const ivaResult = this.checkIVAPrice(item);
+      item.totalImpuesto = Number(ivaResult.totalPrecioIVADef || item.totalImpuesto || 0);
+      item.totalPedididoConDescuento = item.subtotal + item.totalImpuesto;
+
+      // Recalcular anticipo desde PagosAsentados (igual que en procesarRespuestaPaginada)
+      if (item.PagosAsentados && item.PagosAsentados.length > 0) {
+        item.anticipo = item.PagosAsentados.reduce((acc, pago) => {
+          const estadoValido = pago.estadoVerificacion !== 'Rechazado' && pago.estadoVerificacion !== 'Cancelado';
+          return estadoValido ? acc + Number(pago.valor || pago.valorRegistrado || 0) : acc;
+        }, 0);
+      } else if (item.anticipo == null || item.anticipo === undefined) {
+        item.anticipo = 0;
+      }
+
+      // Recalcular falta por pagar con el nuevo total
+      item.faltaPorPagar = Math.max(0, item.totalPedididoConDescuento - Number(item.anticipo || 0));
+    }
+
     // Mostrar solo el pedido seleccionado
     this.orders = [item];
 
@@ -5066,11 +5097,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   private recalcularTotalesPedido(pedido: Pedido): void {
     if (!pedido) return;
 
-    // Recalcular totales usando el servicio de utilidades
-    this.pedidoUtilService.pedido = pedido;
-
     // 1. Obtener subtotal SOLO de productos (sin IVA, sin envío)
-    const subtotalProductos = this.pedidoUtilService.getSubtotalSinEnvio();
+    // Usar checkPriceScale para aplicar correctamente precios por volumen
+    const subtotalProductos = this.checkPriceScale(pedido as any);
     const totalEnvio = Number(pedido.totalEnvio) || 0;
 
     // 2. Valor Bruto (totalPedidoSinDescuento) = SOLO productos (sin envío)
@@ -5184,7 +5213,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 🔄 RECALCULAR TOTALES DEPENDIENTES - Fórmula consistente con PaymentService
     // 1. Obtener subtotal SOLO de productos (sin IVA, sin envío)
-    const subtotalProductos = this.pedidoUtilService.getSubtotal();
+    // Usar checkPriceScale para aplicar correctamente precios por volumen
+    const subtotalProductos = this.checkPriceScale(order);
 
     // 2. Valor Bruto (totalPedidoSinDescuento) = SOLO productos (sin envío)
     order.totalPedidoSinDescuento = subtotalProductos;
