@@ -389,8 +389,6 @@ export class EcomerceProductsComponent
   listProducts() {
     this.ventasService.getProducts().subscribe({
       next: (data) => {
-        console.log(data);
-        console.log("productos", JSON.stringify(data));
         this.productosCompletos = data;
         this.productos = data; // Mantener esta asignación para compatibilidad
 
@@ -502,13 +500,6 @@ export class EcomerceProductsComponent
 
     // Guardar filtros actuales
     this.filtrosActuales = { ...filter };
-
-    console.log("Filtrando productos con:", {
-      ciudad: this.ciudad,
-      bodega: this.bodega?.nombre || this.bodega?.idBodega,
-      filtros: filter,
-      usandoPaginacionServidor: this.usarPaginacionServidor,
-    });
 
     // Reiniciar a página 1 con nuevos filtros
     this.paginaActual = 1;
@@ -861,7 +852,6 @@ export class EcomerceProductsComponent
     if ((bodegaChanged || ciudadChanged) && this.filterForm) {
       // Actualizar campos del formulario de filtros antes de filtrar
       if (bodegaChanged) {
-        console.log("Bodega cambiada a:", this.bodega);
         // Limpiar productos si no hay ciudad para evitar peticiones inválidas
         if (
           !this.ciudad ||
@@ -877,7 +867,6 @@ export class EcomerceProductsComponent
         }
       }
       if (ciudadChanged) {
-        console.log("Ciudad cambiada a:", this.ciudad);
         // selectedCity controla visualización del selector
         this.selectedCity = this.ciudad;
 
@@ -925,7 +914,6 @@ export class EcomerceProductsComponent
 
     // Si no hay productos en el carrito, no hay nada que verificar
     if (!productosEnCarrito || productosEnCarrito.length === 0) {
-      console.log('🛒 No hay productos en el carrito para verificar');
       return;
     }
 
@@ -938,8 +926,6 @@ export class EcomerceProductsComponent
     });
 
     if (productosOtraCiudad.length > 0) {
-      console.log(`⚠️ Se encontraron ${productosOtraCiudad.length} productos de otra ciudad en el carrito`);
-
       // Mostrar mensaje y preguntar al usuario
       const mensaje = `Hay ${productosOtraCiudad.length} producto(s) en el carrito que pertenecen a otra ciudad. ¿Desea limpiar el carrito para la nueva ciudad "${nuevaCiudad}"?`;
 
@@ -956,8 +942,6 @@ export class EcomerceProductsComponent
           'Advertencia'
         );
       }
-    } else {
-      console.log('✅ Todos los productos del carrito son compatibles con la nueva ciudad');
     }
   }
 

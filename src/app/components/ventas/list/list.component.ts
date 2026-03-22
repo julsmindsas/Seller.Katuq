@@ -189,7 +189,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Usar requestAnimationFrame en lugar de setTimeout para carga más rápida
       requestAnimationFrame(() => {
         if (this.orders.length === 0 && this.totalRecords === 0 && this.table) {
-          console.log('🔄 Carga inicial inmediata');
           this.loadLazy({
             first: 0,
             rows: this.pageSize
@@ -204,13 +203,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   loadLazy(event: LazyLoadEvent) {
     if (!this.usePagination) {
-      console.log('⏭️ loadLazy omitido - paginación deshabilitada');
       return;
     }
 
     // Si no hay evento, crear uno por defecto para la primera carga
     if (!event) {
-      console.log('⚠️ loadLazy llamado sin evento, creando evento por defecto');
       event = {
         first: 0,
         rows: this.pageSize
@@ -219,15 +216,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     const previousPage = this.currentPage;
     const previousFirst = this.first;
-
-    console.log('🔄 loadLazy llamado:', {
-      eventFirst: event.first,
-      eventRows: event.rows,
-      previousPage: previousPage,
-      previousFirst: previousFirst,
-      sortField: event.sortField,
-      sortOrder: event.sortOrder
-    });
 
     // Actualizar tamaño de página si cambió
     if (event.rows) {
@@ -255,16 +243,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Detectar si realmente cambió la página
     const pageChanged = previousPage !== this.currentPage || previousFirst !== this.first;
     
-    console.log('📄 Parámetros de paginación calculados:', {
-      previousPage: previousPage,
-      newPage: this.currentPage,
-      previousFirst: previousFirst,
-      newFirst: this.first,
-      pageSize: this.pageSize,
-      pageChanged: pageChanged,
-      refrescoEnProgreso: this.refrescoEnProgreso
-    });
-
     // Capturar ordenamiento si existe
     if (event.sortField) {
       // El ordenamiento se puede manejar aquí si es necesario
@@ -280,8 +258,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // - transportador → transportador
     if (event.filters) {
       this.columnFilters = {};
-
-      console.log('📋 Filtros recibidos del evento:', JSON.stringify(event.filters, null, 2));
 
       // Mapeo de campos HTML → campos backend
       const fieldMapping: { [key: string]: string } = {
@@ -325,20 +301,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // Solo agregar el filtro si tiene un valor válido (no null, no array vacío)
           if (filterValue && (!Array.isArray(filterValue) || filterValue.length > 0)) {
             this.columnFilters[backendField] = filterValue;
-            console.log(`🔍 Filtro de columna capturado: ${htmlField} → ${backendField} = "${JSON.stringify(filterValue)}"`);
           }
         }
-      }
-
-      if (Object.keys(this.columnFilters).length > 0) {
-        console.log('🎯 Filtros de columna activos para backend:', this.columnFilters);
       }
     }
     // ==============================================================================
 
     // Llamar a refrescar datos con la nueva página
     // Marcar como cambio de página para evitar bloqueos de protección
-    console.log('🚀 Llamando a refrescarDatos con isPageChange=true');
     this.refrescarDatos(false, true);
   }
 
@@ -358,8 +328,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param event - Evento de filtro de PrimeNG
    */
   onTableFilter(event: any): void {
-    console.log('🔍 onTableFilter disparado:', event.filters);
-
     // Capturar filtros del evento
     if (event.filters) {
       this.captureColumnFilters(event.filters);
@@ -368,8 +336,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Si estamos en modo lazy y hay filtros activos, recargar datos del backend
     // para obtener métricas recalculadas sobre los datos filtrados
     if (this.usePagination) {
-      const hasActiveFilters = Object.keys(this.columnFilters).length > 0;
-      console.log('🎯 Filtros activos:', this.columnFilters, '- Recargando:', hasActiveFilters || Object.keys(event.filters || {}).length > 0);
 
       // Siempre recargar cuando hay cambio de filtros para actualizar métricas
       this.currentPage = 1; // Reset a primera página
@@ -412,12 +378,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
         if (filterValue) {
           this.columnFilters[backendField] = filterValue;
-          console.log(`   📌 Filtro capturado: ${backendField} = "${filterValue}"`);
         }
       }
     }
-
-    console.log('📊 columnFilters final:', this.columnFilters);
   }
 
   @HostListener("window:scroll", ["$event"])
@@ -756,8 +719,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Verifica si hay una integración de facturación electrónica configurada
    */
   private checkInvoicingIntegration(): void {
-    console.log('🔄 [List] Verificando integración de facturación...');
-
     // Verificar proveedores contables: SIIGO y World Office
     const accountingProviders = ['siigo', 'world_office'];
     let found = false;
@@ -767,7 +728,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         if (!found) {
           this.hasInvoicingIntegration = false;
           this.activeAccountingProvider = null;
-          console.log('ℹ️ [List] No hay integración de facturación configurada');
         }
         return;
       }
@@ -790,7 +750,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             found = true;
             this.hasInvoicingIntegration = true;
             this.activeAccountingProvider = provider;
-            console.log(`✅ [List] Integración ${provider} detectada - status: active`);
           } else {
             checkProvider(index + 1);
           }
@@ -826,30 +785,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns true si se puede facturar
    */
   puedeFacturarSiigo(pedido: Pedido): boolean {
-    console.log('🔍 [puedeFacturarSiigo] Verificando pedido:', pedido?.nroPedido);
-    console.log('   - hasInvoicingIntegration:', this.hasInvoicingIntegration);
-    console.log('   - estadoPago:', pedido?.estadoPago);
-    console.log('   - nroFactura:', pedido?.nroFactura);
-    console.log('   - pdfUrlInvoice:', pedido?.pdfUrlInvoice);
-    console.log('   - isFromProduction:', this.isFromProduction);
-
     // Verificar si hay integración de facturación configurada
     if (!this.hasInvoicingIntegration) {
-      console.log('   ❌ No hay integración de facturación');
       return false;
     }
     // Solo pedidos con pago aprobado o pre-aprobado
     const estadosPermitidos = [EstadoPago.Aprobado, EstadoPago.PreAprobado];
     if (!estadosPermitidos.includes(pedido?.estadoPago as EstadoPago)) {
-      console.log('   ❌ Estado de pago no permitido:', pedido?.estadoPago, 'Permitidos:', estadosPermitidos);
       return false;
     }
     // No mostrar si ya tiene factura (verificar por nroFactura o pdfUrlInvoice)
     if (pedido?.nroFactura || pedido?.pdfUrlInvoice) {
-      console.log('   ❌ Ya tiene factura');
       return false;
     }
-    console.log('   ✅ Puede facturar');
     return true;
   }
 
@@ -869,7 +817,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.integrationsService.getSiigoDocumentTypes().subscribe({
       next: (response) => {
         Swal.close();
-        console.log('📄 [Siigo] Respuesta document-types:', response);
 
         // El backend devuelve { success, data: { documentTypes: [...] } }
         let documentTypes: any[] = [];
@@ -884,8 +831,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         } else if (Array.isArray(response)) {
           documentTypes = response;
         }
-
-        console.log('📄 [Siigo] Document types procesados:', documentTypes);
 
         if (!documentTypes || documentTypes.length === 0) {
           Swal.fire({
@@ -1906,9 +1851,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private changeDetectorRef: ChangeDetectorRef,
     private integrationsService: IntegrationsService,
   ) {
-    console.log("🔧 Constructor - Registrando filtros personalizados...");
     this.registerCustomFilters();
-    console.log("✅ Constructor - Filtros personalizados registrados");
     this.setupSearchDebounce();
 
     const unaSemana = 7 * 24 * 60 * 60 * 1000;
@@ -1920,7 +1863,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         .getOrdersByNroPedido(this.numberProduct)
         .subscribe((x: any) => {
           this.orders = x;
-          console.log(this.orders);
         });
     }
 
@@ -1943,7 +1885,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         takeUntil(this.destroy$),
       )
       .subscribe((query) => {
-        console.log("Debounce ejecutado con query:", query);
         this.performSearch(query);
       });
   }
@@ -1958,7 +1899,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Validar longitud mínima de 3 caracteres
     if (query.trim().length < 3) {
-      console.log("⚠️ Búsqueda requiere al menos 3 caracteres");
       return false;
     }
 
@@ -1995,9 +1935,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.searchError = null;
 
         // Si no hay resultados, mostrar array vacío (el template 'empty' se mostrará automáticamente)
-        if (results.length === 0) {
-          console.log("ℹ️ No se encontraron pedidos para:", trimmedQuery);
-        }
 
         // Mostrar el panel del autocomplete después de cargar los datos
         if (this.sharedFilters && this.sharedFilters.showAutocompletePanel) {
@@ -2005,7 +1942,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       },
       error: (err) => {
-        console.log("⚠️ Error en búsqueda principal:", err);
+        console.error("Error en búsqueda principal:", err);
 
         // Verificar si el error es por "no encontrado"
         const isNotFoundError =
@@ -2018,7 +1955,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           this.ordersByName = [];
           this.isSearching = false;
           this.searchError = null;
-          console.log("ℹ️ No se encontraron pedidos (404)");
         } else {
           // Fallback al servicio original si es un error real
           this.service
@@ -2350,7 +2286,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   onSearchComplete(event: any): void {
     const query = event.query || "";
-    console.log("🔍 Búsqueda autocompletado (Enter presionado):", query);
 
     // Ejecutar búsqueda inmediatamente sin debounce cuando viene del Enter
     // Esto permite que el dropdown se muestre con los resultados
@@ -2366,8 +2301,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Maneja la selección de un pedido desde el autocompletado
    */
   onSearchSelect(event: any): void {
-    console.log("✅ Pedido seleccionado desde autocompletado:", event);
-
     // Llamar al método existente de selección
     this.selectOrder(event);
   }
@@ -2555,7 +2488,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         );
       },
       error(err) {
-        console.log(err);
+        console.error(err);
       },
     });
 
@@ -2906,8 +2839,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private registerCustomFilters() {
-    console.log("🔧 registerCustomFilters - Iniciando registro...");
-
     this.filterService.register(
       "horarioEntregaCustom",
       (value, filter): boolean => {
@@ -2926,18 +2857,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         return result;
       },
     );
-    console.log("✅ Filtro horarioEntregaCustom registrado");
 
     this.filterService.register("customDate", (value, filter): boolean => {
-      console.log("🔍 FILTRO customDate - Valor:", value, "Filtro:", filter);
-
       if (filter === undefined || filter === null) {
-        console.log("✅ Filtro vacío, retornando true");
         return true;
       }
 
       if (value === undefined || value === null) {
-        console.log("❌ Valor vacío, retornando false");
         return false;
       }
 
@@ -2952,33 +2878,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             parseInt(parts[1]) - 1,
             parseInt(parts[0]),
           );
-          console.log("📅 Valor string convertido:", value, "->", valueDate);
         } else {
           valueDate = new Date(value);
-          console.log(
-            "📅 Valor string genérico convertido:",
-            value,
-            "->",
-            valueDate,
-          );
         }
       } else {
         valueDate = new Date(value);
-        console.log("📅 Valor Date convertido:", value, "->", valueDate);
       }
 
       // Convertir el filtro (que viene del calendario) a Date
       const filterDate = new Date(filter);
-      console.log("📅 Filtro convertido:", filter, "->", filterDate);
 
       // Verificar si las fechas son válidas
       if (isNaN(valueDate.getTime()) || isNaN(filterDate.getTime())) {
-        console.log(
-          "❌ Fecha inválida detectada - Valor:",
-          valueDate,
-          "Filtro:",
-          filterDate,
-        );
         return false;
       }
 
@@ -2994,68 +2905,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         filterDate.getDate(),
       );
 
-      console.log("📅 Comparando fechas:", valueDateOnly, "vs", filterDateOnly);
-
       const result = valueDateOnly.getTime() === filterDateOnly.getTime();
-      console.log("✅ Resultado del filtro:", result);
 
       return result;
     });
-    console.log("✅ Filtro customDate registrado");
-
-    console.log(
-      "🎯 registerCustomFilters - Todos los filtros registrados exitosamente",
-    );
   }
 
   // ✅ NUEVO: Flag para controlar refrescos automáticos
   private ultimoRefresco = 0;
   private refrescoEnProgreso = false;
 
-  // Método para debug del filtro de fecha
+  // Método para aplicar el filtro de fecha desde el calendario
   onDateFilterSelect(event: any, filterCallback: Function) {
-    console.log("🗓️ EVENTO onSelect del calendario:", event);
-    console.log("🗓️ Tipo de evento:", typeof event);
-    console.log("🗓️ Valor del evento:", event);
-    console.log("🗓️ Filter callback:", filterCallback);
-    console.log("🗓️ Filter callback tipo:", typeof filterCallback);
-
     try {
-      // Llamar al callback original
-      console.log("🗓️ Ejecutando filterCallback...");
       filterCallback(event);
-      console.log("🗓️ filterCallback ejecutado exitosamente");
     } catch (error) {
-      console.error("❌ Error al ejecutar filterCallback:", error);
+      console.error("Error al ejecutar filterCallback:", error);
     }
   }
 
   // Método alternativo para probar el filtro
   testDateFilter(event: any) {
-    console.log("🧪 TEST - Evento del calendario:", event);
-    console.log("🧪 TEST - Tipo de evento:", typeof event);
-
-    if (event && event.target) {
-      console.log("🧪 TEST - Valor del input:", event.target.value);
-    }
+    // No-op: método de debug eliminado
   }
 
   // Método para probar el filtro manualmente
   testFilter(filterCallback: Function) {
-    console.log("🧪 TEST FILTER - Iniciando prueba manual del filtro");
-    console.log("🧪 TEST FILTER - Filter callback:", filterCallback);
-    console.log("🧪 TEST FILTER - Tipo de callback:", typeof filterCallback);
-
     try {
-      // Crear una fecha de prueba
       const testDate = new Date();
-      console.log("🧪 TEST FILTER - Fecha de prueba:", testDate);
-
-      // Ejecutar el filtro con la fecha de prueba
       filterCallback(testDate);
-      console.log("🧪 TEST FILTER - Filtro ejecutado exitosamente");
     } catch (error) {
-      console.error("❌ TEST FILTER - Error al ejecutar filtro:", error);
+      console.error("Error al ejecutar filtro:", error);
     }
   }
 
@@ -3063,13 +2943,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Log del stack trace para identificar de dónde viene la llamada
     const stackTrace = new Error().stack;
     const caller = stackTrace?.split('\n')[2]?.trim() || 'unknown';
-    
-    console.log('🔍 refrescarDatos llamado desde:', {
-      caller: caller.substring(0, 100), // Limitar longitud del log
-      forceRefresh,
-      isPageChange,
-      refrescoEnProgreso: this.refrescoEnProgreso
-    });
     
     // ✅ PROTECCIÓN MEJORADA: Evitar refrescos automáticos muy frecuentes
     // PERO: Los cambios de página SIEMPRE deben procesarse inmediatamente
@@ -3087,23 +2960,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // 2. Es un cambio de página legítimo con paginación habilitada
     const skipTimeProtection = forceRefresh || (this.usePagination && isPageChange);
 
-    console.log('🔍 Verificando protección de refresco:', {
-      forceRefresh,
-      isPageChange,
-      usePagination: this.usePagination,
-      skipTimeProtection,
-      tiempoDesdeUltimoRefresco: (tiempoDesdeUltimoRefresco / 1000).toFixed(1) + 's',
-      tiempoMinimo: (tiempoMinimoEntreRefrescos / 1000).toFixed(1) + 's',
-      refrescoEnProgreso: this.refrescoEnProgreso
-    });
-
     if (
       !skipTimeProtection &&
       tiempoDesdeUltimoRefresco < tiempoMinimoEntreRefrescos
     ) {
-      console.log(
-        `⏰ REFRESCO OMITIDO - Último refresco hace ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s (mínimo ${tiempoMinimoEntreRefrescos / 1000}s)`,
-      );
       return;
     }
 
@@ -3112,15 +2972,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.refrescoEnProgreso) {
       const tiempoMaximoEspera = 3000; // 3 segundos máximo de espera
       if (isPageChange && tiempoDesdeUltimoRefresco > tiempoMaximoEspera) {
-        console.log(`⚠️ Forzando refresco - el anterior tardó más de ${tiempoMaximoEspera/1000}s`);
         // Resetear el flag para permitir el nuevo refresco
         this.refrescoEnProgreso = false;
       } else {
-        console.log(`🔄 REFRESCO EN PROGRESO - Omitiendo solicitud duplicada`, {
-          isPageChange,
-          tiempoDesdeUltimoRefresco: (tiempoDesdeUltimoRefresco / 1000).toFixed(1) + 's',
-          caller: caller.substring(0, 100)
-        });
         return;
       }
     }
@@ -3133,10 +2987,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.currentPage = 1;
       this.first = 0;
     }
-
-    console.log(
-      `🔄 INICIANDO REFRESCO - Forzado: ${forceRefresh}, Tiempo desde último: ${(tiempoDesdeUltimoRefresco / 1000).toFixed(1)}s`,
-    );
 
     // Ensure dates are set with fallback to today
     if (!this.fechaInicial || !this.fechaFinal) {
@@ -3172,7 +3022,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Solo para las 4 columnas principales: nroPedido, cliente, ciudad, transportador
     if (this.usePagination && Object.keys(this.columnFilters).length > 0) {
       filter.columnFilters = this.columnFilters;
-      console.log('🎯 Filtros de columna agregados al payload:', filter.columnFilters);
     }
     // ======================================================================================
 
@@ -3245,21 +3094,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       posFilter.globalFilter = filter.globalFilter;
     }
 
-    console.log("Payload para pedidos normales:", filter);
-    console.log("Payload para pedidos POS:", posFilter);
-
     // Usar paginación del servidor si está habilitada
     if (this.usePagination) {
       // Establecer loading antes de hacer la petición
       this.loading = true;
-      
-      console.log('🔄 refrescarDatos con paginación:', {
-        currentPage: this.currentPage,
-        pageSize: this.pageSize,
-        first: this.first,
-        filter: filter,
-        refrescoEnProgreso: this.refrescoEnProgreso
-      });
 
       // Obtener pedidos normales paginados y pedidos del POS en paralelo
       // Usar takeUntil para limpiar suscriptores cuando el componente se destruya
@@ -3362,7 +3200,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       // Combinar ambos tipos de pedidos
       // Los pedidos POS van al inicio para que aparezcan primero en la primera página
       const allOrders = [...posOrdersArray, ...(normalOrders || [])];
-      console.log("Total de pedidos combinados:", allOrders.length);
 
       // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
       this.orders = [];
@@ -3403,16 +3240,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // Calcular anticipo basado en PagosAsentados si existen
           if (order.PagosAsentados && order.PagosAsentados.length > 0) {
-            console.log(`🔍 PROCESANDO PAGOS - Pedido ${order.nroPedido}:`, {
-              totalPagos: order.PagosAsentados.length,
-              pagos: order.PagosAsentados.map((p) => ({
-                formaPago: p.formaPago,
-                estadoVerificacion: p.estadoVerificacion,
-                valor: p.valor || p.valorRegistrado,
-                numeroComprobante: p.numeroComprobante,
-              })),
-            });
-
             order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
               // ✅ CORREGIDO: Incluir TODOS los pagos, incluso los pendientes
               // Los pagos pendientes también representan dinero que el cliente ya pagó
@@ -3428,30 +3255,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 const valorPago = Number(
                   pago.valor || pago.valorRegistrado || 0,
                 );
-                console.log(`💰 PAGO INCLUIDO - Pedido ${order.nroPedido}:`, {
-                  formaPago: pago.formaPago,
-                  estadoVerificacion: pago.estadoVerificacion,
-                  valor: valorPago,
-                  numeroComprobante: pago.numeroComprobante,
-                });
                 return acc + valorPago;
               } else {
-                console.log(`❌ PAGO EXCLUIDO - Pedido ${order.nroPedido}:`, {
-                  formaPago: pago.formaPago,
-                  estadoVerificacion: pago.estadoVerificacion,
-                  valor: pago.valor || pago.valorRegistrado,
-                  numeroComprobante: pago.numeroComprobante,
-                  razon: "Estado inválido",
-                });
                 return acc;
               }
             }, 0);
 
-            console.log(`📊 RESUMEN CÁLCULO - Pedido ${order.nroPedido}:`, {
-              anticipoCalculado: order.anticipo,
-              faltaPorPagar: order.faltaPorPagar,
-              totalPedido: order.totalPedididoConDescuento,
-            });
           } else if (order.anticipo == null || order.anticipo == undefined) {
             order.anticipo = 0;
           }
@@ -3468,17 +3277,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             Number(order.anticipo || 0),
           );
 
-          // 🔍 DEBUG: Log del estado de pago antes de procesar
-          console.log(`💰 ESTADO DE PAGO - Pedido ${order.nroPedido}:`, {
-            estadoActual: order.estadoPago,
-            _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
-            _timestamp: order._timestamp,
-            anticipo: order.anticipo,
-            faltaPorPagar: order.faltaPorPagar,
-            totalPedido: order.totalPedididoConDescuento,
-            pagosAsentados: order.PagosAsentados?.length || 0,
-          });
-
           // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
           // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
           // ✅ CORREGIDO: No recalcular estados finales (Aprobado, Rechazado, Cancelado, Precancelado)
@@ -3489,13 +3287,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             !order._estadoCalculadoEnFrontend &&
             !esEstadoFinal;
 
-          console.log(`🔍 VERIFICACIÓN ESTADO - Pedido ${order.nroPedido}:`, {
-            _estadoCalculadoEnFrontend: order._estadoCalculadoEnFrontend,
-            _timestamp: order._timestamp,
-            debeRecalcular: debeRecalcular,
-            esEstadoFinal: esEstadoFinal,
-            estadoActual: order.estadoPago,
-          });
 
           // Actualizar estado de pago basado en los cálculos reales
           // SOLO recalcular estado si no viene ya calculado del frontend
@@ -3741,12 +3532,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.ventasService.getOrdersPOSByFilter(posFilter),
       ]).subscribe({
         next: ([normalOrders, posOrders]) => {
-          console.log("Pedidos normales:", normalOrders);
-          console.log("Pedidos POS:", posOrders);
-
           // Combinar ambos tipos de pedidos
           const allOrders = [...(normalOrders || []), ...(posOrders || [])];
-          console.log("Total de pedidos combinados:", allOrders.length);
 
           // Limpiar orders antes de asignar nuevos datos para forzar detección de cambios
           this.orders = [];
