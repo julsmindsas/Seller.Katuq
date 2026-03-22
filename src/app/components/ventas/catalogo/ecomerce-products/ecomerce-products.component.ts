@@ -106,6 +106,9 @@ export class EcomerceProductsComponent
   // Flag para evitar doble carga cuando cargarTodo() ya disparó filtrarProductos()
   private _skipNextOnChanges: boolean = false;
 
+  // Flag para evitar doble carga entre ngOnInit y ngAfterViewInit
+  private _initialLoadTriggered: boolean = false;
+
   // Subject para debounce de cambios de filtros (checkboxes)
   private filterSubject$ = new Subject<void>();
 
@@ -125,13 +128,18 @@ export class EcomerceProductsComponent
   }
 
   ngAfterViewInit(): void {
-    if (this.isRebuy) {
+    // Solo cargar si ngOnInit no lo hizo ya (evita doble HTTP request)
+    if (this.isRebuy && !this._initialLoadTriggered) {
+      this._initialLoadTriggered = true;
       this.cargarTodo();
     }
   }
 
   public cargarTodo() {
-    this.initForm();
+    // initForm() ya se llama en el constructor — solo reiniciar si el form no existe
+    if (!this.filterForm) {
+      this.initForm();
+    }
     this.listView = false;
     this.col = "2";
     this.obtenerFiltros();
@@ -261,6 +269,7 @@ export class EcomerceProductsComponent
       this.ciudad !== "seleccione" &&
       this.ciudad.trim() !== ""
     ) {
+      this._initialLoadTriggered = true;
       this.cargarTodo();
     }
   }
