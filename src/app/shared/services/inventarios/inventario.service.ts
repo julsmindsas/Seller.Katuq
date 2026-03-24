@@ -149,7 +149,7 @@ export class InventarioService {
   }
 
   analizarAbastecimientoIA(datos: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/inventory/analizar-abastecimiento-ia`, datos);
+    return this.http.post(`${this.apiUrl}/katuqintelligence/kai/inventory-analysis`, datos);
   }
 
   ingresarProductos(bodegaId: string, productos: any[], tipoMovimiento: TipoMovimientoInventario, observaciones: string): Observable<any> {
@@ -247,6 +247,8 @@ export class InventarioService {
     fechaFin?: string;
     bodegaId?: string;
     productoId?: string;
+    tipo?: string;
+    search?: string;
     limit?: number;
     lastDoc?: string;
     orderBy?: string;
@@ -277,6 +279,12 @@ export class InventarioService {
     }
     if (filtros.orderDirection) {
       params = params.set('orderDirection', filtros.orderDirection);
+    }
+    if (filtros.tipo) {
+      params = params.set('tipo', filtros.tipo);
+    }
+    if (filtros.search) {
+      params = params.set('search', filtros.search);
     }
 
     return this.http.get<MovimientosResponse>(`${this.apiUrl}/inventory/historial`, { params });

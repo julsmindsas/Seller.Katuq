@@ -35,6 +35,8 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
   totalRecords: number = 0;
   rows: number = 10;
   lastDoc: string = "";
+  pageLastDocs: { [page: number]: string } = {}; // cursor por página para ir atrás
+  currentPage: number = 0;
   mostrarFiltros: boolean = true;
   viewMode: "compact" | "detailed" = "compact"; // Modo de visualización
   selectedMovimiento: Movimiento | null = null; // Movimiento seleccionado
@@ -91,7 +93,11 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
     this.searchSubject
       .pipe(debounceTime(300), distinctUntilChanged())
       .subscribe((searchValue) => {
-        this.dt.filterGlobal(searchValue, "contains");
+        this.globalFilterValue = searchValue;
+        this.lastDoc = "";
+        this.pageLastDocs = {};
+        this.currentPage = 0;
+        this.buscarMovimientos();
       });
   }
 
@@ -107,14 +113,10 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
   // Método para aplicar filtros rápidos por tipo de movimiento
   applyTipoFilter(tipo: "todos" | "ingreso" | "salida"): void {
     this.selectedTipoFilter = tipo;
-
-    if (tipo === "todos") {
-      this.dt.filter(null, "tipo", "contains");
-    } else if (tipo === "ingreso") {
-      this.dt.filter("INGRESO", "tipo", "contains");
-    } else {
-      this.dt.filter("SALIDA", "tipo", "contains");
-    }
+    this.lastDoc = "";
+    this.pageLastDocs = {};
+    this.currentPage = 0;
+    this.buscarMovimientos();
   }
 
   cargarProductos(): void {
@@ -151,6 +153,13 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
     if (this.formFiltros.valid) {
       this.loading = true;
 
+      // Si no viene de paginación, resetear cursores
+      if (!event || !event.first) {
+        this.lastDoc = "";
+        this.pageLastDocs = {};
+        this.currentPage = 0;
+      }
+
       // Guardar filtros antes de buscar
       this.saveFilters();
 
@@ -158,8 +167,8 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
 
       // Crear objeto limpio para el backend
       const filtrosParaBackend: any = {
-        orderBy: filtros.orderBy,
-        orderDirection: filtros.orderDirection
+        orderBy: filtros.orderBy?.value || filtros.orderBy || 'fecha',
+        orderDirection: filtros.orderDirection?.value || filtros.orderDirection || 'desc'
       };
 
       // Formatear fechas
@@ -178,22 +187,23 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
 
       // Extraer IDs de los objetos seleccionados
       if (filtros.producto) {
-        // Intentar diferentes propiedades posibles
-        filtrosParaBackend.productoId = filtros.producto._id
-          || filtros.producto.id
-          || filtros.producto.productId
-          || filtros.producto.cd;
-        console.log('Producto seleccionado:', filtros.producto);
-        console.log('ProductoId extraído:', filtrosParaBackend.productoId);
+        // cd es el Firestore doc ID (estándar Katuq)
+        filtrosParaBackend.productoId = filtros.producto.cd || filtros.producto._id || filtros.producto.id;
       }
 
       if (filtros.bodega) {
-        // Intentar diferentes propiedades posibles
-        filtrosParaBackend.bodegaId = filtros.bodega.idBodega
-          || filtros.bodega.id
-          || filtros.bodega._id;
-        console.log('Bodega seleccionada:', filtros.bodega);
-        console.log('BodegaId extraído:', filtrosParaBackend.bodegaId);
+        // idBodega es el business code (estándar Katuq)
+        filtrosParaBackend.bodegaId = filtros.bodega.idBodega || filtros.bodega.id;
+      }
+
+      // Filtro por tipo (todos/ingreso/salida)
+      if (this.selectedTipoFilter !== 'todos') {
+        filtrosParaBackend.tipo = this.selectedTipoFilter === 'ingreso' ? 'INGRESO' : 'SALIDA';
+      }
+
+      // Búsqueda global
+      if (this.globalFilterValue?.trim()) {
+        filtrosParaBackend.search = this.globalFilterValue.trim();
       }
 
       // Agregar paginación
@@ -207,6 +217,10 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
           this.movimientos = response.movimientos || [];
           this.totalRecords = response.pagination.total || 0;
           this.lastDoc = response.pagination.lastDoc || "";
+          // Guardar cursor de esta página para poder navegar atrás
+          if (this.lastDoc) {
+            this.pageLastDocs[this.currentPage] = this.lastDoc;
+          }
           this.loading = false;
         },
         error: (error) => {
@@ -346,6 +360,8 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
     });
 
     this.lastDoc = "";
+    this.pageLastDocs = {};
+    this.currentPage = 0;
     this.selectedMovimiento = null;
 
     // Limpiar filtros guardados en localStorage
@@ -356,6 +372,16 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
 
   onPageChange(event: any): void {
     this.rows = event.rows;
+    const newPage = Math.floor((event.first || 0) / event.rows);
+
+    // Si vamos a una página que ya visitamos, usar su cursor
+    if (newPage > 0 && this.pageLastDocs[newPage - 1]) {
+      this.lastDoc = this.pageLastDocs[newPage - 1];
+    } else if (newPage === 0) {
+      this.lastDoc = "";
+    }
+
+    this.currentPage = newPage;
     this.buscarMovimientos(event);
   }
 

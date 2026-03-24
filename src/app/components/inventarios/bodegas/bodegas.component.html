@@ -48,7 +48,7 @@
 
                 <div class="card-body custom-datatable" *ngIf="!cargando">
                     <p-table #dt [columns]="selectedColumns" [value]="bodegas" [paginator]="true" [rows]="10"
-                        [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
+                        [resizableColumns]="true"
                         styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
                         [globalFilterFields]="['nombre', 'idBodega', 'ciudad', 'tipo']" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true">
 
