@@ -799,8 +799,54 @@ export class InventarioCatalogoComponent implements OnInit {
       command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'SALIDA'),
     });
 
+    // Quitar producto de bodegas sin stock
+    const tieneBodegasSinStock = producto.stockPorBodega &&
+      Object.values(producto.stockPorBodega).some(qty => qty === 0);
+    if (tieneBodegasSinStock) {
+      items.push({
+        label: 'Quitar de bodegas sin stock',
+        icon: 'pi pi-eraser',
+        command: () => this.quitarProductoSinStock(this.selectedMenuProducto!),
+      });
+    }
+
     this.rowMenuItems = items;
     menu.toggle(event);
+  }
+
+  // ============== QUITAR PRODUCTO SIN STOCK ==============
+  quitarProductoSinStock(producto: ProductoConsolidado): void {
+    const bodegasSinStock = Object.entries(producto.stockPorBodega || {})
+      .filter(([_, qty]) => qty === 0)
+      .map(([bodegaId]) => this.getNombreBodega(bodegaId) || bodegaId);
+
+    if (bodegasSinStock.length === 0) {
+      this.toastr.info('Este producto no tiene bodegas con stock 0', 'Sin cambios');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Quitar producto sin stock',
+      html: `<p>Se eliminará <strong>"${producto.nombre}"</strong> de las siguientes bodegas donde tiene 0 unidades:</p>
+             <ul style="text-align:left;">${bodegasSinStock.map(b => `<li>${b}</li>`).join('')}</ul>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#5c6ac4',
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Quitar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.inventarioService.quitarProductoSinStock(producto.id).subscribe({
+          next: (res: any) => {
+            this.toastr.success(`Eliminado de ${res.deleted || 0} bodegas`, 'Producto limpiado');
+            this.cargarInventarioConsolidado();
+          },
+          error: () => {
+            this.toastr.error('Error al quitar producto', 'Error');
+          }
+        });
+      }
+    });
   }
 
   // ============== AJUSTE RÁPIDO DE INVENTARIO ==============

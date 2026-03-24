@@ -148,6 +148,10 @@ export class InventarioService {
     });
   }
 
+  quitarProductoSinStock(productoId: string): Observable<any> {
+    return this.http.delete(`${this.apiUrl}/inventory/quitar-sin-stock/${productoId}`);
+  }
+
   analizarAbastecimientoIA(datos: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/katuqintelligence/kai/inventory-analysis`, datos);
   }
