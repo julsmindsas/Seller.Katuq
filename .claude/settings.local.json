@@ -56,7 +56,13 @@
       "Bash(cd:*)",
       "Bash(git show:*)",
       "Bash(grep:*)",
-      "Bash(find src:*)"
+      "Bash(find src:*)",
+      "mcp__plugin_claude-mem_mcp-search__search",
+      "mcp__plugin_claude-mem_mcp-search__timeline",
+      "Read(//c/sourcecodejuls/katuq_admin_back_firebase/functions/**)",
+      "Bash(node -c controllers/onboarding.js)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

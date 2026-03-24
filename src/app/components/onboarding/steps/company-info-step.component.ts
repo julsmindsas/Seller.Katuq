@@ -110,7 +110,7 @@ export class CompanyInfoStepComponent implements OnInit {
   private initForm(): void {
     this.companyForm = this.fb.group({
       nombre: ['', [Validators.required, Validators.minLength(3)]],
-      nomComercial: [''], // Corregido: usar nomComercial en lugar de nombreComercial para coincidir con Empresa
+      nomComercial: [''],
       nit: ['', [Validators.required, Validators.pattern(/^[0-9]{6,12}$/)]],
       tipoEmpresa: ['persona_juridica', Validators.required],
       sector: ['', Validators.required],

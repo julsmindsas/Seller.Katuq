@@ -37,10 +37,12 @@ import { ConfirmationService } from 'primeng/api';
 import { HistorialMovimientosComponent } from './historial-movimientos/historial-movimientos.component';
 import { ImportarBodegasModalComponent } from './bodegas/importar-bodegas-modal/importar-bodegas-modal.component';
 import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulfillment-sync-history.component';
+import { ImportModalModule } from '../../shared/components/import-modal/import-modal.module';
 
 @NgModule({
     imports: [
         InventariosRoutingModule,
+        ImportModalModule,
         CommonModule,
         SharedModule,
         ProductosRoutingModule,

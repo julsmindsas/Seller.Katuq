@@ -5,13 +5,16 @@
 
 export interface ColumnMapping {
   sourceColumn: string;
+  additionalColumns?: string[]; // columnas extra a concatenar (ej: Segundo Nombre)
+  joinSeparator?: string;       // separador para concatenar (default: ' ')
+  defaultValue?: any;           // valor fijo cuando no hay sourceColumn (ej: '+57')
   confidence: number; // 0-100
   reasoning: string;
 }
 
 export interface ColumnMappingResult {
   success: boolean;
-  type: 'customer' | 'product';
+  type: 'customer' | 'product' | 'inventory';
   mappings: { [katuqField: string]: ColumnMapping };
   unmappedRequired: string[];
   warnings: string[];
@@ -24,7 +27,7 @@ export interface ColumnMappingResult {
 }
 
 export interface ColumnMappingRequest {
-  type: 'customer' | 'product';
+  type: 'customer' | 'product' | 'inventory';
   sourceColumns: string[];
   sampleRows: any[];
   companyId?: string;
@@ -67,6 +70,7 @@ export interface ImportResult {
   success: number;
   failed: number;
   errors: string[];
+  batchId?: string;
   importedItems?: any[];
 }
 

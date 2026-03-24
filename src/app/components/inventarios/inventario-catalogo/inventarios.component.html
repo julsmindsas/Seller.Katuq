@@ -30,6 +30,15 @@
                                     (click)="cargarInventarioConsolidado()"
                                     [disabled]="loadingConsolidado"
                                     pTooltip="Actualizar datos"></button>
+                            <!-- Botón Importar Inventario -->
+                            <button pButton type="button"
+                                    icon="pi pi-upload"
+                                    label="Importar"
+                                    class="p-button-outlined p-button-sm"
+                                    style="border-color: #5c6ac4; color: #5c6ac4;"
+                                    (click)="showImportModal = true"
+                                    pTooltip="Importar inventario desde Excel"
+                                    tooltipPosition="bottom"></button>
                             <!-- Botón Análisis IA -->
                             <button pButton type="button"
                                     icon="pi pi-bolt"
@@ -1760,3 +1769,10 @@
         cursor: pointer;
     }
 </style>
+
+<!-- Modal de Importacion de Inventario -->
+<app-import-modal
+    [(visible)]="showImportModal"
+    type="inventory"
+    (importComplete)="onImportComplete($event)">
+</app-import-modal>

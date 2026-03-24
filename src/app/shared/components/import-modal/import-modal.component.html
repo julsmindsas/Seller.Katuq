@@ -2,7 +2,7 @@
   [(visible)]="visible"
   [header]="config?.title || 'Importar'"
   [modal]="true"
-  [closable]="!isUploading && !isAnalyzingColumns"
+  [closable]="!isUploading && !isAnalyzingColumns && !isDeleting"
   [style]="{width: '90vw', maxWidth: '900px'}"
   [contentStyle]="{'max-height': '80vh', 'overflow': 'auto'}"
   (onShow)="onDialogShow()"
@@ -59,8 +59,20 @@
     </div>
   </div>
 
+  <!-- Step 2b: Uploading/Importing -->
+  <div class="analyzing-step" *ngIf="isUploading">
+    <div class="analyzing-content">
+      <i class="pi pi-spin pi-spinner analyzing-icon"></i>
+      <h4>Importando {{ importTotalRecords }} {{ type === 'customer' ? 'clientes' : 'productos' }}...</h4>
+      <p class="text-muted">
+        Esto puede tardar varios segundos dependiendo del volumen. No cierres esta ventana.
+      </p>
+      <p-progressBar mode="indeterminate" styleClass="mt-3"></p-progressBar>
+    </div>
+  </div>
+
   <!-- Step 3: Column Mapping -->
-  <div class="mapping-step" *ngIf="showMappingPreview && !importResult && !isAnalyzingColumns">
+  <div class="mapping-step" *ngIf="showMappingPreview && !importResult && !isAnalyzingColumns && !isUploading">
     <div class="step-header">
       <h4>
         <i class="pi pi-sparkles mr-2"></i>
@@ -112,7 +124,7 @@
   </div>
 
   <!-- Step 4: Import Result -->
-  <div class="result-step" *ngIf="importResult">
+  <div class="result-step" *ngIf="importResult && !isUploading">
     <div class="result-content" [ngClass]="{'success': importResult.success > 0, 'partial': importResult.failed > 0}">
       <i class="pi result-icon" [ngClass]="importResult.success > 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
       <h4>Importacion {{ importResult.success > 0 ? 'Completada' : 'con Errores' }}</h4>
@@ -136,6 +148,35 @@
           </p-accordionTab>
         </p-accordion>
       </div>
+
+      <div class="batch-info mt-3" *ngIf="importResult.batchId">
+        <small class="text-muted">
+          <i class="pi pi-tag mr-1"></i>Batch: {{ importResult.batchId }}
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4b: Delete Result -->
+  <div class="result-step" *ngIf="deleteResult && !isDeleting">
+    <div class="result-content">
+      <i class="pi pi-trash result-icon" style="color: var(--orange-500)"></i>
+      <h4>Importacion eliminada</h4>
+      <div class="result-stats">
+        <div class="stat">
+          <span class="stat-number">{{ deleteResult.deleted }}</span>
+          <span class="stat-label">Clientes eliminados</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deleting spinner -->
+  <div class="analyzing-step" *ngIf="isDeleting">
+    <div class="analyzing-content">
+      <i class="pi pi-spin pi-spinner analyzing-icon"></i>
+      <h4>Eliminando importacion...</h4>
+      <p-progressBar mode="indeterminate" styleClass="mt-3"></p-progressBar>
     </div>
   </div>
 
@@ -150,12 +191,12 @@
         icon="pi pi-times"
         class="p-button-outlined p-button-secondary"
         (click)="visible = false; visibleChange.emit(false)"
-        [disabled]="isUploading">
+        [disabled]="isUploading || isDeleting">
       </button>
 
       <!-- Confirm Mapping button (mobile only) -->
       <button
-        *ngIf="showMappingPreview && !importResult && !isAnalyzingColumns"
+        *ngIf="showMappingPreview && !importResult && !isAnalyzingColumns && !isUploading"
         pButton
         type="button"
         label="Confirmar Mapeo"
@@ -167,20 +208,41 @@
 
       <!-- Import button -->
       <button
-        *ngIf="showMappingPreview && !importResult"
+        *ngIf="showMappingPreview && !importResult && !isUploading"
         pButton
         type="button"
         [label]="'Importar ' + (type === 'customer' ? 'Clientes' : 'Productos')"
         icon="pi pi-upload"
         class="p-button-success"
         (click)="importData()"
-        [disabled]="!canImport()"
-        [loading]="isUploading">
+        [disabled]="!canImport()">
       </button>
 
-      <!-- Close button (after import) -->
+      <!-- Delete import button (only if customers type and batchId exists) -->
       <button
-        *ngIf="importResult"
+        *ngIf="importResult && importResult.batchId && type === 'customer' && !isDeleting"
+        pButton
+        type="button"
+        label="Eliminar Importacion"
+        icon="pi pi-trash"
+        class="p-button-outlined p-button-danger"
+        (click)="deleteImport()">
+      </button>
+
+      <!-- Delete ALL clients button (only if customers type) -->
+      <button
+        *ngIf="importResult && type === 'customer' && !isDeleting"
+        pButton
+        type="button"
+        label="Eliminar TODOS los Clientes"
+        icon="pi pi-exclamation-triangle"
+        class="p-button-danger"
+        (click)="deleteAllClients()">
+      </button>
+
+      <!-- Close button (after import or delete) -->
+      <button
+        *ngIf="(importResult || deleteResult) && !isDeleting"
         pButton
         type="button"
         label="Cerrar"

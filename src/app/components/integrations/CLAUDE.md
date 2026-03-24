@@ -16,15 +16,4 @@
 |----|------|---|-------|------|
 | #2546 | 10:26 PM | 🔵 | IntegrationsService SIIGO-Specific Methods and Provider Registry | ~196 |
 | #2521 | 10:10 PM | 🔵 | Frontend Integration Architecture Pattern Analysis | ~1105 |
-
-### Mar 18, 2026
-
-| ID | Time | T | Title | Read |
-|----|------|---|-------|------|
-| #2723 | 1:20 AM | 🔴 | idMoneda and idBodega lack required validators despite API requirement | ~465 |
-| #2721 | 1:19 AM | 🔵 | World Office HTML template includes idMoneda and idBodega fields | ~431 |
-| #2685 | 1:07 AM | 🔵 | World Office form has 5 fields in FormGroup not rendered in HTML | ~420 |
-| #2678 | 1:02 AM | 🔴 | World Office form missing required fields in additional fields UI | ~440 |
-| #2676 | 1:01 AM | 🟣 | World Office form with required API fields | ~373 |
-| #2674 | " | 🔵 | Frontend integrations component with dynamic form capabilities | ~394 |
 </claude-mem-context>

@@ -257,6 +257,15 @@ export class InventarioCatalogoComponent implements OnInit {
     return this.bodegasDesglose.filter((b) => b.diferencia !== 0).length;
   }
 
+  // ============== IMPORTACIÓN ==============
+  showImportModal: boolean = false;
+
+  onImportComplete(result: any): void {
+    if (result.success > 0) {
+      this.cargarInventarioConsolidado();
+    }
+  }
+
   // ============== ANÁLISIS IA ==============
   analizandoIA: boolean = false;
   iaAnalysisError: string | null = null;
