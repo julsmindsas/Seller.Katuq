@@ -1776,3 +1776,57 @@
     type="inventory"
     (importComplete)="onImportComplete($event)">
 </app-import-modal>
+
+<!-- Dialog Ajuste Rápido de Inventario -->
+<p-dialog
+    [(visible)]="ajusteVisible"
+    [header]="(ajusteTipo === 'INGRESO' ? 'Ingresar stock — ' : 'Retirar stock — ') + (ajusteProducto?.nombre || '')"
+    [modal]="true"
+    [style]="{width: '420px'}"
+    [closable]="!ajusteGuardando">
+
+    <div class="p-fluid" *ngIf="ajusteProducto">
+        <div class="field mb-3">
+            <label class="font-semibold mb-1 d-block">Bodega</label>
+            <select class="form-select" [(ngModel)]="ajusteBodegaId" [disabled]="ajusteGuardando">
+                <option value="">Seleccionar bodega</option>
+                <option *ngFor="let b of bodegas" [value]="b.idBodega">
+                    {{ b.nombre }} ({{ b.idBodega }})
+                </option>
+            </select>
+        </div>
+
+        <div class="field mb-3">
+            <label class="font-semibold mb-1 d-block">Cantidad</label>
+            <input type="number" class="form-control" [(ngModel)]="ajusteCantidad" min="1"
+                   [disabled]="ajusteGuardando">
+        </div>
+
+        <div class="field mb-3">
+            <label class="font-semibold mb-1 d-block">Observaciones</label>
+            <input type="text" class="form-control" [(ngModel)]="ajusteObservaciones"
+                   [placeholder]="ajusteTipo === 'INGRESO' ? 'Motivo del ingreso...' : 'Motivo del retiro...'"
+                   [disabled]="ajusteGuardando">
+        </div>
+
+        <!-- Stock actual en la bodega seleccionada -->
+        <div *ngIf="ajusteBodegaId" class="mb-3 p-2 rounded" style="background: #f8fafc;">
+            <small class="text-muted">Stock actual en esta bodega:
+                <strong>{{ getStockBodega(ajusteProducto, ajusteBodegaId) }}</strong> unidades
+            </small>
+        </div>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton type="button" label="Cancelar" icon="pi pi-times"
+                class="p-button-text" (click)="ajusteVisible = false"
+                [disabled]="ajusteGuardando"></button>
+        <button pButton type="button"
+                [label]="ajusteTipo === 'INGRESO' ? 'Ingresar' : 'Retirar'"
+                [icon]="ajusteTipo === 'INGRESO' ? 'pi pi-plus' : 'pi pi-minus'"
+                [class]="ajusteTipo === 'INGRESO' ? 'p-button-success' : 'p-button-danger'"
+                (click)="guardarAjuste()"
+                [disabled]="ajusteGuardando || !ajusteBodegaId || ajusteCantidad < 1"
+                [loading]="ajusteGuardando"></button>
+    </ng-template>
+</p-dialog>

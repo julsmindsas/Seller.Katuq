@@ -786,9 +786,78 @@ export class InventarioCatalogoComponent implements OnInit {
       });
     }
 
+    // Ajuste de inventario (ingreso/retiro)
+    items.push({ separator: true });
+    items.push({
+      label: 'Ingresar stock',
+      icon: 'pi pi-plus-circle',
+      command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'INGRESO'),
+    });
+    items.push({
+      label: 'Retirar stock',
+      icon: 'pi pi-minus-circle',
+      command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'SALIDA'),
+    });
+
     this.rowMenuItems = items;
     menu.toggle(event);
   }
+
+  // ============== AJUSTE RÁPIDO DE INVENTARIO ==============
+  ajusteVisible = false;
+  ajusteTipo: 'INGRESO' | 'SALIDA' = 'INGRESO';
+  ajusteProducto: ProductoConsolidado | null = null;
+  ajusteCantidad: number = 1;
+  ajusteBodegaId: string = '';
+  ajusteObservaciones: string = '';
+  ajusteGuardando = false;
+
+  abrirAjusteInventario(producto: ProductoConsolidado, tipo: 'INGRESO' | 'SALIDA'): void {
+    this.ajusteProducto = producto;
+    this.ajusteTipo = tipo;
+    this.ajusteCantidad = 1;
+    this.ajusteBodegaId = this.bodegas.length === 1 ? this.bodegas[0].idBodega : '';
+    this.ajusteObservaciones = '';
+    this.ajusteVisible = true;
+  }
+
+  guardarAjuste(): void {
+    if (!this.ajusteProducto || !this.ajusteBodegaId || this.ajusteCantidad < 1) return;
+    this.ajusteGuardando = true;
+
+    const tipoMovimiento = this.ajusteTipo === 'INGRESO'
+      ? 'Ingreso por Ajuste de inventario'
+      : 'Salida por ajuste de inventario';
+
+    const payload = {
+      bodegaId: this.ajusteBodegaId,
+      productos: [{
+        productoId: this.ajusteProducto.id,
+        cantidad: this.ajusteCantidad,
+      }],
+      tipoMovimiento,
+      observaciones: this.ajusteObservaciones || `${this.ajusteTipo === 'INGRESO' ? 'Ingreso' : 'Retiro'} rápido desde catálogo`,
+    };
+
+    this.inventarioService.ingresarProductos(
+      payload.bodegaId, payload.productos, payload.tipoMovimiento as any, payload.observaciones
+    ).subscribe({
+      next: () => {
+        this.toastr.success(
+          `${this.ajusteCantidad} unidades ${this.ajusteTipo === 'INGRESO' ? 'ingresadas a' : 'retiradas de'} ${this.getNombreBodega(this.ajusteBodegaId)}`,
+          this.ajusteTipo === 'INGRESO' ? 'Stock Ingresado' : 'Stock Retirado'
+        );
+        this.ajusteVisible = false;
+        this.ajusteGuardando = false;
+        this.cargarInventarioConsolidado();
+      },
+      error: (err: any) => {
+        this.toastr.error(err?.error?.error || 'Error al ajustar inventario', 'Error');
+        this.ajusteGuardando = false;
+      }
+    });
+  }
+
 
   // ============== MÉTODOS DEL MODAL DE SINCRONIZACIÓN - SIMPLIFICADO ==============
 

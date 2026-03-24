@@ -39,9 +39,8 @@ export class BodegasComponent implements OnInit {
   cargarBodegas() {
     this.cargando = true;
     this.bodegaService.getBodegas().subscribe(bodegas => {
-      this.todasLasBodegas = bodegas;  // Guardar todas para verificar fulfillmentId
-      // Filtrar solo bodegas activas para mostrar (el backend usa soft delete)
-      this.bodegas = bodegas.filter(b => b.active !== false);
+      this.todasLasBodegas = bodegas;
+      this.bodegas = bodegas;
       this.cargando = false;
     });
   }

@@ -213,6 +213,10 @@ export class VentasService extends BaseService {
     );
   }
 
+  restoreProductInventory(orderId: string, productoId: string, cantidad: number): Observable<any> {
+    return this.post<any>('/v1/orders/restore-product-inventory', { orderId, productoId, cantidad });
+  }
+
   editOrder(order: Pedido): Observable<any> {
     // Capturar el estado anterior para comparar cambios
     const previousOrder = { ...order };

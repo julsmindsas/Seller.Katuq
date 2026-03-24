@@ -38,6 +38,7 @@ import { HistorialMovimientosComponent } from './historial-movimientos/historial
 import { ImportarBodegasModalComponent } from './bodegas/importar-bodegas-modal/importar-bodegas-modal.component';
 import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulfillment-sync-history.component';
 import { ImportModalModule } from '../../shared/components/import-modal/import-modal.module';
+import { CentralAbastecimientoComponent } from './central-abastecimiento/central-abastecimiento.component';
 
 @NgModule({
     imports: [
@@ -79,7 +80,8 @@ import { ImportModalModule } from '../../shared/components/import-modal/import-m
         TrasladosComponent,
         HistorialMovimientosComponent,
         ImportarBodegasModalComponent,
-        FulfillmentSyncHistoryComponent
+        FulfillmentSyncHistoryComponent,
+        CentralAbastecimientoComponent
     ],
     providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective, ConfirmationService],
 })

@@ -142,6 +142,16 @@ export class InventarioService {
    * @param tipoMovimiento Tipo de movimiento de inventario
    * @returns Observable con el resultado de la operación
    */
+  getCentralAbastecimiento(dias: number = 30): Observable<any> {
+    return this.http.get(`${this.apiUrl}/inventory/central-abastecimiento`, {
+      params: { dias: dias.toString() }
+    });
+  }
+
+  analizarAbastecimientoIA(datos: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/inventory/analizar-abastecimiento-ia`, datos);
+  }
+
   ingresarProductos(bodegaId: string, productos: any[], tipoMovimiento: TipoMovimientoInventario, observaciones: string): Observable<any> {
     const url = `${this.apiUrl}/inventory/ingresar-multiples`;
     const headers = new HttpHeaders({

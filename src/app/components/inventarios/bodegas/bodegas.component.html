@@ -84,7 +84,14 @@
 
                         <ng-template pTemplate="body" let-bodega>
                             <tr>
-                                <td>{{ bodega.nombre }}</td>
+                                <td>
+                                    {{ bodega.nombre }}
+                                    <span *ngIf="bodega.active === false"
+                                          class="badge ms-1"
+                                          style="background: #fee2e2; color: #991b1b; font-size: 0.65rem; vertical-align: middle;">
+                                        Inactiva
+                                    </span>
+                                </td>
                                 <td class="text-center">{{ bodega.idBodega }}</td>
                                 <td class="text-center">
                                     <span *ngIf="bodega.tipo === 'Física'">

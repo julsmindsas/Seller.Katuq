@@ -1,0 +1,61 @@
+:host {
+  display: block;
+}
+
+.module-header {
+  border-radius: 0;
+}
+
+.card {
+  border-radius: 8px;
+  border: 1px solid #e8eaed;
+
+  &.shadow-sm {
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  }
+}
+
+// KPI cards internas
+.card-body .card {
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+}
+
+// Tablas limpias
+table {
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #6b778c;
+    font-weight: 600;
+    border-bottom: 2px solid #f0f0f0;
+    padding: 10px 8px;
+  }
+
+  td {
+    padding: 10px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f8f9fa;
+  }
+
+  tbody tr:hover {
+    background: #fafbfc;
+  }
+}
+
+// Cards de secciones
+.card-header {
+  font-size: 0.9rem;
+}
+
+// Loader estándar
+.loader-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+}
