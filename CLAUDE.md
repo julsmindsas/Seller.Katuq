@@ -565,6 +565,57 @@ usage-code: {code}               → Código de autorización
 
 ---
 
+## Sistema de Inventario
+
+### Arquitectura
+
+| Colección | Clave | Campos |
+|-----------|-------|--------|
+| `inventory` | company + idBodega (business code) + productoId (Firestore ID) | cantidad, bodegaDoc, productoDoc |
+| `inventoryMovement` | company + ordenId + productoId | tipo, tipoMovimiento, cantidad, idBodega |
+| `warehouses` | company + idBodega | nombre, tipo, fulfillmentId |
+| `channelWarehouseAssociations` | company + channelId | bodegaId (**Firestore doc ID**) |
+| `inventory_audit` | company + action | Telemetría de operaciones |
+
+### IDs — REGLA CRÍTICA
+
+- `idBodega` en `inventory`/`inventoryMovement` = **business code** (`"BOD-001"`)
+- `bodegaId` en `channelWarehouseAssociations` = **Firestore doc ID** (`"l1h5f0RuneuiIx70gzDH"`)
+- `productoId` en `inventory` = **Firestore doc ID** del producto (= `producto.cd` en frontend)
+- **NUNCA** escribir un Firestore doc ID en el campo `idBodega` de `inventory`
+
+### Flujos de Inventario
+
+- **POS**: `updateByPOS()` — usa `order.bodegaId` (business code) directo
+- **Venta Asistida/E-commerce**: `updateByChannel()` — busca canal → obtiene bodegasAsociadas (Firestore IDs) → resuelve a bodegaData.idBodega (business code)
+- **No inventariable**: `disponibilidad.inventariable === false` → movimiento se registra pero stock NO se descuenta
+- **Cancelación/Rechazo**: `restoreStock()` automático — busca movimientos SALIDA y crea INGRESO de devolución
+- **Remover producto de pedido**: `restoreProductStock()` — devuelve inventario de 1 producto específico
+
+### Endpoints de Inventario (creados Mar 2026)
+
+| Endpoint | Método | Función |
+|----------|--------|---------|
+| `/v1/inventory/diagnostico` | GET | Detecta inconsistencias (bodegas/productos fantasma, stock negativo) |
+| `/v1/inventory/reparar` | POST | Corrige idBodega incorrecto, elimina huérfanos |
+| `/v1/inventory/central-abastecimiento` | GET | Inteligencia: rotación, críticos, dormidos, sugerencias traslado |
+| `/v1/katuqintelligence/kai/inventory-analysis` | POST | Análisis IA via KAI (Genkit + Gemini 2.5 Flash) |
+| `/v1/onboarding/import-inventory` | POST | Importación masiva (referencia → productoId automático) |
+| `/v1/orders/restore-product-inventory` | POST | Devolver inventario de producto removido de pedido |
+
+### Frontend — Módulo Inventario
+
+| Ruta | Componente | Función |
+|------|-----------|---------|
+| `/inventario/inventario-catalogo` | InventarioCatalogoComponent | Vista consolidada, ajuste rápido (ingreso/retiro), importar |
+| `/inventario/central-abastecimiento` | CentralAbastecimientoComponent | Inteligencia de inventario + análisis KAI |
+| `/inventario/traslados` | TrasladosComponent | Traslados masivos (múltiples productos) |
+| `/inventario/recepcion-mercancia` | RecepcionMercanciaComponent | Ingreso/salida de mercancía |
+| `/inventario/historial-movimientos` | HistorialMovimientosComponent | Historial con filtros y paginación lazy |
+| `/inventario/bodegas` | BodegasComponent | Maestro de bodegas (incluye inactivas con badge) |
+
+---
+
 ## Reglas para Claude al Trabajar en Este Proyecto
 
 ### SIEMPRE
@@ -578,6 +629,9 @@ usage-code: {code}               → Código de autorización
 7. **Agregar `takeUntil(this.destroy$)`** a subscripciones nuevas
 8. **Usar `trackBy`** en nuevos `*ngFor`
 9. **Lógica de negocio en servicios**, no en componentes
+10. **Usar servicios existentes** (InventarioService, VentasService, etc.) para HTTP — nunca HttpClient directo en componentes. El interceptor agrega headers de auth.
+11. **Usar Firestore audit collections** para telemetría — nunca console.log masivo
+12. **Mantener auth middleware** en todos los endpoints — nunca quitarlo ni temporalmente
 
 ### NUNCA
 
@@ -590,6 +644,11 @@ usage-code: {code}               → Código de autorización
 7. **No agregar dependencias de Next.js, React, o Vercel** — este es un proyecto Angular 14
 8. **No actualizar Angular** sin instrucción explícita — hay dependencias legacy atadas a v14
 9. **No crear archivos de test** — skipTests está activo, los tests no se ejecutan
+10. **No escribir Firestore doc ID en `idBodega`** de inventory/inventoryMovement — siempre business code
+11. **No quitar auth middleware** de endpoints — el interceptor envía tokens automáticamente
+12. **No usar console.log para telemetría** — usar `inventory_audit` u otra colección Firestore
+13. **No asumir bugs sin datos** — usar endpoint de diagnóstico para verificar antes de cambiar código
+14. **No hacer cambios en inventoryService sin entender el flujo completo** — afecta POS, ventas, fulfillment, Shopify
 
 ### AL CREAR COMPONENTES NUEVOS
 

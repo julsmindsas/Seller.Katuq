@@ -48,7 +48,7 @@
 
                 <div class="card-body custom-datatable" *ngIf="!cargando">
                     <p-table #dt [columns]="selectedColumns" [value]="bodegas" [paginator]="true" [rows]="10"
-                        [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
+                        [resizableColumns]="true"
                         styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
                         [globalFilterFields]="['nombre', 'idBodega', 'ciudad', 'tipo']" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true">
 
@@ -84,7 +84,14 @@
 
                         <ng-template pTemplate="body" let-bodega>
                             <tr>
-                                <td>{{ bodega.nombre }}</td>
+                                <td>
+                                    {{ bodega.nombre }}
+                                    <span *ngIf="bodega.active === false"
+                                          class="badge ms-1"
+                                          style="background: #fee2e2; color: #991b1b; font-size: 0.65rem; vertical-align: middle;">
+                                        Inactiva
+                                    </span>
+                                </td>
                                 <td class="text-center">{{ bodega.idBodega }}</td>
                                 <td class="text-center">
                                     <span *ngIf="bodega.tipo === 'Física'">

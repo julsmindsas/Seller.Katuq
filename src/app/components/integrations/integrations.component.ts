@@ -548,6 +548,12 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'world_office':
         this.integrationForm = this.createWorldOfficeForm();
+        this.woMasterDataLoaded = false;
+        this.woMasterDataLoading = false;
+        this.woEmpresas = [];
+        this.woPaymentTypes = [];
+        this.woMonedas = [];
+        this.woBodegas = [];
         this.setupWOAutoLoad();
         break;
       default:

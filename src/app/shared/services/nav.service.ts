@@ -454,6 +454,12 @@ export class NavService implements OnDestroy {
           icon: "refresh-cw",
         },
         {
+          path: "inventario/central-abastecimiento",
+          title: "Central de Abastecimiento",
+          type: "link",
+          icon: "compass",
+        },
+        {
           path: "inventario/historial-movimientos",
           title: "Historial de movimientos",
           type: "link",

@@ -56,7 +56,19 @@
       "Bash(cd:*)",
       "Bash(git show:*)",
       "Bash(grep:*)",
-      "Bash(find src:*)"
+      "Bash(find src:*)",
+      "mcp__plugin_claude-mem_mcp-search__search",
+      "mcp__plugin_claude-mem_mcp-search__timeline",
+      "Read(//c/sourcecodejuls/katuq_admin_back_firebase/functions/**)",
+      "Bash(node -c controllers/onboarding.js)",
+      "Bash(node:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d[''''resumen''''], indent=2\\)\\)\")",
+      "mcp__claude_ai_ClickUp__clickup_create_task_comment",
+      "mcp__claude_ai_ClickUp__clickup_update_task",
+      "mcp__claude_ai_ClickUp__clickup_get_task",
+      "mcp__claude_ai_ClickUp__clickup_get_workspace_hierarchy",
+      "mcp__claude_ai_ClickUp__clickup_filter_tasks"
     ]
   }
 }

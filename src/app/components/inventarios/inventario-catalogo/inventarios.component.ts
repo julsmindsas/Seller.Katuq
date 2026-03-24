@@ -257,6 +257,15 @@ export class InventarioCatalogoComponent implements OnInit {
     return this.bodegasDesglose.filter((b) => b.diferencia !== 0).length;
   }
 
+  // ============== IMPORTACIÓN ==============
+  showImportModal: boolean = false;
+
+  onImportComplete(result: any): void {
+    if (result.success > 0) {
+      this.cargarInventarioConsolidado();
+    }
+  }
+
   // ============== ANÁLISIS IA ==============
   analizandoIA: boolean = false;
   iaAnalysisError: string | null = null;
@@ -777,9 +786,124 @@ export class InventarioCatalogoComponent implements OnInit {
       });
     }
 
+    // Ajuste de inventario (ingreso/retiro)
+    items.push({ separator: true });
+    items.push({
+      label: 'Ingresar stock',
+      icon: 'pi pi-plus-circle',
+      command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'INGRESO'),
+    });
+    items.push({
+      label: 'Retirar stock',
+      icon: 'pi pi-minus-circle',
+      command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'SALIDA'),
+    });
+
+    // Quitar producto de bodegas sin stock
+    const tieneBodegasSinStock = producto.stockPorBodega &&
+      Object.values(producto.stockPorBodega).some(qty => qty === 0);
+    if (tieneBodegasSinStock) {
+      items.push({
+        label: 'Quitar de bodegas sin stock',
+        icon: 'pi pi-eraser',
+        command: () => this.quitarProductoSinStock(this.selectedMenuProducto!),
+      });
+    }
+
     this.rowMenuItems = items;
     menu.toggle(event);
   }
+
+  // ============== QUITAR PRODUCTO SIN STOCK ==============
+  quitarProductoSinStock(producto: ProductoConsolidado): void {
+    const bodegasSinStock = Object.entries(producto.stockPorBodega || {})
+      .filter(([_, qty]) => qty === 0)
+      .map(([bodegaId]) => this.getNombreBodega(bodegaId) || bodegaId);
+
+    if (bodegasSinStock.length === 0) {
+      this.toastr.info('Este producto no tiene bodegas con stock 0', 'Sin cambios');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Quitar producto sin stock',
+      html: `<p>Se eliminará <strong>"${producto.nombre}"</strong> de las siguientes bodegas donde tiene 0 unidades:</p>
+             <ul style="text-align:left;">${bodegasSinStock.map(b => `<li>${b}</li>`).join('')}</ul>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#5c6ac4',
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Quitar',
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.inventarioService.quitarProductoSinStock(producto.id).subscribe({
+          next: (res: any) => {
+            this.toastr.success(`Eliminado de ${res.deleted || 0} bodegas`, 'Producto limpiado');
+            this.cargarInventarioConsolidado();
+          },
+          error: () => {
+            this.toastr.error('Error al quitar producto', 'Error');
+          }
+        });
+      }
+    });
+  }
+
+  // ============== AJUSTE RÁPIDO DE INVENTARIO ==============
+  ajusteVisible = false;
+  ajusteTipo: 'INGRESO' | 'SALIDA' = 'INGRESO';
+  ajusteProducto: ProductoConsolidado | null = null;
+  ajusteCantidad: number = 1;
+  ajusteBodegaId: string = '';
+  ajusteObservaciones: string = '';
+  ajusteGuardando = false;
+
+  abrirAjusteInventario(producto: ProductoConsolidado, tipo: 'INGRESO' | 'SALIDA'): void {
+    this.ajusteProducto = producto;
+    this.ajusteTipo = tipo;
+    this.ajusteCantidad = 1;
+    this.ajusteBodegaId = this.bodegas.length === 1 ? this.bodegas[0].idBodega : '';
+    this.ajusteObservaciones = '';
+    this.ajusteVisible = true;
+  }
+
+  guardarAjuste(): void {
+    if (!this.ajusteProducto || !this.ajusteBodegaId || this.ajusteCantidad < 1) return;
+    this.ajusteGuardando = true;
+
+    const tipoMovimiento = this.ajusteTipo === 'INGRESO'
+      ? 'Ingreso por Ajuste de inventario'
+      : 'Salida por ajuste de inventario';
+
+    const payload = {
+      bodegaId: this.ajusteBodegaId,
+      productos: [{
+        productoId: this.ajusteProducto.id,
+        cantidad: this.ajusteCantidad,
+      }],
+      tipoMovimiento,
+      observaciones: this.ajusteObservaciones || `${this.ajusteTipo === 'INGRESO' ? 'Ingreso' : 'Retiro'} rápido desde catálogo`,
+    };
+
+    this.inventarioService.ingresarProductos(
+      payload.bodegaId, payload.productos, payload.tipoMovimiento as any, payload.observaciones
+    ).subscribe({
+      next: () => {
+        this.toastr.success(
+          `${this.ajusteCantidad} unidades ${this.ajusteTipo === 'INGRESO' ? 'ingresadas a' : 'retiradas de'} ${this.getNombreBodega(this.ajusteBodegaId)}`,
+          this.ajusteTipo === 'INGRESO' ? 'Stock Ingresado' : 'Stock Retirado'
+        );
+        this.ajusteVisible = false;
+        this.ajusteGuardando = false;
+        this.cargarInventarioConsolidado();
+      },
+      error: (err: any) => {
+        this.toastr.error(err?.error?.error || 'Error al ajustar inventario', 'Error');
+        this.ajusteGuardando = false;
+      }
+    });
+  }
+
 
   // ============== MÉTODOS DEL MODAL DE SINCRONIZACIÓN - SIMPLIFICADO ==============
 

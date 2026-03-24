@@ -6868,23 +6868,32 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           );
 
           if (index !== -1 && index !== undefined) {
+            const productoId = item.producto?.cd || (item.producto as any)?.id;
+            const cantidad = item.cantidad;
+
             // Eliminar el producto del carrito
             pedido.carrito?.splice(index, 1);
-
-            console.log(
-              `🗑️ Producto eliminado del pedido ${pedido.nroPedido}:`,
-              {
-                producto: item.producto?.crearProducto?.titulo,
-                referencia: item.producto?.identificacion?.referencia,
-                cantidad: item.cantidad,
-              },
-            );
 
             // Recalcular todos los valores del pedido
             pedido = this.actualizarValoresPedido(pedido);
 
             // Actualizar el pedido en el backend
             this.editOrder(pedido);
+
+            // Devolver inventario del producto eliminado
+            if (productoId && pedido._id) {
+              this.ventasService.restoreProductInventory(pedido._id, productoId, cantidad).subscribe({
+                next: (res: any) => {
+                  if (res?.restored > 0) {
+                    this.toastrService.info(
+                      `${res.restored} unidades devueltas al inventario`,
+                      "Inventario Devuelto",
+                    );
+                  }
+                },
+                error: () => {} // No bloquear si falla la devolución
+              });
+            }
 
             // Mostrar mensaje de éxito
             this.toastrService.success(

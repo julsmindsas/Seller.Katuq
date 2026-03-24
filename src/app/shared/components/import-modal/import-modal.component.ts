@@ -122,7 +122,7 @@ const PRODUCT_DEFAULTS = {
 export class ImportModalComponent implements OnInit, OnDestroy {
   @ViewChild(MobileFileUploadComponent) mobileFileUpload: MobileFileUploadComponent;
 
-  @Input() type: 'customer' | 'product' = 'customer';
+  @Input() type: 'customer' | 'product' | 'inventory' = 'customer';
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() importComplete = new EventEmitter<ImportResult>();
@@ -132,8 +132,11 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   config: ImportConfig | null = null;
 
   isUploading = false;
+  isDeleting = false;
   uploadedFile: File | null = null;
   importResult: ImportResult | null = null;
+  importTotalRecords = 0;
+  deleteResult: { deleted: number } | null = null;
   previewData: any[] = [];
   showPreview = false;
 
@@ -262,6 +265,25 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     }
   };
 
+  private inventoryConfig: ImportConfig = {
+    title: 'Importar Inventario',
+    endpoint: '/v1/onboarding/import-inventory',
+    payloadKey: 'inventory',
+    maxFileSize: 10000000,
+    templateColumns: [
+      { field: 'referencia', header: 'Referencia/SKU', required: true, example: 'PROD001' },
+      { field: 'cantidad', header: 'Cantidad/Stock', required: true, example: '100' },
+      { field: 'bodega', header: 'Bodega', required: false, example: 'Bodega Principal' },
+      { field: 'observaciones', header: 'Observaciones', required: false, example: 'Inventario inicial' }
+    ],
+    fieldLabels: {
+      'referencia': 'Referencia/SKU',
+      'cantidad': 'Cantidad/Stock',
+      'bodega': 'Bodega',
+      'observaciones': 'Observaciones'
+    }
+  };
+
   constructor(
     private messageService: MessageService,
     private http: HttpClient,
@@ -278,7 +300,13 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   }
 
   private loadConfig(): void {
-    this.config = this.type === 'customer' ? this.customerConfig : this.productConfig;
+    if (this.type === 'customer') {
+      this.config = this.customerConfig;
+    } else if (this.type === 'inventory') {
+      this.config = this.inventoryConfig;
+    } else {
+      this.config = this.productConfig;
+    }
   }
 
   onDialogShow(): void {
@@ -295,6 +323,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.previewData = [];
     this.showPreview = false;
     this.importResult = null;
+    this.importTotalRecords = 0;
+    this.deleteResult = null;
     this.parsedData = [];
     this.sourceColumns = [];
     this.mappingResult = null;
@@ -303,6 +333,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.mappingFields = [];
     this.availableColumns = [];
     this.isUploading = false;
+    this.isDeleting = false;
     this.isAnalyzingColumns = false;
   }
 
@@ -487,7 +518,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'success',
       summary: 'Mapeo Confirmado',
-      detail: `Los mapeos han sido confirmados. Ahora puedes importar los ${this.type === 'customer' ? 'clientes' : 'productos'}.`
+      detail: `Los mapeos han sido confirmados. Ahora puedes importar los ${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'}.`
     });
   }
 
@@ -500,7 +531,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.messageService.add({
       severity: 'info',
       summary: 'Mapeo Confirmado',
-      detail: `Ahora puedes importar los ${this.type === 'customer' ? 'clientes' : 'productos'} con el mapeo confirmado`
+      detail: `Ahora puedes importar los ${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'} con el mapeo confirmado`
     });
   }
 
@@ -530,6 +561,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     }
 
     this.isUploading = true;
+    this.importTotalRecords = this.parsedData.length;
 
     try {
       const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
@@ -548,63 +580,147 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       console.log('[ImportModal] 🏢 Company:', companyId);
       console.log('[ImportModal] 🔄 Transformando datos con mapeo...');
 
-      const transformedData = this.transformDataWithMapping(this.parsedData, this.confirmedMappings);
+      const transformedData = this.transformDataWithMapping(this.parsedData, this.confirmedMappings, this.mappingResult?.mappings);
 
       console.log('[ImportModal] ✅ Datos transformados:', transformedData.length, 'registros');
       console.log('[ImportModal] 📋 Muestra de datos transformados (primeros 3):', JSON.stringify(transformedData.slice(0, 3), null, 2));
 
+      const batchId = `imp_${Date.now()}`;
       const payload: any = {
         companyId: companyId,
-        mappings: this.confirmedMappings
+        mappings: this.confirmedMappings,
+        importBatchId: batchId
       };
       payload[this.config!.payloadKey] = transformedData;
 
-      console.log('[ImportModal] 📤 PAYLOAD COMPLETO A ENVIAR:');
-      console.log(JSON.stringify(payload, null, 2));
+      const headers = new HttpHeaders({ 'company': companyId });
 
-      const headers = new HttpHeaders({
-        'company': companyId
+      // Timeout de 3 minutos para importaciones grandes
+      const IMPORT_TIMEOUT_MS = 180000;
+      let timeoutHandle: any = null;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(() => reject(new Error('La importación tardó demasiado. Intenta con un archivo más pequeño.')), IMPORT_TIMEOUT_MS);
       });
 
-      const response = await this.http.post<ImportResult>(
+      const httpPromise = this.http.post<any>(
         `${environment.urlApi}${this.config!.endpoint}`,
         payload,
         { headers }
       ).toPromise();
 
-      this.importResult = response || { success: 0, failed: 0, errors: [] };
+      const response: any = await Promise.race([httpPromise, timeoutPromise]);
+      clearTimeout(timeoutHandle);
+
+      const data = response?.data || response || {};
+      this.importResult = {
+        success: data.success || 0,
+        failed: data.failed || 0,
+        errors: data.errors || [],
+        batchId: data.batchId || batchId
+      };
+
+      const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos';
+      const created: number = data.created ?? 0;
+      const updated: number = data.updated ?? 0;
+      let detail = '';
+      if (created > 0 && updated > 0) {
+        detail = `${created} ${entity} creados, ${updated} actualizados`;
+      } else if (created > 0) {
+        detail = `${created} ${entity} creados`;
+      } else if (updated > 0) {
+        detail = `${updated} ${entity} actualizados`;
+      } else {
+        detail = `${this.importResult.success} ${entity} procesados`;
+      }
+      if (this.importResult.failed > 0) detail += `, ${this.importResult.failed} fallidos`;
 
       this.messageService.add({
         severity: 'success',
         summary: 'Importacion Completada',
-        detail: `${this.importResult.success} ${this.type === 'customer' ? 'clientes' : 'productos'} importados correctamente${this.importResult.failed > 0 ? `, ${this.importResult.failed} fallidos` : ''}`
+        detail
       });
 
       this.importComplete.emit(this.importResult);
-
-      // Close modal after short delay
-      setTimeout(() => {
-        this.visible = false;
-        this.visibleChange.emit(false);
-      }, 1500);
+      // No cierra automáticamente: el usuario puede revisar errores o eliminar
 
     } catch (error: any) {
       console.error('Error importing data:', error);
       this.messageService.add({
         severity: 'error',
         summary: 'Error en Importacion',
-        detail: error?.error?.message || `No se pudieron importar los ${this.type === 'customer' ? 'clientes' : 'productos'}`
+        detail: error?.error?.message || `No se pudieron importar los ${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'}`
       });
     } finally {
       this.isUploading = false;
     }
   }
 
-  private transformDataWithMapping(data: any[], mappings: { [katuqField: string]: string }): any[] {
+  async deleteImport(): Promise<void> {
+    if (!this.importResult?.batchId) return;
+    this.isDeleting = true;
+    try {
+      const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      const companyId = company.nomComercial;
+      const headers = new HttpHeaders({ 'company': companyId });
+      const response = await this.http.delete<{ success: boolean; deleted: number }>(
+        `${environment.urlApi}/v1/onboarding/import-customers/${this.importResult.batchId}`,
+        { headers }
+      ).toPromise();
+      this.deleteResult = { deleted: response?.deleted || 0 };
+      this.importResult = null;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Importacion eliminada',
+        detail: `Se eliminaron ${this.deleteResult.deleted} clientes importados`
+      });
+    } catch (error: any) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error al eliminar',
+        detail: error?.error?.error || 'No se pudo eliminar la importacion'
+      });
+    } finally {
+      this.isDeleting = false;
+    }
+  }
+
+  async deleteAllClients(): Promise<void> {
+    if (!confirm('⚠️ ESTO ELIMINARÁ TODOS LOS CLIENTES DE LA EMPRESA. ¿Estás seguro?')) return;
+    this.isDeleting = true;
+    try {
+      const company = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      const companyId = company.nomComercial;
+      const headers = new HttpHeaders({ 'company': companyId });
+      const response = await this.http.delete<{ success: boolean; deleted: number }>(
+        `${environment.urlApi}/v1/onboarding/delete-all-clients`,
+        { headers }
+      ).toPromise();
+      this.deleteResult = { deleted: response?.deleted || 0 };
+      this.importResult = null;
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Clientes eliminados',
+        detail: `Se eliminaron ${this.deleteResult.deleted} clientes de la empresa`
+      });
+    } catch (error: any) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error al eliminar',
+        detail: error?.error?.error || 'No se pudieron eliminar los clientes'
+      });
+    } finally {
+      this.isDeleting = false;
+    }
+  }
+
+  private transformDataWithMapping(
+    data: any[],
+    mappings: { [katuqField: string]: string },
+    fullMappings?: { [katuqField: string]: any }
+  ): any[] {
     console.log('[ImportModal] 🔄 Transformando', data.length, 'filas con mappings:', mappings);
 
     return data.map((row, index) => {
-      // Para productos, iniciar con los valores por defecto
       let transformedRow: any = this.type === 'product'
         ? this.getProductDefaults(index)
         : {};
@@ -614,43 +730,53 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       }
 
       Object.entries(mappings).forEach(([katuqField, sourceColumn]) => {
-        let value = row[sourceColumn];
+        const fullMapping = fullMappings?.[katuqField];
+
+        // Caso 1: valor por defecto fijo (sin sourceColumn, ej: indicativo '+57')
+        if (fullMapping?.defaultValue !== undefined && (!sourceColumn || sourceColumn === '')) {
+          this.setNestedValue(transformedRow, katuqField, fullMapping.defaultValue, index);
+          return;
+        }
+
+        // Obtener valor principal con trim para manejar espacios en nombres de columna
+        let value = this.getRowValue(row, sourceColumn);
+
+        // Caso 2: concatenar columnas adicionales (ej: Primer Nombre + Segundo Nombre)
+        if (fullMapping?.additionalColumns?.length) {
+          const separator = fullMapping.joinSeparator ?? ' ';
+          const parts = [value];
+          for (const extraCol of fullMapping.additionalColumns) {
+            const extra = this.getRowValue(row, extraCol);
+            if (extra !== undefined && extra !== null && String(extra).trim() !== '') {
+              parts.push(String(extra).trim());
+            }
+          }
+          value = parts.filter(p => p !== undefined && p !== null && String(p).trim() !== '').join(separator).trim();
+        }
 
         if (index === 0) {
           console.log(`[ImportModal]   ${katuqField} ← "${sourceColumn}" = "${value}"`);
         }
 
-        // No procesar si el valor es undefined, null o string vacío
-        if (value === undefined || value === null || value === '') {
+        if (value === undefined || value === null || String(value).trim() === '') {
+          // Aun sin valor del Excel, aplicar defaultValue si existe
+          if (fullMapping?.defaultValue !== undefined) {
+            this.setNestedValue(transformedRow, katuqField, fullMapping.defaultValue, index);
+          }
           return;
         }
 
-        // Convertir tipos de datos según el campo
         value = this.convertFieldValue(katuqField, value);
-
-        if (katuqField.includes('.')) {
-          const parts = katuqField.split('.');
-          let current = transformedRow;
-
-          for (let i = 0; i < parts.length - 1; i++) {
-            if (!current[parts[i]]) {
-              current[parts[i]] = {};
-            }
-            current = current[parts[i]];
-          }
-
-          current[parts[parts.length - 1]] = value;
-        } else {
-          // Mapear campos simples a su estructura correcta para productos
-          if (this.type === 'product') {
-            this.mapSimpleFieldToProductStructure(transformedRow, katuqField, value);
-          } else {
-            transformedRow[katuqField] = value;
-          }
-        }
+        this.setNestedValue(transformedRow, katuqField, value, index);
       });
 
-      // Calcular campos derivados para productos
+      // Defaults automáticos para clientes
+      if (this.type === 'customer') {
+        if (!transformedRow.indicativo_celular_comprador) {
+          transformedRow.indicativo_celular_comprador = '+57';
+        }
+      }
+
       if (this.type === 'product') {
         this.calculateDerivedFields(transformedRow);
       }
@@ -661,6 +787,40 @@ export class ImportModalComponent implements OnInit, OnDestroy {
 
       return transformedRow;
     });
+  }
+
+  /** Obtiene valor de una fila con matching robusto (trim + case-insensitive) */
+  private getRowValue(row: any, columnName: string): any {
+    if (!row || !columnName) return undefined;
+    // Exacto
+    if (row.hasOwnProperty(columnName)) return row[columnName];
+    // Con trim
+    const trimmed = columnName.trim();
+    const key = Object.keys(row).find(k => k?.trim() === trimmed);
+    if (key) return row[key];
+    // Case-insensitive
+    const lower = trimmed.toLowerCase();
+    const keyCI = Object.keys(row).find(k => k?.trim().toLowerCase() === lower);
+    return keyCI ? row[keyCI] : undefined;
+  }
+
+  /** Escribe un valor en un campo anidado (notación de punto) o simple */
+  private setNestedValue(obj: any, katuqField: string, value: any, index: number): void {
+    if (katuqField.includes('.')) {
+      const parts = katuqField.split('.');
+      let current = obj;
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!current[parts[i]]) current[parts[i]] = {};
+        current = current[parts[i]];
+      }
+      current[parts[parts.length - 1]] = value;
+    } else {
+      if (this.type === 'product') {
+        this.mapSimpleFieldToProductStructure(obj, katuqField, value);
+      } else {
+        obj[katuqField] = value;
+      }
+    }
   }
 
   /**
@@ -832,13 +992,13 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    link.download = `plantilla_${this.type === 'customer' ? 'clientes' : 'productos'}_katuq.csv`;
+    link.download = `plantilla_${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'}_katuq.csv`;
     link.click();
 
     this.messageService.add({
       severity: 'success',
       summary: 'Plantilla Descargada',
-      detail: `Completa la plantilla con tus ${this.type === 'customer' ? 'clientes' : 'productos'} y subela para importar`
+      detail: `Completa la plantilla con tus ${this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos'} y subela para importar`
     });
   }
 

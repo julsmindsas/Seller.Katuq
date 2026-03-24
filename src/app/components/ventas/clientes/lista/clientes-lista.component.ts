@@ -8,6 +8,8 @@ import * as XLSX from 'xlsx';
 import { Router } from '@angular/router';
 import { DataStoreService } from '../../../../shared/services/dataStoreService';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente-modal.component';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -55,7 +57,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         private storeService: DataStoreService,
         private fb: FormBuilder,
         private datePipe: DatePipe,
-        private messageService: MessageService
+        private messageService: MessageService,
+        private http: HttpClient
     ) {
         // Intentar cargar filtros guardados
         const savedFilters = this.loadSavedFilters();
@@ -425,21 +428,30 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     onImportComplete(result: ImportResult): void {
-        this.showImportModal = false;
+        // NO cerrar el modal — el usuario puede revisar resultados o eliminar la importación
         if (result.success > 0) {
-            this.messageService.add({
-                severity: 'success',
-                summary: 'Importacion Exitosa',
-                detail: `${result.success} clientes importados correctamente`
-            });
-            // Recargar lista de clientes
             this.cargarClientes();
         }
-        if (result.failed > 0) {
+    }
+
+    async deleteAllClients(): Promise<void> {
+        if (!confirm('⚠️ ESTO ELIMINARÁ TODOS LOS CLIENTES DE LA EMPRESA. ¿Estás seguro?')) return;
+        try {
+            // El interceptor agrega Authorization, company y demás headers automáticamente
+            const response = await this.http.delete<{ success: boolean; deleted: number }>(
+                `${environment.urlApi}/v1/onboarding/delete-all-clients`
+            ).toPromise();
             this.messageService.add({
                 severity: 'warn',
-                summary: 'Importacion con errores',
-                detail: `${result.failed} clientes no pudieron ser importados`
+                summary: 'Clientes eliminados',
+                detail: `Se eliminaron ${response?.deleted || 0} clientes`
+            });
+            this.cargarClientes();
+        } catch (error: any) {
+            this.messageService.add({
+                severity: 'error',
+                summary: 'Error',
+                detail: error?.error?.error || 'No se pudieron eliminar los clientes'
             });
         }
     }

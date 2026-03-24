@@ -35,16 +35,9 @@
           </small>
         </div>
 
-        <!-- Nombre Comercial -->
-        <div class="form-field col-12">
-          <label for="nomComercial">Nombre Comercial (Opcional)</label>
-          <input
-            id="nomComercial"
-            type="text"
-            pInputText
-            formControlName="nomComercial"
-            placeholder="Ej: ABC Store" />
-          <small class="field-help">El nombre con el que tus clientes te conocen</small>
+        <!-- Nombre Comercial (oculto) -->
+        <div class="form-field col-12" style="display:none">
+          <input type="text" formControlName="nomComercial" />
         </div>
 
         <!-- NIT -->
