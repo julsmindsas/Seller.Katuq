@@ -6,7 +6,7 @@ import { takeUntil } from 'rxjs/operators';
 import { MessageService } from 'primeng/api';
 import { CrmService } from '../../services/crm.service';
 import {
-  CrmActivity, CrmTask, getStageSeverity,
+  CrmActivity, CrmTask, getStageSeverity, getPrioritySeverity,
   ACTIVITY_TYPE_OPTIONS, TASK_TYPE_OPTIONS, PRIORITY_OPTIONS,
 } from '../../models/crm.models';
 
@@ -186,6 +186,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   }
 
   getStageSeverity = getStageSeverity;
+  getPrioritySeverity = getPrioritySeverity;
 
   capitalize(s: string): string {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';

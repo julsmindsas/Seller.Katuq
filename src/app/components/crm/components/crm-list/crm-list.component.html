@@ -1,117 +1,265 @@
-<div class="container-fluid p-3">
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12 p-2">
+      <br />
+      <div class="card">
 
-  <h5 class="mb-3">{{ getTitle() }}</h5>
-
-  <!-- Stats (metric-chip pattern from despachos) -->
-  <div class="d-flex flex-wrap gap-2 mb-3" *ngIf="stats">
-    <div class="metric-chip metric-chip-primary">
-      <i class="pi pi-users"></i>
-      <span class="metric-label">{{ 'Total' | translate }}</span>
-      <span class="metric-badge">{{ stats.total }}</span>
-    </div>
-    <ng-container *ngFor="let stage of stages">
-      <div class="metric-chip"
-        [class.metric-chip-active]="selectedStage === stage"
-        (click)="selectedStage = (selectedStage === stage ? null : stage); onStageFilter()">
-        <span class="metric-label">{{ capitalize(stage) }}</span>
-        <span class="metric-badge">{{ stats.byStage[stage] || 0 }}</span>
-      </div>
-    </ng-container>
-    <div class="metric-chip metric-chip-warning" *ngIf="stats.tasksPending > 0">
-      <i class="pi pi-clock"></i>
-      <span class="metric-label">{{ 'Tareas' | translate }}</span>
-      <span class="metric-badge">{{ stats.tasksPending }}</span>
-    </div>
-  </div>
-
-  <!-- Toolbar -->
-  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-    <div class="p-input-icon-left" style="min-width: 240px;">
-      <i class="pi pi-search"></i>
-      <input pInputText type="text" [value]="searchTerm"
-        (input)="onSearch($any($event.target).value)"
-        placeholder="{{ 'Buscar por nombre, email, NIT...' | translate }}" class="w-100" />
-    </div>
-    <p-dropdown [options]="stageOptions" [(ngModel)]="selectedStage"
-      placeholder="{{ 'Filtrar etapa' | translate }}" [showClear]="true"
-      (onChange)="onStageFilter()" [style]="{'min-width':'160px'}">
-    </p-dropdown>
-    <button pButton label="{{ 'Limpiar' | translate }}" icon="pi pi-filter-slash"
-      class="p-button-text p-button-sm" (click)="clearFilters()"
-      *ngIf="searchTerm || selectedStage"></button>
-  </div>
-
-  <!-- Table -->
-  <p-table #dt [value]="leads" [lazy]="true" (onLazyLoad)="onLazyLoad($event)"
-    [totalRecords]="totalRecords" [rows]="pageSize" [first]="first"
-    [paginator]="true" [rowsPerPageOptions]="[10,20,50]"
-    [loading]="loading" [showCurrentPageReport]="true"
-    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
-    styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="flex"
-    dataKey="id">
-
-    <ng-template pTemplate="header">
-      <tr>
-        <th style="width:30%">{{ 'Nombre' | translate }}</th>
-        <th style="width:12%" *ngIf="entityType === 'company'">{{ 'Plan' | translate }}</th>
-        <th style="width:12%">{{ 'Etapa' | translate }}</th>
-        <th style="width:12%">{{ 'Prioridad' | translate }}</th>
-        <th style="width:15%">{{ 'Asignado' | translate }}</th>
-        <th style="width:12%">{{ 'Último contacto' | translate }}</th>
-        <th style="width:7%">{{ 'Acciones' | translate }}</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-lead>
-      <tr class="cursor-pointer" (click)="viewDetail(lead)">
-        <td>
-          <div>
-            <strong>{{ lead.name }}</strong>
-            <small class="d-block text-muted">{{ lead.email || lead.nit || '' }}</small>
+        <!-- Header -->
+        <div class="card-header bg-white">
+          <div class="row align-items-center">
+            <div class="col-md-5">
+              <h5 class="mb-0 fw-bold" style="color: #334155;">
+                <i class="fa fa-bullseye me-2" style="color: #8b5cf6;"></i>
+                {{ getTitle() }}
+              </h5>
+              <small class="text-muted">{{ 'Arrastra las tarjetas para cambiar de etapa' | translate }}</small>
+            </div>
+            <div class="col-md-5">
+              <div class="input-group">
+                <span class="input-group-text"><i class="fa fa-search"></i></span>
+                <input type="text" class="form-control" [value]="searchTerm"
+                  (input)="onSearch($any($event.target).value)"
+                  placeholder="{{ 'Buscar por nombre, email, NIT...' | translate }}" />
+              </div>
+            </div>
+            <div class="col-md-2 text-end d-flex align-items-center justify-content-end gap-2">
+              <!-- Export / Import -->
+              <button class="btn btn-outline-success btn-sm" (click)="exportToExcel()"
+                pTooltip="{{ 'Exportar Excel' | translate }}" [disabled]="leads.length === 0">
+                <i class="fa fa-download"></i>
+              </button>
+              <button class="btn btn-outline-primary btn-sm" (click)="fileInput.click()"
+                pTooltip="{{ 'Importar Excel' | translate }}">
+                <i class="fa fa-upload"></i>
+              </button>
+              <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden
+                (change)="onFileImport($event)" />
+              <!-- View toggle -->
+              <div class="btn-group btn-group-sm">
+                <button class="btn" [ngClass]="viewMode === 'kanban' ? 'btn-primary' : 'btn-outline-secondary'"
+                  (click)="viewMode = 'kanban'" pTooltip="Kanban">
+                  <i class="fa fa-columns"></i>
+                </button>
+                <button class="btn" [ngClass]="viewMode === 'table' ? 'btn-primary' : 'btn-outline-secondary'"
+                  (click)="viewMode = 'table'" pTooltip="Tabla">
+                  <i class="fa fa-list"></i>
+                </button>
+              </div>
+            </div>
           </div>
-        </td>
-        <td *ngIf="entityType === 'company'">
-          <p-tag *ngIf="lead.subscriptionPlan"
-            [value]="lead.subscriptionPlan"
-            [severity]="lead.subscriptionPlan === 'premium' ? 'success' : 'info'">
-          </p-tag>
-        </td>
-        <td>
-          <p-dropdown [options]="stageOptions" [ngModel]="lead.stage"
-            (onChange)="changeStage(lead, $event.value); $event.originalEvent.stopPropagation()"
-            [style]="{'width':'100%','font-size':'0.8rem'}" appendTo="body">
-            <ng-template let-item pTemplate="selectedItem">
-              <p-tag [value]="capitalize(item.value)" [severity]="getStageSeverity(item.value)"></p-tag>
-            </ng-template>
-          </p-dropdown>
-        </td>
-        <td>
-          <p-tag *ngIf="lead.priority" [value]="lead.priority" [severity]="getPrioritySeverity(lead.priority)"
-            [style]="{'font-size':'0.75rem'}"></p-tag>
-        </td>
-        <td>
-          <small>{{ lead.assignedTo || '-' }}</small>
-        </td>
-        <td>
-          <small>{{ formatDate(lead.lastContactedAt) }}</small>
-        </td>
-        <td>
-          <button pButton icon="pi pi-eye" class="p-button-text p-button-sm p-button-rounded"
-            pTooltip="{{ 'Ver detalle' | translate }}" (click)="viewDetail(lead); $event.stopPropagation()">
-          </button>
-        </td>
-      </tr>
-    </ng-template>
+        </div>
 
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td [attr.colspan]="entityType === 'company' ? 7 : 6" class="text-center p-4">
-          <i class="pi pi-inbox" style="font-size:2rem; color:#9ca3af;"></i>
-          <p class="text-muted mt-2">{{ 'No hay leads registrados' | translate }}</p>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+        <!-- Stats chips -->
+        <div class="card-body py-2 border-bottom" *ngIf="stats">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="stat-badge stat-badge-primary">{{ stats.total }} {{ 'total' | translate }}</span>
+            <ng-container *ngFor="let stage of stages">
+              <span class="stat-badge cursor-pointer"
+                [style.background-color]="getStageBgColor(stage)" [style.color]="getStageColor(stage)"
+                [class.stat-badge-active]="selectedStage === stage"
+                (click)="selectedStage = (selectedStage === stage ? null : stage); onStageFilter()">
+                {{ capitalize(stage) }}: {{ stats.byStage[stage] || 0 }}
+              </span>
+            </ng-container>
+            <span class="stat-badge stat-badge-warning" *ngIf="stats.tasksPending > 0">
+              <i class="fa fa-clock-o me-1"></i>{{ stats.tasksPending }} {{ 'tareas' | translate }}
+            </span>
+            <!-- Pipeline total value -->
+            <span class="stat-badge stat-badge-primary ms-auto" *ngIf="stats.totalValue > 0">
+              <i class="fa fa-dollar me-1"></i>{{ formatCurrency(stats.totalValue) }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Loader -->
+        <div class="loader-box" *ngIf="loading">
+          <div class="loader-8"></div>
+        </div>
+
+        <!-- ═══════ KANBAN VIEW ═══════ -->
+        <div class="card-body p-2" *ngIf="!loading && viewMode === 'kanban'">
+          <div class="kanban-board">
+            <div class="kanban-column" *ngFor="let stage of stages"
+              [class.d-none]="selectedStage && selectedStage !== stage">
+
+              <!-- Column header -->
+              <div class="kanban-column-header" [style.border-top-color]="getStageColor(stage)">
+                <div>
+                  <span class="kanban-column-title">{{ capitalize(stage) }}</span>
+                  <span class="kanban-column-count">{{ getStageCount(stage) }}</span>
+                </div>
+                <small class="kanban-column-value" *ngIf="getStageValue(stage) > 0">
+                  {{ formatCurrency(getStageValue(stage)) }}
+                </small>
+              </div>
+
+              <!-- Cards container (dragula) -->
+              <div class="kanban-cards"
+                [dragula]="'crm-kanban'" [dragulaModel]="leadsByStage[stage]"
+                [attr.data-stage]="stage">
+
+                <div class="kanban-card" *ngFor="let lead of leadsByStage[stage]; trackBy: trackById"
+                  [attr.data-lead-id]="lead.id">
+
+                  <!-- Card header -->
+                  <div class="kanban-card-header">
+                    <a class="kanban-card-link" (click)="viewDetail(lead)">{{ lead.name }}</a>
+                    <span class="stat-badge badge-sm" *ngIf="lead.subscriptionPlan"
+                      [style.background-color]="lead.subscriptionPlan === 'premium' ? '#f0fdf4' : '#f1f3f5'"
+                      [style.color]="lead.subscriptionPlan === 'premium' ? '#27AE60' : '#6b7280'">
+                      {{ lead.subscriptionPlan }}
+                    </span>
+                  </div>
+
+                  <!-- Card body -->
+                  <div class="kanban-card-body">
+                    <small class="text-muted d-block" *ngIf="lead.email">
+                      <i class="fa fa-envelope-o me-1"></i>{{ lead.email }}
+                    </small>
+                    <small class="text-muted d-block" *ngIf="lead.nit">
+                      <i class="fa fa-id-card-o me-1"></i>{{ lead.nit }}
+                    </small>
+                    <!-- Estimated value -->
+                    <small class="d-block fw-semibold" style="color: #8b5cf6;" *ngIf="lead.estimatedValue">
+                      <i class="fa fa-dollar me-1"></i>{{ formatCurrency(lead.estimatedValue) }}
+                    </small>
+                  </div>
+
+                  <!-- Quick actions -->
+                  <div class="kanban-card-actions">
+                    <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn-pill"
+                      (click)="$event.stopPropagation()">
+                      <i class="fa fa-phone me-1"></i>Llamar
+                    </a>
+                    <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn-pill"
+                      (click)="$event.stopPropagation()">
+                      <i class="fa fa-envelope-o me-1"></i>Email
+                    </a>
+                    <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
+                      class="action-btn-pill action-btn-wa"
+                      (click)="$event.stopPropagation()">
+                      <i class="fa fa-whatsapp me-1"></i>WA
+                    </a>
+                    <a class="action-btn-pill action-btn-detail" (click)="viewDetail(lead)">
+                      <i class="fa fa-external-link me-1"></i>Ver
+                    </a>
+                  </div>
+
+                  <!-- Card footer -->
+                  <div class="kanban-card-footer">
+                    <span class="stat-badge" *ngIf="lead.priority"
+                      [style.background-color]="getPriorityBgColor(lead.priority)"
+                      [style.color]="getPriorityColor(lead.priority)">
+                      {{ lead.priority }}
+                    </span>
+                    <small class="text-muted" *ngIf="lead.assignedTo">
+                      <i class="fa fa-user-o me-1"></i>{{ lead.assignedTo?.split('@')[0] }}
+                    </small>
+                    <span class="stat-badge badge-sm"
+                      [style.background-color]="lead.activo ? '#f0fdf4' : '#fef2f2'"
+                      [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
+                      {{ lead.activo ? 'activo' : 'inactivo' }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Empty column -->
+                <div class="kanban-empty" *ngIf="getStageCount(stage) === 0">
+                  <small class="text-muted">{{ 'Sin leads' | translate }}</small>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══════ TABLE VIEW ═══════ -->
+        <div class="card-body p-2" *ngIf="!loading && viewMode === 'table'">
+          <p-table [value]="filteredLeads" dataKey="id"
+            [paginator]="true" [rows]="20" [rowsPerPageOptions]="[10,20,50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords}' | translate }}"
+            styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
+            style="font-size: 0.75em;">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width:22%">{{ 'Nombre' | translate }}</th>
+                <th style="width:12%" *ngIf="entityType === 'company'">{{ 'Plan' | translate }}</th>
+                <th style="width:10%">{{ 'Etapa' | translate }}</th>
+                <th style="width:8%">{{ 'Estado' | translate }}</th>
+                <th style="width:10%">{{ 'Prioridad' | translate }}</th>
+                <th style="width:14%">{{ 'Asignado' | translate }}</th>
+                <th style="width:10%">{{ 'Valor' | translate }}</th>
+                <th style="width:14%">{{ 'Contacto' | translate }}</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-lead>
+              <tr class="cursor-pointer" (click)="viewDetail(lead)">
+                <td>
+                  <strong>{{ lead.name }}</strong>
+                  <small class="d-block text-muted">{{ lead.email || lead.nit || '' }}</small>
+                </td>
+                <td *ngIf="entityType === 'company'">
+                  <span class="stat-badge badge-sm" *ngIf="lead.subscriptionPlan"
+                    [style.background-color]="lead.subscriptionPlan === 'premium' ? '#f0fdf4' : '#f1f3f5'"
+                    [style.color]="lead.subscriptionPlan === 'premium' ? '#27AE60' : '#6b7280'">
+                    {{ lead.subscriptionPlan }}
+                  </span>
+                </td>
+                <td>
+                  <p-tag [value]="capitalize(lead.stage)" [severity]="getStageSeverity(lead.stage)"
+                    [style]="{'font-size':'0.75rem'}"></p-tag>
+                </td>
+                <td>
+                  <span class="stat-badge badge-sm"
+                    [style.background-color]="lead.activo ? '#f0fdf4' : '#fef2f2'"
+                    [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
+                    {{ lead.activo ? 'activo' : 'inactivo' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="stat-badge badge-sm" *ngIf="lead.priority"
+                    [style.background-color]="getPriorityBgColor(lead.priority)"
+                    [style.color]="getPriorityColor(lead.priority)">
+                    {{ lead.priority }}
+                  </span>
+                </td>
+                <td><small>{{ lead.assignedTo || '-' }}</small></td>
+                <td>
+                  <small *ngIf="lead.estimatedValue" style="color:#8b5cf6; font-weight:600;">
+                    {{ formatCurrency(lead.estimatedValue) }}
+                  </small>
+                </td>
+                <td>
+                  <div class="d-flex gap-2">
+                    <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn"
+                      (click)="$event.stopPropagation()"><i class="fa fa-phone"></i></a>
+                    <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn"
+                      (click)="$event.stopPropagation()"><i class="fa fa-envelope-o"></i></a>
+                    <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
+                      class="action-btn action-btn-wa" (click)="$event.stopPropagation()">
+                      <i class="fa fa-whatsapp"></i></a>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td [attr.colspan]="entityType === 'company' ? 8 : 7" class="text-center p-4">
+                  <i class="fa fa-inbox" style="font-size:2rem; color:#9ca3af;"></i>
+                  <p class="text-muted mt-2 mb-0">{{ 'No hay leads' | translate }}</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </div>
 
 <p-toast></p-toast>

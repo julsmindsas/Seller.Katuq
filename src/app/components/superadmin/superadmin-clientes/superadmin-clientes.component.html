@@ -1,401 +1,331 @@
-<div class="container-fluid dashboard-container">
-  <!-- Header con barra de progreso -->
-  <div class="dashboard-header">
-    <div class="progress progress-thin mb-2" style="height: 4px;">
-      <div class="progress-bar bg-success" role="progressbar" 
-           [style.width.%]="(clientesActivosCount / totalClientes) * 100" 
-           aria-valuemin="0" aria-valuemax="100"></div>
+<div class="container-fluid px-4 pt-3">
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+      <h4 class="fw-bold mb-0" style="color: #0f172a;">Empresas</h4>
+      <small class="text-muted">Gestion de clientes de la plataforma</small>
     </div>
-    <div class="d-flex justify-content-between align-items-center mb-4">
-      <div>
-        <h4 class="mb-0 dashboard-title">Dashboard de Clientes</h4>
-        <p class="text-muted mb-0 d-none d-md-block">Gestión y análisis avanzado de clientes</p>
-      </div>
-      <div class="dashboard-actions d-flex gap-2">
-        <button class="btn btn-sm btn-outline-primary action-btn" (click)="refreshData()" data-bs-toggle="tooltip" title="Actualizar datos">
-          <i class="fa fa-sync-alt"></i><span class="d-none d-md-inline ms-2">Actualizar</span>
-        </button>
-        <button class="btn btn-sm btn-outline-success action-btn" (click)="exportData()" data-bs-toggle="tooltip" title="Exportar datos">
-          <i class="fa fa-file-export"></i><span class="d-none d-md-inline ms-2">Exportar</span>
-        </button>
-      </div>
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-secondary" (click)="refreshData()">
+        <i class="fa fa-refresh me-1"></i><span class="d-none d-md-inline">Actualizar</span>
+      </button>
+      <button class="btn btn-sm btn-outline-secondary" (click)="exportData()">
+        <i class="fa fa-download me-1"></i><span class="d-none d-md-inline">Exportar</span>
+      </button>
     </div>
   </div>
 
-  <!-- Tarjetas de Resumen Principal -->
-  <div class="row g-3 mb-4">
+  <!-- Accesos directos -->
+  <div class="row g-2 mb-3">
     <div class="col-6 col-md-3">
-      <div class="card widget-card hover-lift">
-        <div class="card-body">
-          <div class="widget-content">
-            <div class="widget-icon secondary">
-              <i class="fa fa-users-cog"></i>
-            </div>
-            <div class="widget-data">
-              <h4 class="counter-value">{{ totalClientes }}</h4>
-              <span class="widget-label">Total Clientes</span>
-              <div class="progress mt-2" style="height: 5px;">
-                <div class="progress-bar bg-secondary" style="width: 100%"></div>
-              </div>
-            </div>
-          </div>
+      <a routerLink="/crm/list" class="shortcut-card">
+        <i class="fa fa-bullseye" style="color: #6366f1;"></i>
+        <span>CRM</span>
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a routerLink="/dashboards" class="shortcut-card">
+        <i class="fa fa-bar-chart" style="color: #27ae60;"></i>
+        <span>Analiticas</span>
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a routerLink="/ventas/pedidos" class="shortcut-card">
+        <i class="fa fa-file-text" style="color: #e67e22;"></i>
+        <span>Pedidos</span>
+      </a>
+    </div>
+    <div class="col-6 col-md-3">
+      <a routerLink="/inventario/inventario-catalogo" class="shortcut-card">
+        <i class="fa fa-cubes" style="color: #3b82f6;"></i>
+        <span>Inventario</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Contadores reales -->
+  <div class="row g-2 mb-3">
+    <div class="col-6 col-md-3">
+      <div class="stat-card" style="border-left-color: #8b5cf6;">
+        <div class="stat-icon" style="background: #faf5ff;">
+          <i class="fa fa-users" style="color: #8b5cf6;"></i>
+        </div>
+        <div>
+          <span class="stat-value">{{ totalClientes }}</span>
+          <small class="stat-label">Total</small>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card widget-card hover-lift">
-        <div class="card-body">
-          <div class="widget-content">
-            <div class="widget-icon success">
-              <i class="fa fa-user-check"></i>
-            </div>
-            <div class="widget-data">
-              <h4 class="counter-value">{{ clientesActivosCount }}</h4>
-              <span class="widget-label">Clientes Activos</span>
-              <div class="progress mt-2" style="height: 5px;">
-                <div class="progress-bar bg-success" [style.width.%]="(clientesActivosCount / totalClientes) * 100"></div>
-              </div>
-            </div>
-          </div>
+      <div class="stat-card" style="border-left-color: #27ae60;">
+        <div class="stat-icon" style="background: #f0fdf4;">
+          <i class="fa fa-check" style="color: #27ae60;"></i>
+        </div>
+        <div>
+          <span class="stat-value">{{ clientesActivosCount }}</span>
+          <small class="stat-label">Activos</small>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card widget-card hover-lift">
-        <div class="card-body">
-          <div class="widget-content">
-            <div class="widget-icon danger">
-              <i class="fa fa-user-slash"></i>
-            </div>
-            <div class="widget-data">
-              <h4 class="counter-value">{{ clientesBloqueadosCount }}</h4>
-              <span class="widget-label">Clientes Bloqueados</span>
-              <div class="progress mt-2" style="height: 5px;">
-                <div class="progress-bar bg-danger" [style.width.%]="(clientesBloqueadosCount / totalClientes) * 100"></div>
-              </div>
-            </div>
-          </div>
+      <div class="stat-card" style="border-left-color: #d12b38;">
+        <div class="stat-icon" style="background: #fef2f2;">
+          <i class="fa fa-ban" style="color: #d12b38;"></i>
+        </div>
+        <div>
+          <span class="stat-value">{{ clientesInactivosCount }}</span>
+          <small class="stat-label">Inactivos</small>
         </div>
       </div>
     </div>
     <div class="col-6 col-md-3">
-      <div class="card widget-card hover-lift">
-        <div class="card-body">
-          <div class="widget-content">
-            <div class="widget-icon warning">
-              <i class="fa fa-user-clock"></i>
-            </div>
-            <div class="widget-data">
-              <h4 class="counter-value">{{ clientesPendientesCount }}</h4>
-              <span class="widget-label">Clientes Pendientes</span>
-              <div class="progress mt-2" style="height: 5px;">
-                <div class="progress-bar bg-warning" [style.width.%]="(clientesPendientesCount / totalClientes) * 100"></div>
-              </div>
-            </div>
-          </div>
+      <div class="stat-card" style="border-left-color: #D35400;">
+        <div class="stat-icon" style="background: #fef3c7;">
+          <i class="fa fa-clock-o" style="color: #D35400;"></i>
+        </div>
+        <div>
+          <span class="stat-value">{{ clientesPendientesCount }}</span>
+          <small class="stat-label">Pendientes</small>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- KPIs Principales -->
-  <div class="row g-3 mb-4">
-    <div class="col-6 col-md-3">
-      <div class="card kpi-card hover-shadow">
-        <div class="card-body p-0">
-          <div class="kpi-content">
-            <div class="kpi-left">
-              <h6 class="text-muted mb-1">Ventas Totales</h6>
-              <h4 class="mb-0">{{ kpiData.ventasTotales ? (kpiData.ventasTotales | currency:'COP':'symbol-narrow':'1.0-0') : '$0' }}</h4>
-            </div>
-            <div class="kpi-right">
-              <div id="chart-ventas-mensuales" class="sparkline-chart"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card kpi-card hover-shadow">
-        <div class="card-body p-0">
-          <div class="kpi-content">
-            <div class="kpi-left">
-              <h6 class="text-muted mb-1">Pedidos Prom.</h6>
-              <h4 class="mb-0">{{ kpiData.pedidosPromedio }}</h4>
-            </div>
-            <div class="kpi-right">
-              <div id="chart-pedidos" class="sparkline-chart"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card kpi-card hover-shadow">
-        <div class="card-body p-0">
-          <div class="kpi-content">
-            <div class="kpi-left">
-              <h6 class="text-muted mb-1">T. Entrega</h6>
-              <h4 class="mb-0">{{ kpiData.tiempoEntregaPromedio }} min</h4>
-            </div>
-            <div class="kpi-right trend-indicator">
-              <i class="fa fa-arrow-down text-success"></i>
-              <span>12%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="col-6 col-md-3">
-      <div class="card kpi-card hover-shadow">
-        <div class="card-body p-0">
-          <div class="kpi-content">
-            <div class="kpi-left">
-              <h6 class="text-muted mb-1">Satisfacción</h6>
-              <h4 class="mb-0">{{ kpiData.satisfaccionGlobal }}/5.0</h4>
-            </div>
-            <div class="kpi-right">
-              <div class="rating-stars">
-                <i class="fa fa-star text-warning"></i>
-                <i class="fa fa-star text-warning"></i>
-                <i class="fa fa-star text-warning"></i>
-                <i class="fa fa-star text-warning"></i>
-                <i class="fa fa-star-half-alt text-warning"></i>
+  <!-- Metricas reales -->
+  <div class="row g-3 mb-3" *ngIf="clientes.length > 0">
+    <!-- Plan distribution -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100" style="border-radius: 10px;">
+        <div class="card-body p-3">
+          <h6 class="section-label mb-2"><i class="fa fa-diamond me-2" style="color: #8b5cf6;"></i>Planes</h6>
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="flex-fill">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="text-muted">Premium</small>
+                <small class="fw-bold" style="color: #8b5cf6;">{{ premiumCount }}</small>
+              </div>
+              <div class="progress" style="height: 6px; border-radius: 3px;">
+                <div class="progress-bar" style="background: #8b5cf6; border-radius: 3px;"
+                     [style.width.%]="totalClientes ? (premiumCount / totalClientes) * 100 : 0"></div>
               </div>
             </div>
+          </div>
+          <div class="d-flex align-items-center gap-3">
+            <div class="flex-fill">
+              <div class="d-flex justify-content-between mb-1">
+                <small class="text-muted">Freemium</small>
+                <small class="fw-bold" style="color: #64748b;">{{ freemiumCount }}</small>
+              </div>
+              <div class="progress" style="height: 6px; border-radius: 3px;">
+                <div class="progress-bar" style="background: #cbd5e1; border-radius: 3px;"
+                     [style.width.%]="totalClientes ? (freemiumCount / totalClientes) * 100 : 0"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top ciudades -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100" style="border-radius: 10px;">
+        <div class="card-body p-3">
+          <h6 class="section-label mb-2"><i class="fa fa-map-marker me-2" style="color: #e67e22;"></i>Top ciudades</h6>
+          <div *ngFor="let ciudad of ciudadesTop" class="d-flex justify-content-between align-items-center mb-1">
+            <small class="text-truncate" style="max-width: 150px;">{{ ciudad.nombre }}</small>
+            <span class="badge" style="background: #f1f5f9; color: #334155; font-size: 0.7rem;">{{ ciudad.count }}</span>
+          </div>
+          <small class="text-muted" *ngIf="ciudadesTop.length === 0">Sin datos de ciudad</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- Registros recientes -->
+    <div class="col-md-4">
+      <div class="card border-0 shadow-sm h-100" style="border-radius: 10px;">
+        <div class="card-body p-3">
+          <h6 class="section-label mb-2"><i class="fa fa-clock-o me-2" style="color: #3b82f6;"></i>Recientes</h6>
+          <div *ngFor="let c of registrosRecientes" class="d-flex justify-content-between align-items-center mb-1">
+            <small class="text-truncate fw-medium" style="max-width: 150px; color: #0f172a;">{{ c.empresa.nombre }}</small>
+            <small class="text-muted" style="font-size: 0.65rem;">{{ c.fechaRegistro | date:'dd/MM' }}</small>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Filtros y Buscador -->
-  <div class="card filter-card mb-4">
-    <div class="card-body">
-      <div class="row g-3 align-items-end">
-        <div class="col-md-4">
-          <label class="form-label small">Buscar Cliente</label>
-          <div class="search-input-group">
-            <i class="search-icon fa fa-search"></i>
-            <input type="text" 
-                   class="form-control search-control" 
-                   placeholder="Nombre, email o empresa..."
-                   [(ngModel)]="filtroNombre" 
-                   (ngModelChange)="filtrarClientes()">
+  <!-- Filtros -->
+  <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px;">
+    <div class="card-body p-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+          <div class="position-relative">
+            <i class="fa fa-search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+            <input type="text" class="form-control" placeholder="Buscar por nombre, NIT o email..."
+                   [(ngModel)]="filtroNombre" (ngModelChange)="filtrarClientes()"
+                   style="padding-left: 36px; border-radius: 8px; border: 1px solid #e2e8f0;">
           </div>
         </div>
         <div class="col-md-3">
-          <label class="form-label small">Estado</label>
-          <select class="form-select custom-select" 
-                  [(ngModel)]="filtroEstado" 
-                  (ngModelChange)="filtrarClientes()">
-            <option value="">Todos los Estados</option>
+          <select class="form-select" [(ngModel)]="filtroEstado" (ngModelChange)="filtrarClientes()"
+                  style="border-radius: 8px; border: 1px solid #e2e8f0;">
+            <option value="">Todos los estados</option>
             <option value="Activo">Activo</option>
-            <option value="Bloqueado">Bloqueado</option>
+            <option value="Inactivo">Inactivo</option>
             <option value="Pendiente">Pendiente</option>
           </select>
         </div>
-        <div class="col-md-3">
-          <label class="form-label small">Fecha Registro</label>
-          <input type="date" class="form-control" [(ngModel)]="filtroFecha" (ngModelChange)="filtrarClientes()">
+        <div class="col-md-2">
+          <input type="date" class="form-control" [(ngModel)]="filtroFecha" (ngModelChange)="filtrarClientes()"
+                 style="border-radius: 8px; border: 1px solid #e2e8f0;">
         </div>
         <div class="col-md-2">
-          <button class="btn btn-primary w-100 custom-btn" type="button" (click)="openNewClientModal()">
-            <i class="fa fa-plus-circle me-2"></i>Nuevo Cliente
+          <button class="btn w-100" style="background: #8b5cf6; color: #fff; border-radius: 8px;" (click)="openNewClientModal()">
+            <i class="fa fa-plus me-1"></i>Nuevo
           </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Tabla de Clientes -->
-  <div class="card table-card mb-4">
-    <div class="card-header">
-      <div class="d-flex justify-content-between align-items-center">
-        <h5 class="mb-0"><i class="fa fa-users me-2"></i>Gestión de Clientes</h5>
-        <div class="table-actions">
-          <button class="btn btn-sm btn-outline-secondary" (click)="toggleViewMode()">
-            <i class="fa" [ngClass]="viewMode === 'table' ? 'fa-th-large' : 'fa-table'"></i>
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      <!-- Estado de carga -->
-      <div class="loading-container" *ngIf="cargando">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-        <p class="mt-2 loading-text">Cargando clientes...</p>
+  <!-- Tabla de empresas -->
+  <div class="card border-0 shadow-sm" style="border-radius: 10px;">
+    <div class="card-body p-0">
+
+      <!-- Loading -->
+      <div class="text-center py-5" *ngIf="cargando">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Cargando empresas...</p>
       </div>
 
-      <!-- Mensaje de error -->
-      <div class="alert alert-danger d-flex align-items-center" role="alert" *ngIf="error && !cargando">
-        <i class="fa fa-exclamation-triangle me-2"></i>
-        <div>
-          {{ error }}
-          <button type="button" class="btn btn-sm btn-outline-danger ms-3" (click)="cargarClientes()">
-            <i class="fa fa-sync-alt me-1"></i>Reintentar
-          </button>
-        </div>
+      <!-- Error -->
+      <div class="alert alert-danger m-3" *ngIf="error && !cargando">
+        <i class="fa fa-exclamation-triangle me-2"></i>{{ error }}
+        <button class="btn btn-sm btn-outline-danger ms-2" (click)="cargarClientes()">
+          <i class="fa fa-refresh me-1"></i>Reintentar
+        </button>
       </div>
 
-      <!-- Vista de tabla (default) -->
+      <!-- Vista tabla -->
       <div class="table-responsive" *ngIf="!cargando && !error && viewMode === 'table'">
-        <table class="table align-middle custom-table table-hover">
-          <thead class="table-light">
-            <tr>
-              <th width="30%">
-                <i class="fa fa-building text-primary me-2"></i>Nombre / Empresa
-              </th>
-              <th width="30%">
-                <i class="fa fa-address-card text-primary me-2"></i>Contacto
-              </th>
-              <th width="15%">
-                <i class="fa fa-check-circle text-primary me-2"></i>Estado
-              </th>
-              <th width="15%">
-                <i class="fa fa-calendar-alt text-primary me-2"></i>Fecha Registro
-              </th>
-              <th width="10%" class="text-center">
-                <i class="fa fa-cogs text-primary me-2"></i>Acciones
-              </th>
+        <table class="table align-middle mb-0">
+          <thead>
+            <tr style="background: #f8fafc;">
+              <th class="ps-3" style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Empresa</th>
+              <th style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Contacto</th>
+              <th style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Estado</th>
+              <th style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Registro</th>
+              <th class="text-center" style="font-size: 0.75rem; text-transform: uppercase; color: #64748b; font-weight: 600;">Acciones</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let cliente of clientesFiltrados" class="table-row">
-              <td>
+            <tr *ngFor="let cliente of clientesFiltrados" class="border-bottom" style="transition: background 0.15s;">
+              <td class="ps-3">
                 <div class="d-flex align-items-center">
                   <div class="avatar-circle" [ngClass]="'bg-' + getClienteColor(cliente)">
                     {{ getInitials(cliente.empresa.nombre) }}
                   </div>
                   <div class="ms-3">
-                    <h6 class="mb-0 fw-semibold">{{cliente.empresa.nombre}}</h6>
-                    <small class="text-muted d-flex align-items-center">
-                      <i class="fa fa-id-card text-muted me-1"></i>
-                      {{cliente.empresa.nit || 'NIT no disponible'}}
+                    <span class="fw-semibold" style="color: #0f172a;">{{ cliente.empresa.nombre }}</span>
+                    <small class="d-block text-muted">
+                      {{ cliente.empresa.nit || 'Sin NIT' }}
+                      <span class="badge ms-1" [ngClass]="cliente.plan === 'premium' ? 'badge-premium' : 'badge-free'">{{ cliente.plan }}</span>
                     </small>
                   </div>
                 </div>
               </td>
               <td>
-                <div class="contact-info">
-                  <div class="d-flex align-items-center mb-1">
-                    <i class="fa fa-envelope text-primary me-2"></i>
-                    <span class="contact-text">{{cliente.empresa.emailContacto || 'No disponible'}}</span>
-                  </div>
-                  <div class="d-flex align-items-center">
-                    <i class="fa fa-phone text-success me-2"></i>
-                    <span class="contact-text">{{cliente.empresa.telContacto || 'No disponible'}}</span>
-                  </div>
+                <div>
+                  <small class="d-flex align-items-center mb-1">
+                    <i class="fa fa-envelope text-muted me-2" style="font-size: 0.7rem;"></i>
+                    {{ cliente.empresa.emailContacto || 'N/D' }}
+                  </small>
+                  <small class="d-flex align-items-center">
+                    <i class="fa fa-phone text-muted me-2" style="font-size: 0.7rem;"></i>
+                    {{ cliente.empresa.telContacto || 'N/D' }}
+                  </small>
                 </div>
               </td>
               <td>
-                <span class="badge status-badge" [ngClass]="{
-                  'status-active': cliente.estado === 'Activo',
-                  'status-blocked': cliente.estado === 'Bloqueado',
-                  'status-pending': cliente.estado === 'Pendiente'
+                <span class="badge" [ngClass]="{
+                  'badge-active': cliente.estado === 'Activo',
+                  'badge-inactive': cliente.estado === 'Inactivo',
+                  'badge-pending': cliente.estado === 'Pendiente'
                 }">
-                  <i class="fa" [ngClass]="{
-                    'fa-check-circle': cliente.estado === 'Activo',
-                    'fa-ban': cliente.estado === 'Bloqueado',
-                    'fa-clock': cliente.estado === 'Pendiente'
-                  }"></i>
-                  <span class="ms-1">{{cliente.estado}}</span>
+                  {{ cliente.estado }}
                 </span>
               </td>
               <td>
-                <div class="d-flex align-items-center">
-                  <i class="far fa-calendar-alt text-muted me-2"></i>
-                  <span>{{ cliente.fechaRegistro | date:'dd/MM/yyyy' }}</span>
-                </div>
+                <small class="text-muted">{{ cliente.fechaRegistro | date:'dd/MM/yyyy' }}</small>
               </td>
-              <td>
-                <div class="action-buttons">
-                  <button class="btn btn-icon btn-sm btn-primary" (click)="editarCliente(cliente)" pTooltip="Editar" tooltipPosition="top">
-                    <i class="fa fa-edit"></i>
-                  </button>
-                  <button class="btn btn-icon btn-sm btn-info" (click)="verDetalles(cliente)" pTooltip="Ver detalles" tooltipPosition="top">
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                  <button class="btn btn-sm btn-light" (click)="verDetalles(cliente)" title="Ver detalles">
                     <i class="fa fa-eye"></i>
                   </button>
+                  <button class="btn btn-sm btn-light" (click)="editarCliente(cliente)" title="Editar">
+                    <i class="fa fa-pencil"></i>
+                  </button>
                   <div class="dropdown d-inline-block">
-                    <button class="btn btn-icon btn-sm btn-secondary" type="button" data-bs-toggle="dropdown" pTooltip="Más opciones" tooltipPosition="top">
+                    <button class="btn btn-sm btn-light" data-bs-toggle="dropdown">
                       <i class="fa fa-ellipsis-v"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                      <li><button class="dropdown-item d-flex align-items-center" (click)="cambiarEstado(cliente, 'Activo')" [disabled]="cliente.estado === 'Activo'">
-                        <i class="fa fa-check-circle text-success me-2"></i>Activar
-                      </button></li>
-                      <li><button class="dropdown-item d-flex align-items-center" (click)="cambiarEstado(cliente, 'Bloqueado')" [disabled]="cliente.estado === 'Bloqueado'">
-                        <i class="fa fa-ban text-danger me-2"></i>Bloquear
-                      </button></li>
+                      <li>
+                        <button class="dropdown-item" (click)="cambiarEstado(cliente, 'Activo')" [disabled]="cliente.estado === 'Activo'">
+                          <i class="fa fa-check text-success me-2"></i>Activar
+                        </button>
+                      </li>
+                      <li>
+                        <button class="dropdown-item" (click)="cambiarEstado(cliente, 'Inactivo')" [disabled]="cliente.estado === 'Inactivo'">
+                          <i class="fa fa-ban text-danger me-2"></i>Desactivar
+                        </button>
+                      </li>
                       <li><hr class="dropdown-divider"></li>
-                      <li><button class="dropdown-item d-flex align-items-center text-danger" (click)="eliminarCliente(cliente)">
-                        <i class="fa fa-trash me-2"></i>Eliminar
-                      </button></li>
+                      <li>
+                        <button class="dropdown-item text-danger" (click)="eliminarCliente(cliente)">
+                          <i class="fa fa-trash me-2"></i>Eliminar
+                        </button>
+                      </li>
                     </ul>
                   </div>
                 </div>
-              </td>
-            </tr>
-            <tr *ngIf="clientesFiltrados && clientesFiltrados.length === 0">
-              <td colspan="5" class="text-center py-4 text-muted">
-                <i class="fa fa-search fa-2x mb-3"></i>
-                <p>No se encontraron clientes con los filtros seleccionados</p>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Vista de tarjetas (alternativa para móviles) -->
-      <div class="card-view" *ngIf="!cargando && !error && viewMode === 'cards'">
+      <!-- Vista cards (mobile) -->
+      <div class="p-3" *ngIf="!cargando && !error && viewMode === 'cards'">
         <div class="row g-3">
-          <div class="col-12 col-md-6 col-lg-4 col-xl-3" *ngFor="let cliente of clientesFiltrados">
-            <div class="card client-card hover-shadow">
-              <div class="card-body">
-                <div class="client-header d-flex justify-content-between align-items-start">
-                  <div class="avatar-circle large" [ngClass]="'bg-' + getClienteColor(cliente)">
+          <div class="col-12 col-md-6 col-lg-4" *ngFor="let cliente of clientesFiltrados">
+            <div class="card border" style="border-radius: 10px;">
+              <div class="card-body p-3">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                  <div class="avatar-circle" [ngClass]="'bg-' + getClienteColor(cliente)">
                     {{ getInitials(cliente.empresa.nombre) }}
                   </div>
-                  <span class="badge status-badge" [ngClass]="{
-                    'status-active': cliente.estado === 'Activo',
-                    'status-blocked': cliente.estado === 'Bloqueado',
-                    'status-pending': cliente.estado === 'Pendiente'
-                  }">
-                    {{cliente.estado}}
-                  </span>
+                  <span class="badge" [ngClass]="{
+                    'badge-active': cliente.estado === 'Activo',
+                    'badge-inactive': cliente.estado === 'Inactivo',
+                    'badge-pending': cliente.estado === 'Pendiente'
+                  }">{{ cliente.estado }}</span>
                 </div>
-                <h5 class="mt-3">{{cliente.empresa.nombre}}</h5>
-                <p class="text-muted">NIT: {{cliente.empresa.nit || 'N/A'}}</p>
-                <div class="client-contact mb-3">
-                  <div class="d-flex align-items-center mb-1">
-                    <i class="fa fa-envelope text-muted me-2"></i>
-                    <span class="text-truncate">{{cliente.empresa.emailContacto || 'No disponible'}}</span>
-                  </div>
-                  <div class="d-flex align-items-center">
-                    <i class="fa fa-phone text-muted me-2"></i>
-                    <span>{{cliente.empresa.telContacto || 'No disponible'}}</span>
-                  </div>
-                </div>
-                <div class="client-footer d-flex justify-content-between align-items-center">
-                  <small class="text-muted">Registrado: {{ cliente.fechaRegistro | date:'dd/MM/yyyy' }}</small>
-                  <div class="dropdown">
-                    <button class="btn btn-sm btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                      Acciones
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li><button class="dropdown-item" (click)="verDetalles(cliente)">
-                        <i class="fa fa-eye me-2"></i>Ver detalles
-                      </button></li>
-                      <li><button class="dropdown-item" (click)="editarCliente(cliente)">
-                        <i class="fa fa-edit me-2"></i>Editar
-                      </button></li>
-                      <li><hr class="dropdown-divider"></li>
-                      <li><button class="dropdown-item text-danger" (click)="eliminarCliente(cliente)">
-                        <i class="fa fa-trash me-2"></i>Eliminar
-                      </button></li>
-                    </ul>
+                <h6 class="fw-semibold mb-1">{{ cliente.empresa.nombre }}</h6>
+                <small class="text-muted d-block mb-2">NIT: {{ cliente.empresa.nit || 'N/A' }}</small>
+                <small class="d-flex align-items-center text-muted mb-1">
+                  <i class="fa fa-envelope me-2" style="font-size: 0.65rem;"></i>{{ cliente.empresa.emailContacto || 'N/D' }}
+                </small>
+                <small class="d-flex align-items-center text-muted mb-2">
+                  <i class="fa fa-phone me-2" style="font-size: 0.65rem;"></i>{{ cliente.empresa.telContacto || 'N/D' }}
+                </small>
+                <div class="d-flex justify-content-between align-items-center pt-2" style="border-top: 1px solid #f1f5f9;">
+                  <small class="text-muted">{{ cliente.fechaRegistro | date:'dd/MM/yyyy' }}</small>
+                  <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-light" (click)="verDetalles(cliente)"><i class="fa fa-eye"></i></button>
+                    <button class="btn btn-sm btn-light" (click)="editarCliente(cliente)"><i class="fa fa-pencil"></i></button>
                   </div>
                 </div>
               </div>
@@ -404,1313 +334,25 @@
         </div>
       </div>
 
-      <!-- Estado vacío -->
-      <div class="empty-state" *ngIf="!clientesFiltrados?.length && !cargando && !error">
-        <img src="assets/images/empty-data.svg" alt="No hay datos" class="empty-icon">
-        <h5>No se encontraron clientes</h5>
-        <p class="text-muted">Intente ajustar los filtros o crear un nuevo cliente</p>
-        <button class="btn btn-primary" (click)="openNewClientModal()">
-          <i class="fa fa-plus-circle me-2"></i>Crear Cliente
+      <!-- Empty state -->
+      <div class="text-center py-5" *ngIf="!cargando && !error && clientesFiltrados?.length === 0">
+        <i class="fa fa-search fa-2x text-muted mb-3"></i>
+        <p class="text-muted">No se encontraron empresas</p>
+        <button class="btn btn-sm" style="background: #8b5cf6; color: #fff;" (click)="openNewClientModal()">
+          <i class="fa fa-plus me-1"></i>Crear empresa
         </button>
       </div>
+
+    </div>
+
+    <!-- Footer con toggle vista -->
+    <div class="card-footer bg-white border-top d-flex justify-content-between align-items-center py-2 px-3"
+         *ngIf="!cargando && !error && clientesFiltrados?.length > 0" style="border-radius: 0 0 10px 10px;">
+      <small class="text-muted">{{ clientesFiltrados.length }} empresa{{ clientesFiltrados.length !== 1 ? 's' : '' }}</small>
+      <button class="btn btn-sm btn-light" (click)="toggleViewMode()">
+        <i class="fa" [ngClass]="viewMode === 'table' ? 'fa-th-large' : 'fa-list'"></i>
+      </button>
     </div>
   </div>
 
-  <!-- Dashboard de Tiendas con Acordeón PrimeNG -->
-  <div class="card mb-4">
-    <div class="card-header">
-      <div class="d-flex justify-content-between flex-wrap">
-        <div class="mb-2 mb-md-0">
-          <h5 class="mb-0"><i class="fa fa-store me-2"></i>Dashboard de Tiendas</h5>
-          <p class="text-muted mb-0 d-none d-md-block">Métricas clave de ventas y rendimiento por tienda</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-          <div class="date-picker-group">
-            <input type="date" class="form-control form-control-sm" value="2025-03-01">
-            <span class="date-separator">a</span>
-            <input type="date" class="form-control form-control-sm" value="2025-04-18">
-          </div>
-          <div class="btn-group">
-            <button class="btn btn-outline-secondary btn-sm">Mes actual</button>
-            <button class="btn btn-primary btn-sm">Filtrar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="card-body">
-      <!-- Acordeón con PrimeNG -->
-      <p-accordion [activeIndex]="0" styleClass="custom-accordion">
-        <!-- Panel de Gráficas -->
-        <p-accordionTab>
-          <ng-template pTemplate="header">
-            <div class="d-flex align-items-center">
-              <i class="fa fa-chart-line me-2"></i> 
-              <span>Gráficas de Rendimiento</span>
-            </div>
-          </ng-template>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="card chart-card h-100">
-                <div class="card-header bg-primary text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-chart-line me-2"></i>Ventas por Tienda</h6>
-                </div>
-                <div class="card-body">
-                  <div id="chart-ventas-tiendas" class="chart-container"></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card chart-card h-100">
-                <div class="card-header bg-success text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-chart-pie me-2"></i>Distribución de Pedidos</h6>
-                </div>
-                <div class="card-body">
-                  <div id="chart-pedidos-tiendas" class="chart-container"></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-8">
-              <div class="card chart-card h-100">
-                <div class="card-header bg-info text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-chart-bar me-2"></i>Crecimiento Mensual por Tienda</h6>
-                </div>
-                <div class="card-body">
-                  <div id="chart-crecimiento-tiendas" class="chart-container"></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4">
-              <div class="card ai-card h-100">
-                <div class="card-header bg-purple text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-brain me-2"></i>Análisis K.A.I.</h6>
-                </div>
-                <div class="card-body d-flex flex-column">
-                  <button class="btn btn-primary mb-3">
-                    <i class="fa fa-bolt me-2"></i>Analizar Rendimiento
-                  </button>
-                  <div class="ai-placeholder">
-                    <img src="assets/images/ai-assistant.svg" alt="K.A.I." class="ai-icon mb-3">
-                    <p class="text-center text-muted">Aquí verás el análisis inteligente de ventas, tendencias y recomendaciones personalizadas para todas tus tiendas.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </p-accordionTab>
-
-        <!-- Panel de Rendimiento Detallado -->
-        <p-accordionTab>
-          <ng-template pTemplate="header">
-            <div class="d-flex align-items-center">
-              <i class="fa fa-table me-2"></i> 
-              <span>Rendimiento Detallado por Tienda</span>
-            </div>
-          </ng-template>
-          <div class="table-responsive">
-            <table class="table table-striped table-hover store-performance-table">
-              <thead class="table-sticky">
-                <tr>
-                  <th><i class="fa fa-store-alt me-2"></i>Tienda</th>
-                  <th><i class="fa fa-dollar-sign me-2"></i>Ventas Mes</th>
-                  <th><i class="fa fa-shopping-bag me-2"></i>Pedidos Hoy</th>
-                  <th><i class="fa fa-chart-line me-2"></i>Crecimiento</th>
-                  <th><i class="fa fa-user-check me-2"></i>Clientes Activos</th>
-                  <th class="text-center"><i class="fa fa-cogs me-2"></i>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngIf="loadingStoresData">
-                  <td colspan="6" class="text-center p-3">
-                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                    <span class="ms-2 loading-text">Cargando datos de tiendas...</span>
-                  </td>
-                </tr>
-                <tr *ngFor="let tienda of storesData" class="store-row">
-                  <td>
-                    <div class="d-flex align-items-center">
-                      <div class="store-icon" [ngClass]="'store-icon-' + getTiendaStatus(tienda)">
-                        <i class="fa fa-store"></i>
-                      </div>
-                      <div class="ms-2">
-                        <span class="fw-medium">{{ tienda.nombre || 'N/A' }}</span>
-                        <small class="d-block text-muted">{{ tienda.direccion || 'Sin dirección registrada' }}</small>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="d-flex flex-column">
-                      <span class="text-success fw-bold">{{ (tienda.ingresos != null ? (tienda.ingresos | currency:'COP':'symbol-narrow':'1.0-0') : 'N/A') }}</span>
-                      <small class="text-muted">{{ tienda.periodoVentas || 'Este mes' }}</small>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="pedidos-badge">
-                      <span class="badge rounded-pill" [ngClass]="getPedidosBadgeClass(tienda.pedidos)">
-                        {{ tienda.pedidos != null ? tienda.pedidos : 'N/A' }}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="growth-indicator" [ngClass]="{
-                       'positive': tienda.crecimiento > 0,
-                       'negative': tienda.crecimiento < 0,
-                       'neutral': tienda.crecimiento == 0 || tienda.crecimiento == null
-                    }">
-                      <i class="fa" [ngClass]="{
-                         'fa-arrow-up': tienda.crecimiento > 0,
-                         'fa-arrow-down': tienda.crecimiento < 0,
-                         'fa-minus': tienda.crecimiento == 0 || tienda.crecimiento == null
-                      }"></i>
-                      <span>{{ (tienda.crecimiento != null ? (tienda.crecimiento | number:'1.1-1') + '%' : 'N/A') }}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="active-clients-count">
-                      <span class="badge" [ngClass]="getClientesActivosBadgeClass(tienda.clientesActivos)">
-                        {{ tienda.clientesActivos || 0 }}
-                      </span>
-                    </div>
-                  </td>
-                  <td>
-                    <div class="action-buttons">
-                      <button class="btn btn-icon btn-primary" pTooltip="Ver detalles" (click)="verDetallesTienda(tienda)">
-                        <i class="fa fa-chart-bar"></i>
-                      </button>
-                      <button class="btn btn-icon btn-info" pTooltip="Ver clientes" (click)="verClientesTienda(tienda)">
-                        <i class="fa fa-users"></i>
-                      </button>
-                      <button class="btn btn-icon btn-light" pTooltip="Configurar tienda" (click)="configurarTienda(tienda)">
-                        <i class="fa fa-cog"></i>
-                      </button>
-                      <div class="dropdown d-inline-block">
-                        <button class="btn btn-icon btn-light" pTooltip="Más opciones" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                          <i class="fa fa-ellipsis-v"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
-                          <li><a class="dropdown-item" href="javascript:void(0)" (click)="enviarInforme(tienda)"><i class="fa fa-file-export me-2"></i> Exportar informe</a></li>
-                          <li><a class="dropdown-item" href="javascript:void(0)" (click)="revisarInventario(tienda)"><i class="fa fa-boxes me-2"></i> Revisar inventario</a></li>
-                          <li><hr class="dropdown-divider"></li>
-                          <li><a class="dropdown-item text-danger" href="javascript:void(0)" (click)="desactivarTienda(tienda)"><i class="fa fa-store-slash me-2"></i> Desactivar tienda</a></li>
-                        </ul>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-                <tr *ngIf="!loadingStoresData && (!storesData || storesData.length === 0)">
-                  <td colspan="6" class="text-center p-4">
-                    <div class="empty-state-small">
-                      <i class="fa fa-store-alt-slash fa-3x text-muted mb-3"></i>
-                      <p>No se encontraron datos de rendimiento para las tiendas.</p>
-                      <button class="btn btn-sm btn-outline-primary" (click)="recargarDatosTiendas()">
-                        <i class="fa fa-sync-alt me-2"></i>Intentar nuevamente
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </p-accordionTab>
-
-        <!-- Panel de Análisis y Proyecciones -->
-        <p-accordionTab>
-          <ng-template pTemplate="header">
-            <div class="d-flex align-items-center">
-              <i class="fa fa-analytics me-2"></i> 
-              <span>Análisis y Proyecciones</span>
-            </div>
-          </ng-template>
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="card h-100">
-                <div class="card-header bg-secondary text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-chart-area me-2"></i>Proyección de Ventas</h6>
-                </div>
-                <div class="card-body">
-                  <div id="chart-proyeccion-ventas" class="chart-container"></div>
-                  <div class="mt-3 text-center">
-                    <select class="form-select form-select-sm d-inline-block w-auto" (change)="cambiarPeriodoProyeccion($event)">
-                      <option value="3">Próximos 3 meses</option>
-                      <option value="6">Próximos 6 meses</option>
-                      <option value="12">Próximo año</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card h-100">
-                <div class="card-header bg-dark text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-balance-scale me-2"></i>Comparativa entre Tiendas</h6>
-                </div>
-                <div class="card-body">
-                  <div id="chart-comparativa-tiendas" class="chart-container"></div>
-                  <div class="mt-3 text-center">
-                    <button class="btn btn-sm btn-outline-secondary me-2" (click)="cambiarVistaComparativa('ventas')">
-                      <i class="fa fa-dollar-sign me-1"></i>Ventas
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary me-2" (click)="cambiarVistaComparativa('pedidos')">
-                      <i class="fa fa-shopping-cart me-1"></i>Pedidos
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary" (click)="cambiarVistaComparativa('clientes')">
-                      <i class="fa fa-users me-1"></i>Clientes
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-  </div>
-
-  <!-- Secciones de Analytics que se cargan a demanda -->
-  <div class="analytics-section">
-    <div class="card mb-4">
-      <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-        <h5 class="mb-0"><i class="fa fa-user-chart me-2"></i>Análisis Avanzado de Usuarios</h5>
-        <button class="btn btn-sm btn-primary" 
-                *ngIf="!userAnalysisLoaded" 
-                (click)="loadUserAnalysisData()" 
-                [disabled]="loadingUserAnalysis">
-          <i class="fa" [ngClass]="loadingUserAnalysis ? 'fa-spinner fa-spin' : 'fa-chart-line'"></i>
-          <span class="ms-2">{{ loadingUserAnalysis ? 'Cargando...' : 'Cargar Análisis' }}</span>
-        </button>
-      </div>
-      <div class="card-body" *ngIf="userAnalysisLoaded">
-        <!-- Métricas de Usuario -->
-        <div class="row g-3 mb-4">
-          <div class="col-6 col-md-3">
-            <div class="metric-card hover-shadow">
-              <div class="metric-icon bg-primary-light">
-                <i class="fa fa-users text-primary"></i>
-              </div>
-              <div class="metric-info">
-                <h6 class="text-muted">Usuarios Activos</h6>
-                <h4 class="text-primary">{{ metricasGlobales.usuariosActivos }}</h4>
-                <div class="progress mt-2" style="height: 4px;">
-                  <div class="progress-bar bg-primary" style="width: 85%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="metric-card hover-shadow">
-              <div class="metric-icon bg-success-light">
-                <i class="fa fa-user-shield text-success"></i>
-              </div>
-              <div class="metric-info">
-                <h6 class="text-muted">Retención</h6>
-                <h4 class="text-success">{{ metricasGlobales.tasaRetencion | percent:'1.1-1' }}</h4>
-                <div class="progress mt-2" style="height: 4px;">
-                  <div class="progress-bar bg-success" style="width: 75%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="metric-card hover-shadow">
-              <div class="metric-icon bg-info-light">
-                <i class="fa fa-gem text-info"></i>
-              </div>
-              <div class="metric-info">
-                <h6 class="text-muted">LTV Promedio</h6>
-                <h4 class="text-info">{{ metricasGlobales.valorLTVPromedio ? (metricasGlobales.valorLTVPromedio | currency:'COP':'symbol-narrow':'1.0-0') : '$0' }}</h4>
-                <div class="progress mt-2" style="height: 4px;">
-                  <div class="progress-bar bg-info" style="width: 65%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="col-6 col-md-3">
-            <div class="metric-card hover-shadow">
-              <div class="metric-icon bg-warning-light">
-                <i class="fa fa-clock text-warning"></i>
-              </div>
-              <div class="metric-info">
-                <h6 class="text-muted">Tiempo Promedio</h6>
-                <h4 class="text-warning">{{ metricasGlobales.tiempoSesionPromedio }} min</h4>
-                <div class="progress mt-2" style="height: 4px;">
-                  <div class="progress-bar bg-warning" style="width: 55%"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Gráficos de Engagement y LTV -->
-        <div class="row g-3">
-          <div class="col-md-6">
-            <div class="card chart-card">
-              <div class="card-header py-2">
-                <h6 class="mb-0"><i class="fa fa-heart me-2"></i>Score de Engagement</h6>
-              </div>
-              <div class="card-body">
-                <div id="chart-engagement" class="chart-container"></div>
-              </div>
-            </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card chart-card">
-              <div class="card-header py-2">
-                <h6 class="mb-0"><i class="fa fa-dollar-sign me-2"></i>Valor de Vida del Cliente (LTV)</h6>
-              </div>
-              <div class="card-body">
-                <div id="chart-ltv" class="chart-container"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sección de Métricas de Crecimiento y Rendimiento (Restaurada) -->
-    <div class="card mb-4">
-      <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-        <h5 class="mb-0"><i class="fa fa-chart-line me-2"></i>Métricas de Crecimiento y Rendimiento</h5>
-        <button class="btn btn-sm btn-primary" 
-                *ngIf="!growthPerformanceLoaded" 
-                (click)="loadGrowthPerformanceData()" 
-                [disabled]="loadingGrowthPerformance">
-          <i class="fa" [ngClass]="loadingGrowthPerformance ? 'fa-spinner fa-spin' : 'fa-chart-bar'"></i>
-          <span class="ms-2">{{ loadingGrowthPerformance ? 'Cargando...' : 'Cargar Métricas' }}</span>
-        </button>
-      </div>
-      <div class="card-body" *ngIf="growthPerformanceLoaded">
-        <div *ngIf="!loadingGrowthPerformance">
-          <!-- Métricas de Crecimiento -->
-          <div class="row g-3 mb-4">
-            <div class="col-6 col-md-3">
-              <div class="metric-card hover-shadow">
-                <div class="metric-icon bg-primary-light">
-                  <i class="fa fa-store-alt text-primary"></i>
-                </div>
-                <div class="metric-info">
-                  <h6 class="text-muted">Tiendas Nuevas</h6>
-                  <h4 class="text-primary">{{ growthMetrics.newStores || 0 }}</h4>
-                  <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-primary" [style.width.%]="(growthMetrics.newStores / 100) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="metric-card hover-shadow">
-                <div class="metric-icon bg-success-light">
-                  <i class="fa fa-check-circle text-success"></i>
-                </div>
-                <div class="metric-info">
-                  <h6 class="text-muted">Tiendas Activas</h6>
-                  <h4 class="text-success">{{ growthMetrics.activeStores || 0 }}</h4>
-                  <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-success" [style.width.%]="(growthMetrics.activeStores / 500) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="metric-card hover-shadow">
-                <div class="metric-icon bg-info-light">
-                  <i class="fa fa-hand-holding-usd text-info"></i>
-                </div>
-                <div class="metric-info">
-                  <h6 class="text-muted">MRR</h6>
-                  <h4 class="text-info">{{ (growthMetrics.mrr != null ? (growthMetrics.mrr | currency:'COP':'symbol-narrow':'1.0-0') : 'N/A') }}</h4>
-                  <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-info" [style.width.%]="(growthMetrics.mrr / 1000000) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="metric-card hover-shadow">
-                <div class="metric-icon bg-warning-light">
-                  <i class="fa fa-user-minus text-warning"></i>
-                </div>
-                <div class="metric-info">
-                  <h6 class="text-muted">Tasa de Churn</h6>
-                  <h4 class="text-warning">{{ (growthMetrics.churnRate != null ? (growthMetrics.churnRate | percent:'1.1-1') : 'N/A') }}</h4>
-                  <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-warning" [style.width.%]="growthMetrics.churnRate * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Gráficos de Revenue y Performance (Restaurados) -->
-          <div class="row g-3">
-            <div class="col-md-6">
-              <div class="card chart-card">
-                <div class="card-header bg-secondary text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-chart-line me-2"></i>Tendencia de Ingresos</h6>
-                </div>
-                <div class="card-body">
-                  <div id="chart-revenue" class="chart-container"></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-6">
-              <div class="card chart-card">
-                <div class="card-header bg-info text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-tachometer-alt me-2"></i>Rendimiento de la Plataforma</h6>
-                </div>
-                <div class="card-body">
-                  <div id="chart-performance" class="chart-container"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="loadingGrowthPerformance" class="text-center p-4">
-          <div class="spinner-border text-primary" role="status"></div>
-          <span class="ms-2 loading-text">Cargando métricas de crecimiento...</span>
-        </div>
-      </div>
-      <div class="card-footer bg-light text-center p-3" *ngIf="!growthPerformanceLoaded && !loadingGrowthPerformance">
-        <p class="text-muted mb-0">
-          <i class="fa fa-info-circle me-2"></i>
-          Haga clic en "Cargar Métricas" para ver análisis de crecimiento y rendimiento
-        </p>
-      </div>
-    </div>
-
-    <!-- Sección de Análisis de Categorías y Marketing (Restaurada) -->
-    <div class="card mb-4">
-      <div class="card-header d-flex justify-content-between align-items-center flex-wrap">
-        <h5 class="mb-0"><i class="fa fa-tags me-2"></i>Análisis de Categorías y Marketing</h5>
-        <button class="btn btn-sm btn-primary" 
-                *ngIf="!categoryMarketingLoaded" 
-                (click)="loadCategoryMarketingData()" 
-                [disabled]="loadingCategoryMarketing">
-          <i class="fa" [ngClass]="loadingCategoryMarketing ? 'fa-spinner fa-spin' : 'fa-chart-pie'"></i>
-          <span class="ms-2">{{ loadingCategoryMarketing ? 'Cargando...' : 'Cargar Datos' }}</span>
-        </button>
-      </div>
-      <div class="card-body" *ngIf="categoryMarketingLoaded">
-        <div *ngIf="!loadingCategoryMarketing">
-          <!-- Análisis por Categoría (Restaurado) -->
-          <div class="row g-3 mb-4">
-            <div class="col-lg-7 mb-3">
-              <div class="card chart-card">
-                <div class="card-header bg-primary text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-chart-bar me-2"></i>Crecimiento por Categoría</h6>
-                </div>
-                <div class="card-body">
-                  <div id="chart-categories" class="chart-container"></div>
-                </div>
-              </div>
-            </div>
-            <div class="col-lg-5 mb-3">
-              <div class="card h-100">
-                <div class="card-header bg-secondary text-white py-2">
-                  <h6 class="mb-0"><i class="fa fa-clipboard-list me-2"></i>Detalle Categorías</h6>
-                </div>
-                <div class="card-body">
-                  <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                    <table class="table table-sm table-hover">
-                      <thead class="table-light sticky-top">
-                        <tr>
-                          <th>Categoría</th>
-                          <th>Ingresos</th>
-                          <th>Crecimiento</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr *ngFor="let category of categoryTrends">
-                          <td><span class="fw-medium">{{ category.name }}</span></td>
-                          <td>{{ category.revenue != null ? (category.revenue | currency:'COP':'symbol-narrow':'1.0-0') : '$0' }}</td>
-                          <td>
-                            <span class="badge" [ngClass]="{
-                              'status-active': category.growth > 0,
-                              'status-blocked': category.growth < 0,
-                              'status-pending': category.growth == 0
-                            }">
-                              <i class="fa" [ngClass]="{
-                                'fa-arrow-up': category.growth > 0,
-                                'fa-arrow-down': category.growth < 0,
-                                'fa-minus': category.growth == 0
-                              }"></i>
-                              {{ category.growth }}%
-                            </span>
-                          </td>
-                        </tr>
-                        <tr *ngIf="!categoryTrends?.length">
-                          <td colspan="3" class="text-center text-muted py-3">No hay datos de tendencias de categorías.</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Métricas de Marketing (Restauradas) -->
-          <div class="row">
-            <div class="col-12">
-              <h6 class="section-title mb-3"><i class="fa fa-bullhorn me-2"></i>Métricas de Marketing</h6>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="metric-card hover-shadow">
-                <div class="metric-icon bg-purple-light">
-                  <i class="fa fa-coins text-purple"></i>
-                </div>
-                <div class="metric-info">
-                  <h6 class="text-muted">CPA</h6>
-                  <h4 class="text-purple">{{ (marketingMetrics.cpa != null ? (marketingMetrics.cpa | currency:'COP':'symbol-narrow':'1.0-0') : 'N/A') }}</h4>
-                  <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-purple" [style.width.%]="(marketingMetrics.cpa / 200) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="metric-card hover-shadow">
-                <div class="metric-icon bg-success-light">
-                  <i class="fa fa-chart-pie text-success"></i>
-                </div>
-                <div class="metric-info">
-                  <h6 class="text-muted">ROAS</h6>
-                  <h4 class="text-success">{{ marketingMetrics.roas ? (marketingMetrics.roas + 'x') : 'N/A' }}</h4>
-                  <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-success" [style.width.%]="(marketingMetrics.roas / 5) * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="metric-card hover-shadow">
-                <div class="metric-icon bg-info-light">
-                  <i class="fa fa-envelope-open text-info"></i>
-                </div>
-                <div class="metric-info">
-                  <h6 class="text-muted">Email Open Rate</h6>
-                  <h4 class="text-info">{{ (marketingMetrics.emailOpenRate != null ? (marketingMetrics.emailOpenRate | percent:'1.1-1') : 'N/A') }}</h4>
-                  <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-info" [style.width.%]="marketingMetrics.emailOpenRate * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="col-6 col-md-3">
-              <div class="metric-card hover-shadow">
-                <div class="metric-icon bg-warning-light">
-                  <i class="fa fa-mouse-pointer text-warning"></i>
-                </div>
-                <div class="metric-info">
-                  <h6 class="text-muted">CTR</h6>
-                  <h4 class="text-warning">{{ (marketingMetrics.clickThroughRate != null ? (marketingMetrics.clickThroughRate | percent:'1.1-1') : 'N/A') }}</h4>
-                  <div class="progress mt-2" style="height: 4px;">
-                    <div class="progress-bar bg-warning" [style.width.%]="marketingMetrics.clickThroughRate * 100"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="loadingCategoryMarketing" class="text-center p-4">
-          <div class="spinner-border text-primary" role="status"></div>
-          <span class="ms-2 loading-text">Cargando datos de categorías y marketing...</span>
-        </div>
-      </div>
-      <div class="card-footer bg-light text-center p-3" *ngIf="!categoryMarketingLoaded && !loadingCategoryMarketing">
-        <p class="text-muted mb-0">
-          <i class="fa fa-info-circle me-2"></i>
-          Haga clic en "Cargar Datos" para ver análisis de categorías y marketing
-        </p>
-      </div>
-    </div>
-  </div>
 </div>
-
-<!-- Modal de Detalles del Cliente -->
-<div class="modal fade" id="detallesModal" tabindex="-1" aria-labelledby="detallesModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg modal-dialog-scrollable">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="detallesModalLabel">
-          <i class="fa fa-building me-2"></i>
-          <span *ngIf="clienteSeleccionado">{{ clienteSeleccionado.empresa.nombre }}</span>
-        </h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div *ngIf="clienteSeleccionado">
-          <!-- Información General -->
-          <div class="card client-detail-card mb-3">
-            <div class="card-header">
-              <h6 class="mb-0"><i class="fa fa-info-circle me-2"></i>Información General</h6>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div class="col-md-6">
-                  <ul class="info-list">
-                    <li><span class="info-label">Empresa:</span> {{clienteSeleccionado.empresa.nombre}}</li>
-                    <li><span class="info-label">NIT:</span> {{clienteSeleccionado.empresa.nit || 'N/A'}}</li>
-                    <li><span class="info-label">Email:</span> {{clienteSeleccionado.empresa.emailContacto || 'N/A'}}</li>
-                    <li><span class="info-label">Teléfono:</span> {{clienteSeleccionado.empresa.telContacto || 'N/A'}}</li>
-                  </ul>
-                </div>
-                <div class="col-md-6">
-                  <ul class="info-list">
-                    <li><span class="info-label">Dirección:</span> {{clienteSeleccionado.empresa.direccion || 'N/A'}}</li>
-                    <li><span class="info-label">Ciudad:</span> {{clienteSeleccionado.empresa.ciudad || 'N/A'}}</li>
-                    <li><span class="info-label">Dpto:</span> {{clienteSeleccionado.empresa.departamento || 'N/A'}}</li>
-                    <li><span class="info-label">País:</span> {{clienteSeleccionado.empresa.pais || 'N/A'}}</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Sedes -->
-          <div class="card client-detail-card mb-3" *ngIf="clienteSeleccionado.empresa.sedes?.length">
-            <div class="card-header">
-              <h6 class="mb-0">
-                <i class="fa fa-map-marker-alt me-2"></i>
-                Sedes ({{clienteSeleccionado.empresa.sedes.length}})
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="row g-3">
-                <div class="col-md-6" *ngFor="let sede of clienteSeleccionado.empresa.sedes">
-                  <div class="location-card">
-                    <h6 class="location-title">{{sede.nombreSede}}</h6>
-                    <p class="location-address">
-                      <i class="fa fa-map-pin me-2"></i>
-                      {{sede.direccionSede || 'Dirección no disponible'}}
-                    </p>
-                    <p class="location-city">
-                      <i class="fa fa-city me-2"></i>
-                      {{sede.ciudadSede || 'Ciudad no disp.'}}, {{sede.paisSede || 'País no disp.'}}
-                    </p>
-                    <div class="location-contact">
-                      <p><i class="fa fa-phone me-2"></i>Tel: {{sede.fijoContacto || 'N/A'}} Ext: {{sede.extensionFijo || 'N/A'}}</p>
-                      <p><i class="fa fa-mobile-alt me-2"></i>Cel: {{sede.cel || 'N/A'}}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Contactos -->
-          <div class="card client-detail-card mb-3" *ngIf="clienteSeleccionado.empresa.contactos?.length">
-            <div class="card-header">
-              <h6 class="mb-0">
-                <i class="fa fa-address-card me-2"></i>
-                Contactos ({{clienteSeleccionado.empresa.contactos.length}})
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="row g-3">
-                <div class="col-md-6" *ngFor="let contacto of clienteSeleccionado.empresa.contactos">
-                  <div class="contact-card">
-                    <div class="contact-header">
-                      <div class="contact-avatar">
-                        {{ getInitials(contacto.nomCompletoContacto) }}
-                      </div>
-                      <div class="contact-info-main">
-                        <h6 class="contact-name">{{contacto.nomCompletoContacto}}</h6>
-                        <p class="contact-position">{{contacto.cargoContacto || 'Cargo no disponible'}}</p>
-                      </div>
-                    </div>
-                    <div class="contact-info-details">
-                      <p><i class="fa fa-envelope me-2"></i>{{contacto.emailContacto || 'Email no disponible'}}</p>
-                      <p><i class="fa fa-phone me-2"></i>{{contacto.telContacto || 'Teléfono no disponible'}}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Marketplaces -->
-          <div class="card client-detail-card mb-3" *ngIf="clienteSeleccionado.empresa.marketplaces?.length">
-            <div class="card-header">
-              <h6 class="mb-0">
-                <i class="fa fa-shopping-cart me-2"></i>
-                Marketplaces
-              </h6>
-            </div>
-            <div class="card-body">
-              <div class="marketplace-grid">
-                <div class="marketplace-item" *ngFor="let mp of clienteSeleccionado.empresa.marketplaces">
-                  <img [src]="mp.logoMP" [alt]="mp.nombreMP" class="marketplace-logo">
-                  <h6 class="marketplace-name">{{mp.nombreMP}}</h6>
-                  <a [href]="mp.linkMP" target="_blank" class="btn btn-sm btn-outline-primary">
-                    <i class="fa fa-external-link-alt me-1"></i>Visitar
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div *ngIf="!clienteSeleccionado" class="text-center p-5">
-          <div class="empty-placeholder">
-            <i class="fa fa-search fa-3x mb-3 text-muted"></i>
-            <p>Seleccione un cliente para ver sus detalles.</p>
-          </div>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          <i class="fa fa-times me-2"></i>Cerrar
-        </button>
-        <button type="button" class="btn btn-primary" *ngIf="clienteSeleccionado" (click)="editarCliente(clienteSeleccionado)">
-          <i class="fa fa-edit me-2"></i>Editar Cliente
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-/* Estilos generales */
-.dashboard-container {
-  animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.dashboard-header {
-  margin-bottom: 1.5rem;
-}
-
-.dashboard-title {
-  font-weight: 600;
-  color: #495057;
-}
-
-/* Tarjetas Widget Estilizadas */
-.widget-card {
-  transition: all 0.3s ease;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.widget-content {
-  display: flex;
-  align-items: center;
-}
-
-.widget-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
-}
-
-.widget-icon i {
-  font-size: 1.5rem;
-  color: #fff;
-}
-
-.widget-icon.secondary { background-color: #6c757d; }
-.widget-icon.success { background-color: #28a745; }
-.widget-icon.danger { background-color: #dc3545; }
-.widget-icon.warning { background-color: #ffc107; }
-
-.widget-data h4 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-bottom: 0;
-}
-
-.widget-label {
-  color: #6c757d;
-  font-size: 0.875rem;
-}
-
-/* KPI Cards */
-.kpi-card {
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.kpi-content {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px;
-}
-
-.kpi-left {
-  flex: 1;
-}
-
-.kpi-right {
-  width: 80px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.sparkline-chart {
-  height: 50px;
-  width: 80px;
-}
-
-.trend-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.rating-stars {
-  color: #ffc107;
-}
-
-/* Filtros */
-.filter-card {
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.search-input-group {
-  position: relative;
-}
-
-.search-icon {
-  position: absolute;
-  left: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #adb5bd;
-}
-
-.search-control {
-  padding-left: 35px;
-}
-
-.custom-select {
-  border-radius: 8px;
-  border: 1px solid #ced4da;
-}
-
-.custom-btn {
-  border-radius: 8px;
-  font-weight: 500;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-/* Tabla y Vista de Tarjetas */
-.table-card {
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.table-card .card-header {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-  padding-top: 15px;
-  padding-bottom: 15px;
-}
-
-.custom-table {
-  margin-bottom: 0;
-}
-
-.custom-table th {
-  font-weight: 600;
-  color: #495057;
-}
-
-.table-row {
-  transition: background-color 0.2s ease;
-}
-
-.table-row:hover {
-  background-color: #f8f9fa;
-  cursor: pointer;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 5px;
-  justify-content: center;
-}
-
-.btn-icon {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-}
-
-/* Avatar y Estado */
-.avatar-circle {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-}
-
-.avatar-circle.large {
-  width: 50px;
-  height: 50px;
-  font-size: 1.2rem;
-}
-
-.bg-primary-dark { background-color: #0062cc; }
-.bg-success-dark { background-color: #218838; }
-.bg-danger-dark { background-color: #c82333; }
-.bg-warning-dark { background-color: #e0a800; }
-.bg-info-dark { background-color: #138496; }
-.bg-purple { background-color: #6f42c1; }
-
-.status-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 10px;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.status-active {
-  background-color: rgba(40, 167, 69, 0.1);
-  color: #28a745;
-}
-
-.status-blocked {
-  background-color: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-}
-
-.status-pending {
-  background-color: rgba(255, 193, 7, 0.1);
-  color: #ffc107;
-}
-
-.status-icon {
-  font-size: 0.5rem;
-}
-
-/* Vista de Tarjetas */
-.client-card {
-  height: 100%;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-}
-
-.client-header {
-  margin-bottom: 10px;
-}
-
-.client-contact {
-  font-size: 0.875rem;
-}
-
-.client-footer {
-  margin-top: auto;
-  padding-top: 10px;
-  border-top: 1px solid #e9ecef;
-}
-
-/* Estados de Carga y Vacío */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-}
-
-.loading-text {
-  margin-top: 0.5rem;
-  color: #6c757d;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  text-align: center;
-}
-
-.empty-icon {
-  max-width: 150px;
-  margin-bottom: 1rem;
-}
-
-/* Gráficos */
-.chart-card {
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-}
-
-.chart-container {
-  min-height: 250px;
-  height: 100%;
-}
-
-/* Métricas */
-.metric-card {
-  display: flex;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  transition: all 0.3s ease;
-}
-
-.metric-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 15px;
-}
-
-.metric-info {
-  flex: 1;
-}
-
-.bg-primary-light { background-color: rgba(0, 123, 255, 0.1); }
-.bg-success-light { background-color: rgba(40, 167, 69, 0.1); }
-.bg-info-light { background-color: rgba(23, 162, 184, 0.1); }
-.bg-warning-light { background-color: rgba(255, 193, 7, 0.1); }
-
-/* Growth Indicator */
-.growth-indicator {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 8px;
-  border-radius: 15px;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.growth-indicator.positive {
-  background-color: rgba(40, 167, 69, 0.1);
-  color: #28a745;
-}
-
-.growth-indicator.negative {
-  background-color: rgba(220, 53, 69, 0.1);
-  color: #dc3545;
-}
-
-.growth-indicator.neutral {
-  background-color: rgba(108, 117, 125, 0.1);
-  color: #6c757d;
-}
-
-/* Modal de Detalles */
-.client-detail-card {
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.client-detail-card .card-header {
-  background-color: #f8f9fa;
-  padding: 10px 15px;
-}
-
-.info-list {
-  list-style-type: none;
-  padding-left: 0;
-  margin-bottom: 0;
-}
-
-.info-list li {
-  margin-bottom: 8px;
-}
-
-.info-label {
-  font-weight: 600;
-  color: #495057;
-  margin-right: 5px;
-}
-
-.location-card, .contact-card {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 15px;
-  height: 100%;
-}
-
-.location-title, .contact-name {
-  font-weight: 600;
-  margin-bottom: 10px;
-  color: #212529;
-}
-
-.location-address, .location-city, .location-contact,
-.contact-position, .contact-info-details p {
-  margin-bottom: 5px;
-  font-size: 0.875rem;
-  color: #6c757d;
-}
-
-.contact-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
-}
-
-.contact-avatar {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background-color: #6c757d;
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  margin-right: 10px;
-}
-
-.contact-info-main {
-  flex: 1;
-}
-
-.marketplace-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 15px;
-}
-
-.marketplace-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  padding: 10px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-}
-
-.marketplace-logo {
-  max-height: 40px;
-  margin-bottom: 10px;
-}
-
-.marketplace-name {
-  font-size: 0.875rem;
-  margin-bottom: 10px;
-}
-
-/* Efectos de Hover */
-.hover-shadow:hover {
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-.hover-lift:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-/* Sección títulos */
-.section-title {
-  font-weight: 600;
-  color: #495057;
-  margin-bottom: 1rem;
-}
-
-/* Date Picker Group */
-.date-picker-group {
-  display: flex;
-  align-items: center;
-}
-
-.date-separator {
-  margin: 0 10px;
-  color: #6c757d;
-}
-
-/* Tienda Icon */
-.store-icon {
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  background-color: #f8f9fa;
-  color: #495057;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* AI Card */
-.ai-card .card-body {
-  height: 100%;
-}
-
-.ai-placeholder {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-}
-
-.ai-icon {
-  max-width: 80px;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .action-buttons {
-    flex-direction: column;
-    gap: 5px;
-  }
-  
-  .widget-card, .kpi-card, .metric-card {
-    margin-bottom: 10px;
-  }
-  
-  .kpi-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .kpi-right {
-    margin-top: 10px;
-    width: 100%;
-  }
-  
-  .dashboard-actions {
-    width: 100%;
-    margin-top: 15px;
-  }
-  
-  .date-picker-group {
-    flex-direction: column;
-    width: 100%;
-  }
-  
-  .date-separator {
-    margin: 5px 0;
-  }
-}
-
-/* Colores adicionales para gráficos restaurados */
-.bg-purple { background-color: #6f42c1; }
-.bg-purple-light { background-color: rgba(111, 66, 193, 0.1); }
-.text-purple { color: #6f42c1; }
-</style>

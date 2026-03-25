@@ -61,8 +61,15 @@ export class CrmService {
   }
 
   updateTask(taskId: string, data: Partial<CrmTask>): Observable<CrmTask | null> {
-    return this.http.patch<{ success: boolean; data: CrmTask }>(`${this.base}/tasks/${taskId}`, data)
+    return this.http.put<{ success: boolean; data: CrmTask }>(`${this.base}/tasks/${taskId}`, data)
       .pipe(map(r => r.data || null), catchError(() => of(null)));
+  }
+
+  // ─── Import ─────────────────────────────────────────────────
+
+  importLead(data: any): Observable<any> {
+    return this.http.post<any>(`${this.base}/leads/import`, data)
+      .pipe(catchError(() => of({ success: false })));
   }
 
   // ─── Stats & Stages ─────────────────────────────────────────

@@ -22,6 +22,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { SkeletonModule } from 'primeng/skeleton';
 import { BadgeModule } from 'primeng/badge';
 import { MenuModule } from 'primeng/menu';
+import { DragulaModule } from 'ng2-dragula';
 
 import { CrmListComponent } from './components/crm-list/crm-list.component';
 import { CrmDetailComponent } from './components/crm-detail/crm-detail.component';
@@ -37,7 +38,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
     DialogModule, ToastModule, ConfirmDialogModule, ButtonModule,
     InputTextModule, InputTextareaModule, InputNumberModule,
     CardModule, ToolbarModule, TooltipModule, SkeletonModule,
-    BadgeModule, MenuModule,
+    BadgeModule, MenuModule, DragulaModule,
   ],
   providers: [MessageService, ConfirmationService],
 })

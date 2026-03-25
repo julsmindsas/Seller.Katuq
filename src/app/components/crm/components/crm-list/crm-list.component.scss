@@ -1,62 +1,205 @@
-// Metric chips (patrón despachos: fondo tintado, sin gradientes)
-.metric-chip {
-  display: inline-flex;
+// ═══════════════════════════════════════════════════════════
+// Kanban Board
+// ═══════════════════════════════════════════════════════════
+
+.kanban-board {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  min-height: 500px;
+
+  // Scrollbar sutil
+  &::-webkit-scrollbar { height: 6px; }
+  &::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+}
+
+.kanban-column {
+  min-width: 260px;
+  max-width: 300px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.kanban-column-header {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: 1.5px solid transparent;
-  background-color: #f1f3f5;
-  color: #495057;
+  padding: 0.5rem 0.75rem;
+  background: #f8f9fa;
+  border-radius: 6px 6px 0 0;
+  border-top: 3px solid #6b7280;
 
-  &:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  .kanban-column-title {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
 
-  &.metric-chip-active {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
-    border-color: #7b1fa2;
-  }
-
-  &.metric-chip-primary {
-    background-color: #ede9fe;
-    color: #7c3aed;
-    cursor: default;
-  }
-
-  &.metric-chip-warning {
-    background-color: #fff3e0;
-    color: #ef6c00;
-    cursor: default;
-  }
-
-  .metric-label { font-weight: 600; letter-spacing: 0.3px; }
-
-  .metric-badge {
-    min-width: 22px;
-    height: 18px;
-    padding: 0 0.35rem;
-    border-radius: 9px;
-    background-color: rgba(0, 0, 0, 0.1);
-    font-size: 0.75rem;
+  .kanban-column-count {
+    background: #e5e7eb;
+    color: #374151;
+    font-size: 0.7rem;
     font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    padding: 0.1rem 0.45rem;
+    border-radius: 10px;
   }
 }
 
-// Table hover
-:host ::ng-deep {
-  .p-datatable .p-datatable-tbody > tr:hover {
-    background: #faf8ff !important;
+.kanban-cards {
+  flex: 1;
+  background: #f1f3f5;
+  border-radius: 0 0 6px 6px;
+  padding: 0.5rem;
+  min-height: 100px;
+
+  // Dragula: visual feedback
+  &.gu-transit { opacity: 0.5; }
+}
+
+.kanban-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: box-shadow 0.15s, border-color 0.15s;
+
+  &:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.12);
   }
+
+  // Dragula: mientras se arrastra
+  &.gu-mirror {
+    opacity: 0.9;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-color: #8b5cf6;
+  }
+}
+
+.kanban-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.3rem;
+
+  .kanban-card-link {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.3;
+    cursor: pointer;
+    text-decoration: none;
+
+    &:hover { color: #8b5cf6; text-decoration: underline; }
+  }
+}
+
+.kanban-card-body {
+  margin-bottom: 0.3rem;
+
+  small {
+    font-size: 0.7rem;
+    line-height: 1.5;
+  }
+}
+
+.kanban-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+
+  .badge { font-size: 0.65rem; }
+  small { font-size: 0.65rem; }
+}
+
+.kanban-empty {
+  text-align: center;
+  padding: 2rem 0.5rem;
+  small { font-size: 0.75rem; }
+}
+
+.badge-sm { font-size: 0.6rem !important; padding: 0.15rem 0.35rem !important; }
+
+// Quick action buttons on cards (pill style)
+.kanban-card-actions {
+  display: flex;
+  gap: 0.35rem;
+  padding-top: 0.4rem;
+  margin-top: 0.3rem;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.action-btn-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  background: #f1f3f5;
+  color: #495057;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover { background: #e5e7eb; color: #1f2937; text-decoration: none; }
+  &.action-btn-wa { background: #f0fdf4; color: #27AE60; }
+  &.action-btn-wa:hover { background: #dcfce7; color: #16a34a; }
+  &.action-btn-detail { background: #ede9fe; color: #7c3aed; }
+  &.action-btn-detail:hover { background: #ddd6fe; color: #6d28d9; }
+}
+
+// Column value
+.kanban-column-value {
+  color: #8b5cf6;
+  font-weight: 600;
+  font-size: 0.7rem;
+}
+
+// Stat badge active
+.stat-badge-active {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
 }
 
 .cursor-pointer { cursor: pointer; }
+
+// Stat badges (fondo claro tintado + texto oscuro del color)
+.stat-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &.stat-badge-primary { background: #ede9fe; color: #7c3aed; }
+  &.stat-badge-warning { background: #fff7ed; color: #D35400; }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Dragula overrides (global)
+// ═══════════════════════════════════════════════════════════
+
+:host ::ng-deep {
+  .gu-mirror {
+    position: fixed !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    opacity: 0.9;
+  }
+
+  .gu-hide { display: none !important; }
+  .gu-unselectable { user-select: none !important; }
+  .gu-transit { opacity: 0.3; }
+}

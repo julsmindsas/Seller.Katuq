@@ -1,84 +1,292 @@
-input[type="file"]::-webkit-file-upload-button {
-  background-color: #7d4eff;
-  color: #fff;
-  border-radius: 4px;
-  padding: 8px 12px;
-  cursor: pointer;
+// ==========================================
+// Crear Empresa - Katuq Design System
+// ==========================================
+
+$katuq-primary: #8b5cf6;
+$katuq-primary-dark: #7c3aed;
+$katuq-dark: #0f172a;
+$katuq-gray: #64748b;
+$katuq-gray-light: #e2e8f0;
+$katuq-bg: #f8fafc;
+
+// Card principal
+:host ::ng-deep .card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
-th {
-  width: 35%;
+:host ::ng-deep .card-body {
+  padding: 20px 24px;
+}
+
+// PrimeNG TabView override
+:host ::ng-deep .p-tabview {
+  .p-tabview-nav-container {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 16px;
+  }
+
+  .p-tabview-nav {
+    border: none !important;
+    background: transparent !important;
+    padding: 0;
+    gap: 2px;
+    flex-wrap: nowrap;
+
+    li {
+      white-space: nowrap;
+
+      .p-tabview-nav-link {
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 8px 14px !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        color: $katuq-gray !important;
+        background: transparent !important;
+        transition: all 0.2s ease;
+        margin: 0 !important;
+
+        &:hover {
+          background: #fff !important;
+          color: $katuq-primary !important;
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+        }
+
+        &:focus {
+          box-shadow: none !important;
+        }
+      }
+
+      &.p-highlight .p-tabview-nav-link {
+        background: #fff !important;
+        color: $katuq-primary !important;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08) !important;
+      }
+    }
+  }
+
+  // Scroll buttons
+  .p-tabview-nav-prev,
+  .p-tabview-nav-next {
+    background: #f8fafc !important;
+    border: none !important;
+    color: $katuq-gray !important;
+    width: 28px !important;
+    border-radius: 8px;
+
+    &:hover {
+      color: $katuq-primary !important;
+    }
+  }
+
+  .p-tabview-panels {
+    padding: 0 !important;
+    border: none !important;
+    background: transparent !important;
+  }
+}
+
+// Section headers
+h5 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: $katuq-dark;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+// Form labels
+.form-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $katuq-dark;
+  margin-bottom: 4px;
+}
+
+// Form controls
+.form-control,
+.form-select,
+select.form-control {
+  border: 1px solid $katuq-gray-light;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.82rem;
+  color: $katuq-dark;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+
+  &:focus {
+    border-color: $katuq-primary;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+    outline: none;
+  }
 }
 
 .select-default {
-  color: gray;
-  /* Cambia "gray" por el color que desees */
+  color: $katuq-gray;
 }
 
-.select-default option:first-child {
-  color: gray;
-  /* Cambia "gray" por el color que desees */
+// Buttons
+.btn-primary {
+  background: $katuq-primary;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 8px 16px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $katuq-primary-dark;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+  }
+}
+
+.btn-success {
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.btn-danger {
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.btn-info {
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+// File upload button
+input[type="file"]::-webkit-file-upload-button {
+  background-color: $katuq-primary;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background-color: $katuq-primary-dark;
+  }
+}
+
+// Tables
+th {
+  width: 35%;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: $katuq-gray;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .table-container {
-  margin-top: 20px;
+  margin-top: 16px;
   overflow-x: auto;
 }
 
 .file-table {
   width: 100%;
   border-collapse: collapse;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: #f8f9fa;
   border-radius: 8px;
   overflow: hidden;
+  border: 1px solid #f1f5f9;
 }
 
 .file-table th,
 .file-table td {
-  padding: 12px 16px;
+  padding: 10px 14px;
   text-align: left;
-  font-size: 16px;
+  font-size: 0.82rem;
 }
 
-// .file-table thead {
-//   background-color: #343a40 !important;
-//   color: #020202;
-// }
+.file-table thead {
+  background: $katuq-bg;
+}
 
 .file-table tr:nth-child(even) {
-  background-color: #f1f1f1;
-}
-
-.file-table tr:nth-child(odd) {
-  background-color: #ffffff;
+  background: $katuq-bg;
 }
 
 .file-table tr:hover {
-  background-color: #e9ecef;
+  background: #faf5ff;
 }
 
+// Delete button
 .delete-button {
-  padding: 8px 12px;
+  padding: 6px 12px;
   border: none;
-  background-color: #e63946;
-  color: #ffffff;
-  border-radius: 4px;
-  font-size: 14px;
+  background: #fef2f2;
+  color: #d12b38;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #fee2e2;
+  }
 }
 
-.delete-button:hover {
-  background-color: #d62828;
-}
-
+// Links
 a {
-  color: #a78bfa;
+  color: $katuq-primary;
   text-decoration: none;
   font-weight: 500;
+
+  &:hover {
+    color: $katuq-primary-dark;
+    text-decoration: underline;
+  }
 }
 
-a:hover {
-  text-decoration: underline;
+// Textarea
+textarea.form-control {
+  border-radius: 8px;
+  resize: vertical;
+  min-height: 80px;
+}
+
+// Image previews
+img {
+  border-radius: 8px;
+}
+
+// Responsive
+@media (max-width: 767px) {
+  :host ::ng-deep .card-body {
+    padding: 16px;
+  }
+
+  :host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+  }
+
+  .form-label {
+    font-size: 0.72rem;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 0.78rem;
+    padding: 7px 10px;
+  }
 }

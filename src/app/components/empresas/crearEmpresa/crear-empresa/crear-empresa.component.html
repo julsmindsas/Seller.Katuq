@@ -1,6 +1,13 @@
-<app-breadcrumb [title]="'Crear Empresa'" [items]="['Maestros/Empresas']" [active_item]="'Crear Empresas'">
-</app-breadcrumb>
-<div class="container-fluid">
+<!-- breadcrumb removido para ganar espacio -->
+<div class="container-fluid px-4 pt-3">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <button class="btn btn-sm btn-light" (click)="volverAlListado()" style="border: 1px solid #e2e8f0; border-radius: 8px;">
+            <i class="fa fa-arrow-left me-1"></i>Volver
+        </button>
+        <h5 class="fw-bold mb-0" style="color: #0f172a; font-size: 1.1rem; border: none; padding: 0;">
+            {{ mostrarCrear ? 'Crear Empresa' : 'Editar Empresa' }}
+        </h5>
+    </div>
     <div class="row">
         <div class="col-sm-12">
             <div class="card">

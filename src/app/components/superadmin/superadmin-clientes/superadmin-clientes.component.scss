@@ -1,871 +1,192 @@
-// Estilos específicos para el componente superadmin-clientes
-// Por ahora vacío, heredará estilos globales.
+// Superadmin Clientes - Katuq flat design
 
-.apex-chart {
-  width: 100%;
-  min-height: 350px;
-  margin: 0 auto;
-}
-
-.metric-card {
-  background: #f8f9fa;
-  border-radius: 10px;
-  text-align: center;
-  transition: transform 0.3s ease;
+// Stat cards (contadores)
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  border-left: 3px solid;
+  border-radius: 8px;
+  padding: 12px 14px;
   height: 100%;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
 
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
-  }
-
-  .card-body {
-    padding: 1.5rem;
-    
-    h6 {
-      font-size: 0.875rem;
-      margin-bottom: 0.75rem;
-      color: #6c757d;
-    }
-    
-    h4 {
-      font-size: 1.75rem;
-      margin-bottom: 1.25rem;
-      font-weight: 600;
-    }
-    
-    .progress {
-      height: 8px;
-      border-radius: 4px;
-      background-color: rgba(0, 0, 0, 0.05);
-      
-      .progress-bar {
-        border-radius: 4px;
-      }
-    }
-  }
-}
-
-.card {
-  transition: all 0.3s ease;
-  margin-bottom: 25px;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-    padding: 15px 20px;
-    
-    h5, h6 {
-      margin-bottom: 0;
-      font-weight: 600;
-    }
-  }
-  
-  .card-body {
-    padding: 20px 25px;
-    
-    .row {
-      margin-bottom: 15px;
-    }
-  }
-}
-
-// Estilos para los gráficos de KPIs
-:host ::ng-deep {
-  .apexcharts-tooltip {
-    background: #fff;
-    border: 1px solid #e9ecef;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    padding: 10px 12px;
-    border-radius: 6px;
-  }
-
-  .apexcharts-tooltip-title {
-    background: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-    padding: 8px 12px;
-    margin-bottom: 5px;
-  }
-
-  .apexcharts-xaxis-label, 
-  .apexcharts-yaxis-label {
-    font-size: 12px;
-    fill: #6c757d;
-  }
-  
-  .apexcharts-legend {
-    padding: 10px 0;
-    
-    .apexcharts-legend-series {
-      margin: 5px 10px;
-    }
-  }
-  
-  .apexcharts-canvas {
-    margin: 0 auto;
-  }
-  
-  // Mejora para donut y pie charts
-  .apexcharts-pie, 
-  .apexcharts-radialbar {
-    .apexcharts-datalabel {
-      font-size: 14px;
-      font-weight: 600;
-    }
-  }
-  
-  // Mejora para bar charts
-  .apexcharts-bar-series {
-    .apexcharts-datalabel {
-      font-weight: 600;
-    }
-  }
-}
-
-// Estilos para la tabla de análisis
-.table {
-  margin-top: 10px;
-  
-  th {
-    font-weight: 600;
-    color: #495057;
-    background-color: #f8f9fa;
-    border-bottom: 2px solid #dee2e6;
-    padding: 12px 15px;
-  }
-  
-  td {
-    vertical-align: middle;
-    padding: 12px 15px;
-  }
-  
-  .progress {
-    height: 8px;
-    margin-bottom: 0;
-    border-radius: 4px;
-  }
-  
-  .text-success, .text-danger {
-    font-weight: 600;
-  }
-}
-
-// Espaciado de secciones
-.row.mt-4 {
-  margin-top: 2rem !important;
-}
-
-// Responsividad para dispositivos pequeños
-@media (max-width: 768px) {
-  .apex-chart {
-    min-height: 250px;
-  }
-  
-  .card-body {
-    padding: 15px;
-  }
-}
-
-/* Variables (opcional, pero útil para consistencia) */
-:host {
-  --card-bg: #fff;
-  --card-border-radius: 0.5rem; // Más redondeado
-  --card-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --card-hover-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-  --icon-round-size: 50px;
-}
-
-/* Estilos para las tarjetas de resumen - Mejorados */
-.card.widget-1 {
-  background-color: var(--card-bg);
-  border: none; // Quitar borde por defecto si existe
-  border-radius: var(--card-border-radius);
-  box-shadow: var(--card-shadow);
-  transition: all 0.3s ease-in-out;
-  margin-bottom: 1.5rem; // Espacio entre tarjetas
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: var(--card-hover-shadow);
-  }
-
-  .card-body {
-    padding: 1.5rem; // Más padding interno
-  }
-
-  .widget-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between; // Asegurar espacio entre icono y texto
-  }
-
-  .widget-round {
-    height: var(--icon-round-size);
-    width: var(--icon-round-size);
-    min-width: var(--icon-round-size); // Evitar que se encoja
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 1rem; // Espacio entre icono y texto
-    position: relative; // Para el pseudo-elemento de fondo
-    overflow: hidden; // Para contener el gradiente
-
-    // Gradiente sutil como fondo para los iconos
-    &::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      border-radius: 50%;
-      opacity: 0.2;
-      z-index: 0;
-    }
-
-    // Colores específicos y gradientes
-    &.secondary::before { background: linear-gradient(135deg, #6e4ff5, #8d7bf7); }
-    &.success::before   { background: linear-gradient(135deg, #17c684, #53d1a1); }
-    &.danger::before    { background: linear-gradient(135deg, #e53d51, #f06a7a); }
-    &.warning::before   { background: linear-gradient(135deg, #ff8a00, #ffae4c); }
-
-    .bg-round {
-      height: 100%; // Ocupar todo el espacio
-      width: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative; // Para que el icono esté sobre el ::before
-      z-index: 1;
-      
-      svg.svg-fill {
-        height: 24px; // Tamaño del icono
-        width: 24px;
-        fill: #fff; // Icono blanco para buen contraste
-      }
-      // Ocultar el half-circle que puede no ser necesario con el nuevo fondo
-      svg.half-circle {
-         display: none; 
-      }
-    }
-  }
-
-  // Estilos para el texto
-  .widget-content > div:last-child { // El div que contiene h4 y span
-    text-align: right; // Alinear texto a la derecha
-    h4 {
-      font-size: 1.5rem; // Tamaño más grande para el número
-      font-weight: 600; // Más peso
-      margin-bottom: 0.25rem;
-      color: #2c323f; // Color oscuro principal
-    }
-    span.f-light {
-      font-size: 0.875rem; // Ligeramente más pequeño
-      color: #6c757d; // Gris estándar para texto secundario
-    }
-  }
-}
-
-/* Otros estilos existentes del componente... */
-.metric-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  border-radius: 8px;
-  cursor: pointer;
-
-  &:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-  }
-
-  .card-body {
-    padding: 1.25rem;
-  }
-
-  h6 {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.5rem;
-  }
-
-  h4 {
-    font-size: 1.4rem;
-    font-weight: 600;
-  }
-
-  .progress {
-    height: 6px;
-    border-radius: 3px;
-  }
-}
-
-.apex-chart {
-  min-height: 300px; /* Ajusta según sea necesario */
-}
-
-/* Estilos para la tabla */
-.table {
-  th {
-    font-weight: 600; // Encabezados más notorios
-    color: #495057; // Un gris oscuro para encabezados
-  }
-
-  td {
-    vertical-align: middle;
-  }
-
-  .badge {
-    font-size: 0.8em;
-    padding: 0.4em 0.7em;
-  }
-}
-
-/* Estilos para el acordeón */
-:host ::ng-deep ngb-accordion {
-  .card {
-    border-radius: var(--card-border-radius);
-    overflow: hidden;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  }
-  
-  .accordion-button {
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: none;
-    padding: 1rem 1.25rem;
-    font-weight: 600;
-    color: #212529;
-    
-    &:focus {
-      box-shadow: none;
-      outline: none;
-    }
-    
-    &:not(.collapsed) {
-      background-color: #f8f9fa;
-      color: #0d6efd;
-    }
-    
-    &::after {
-      margin-left: auto;
-    }
-  }
-  
-  .card-header {
-    padding: 0;
-    background-color: #fff;
-    border-bottom: 1px solid rgba(0,0,0,.125);
-  }
-  
-  .card-body {
-    padding: 1.25rem;
-  }
-}
-
-/* Estilos para el acordeón de Bootstrap estándar */
-.accordion {
-  --bs-accordion-border-radius: 10px;
-  --bs-accordion-inner-border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 1rem;
-  
-  .accordion-item {
-    border: none;
-    background-color: #fff;
-    
-    &:not(:last-child) {
-      border-bottom: 1px solid rgba(0,0,0,0.125);
-    }
-  }
-  
-  .accordion-button {
-    font-weight: 600;
-    color: #212529;
-    padding: 1.25rem;
-    background-color: #f8f9fa;
-    
-    &:not(.collapsed) {
-      color: #0d6efd;
-      background-color: #f8f9fa;
-      box-shadow: none;
-    }
-    
-    &:focus {
-      box-shadow: none;
-      border-color: rgba(0,0,0,0.125);
-    }
-    
-    &::after {
-      background-size: 1.2rem;
-      transition: transform 0.3s ease;
-    }
-  }
-  
-  .accordion-body {
-    padding: 1.25rem;
-    background-color: #fff;
-  }
-}
-
-/* Estilos para la tabla de rendimiento de tiendas */
-.store-performance-table {
-  th, td {
-    padding: 0.85rem;
-    vertical-align: middle;
-  }
-  
-  th {
-    position: sticky;
-    top: 0;
-    background-color: #f8f9fa;
-    z-index: 10;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    color: #6c757d;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid #dee2e6;
-  }
-  
-  .table-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  
-  .store-row {
-    transition: background-color 0.15s ease;
-    
-    &:hover {
-      background-color: #f8f9fa;
-      box-shadow: inset 0 0 0 1px #dee2e6;
-    }
-  }
-  
-  .store-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-    
-    i {
-      font-size: 1.2rem;
-    }
-    
-    &.store-icon-active {
-      background: linear-gradient(45deg, #2bd980, #55e7aa);
-      color: white;
-    }
-    
-    &.store-icon-moderate {
-      background: linear-gradient(45deg, #3f9ce8, #5bc0de);
-      color: white;
-    }
-    
-    &.store-icon-inactive {
-      background: linear-gradient(45deg, #e9ecef, #ced4da);
-      color: #6c757d;
-    }
-  }
-}
-
-/* Estilos para la tabla de rendimiento de tiendas */
-.store-performance-table {
-  th, td {
-    padding: 0.85rem;
-    vertical-align: middle;
-  }
-  
-  th {
-    position: sticky;
-    top: 0;
-    background-color: #f8f9fa;
-    z-index: 10;
-    font-weight: 600;
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    color: #6c757d;
-    letter-spacing: 0.5px;
-    border-bottom: 2px solid #dee2e6;
-  }
-  
-  .table-sticky {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-  }
-  
-  .store-row {
-    transition: background-color 0.15s ease;
-    
-    &:hover {
-      background-color: #f8f9fa;
-      box-shadow: inset 0 0 0 1px #dee2e6;
-    }
-  }
-  
-  .store-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-    
-    i {
-      font-size: 1.2rem;
-    }
-    
-    &.store-icon-active {
-      background: linear-gradient(45deg, #2bd980, #55e7aa);
-      color: white;
-    }
-    
-    &.store-icon-moderate {
-      background: linear-gradient(45deg, #3f9ce8, #5bc0de);
-      color: white;
-    }
-    
-    &.store-icon-inactive {
-      background: linear-gradient(45deg, #e9ecef, #ced4da);
-      color: #6c757d;
-    }
-  }
-  
-  .pedidos-badge {
-    .badge {
-      font-size: 0.85rem;
-      padding: 0.5em 0.85em;
-      font-weight: 500;
-    }
-  }
-  
-  .growth-indicator {
-    display: inline-flex;
-    align-items: center;
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-weight: 500;
-    
-    i {
-      margin-right: 5px;
-      font-size: 0.85rem;
-    }
-    
-    &.positive {
-      background-color: rgba(40, 167, 69, 0.1);
-      color: #28a745;
-    }
-    
-    &.negative {
-      background-color: rgba(220, 53, 69, 0.1);
-      color: #dc3545;
-    }
-    
-    &.neutral {
-      background-color: rgba(108, 117, 125, 0.1);
-      color: #6c757d;
-    }
-  }
-  
-  .active-clients-count {
-    .badge {
-      font-size: 0.85rem;
-      padding: 0.5em 0.85em;
-      min-width: 50px;
-    }
-  }
-  
-  .action-buttons {
-    display: flex;
-    gap: 5px;
-    justify-content: center;
-    
-    .btn-icon {
-      width: 36px;
-      height: 36px;
-      padding: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 8px;
-      transition: all 0.15s ease;
-      
-      &:hover {
-        transform: translateY(-2px);
-      }
-      
-      i {
-        font-size: 1rem;
-      }
-    }
-  }
-}
-
-/* Estilos para estados vacíos */
-.empty-state-small {
-  padding: 2rem 1rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  
-  i {
-    opacity: 0.6;
-  }
-  
-  p {
-    color: #6c757d;
-    margin-bottom: 1rem;
-  }
-}
-
-/* Personalización de dropdowns */
-.dropdown-menu {
-  padding: 0.5rem 0;
-  border-radius: 8px;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  
-  .dropdown-item {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    
-    &:hover {
-      background-color: rgba(13,110,253,0.04);
-    }
-    
-    &:active {
-      background-color: rgba(13,110,253,0.08);
-    }
-    
-    i {
-      width: 20px;
-    }
-  }
-}
-
-/* Mejoras responsive */
-@media (max-width: 992px) {
-  .store-performance-table {
-    th, td {
-      padding: 0.75rem 0.5rem;
-    }
-    
-    .store-icon {
-      width: 36px;
-      height: 36px;
-    }
-    
-    .action-buttons {
-      flex-wrap: wrap;
-      
-      .btn-icon {
-        width: 32px;
-        height: 32px;
-      }
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  :host ::ng-deep ngb-accordion {
-    .accordion-button {
-      padding: 0.85rem 1rem;
-      font-size: 0.95rem;
-    }
-  }
-  
-  .store-performance-table {
-    th, td {
-      font-size: 0.85rem;
-    }
-  }
-  
-  .growth-indicator {
-    padding: 3px 8px;
-    font-size: 0.8rem;
-  }
-}
-
-/* Ajustes para los nuevos gráficos */
-#chart-proyeccion-ventas,
-#chart-comparativa-tiendas {
-  height: 300px;
-}
-
-/* Estilos para el acordeón de PrimeNG */
-:host ::ng-deep .custom-accordion {
-  .p-accordion-header {
-    a {
-      padding: 1rem 1.25rem;
-      font-weight: 600;
-      color: #212529;
-      background: #f8f9fa;
-      border-radius: 8px;
-      
-      &:focus {
-        box-shadow: none;
-        outline: none;
-      }
-      
-      &:not(.p-disabled):hover {
-        background-color: #f0f0f0;
-      }
-      
-      .p-accordion-toggle-icon {
-        margin-left: auto;
-      }
-    }
-    
-    &.p-highlight a {
-      background-color: #f8f9fa;
-      color: #0d6efd;
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
-    }
-  }
-  
-  .p-accordion-content {
-    padding: 1.25rem;
-    background-color: #fff;
-    border: 1px solid #dee2e6;
-    border-top: 0;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-  }
-  
-  .p-accordion-tab {
-    margin-bottom: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  .stat-icon {
+    width: 36px;
+    height: 36px;
     border-radius: 8px;
-    overflow: hidden;
-  }
-}
-
-/* Estilos mejorados para la tabla de clientes */
-.custom-table {
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-  border-radius: 8px;
-  overflow: hidden;
-  
-  th {
-    font-weight: 600;
-    color: #495057;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    letter-spacing: 0.5px;
-    padding: 1rem;
-    border-top: none;
-    white-space: nowrap;
-    background-color: #f8f9fa;
-    vertical-align: middle;
-  }
-  
-  td {
-    padding: 0.75rem 1rem;
-    vertical-align: middle;
-  }
-  
-  .table-row {
-    border-left: 3px solid transparent;
-    transition: all 0.2s ease;
-    
-    &:hover {
-      background-color: rgba(0, 123, 255, 0.03);
-      border-left: 3px solid #0d6efd;
-    }
-  }
-}
-
-.avatar-circle {
-  min-width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  font-size: 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  text-transform: uppercase;
-}
-
-/* Iconos de acciones */
-.action-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  
-  .btn-icon {
-    width: 32px;
-    height: 32px;
-    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 6px;
-    transition: all 0.2s;
-    color: white;
-    
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-    }
-  }
-}
+    flex-shrink: 0;
 
-/* Información de contacto */
-.contact-info {
-  .contact-text {
-    font-size: 0.875rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    i { font-size: 0.9rem; }
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #0f172a;
     display: block;
-    max-width: 200px;
+    line-height: 1.1;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
   }
 }
 
-/* Badges de estado */
-.status-badge {
-  padding: 0.5rem 0.75rem;
-  font-weight: 500;
-  border-radius: 30px;
-  display: inline-flex;
+// Avatar
+.avatar-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
   align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+
+  &.bg-success { background: #27ae60; }
+  &.bg-danger { background: #d12b38; }
+  &.bg-warning { background: #D35400; }
+  &.bg-secondary { background: #64748b; }
+}
+
+// Status badges (tinted style)
+.badge-active {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.badge-inactive {
+  background: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+.badge-pending {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+// Table rows
+.table tbody tr:hover {
+  background: #faf5ff;
+}
+
+.table th {
+  border-bottom: 2px solid #f1f5f9;
+  padding: 10px 12px;
+}
+
+.table td {
+  padding: 10px 12px;
+  vertical-align: middle;
+}
+
+// Action buttons
+.btn-light {
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+  border-radius: 6px;
+  padding: 4px 8px;
+
+  &:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+  }
+}
+
+// Shortcut cards
+.shortcut-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: all 0.2s ease;
   font-size: 0.8rem;
-  white-space: nowrap;
-  
-  &.status-active {
-    background-color: rgba(40, 167, 69, 0.15);
-    color: #28a745;
+  font-weight: 600;
+  color: #0f172a;
+
+  &:hover {
+    border-color: #a78bfa;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.08);
+    transform: translateY(-1px);
+    text-decoration: none;
+    color: #0f172a;
   }
-  
-  &.status-blocked {
-    background-color: rgba(220, 53, 69, 0.15);
-    color: #dc3545;
-  }
-  
-  &.status-pending {
-    background-color: rgba(255, 193, 7, 0.15);
-    color: #ffc107;
+
+  i { font-size: 1rem; }
+}
+
+// Section labels
+.section-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #64748b;
+}
+
+// Plan badges
+.badge-premium {
+  background: #faf5ff;
+  color: #7c3aed;
+  border: 1px solid #e9d5ff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-free {
+  background: #f8fafc;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  font-size: 0.6rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+// Progress bars
+.progress {
+  background: #f1f5f9;
+}
+
+// Responsive
+@media (max-width: 767px) {
+  .stat-card {
+    padding: 10px 12px;
+
+    .stat-value {
+      font-size: 1.1rem;
+    }
   }
 }
