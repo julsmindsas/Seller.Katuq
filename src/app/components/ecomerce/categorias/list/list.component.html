@@ -30,6 +30,13 @@
                                         <span>{{'Guardar' | translate}}</span>&nbsp;
                                         <i class="icofont icofont-save"></i>
                                     </button>
+                                    <button class="btn btn-primary fc-white ml-4 mb-2" type="button" (click)="openImportModal()"
+                                        aria-label="Importar categorías desde archivo"
+                                        ngbTooltip="Importar categorías desde un archivo Excel o JSON"
+                                        style="background-color: #5c6ac4; border-color: #5c6ac4;">
+                                        <i class="pi pi-upload mr-1"></i>
+                                        <span>{{'Importar' | translate}}</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -147,6 +154,12 @@
         </div>
     </div>
 </div>
+
+<app-import-modal
+    [(visible)]="showImportModal"
+    type="category"
+    (importComplete)="onImportComplete($event)">
+</app-import-modal>
 
 <!-- Confirmation Dialog Template -->
 <ng-template #confirmationDialog let-modal>

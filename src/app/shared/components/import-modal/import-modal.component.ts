@@ -122,7 +122,7 @@ const PRODUCT_DEFAULTS = {
 export class ImportModalComponent implements OnInit, OnDestroy {
   @ViewChild(MobileFileUploadComponent) mobileFileUpload: MobileFileUploadComponent;
 
-  @Input() type: 'customer' | 'product' | 'inventory' = 'customer';
+  @Input() type: 'customer' | 'product' | 'inventory' | 'category' = 'customer';
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() importComplete = new EventEmitter<ImportResult>();
@@ -284,6 +284,33 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     }
   };
 
+  private categoryConfig: ImportConfig = {
+    title: 'Importar Categorías',
+    endpoint: '/v1/onboarding/import-categories',
+    payloadKey: 'categories',
+    maxFileSize: 5000000,
+    templateColumns: [
+      { field: 'categoria_nivel1', header: 'Nombre', required: true, example: 'Ropa' },
+      { field: 'codigo', header: 'Código', required: false, example: 'ROPa' },
+      { field: 'categoria_nivel2', header: 'Subcategoría (Nivel 2)', required: false, example: 'Hombre' },
+      { field: 'categoria_nivel3', header: 'Sub-subcategoría (Nivel 3)', required: false, example: 'Camisetas' },
+      { field: 'categoria_padre', header: 'Categoría Padre (nombre o código)', required: false, example: 'Ropa' },
+      { field: 'imagen', header: 'URL Imagen', required: false, example: 'https://example.com/imagen.jpg' },
+      { field: 'activo', header: 'Activo', required: false, example: 'SI' },
+      { field: 'posicion', header: 'Posición', required: false, example: '1' },
+    ],
+    fieldLabels: {
+      'categoria_nivel1': 'Nombre de Categoría',
+      'codigo': 'Código / Referencia',
+      'categoria_nivel2': 'Subcategoría (Nivel 2)',
+      'categoria_nivel3': 'Sub-subcategoría (Nivel 3)',
+      'categoria_padre': 'Categoría Padre (nombre o código)',
+      'imagen': 'URL de Imagen',
+      'activo': 'Activo (SI/NO)',
+      'posicion': 'Posición / Orden',
+    }
+  };
+
   constructor(
     private messageService: MessageService,
     private http: HttpClient,
@@ -304,6 +331,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       this.config = this.customerConfig;
     } else if (this.type === 'inventory') {
       this.config = this.inventoryConfig;
+    } else if (this.type === 'category') {
+      this.config = this.categoryConfig;
     } else {
       this.config = this.productConfig;
     }
@@ -619,7 +648,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         batchId: data.batchId || batchId
       };
 
-      const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : 'productos';
+      const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : this.type === 'category' ? 'categorías' : 'productos';
       const created: number = data.created ?? 0;
       const updated: number = data.updated ?? 0;
       let detail = '';

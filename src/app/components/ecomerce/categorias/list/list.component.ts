@@ -23,6 +23,7 @@ export class ListComponent implements OnInit, OnChanges {
   cargando = true;
   confirmationMessage: string = '';
   nodeToDelete: any = null;
+  showImportModal = false;
   
   // Toast configuration
   position = 'top-right';
@@ -212,10 +213,26 @@ export class ListComponent implements OnInit, OnChanges {
 
   showError(msg: string) {
     this.messageService.add({
-      severity: 'error', 
-      summary: 'Error', 
+      severity: 'error',
+      summary: 'Error',
       detail: msg,
       life: 5000
     });
+  }
+
+  openImportModal() {
+    this.showImportModal = true;
+  }
+
+  onImportComplete(result: any) {
+    this.showImportModal = false;
+    if (result && (result.success > 0 || result.created > 0 || result.updated > 0)) {
+      const created = result.created ?? 0;
+      const updated = result.updated ?? 0;
+      this.showSuccess(`Se importaron ${created} categorías nuevas` + (updated > 0 ? ` y se actualizaron ${updated}` : ''));
+      this.obtenerCategorias();
+    } else if (result && result.failed > 0) {
+      this.showError('Algunas categorías no pudieron importarse. Revisa los errores.');
+    }
   }
 }

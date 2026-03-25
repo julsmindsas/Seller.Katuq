@@ -14,7 +14,7 @@ export interface ColumnMapping {
 
 export interface ColumnMappingResult {
   success: boolean;
-  type: 'customer' | 'product' | 'inventory';
+  type: 'customer' | 'product' | 'inventory' | 'category';
   mappings: { [katuqField: string]: ColumnMapping };
   unmappedRequired: string[];
   warnings: string[];
@@ -27,7 +27,7 @@ export interface ColumnMappingResult {
 }
 
 export interface ColumnMappingRequest {
-  type: 'customer' | 'product' | 'inventory';
+  type: 'customer' | 'product' | 'inventory' | 'category';
   sourceColumns: string[];
   sampleRows: any[];
   companyId?: string;
