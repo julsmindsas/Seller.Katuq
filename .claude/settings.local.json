@@ -68,7 +68,16 @@
       "mcp__claude_ai_ClickUp__clickup_update_task",
       "mcp__claude_ai_ClickUp__clickup_get_task",
       "mcp__claude_ai_ClickUp__clickup_get_workspace_hierarchy",
-      "mcp__claude_ai_ClickUp__clickup_filter_tasks"
+      "mcp__claude_ai_ClickUp__clickup_filter_tasks",
+      "Bash(node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng serve --port 4201)",
+      "Bash(cmd /c \"dir \\\\\"C:\\\\Users\\\\julia\\\\Desktop\\\\\"\")",
+      "Bash(cmd /c \"dir /b C:\\\\Users\\\\julia\\\\Desktop 2>&1 & dir /b C:\\\\users\\\\julia\\\\Desktop 2>&1\")",
+      "Bash(powershell -Command \"[Environment]::GetFolderPath\\('Desktop'\\)\")",
+      "Bash(head -20 grep -rn \"optimized\\\\|preciosVolumen\" C:/Users/julia/OneDrive/Documentos/GitHub/katuq_admin_back_firebase/functions/controllers/ --include=*.js)",
+      "Bash(cmd /c \"taskkill /F /IM node.exe\")",
+      "Bash(node_modules/.bin/ng build:*)",
+      "Bash(node_modules/.bin/ng-template-parser)",
+      "Bash(npx @angular/compiler-cli)"
     ]
   }
 }

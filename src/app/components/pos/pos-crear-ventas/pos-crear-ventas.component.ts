@@ -1406,4 +1406,88 @@ export class CrearPOSVentasComponent implements OnInit, AfterViewChecked, OnChan
     // this.showSteper = false;
     // this.mywizard.goToNextStep();
   }
+
+  // ─── CALCULADORA ───────────────────────────────────────────────
+  calcVisible = false;
+  calcDisplay = '0';
+  calcExpresion = '';
+  private calcOperador = '';
+  private calcPrimerValor: number | null = null;
+  private calcNuevoNumero = true;
+
+  toggleCalculadora() {
+    this.calcVisible = !this.calcVisible;
+  }
+
+  calcPresionar(valor: string) {
+    if (this.calcNuevoNumero) {
+      this.calcDisplay = valor === '.' ? '0.' : valor;
+      this.calcNuevoNumero = false;
+    } else {
+      if (valor === '.' && this.calcDisplay.includes('.')) return;
+      this.calcDisplay = this.calcDisplay === '0' && valor !== '.' ? valor : this.calcDisplay + valor;
+    }
+  }
+
+  calcOperar(op: string) {
+    const actual = parseFloat(this.calcDisplay);
+    if (this.calcPrimerValor !== null && !this.calcNuevoNumero) {
+      const resultado = this.calcEvaluar(this.calcPrimerValor, actual, this.calcOperador);
+      this.calcDisplay = this.calcFormatear(resultado);
+      this.calcExpresion = `${this.calcFormatear(resultado)} ${op}`;
+      this.calcPrimerValor = resultado;
+    } else {
+      this.calcPrimerValor = actual;
+      this.calcExpresion = `${this.calcFormatear(actual)} ${op}`;
+    }
+    this.calcOperador = op;
+    this.calcNuevoNumero = true;
+  }
+
+  calcIgual() {
+    if (this.calcPrimerValor === null || this.calcNuevoNumero) return;
+    const actual = parseFloat(this.calcDisplay);
+    const resultado = this.calcEvaluar(this.calcPrimerValor, actual, this.calcOperador);
+    this.calcExpresion = `${this.calcFormatear(this.calcPrimerValor)} ${this.calcOperador} ${this.calcFormatear(actual)} =`;
+    this.calcDisplay = this.calcFormatear(resultado);
+    this.calcPrimerValor = null;
+    this.calcOperador = '';
+    this.calcNuevoNumero = true;
+  }
+
+  calcLimpiar() {
+    this.calcDisplay = '0';
+    this.calcExpresion = '';
+    this.calcOperador = '';
+    this.calcPrimerValor = null;
+    this.calcNuevoNumero = true;
+  }
+
+  calcBorrar() {
+    if (this.calcNuevoNumero) return;
+    this.calcDisplay = this.calcDisplay.length > 1 ? this.calcDisplay.slice(0, -1) : '0';
+  }
+
+  calcPorcentaje() {
+    const valor = parseFloat(this.calcDisplay);
+    this.calcDisplay = this.calcFormatear(valor / 100);
+    this.calcNuevoNumero = true;
+  }
+
+  private calcEvaluar(a: number, b: number, op: string): number {
+    switch (op) {
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b !== 0 ? a / b : 0;
+      default:  return b;
+    }
+  }
+
+  private calcFormatear(n: number): string {
+    if (isNaN(n)) return '0';
+    const s = parseFloat(n.toPrecision(10)).toString();
+    return s;
+  }
+  // ───────────────────────────────────────────────────────────────
 }

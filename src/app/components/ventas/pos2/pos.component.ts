@@ -1,4 +1,4 @@
-import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core'; // Importar OnInit
+import { Component, ViewChild, AfterViewInit, OnInit, HostListener } from '@angular/core'; // Importar OnInit
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { ProductCategoryComponent } from "./widgets/product-category/product-category.component";
@@ -9,6 +9,7 @@ import { CashClosingComponent } from './widgets/cash-closing/cash-closing.compon
 import { CashClosingHistoryComponent } from './widgets/cash-closing-history/cash-closing-history.component';
 import { CartService } from '../../../shared/services/cart.service';
 import { PosCheckoutService } from '../../../shared/services/ventas/pos-checkout.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-pos',
@@ -23,7 +24,8 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
   constructor(
     private modal: NgbModal,
     private cartService: CartService,
-    private checkoutService: PosCheckoutService
+    private checkoutService: PosCheckoutService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -100,6 +102,10 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
     }
   }
 
+  irAPedidos() {
+    this.router.navigate(['/ventas/pedidos']);
+  }
+
   openCashClosingModal() {
     this.modal.open(CashClosingComponent, {
       centered: true,
@@ -117,4 +123,109 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
       keyboard: false
     });
   }
+
+  // ─── CALCULADORA — TECLADO ─────────────────────────────────────
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(e: KeyboardEvent) {
+    if (!this.calcVisible) return;
+    // Evitar que interfiera con inputs de texto activos
+    const tag = (e.target as HTMLElement).tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+    const digitos = ['0','1','2','3','4','5','6','7','8','9'];
+    if (digitos.includes(e.key))           { e.preventDefault(); this.calcPresionar(e.key); return; }
+    if (e.key === '.' || e.key === ',')    { e.preventDefault(); this.calcPresionar('.'); return; }
+    if (e.key === '+')                     { e.preventDefault(); this.calcOperar('+'); return; }
+    if (e.key === '-')                     { e.preventDefault(); this.calcOperar('−'); return; }
+    if (e.key === '*')                     { e.preventDefault(); this.calcOperar('×'); return; }
+    if (e.key === '/')                     { e.preventDefault(); this.calcOperar('÷'); return; }
+    if (e.key === 'Enter' || e.key === '='){ e.preventDefault(); this.calcIgual(); return; }
+    if (e.key === 'Backspace')             { e.preventDefault(); this.calcBorrar(); return; }
+    if (e.key === 'Escape')                { e.preventDefault(); this.toggleCalculadora(); return; }
+    if (e.key === '%')                     { e.preventDefault(); this.calcPorcentaje(); return; }
+    if (e.key === 'Delete')                { e.preventDefault(); this.calcLimpiar(); return; }
+  }
+
+  // ─── CALCULADORA ───────────────────────────────────────────────
+  calcVisible = false;
+  calcDisplay = '0';
+  calcExpresion = '';
+  private calcOperador = '';
+  private calcPrimerValor: number | null = null;
+  private calcNuevoNumero = true;
+
+  toggleCalculadora() {
+    this.calcVisible = !this.calcVisible;
+  }
+
+  calcPresionar(valor: string) {
+    if (this.calcNuevoNumero) {
+      this.calcDisplay = valor === '.' ? '0.' : valor;
+      this.calcNuevoNumero = false;
+    } else {
+      if (valor === '.' && this.calcDisplay.includes('.')) return;
+      this.calcDisplay = this.calcDisplay === '0' && valor !== '.' ? valor : this.calcDisplay + valor;
+    }
+  }
+
+  calcOperar(op: string) {
+    const actual = parseFloat(this.calcDisplay);
+    if (this.calcPrimerValor !== null && !this.calcNuevoNumero) {
+      const resultado = this.calcEvaluar(this.calcPrimerValor, actual, this.calcOperador);
+      this.calcDisplay = this.calcFormatear(resultado);
+      this.calcExpresion = `${this.calcFormatear(resultado)} ${op}`;
+      this.calcPrimerValor = resultado;
+    } else {
+      this.calcPrimerValor = actual;
+      this.calcExpresion = `${this.calcFormatear(actual)} ${op}`;
+    }
+    this.calcOperador = op;
+    this.calcNuevoNumero = true;
+  }
+
+  calcIgual() {
+    if (this.calcPrimerValor === null || this.calcNuevoNumero) return;
+    const actual = parseFloat(this.calcDisplay);
+    const resultado = this.calcEvaluar(this.calcPrimerValor, actual, this.calcOperador);
+    this.calcExpresion = `${this.calcFormatear(this.calcPrimerValor)} ${this.calcOperador} ${this.calcFormatear(actual)} =`;
+    this.calcDisplay = this.calcFormatear(resultado);
+    this.calcPrimerValor = null;
+    this.calcOperador = '';
+    this.calcNuevoNumero = true;
+  }
+
+  calcLimpiar() {
+    this.calcDisplay = '0';
+    this.calcExpresion = '';
+    this.calcOperador = '';
+    this.calcPrimerValor = null;
+    this.calcNuevoNumero = true;
+  }
+
+  calcBorrar() {
+    if (this.calcNuevoNumero) return;
+    this.calcDisplay = this.calcDisplay.length > 1 ? this.calcDisplay.slice(0, -1) : '0';
+  }
+
+  calcPorcentaje() {
+    const valor = parseFloat(this.calcDisplay);
+    this.calcDisplay = this.calcFormatear(valor / 100);
+    this.calcNuevoNumero = true;
+  }
+
+  private calcEvaluar(a: number, b: number, op: string): number {
+    switch (op) {
+      case '+': return a + b;
+      case '−': return a - b;
+      case '×': return a * b;
+      case '÷': return b !== 0 ? a / b : 0;
+      default:  return b;
+    }
+  }
+
+  private calcFormatear(n: number): string {
+    if (isNaN(n)) return '0';
+    return parseFloat(n.toPrecision(10)).toString();
+  }
+  // ───────────────────────────────────────────────────────────────
 }

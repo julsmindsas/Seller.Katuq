@@ -11,9 +11,49 @@
             {{pedidoGral?.cliente.apellidos_completos}}</h6> -->
         </div>
         <div class="card" style="padding: 10px;">
-          <div class="card-body" style="padding: 10px;">
+          <div class="card-body" style="padding: 10px; position: relative;">
             <h5 style="position: absolute;left: 10px;top: 10px; padding: 10px;">VENTAS POS - Preventa #
               {{pedidoGral.nroPedido}}</h5>
+
+            <!-- Calculadora -->
+            <div class="calc-wrapper">
+              <button class="calc-fab" type="button" (click)="toggleCalculadora()" [class.calc-fab--active]="calcVisible" title="Calculadora">
+                <i class="fa" [ngClass]="calcVisible ? 'fa-times' : 'fa-calculator'"></i>
+              </button>
+              <div class="calc-panel" [class.calc-panel--open]="calcVisible">
+                <div class="calc-header">
+                  <span class="calc-title"><i class="fa fa-calculator me-2"></i>Calculadora</span>
+                  <button class="calc-close" type="button" (click)="toggleCalculadora()"><i class="fa fa-times"></i></button>
+                </div>
+                <div class="calc-display">
+                  <div class="calc-expression">{{ calcExpresion || '&nbsp;' }}</div>
+                  <div class="calc-current">{{ calcDisplay }}</div>
+                </div>
+                <div class="calc-buttons">
+                  <button class="calc-btn calc-btn--fn" type="button" (click)="calcLimpiar()">C</button>
+                  <button class="calc-btn calc-btn--fn" type="button" (click)="calcBorrar()"><i class="fa fa-backspace"></i></button>
+                  <button class="calc-btn calc-btn--fn" type="button" (click)="calcPorcentaje()">%</button>
+                  <button class="calc-btn calc-btn--op" type="button" (click)="calcOperar('÷')">÷</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('7')">7</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('8')">8</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('9')">9</button>
+                  <button class="calc-btn calc-btn--op" type="button" (click)="calcOperar('×')">×</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('4')">4</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('5')">5</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('6')">6</button>
+                  <button class="calc-btn calc-btn--op" type="button" (click)="calcOperar('−')">−</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('1')">1</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('2')">2</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('3')">3</button>
+                  <button class="calc-btn calc-btn--op" type="button" (click)="calcOperar('+')">+</button>
+                  <button class="calc-btn calc-btn--zero" type="button" (click)="calcPresionar('0')">0</button>
+                  <button class="calc-btn" type="button" (click)="calcPresionar('.')">.</button>
+                  <button class="calc-btn calc-btn--eq" type="button" (click)="calcIgual()">=</button>
+                </div>
+              </div>
+            </div>
+            <!-- / Calculadora -->
+
             <br><br>
             <app-custom-primeng-wizard>
               <ng-template class="p-0" wizardStep (stepEnter)="enterStep($event,3)">
