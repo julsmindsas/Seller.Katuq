@@ -83,7 +83,8 @@
       "Bash(wc -l /c/sourcecodejuls/katuq_admin_back_firebase/functions/controllers/*.js)",
       "Bash(echo \"Levels up: 6 \\(contact-form -> components -> crm -> components -> app -> src\\) then assets/scss/utils/variables\")",
       "Read(//c/assets/scss/utils/**)",
-      "Bash(git -C C:sourcecodejulsSeller.Katuq diff --stat HEAD)"
+      "Bash(git -C C:sourcecodejulsSeller.Katuq diff --stat HEAD)",
+      "WebFetch(domain:procreator.design)"
     ]
   }
 }
