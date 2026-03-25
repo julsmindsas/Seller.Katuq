@@ -1,0 +1,80 @@
+.crm-dashboard {
+  padding: 1rem;
+}
+
+.stat-card {
+  border-radius: 12px;
+  padding: 1.2rem;
+  text-align: center;
+  color: #fff;
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s;
+
+  &:hover { transform: translateY(-3px); }
+
+  &.stat-primary { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+  &.stat-info { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+  &.stat-success { background: linear-gradient(135deg, #27AE60, #2ecc71); }
+  &.stat-accent { background: linear-gradient(135deg, #00b4d8, #00e5cc); }
+  &.stat-warning { background: linear-gradient(135deg, #D35400, #f39c12); }
+  &.stat-danger { background: linear-gradient(135deg, #d12b38, #e74c3c); }
+
+  .stat-icon { font-size: 1.5rem; margin-bottom: 0.3rem; opacity: 0.85; }
+  .stat-value { font-size: 1.6rem; font-weight: 700; }
+  .stat-label { font-size: 0.75rem; opacity: 0.9; }
+}
+
+.skeleton-loader {
+  width: 100%;
+  height: 80px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.action-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.15);
+    transform: translateY(-2px);
+  }
+
+  i { font-size: 2rem; color: #8b5cf6; display: block; margin-bottom: 0.5rem; }
+  span { font-weight: 600; color: #374151; }
+}
+
+.conversion-rate {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #8b5cf6;
+}
+
+.pipeline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f3f4f6;
+
+  &:last-child { border-bottom: none; }
+
+  .pipeline-label { font-size: 0.875rem; color: #6b7280; }
+}

@@ -129,8 +129,8 @@ export class SubscriptionService {
 
     if (subscription.plan === 'premium') return true;
 
-    // Verificar features bloqueadas para freemium
-    const blockedFeatures = ['production', 'integrations', 'dropshipping', 'multiple-warehouses'];
+    // Freemium permite 1 integración (validada en backend), bloquea producción y dropshipping
+    const blockedFeatures = ['production', 'dropshipping'];
     return !blockedFeatures.includes(feature);
   }
 

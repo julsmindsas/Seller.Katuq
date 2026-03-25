@@ -1,0 +1,102 @@
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex gap-2">
+    <button pButton [label]="'Pendientes' | translate" class="p-button-sm"
+      [class.p-button-outlined]="statusFilter !== 'pending'" (click)="statusFilter = 'pending'"></button>
+    <button pButton [label]="'Completadas' | translate" class="p-button-sm p-button-success"
+      [class.p-button-outlined]="statusFilter !== 'completed'" (click)="statusFilter = 'completed'"></button>
+    <button pButton [label]="'Todas' | translate" class="p-button-sm p-button-secondary"
+      [class.p-button-outlined]="statusFilter !== ''" (click)="statusFilter = ''"></button>
+  </div>
+  <button *ngIf="contactId" pButton label="{{ 'Nueva Tarea' | translate }}" icon="pi pi-plus"
+    class="p-button-sm" (click)="showForm = !showForm"></button>
+</div>
+
+<!-- Create Task Form -->
+<div *ngIf="showForm" class="card mb-3">
+  <div class="card-body">
+    <form [formGroup]="taskForm" (ngSubmit)="createTask()">
+      <div class="row">
+        <div class="col-md-6 mb-2">
+          <label class="form-label">{{ 'Título' | translate }} *</label>
+          <input pInputText formControlName="title" class="w-100" />
+        </div>
+        <div class="col-md-3 mb-2">
+          <label class="form-label">{{ 'Tipo' | translate }}</label>
+          <p-dropdown [options]="typeOptions" formControlName="type" optionLabel="label" optionValue="value"
+            [style]="{'width':'100%'}"></p-dropdown>
+        </div>
+        <div class="col-md-3 mb-2">
+          <label class="form-label">{{ 'Prioridad' | translate }}</label>
+          <p-dropdown [options]="priorityOptions" formControlName="priority" optionLabel="label" optionValue="value"
+            [style]="{'width':'100%'}"></p-dropdown>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-2">
+          <label class="form-label">{{ 'Fecha límite' | translate }}</label>
+          <p-calendar formControlName="dueDate" [showIcon]="true" dateFormat="yy-mm-dd"
+            [style]="{'width':'100%'}"></p-calendar>
+        </div>
+        <div class="col-md-4 mb-2">
+          <label class="form-label">{{ 'Hora' | translate }}</label>
+          <input pInputText formControlName="dueTime" type="time" class="w-100" />
+        </div>
+        <div class="col-md-4 mb-2 d-flex align-items-end gap-2">
+          <button pButton type="submit" label="{{ 'Crear' | translate }}" icon="pi pi-check"
+            class="p-button-sm" [loading]="submitting" [disabled]="taskForm.invalid"></button>
+          <button pButton type="button" label="{{ 'Cancelar' | translate }}" icon="pi pi-times"
+            class="p-button-sm p-button-text" (click)="showForm = false"></button>
+        </div>
+      </div>
+      <div class="mt-2">
+        <textarea pInputTextarea formControlName="description" [rows]="2" [autoResize]="true"
+          placeholder="{{ 'Descripción (opcional)' | translate }}" class="w-100"></textarea>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Task List -->
+<div class="task-list">
+  <div *ngFor="let task of filteredTasks; trackBy: trackByTaskId"
+    class="task-item" [class.task-overdue]="isOverdue(task)" [class.task-completed]="task.status === 'completed'">
+
+    <div class="d-flex align-items-start gap-3">
+      <!-- Complete checkbox -->
+      <button *ngIf="task.status === 'pending'" pButton icon="pi pi-circle" class="p-button-text p-button-sm p-button-rounded"
+        pTooltip="{{ 'Completar' | translate }}" (click)="completeTask(task)"></button>
+      <i *ngIf="task.status === 'completed'" class="pi pi-check-circle text-success mt-1" style="font-size:1.2rem;"></i>
+      <i *ngIf="task.status === 'cancelled'" class="pi pi-times-circle text-danger mt-1" style="font-size:1.2rem;"></i>
+
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-start">
+          <div>
+            <strong [class.text-decoration-line-through]="task.status === 'completed'">{{ task.title }}</strong>
+            <div class="mt-1">
+              <p-tag [value]="getTypeLabel(task.type)" severity="info" class="me-1" [style]="{'font-size':'0.7rem'}"></p-tag>
+              <p-tag [value]="task.priority" [severity]="getPrioritySeverity(task.priority)" [style]="{'font-size':'0.7rem'}"></p-tag>
+            </div>
+          </div>
+          <div class="text-end">
+            <small class="text-muted" [class.text-danger]="isOverdue(task)">
+              {{ task.dueDate ? formatDate(task.dueDate) : 'Sin fecha' }}
+              <span *ngIf="task.dueTime"> {{ task.dueTime }}</span>
+            </small>
+            <div *ngIf="task.status === 'pending'" class="mt-1">
+              <button pButton icon="pi pi-times" class="p-button-text p-button-danger p-button-sm"
+                pTooltip="{{ 'Cancelar' | translate }}" (click)="cancelTask(task)"></button>
+            </div>
+          </div>
+        </div>
+        <p *ngIf="task.description" class="text-muted mb-0 mt-1" style="font-size:0.8rem;">{{ task.description }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Empty state -->
+<div *ngIf="filteredTasks.length === 0" class="text-center p-4 text-muted">
+  <i class="pi pi-check-square" style="font-size: 2rem;"></i>
+  <p class="mt-2">{{ 'No hay tareas' | translate }}</p>
+</div>

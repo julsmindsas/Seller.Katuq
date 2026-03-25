@@ -80,7 +80,9 @@
       "Bash(npx @angular/compiler-cli)",
       "WebFetch(domain:katuq.com)",
       "WebFetch(domain:docs.wompi.co)",
-      "Bash(wc -l /c/sourcecodejuls/katuq_admin_back_firebase/functions/controllers/*.js)"
+      "Bash(wc -l /c/sourcecodejuls/katuq_admin_back_firebase/functions/controllers/*.js)",
+      "Bash(echo \"Levels up: 6 \\(contact-form -> components -> crm -> components -> app -> src\\) then assets/scss/utils/variables\")",
+      "Read(//c/assets/scss/utils/**)"
     ]
   }
 }

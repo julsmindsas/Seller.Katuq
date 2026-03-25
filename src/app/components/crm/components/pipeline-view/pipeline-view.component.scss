@@ -1,0 +1,42 @@
+.stage-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  border-radius: 8px;
+  transition: background 0.2s;
+
+  &:hover { background: #f9fafb; }
+  &.active { background: #f3f0ff; }
+
+  .stage-count {
+    font-weight: 700;
+    font-size: 0.875rem;
+    color: #374151;
+  }
+}
+
+.pipeline-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #8b5cf6;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
+    transform: translateY(-2px);
+  }
+
+  h6 { color: #1f2937; }
+
+  .text-primary { color: #8b5cf6 !important; }
+}
+
+.stage-header {
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}

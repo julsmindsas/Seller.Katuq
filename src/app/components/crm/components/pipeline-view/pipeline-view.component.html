@@ -1,0 +1,67 @@
+<div class="pipeline-view">
+  <!-- Pipeline Summary Bar -->
+  <div class="pipeline-summary card mb-4" *ngIf="stats">
+    <div class="card-body">
+      <h5 class="mb-3">{{ 'Pipeline de Ventas' | translate }}</h5>
+      <div class="d-flex gap-2 flex-wrap">
+        <div *ngFor="let stage of stages; let i = index" class="stage-chip"
+          [class.active]="activeStageIndex === i" (click)="activeStageIndex = i">
+          <p-tag [value]="stage.label" [severity]="getStatusSeverity(stage.value)"></p-tag>
+          <span class="stage-count">{{ getStageCount(stage.value) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stage Tabs -->
+  <p-tabView [(activeIndex)]="activeStageIndex">
+    <p-tabPanel *ngFor="let stage of stages"
+      [header]="stage.label + ' (' + getStageCount(stage.value) + ')'">
+
+      <!-- Stage header with total value -->
+      <div class="stage-header mb-3">
+        <span class="text-muted">{{ 'Valor total:' | translate }}</span>
+        <strong class="ms-2">{{ formatCurrency(getStageValue(stage.value)) }}</strong>
+      </div>
+
+      <!-- Contact cards -->
+      <div class="row">
+        <div class="col-lg-4 col-md-6 mb-3"
+          *ngFor="let contact of contactsByStage[stage.value] || []; trackBy: trackByContactId">
+          <div class="pipeline-card" (click)="viewContact(contact)">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="mb-1">{{ contact.name }}</h6>
+                <small class="text-muted" *ngIf="contact.companyName">{{ contact.companyName }}</small>
+              </div>
+              <strong class="text-primary" *ngIf="contact.estimatedValue">
+                {{ formatCurrency(contact.estimatedValue) }}
+              </strong>
+            </div>
+            <div class="mt-2 d-flex gap-2 flex-wrap">
+              <small class="text-muted" *ngIf="contact.email">
+                <i class="pi pi-envelope"></i> {{ contact.email }}
+              </small>
+              <small class="text-muted" *ngIf="contact.phone">
+                <i class="pi pi-phone"></i> {{ contact.phone }}
+              </small>
+            </div>
+            <div class="mt-2" *ngIf="contact.assignedTo">
+              <small class="text-muted"><i class="pi pi-user"></i> {{ contact.assignedTo }}</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="(contactsByStage[stage.value] || []).length === 0" class="text-center p-4 text-muted">
+        <i class="pi pi-inbox" style="font-size: 2rem;"></i>
+        <p class="mt-2">{{ 'Sin contactos en esta etapa' | translate }}</p>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>
+
+<div *ngIf="loading" class="text-center p-5">
+  <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+</div>

@@ -49,10 +49,11 @@ export class PricingComponent implements OnInit, OnDestroy {
     { text: '15 pedidos por mes', enabled: true },
     { text: '1 bodega', enabled: true },
     { text: '2 usuarios', enabled: true },
+    { text: '1 integración', enabled: true },
     { text: 'Chat IA: 10 msg/día', enabled: true },
     { text: 'Dashboard básico', enabled: true },
-    { text: 'Integraciones', enabled: false },
     { text: 'Producción', enabled: false },
+    { text: 'Dropshipping', enabled: false },
     { text: 'IA de Voz', enabled: false },
   ];
 

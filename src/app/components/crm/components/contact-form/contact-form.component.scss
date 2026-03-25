@@ -1,0 +1,47 @@
+@import '../../../../../assets/scss/utils/variables';
+
+.section-header {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: $primary-color;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 2px solid rgba($primary-color, 0.15);
+
+  &:not(:first-of-type) {
+    margin-top: 1.25rem;
+  }
+}
+
+.form-label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #444;
+  margin-bottom: 0.25rem;
+}
+
+.field-error {
+  display: block;
+  color: #d12b38;
+  font-size: 0.78rem;
+  margin-top: 0.2rem;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid #eee;
+}
+
+::ng-deep {
+  .p-chips .p-chips-multiple-container {
+    width: 100%;
+  }
+
+  .p-inputnumber {
+    width: 100%;
+  }
+}

@@ -1,0 +1,72 @@
+<div class="contact-detail" *ngIf="!loading && contact">
+  <!-- Header -->
+  <div class="detail-header mb-4">
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-3">
+        <button pButton icon="pi pi-arrow-left" class="p-button-text p-button-sm" (click)="goBack()"></button>
+        <div>
+          <h4 class="mb-0">{{ contact.name }}</h4>
+          <span class="text-muted" *ngIf="contact.companyName">{{ contact.companyName }}</span>
+        </div>
+        <p-tag [value]="getStatusLabel(contact.status)" [severity]="getStatusSeverity(contact.status)"></p-tag>
+      </div>
+      <div class="d-flex gap-2">
+        <button pButton label="{{ 'Editar' | translate }}" icon="pi pi-pencil" class="p-button-outlined p-button-sm"
+          (click)="isEditing = !isEditing"></button>
+        <button pButton *ngIf="contact.status !== 'converted'" label="{{ 'Convertir a Cliente' | translate }}"
+          icon="pi pi-user-plus" class="p-button-success p-button-sm" (click)="convertToClient()"></button>
+
+        <!-- Quick contact links -->
+        <a *ngIf="contact.phone" [href]="'tel:' + contact.phone" pButton icon="pi pi-phone"
+          class="p-button-outlined p-button-sm p-button-rounded" pTooltip="Llamar"></a>
+        <a *ngIf="contact.email" [href]="'mailto:' + contact.email" pButton icon="pi pi-envelope"
+          class="p-button-outlined p-button-sm p-button-rounded" pTooltip="Email"></a>
+        <a *ngIf="contact.whatsapp" [href]="'https://wa.me/' + contact.whatsapp" target="_blank"
+          pButton icon="pi pi-whatsapp" class="p-button-outlined p-button-sm p-button-rounded p-button-success"
+          pTooltip="WhatsApp"></a>
+      </div>
+    </div>
+
+    <!-- Status change bar -->
+    <div class="status-bar mt-3">
+      <span class="me-2 text-muted">{{ 'Cambiar estado:' | translate }}</span>
+      <button *ngFor="let opt of statusOptions" pButton [label]="opt.label" class="p-button-text p-button-sm"
+        [class.p-button-outlined]="contact.status !== opt.value"
+        [class.active-status]="contact.status === opt.value"
+        (click)="changeStatus(opt.value)">
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <p-tabView [(activeIndex)]="activeTabIndex">
+    <!-- Tab: Info -->
+    <p-tabPanel header="{{ 'Información' | translate }}" leftIcon="pi pi-user">
+      <app-contact-form [contact]="contact" [isEdit]="isEditing"
+        (saved)="onContactSaved($event)" (cancelled)="isEditing = false">
+      </app-contact-form>
+    </p-tabPanel>
+
+    <!-- Tab: Timeline -->
+    <p-tabPanel header="{{ 'Timeline' | translate }}" leftIcon="pi pi-clock">
+      <app-activity-timeline [contactId]="contact.id" [activities]="activities"
+        (activityAdded)="onActivityAdded()">
+      </app-activity-timeline>
+    </p-tabPanel>
+
+    <!-- Tab: Tasks -->
+    <p-tabPanel header="{{ 'Tareas' | translate }}" leftIcon="pi pi-check-square">
+      <app-task-list [contactId]="contact.id" [tasks]="tasks"
+        (taskCreated)="onTaskCreated()">
+      </app-task-list>
+    </p-tabPanel>
+  </p-tabView>
+</div>
+
+<!-- Loading -->
+<div *ngIf="loading" class="text-center p-5">
+  <i class="pi pi-spin pi-spinner" style="font-size: 2rem;"></i>
+  <p class="mt-2 text-muted">{{ 'Cargando contacto...' | translate }}</p>
+</div>
+
+<p-toast></p-toast>

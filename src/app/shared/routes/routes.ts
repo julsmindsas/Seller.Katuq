@@ -241,8 +241,8 @@ export const content: Routes = [
       import("../../components/integrations/integrations.module").then(
         (m) => m.IntegrationsModule,
       ),
-    canActivate: [AuthGuard, SubscriptionGuard],
-    data: { requiresPremium: true },
+    canActivate: [AuthGuard],
+    // Freemium permite 1 integración (límite validado en backend)
   },
   {
     path: "dropshipping",

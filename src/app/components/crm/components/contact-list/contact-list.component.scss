@@ -1,0 +1,185 @@
+// ─── Katuq Design Tokens (inline, tokens file not yet created) ────
+$katuq-primary: #8b5cf6;
+$katuq-primary-light: #a78bfa;
+$katuq-primary-dark: #7c3aed;
+$katuq-accent: #00e5cc;
+$katuq-success: #27AE60;
+$katuq-warning: #D35400;
+$katuq-error: #d12b38;
+$katuq-info: #3b82f6;
+
+// ═══════════════════════════════════════════════════════════
+//  STATS CARDS
+// ═══════════════════════════════════════════════════════════
+
+.stat-card {
+  border-radius: 0.75rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-align: center;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    opacity: 0.85;
+    margin-top: 0.25rem;
+  }
+
+  &.stat-total {
+    background: linear-gradient(135deg, $katuq-primary, $katuq-primary-dark);
+    color: #fff;
+  }
+
+  &.stat-new {
+    background: linear-gradient(135deg, $katuq-info, darken($katuq-info, 10%));
+    color: #fff;
+  }
+
+  &.stat-qualified {
+    background: linear-gradient(135deg, $katuq-success, darken($katuq-success, 8%));
+    color: #fff;
+  }
+
+  &.stat-converted {
+    background: linear-gradient(135deg, $katuq-accent, darken($katuq-accent, 12%));
+    color: #1a1a2e;
+  }
+
+  &.stat-pipeline {
+    background: linear-gradient(135deg, $katuq-warning, darken($katuq-warning, 8%));
+    color: #fff;
+
+    .stat-value {
+      font-size: 1.15rem;
+    }
+  }
+
+  &.stat-tasks {
+    background: linear-gradient(135deg, lighten($katuq-error, 5%), $katuq-error);
+    color: #fff;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONTACT AVATARS
+// ═══════════════════════════════════════════════════════════
+
+.contact-avatar,
+.contact-avatar-sm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, $katuq-primary-light, $katuq-primary);
+  flex-shrink: 0;
+}
+
+.contact-avatar {
+  width: 2.8rem;
+  height: 2.8rem;
+  font-size: 0.9rem;
+}
+
+.contact-avatar-sm {
+  width: 2.2rem;
+  height: 2.2rem;
+  font-size: 0.75rem;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  CONTACT CARDS (Card view)
+// ═══════════════════════════════════════════════════════════
+
+.contact-card {
+  border: 1px solid #e9ecef;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba($katuq-primary, 0.12);
+    border-color: $katuq-primary-light;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  BULK ACTION BAR
+// ═══════════════════════════════════════════════════════════
+
+.bulk-bar {
+  background: rgba($katuq-primary, 0.06);
+  border: 1px solid rgba($katuq-primary, 0.2);
+  border-radius: 0.5rem;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  TABLE TWEAKS
+// ═══════════════════════════════════════════════════════════
+
+:host ::ng-deep {
+  .p-datatable .p-datatable-tbody > tr {
+    cursor: pointer;
+  }
+
+  .p-datatable .p-datatable-tbody > tr:hover {
+    background: rgba($katuq-primary, 0.04) !important;
+  }
+
+  .p-paginator {
+    border: none;
+    padding: 0.5rem 0;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+//  FILTER BADGE
+// ═══════════════════════════════════════════════════════════
+
+.badge.bg-primary {
+  background-color: $katuq-primary !important;
+  font-size: 0.65rem;
+  vertical-align: middle;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  UTILITIES
+// ═══════════════════════════════════════════════════════════
+
+.text-xs {
+  font-size: 0.7rem !important;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+// Responsive: stack filters on small screens
+@media (max-width: 768px) {
+  .stat-card .stat-value {
+    font-size: 1.2rem;
+  }
+
+  .stat-card.stat-pipeline .stat-value {
+    font-size: 0.95rem;
+  }
+
+  .contact-avatar {
+    width: 2.2rem;
+    height: 2.2rem;
+    font-size: 0.75rem;
+  }
+}

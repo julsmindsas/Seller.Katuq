@@ -1,0 +1,74 @@
+<div class="crm-dashboard">
+  <!-- Stats Cards -->
+  <div class="row mb-4">
+    <div class="col-md-2 col-sm-4 col-6 mb-3" *ngFor="let card of [
+      { label: 'Total Contactos', value: stats?.total, icon: 'pi pi-users', class: 'stat-primary' },
+      { label: 'Nuevos', value: stats?.byStatus?.new, icon: 'pi pi-plus-circle', class: 'stat-info' },
+      { label: 'Calificados', value: stats?.byStatus?.qualified, icon: 'pi pi-check-circle', class: 'stat-success' },
+      { label: 'Convertidos', value: stats?.byStatus?.converted, icon: 'pi pi-star', class: 'stat-accent' },
+      { label: 'Pipeline', value: null, isCurrency: true, icon: 'pi pi-dollar', class: 'stat-warning' },
+      { label: 'Tareas Pendientes', value: (stats?.tasksDueToday || 0) + (stats?.tasksOverdue || 0), icon: 'pi pi-clock', class: 'stat-danger' }
+    ]">
+      <div class="stat-card {{ card.class }}">
+        <div *ngIf="loading" class="skeleton-loader"></div>
+        <ng-container *ngIf="!loading">
+          <i [class]="card.icon + ' stat-icon'"></i>
+          <div class="stat-value">
+            {{ card.isCurrency ? formatCurrency(stats?.totalPipelineValue) : (card.value || 0) }}
+          </div>
+          <div class="stat-label">{{ card.label }}</div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="action-card" (click)="navigateTo('/crm/contacts')">
+        <i class="pi pi-users"></i>
+        <span>{{ 'Ver Contactos' | translate }}</span>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="action-card" (click)="navigateTo('/crm/pipeline')">
+        <i class="pi pi-chart-bar"></i>
+        <span>{{ 'Ver Pipeline' | translate }}</span>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="action-card" (click)="navigateTo('/crm/tasks')">
+        <i class="pi pi-check-square"></i>
+        <span>{{ 'Mis Tareas' | translate }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversion Rate -->
+  <div class="row" *ngIf="stats">
+    <div class="col-md-6 mb-3">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">{{ 'Tasa de Conversión' | translate }}</h6>
+        </div>
+        <div class="card-body text-center">
+          <h2 class="conversion-rate">{{ stats.conversionRate }}%</h2>
+          <p class="text-muted">{{ 'de contactos convertidos a clientes' | translate }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-6 mb-3">
+      <div class="card">
+        <div class="card-header">
+          <h6 class="mb-0">{{ 'Resumen Pipeline' | translate }}</h6>
+        </div>
+        <div class="card-body">
+          <div *ngFor="let opt of statusOptions" class="pipeline-row">
+            <span class="pipeline-label">{{ opt.label }}</span>
+            <p-tag [value]="(stats.byStatus[opt.value] || 0).toString()" [severity]="getStatusSeverity(opt.value)"></p-tag>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
