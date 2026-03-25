@@ -67,93 +67,41 @@
 </div>
 
 <!-- Indicadores Económicos del Día -->
-<div class="container-fluid mt-3 p-t-10">
-    <div class="row g-3">
-        <!-- TRM -->
+<div class="container-fluid mt-3">
+    <div class="row g-2">
         <div class="col-6 col-lg-3">
-            <div class="card border-0 h-100 indicator-card"
-                 style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
-                <div class="card-body p-3 text-white">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="mb-1" style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <i class="fa fa-chart-line me-1"></i>TRM Hoy
-                            </p>
-                            <h4 class="mb-0 fw-bold" style="font-size: 1.3rem;">
-                                {{ trmCargando ? '...' : (trmHoy ? ('$' + (trmHoy | number:'1.2-2')) : 'N/D') }}
-                            </h4>
-                            <small style="opacity: 0.7; font-size: 0.65rem;">USD/COP — Banco República</small>
-                        </div>
-                        <div style="opacity: 0.2; font-size: 2.5rem;">
-                            <i class="fa fa-dollar-sign"></i>
-                        </div>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 3px solid #8b5cf6 !important;">
+                <div class="card-body p-2">
+                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">TRM Hoy</small>
+                    <h5 class="fw-bold mb-0" style="color: #8b5cf6;">{{ trmCargando ? '...' : (trmHoy ? ('$' + (trmHoy | number:'1.2-2')) : 'N/D') }}</h5>
+                    <small class="text-muted" style="font-size: 0.6rem;">USD/COP</small>
                 </div>
             </div>
         </div>
-        <!-- Salario Mínimo -->
         <div class="col-6 col-lg-3">
-            <div class="card border-0 h-100 indicator-card"
-                 style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 12px;">
-                <div class="card-body p-3 text-white">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="mb-1" style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <i class="fa fa-briefcase me-1"></i>Salario Mínimo
-                            </p>
-                            <h4 class="mb-0 fw-bold" style="font-size: 1.3rem;">
-                                ${{ indicadores.salarioMinimo | number:'1.0-0' }}
-                            </h4>
-                            <small style="opacity: 0.7; font-size: 0.65rem;">SMLMV 2026 — Colombia</small>
-                        </div>
-                        <div style="opacity: 0.2; font-size: 2.5rem;">
-                            <i class="fa fa-users"></i>
-                        </div>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 3px solid #27ae60 !important;">
+                <div class="card-body p-2">
+                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">SMLMV 2026</small>
+                    <h5 class="fw-bold mb-0" style="color: #27ae60;">${{ indicadores.salarioMinimo | number:'1.0-0' }}</h5>
+                    <small class="text-muted" style="font-size: 0.6rem;">Salario minimo</small>
                 </div>
             </div>
         </div>
-        <!-- Auxilio Transporte -->
         <div class="col-6 col-lg-3">
-            <div class="card border-0 h-100 indicator-card"
-                 style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px;">
-                <div class="card-body p-3 text-white">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="mb-1" style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <i class="fa fa-bus me-1"></i>Aux. Transporte
-                            </p>
-                            <h4 class="mb-0 fw-bold" style="font-size: 1.3rem;">
-                                ${{ indicadores.auxilioTransporte | number:'1.0-0' }}
-                            </h4>
-                            <small style="opacity: 0.7; font-size: 0.65rem;">Subsidio mensual 2026</small>
-                        </div>
-                        <div style="opacity: 0.2; font-size: 2.5rem;">
-                            <i class="fa fa-route"></i>
-                        </div>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 3px solid #e67e22 !important;">
+                <div class="card-body p-2">
+                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">Aux. Transporte</small>
+                    <h5 class="fw-bold mb-0" style="color: #e67e22;">${{ indicadores.auxilioTransporte | number:'1.0-0' }}</h5>
+                    <small class="text-muted" style="font-size: 0.6rem;">Subsidio 2026</small>
                 </div>
             </div>
         </div>
-        <!-- UVT -->
         <div class="col-6 col-lg-3">
-            <div class="card border-0 h-100 indicator-card"
-                 style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); border-radius: 12px;">
-                <div class="card-body p-3 text-white">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <p class="mb-1" style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">
-                                <i class="fa fa-calculator me-1"></i>UVT 2026
-                            </p>
-                            <h4 class="mb-0 fw-bold" style="font-size: 1.3rem;">
-                                ${{ indicadores.uvt | number:'1.0-0' }}
-                            </h4>
-                            <small style="opacity: 0.7; font-size: 0.65rem;">Unidad de Valor Tributario — DIAN</small>
-                        </div>
-                        <div style="opacity: 0.2; font-size: 2.5rem;">
-                            <i class="fa fa-file-invoice"></i>
-                        </div>
-                    </div>
+            <div class="card border-0 shadow-sm h-100" style="border-left: 3px solid #64748b !important;">
+                <div class="card-body p-2">
+                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">UVT 2026</small>
+                    <h5 class="fw-bold mb-0" style="color: #64748b;">${{ indicadores.uvt | number:'1.0-0' }}</h5>
+                    <small class="text-muted" style="font-size: 0.6rem;">DIAN</small>
                 </div>
             </div>
         </div>
@@ -283,7 +231,7 @@
                                     Cobra en segundos. Sistema POS rápido y sin complicaciones para tu tienda física.
                                 </p>
                                 <div>
-                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/ventas/pos2">Abrir Caja</a>
+                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/pos">Abrir Caja</a>
                                 </div>
                             </div>
                         </div>

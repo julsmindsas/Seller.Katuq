@@ -44,17 +44,6 @@ $katuq-white: #ffffff; // White
   box-shadow: 0 4px 12px rgba(196, 181, 253, 0.35) !important;
 }
 
-// Indicadores económicos cards
-.indicator-card {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
-  cursor: default;
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
-  }
-}
 
 // Tour Section Styles
 .tour-section {
