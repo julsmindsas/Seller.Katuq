@@ -1,0 +1,105 @@
+.detail-header {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.stage-bar {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+
+  .stage-active {
+    background-color: #8b5cf6 !important;
+    color: #fff !important;
+    border-color: #8b5cf6 !important;
+  }
+}
+
+.info-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1rem;
+
+  h6 { color: #374151; margin-bottom: 0.75rem; }
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.875rem;
+
+  &:last-child { border-bottom: none; }
+
+  .info-label {
+    color: #6b7280;
+    i { margin-right: 0.4rem; font-size: 0.8rem; }
+  }
+}
+
+// Timeline
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 13px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #e5e7eb;
+  }
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 1rem;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.timeline-marker {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #8b5cf6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: -2rem;
+  z-index: 1;
+}
+
+.timeline-content {
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+// Tasks
+.task-item {
+  background: #fff;
+  border: 1px solid #f3f4f6;
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: 0.5rem;
+
+  &.task-done { opacity: 0.6; }
+}
+
+// PrimeNG severity "secondary" fallback
+:host ::ng-deep .p-tag-secondary {
+  background: #6b7280 !important;
+}

@@ -1,0 +1,183 @@
+<div *ngIf="loading" class="text-center p-5">
+  <i class="pi pi-spin pi-spinner" style="font-size:2rem;"></i>
+</div>
+
+<div class="container-fluid p-3" *ngIf="!loading && lead">
+
+  <!-- Header -->
+  <div class="detail-header mb-3">
+    <div class="d-flex align-items-center gap-3 mb-2">
+      <button pButton icon="pi pi-arrow-left" class="p-button-text p-button-sm" (click)="goBack()"></button>
+      <h5 class="mb-0">{{ entityName }}</h5>
+      <p-tag [value]="capitalize(currentStage)" [severity]="getStageSeverity(currentStage)"></p-tag>
+      <span class="text-muted ms-2" *ngIf="lead.entity?.email">{{ lead.entity.email }}</span>
+    </div>
+
+    <!-- Stage selector -->
+    <div class="stage-bar">
+      <button *ngFor="let stage of stages" pButton [label]="capitalize(stage)"
+        class="p-button-sm"
+        [class.p-button-outlined]="currentStage !== stage"
+        [class.stage-active]="currentStage === stage"
+        (click)="changeStage(stage)">
+      </button>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <p-tabView [(activeIndex)]="activeTab">
+
+    <!-- Tab: Info -->
+    <p-tabPanel header="{{ 'Información' | translate }}" leftIcon="pi pi-info-circle">
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <div class="info-card">
+            <h6>{{ 'Datos de contacto' | translate }}</h6>
+            <div class="info-row" *ngIf="lead.entity?.email || lead.entity?.correo_electronico_comprador">
+              <span class="info-label"><i class="pi pi-envelope"></i> Email</span>
+              <span>{{ lead.entity?.email || lead.entity?.correo_electronico_comprador }}</span>
+            </div>
+            <div class="info-row" *ngIf="lead.entity?.phone || lead.entity?.numero_celular_comprador">
+              <span class="info-label"><i class="pi pi-phone"></i> Teléfono</span>
+              <span>{{ lead.entity?.phone || lead.entity?.numero_celular_comprador }}</span>
+            </div>
+            <div class="info-row" *ngIf="lead.entity?.nit || lead.entity?.documento">
+              <span class="info-label"><i class="pi pi-id-card"></i> NIT/Doc</span>
+              <span>{{ lead.entity?.nit || lead.entity?.documento }}</span>
+            </div>
+            <div class="info-row" *ngIf="lead.entity?.city">
+              <span class="info-label"><i class="pi pi-map-marker"></i> Ciudad</span>
+              <span>{{ lead.entity?.city }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="info-card">
+            <h6>{{ 'Datos CRM' | translate }}</h6>
+            <div class="info-row">
+              <span class="info-label">{{ 'Prioridad' | translate }}</span>
+              <p-dropdown [options]="priorityOptions" [ngModel]="lead.pipeline?.priority || 'medium'"
+                (onChange)="updateField('priority', $event.value)" [style]="{'width':'140px'}">
+              </p-dropdown>
+            </div>
+            <div class="info-row">
+              <span class="info-label">{{ 'Asignado a' | translate }}</span>
+              <span>{{ lead.pipeline?.assignedTo || 'Sin asignar' }}</span>
+            </div>
+            <div class="info-row" *ngIf="lead.entity?.subscriptionPlan">
+              <span class="info-label">{{ 'Plan' | translate }}</span>
+              <p-tag [value]="lead.entity.subscriptionPlan"
+                [severity]="lead.entity.subscriptionPlan === 'premium' ? 'success' : 'info'"></p-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab: Timeline -->
+    <p-tabPanel header="{{ 'Timeline' | translate }}" leftIcon="pi pi-clock">
+      <!-- Add activity form -->
+      <div class="card mb-3 mt-3">
+        <div class="card-body py-2">
+          <form [formGroup]="activityForm" (ngSubmit)="addActivity()" class="d-flex gap-2 align-items-end flex-wrap">
+            <p-dropdown [options]="activityTypes" formControlName="type" optionLabel="label" optionValue="value"
+              [style]="{'width':'140px'}"></p-dropdown>
+            <input pInputText formControlName="description" placeholder="{{ 'Descripción...' | translate }}"
+              style="flex:1; min-width:200px;" />
+            <button pButton type="submit" icon="pi pi-plus" label="{{ 'Agregar' | translate }}"
+              class="p-button-sm" [disabled]="activityForm.invalid"></button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div class="timeline">
+        <div class="timeline-item" *ngFor="let a of activities; trackBy: trackById">
+          <div class="timeline-marker">
+            <i [class]="getActivityIcon(a.type)" style="font-size:0.7rem; color:#fff;"></i>
+          </div>
+          <div class="timeline-content">
+            <div class="d-flex justify-content-between">
+              <strong>{{ a.description }}</strong>
+              <small class="text-muted">{{ formatDate(a.createdAt) }}</small>
+            </div>
+            <small class="text-muted" *ngIf="a.detail">{{ a.detail }}</small>
+            <div *ngIf="a.oldStage || a.newStage" class="mt-1">
+              <p-tag *ngIf="a.oldStage" [value]="a.oldStage" severity="secondary" [style]="{'font-size':'0.7rem'}"></p-tag>
+              <i class="pi pi-arrow-right mx-1" style="font-size:0.6rem;" *ngIf="a.oldStage && a.newStage"></i>
+              <p-tag *ngIf="a.newStage" [value]="a.newStage" [severity]="getStageSeverity(a.newStage)" [style]="{'font-size':'0.7rem'}"></p-tag>
+            </div>
+            <div><small class="text-muted">{{ a.createdBy }}</small></div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="activities.length === 0" class="text-center p-4 text-muted">
+        <i class="pi pi-clock" style="font-size:2rem;"></i>
+        <p class="mt-2">{{ 'Sin actividades' | translate }}</p>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab: Tasks -->
+    <p-tabPanel header="{{ 'Tareas' | translate }} ({{ tasks.length }})" leftIcon="pi pi-check-square">
+      <div class="mt-3">
+        <button pButton label="{{ 'Nueva tarea' | translate }}" icon="pi pi-plus" class="p-button-sm mb-3"
+          (click)="showTaskForm = !showTaskForm"></button>
+
+        <!-- Task form -->
+        <div *ngIf="showTaskForm" class="card mb-3">
+          <div class="card-body py-2">
+            <form [formGroup]="taskForm" (ngSubmit)="createTask()">
+              <div class="row">
+                <div class="col-md-4 mb-2">
+                  <input pInputText formControlName="title" placeholder="{{ 'Título' | translate }} *" class="w-100" />
+                </div>
+                <div class="col-md-2 mb-2">
+                  <p-dropdown [options]="taskTypes" formControlName="type" optionLabel="label" optionValue="value"
+                    [style]="{'width':'100%'}"></p-dropdown>
+                </div>
+                <div class="col-md-2 mb-2">
+                  <p-dropdown [options]="priorityOptions" formControlName="priority" optionLabel="label" optionValue="value"
+                    [style]="{'width':'100%'}"></p-dropdown>
+                </div>
+                <div class="col-md-2 mb-2">
+                  <p-calendar formControlName="dueDate" [showIcon]="true" dateFormat="yy-mm-dd"
+                    placeholder="{{ 'Fecha' | translate }}" [style]="{'width':'100%'}"></p-calendar>
+                </div>
+                <div class="col-md-2 mb-2 d-flex gap-1">
+                  <button pButton type="submit" icon="pi pi-check" class="p-button-sm" [disabled]="taskForm.invalid"></button>
+                  <button pButton type="button" icon="pi pi-times" class="p-button-text p-button-sm" (click)="showTaskForm=false"></button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Task list -->
+        <div *ngFor="let task of tasks; trackBy: trackById" class="task-item"
+          [class.task-done]="task.status === 'completed'">
+          <div class="d-flex align-items-center gap-2">
+            <button *ngIf="task.status === 'pending'" pButton icon="pi pi-circle"
+              class="p-button-text p-button-sm p-button-rounded"
+              (click)="completeTask(task)"></button>
+            <i *ngIf="task.status === 'completed'" class="pi pi-check-circle text-success"></i>
+            <div class="flex-grow-1">
+              <strong [class.text-decoration-line-through]="task.status === 'completed'">{{ task.title }}</strong>
+              <div class="d-flex gap-2 mt-1">
+                <p-tag [value]="task.type" severity="info" [style]="{'font-size':'0.7rem'}"></p-tag>
+                <p-tag [value]="task.priority" [severity]="getPrioritySeverity(task.priority)" [style]="{'font-size':'0.7rem'}"></p-tag>
+                <small class="text-muted" *ngIf="task.dueDate">{{ formatDate(task.dueDate) }}</small>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div *ngIf="tasks.length === 0" class="text-center p-4 text-muted">
+          <i class="pi pi-check-square" style="font-size:2rem;"></i>
+          <p class="mt-2">{{ 'Sin tareas' | translate }}</p>
+        </div>
+      </div>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>
+
+<p-toast></p-toast>

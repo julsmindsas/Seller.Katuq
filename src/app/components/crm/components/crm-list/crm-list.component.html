@@ -1,0 +1,117 @@
+<div class="container-fluid p-3">
+
+  <h5 class="mb-3">{{ getTitle() }}</h5>
+
+  <!-- Stats (metric-chip pattern from despachos) -->
+  <div class="d-flex flex-wrap gap-2 mb-3" *ngIf="stats">
+    <div class="metric-chip metric-chip-primary">
+      <i class="pi pi-users"></i>
+      <span class="metric-label">{{ 'Total' | translate }}</span>
+      <span class="metric-badge">{{ stats.total }}</span>
+    </div>
+    <ng-container *ngFor="let stage of stages">
+      <div class="metric-chip"
+        [class.metric-chip-active]="selectedStage === stage"
+        (click)="selectedStage = (selectedStage === stage ? null : stage); onStageFilter()">
+        <span class="metric-label">{{ capitalize(stage) }}</span>
+        <span class="metric-badge">{{ stats.byStage[stage] || 0 }}</span>
+      </div>
+    </ng-container>
+    <div class="metric-chip metric-chip-warning" *ngIf="stats.tasksPending > 0">
+      <i class="pi pi-clock"></i>
+      <span class="metric-label">{{ 'Tareas' | translate }}</span>
+      <span class="metric-badge">{{ stats.tasksPending }}</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <div class="p-input-icon-left" style="min-width: 240px;">
+      <i class="pi pi-search"></i>
+      <input pInputText type="text" [value]="searchTerm"
+        (input)="onSearch($any($event.target).value)"
+        placeholder="{{ 'Buscar por nombre, email, NIT...' | translate }}" class="w-100" />
+    </div>
+    <p-dropdown [options]="stageOptions" [(ngModel)]="selectedStage"
+      placeholder="{{ 'Filtrar etapa' | translate }}" [showClear]="true"
+      (onChange)="onStageFilter()" [style]="{'min-width':'160px'}">
+    </p-dropdown>
+    <button pButton label="{{ 'Limpiar' | translate }}" icon="pi pi-filter-slash"
+      class="p-button-text p-button-sm" (click)="clearFilters()"
+      *ngIf="searchTerm || selectedStage"></button>
+  </div>
+
+  <!-- Table -->
+  <p-table #dt [value]="leads" [lazy]="true" (onLazyLoad)="onLazyLoad($event)"
+    [totalRecords]="totalRecords" [rows]="pageSize" [first]="first"
+    [paginator]="true" [rowsPerPageOptions]="[10,20,50]"
+    [loading]="loading" [showCurrentPageReport]="true"
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
+    styleClass="p-datatable-sm" [scrollable]="true" scrollHeight="flex"
+    dataKey="id">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width:30%">{{ 'Nombre' | translate }}</th>
+        <th style="width:12%" *ngIf="entityType === 'company'">{{ 'Plan' | translate }}</th>
+        <th style="width:12%">{{ 'Etapa' | translate }}</th>
+        <th style="width:12%">{{ 'Prioridad' | translate }}</th>
+        <th style="width:15%">{{ 'Asignado' | translate }}</th>
+        <th style="width:12%">{{ 'Último contacto' | translate }}</th>
+        <th style="width:7%">{{ 'Acciones' | translate }}</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-lead>
+      <tr class="cursor-pointer" (click)="viewDetail(lead)">
+        <td>
+          <div>
+            <strong>{{ lead.name }}</strong>
+            <small class="d-block text-muted">{{ lead.email || lead.nit || '' }}</small>
+          </div>
+        </td>
+        <td *ngIf="entityType === 'company'">
+          <p-tag *ngIf="lead.subscriptionPlan"
+            [value]="lead.subscriptionPlan"
+            [severity]="lead.subscriptionPlan === 'premium' ? 'success' : 'info'">
+          </p-tag>
+        </td>
+        <td>
+          <p-dropdown [options]="stageOptions" [ngModel]="lead.stage"
+            (onChange)="changeStage(lead, $event.value); $event.originalEvent.stopPropagation()"
+            [style]="{'width':'100%','font-size':'0.8rem'}" appendTo="body">
+            <ng-template let-item pTemplate="selectedItem">
+              <p-tag [value]="capitalize(item.value)" [severity]="getStageSeverity(item.value)"></p-tag>
+            </ng-template>
+          </p-dropdown>
+        </td>
+        <td>
+          <p-tag *ngIf="lead.priority" [value]="lead.priority" [severity]="getPrioritySeverity(lead.priority)"
+            [style]="{'font-size':'0.75rem'}"></p-tag>
+        </td>
+        <td>
+          <small>{{ lead.assignedTo || '-' }}</small>
+        </td>
+        <td>
+          <small>{{ formatDate(lead.lastContactedAt) }}</small>
+        </td>
+        <td>
+          <button pButton icon="pi pi-eye" class="p-button-text p-button-sm p-button-rounded"
+            pTooltip="{{ 'Ver detalle' | translate }}" (click)="viewDetail(lead); $event.stopPropagation()">
+          </button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td [attr.colspan]="entityType === 'company' ? 7 : 6" class="text-center p-4">
+          <i class="pi pi-inbox" style="font-size:2rem; color:#9ca3af;"></i>
+          <p class="text-muted mt-2">{{ 'No hay leads registrados' | translate }}</p>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-toast></p-toast>

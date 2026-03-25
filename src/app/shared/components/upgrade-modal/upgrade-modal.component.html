@@ -3,113 +3,170 @@
   [modal]="true"
   [draggable]="false"
   [resizable]="false"
-  [closable]="true"
-  [closeOnEscape]="true"
+  [closable]="!loading"
+  [closeOnEscape]="!loading"
   (onHide)="closeModal()"
-  styleClass="upgrade-modal"
-  [style]="{'width': '90vw', 'max-width': '600px'}">
+  [style]="{'width': '90vw', 'max-width': '550px'}">
 
   <ng-template pTemplate="header">
     <div class="d-flex align-items-center gap-2">
       <i class="pi pi-bolt" style="color: #8b5cf6; font-size: 1.2rem;"></i>
       <div>
-        <h5 class="mb-0 fw-bold" style="color: #0f172a;">Activar Plan Pago</h5>
-        <small class="text-muted">Desbloquea todo, paga solo por lo que vendes</small>
+        <h5 class="mb-0 fw-bold" style="color: #0f172a;">
+          {{ step === 'info' ? 'Activar Plan Pago' : step === 'card' ? 'Medio de Pago' : 'Plan Activado' }}
+        </h5>
+        <small class="text-muted">
+          {{ step === 'info' ? 'Desbloquea todo, paga segun tus ventas' : step === 'card' ? 'Para cobro automatico mensual' : '' }}
+        </small>
       </div>
     </div>
   </ng-template>
 
-  <div class="p-3">
-    <!-- Cómo funciona -->
-    <div class="mb-4 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-      <h6 class="fw-bold mb-3" style="color: #0f172a;">
-        <i class="pi pi-info-circle me-1" style="color: #8b5cf6;"></i>
-        Como funciona la facturacion
+  <!-- STEP 1: Info -->
+  <div *ngIf="step === 'info'" class="p-3">
+    <div class="mb-3 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+      <h6 class="fw-bold mb-3" style="color: #0f172a; font-size: 0.85rem;">
+        <i class="pi pi-info-circle me-1" style="color: #8b5cf6;"></i>Como funciona
       </h6>
       <div class="d-flex align-items-start gap-2 mb-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
               style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">1</span>
-        <small style="color: #334155;">Usas Katuq sin restricciones — pedidos, bodegas, usuarios, integraciones, todo ilimitado.</small>
+        <small style="color: #334155;">Usas Katuq sin restricciones — todo ilimitado.</small>
       </div>
       <div class="d-flex align-items-start gap-2 mb-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
               style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">2</span>
-        <small style="color: #334155;">Al cierre de tu mes, sumamos tus ventas y determinamos tu tramo automaticamente.</small>
+        <small style="color: #334155;">Al cierre de tu mes, sumamos tus ventas y determinamos tu tramo.</small>
       </div>
       <div class="d-flex align-items-start gap-2">
         <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
               style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">3</span>
-        <small style="color: #334155;">Te cobramos segun lo que vendiste. Si vendes poco, pagas poco.</small>
+        <small style="color: #334155;">Te cobramos segun lo que vendiste. Desde $47 USD/mes.</small>
       </div>
     </div>
 
-    <!-- Tabla de tramos -->
-    <div class="mb-4">
-      <h6 class="fw-bold mb-2" style="color: #0f172a; font-size: 0.85rem;">Escala de precios</h6>
-      <table class="table table-sm mb-0" style="font-size: 0.8rem;">
-        <thead style="background: #f8fafc;">
-          <tr>
-            <th style="color: #64748b; font-weight: 600;">Plan</th>
-            <th class="text-center" style="color: #64748b; font-weight: 600;">Ventas hasta</th>
-            <th class="text-center" style="color: #64748b; font-weight: 600;">Precio</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td class="fw-semibold">Origen</td>
-            <td class="text-center">$30M COP</td>
-            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$47 USD</td>
-          </tr>
-          <tr style="background: #faf5ff;">
-            <td class="fw-semibold">Esencia <span class="badge" style="background: #f3e8ff; color: #8b5cf6; font-size: 0.6rem;">Popular</span></td>
-            <td class="text-center">$60M COP</td>
-            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$77 USD</td>
-          </tr>
-          <tr>
-            <td class="fw-semibold">Impulso</td>
-            <td class="text-center">$150M COP</td>
-            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$147 USD</td>
-          </tr>
-          <tr>
-            <td class="fw-semibold">Expansion</td>
-            <td class="text-center">$300M COP</td>
-            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$247 USD</td>
-          </tr>
-          <tr>
-            <td class="fw-semibold">Liderazgo</td>
-            <td class="text-center">$500M COP</td>
-            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$427 USD</td>
-          </tr>
-        </tbody>
-      </table>
-      <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
-        <i class="pi pi-info-circle me-1"></i>Precios en USD convertidos a COP con TRM del dia de cobro
+    <table class="table table-sm mb-3" style="font-size: 0.8rem;">
+      <thead style="background: #f8fafc;">
+        <tr>
+          <th style="color: #64748b; font-weight: 600;">Plan</th>
+          <th class="text-center" style="color: #64748b; font-weight: 600;">Ventas hasta</th>
+          <th class="text-center" style="color: #64748b; font-weight: 600;">Precio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>Origen</td><td class="text-center">$30M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$47 USD</td></tr>
+        <tr style="background: #faf5ff;"><td>Esencia <span class="badge" style="background: #f3e8ff; color: #8b5cf6; font-size: 0.55rem;">Popular</span></td><td class="text-center">$60M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$77 USD</td></tr>
+        <tr><td>Impulso</td><td class="text-center">$150M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$147 USD</td></tr>
+        <tr><td>Expansion</td><td class="text-center">$300M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$247 USD</td></tr>
+        <tr><td>Liderazgo</td><td class="text-center">$500M COP</td><td class="text-center fw-semibold" style="color: #8b5cf6;">$427 USD</td></tr>
+      </tbody>
+    </table>
+
+    <small class="text-muted d-block mb-3" style="font-size: 0.7rem;">
+      <i class="pi pi-info-circle me-1"></i>Precios en USD convertidos a COP con TRM del dia de cobro
+    </small>
+  </div>
+
+  <!-- STEP 2: Card -->
+  <div *ngIf="step === 'card'" class="p-3">
+    <div class="mb-3">
+      <label class="form-label fw-semibold" style="font-size: 0.85rem;">Numero de tarjeta</label>
+      <input type="text" class="form-control" [(ngModel)]="cardNumber"
+             placeholder="4242 4242 4242 4242" maxlength="19" [disabled]="loading">
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-4">
+        <label class="form-label fw-semibold" style="font-size: 0.85rem;">Mes</label>
+        <input type="text" class="form-control" [(ngModel)]="cardExpMonth"
+               placeholder="MM" maxlength="2" [disabled]="loading">
+      </div>
+      <div class="col-4">
+        <label class="form-label fw-semibold" style="font-size: 0.85rem;">Ano</label>
+        <input type="text" class="form-control" [(ngModel)]="cardExpYear"
+               placeholder="YY" maxlength="2" [disabled]="loading">
+      </div>
+      <div class="col-4">
+        <label class="form-label fw-semibold" style="font-size: 0.85rem;">CVC</label>
+        <input type="text" class="form-control" [(ngModel)]="cardCvc"
+               placeholder="123" maxlength="4" [disabled]="loading">
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-semibold" style="font-size: 0.85rem;">Titular de la tarjeta</label>
+      <input type="text" class="form-control" [(ngModel)]="cardHolder"
+             placeholder="NOMBRE COMO APARECE EN LA TARJETA" [disabled]="loading"
+             style="text-transform: uppercase;">
+    </div>
+
+    <!-- Aceptación de términos -->
+    <div class="p-2 rounded mb-3" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+      <div class="form-check mb-2">
+        <input type="checkbox" class="form-check-input" id="acceptPolicy"
+               [(ngModel)]="acceptedPolicy" [disabled]="loading">
+        <label class="form-check-label" for="acceptPolicy" style="font-size: 0.75rem;">
+          Acepto los <a [href]="policyLink" target="_blank" style="color: #8b5cf6;">terminos y condiciones</a> de Wompi
+        </label>
+      </div>
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="acceptPersonal"
+               [(ngModel)]="acceptedPersonalData" [disabled]="loading">
+        <label class="form-check-label" for="acceptPersonal" style="font-size: 0.75rem;">
+          Autorizo el <a [href]="personalDataLink" target="_blank" style="color: #8b5cf6;">tratamiento de datos personales</a>
+        </label>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="cardError" class="alert alert-danger py-2 mb-3" style="font-size: 0.8rem;">
+      <i class="pi pi-exclamation-circle me-1"></i>{{ cardError }}
+    </div>
+
+    <div class="text-center">
+      <small class="text-muted" style="font-size: 0.65rem;">
+        <i class="pi pi-lock me-1"></i>Tu informacion esta protegida por Wompi. Katuq nunca almacena datos de tarjeta.
       </small>
     </div>
+  </div>
 
-    <!-- Lo que desbloqueas -->
-    <div class="p-3 rounded" style="background: #faf5ff; border: 1px solid #e9d5ff;">
-      <h6 class="fw-bold mb-2" style="color: #8b5cf6; font-size: 0.85rem;">
-        <i class="pi pi-check-circle me-1"></i>Lo que desbloqueas
-      </h6>
-      <div class="row g-1">
-        <div class="col-6" *ngFor="let feature of ['Pedidos ilimitados', 'Bodegas ilimitadas', 'Usuarios ilimitados', 'Integraciones ilimitadas', 'Chat IA ilimitado', 'Modulo Produccion', 'Dropshipping', 'Soporte prioritario']">
-          <small class="d-flex align-items-center gap-1">
-            <i class="pi pi-check" style="color: #8b5cf6; font-size: 0.65rem;"></i>
-            <span style="color: #334155;">{{ feature }}</span>
-          </small>
-        </div>
-      </div>
+  <!-- STEP 3: Success -->
+  <div *ngIf="step === 'success'" class="p-4 text-center">
+    <div class="mb-3">
+      <i class="pi pi-check-circle" style="font-size: 3rem; color: #27ae60;"></i>
     </div>
+    <h5 class="fw-bold" style="color: #0f172a;">Plan activado exitosamente</h5>
+    <p class="text-muted">Ahora tienes acceso ilimitado a todas las funcionalidades de Katuq. Tu facturacion se ajustara automaticamente segun tus ventas.</p>
   </div>
 
   <ng-template pTemplate="footer">
     <div class="d-flex justify-content-between w-100">
-      <button pButton type="button" label="Cancelar" icon="pi pi-times"
-              class="p-button-text p-button-secondary" (click)="closeModal()" [disabled]="loading"></button>
-      <button pButton type="button" label="Activar Plan Pago" icon="pi pi-bolt"
-              style="background: #8b5cf6; border-color: #8b5cf6;"
-              [loading]="loading" (click)="confirmUpgrade()"></button>
+      <!-- Step 1 -->
+      <ng-container *ngIf="step === 'info'">
+        <button pButton type="button" label="Cancelar" icon="pi pi-times"
+                class="p-button-text p-button-secondary" (click)="closeModal()"></button>
+        <button pButton type="button" label="Continuar" icon="pi pi-arrow-right" iconPos="right"
+                style="background: #8b5cf6; border-color: #8b5cf6;"
+                (click)="goToCardStep()"></button>
+      </ng-container>
+
+      <!-- Step 2 -->
+      <ng-container *ngIf="step === 'card'">
+        <button pButton type="button" label="Omitir tarjeta" icon="pi pi-forward"
+                class="p-button-text p-button-secondary" (click)="skipCard()"
+                [disabled]="loading" pTooltip="Recibiras links de pago por email"></button>
+        <button pButton type="button" label="Guardar y Activar" icon="pi pi-check"
+                style="background: #8b5cf6; border-color: #8b5cf6;"
+                [loading]="loading"
+                [disabled]="loading || !acceptedPolicy || !acceptedPersonalData"
+                (click)="submitCard()"></button>
+      </ng-container>
+
+      <!-- Step 3 -->
+      <ng-container *ngIf="step === 'success'">
+        <span></span>
+        <button pButton type="button" label="Ir al Dashboard" icon="pi pi-home"
+                style="background: #8b5cf6; border-color: #8b5cf6;"
+                (click)="closeModal()" routerLink="/welcome"></button>
+      </ng-container>
     </div>
   </ng-template>
 </p-dialog>

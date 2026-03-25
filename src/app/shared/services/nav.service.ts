@@ -346,13 +346,13 @@ export class NavService implements OnDestroy {
       ],
     },
     {
-      title: "Flow CRM",
-      icon: "users",
+      title: "CRM",
+      icon: "target",
       type: "sub",
       active: false,
-      isOnlySuperAdministrador: true,
       children: [
-        { path: "katuq-flow/leads", title: "Gestión de Leads", type: "link", icon: "target" },
+        { path: "crm/list", title: "Pipeline", type: "link", icon: "bar-chart-2" },
+        { path: "crm/tasks", title: "Tareas", type: "link", icon: "check-square" },
       ],
     },
 
