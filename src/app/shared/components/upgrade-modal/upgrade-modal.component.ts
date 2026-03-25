@@ -16,7 +16,7 @@ export class UpgradeModalComponent {
 
   confirmUpgrade(): void {
     this.loading = true;
-    this.subscriptionService.upgradePlan('paid').subscribe({
+    this.subscriptionService.upgradePlan('premium' as any).subscribe({
       next: () => {
         this.loading = false;
         this.closeModal();
