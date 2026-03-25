@@ -148,6 +148,18 @@ const routes: Routes = [
       }
     ]
   },
+  // Billing page
+  {
+    path: 'billing',
+    component: ContentComponent,
+    canActivate: [AdminGuard],
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/billing/billing.module').then(m => m.BillingModule)
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,

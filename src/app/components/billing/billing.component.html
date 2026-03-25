@@ -1,0 +1,217 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="card shadow-sm border-0">
+        <!-- Loader -->
+        <div class="loader-box" *ngIf="loading">
+          <div class="loader-8"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="module-header px-4 py-3 border-bottom"
+             style="background: #f8fafc; border-left: 4px solid #5c6ac4;">
+          <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="mb-2 mb-md-0">
+              <h4 class="mb-1 fw-bold text-dark">
+                <i class="pi pi-credit-card me-2" style="color: #5c6ac4;"></i>{{ 'Facturacion y Consumo' | translate }}
+              </h4>
+              <p class="text-muted small mb-0">
+                {{ 'Historial de facturacion y consumo de tu plan' | translate }}
+              </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button pButton type="button" icon="pi pi-refresh"
+                      class="p-button-rounded p-button-outlined"
+                      style="border-color: #5c6ac4; color: #5c6ac4; width: 2.5rem; height: 2.5rem;"
+                      (click)="loadData()" [disabled]="loading"></button>
+              <button pButton type="button" label="Ver Planes" icon="pi pi-th-large"
+                      class="p-button-outlined p-button-sm"
+                      style="border-color: #5c6ac4; color: #5c6ac4;"
+                      routerLink="/pricing"></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4" *ngIf="!loading">
+
+          <!-- KPIs del mes actual -->
+          <div class="row g-3 mb-4" *ngIf="billingInfo">
+            <div class="col-6 col-lg-3">
+              <div class="card border-0 h-100" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px;">
+                <div class="card-body p-3 text-white">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p class="mb-1" style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Ventas del Mes
+                      </p>
+                      <h4 class="mb-0 fw-bold" style="font-size: 1.2rem;">
+                        ${{ billingInfo.currentMonthSales | number:'1.0-0' }}
+                      </h4>
+                      <small style="opacity: 0.7; font-size: 0.65rem;">COP</small>
+                    </div>
+                    <div style="opacity: 0.2; font-size: 2rem;"><i class="pi pi-chart-line"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-lg-3">
+              <div class="card border-0 h-100" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); border-radius: 12px;">
+                <div class="card-body p-3 text-white">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p class="mb-1" style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Tramo Actual
+                      </p>
+                      <h4 class="mb-0 fw-bold" style="font-size: 1.2rem;">
+                        {{ billingInfo.currentTierName || 'Freemium' }}
+                      </h4>
+                      <small style="opacity: 0.7; font-size: 0.65rem;">${{ billingInfo.projectedAmountUSD || 0 }} USD/mes</small>
+                    </div>
+                    <div style="opacity: 0.2; font-size: 2rem;"><i class="pi pi-star"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-lg-3">
+              <div class="card border-0 h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px;">
+                <div class="card-body p-3 text-white">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p class="mb-1" style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Facturacion Proyectada
+                      </p>
+                      <h4 class="mb-0 fw-bold" style="font-size: 1.2rem;">
+                        ${{ billingInfo.projectedAmount | number:'1.0-0' }}
+                      </h4>
+                      <small style="opacity: 0.7; font-size: 0.65rem;">COP (TRM ${{ billingInfo.trm | number:'1.0-0' }})</small>
+                    </div>
+                    <div style="opacity: 0.2; font-size: 2rem;"><i class="pi pi-wallet"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-6 col-lg-3">
+              <div class="card border-0 h-100" style="background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); border-radius: 12px;">
+                <div class="card-body p-3 text-white">
+                  <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                      <p class="mb-1" style="font-size: 0.7rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.5px;">
+                        TRM del Dia
+                      </p>
+                      <h4 class="mb-0 fw-bold" style="font-size: 1.2rem;">
+                        ${{ billingInfo.trm | number:'1.2-2' }}
+                      </h4>
+                      <small style="opacity: 0.7; font-size: 0.65rem;">USD/COP</small>
+                    </div>
+                    <div style="opacity: 0.2; font-size: 2rem;"><i class="pi pi-dollar"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabla de tramos -->
+          <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;" *ngIf="billingInfo?.tiers">
+            <div class="card-header bg-white border-bottom d-flex align-items-center gap-2 py-3">
+              <i class="pi pi-th-large" style="color: #5c6ac4;"></i>
+              <span class="fw-semibold">Escala de Facturacion</span>
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-hover mb-0" style="font-size: 0.85rem;">
+                <thead style="background: #fafbfc;">
+                  <tr>
+                    <th class="ps-3">Plan</th>
+                    <th class="text-center">Ventas hasta</th>
+                    <th class="text-center">Precio USD</th>
+                    <th class="text-center">Precio COP (TRM)</th>
+                    <th class="text-center">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let tier of billingInfo.tiers"
+                      [style.background]="billingInfo.currentTier === tier.id ? '#eef0fb' : ''">
+                    <td class="ps-3 fw-semibold">{{ tier.name }}</td>
+                    <td class="text-center">
+                      <span *ngIf="!tier.custom">${{ tier.maxSalesCOP | number:'1.0-0' }}</span>
+                      <span *ngIf="tier.custom">Personalizado</span>
+                    </td>
+                    <td class="text-center">${{ tier.priceUSD }}</td>
+                    <td class="text-center">
+                      <span *ngIf="!tier.custom && billingInfo.trm">${{ (tier.priceUSD * billingInfo.trm) | number:'1.0-0' }}</span>
+                      <span *ngIf="tier.custom">-</span>
+                    </td>
+                    <td class="text-center">
+                      <span *ngIf="billingInfo.currentTier === tier.id" class="badge" style="background: #5c6ac4; color: white;">
+                        Actual
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Historial de Facturas -->
+          <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+            <div class="card-header bg-white border-bottom d-flex align-items-center gap-2 py-3">
+              <i class="pi pi-file" style="color: #5c6ac4;"></i>
+              <span class="fw-semibold">Historial de Facturas</span>
+              <span class="badge ms-auto" style="background: #eef0fb; color: #5c6ac4;">{{ invoices.length }}</span>
+            </div>
+            <div class="card-body p-0">
+              <table class="table table-hover mb-0" style="font-size: 0.85rem;" *ngIf="invoices.length > 0">
+                <thead style="background: #fafbfc;">
+                  <tr>
+                    <th class="ps-3">Periodo</th>
+                    <th class="text-center">Ventas COP</th>
+                    <th class="text-center">Plan</th>
+                    <th class="text-center">Monto COP</th>
+                    <th class="text-center">TRM</th>
+                    <th class="text-center">Estado</th>
+                    <th class="text-center">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let inv of invoices">
+                    <td class="ps-3 fw-semibold">{{ inv.period }}</td>
+                    <td class="text-center">${{ inv.totalSalesCOP | number:'1.0-0' }}</td>
+                    <td class="text-center">{{ inv.tierName }}</td>
+                    <td class="text-center fw-bold" style="color: #5c6ac4;">${{ inv.amountCOP | number:'1.0-0' }}</td>
+                    <td class="text-center text-muted">{{ inv.trm | number:'1.0-0' }}</td>
+                    <td class="text-center">
+                      <span class="badge" [ngClass]="getStatusClass(inv.status)">
+                        {{ getStatusLabel(inv.status) }}
+                      </span>
+                    </td>
+                    <td class="text-center text-muted">{{ formatDate(inv.createdAt) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Empty state -->
+              <div *ngIf="invoices.length === 0" class="text-center py-5">
+                <i class="pi pi-inbox" style="font-size: 2.5rem; color: #cbd5e1;"></i>
+                <p class="mt-2 text-muted mb-0">Aun no tienes facturas</p>
+                <small class="text-muted">Las facturas se generan automaticamente cada mes</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Freemium CTA -->
+          <div class="text-center" *ngIf="currentPlan === 'freemium'">
+            <div class="card border-0 shadow-sm p-4" style="border-radius: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+              <h5 class="text-white fw-bold mb-2">Activa tu plan pago</h5>
+              <p class="text-white mb-3" style="opacity: 0.9;">Desbloquea pedidos ilimitados y todas las funcionalidades</p>
+              <button pButton label="Ver Planes" icon="pi pi-bolt"
+                      style="background: white; color: #764ba2; border: none; font-weight: 700;"
+                      routerLink="/pricing"></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

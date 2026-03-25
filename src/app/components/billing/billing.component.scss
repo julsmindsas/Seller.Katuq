@@ -1,0 +1,42 @@
+.card {
+  border-radius: 8px;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+  }
+}
+
+table {
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #6b778c;
+    font-weight: 600;
+    border-bottom: 2px solid #f0f0f0;
+    padding: 10px 8px;
+  }
+
+  td {
+    padding: 10px 8px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f8f9fa;
+  }
+
+  tbody tr:hover {
+    background: #fafbfc;
+  }
+}
+
+.badge-success { background: #d1fae5; color: #065f46; }
+.badge-warning { background: #fef3c7; color: #92400e; }
+.badge-danger { background: #fee2e2; color: #991b1b; }
+.badge-secondary { background: #e2e8f0; color: #475569; }
+
+.loader-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem 0;
+}
