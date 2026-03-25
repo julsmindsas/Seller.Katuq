@@ -245,15 +245,6 @@ export const content: Routes = [
     data: { requiresPremium: true },
   },
   {
-    path: "prospectos",
-    loadChildren: () =>
-      import("../../components/prospect-manager/prospect-manager.module").then(
-        (m) => m.ProspectManagerModule,
-      ),
-    canActivate: [AuthGuard], // O AdminGuard si aplica
-    data: { title: "Gestión de Prospectos" },
-  },
-  {
     path: "dropshipping",
     loadChildren: () =>
       import("../../components/dropshipping/dropshipping.module").then(
@@ -263,12 +254,12 @@ export const content: Routes = [
     data: { title: "Dropshipping" },
   },
   {
-    path: "katuq-flow",
+    path: "crm",
     loadChildren: () =>
-      import("../../components/katuq-flow/katuq-flow.module").then(
-        (m) => m.KatuqFlowModule,
+      import("../../components/crm/crm.module").then(
+        (m) => m.CrmModule,
       ),
     canActivate: [AuthGuard],
-    data: { title: "Katuq Flow CRM" },
+    data: { title: "CRM" },
   },
 ];

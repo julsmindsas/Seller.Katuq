@@ -113,6 +113,95 @@
             </div>
           </div>
 
+          <!-- Consumo del Mes -->
+          <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;" *ngIf="billingInfo && currentPlan !== 'freemium'">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h6 class="fw-bold mb-0" style="color: #0f172a;">
+                    <i class="pi pi-chart-bar me-2" style="color: #5c6ac4;"></i>Consumo del Mes
+                  </h6>
+                  <small class="text-muted">Ventas acumuladas vs tope de tu tramo actual</small>
+                </div>
+                <div class="text-end">
+                  <span class="fw-bold" style="color: #5c6ac4; font-size: 1.1rem;">
+                    {{ getConsumptionPercentage() }}%
+                  </span>
+                </div>
+              </div>
+
+              <!-- Barra de progreso principal -->
+              <div class="position-relative mb-3">
+                <div style="height: 24px; background: #f1f5f9; border-radius: 12px; overflow: hidden;">
+                  <div [style.width.%]="getConsumptionPercentage()"
+                       [style.background]="getConsumptionPercentage() < 60 ? 'linear-gradient(90deg, #667eea, #764ba2)' :
+                                           getConsumptionPercentage() < 85 ? 'linear-gradient(90deg, #f093fb, #f5576c)' :
+                                           'linear-gradient(90deg, #ef4444, #dc2626)'"
+                       style="height: 100%; border-radius: 12px; transition: width 1s ease; min-width: 2%;">
+                  </div>
+                </div>
+                <!-- Marcadores de tramos -->
+                <div class="d-flex justify-content-between mt-1">
+                  <small class="text-muted" style="font-size: 0.65rem;">$0</small>
+                  <small class="fw-semibold" style="font-size: 0.65rem; color: #5c6ac4;">
+                    ${{ billingInfo.currentMonthSales | number:'1.0-0' }} COP
+                  </small>
+                  <small class="text-muted" style="font-size: 0.65rem;">
+                    ${{ getCurrentTierMax() | number:'1.0-0' }}
+                  </small>
+                </div>
+              </div>
+
+              <!-- Detalle de tramos como timeline -->
+              <div class="d-flex flex-wrap gap-2">
+                <div *ngFor="let tier of billingInfo.tiers; let i = index"
+                     class="d-flex align-items-center gap-1 px-2 py-1 rounded"
+                     [style.background]="billingInfo.currentTier === tier.id ? '#eef0fb' : '#f8fafc'"
+                     [style.border]="billingInfo.currentTier === tier.id ? '1px solid #5c6ac4' : '1px solid #e2e8f0'"
+                     style="font-size: 0.7rem;">
+                  <span class="fw-semibold" [style.color]="billingInfo.currentTier === tier.id ? '#5c6ac4' : '#64748b'">
+                    {{ tier.name }}
+                  </span>
+                  <span class="text-muted" *ngIf="!tier.custom">${{ tier.priceUSD }}</span>
+                  <i class="pi pi-check-circle" *ngIf="billingInfo.currentTier === tier.id" style="color: #5c6ac4; font-size: 0.6rem;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Consumo Freemium -->
+          <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;" *ngIf="currentPlan === 'freemium'">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                  <h6 class="fw-bold mb-0" style="color: #0f172a;">
+                    <i class="pi pi-chart-bar me-2" style="color: #5c6ac4;"></i>Uso del Plan Gratuito
+                  </h6>
+                  <small class="text-muted">Pedidos usados este mes</small>
+                </div>
+                <div class="text-end">
+                  <span class="fw-bold" style="color: #5c6ac4; font-size: 1.1rem;" *ngIf="(subscriptionService.usage$ | async) as usage">
+                    {{ usage.orders?.current || 0 }}/{{ usage.orders?.limit || 15 }}
+                  </span>
+                </div>
+              </div>
+
+              <div style="height: 24px; background: #f1f5f9; border-radius: 12px; overflow: hidden;"
+                   *ngIf="(subscriptionService.usage$ | async) as usage">
+                <div [style.width.%]="((usage.orders?.current || 0) / (usage.orders?.limit || 15)) * 100"
+                     [style.background]="((usage.orders?.current || 0) / (usage.orders?.limit || 15)) < 0.6 ? 'linear-gradient(90deg, #11998e, #38ef7d)' :
+                                         ((usage.orders?.current || 0) / (usage.orders?.limit || 15)) < 0.85 ? 'linear-gradient(90deg, #f093fb, #f5576c)' :
+                                         'linear-gradient(90deg, #ef4444, #dc2626)'"
+                     style="height: 100%; border-radius: 12px; transition: width 1s ease; min-width: 2%;">
+                </div>
+              </div>
+              <div class="d-flex justify-content-between mt-1">
+                <small class="text-muted" style="font-size: 0.65rem;">0 pedidos</small>
+                <small class="text-muted" style="font-size: 0.65rem;">15 pedidos</small>
+              </div>
+            </div>
+          </div>
+
           <!-- Tabla de tramos -->
           <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;" *ngIf="billingInfo?.tiers">
             <div class="card-header bg-white border-bottom d-flex align-items-center gap-2 py-3">

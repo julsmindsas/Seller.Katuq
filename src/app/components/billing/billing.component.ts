@@ -81,6 +81,19 @@ export class BillingComponent implements OnInit, OnDestroy {
     }
   }
 
+  getConsumptionPercentage(): number {
+    if (!this.billingInfo) return 0;
+    const max = this.getCurrentTierMax();
+    if (max <= 0) return 0;
+    return Math.min(Math.round((this.billingInfo.currentMonthSales / max) * 100), 100);
+  }
+
+  getCurrentTierMax(): number {
+    if (!this.billingInfo?.tiers || !this.billingInfo?.currentTier) return 30000000;
+    const tier = this.billingInfo.tiers.find((t: any) => t.id === this.billingInfo.currentTier);
+    return tier?.maxSalesCOP || 30000000;
+  }
+
   formatDate(timestamp: any): string {
     if (!timestamp) return '-';
     const date = timestamp._seconds ? new Date(timestamp._seconds * 1000) : new Date(timestamp);
