@@ -1,3 +1,20 @@
+<!-- Subscription Banner -->
+<div class="subscription-banner" *ngIf="(subscriptionService.subscription$ | async) as sub"
+     [hidden]="sub.plan === 'premium'">
+  <div class="d-flex align-items-center justify-content-center gap-2 py-1 px-3"
+       [style.background]="(subscriptionService.usage$ | async)?.orders?.remaining <= 3 ? '#fee2e2' : '#eef0fb'"
+       [style.color]="(subscriptionService.usage$ | async)?.orders?.remaining <= 3 ? '#991b1b' : '#5c6ac4'"
+       style="font-size: 0.75rem; border-bottom: 1px solid rgba(0,0,0,0.06);">
+    <i class="pi pi-info-circle" style="font-size: 0.7rem;"></i>
+    <span *ngIf="(subscriptionService.usage$ | async) as usage">
+      Plan Gratuito — {{ usage.orders?.remaining >= 0 ? usage.orders?.remaining : 0 }} pedidos restantes este mes
+    </span>
+    <a routerLink="/pricing" style="font-weight: 600; text-decoration: underline; cursor: pointer;">
+      Actualizar
+    </a>
+  </div>
+</div>
+
 <!-- Page Header Start - CLEAN VERSION -->
 <div class="page-header" [class.close_icon]="navServices.collapseSidebar" role="banner" aria-label="Encabezado principal">
   <div class="header-wrapper row m-0">

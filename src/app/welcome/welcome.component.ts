@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ServiciosService } from '../shared/services/servicios.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { TourNavigationService } from '../shared/services/tour-navigation.service';
@@ -46,10 +47,22 @@ export class WelcomeComponent implements OnInit {
   // Variable para el cliente seleccionado en el modal
   selectedClient: any = null;
 
+  // Métricas del día
+  trmHoy: number | null = null;
+  trmCargando = false;
+
+  // Indicadores económicos Colombia 2026
+  indicadores = {
+    salarioMinimo: 1423500,      // SMLMV 2026
+    auxilioTransporte: 200000,    // Auxilio de transporte 2026
+    uvt: 49799,                   // UVT 2026
+  };
+
   constructor(
     private service: ServiciosService,
     private modalService: NgbModal,
-    private tourNavigationService: TourNavigationService
+    private tourNavigationService: TourNavigationService,
+    private http: HttpClient
   ) {
     // Setup debounce for search input
     this.searchDebounce.pipe(
@@ -74,6 +87,23 @@ export class WelcomeComponent implements OnInit {
       console.error('Error fetching contacts:', error);
       this.loading = false;
     });
+
+    // Cargar TRM del día
+    this.cargarTRM();
+  }
+
+  cargarTRM(): void {
+    this.trmCargando = true;
+    this.http.get<any[]>('https://www.datos.gov.co/resource/mcec-87by.json?$limit=1&$order=vigenciadesde%20DESC')
+      .subscribe({
+        next: (data) => {
+          if (data?.length > 0) {
+            this.trmHoy = parseFloat(data[0].valor);
+          }
+          this.trmCargando = false;
+        },
+        error: () => { this.trmCargando = false; }
+      });
   }
 
   updatePagination() {

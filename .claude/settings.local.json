@@ -77,7 +77,10 @@
       "Bash(cmd /c \"taskkill /F /IM node.exe\")",
       "Bash(node_modules/.bin/ng build:*)",
       "Bash(node_modules/.bin/ng-template-parser)",
-      "Bash(npx @angular/compiler-cli)"
+      "Bash(npx @angular/compiler-cli)",
+      "WebFetch(domain:katuq.com)",
+      "WebFetch(domain:docs.wompi.co)",
+      "Bash(wc -l /c/sourcecodejuls/katuq_admin_back_firebase/functions/controllers/*.js)"
     ]
   }
 }

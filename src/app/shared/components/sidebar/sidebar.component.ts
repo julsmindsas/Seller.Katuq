@@ -944,10 +944,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   viewSubscriptionDetails() {
-    console.log('📊 Mostrando detalles de uso...');
-    // Por ahora, redirigir a pricing donde se ve todo
-    // En el futuro puede ser una página dedicada de detalles
-    this.navigateAndCleanup('/pricing');
+    this.navigateAndCleanup('/billing');
   }
 
   closePlanModal() {

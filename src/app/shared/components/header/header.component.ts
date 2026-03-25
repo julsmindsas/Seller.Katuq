@@ -8,6 +8,7 @@ import { NotificationrlService } from '../../services/notificationrl.service';
 import { NgpThemeService } from '../../services/ngtheme.service';
 import { MaestroService } from '../../services/maestros/maestro.service';
 import { TourNavigationService } from '../../services/tour-navigation.service';
+import { SubscriptionService } from '../../services/subscription.service';
 
 @Component({
   selector: 'app-header',
@@ -31,7 +32,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
     private service: MaestroService,
     @Inject(DOCUMENT) private document: any,
     private notificationService: NotificationrlService,
-    private tourNavigationService: TourNavigationService) {
+    private tourNavigationService: TourNavigationService,
+    public subscriptionService: SubscriptionService) {
     // const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     // if (darkModeMediaQuery.matches) {
     //   this.layoutToggle();
