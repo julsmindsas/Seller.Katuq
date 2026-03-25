@@ -47,6 +47,9 @@ export class WelcomeComponent implements OnInit {
   // Variable para el cliente seleccionado en el modal
   selectedClient: any = null;
 
+  // Onboarding banner
+  showOnboardingBanner = false;
+
   // Métricas del día
   trmHoy: number | null = null;
   trmCargando = false;
@@ -88,8 +91,18 @@ export class WelcomeComponent implements OnInit {
       this.loading = false;
     });
 
+    // Verificar si mostrar banner de onboarding
+    if (localStorage.getItem('showOnboardingBanner') === 'true') {
+      this.showOnboardingBanner = true;
+    }
+
     // Cargar TRM del día
     this.cargarTRM();
+  }
+
+  dismissOnboarding(): void {
+    this.showOnboardingBanner = false;
+    localStorage.removeItem('showOnboardingBanner');
   }
 
   cargarTRM(): void {

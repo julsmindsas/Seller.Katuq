@@ -118,10 +118,8 @@ export class AuthService implements OnInit {
             const onboardingCompleted = await this.onboardingService.checkOnboardingStatus(result.email);
 
             if (!onboardingCompleted) {
-              // Usuario nuevo o con onboarding incompleto
-              console.log('🎯 Administrador sin onboarding completado, redirigiendo a /onboarding');
-              this.router.navigate(["/onboarding"]);
-              return;
+              // Usuario nuevo: ir a welcome directamente (onboarding accesible desde menú)
+              localStorage.setItem('showOnboardingBanner', 'true');
             }
 
             // Usuario con onboarding completado
