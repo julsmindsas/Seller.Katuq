@@ -81,15 +81,19 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     this.crmService.getLead(this.entityId)
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
+        this.loading = false;
         if (!res.success || !res.data) {
-          this.messageService.add({ severity: 'error', summary: 'Lead no encontrado' });
-          this.router.navigate(['/crm/list']);
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'No se pudo cargar el lead. Verifica que el backend esté corriendo.',
+            life: 5000,
+          });
           return;
         }
         this.lead = res.data;
         this.activities = res.data.activities || [];
         this.tasks = res.data.tasks || [];
-        this.loading = false;
       });
   }
 

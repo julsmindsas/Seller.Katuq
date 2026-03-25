@@ -1,54 +1,67 @@
-<!-- Saludo personalizado -->
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-12 mb-3">
-            <h4 class="fw-bold mb-1" style="color: #0f172a;">
-                Hola, {{ currentCompany?.nomComercial || 'Bienvenido' }} 👋
-            </h4>
-            <p class="text-muted mb-0" style="font-size: 0.9rem;">Esto es lo que puedes hacer hoy en Katuq</p>
+<!-- Hero Banner -->
+<div class="container-fluid px-4 pt-3">
+    <div class="hero-banner">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h4 class="hero-title">
+                    Hola, {{ userActive?.name?.split(' ')[0] || 'Bienvenido' }}
+                </h4>
+                <p class="hero-subtitle">
+                    <span *ngIf="currentCompany?.nomComercial" style="color: #6366f1; font-weight: 600;">{{ currentCompany.nomComercial }}</span>
+                    <span *ngIf="currentCompany?.nomComercial"> &middot; </span>
+                    Gestiona productos, ventas, inventarios y envios desde un solo lugar.
+                </p>
+                <div class="hero-actions">
+                    <a class="btn btn-katuq-solid btn-sm" routerLink="/ventas/crear-ventas">
+                        <i class="fa fa-plus me-1"></i>Nueva venta
+                    </a>
+                    <a class="btn btn-katuq-outline-light btn-sm" routerLink="/usuarios/editarUsuario">
+                        <i class="fa fa-user me-1"></i>Mi perfil
+                    </a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="assets/images/dashboard/katuqIA.png" alt="Katuq IA">
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Setup checklist (usuarios nuevos) -->
-<div class="container-fluid mb-3" *ngIf="showOnboardingBanner">
-    <div class="card border-0 shadow-sm" style="border-radius: 12px; border-left: 4px solid #8b5cf6 !important;">
+<div class="container-fluid px-4 mb-3" *ngIf="showOnboardingBanner">
+    <div class="card border-0 shadow-sm" style="border-radius: 10px; border-left: 4px solid #8b5cf6 !important;">
         <div class="card-body p-3">
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <h6 class="fw-bold mb-0" style="color: #0f172a;">
                     <i class="fa fa-rocket me-2" style="color: #8b5cf6;"></i>Configura tu tienda
                 </h6>
-                <button class="btn btn-sm" style="font-size: 0.7rem; color: #64748b;" (click)="dismissOnboarding()">
+                <button class="btn btn-sm p-0" style="color: #94a3b8;" (click)="dismissOnboarding()">
                     <i class="fa fa-times"></i>
                 </button>
             </div>
             <div class="row g-2">
                 <div class="col-6 col-md-3">
-                    <a routerLink="/productos/crear" class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none"
-                       style="background: #faf5ff; border: 1px solid #e9d5ff; cursor: pointer;">
-                        <i class="fa fa-box" style="color: #8b5cf6;"></i>
+                    <a routerLink="/productos/crearProductos" class="setup-link" style="background: #faf5ff; border-color: #e9d5ff;">
+                        <i class="fa fa-cube" style="color: #8b5cf6;"></i>
                         <small class="fw-semibold" style="color: #334155;">Agregar productos</small>
                     </a>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a routerLink="/ventas/clientes" class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none"
-                       style="background: #f0fdf4; border: 1px solid #bbf7d0; cursor: pointer;">
+                    <a routerLink="/ventas/clientes" class="setup-link" style="background: #f0fdf4; border-color: #bbf7d0;">
                         <i class="fa fa-user-plus" style="color: #27ae60;"></i>
                         <small class="fw-semibold" style="color: #334155;">Agregar clientes</small>
                     </a>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a routerLink="/empresas" class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none"
-                       style="background: #fef3c7; border: 1px solid #fde68a; cursor: pointer;">
-                        <i class="fa fa-store" style="color: #e67e22;"></i>
+                    <a routerLink="/empresas" class="setup-link" style="background: #fef3c7; border-color: #fde68a;">
+                        <i class="fa fa-building" style="color: #e67e22;"></i>
                         <small class="fw-semibold" style="color: #334155;">Info de tu empresa</small>
                     </a>
                 </div>
                 <div class="col-6 col-md-3">
-                    <a routerLink="/onboarding" class="d-flex align-items-center gap-2 p-2 rounded text-decoration-none"
-                       style="background: #f1f5f9; border: 1px solid #e2e8f0; cursor: pointer;">
+                    <a routerLink="/empresas" class="setup-link" style="background: #f1f5f9; border-color: #e2e8f0;">
                         <i class="fa fa-cog" style="color: #64748b;"></i>
-                        <small class="fw-semibold" style="color: #334155;">Personalizar todo</small>
+                        <small class="fw-semibold" style="color: #334155;">Personalizar</small>
                     </a>
                 </div>
             </div>
@@ -56,771 +69,181 @@
     </div>
 </div>
 
-<div class="container-fluid">
-    <div class="row d-flex align-items-stretch">
-        <div class="col-sm-8 m-b-15">
-            <div class="card o-hidden welcome-card h-100 shadow-2 backColorSwitch p-3">
-                <div class="card-body p-3">
-                    <h4 class="mb-3 mt-1 f-w-800 mb-0 f-22">
-                        KATUQ - ECOMMERCE<span>&nbsp;✨&nbsp;<strong>Potenciado con IA</strong>&nbsp;✨</span>
-                    </h4>
-                    <p class="f-18">
-                        <strong>Gestiona tu negocio desde un solo lugar.</strong> Controla productos, ventas, inventarios,
-                        pedidos y envíos con analíticas en tiempo real.
-                    </p>
-                    <p class="f-18">
-                        Nuestra <strong>inteligencia artificial aprende de tu negocio</strong> para automatizar procesos
-                        y ahorrarte tiempo.
-                    </p>
-                </div>
-                <img src="assets/images/dashboard/katuqIA.png" alt="katuq IA" class="welcome-img" />
-            </div>
-        </div>
-        <div class="col-md-4 m-b-15">
-            <div class="card social-profile h-100 shadow-2">
-                <div class="card-body backColorSwitch">
-                    <div class="social-img-wrap ">
-                        <div>
-                            <!-- <img class="avatar-image" [src]="userActive.image ? userActive.image : 'assets/images/user/user.png'" alt="profile" /> -->
-                            <img class="avatar-image"
-                                [src]="userActive.image ? userActive.image : 'assets/images/user/user.png'"
-                                alt="profile" style="max-height: 60px; width: auto; padding: 0px">
-                        </div>
-                        <!-- <div class="edit-icon"><svg>
-                <use href="assets/svg/icon-sprite.svg#profile-check"></use>
-              </svg></div> -->
-                    </div>
-                    <div class="social-details pt-3">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <h5 class="mb-1 ml-2">
-                                <a href="social-app.html" style="color: white">Bienvenido/a</a>
-                            </h5>
-                            <button class="btn-icon-mobile ml-2" routerLink="/usuarios/editarUsuario"
-                                    type="button" aria-label="Editar perfil">
-                                <i class="fa fa-edit"></i>
-                            </button>
-                        </div>
-                        <br />
-                        <span class="f-light">{{ userActive.name }} -
-                            {{ userActive.email }}</span>
-                        <ul class="social-follow d-flex justify-content-center">
-                            <li>
-                                <h5 class="mb-0">ID</h5>
-                                <span class="f-light">{{
-                                    userActive.nit
-                                    }}</span>
-                            </li>
-                            <li>
-                                <h5 class="mb-0">Rol</h5>
-                                <span class="f-light">{{
-                                    userActive.rol
-                                    }}</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Banner Onboarding (usuarios nuevos) -->
-<div class="container-fluid mt-3" *ngIf="showOnboardingBanner">
-    <div class="card border-0 shadow-sm" style="border-radius: 12px; border-left: 4px solid #8b5cf6 !important;">
-        <div class="card-body p-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
-            <div class="d-flex align-items-center gap-2">
-                <i class="fa fa-magic" style="color: #8b5cf6; font-size: 1.2rem;"></i>
-                <div>
-                    <span class="fw-semibold" style="color: #0f172a;">Tu tienda esta lista para vender</span>
-                    <small class="text-muted d-block">Ya configuramos todo lo basico. Puedes personalizar tu tienda cuando quieras.</small>
-                </div>
-            </div>
-            <div class="d-flex gap-2">
-                <a class="btn btn-sm" style="background: #8b5cf6; color: white; border: none;" routerLink="/onboarding">
-                    <i class="fa fa-cog me-1"></i>Personalizar
-                </a>
-                <button class="btn btn-sm btn-outline-secondary" (click)="dismissOnboarding()">
-                    Ahora no
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Indicadores Económicos del Día -->
-<div class="container-fluid mt-3">
+<!-- Indicadores economicos -->
+<div class="container-fluid px-4 mb-3">
     <div class="row g-2">
         <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100" style="border-left: 3px solid #8b5cf6 !important;">
-                <div class="card-body p-2">
-                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">TRM Hoy</small>
-                    <h5 class="fw-bold mb-0" style="color: #8b5cf6;">{{ trmCargando ? '...' : (trmHoy ? ('$' + (trmHoy | number:'1.2-2')) : 'N/D') }}</h5>
-                    <small class="text-muted" style="font-size: 0.6rem;">USD/COP</small>
-                </div>
+            <div class="indicator-card" style="border-left-color: #8b5cf6;">
+                <small class="indicator-label">TRM Hoy</small>
+                <span class="indicator-value" style="color: #8b5cf6;">
+                    {{ trmCargando ? '...' : (trmHoy ? ('$' + (trmHoy | number:'1.2-2')) : 'N/D') }}
+                </span>
+                <small class="indicator-sub">USD/COP</small>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100" style="border-left: 3px solid #27ae60 !important;">
-                <div class="card-body p-2">
-                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">SMLMV 2026</small>
-                    <h5 class="fw-bold mb-0" style="color: #27ae60;">${{ indicadores.salarioMinimo | number:'1.0-0' }}</h5>
-                    <small class="text-muted" style="font-size: 0.6rem;">Salario minimo</small>
-                </div>
+            <div class="indicator-card" style="border-left-color: #27ae60;">
+                <small class="indicator-label">SMLMV 2026</small>
+                <span class="indicator-value" style="color: #27ae60;">
+                    ${{ indicadores.salarioMinimo | number:'1.0-0' }}
+                </span>
+                <small class="indicator-sub">Salario minimo</small>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100" style="border-left: 3px solid #e67e22 !important;">
-                <div class="card-body p-2">
-                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">Aux. Transporte</small>
-                    <h5 class="fw-bold mb-0" style="color: #e67e22;">${{ indicadores.auxilioTransporte | number:'1.0-0' }}</h5>
-                    <small class="text-muted" style="font-size: 0.6rem;">Subsidio 2026</small>
-                </div>
+            <div class="indicator-card" style="border-left-color: #e67e22;">
+                <small class="indicator-label">Aux. Transporte</small>
+                <span class="indicator-value" style="color: #e67e22;">
+                    ${{ indicadores.auxilioTransporte | number:'1.0-0' }}
+                </span>
+                <small class="indicator-sub">Subsidio 2026</small>
             </div>
         </div>
         <div class="col-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100" style="border-left: 3px solid #64748b !important;">
-                <div class="card-body p-2">
-                    <small class="text-muted text-uppercase" style="font-size: 0.6rem; letter-spacing: 0.5px;">UVT 2026</small>
-                    <h5 class="fw-bold mb-0" style="color: #64748b;">${{ indicadores.uvt | number:'1.0-0' }}</h5>
-                    <small class="text-muted" style="font-size: 0.6rem;">DIAN</small>
-                </div>
+            <div class="indicator-card" style="border-left-color: #64748b;">
+                <small class="indicator-label">UVT 2026</small>
+                <span class="indicator-value" style="color: #64748b;">
+                    ${{ indicadores.uvt | number:'1.0-0' }}
+                </span>
+                <small class="indicator-sub">DIAN</small>
             </div>
         </div>
     </div>
 </div>
 
-<div class="container-fluid mt-50">
-    <div class="row">
-        <div class="col-sm-12">
-            <p class="firma">Explora tus herramientas</p>
+<!-- Acciones rapidas -->
+<div class="container-fluid px-4 mb-2">
+    <h6 class="section-title">Acciones rapidas</h6>
+</div>
+
+<div class="container-fluid px-4 mb-4">
+    <div class="row g-3">
+        <div class="col-6 col-lg-4">
+            <a routerLink="/ventas/crear-ventas" class="action-card">
+                <div class="action-icon" style="background: #faf5ff;">
+                    <i class="fa fa-shopping-cart" style="color: #8b5cf6;"></i>
+                </div>
+                <div class="action-content">
+                    <h6 class="action-title">Vender</h6>
+                    <small class="action-desc">Crear nueva venta asistida</small>
+                </div>
+                <i class="fa fa-chevron-right action-arrow"></i>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg-4">
+            <a routerLink="/pos" class="action-card">
+                <div class="action-icon" style="background: #f0fdf4;">
+                    <i class="fa fa-calculator" style="color: #27ae60;"></i>
+                </div>
+                <div class="action-content">
+                    <h6 class="action-title">POS</h6>
+                    <small class="action-desc">Abrir punto de venta</small>
+                </div>
+                <i class="fa fa-chevron-right action-arrow"></i>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg-4">
+            <a routerLink="/productos" class="action-card">
+                <div class="action-icon" style="background: #fff7ed;">
+                    <i class="fa fa-cube" style="color: #e67e22;"></i>
+                </div>
+                <div class="action-content">
+                    <h6 class="action-title">Productos</h6>
+                    <small class="action-desc">Gestionar catalogo</small>
+                </div>
+                <i class="fa fa-chevron-right action-arrow"></i>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg-4">
+            <a routerLink="/ventas/pedidos" class="action-card">
+                <div class="action-icon" style="background: #eff6ff;">
+                    <i class="fa fa-file-text" style="color: #3b82f6;"></i>
+                </div>
+                <div class="action-content">
+                    <h6 class="action-title">Pedidos</h6>
+                    <small class="action-desc">Control de ordenes</small>
+                </div>
+                <i class="fa fa-chevron-right action-arrow"></i>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg-4">
+            <a routerLink="/inventario/inventario-catalogo" class="action-card">
+                <div class="action-icon" style="background: #fef3c7;">
+                    <i class="fa fa-cubes" style="color: #d97706;"></i>
+                </div>
+                <div class="action-content">
+                    <h6 class="action-title">Inventario</h6>
+                    <small class="action-desc">Stock y bodegas</small>
+                </div>
+                <i class="fa fa-chevron-right action-arrow"></i>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg-4">
+            <a routerLink="/ventas/clienteslista" class="action-card">
+                <div class="action-icon" style="background: #fdf2f8;">
+                    <i class="fa fa-users" style="color: #ec4899;"></i>
+                </div>
+                <div class="action-content">
+                    <h6 class="action-title">Clientes</h6>
+                    <small class="action-desc">Base de datos</small>
+                </div>
+                <i class="fa fa-chevron-right action-arrow"></i>
+            </a>
+        </div>
+
+        <div class="col-6 col-lg-4">
+            <a routerLink="/crm/list" class="action-card">
+                <div class="action-icon" style="background: #eef2ff;">
+                    <i class="fa fa-bullseye" style="color: #6366f1;"></i>
+                </div>
+                <div class="action-content">
+                    <h6 class="action-title">CRM</h6>
+                    <small class="action-desc">Pipeline de ventas</small>
+                </div>
+                <i class="fa fa-chevron-right action-arrow"></i>
+            </a>
         </div>
     </div>
 </div>
 
-<div class="container-fluid m-t-35">
-    <div class="row widget-grid">
-        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
-            <div class="card bc-secondary card-body-item shadow-2">
-                <div class="card-body">
-                    <div class="imagenCard">
-                        <img src="assets/images/dashboard/katuqProductos.png" class="img-fluid" style="z-index: 0"
-                            alt="katuq productos" />
-                    </div>
-                    <div class="media">
-                        <div class="media-body">
-                            <div class="greeting-user">
-                                <h4 class="f-w-600 font-black">Productos</h4>
-                                <p class="text-p">
-                                    Crea catálogos profesionales en minutos con IA. Gestiona stock e inventario inteligentemente.
-                                </p>
-                                <div>
-                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/productos">Gestionar</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="clockbox">
-                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
-                                    <g id="face">
-                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
-                                        <path
-                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
-                                            class="hour-marks"></path>
-                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
-                                    </g>
-                                    <g id="hour">
-                                        <path d="M300.5 298V142" class="hour-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="minute">
-                                        <path d="M300.5 298V67" class="minute-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="second">
-                                        <path d="M300.5 350V55" class="second-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                </svg>
-                            </div>
-                            <div id="txt" class="badge f-10 p-0"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+<!-- Herramientas -->
+<div class="container-fluid px-4 mb-2">
+    <h6 class="section-title">Herramientas</h6>
+</div>
+
+<div class="container-fluid px-4 mb-4">
+    <div class="row g-3">
+        <div class="col-6 col-md-4 col-lg-3">
+            <a routerLink="/despachos" class="tool-card">
+                <i class="fa fa-truck tool-icon" style="color: #8b5cf6;"></i>
+                <span class="tool-label">Despachos</span>
+            </a>
         </div>
 
-        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
-            <div class="card bc-secondary card-body-item shadow-2">
-                <div class="card-body">
-                    <div class="imagenCard">
-                        <img src="assets/images/dashboard/productoskatuq.png" class="img-fluid" alt="katuq Pos" />
-                    </div>
-                    <div class="media">
-                        <div class="media-body">
-                            <div class="greeting-user">
-                                <h4 class="f-w-600 font-black">Ventas</h4>
-                                <p class="text-p">
-                                    Cierra más ventas con asistencia inteligente. K.A.I. te guía en cada paso del proceso.
-                                </p>
-                                <div>
-                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/ventas/crear-ventas">Vender Ahora</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="clockbox">
-                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
-                                    <g id="face">
-                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
-                                        <path
-                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
-                                            class="hour-marks"></path>
-                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
-                                    </g>
-                                    <g id="hour">
-                                        <path d="M300.5 298V142" class="hour-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="minute">
-                                        <path d="M300.5 298V67" class="minute-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="second">
-                                        <path d="M300.5 350V55" class="second-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                </svg>
-                            </div>
-                            <div id="txt" class="badge f-10 p-0"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-6 col-md-4 col-lg-3">
+            <a routerLink="/dashboards" class="tool-card">
+                <i class="fa fa-bar-chart tool-icon" style="color: #27ae60;"></i>
+                <span class="tool-label">Analiticas</span>
+            </a>
         </div>
 
-        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
-            <div class="card bc-secondary card-body-item shadow-2">
-                <div class="card-body">
-                    <div class="imagenCard">
-                        <img src="assets/images/dashboard/katuqPos.png" class="img-fluid" alt="katuq Pos" />
-                    </div>
-                    <div class="media">
-                        <div class="media-body">
-                            <div class="greeting-user">
-                                <h4 class="f-w-600 font-black">POS</h4>
-                                <p class="text-p">
-                                    Cobra en segundos. Sistema POS rápido y sin complicaciones para tu tienda física.
-                                </p>
-                                <div>
-                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/pos">Abrir Caja</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="clockbox">
-                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
-                                    <g id="face">
-                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
-                                        <path
-                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
-                                            class="hour-marks"></path>
-                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
-                                    </g>
-                                    <g id="hour">
-                                        <path d="M300.5 298V142" class="hour-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="minute">
-                                        <path d="M300.5 298V67" class="minute-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="second">
-                                        <path d="M300.5 350V55" class="second-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                </svg>
-                            </div>
-                            <div id="txt" class="badge f-10 p-0"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-6 col-md-4 col-lg-3">
+            <a routerLink="/empresas" class="tool-card">
+                <i class="fa fa-building tool-icon" style="color: #e67e22;"></i>
+                <span class="tool-label">Mi Empresa</span>
+            </a>
         </div>
-        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
-            <div class="card bc-secondary card-body-item shadow-2">
-                <div class="card-body">
-                    <div class="media">
-                        <div class="media-body">
-                            <div class="greeting-user">
-                                <h4 class="f-w-600 font-black">Clientes</h4>
-                                <p class="text-p">
-                                    Construye relaciones duraderas. Base de datos completa para conocer mejor a tus clientes.
-                                </p>
-                                <div>
-                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/ventas/clienteslista">Ver Clientes</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="clockbox">
-                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
-                                    <g id="face">
-                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
-                                        <path
-                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
-                                            class="hour-marks"></path>
-                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
-                                    </g>
-                                    <g id="hour">
-                                        <path d="M300.5 298V142" class="hour-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="minute">
-                                        <path d="M300.5 298V67" class="minute-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="second">
-                                        <path d="M300.5 350V55" class="second-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                </svg>
-                            </div>
-                            <div id="txt" class="badge f-10 p-0"></div>
-                        </div>
-                    </div>
-                    <div class="imagenCard">
-                        <img class="image0" src="assets/images/dashboard/katuqclientes.png" alt="katuq Clientes"
-                            class="img-fluid" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
-            <div class="card bc-secondary card-body-item shadow-2">
-                <div class="card-body">
-                    <div class="media">
-                        <div class="media-body">
-                            <div class="greeting-user">
-                                <h4 class="f-w-600 font-black">Pedidos</h4>
-                                <p class="text-p">
-                                    Control total desde la orden hasta la entrega. Seguimiento en tiempo real de cada pedido.
-                                </p>
-                                <div>
-                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/ventas/pedidos">Ver Pedidos</a>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="clockbox">
-                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
-                                    <g id="face">
-                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
-                                        <path
-                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
-                                            class="hour-marks"></path>
-                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
-                                    </g>
-                                    <g id="hour">
-                                        <path d="M300.5 298V142" class="hour-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="minute">
-                                        <path d="M300.5 298V67" class="minute-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="second">
-                                        <path d="M300.5 350V55" class="second-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                </svg>
-                            </div>
-                            <div id="txt" class="badge f-10 p-0"></div>
-                        </div>
-                    </div>
-                    <div class="imagenCard">
-                        <img src="assets/images/dashboard/katuqwallet.png" alt="katuq Wallet" class="img-fluid" />
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-4 box-col-4">
-            <div class="card bc-secondary shadow-2">
-                <div class="card-body">
-                    <div class="media">
-                        <div class="media-body">
-                            <div class="greeting-user">
-                                <h4 class="f-w-600 font-black">Analíticas</h4>
-                                <p class="text-p">
-                                    Decisiones inteligentes con datos reales. K.A.I. analiza tu negocio y te da insights valiosos.
-                                </p>
-                                <div>
-                                    <a class="btn btn-outline-white btn-mobile-optimized" routerLink="/dashboards">Ver Dashboard</a>
-                                    <button class="btn btn-outline-light ms-2" (click)="startDashboardTour()" title="Tour del Dashboard">
-                                        <i class="fa fa-route"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="clockbox">
-                                <svg id="clock" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600">
-                                    <g id="face">
-                                        <circle cx="300" cy="300" r="253.9" class="circle"></circle>
-                                        <path
-                                            d="M300.5 94V61M506 300.5h32M300.5 506v33M94 300.5H60M411.3 107.8l7.9-13.8M493 190.2l13-7.4M492.1 411.4l16.5 9.5M411 492.3l8.9 15.3M189 492.3l-9.2 15.9M107.7 411L93 419.5M107.5 189.3l-17.1-9.9M188.1 108.2l-9-15.6"
-                                            class="hour-marks"></path>
-                                        <circle cx="300" cy="300" r="16.2" class="mid-circle"></circle>
-                                    </g>
-                                    <g id="hour">
-                                        <path d="M300.5 298V142" class="hour-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="minute">
-                                        <path d="M300.5 298V67" class="minute-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                    <g id="second">
-                                        <path d="M300.5 350V55" class="second-hand"></path>
-                                        <circle cx="300" cy="300" r="253.9" class="sizing-box"></circle>
-                                    </g>
-                                </svg>
-                            </div>
-                            <div id="txt" class="badge f-10 p-0"></div>
-                        </div>
-                    </div>
-                    <div class="imagenCard">
-                        <img src="assets/images/dashboard/katuqAnalitica.png" alt="katuq Analitica" class="img-fluid" />
-                    </div>
-                </div>
-            </div>
+
+        <div class="col-6 col-md-4 col-lg-3">
+            <a routerLink="/integrations" class="tool-card">
+                <i class="fa fa-plug tool-icon" style="color: #3b82f6;"></i>
+                <span class="tool-label">Integraciones</span>
+            </a>
         </div>
     </div>
 </div>
-
-<!-- Tours Guiados Section - HIDDEN -->
-<div class="container-fluid mt-4 mb-4" *ngIf="false">
-    <div class="row justify-content-center">
-        <div class="col-md-10">
-            <div class="card tour-section shadow-lg border-0">
-                <div class="card-header bg-gradient-primary text-white text-center py-4">
-                    <h4 class="mb-1">
-                        <i class="fa fa-compass me-2"></i>🧭 Tours de Navegación Katuq
-                    </h4>
-                    <p class="mb-0 opacity-75">Aprende a navegar por el menú y encontrar todas las funciones</p>
-                </div>
-                <div class="card-body p-5">
-                    <div class="row g-4">
-                        <div class="col-md-6 col-lg-3">
-                            <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
-                                <div class="tour-icon mb-3">
-                                    <i class="fa fa-compass fa-3x text-primary"></i>
-                                </div>
-                                <h6 class="fw-bold mb-2">🧭 Navegación</h6>
-                                <p class="text-muted small mb-3">Aprende a usar el menú lateral y navegar</p>
-                                <button class="btn btn-primary btn-sm w-100" (click)="startMainNavigationTour()">
-                                    <i class="fa fa-play me-1"></i>¡Empezar Aquí!
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg-3">
-                            <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
-                                <div class="tour-icon mb-3">
-                                    <i class="fa fa-chart-bar fa-3x text-primary"></i>
-                                </div>
-                                <h6 class="fw-bold mb-2">📊 Dashboard</h6>
-                                <p class="text-muted small mb-3">Cómo acceder al panel de métricas</p>
-                                <button class="btn btn-outline-primary btn-sm w-100" (click)="startDashboardTour()">
-                                    <i class="fa fa-map-marker-alt me-1"></i>Ver Ubicación
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg-3">
-                            <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
-                                <div class="tour-icon mb-3">
-                                    <i class="fa fa-shopping-cart fa-3x text-success"></i>
-                                </div>
-                                <h6 class="fw-bold mb-2">🛒 Módulo Ventas</h6>
-                                <p class="text-muted small mb-3">Dónde encontrar las funciones de ventas</p>
-                                <button class="btn btn-outline-success btn-sm w-100" (click)="startVentasTour()">
-                                    <i class="fa fa-map-marker-alt me-1"></i>Ver Ubicación
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg-3">
-                            <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
-                                <div class="tour-icon mb-3">
-                                    <i class="fa fa-boxes fa-3x text-warning"></i>
-                                </div>
-                                <h6 class="fw-bold mb-2">📦 Inventarios</h6>
-                                <p class="text-muted small mb-3">Dónde gestionar productos e inventario</p>
-                                <button class="btn btn-outline-warning btn-sm w-100" (click)="startInventarioTour()">
-                                    <i class="fa fa-map-marker-alt me-1"></i>Ver Ubicación
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6 col-lg-3">
-                            <div class="tour-card text-center h-100 p-4 border rounded-lg shadow-sm">
-                                <div class="tour-icon mb-3">
-                                    <i class="fa fa-cash-register fa-3x text-info"></i>
-                                </div>
-                                <h6 class="fw-bold mb-2">🏪 Punto de Venta</h6>
-                                <p class="text-muted small mb-3">Cómo llegar al sistema POS</p>
-                                <button class="btn btn-outline-info btn-sm w-100" (click)="startPosTour()">
-                                    <i class="fa fa-map-marker-alt me-1"></i>Ver Ubicación
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row mt-4">
-                        <div class="col-12 text-center">
-                            <p class="text-muted mb-0">
-                                <i class="fa fa-lightbulb me-1"></i>
-                                <strong>¿Nuevo en Katuq?</strong> Comienza con el tour de "🧭 Navegación" para aprender a moverte por el menú
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- CRM Section - HIDDEN -->
-<div class="container-fluid m-t-35" id="crmClienteStartco" *ngIf="false">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card shadow-2 crm-card">
-                <div class="card-header bg-primary text-white">
-                    <div class="d-flex align-items-center">
-                        <i class="fa fa-users mr-2" aria-hidden="true"></i>
-                        <h4 class="m-0">Clientes Potenciales</h4>
-                        <span class="badge badge-warning ml-2">Importante</span>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <!-- Search and Actions Bar -->
-                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
-                        <div class="search-container position-relative">
-                            <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 10px;"></i>
-                            <input type="text" class="form-control pl-4" placeholder="Buscar por nombre, cédula o teléfono..." 
-                                   [(ngModel)]="searchTerm" 
-                                   (input)="onSearchInput()"
-                                   style="min-width: 300px; padding-left: 35px; padding-right: 35px;">
-                            <button *ngIf="searchTerm" 
-                                    class="btn btn-sm btn-link position-absolute" 
-                                    style="right: 0; top: 0; height: 100%;"
-                                    (click)="clearSearch()">
-                                <i class="fa fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="d-flex">
-                            <div class="mr-2">
-                                <select class="form-control" [(ngModel)]="searchField" (change)="filterClients()">
-                                    <option value="all">Buscar en todos los campos</option>
-                                    <option value="nombre">Nombre</option>
-                                    <option value="cedula">Cédula</option>
-                                    <option value="telefono">Teléfono</option>
-                                    <option value="direccion">Dirección</option>
-                                    <option value="observaciones">Mensaje</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-outline-primary mr-2" (click)="filterClients()">
-                                <i class="fa fa-search mr-1"></i> Buscar
-                            </button>
-                            <button class="btn btn-outline-secondary" (click)="resetFilters()" [disabled]="!isFiltered">
-                                <i class="fa fa-refresh mr-1"></i> Resetear
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Advanced filters (collapsible) -->
-                    <div class="mb-4">
-                        <button class="btn btn-link p-0 text-decoration-none" (click)="toggleAdvancedFilters()">
-                            <i class="fa" [ngClass]="showAdvancedFilters ? 'fa-chevron-down' : 'fa-chevron-right'"></i>
-                            Filtros avanzados
-                        </button>
-                        <div class="card mt-2" *ngIf="showAdvancedFilters">
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <label>Estado del cliente</label>
-                                        <select class="form-control" [(ngModel)]="filterStatus" (change)="filterClients()">
-                                            <option value="">Todos</option>
-                                            <option value="active">Activos</option>
-                                            <option value="inactive">Inactivos</option>
-                                            <option value="pending">Pendientes</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label>Ordenar por</label>
-                                        <select class="form-control" [(ngModel)]="sortColumn" (change)="applySorting()">
-                                            <option value="">Sin ordenar</option>
-                                            <option value="nombre">Nombre</option>
-                                            <option value="cedula">Cédula</option>
-                                            <option value="telefono">Teléfono</option>
-                                            <option value="fechaCreacion">Fecha de creación</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label>Dirección</label>
-                                        <select class="form-control" [(ngModel)]="sortDirection" (change)="applySorting()">
-                                            <option value="asc">Ascendente</option>
-                                            <option value="desc">Descendente</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Search results indicator -->
-                    <div *ngIf="isFiltered" class="alert alert-info d-flex align-items-center mb-4">
-                        <i class="fa fa-filter mr-2"></i>
-                        <span>
-                            Mostrando {{ filteredClientes.length }} resultados para "{{ searchTerm }}"
-                            <button class="btn btn-sm btn-link" (click)="resetFilters()">Limpiar filtros</button>
-                        </span>
-                    </div>
-
-                    <!-- Table with responsive design -->
-                    <div class="table-responsive crm-table">
-                        <table class="table table-hover table-striped">
-                            <thead class="thead-primary">
-                                <tr>
-                                    <th scope="col" class="sortable" (click)="sortBy('id')">#
-                                        <i class="fa fa-sort ml-1"></i>
-                                    </th>
-                                    <th scope="col" class="sortable" (click)="sortBy('nombre')">Nombre
-                                        <i class="fa fa-sort ml-1"></i>
-                                    </th>
-                                    <th scope="col" class="sortable" (click)="sortBy('cedula')">Cédula
-                                        <i class="fa fa-sort ml-1"></i>
-                                    </th>
-                                    <th scope="col" class="sortable" (click)="sortBy('telefono')">Teléfono
-                                        <i class="fa fa-sort ml-1"></i>
-                                    </th>
-                                    <th scope="col" class="sortable" (click)="sortBy('direccion')">Dirección
-                                        <i class="fa fa-sort ml-1"></i>
-                                    </th>
-                                    <th scope="col">Mensaje</th>
-                                    <th scope="col">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr *ngIf="loading">
-                                    <td colspan="7" class="text-center py-4">
-                                        <div class="spinner-border text-primary" role="status">
-                                            <span class="sr-only">Cargando...</span>
-                                        </div>
-                                        <p class="mt-2 mb-0">Cargando clientes...</p>
-                                    </td>
-                                </tr>
-                                <tr *ngIf="!loading && pagedClientes.length === 0">
-                                    <td colspan="7" class="text-center py-4">
-                                        <i class="fa fa-search fa-3x text-muted mb-3"></i>
-                                        <p class="lead mb-0">No se encontraron clientes</p>
-                                        <p class="text-muted">Intenta con otra búsqueda o agrega nuevos clientes</p>
-                                    </td>
-                                </tr>
-                                <tr *ngFor="let cliente of pagedClientes; let i = index" class="client-row">
-                                    <th scope="row">{{ (currentPage - 1) * pageSize + i + 1 }}</th>
-                                    <td class="font-weight-bold">{{cliente.nombre}}</td>
-                                    <td>{{cliente.cedula}}</td>
-                                    <td>
-                                        <a href="tel:{{cliente.telefono}}" class="text-primary">
-                                            <i class="fa fa-phone mr-1"></i>{{cliente.telefono}}
-                                        </a>
-                                    </td>
-                                    <td title="{{cliente.direccion}}">{{cliente.direccion | slice:0:20}}{{cliente.direccion.length > 20 ? '...' : ''}}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-link p-0" (click)="showMessage(cliente, messageModal)">
-                                            Ver mensaje
-                                        </button>
-                                    </td>
-                                    <td>
-                                        <div class="btn-group">
-                                            <button class="btn btn-sm btn-outline-primary" title="Editar cliente">
-                                                <i class="fa fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-success" title="Contactar">
-                                                <i class="fa fa-comment"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Enhanced pagination -->
-                    <div class="d-flex justify-content-between align-items-center mt-4 pagination-container">
-                        <div class="text-muted">
-                            Mostrando {{(currentPage - 1) * pageSize + 1}} - {{Math.min(currentPage * pageSize, totalItems)}} de {{totalItems}} clientes
-                        </div>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination pagination-md">
-                                <li class="page-item" [class.disabled]="currentPage === 1">
-                                    <a class="page-link" href="javascript:void(0)" (click)="goToPage(1)" aria-label="First">
-                                        <span aria-hidden="true">&laquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item" [class.disabled]="currentPage === 1">
-                                    <a class="page-link" href="javascript:void(0)" (click)="previousPage()" aria-label="Previous">
-                                        <span aria-hidden="true">&lsaquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item" *ngFor="let page of getVisiblePages()"
-                                    [class.active]="page === currentPage">
-                                    <a class="page-link" href="javascript:void(0)" (click)="goToPage(page)">{{page}}</a>
-                                </li>
-                                <li class="page-item" [class.disabled]="currentPage === totalPages">
-                                    <a class="page-link" href="javascript:void(0)" (click)="nextPage()" aria-label="Next">
-                                        <span aria-hidden="true">&rsaquo;</span>
-                                    </a>
-                                </li>
-                                <li class="page-item" [class.disabled]="currentPage === totalPages">
-                                    <a class="page-link" href="javascript:void(0)" (click)="goToPage(totalPages)" aria-label="Last">
-                                        <span aria-hidden="true">&raquo;</span>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                        <div class="pages-per-view">
-                            <select class="form-control" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
-                                <option [value]="10">10 por página</option>
-                                <option [value]="25">25 por página</option>
-                                <option [value]="50">50 por página</option>
-                                <option [value]="100">100 por página</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Message Modal - CRM - HIDDEN -->
-<ng-template #messageModal let-modal *ngIf="false">
-  <div class="modal-header">
-    <h5 class="modal-title">Mensaje de {{selectedClient?.nombre}}</h5>
-    <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-      <span aria-hidden="true">&times;</span>
-    </button>
-  </div>
-  <div class="modal-body">
-    <p>{{selectedClient?.observaciones}}</p>
-  </div>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="modal.close('Close click')">Cerrar</button>
-    <button type="button" class="btn btn-primary">Responder</button>
-  </div>
-</ng-template>

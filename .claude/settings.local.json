@@ -84,7 +84,8 @@
       "Bash(echo \"Levels up: 6 \\(contact-form -> components -> crm -> components -> app -> src\\) then assets/scss/utils/variables\")",
       "Read(//c/assets/scss/utils/**)",
       "Bash(git -C C:sourcecodejulsSeller.Katuq diff --stat HEAD)",
-      "WebFetch(domain:procreator.design)"
+      "WebFetch(domain:procreator.design)",
+      "mcp__plugin_claude-mem_mcp-search__get_observations"
     ]
   }
 }

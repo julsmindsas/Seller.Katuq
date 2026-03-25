@@ -2,6 +2,13 @@
   <i class="pi pi-spin pi-spinner" style="font-size:2rem;"></i>
 </div>
 
+<!-- Error / not found -->
+<div *ngIf="!loading && !lead" class="text-center p-5">
+  <i class="pi pi-exclamation-triangle" style="font-size:2rem; color:#d12b38;"></i>
+  <p class="mt-2">No se pudo cargar el lead. Verifica que el backend esté corriendo en localhost:3300.</p>
+  <button pButton label="Volver al listado" icon="pi pi-arrow-left" class="p-button-text" (click)="goBack()"></button>
+</div>
+
 <div class="container-fluid p-3" *ngIf="!loading && lead">
 
   <!-- Header -->

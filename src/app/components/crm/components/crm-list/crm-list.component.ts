@@ -48,16 +48,22 @@ export class CrmListComponent implements OnInit, OnDestroy {
         this.loadLeads(true);
       });
 
-    // Load stages first, then data
+    // Load stages, then data — if stages fail, load data anyway
     this.crmService.getStages()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(result => {
-        this.stages = result.stages;
-        this.entityType = result.entityType;
-        this.stageOptions = result.stages.map(s => ({ label: this.capitalize(s), value: s }));
-        this.loadLeads();
-        this.loadStats();
+      .subscribe({
+        next: (result) => {
+          this.stages = result.stages;
+          this.entityType = result.entityType;
+          this.stageOptions = result.stages.map(s => ({ label: this.capitalize(s), value: s }));
+        },
+        error: () => {},
+        complete: () => {},
       });
+
+    // Always load data regardless of stages
+    this.loadLeads();
+    this.loadStats();
   }
 
   ngOnDestroy(): void {
