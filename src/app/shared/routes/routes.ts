@@ -253,13 +253,4 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "Dropshipping" },
   },
-  {
-    path: "crm",
-    loadChildren: () =>
-      import("../../components/crm/crm.module").then(
-        (m) => m.CrmModule,
-      ),
-    canActivate: [AuthGuard],
-    data: { title: "CRM" },
-  },
 ];

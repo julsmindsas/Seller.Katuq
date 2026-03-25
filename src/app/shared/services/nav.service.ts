@@ -296,7 +296,7 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "users",
         },
-        { path: "crm/dashboard", title: "CRM", type: "link", icon: "target" },
+        { path: "prospectos/lista", title: "Prospectos", type: "link", icon: "user-plus" },
       ],
     },
 
@@ -346,15 +346,13 @@ export class NavService implements OnDestroy {
       ],
     },
     {
-      title: "CRM",
-      icon: "target",
+      title: "Flow CRM",
+      icon: "users",
       type: "sub",
       active: false,
+      isOnlySuperAdministrador: true,
       children: [
-        { path: "crm/dashboard", title: "Dashboard", type: "link", icon: "pie-chart" },
-        { path: "crm/contacts", title: "Contactos", type: "link", icon: "users" },
-        { path: "crm/pipeline", title: "Pipeline", type: "link", icon: "bar-chart-2" },
-        { path: "crm/tasks", title: "Tareas", type: "link", icon: "check-square" },
+        { path: "katuq-flow/leads", title: "Gestión de Leads", type: "link", icon: "target" },
       ],
     },
 

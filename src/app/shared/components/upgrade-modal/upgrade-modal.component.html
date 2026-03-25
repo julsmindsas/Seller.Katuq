@@ -7,125 +7,109 @@
   [closeOnEscape]="true"
   (onHide)="closeModal()"
   styleClass="upgrade-modal"
-  [style]="{'width': '90vw', 'max-width': '900px'}">
+  [style]="{'width': '90vw', 'max-width': '600px'}">
 
   <ng-template pTemplate="header">
-    <div class="modal-header-content">
-      <i class="fa fa-rocket header-icon"></i>
+    <div class="d-flex align-items-center gap-2">
+      <i class="pi pi-bolt" style="color: #8b5cf6; font-size: 1.2rem;"></i>
       <div>
-        <h3>Actualizar a Premium</h3>
-        <p class="header-subtitle">Desbloquea todas las funcionalidades de Katuq</p>
+        <h5 class="mb-0 fw-bold" style="color: #0f172a;">Activar Plan Pago</h5>
+        <small class="text-muted">Desbloquea todo, paga solo por lo que vendes</small>
       </div>
     </div>
   </ng-template>
 
-  <div class="pricing-container">
-    <!-- Premium Features Banner -->
-    <div class="features-banner">
-      <h4><i class="fa fa-star"></i> Beneficios Premium</h4>
-      <div class="features-grid">
-        <div class="feature-item">
-          <i class="fa fa-infinity"></i>
-          <span>Pedidos ilimitados</span>
-        </div>
-        <div class="feature-item">
-          <i class="fa fa-brain"></i>
-          <span>IA sin restricciones</span>
-        </div>
-        <div class="feature-item">
-          <i class="fa fa-warehouse"></i>
-          <span>Múltiples bodegas</span>
-        </div>
-        <div class="feature-item">
-          <i class="fa fa-truck"></i>
-          <span>Dropshipping</span>
-        </div>
-        <div class="feature-item">
-          <i class="fa fa-link"></i>
-          <span>Integraciones avanzadas</span>
-        </div>
-        <div class="feature-item">
-          <i class="fa fa-headset"></i>
-          <span>Soporte prioritario</span>
-        </div>
+  <div class="p-3">
+    <!-- Cómo funciona -->
+    <div class="mb-4 p-3 rounded" style="background: #f8fafc; border: 1px solid #e2e8f0;">
+      <h6 class="fw-bold mb-3" style="color: #0f172a;">
+        <i class="pi pi-info-circle me-1" style="color: #8b5cf6;"></i>
+        Como funciona la facturacion
+      </h6>
+      <div class="d-flex align-items-start gap-2 mb-2">
+        <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+              style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">1</span>
+        <small style="color: #334155;">Usas Katuq sin restricciones — pedidos, bodegas, usuarios, integraciones, todo ilimitado.</small>
+      </div>
+      <div class="d-flex align-items-start gap-2 mb-2">
+        <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+              style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">2</span>
+        <small style="color: #334155;">Al cierre de tu mes, sumamos tus ventas y determinamos tu tramo automaticamente.</small>
+      </div>
+      <div class="d-flex align-items-start gap-2">
+        <span class="badge rounded-circle d-flex align-items-center justify-content-center flex-shrink-0"
+              style="width: 20px; height: 20px; background: #8b5cf6; font-size: 0.65rem;">3</span>
+        <small style="color: #334155;">Te cobramos segun lo que vendiste. Si vendes poco, pagas poco.</small>
       </div>
     </div>
 
-    <!-- Pricing Cards -->
-    <div class="pricing-cards">
-      <div *ngFor="let option of pricingOptions"
-           class="pricing-card"
-           [class.selected]="selectedPeriod === option.period"
-           [class.recommended]="option.recommended"
-           (click)="selectPeriod(option.period)">
-
-        <div class="recommended-badge" *ngIf="option.recommended">
-          <i class="fa fa-star"></i> Recomendado
-        </div>
-
-        <div class="card-header">
-          <h4>{{ option.label }}</h4>
-          <div class="discount-tag" *ngIf="option.discount">
-            {{ option.discount }}
-          </div>
-        </div>
-
-        <div class="card-pricing">
-          <div class="main-price">
-            {{ formatPrice(option.price) }}
-          </div>
-          <div class="price-per-month" *ngIf="option.period !== 'monthly'">
-            {{ formatPrice(option.pricePerMonth) }}/mes
-          </div>
-        </div>
-
-        <div class="select-indicator">
-          <i class="fa" [class.fa-circle-o]="selectedPeriod !== option.period"
-                        [class.fa-check-circle]="selectedPeriod === option.period"></i>
-          <span>{{ selectedPeriod === option.period ? 'Seleccionado' : 'Seleccionar' }}</span>
-        </div>
-      </div>
+    <!-- Tabla de tramos -->
+    <div class="mb-4">
+      <h6 class="fw-bold mb-2" style="color: #0f172a; font-size: 0.85rem;">Escala de precios</h6>
+      <table class="table table-sm mb-0" style="font-size: 0.8rem;">
+        <thead style="background: #f8fafc;">
+          <tr>
+            <th style="color: #64748b; font-weight: 600;">Plan</th>
+            <th class="text-center" style="color: #64748b; font-weight: 600;">Ventas hasta</th>
+            <th class="text-center" style="color: #64748b; font-weight: 600;">Precio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="fw-semibold">Origen</td>
+            <td class="text-center">$30M COP</td>
+            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$47 USD</td>
+          </tr>
+          <tr style="background: #faf5ff;">
+            <td class="fw-semibold">Esencia <span class="badge" style="background: #f3e8ff; color: #8b5cf6; font-size: 0.6rem;">Popular</span></td>
+            <td class="text-center">$60M COP</td>
+            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$77 USD</td>
+          </tr>
+          <tr>
+            <td class="fw-semibold">Impulso</td>
+            <td class="text-center">$150M COP</td>
+            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$147 USD</td>
+          </tr>
+          <tr>
+            <td class="fw-semibold">Expansion</td>
+            <td class="text-center">$300M COP</td>
+            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$247 USD</td>
+          </tr>
+          <tr>
+            <td class="fw-semibold">Liderazgo</td>
+            <td class="text-center">$500M COP</td>
+            <td class="text-center" style="color: #8b5cf6; font-weight: 600;">$427 USD</td>
+          </tr>
+        </tbody>
+      </table>
+      <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+        <i class="pi pi-info-circle me-1"></i>Precios en USD convertidos a COP con TRM del dia de cobro
+      </small>
     </div>
 
-    <!-- Info Section -->
-    <div class="info-section">
-      <i class="fa fa-info-circle"></i>
-      <p *ngIf="checkingFirstTime">
-        <i class="fa fa-spinner fa-spin"></i> Verificando tipo de usuario...
-      </p>
-      <p *ngIf="!checkingFirstTime && isFirstTime">
-        🎉 Como es tu primera vez, usarás nuestro sistema de pago embebido para una experiencia más fluida.
-        Tu suscripción se activará automáticamente al confirmar el pago.
-      </p>
-      <p *ngIf="!checkingFirstTime && !isFirstTime">
-        Al hacer clic en "Continuar al Pago" serás redirigido a Wompi para completar tu pago de forma segura.
-        Tu suscripción se renovará automáticamente al confirmar el pago.
-      </p>
+    <!-- Lo que desbloqueas -->
+    <div class="p-3 rounded" style="background: #faf5ff; border: 1px solid #e9d5ff;">
+      <h6 class="fw-bold mb-2" style="color: #8b5cf6; font-size: 0.85rem;">
+        <i class="pi pi-check-circle me-1"></i>Lo que desbloqueas
+      </h6>
+      <div class="row g-1">
+        <div class="col-6" *ngFor="let feature of ['Pedidos ilimitados', 'Bodegas ilimitadas', 'Usuarios ilimitados', 'Integraciones ilimitadas', 'Chat IA ilimitado', 'Modulo Produccion', 'Dropshipping', 'Soporte prioritario']">
+          <small class="d-flex align-items-center gap-1">
+            <i class="pi pi-check" style="color: #8b5cf6; font-size: 0.65rem;"></i>
+            <span style="color: #334155;">{{ feature }}</span>
+          </small>
+        </div>
+      </div>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <div class="modal-footer-actions">
-      <button
-        type="button"
-        pButton
-        label="Cancelar"
-        icon="fa fa-times"
-        class="p-button-text p-button-secondary"
-        (click)="closeModal()"
-        [disabled]="loading">
-      </button>
-
-      <button
-        type="button"
-        pButton
-        label="Continuar al Pago"
-        icon="fa fa-arrow-right"
-        class="p-button-primary"
-        [loading]="loading"
-        [disabled]="!selectedPeriod || loading"
-        (click)="confirmUpgrade()">
-      </button>
+    <div class="d-flex justify-content-between w-100">
+      <button pButton type="button" label="Cancelar" icon="pi pi-times"
+              class="p-button-text p-button-secondary" (click)="closeModal()" [disabled]="loading"></button>
+      <button pButton type="button" label="Activar Plan Pago" icon="pi pi-bolt"
+              style="background: #8b5cf6; border-color: #8b5cf6;"
+              [loading]="loading" (click)="confirmUpgrade()"></button>
     </div>
   </ng-template>
 </p-dialog>
