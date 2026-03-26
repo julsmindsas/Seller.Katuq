@@ -390,6 +390,9 @@ export class CrearEmpresaComponent implements OnInit {
   }
 
   addRowContact() {
+    if (!Array.isArray(this.contactos)) {
+      this.contactos = [];
+    }
     const contacto = {
       nomCompletoContacto: this.nomCompletoContacto.nativeElement.value,
       indicativoTelContacto: this.indicativoTelContacto.nativeElement.value,
@@ -451,8 +454,8 @@ export class CrearEmpresaComponent implements OnInit {
       if (this.edit != null) {
         this.mostrarCrear = false
 
-        this.contactos = this.edit.contactos
-        this.sedess = this.edit.sedes
+        this.contactos = Array.isArray(this.edit.contactos) ? this.edit.contactos : []
+        this.sedess = Array.isArray(this.edit.sedes) ? this.edit.sedes : []
         this.horarioPV = this.edit.horarioPV
         this.f.value.canalesComunicacion = this.edit.canalesComunicacion
         this.edit.horarioPV?.map(x => {
