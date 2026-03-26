@@ -18,7 +18,7 @@ import { LoadingBarModule } from '@ngx-loading-bar/core';
 import { environment } from '../environments/environment';
 import { AppComponent } from './app.component';
 import { LoginModule } from '../app/auth/login/login.module';
-import { ServiceWorkerModule } from '@angular/service-worker';
+// import { ServiceWorkerModule } from '@angular/service-worker'; // SW desactivado (2026-03-25)
 import { TreeTableModule } from 'primeng/treetable';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -117,12 +117,12 @@ export function HttpLoaderFactory(http: HttpClient) {
     LoadingBarRouterModule,
     // for Core use:
     LoadingBarModule,
-    ServiceWorkerModule.register('ngsw-worker.js', {
-      enabled: environment.production,
-      // Register the ServiceWorker as soon as the app is stable
-      // or after 30 seconds (whichever comes first).
-      registrationStrategy: 'registerWhenStable:30000'
-    }),
+    // Service Worker desactivado (2026-03-25) - duplicaba requests HTTP y degradaba rendimiento
+    // Si se necesita reactivar: descomentar y configurar serviceWorker:true en angular.json
+    // ServiceWorkerModule.register('ngsw-worker.js', {
+    //   enabled: environment.production,
+    //   registrationStrategy: 'registerWhenStable:30000'
+    // }),
     ChangePasswordModule,
     FacturaTirillaModule,
     AppTranslateModule,

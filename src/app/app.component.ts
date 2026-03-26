@@ -3,7 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { LoadingBarService } from '@ngx-loading-bar/core';
 import { map, delay, withLatestFrom, takeUntil, filter } from 'rxjs/operators';
 import { TranslateService } from '@ngx-translate/core';
-import { SwUpdate } from '@angular/service-worker';
+// import { SwUpdate } from '@angular/service-worker'; // SW desactivado (2026-03-25)
 import Swal from 'sweetalert2';
 import { env } from 'process';
 import { environment } from './../environments/environment';
@@ -72,7 +72,7 @@ export class AppComponent implements OnInit, OnDestroy {
     private idleInterruptService: IdleInterruptService,
     private loader: LoadingBarService,
     translate: TranslateService,
-    private updates: SwUpdate,
+    // private updates: SwUpdate, // SW desactivado (2026-03-25)
     private errorHandlerService: ErrorHandlerService,
     private cdr: ChangeDetectorRef
   ) {
@@ -87,12 +87,8 @@ export class AppComponent implements OnInit, OnDestroy {
       translate.setDefaultLang('es');
       translate.addLangs(['en', 'de', 'es', 'fr', 'pt', 'cn', 'ae']);
     }
-    // if (environment.production) {
-    updates.checkForUpdate().then(() => { }
-      // this.updateCheckText = 'resolved';
-    ).catch(err => { }
-      // this.updateCheckText = rejected: ${ err.message }
-    );
+    // Service Worker desactivado (2026-03-25) - duplicaba requests HTTP y degradaba rendimiento
+    // updates.checkForUpdate().then(() => { }).catch(err => { });
 
     this.notificationService.notifications$
       .pipe(takeUntil(this.destroy$))
@@ -108,30 +104,27 @@ export class AppComponent implements OnInit, OnDestroy {
         }
       );
 
-    updates.available
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(async event => {
-      // Add a notification
-      this.notificationService.addNotification({
-        message: 'Tenemos una actualización nueva. Para acceder a nuevas funcionalidades y mejoras. Dale REINICIAR AHORA. Detalles de la actualización: [detalles]',
-        timestamp: new Date(),
-        type: 'function',
-        typeIcon: 'warning',
-        action: () => {
-          updates.activateUpdate().then(() => document.location.reload());
-        },
-        btnName: 'Reiniciar Ahora',
-        details: ''
-      });
-
-      // Show a toast
-      this.toastrService.warning('¡Nueva versión disponible!', 'Actualización', {
-        timeOut: 5000,
-        progressBar: true,
-        positionClass: 'toast-top-right'
-      });
-
-    });
+    // Service Worker update listener desactivado (2026-03-25)
+    // updates.available
+    //   .pipe(takeUntil(this.destroy$))
+    //   .subscribe(async event => {
+    //   this.notificationService.addNotification({
+    //     message: 'Tenemos una actualización nueva...',
+    //     timestamp: new Date(),
+    //     type: 'function',
+    //     typeIcon: 'warning',
+    //     action: () => {
+    //       updates.activateUpdate().then(() => document.location.reload());
+    //     },
+    //     btnName: 'Reiniciar Ahora',
+    //     details: ''
+    //   });
+    //   this.toastrService.warning('¡Nueva versión disponible!', 'Actualización', {
+    //     timeOut: 5000,
+    //     progressBar: true,
+    //     positionClass: 'toast-top-right'
+    //   });
+    // });
 
     // Enhanced idle configuration using IdleInterruptService
     this.configureIdleSettings();

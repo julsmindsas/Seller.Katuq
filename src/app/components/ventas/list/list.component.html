@@ -293,7 +293,8 @@
                                                 {{ '# Pedido' | translate }}
                                                 <p-sortIcon field="nroPedido"></p-sortIcon>
                                                 <p-columnFilter type="text" field="nroPedido" display="menu"
-                                                    matchMode="contains" [showMenu]="true" [showClearButton]="true">
+                                                    matchMode="contains" [showMenu]="true" [showClearButton]="true"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                                                         <input type="text" pInputText
                                                                [value]="value"
@@ -311,7 +312,8 @@
                                                 <p-sortIcon field="nroFactura"></p-sortIcon>
                                                 <p-columnFilter type="text" field="nroFactura"
                                                     matchMode="contains" placeholder="{{'Factura' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 
@@ -344,7 +346,8 @@
                                                 {{ 'Estado de Pago' | translate }}
                                                 <p-sortIcon field="estadoPago"></p-sortIcon>
                                                 <p-columnFilter field="estadoPago" matchMode="in"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                     <ng-template pTemplate="filter" let-value
                                                         let-filter="filterCallback">
                                                         <p-multiSelect [ngModel]="value" [options]="estadosPago"
@@ -361,7 +364,8 @@
                                                 {{ 'Estado de Proceso' | translate }}
                                                 <p-sortIcon field="estadoProceso"></p-sortIcon>
                                                 <p-columnFilter field="estadoProceso" matchMode="in"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                     <ng-template pTemplate="filter" let-value
                                                         let-filter="filterCallback">
                                                         <p-multiSelect [ngModel]="value" [options]="estadosProcesos"
@@ -379,6 +383,7 @@
                                                 {{ 'Validación' | translate }}
                                                 <p-sortIcon field="validacion"></p-sortIcon>
                                                 <p-columnFilter field="validacion" matchMode="equals"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false"
                                                     [showMenu]="true" display="menu">
                                                     <ng-template pTemplate="filter" let-value
                                                         let-filter="filterCallback">
@@ -398,7 +403,8 @@
                                                 {{ 'Cliente' | translate }}
                                                 <p-sortIcon field="cliente.nombres_completos"></p-sortIcon>
                                                 <p-columnFilter type="text" field="cliente.nombres_completos"
-                                                    matchMode="contains" [showMenu]="true" display="menu" [showClearButton]="true">
+                                                    matchMode="contains" [showMenu]="true" display="menu" [showClearButton]="true"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                     <ng-template pTemplate="filter" let-value let-filter="filterCallback">
                                                         <input type="text" pInputText
                                                                [value]="value"
@@ -416,7 +422,8 @@
                                                 <p-sortIcon field="totalPedidoSinDescuento"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="totalPedidoSinDescuento"
                                                     matchMode="contains" placeholder="{{'V. Bruto' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 
@@ -427,7 +434,8 @@
                                                 <p-sortIcon field="totalDescuento"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="totalDescuento"
                                                     matchMode="contains" placeholder="{{'Desc.' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 
@@ -438,7 +446,8 @@
                                                 <p-sortIcon field="totalEnvio"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="totalEnvio"
                                                     matchMode="contains" placeholder="{{'Domicilio' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 
@@ -449,7 +458,8 @@
                                                 <p-sortIcon field="subtotal"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="subtotal" matchMode="contains"
                                                     placeholder="{{'Subt.' | translate}}" [showMenu]="true"
-                                                    display="menu">
+                                                    display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 
@@ -460,7 +470,8 @@
                                                 <p-sortIcon field="totalImpuesto"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="totalImpuesto"
                                                     matchMode="contains" placeholder="{{'IVA' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 
@@ -471,7 +482,8 @@
                                                 <p-sortIcon field="totalPedididoConDescuento"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="totalPedididoConDescuento"
                                                     matchMode="contains" placeholder="{{'Total' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 
@@ -482,7 +494,8 @@
                                                 <p-sortIcon field="anticipo"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="anticipo" matchMode="contains"
                                                     placeholder="{{'Anticipo' | translate}}" [showMenu]="true"
-                                                    display="menu">
+                                                    display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 
@@ -493,7 +506,8 @@
                                                 <p-sortIcon field="faltaPorPagar"></p-sortIcon>
                                                 <p-columnFilter type="numeric" field="faltaPorPagar"
                                                     matchMode="contains" placeholder="{{'Falta' | translate}}"
-                                                    [showMenu]="true" display="menu">
+                                                    [showMenu]="true" display="menu"
+                                                    [showMatchModes]="false" [showOperator]="false" [showAddButton]="false">
                                                 </p-columnFilter>
                                             </th>
 

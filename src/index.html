@@ -65,6 +65,18 @@
 
 <body>
   <app-root></app-root>
+  <!-- Service Worker desactivado (2026-03-25) - duplicaba requests HTTP y degradaba rendimiento
+       Si se necesita reactivar: angular.json > configurations.production > "serviceWorker": true
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(registration) {
+          registration.unregister();
+        });
+      });
+    }
+  </script>
+  -->
 </body>
 
 </html>

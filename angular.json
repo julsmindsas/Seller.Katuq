@@ -39,8 +39,6 @@
         "build": {
           "builder": "@angular-devkit/build-angular:browser",
           "options": {
-            "serviceWorker": true,
-            "ngswConfigPath": "ngsw-config.json",
             "allowedCommonJsDependencies": [
               "lodash",
               "rxjs-compat",
