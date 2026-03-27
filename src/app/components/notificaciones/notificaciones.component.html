@@ -49,11 +49,10 @@
                                             {{ 'Email' | translate }}
                                         </div>
                                     </th>
-                                    <th class="td-channel text-center td-sms td-decorative">
+                                    <th class="td-channel text-center td-sms">
                                         <div class="channel-header">
                                             <i class="fa fa-comment me-1" aria-hidden="true"></i>
                                             {{ 'Mensaje de texto' | translate }}
-                                            <span class="badge badge-decorative ms-1">{{ 'Próximamente' | translate }}</span>
                                         </div>
                                     </th>
                                     <th class="td-channel text-center td-decorative">
@@ -82,11 +81,12 @@
                                         </div>
                                     </td>
 
-                                    <td class="td-channel td-sms td-decorative text-center align-middle">
-                                        <div class="checkbox-container decorative">
+                                    <td class="td-channel td-sms text-center align-middle">
+                                        <div class="checkbox-container">
                                             <input type="checkbox" class="custom-checkbox" [id]="'sms-' + pref.id"
-                                                disabled [attr.checked]="false">
-                                            <label [for]="'sms-' + pref.id" [attr.title]="'Próximamente' | translate"></label>
+                                                [checked]="pref.channels.sms"
+                                                (change)="toggleSms(pref.id)">
+                                            <label [for]="'sms-' + pref.id"></label>
                                         </div>
                                     </td>
 

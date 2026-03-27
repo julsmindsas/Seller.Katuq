@@ -121,8 +121,13 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
               }
             });
           }
-          // SMS deshabilitado en producción — forzar false ignorando Firestore
-          this.preferences.forEach(pref => pref.channels.sms = false);
+          if (saved && saved.sms_notifications) {
+            this.preferences.forEach(pref => {
+              if (saved.sms_notifications[pref.id] !== undefined) {
+                pref.channels.sms = saved.sms_notifications[pref.id];
+              }
+            });
+          }
           this.isLoading = false;
         },
         error: () => {
@@ -160,7 +165,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     const sms_notifications: { [key: string]: boolean } = {};
     this.preferences.forEach(pref => {
       notifications[pref.id] = pref.channels.email;
-      sms_notifications[pref.id] = false; // SMS deshabilitado en producción
+      sms_notifications[pref.id] = pref.channels.sms;
     });
 
     this.maestroService.saveCompanyNotificationPreferences(companyName, { notifications, sms_notifications })
