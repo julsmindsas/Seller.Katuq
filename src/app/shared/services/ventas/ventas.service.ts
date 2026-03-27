@@ -470,7 +470,8 @@ export class VentasService extends BaseService {
           nroPedido: order.nroPedido,
           cliente: order.cliente?.nombres_completos || 'Cliente',
           total: this.formatCurrency(order.subtotal || 0),
-          orderId: order._id
+          orderId: order._id,
+          clienteEmail: order.cliente?.correo_electronico_comprador
         },
         priority: NotificationPriority.HIGH,
         channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME]
@@ -568,7 +569,8 @@ export class VentasService extends BaseService {
           estadoProceso: order.estadoProceso,
           orderId: order._id,
           transportador: order.transportador?.nombre,
-          trackingNumber: order.nroShippingOrder
+          trackingNumber: order.nroShippingOrder,
+          clienteEmail: order.cliente?.correo_electronico_comprador
         },
         priority
       };
@@ -615,7 +617,8 @@ export class VentasService extends BaseService {
           estadoPago: estadoPago,
           monto: order ? this.formatCurrency(order.subtotal || 0) : '',
           orderId: order?._id,
-          cliente: order?.cliente?.nombres_completos
+          cliente: order?.cliente?.nombres_completos,
+          clienteEmail: order?.cliente?.correo_electronico_comprador 
         },
         priority,
         channels

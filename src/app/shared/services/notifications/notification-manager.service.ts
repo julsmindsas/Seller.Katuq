@@ -676,18 +676,50 @@ export class NotificationManagerService {
   }
 
   /**
-   * Envía notificación por email (backend)
+   * Tipos de notificación cuyo email va al cliente (requieren toEmail en data).
+   */
+  /** Tipos cuyo email va al cliente: el backend debe recibir toEmail. */
+  private static readonly CUSTOMER_EMAIL_TYPES: Set<string> = new Set([
+    'ORDER_DISPATCHED',
+    'ORDER_DELIVERED',
+    'CART_ABANDONED',
+    'CART_REMINDER'
+  ]);
+
+  /**
+   * Envía notificación por email (backend).
+   * Incluye toEmail en el payload cuando existe en notification.data para que el backend sepa el destinatario.
    */
   private async sendEmailNotification(notification: KatuqNotification): Promise<void> {
+    const emailTemplate = NOTIFICATION_TEMPLATES[notification.type]?.templates?.[NotificationChannel.EMAIL];
+    if (!emailTemplate) {
+      console.warn(`🔔 Email no enviado: no hay template EMAIL para tipo ${notification.type}`);
+      return;
+    }
+
+    const toEmail = notification.data?.clienteEmail || notification.data?.toEmail;
+    const isCustomerEmail = NotificationManagerService.CUSTOMER_EMAIL_TYPES.has(notification.type);
+    if (isCustomerEmail && !toEmail) {
+      console.warn(`🔔 Email no enviado: notificación ${notification.type} requiere destinatario (clienteEmail/toEmail) y no está en data.`, notification.data);
+      return;
+    }
+
     const endpoint = `${NOTIFICATION_CONFIG.api.baseUrl}${NOTIFICATION_CONFIG.api.endpoints.send}`;
-    
-    await this.http.post(endpoint, {
+    const body = {
       type: 'email',
+      toEmail: toEmail || undefined,
       notification: {
         ...notification,
-        template: NOTIFICATION_TEMPLATES[notification.type].templates[NotificationChannel.EMAIL]
+        template: emailTemplate
       }
-    }).toPromise();
+    };
+
+    try {
+      await this.http.post(endpoint, body).toPromise();
+    } catch (error: any) {
+      console.error('❌ Error enviando notificación por email:', error?.message || error, { type: notification.type, toEmail });
+      throw error;
+    }
   }
 
   /**

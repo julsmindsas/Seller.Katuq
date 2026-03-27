@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
-import { NotificationService, Notification } from 'src/app/shared/services/notification.service';
+import { NotificationService, Notification } from '../../../../services/notification.service';
 
 @Component({
   selector: 'app-notification',
@@ -28,7 +28,9 @@ export class NotificationComponent implements OnInit, OnDestroy {
       );
   }
   actionNotification(notification: Notification) {
-    notification.action();
+    if (notification.action) {
+      notification.action();
+    }
     this.notificationService.removeNotification(notification);
   }
 
