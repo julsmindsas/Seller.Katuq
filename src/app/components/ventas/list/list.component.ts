@@ -6204,6 +6204,39 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                 "✅ Producto agregado a recompra:",
                 configuracionResult,
               );
+
+              // Si el producto permite precio manual, preguntar al usuario
+              if (configuracionResult.producto?.procesoComercial?.permitePrecioManual === true) {
+                const precioBase = configuracionResult.producto?.precio?.precioUnitarioConIva || 0;
+                Swal.fire({
+                  title: 'Precio Manual',
+                  html: `<p style="margin-bottom:0.5rem;">El producto <b>${configuracionResult.producto?.crearProducto?.titulo || ''}</b> permite precio manual.</p>
+                         <p style="font-size:0.85rem;color:#64748b;">Precio base: <b>$${precioBase.toLocaleString('es-CO')}</b></p>`,
+                  input: 'number',
+                  inputLabel: 'Ingrese el precio con IVA',
+                  inputPlaceholder: 'Ej: 3000',
+                  inputAttributes: { min: '0', step: '1' },
+                  showCancelButton: true,
+                  confirmButtonText: 'Aplicar precio',
+                  cancelButtonText: 'Usar precio base',
+                  confirmButtonColor: '#8b5cf6',
+                  inputValidator: (value) => {
+                    if (value && (isNaN(Number(value)) || Number(value) < 0)) {
+                      return 'Ingrese un precio válido';
+                    }
+                    return null;
+                  }
+                }).then((result) => {
+                  if (result.isConfirmed && result.value) {
+                    configuracionResult._precioManualOverride = Number(result.value);
+                    console.log('💰 Precio manual asignado:', configuracionResult._precioManualOverride);
+                  }
+                  this.sincronizarFormaEntrega(order);
+                  order = this.actualizarValoresPedido(order);
+                  this.editOrder(order);
+                });
+                return;
+              }
             } else {
               console.error(
                 "❌ Producto sin referencia válida:",
