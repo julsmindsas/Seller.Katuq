@@ -686,15 +686,21 @@
                   <span *ngIf="selectedFormaEntrega === 'Domicilio'">Se enviará a domicilio.</span>
                 </div>
 
-                <!-- Tab Navigation -->
-                <ul class="nav nav-tabs step4-tabs" role="tablist">
-                  <!-- Tab Envío - Se oculta cuando es Recoge en Tienda -->
+                <!-- Mensaje informativo cuando es Recoge en Tienda -->
+                <div class="alert alert-info mb-3" *ngIf="esRecogeEnTienda"
+                  style="border-left: 3px solid #8b5cf6; border-radius: 0.5rem;">
+                  <i class="fa fa-info-circle me-2"></i>
+                  <strong>Recoge en Tienda:</strong> No se requieren datos de envío. Por favor configure los datos de facturación.
+                </div>
+
+                <!-- Tabs de navegación Envío / Facturación -->
+                <ul class="nav step4-tabs" role="tablist">
                   <li class="nav-item" role="presentation" *ngIf="!esRecogeEnTienda">
-                    <button class="nav-link" [class.active]="!esRecogeEnTienda" id="tab-envio" data-bs-toggle="tab" data-bs-target="#panel-envio"
-                            type="button" role="tab" aria-controls="panel-envio" [attr.aria-selected]="!esRecogeEnTienda">
+                    <button class="nav-link active" id="tab-envio" data-bs-toggle="tab" data-bs-target="#panel-envio"
+                            type="button" role="tab" aria-controls="panel-envio" aria-selected="true">
                       <i class="fa fa-truck me-2"></i>Envío
-                      <span class="tab-status" *ngIf="pedidoGral?.envio">
-                        <i class="fa fa-check-circle text-success"></i>
+                      <span class="tab-badge" *ngIf="pedidoGral?.envio">
+                        <i class="fa fa-check-circle"></i>
                       </span>
                     </button>
                   </li>
@@ -702,54 +708,44 @@
                     <button class="nav-link" [class.active]="esRecogeEnTienda" id="tab-facturacion" data-bs-toggle="tab" data-bs-target="#panel-facturacion"
                             type="button" role="tab" aria-controls="panel-facturacion" [attr.aria-selected]="esRecogeEnTienda">
                       <i class="fa fa-file-invoice me-2"></i>Facturación
-                      <span class="tab-status" *ngIf="pedidoGral?.facturacion">
-                        <i class="fa fa-check-circle text-success"></i>
+                      <span class="tab-badge" *ngIf="pedidoGral?.facturacion">
+                        <i class="fa fa-check-circle"></i>
                       </span>
                     </button>
                   </li>
                 </ul>
 
-                <!-- Mensaje informativo cuando es Recoge en Tienda -->
-                <div class="alert alert-info mt-2 mb-2" *ngIf="esRecogeEnTienda">
-                  <i class="fa fa-info-circle me-2"></i>
-                  <strong>Recoge en Tienda:</strong> No se requieren datos de envío. Por favor configure los datos de facturación.
-                </div>
-
-                <!-- Tab Content -->
+                <!-- Contenido de las tabs -->
                 <div class="tab-content step4-tab-content">
-                  <!-- Panel Envío - Se oculta cuando es Recoge en Tienda -->
-                  <div class="tab-pane fade" [class.show]="!esRecogeEnTienda" [class.active]="!esRecogeEnTienda"
-                       id="panel-envio" role="tabpanel" aria-labelledby="tab-envio" *ngIf="!esRecogeEnTienda">
-                    <div class="step4-section">
-                      <pedido-entrega #entrega [pedidoGral]="pedidoGral" [formulario]="formulario"
-                        [datosEntregas]="datosEntregas" [documentoBusqueda]="documentoBuscar"
-                        [direccionEntrega]="direccion_facturacion" [paisInicial]="pais" [departamentoInicial]="departamento"
-                        [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
-                        [datosEntregaNoEncontradosParaCiudadSeleccionada]="datosEntregaNoEncontradosParaCiudadSeleccionada"
-                        (overridePedido)="overridePedido($event)" [activeIndex]="0" *ngIf="pedidoGral">
-                      </pedido-entrega>
-                    </div>
+                  <!-- Panel Envío -->
+                  <div class="tab-pane fade show active" id="panel-envio" role="tabpanel"
+                       aria-labelledby="tab-envio" *ngIf="!esRecogeEnTienda">
+                    <pedido-entrega #entrega [pedidoGral]="pedidoGral" [formulario]="formulario"
+                      [datosEntregas]="datosEntregas" [documentoBusqueda]="documentoBuscar"
+                      [direccionEntrega]="direccion_facturacion" [paisInicial]="pais" [departamentoInicial]="departamento"
+                      [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
+                      [datosEntregaNoEncontradosParaCiudadSeleccionada]="datosEntregaNoEncontradosParaCiudadSeleccionada"
+                      (overridePedido)="overridePedido($event)" [activeIndex]="0" *ngIf="pedidoGral">
+                    </pedido-entrega>
                   </div>
 
                   <!-- Panel Facturación -->
                   <div class="tab-pane fade" [class.show]="esRecogeEnTienda" [class.active]="esRecogeEnTienda"
                        id="panel-facturacion" role="tabpanel" aria-labelledby="tab-facturacion">
-                    <div class="step4-section">
-                      <app-pedido-facturacion #facturacion [pedidoGral]="pedidoGral" [formulario]="formulario"
-                        [datosFacturacionElectronica]="datosFacturacionElectronica"
-                        [direccionFacturacion]="direccion_facturacion" [paisInicial]="pais"
-                        [departamentoInicial]="departamento" [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
-                        (overridePedido)="overridePedido($event)" [generarFactura]="generarFacturaElectronica"
-                        (generarFacturaChange)="onGenerarFacturaChange($event)"
-                        [documentoBusqueda]="documentoBuscar" [activeIndex]="0" *ngIf="pedidoGral">
-                      </app-pedido-facturacion>
-                    </div>
+                    <app-pedido-facturacion #facturacion [pedidoGral]="pedidoGral" [formulario]="formulario"
+                      [datosFacturacionElectronica]="datosFacturacionElectronica"
+                      [direccionFacturacion]="direccion_facturacion" [paisInicial]="pais"
+                      [departamentoInicial]="departamento" [ciudad]="ciudad_municipio" [codigoPostal]="codigo_postal"
+                      (overridePedido)="overridePedido($event)" [generarFactura]="generarFacturaElectronica"
+                      (generarFacturaChange)="onGenerarFacturaChange($event)"
+                      [documentoBusqueda]="documentoBuscar" [activeIndex]="0" *ngIf="pedidoGral">
+                    </app-pedido-facturacion>
                   </div>
                 </div>
 
                 <!-- Resumen rápido del estado -->
-                <div class="step4-status-bar" *ngIf="pedidoGral?.envio || pedidoGral?.facturacion">
-                  <div class="status-item" [class.completed]="pedidoGral?.envio">
+                <div class="step4-status-bar">
+                  <div class="status-item" [class.completed]="pedidoGral?.envio" *ngIf="!esRecogeEnTienda">
                     <i class="fa" [class.fa-check-circle]="pedidoGral?.envio" [class.fa-circle]="!pedidoGral?.envio"></i>
                     <span>Envío</span>
                   </div>

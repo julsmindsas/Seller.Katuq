@@ -2893,9 +2893,32 @@ export class CrearVentasComponent
   }
 
   // Método para procesar el pago después de recibir los datos completos del checkout
-  comprarYPagar(pedidoProcesado: Pedido) {
+  async comprarYPagar(pedidoProcesado: Pedido) {
     // Asegurarnos de mantener la información correcta del pedido
     this.pedidoGral = { ...pedidoProcesado };
+
+    // Validar productos con precio manual no configurado
+    const productosSinPrecioManual = this.pedidoGral.carrito?.filter(item =>
+      item.producto?.procesoComercial?.permitePrecioManual === true
+      && (item._precioManualOverride === undefined || item._precioManualOverride === null)
+    );
+
+    if (productosSinPrecioManual?.length > 0) {
+      const nombres = productosSinPrecioManual
+        .map(item => item.producto?.crearProducto?.titulo || 'Producto sin nombre')
+        .join(', ');
+
+      const result = await Swal.fire({
+        title: 'Precio manual no configurado',
+        html: `Los siguientes productos permiten precio manual pero no tienen precio asignado:<br><b>${nombres}</b><br>¿Desea continuar con el precio base?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, continuar',
+        cancelButtonText: 'Volver al carrito',
+      });
+
+      if (!result.isConfirmed) return;
+    }
 
     // Validar que la dirección de envío pertenezca al cliente actual
     if (this.pedidoGral.envio?.direccionEntrega && this.pedidoGral.formaEntrega !== 'Recoge' && !this.esRecogeEnTienda) {

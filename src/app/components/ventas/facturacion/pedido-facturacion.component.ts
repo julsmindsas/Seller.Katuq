@@ -173,31 +173,19 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       this.formulario.controls["notas"].setValue(res.notas);
       this.formulario.controls["estado"].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe((r) => {
-        console.log(r);
+        // Cerrar modal si está abierto
+        this.modalService.dismissAll();
+
         Swal.fire({
           title: "Guardado!",
-          text: "Guardado con exito",
+          text: "Datos de facturación guardados con éxito",
           icon: "success",
           confirmButtonText: "Ok",
+          timer: 2000,
         });
 
-        // Cambiar a la pestaña de listado (Mis Datos de Facturación)
-        this.activeIndex = 0;
-
         // Limpiar TODOS los campos del formulario
-        this.facturacionElectronica = false;
-        this.alias_facturacion = "";
-        this.razon_social = "";
-        this.tipo_documento_facturacion = "";
-        this.numero_documento_facturacion = "";
-        this.indicativo_celular_facturacion = "";
-        this.numero_celular_facturacion = "";
-        this.correo_electronico_facturacion = "";
-        this.direccion_facturacion = "";
-        this.pais = "";
-        this.departamento = "";
-        this.ciudad_municipio = "";
-        this.codigo_postal = "";
+        this.limpiarVariables();
       });
     });
   }
@@ -627,5 +615,21 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
    */
   onGenerarFacturaChange(value: boolean): void {
     this.generarFacturaChange.emit(value);
+  }
+
+  abrirModalCrearFacturacion(modal): void {
+    this.limpiarVariables();
+    this.modalService.open(modal, { size: "lg" }).result.then(
+      () => {
+        this.limpiarVariables();
+      },
+      () => {
+        this.limpiarVariables();
+      },
+    );
+  }
+
+  trackByIndex(index: number, item: any): number {
+    return index;
   }
 }

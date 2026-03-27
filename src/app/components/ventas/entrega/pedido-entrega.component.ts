@@ -337,37 +337,31 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
               clientRes.datosEntrega &&
               Array.isArray(clientRes.datosEntrega)
             ) {
-              this.datosEntregas = clientRes.datosEntrega.filter((x) => {
-                return x.ciudad == (this.pedidoGral?.envio?.ciudad || "");
-              });
+              const ciudadFiltro = this.pedidoGral?.envio?.ciudad;
+              if (ciudadFiltro) {
+                const filtradas = clientRes.datosEntrega.filter((x) => x.ciudad == ciudadFiltro);
+                // Si hay direcciones para la ciudad, mostrar esas; si no, mostrar todas
+                this.datosEntregas = filtradas.length > 0 ? filtradas : clientRes.datosEntrega;
+                this.datosEntregaNoEncontradosParaCiudadSeleccionada = filtradas.length === 0;
+              } else {
+                // Sin ciudad seleccionada, mostrar todas las direcciones
+                this.datosEntregas = clientRes.datosEntrega;
+                this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
+              }
             } else {
               this.datosEntregas = [];
             }
 
-            // Verificar si hay datos de entrega para la ciudad
-            if (this.datosEntregas.length == 0) {
-              this.datosEntregaNoEncontradosParaCiudadSeleccionada = true;
-              //informar al usuario que no se encontraron datos de entrega para la ciudad seleccionada
-              Swal.fire({
-                title: "Advertencia!",
-                text:
-                  "Se guardó con éxito, pero recuerda que debes tener una dirección de entrega para la ciudad seleccionada (" +
-                  (this.pedidoGral?.envio?.ciudad || "seleccionada") +
-                  ") y posiblemente la que se creó no se vea reflejada en la lista de direcciones de entrega.",
-                icon: "warning",
-                confirmButtonText: "Ok",
-              });
-            } else {
-              Swal.fire({
-                title: "Guardado!",
-                text: "Guardado con éxito",
-                icon: "success",
-                confirmButtonText: "Ok",
-                timer: 2000,
-              });
+            // Cerrar modal si está abierto
+            this.modalService.dismissAll();
 
-              this.datosEntregaNoEncontradosParaCiudadSeleccionada = false;
-            }
+            Swal.fire({
+              title: "Guardado!",
+              text: "Dirección guardada con éxito",
+              icon: "success",
+              confirmButtonText: "Ok",
+              timer: 2000,
+            });
           });
 
         // Cambiar a la pestaña de listado (Mis Direcciones de Entrega)
@@ -401,6 +395,18 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.filteredResults = [];
       });
     });
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  abrirModalCrearEntrega(modal: any): void {
+    this.editandodato = false;
+    this.modalService.open(modal, { size: 'lg' }).result.then(
+      () => {},
+      () => {}
+    );
   }
 
   seleccionarDireccionEntrega(index) {

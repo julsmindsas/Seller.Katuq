@@ -1,174 +1,167 @@
-<p-tabView [(activeIndex)]="activeIndex">
-  <p-tabPanel header="{{ 'Mis Datos de Facturación' | translate}}">
-    <div class="alert alert-info">
-      {{ 'Por favor, seleccione o ingrese los datos de Facturación Electrónica.' | translate}}
+<div class="facturacion-section">
+  <!-- Header row -->
+  <div class="facturacion-header d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-3 border-bottom">
+    <div class="d-flex align-items-center gap-2">
+      <i class="fa fa-file-invoice" style="font-size: 1.3rem; color: var(--katuq-primary, #8b5cf6);"></i>
+      <h5 class="mb-0 fw-semibold">{{ 'Datos de Facturacion' | translate }}</h5>
     </div>
-    <div class="card-header">
-      <div class="row">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <!-- Consumidor Final button -->
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="seleccionarConsumidorFinal()">
+        <i class="fa fa-user me-1"></i>
+        {{ 'Consumidor Final' | translate }}
+      </button>
+      <!-- Generar Factura toggle -->
+      <div class="form-check form-switch d-inline-flex align-items-center ms-2">
+        <input class="form-check-input" type="checkbox" role="switch" id="generarFacturaSwitch"
+          [(ngModel)]="generarFactura" (ngModelChange)="onGenerarFacturaChange($event)">
+        <label class="form-check-label ms-2" for="generarFacturaSwitch">
+          <i class="pi pi-file-pdf me-1"></i>
+          {{ 'Generar Factura Electrónica (Siigo)' | translate }}
+        </label>
+      </div>
+      <!-- Primary button to create new -->
+      <button type="button" class="btn btn-primary btn-sm" (click)="abrirModalCrearFacturacion(crearFacturacion)">
+        <i class="fa fa-plus me-1"></i>
+        {{ 'Nuevos Datos' | translate }}
+      </button>
+    </div>
+  </div>
 
-        <div class="col">
-          <h2><label for="">{{ 'Datos Facturación' | translate}}</label></h2>
-        </div>
-        <div class="col-auto d-flex align-items-center">
-          <button type="button" class="btn btn-outline-secondary btn-sm" (click)="seleccionarConsumidorFinal()">
-            <i class="fa fa-user me-1"></i>
-            {{ 'Consumidor Final' | translate }}
-          </button>
-        </div>
-        <div class="col text-end">
-          <div class="form-check form-switch d-inline-flex align-items-center">
-            <input class="form-check-input" type="checkbox" role="switch" id="generarFacturaSwitch"
-              [(ngModel)]="generarFactura" (ngModelChange)="onGenerarFacturaChange($event)">
-            <label class="form-check-label ms-2" for="generarFacturaSwitch">
-              <i class="pi pi-file-pdf me-1"></i>
-              {{ 'Generar Factura Electrónica (Siigo)' | translate }}
-            </label>
-          </div>
+  <!-- Currently selected billing data (highlighted card) -->
+  <div *ngIf="pedidoGral?.facturacion; else sinFacturacion" class="selected-billing-card mb-3"
+    style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px;">
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fa fa-check-circle" style="font-size: 1.2rem; color: #16a34a;"></i>
+        <div>
+          <span class="badge bg-success bg-opacity-25 text-success me-2" style="font-size: 0.8rem;">
+            {{ pedidoGral?.facturacion?.alias || 'Sin referencia' }}
+          </span>
+          <span class="fw-semibold">{{ pedidoGral?.facturacion?.nombres }}</span>
+          <span class="mx-2 text-muted">|</span>
+          <span>{{ pedidoGral?.facturacion?.tipoDocumento }}: {{ pedidoGral?.facturacion?.documento }}</span>
+          <span *ngIf="pedidoGral?.facturacion?.correoElectronico" class="mx-2 text-muted">|</span>
+          <span *ngIf="pedidoGral?.facturacion?.correoElectronico" class="text-muted">{{ pedidoGral?.facturacion?.correoElectronico }}</span>
         </div>
       </div>
-      <div class="row">
-        <div class="col-12">
-          <h5 class="mb-2">{{ 'Datos de facturacion seleccionada:' | translate}}</h5>
-          <div *ngIf="pedidoGral?.facturacion; else sinFacturacion" class="alert alert-success py-2">
-            <div class="d-flex align-items-center">
-              <i class="fa fa-check-circle me-2" style="font-size: 1.2rem;"></i>
-              <div>
-                <strong>{{ pedidoGral?.facturacion?.alias || 'Sin referencia' }}</strong>
-                <span class="mx-2">|</span>
-                <span>{{ pedidoGral?.facturacion?.nombres }}</span>
-                <span class="mx-2">|</span>
-                <span>{{ pedidoGral?.facturacion?.tipoDocumento }}: {{ pedidoGral?.facturacion?.documento }}</span>
-                <span *ngIf="pedidoGral?.facturacion?.correoElectronico" class="mx-2">|</span>
-                <span *ngIf="pedidoGral?.facturacion?.correoElectronico">{{ pedidoGral?.facturacion?.correoElectronico }}</span>
-              </div>
-            </div>
-          </div>
-          <ng-template #sinFacturacion>
-            <div class="alert alert-warning py-2">
-              <i class="fa fa-exclamation-triangle me-2"></i>
-              {{ 'No ha seleccionado datos de facturación. Por favor seleccione uno de la lista.' | translate }}
-            </div>
-          </ng-template>
-        </div>
+      <button type="button" class="btn btn-outline-danger btn-sm" (click)="quitarDireccionFacturacion()">
+        <i class="fa fa-times me-1"></i>
+        {{ 'Quitar' | translate }}
+      </button>
+    </div>
+  </div>
+  <ng-template #sinFacturacion>
+    <div class="mb-3" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 12px 16px;">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fa fa-exclamation-triangle" style="color: #d97706;"></i>
+        <span>{{ 'No ha seleccionado datos de facturacion. Por favor seleccione uno de la lista.' | translate }}</span>
       </div>
     </div>
+  </ng-template>
 
-    <div class="card-body">
-      <table class="table">
-        <thead>
-          <tr>
-            <th></th>
-            <th>{{ 'Referencia' | translate}}</th>
-            <th>{{ 'Nombres/Razon Social' | translate}}</th>
-            <th>{{ 'Tipo Documento' | translate}}</th>
-            <th>{{ 'Documento' | translate}}</th>
-            <!-- <th>{{ 'Dirección' | translate}}</th> -->
-            <th>{{ 'Opciones' | translate}}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of datosFacturacionElectronica; let i = index">
-            <td>
-              <button class="btn btn-primary" (click)="seleccionarDireccionFE(i)">
-                {{ 'Usar Estos Datos' | translate}}
-              </button>
-            </td>
-            <td>{{ item.alias }}</td>
-            <td>{{ item.nombres }}</td>
-            <td>{{ item.tipoDocumento }}</td>
-            <td>{{ item.documento }}</td>
-            <!-- <td>{{item.indicativoCel}}{{item.celular}}</td>
-                <td>{{item.correoElectronico}}</td> -->
-            <!-- <td>{{ item.direccion }}</td> -->
-            <!-- <td>{{item.pais}}</td>
-                <td>{{item.departamento}}</td>
-                <td>{{item.ciudad}}</td>
-                <td>{{item.codigoPostal}}</td> -->
-            <td>
-              <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
-                style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                class="icofont icofont-pencil-alt-5" (click)="editarDatos1(facturacion, i)"></i>
-              <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
-                style="font-size: 18px; margin-left: 10px; color: cornflowerblue; cursor: pointer;"
-                (click)="eliminarDato(i)" class="icofont icofont icofont-trash"></i>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    
-    <!-- Botón para quitar dirección de facturación -->
-    <div class="row mt-3" *ngIf="pedidoGral?.facturacion">
-      <div class="col-12">
-        <button type="button" class="btn btn-outline-danger" (click)="quitarDireccionFacturacion()">
-          <i class="icofont icofont-trash me-2"></i>
-          {{ 'Quitar Dirección' | translate }}
+  <!-- Billing data list as cards -->
+  <div *ngIf="datosFacturacionElectronica?.length > 0" class="billing-list d-flex flex-column gap-2">
+    <div class="billing-card d-flex align-items-center justify-content-between flex-wrap gap-2"
+      *ngFor="let item of datosFacturacionElectronica; let i = index; trackBy: trackByIndex"
+      style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 16px; transition: box-shadow 0.2s;">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <span class="badge" style="background: #f3f0ff; color: #7c3aed; border: 1px solid #ddd6fe; font-size: 0.78rem;">
+          {{ item.alias || 'Sin referencia' }}
+        </span>
+        <span class="fw-semibold">{{ item.nombres }}</span>
+        <span class="text-muted" style="font-size: 0.9rem;">{{ item.tipoDocumento }}: {{ item.documento }}</span>
+        <span *ngIf="item.correoElectronico" class="text-muted" style="font-size: 0.85rem;">
+          <i class="fa fa-envelope me-1" style="font-size: 0.75rem;"></i>{{ item.correoElectronico }}
+        </span>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-primary btn-sm" (click)="seleccionarDireccionFE(i)">
+          {{ 'Usar' | translate }}
         </button>
-        <small class="form-text text-muted d-block mt-2">
-          {{ 'Al quitar la dirección, se eliminará la información de facturación del pedido' | translate }}
-        </small>
+        <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
+          style="font-size: 18px; color: cornflowerblue; cursor: pointer;"
+          class="icofont icofont-pencil-alt-5" (click)="editarDatos1(facturacion, i)"></i>
+        <i placement="top" ngbTooltip="{{ 'Eliminar' | translate }}"
+          style="font-size: 18px; color: #d12b38; cursor: pointer;"
+          (click)="eliminarDato(i)" class="icofont icofont icofont-trash"></i>
       </div>
     </div>
-  </p-tabPanel>
-  <p-tabPanel header="{{ 'Crear Datos de Facturación' | translate}}">
-    <input [(ngModel)]="facturacionElectronica" type="checkbox" (change)="datosFacElect($event)" />
-    <label class="form-label" for="razon_social">
-      {{ 'Los datos de facturacion electronica son iguales a los del cliente' | translate}}
-    </label>
+  </div>
+</div>
+
+<!-- Modal for CREATING new billing data -->
+<ng-template #crearFacturacion let-modal>
+  <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #fff; border-bottom: none;">
+    <h5 class="modal-title" style="font-weight: 600;">
+      <i class="fa fa-plus-circle me-2"></i>
+      {{ 'Nuevos Datos de Facturación' | translate }}
+    </h5>
+    <button type="button" class="btn-close" aria-label="Cerrar"
+      (click)="modal.dismiss('Cross click')"
+      style="filter: brightness(0) invert(1); opacity: 0.8;">
+    </button>
+  </div>
+  <div class="modal-body">
+    <div class="form-check mb-3">
+      <input class="form-check-input" [(ngModel)]="facturacionElectronica" type="checkbox" id="datosIgualesCliente"
+        (change)="datosFacElect($event)" />
+      <label class="form-check-label" for="datosIgualesCliente">
+        {{ 'Los datos de facturacion electronica son iguales a los del cliente' | translate }}
+      </label>
+    </div>
 
     <div class="row">
-      <div class="col-sm-6">
-        <label class="form-label" for="razon_social">{{ 'Referencia para guardar datos:' | translate}}</label>
-        <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social"
-          [(ngModel)]="alias_facturacion" />
+      <div class="col-sm-6 mb-3">
+        <label class="form-label" for="alias_facturacion_crear">{{ 'Referencia para guardar datos:' | translate }}</label>
+        <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text"
+          id="alias_facturacion_crear" [(ngModel)]="alias_facturacion" />
       </div>
-      <div class="col-sm-6">
-        <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate}}</label>
-        <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social" />
+      <div class="col-sm-6 mb-3">
+        <label class="form-label" for="razon_social_crear">{{ 'Razón Social / Nombre Completo:' | translate }}</label>
+        <input class="form-control" type="text" id="razon_social_crear" [(ngModel)]="razon_social" />
       </div>
-      <div class="col-sm-6">
-        <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento:' | translate}}</label>
-        <select class="form-control" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion">
-          <option value="CC-NIT">
-            {{ 'Cedula de Ciudadania' | translate}}
-          </option>
+      <div class="col-sm-6 mb-3">
+        <label class="form-label" for="tipo_documento_facturacion_crear">{{ 'Tipo de Documento:' | translate }}</label>
+        <select class="form-control" id="tipo_documento_facturacion_crear" [(ngModel)]="tipo_documento_facturacion">
+          <option value="CC-NIT">{{ 'Cedula de Ciudadania' | translate }}</option>
           <option value="PA">PA</option>
           <option value="TI">TI</option>
           <option value="NIT">NIT</option>
         </select>
       </div>
-      <div class="col-sm-6">
-        <label class="form-label" for="tipo_documento_facturacion">{{ 'Documento:' | translate}}</label>
-        <input class="form-control" type="text" id="numero_documento_facturacion"
+      <div class="col-sm-6 mb-3">
+        <label class="form-label" for="numero_documento_facturacion_crear">{{ 'Documento:' | translate }}</label>
+        <input class="form-control" type="text" id="numero_documento_facturacion_crear"
           [(ngModel)]="numero_documento_facturacion" />
       </div>
     </div>
     <div class="row">
       <div class="col-sm-6">
-        <label class="form-label" for="indicativo">{{ 'Número de Celular:' | translate}}</label>
+        <label class="form-label" for="indicativo_crear">{{ 'Número de Celular:' | translate }}</label>
       </div>
       <div class="col-sm-6">
-        <label class="form-label" for="correo_electronico">{{ 'Correo Electrónico:' | translate}}</label>
+        <label class="form-label" for="correo_electronico_crear">{{ 'Correo Electrónico:' | translate }}</label>
       </div>
     </div>
     <div class="row">
       <div class="col-sm-3 mb-3">
         <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion" class="form-control select-default"
-          id="validationCustom01" type="number" required="">
+          id="indicativo_crear" type="number" required="">
           <option disabled selected>
-            {{ 'Indicativo Celular' | translate}}
+            {{ 'Indicativo Celular' | translate }}
           </option>
           <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
             {{ item.nombre }} (+{{ item.phone_code }})
           </option>
         </select>
       </div>
-      <div class="col-sm-3">
-        <input class="form-control" type="text" id="numero_celular" [(ngModel)]="numero_celular_facturacion" />
+      <div class="col-sm-3 mb-3">
+        <input class="form-control" type="text" id="numero_celular_crear" [(ngModel)]="numero_celular_facturacion" />
       </div>
-
-      <div class="col-sm-6">
-        <input class="form-control" type="email" id="correo_electronico" [(ngModel)]="correo_electronico_facturacion" />
+      <div class="col-sm-6 mb-3">
+        <input class="form-control" type="email" id="correo_electronico_crear"
+          [(ngModel)]="correo_electronico_facturacion" />
       </div>
     </div>
     <!--
@@ -215,122 +208,128 @@
       </div>
     </div>
     -->
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('Cancel')">
+      {{ 'Cancelar' | translate }}
+    </button>
+    <button type="button" class="btn btn-primary" (click)="guardarDatosFacturacionElectronica(); modal.dismiss('Save')">
+      {{ 'Guardar' | translate }}
+    </button>
+  </div>
+</ng-template>
 
+<!-- Modal for EDITING existing billing data -->
+<ng-template #facturacion let-modal>
+  <div class="modal-header" style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: #fff; border-bottom: none;">
+    <h5 class="modal-title" style="font-weight: 600;">
+      <i class="fa fa-edit me-2"></i>
+      {{ 'Editar Datos de Facturación' | translate }}
+    </h5>
+    <button type="button" class="btn-close" aria-label="Cerrar"
+      (click)="modal.dismiss('Cross click')"
+      style="filter: brightness(0) invert(1); opacity: 0.8;">
+    </button>
+  </div>
+  <div class="modal-body">
     <div class="row">
-      <button type="button" class="btn btn-primary" (click)="guardarDatosFacturacionElectronica()">
-        {{ 'Guardar' | translate}}
-      </button>
-    </div>
-  </p-tabPanel>
-  <ng-template #facturacion let-modal>
-    <div class="modal-header">
-      <h4 class="modal-title" id="modal-basic-title">
-        {{ 'Crear Datos Facturacion Electrónica' | translate}}
-      </h4>
-      <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-        <span aria-hidden="true">&times;</span>
-      </button>
-    </div>
-    <div class="modal-body">
-      <div class="row">
-        <div class="col-sm-6">
-          <label class="form-label" for="razon_social">{{ 'Referencia para guardar datos:' | translate}}</label>
-          <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social"
-            [(ngModel)]="alias_facturacion" />
-        </div>
-        <div class="col-sm-6">
-          <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate}}</label>
-          <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social" />
-        </div>
-        <div class="col-sm-6">
-          <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento:' | translate}}</label>
-          <select class="form-control" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion">
-            <option value="CC-NIT">{{ 'Cedula de Ciudadania' | translate}}</option>
-            <option value="PA">PA</option>
-            <option value="TI">TI</option>
-            <option value="NIT">NIT</option>
-          </select>
-        </div>
-        <div class="col-sm-6">
-          <label class="form-label" for="tipo_documento_facturacion">{{ 'Documento:' | translate}}</label>
-          <input class="form-control" type="text" id="numero_documento_facturacion"
-            [(ngModel)]="numero_documento_facturacion" />
-        </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="razon_social">{{ 'Referencia para guardar datos:' | translate }}</label>
+        <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text" id="razon_social"
+          [(ngModel)]="alias_facturacion" />
       </div>
-      <div class="row">
-        <div class="col-sm-6">
-          <label class="form-label" for="indicativo">{{ 'Número de Celular:' | translate}}</label>
-        </div>
-        <div class="col-sm-6">
-          <label class="form-label" for="correo_electronico">{{ 'Correo Electrónico:' | translate}}</label>
-        </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="razon_social">{{ 'Razón Social / Nombre Completo:' | translate }}</label>
+        <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social" />
       </div>
-      <div class="row">
-        <div class="col-sm-3 mb-3">
-          <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion" class="form-control select-default"
-            id="validationCustom01" type="number" required="">
-            <option disabled selected>{{ 'Indicativo Celular' | translate}}</option>
-            <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
-              {{ item.nombre }} (+{{ item.phone_code }})
-            </option>
-          </select>
-        </div>
-        <div class="col-sm-3">
-          <input class="form-control" type="text" id="numero_celular" [(ngModel)]="numero_celular_facturacion" />
-        </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="tipo_documento_facturacion">{{ 'Tipo de Documento:' | translate }}</label>
+        <select class="form-control" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion">
+          <option value="CC-NIT">{{ 'Cedula de Ciudadania' | translate }}</option>
+          <option value="PA">PA</option>
+          <option value="TI">TI</option>
+          <option value="NIT">NIT</option>
+        </select>
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="tipo_documento_facturacion">{{ 'Documento:' | translate }}</label>
+        <input class="form-control" type="text" id="numero_documento_facturacion"
+          [(ngModel)]="numero_documento_facturacion" />
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-6">
+        <label class="form-label" for="indicativo">{{ 'Número de Celular:' | translate }}</label>
+      </div>
+      <div class="col-sm-6">
+        <label class="form-label" for="correo_electronico">{{ 'Correo Electrónico:' | translate }}</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-3 mb-3">
+        <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion" class="form-control select-default"
+          id="validationCustom01" type="number" required="">
+          <option disabled selected>{{ 'Indicativo Celular' | translate }}</option>
+          <option value="{{ item.phone_code }}" *ngFor="let item of indicativos">
+            {{ item.nombre }} (+{{ item.phone_code }})
+          </option>
+        </select>
+      </div>
+      <div class="col-sm-3">
+        <input class="form-control" type="text" id="numero_celular" [(ngModel)]="numero_celular_facturacion" />
+      </div>
 
-        <div class="col-sm-6">
-          <input class="form-control" type="email" id="correo_electronico"
-            [(ngModel)]="correo_electronico_facturacion" />
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-12">
-          <label class="form-label" for="direccion">{{ 'Dirección del Comprador:' | translate}}</label>
-          <input class="form-control" type="text" id="direccion" [(ngModel)]="direccion_facturacion" />
-        </div>
-        <div class="col-sm-4 mb-3">
-          <label class="form-label" for="validationCustom01">{{ 'País' | translate}}</label>
-          <select [(ngModel)]="pais" class="form-control select-default" (change)="identificarDepto()">
-            <option disabled selected>{{ 'País' | translate}}</option>
-            <option *ngFor="let item of paises" value="{{ item }}">{{ item }}</option>
-          </select>
-        </div>
-        <div class="col-md-4 mb-3">
-          <label class="form-label" for="validationCustom01">{{ 'Departamento' | translate}}</label>
-          <select [(ngModel)]="departamento" class="form-control select-default" (change)="identificarCiu()">
-            <option disabled selected>{{ 'Departamento' | translate}}</option>
-            <option *ngFor="let item of departamentos" value="{{ item }}">{{ item }}</option>
-          </select>
-        </div>
-        <div class="col-md-4 mb-3">
-          <label class="form-label" for="validationCustom01">{{ 'Ciudad / Municipio' | translate}}</label>
-          <select [(ngModel)]="ciudad_municipio" class="form-control select-default">
-            <option disabled selected>{{ 'Ciudad / Municipio' | translate}}</option>
-            <option *ngFor="let item of ciudades" value="{{ item }}">{{ item }}</option>
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-4">
-          <label class="form-label" for="codigo_postal">{{ 'Código Postal:' | translate}}</label>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-sm-4">
-          <input class="form-control" type="text" id="codigo_postal" [(ngModel)]="codigo_postal" />
-        </div>
-        <div class="col-md-4 mb-3">
-          <button class="btn btn-primary" (click)="redirectToPostalCode()">
-            {{ 'Conoce Tu Codigo Postal' | translate}}
-          </button>
-        </div>
+      <div class="col-sm-6">
+        <input class="form-control" type="email" id="correo_electronico"
+          [(ngModel)]="correo_electronico_facturacion" />
       </div>
     </div>
-    <div class="modal-footer">
-      <button type="button" *ngIf="editandodato" class="btn btn-outline-dark" (click)="editarDatosFacturacion()">
-        {{ 'Guardar' | translate}}
-      </button>
+    <div class="row">
+      <div class="col-sm-12">
+        <label class="form-label" for="direccion">{{ 'Dirección del Comprador:' | translate }}</label>
+        <input class="form-control" type="text" id="direccion" [(ngModel)]="direccion_facturacion" />
+      </div>
+      <div class="col-sm-4 mb-3">
+        <label class="form-label" for="validationCustom01">{{ 'País' | translate }}</label>
+        <select [(ngModel)]="pais" class="form-control select-default" (change)="identificarDepto()">
+          <option disabled selected>{{ 'País' | translate }}</option>
+          <option *ngFor="let item of paises" value="{{ item }}">{{ item }}</option>
+        </select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label" for="validationCustom01">{{ 'Departamento' | translate }}</label>
+        <select [(ngModel)]="departamento" class="form-control select-default" (change)="identificarCiu()">
+          <option disabled selected>{{ 'Departamento' | translate }}</option>
+          <option *ngFor="let item of departamentos" value="{{ item }}">{{ item }}</option>
+        </select>
+      </div>
+      <div class="col-md-4 mb-3">
+        <label class="form-label" for="validationCustom01">{{ 'Ciudad / Municipio' | translate }}</label>
+        <select [(ngModel)]="ciudad_municipio" class="form-control select-default">
+          <option disabled selected>{{ 'Ciudad / Municipio' | translate }}</option>
+          <option *ngFor="let item of ciudades" value="{{ item }}">{{ item }}</option>
+        </select>
+      </div>
     </div>
-  </ng-template>
-</p-tabView>
+    <div class="row">
+      <div class="col-sm-4">
+        <label class="form-label" for="codigo_postal">{{ 'Código Postal:' | translate }}</label>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-sm-4">
+        <input class="form-control" type="text" id="codigo_postal" [(ngModel)]="codigo_postal" />
+      </div>
+      <div class="col-md-4 mb-3">
+        <button class="btn btn-primary" (click)="redirectToPostalCode()">
+          {{ 'Conoce Tu Codigo Postal' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="modal-footer">
+    <button type="button" *ngIf="editandodato" class="btn btn-outline-dark" (click)="editarDatosFacturacion()">
+      {{ 'Guardar' | translate }}
+    </button>
+  </div>
+</ng-template>
