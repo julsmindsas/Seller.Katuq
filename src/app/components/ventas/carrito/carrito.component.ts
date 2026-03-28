@@ -249,10 +249,12 @@ export class CarritoComponent implements OnInit {
 
   checkPriceScale(itemCarrito: any): number {
     if (!itemCarrito?.producto?.precio) return 0;
-    // Si tiene precio manual override Y el producto permite precio manual, usarlo
+    // Si tiene precio manual override Y el producto permite precio manual, calcular base + IVA
     if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
         && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true) {
-      return Number(itemCarrito._precioManualOverride) || 0;
+      const base = Number(itemCarrito._precioManualOverride) || 0;
+      const iva = this.getIvaActual(itemCarrito);
+      return base * (1 + iva / 100);
     }
     return this.getProductPriceWithScale(itemCarrito);
   }

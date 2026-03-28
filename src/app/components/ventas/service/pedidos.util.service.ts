@@ -544,13 +544,10 @@ export class PedidosUtilService {
         }
 
         // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+        // _precioManualOverride es el precio BASE (sin IVA), se retorna directamente
         if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
             && producto?.procesoComercial?.permitePrecioManual === true) {
-            const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
-            const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
-                ? Number(itemCarrito._ivaManualOverride)
-                : Number(producto?.precio?.precioUnitarioIva) || 0;
-            return precioManualConIva / (1 + porcentajeIva / 100);
+            return Number(itemCarrito._precioManualOverride) || 0;
         }
 
         // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
@@ -599,9 +596,14 @@ export class PedidosUtilService {
         }
 
         // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+        // _precioManualOverride es el precio BASE (sin IVA), se calcula el precio con IVA sumando el porcentaje
         if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
             && producto?.procesoComercial?.permitePrecioManual === true) {
-            return Number(itemCarrito._precioManualOverride) || 0;
+            const precioBase = Number(itemCarrito._precioManualOverride) || 0;
+            const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
+                ? Number(itemCarrito._ivaManualOverride)
+                : Number(producto?.precio?.precioUnitarioIva) || 0;
+            return precioBase * (1 + porcentajeIva / 100);
         }
 
         // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen

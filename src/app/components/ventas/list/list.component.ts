@@ -2538,13 +2538,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+    // _precioManualOverride es el precio BASE (sin IVA), se retorna directamente
     if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
         && producto?.procesoComercial?.permitePrecioManual === true) {
-      const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
-      const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
-        ? Number(itemCarrito._ivaManualOverride)
-        : Number(producto?.precio?.precioUnitarioIva) || 0;
-      return precioManualConIva / (1 + porcentajeIva / 100);
+      return Number(itemCarrito._precioManualOverride) || 0;
     }
 
     const preciosVolumen = producto.precio.preciosVolumen || [];
@@ -2662,13 +2659,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       let porcentajeIvaStr = (producto?.precio?.precioUnitarioIva ?? "0").toString();
 
       // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+      // _precioManualOverride es el precio BASE (sin IVA), se calcula el precio con IVA sumando el porcentaje
       const tienePrecioManual = itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
         && producto?.procesoComercial?.permitePrecioManual === true;
       if (tienePrecioManual) {
-        precioConIva = Number(itemCarrito._precioManualOverride) || 0;
+        const precioBase = Number(itemCarrito._precioManualOverride) || 0;
         porcentajeIvaStr = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
           ? itemCarrito._ivaManualOverride.toString()
           : porcentajeIvaStr;
+        precioConIva = precioBase * (1 + Number(porcentajeIvaStr) / 100);
       }
 
       // PRIORIDAD 1: Verificar si hay precio por categoría de cliente
@@ -6208,28 +6207,48 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               // Si el producto permite precio manual, preguntar al usuario
               if (configuracionResult.producto?.procesoComercial?.permitePrecioManual === true) {
                 const precioBase = configuracionResult.producto?.precio?.precioUnitarioConIva || 0;
+                const ivaProducto = configuracionResult.producto?.precio?.precioUnitarioIva || '0';
                 Swal.fire({
                   title: 'Precio Manual',
                   html: `<p style="margin-bottom:0.5rem;">El producto <b>${configuracionResult.producto?.crearProducto?.titulo || ''}</b> permite precio manual.</p>
-                         <p style="font-size:0.85rem;color:#64748b;">Precio base: <b>$${precioBase.toLocaleString('es-CO')}</b></p>`,
-                  input: 'number',
-                  inputLabel: 'Ingrese el precio con IVA',
-                  inputPlaceholder: 'Ej: 3000',
-                  inputAttributes: { min: '0', step: '1' },
+                         <p style="font-size:0.85rem;color:#64748b;">Precio base: <b>$${precioBase.toLocaleString('es-CO')}</b> (IVA ${ivaProducto}%)</p>
+                         <div style="display:flex;gap:0.75rem;align-items:flex-end;margin-top:0.75rem;">
+                           <div style="flex:1;">
+                             <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:0.25rem;color:#374151;">Precio base (sin IVA)</label>
+                             <input id="swal-precio-manual" type="number" class="swal2-input" placeholder="Ej: 3000" min="0" step="100" style="margin:0;width:100%;">
+                           </div>
+                           <div style="flex:0 0 auto;">
+                             <label style="display:block;font-size:0.85rem;font-weight:500;margin-bottom:0.25rem;color:#374151;">IVA</label>
+                             <select id="swal-iva-manual" class="swal2-input" style="margin:0;padding:0.4rem 0.5rem;min-width:80px;">
+                               <option value="0" ${ivaProducto === '0' ? 'selected' : ''}>0%</option>
+                               <option value="5" ${ivaProducto === '5' ? 'selected' : ''}>5%</option>
+                               <option value="8" ${ivaProducto === '8' ? 'selected' : ''}>8%</option>
+                               <option value="19" ${ivaProducto === '19' ? 'selected' : ''}>19%</option>
+                             </select>
+                           </div>
+                         </div>`,
                   showCancelButton: true,
                   confirmButtonText: 'Aplicar precio',
                   cancelButtonText: 'Usar precio base',
                   confirmButtonColor: '#8b5cf6',
-                  inputValidator: (value) => {
-                    if (value && (isNaN(Number(value)) || Number(value) < 0)) {
-                      return 'Ingrese un precio válido';
+                  focusConfirm: false,
+                  preConfirm: () => {
+                    const precioInput = (document.getElementById('swal-precio-manual') as HTMLInputElement)?.value;
+                    const ivaInput = (document.getElementById('swal-iva-manual') as HTMLSelectElement)?.value;
+                    if (precioInput && (isNaN(Number(precioInput)) || Number(precioInput) < 0)) {
+                      Swal.showValidationMessage('Ingrese un precio válido');
+                      return false;
                     }
-                    return null;
+                    return { precio: precioInput, iva: ivaInput };
                   }
                 }).then((result) => {
                   if (result.isConfirmed && result.value) {
-                    configuracionResult._precioManualOverride = Number(result.value);
-                    console.log('💰 Precio manual asignado:', configuracionResult._precioManualOverride);
+                    const { precio, iva } = result.value;
+                    if (precio) {
+                      configuracionResult._precioManualOverride = Number(precio);
+                      configuracionResult._ivaManualOverride = Number(iva);
+                      console.log('💰 Precio manual asignado:', configuracionResult._precioManualOverride, 'IVA:', configuracionResult._ivaManualOverride + '%');
+                    }
                   }
                   this.sincronizarFormaEntrega(order);
                   order = this.actualizarValoresPedido(order);

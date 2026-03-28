@@ -210,13 +210,10 @@ export class PaymentService extends BaseService {
         Number(producto?.precio?.precioUnitarioSinIva) || 0;
 
       // 🔒 PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+      // _precioManualOverride es el precio BASE (sin IVA)
       if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
           && producto?.procesoComercial?.permitePrecioManual === true) {
-        const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
-        const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
-          ? Number(itemCarrito._ivaManualOverride)
-          : Number(producto?.precio?.precioUnitarioIva) || 0;
-        const precioManualSinIva = precioManualConIva / (1 + porcentajeIva / 100);
+        const precioManualSinIva = Number(itemCarrito._precioManualOverride) || 0;
         totalItemSinIVA = precioManualSinIva * cantidad;
       }
       // 🔒 PRIORIDAD 1: Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
@@ -354,12 +351,14 @@ export class PaymentService extends BaseService {
         : null;
 
       // 🔒 PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+      // _precioManualOverride es el precio BASE (sin IVA), se calcula el precio con IVA sumando el porcentaje
       if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
           && producto?.procesoComercial?.permitePrecioManual === true) {
-        precioConIvaItem = Number(itemCarrito._precioManualOverride) || 0;
+        const precioBase = Number(itemCarrito._precioManualOverride) || 0;
         porcentajeIvaItemStr = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
           ? itemCarrito._ivaManualOverride.toString()
           : porcentajeIvaUnitario;
+        precioConIvaItem = precioBase * (1 + Number(porcentajeIvaItemStr) / 100);
       }
       // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
       else if (precioCategoria) {
@@ -1205,14 +1204,14 @@ export class PaymentService extends BaseService {
       let precioUnitarioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
 
       if (tienePrecioManual) {
-        // Precio manual: calcular sin IVA a partir del precio con IVA ingresado
-        precioUnitarioConIva = Number(item._precioManualOverride) || 0;
+        // Precio manual: _precioManualOverride es el precio BASE (sin IVA), se suma el IVA
+        precioUnitarioSinIva = Number(item._precioManualOverride) || 0;
         porcentajeIva = (item._ivaManualOverride !== undefined && item._ivaManualOverride !== null)
           ? item._ivaManualOverride.toString()
           : (producto?.precio?.precioUnitarioIva ?? "0");
         const porcentajeIvaNum = Number(porcentajeIva) || 0;
-        precioUnitarioSinIva = precioUnitarioConIva / (1 + porcentajeIvaNum / 100);
-        valorIva = precioUnitarioConIva - precioUnitarioSinIva;
+        valorIva = precioUnitarioSinIva * (porcentajeIvaNum / 100);
+        precioUnitarioConIva = precioUnitarioSinIva + valorIva;
       } else if (usaPrecioCategoria) {
         // Si hay precio por categoría, usarlo directamente
         precioUnitarioSinIva = Number(precioCategoria.precio) || 0;

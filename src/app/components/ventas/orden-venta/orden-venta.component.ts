@@ -145,9 +145,14 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
     const cantidad = Number(item.cantidad) || 0;
 
     // PRIORIDAD 0: Precio manual
+    // _precioManualOverride es el precio BASE (sin IVA), se calcula el precio con IVA sumando el porcentaje
     if (item._precioManualOverride !== undefined && item._precioManualOverride !== null
         && producto?.procesoComercial?.permitePrecioManual === true) {
-      return Number(item._precioManualOverride) || 0;
+      const precioBase = Number(item._precioManualOverride) || 0;
+      const porcentajeIva = (item._ivaManualOverride !== undefined && item._ivaManualOverride !== null)
+        ? Number(item._ivaManualOverride)
+        : Number(producto?.precio?.precioUnitarioIva) || 0;
+      return precioBase * (1 + porcentajeIva / 100);
     }
 
     // PRIORIDAD 1: Precio por categoría de cliente (desactiva volumen)

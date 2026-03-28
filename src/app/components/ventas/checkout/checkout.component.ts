@@ -460,13 +460,10 @@ export class CheckOutComponent implements OnInit, OnChanges {
     if (!productoPrecio) return 0;
 
     // Si tiene precio manual override Y el producto permite precio manual
+    // _precioManualOverride es el precio BASE (sin IVA), se retorna directamente
     if (item._precioManualOverride !== undefined && item._precioManualOverride !== null
         && item.producto?.procesoComercial?.permitePrecioManual === true) {
-      const precioConIva = Number(item._precioManualOverride) || 0;
-      const porcentajeIva = (item._ivaManualOverride !== undefined && item._ivaManualOverride !== null)
-        ? Number(item._ivaManualOverride)
-        : Number(productoPrecio.precioUnitarioIva) || 0;
-      return precioConIva / (1 + porcentajeIva / 100);
+      return Number(item._precioManualOverride) || 0;
     }
 
     // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
@@ -591,14 +588,14 @@ export class CheckOutComponent implements OnInit, OnChanges {
       const porceDescuento = (this.pedido?.porceDescuento ?? 0) / 100;
 
       // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
+      // _precioManualOverride es el precio BASE (sin IVA), se suma el IVA
       if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
           && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true) {
-        const precioManualConIva = Number(itemCarrito._precioManualOverride) || 0;
+        const precioManualSinIva = Number(itemCarrito._precioManualOverride) || 0;
         const porcentajeIva = (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)
           ? Number(itemCarrito._ivaManualOverride)
           : Number(productoPrecio?.precioUnitarioIva) || 0;
-        const precioManualSinIva = precioManualConIva / (1 + porcentajeIva / 100);
-        const valorIvaManual = precioManualConIva - precioManualSinIva;
+        const valorIvaManual = precioManualSinIva * (porcentajeIva / 100);
         const precioItemConDescuento = (valorIvaManual * cantidadItem) * (1 - porceDescuento);
         totalPrecioIVA += precioItemConDescuento;
         const ivaKey = porcentajeIva.toString();

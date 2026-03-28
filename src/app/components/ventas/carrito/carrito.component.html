@@ -48,10 +48,11 @@
               <ng-container *ngIf="permitePrecioManual(itemCarrito); else precioSoloLectura">
                 <div class="price-editable">
                   <input class="price-input" type="number"
-                         [ngModel]="itemCarrito._precioManualTemp !== undefined ? itemCarrito._precioManualTemp : (itemCarrito._precioManualOverride !== undefined ? itemCarrito._precioManualOverride : checkPriceScale(itemCarrito))"
+                         [ngModel]="itemCarrito._precioManualTemp !== undefined ? itemCarrito._precioManualTemp : (itemCarrito._precioManualOverride !== undefined ? itemCarrito._precioManualOverride : getPrecioSinIva(itemCarrito))"
                          (ngModelChange)="onPrecioManualInput(itemCarrito, $event)"
                          (blur)="onPrecioManualConfirm(itemCarrito)"
                          (keyup.enter)="onPrecioManualConfirm(itemCarrito)"
+                         placeholder="Precio base"
                          [min]="0" step="100">
                   <select class="iva-select"
                           [ngModel]="getIvaActual(itemCarrito)"
@@ -62,8 +63,8 @@
                     <option [ngValue]="19">19%</option>
                   </select>
                   <div class="price-breakdown">
-                    {{getPrecioSinIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}
                     + {{getValorIva(itemCarrito) | currency:'USD':'symbol':'1.0-0'}} IVA
+                    = {{checkPriceScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}
                   </div>
                   <div class="price-original" *ngIf="itemCarrito._precioManualOverride !== undefined || itemCarrito._ivaManualOverride !== undefined">
                     <s>{{getProductPriceWithScale(itemCarrito) | currency:'USD':'symbol':'1.0-0'}}</s>
