@@ -1,170 +1,184 @@
-<!-- <app-breadcrumb [title]="'Product Details'" [items]="['Apps', 'Ecommerce']" [active_item]="'Product Details'"></app-breadcrumb> -->
-<div class="modal-header">
-  <h4 class="modal-title">{{'Vista previa' | translate}}</h4>
-  <button type="button" class="close" aria-label="Close" (click)="activeModal.close('Cross click')">
-    <span aria-hidden="true">&times;</span>
-  </button>
-</div>
-<div class="container-fluid modal-body">
-  <div *ngIf="!fromProductCreate">
-    <div class="row">
-      <div class="col-sm-3">
-        <div class="row">
-          <div class="col-sm12">
-            <div class="card">
-              <div class="card-body">
-                <section>
-                  <ks-carousel [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
-                  </ks-carousel>
-                </section>
-              </div>
-            </div>
-          </div>
-          <div class="col-sm-12">
-            <div class="product-page-details">
-              <h3>{{producto.crearProducto.titulo}}</h3>
-            </div>
-            <div class="product-price f-28">{{producto.precio.precioUnitarioConIva | currency:'COP'
-              :'symbol-narrow':'4.2-2'}}
+<!-- Vista previa moderna del producto (desde listado) -->
+<div *ngIf="!fromProductCreate">
 
-            </div>
-          </div>
-        </div>
-
-      </div>
-      <div class="col-sm-9">
-        <div class="card">
-          <div class="card-body">
-            <div class="product-page-details">
-              <h3>Descripcion</h3>
-            </div>
-            <hr>
-            <p style="white-space: pre-line;" [innerHtml]="producto.crearProducto.descripcion"></p>
-
-            <hr>
-            <div class="row">
-              <div class="col-sm-6">
-                <table class="product-page-width">
-                  <tbody>
-                    <tr>
-                      <td> <b>Marca &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td>{{producto.identificacion.marca}}</td>
-                    </tr>
-                    <tr>
-                      <td> <b>Referencia &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td>{{producto.identificacion.referencia}}</td>
-                    </tr>
-                    <tr>
-                      <td> <b>Codigo de Barras &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td>{{producto.identificacion.codigoBarras}}</td>
-                    </tr>
-                    <tr>
-                      <td> <b>En Stock &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
-                      <td class="txt-success">{{producto.disponibilidad.cantidadDisponible}}</td>
-                    </tr>
-                    <tr>
-                      <td> <b>Tipo Producto &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
-                      <td>{{producto.identificacion.tipoProducto}}</td>
-                    </tr>
-                    <tr>
-                      <td> <b>Dimensiones &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
-                      <td>{{producto.dimensiones.altoProductoCm}}Cm x {{producto.dimensiones.anchoProductoCm}}Cm x
-                        {{producto.dimensiones.largoProductoCm}}Cm</td>
-                    </tr>
-                    <tr>
-                      <td> <b>Peso &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
-                      <td>
-                        {{producto.dimensiones.pesoUnitarioProductoKg}}Kg</td>
-                    </tr>
-                    <tr>
-                      <td> <b>Tiempo Entrega &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td>{{producto.disponibilidad.tiempoEntrega}} Dias</td>
-                    </tr>
-                    <tr>
-                      <td> <b>Tipo Entrega &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td><span *ngFor="let item of producto.disponibilidad.tipoEntrega" class="mb-0 m-t-20">{{item+','}}</span></td>
-                    </tr>
-                    <tr>
-                      <td> <b>Cantidad Minima de Venta &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td>{{producto.disponibilidad.cantidadMinVenta}}</td>
-                    </tr>
-
-                  </tbody>
-                </table>
-              </div>
-              <div class="col-sm-6">
-                <table class="product-page-width">
-                  <tbody>
-
-                    <tr>
-                      <td> <b>Ciudades Entrega &nbsp;&nbsp;&nbsp;: &nbsp;&nbsp;&nbsp;</b></td>
-                      <td class="txt-success"><span *ngFor="let item of producto.ciudades.ciudadesEntrega"
-                          class="mb-0 m-t-20">{{item.value+', '}}</span></td>
-                    </tr>
-
-                    <tr>
-                      <td> <b>Genero &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td><span *ngFor="let item of generosProducto" class="mb-0 m-t-20">{{item.name+'. '}}</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td> <b>Ocasiones &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td><span *ngFor="let item of ocasionesProducto" class="mb-0 m-t-20">{{item.name+'. '}}</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td> <b>Preferencias &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td><span *ngFor="let item of variablesProducto"
-                          class="mb-0 m-t-20">{{item.data.titulo+'.'}}</span></td>
-                    </tr>
-                    <tr>
-                      <td> <b>Etiquetas &nbsp;&nbsp;&nbsp;:</b></td>
-                      <td><span *ngFor="let item of producto.exposicion.etiquetas"
-                          class="mb-0 m-t-20">{{item+'.'}}</span></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            <hr>
-            <div class="row">
-              <div class="col-md-6">
-                <h6 class="product-title">Compartelo!</h6>
-              </div>
-              <div class="col-md-6">
-                <div class="product-icon">
-                  <ul class="product-social">
-                    <li class="d-inline-block"><a href="https://www.facebook.com/"><i class="fa fa-facebook"></i></a>
-                    </li>
-                    <li class="d-inline-block"><a href="https://myaccount.google.com/"><i
-                          class="fa fa-google-plus"></i></a></li>
-                    <li class="d-inline-block"><a href="https://twitter.com/"><i class="fa fa-twitter"></i></a></li>
-                    <li class="d-inline-block"><a href="https://www.instagram.com/"><i class="fa fa-instagram"></i></a>
-                    </li>
-                    <li class="d-inline-block"><a href="https://dashboard.rss.com/auth/sign-in/"><i
-                          class="fa fa-rss"></i></a></li>
-                  </ul>
-                  <form class="d-inline-block f-right"></form>
-                </div>
-              </div>
-            </div>
-            <hr>
-            <div class="product-button" *ngIf="!isView">
-              <button class="btn btn-primary m-r-10 m-t-10" type="button" title=""> <i
-                  class="fa fa-shopping-basket me-1"></i>Add To Cart</button>
-              <button class="btn btn-success m-r-10 m-t-10" type="button" title=""> <i
-                  class="fa fa-shopping-cart me-1"></i>Buy Now</button>
-              <a class="btn btn-secondary m-t-10" href="javascript:void(0);"> <i class="fa fa-heart me-1"></i>Add To
-                WishList</a>
-            </div>
-          </div>
-        </div>
+  <!-- Header: título + badges + cerrar -->
+  <div class="modal-header border-0 pb-0 px-4 pt-4">
+    <div class="flex-grow-1 me-3">
+      <h5 class="fw-bold text-primary mb-1">{{ producto?.crearProducto?.titulo }}</h5>
+      <div class="d-flex flex-wrap gap-2">
+        <span class="badge rounded-pill"
+          [class.bg-success]="producto?.exposicion?.activar"
+          [class.bg-danger]="!producto?.exposicion?.activar">
+          <i class="icofont me-1"
+            [class.icofont-check]="producto?.exposicion?.activar"
+            [class.icofont-close]="!producto?.exposicion?.activar"></i>
+          {{ producto?.exposicion?.activar ? 'Activo' : 'Inactivo' }}
+        </span>
+        <span class="badge rounded-pill"
+          [class.bg-info]="producto?.exposicion?.disponible"
+          [class.bg-secondary]="!producto?.exposicion?.disponible">
+          {{ producto?.exposicion?.disponible ? 'Disponible' : 'Agotado' }}
+        </span>
+        <span class="badge rounded-pill bg-warning text-dark" *ngIf="producto?.crearProducto?.paraProduccion">
+          <i class="icofont icofont-settings-alt me-1"></i>Requiere producción
+        </span>
       </div>
     </div>
-
+    <button type="button" class="btn-close" (click)="activeModal.close('Cross click')"></button>
   </div>
-  <div class="row" *ngIf="fromProductCreate">
+
+  <!-- Body: dos columnas -->
+  <div class="modal-body px-4 pt-3 pb-2">
+    <div class="row g-4">
+
+      <!-- Columna izquierda: imagen + precio + acciones rápidas -->
+      <div class="col-lg-4">
+
+        <!-- Imagen principal -->
+        <div class="preview-main-img-wrap mb-2 text-center">
+          <img [src]="currentPreviewImage"
+               [alt]="producto?.crearProducto?.titulo"
+               class="img-fluid rounded shadow-sm"
+               style="max-height:280px; object-fit:contain; background:#f8f9fa; width:100%;"
+               onerror="this.src='assets/img/placeholder.png'" />
+        </div>
+
+        <!-- Miniaturas -->
+        <div class="d-flex flex-wrap gap-2 justify-content-center mb-3"
+             *ngIf="(producto?.crearProducto?.imagenesPrincipales?.length || 0) > 1">
+          <img *ngFor="let img of producto?.crearProducto?.imagenesPrincipales; let i = index"
+               [src]="img.urls"
+               width="56" height="56"
+               class="rounded border"
+               [class.border-primary]="i === currentPreviewIdx"
+               [class.border-2]="i === currentPreviewIdx"
+               [class.opacity-50]="i !== currentPreviewIdx"
+               style="cursor:pointer; object-fit:cover; transition:all 0.15s"
+               (click)="selectPreviewImage(i)"
+               onerror="this.style.display='none'" />
+        </div>
+
+        <!-- Precio -->
+        <div class="preview-price-box rounded p-3 text-center mb-3"
+             style="background: linear-gradient(135deg,#f0ebff,#e8f5e9);">
+          <div class="fw-bold text-primary" style="font-size:1.5rem;">
+            {{ (producto?.precio?.precioUnitarioConIva || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
+          </div>
+          <small class="text-muted" *ngIf="producto?.precio?.precioUnitarioSinIva">
+            Sin IVA: {{ producto?.precio?.precioUnitarioSinIva | currency:'COP':'symbol-narrow':'1.0-0' }}
+            <span *ngIf="producto?.precio?.precioUnitarioIva"> · IVA {{ producto?.precio?.precioUnitarioIva }}%</span>
+          </small>
+        </div>
+
+        <!-- Stock -->
+        <div class="text-center mb-2">
+          <span class="fw-semibold"
+            [class.text-success]="(producto?.disponibilidad?.cantidadDisponible || 0) > 0"
+            [class.text-danger]="!(producto?.disponibilidad?.cantidadDisponible)">
+            <i class="icofont icofont-box me-1"></i>
+            Stock: {{ producto?.disponibilidad?.cantidadDisponible || 0 }} unidades
+          </span>
+        </div>
+
+      </div>
+
+      <!-- Columna derecha: info del producto -->
+      <div class="col-lg-8">
+
+        <!-- Info rápida -->
+        <div class="row g-2 mb-3">
+          <div class="col-sm-6" *ngIf="producto?.identificacion?.referencia">
+            <div class="info-chip p-2 rounded border">
+              <small class="text-muted d-block" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em;">Referencia</small>
+              <span class="fw-semibold text-dark">{{ producto?.identificacion?.referencia }}</span>
+            </div>
+          </div>
+          <div class="col-sm-6" *ngIf="producto?.identificacion?.marca">
+            <div class="info-chip p-2 rounded border">
+              <small class="text-muted d-block" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em;">Marca</small>
+              <span>{{ producto?.identificacion?.marca }}</span>
+            </div>
+          </div>
+          <div class="col-sm-6" *ngIf="producto?.identificacion?.codigoBarras">
+            <div class="info-chip p-2 rounded border">
+              <small class="text-muted d-block" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em;">Cód. Barras</small>
+              <span>{{ producto?.identificacion?.codigoBarras }}</span>
+            </div>
+          </div>
+          <div class="col-sm-6" *ngIf="producto?.identificacion?.tipoProducto">
+            <div class="info-chip p-2 rounded border">
+              <small class="text-muted d-block" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em;">Tipo</small>
+              <span>{{ producto?.identificacion?.tipoProducto }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción -->
+        <div class="mb-3" *ngIf="producto?.crearProducto?.descripcion">
+          <h6 class="text-muted mb-1 small" style="text-transform:uppercase; letter-spacing:0.05em;">Descripción</h6>
+          <p class="small text-body-secondary mb-0"
+             style="white-space:pre-line; max-height:120px; overflow-y:auto; background:#fafafa; border-radius:8px; padding:10px;">
+            {{ producto?.crearProducto?.descripcion }}
+          </p>
+        </div>
+
+        <!-- Logística -->
+        <div class="row g-2 mb-3">
+          <div class="col-sm-4" *ngIf="producto?.dimensiones?.pesoUnitarioProductoKg">
+            <div class="info-chip p-2 rounded border text-center">
+              <i class="icofont icofont-box d-block text-muted mb-1"></i>
+              <small class="text-muted d-block" style="font-size:0.7rem;">Peso</small>
+              <span class="small fw-semibold">{{ producto?.dimensiones?.pesoUnitarioProductoKg }} Kg</span>
+            </div>
+          </div>
+          <div class="col-sm-4" *ngIf="producto?.disponibilidad?.tiempoEntrega">
+            <div class="info-chip p-2 rounded border text-center">
+              <i class="icofont icofont-clock-time d-block text-muted mb-1"></i>
+              <small class="text-muted d-block" style="font-size:0.7rem;">T. Entrega</small>
+              <span class="small fw-semibold">{{ producto?.disponibilidad?.tiempoEntrega }} días</span>
+            </div>
+          </div>
+          <div class="col-sm-4" *ngIf="producto?.disponibilidad?.cantidadMinVenta">
+            <div class="info-chip p-2 rounded border text-center">
+              <i class="icofont icofont-cart d-block text-muted mb-1"></i>
+              <small class="text-muted d-block" style="font-size:0.7rem;">Mín. venta</small>
+              <span class="small fw-semibold">{{ producto?.disponibilidad?.cantidadMinVenta }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Etiquetas -->
+        <div class="d-flex flex-wrap gap-1 mb-3" *ngIf="producto?.exposicion?.etiquetas?.length">
+          <span *ngFor="let tag of producto?.exposicion?.etiquetas"
+                class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle">
+            {{ tag }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer con acciones -->
+  <div class="modal-footer border-0 px-4 pt-0 pb-3 d-flex justify-content-between">
+    <button type="button" class="btn btn-outline-secondary btn-sm" (click)="activeModal.close('Cross click')">
+      <i class="icofont icofont-close me-1"></i>Cerrar
+    </button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="activeModal.close('edit')">
+      <i class="icofont icofont-pencil-alt-5 me-1"></i>Editar producto
+    </button>
+  </div>
+
+</div>
+
+<!-- Vista detallada desde edición de producto -->
+<div *ngIf="fromProductCreate">
+  <div class="modal-header">
+    <h4 class="modal-title">{{ 'Vista previa' | translate }}</h4>
+    <button type="button" class="btn-close" (click)="activeModal.close('Cross click')"></button>
+  </div>
+  <div class="container-fluid modal-body">
+  <div class="row">
 
 
     <div class="col-sm-4">
@@ -783,6 +797,6 @@
   </div>
 </div>
 <!-- [ Main Content ] end -->
-<div class="modal-footer" *ngIf="isView">
+<div class="modal-footer" *ngIf="fromProductCreate && isView">
   <button type="button" class="btn btn-light" (click)="activeModal.close('Close click')">Cerrar</button>
 </div>

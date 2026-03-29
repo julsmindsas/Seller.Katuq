@@ -21,6 +21,10 @@ export class ProductDetailsComponent implements OnInit {
   @Input() public isView: boolean = false;
   @Input() public fromProductCreate: boolean = false;
   public imagesRect: Image[]
+
+  // Quick preview state
+  currentPreviewIdx = 0;
+  currentPreviewImage = '';
   empresaActual: any;
   formaEntrega: any;
   tiempoEntrega: any;
@@ -56,16 +60,21 @@ export class ProductDetailsComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log(this.fromProductCreate,'Valor de la BANDERA')
     this.getAllFilters()
-    
-    console.log(this.producto)
-    this.processedDescriptioni=((this.producto.crearProducto.descripcion.split('\n')).map(line => `- ${line}`)).join('\n')
-    this.processedAditionalDetails=((this.producto.crearProducto.caracAdicionales.split('\n')).map(line => `- ${line}`)).join('\n')
-    this.productCare=((this.producto.crearProducto.cuidadoConsumo.split('\n')).map(line => `- ${line}`)).join('\n')
-    this.productGuarantee=((this.producto.crearProducto.garantiasProducto.split('\n')).map(line => `- ${line}`)).join('\n')
-    this.productRestrictions=((this.producto.crearProducto.restriccionesProducto.split('\n')).map(line => `- ${line}`)).join('\n')
-    this.imagesRect = this.producto.crearProducto.imagenesPrincipales.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls }));
+
+    const crearProd = this.producto?.crearProducto || {};
+    const images: any[] = crearProd.imagenesPrincipales || [];
+
+    this.processedDescriptioni = ((crearProd.descripcion || '').split('\n')).map((line: string) => `- ${line}`).join('\n');
+    this.processedAditionalDetails = ((crearProd.caracAdicionales || '').split('\n')).map((line: string) => `- ${line}`).join('\n');
+    this.productCare = ((crearProd.cuidadoConsumo || '').split('\n')).map((line: string) => `- ${line}`).join('\n');
+    this.productGuarantee = ((crearProd.garantiasProducto || '').split('\n')).map((line: string) => `- ${line}`).join('\n');
+    this.productRestrictions = ((crearProd.restriccionesProducto || '').split('\n')).map((line: string) => `- ${line}`).join('\n');
+    this.imagesRect = images.map((x, index) => new Image(index, { img: x.urls }, { img: x.urls }));
+
+    // Quick preview image state
+    this.currentPreviewImage = images.length > 0 ? images[0].urls : 'assets/img/placeholder.png';
+    this.currentPreviewIdx = 0;
     if(this.fromProductCreate){
       this.libConfigCarouselFixed = {
         carouselPreviewsConfig: {
@@ -103,6 +112,14 @@ export class ProductDetailsComponent implements OnInit {
     }
   
   }
+  selectPreviewImage(idx: number): void {
+    const images: any[] = this.producto?.crearProducto?.imagenesPrincipales || [];
+    if (images[idx]) {
+      this.currentPreviewIdx = idx;
+      this.currentPreviewImage = images[idx].urls;
+    }
+  }
+
   getAllFilters() {
     this.empresaActual = JSON.parse(localStorage.getItem("currentCompany"));
 

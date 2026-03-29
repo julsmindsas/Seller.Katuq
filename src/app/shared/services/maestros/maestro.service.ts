@@ -192,6 +192,29 @@ export class MaestroService {
   public createProduct(product: any) {
     return this.http.post(this.urlBase + '/v1/productos/create', product, this.httpOptions);
   }
+  getProductsFiltered(filtros: any, pageSize: number, currentPage: number, lastDocId?: string): Observable<any> {
+    let params = new HttpParams()
+      .set('page', currentPage.toString())
+      .set('pageSize', pageSize.toString());
+
+    if (filtros.texto) params = params.set('searchTerm', filtros.texto);
+    if (filtros.estado) params = params.set('estado', filtros.estado);
+    if (filtros.disponibilidad) params = params.set('disponibilidad', filtros.disponibilidad);
+    if (filtros.tipoProducto) params = params.set('tipoProducto', filtros.tipoProducto);
+    if (filtros.precioDesde != null) params = params.set('precioDesde', filtros.precioDesde.toString());
+    if (filtros.precioHasta != null) params = params.set('precioHasta', filtros.precioHasta.toString());
+    if (filtros.requiereProduccion) params = params.set('requiereProduccion', filtros.requiereProduccion);
+    if (filtros.inventariable) params = params.set('inventariable', filtros.inventariable);
+    if (filtros.ultimaEdicion) params = params.set('ultimaEdicion', filtros.ultimaEdicion);
+    if (lastDocId) params = params.set('lastDocId', lastDocId);
+
+    return this.http.get<any>(this.urlBase + '/v1/productos/all', { params });
+  }
+  public checkReferenciaUnica(referencia: string, excludeId?: string): Observable<any> {
+    let params = new HttpParams().set('referencia', referencia);
+    if (excludeId) params = params.set('excludeId', excludeId);
+    return this.http.get(this.urlBase + '/v1/productos/check-referencia', { params });
+  }
   public getTotalProducts() {
     return this.http.get(this.urlBase + '/v1/productos/totalProducts', this.httpOptions);
   }
@@ -423,5 +446,19 @@ export class MaestroService {
 
   removerBodegaDeCanal(canalId: string, bodegaId: string): Observable<any> {
     return this.http.delete<any>(`${this.urlBase}/v1/canales/${canalId}/canales/${bodegaId}`);
+  }
+
+  // Pedidos que contienen este producto
+  getPedidosByProducto(productoId: string, page = 1, pageSize = 20): Observable<any> {
+    const params = new HttpParams()
+      .set('productoId', productoId)
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+    return this.http.get<any>(`${this.urlBase}/v1/pedidos/all`, { params });
+  }
+
+  // Historial de cambios del producto
+  getProductoHistorial(productoId: string): Observable<any> {
+    return this.http.get<any>(`${this.urlBase}/v1/productos/historial/${productoId}`);
   }
 }

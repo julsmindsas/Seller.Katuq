@@ -72,6 +72,14 @@
                             <i class="icofont icofont-file-excel"></i>
                             {{ "Exportar" | translate }}
                         </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary btn-sm"
+                            (click)="showColConfigDialog = true"
+                            ngbTooltip="Configurar columnas"
+                        >
+                            <i class="pi pi-table"></i>
+                        </button>
                         <!-- Botón Administrativo: Limpiar BD - COMENTADO PARA NO DESPLEGAR
                         <button type="button" class="btn btn-outline-danger btn-sm"
                                 (click)="limpiarProductosComercio()"
@@ -95,24 +103,194 @@
                 </div>
 
                 <div class="card-body p-4 custom-datatable">
-                    <!-- Barra de Búsqueda y Filtros Mejorada -->
-                    <div class="row mb-4">
-                        <div class="col-lg-6 col-md-12 mb-3 mb-lg-0">
-                            <div class="input-group search-input-group">
-                                <span class="input-group-text">
-                                    <i class="icofont icofont-search"></i>
-                                </span>
-                                <input
-                                    type="text"
-                                    class="form-control search-input"
-                                    placeholder="{{
-                                        'Buscar producto (presiona Enter)...'
-                                            | translate
-                                    }}"
-                                    (keyup)="updateFilter($event)"
-                                />
+
+                    <!-- ====== SISTEMA DE FILTROS ====== -->
+                    <div class="filtros-wrapper mb-3">
+
+                        <!-- Fila 1: Búsqueda + Filtros principales -->
+                        <div class="row g-2 align-items-end mb-2">
+
+                            <!-- Búsqueda full-text -->
+                            <div class="col-lg-4 col-md-12">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0">
+                                        <i class="icofont icofont-search text-muted"></i>
+                                    </span>
+                                    <input
+                                        type="text"
+                                        class="form-control border-start-0 ps-0"
+                                        [value]="filtros.texto"
+                                        placeholder="Título, referencia, marca, descripción…"
+                                        (input)="onSearchInput($event)"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Estado -->
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <select class="form-select form-select-sm"
+                                    [(ngModel)]="filtros.estado"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Todos los estados</option>
+                                    <option value="activo">Activo</option>
+                                    <option value="inactivo">Inactivo</option>
+                                </select>
+                            </div>
+
+                            <!-- Disponibilidad -->
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <select class="form-select form-select-sm"
+                                    [(ngModel)]="filtros.disponibilidad"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Disponibilidad</option>
+                                    <option value="disponible">Disponible</option>
+                                    <option value="agotado">Agotado</option>
+                                </select>
+                            </div>
+
+                            <!-- Tipo de producto -->
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <select class="form-select form-select-sm"
+                                    [(ngModel)]="filtros.tipoProducto"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Tipo producto</option>
+                                    <option value="propio">Propio</option>
+                                    <option value="externo">Externo</option>
+                                    <option value="dropshipping">Dropshipping</option>
+                                </select>
+                            </div>
+
+                            <!-- Botón Más filtros -->
+                            <div class="col-lg-2 col-md-12 col-6 d-flex gap-2">
+                                <button class="btn btn-outline-secondary btn-sm flex-grow-1"
+                                    (click)="masFiltersVisible = !masFiltersVisible"
+                                    [class.active]="masFiltersVisible">
+                                    <i class="icofont icofont-filter me-1"></i>
+                                    Más filtros
+                                    <i class="fa ms-1" [class.fa-chevron-down]="!masFiltersVisible" [class.fa-chevron-up]="masFiltersVisible"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm"
+                                    *ngIf="hayFiltrosActivos"
+                                    (click)="limpiarFiltros()"
+                                    ngbTooltip="Limpiar todos los filtros">
+                                    <i class="icofont icofont-close"></i>
+                                </button>
                             </div>
                         </div>
+
+                        <!-- Fila 2: Más filtros (expandible) -->
+                        <div class="row g-2 align-items-end mb-2" *ngIf="masFiltersVisible">
+                            <!-- Precio desde -->
+                            <div class="col-lg-2 col-md-3 col-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" placeholder="Precio desde"
+                                        [(ngModel)]="filtros.precioDesde"
+                                        (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
+                                </div>
+                            </div>
+                            <!-- Precio hasta -->
+                            <div class="col-lg-2 col-md-3 col-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" class="form-control" placeholder="Precio hasta"
+                                        [(ngModel)]="filtros.precioHasta"
+                                        (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
+                                </div>
+                            </div>
+                            <!-- Requiere producción -->
+                            <div class="col-lg-2 col-md-3 col-6">
+                                <select class="form-select form-select-sm"
+                                    [(ngModel)]="filtros.requiereProduccion"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Producción: Todos</option>
+                                    <option value="si">Requiere producción</option>
+                                    <option value="no">No requiere producción</option>
+                                </select>
+                            </div>
+                            <!-- Inventariable -->
+                            <div class="col-lg-2 col-md-3 col-6">
+                                <select class="form-select form-select-sm"
+                                    [(ngModel)]="filtros.inventariable"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Inventariable: Todos</option>
+                                    <option value="si">Inventariable</option>
+                                    <option value="no">No inventariable</option>
+                                </select>
+                            </div>
+                            <!-- Última edición -->
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <select class="form-select form-select-sm"
+                                    [(ngModel)]="filtros.ultimaEdicion"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Última edición: Todas</option>
+                                    <option value="hoy">Hoy</option>
+                                    <option value="7dias">Últimos 7 días</option>
+                                    <option value="mes">Este mes</option>
+                                    <option value="mes_anterior">Mes anterior</option>
+                                </select>
+                            </div>
+                            <!-- Completitud -->
+                            <div class="col-lg-2 col-md-4 col-6">
+                                <select class="form-select form-select-sm"
+                                    [(ngModel)]="filtros.completitud"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Completitud: Todos</option>
+                                    <option value="completo">✅ Completos (≥80%)</option>
+                                    <option value="parcial">🟡 Parciales (50-79%)</option>
+                                    <option value="incompleto">🔴 Incompletos (&lt;50%)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Chips de filtros activos + Contador -->
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-1" *ngIf="activeChips.length > 0 || totalItems > 0">
+                            <span class="text-muted small me-1">
+                                <strong>{{ totalItems | number }}</strong> producto{{ totalItems !== 1 ? 's' : '' }} encontrado{{ totalItems !== 1 ? 's' : '' }}
+                            </span>
+                            <span *ngFor="let chip of activeChips"
+                                class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle d-inline-flex align-items-center gap-1 px-2 py-1">
+                                {{ chip.label }}
+                                <button type="button" class="btn-close btn-close-sm ms-1"
+                                    style="font-size: 0.6rem;"
+                                    (click)="removerChip(chip.key)"></button>
+                            </span>
+                            <!-- Guardar / cargar vistas -->
+                            <button *ngIf="hasActiveFilters()"
+                                class="btn btn-sm btn-outline-primary py-0 px-2"
+                                style="font-size:0.78rem"
+                                (click)="saveCurrentView()"
+                                ngbTooltip="Guardar estos filtros como vista">
+                                <i class="pi pi-bookmark me-1"></i>
+                                {{ activeViewName ? 'Actualizar "' + activeViewName + '"' : 'Guardar vista' }}
+                            </button>
+                        </div>
+
+                        <!-- Saved views row -->
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-2" *ngIf="savedViews.length > 0">
+                            <span class="text-muted small"><i class="pi pi-bookmark me-1"></i>Vistas:</span>
+                            <span *ngFor="let v of savedViews"
+                                class="badge d-inline-flex align-items-center gap-1 px-2 py-1"
+                                [class.bg-primary]="activeViewName === v.name"
+                                [class.bg-light]="activeViewName !== v.name"
+                                [class.text-white]="activeViewName === v.name"
+                                [class.text-dark]="activeViewName !== v.name"
+                                style="cursor:pointer; border: 1px solid #dee2e6; font-size:0.78rem"
+                                (click)="loadView(v)"
+                                ngbTooltip="Aplicar vista">
+                                {{ v.name }}
+                                <button type="button" class="btn-close ms-1"
+                                    [class.btn-close-white]="activeViewName === v.name"
+                                    style="font-size: 0.55rem"
+                                    (click)="deleteView(v, $event)"></button>
+                            </span>
+                        </div>
+                    </div>
+                    <!-- ====== FIN FILTROS ====== -->
+
+                    <!-- Barra mobile de acciones (legacy) -->
+                    <div class="row mb-2" style="display:none">
+                        <div class="col-lg-6 col-md-12 mb-3 mb-lg-0"><!-- search legacy --></div>
                         <div class="col-lg-6 col-md-12 d-lg-none text-center">
                             <button
                                 type="button"
@@ -189,6 +367,36 @@
                         </div>
                     </div> -->
 
+                    <!-- Barra de acciones masivas — visible cuando hay selección -->
+                    <div *ngIf="selectedProductos.length > 0"
+                        class="d-flex align-items-center gap-2 flex-wrap p-2 mb-2 rounded border border-primary bg-primary-subtle">
+                        <span class="fw-semibold text-primary me-2">
+                            <i class="icofont icofont-check-alt me-1"></i>
+                            {{ selectedProductos.length }} seleccionado{{ selectedProductos.length !== 1 ? 's' : '' }}
+                        </span>
+                        <button class="btn btn-sm btn-success" (click)="accionMasiva('activar')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="icofont icofont-check me-1"></i>Activar
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" (click)="accionMasiva('desactivar')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="icofont icofont-close me-1"></i>Desactivar
+                        </button>
+                        <button class="btn btn-sm btn-info" (click)="accionMasiva('disponible')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="icofont icofont-check-circled me-1"></i>Disponible
+                        </button>
+                        <button class="btn btn-sm btn-secondary" (click)="accionMasiva('agotado')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="icofont icofont-minus-circle me-1"></i>Agotado
+                        </button>
+                        <button class="btn btn-sm btn-danger" (click)="accionMasiva('eliminar')" [disabled]="ejecutandoAccionMasiva">
+                            <i class="icofont icofont-trash me-1"></i>Eliminar
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="selectedProductos = []">
+                            <i class="icofont icofont-close me-1"></i>Deseleccionar
+                        </button>
+                        <span *ngIf="ejecutandoAccionMasiva" class="ms-2">
+                            <i class="fa fa-spinner fa-spin me-1"></i>Procesando…
+                        </span>
+                    </div>
+
                     <!-- La tabla de PrimeNG -->
                     <p-table
                         #dt
@@ -197,22 +405,31 @@
                         [resizableColumns]="true"
                         [scrollable]="true"
                         [loading]="cargando"
-                        [rowsPerPageOptions]="[10, 20, 50]"
-                        [paginator]="true"
+                        [rowsPerPageOptions]="[10, 20, 50, 100]"
                         [rows]="pageSize"
                         [totalRecords]="totalItems"
                         [sortField]="'crearProducto.titulo'"
                         [sortOrder]="1"
-                        styleClass="p-datatable-gridlines"
+                        styleClass="p-datatable-gridlines p-datatable-sm"
                         (onLazyLoad)="onPageChange($event)"
                         [lazy]="true"
                         [tableStyle]="{ 'min-width': '10rem' }"
                         [rowHover]="true"
                         [showCurrentPageReport]="true"
+                        currentPageReportTemplate="Mostrando {first}–{last} de {totalRecords} productos"
+                        paginatorPosition="bottom"
                     >
                         <!-- ENCABEZADO -->
                         <ng-template pTemplate="header">
                             <tr>
+                                <!-- Checkbox selección múltiple -->
+                                <th class="text-center" style="width:40px">
+                                    <input type="checkbox"
+                                        class="form-check-input"
+                                        [checked]="allPageSelected"
+                                        [indeterminate]="selectedProductos.length > 0 && !allPageSelected"
+                                        (change)="toggleSelectAll()" />
+                                </th>
                                 <!-- Imagen (sin ordenamiento) -->
                                 <th class="text-center" style="width: 80px">
                                     {{ "Imagen" | translate }}
@@ -231,7 +448,7 @@
                                 <th
                                     class="text-center"
                                     pSortableColumn="identificacion.referencia"
-                                    *ngIf="!isMobile"
+                                    *ngIf="!isMobile && isColVisible('referencia')"
                                 >
                                     {{ "Referencia" | translate }}
                                     <p-sortIcon
@@ -241,8 +458,24 @@
 
                                 <th
                                     class="text-center"
+                                    pSortableColumn="categorias.label"
+                                    *ngIf="!isMobile && isColVisible('categoria')"
+                                >
+                                    {{ "Categoría" | translate }}
+                                    <p-sortIcon field="categorias.label"></p-sortIcon>
+                                </th>
+
+                                <th
+                                    class="text-center"
+                                    *ngIf="!isMobile && isColVisible('canales')"
+                                >
+                                    {{ "Canales" | translate }}
+                                </th>
+
+                                <th
+                                    class="text-center"
                                     pSortableColumn="exposicion.activar"
-                                    *ngIf="!isMobile"
+                                    *ngIf="!isMobile && isColVisible('estado')"
                                 >
                                     {{ "Estado" | translate }}
                                     <p-sortIcon
@@ -253,7 +486,7 @@
                                 <th
                                     class="text-center"
                                     pSortableColumn="exposicion.disponible"
-                                    *ngIf="!isMobile"
+                                    *ngIf="!isMobile && isColVisible('disponibilidad')"
                                 >
                                     {{ "Disponibilidad" | translate }}
                                     <p-sortIcon
@@ -264,7 +497,7 @@
                                 <th
                                     class="text-center"
                                     pSortableColumn="crearProducto.paraProduccion"
-                                    *ngIf="!isMobile"
+                                    *ngIf="!isMobile && isColVisible('produccion')"
                                 >
                                     {{ "Producción" | translate }}
                                     <p-sortIcon
@@ -274,19 +507,19 @@
 
                                 <th
                                     class="text-center"
-                                    pSortableColumn="precio.precioUnitarioSinIva"
-                                    *ngIf="!isMobile"
+                                    pSortableColumn="precio.precioUnitarioConIva"
+                                    *ngIf="!isMobile && isColVisible('precio')"
                                 >
-                                    {{ "Precio" | translate }}
+                                    {{ "Precio (c/IVA)" | translate }}
                                     <p-sortIcon
-                                        field="precio.precioUnitarioSinIva"
+                                        field="precio.precioUnitarioConIva"
                                     ></p-sortIcon>
                                 </th>
 
                                 <th
                                     class="text-center"
                                     pSortableColumn="date_edit"
-                                    *ngIf="!isMobile"
+                                    *ngIf="!isMobile && isColVisible('ultimaEdicion')"
                                 >
                                     {{ "Última Edición" | translate }}
                                     <p-sortIcon field="date_edit"></p-sortIcon>
@@ -306,6 +539,13 @@
                         <!-- CUERPO DE LA TABLA -->
                         <ng-template pTemplate="body" let-row>
                             <tr>
+                                <!-- Checkbox selección -->
+                                <td class="text-center">
+                                    <input type="checkbox"
+                                        class="form-check-input"
+                                        [checked]="isSelected(row)"
+                                        (change)="toggleSelectRow(row)" />
+                                </td>
                                 <!-- Imagen -->
                                 <td class="text-center">
                                     <img
@@ -343,75 +583,104 @@
                                     />
                                 </td>
 
-                                <!-- Título -->
+                                <!-- Título + Indicador completitud -->
                                 <td>
-                                    <span class="fw-semibold">{{
-                                        row.crearProducto?.titulo
-                                    }}</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <ng-container *ngIf="getProductCompleteness(row) as c">
+                                            <span class="completeness-dot"
+                                                [style.background]="c.level === 'green' ? '#27AE60' : c.level === 'yellow' ? '#f59e0b' : '#d12b38'"
+                                                [ngbTooltip]="c.tooltip + ' (' + c.score + '%)'"
+                                                placement="right"
+                                                style="display:inline-block; width:10px; height:10px; border-radius:50%; flex-shrink:0; cursor:help;">
+                                            </span>
+                                        </ng-container>
+                                        <span class="fw-semibold">{{ row.crearProducto?.titulo }}</span>
+                                    </div>
                                 </td>
 
                                 <!-- Referencia (solo en desktop) -->
-                                <td *ngIf="!isMobile" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('referencia')" class="text-center">
                                     <span class="text-muted">{{
                                         row.identificacion?.referencia || "N/A"
                                     }}</span>
                                 </td>
 
-                                <!-- Estado Activo (solo en desktop) -->
-                                <td *ngIf="!isMobile" class="text-center">
-                                    <span
-                                        *ngIf="row.exposicion?.activar === true"
-                                        class="badge bg-success"
-                                    >
-                                        <i
-                                            class="icofont icofont-check me-1"
-                                        ></i
-                                        >{{ "Activo" | translate }}
+                                <!-- Categoría (solo en desktop) -->
+                                <td *ngIf="!isMobile && isColVisible('categoria')" class="text-center">
+                                    <span *ngIf="row.categorias?.label"
+                                        class="badge rounded-pill bg-light text-dark border"
+                                        style="font-size:0.75rem;">
+                                        {{ row.categorias?.label }}
                                     </span>
-                                    <span
-                                        *ngIf="
-                                            row.exposicion?.activar === false ||
-                                            !row.exposicion?.activar
-                                        "
-                                        class="badge bg-danger"
-                                    >
-                                        <i
-                                            class="icofont icofont-close me-1"
-                                        ></i
-                                        >{{ "Inactivo" | translate }}
+                                    <span *ngIf="!row.categorias?.label" class="text-muted small">—</span>
+                                </td>
+
+                                <!-- Canales de venta (solo en desktop) -->
+                                <td *ngIf="!isMobile && isColVisible('canales')" class="text-center">
+                                    <div class="d-flex flex-wrap gap-1 justify-content-center">
+                                        <span *ngIf="row.exposicion?.soloPos"
+                                            class="badge rounded-pill bg-warning text-dark"
+                                            style="font-size:0.7rem;"
+                                            ngbTooltip="Solo Punto de Venta">
+                                            <i class="icofont icofont-cash-on-delivery me-1"></i>POS
+                                        </span>
+                                        <span *ngIf="row.exposicion?.activar && !row.exposicion?.soloPos"
+                                            class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle"
+                                            style="font-size:0.7rem;"
+                                            ngbTooltip="Catálogo Web">
+                                            <i class="icofont icofont-web me-1"></i>Web
+                                        </span>
+                                        <span *ngIf="row.integrations?.shopify?.id"
+                                            class="badge rounded-pill bg-success-subtle text-success-emphasis border border-success-subtle"
+                                            style="font-size:0.7rem;"
+                                            ngbTooltip="Sincronizado con Shopify">
+                                            <i class="icofont icofont-brand-shopify me-1"></i>Shopify
+                                        </span>
+                                        <span *ngIf="!row.exposicion?.activar && !row.exposicion?.soloPos && !row.integrations?.shopify?.id"
+                                            class="text-muted small">—</span>
+                                    </div>
+                                </td>
+
+                                <!-- Estado Activo (solo en desktop) — toggle inline -->
+                                <td *ngIf="!isMobile && isColVisible('estado')" class="text-center">
+                                    <span *ngIf="row._guardandoEstado" class="badge bg-secondary">
+                                        <i class="fa fa-spinner fa-spin me-1"></i>Guardando…
+                                    </span>
+                                    <span *ngIf="!row._guardandoEstado"
+                                        class="badge cursor-pointer"
+                                        [class.bg-success]="row.exposicion?.activar === true"
+                                        [class.bg-danger]="row.exposicion?.activar !== true"
+                                        style="cursor:pointer"
+                                        ngbTooltip="Clic para {{ row.exposicion?.activar ? 'desactivar' : 'activar' }}"
+                                        (click)="toggleEstado(row)">
+                                        <i class="icofont me-1"
+                                            [class.icofont-check]="row.exposicion?.activar === true"
+                                            [class.icofont-close]="row.exposicion?.activar !== true"></i>
+                                        {{ row.exposicion?.activar ? ('Activo' | translate) : ('Inactivo' | translate) }}
                                     </span>
                                 </td>
 
-                                <!-- Disponibilidad (solo en desktop) -->
-                                <td *ngIf="!isMobile" class="text-center">
-                                    <span
-                                        *ngIf="
-                                            row.exposicion?.disponible === true
-                                        "
-                                        class="badge bg-info"
-                                    >
-                                        <i
-                                            class="icofont icofont-check-circled me-1"
-                                        ></i
-                                        >{{ "Disponible" | translate }}
+                                <!-- Disponibilidad (solo en desktop) — toggle inline -->
+                                <td *ngIf="!isMobile && isColVisible('disponibilidad')" class="text-center">
+                                    <span *ngIf="row._guardandoDisp" class="badge bg-secondary">
+                                        <i class="fa fa-spinner fa-spin me-1"></i>Guardando…
                                     </span>
-                                    <span
-                                        *ngIf="
-                                            row.exposicion?.disponible ===
-                                                false ||
-                                            !row.exposicion?.disponible
-                                        "
-                                        class="badge bg-secondary"
-                                    >
-                                        <i
-                                            class="icofont icofont-minus-circle me-1"
-                                        ></i
-                                        >{{ "No disponible" | translate }}
+                                    <span *ngIf="!row._guardandoDisp"
+                                        class="badge"
+                                        [class.bg-info]="row.exposicion?.disponible === true"
+                                        [class.bg-secondary]="row.exposicion?.disponible !== true"
+                                        style="cursor:pointer"
+                                        ngbTooltip="Clic para marcar como {{ row.exposicion?.disponible ? 'agotado' : 'disponible' }}"
+                                        (click)="toggleDisponibilidad(row)">
+                                        <i class="icofont me-1"
+                                            [class.icofont-check-circled]="row.exposicion?.disponible === true"
+                                            [class.icofont-minus-circle]="row.exposicion?.disponible !== true"></i>
+                                        {{ row.exposicion?.disponible ? ('Disponible' | translate) : ('No disponible' | translate) }}
                                     </span>
                                 </td>
 
                                 <!-- Se produce (solo en desktop) -->
-                                <td *ngIf="!isMobile" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('produccion')" class="text-center">
                                     <span
                                         *ngIf="
                                             row.crearProducto?.paraProduccion
@@ -433,22 +702,17 @@
                                     </span>
                                 </td>
 
-                                <!-- Precio unitario sin IVA (solo en desktop) -->
-                                <td *ngIf="!isMobile" class="text-end">
-                                    <span class="fw-bold text-primary">
-                                        {{
-                                            row.precio?.precioUnitarioSinIva ||
-                                                0
-                                                | currency
-                                                    : "USD"
-                                                    : "symbol"
-                                                    : "1.0-0"
-                                        }}
+                                <!-- Precio unitario con IVA (solo en desktop) -->
+                                <td *ngIf="!isMobile && isColVisible('precio')" class="text-end">
+                                    <span class="fw-bold text-primary"
+                                        ngbTooltip="Sin IVA: {{ (row.precio?.precioUnitarioSinIva || 0) | currency:'USD':'symbol':'1.0-0' }} | IVA {{ row.precio?.precioUnitarioIva || 0 }}%"
+                                        placement="top">
+                                        {{ (row.precio?.precioUnitarioConIva || 0) | currency:'USD':'symbol':'1.0-0' }}
                                     </span>
                                 </td>
 
                                 <!-- Fecha editado (solo en desktop) -->
-                                <td *ngIf="!isMobile" class="text-center">
+                                <td *ngIf="!isMobile && isColVisible('ultimaEdicion')" class="text-center">
                                     <small class="text-muted">{{
                                         toDate(row.date_edit)
                                             ? (toDate(row.date_edit)
@@ -558,3 +822,81 @@
     (importComplete)="onImportComplete($event)"
 >
 </app-import-modal>
+
+<!-- Export Dialog -->
+<p-dialog
+    header="Exportar productos"
+    [(visible)]="showExportDialog"
+    [modal]="true"
+    [style]="{width: '480px'}"
+    [draggable]="false"
+    [resizable]="false">
+    <div class="mb-3">
+        <div *ngIf="selectedProductos?.length > 0" class="alert alert-info py-2 mb-3">
+            <i class="pi pi-info-circle me-1"></i>
+            Se exportarán <strong>{{ selectedProductos.length }}</strong> productos seleccionados.
+        </div>
+        <div *ngIf="!selectedProductos?.length" class="alert alert-secondary py-2 mb-3">
+            <i class="pi pi-filter me-1"></i>
+            Se exportarán los <strong>{{ rows.length }}</strong> productos de la página actual (con filtros activos).
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="fw-semibold">Columnas a incluir</label>
+            <div class="d-flex gap-2">
+                <a href="javascript:void(0)" class="small text-primary" (click)="selectAllExportColumns(true)">Todas</a>
+                <span class="text-muted small">|</span>
+                <a href="javascript:void(0)" class="small text-secondary" (click)="selectAllExportColumns(false)">Ninguna</a>
+            </div>
+        </div>
+        <div class="row g-2">
+            <div class="col-6" *ngFor="let col of exportColumnas">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="col.selected" [id]="'expCol_' + col.key" />
+                    <label class="form-check-label" [for]="'expCol_' + col.key">{{ col.label }}</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <button type="button" class="btn btn-secondary btn-sm me-2" (click)="showExportDialog = false">Cancelar</button>
+        <button type="button" class="btn btn-success btn-sm" (click)="doExport()">
+            <i class="icofont icofont-file-excel me-1"></i>Descargar Excel
+        </button>
+    </ng-template>
+</p-dialog>
+
+<!-- Column Configuration Dialog -->
+<p-dialog
+    header="Configurar columnas"
+    [(visible)]="showColConfigDialog"
+    [modal]="true"
+    [style]="{width: '400px'}"
+    [draggable]="false"
+    [resizable]="false">
+    <p class="text-muted small mb-3">
+        <i class="pi pi-info-circle me-1"></i>
+        Activa o desactiva columnas y usa las flechas para reordenarlas.
+    </p>
+    <div class="list-group">
+        <div *ngFor="let col of colConfig; let i = index; trackBy: trackById"
+            class="list-group-item d-flex align-items-center gap-2 py-2">
+            <div class="form-check mb-0 flex-grow-1">
+                <input class="form-check-input" type="checkbox"
+                    [(ngModel)]="col.visible"
+                    [id]="'col_' + col.key" />
+                <label class="form-check-label" [for]="'col_' + col.key">{{ col.label }}</label>
+            </div>
+            <div class="d-flex flex-column gap-1">
+                <button class="btn btn-sm btn-outline-secondary py-0 px-1" [disabled]="i === 0" (click)="moveColUp(i)" style="font-size:0.7rem; line-height:1">▲</button>
+                <button class="btn btn-sm btn-outline-secondary py-0 px-1" [disabled]="i === colConfig.length - 1" (click)="moveColDown(i)" style="font-size:0.7rem; line-height:1">▼</button>
+            </div>
+        </div>
+    </div>
+    <ng-template pTemplate="footer">
+        <button type="button" class="btn btn-secondary btn-sm me-2" (click)="showColConfigDialog = false">Cancelar</button>
+        <button type="button" class="btn btn-primary btn-sm" (click)="saveColConfig()">
+            <i class="pi pi-save me-1"></i>Guardar configuración
+        </button>
+    </ng-template>
+</p-dialog>

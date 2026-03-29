@@ -167,11 +167,23 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   kaiProductPrompt: any;
   uploadingImages: boolean = false;
   saving: boolean = false;
+  referenciaError: string = '';
+  validandoReferencia: boolean = false;
   private subs = new Subscription();
   
   // Control de tabs y modo dropshipping
   activeTabIndex = 0;
   isDropshippingConfigMode = false;
+
+  // Pestaña: Pedidos relacionados
+  pedidosRelacionados: any[] = [];
+  loadingPedidos = false;
+  pedidosCargados = false;
+
+  // Pestaña: Historial de cambios
+  historialCambios: any[] = [];
+  loadingHistorial = false;
+  historialCargado = false;
 
   getNameControl(control) {
     return control.value.nameMP;
@@ -1092,7 +1104,49 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-  guardarProductos() {
+  validarReferenciaEnBlur(): void {
+    const tipoRef = this.identificacion.get('tipoReferencia')?.value;
+    if (tipoRef === 'propio') return;
+    const ref = this.identificacion.getRawValue().referencia;
+    if (!ref) { this.referenciaError = ''; return; }
+    this.validarReferenciaUnica().then(() => {});
+  }
+
+  private validarReferenciaUnica(): Promise<boolean> {
+    const tipoRef = this.identificacion.get('tipoReferencia')?.value;
+    // Referencias automáticas ('propio') son únicas por diseño — no validar
+    if (tipoRef === 'propio') return Promise.resolve(true);
+
+    const ref = this.identificacion.getRawValue().referencia;
+    if (!ref) return Promise.resolve(true);
+
+    const excludeId = this.isEditMode() ? (this.edit?.cd || this.edit?.id || this.cd) : undefined;
+
+    return new Promise((resolve) => {
+      this.validandoReferencia = true;
+      this.service.checkReferenciaUnica(ref, excludeId).subscribe({
+        next: (response: any) => {
+          this.validandoReferencia = false;
+          if (response?.exists) {
+            const nombreConflicto = response.producto?.crearProducto?.titulo || 'otro producto';
+            this.referenciaError = `Esta referencia ya está en uso por: "${nombreConflicto}". Por favor usa una diferente.`;
+            resolve(false);
+          } else {
+            this.referenciaError = '';
+            resolve(true);
+          }
+        },
+        error: () => {
+          // Si el endpoint aún no existe en backend, permitir guardar (graceful degradation)
+          this.validandoReferencia = false;
+          this.referenciaError = '';
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  async guardarProductos() {
     // Evitar múltiples envíos
     if (this.saving) {
       return;
@@ -1121,6 +1175,17 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         "error",
       );
       this.saving = false;
+      return;
+    }
+
+    // Validar unicidad de referencia (solo referencias manuales)
+    const referenciaValida = await this.validarReferenciaUnica();
+    if (!referenciaValida) {
+      this.saving = false;
+      // Hacer scroll al campo de referencia para que el usuario lo vea
+      setTimeout(() => {
+        this.referencia?.nativeElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
       return;
     }
 
@@ -1873,6 +1938,67 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   private isEditMode(): boolean {
     return sessionStorage.getItem("infoForms") !== null;
+  }
+
+  // ---- Pestaña Pedidos relacionados ----
+  onTabChange(event: any): void {
+    const tabIndex = event.index ?? event;
+    // Lazy load cuando se activa la pestaña de pedidos
+    const productoId = this.edit?.cd || this.cd;
+    if (!productoId) return;
+
+    // Determinar índices de las pestañas según el orden definido en HTML
+    // Se identifican por el header text via event o buscando el tabIndex
+    const tabHeaders = document.querySelectorAll('.p-tabview-nav li');
+    if (tabHeaders && tabHeaders[tabIndex]) {
+      const headerText = tabHeaders[tabIndex].textContent?.trim() || '';
+      if (headerText.includes('Pedidos') && !this.pedidosCargados) {
+        this.cargarPedidosRelacionados(productoId);
+      }
+      if (headerText.includes('Historial') && !this.historialCargado) {
+        this.cargarHistorial(productoId);
+      }
+    }
+  }
+
+  cargarPedidosRelacionados(productoId?: string): void {
+    const id = productoId || this.edit?.cd || this.cd;
+    if (!id || this.pedidosCargados) return;
+    this.loadingPedidos = true;
+    this.service.getPedidosByProducto(id).subscribe({
+      next: (response: any) => {
+        this.pedidosRelacionados = response?.pedidos || response?.orders || response?.data || [];
+        this.loadingPedidos = false;
+        this.pedidosCargados = true;
+      },
+      error: () => {
+        this.pedidosRelacionados = [];
+        this.loadingPedidos = false;
+        this.pedidosCargados = true;
+      }
+    });
+  }
+
+  trackById(index: number, item: any): string {
+    return item?.cd || item?.id || item?.referencia || index;
+  }
+
+  cargarHistorial(productoId?: string): void {
+    const id = productoId || this.edit?.cd || this.cd;
+    if (!id || this.historialCargado) return;
+    this.loadingHistorial = true;
+    this.service.getProductoHistorial(id).subscribe({
+      next: (response: any) => {
+        this.historialCambios = response?.historial || response?.data || [];
+        this.loadingHistorial = false;
+        this.historialCargado = true;
+      },
+      error: () => {
+        this.historialCambios = [];
+        this.loadingHistorial = false;
+        this.historialCargado = true;
+      }
+    });
   }
 
   private generateBarcode(code: string) {

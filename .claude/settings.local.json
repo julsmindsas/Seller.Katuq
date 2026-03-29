@@ -85,7 +85,21 @@
       "Read(//c/assets/scss/utils/**)",
       "Bash(git -C C:sourcecodejulsSeller.Katuq diff --stat HEAD)",
       "WebFetch(domain:procreator.design)",
-      "mcp__plugin_claude-mem_mcp-search__get_observations"
+      "mcp__plugin_claude-mem_mcp-search__get_observations",
+      "mcp__claude_ai_ClickUp__clickup_get_folder",
+      "Read(//c//**)",
+      "Bash(find /mnt -name katuq_admin* -maxdepth 5)",
+      "Bash(python3:*)",
+      "Bash(npm --version)",
+      "Bash(npm install:*)",
+      "Bash(firebase --version)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(/dev/null echo:*)",
+      "Bash(echo \":*)",
+      "Bash(\"C:\\\\Users\\\\julia\\\\Documents\\\\Seller.Katuq.Back\\\\katuq_admin_back_firebase\\\\functions\\\\routers\\\\productos.js\")",
+      "Bash(/dev/null grep:*)",
+      "Bash(grep -rn \"getProductsFiltered\\\\|getAllProductsPagination\\\\|getAllProductsInventariables\" \"C:\\\\users\\\\julia\\\\documents\\\\Seller.Katuq\\\\src\\\\app\"\" --include=\"*.ts\" | grep -v \"maestro.service)",
+      "Bash(spec.ts \")"
     ]
   }
 }

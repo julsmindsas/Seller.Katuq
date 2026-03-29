@@ -148,6 +148,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   confirmedMappings: { [katuqField: string]: string } = {};
   showMappingPreview = false;
 
+  // Import mode: create-only, update-only, or upsert (default)
+  importMode: 'create' | 'update' | 'upsert' = 'upsert';
+
   // Mobile: Mapping Fields for Cards
   mappingFields: MappingField[] = [];
   availableColumns: { label: string; value: string }[] = [];
@@ -361,6 +364,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.showMappingPreview = false;
     this.mappingFields = [];
     this.availableColumns = [];
+    this.importMode = 'upsert';
     this.isUploading = false;
     this.isDeleting = false;
     this.isAnalyzingColumns = false;
@@ -618,7 +622,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       const payload: any = {
         companyId: companyId,
         mappings: this.confirmedMappings,
-        importBatchId: batchId
+        importBatchId: batchId,
+        mode: this.importMode
       };
       payload[this.config!.payloadKey] = transformedData;
 
@@ -645,7 +650,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         success: data.success || 0,
         failed: data.failed || 0,
         errors: data.errors || [],
-        batchId: data.batchId || batchId
+        batchId: data.batchId || batchId,
+        created: data.created ?? undefined,
+        updated: data.updated ?? undefined
       };
 
       const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : this.type === 'category' ? 'categorías' : 'productos';

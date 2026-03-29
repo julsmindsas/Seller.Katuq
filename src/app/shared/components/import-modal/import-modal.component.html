@@ -121,6 +121,45 @@
         </p-chip>
       </div>
     </div>
+
+    <!-- Import Mode Selector (products only) -->
+    <div class="import-mode-selector mt-3 p-3 border rounded bg-light" *ngIf="type === 'product'">
+      <div class="fw-semibold mb-2 d-flex align-items-center gap-2">
+        <i class="pi pi-sliders-h text-primary"></i>
+        Modo de importación
+      </div>
+      <div class="d-flex gap-4 flex-wrap">
+        <div class="form-check">
+          <input type="radio" [(ngModel)]="importMode" value="upsert" id="modeUpsert" name="importMode" class="form-check-input" />
+          <label for="modeUpsert" class="form-check-label">
+            <span class="fw-semibold">Crear y actualizar</span>
+            <small class="d-block text-muted">Crea nuevos y actualiza existentes por referencia</small>
+          </label>
+        </div>
+        <div class="form-check">
+          <input type="radio" [(ngModel)]="importMode" value="create" id="modeCreate" name="importMode" class="form-check-input" />
+          <label for="modeCreate" class="form-check-label">
+            <span class="fw-semibold">Solo crear nuevos</span>
+            <small class="d-block text-muted">Ignora registros con referencia duplicada</small>
+          </label>
+        </div>
+        <div class="form-check">
+          <input type="radio" [(ngModel)]="importMode" value="update" id="modeUpdate" name="importMode" class="form-check-input" />
+          <label for="modeUpdate" class="form-check-label">
+            <span class="fw-semibold">Solo actualizar existentes</span>
+            <small class="d-block text-muted">Omite productos sin coincidencia por referencia</small>
+          </label>
+        </div>
+      </div>
+      <div class="mt-2 small" *ngIf="importMode === 'upsert'">
+        <i class="pi pi-info-circle text-primary me-1"></i>
+        <span class="text-muted">Recomendado: los duplicados se detectan por el campo <strong>Referencia</strong>.</span>
+      </div>
+      <div class="mt-2 small" *ngIf="importMode === 'update'">
+        <i class="pi pi-exclamation-triangle text-warning me-1"></i>
+        <span class="text-muted">Solo se actualizarán productos cuya <strong>Referencia</strong> ya exista en el catálogo.</span>
+      </div>
+    </div>
   </div>
 
   <!-- Step 4: Import Result -->
@@ -129,10 +168,26 @@
       <i class="pi result-icon" [ngClass]="importResult.success > 0 ? 'pi-check-circle' : 'pi-exclamation-circle'"></i>
       <h4>Importacion {{ importResult.success > 0 ? 'Completada' : 'con Errores' }}</h4>
       <div class="result-stats">
-        <div class="stat success">
-          <span class="stat-number">{{ importResult.success }}</span>
-          <span class="stat-label">Importados</span>
-        </div>
+        <ng-container *ngIf="importResult.created != null || importResult.updated != null; else simpleStats">
+          <div class="stat success" *ngIf="importResult.created != null && importResult.created! > 0">
+            <span class="stat-number">{{ importResult.created }}</span>
+            <span class="stat-label">Creados</span>
+          </div>
+          <div class="stat info" *ngIf="importResult.updated != null && importResult.updated! > 0">
+            <span class="stat-number">{{ importResult.updated }}</span>
+            <span class="stat-label">Actualizados</span>
+          </div>
+          <div class="stat success" *ngIf="(importResult.created == null || importResult.created === 0) && (importResult.updated == null || importResult.updated === 0)">
+            <span class="stat-number">{{ importResult.success }}</span>
+            <span class="stat-label">Procesados</span>
+          </div>
+        </ng-container>
+        <ng-template #simpleStats>
+          <div class="stat success">
+            <span class="stat-number">{{ importResult.success }}</span>
+            <span class="stat-label">Importados</span>
+          </div>
+        </ng-template>
         <div class="stat error" *ngIf="importResult.failed > 0">
           <span class="stat-number">{{ importResult.failed }}</span>
           <span class="stat-label">Fallidos</span>

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { Router } from '@angular/router';
@@ -15,13 +15,17 @@ import { ImportResult } from '../../shared/models/column-mapping.model';
 import { FulfillmentService } from '../../shared/services/fulfillment/fulfillment.service';
 import { ToastrService } from 'ngx-toastr';
 import { IntegrationsService } from '../integrations/integrations.service';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+
+const FILTROS_SESSION_KEY = 'productos_filtros';
 
 @Component({
   selector: 'app-productos',
   templateUrl: './productos.component.html',
   styleUrls: ['./productos.component.scss']
 })
-export class ProductosComponent implements OnInit {
+export class ProductosComponent implements OnInit, OnDestroy {
   @ViewChild(DatatableComponent, { static: false }) table: DatatableComponent;
 
   cargando = false;
@@ -48,7 +52,100 @@ export class ProductosComponent implements OnInit {
   empresaActual: any;
   ultimasLetras: any;
 
-  // Filtros de dropshipping
+  // ---- Sistema de Filtros ----
+  filtros = {
+    texto: '',
+    estado: 'activo',       // preseleccionado Activo por defecto
+    disponibilidad: '',
+    tipoProducto: '',
+    precioDesde: null as number | null,
+    precioHasta: null as number | null,
+    // Más filtros
+    requiereProduccion: '',
+    inventariable: '',
+    ultimaEdicion: '',
+    completitud: '',        // '' | 'completo' | 'parcial' | 'incompleto'
+  };
+  masFiltersVisible = false;
+  private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
+
+  // Saved filter views
+  private readonly SAVED_VIEWS_KEY = 'productos_saved_views';
+  savedViews: { name: string; filtros: any }[] = [];
+  activeViewName = '';
+
+  hasActiveFilters(): boolean {
+    return !!(
+      this.filtros.texto ||
+      (this.filtros.estado && this.filtros.estado !== 'activo') ||
+      this.filtros.disponibilidad ||
+      this.filtros.tipoProducto ||
+      this.filtros.precioDesde != null ||
+      this.filtros.precioHasta != null ||
+      this.filtros.requiereProduccion ||
+      this.filtros.inventariable ||
+      this.filtros.ultimaEdicion ||
+      this.filtros.completitud
+    );
+  }
+
+  async saveCurrentView(): Promise<void> {
+    const { value: name } = await Swal.fire({
+      title: 'Guardar vista',
+      input: 'text',
+      inputLabel: 'Nombre de la vista',
+      inputPlaceholder: 'Ej: Activos con stock',
+      inputValue: this.activeViewName || '',
+      showCancelButton: true,
+      confirmButtonText: 'Guardar',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (v) => !v ? 'Escribe un nombre para la vista' : undefined
+    });
+    if (!name) return;
+    const existing = this.savedViews.findIndex(v => v.name === name);
+    const snapshot = JSON.parse(JSON.stringify(this.filtros));
+    if (existing >= 0) {
+      this.savedViews[existing].filtros = snapshot;
+    } else {
+      this.savedViews.push({ name, filtros: snapshot });
+    }
+    this.activeViewName = name;
+    localStorage.setItem(this.SAVED_VIEWS_KEY, JSON.stringify(this.savedViews));
+    this.toastr.success(`Vista "${name}" guardada`, 'Vistas');
+  }
+
+  loadView(view: { name: string; filtros: any }): void {
+    this.filtros = { ...this.filtros, ...view.filtros };
+    this.activeViewName = view.name;
+    this.resetPaginacion();
+    this.cargarConFiltros();
+  }
+
+  async deleteView(view: { name: string; filtros: any }, event: Event): Promise<void> {
+    event.stopPropagation();
+    const confirmed = await Swal.fire({
+      title: `¿Eliminar vista "${view.name}"?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d12b38'
+    });
+    if (!confirmed.isConfirmed) return;
+    this.savedViews = this.savedViews.filter(v => v.name !== view.name);
+    if (this.activeViewName === view.name) this.activeViewName = '';
+    localStorage.setItem(this.SAVED_VIEWS_KEY, JSON.stringify(this.savedViews));
+  }
+
+  private loadSavedViews(): void {
+    try {
+      const saved = localStorage.getItem(this.SAVED_VIEWS_KEY);
+      if (saved) this.savedViews = JSON.parse(saved);
+    } catch { /* ignore */ }
+  }
+
+  // Filtros de dropshipping (legacy — mantenidos para compatibilidad)
   proveedores: Proveedor[] = [];
   selectedProveedor: string | null = null;
   loadingProveedores = false;
@@ -56,6 +153,82 @@ export class ProductosComponent implements OnInit {
 
   // Import modal
   showImportModal: boolean = false;
+
+  // Export dialog
+  showExportDialog = false;
+  exportColumnas = [
+    { label: 'Referencia',         key: 'referencia',         selected: true,  getValue: (r: any) => r.identificacion?.referencia || '' },
+    { label: 'Título',             key: 'titulo',             selected: true,  getValue: (r: any) => r.crearProducto?.titulo || '' },
+    { label: 'Descripción',        key: 'descripcion',        selected: false, getValue: (r: any) => r.crearProducto?.descripcion || '' },
+    { label: 'Categoría',          key: 'categoria',          selected: true,  getValue: (r: any) => r.categorias?.label || '' },
+    { label: 'Precio con IVA',     key: 'precioConIva',       selected: true,  getValue: (r: any) => r.precio?.precioUnitarioConIva || 0 },
+    { label: 'Precio sin IVA',     key: 'precioSinIva',       selected: false, getValue: (r: any) => r.precio?.precioUnitarioSinIva || 0 },
+    { label: '% IVA',              key: 'porcentajeIva',      selected: false, getValue: (r: any) => r.precio?.precioUnitarioIva || '0' },
+    { label: 'Stock disponible',   key: 'stock',              selected: true,  getValue: (r: any) => r.disponibilidad?.cantidadDisponible ?? 0 },
+    { label: 'Estado',             key: 'estado',             selected: true,  getValue: (r: any) => r.disponibilidad?.activar ? 'Activo' : 'Inactivo' },
+    { label: 'Marca',              key: 'marca',              selected: false, getValue: (r: any) => r.identificacion?.marca || '' },
+    { label: 'Inventariable',      key: 'inventariable',      selected: false, getValue: (r: any) => r.disponibilidad?.inventariable ? 'Sí' : 'No' },
+    { label: 'Requiere Producción',key: 'requiereProduccion', selected: false, getValue: (r: any) => r.procesoComercial?.requiereProduccion ? 'Sí' : 'No' },
+    { label: 'Tiempo de Entrega',  key: 'tiempoEntrega',      selected: false, getValue: (r: any) => r.disponibilidad?.tiempoEntrega || '' },
+    { label: 'Peso (kg)',          key: 'peso',               selected: false, getValue: (r: any) => r.dimensiones?.pesoUnitarioProductoKg || '' },
+    { label: 'Tags',               key: 'tags',               selected: false, getValue: (r: any) => (r.crearProducto?.etiquetas || []).join(', ') },
+  ];
+
+  // Column configuration
+  private readonly COL_CONFIG_KEY = 'productos_col_config';
+  showColConfigDialog = false;
+  colConfig: { key: string; label: string; visible: boolean }[] = [
+    { key: 'referencia',    label: 'Referencia',      visible: true  },
+    { key: 'categoria',     label: 'Categoría',       visible: true  },
+    { key: 'canales',       label: 'Canales',         visible: true  },
+    { key: 'estado',        label: 'Estado',          visible: true  },
+    { key: 'disponibilidad',label: 'Disponibilidad',  visible: true  },
+    { key: 'produccion',    label: 'Producción',      visible: true  },
+    { key: 'precio',        label: 'Precio (c/IVA)',  visible: true  },
+    { key: 'ultimaEdicion', label: 'Última Edición',  visible: true  },
+  ];
+
+  isColVisible(key: string): boolean {
+    const col = this.colConfig.find(c => c.key === key);
+    return col ? col.visible : true;
+  }
+
+  saveColConfig(): void {
+    const saved = this.colConfig.map(c => ({ key: c.key, visible: c.visible }));
+    localStorage.setItem(this.COL_CONFIG_KEY, JSON.stringify(saved));
+    this.showColConfigDialog = false;
+  }
+
+  private loadColConfig(): void {
+    try {
+      const saved = localStorage.getItem(this.COL_CONFIG_KEY);
+      if (saved) {
+        const parsed: { key: string; visible: boolean }[] = JSON.parse(saved);
+        parsed.forEach(s => {
+          const col = this.colConfig.find(c => c.key === s.key);
+          if (col) col.visible = s.visible;
+        });
+      }
+    } catch { /* ignore */ }
+  }
+
+  moveColUp(index: number): void {
+    if (index <= 0) return;
+    const tmp = this.colConfig[index - 1];
+    this.colConfig[index - 1] = this.colConfig[index];
+    this.colConfig[index] = tmp;
+  }
+
+  moveColDown(index: number): void {
+    if (index >= this.colConfig.length - 1) return;
+    const tmp = this.colConfig[index + 1];
+    this.colConfig[index + 1] = this.colConfig[index];
+    this.colConfig[index] = tmp;
+  }
+
+  // Selección múltiple
+  selectedProductos: any[] = [];
+  ejecutandoAccionMasiva = false;
 
   // Fulfillment
   fulfillmentEnabled: boolean = false;
@@ -81,25 +254,159 @@ export class ProductosComponent implements OnInit {
     const texto = this.empresaActual.nomComercial.toString();
     this.ultimasLetras = texto.substring(texto.length - 3);
 
-    // Cargar datos iniciales
-    this.cargarDatos();
+    // Restaurar filtros de sesión si existen
+    this.restaurarFiltros();
+
+    // Restaurar configuración de columnas
+    this.loadColConfig();
+
+    // Cargar vistas guardadas
+    this.loadSavedViews();
+
+    // Debounce para búsqueda de texto
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(texto => {
+      this.filtros.texto = texto;
+      this.resetPaginacion();
+      this.cargarConFiltros();
+    });
+
+    this.cargarConFiltros();
     this.cargarProveedores();
     this.checkFulfillmentConfig();
   }
 
-  cargarDatos() {
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ---- Persistencia de filtros en sesión ----
+  private guardarFiltros(): void {
+    sessionStorage.setItem(FILTROS_SESSION_KEY, JSON.stringify(this.filtros));
+  }
+
+  private restaurarFiltros(): void {
+    const saved = sessionStorage.getItem(FILTROS_SESSION_KEY);
+    if (saved) {
+      try {
+        this.filtros = { ...this.filtros, ...JSON.parse(saved) };
+      } catch {}
+    }
+  }
+
+  private resetPaginacion(): void {
+    this.currentPage = 1;
+    this.lastDocId = null;
+  }
+
+  // ---- Chips de filtros activos ----
+  get activeChips(): { label: string; key: string }[] {
+    const chips = [];
+    if (this.filtros.texto) chips.push({ label: `"${this.filtros.texto}"`, key: 'texto' });
+    if (this.filtros.estado === 'activo') chips.push({ label: 'Activo', key: 'estado' });
+    if (this.filtros.estado === 'inactivo') chips.push({ label: 'Inactivo', key: 'estado' });
+    if (this.filtros.disponibilidad === 'disponible') chips.push({ label: 'Disponible', key: 'disponibilidad' });
+    if (this.filtros.disponibilidad === 'agotado') chips.push({ label: 'Agotado', key: 'disponibilidad' });
+    if (this.filtros.tipoProducto) chips.push({ label: `Tipo: ${this.filtros.tipoProducto}`, key: 'tipoProducto' });
+    if (this.filtros.precioDesde != null) chips.push({ label: `Desde $${this.filtros.precioDesde}`, key: 'precioDesde' });
+    if (this.filtros.precioHasta != null) chips.push({ label: `Hasta $${this.filtros.precioHasta}`, key: 'precioHasta' });
+    if (this.filtros.requiereProduccion) chips.push({ label: `Producción: ${this.filtros.requiereProduccion === 'si' ? 'Sí' : 'No'}`, key: 'requiereProduccion' });
+    if (this.filtros.inventariable) chips.push({ label: `Inventariable: ${this.filtros.inventariable === 'si' ? 'Sí' : 'No'}`, key: 'inventariable' });
+    if (this.filtros.ultimaEdicion) chips.push({ label: `Edición: ${this.filtros.ultimaEdicion}`, key: 'ultimaEdicion' });
+    if (this.filtros.completitud === 'completo') chips.push({ label: 'Completos', key: 'completitud' });
+    if (this.filtros.completitud === 'parcial') chips.push({ label: 'Parciales', key: 'completitud' });
+    if (this.filtros.completitud === 'incompleto') chips.push({ label: 'Incompletos', key: 'completitud' });
+    return chips;
+  }
+
+  get hayFiltrosActivos(): boolean {
+    return this.activeChips.length > 0;
+  }
+
+  removerChip(key: string): void {
+    if (key === 'texto') this.filtros.texto = '';
+    else if (key === 'estado') this.filtros.estado = '';
+    else if (key === 'disponibilidad') this.filtros.disponibilidad = '';
+    else if (key === 'tipoProducto') this.filtros.tipoProducto = '';
+    else if (key === 'precioDesde') this.filtros.precioDesde = null;
+    else if (key === 'precioHasta') this.filtros.precioHasta = null;
+    else if (key === 'requiereProduccion') this.filtros.requiereProduccion = '';
+    else if (key === 'inventariable') this.filtros.inventariable = '';
+    else if (key === 'ultimaEdicion') this.filtros.ultimaEdicion = '';
+    else if (key === 'completitud') this.filtros.completitud = '';
+    this.resetPaginacion();
+    this.cargarConFiltros();
+  }
+
+  // ---- Completitud del producto ----
+  getProductCompleteness(row: any): { score: number; level: 'red' | 'yellow' | 'green'; tooltip: string } {
+    const checks = [
+      { label: 'Título', ok: !!(row.crearProducto?.titulo?.trim()), weight: 2 },
+      { label: 'Descripción', ok: !!(row.crearProducto?.descripcion?.trim()), weight: 2 },
+      { label: 'Imagen', ok: (row.crearProducto?.imagenesPrincipales?.length || 0) > 0, weight: 2 },
+      { label: 'Precio', ok: (row.precio?.precioUnitarioConIva || 0) > 0, weight: 2 },
+      { label: 'Referencia', ok: !!(row.identificacion?.referencia?.trim()), weight: 2 },
+      { label: 'Categoría', ok: !!(row.categorias?.label), weight: 1 },
+      { label: 'Peso', ok: (row.dimensiones?.pesoUnitarioProductoKg || 0) > 0, weight: 1 },
+      { label: 'Garantías', ok: !!(row.crearProducto?.garantiasProducto?.trim()), weight: 1 },
+      { label: 'T. Entrega', ok: !!(row.disponibilidad?.tiempoEntrega), weight: 1 },
+    ];
+
+    const totalWeight = checks.reduce((s, c) => s + c.weight, 0);
+    const filledWeight = checks.filter(c => c.ok).reduce((s, c) => s + c.weight, 0);
+    const score = Math.round((filledWeight / totalWeight) * 100);
+
+    const missing = checks.filter(c => !c.ok).map(c => c.label);
+    const tooltip = score === 100
+      ? '✅ Producto completo'
+      : `Faltan: ${missing.join(', ')}`;
+
+    const level: 'red' | 'yellow' | 'green' = score >= 80 ? 'green' : score >= 50 ? 'yellow' : 'red';
+    return { score, level, tooltip };
+  }
+
+  // ---- Método unificado de carga ----
+  cargarConFiltros(): void {
     this.cargando = true;
-    this.service.getAllProductsPagination(this.pageSize, this.currentPage, this.lastDocId ?? undefined).subscribe((response: any) => {
-      this.temp = [...response.products];
-      this.rows = response.products;
-      this.totalItems = response.pagination.totalItems;
-      this.totalPages = response.pagination.totalPages;
-      this.cargando = false;
-      this.lastDocId = response.pagination.lastDocId; // para la paginación basada en cursor
-    }, error => {
-      console.error("Error al cargar datos:", error);
-      this.cargando = false;
-    });
+    this.guardarFiltros();
+    this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, this.lastDocId ?? undefined)
+      .subscribe({
+        next: (response: any) => {
+          this.temp = [...response.products];
+          this.rows = response.products;
+          this.totalItems = response.pagination.totalItems;
+          this.totalPages = response.pagination.totalPages;
+          this.lastDocId = response.pagination.lastDocId;
+          this.cargando = false;
+        },
+        error: (err) => {
+          console.error('Error al cargar productos:', err);
+          this.cargando = false;
+        }
+      });
+  }
+
+  onFiltroChange(): void {
+    this.resetPaginacion();
+    this.cargarConFiltros();
+  }
+
+  onSearchInput(event: any): void {
+    this.searchSubject.next(event.target.value);
+  }
+
+  onPrecioBlur(): void {
+    this.resetPaginacion();
+    this.cargarConFiltros();
+  }
+
+  // Alias — mantiene compatibilidad con llamadas desde eliminar, importar, duplicar, etc.
+  cargarDatos() {
+    this.cargarConFiltros();
   }
 
   // Cargar proveedores para filtro
@@ -132,13 +439,24 @@ export class ProductosComponent implements OnInit {
     this.cargarDatosFiltrados();
   }
 
-  // Limpiar filtros
+  // Limpiar filtros — restaura al estado default (estado=activo)
   limpiarFiltros() {
+    this.filtros = {
+      texto: '',
+      estado: 'activo',
+      disponibilidad: '',
+      tipoProducto: '',
+      precioDesde: null,
+      precioHasta: null,
+      requiereProduccion: '',
+      inventariable: '',
+      ultimaEdicion: '',
+      completitud: '',
+    };
     this.selectedProveedor = null;
     this.mostrarSoloDropshipping = false;
-    this.currentPage = 1;
-    this.lastDocId = null;
-    this.cargarDatos();
+    this.resetPaginacion();
+    this.cargarConFiltros();
   }
 
   // Cargar datos con filtros aplicados
@@ -181,18 +499,10 @@ export class ProductosComponent implements OnInit {
     const newPageSize = event.rows;
     const newCurrentPage = Math.floor(event.first / event.rows) + 1;
 
-    // Solo actualizar y cargar datos si hay un cambio real en el tamaño de página o en la página actual
     if (newPageSize !== this.pageSize || newCurrentPage !== this.currentPage) {
       this.pageSize = newPageSize;
       this.currentPage = newCurrentPage;
-
-      // Establecer cargando en true y llamar al método de carga apropiado
-      this.cargando = true;
-      if (this.selectedProveedor || this.mostrarSoloDropshipping) {
-        this.cargarDatosFiltrados();
-      } else {
-        this.cargarDatos();
-      }
+      this.cargarConFiltros();
     }
   }
 
@@ -251,158 +561,355 @@ export class ProductosComponent implements OnInit {
   }
 
   private ejecutarDuplicacion(row) {
-    console.log('Ejecutando duplicación del producto:', row);
-    
     // Mostrar loading
     Swal.fire({
       title: 'Duplicando producto...',
       text: 'Por favor espera mientras se crea la copia del producto.',
       allowOutsideClick: false,
       showConfirmButton: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
+      didOpen: () => { Swal.showLoading(); }
     });
-    
-    // Usar deepClone para crear una copia exacta del producto
+
+    const timestamp = new Date().getTime().toString().slice(-6);
     const productoDuplicado = this.utilsService.deepClone(row);
-    
-    // Quitar las propiedades que no deben duplicarse para crear un nuevo producto
+
+    // Quitar IDs para que el backend genere uno nuevo
     delete productoDuplicado.id;
     delete productoDuplicado._id;
     delete productoDuplicado.cd;
     delete productoDuplicado.date_edit;
-    
-    // Modificar la referencia para indicar que es una copia
-    if (productoDuplicado.identificacion && productoDuplicado.identificacion.referencia) {
-      const timestamp = new Date().getTime().toString().slice(-4);
-      productoDuplicado.identificacion.referencia = `${productoDuplicado.identificacion.referencia}-COPY-${timestamp}`;
+
+    // Limpiar IDs de integraciones externas (Shopify, Fulfillment) — no deben heredarse
+    if (productoDuplicado.integrations) {
+      productoDuplicado.integrations = {};
     }
-    
-    // Modificar el título para indicar que es una copia
-    if (productoDuplicado.crearProducto && productoDuplicado.crearProducto.titulo) {
+
+    // Limpiar stock — el duplicado parte en cero hasta que se configure
+    if (productoDuplicado.disponibilidad) {
+      productoDuplicado.disponibilidad.cantidadDisponible = 0;
+      productoDuplicado.disponibilidad.cantidadDisponibleGlobal = 0;
+    }
+
+    // Duplicado queda INACTIVO por defecto hasta que el usuario lo revise y active
+    if (productoDuplicado.exposicion) {
+      productoDuplicado.exposicion.activar = false;
+    }
+
+    // Nueva referencia única
+    if (productoDuplicado.identificacion?.referencia) {
+      productoDuplicado.identificacion.referencia = `${productoDuplicado.identificacion.referencia}-COPIA-${timestamp}`;
+    }
+
+    // Título diferenciado
+    if (productoDuplicado.crearProducto?.titulo) {
       productoDuplicado.crearProducto.titulo = `Copia de ${productoDuplicado.crearProducto.titulo}`;
     }
-    
-    // También modificar el código de barras si existe
-    if (productoDuplicado.identificacion && productoDuplicado.identificacion.codigoBarras) {
-      const timestamp = new Date().getTime().toString().slice(-4);
-      productoDuplicado.identificacion.codigoBarras = `${productoDuplicado.identificacion.codigoBarras}-COPY-${timestamp}`;
+
+    // Código de barras único
+    if (productoDuplicado.identificacion?.codigoBarras) {
+      productoDuplicado.identificacion.codigoBarras = `${productoDuplicado.identificacion.codigoBarras}-${timestamp}`;
     }
-    
-    console.log('Producto duplicado (sin ID):', productoDuplicado);
-    
-    // Guardar automáticamente el producto duplicado
+
     this.service.createProduct(productoDuplicado).subscribe({
-      next: (response) => {
-        console.log('Producto duplicado guardado exitosamente:', response);
-        
-        // Recargar la lista de productos para mostrar el nuevo producto
+      next: (response: any) => {
+        Swal.close();
         this.cargarDatos();
-        
-        // Mostrar mensaje de éxito
+
+        const productoGuardado = response?.product || response?.data || productoDuplicado;
+        this.toastr.success(
+          `"${productoDuplicado.crearProducto?.titulo}" creado como inactivo`,
+          'Producto duplicado',
+          { timeOut: 5000 }
+        );
+
         Swal.fire({
-          title: '¡Producto Duplicado!',
+          title: '¡Producto duplicado!',
           html: `
-            <div style="text-align: left; margin: 20px 0;">
-              <p><i class="fa fa-check-circle" style="color: #28a745;"></i> El producto se ha duplicado exitosamente.</p>
-              <hr>
-              <p><strong>Producto original:</strong> ${row.crearProducto?.titulo}</p>
-              <p><strong>Nueva referencia:</strong> <span style="color: #28a745; font-weight: bold;">${productoDuplicado.identificacion?.referencia}</span></p>
+            <div style="text-align:left; margin: 16px 0;">
               <p><strong>Nuevo título:</strong> ${productoDuplicado.crearProducto?.titulo}</p>
+              <p><strong>Nueva referencia:</strong> <span style="color:#28a745; font-weight:bold;">${productoDuplicado.identificacion?.referencia}</span></p>
+              <p class="text-warning"><i class="fa fa-info-circle"></i> El producto quedó <strong>inactivo</strong>. Actívalo después de revisarlo.</p>
             </div>
           `,
           icon: 'success',
-          confirmButtonText: '<i class="fa fa-check"></i> Perfecto',
+          confirmButtonText: 'Perfecto',
           showCancelButton: true,
-          cancelButtonText: '<i class="fa fa-edit"></i> Editar ahora',
+          cancelButtonText: 'Editar ahora',
           confirmButtonColor: '#28a745',
           cancelButtonColor: '#007bff'
         }).then((result) => {
           if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
-            // Si el usuario quiere editar, navegar al formulario
-            sessionStorage.setItem('infoForms', JSON.stringify(response));
+            sessionStorage.setItem('infoForms', JSON.stringify(productoGuardado));
             this.router.navigateByUrl('productos/crearProductos');
           }
         });
       },
       error: (error) => {
-        console.error('Error al guardar el producto duplicado:', error);
-        
-        // Mostrar mensaje de error
-        Swal.fire({
-          title: 'Error al Duplicar',
-          html: `
-            <div style="text-align: left; margin: 20px 0;">
-              <p><i class="fa fa-exclamation-triangle" style="color: #dc3545;"></i> No se pudo guardar el producto duplicado.</p>
-              <hr>
-              <p><strong>Error:</strong> ${error.error?.msg || 'Error desconocido'}</p>
-              <p style="color: #666; font-size: 14px;">Puedes intentar de nuevo o editar manualmente el producto.</p>
-            </div>
-          `,
-          icon: 'error',
-          confirmButtonText: '<i class="fa fa-redo"></i> Intentar de nuevo',
-          showCancelButton: true,
-          cancelButtonText: '<i class="fa fa-edit"></i> Editar manualmente',
-          confirmButtonColor: '#dc3545',
-          cancelButtonColor: '#6c757d'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Intentar de nuevo
-            this.ejecutarDuplicacion(row);
-          } else if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
-            // Si falla el guardado automático, permitir edición manual
-            sessionStorage.setItem('infoForms', JSON.stringify(productoDuplicado));
-            this.router.navigateByUrl('productos/crearProductos');
+        // El backend puede retornar error aunque el producto SÍ fue creado
+        // (fallo en proceso posterior como sync de integraciones).
+        // Estrategia: buscar el producto por la nueva referencia para confirmar.
+        Swal.close();
+
+        const nuevaReferencia = productoDuplicado.identificacion?.referencia;
+        this.service.getProductsFiltered({ texto: nuevaReferencia || '', estado: '' }, 5, 1).subscribe({
+          next: (r: any) => {
+            const productos = r?.products || [];
+            const encontrado = productos.find((p: any) => p.identificacion?.referencia === nuevaReferencia);
+
+            if (encontrado) {
+              // El producto SÍ fue creado a pesar del error (fallo post-proceso)
+              this.cargarDatos();
+              this.toastr.success(
+                `"${productoDuplicado.crearProducto?.titulo}" creado como inactivo`,
+                'Producto duplicado',
+                { timeOut: 5000 }
+              );
+              Swal.fire({
+                title: '¡Producto duplicado!',
+                html: `<div style="text-align:left; margin: 16px 0;">
+                  <p><strong>Nuevo título:</strong> ${productoDuplicado.crearProducto?.titulo}</p>
+                  <p><strong>Nueva referencia:</strong> <span style="color:#28a745; font-weight:bold;">${nuevaReferencia}</span></p>
+                  <p class="text-warning"><i class="fa fa-info-circle"></i> El producto quedó <strong>inactivo</strong>. Actívalo después de revisarlo.</p>
+                </div>`,
+                icon: 'success',
+                confirmButtonText: 'Perfecto',
+                showCancelButton: true,
+                cancelButtonText: 'Editar ahora',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#007bff'
+              }).then((result) => {
+                if (result.isDismissed && result.dismiss === Swal.DismissReason.cancel) {
+                  sessionStorage.setItem('infoForms', JSON.stringify(encontrado));
+                  this.router.navigateByUrl('productos/crearProductos');
+                }
+              });
+            } else {
+              // El producto NO fue creado — error real
+              this.cargarDatos();
+              const errorMsg = error?.error?.msg || error?.error?.message || error?.message || 'Error desconocido';
+              Swal.fire({
+                title: 'Error al duplicar',
+                html: `<div style="text-align:left; margin:16px 0;">
+                  <p><i class="fa fa-exclamation-triangle" style="color:#dc3545;"></i> Ocurrió un error durante la duplicación.</p>
+                  <p><strong>Detalle:</strong> ${errorMsg}</p>
+                </div>`,
+                icon: 'error',
+                confirmButtonText: 'Aceptar',
+                confirmButtonColor: '#dc3545'
+              });
+            }
+          },
+          error: () => {
+            // No se pudo verificar — aviso genérico
+            this.cargarDatos();
+            Swal.fire({
+              title: 'Verifica el listado',
+              text: 'Hubo un error en la duplicación. Es posible que el producto sí haya sido creado. Revisa el listado antes de intentar nuevamente.',
+              icon: 'warning',
+              confirmButtonText: 'Ver listado',
+              confirmButtonColor: '#f59e0b'
+            });
           }
         });
       }
     });
   }
 
+  // Mantenido por compatibilidad con el HTML — delega al nuevo sistema
   updateFilter(event: any) {
-    const input = (event.target as HTMLInputElement).value.toLowerCase();
-    if (input === "") { // Si se borra el contenido del filtro
-        this.currentPage = 1;
-        this.cargarDatos();
-        return;
-    }
-    if (event.key !== 'Enter' || input.length < 3) {
-        return;
-    }
-    // ...resto del código para búsqueda con enter y mínimo 3 caracteres...
-    const context = this;
-    this.cargando = true;
-    this.service.getProductsBySearch(input, this.pageSize, this.currentPage, this.lastDocId ?? undefined).subscribe({
-      next(response: any) {
-        context.temp = [...response.products];
-        context.rows = response.products;
-        context.totalItems = response.pagination.totalItems;
-        context.totalPages = response.pagination.totalPages;
-        context.cargando = false;
-        context.lastDocId = response.pagination.lastDocId;
-      },
-      error(err) {
-        console.error(err);
-        context.cargando = false;
-      },
+    this.onSearchInput(event);
+  }
+
+  toggleEstado(row: any): void {
+    const nuevoEstado = !row.exposicion?.activar;
+    const accion = nuevoEstado ? 'activar' : 'desactivar';
+
+    Swal.fire({
+      title: `¿${nuevoEstado ? 'Activar' : 'Desactivar'} producto?`,
+      text: `"${row.crearProducto?.titulo}"`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: nuevoEstado ? 'Sí, activar' : 'Sí, desactivar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: nuevoEstado ? '#28a745' : '#dc3545',
+      cancelButtonColor: '#6c757d'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      // Optimistic update
+      const valorAnterior = row.exposicion?.activar;
+      if (row.exposicion) row.exposicion.activar = nuevoEstado;
+      row._guardandoEstado = true;
+
+      const productoActualizado = { ...row };
+      this.service.createProduct(productoActualizado).subscribe({
+        next: () => {
+          row._guardandoEstado = false;
+          this.toastr.success(
+            `Producto ${nuevoEstado ? 'activado' : 'desactivado'}`,
+            row.crearProducto?.titulo,
+            { timeOut: 3000 }
+          );
+        },
+        error: () => {
+          // Revertir
+          if (row.exposicion) row.exposicion.activar = valorAnterior;
+          row._guardandoEstado = false;
+          this.toastr.error('No se pudo cambiar el estado', 'Error');
+        }
+      });
     });
+  }
+
+  toggleDisponibilidad(row: any): void {
+    const nuevaDisp = !row.exposicion?.disponible;
+
+    Swal.fire({
+      title: `¿Marcar como ${nuevaDisp ? 'Disponible' : 'Agotado'}?`,
+      text: `"${row.crearProducto?.titulo}"`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: nuevaDisp ? 'Sí, disponible' : 'Sí, agotado',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: nuevaDisp ? '#17a2b8' : '#6c757d',
+      cancelButtonColor: '#6c757d'
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      const valorAnterior = row.exposicion?.disponible;
+      if (row.exposicion) row.exposicion.disponible = nuevaDisp;
+      row._guardandoDisp = true;
+
+      const productoActualizado = { ...row };
+      this.service.createProduct(productoActualizado).subscribe({
+        next: () => {
+          row._guardandoDisp = false;
+          this.toastr.success(
+            `Marcado como ${nuevaDisp ? 'disponible' : 'agotado'}`,
+            row.crearProducto?.titulo,
+            { timeOut: 3000 }
+          );
+        },
+        error: () => {
+          if (row.exposicion) row.exposicion.disponible = valorAnterior;
+          row._guardandoDisp = false;
+          this.toastr.error('No se pudo cambiar la disponibilidad', 'Error');
+        }
+      });
+    });
+  }
+
+  // ---- Selección múltiple ----
+  get allPageSelected(): boolean {
+    return this.rows.length > 0 && this.rows.every(r => this.isSelected(r));
+  }
+
+  isSelected(row: any): boolean {
+    const id = row.cd || row.id || row._id;
+    return this.selectedProductos.some(p => (p.cd || p.id || p._id) === id);
+  }
+
+  toggleSelectAll(): void {
+    if (this.allPageSelected) {
+      this.selectedProductos = [];
+    } else {
+      this.selectedProductos = [...this.rows];
+    }
+  }
+
+  toggleSelectRow(row: any): void {
+    const id = row.cd || row.id || row._id;
+    const idx = this.selectedProductos.findIndex(p => (p.cd || p.id || p._id) === id);
+    if (idx >= 0) {
+      this.selectedProductos.splice(idx, 1);
+    } else {
+      this.selectedProductos.push(row);
+    }
+  }
+
+  async accionMasiva(accion: 'activar' | 'desactivar' | 'disponible' | 'agotado' | 'eliminar'): Promise<void> {
+    if (this.selectedProductos.length === 0) return;
+
+    const n = this.selectedProductos.length;
+
+    if (accion === 'eliminar') {
+      const confirm = await Swal.fire({
+        title: `¿Eliminar ${n} producto${n > 1 ? 's' : ''}?`,
+        text: 'Esta acción no se puede deshacer.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: `Eliminar ${n} producto${n > 1 ? 's' : ''}`,
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545'
+      });
+      if (!confirm.isConfirmed) return;
+    }
+
+    this.ejecutandoAccionMasiva = true;
+    let exitos = 0;
+    let errores = 0;
+
+    for (const prod of [...this.selectedProductos]) {
+      try {
+        if (accion === 'eliminar') {
+          await this.service.deleteProducto(prod).toPromise();
+        } else {
+          const copia = { ...prod };
+          if (!copia.exposicion) copia.exposicion = {};
+          if (accion === 'activar') copia.exposicion.activar = true;
+          else if (accion === 'desactivar') copia.exposicion.activar = false;
+          else if (accion === 'disponible') copia.exposicion.disponible = true;
+          else if (accion === 'agotado') copia.exposicion.disponible = false;
+          await this.service.createProduct(copia).toPromise();
+          // Actualizar fila en memoria
+          const id = prod.cd || prod.id || prod._id;
+          const rowRef = this.rows.find(r => (r.cd || r.id || r._id) === id);
+          if (rowRef) {
+            if (!rowRef.exposicion) rowRef.exposicion = {};
+            if (accion === 'activar') rowRef.exposicion.activar = true;
+            else if (accion === 'desactivar') rowRef.exposicion.activar = false;
+            else if (accion === 'disponible') rowRef.exposicion.disponible = true;
+            else if (accion === 'agotado') rowRef.exposicion.disponible = false;
+          }
+        }
+        exitos++;
+      } catch {
+        errores++;
+      }
+    }
+
+    this.ejecutandoAccionMasiva = false;
+    this.selectedProductos = [];
+
+    if (accion === 'eliminar') this.cargarConFiltros();
+
+    const msg = exitos > 0
+      ? `${exitos} producto${exitos > 1 ? 's' : ''} actualizado${exitos > 1 ? 's' : ''}`
+      : '';
+    const errMsg = errores > 0 ? ` (${errores} error${errores > 1 ? 'es' : ''})` : '';
+
+    if (exitos > 0) this.toastr.success(msg + errMsg, 'Acción completada', { timeOut: 4000 });
+    else this.toastr.error('No se pudo completar la acción', 'Error');
   }
 
   viewProduct(row) {
     const config: NgbModalOptions = {
-      backdrop: "static",
-      size: 'xl',
+      backdrop: true,
+      size: 'lg',
       keyboard: true,
       centered: true,
       animation: true,
-      fullscreen: true,
       scrollable: true,
-      windowClass: 'modal-fullscreen'
+      windowClass: 'product-preview-modal'
     }
     const modalRef = this.modalService.open(ProductDetailsComponent, config);
     modalRef.componentInstance.producto = row;
     modalRef.componentInstance.isView = true;
+    modalRef.result.then((result) => {
+      if (result === 'edit') {
+        this.editarProducto(row);
+      }
+    }, () => {});
   }
 
   eliminarProducto(row) {
@@ -441,26 +948,38 @@ export class ProductosComponent implements OnInit {
   }
 
   exportToExcel() {
-    this.service.exportToExcel().subscribe({
-      next: (response) => {
-        // Crear un Blob y un enlace temporal para descargar el archivo
-        const blob = new Blob([response], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        });
-        const url = window.URL.createObjectURL(blob);
+    this.showExportDialog = true;
+  }
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'productos.xlsx'; // Nombre del archivo
-        a.click();
-
-        // Liberar memoria
-        window.URL.revokeObjectURL(url);
-      },
-      error: (err) => {
-        console.error('Error al exportar el archivo:', err);
-      },
+  doExport(): void {
+    const source = this.selectedProductos?.length > 0 ? this.selectedProductos : this.rows;
+    const cols = this.exportColumnas.filter(c => c.selected);
+    if (!cols.length) {
+      this.toastr.warning('Selecciona al menos una columna para exportar.', 'Exportar');
+      return;
+    }
+    const data = (source as any[]).map(row => {
+      const obj: any = {};
+      cols.forEach(col => { obj[col.label] = col.getValue(row); });
+      return obj;
     });
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Productos');
+    const hasFilters = Object.values(this.filtros).some(v => v !== '' && v !== null && v !== 'activo');
+    const hasSelected = this.selectedProductos?.length > 0;
+    const suffix = hasSelected ? `_seleccionados(${source.length})` : hasFilters ? '_filtrados' : '_todos';
+    const date = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, `productos${suffix}_${date}.xlsx`);
+    this.showExportDialog = false;
+  }
+
+  selectAllExportColumns(selected: boolean): void {
+    this.exportColumnas.forEach(c => c.selected = selected);
+  }
+
+  trackById(index: number, item: any): any {
+    return item?.key || index;
   }
 
   // ============== MÉTODOS DE IMPORTACIÓN ==============
