@@ -269,6 +269,14 @@ export class MaestroService {
   public editProductByReference(product: any) {
     return this.http.post(this.urlBase + '/v1/productos/edit', product, this.httpOptions);
   }
+
+  public importPreciosTipoCliente(data: { precios: any[], porcentajeIva: number, preciosConIva: boolean }) {
+    return this.http.post<any>(this.urlBase + '/v1/productos/import-precios', data, this.httpOptions);
+  }
+
+  public limpiarPreciosTipoCliente() {
+    return this.http.post<any>(this.urlBase + '/v1/productos/limpiar-precios', {}, this.httpOptions);
+  }
   public createUser(user: any) {
     return this.http.post(this.urlBase + '/v1/users/create', user, this.httpOptions);
   }

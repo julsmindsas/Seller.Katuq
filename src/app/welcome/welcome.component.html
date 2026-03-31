@@ -83,7 +83,7 @@
         </div>
         <div class="col-6 col-lg-3">
             <div class="indicator-card" style="border-left-color: #27ae60;">
-                <small class="indicator-label">SMLMV 2026</small>
+                <small class="indicator-label">SMLMV {{ indicadores.anio }}</small>
                 <span class="indicator-value" style="color: #27ae60;">
                     ${{ indicadores.salarioMinimo | number:'1.0-0' }}
                 </span>
@@ -96,12 +96,12 @@
                 <span class="indicator-value" style="color: #e67e22;">
                     ${{ indicadores.auxilioTransporte | number:'1.0-0' }}
                 </span>
-                <small class="indicator-sub">Subsidio 2026</small>
+                <small class="indicator-sub">Subsidio {{ indicadores.anio }}</small>
             </div>
         </div>
         <div class="col-6 col-lg-3">
             <div class="indicator-card" style="border-left-color: #64748b;">
-                <small class="indicator-label">UVT 2026</small>
+                <small class="indicator-label">UVT {{ indicadores.anio }}</small>
                 <span class="indicator-value" style="color: #64748b;">
                     ${{ indicadores.uvt | number:'1.0-0' }}
                 </span>

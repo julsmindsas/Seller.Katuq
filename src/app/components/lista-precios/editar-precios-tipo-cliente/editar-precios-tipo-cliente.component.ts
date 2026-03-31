@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
 
@@ -28,6 +29,7 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private service: MaestroService,
+    private afs: AngularFirestore,
     public activeModal: NgbActiveModal
   ) {
     this.preciosForm = this.fb.group({});
@@ -39,16 +41,9 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
 
   cargarTiposCliente() {
     this.cargando = true;
-    console.log('Cargando tipos de cliente...');
-    
-    // Cargar TODOS los tipos de cliente directamente (no solo activos)
+
     this.service.consultarTiposCliente().subscribe({
       next: (data: any) => {
-        console.log('Respuesta completa del endpoint:', data);
-        console.log('Tipo de dato:', typeof data);
-        console.log('Es array?', Array.isArray(data));
-        
-        // Procesar la respuesta
         if (Array.isArray(data)) {
           this.tiposCliente = data;
         } else if (data && Array.isArray(data.data)) {
@@ -56,7 +51,6 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
         } else if (data && data.results && Array.isArray(data.results)) {
           this.tiposCliente = data.results;
         } else if (data && typeof data === 'object') {
-          // Si es un objeto, intentar extraer un array
           const keys = Object.keys(data);
           if (keys.length > 0 && Array.isArray(data[keys[0]])) {
             this.tiposCliente = data[keys[0]];
@@ -66,31 +60,19 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
         } else {
           this.tiposCliente = [];
         }
-        
-        console.log('Tipos de cliente procesados:', this.tiposCliente);
-        console.log('Cantidad de tipos de cliente:', this.tiposCliente.length);
-        
-        // Mostrar cada tipo en consola
-        this.tiposCliente.forEach((tipo, index) => {
-          console.log(`Tipo ${index + 1}:`, tipo);
-        });
-        
+
         this.inicializarFormulario();
         this.cargando = false;
       },
-      error: (error) => {
-        console.error('Error cargando tipos de cliente:', error);
-        console.error('Error completo:', JSON.stringify(error, null, 2));
+      error: () => {
         this.cargando = false;
       }
     });
   }
 
   inicializarFormulario() {
-    console.log('Inicializando formulario con', this.tiposCliente.length, 'tipos de cliente');
     const formControls: any = {};
 
-    // Cargar el IVA existente del producto o del primer precio configurado
     if (this.producto?.preciosPorTipoCliente && this.producto.preciosPorTipoCliente.length > 0) {
       const primerPrecio = this.producto.preciosPorTipoCliente[0];
       if (primerPrecio.porcentajeIva !== undefined) {
@@ -99,7 +81,6 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
     }
 
     this.tiposCliente.forEach(tipo => {
-      // Buscar precio existente en la lista de preciosPorTipoCliente
       let precioExistente = 0;
 
       if (this.producto?.preciosPorTipoCliente && Array.isArray(this.producto.preciosPorTipoCliente)) {
@@ -107,12 +88,10 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
           (p: PrecioPorTipoCliente) => p.tipoClienteId === tipo.id
         );
         if (precioEncontrado) {
-          // Usar el precio sin IVA
           precioExistente = precioEncontrado.precio;
         }
       }
 
-      // Si no hay precio específico, usar precio base del producto (sin IVA)
       if (precioExistente === 0) {
         precioExistente = this.producto?.precio?.precioUnitarioSinIva ||
                          this.producto?.precio?.precioUnitarioConIva ||
@@ -120,12 +99,9 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
       }
 
       formControls[`precio_${tipo.id}`] = [precioExistente];
-      console.log(`Tipo: ${tipo.descripcion || tipo.nombre} (${tipo.id}), Precio inicial: ${precioExistente}`);
     });
 
     this.preciosForm = this.fb.group(formControls);
-    console.log('Formulario inicializado:', this.preciosForm.value);
-    console.log('IVA seleccionado:', this.porcentajeIvaSeleccionado);
   }
 
   // Métodos para cálculo de IVA
@@ -191,24 +167,30 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
 
     console.log('Producto actualizado:', productoActualizado);
 
-    // Guardar el producto actualizado usando el método de edición
-    this.service.editProductByReference(productoActualizado).subscribe({
-      next: (response) => {
-        console.log('Producto actualizado exitosamente:', response);
+    // Guardar directo en Firestore (el backend /v1/productos/edit no persiste preciosPorTipoCliente)
+    if (!this.producto.cd) {
+      this.activeModal.close({ success: false, error: 'Producto sin ID' });
+      return;
+    }
+
+    this.afs.collection('products').doc(this.producto.cd)
+      .update({
+        preciosPorTipoCliente: preciosPorTipoCliente,
+        date_edit: new Date().toISOString()
+      })
+      .then(() => {
         this.activeModal.close({
           success: true,
           producto: productoActualizado,
           preciosPorTipoCliente: preciosPorTipoCliente
         });
-      },
-      error: (error) => {
-        console.error('Error al actualizar producto:', error);
+      })
+      .catch((error) => {
         this.activeModal.close({
           success: false,
           error: error
         });
-      }
-    });
+      });
   }
 
   cancelar() {

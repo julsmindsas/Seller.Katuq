@@ -58,8 +58,8 @@ const PRODUCT_DEFAULTS = {
     preciosVolumen: []
   },
   disponibilidad: {
-    tipoEntrega: 'seleccione',
-    tiempoEntrega: 'seleccione',
+    tipoEntrega: '',
+    tiempoEntrega: '',
     cantidadDisponible: 0,
     cantidadMinVenta: 1,
     inventarioSeguridad: 0,
@@ -72,25 +72,27 @@ const PRODUCT_DEFAULTS = {
     pesoUnitarioProductoKg: ''
   },
   exposicion: {
-    activar: false,
+    activar: true,
     posicion: 0,
-    disponible: false,
+    disponible: true,
     recomendado: false,
     destacado: false,
     oferta: false,
-    nuevo: false,
+    nuevo: true,
     masvendido: false,
     etiquetas: []
   },
   marketplace: {
-    sellerCenter: false,
-    paginaWeb: false,
+    sellerCenter: true,
+    paginaWeb: true,
     puntoDeVenta: true,
     campos: []
   },
   ciudades: {
     ciudadesOrigen: [],
-    ciudadesEntrega: []
+    ciudadesEntrega: [],
+    coberturaNacionalOrigen: false,
+    coberturaNacionalEntrega: false
   },
   procesoComercial: {
     aceptaOcasion: false,
@@ -148,6 +150,10 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   confirmedMappings: { [katuqField: string]: string } = {};
   showMappingPreview = false;
 
+  // Produccion: checkboxes globales
+  todosParaProduccion = false;
+  todosIntegranProduccion = false;
+
   // Mobile: Mapping Fields for Cards
   mappingFields: MappingField[] = [];
   availableColumns: { label: string; value: string }[] = [];
@@ -194,7 +200,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     title: 'Importar Productos',
     endpoint: '/v1/onboarding/import-products',
     payloadKey: 'products',
-    maxFileSize: 10000000, // 10MB
+    maxFileSize: 50000000, // 50MB para importaciones masivas
     templateColumns: [
       { field: 'referencia', header: 'Referencia/SKU', required: true, example: 'PROD001' },
       { field: 'titulo', header: 'Titulo', required: true, example: 'Camiseta Basica' },
@@ -212,7 +218,11 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'tipoEntrega', header: 'Tipo de Entrega', required: false, example: 'Envio nacional' },
       { field: 'tiempoEntrega', header: 'Tiempo de Entrega', required: false, example: '3-5 dias' },
       { field: 'activar', header: 'Activo (SI/NO)', required: false, example: 'SI' },
-      { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI' }
+      { field: 'disponible', header: 'Disponible (SI/NO)', required: false, example: 'SI' },
+      { field: 'seProduceInternamente', header: 'Se Produce? (SI/NO)', required: false, example: 'NO' },
+      { field: 'integraConProduccion', header: 'Integra Software Produccion? (SI/NO)', required: false, example: 'NO' },
+      { field: 'tiempoProduccion', header: 'Tiempo Produccion', required: false, example: '3 dias' },
+      { field: 'softwareProduccion', header: 'Software Produccion', required: false, example: 'ERP Interno' }
     ],
     fieldLabels: {
       'identificacion.referencia': 'Referencia/SKU',
@@ -255,13 +265,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'inventarioSeguridad': 'Inventario Seguridad',
       'marca': 'Marca',
       'codigoBarras': 'Codigo de Barras',
-      'categoria': 'Categoria',
+      'categoria': 'Categoria/Grupo/Linea/Familia',
       'garantiasProducto': 'Garantias',
       'caracAdicionales': 'Caracteristicas Adicionales',
-      'tipoEntrega': 'Tipo de Entrega',
-      'tiempoEntrega': 'Tiempo de Entrega',
+      'tipoEntrega': 'Tipo/Forma de Entrega',
+      'tiempoEntrega': 'Tiempo/Plazo de Entrega',
       'activar': 'Activo',
-      'disponible': 'Disponible'
+      'disponible': 'Disponible',
+      'seProduceInternamente': 'Se Produce Internamente',
+      'integraConProduccion': 'Integra con Software de Produccion',
+      'tiempoProduccion': 'Tiempo de Produccion',
+      'softwareProduccion': 'Software de Produccion',
+      'procesoComercial.seProduceInternamente': 'Se Produce Internamente',
+      'procesoComercial.integraConProduccion': 'Integra con Produccion',
+      'procesoComercial.tiempoProduccion': 'Tiempo de Produccion',
+      'procesoComercial.softwareProduccion': 'Software de Produccion'
     }
   };
 
@@ -615,53 +633,94 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       console.log('[ImportModal] 📋 Muestra de datos transformados (primeros 3):', JSON.stringify(transformedData.slice(0, 3), null, 2));
 
       const batchId = `imp_${Date.now()}`;
-      const payload: any = {
-        companyId: companyId,
-        mappings: this.confirmedMappings,
-        importBatchId: batchId
-      };
-      payload[this.config!.payloadKey] = transformedData;
-
       const headers = new HttpHeaders({ 'company': companyId });
 
-      // Timeout de 3 minutos para importaciones grandes
-      const IMPORT_TIMEOUT_MS = 180000;
-      let timeoutHandle: any = null;
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        timeoutHandle = setTimeout(() => reject(new Error('La importación tardó demasiado. Intenta con un archivo más pequeño.')), IMPORT_TIMEOUT_MS);
-      });
+      // Particion por lotes de 500 registros
+      const BATCH_SIZE = 500;
+      const totalBatches = Math.ceil(transformedData.length / BATCH_SIZE);
+      let totalCreated = 0;
+      let totalUpdated = 0;
+      let totalFailed = 0;
+      const allErrors: string[] = [];
 
-      const httpPromise = this.http.post<any>(
-        `${environment.urlApi}${this.config!.endpoint}`,
-        payload,
-        { headers }
-      ).toPromise();
+      console.log(`[ImportModal] 📦 Enviando en ${totalBatches} lotes de ${BATCH_SIZE} (${transformedData.length} total)`);
 
-      const response: any = await Promise.race([httpPromise, timeoutPromise]);
-      clearTimeout(timeoutHandle);
+      for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
+        const start = batchIdx * BATCH_SIZE;
+        const batchData = transformedData.slice(start, start + BATCH_SIZE);
 
-      const data = response?.data || response || {};
+        const payload: any = {
+          companyId: companyId,
+          mappings: this.confirmedMappings,
+          importBatchId: batchId,
+          batchIndex: batchIdx,
+          totalBatches: totalBatches
+        };
+        payload[this.config!.payloadKey] = batchData;
+
+        console.log(`[ImportModal] 📤 Lote ${batchIdx + 1}/${totalBatches}: ${batchData.length} registros`);
+
+        // Timeout de 5 minutos por lote
+        const BATCH_TIMEOUT_MS = 300000;
+        let timeoutHandle: any = null;
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          timeoutHandle = setTimeout(() => reject(new Error(`Lote ${batchIdx + 1} tardó demasiado (5min). ${totalCreated + totalUpdated} procesados hasta ahora.`)), BATCH_TIMEOUT_MS);
+        });
+
+        try {
+          const httpPromise = this.http.post<any>(
+            `${environment.urlApi}${this.config!.endpoint}`,
+            payload,
+            { headers }
+          ).toPromise();
+
+          const response: any = await Promise.race([httpPromise, timeoutPromise]);
+          clearTimeout(timeoutHandle);
+
+          const data = response?.data || response || {};
+          totalCreated += data.created || 0;
+          totalUpdated += data.updated || 0;
+          totalFailed += data.failed || 0;
+          if (data.errors?.length) allErrors.push(...data.errors);
+
+          // Notificar progreso entre lotes
+          if (totalBatches > 1) {
+            this.messageService.add({
+              severity: 'info',
+              summary: `Lote ${batchIdx + 1}/${totalBatches}`,
+              detail: `${data.created || 0} creados, ${data.updated || 0} actualizados`,
+              life: 3000
+            });
+          }
+        } catch (batchError: any) {
+          clearTimeout(timeoutHandle);
+          totalFailed += batchData.length;
+          allErrors.push(`Lote ${batchIdx + 1}: ${batchError?.message || 'Error desconocido'}`);
+          console.error(`[ImportModal] ❌ Lote ${batchIdx + 1} fallo:`, batchError);
+          // Continuar con el siguiente lote
+        }
+      }
+
       this.importResult = {
-        success: data.success || 0,
-        failed: data.failed || 0,
-        errors: data.errors || [],
-        batchId: data.batchId || batchId
+        success: totalCreated + totalUpdated,
+        failed: totalFailed,
+        errors: allErrors.slice(0, 50),
+        batchId: batchId
       };
 
       const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : this.type === 'category' ? 'categorías' : 'productos';
-      const created: number = data.created ?? 0;
-      const updated: number = data.updated ?? 0;
       let detail = '';
-      if (created > 0 && updated > 0) {
-        detail = `${created} ${entity} creados, ${updated} actualizados`;
-      } else if (created > 0) {
-        detail = `${created} ${entity} creados`;
-      } else if (updated > 0) {
-        detail = `${updated} ${entity} actualizados`;
+      if (totalCreated > 0 && totalUpdated > 0) {
+        detail = `${totalCreated} ${entity} creados, ${totalUpdated} actualizados`;
+      } else if (totalCreated > 0) {
+        detail = `${totalCreated} ${entity} creados`;
+      } else if (totalUpdated > 0) {
+        detail = `${totalUpdated} ${entity} actualizados`;
       } else {
         detail = `${this.importResult.success} ${entity} procesados`;
       }
-      if (this.importResult.failed > 0) detail += `, ${this.importResult.failed} fallidos`;
+      if (totalFailed > 0) detail += `, ${totalFailed} fallidos`;
+      if (totalBatches > 1) detail += ` (${totalBatches} lotes)`;
 
       this.messageService.add({
         severity: 'success',
@@ -806,8 +865,58 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         }
       }
 
+      // Pasar campos raw no mapeados para que el backend pueda buscar aliases (ej: "Grupo Inventario" -> categoria)
       if (this.type === 'product') {
+        const mappedSourceColumns = new Set(Object.values(mappings).filter(v => v));
+        Object.keys(row).forEach(col => {
+          if (!mappedSourceColumns.has(col) && row[col] !== undefined && row[col] !== null && String(row[col]).trim() !== '') {
+            // Pasar con el nombre original de la columna del Excel
+            transformedRow[col] = row[col];
+          }
+        });
+
         this.calculateDerivedFields(transformedRow);
+
+        // Aplicar flags globales de produccion si estan activos
+        if (this.todosParaProduccion) {
+          transformedRow.seProduceInternamente = true;
+          transformedRow.crearProducto = transformedRow.crearProducto || {};
+          transformedRow.crearProducto.paraProduccion = true;
+          transformedRow.procesoComercial = transformedRow.procesoComercial || {};
+          transformedRow.procesoComercial.seProduceInternamente = true;
+        }
+        if (this.todosIntegranProduccion) {
+          transformedRow.integraConProduccion = true;
+          transformedRow.procesoComercial = transformedRow.procesoComercial || {};
+          transformedRow.procesoComercial.integraConProduccion = true;
+        }
+
+        // Detectar cobertura nacional en campo ciudad
+        const ciudadVal = (
+          transformedRow.ciudad ||
+          transformedRow.ciudadOrigen ||
+          transformedRow.disponibilidad?.ciudadOrigen || ''
+        ).toString().toLowerCase().trim();
+        const esNacional = ['todas', 'todo el pais', 'nacional', 'cobertura nacional', 'todo el país', 'all', 'todos'].includes(ciudadVal);
+        if (esNacional) {
+          transformedRow.ciudades = transformedRow.ciudades || {};
+          transformedRow.ciudades.coberturaNacionalOrigen = true;
+          transformedRow.ciudades.coberturaNacionalEntrega = true;
+          transformedRow.ciudades.ciudadesOrigen = [];
+          transformedRow.ciudades.ciudadesEntrega = [];
+        }
+
+        // Canales de venta siempre activos
+        transformedRow.marketplace = transformedRow.marketplace || {};
+        transformedRow.marketplace.sellerCenter = true;
+        transformedRow.marketplace.paginaWeb = true;
+        transformedRow.marketplace.puntoDeVenta = true;
+
+        // Exposicion activa por defecto
+        transformedRow.exposicion = transformedRow.exposicion || {};
+        transformedRow.exposicion.activar = true;
+        transformedRow.exposicion.disponible = true;
+        transformedRow.exposicion.activo = true;
       }
 
       if (index === 0) {
@@ -933,6 +1042,35 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       return 0;
     }
 
+    // Tiempo de entrega: convertir texto a minDias (numero)
+    if (katuqField === 'tiempoEntrega' || katuqField === 'disponibilidad.tiempoEntrega') {
+      if (typeof value === 'number') return value;
+      const lower = String(value).toLowerCase().trim();
+      // Mapeo de texto comun a minDias
+      if (['inmediato', 'inmediata', 'immediate', '0', 'hoy', 'mismo dia'].includes(lower)) return 0;
+      if (['1', '1-2', '1_2', '1-2 dias', '1 dia', '1 a 2'].includes(lower)) return 1;
+      if (['3', '3-5', '3_5', '3-5 dias', '3 a 5'].includes(lower)) return 3;
+      if (['5', '5-7', '5_7', '5-7 dias', '5 a 7', 'una semana', '1 semana'].includes(lower)) return 5;
+      if (['7', '7-10', '7_10', '7-10 dias'].includes(lower)) return 7;
+      if (['10', '10-15', '10_15'].includes(lower)) return 10;
+      if (['15', '15-20', '15_20'].includes(lower)) return 15;
+      // Si es un numero directo
+      const parsed = parseInt(lower);
+      if (!isNaN(parsed)) return parsed;
+      // Default: inmediato
+      return 0;
+    }
+
+    // Tipo de entrega: normalizar texto a nombreInterno
+    if (katuqField === 'tipoEntrega' || katuqField === 'disponibilidad.tipoEntrega') {
+      const lower = String(value).toLowerCase().trim();
+      if (['domicilio', 'envio', 'envío', 'delivery', 'envio a domicilio', 'solo domicilio'].includes(lower)) return 'SOLO DOMICILIO';
+      if (['recoge', 'recogida', 'pickup', 'tienda', 'solo recoge', 'punto de venta'].includes(lower)) return 'SOLO RECOGE';
+      if (['ambos', 'domicilio y recoge', 'envio y recoge', 'todos'].includes(lower)) return 'ENVIO A DOMICILIO Y RECOGE';
+      // Si ya viene con el valor correcto, dejarlo
+      return value;
+    }
+
     return value;
   }
 
@@ -953,6 +1091,17 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'inventarioSeguridad': 'disponibilidad.inventarioSeguridad',
       'tipoEntrega': 'disponibilidad.tipoEntrega',
       'tiempoEntrega': 'disponibilidad.tiempoEntrega',
+      'tiempo_entrega': 'disponibilidad.tiempoEntrega',
+      'plazoEntrega': 'disponibilidad.tiempoEntrega',
+      'plazo_entrega': 'disponibilidad.tiempoEntrega',
+      'deliveryTime': 'disponibilidad.tiempoEntrega',
+      'delivery_time': 'disponibilidad.tiempoEntrega',
+      'formaEntrega': 'disponibilidad.tipoEntrega',
+      'forma_entrega': 'disponibilidad.tipoEntrega',
+      'metodoEntrega': 'disponibilidad.tipoEntrega',
+      'metodo_entrega': 'disponibilidad.tipoEntrega',
+      'deliveryType': 'disponibilidad.tipoEntrega',
+      'delivery_type': 'disponibilidad.tipoEntrega',
       'garantiasProducto': 'crearProducto.garantiasProducto',
       'caracAdicionales': 'crearProducto.caracAdicionales',
       'restriccionesProducto': 'crearProducto.restriccionesProducto',
@@ -964,7 +1113,21 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       'oferta': 'exposicion.oferta',
       'destacado': 'exposicion.destacado',
       'recomendado': 'exposicion.recomendado',
-      'masvendido': 'exposicion.masvendido'
+      'masvendido': 'exposicion.masvendido',
+      'categoria': 'categoriaNombre',
+      'categoría': 'categoriaNombre',
+      'category': 'categoriaNombre',
+      'grupo': 'categoriaNombre',
+      'grupoInventario': 'categoriaNombre',
+      'grupo_inventario': 'categoriaNombre',
+      'grupo inventario': 'categoriaNombre',
+      'grupoProducto': 'categoriaNombre',
+      'grupo_producto': 'categoriaNombre',
+      'linea': 'categoriaNombre',
+      'lineaProducto': 'categoriaNombre',
+      'familia': 'categoriaNombre',
+      'clasificacion': 'categoriaNombre',
+      'tipo': 'categoriaNombre'
     };
 
     const targetPath = fieldMappings[field];

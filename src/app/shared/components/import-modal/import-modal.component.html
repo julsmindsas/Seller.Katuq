@@ -206,12 +206,32 @@
         [disabled]="mappingFields.length === 0">
       </button>
 
+      <!-- Opciones de produccion (solo productos) -->
+      <div *ngIf="type === 'product' && showMappingPreview && !importResult && !isUploading"
+           class="w-100 mb-3 p-3" style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px;">
+        <h6 style="font-size: 0.8rem; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+          <i class="fa fa-cogs me-2" style="color: #8b5cf6;"></i>Opciones de produccion
+        </h6>
+        <div class="d-flex flex-column gap-2">
+          <label class="d-flex align-items-center gap-2" style="cursor: pointer; font-size: 0.82rem;">
+            <input type="checkbox" [(ngModel)]="todosParaProduccion"
+                   style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+            <span>Todos los productos se producen internamente</span>
+          </label>
+          <label class="d-flex align-items-center gap-2" style="cursor: pointer; font-size: 0.82rem;">
+            <input type="checkbox" [(ngModel)]="todosIntegranProduccion"
+                   style="width: 18px; height: 18px; accent-color: #8b5cf6;">
+            <span>Aptos para integracion con software de produccion</span>
+          </label>
+        </div>
+      </div>
+
       <!-- Import button -->
       <button
         *ngIf="showMappingPreview && !importResult && !isUploading"
         pButton
         type="button"
-        [label]="'Importar ' + (type === 'customer' ? 'Clientes' : 'Productos')"
+        [label]="'Importar ' + (type === 'customer' ? 'Clientes' : type === 'inventory' ? 'Inventario' : type === 'category' ? 'Categorias' : 'Productos') + ' (' + parsedData.length + ')'"
         icon="pi pi-upload"
         class="p-button-success"
         (click)="importData()"

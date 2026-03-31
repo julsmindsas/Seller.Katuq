@@ -1,4 +1,6 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import * as XLSX from 'xlsx';
@@ -13,23 +15,28 @@ import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/
   templateUrl: './lista-precios.component.html',
   styleUrls: ['./lista-precios.component.scss']
 })
-export class ListaPreciosComponent implements OnInit {
+export class ListaPreciosComponent implements OnInit, OnDestroy {
   @ViewChild('fileInput') fileInput: any;
 
+  private destroy$ = new Subject<void>();
+  private searchSubject$ = new Subject<string>();
+
   cargando = false;
-  productos: Producto[] = [];
   productosFiltrados: Producto[] = [];
   tiposCliente: any[] = [];
   searchTerm: string = '';
-  activeTab: number = 0; // 0: Tipo Cliente, 1: Precio Unitario, 2: Precio por Volumen
+  activeTab: number = 0;
 
-  // Paginación
+  // Paginación server-side
   pageSize = 10;
-  currentPage = 0;
   totalRecords = 0;
+  private _lazyLoadInitialized = false;
 
   // Row expansion
   expandedRows: { [key: string]: boolean } = {};
+
+  // Cache de todos los productos — solo se carga para exportar
+  private _todosLosProductos: Producto[] | null = null;
 
   constructor(
     private service: MaestroService,
@@ -38,621 +45,154 @@ export class ListaPreciosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarTiposCliente();
-    this.cargarProductos();
+
+    // Debounce de búsqueda — 500ms después de dejar de escribir
+    this.searchSubject$
+      .pipe(debounceTime(500), distinctUntilChanged(), takeUntil(this.destroy$))
+      .subscribe(term => {
+        this.searchTerm = term;
+        this.cargarPagina(1);
+      });
+
+    // cargarPagina(1) como fallback: si p-table no dispara onLazyLoad en el primer render
+    // (ocurre en algunos casos dentro de p-tabPanel), cargamos manualmente
+    setTimeout(() => {
+      if (!this._lazyLoadInitialized) {
+        this.cargarPagina(1);
+      }
+    }, 300);
   }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ── Carga de datos ──
 
   cargarTiposCliente() {
-    // Cargar TODOS los tipos de cliente (no solo activos) para la plantilla
-    this.service.consultarTiposCliente().subscribe({
-      next: (data: any) => {
-        console.log('Respuesta completa de tipos de cliente:', data);
-        
-        // Procesar la respuesta
-        let tiposProcesados: any[] = [];
-        if (Array.isArray(data)) {
-          tiposProcesados = data;
-        } else if (data && Array.isArray(data.data)) {
-          tiposProcesados = data.data;
-        } else if (data && data.results && Array.isArray(data.results)) {
-          tiposProcesados = data.results;
-        } else {
-          tiposProcesados = [];
-        }
-        
-        // Normalizar los datos - usar descripcion como nombre principal
-        this.tiposCliente = tiposProcesados.map(tipo => {
-          console.log('Tipo de cliente recibido:', tipo);
-          // La descripcion es el campo principal para el nombre
-          const descripcion = tipo.descripcion || tipo.description || '';
-          const nombre = tipo.nombre || tipo.name || '';
-          
-          return {
+    this.service.consultarTiposCliente()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data: any) => {
+          let tiposProcesados: any[] = [];
+          if (Array.isArray(data)) tiposProcesados = data;
+          else if (data?.data && Array.isArray(data.data)) tiposProcesados = data.data;
+          else if (data?.results && Array.isArray(data.results)) tiposProcesados = data.results;
+
+          this.tiposCliente = tiposProcesados.map(tipo => ({
             ...tipo,
-            descripcion: descripcion,
-            nombre: nombre
-          };
-        });
-        
-        console.log('Tipos de cliente procesados:', this.tiposCliente.length);
-        console.log('Detalles de tipos:', this.tiposCliente.map(t => ({ 
-          id: t.id, 
-          nombre: t.nombre, 
-          descripcion: t.descripcion,
-          todosLosCampos: Object.keys(t)
-        })));
-      },
-      error: (error) => {
-        console.error('Error cargando tipos de cliente:', error);
-        // Intentar cargar solo activos como fallback
-        this.service.consultarTiposClienteActivos().subscribe({
-          next: (dataActivos: any) => {
-            this.tiposCliente = Array.isArray(dataActivos) ? dataActivos : [];
-          }
-        });
-      }
-    });
+            descripcion: tipo.descripcion || tipo.description || '',
+            nombre: tipo.nombre || tipo.name || ''
+          }));
+        },
+        error: () => {
+          this.service.consultarTiposClienteActivos()
+            .pipe(takeUntil(this.destroy$))
+            .subscribe({
+              next: (dataActivos: any) => {
+                this.tiposCliente = Array.isArray(dataActivos) ? dataActivos : [];
+              }
+            });
+        }
+      });
   }
 
-  cargarProductos() {
+  /**
+   * Carga UNA página de productos desde el servidor.
+   * Si hay searchTerm, usa getProductsBySearch; si no, getAllProductsPagination.
+   */
+  cargarPagina(page: number) {
     this.cargando = true;
-    this.productos = [];
-    this.cargarProductosPaginados(1, null);
-  }
+    const term = this.searchTerm?.trim();
 
-  private cargarProductosPaginados(page: number, lastDocId: string | null) {
-    const pageSize = 100; // Cargar de 100 en 100 para mejor rendimiento
+    const obs$ = term
+      ? this.service.getProductsBySearch(term, this.pageSize, page)
+      : this.service.getAllProductsPagination(this.pageSize, page);
 
-    this.service.getAllProductsPagination(pageSize, page, lastDocId ?? undefined).subscribe({
+    obs$.pipe(takeUntil(this.destroy$)).subscribe({
       next: (data: any) => {
-        const productosNuevos = Array.isArray(data?.products) ? data.products : [];
-        this.productos = [...this.productos, ...productosNuevos];
-
-        // Verificar si hay más páginas
-        const totalPages = data?.pagination?.totalPages || 1;
-        const currentPage = data?.pagination?.currentPage || page;
-        const newLastDocId = data?.pagination?.lastDocId;
-
-        if (currentPage < totalPages && productosNuevos.length > 0) {
-          // Cargar siguiente página
-          this.cargarProductosPaginados(currentPage + 1, newLastDocId);
-        } else {
-          // Terminó de cargar todas las páginas
-          this.productosFiltrados = [...this.productos];
-          this.totalRecords = this.productos.length;
-          this.cargando = false;
-          console.log(`Total de productos cargados: ${this.productos.length}`);
-        }
+        this.productosFiltrados = Array.isArray(data?.products) ? data.products : [];
+        this.totalRecords = data?.pagination?.totalItems || this.productosFiltrados.length;
+        this.cargando = false;
       },
-      error: (error) => {
-        console.error('Error cargando productos:', error);
-        // Si hay error pero ya tenemos algunos productos, mostrarlos
-        if (this.productos.length > 0) {
-          this.productosFiltrados = [...this.productos];
-          this.totalRecords = this.productos.length;
-        }
+      error: () => {
+        this.productosFiltrados = [];
         this.cargando = false;
       }
     });
   }
 
-  buscarProducto() {
-    const term = this.searchTerm?.trim()?.toLowerCase() || '';
+  /**
+   * Evento lazy load de p-table — se dispara al cambiar página o rows.
+   * El primer disparo (init) lo manejamos aquí; los siguientes son paginación real.
+   */
+  onLazyLoad(event: any) {
+    this.pageSize = event.rows || 10;
+    const page = Math.floor((event.first || 0) / this.pageSize) + 1;
+    this._lazyLoadInitialized = true;
+    this.cargarPagina(page);
+  }
 
-    if (!term) {
-      this.productosFiltrados = [...this.productos];
+  /**
+   * Carga TODOS los productos recursivamente — solo para exportar Excel.
+   */
+  private cargarTodosLosProductos(callback: () => void) {
+    if (this._todosLosProductos) {
+      callback();
       return;
     }
+    this._todosLosProductos = [];
+    this.cargarPaginaRecursiva(1, null, callback);
+  }
 
-    this.productosFiltrados = this.productos.filter(p => {
-      const referencia = p.identificacion?.referencia?.toLowerCase() || '';
-      const titulo = p.crearProducto?.titulo?.toLowerCase() || '';
-      const codigoBarras = p.identificacion?.codigoBarras?.toLowerCase() || '';
+  private cargarPaginaRecursiva(page: number, lastDocId: string | null, callback: () => void) {
+    this.service.getAllProductsPagination(100, page, lastDocId ?? undefined)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (data: any) => {
+          const nuevos = Array.isArray(data?.products) ? data.products : [];
+          this._todosLosProductos = [...(this._todosLosProductos || []), ...nuevos];
+          const totalPages = data?.pagination?.totalPages || 1;
+          const currentPage = data?.pagination?.currentPage || page;
+          const newLastDocId = data?.pagination?.lastDocId;
+          if (currentPage < totalPages && nuevos.length > 0) {
+            this.cargarPaginaRecursiva(currentPage + 1, newLastDocId, callback);
+          } else {
+            callback();
+          }
+        },
+        error: () => { callback(); }
+      });
+  }
 
-      return referencia.includes(term) ||
-             titulo.includes(term) ||
-             codigoBarras.includes(term);
-    });
+  // ── Búsqueda ──
 
-    console.log(`Búsqueda: "${term}" - Encontrados: ${this.productosFiltrados.length} de ${this.productos.length}`);
+  onSearchInput(event: any) {
+    this.searchSubject$.next(event.target.value || '');
+  }
+
+  buscarProducto() {
+    this.cargarPagina(1);
   }
 
   onTabChange(event: any) {
     this.activeTab = event.index;
   }
 
-  descargarFormatoExcel() {
-    if (this.activeTab !== 0) {
-      Swal.fire('Info', 'El formato Excel solo está disponible para Precio por Tipo de Cliente', 'info');
-      return;
-    }
-
-    // Verificar si hay tipos de cliente cargados
-    if (this.tiposCliente.length === 0) {
-      Swal.fire({
-        title: 'Cargando tipos de cliente...',
-        text: 'Por favor espera mientras cargamos los tipos de cliente',
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        }
-      });
-
-      // Recargar tipos de cliente
-      this.service.consultarTiposCliente().subscribe({
-        next: (data: any) => {
-          if (Array.isArray(data)) {
-            this.tiposCliente = data;
-          } else if (data && Array.isArray(data.data)) {
-            this.tiposCliente = data.data;
-          } else if (data && data.results && Array.isArray(data.results)) {
-            this.tiposCliente = data.results;
-          }
-
-          if (this.tiposCliente.length === 0) {
-            Swal.fire('Advertencia', 'No hay tipos de cliente disponibles. Por favor, crea tipos de cliente primero.', 'warning');
-            return;
-          }
-
-          // Generar plantilla después de cargar
-          this.generarPlantillaExcel();
-        },
-        error: (error) => {
-          Swal.fire('Error', 'No se pudieron cargar los tipos de cliente', 'error');
-        }
-      });
-      return;
-    }
-
-    // Si ya hay tipos de cliente, generar directamente
-    this.generarPlantillaExcel();
-  }
-
-  generarPlantillaExcel() {
-    console.log('=== GENERANDO PLANTILLA EXCEL ===');
-    console.log('Tipos de cliente disponibles:', this.tiposCliente);
-    console.log('Cantidad de tipos:', this.tiposCliente.length);
-    
-    // Crear encabezados: REFERENCIA + nombres de tipos de cliente
-    const headers = ['REFERENCIA'];
-    this.tiposCliente.forEach((tipo, index) => {
-      console.log(`\n--- Procesando tipo ${index + 1} ---`);
-      console.log('Objeto completo:', tipo);
-      console.log('Campos disponibles:', Object.keys(tipo));
-      console.log('tipo.descripcion:', tipo.descripcion);
-      console.log('tipo.nombre:', tipo.nombre);
-      
-      // FORZAR uso de descripcion como campo principal para el nombre
-      // SIEMPRE usar descripcion si existe, sin importar si nombre también existe
-      let nombreTipo = '';
-      
-      // Verificar descripcion primero (campo principal)
-      const descripcion = tipo.descripcion || tipo.description || '';
-      const descripcionTrim = String(descripcion).trim();
-      
-      if (descripcionTrim) {
-        nombreTipo = descripcionTrim;
-        console.log('✅ USANDO DESCRIPCION:', nombreTipo);
-      } else {
-        // Solo usar nombre como último recurso si NO hay descripcion
-        const nombre = tipo.nombre || tipo.name || '';
-        const nombreTrim = String(nombre).trim();
-        
-        if (nombreTrim) {
-          nombreTipo = nombreTrim;
-          console.log('⚠️ Usando nombre (fallback - NO hay descripcion):', nombreTipo);
-        } else {
-          console.error('⚠️ Tipo de cliente sin descripción válida:', tipo);
-          nombreTipo = `Tipo_${tipo.id || index}`;
-        }
-      }
-      
-      console.log(`✅ Nombre final seleccionado: "${nombreTipo}"`);
-      headers.push(nombreTipo);
-    });
-    
-    console.log('\n=== ENCABEZADOS FINALES ===');
-    console.log(headers);
-    console.log('===========================\n');
-
-    // Crear plantilla vacía (solo encabezados, sin filas de datos)
-    // Crear workbook directamente con los encabezados
-    const worksheet = XLSX.utils.aoa_to_sheet([headers]); // aoa_to_sheet crea solo la fila de encabezados
-
-    // Ajustar ancho de columnas
-    const colWidths = [
-      { wch: 20 }, // REFERENCIA
-      ...this.tiposCliente.map(() => ({ wch: 25 })) // Precios por tipo de cliente
-    ];
-    worksheet['!cols'] = colWidths;
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Precios');
-
-    // Descargar
-    const fecha = new Date().toISOString().split('T')[0];
-    XLSX.writeFile(workbook, `Plantilla_Precios_Tipo_Cliente_${fecha}.xlsx`);
-
-    Swal.fire({
-      title: 'Éxito',
-      html: `Plantilla Excel descargada correctamente<br><br><small>La plantilla incluye ${this.tiposCliente.length} tipo(s) de cliente:<br>${this.tiposCliente.map(t => `• ${t.nombre || t.descripcion || t.id}`).join('<br>')}</small>`,
-      icon: 'success',
-      confirmButtonText: 'Ok',
-      width: '500px'
-    });
-  }
-
-  importarPrecios() {
-    this.fileInput.nativeElement.click();
-  }
-
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      try {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
-
-        this.procesarImportacion(jsonData);
-      } catch (error) {
-        console.error('Error leyendo archivo:', error);
-        Swal.fire('Error', 'Error al leer el archivo Excel', 'error');
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  procesarImportacion(datos: any[]) {
-    Swal.fire({
-      title: 'Procesando...',
-      text: 'Importando precios, por favor espere',
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-
-    const productosActualizados: Producto[] = [];
-    let procesados = 0;
-    let errores = 0;
-    const erroresDetalle: string[] = [];
-
-    datos.forEach((row: any, index: number) => {
-      // Buscar referencia (puede estar en diferentes formatos)
-      const referencia = row['REFERENCIA'] || row['referencia'] || row['Referencia'] || row['Referencia'] || '';
-      
-      if (!referencia || referencia.toString().trim() === '') {
-        errores++;
-        erroresDetalle.push(`Fila ${index + 2}: Sin referencia`);
-        return;
-      }
-
-      // Buscar producto por referencia
-      const producto = this.productos.find(p => 
-        p.identificacion?.referencia?.toString().trim().toLowerCase() === referencia.toString().trim().toLowerCase()
-      );
-
-      if (!producto) {
-        errores++;
-        erroresDetalle.push(`Fila ${index + 2}: Producto con referencia "${referencia}" no encontrado`);
-        return;
-      }
-
-      // Extraer precios por tipo de cliente (buscar por nombre de columna = nombre del tipo de cliente)
-      const preciosPorTipo: PrecioPorTipoCliente[] = [];
-      
-      this.tiposCliente.forEach(tipo => {
-        // Buscar el precio en la columna que coincide con la descripción del tipo de cliente
-        const nombreTipo = tipo.descripcion?.trim() || tipo.description?.trim() || tipo.nombre?.trim() || '';
-        
-        if (!nombreTipo) {
-          console.warn('Tipo de cliente sin descripción válida:', tipo);
-          return;
-        }
-        
-        // Buscar el precio en diferentes variaciones del nombre (mayúsculas, minúsculas, etc.)
-        const precio = row[nombreTipo] || 
-                      row[nombreTipo.toUpperCase()] || 
-                      row[nombreTipo.toLowerCase()] ||
-                      row[nombreTipo.charAt(0).toUpperCase() + nombreTipo.slice(1).toLowerCase()];
-        
-        if (precio !== undefined && precio !== null && precio !== '' && !isNaN(precio)) {
-          const precioNumero = parseFloat(precio.toString().replace(/[^0-9.-]/g, ''));
-          if (precioNumero > 0) {
-            // Por defecto usar IVA 19% para importación
-            const porcentajeIva = 19;
-            const valorIva = precioNumero * (porcentajeIva / 100);
-            const precioConIva = precioNumero + valorIva;
-
-            preciosPorTipo.push({
-              tipoClienteId: tipo.id,
-              tipoClienteNombre: tipo.descripcion || nombreTipo,
-              precio: precioNumero,
-              porcentajeIva: porcentajeIva,
-              valorIva: Math.round(valorIva),
-              precioConIva: Math.round(precioConIva),
-              activo: true
-            });
-          }
-        }
-      });
-
-      // Si no se encontraron precios, saltar este producto
-      if (preciosPorTipo.length === 0) {
-        errores++;
-        erroresDetalle.push(`Fila ${index + 2}: No se encontraron precios válidos para "${referencia}"`);
-        return;
-      }
-
-      // Inicializar array si no existe
-      if (!producto.preciosPorTipoCliente) {
-        producto.preciosPorTipoCliente = [];
-      }
-      
-      // Actualizar o agregar precios
-      preciosPorTipo.forEach(precioNuevo => {
-        const indexExistente = producto.preciosPorTipoCliente!.findIndex(
-          (p: PrecioPorTipoCliente) => p.tipoClienteId === precioNuevo.tipoClienteId
-        );
-        if (indexExistente !== -1) {
-          producto.preciosPorTipoCliente![indexExistente] = precioNuevo;
-        } else {
-          producto.preciosPorTipoCliente!.push(precioNuevo);
-        }
-      });
-
-      // Actualizar fecha de edición
-      producto.date_edit = new Date().toISOString();
-
-      productosActualizados.push(producto);
-      procesados++;
-    });
-
-    // Actualizar productos en el backend
-    this.actualizarProductosEnBackend(productosActualizados, procesados, errores, erroresDetalle);
-  }
-
-  actualizarProductosEnBackend(productos: Producto[], procesados: number, errores: number, erroresDetalle: string[] = []) {
-    let actualizados = 0;
-    const total = productos.length;
-
-    if (total === 0) {
-      Swal.fire('Advertencia', 'No se encontraron productos para actualizar', 'warning');
-      return;
-    }
-
-    productos.forEach((producto) => {
-      // Preparar datos para actualizar - mantener estructura del producto y agregar precios
-      const productoActualizado: Producto = {
-        ...producto,
-        date_edit: new Date().toISOString(),
-        preciosPorTipoCliente: producto.preciosPorTipoCliente
-      };
-
-      // Actualizar producto usando el método de edición
-      this.service.editProductByReference(productoActualizado).subscribe({
-        next: () => {
-          actualizados++;
-          if (actualizados === total) {
-            let mensajeHtml = `
-              <p><strong>Productos procesados:</strong> ${procesados}</p>
-              <p><strong>Productos actualizados:</strong> ${actualizados}</p>
-              <p><strong>Errores:</strong> ${errores}</p>
-            `;
-            
-            if (erroresDetalle.length > 0 && erroresDetalle.length <= 10) {
-              mensajeHtml += '<hr><p><strong>Detalles de errores:</strong></p><ul style="text-align: left; font-size: 0.9em;">';
-              erroresDetalle.forEach(error => {
-                mensajeHtml += `<li>${error}</li>`;
-              });
-              mensajeHtml += '</ul>';
-            } else if (erroresDetalle.length > 10) {
-              mensajeHtml += `<p><small>Hay ${erroresDetalle.length} errores. Revisa la consola para más detalles.</small></p>`;
-              console.log('Errores detallados:', erroresDetalle);
-            }
-
-            Swal.fire({
-              title: errores > 0 ? 'Importación completada con errores' : 'Importación completada',
-              html: mensajeHtml,
-              icon: errores > 0 ? 'warning' : 'success',
-              confirmButtonText: 'Ok',
-              width: '600px'
-            }).then(() => {
-              this.cargarProductos();
-            });
-          }
-        },
-        error: (error) => {
-          console.error('Error actualizando producto:', error);
-          errores++;
-          if (actualizados + errores === total) {
-            let mensajeHtml = `
-              <p><strong>Productos procesados:</strong> ${procesados}</p>
-              <p><strong>Productos actualizados:</strong> ${actualizados}</p>
-              <p><strong>Errores:</strong> ${errores}</p>
-            `;
-            
-            if (erroresDetalle.length > 0 && erroresDetalle.length <= 10) {
-              mensajeHtml += '<hr><p><strong>Detalles de errores:</strong></p><ul style="text-align: left; font-size: 0.9em;">';
-              erroresDetalle.forEach(error => {
-                mensajeHtml += `<li>${error}</li>`;
-              });
-              mensajeHtml += '</ul>';
-            }
-
-            Swal.fire({
-              title: 'Importación completada con errores',
-              html: mensajeHtml,
-              icon: 'warning',
-              confirmButtonText: 'Ok',
-              width: '600px'
-            }).then(() => {
-              this.cargarProductos();
-            });
-          }
-        }
-      });
-    });
-  }
-
-  editarPrecio(producto: Producto) {
-    console.log('editarPrecio llamado', { producto, activeTab: this.activeTab });
-
-    if (!producto) {
-      console.error('Producto no definido');
-      return;
-    }
-
-    // Redirigir según el tab activo
-    switch (this.activeTab) {
-      case 0: // Precio tipo clientes
-        this.editarPrecioTipoCliente(producto);
-        break;
-      case 1: // Precio unitario
-        this.editarPrecioUnitario(producto);
-        break;
-      case 2: // Precio por volumen
-        this.editarPrecioVolumen(producto);
-        break;
-      default:
-        Swal.fire('Info', 'Funcionalidad no disponible para esta pestaña', 'info');
-    }
-  }
-
-  editarPrecioTipoCliente(producto: Producto) {
-    try {
-      const modalRef = this.modalService.open(EditarPreciosTipoClienteComponent, {
-        size: 'lg',
-        centered: true,
-        backdrop: 'static'
-      });
-
-      if (!modalRef) {
-        console.error('No se pudo abrir el modal');
-        return;
-      }
-
-      modalRef.componentInstance.producto = producto;
-
-      modalRef.result.then((result) => {
-        if (result && result.success) {
-          console.log('Precios guardados exitosamente:', result);
-          const index = this.productos.findIndex(p => p.cd === result.producto.cd);
-          if (index !== -1) {
-            this.productos[index] = result.producto;
-            this.productosFiltrados = [...this.productos];
-          }
-          Swal.fire('Éxito', 'Precios por tipo de cliente guardados correctamente', 'success');
-        } else if (result && !result.success) {
-          console.error('Error al guardar:', result.error);
-          Swal.fire('Error', 'No se pudieron guardar los precios', 'error');
-        }
-      }).catch((error) => {
-        console.log('Modal cerrado:', error);
-      });
-    } catch (error) {
-      console.error('Error al abrir modal:', error);
-      Swal.fire('Error', 'No se pudo abrir el modal de edición', 'error');
-    }
-  }
-
-  editarPrecioUnitario(producto: Producto) {
-    try {
-      const modalRef = this.modalService.open(EditarPrecioUnitarioComponent, {
-        size: 'lg',
-        centered: true,
-        backdrop: 'static'
-      });
-
-      if (!modalRef) {
-        console.error('No se pudo abrir el modal');
-        return;
-      }
-
-      modalRef.componentInstance.producto = producto;
-
-      modalRef.result.then((result) => {
-        if (result && result.success) {
-          console.log('Precio unitario guardado exitosamente:', result);
-          const index = this.productos.findIndex(p => p.cd === result.producto.cd);
-          if (index !== -1) {
-            this.productos[index] = result.producto;
-            this.productosFiltrados = [...this.productos];
-          }
-          Swal.fire('Éxito', 'Precio unitario guardado correctamente', 'success');
-        } else if (result && !result.success) {
-          console.error('Error al guardar:', result.error);
-          Swal.fire('Error', 'No se pudo guardar el precio unitario', 'error');
-        }
-      }).catch((error) => {
-        console.log('Modal cerrado:', error);
-      });
-    } catch (error) {
-      console.error('Error al abrir modal:', error);
-      Swal.fire('Error', 'No se pudo abrir el modal de edición', 'error');
-    }
-  }
-
-  editarPrecioVolumen(producto: Producto) {
-    try {
-      const modalRef = this.modalService.open(EditarPrecioVolumenComponent, {
-        size: 'xl',
-        centered: true,
-        backdrop: 'static'
-      });
-
-      if (!modalRef) {
-        console.error('No se pudo abrir el modal');
-        return;
-      }
-
-      modalRef.componentInstance.producto = producto;
-
-      modalRef.result.then((result) => {
-        if (result && result.success) {
-          console.log('Precios por volumen guardados exitosamente:', result);
-          const index = this.productos.findIndex(p => p.cd === result.producto.cd);
-          if (index !== -1) {
-            this.productos[index] = result.producto;
-            this.productosFiltrados = [...this.productos];
-          }
-          Swal.fire('Éxito', 'Precios por volumen guardados correctamente', 'success');
-        } else if (result && !result.success) {
-          console.error('Error al guardar:', result.error);
-          Swal.fire('Error', 'No se pudieron guardar los precios por volumen', 'error');
-        }
-      }).catch((error) => {
-        console.log('Modal cerrado:', error);
-      });
-    } catch (error) {
-      console.error('Error al abrir modal:', error);
-      Swal.fire('Error', 'No se pudo abrir el modal de edición', 'error');
-    }
-  }
+  // ── Precios base y comparación ──
 
   obtenerPrecio(producto: Producto): number {
-    if (this.activeTab === 0 && producto.preciosPorTipoCliente && Array.isArray(producto.preciosPorTipoCliente)) {
-      // Si hay precios por tipo de cliente, mostrar el primero o el precio base
-      if (producto.preciosPorTipoCliente.length > 0) {
-        return producto.preciosPorTipoCliente[0].precio ||
-               producto.precio?.precioUnitarioConIva ||
-               producto.precio?.precioUnitarioSinIva ||
-               0;
-      }
+    if (this.activeTab === 0 && producto.preciosPorTipoCliente?.length > 0) {
+      return producto.preciosPorTipoCliente[0].precio ||
+             producto.precio?.precioUnitarioConIva ||
+             producto.precio?.precioUnitarioSinIva || 0;
     }
-    return producto.precio?.precioUnitarioConIva ||
-           producto.precio?.precioUnitarioSinIva ||
-           0;
+    return producto.precio?.precioUnitarioConIva || producto.precio?.precioUnitarioSinIva || 0;
   }
 
   obtenerPrecioBase(producto: Producto): number {
-    return producto.precio?.precioUnitarioConIva ||
-           producto.precio?.precioUnitarioSinIva ||
-           0;
+    return producto.precio?.precioUnitarioConIva || producto.precio?.precioUnitarioSinIva || 0;
   }
 
   getPorcentajeDiferencia(producto: Producto, precioTipo: number): number {
@@ -661,44 +201,535 @@ export class ListaPreciosComponent implements OnInit {
     return ((precioTipo - precioBase) / precioBase) * 100;
   }
 
+  getPreciosValidosPorTipoCliente(producto: Producto): PrecioPorTipoCliente[] {
+    if (!producto.preciosPorTipoCliente?.length || !this.tiposCliente?.length) return [];
+
+    const tiposClienteIds = this.tiposCliente.map(t => t.id);
+    return producto.preciosPorTipoCliente
+      .filter(precio => tiposClienteIds.includes(precio.tipoClienteId))
+      .map(precio => {
+        const tipoActual = this.tiposCliente.find(t => t.id === precio.tipoClienteId);
+        return {
+          ...precio,
+          tipoClienteNombre: tipoActual?.descripcion || tipoActual?.nombre || precio.tipoClienteNombre
+        };
+      });
+  }
+
   getTiposClienteSinPrecio(producto: Producto): any[] {
-    if (!this.tiposCliente || this.tiposCliente.length === 0) return [];
-    if (!producto.preciosPorTipoCliente || producto.preciosPorTipoCliente.length === 0) {
-      return this.tiposCliente;
-    }
+    if (!this.tiposCliente?.length) return [];
+    if (!producto.preciosPorTipoCliente?.length) return this.tiposCliente;
 
     const tiposConPrecio = producto.preciosPorTipoCliente.map(p => p.tipoClienteId);
     return this.tiposCliente.filter(tipo => !tiposConPrecio.includes(tipo.id));
   }
 
-  /**
-   * Obtiene los precios por tipo de cliente válidos (solo aquellos cuyo tipoClienteId
-   * existe en los tipos de cliente actuales cargados del servicio)
-   */
-  getPreciosValidosPorTipoCliente(producto: Producto): PrecioPorTipoCliente[] {
-    if (!producto.preciosPorTipoCliente || producto.preciosPorTipoCliente.length === 0) {
-      return [];
-    }
-    if (!this.tiposCliente || this.tiposCliente.length === 0) {
-      return [];
-    }
-
-    // Filtrar solo los precios cuyo tipoClienteId existe en los tipos de cliente actuales
-    const tiposClienteIds = this.tiposCliente.map(t => t.id);
-    return producto.preciosPorTipoCliente.filter(precio =>
-      tiposClienteIds.includes(precio.tipoClienteId)
-    ).map(precio => {
-      // Actualizar el nombre del tipo de cliente con el nombre actual del servicio
-      const tipoActual = this.tiposCliente.find(t => t.id === precio.tipoClienteId);
-      return {
-        ...precio,
-        tipoClienteNombre: tipoActual?.descripcion || tipoActual?.nombre || precio.tipoClienteNombre
-      };
-    });
-  }
-
   obtenerFechaEdicion(producto: Producto): string {
     return producto.date_edit || '-';
   }
-}
 
+  // ── TrackBy ──
+  trackByTipoClienteId(index: number, precio: PrecioPorTipoCliente): string {
+    return precio.tipoClienteId;
+  }
+
+  trackByTipoId(index: number, tipo: any): string {
+    return tipo.id;
+  }
+
+  // ── Edición ──
+
+  editarPrecio(producto: Producto) {
+    if (!producto) return;
+
+    switch (this.activeTab) {
+      case 0: this.editarPrecioTipoCliente(producto); break;
+      case 1: this.editarPrecioUnitario(producto); break;
+      case 2: this.editarPrecioVolumen(producto); break;
+    }
+  }
+
+  private editarPrecioTipoCliente(producto: Producto) {
+    const modalRef = this.modalService.open(EditarPreciosTipoClienteComponent, {
+      size: 'lg', centered: true, backdrop: 'static'
+    });
+    modalRef.componentInstance.producto = producto;
+
+    modalRef.result.then((result) => {
+      if (result?.success) {
+        this.actualizarProductoEnVista(result.producto);
+        Swal.fire('Éxito', 'Precios por tipo de cliente guardados correctamente', 'success');
+      }
+    }).catch(() => {});
+  }
+
+  private editarPrecioUnitario(producto: Producto) {
+    const modalRef = this.modalService.open(EditarPrecioUnitarioComponent, {
+      size: 'lg', centered: true, backdrop: 'static'
+    });
+    modalRef.componentInstance.producto = producto;
+
+    modalRef.result.then((result) => {
+      if (result?.success) {
+        this.actualizarProductoEnVista(result.producto);
+        Swal.fire('Éxito', 'Precio unitario guardado correctamente', 'success');
+      }
+    }).catch(() => {});
+  }
+
+  private editarPrecioVolumen(producto: Producto) {
+    const modalRef = this.modalService.open(EditarPrecioVolumenComponent, {
+      size: 'xl', centered: true, backdrop: 'static'
+    });
+    modalRef.componentInstance.producto = producto;
+
+    modalRef.result.then((result) => {
+      if (result?.success) {
+        this.actualizarProductoEnVista(result.producto);
+        Swal.fire('Éxito', 'Precios por volumen guardados correctamente', 'success');
+      }
+    }).catch(() => {});
+  }
+
+  private actualizarProductoEnVista(productoActualizado: Producto) {
+    const index = this.productosFiltrados.findIndex(p => p.cd === productoActualizado.cd);
+    if (index !== -1) {
+      this.productosFiltrados[index] = productoActualizado;
+      this.productosFiltrados = [...this.productosFiltrados];
+    }
+  }
+
+  // ── Exportación Excel ──
+
+  descargarFormatoExcel() {
+    if (this.tiposCliente.length === 0) {
+      Swal.fire({
+        title: 'Cargando tipos de cliente...',
+        text: 'Por favor espera mientras cargamos los tipos de cliente',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+
+      this.service.consultarTiposCliente()
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (data: any) => {
+            if (Array.isArray(data)) this.tiposCliente = data;
+            else if (data?.data && Array.isArray(data.data)) this.tiposCliente = data.data;
+            else if (data?.results && Array.isArray(data.results)) this.tiposCliente = data.results;
+
+            if (this.tiposCliente.length === 0) {
+              Swal.fire('Advertencia', 'No hay tipos de cliente disponibles.', 'warning');
+              return;
+            }
+            this.generarPlantillaExcel();
+          },
+          error: () => {
+            Swal.fire('Error', 'No se pudieron cargar los tipos de cliente', 'error');
+          }
+        });
+      return;
+    }
+
+    this.generarPlantillaExcel();
+  }
+
+  private generarPlantillaExcel() {
+    const headers = ['REFERENCIA'];
+    this.tiposCliente.forEach((tipo, index) => {
+      const descripcion = (tipo.descripcion || tipo.description || '').trim();
+      const nombre = (tipo.nombre || tipo.name || '').trim();
+      headers.push(descripcion || nombre || `Tipo_${tipo.id || index}`);
+    });
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers]);
+    worksheet['!cols'] = [{ wch: 20 }, ...this.tiposCliente.map(() => ({ wch: 25 }))];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Precios');
+
+    const fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `Plantilla_Precios_Tipo_Cliente_${fecha}.xlsx`);
+
+    Swal.fire({
+      title: 'Éxito',
+      html: `Plantilla Excel descargada con ${this.tiposCliente.length} tipo(s) de cliente`,
+      icon: 'success',
+      confirmButtonText: 'Ok'
+    });
+  }
+
+  /**
+   * Exporta todos los productos con precios a Excel.
+   * Carga el catálogo completo solo cuando se exporta.
+   */
+  exportarExcel() {
+    Swal.fire({
+      title: 'Preparando exportación...',
+      text: 'Cargando catálogo completo',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    this.cargarTodosLosProductos(() => {
+      const productos = this._todosLosProductos || [];
+      if (productos.length === 0) {
+        Swal.fire('Advertencia', 'No hay productos para exportar', 'warning');
+        return;
+      }
+
+      const fecha = new Date().toISOString().split('T')[0];
+      let workbook: XLSX.WorkBook;
+      let filename: string;
+
+      switch (this.activeTab) {
+        case 0:
+          workbook = this.generarExcelTipoCliente(productos);
+          filename = `Precios_Tipo_Cliente_${fecha}.xlsx`;
+          break;
+        case 1:
+          workbook = this.generarExcelUnitario(productos);
+          filename = `Precios_Unitarios_${fecha}.xlsx`;
+          break;
+        case 2:
+          workbook = this.generarExcelVolumen(productos);
+          filename = `Precios_Volumen_${fecha}.xlsx`;
+          break;
+        default:
+          Swal.close();
+          return;
+      }
+
+      XLSX.writeFile(workbook, filename);
+      Swal.fire({
+        title: 'Éxito',
+        html: `Excel exportado con ${productos.length} productos`,
+        icon: 'success',
+        confirmButtonText: 'Ok'
+      });
+    });
+  }
+
+  private generarExcelTipoCliente(productos: Producto[]): XLSX.WorkBook {
+    const tipoNombres = this.tiposCliente.map(t =>
+      (t.descripcion || t.description || t.nombre || t.name || '').trim()
+    );
+
+    const headers = ['REFERENCIA', 'PRODUCTO', 'PRECIO BASE', ...tipoNombres];
+    const rows: any[][] = [headers];
+
+    productos.forEach(p => {
+      const fila: any[] = [
+        p.identificacion?.referencia || '',
+        p.crearProducto?.titulo || '',
+        p.precio?.precioUnitarioConIva || p.precio?.precioUnitarioSinIva || 0
+      ];
+      this.tiposCliente.forEach(tipo => {
+        const precioTipo = p.preciosPorTipoCliente?.find(
+          (pt: PrecioPorTipoCliente) => pt.tipoClienteId === tipo.id
+        );
+        fila.push(precioTipo?.precio || '');
+      });
+      rows.push(fila);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 20 }, { wch: 35 }, { wch: 15 }, ...tipoNombres.map(() => ({ wch: 20 }))];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Precio Tipo Cliente');
+    return wb;
+  }
+
+  private generarExcelUnitario(productos: Producto[]): XLSX.WorkBook {
+    const headers = ['REFERENCIA', 'PRODUCTO', 'PRECIO SIN IVA', '% IVA', 'VALOR IVA', 'PRECIO CON IVA'];
+    const rows: any[][] = [headers];
+
+    productos.forEach(p => {
+      rows.push([
+        p.identificacion?.referencia || '',
+        p.crearProducto?.titulo || '',
+        p.precio?.precioUnitarioSinIva || 0,
+        (p.precio?.precioUnitarioIva || '0') + '%',
+        p.precio?.valorIva || 0,
+        p.precio?.precioUnitarioConIva || 0
+      ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 20 }, { wch: 35 }, { wch: 18 }, { wch: 10 }, { wch: 15 }, { wch: 18 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Precio Unitario');
+    return wb;
+  }
+
+  private generarExcelVolumen(productos: Producto[]): XLSX.WorkBook {
+    const headers = ['REFERENCIA', 'PRODUCTO', 'PRECIO BASE', 'DESDE', 'HASTA', 'PRECIO SIN IVA', '% IVA', 'PRECIO CON IVA'];
+    const rows: any[][] = [headers];
+
+    productos.forEach(p => {
+      const ref = p.identificacion?.referencia || '';
+      const titulo = p.crearProducto?.titulo || '';
+      const precioBase = p.precio?.precioUnitarioConIva || 0;
+      const rangos = p.precio?.preciosVolumen || [];
+
+      if (rangos.length === 0) {
+        rows.push([ref, titulo, precioBase, '', '', '', '', '']);
+      } else {
+        rangos.forEach((rango: any, i: number) => {
+          rows.push([
+            i === 0 ? ref : '', i === 0 ? titulo : '', i === 0 ? precioBase : '',
+            rango.numeroUnidadesInicial || '', rango.numeroUnidadesLimite || '',
+            rango.valorUnitarioPorVolumenSinIVA || 0,
+            (rango.valorIVAPorVolumen || 0) + '%',
+            rango.valorUnitarioPorVolumenConIVA || 0
+          ]);
+        });
+      }
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 20 }, { wch: 35 }, { wch: 15 }, { wch: 10 }, { wch: 10 }, { wch: 18 }, { wch: 10 }, { wch: 18 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Precio Volumen');
+    return wb;
+  }
+
+  // ── Importación Excel ──
+
+  importarPrecios() {
+    this.fileInput.nativeElement.click();
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+    this.leerArchivoExcel(file);
+  }
+
+  private leerArchivoExcel(file: File) {
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+        this.procesarImportacion(jsonData).catch(err => {
+          Swal.fire('Error', 'Error al procesar importación: ' + (err?.message || err), 'error');
+        });
+      } catch {
+        Swal.fire('Error', 'Error al leer el archivo Excel', 'error');
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  /** Normaliza texto para comparación: sin tildes, sin espacios extra, minúsculas */
+  private normalizarTexto(s: string): string {
+    return (s || '').trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  /** Busca el valor de una columna en el row de Excel usando comparación normalizada */
+  private buscarColumnaExcel(row: any, nombreBuscado: string): any {
+    const normBuscado = this.normalizarTexto(nombreBuscado);
+    const entrada = Object.entries(row).find(([k]) => this.normalizarTexto(k) === normBuscado);
+    return entrada?.[1];
+  }
+
+  async procesarImportacion(datos: any[]) {
+    // Preguntar si los precios son con o sin IVA
+    const resultadoIva = await Swal.fire({
+      title: '¿Los precios del Excel incluyen IVA?',
+      html: `<p class="text-muted mb-3">Indica cómo están expresados los precios en tu archivo.</p>`,
+      icon: 'question',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar importación',
+      confirmButtonText: 'Sí, incluyen IVA',
+      showDenyButton: true,
+      denyButtonText: 'No, son sin IVA',
+      denyButtonColor: '#0d6efd',
+      confirmButtonColor: '#198754',
+    });
+
+    if (resultadoIva.isDismissed) return;
+    const preciosConIva: boolean = resultadoIva.isConfirmed;
+
+    // Parsear Excel → array plano de { referencia, tipoClienteId, tipoClienteNombre, precio }
+    const precios: any[] = [];
+    let filasIgnoradas = 0;
+
+    datos.forEach((row: any) => {
+      const referenciaRaw = this.buscarColumnaExcel(row, 'REFERENCIA') ?? '';
+      const referencia = referenciaRaw.toString().trim();
+      if (!referencia) { filasIgnoradas++; return; }
+
+      this.tiposCliente.forEach(tipo => {
+        const nombreTipo = tipo.descripcion?.trim() || tipo.description?.trim() || tipo.nombre?.trim() || '';
+        if (!nombreTipo) return;
+
+        const valorCelda = this.buscarColumnaExcel(row, nombreTipo);
+        if (valorCelda !== undefined && valorCelda !== null && valorCelda !== '') {
+          const precioNumero = parseFloat(valorCelda.toString().replace(/[^0-9.-]/g, ''));
+          if (!isNaN(precioNumero) && precioNumero > 0) {
+            precios.push({
+              referencia,
+              tipoClienteId: tipo.id,
+              tipoClienteNombre: tipo.descripcion || nombreTipo,
+              precio: precioNumero
+            });
+          }
+        }
+      });
+    });
+
+    if (precios.length === 0) {
+      Swal.fire('Sin precios', `No se encontraron precios válidos en el Excel. ${filasIgnoradas} filas sin referencia.`, 'warning');
+      return;
+    }
+
+    // Preview
+    const refsUnicas = new Set(precios.map(p => p.referencia)).size;
+    const { isConfirmed } = await Swal.fire({
+      title: 'Confirmar importación',
+      html: `
+        <p><strong>${precios.length} precios</strong> para <strong>${refsUnicas} referencias</strong>.</p>
+        <p>Precios expresados <strong>${preciosConIva ? 'con IVA incluido' : 'sin IVA'}</strong>.</p>
+        ${filasIgnoradas > 0 ? `<p class="text-muted"><small>${filasIgnoradas} filas sin referencia ignoradas</small></p>` : ''}
+        <p>El backend buscará cada producto por referencia y guardará los precios.</p>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: `Importar ${precios.length} precios`,
+      confirmButtonColor: '#198754'
+    });
+
+    if (!isConfirmed) return;
+
+    Swal.fire({
+      title: 'Importando precios...',
+      text: 'Enviando al servidor',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    // Enviar al backend — UNA sola petición
+    this.service.importPreciosTipoCliente({
+      precios,
+      porcentajeIva: 19,
+      preciosConIva
+    }).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (response: any) => {
+        const data = response?.data || response;
+        const actualizados = data.actualizados || 0;
+        const noEncontrados = data.noEncontrados || 0;
+        const errores = data.errores || 0;
+        const erroresDetalle = data.erroresDetalle || [];
+
+        let html = `
+          <p><strong>Actualizados:</strong> ${actualizados}</p>
+          <p><strong>No encontrados:</strong> ${noEncontrados}</p>
+        `;
+        if (erroresDetalle.length > 0 && erroresDetalle.length <= 10) {
+          html += '<hr><ul style="text-align:left;font-size:.85em">';
+          erroresDetalle.forEach((e: string) => { html += `<li>${e}</li>`; });
+          html += '</ul>';
+        }
+
+        Swal.fire({
+          title: actualizados > 0 ? 'Importación completada' : 'Sin cambios',
+          html,
+          icon: actualizados > 0 ? 'success' : 'warning',
+          width: '600px'
+        }).then(() => {
+          this.cargarPagina(1);
+        });
+      },
+      error: (err) => {
+        Swal.fire('Error', 'Error del servidor: ' + (err?.error?.details || err?.message || 'desconocido'), 'error');
+      }
+    });
+  }
+
+  // ── Limpiar precios ──
+
+  async limpiarPreciosTipoCliente() {
+    const resultado = await Swal.fire({
+      title: 'Limpiar precios por tipo de cliente',
+      html: `<p>Esto eliminará los precios por tipo de cliente de <strong>todos</strong> los productos.</p>
+             <p>Esta acción <strong>no se puede deshacer</strong>.</p>
+             <p>Escribe <strong>LIMPIAR</strong> para confirmar:</p>`,
+      input: 'text',
+      inputPlaceholder: 'LIMPIAR',
+      icon: 'warning',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      confirmButtonText: 'Limpiar todo',
+      confirmButtonColor: '#dc3545',
+      preConfirm: (value) => {
+        if (value?.trim().toUpperCase() !== 'LIMPIAR') {
+          Swal.showValidationMessage('Escribe exactamente: LIMPIAR');
+          return false;
+        }
+        return value;
+      }
+    });
+
+    if (!resultado.isConfirmed) return;
+
+    Swal.fire({
+      title: 'Limpiando precios...',
+      text: 'El servidor está procesando',
+      allowOutsideClick: false,
+      didOpen: () => { Swal.showLoading(); }
+    });
+
+    this.service.limpiarPreciosTipoCliente()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response: any) => {
+          const actualizados = response?.data?.actualizados || 0;
+          this.cargarPagina(1);
+          Swal.fire({
+            title: 'Limpieza completada',
+            html: `<p>Productos limpiados: <strong>${actualizados}</strong></p>`,
+            icon: actualizados > 0 ? 'success' : 'info'
+          });
+        },
+        error: (err) => {
+          Swal.fire('Error', 'Error del servidor: ' + (err?.error?.details || err?.error?.error || err?.message || 'desconocido'), 'error');
+        }
+      });
+  }
+
+  private mostrarResultadoImportacion(procesados: number, actualizados: number, errores: number, erroresDetalle: string[]) {
+    let mensajeHtml = `
+      <p><strong>Productos procesados:</strong> ${procesados}</p>
+      <p><strong>Productos actualizados:</strong> ${actualizados}</p>
+      <p><strong>Errores:</strong> ${errores}</p>
+    `;
+
+    if (erroresDetalle.length > 0 && erroresDetalle.length <= 10) {
+      mensajeHtml += '<hr><p><strong>Detalles:</strong></p><ul style="text-align: left; font-size: 0.9em;">';
+      erroresDetalle.forEach(error => { mensajeHtml += `<li>${error}</li>`; });
+      mensajeHtml += '</ul>';
+    } else if (erroresDetalle.length > 10) {
+      mensajeHtml += `<p><small>${erroresDetalle.length} errores en total.</small></p>`;
+    }
+
+    Swal.fire({
+      title: errores > 0 ? 'Importación completada con errores' : 'Importación completada',
+      html: mensajeHtml,
+      icon: errores > 0 ? 'warning' : 'success',
+      confirmButtonText: 'Ok',
+      width: '600px'
+    }).then(() => {
+      this._todosLosProductos = null; // Invalidar cache
+      this.cargarPagina(1); // Recargar página actual
+    });
+  }
+}

@@ -2114,11 +2114,22 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     this.productosArticulos = this.edit?.otrosProcesos?.modulosVariables?.produccion || [];
 
     if (this.edit.categorias) {
-      this.categoriasForm.controls["categorias"].setValue(parse(this.edit.categorias));
+      try {
+        const cats = typeof this.edit.categorias === 'string' ? parse(this.edit.categorias) : this.edit.categorias;
+        this.categoriasForm.controls["categorias"].setValue(cats);
+      } catch (e) {
+        this.categoriasForm.controls["categorias"].setValue(this.edit.categorias);
+      }
     }
 
-    if (this.edit.procesoComercial.variablesForm && this.edit.procesoComercial.variablesForm !== "[]") {
-      this.variables = parse(this.edit.procesoComercial.variablesForm);
+    if (this.edit.procesoComercial?.variablesForm && this.edit.procesoComercial.variablesForm !== "[]") {
+      try {
+        this.variables = typeof this.edit.procesoComercial.variablesForm === 'string'
+          ? parse(this.edit.procesoComercial.variablesForm)
+          : this.edit.procesoComercial.variablesForm;
+      } catch (e) {
+        this.variables = [];
+      }
     }
     this.variables = [...this.variables];
     this.marketplace.patchValue(this.edit.marketplace);

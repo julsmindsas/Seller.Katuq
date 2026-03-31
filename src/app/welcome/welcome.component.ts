@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ServiciosService } from '../shared/services/servicios.service';
 import { HttpClient } from '@angular/common/http';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
 
 @Component({
   selector: 'app-welcome',
@@ -14,18 +15,20 @@ export class WelcomeComponent implements OnInit {
   // Onboarding banner
   showOnboardingBanner = false;
 
-  // Indicadores economicos Colombia 2026
+  // Indicadores economicos Colombia (defaults como fallback)
   trmHoy: number | null = null;
   trmCargando = false;
   indicadores = {
-    salarioMinimo: 1423500,
-    auxilioTransporte: 200000,
+    salarioMinimo: 1623500,
+    auxilioTransporte: 229468,
     uvt: 49799,
+    anio: 2026,
   };
 
   constructor(
     private service: ServiciosService,
-    private http: HttpClient
+    private http: HttpClient,
+    private afs: AngularFirestore
   ) {}
 
   ngOnInit() {
@@ -37,6 +40,7 @@ export class WelcomeComponent implements OnInit {
     }
 
     this.cargarTRM();
+    this.cargarIndicadoresEconomicos();
   }
 
   dismissOnboarding(): void {
@@ -56,5 +60,26 @@ export class WelcomeComponent implements OnInit {
         },
         error: () => { this.trmCargando = false; }
       });
+  }
+
+  /**
+   * Carga indicadores económicos desde Firestore (colección config/indicadores_economicos).
+   * Si no existe el documento, usa los valores hardcodeados como fallback.
+   * Para actualizar: editar el doc en Firestore o crear un script.
+   */
+  private cargarIndicadoresEconomicos(): void {
+    this.afs.doc('config/indicadores_economicos').valueChanges().subscribe({
+      next: (data: any) => {
+        if (data) {
+          this.indicadores = {
+            salarioMinimo: data.salarioMinimo || this.indicadores.salarioMinimo,
+            auxilioTransporte: data.auxilioTransporte || this.indicadores.auxilioTransporte,
+            uvt: data.uvt || this.indicadores.uvt,
+            anio: data.anio || this.indicadores.anio,
+          };
+        }
+      },
+      error: () => { /* Usa fallback hardcodeado */ }
+    });
   }
 }

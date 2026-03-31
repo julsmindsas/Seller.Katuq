@@ -30,6 +30,15 @@
                                     (click)="cargarInventarioConsolidado()"
                                     [disabled]="loadingConsolidado"
                                     pTooltip="Actualizar datos"></button>
+                            <!-- Botón Eliminar Inventario (temporal/admin) -->
+                            <button pButton type="button"
+                                    icon="pi pi-trash"
+                                    class="p-button-rounded p-button-outlined p-button-danger"
+                                    style="width: 2.5rem; height: 2.5rem;"
+                                    (click)="eliminarTodoElInventario()"
+                                    [disabled]="loadingConsolidado"
+                                    pTooltip="Eliminar todo el inventario del comercio"
+                                    tooltipPosition="bottom"></button>
                             <!-- Botón Importar Inventario -->
                             <button pButton type="button"
                                     icon="pi pi-upload"
@@ -64,7 +73,7 @@
                 <div class="stats-bar px-4 py-3 bg-light border-bottom" *ngIf="productosConsolidados.length > 0">
                     <div class="row g-2">
                         <!-- Valor Total del Inventario - DESTACADO -->
-                        <div class="col-lg-3 col-md-6">
+                        <div class="col-lg-2 col-md-6">
                             <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #5c6ac4 !important;">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
@@ -92,7 +101,7 @@
                             <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-success border-2">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h3 class="mb-0 fw-bold text-success">{{ estadisticasConsolidadas.totalStock | number }}</h3>
+                                        <h3 class="mb-0 fw-bold text-success">{{ getMetricaUnidades() | number }}</h3>
                                         <small class="text-muted">Unidades</small>
                                     </div>
                                     <i class="pi pi-check-circle text-success" style="font-size: 1.5rem; opacity: 0.4;"></i>
@@ -102,11 +111,11 @@
                         <!-- Stock Bajo -->
                         <div class="col-lg-2 col-md-4">
                             <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-warning border-2 cursor-pointer"
-                                 (click)="filtrosConsolidados.estadoStock = 'bajos'; aplicarFiltrosConsolidados()"
+                                 (click)="filtrosConsolidados.estadoStock = 'bajos'; aplicarFiltrosYResetear()"
                                  pTooltip="Click para filtrar">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h3 class="mb-0 fw-bold text-warning">{{ estadisticasConsolidadas.productosBajoStock }}</h3>
+                                        <h3 class="mb-0 fw-bold text-warning">{{ getMetricaProductosBajoStock() }}</h3>
                                         <small class="text-muted">Stock Bajo</small>
                                     </div>
                                     <i class="pi pi-exclamation-triangle text-warning" style="font-size: 1.5rem; opacity: 0.4;"></i>
@@ -116,25 +125,28 @@
                         <!-- Agotados -->
                         <div class="col-lg-2 col-md-4">
                             <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-danger border-2 cursor-pointer"
-                                 (click)="filtrosConsolidados.estadoStock = 'agotados'; aplicarFiltrosConsolidados()"
+                                 (click)="filtrosConsolidados.estadoStock = 'agotados'; aplicarFiltrosYResetear()"
                                  pTooltip="Click para filtrar">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h3 class="mb-0 fw-bold text-danger">{{ estadisticasConsolidadas.productosSinStock }}</h3>
+                                        <h3 class="mb-0 fw-bold text-danger">{{ getMetricaProductosSinStock() }}</h3>
                                         <small class="text-muted">Agotados</small>
                                     </div>
                                     <i class="pi pi-times-circle text-danger" style="font-size: 1.5rem; opacity: 0.4;"></i>
                                 </div>
                             </div>
                         </div>
-                        <!-- % Cobertura (nuevo) -->
-                        <div class="col-lg-1 col-md-4 d-none d-lg-block">
-                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-info border-2">
-                                <div class="text-center">
-                                    <h4 class="mb-0 fw-bold text-info">
-                                        {{ totalItems > 0 ? (((totalItems - estadisticasConsolidadas.productosSinStock) / totalItems) * 100).toFixed(0) : 0 }}%
-                                    </h4>
-                                    <small class="text-muted" style="font-size: 0.7rem;">Cobertura</small>
+                        <!-- Sin inventario -->
+                        <div class="col-lg-2 col-md-4">
+                            <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-secondary border-2 cursor-pointer"
+                                 (click)="filtrosConsolidados.estadoStock = 'sinInventario'; aplicarFiltrosYResetear()"
+                                 pTooltip="Referencias sin ningún registro de inventario">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h3 class="mb-0 fw-bold text-secondary">{{ getMetricaSinInventario() }}</h3>
+                                        <small class="text-muted">Sin inventario</small>
+                                    </div>
+                                    <i class="pi pi-inbox text-secondary" style="font-size: 1.5rem; opacity: 0.4;"></i>
                                 </div>
                             </div>
                         </div>
@@ -191,7 +203,8 @@
                                         <input pInputText
                                                type="text"
                                                [(ngModel)]="filtrosConsolidados.busqueda"
-                                               (input)="aplicarFiltrosConsolidados()"
+                                               (input)="onBusquedaConsolidadoInput()"
+                                               (keyup.enter)="aplicarFiltrosYResetear()"
                                                placeholder="Nombre o referencia..."
                                                class="w-100 p-inputtext-sm">
                                     </div>
@@ -206,10 +219,11 @@
                                                       {label: 'Agotados (0)', value: 'agotados'},
                                                       {label: 'Críticos (1-2)', value: 'criticos'},
                                                       {label: 'Bajos (≤5)', value: 'bajos'},
-                                                      {label: 'Disponibles', value: 'disponibles'}
+                                                      {label: 'Disponibles', value: 'disponibles'},
+                                                      {label: 'Sin inventario', value: 'sinInventario'}
                                                     ]"
                                                     [(ngModel)]="filtrosConsolidados.estadoStock"
-                                                    (onChange)="aplicarFiltrosConsolidados()"
+                                                    (onChange)="aplicarFiltrosYResetear()"
                                                     placeholder="Todos"
                                                     styleClass="w-100 p-inputtext-sm">
                                         </p-dropdown>
@@ -222,7 +236,7 @@
                                         </label>
                                         <p-dropdown [options]="opcionesBodegasFiltro"
                                                     [(ngModel)]="filtrosConsolidados.bodegaId"
-                                                    (onChange)="aplicarFiltrosConsolidados()"
+                                                    (onChange)="aplicarFiltrosYResetear()"
                                                     placeholder="Todas"
                                                     styleClass="w-100 p-inputtext-sm">
                                         </p-dropdown>
@@ -239,7 +253,7 @@
                                                       {label: 'Sin enlace', value: 'sin'}
                                                     ]"
                                                     [(ngModel)]="filtrosConsolidados.fulfillment"
-                                                    (onChange)="aplicarFiltrosConsolidados()"
+                                                    (onChange)="aplicarFiltrosYResetear()"
                                                     placeholder="Todos"
                                                     styleClass="w-100 p-inputtext-sm">
                                         </p-dropdown>
@@ -297,9 +311,9 @@
                                                 class="p-button-sm"
                                                 style="background: #5c6ac4; border-color: #5c6ac4;"
                                                 (click)="syncAllProductsFulfillment()"
-                                                [disabled]="syncingAllProducts || getProductosConFulfillment().length === 0"
+                                                [disabled]="syncingAllProducts"
                                                 [loading]="syncingAllProducts"
-                                                [pTooltip]="'Sincronizar ' + getProductosConFulfillment().length + ' productos'">
+                                                pTooltip="Sincronizar todos los productos con fulfillment">
                                         </button>
                                     </div>
 
@@ -334,19 +348,19 @@
                                 <div class="mt-2 d-flex flex-wrap gap-1" *ngIf="hayFiltrosActivos()">
                                     <span class="badge bg-info" *ngIf="filtrosConsolidados.busqueda">
                                         <i class="pi pi-search me-1"></i>"{{ filtrosConsolidados.busqueda }}"
-                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.busqueda = ''; aplicarFiltrosConsolidados()"></i>
+                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.busqueda = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
                                     <span class="badge bg-warning text-dark" *ngIf="filtrosConsolidados.estadoStock">
                                         <i class="pi pi-chart-bar me-1"></i>{{ filtrosConsolidados.estadoStock }}
-                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.estadoStock = ''; aplicarFiltrosConsolidados()"></i>
+                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.estadoStock = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
                                     <span class="badge bg-secondary" *ngIf="filtrosConsolidados.bodegaId">
                                         <i class="pi pi-box me-1"></i>{{ getNombreBodegaById(filtrosConsolidados.bodegaId) }}
-                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.bodegaId = ''; aplicarFiltrosConsolidados()"></i>
+                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.bodegaId = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
                                     <span class="badge bg-primary" *ngIf="filtrosConsolidados.fulfillment">
                                         <i class="pi pi-cloud me-1"></i>{{ filtrosConsolidados.fulfillment === 'con' ? 'Con enlace' : 'Sin enlace' }}
-                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.fulfillment = ''; aplicarFiltrosConsolidados()"></i>
+                                        <i class="pi pi-times ms-1 cursor-pointer" (click)="filtrosConsolidados.fulfillment = ''; aplicarFiltrosYResetear()"></i>
                                     </span>
                                 </div>
                             </div>
@@ -355,9 +369,14 @@
                             <div class="table-container mb-4">
                                 <p-table #dtConsolidado
                                          [value]="productosConsolidadosFiltrados"
+                                         [lazy]="true"
+                                         (onLazyLoad)="onLazyLoadConsolidado($event)"
                                          [paginator]="true"
-                                         [rows]="20"
+                                         [rows]="paginationConsolidada.limit"
+                                         [totalRecords]="paginationConsolidada.totalItems"
                                          [rowsPerPageOptions]="[10,20,50,100]"
+                                         [showCurrentPageReport]="true"
+                                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
                                          styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
                                          [responsive]="true"
                                          [loading]="loadingConsolidado"
@@ -405,20 +424,20 @@
                                             <th style="width: 70px;"></th>
                                             <th style="width: 120px;"></th>
                                             <th style="min-width: 200px;"></th>
-                                            <!-- Columna Total (después del nombre) - suma real de bodegas -->
+                                            <!-- Columna Total -->
                                             <th style="width: 80px;" class="text-center py-2">
                                                 <span class="text-primary fw-bold">
-                                                    {{ calcularTotalUnidadesBodegas() | number }}
+                                                    {{ getMetricaUnidades() | number }}
                                                 </span>
                                             </th>
-                                            <!-- Métricas por cada Bodega (basado en productos filtrados) -->
+                                            <!-- Total por cada Bodega -->
                                             <th *ngFor="let bodega of bodegasConsolidadas"
                                                 class="text-center py-2"
                                                 style="background: #f8fafc; cursor: help;"
-                                                [pTooltip]="'📦 ' + (calcularTotalBodegaFiltrado(bodega.id) | number) + ' unidades (filtrado)'"
+                                                [pTooltip]="'Total en ' + bodega.nombre"
                                                 tooltipPosition="bottom">
                                                 <span class="fw-semibold" style="color: #475569;">
-                                                    {{ calcularTotalBodegaFiltrado(bodega.id) | number }}
+                                                    {{ getTotalBodegaFooter(bodega.id) | number }}
                                                 </span>
                                             </th>
                                             <!-- Columna Precio -->
@@ -649,8 +668,9 @@
                             </div>
                         </p-tabPanel>
 
-                        <!-- Tab 2: Vista por Bodega (Antigua) -->
-                        <p-tabPanel header="Vista por Bodega" leftIcon="pi pi-box">
+                        <!-- Tab 2: Vista por Bodega (Antigua) - OCULTO -->
+                        <p-tabPanel header="Vista por Bodega" leftIcon="pi pi-box" [disabled]="true" [style]="{'display': 'none'}"
+                                    *ngIf="false">
                     <!-- Selector de Bodega para vista antigua -->
                     <div class="mb-4 p-3 border rounded bg-light">
                         <div class="d-flex align-items-center gap-3">

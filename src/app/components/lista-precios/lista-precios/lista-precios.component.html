@@ -10,14 +10,21 @@
               <p class="text-muted mb-0">Administra los precios de tus productos</p>
             </div>
             <div class="col-md-6 text-end">
-              <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()" *ngIf="activeTab === 0">
+              <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()" *ngIf="activeTab === 0"
+                pTooltip="Importar precios desde Excel" tooltipPosition="bottom">
                 <i class="icofont icofont-upload"></i> Importar
               </button>
-              <button class="btn btn-success me-2" (click)="descargarFormatoExcel()" *ngIf="activeTab === 0">
-                <i class="icofont icofont-download"></i> Descargar Plantilla
+              <button class="btn btn-outline-success me-2" (click)="descargarFormatoExcel()" *ngIf="activeTab === 0"
+                pTooltip="Descargar plantilla vacía para importar" tooltipPosition="bottom">
+                <i class="icofont icofont-download"></i> Plantilla
               </button>
-              <button class="btn btn-outline-success" *ngIf="activeTab !== 0">
-                <i class="icofont icofont-file-excel"></i> Descargar Excel
+              <button class="btn btn-success me-2" (click)="exportarExcel()"
+                pTooltip="Exportar todos los productos con precios actuales" tooltipPosition="bottom">
+                <i class="icofont icofont-file-excel"></i> Exportar Excel
+              </button>
+              <button class="btn btn-outline-danger" (click)="limpiarPreciosTipoCliente()" *ngIf="activeTab === 0"
+                pTooltip="Eliminar todos los precios por tipo de cliente" tooltipPosition="bottom">
+                <i class="pi pi-trash"></i> Limpiar precios
               </button>
             </div>
           </div>
@@ -30,28 +37,32 @@
           <!-- Tab 1: Precio tipo clientes -->
           <p-tabPanel header="Precio tipo clientes">
             <div class="p-3">
-              <!-- Buscador -->
+              <!-- Buscador con debounce -->
               <div class="mb-3">
                 <div class="input-group">
                   <span class="input-group-text">
                     <i class="icofont icofont-search"></i>
                   </span>
-                  <input 
-                    type="text" 
-                    class="form-control" 
-                    placeholder="Buscar producto (presiona Enter)..."
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Buscar por referencia o nombre..."
                     [(ngModel)]="searchTerm"
+                    (input)="onSearchInput($event)"
                     (keyup.enter)="buscarProducto()"
                   />
                 </div>
               </div>
 
-              <!-- Tabla de productos -->
+              <!-- Tabla de productos con LAZY LOADING -->
               <p-table
                 [value]="productosFiltrados"
                 [loading]="cargando"
+                [lazy]="true"
+                (onLazyLoad)="onLazyLoad($event)"
                 [paginator]="true"
                 [rows]="pageSize"
+                [totalRecords]="totalRecords"
                 [rowsPerPageOptions]="[10, 20, 50, 100]"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
@@ -86,19 +97,12 @@
                     </td>
                     <td class="text-center">
                       <img
-                        *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
-                        [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
+                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
                         [alt]="producto.crearProducto?.titulo"
+                        appImageFallback
                         width="50"
                         height="50"
                         style="border-radius: 8px; object-fit: cover;"
-                      />
-                      <img
-                        *ngIf="!producto.crearProducto?.imagenesPrincipales?.length"
-                        src="assets/img/placeholder.png"
-                        width="50"
-                        height="50"
-                        style="border-radius: 8px; opacity: 0.5;"
                       />
                     </td>
                     <td>
@@ -113,7 +117,7 @@
                     <td>
                       <div class="d-flex flex-wrap gap-1" *ngIf="getPreciosValidosPorTipoCliente(producto).length > 0">
                         <span
-                          *ngFor="let precio of getPreciosValidosPorTipoCliente(producto) | slice:0:3"
+                          *ngFor="let precio of getPreciosValidosPorTipoCliente(producto) | slice:0:3; trackBy: trackByTipoClienteId"
                           class="badge bg-light text-dark border"
                           style="font-size: 0.75rem;"
                           [pTooltip]="'Sin IVA: $' + (precio.precio | number:'1.0-0') + ' + IVA ' + (precio.porcentajeIva || 0) + '%'"
@@ -122,7 +126,7 @@
                         </span>
                         <span
                           *ngIf="getPreciosValidosPorTipoCliente(producto).length > 3"
-                          class="badge bg-secondary"
+                          class="badge bg-light text-dark border"
                           style="font-size: 0.75rem;">
                           +{{ getPreciosValidosPorTipoCliente(producto).length - 3 }} más
                         </span>
@@ -173,7 +177,7 @@
                               </tr>
                             </thead>
                             <tbody>
-                              <tr *ngFor="let precio of getPreciosValidosPorTipoCliente(producto)">
+                              <tr *ngFor="let precio of getPreciosValidosPorTipoCliente(producto); trackBy: trackByTipoClienteId">
                                 <td>
                                   <span class="fw-bold">{{ precio.tipoClienteNombre }}</span>
                                 </td>
@@ -200,9 +204,9 @@
                           </table>
                         </div>
 
-                        <!-- Resumen visual en cards (opcional, debajo de la tabla) -->
+                        <!-- Resumen visual en cards -->
                         <div class="row mt-3" *ngIf="getPreciosValidosPorTipoCliente(producto).length > 0">
-                          <div class="col-md-3 col-sm-6 mb-2" *ngFor="let precio of getPreciosValidosPorTipoCliente(producto)">
+                          <div class="col-md-3 col-sm-6 mb-2" *ngFor="let precio of getPreciosValidosPorTipoCliente(producto); trackBy: trackByTipoClienteId">
                             <div class="card h-100 border-primary">
                               <div class="card-header bg-primary text-white py-1 text-center">
                                 <small class="fw-bold">{{ precio.tipoClienteNombre }}</small>
@@ -232,19 +236,19 @@
                               <i class="pi pi-info-circle me-2"></i>
                               <div>
                                 <strong>Sin precios configurados</strong>
-                                <p class="mb-0 small">Este producto aún no tiene precios diferenciados por tipo de cliente. Usa el botón de edición para configurarlos.</p>
+                                <p class="mb-0 small">Este producto aún no tiene precios diferenciados por tipo de cliente.</p>
                               </div>
                             </div>
                           </div>
                         </div>
 
-                        <!-- Mostrar tipos de cliente sin precio configurado -->
+                        <!-- Tipos de cliente sin precio configurado -->
                         <div class="row mt-3" *ngIf="getTiposClienteSinPrecio(producto).length > 0 && getPreciosValidosPorTipoCliente(producto).length > 0">
                           <div class="col-12">
                             <small class="text-muted">
                               <i class="pi pi-exclamation-triangle me-1 text-warning"></i>
-                              Tipos de cliente sin precio configurado:
-                              <span *ngFor="let tipo of getTiposClienteSinPrecio(producto); let last = last">
+                              Tipos de cliente sin precio:
+                              <span *ngFor="let tipo of getTiposClienteSinPrecio(producto); let last = last; trackBy: trackByTipoId">
                                 {{ tipo.descripcion || tipo.nombre }}{{ !last ? ', ' : '' }}
                               </span>
                             </small>
@@ -275,8 +279,9 @@
                   <input
                     type="text"
                     class="form-control"
-                    placeholder="Buscar producto (presiona Enter)..."
+                    placeholder="Buscar por referencia o nombre..."
                     [(ngModel)]="searchTerm"
+                    (input)="onSearchInput($event)"
                     (keyup.enter)="buscarProducto()"
                   />
                 </div>
@@ -285,8 +290,11 @@
               <p-table
                 [value]="productosFiltrados"
                 [loading]="cargando"
+                [lazy]="true"
+                (onLazyLoad)="onLazyLoad($event)"
                 [paginator]="true"
                 [rows]="pageSize"
+                [totalRecords]="totalRecords"
                 [rowsPerPageOptions]="[10, 20, 50, 100]"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
@@ -308,18 +316,11 @@
                   <tr>
                     <td class="text-center">
                       <img
-                        *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
-                        [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
-                        width="50"
-                        height="50"
+                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                        [alt]="producto.crearProducto?.titulo"
+                        appImageFallback
+                        width="50" height="50"
                         style="border-radius: 8px; object-fit: cover;"
-                      />
-                      <img
-                        *ngIf="!producto.crearProducto?.imagenesPrincipales?.length"
-                        src="assets/img/placeholder.png"
-                        width="50"
-                        height="50"
-                        style="border-radius: 8px; opacity: 0.5;"
                       />
                     </td>
                     <td>
@@ -374,8 +375,9 @@
                   <input
                     type="text"
                     class="form-control"
-                    placeholder="Buscar producto (presiona Enter)..."
+                    placeholder="Buscar por referencia o nombre..."
                     [(ngModel)]="searchTerm"
+                    (input)="onSearchInput($event)"
                     (keyup.enter)="buscarProducto()"
                   />
                 </div>
@@ -384,8 +386,11 @@
               <p-table
                 [value]="productosFiltrados"
                 [loading]="cargando"
+                [lazy]="true"
+                (onLazyLoad)="onLazyLoad($event)"
                 [paginator]="true"
                 [rows]="pageSize"
+                [totalRecords]="totalRecords"
                 [rowsPerPageOptions]="[10, 20, 50, 100]"
                 [showCurrentPageReport]="true"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
@@ -406,18 +411,11 @@
                   <tr>
                     <td class="text-center">
                       <img
-                        *ngIf="producto.crearProducto?.imagenesPrincipales?.length > 0"
-                        [src]="producto.crearProducto.imagenesPrincipales[0]?.urls"
-                        width="50"
-                        height="50"
+                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                        [alt]="producto.crearProducto?.titulo"
+                        appImageFallback
+                        width="50" height="50"
                         style="border-radius: 8px; object-fit: cover;"
-                      />
-                      <img
-                        *ngIf="!producto.crearProducto?.imagenesPrincipales?.length"
-                        src="assets/img/placeholder.png"
-                        width="50"
-                        height="50"
-                        style="border-radius: 8px; opacity: 0.5;"
                       />
                     </td>
                     <td>
@@ -472,14 +470,13 @@
       </div>
 
       <!-- Input oculto para importar archivos -->
-      <input 
-        #fileInput 
-        type="file" 
-        accept=".xlsx,.xls" 
-        style="display: none;" 
+      <input
+        #fileInput
+        type="file"
+        accept=".xlsx,.xls"
+        style="display: none;"
         (change)="onFileSelected($event)"
       />
     </div>
   </div>
 </div>
-

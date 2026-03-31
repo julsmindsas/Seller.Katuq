@@ -181,6 +181,22 @@ export class VentasService extends BaseService {
     return this.post<any>('/v1/catalog/getProductByNumber', { productNumber });
   }
 
+  /**
+   * Búsqueda rápida de productos por referencia, código de barras o título.
+   * Usa queries indexadas en Firestore — NO carga todos los productos.
+   * Prioridad: match exacto referencia → prefix referencia → título.
+   */
+  public quickSearchProducts(term: string, limit: number = 20): Observable<{
+    success: boolean;
+    products: Producto[];
+    total: number;
+    searchTerm: string;
+    duration: string;
+  }> {
+    const encodedTerm = encodeURIComponent(term);
+    return this.get<any>(`/v1/productos/search/quick?q=${encodedTerm}&limit=${limit}`);
+  }
+
   validateCupon(cupon: any) {
     return this.post<any>('/v1/cupones/validatecupon', cupon);
   }

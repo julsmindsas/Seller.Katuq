@@ -11,8 +11,8 @@ import {
   SimpleChanges,
   OnDestroy,
 } from "@angular/core";
-import { Subject } from "rxjs";
-import { takeUntil, debounceTime, distinctUntilChanged } from "rxjs/operators";
+import { Subject, of, forkJoin } from "rxjs";
+import { takeUntil, debounceTime, distinctUntilChanged, switchMap, tap, catchError, filter } from "rxjs/operators";
 import { QuickViewComponent } from "../../quick-view/quick-view.component";
 import { VentasService } from "../../../../shared/services/ventas/ventas.service";
 import Swal from "sweetalert2";
@@ -28,7 +28,6 @@ import {
 } from "@angular/forms";
 import { ConfProductToCartComponent } from "../conf-product-to-cart/conf-product-to-cart.component";
 import { After } from "v8";
-import { forkJoin } from "rxjs";
 import { PedidosUtilService } from "../../service/pedidos.util.service";
 import { NgbModal } from "@ng-bootstrap/ng-bootstrap";
 import { CartSingletonService } from "../../../../shared/services/ventas/cart.singleton.service";
@@ -111,6 +110,9 @@ export class EcomerceProductsComponent
 
   // Subject para debounce de cambios de filtros (checkboxes)
   private filterSubject$ = new Subject<void>();
+
+  // Subject para carga de páginas — switchMap cancela requests anteriores automáticamente
+  private pageRequest$ = new Subject<{ filters: any; page: number; pageSize: number }>();
 
   // Cache de filtros actuales para paginación
   private filtrosActuales: any = null;
@@ -259,6 +261,40 @@ export class EcomerceProductsComponent
       )
       .subscribe(() => {
         this.filtrarProductos();
+      });
+
+    // Pipeline de carga de páginas con switchMap — cancela requests anteriores automáticamente
+    this.pageRequest$
+      .pipe(
+        tap(() => {
+          this.cargandoProductos = true;
+          this.errorCarga = null;
+        }),
+        switchMap(({ filters, page, pageSize }) =>
+          this.ventasService.getProductsByFilterPaginated(filters, page, pageSize).pipe(
+            catchError(error => {
+              console.error(`❌ Error cargando página ${page}:`, error);
+              this.errorCarga = "Error al cargar productos. Intente nuevamente.";
+              // Fallback a modo legacy si falla
+              if (this.usarPaginacionServidor) {
+                this.usarPaginacionServidor = false;
+                this.cargarTodosLosProductos(this.filtrosActuales);
+              }
+              return of(null);
+            })
+          )
+        ),
+        filter(response => response !== null),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((response: any) => {
+        this.productosPaginados = response.products || [];
+        this.productos = this.productosPaginados;
+        this.temp = [...this.productosPaginados];
+        this.totalProductos = response.pagination?.totalItems || 0;
+        this.totalPaginas = response.pagination?.totalPages || 0;
+        this.paginaActual = response.pagination?.currentPage || 1;
+        this.cargandoProductos = false;
       });
 
     // Inicializar y cargar productos si tenemos bodega y ciudad
@@ -513,54 +549,16 @@ export class EcomerceProductsComponent
   }
 
   /**
-   * Carga una página específica desde el servidor
+   * Carga una página específica desde el servidor.
+   * Emite al pageRequest$ Subject que usa switchMap para cancelar requests anteriores.
    * @param pagina Número de página a cargar
    */
   private cargarPaginaServidor(pagina: number): void {
-    this.cargandoProductos = true;
-    this.errorCarga = null;
-
-    const startTime = performance.now();
-
-    this.ventasService
-      .getProductsByFilterPaginated(this.filtrosActuales, pagina, this.productosPorPagina)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (response) => {
-          const duration = Math.round(performance.now() - startTime);
-          console.log(`✅ Página ${pagina} cargada en ${duration}ms:`, {
-            productos: response.products?.length || 0,
-            total: response.pagination?.totalItems,
-            paginas: response.pagination?.totalPages,
-          });
-
-          // Actualizar productos de la página actual
-          this.productosPaginados = response.products || [];
-          this.productos = this.productosPaginados; // Compatibilidad
-          this.temp = [...this.productosPaginados];
-
-          // Actualizar metadatos de paginación
-          this.totalProductos = response.pagination?.totalItems || 0;
-          this.totalPaginas = response.pagination?.totalPages || 0;
-          this.paginaActual = response.pagination?.currentPage || pagina;
-
-          this.cargandoProductos = false;
-        },
-        error: (error) => {
-          const duration = Math.round(performance.now() - startTime);
-          console.error(`❌ Error cargando página ${pagina} (${duration}ms):`, error);
-
-          this.cargandoProductos = false;
-          this.errorCarga = "Error al cargar productos. Intente nuevamente.";
-
-          // Fallback a modo legacy si falla el servidor
-          if (this.usarPaginacionServidor) {
-            console.warn("⚠️ Fallback a modo legacy por error en paginación servidor");
-            this.usarPaginacionServidor = false;
-            this.cargarTodosLosProductos(this.filtrosActuales);
-          }
-        },
-      });
+    this.pageRequest$.next({
+      filters: { ...this.filtrosActuales },
+      page: pagina,
+      pageSize: this.productosPorPagina,
+    });
   }
 
   /**
@@ -680,6 +678,54 @@ export class EcomerceProductsComponent
    * Ejecuta búsqueda en el servidor con el término dado
    */
   private ejecutarBusqueda(searchTerm: string): void {
+    if (!searchTerm || searchTerm.trim().length === 0) {
+      // Limpiar búsqueda: recargar sin searchTerm
+      if (this.filtrosActuales) {
+        delete this.filtrosActuales.searchTerm;
+        this.paginaActual = 1;
+        this.cargarPaginaServidor(1);
+      }
+      return;
+    }
+
+    // Si parece referencia/código (alfanumérico, sin espacios, >= 3 chars) → quickSearch
+    const isLikelyReference = /^[a-zA-Z0-9\-_.]+$/.test(searchTerm.trim()) && searchTerm.trim().length >= 3;
+
+    if (isLikelyReference) {
+      this.cargandoProductos = true;
+      this.ventasService.quickSearchProducts(searchTerm.trim(), 20)
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (response) => {
+            if (response.success && response.products?.length > 0) {
+              this.productosPaginados = response.products;
+              this.productos = response.products;
+              this.temp = [...response.products];
+              this.totalProductos = response.total;
+              this.totalPaginas = 1;
+              this.paginaActual = 1;
+              this.cargandoProductos = false;
+              return;
+            }
+            // Si quickSearch no encontró nada, caer al flujo normal con searchTerm
+            this.buscarConFiltrosPaginados(searchTerm);
+          },
+          error: () => {
+            // Si quickSearch falla, caer al flujo normal
+            this.buscarConFiltrosPaginados(searchTerm);
+          },
+        });
+      return;
+    }
+
+    // Término con espacios o corto → búsqueda normal paginada con searchTerm
+    this.buscarConFiltrosPaginados(searchTerm);
+  }
+
+  /**
+   * Búsqueda estándar que envía searchTerm al endpoint paginado
+   */
+  private buscarConFiltrosPaginados(searchTerm: string): void {
     if (!this.filtrosActuales) {
       this.filtrosActuales = this.filterForm.value;
       this.filtrosActuales.deliveryCity = { label: this.ciudad, value: this.ciudad };
@@ -688,10 +734,7 @@ export class EcomerceProductsComponent
       this.filtrosActuales.isChannelManual = true;
     }
 
-    // Agregar término de búsqueda al filtro
     this.filtrosActuales.searchTerm = searchTerm;
-
-    // Recargar desde página 1
     this.paginaActual = 1;
     this.cargarPaginaServidor(1);
   }

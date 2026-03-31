@@ -213,20 +213,26 @@ export class InventarioService {
    */
   obtenerInventarioConsolidado(options: {
     limit?: number;
+    page?: number;
     lastDoc?: string;
     soloInventariables?: boolean;
+    includeMetrics?: boolean;
+    stockFilter?: string;
+    search?: string;
+    bodega?: string;
+    fulfillment?: string;
   } = {}): Observable<InventarioConsolidadoResponse> {
     let params = new HttpParams();
-    
-    if (options.limit) {
-      params = params.set('limit', options.limit.toString());
-    }
-    if (options.lastDoc) {
-      params = params.set('lastDoc', options.lastDoc);
-    }
-    if (options.soloInventariables !== undefined) {
-      params = params.set('soloInventariables', options.soloInventariables.toString());
-    }
+
+    if (options.limit) params = params.set('limit', options.limit.toString());
+    if (options.page) params = params.set('page', options.page.toString());
+    if (options.lastDoc) params = params.set('lastDoc', options.lastDoc);
+    if (options.soloInventariables !== undefined) params = params.set('soloInventariables', options.soloInventariables.toString());
+    if (options.includeMetrics !== undefined) params = params.set('includeMetrics', options.includeMetrics.toString());
+    if (options.stockFilter) params = params.set('stockFilter', options.stockFilter);
+    if (options.search) params = params.set('search', options.search);
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.fulfillment) params = params.set('fulfillment', options.fulfillment);
 
     return this.http.get<InventarioConsolidadoResponse>(
       `${this.apiUrl}/inventory/consolidado`,

@@ -209,10 +209,16 @@ export class InventarioCatalogoComponent implements OnInit {
   };
   paginationConsolidada: {
     limit: number;
+    page: number;
+    totalPages: number;
+    totalItems: number;
     hasMore: boolean;
     lastDoc: string | null;
   } = {
-    limit: 500, // Max permitido por el backend
+    limit: 20,
+    page: 1,
+    totalPages: 0,
+    totalItems: 0,
     hasMore: false,
     lastDoc: null,
   };
@@ -223,11 +229,15 @@ export class InventarioCatalogoComponent implements OnInit {
     totalUnidades: number;
     totalProductos: number;
     totalSKUsCatalogo: number;
+    productosSinStock: number;
+    productosBajoStock: number;
   } = {
     valorTotal: 0,
     totalUnidades: 0,
     totalProductos: 0,
     totalSKUsCatalogo: 0,
+    productosSinStock: 0,
+    productosBajoStock: 0,
   };
 
   // ============== MODAL DE SINCRONIZACIÓN ==============
@@ -257,12 +267,62 @@ export class InventarioCatalogoComponent implements OnInit {
     return this.bodegasDesglose.filter((b) => b.diferencia !== 0).length;
   }
 
+  // ============== ELIMINAR INVENTARIO (TEMPORAL) ==============
+  eliminarTodoElInventario(): void {
+    const nombreComercio = this.empresaActual?.nomComercial || '';
+    Swal.fire({
+      title: '⚠️ Eliminar Todo el Inventario',
+      html: `<p>Esta acción eliminará <strong>FÍSICAMENTE</strong> todo el inventario del comercio <strong>${nombreComercio}</strong>.</p>
+             <p class="text-danger fw-bold">Esta acción NO se puede deshacer.</p>
+             <p>Escriba el nombre del comercio para confirmar:</p>`,
+      input: 'text',
+      inputPlaceholder: nombreComercio,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Eliminar Todo',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc3545',
+      inputValidator: (value) => {
+        if (value !== nombreComercio) {
+          return `Debe escribir exactamente "${nombreComercio}"`;
+        }
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Eliminando inventario...',
+          html: 'Por favor espere, esto puede tomar unos minutos.',
+          allowOutsideClick: false,
+          didOpen: () => { Swal.showLoading(); }
+        });
+        this.inventarioService.deleteAllInventoryByCompany(nombreComercio).subscribe({
+          next: (response: any) => {
+            Swal.fire({
+              title: 'Inventario Eliminado',
+              html: `<p>${response.message || 'Inventario eliminado correctamente'}</p>`,
+              icon: 'success',
+            });
+            this.recargarInventarioConsolidado();
+          },
+          error: (error) => {
+            Swal.fire({
+              title: 'Error',
+              text: error?.error?.message || 'Error al eliminar el inventario',
+              icon: 'error',
+            });
+          }
+        });
+      }
+    });
+  }
+
   // ============== IMPORTACIÓN ==============
   showImportModal: boolean = false;
 
   onImportComplete(result: any): void {
     if (result.success > 0) {
-      this.cargarInventarioConsolidado();
+      this.recargarInventarioConsolidado();
     }
   }
 
@@ -319,8 +379,9 @@ export class InventarioCatalogoComponent implements OnInit {
     // Cargar bodegas (necesario para la vista antigua y para el modal)
     this.cargarBodegas();
 
-    // Cargar la vista consolidada (nuevo comportamiento por defecto)
-    this.cargarInventarioConsolidado();
+    // La p-table con [lazy]="true" dispara onLazyLoad al renderizar,
+    // eso llama cargarInventarioConsolidado(1) automáticamente.
+    // NO llamar aquí para evitar doble request.
   }
 
   /**
@@ -373,87 +434,57 @@ export class InventarioCatalogoComponent implements OnInit {
   /**
    * Carga el inventario consolidado - todos los productos con stock por bodega
    */
-  cargarInventarioConsolidado(loadMore: boolean = false): void {
+  private _metricasCargadas = false;
+
+  cargarInventarioConsolidado(page: number = 1): void {
     this.loadingConsolidado = true;
 
-    const options: {
-      limit?: number;
-      lastDoc?: string;
-      soloInventariables?: boolean;
-    } = {
+    // Primera carga: pedir métricas + productos.
+    // Cambios de página: solo productos (las métricas globales no cambian entre páginas).
+    const includeMetrics = !this._metricasCargadas;
+
+    this.inventarioService.obtenerInventarioConsolidado({
       limit: this.paginationConsolidada.limit,
+      page,
       soloInventariables: true,
-    };
-
-    if (loadMore && this.paginationConsolidada.lastDoc) {
-      options.lastDoc = this.paginationConsolidada.lastDoc;
-    }
-
-    console.log(
-      "🔄 [Inventario] Llamando a obtenerInventarioConsolidado con opciones:",
-      options,
-    );
-
-    this.inventarioService.obtenerInventarioConsolidado(options).subscribe({
-      next: (response) => {
-        console.log("📥 [Inventario] Respuesta recibida:", {
-          success: response.success,
-          productos: response.productos?.length || 0,
-          bodegas: response.bodegas?.length || 0,
-          totalProductos: response.totalProductos,
-        });
-
+      includeMetrics,
+      stockFilter: this.filtrosConsolidados.estadoStock || undefined,
+      search: this.filtrosConsolidados.busqueda?.trim() || undefined,
+      bodega: this.filtrosConsolidados.bodegaId || undefined,
+      fulfillment: this.filtrosConsolidados.fulfillment || undefined,
+    }).subscribe({
+      next: (response: any) => {
         if (response.success) {
-          if (loadMore) {
-            // Agregar a la lista existente
-            this.productosConsolidados = [
-              ...this.productosConsolidados,
-              ...response.productos,
-            ];
-          } else {
-            // Reemplazar la lista
-            this.productosConsolidados = response.productos;
-          }
-
-          console.log(
-            "📊 [Inventario] Productos asignados:",
-            this.productosConsolidados.length,
-          );
-
-          // Aplicar filtros actuales
+          this.productosConsolidados = response.productos;
           this.aplicarFiltrosConsolidados();
 
-          console.log(
-            "📊 [Inventario] Productos filtrados:",
-            this.productosConsolidadosFiltrados.length,
-          );
-
-          this.bodegasConsolidadas = response.bodegas;
-          this.estadisticasConsolidadas = response.estadisticas;
+          // Actualizar métricas solo si vienen en la respuesta (primera carga o recarga)
+          if (response.bodegas) {
+            this.bodegasConsolidadas = response.bodegas;
+          }
           this.paginationConsolidada = {
-            limit: response.pagination.limit,
-            hasMore: response.pagination.hasMore,
-            lastDoc: response.pagination.lastDoc,
+            limit: response.pagination?.limit || 20,
+            page: response.pagination?.currentPage || page,
+            totalPages: response.pagination?.totalPages || 0,
+            totalItems: response.pagination?.totalItems || response.totalProductos || 0,
+            hasMore: response.pagination?.hasMore || false,
+            lastDoc: response.pagination?.lastDoc || null,
           };
-          this.totalItems = response.totalProductos;
-          // Totales globales calculados en backend (para métricas)
-          this.totalesGlobales = response.totalesGlobales || {
-            valorTotal: 0,
-            totalUnidades: 0,
-            totalProductos: 0,
-            totalSKUsCatalogo: 0,
-          };
+          this.totalItems = this.paginationConsolidada.totalItems;
+          if (response.totalesGlobales) {
+            this.totalesGlobales = response.totalesGlobales;
+          }
 
-          console.log(
-            `📦 Inventario consolidado cargado: ${this.productosConsolidados.length} productos, ${this.bodegasConsolidadas.length} bodegas (valor total: $${this.totalesGlobales.valorTotal.toLocaleString()})`,
-          );
+          // Totales filtrados: null si no hay filtro, objeto si hay
+          this._totalesFiltrados = response.totalesFiltrados || null;
+
+          this._metricasCargadas = true;
         } else {
           this.toastr.error("Error al cargar inventario consolidado");
         }
         this.loadingConsolidado = false;
       },
-      error: (error) => {
-        console.error("Error al cargar inventario consolidado:", error);
+      error: () => {
         this.toastr.error("Error al cargar inventario");
         this.loadingConsolidado = false;
       },
@@ -461,76 +492,63 @@ export class InventarioCatalogoComponent implements OnInit {
   }
 
   /**
+   * Recarga completa: fuerza recalcular métricas (después de ajustes, importaciones, syncs).
+   */
+  recargarInventarioConsolidado(): void {
+    this._metricasCargadas = false;
+    this.cargarInventarioConsolidado(1);
+  }
+
+  /**
    * Carga más productos en la vista consolidada (paginación infinita)
    */
   cargarMasProductos(): void {
-    if (this.paginationConsolidada.hasMore && !this.loadingConsolidado) {
-      this.cargarInventarioConsolidado(true);
+    if (this.paginationConsolidada.page < this.paginationConsolidada.totalPages && !this.loadingConsolidado) {
+      this.cargarInventarioConsolidado(this.paginationConsolidada.page + 1);
     }
+  }
+
+  /**
+   * Evento lazy load de p-table — se dispara al cambiar página o rows.
+   */
+  onLazyLoadConsolidado(event: any): void {
+    const rows = event.rows || this.paginationConsolidada.limit;
+    this.paginationConsolidada.limit = rows;
+    const page = Math.floor((event.first || 0) / rows) + 1;
+    this.cargarInventarioConsolidado(page);
   }
 
   // ============== FILTROS VISTA CONSOLIDADA ==============
 
+  private _busquedaTimeout: any;
+
   /**
-   * Aplica todos los filtros a la vista consolidada
+   * Debounce de búsqueda — espera 500ms después de dejar de escribir para llamar al server
+   */
+  onBusquedaConsolidadoInput(): void {
+    clearTimeout(this._busquedaTimeout);
+    this._busquedaTimeout = setTimeout(() => {
+      this.aplicarFiltrosYResetear();
+    }, 500);
+  }
+
+  /**
+   * Copia datos cargados a la vista.
+   * Todos los filtros se aplican en el backend via query params.
    */
   aplicarFiltrosConsolidados(): void {
-    let resultados = [...this.productosConsolidados];
+    this.productosConsolidadosFiltrados = [...this.productosConsolidados];
+  }
 
-    // Filtro de búsqueda (nombre o referencia)
-    if (this.filtrosConsolidados.busqueda?.trim()) {
-      const busqueda = this.filtrosConsolidados.busqueda.toLowerCase().trim();
-      resultados = resultados.filter(
-        (p) =>
-          p.nombre?.toLowerCase().includes(busqueda) ||
-          p.referencia?.toLowerCase().includes(busqueda),
-      );
-    }
-
-    // Filtro por estado de stock
-    if (this.filtrosConsolidados.estadoStock) {
-      switch (this.filtrosConsolidados.estadoStock) {
-        case "agotados":
-          resultados = resultados.filter((p) => (p.stockTotal || 0) === 0);
-          break;
-        case "criticos":
-          resultados = resultados.filter(
-            (p) => (p.stockTotal || 0) > 0 && (p.stockTotal || 0) <= 2,
-          );
-          break;
-        case "bajos":
-          resultados = resultados.filter(
-            (p) => (p.stockTotal || 0) > 0 && (p.stockTotal || 0) <= 5,
-          );
-          break;
-        case "disponibles":
-          resultados = resultados.filter((p) => (p.stockTotal || 0) > 5);
-          break;
-      }
-    }
-
-    // Filtro por bodega específica (solo productos con stock en esa bodega)
-    if (this.filtrosConsolidados.bodegaId) {
-      resultados = resultados.filter(
-        (p) => this.getStockBodega(p, this.filtrosConsolidados.bodegaId) > 0,
-      );
-    }
-
-    // Filtro por estado de fulfillment
-    if (this.filtrosConsolidados.fulfillment && this.fulfillmentEnabled) {
-      if (this.filtrosConsolidados.fulfillment === "con") {
-        resultados = resultados.filter((p) => !!p.fulfillmentId);
-      } else if (this.filtrosConsolidados.fulfillment === "sin") {
-        resultados = resultados.filter((p) => !p.fulfillmentId);
-      }
-    }
-
-    this.productosConsolidadosFiltrados = resultados;
-
-    // Resetear paginación a la primera página
+  /**
+   * Aplica filtros Y recarga desde el servidor en página 1.
+   * Usar cuando el usuario cambia filtros (dropdown, cards, búsqueda).
+   */
+  aplicarFiltrosYResetear(): void {
     if (this.dtConsolidado) {
       this.dtConsolidado.first = 0;
     }
+    this.cargarInventarioConsolidado(1);
   }
 
   /**
@@ -543,7 +561,7 @@ export class InventarioCatalogoComponent implements OnInit {
       bodegaId: "",
       fulfillment: "",
     };
-    this.aplicarFiltrosConsolidados();
+    this.aplicarFiltrosYResetear();
   }
 
   /**
@@ -574,6 +592,45 @@ export class InventarioCatalogoComponent implements OnInit {
    */
   getStockBodega(producto: ProductoConsolidado, bodegaId: string): number {
     return producto.stockPorBodega?.[bodegaId] ?? 0;
+  }
+
+  // Totales filtrados del backend (null cuando no hay filtro)
+  private _totalesFiltrados: {
+    totalUnidades: number;
+    totalProductos: number;
+    productosSinStock: number;
+    productosBajoStock: number;
+    porBodega: { [id: string]: number };
+  } | null = null;
+
+  // ── Métodos de totales: resuelven automáticamente global vs filtrado ──
+
+  getMetricaUnidades(): number {
+    return this._totalesFiltrados?.totalUnidades ?? this.totalesGlobales.totalUnidades ?? 0;
+  }
+
+  getMetricaProductosBajoStock(): number {
+    return this._totalesFiltrados?.productosBajoStock ?? this.totalesGlobales.productosBajoStock ?? 0;
+  }
+
+  getMetricaProductosSinStock(): number {
+    return this._totalesFiltrados?.productosSinStock ?? this.totalesGlobales.productosSinStock ?? 0;
+  }
+
+  getMetricaTotalProductos(): number {
+    return this._totalesFiltrados?.totalProductos ?? this.totalItems ?? 0;
+  }
+
+  getMetricaSinInventario(): number {
+    const catalogo = this.totalesGlobales.totalSKUsCatalogo || 0;
+    const conInventario = this.totalesGlobales.totalProductos || 0;
+    return Math.max(0, catalogo - conInventario);
+  }
+
+  getTotalBodegaFooter(bodegaId: string): number {
+    if (this._totalesFiltrados) return this._totalesFiltrados.porBodega?.[bodegaId] || 0;
+    const bodega = this.bodegasConsolidadas.find(b => b.id === bodegaId);
+    return bodega?.metricas?.totalUnidades || 0;
   }
 
   /**
@@ -839,7 +896,7 @@ export class InventarioCatalogoComponent implements OnInit {
         this.inventarioService.quitarProductoSinStock(producto.id).subscribe({
           next: (res: any) => {
             this.toastr.success(`Eliminado de ${res.deleted || 0} bodegas`, 'Producto limpiado');
-            this.cargarInventarioConsolidado();
+            this.recargarInventarioConsolidado();
           },
           error: () => {
             this.toastr.error('Error al quitar producto', 'Error');
@@ -895,7 +952,7 @@ export class InventarioCatalogoComponent implements OnInit {
         );
         this.ajusteVisible = false;
         this.ajusteGuardando = false;
-        this.cargarInventarioConsolidado();
+        this.recargarInventarioConsolidado();
       },
       error: (err: any) => {
         this.toastr.error(err?.error?.error || 'Error al ajustar inventario', 'Error');
@@ -1024,7 +1081,7 @@ export class InventarioCatalogoComponent implements OnInit {
             `${completadas} bodega(s) sincronizada(s) correctamente`,
           );
           this.closeSyncModal();
-          this.cargarInventarioConsolidado();
+          this.recargarInventarioConsolidado();
         } else {
           this.toastr.warning(
             `${completadas} sincronizadas, ${errores} con errores`,
@@ -2068,7 +2125,26 @@ export class InventarioCatalogoComponent implements OnInit {
       totalDiferencia: 0,
     };
 
-    const productosConFF = this.getProductosConFulfillment();
+    // Cargar TODOS los productos con fulfillment desde el servidor
+    let productosConFF: ProductoConsolidado[] = [];
+    try {
+      const response: any = await this.inventarioService.obtenerInventarioConsolidado({
+        limit: 500,
+        page: 1,
+        soloInventariables: true,
+        includeMetrics: false,
+        fulfillment: 'con',
+      }).toPromise();
+
+      if (response?.success) {
+        productosConFF = (response.productos || []).filter((p: any) => p.fulfillmentId);
+      }
+    } catch (error) {
+      console.error("Error cargando productos con fulfillment:", error);
+      this.toastr.error("Error al cargar productos", "Error");
+      this.loadingSyncBodegaModal = false;
+      return;
+    }
 
     // Cargar stock de fulfillment para cada producto
     for (const producto of productosConFF) {
@@ -2242,28 +2318,48 @@ export class InventarioCatalogoComponent implements OnInit {
       return;
     }
 
-    const productosConFF = this.getProductosConFulfillment();
-    if (productosConFF.length === 0) {
-      this.toastr.info("No hay productos con enlace a fulfillment", "Info");
-      return;
-    }
+    // Cargar TODOS los productos con fulfillment desde el servidor (no solo la página actual)
+    this.toastr.info("Cargando productos con fulfillment...", "Preparando");
+    this.inventarioService.obtenerInventarioConsolidado({
+      limit: 500,
+      page: 1,
+      soloInventariables: true,
+      includeMetrics: false,
+      fulfillment: 'con',
+    }).subscribe({
+      next: (response: any) => {
+        if (!response.success) {
+          this.toastr.error("Error al cargar productos", "Error");
+          return;
+        }
+        const productosConFF: ProductoConsolidado[] = (response.productos || [])
+          .filter((p: any) => p.fulfillmentId);
 
-    // Confirmar antes de sincronizar
-    Swal.fire({
-      title: "Sincronizar Todo el Inventario",
-      html: `
-        <p>¿Desea sincronizar <strong>${productosConFF.length}</strong> productos con ${this.fulfillmentProviderName}?</p>
-        <p class="text-muted small">Se sincronizarán todas las bodegas de cada producto.</p>
-      `,
-      icon: "question",
-      showCancelButton: true,
-      confirmButtonText: "Sí, sincronizar todo",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#7c3aed",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.ejecutarSyncMasivo(productosConFF);
-      }
+        if (productosConFF.length === 0) {
+          this.toastr.info("No hay productos con enlace a fulfillment", "Info");
+          return;
+        }
+
+        Swal.fire({
+          title: "Sincronizar Todo el Inventario",
+          html: `
+            <p>¿Desea sincronizar <strong>${productosConFF.length}</strong> productos con ${this.fulfillmentProviderName}?</p>
+            <p class="text-muted small">Se sincronizarán todas las bodegas de cada producto.</p>
+          `,
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "Sí, sincronizar todo",
+          cancelButtonText: "Cancelar",
+          confirmButtonColor: "#7c3aed",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            this.ejecutarSyncMasivo(productosConFF);
+          }
+        });
+      },
+      error: () => {
+        this.toastr.error("Error al cargar productos con fulfillment", "Error");
+      },
     });
   }
 

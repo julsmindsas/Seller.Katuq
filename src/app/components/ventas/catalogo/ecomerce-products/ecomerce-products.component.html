@@ -314,10 +314,19 @@
                     <div class="card product-card-modern">
                         <div class="product-box-modern">
                             <div class="product-img-wrapper">
-                                <img class="img-fluid product-image-optimized"
-                                    [src]="producto.crearProducto.imagenesPrincipales[0].urls"
-                                    [alt]="producto.crearProducto.titulo" appImageOptimizer [quality]="0.3" [width]="300"
+                                <img *ngIf="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
+                                    class="img-fluid product-image-optimized"
+                                    [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
+                                    [alt]="producto.crearProducto?.titulo"
+                                    (error)="producto._imgError = true"
+                                    [hidden]="producto._imgError"
+                                    appImageOptimizer [quality]="0.3" [width]="300"
                                     [height]="300" [lazy]="true" loading="lazy" priority>
+                                <div *ngIf="!producto.crearProducto?.imagenesPrincipales?.[0]?.urls && !producto.crearProducto?.imagenesProductos?.[0] || producto._imgError"
+                                     class="d-flex align-items-center justify-content-center bg-light"
+                                     style="height: 200px;">
+                                    <i class="pi pi-box text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                                </div>
 
                                 <!-- Badge de disponibilidad discreto -->
                                 <span class="stock-badge-simple"
