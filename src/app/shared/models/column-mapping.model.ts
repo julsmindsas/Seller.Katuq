@@ -72,6 +72,8 @@ export interface ImportResult {
   errors: string[];
   batchId?: string;
   importedItems?: any[];
+  created?: number;
+  updated?: number;
 }
 
 /**

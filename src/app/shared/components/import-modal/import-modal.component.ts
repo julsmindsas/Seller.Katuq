@@ -154,6 +154,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
   todosParaProduccion = false;
   todosIntegranProduccion = false;
 
+  // Import mode: create-only, update-only, or upsert (default)
+  importMode: 'create' | 'update' | 'upsert' = 'upsert';
+
   // Mobile: Mapping Fields for Cards
   mappingFields: MappingField[] = [];
   availableColumns: { label: string; value: string }[] = [];
@@ -379,6 +382,7 @@ export class ImportModalComponent implements OnInit, OnDestroy {
     this.showMappingPreview = false;
     this.mappingFields = [];
     this.availableColumns = [];
+    this.importMode = 'upsert';
     this.isUploading = false;
     this.isDeleting = false;
     this.isAnalyzingColumns = false;
@@ -654,7 +658,8 @@ export class ImportModalComponent implements OnInit, OnDestroy {
           mappings: this.confirmedMappings,
           importBatchId: batchId,
           batchIndex: batchIdx,
-          totalBatches: totalBatches
+          totalBatches: totalBatches,
+          mode: this.importMode
         };
         payload[this.config!.payloadKey] = batchData;
 
@@ -705,7 +710,9 @@ export class ImportModalComponent implements OnInit, OnDestroy {
         success: totalCreated + totalUpdated,
         failed: totalFailed,
         errors: allErrors.slice(0, 50),
-        batchId: batchId
+        batchId: batchId,
+        created: totalCreated || undefined,
+        updated: totalUpdated || undefined
       };
 
       const entity = this.type === 'customer' ? 'clientes' : this.type === 'inventory' ? 'inventario' : this.type === 'category' ? 'categorías' : 'productos';
