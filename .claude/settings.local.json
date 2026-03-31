@@ -85,7 +85,13 @@
       "Read(//c/assets/scss/utils/**)",
       "Bash(git -C C:sourcecodejulsSeller.Katuq diff --stat HEAD)",
       "WebFetch(domain:procreator.design)",
-      "mcp__plugin_claude-mem_mcp-search__get_observations"
+      "mcp__plugin_claude-mem_mcp-search__get_observations",
+      "Bash(npm list:*)",
+      "Read(//c//**)",
+      "Read(//c/Users/ASUS/OneDrive/Documentos/NetBeansProjects/Seller.Katuq/$HOME/**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\ASUS\\OneDrive\\Documentos\\NetBeansProjects\\katuq_admin_back_firebase"
     ]
   }
 }

@@ -303,7 +303,15 @@ export class NotificationManagerService {
       'ORDER_UPDATED': NotificationType.ORDER_UPDATED,
       'PAYMENT_APPROVED': NotificationType.PAYMENT_APPROVED,
       'PAYMENT_REJECTED': NotificationType.PAYMENT_REJECTED,
-      
+      'ORDER_PROCESS_REJECTED': NotificationType.ORDER_PROCESS_REJECTED,
+      'PRODUCTION_STARTED': NotificationType.PRODUCTION_STARTED,
+      'PRODUCTION_COMPLETED': NotificationType.PRODUCTION_COMPLETED,
+      'ORDER_PACKED': NotificationType.ORDER_PACKED,
+      'ORDER_DISPATCHED': NotificationType.ORDER_DISPATCHED,
+      'ORDER_DELIVERED': NotificationType.ORDER_DELIVERED,
+      'LOW_STOCK': NotificationType.LOW_STOCK,
+      'OUT_OF_STOCK': NotificationType.OUT_OF_STOCK,
+
       // Mapeos en español
       'Pedido Creado': NotificationType.ORDER_CREATED,
       'Pedido Actualizado': NotificationType.ORDER_UPDATED,
