@@ -693,5 +693,15 @@
     "Orden de Venta": "Orden de Venta",
     "Generar orden de venta profesional": "Generar orden de venta profesional",
     "Imprimir PDF": "Imprimir PDF",
-    "Generar documento del pedido": "Generar documento del pedido"
+    "Generar documento del pedido": "Generar documento del pedido",
+    "Ajustes de notificaciones": "Ajustes de notificaciones",
+    "Perfil": "Perfil",
+    "Política de privacidad": "Política de privacidad",
+    "notificaciones.privacy_note_1": "Al activar los permisos de comunicación, aceptas que usemos tu número de teléfono o email, como se describe en nuestra ",
+    "notificaciones.privacy_note_2": " El contenido enviado por email y otros canales puede variar. Puedes retirar tu consentimiento en cualquier momento.",
+    "Mensaje de texto": "Mensaje de texto",
+    "Cargando...": "Cargando...",
+    "notificaciones.email_only_hint": "Activa o desactiva el envío de notificaciones por correo electrónico para cada categoría.",
+    "notificaciones.email_active_hint": "Solo el canal Email está activo. Activa o desactiva el envío por correo para cada categoría. SMS y WhatsApp estarán disponibles próximamente.",
+    "Próximamente": "Próximamente"
 }

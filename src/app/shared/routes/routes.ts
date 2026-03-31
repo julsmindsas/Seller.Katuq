@@ -260,4 +260,13 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "CRM" },
   },
+  {
+    path: "notificaciones",
+    loadChildren: () =>
+      import("../../components/notificaciones/notificaciones.module").then(
+        (m) => m.NotificacionesModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Notificaciones" },
+  },
 ];
