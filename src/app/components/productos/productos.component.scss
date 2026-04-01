@@ -318,43 +318,126 @@ $border-radius: 8px;
     }
 }
 
-// Estilos para el input de búsqueda
-.search-input-group {
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-radius: 6px;
-    overflow: hidden;
-    transition: all 0.3s ease;
+// ============================================
+// FILTROS — SEARCH BAR + PILLS
+// ============================================
 
-    &:hover {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
+.search-input-group {
+    border-radius: 8px !important;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
 
     &:focus-within {
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+        border-color: #a78bfa;
     }
 
-    .input-group-text {
-        background: #f8f9fa;
-        border-right: none;
+    .search-criteria-select {
+        border-top: none;
+        border-bottom: none;
+        border-left: none;
+        border-right: 1px solid #dee2e6;
+        color: #495057;
+        font-weight: 600;
+        cursor: pointer;
 
-        i {
-            font-size: 0.875rem;
-            color: #6c757d;
+        &:focus {
+            box-shadow: none;
         }
     }
 
-    .search-input {
-        border-left: none;
+    .form-control {
+        border-top: none;
+        border-bottom: none;
+        border-right: none;
 
         &:focus {
-            border-color: #ced4da;
             box-shadow: none;
         }
 
         &::placeholder {
-            color: #6c757d;
-            font-style: italic;
+            color: #adb5bd;
+            font-size: 0.88rem;
         }
+    }
+
+    .btn-outline-secondary {
+        border-top: none;
+        border-bottom: none;
+        color: #adb5bd;
+
+        &:hover {
+            color: #6c757d;
+            background: transparent;
+        }
+    }
+}
+
+// Fila de filtros rápidos tipo pill
+.filtros-rapidos {
+    .filtro-pill {
+        height: 32px;
+        font-size: 0.82rem;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-radius: 20px;
+        white-space: nowrap;
+    }
+
+    select.filtro-pill {
+        padding-left: 10px;
+        padding-right: 24px;
+        min-width: fit-content;
+        border-color: #dee2e6;
+        background-color: #fff;
+        color: #495057;
+
+        &:focus {
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.12);
+        }
+
+        // Resalta si tiene valor activo (no vacío)
+        &.ng-valid[ng-reflect-model]:not([ng-reflect-model=""]) {
+            border-color: #8b5cf6;
+            color: #6d28d9;
+            background-color: #f5f3ff;
+            font-weight: 600;
+        }
+    }
+}
+
+// Panel de más filtros
+.mas-filtros-panel {
+    background: #fafafa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    animation: slideDown 0.15s ease;
+
+    .form-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        font-weight: 600;
+    }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+// Estilos para el input de búsqueda (legacy - mantenido para compatibilidad)
+.search-input {
+    &:focus {
+        border-color: #ced4da;
+        box-shadow: none;
+    }
+
+    &::placeholder {
+        color: #6c757d;
+        font-style: italic;
     }
 }
 

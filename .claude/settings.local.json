@@ -99,7 +99,13 @@
       "Bash(\"C:\\\\Users\\\\julia\\\\Documents\\\\Seller.Katuq.Back\\\\katuq_admin_back_firebase\\\\functions\\\\routers\\\\productos.js\")",
       "Bash(/dev/null grep:*)",
       "Bash(grep -rn \"getProductsFiltered\\\\|getAllProductsPagination\\\\|getAllProductsInventariables\" \"C:\\\\users\\\\julia\\\\documents\\\\Seller.Katuq\\\\src\\\\app\"\" --include=\"*.ts\" | grep -v \"maestro.service)",
-      "Bash(spec.ts \")"
+      "Bash(spec.ts \")",
+      "Bash(head -10 grep -rn \"carrito.*producto\\\\|producto\\\\.cd\\\\|item\\\\.cd\" \"C:/users/julia/documents/Seller.Katuq/src/app/shared/services/ventas/ventas.service.ts\")",
+      "Bash(node -e \":*)",
+      "Bash(ls /tmp/*.output)",
+      "Bash(start Backend Katuq:*)",
+      "Bash(start Frontend Katuq:*)",
+      "Bash(start \"Backend Katuq\" cmd /k \"cd /d C:\\\\Users\\\\julia\\\\Documents\\\\Seller.Katuq.Back\\\\katuq_admin_back_firebase\\\\functions && npm run start-express\")"
     ]
   }
 }

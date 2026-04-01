@@ -107,146 +107,178 @@
                     <!-- ====== SISTEMA DE FILTROS ====== -->
                     <div class="filtros-wrapper mb-3">
 
-                        <!-- Fila 1: Búsqueda + Filtros principales -->
-                        <div class="row g-2 align-items-end mb-2">
-
-                            <!-- Búsqueda full-text -->
-                            <div class="col-lg-4 col-md-12">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-white border-end-0">
-                                        <i class="icofont icofont-search text-muted"></i>
-                                    </span>
-                                    <input
-                                        type="text"
-                                        class="form-control border-start-0 ps-0"
-                                        [value]="filtros.texto"
-                                        placeholder="Título, referencia, marca, descripción…"
-                                        (input)="onSearchInput($event)"
-                                    />
-                                </div>
-                            </div>
-
-                            <!-- Estado -->
-                            <div class="col-lg-2 col-md-4 col-6">
-                                <select class="form-select form-select-sm"
-                                    [(ngModel)]="filtros.estado"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Todos los estados</option>
-                                    <option value="activo">Activo</option>
-                                    <option value="inactivo">Inactivo</option>
+                        <!-- Barra de búsqueda principal -->
+                        <div class="mb-3">
+                            <div class="input-group search-input-group shadow-sm rounded">
+                                <select
+                                    class="form-select form-select-sm search-criteria-select fw-semibold"
+                                    [(ngModel)]="filtros.searchBy"
+                                    (change)="onSearchCriteriaChange()"
+                                    style="max-width:148px; border-right: 1px solid #dee2e6; border-radius: 6px 0 0 6px; background-color: #f8f9fa; font-size: 0.82rem;">
+                                    <option value="referencia">Referencia</option>
+                                    <option value="titulo">Nombre</option>
+                                    <option value="marca">Marca</option>
+                                    <option value="codigoBarras">Cód. Barras</option>
                                 </select>
-                            </div>
-
-                            <!-- Disponibilidad -->
-                            <div class="col-lg-2 col-md-4 col-6">
-                                <select class="form-select form-select-sm"
-                                    [(ngModel)]="filtros.disponibilidad"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Disponibilidad</option>
-                                    <option value="disponible">Disponible</option>
-                                    <option value="agotado">Agotado</option>
-                                </select>
-                            </div>
-
-                            <!-- Tipo de producto -->
-                            <div class="col-lg-2 col-md-4 col-6">
-                                <select class="form-select form-select-sm"
-                                    [(ngModel)]="filtros.tipoProducto"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Tipo producto</option>
-                                    <option value="propio">Propio</option>
-                                    <option value="externo">Externo</option>
-                                    <option value="dropshipping">Dropshipping</option>
-                                </select>
-                            </div>
-
-                            <!-- Botón Más filtros -->
-                            <div class="col-lg-2 col-md-12 col-6 d-flex gap-2">
-                                <button class="btn btn-outline-secondary btn-sm flex-grow-1"
-                                    (click)="masFiltersVisible = !masFiltersVisible"
-                                    [class.active]="masFiltersVisible">
-                                    <i class="icofont icofont-filter me-1"></i>
-                                    Más filtros
-                                    <i class="fa ms-1" [class.fa-chevron-down]="!masFiltersVisible" [class.fa-chevron-up]="masFiltersVisible"></i>
-                                </button>
-                                <button class="btn btn-outline-danger btn-sm"
-                                    *ngIf="hayFiltrosActivos"
-                                    (click)="limpiarFiltros()"
-                                    ngbTooltip="Limpiar todos los filtros">
-                                    <i class="icofont icofont-close"></i>
+                                <span class="input-group-text bg-white border-start-0 border-end-0 px-2">
+                                    <i class="icofont icofont-search text-muted"></i>
+                                </span>
+                                <input
+                                    type="text"
+                                    class="form-control border-start-0 ps-0"
+                                    style="border-radius: 0 6px 6px 0;"
+                                    [value]="filtros.texto"
+                                    [placeholder]="searchPlaceholder"
+                                    (input)="onSearchInput($event)"
+                                />
+                                <button *ngIf="filtros.texto"
+                                    class="btn btn-outline-secondary border-start-0"
+                                    style="border-radius: 0 6px 6px 0;"
+                                    type="button"
+                                    (click)="limpiarTexto()"
+                                    ngbTooltip="Limpiar búsqueda">
+                                    <i class="icofont icofont-close-line"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Fila 2: Más filtros (expandible) -->
-                        <div class="row g-2 align-items-end mb-2" *ngIf="masFiltersVisible">
-                            <!-- Precio desde -->
-                            <div class="col-lg-2 col-md-3 col-6">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" placeholder="Precio desde"
-                                        [(ngModel)]="filtros.precioDesde"
-                                        (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
+                        <!-- Fila de filtros rápidos -->
+                        <div class="filtros-rapidos d-flex flex-wrap align-items-center gap-2 mb-2">
+
+                            <!-- Estado -->
+                            <select class="form-select form-select-sm filtro-pill"
+                                [(ngModel)]="filtros.estado"
+                                (change)="onFiltroChange()">
+                                <option value="">Todos los estados</option>
+                                <option value="activo">Activo</option>
+                                <option value="inactivo">Inactivo</option>
+                            </select>
+
+                            <!-- Disponibilidad -->
+                            <select class="form-select form-select-sm filtro-pill"
+                                [(ngModel)]="filtros.disponibilidad"
+                                (change)="onFiltroChange()">
+                                <option value="">Disponibilidad</option>
+                                <option value="disponible">Disponible</option>
+                                <option value="agotado">Agotado</option>
+                            </select>
+
+                            <!-- Tipo de producto -->
+                            <select class="form-select form-select-sm filtro-pill"
+                                [(ngModel)]="filtros.tipoProducto"
+                                (change)="onFiltroChange()">
+                                <option value="">Tipo producto</option>
+                                <option value="propio">Propio</option>
+                                <option value="externo">Externo</option>
+                                <option value="dropshipping">Dropshipping</option>
+                            </select>
+
+                            <!-- Separador -->
+                            <span class="text-muted" style="font-size: 1.1rem; line-height: 1;">|</span>
+
+                            <!-- Botón Más filtros -->
+                            <button class="btn btn-sm filtro-pill"
+                                [class.btn-outline-secondary]="masFilterCount === 0"
+                                [class.btn-primary]="masFilterCount > 0"
+                                (click)="masFiltersVisible = !masFiltersVisible">
+                                <i class="icofont icofont-filter me-1"></i>
+                                Más filtros
+                                <span *ngIf="masFilterCount > 0"
+                                    class="badge bg-white text-primary ms-1"
+                                    style="font-size: 0.7rem;">{{ masFilterCount }}</span>
+                                <i class="fa ms-1 small"
+                                    [class.fa-chevron-down]="!masFiltersVisible"
+                                    [class.fa-chevron-up]="masFiltersVisible"></i>
+                            </button>
+
+                            <!-- Limpiar filtros -->
+                            <button class="btn btn-sm btn-outline-danger filtro-pill"
+                                *ngIf="hayFiltrosActivos"
+                                (click)="limpiarFiltros()"
+                                ngbTooltip="Limpiar todos los filtros">
+                                <i class="icofont icofont-close me-1"></i>Limpiar
+                            </button>
+                        </div>
+
+                        <!-- Panel: Más filtros (expandible) -->
+                        <div class="mas-filtros-panel p-3 mb-2" *ngIf="masFiltersVisible">
+                            <div class="row g-2 align-items-end">
+                                <!-- Precio desde -->
+                                <div class="col-lg-2 col-md-3 col-6">
+                                    <label class="form-label text-muted small mb-1">Precio desde</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" placeholder="0"
+                                            [(ngModel)]="filtros.precioDesde"
+                                            (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
+                                    </div>
                                 </div>
-                            </div>
-                            <!-- Precio hasta -->
-                            <div class="col-lg-2 col-md-3 col-6">
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" class="form-control" placeholder="Precio hasta"
-                                        [(ngModel)]="filtros.precioHasta"
-                                        (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
+                                <!-- Precio hasta -->
+                                <div class="col-lg-2 col-md-3 col-6">
+                                    <label class="form-label text-muted small mb-1">Precio hasta</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" placeholder="∞"
+                                            [(ngModel)]="filtros.precioHasta"
+                                            (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
+                                    </div>
                                 </div>
-                            </div>
-                            <!-- Requiere producción -->
-                            <div class="col-lg-2 col-md-3 col-6">
-                                <select class="form-select form-select-sm"
-                                    [(ngModel)]="filtros.requiereProduccion"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Producción: Todos</option>
-                                    <option value="si">Requiere producción</option>
-                                    <option value="no">No requiere producción</option>
-                                </select>
-                            </div>
-                            <!-- Inventariable -->
-                            <div class="col-lg-2 col-md-3 col-6">
-                                <select class="form-select form-select-sm"
-                                    [(ngModel)]="filtros.inventariable"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Inventariable: Todos</option>
-                                    <option value="si">Inventariable</option>
-                                    <option value="no">No inventariable</option>
-                                </select>
-                            </div>
-                            <!-- Última edición -->
-                            <div class="col-lg-2 col-md-4 col-6">
-                                <select class="form-select form-select-sm"
-                                    [(ngModel)]="filtros.ultimaEdicion"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Última edición: Todas</option>
-                                    <option value="hoy">Hoy</option>
-                                    <option value="7dias">Últimos 7 días</option>
-                                    <option value="mes">Este mes</option>
-                                    <option value="mes_anterior">Mes anterior</option>
-                                </select>
-                            </div>
-                            <!-- Completitud -->
-                            <div class="col-lg-2 col-md-4 col-6">
-                                <select class="form-select form-select-sm"
-                                    [(ngModel)]="filtros.completitud"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Completitud: Todos</option>
-                                    <option value="completo">✅ Completos (≥80%)</option>
-                                    <option value="parcial">🟡 Parciales (50-79%)</option>
-                                    <option value="incompleto">🔴 Incompletos (&lt;50%)</option>
-                                </select>
+                                <!-- Requiere producción -->
+                                <div class="col-lg-2 col-md-3 col-6">
+                                    <label class="form-label text-muted small mb-1">Producción</label>
+                                    <select class="form-select form-select-sm"
+                                        [(ngModel)]="filtros.requiereProduccion"
+                                        (change)="onFiltroChange()">
+                                        <option value="">Todos</option>
+                                        <option value="si">Requiere producción</option>
+                                        <option value="no">No requiere</option>
+                                    </select>
+                                </div>
+                                <!-- Inventariable -->
+                                <div class="col-lg-2 col-md-3 col-6">
+                                    <label class="form-label text-muted small mb-1">Inventariable</label>
+                                    <select class="form-select form-select-sm"
+                                        [(ngModel)]="filtros.inventariable"
+                                        (change)="onFiltroChange()">
+                                        <option value="">Todos</option>
+                                        <option value="si">Sí</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                                <!-- Última edición -->
+                                <div class="col-lg-2 col-md-4 col-6">
+                                    <label class="form-label text-muted small mb-1">Última edición</label>
+                                    <select class="form-select form-select-sm"
+                                        [(ngModel)]="filtros.ultimaEdicion"
+                                        (change)="onFiltroChange()">
+                                        <option value="">Todas</option>
+                                        <option value="hoy">Hoy</option>
+                                        <option value="7dias">Últimos 7 días</option>
+                                        <option value="mes">Este mes</option>
+                                        <option value="mes_anterior">Mes anterior</option>
+                                    </select>
+                                </div>
+                                <!-- Completitud -->
+                                <div class="col-lg-2 col-md-4 col-6">
+                                    <label class="form-label text-muted small mb-1">Completitud</label>
+                                    <select class="form-select form-select-sm"
+                                        [(ngModel)]="filtros.completitud"
+                                        (change)="onFiltroChange()">
+                                        <option value="">Todos</option>
+                                        <option value="completo">✅ Completos (≥80%)</option>
+                                        <option value="parcial">🟡 Parciales (50-79%)</option>
+                                        <option value="incompleto">🔴 Incompletos (&lt;50%)</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
                         <!-- Chips de filtros activos + Contador -->
-                        <div class="d-flex flex-wrap align-items-center gap-2 mt-1" *ngIf="activeChips.length > 0 || totalItems > 0">
-                            <span class="text-muted small me-1">
-                                <strong>{{ totalItems | number }}</strong> producto{{ totalItems !== 1 ? 's' : '' }} encontrado{{ totalItems !== 1 ? 's' : '' }}
+                        <div class="d-flex flex-wrap align-items-center gap-2 mt-1"
+                            *ngIf="activeChips.length > 0 || totalItems > 0">
+                            <span class="text-muted small">
+                                <strong class="text-dark">{{ totalItems | number }}</strong>
+                                producto{{ totalItems !== 1 ? 's' : '' }}
                             </span>
                             <span *ngFor="let chip of activeChips"
                                 class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle d-inline-flex align-items-center gap-1 px-2 py-1">
@@ -255,7 +287,6 @@
                                     style="font-size: 0.6rem;"
                                     (click)="removerChip(chip.key)"></button>
                             </span>
-                            <!-- Guardar / cargar vistas -->
                             <button *ngIf="hasActiveFilters()"
                                 class="btn btn-sm btn-outline-primary py-0 px-2"
                                 style="font-size:0.78rem"

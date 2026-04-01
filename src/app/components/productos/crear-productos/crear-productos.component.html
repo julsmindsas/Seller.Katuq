@@ -1765,8 +1765,9 @@
 									<div class="d-flex align-items-center justify-content-between mb-3">
 										<h6 class="mb-0">
 											<i class="icofont icofont-cart me-2 text-primary"></i>
-											{{ pedidosRelacionados.length }} pedido{{ pedidosRelacionados.length !== 1 ? 's' : '' }} encontrado{{ pedidosRelacionados.length !== 1 ? 's' : '' }}
+											{{ pedidosTotal }} pedido{{ pedidosTotal !== 1 ? 's' : '' }} encontrado{{ pedidosTotal !== 1 ? 's' : '' }}
 										</h6>
+										<small class="text-muted">Página {{ pedidosPage }} de {{ pedidosTotalPages }}</small>
 									</div>
 									<div class="table-responsive">
 										<table class="table table-hover table-sm">
@@ -1807,6 +1808,18 @@
 												</tr>
 											</tbody>
 										</table>
+									</div>
+									<!-- Paginador -->
+									<div *ngIf="pedidosTotalPages > 1" class="d-flex justify-content-center align-items-center gap-2 mt-3">
+										<button class="btn btn-sm btn-outline-secondary" [disabled]="pedidosPage === 1 || loadingPedidos"
+											(click)="cargarPedidosRelacionados(undefined, pedidosPage - 1)">
+											<i class="fa fa-chevron-left"></i>
+										</button>
+										<span class="small text-muted">{{ pedidosPage }} / {{ pedidosTotalPages }}</span>
+										<button class="btn btn-sm btn-outline-secondary" [disabled]="pedidosPage >= pedidosTotalPages || loadingPedidos"
+											(click)="cargarPedidosRelacionados(undefined, pedidosPage + 1)">
+											<i class="fa fa-chevron-right"></i>
+										</button>
 									</div>
 								</div>
 
