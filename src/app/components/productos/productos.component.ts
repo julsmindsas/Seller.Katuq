@@ -16,7 +16,8 @@ import { FulfillmentService } from '../../shared/services/fulfillment/fulfillmen
 import { ToastrService } from 'ngx-toastr';
 import { IntegrationsService } from '../integrations/integrations.service';
 import { Subject } from 'rxjs';
-import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 const FILTROS_SESSION_KEY = 'productos_filtros';
 
@@ -55,7 +56,8 @@ export class ProductosComponent implements OnInit, OnDestroy {
   // ---- Sistema de Filtros ----
   filtros = {
     texto: '',
-    estado: 'activo',       // preseleccionado Activo por defecto
+    searchBy: 'referencia',  // referencia | titulo | marca | codigoBarras
+    estado: 'activo',
     disponibilidad: '',
     tipoProducto: '',
     precioDesde: null as number | null,
@@ -263,15 +265,51 @@ export class ProductosComponent implements OnInit, OnDestroy {
     // Cargar vistas guardadas
     this.loadSavedViews();
 
-    // Debounce para búsqueda de texto
+    // Debounce para búsqueda de texto con switchMap (cancela request anterior si el usuario sigue escribiendo)
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged(),
+      switchMap(texto => {
+        this.filtros.texto = texto;
+        this.resetPaginacion();
+        this.cargando = true;
+        this.guardarFiltros();
+        const trimmed = texto?.trim();
+        if (trimmed && trimmed.length >= 2) {
+          return this.service.quickSearchProducts(trimmed, 100, this.filtros.searchBy);
+        }
+        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage);
+      }),
       takeUntil(this.destroy$)
-    ).subscribe(texto => {
-      this.filtros.texto = texto;
-      this.resetPaginacion();
-      this.cargarConFiltros();
+    ).subscribe({
+      next: (response: any) => {
+        if (response?.products && !response?.pagination) {
+          // Respuesta de quickSearch
+          let products: any[] = response.products || [];
+          if (this.filtros.estado === 'activo') products = products.filter(p => p.exposicion?.activar === true);
+          else if (this.filtros.estado === 'inactivo') products = products.filter(p => p.exposicion?.activar === false);
+          if (this.filtros.disponibilidad === 'disponible') products = products.filter(p => p.exposicion?.disponible === true);
+          else if (this.filtros.disponibilidad === 'agotado') products = products.filter(p => p.exposicion?.disponible === false);
+          if (this.filtros.tipoProducto) products = products.filter(p => p.crearProducto?.tipoProducto === this.filtros.tipoProducto);
+          this.temp = [...products];
+          this.rows = products;
+          this.totalItems = products.length;
+          this.totalPages = 1;
+          this.lastDocId = null;
+        } else {
+          // Respuesta de getProductsFiltered
+          this.temp = [...response.products];
+          this.rows = response.products;
+          this.totalItems = response.pagination.totalItems;
+          this.totalPages = response.pagination.totalPages;
+          this.lastDocId = response.pagination.lastDocId;
+        }
+        this.cargando = false;
+      },
+      error: (err) => {
+        console.error('Error en búsqueda:', err);
+        this.cargando = false;
+      }
     });
 
     this.cargarConFiltros();
@@ -306,7 +344,10 @@ export class ProductosComponent implements OnInit, OnDestroy {
   // ---- Chips de filtros activos ----
   get activeChips(): { label: string; key: string }[] {
     const chips = [];
-    if (this.filtros.texto) chips.push({ label: `"${this.filtros.texto}"`, key: 'texto' });
+    if (this.filtros.texto) {
+      const criteriaLabel: { [key: string]: string } = { referencia: 'Ref', titulo: 'Nombre', marca: 'Marca', codigoBarras: 'C.Barras' };
+      chips.push({ label: `${criteriaLabel[this.filtros.searchBy] || 'Texto'}: "${this.filtros.texto}"`, key: 'texto' });
+    }
     if (this.filtros.estado === 'activo') chips.push({ label: 'Activo', key: 'estado' });
     if (this.filtros.estado === 'inactivo') chips.push({ label: 'Inactivo', key: 'estado' });
     if (this.filtros.disponibilidad === 'disponible') chips.push({ label: 'Disponible', key: 'disponibilidad' });
@@ -325,6 +366,27 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   get hayFiltrosActivos(): boolean {
     return this.activeChips.length > 0;
+  }
+
+  get searchPlaceholder(): string {
+    const map: { [key: string]: string } = {
+      referencia: 'Buscar por referencia (ej: ALM-804)…',
+      titulo: 'Buscar por nombre de producto…',
+      marca: 'Buscar por marca…',
+      codigoBarras: 'Buscar por código de barras…',
+    };
+    return map[this.filtros.searchBy] || 'Buscar…';
+  }
+
+  get masFilterCount(): number {
+    let count = 0;
+    if (this.filtros.precioDesde != null) count++;
+    if (this.filtros.precioHasta != null) count++;
+    if (this.filtros.requiereProduccion) count++;
+    if (this.filtros.inventariable) count++;
+    if (this.filtros.ultimaEdicion) count++;
+    if (this.filtros.completitud) count++;
+    return count;
   }
 
   removerChip(key: string): void {
@@ -373,21 +435,58 @@ export class ProductosComponent implements OnInit, OnDestroy {
   cargarConFiltros(): void {
     this.cargando = true;
     this.guardarFiltros();
-    this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, this.lastDocId ?? undefined)
-      .subscribe({
-        next: (response: any) => {
-          this.temp = [...response.products];
-          this.rows = response.products;
-          this.totalItems = response.pagination.totalItems;
-          this.totalPages = response.pagination.totalPages;
-          this.lastDocId = response.pagination.lastDocId;
-          this.cargando = false;
-        },
-        error: (err) => {
-          console.error('Error al cargar productos:', err);
-          this.cargando = false;
-        }
-      });
+
+    const texto = this.filtros.texto?.trim();
+    if (texto && texto.length >= 2) {
+      // Usar quick search indexado (prefix search por referencia + título)
+      // Evita el limit(500) in-memory que perdía productos como ALM-804
+      this.service.quickSearchProducts(texto, 100, this.filtros.searchBy)
+        .subscribe({
+          next: (response: any) => {
+            let products: any[] = response.products || [];
+            // Aplicar filtros adicionales activos en memoria
+            if (this.filtros.estado === 'activo') {
+              products = products.filter(p => p.exposicion?.activar === true);
+            } else if (this.filtros.estado === 'inactivo') {
+              products = products.filter(p => p.exposicion?.activar === false);
+            }
+            if (this.filtros.disponibilidad === 'disponible') {
+              products = products.filter(p => p.exposicion?.disponible === true);
+            } else if (this.filtros.disponibilidad === 'agotado') {
+              products = products.filter(p => p.exposicion?.disponible === false);
+            }
+            if (this.filtros.tipoProducto) {
+              products = products.filter(p => p.crearProducto?.tipoProducto === this.filtros.tipoProducto);
+            }
+            this.temp = [...products];
+            this.rows = products;
+            this.totalItems = products.length;
+            this.totalPages = 1;
+            this.lastDocId = null;
+            this.cargando = false;
+          },
+          error: (err) => {
+            console.error('Error en quick search:', err);
+            this.cargando = false;
+          }
+        });
+    } else {
+      this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, this.lastDocId ?? undefined)
+        .subscribe({
+          next: (response: any) => {
+            this.temp = [...response.products];
+            this.rows = response.products;
+            this.totalItems = response.pagination.totalItems;
+            this.totalPages = response.pagination.totalPages;
+            this.lastDocId = response.pagination.lastDocId;
+            this.cargando = false;
+          },
+          error: (err) => {
+            console.error('Error al cargar productos:', err);
+            this.cargando = false;
+          }
+        });
+    }
   }
 
   onFiltroChange(): void {
@@ -397,6 +496,19 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   onSearchInput(event: any): void {
     this.searchSubject.next(event.target.value);
+  }
+
+  onSearchCriteriaChange(): void {
+    if (this.filtros.texto?.trim().length >= 2) {
+      this.searchSubject.next(this.filtros.texto);
+    }
+    this.guardarFiltros();
+  }
+
+  limpiarTexto(): void {
+    this.filtros.texto = '';
+    this.resetPaginacion();
+    this.cargarConFiltros();
   }
 
   onPrecioBlur(): void {
@@ -443,6 +555,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   limpiarFiltros() {
     this.filtros = {
       texto: '',
+      searchBy: 'referencia',
       estado: 'activo',
       disponibilidad: '',
       tipoProducto: '',

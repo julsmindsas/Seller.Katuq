@@ -179,6 +179,10 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   pedidosRelacionados: any[] = [];
   loadingPedidos = false;
   pedidosCargados = false;
+  pedidosPage = 1;
+  pedidosPageSize = 10;
+  pedidosTotal = 0;
+  pedidosTotalPages = 0;
 
   // Pestaña: Historial de cambios
   historialCambios: any[] = [];
@@ -1961,13 +1965,17 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  cargarPedidosRelacionados(productoId?: string): void {
+  cargarPedidosRelacionados(productoId?: string, page = 1): void {
     const id = productoId || this.edit?.cd || this.cd;
-    if (!id || this.pedidosCargados) return;
+    if (!id) return;
+    if (page === 1 && this.pedidosCargados) return; // guard para carga inicial, no para paginación
     this.loadingPedidos = true;
-    this.service.getPedidosByProducto(id).subscribe({
+    this.pedidosPage = page;
+    this.service.getPedidosByProducto(id, page, this.pedidosPageSize).subscribe({
       next: (response: any) => {
-        this.pedidosRelacionados = response?.pedidos || response?.orders || response?.data || [];
+        this.pedidosRelacionados = response?.orders || response?.pedidos || response?.data || [];
+        this.pedidosTotal = response?.total || this.pedidosRelacionados.length;
+        this.pedidosTotalPages = response?.totalPages || Math.ceil(this.pedidosTotal / this.pedidosPageSize);
         this.loadingPedidos = false;
         this.pedidosCargados = true;
       },

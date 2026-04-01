@@ -192,6 +192,14 @@ export class MaestroService {
   public createProduct(product: any) {
     return this.http.post(this.urlBase + '/v1/productos/create', product, this.httpOptions);
   }
+  quickSearchProducts(q: string, limit: number = 50, searchBy: string = 'referencia'): Observable<any> {
+    const params = new HttpParams()
+      .set('q', q.trim())
+      .set('limit', limit.toString())
+      .set('searchBy', searchBy);
+    return this.http.get<any>(this.urlBase + '/v1/productos/search/quick', { params });
+  }
+
   getProductsFiltered(filtros: any, pageSize: number, currentPage: number, lastDocId?: string): Observable<any> {
     let params = new HttpParams()
       .set('page', currentPage.toString())
@@ -454,7 +462,7 @@ export class MaestroService {
       .set('productoId', productoId)
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
-    return this.http.get<any>(`${this.urlBase}/v1/pedidos/all`, { params });
+    return this.http.get<any>(`${this.urlBase}/v1/orders/all`, { params });
   }
 
   // Historial de cambios del producto
