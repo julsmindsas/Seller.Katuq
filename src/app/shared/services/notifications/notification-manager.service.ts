@@ -1,21 +1,22 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, Subject, fromEvent, merge } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, Subscription, fromEvent, merge } from 'rxjs';
 import { filter, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { HttpClient } from '@angular/common/http';
 
-import { 
-  KatuqNotification, 
-  NotificationEvent, 
-  NotificationType, 
-  NotificationChannel, 
-  NotificationPriority, 
+import {
+  KatuqNotification,
+  NotificationEvent,
+  NotificationType,
+  NotificationChannel,
+  NotificationPriority,
   NotificationStatus,
   UserRole,
   NotificationStats
 } from './notification.types';
 import { NOTIFICATION_TEMPLATES, NOTIFICATION_CONFIG } from './notification.config';
 import { NotificationService } from '../notification.service';
+import { SecurityService } from '../security/security.service';
 
 @Injectable({
   providedIn: 'root'
@@ -25,14 +26,18 @@ export class NotificationManagerService {
   private notificationsSubject = new BehaviorSubject<KatuqNotification[]>([]);
   private unreadCountSubject = new BehaviorSubject<number>(0);
   private connectionStatusSubject = new BehaviorSubject<boolean>(true);
-  
+
   // Subject para nuevos eventos de notificación
   private notificationEvents$ = new Subject<NotificationEvent>();
 
   // Cache local de notificaciones
   private localNotifications: KatuqNotification[] = [];
   private throttleCache = new Map<string, number>();
-  
+
+  // IDs descartados/eliminados — persistidos en localStorage para sobrevivir refresh
+  private dismissedIds = new Set<string>();
+  private readonly DISMISSED_STORAGE_KEY = 'katuq_dismissed_notifications';
+
   // Estado del usuario actual
   private currentUserId: string | null = null;
   private currentUserRole: UserRole = UserRole.SELLER;
@@ -42,13 +47,36 @@ export class NotificationManagerService {
   private isOnline = true;
   private isInitialized = false;
 
+  // Subscripciones activas de Firebase para poder limpiar al reinicializar
+  private firebaseSubscriptions: Subscription[] = [];
+  private initRetryTimer: any = null;
+
   constructor(
     private http: HttpClient,
     private db: AngularFireDatabase,
-    private legacyNotificationService: NotificationService
+    private legacyNotificationService: NotificationService,
+    private securityService: SecurityService
   ) {
     this.initializeService();
     this.setupOnlineDetection();
+    this.listenForCompanyChange();
+  }
+
+  /**
+   * Escucha cambios en la empresa desde SecurityService.
+   * Cuando el usuario hace login o cambia de empresa, reinicializa los listeners.
+   */
+  private listenForCompanyChange(): void {
+    this.securityService.companyInformation$
+      .pipe(filter(info => !!info))
+      .subscribe(() => {
+        const newCompanyName = this.resolveCompanyName();
+        // Solo reinicializar si la empresa cambió o si aún no estamos inicializados
+        if (newCompanyName && (newCompanyName !== this.currentCompanyId || !this.isInitialized)) {
+          console.log('🔄 NotificationManager: empresa detectada/cambiada →', newCompanyName);
+          this.reinitialize();
+        }
+      });
   }
 
   // Observables públicos
@@ -69,26 +97,57 @@ export class NotificationManagerService {
   }
 
   /**
-   * Inicializa el servicio de notificaciones
+   * Inicializa el servicio de notificaciones.
+   * Si aún no hay datos de empresa en storage, reintenta cada 2s (máx 15 intentos).
    */
-  private async initializeService(): Promise<void> {
+  private async initializeService(attempt: number = 0): Promise<void> {
     try {
       // Obtener información del usuario actual
       await this.loadCurrentUser();
-      
+
+      // Si no hay companyId, reintentar (el login puede no haber guardado aún)
+      if (!this.currentCompanyId && attempt < 15) {
+        console.log(`🔔 NotificationManager: esperando datos de empresa (intento ${attempt + 1}/15)...`);
+        this.initRetryTimer = setTimeout(() => this.initializeService(attempt + 1), 2000);
+        return;
+      }
+
+      if (!this.currentCompanyId) {
+        console.warn('⚠️ NotificationManager: no se encontró companyId tras 15 intentos');
+        return;
+      }
+
       // Cargar notificaciones desde caché local
       this.loadLocalNotifications();
-      
+
       // Configurar escucha en Firebase Realtime Database
       this.setupFirebaseListener();
-      
+
       // Configurar procesamiento de eventos
       this.setupEventProcessing();
-      
+
       this.isInitialized = true;
+      console.log('✅ NotificationManager inicializado para:', this.currentCompanyId);
     } catch (error) {
       console.error('❌ Error inicializando NotificationManager:', error);
     }
+  }
+
+  /**
+   * Re-inicializa los listeners cuando cambia la empresa (ej. después de login).
+   * Puede ser llamado externamente por AuthService o SecurityService.
+   */
+  public reinitialize(): void {
+    console.log('🔄 NotificationManager: reinicializando...');
+    // Limpiar subscripciones previas
+    this.firebaseSubscriptions.forEach(sub => sub.unsubscribe());
+    this.firebaseSubscriptions = [];
+    if (this.initRetryTimer) {
+      clearTimeout(this.initRetryTimer);
+      this.initRetryTimer = null;
+    }
+    this.isInitialized = false;
+    this.initializeService(0);
   }
 
   /**
@@ -114,12 +173,7 @@ export class NotificationManagerService {
       this.currentUserId = currentUser.id || currentUser.uid || currentUser.email || 'default_user';
       this.currentUserRole = this.determineUserRole(currentUser);
       
-      console.log('👤 Usuario cargado:', {
-        userId: this.currentUserId,
-        role: this.currentUserRole,
-        company: this.currentCompanyId,
-        companyData: currentCompany
-      });
+      console.log('👤 NotificationManager usuario cargado:', this.currentCompanyId || '(sin empresa)');
     } catch (error) {
       console.error('Error cargando usuario actual:', error);
       // Valores por defecto
@@ -171,19 +225,19 @@ export class NotificationManagerService {
 
     const notificationsPath = 'notification_queue';
     console.log('🔔 Escuchando notification_queue para company:', this.currentCompanyId);
-    
-    this.db.list(notificationsPath, ref => 
+
+    const sub = this.db.list(notificationsPath, ref =>
       ref.orderByChild('company').equalTo(this.currentCompanyId)
     )
       .snapshotChanges()
       .subscribe((snapshots) => {
         console.log('📨 Notificaciones de notification_queue:', snapshots.length);
-        
+
         const firebaseNotifications = snapshots.map((snapshot) => {
           const data: any = snapshot.payload.val();
           const id = snapshot.key;
-          return { 
-            id, 
+          return {
+            id,
             ...data,
             createdAt: new Date(data.createdAt),
             readAt: data.readAt ? new Date(data.readAt) : undefined,
@@ -194,79 +248,117 @@ export class NotificationManagerService {
 
         this.processFirebaseNotifications(firebaseNotifications, 'notification_queue');
       });
+
+    this.firebaseSubscriptions.push(sub);
   }
 
   /**
    * Escucha la ruta legacy de notificaciones (ActualizacionTicket)
    */
   private listenToActualizacionTicket(): void {
-    // Obtener company data del localStorage
-    const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-    
-    if (!companyData || !companyData.nomComercial) {
+    // Usar currentCompanyId que ya tiene fallback localStorage→sessionStorage
+    const companyName = this.resolveCompanyName();
+
+    if (!companyName) {
       console.log('⚠️ No hay datos de empresa para ActualizacionTicket');
       return;
     }
-    
-    const notificationPath = 'ActualizacionTicket' + companyData.nomComercial;
+
+    const notificationPath = 'ActualizacionTicket' + companyName;
     console.log('🔔 Escuchando ActualizacionTicket en:', notificationPath);
-    
-    // Suscripción para rastrear última notificación procesada
-    let lastProcessedId: string | null = null;
-    
-    this.db.list(notificationPath)
+
+    // Set para rastrear IDs ya procesados (evita duplicados)
+    const processedIds = new Set<string>();
+
+    // Pre-cargar IDs de notificaciones locales existentes
+    this.localNotifications.forEach(n => {
+      if (n.id) processedIds.add(n.id);
+    });
+
+    const sub = this.db.list(notificationPath)
       .snapshotChanges()
       .subscribe((snapshots) => {
         console.log('📨 Notificaciones de ActualizacionTicket:', snapshots.length);
-        
+
         const notifications = snapshots.map((snapshot) => {
           const data: any = snapshot.payload.val();
           const id = snapshot.key;
           return { id, ...data };
         });
 
-        // Ordenar por timestamp
+        // Ordenar por timestamp (más recientes primero)
         const sorted = notifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        
-        // Buscar nueva notificación no leída
-        const newNotification = sorted.find((n) => !n.read);
-        
-        if (newNotification && newNotification.id !== lastProcessedId) {
-          lastProcessedId = newNotification.id;
-          
-          console.log('🔔 Nueva notificación de ActualizacionTicket:', newNotification);
-          
+
+        // Procesar TODAS las notificaciones no leídas que no hayamos procesado antes
+        let newCount = 0;
+        for (const notif of sorted) {
+          const localId = 'actualizacion_' + notif.id;
+
+          // Saltar si ya fue procesada en esta sesión
+          if (processedIds.has(localId)) continue;
+          // Saltar si fue descartada previamente (persiste entre refreshes)
+          if (this.dismissedIds.has(localId)) continue;
+          // Saltar si ya está leída en RTDB
+          if (notif.read) continue;
+
+          processedIds.add(localId);
+
           // Convertir al formato KatuqNotification
           const katuqNotification: KatuqNotification = {
-            id: 'actualizacion_' + newNotification.id,
-            type: this.mapLegacyType(newNotification.type),
-            title: this.extractTitle(newNotification),
-            message: newNotification.message || newNotification.type || 'Nueva notificación',
+            id: localId,
+            type: this.mapLegacyType(notif.type),
+            title: this.extractTitle(notif),
+            message: notif.message || notif.type || 'Nueva notificación',
             data: {
-              orderId: newNotification.orderId,
-              cliente: newNotification.cliente,
-              total: newNotification.total,
-              originalType: newNotification.type,
-              firebaseId: newNotification.id,
-              ...newNotification
+              orderId: notif.orderId || notif.data?.orderId,
+              cliente: notif.cliente || notif.data?.cliente,
+              total: notif.total || notif.data?.total,
+              originalType: notif.type,
+              firebaseId: notif.id,
+              ...notif.data
             },
-            
+
             userId: this.currentUserId || undefined,
             userRole: this.currentUserRole,
             companyId: this.currentCompanyId || undefined,
-            
+
             channels: [NotificationChannel.IN_APP],
             priority: NotificationPriority.NORMAL,
-            status: newNotification.read ? NotificationStatus.READ : NotificationStatus.PENDING,
-            
-            createdAt: new Date(newNotification.timestamp || Date.now()),
-            readAt: newNotification.read ? new Date() : undefined
+            status: NotificationStatus.PENDING,
+
+            createdAt: new Date(notif.timestamp || notif.createdAt || Date.now()),
+            readAt: undefined
           };
-          
-          // Agregar a notificaciones locales
+
           this.addLocalNotification(katuqNotification);
+          newCount++;
+        }
+
+        if (newCount > 0) {
+          console.log(`🔔 ${newCount} nuevas notificaciones procesadas de ActualizacionTicket`);
         }
       });
+
+    this.firebaseSubscriptions.push(sub);
+  }
+
+  /**
+   * Resuelve el nombre comercial de la empresa desde localStorage o sessionStorage
+   */
+  private resolveCompanyName(): string | null {
+    // Intentar localStorage primero
+    try {
+      const localData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+      if (localData?.nomComercial) return localData.nomComercial;
+    } catch (e) { /* ignorar */ }
+
+    // Fallback a sessionStorage
+    try {
+      const sessionData = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
+      if (sessionData?.nomComercial) return sessionData.nomComercial;
+    } catch (e) { /* ignorar */ }
+
+    return null;
   }
 
   /**
@@ -435,9 +527,6 @@ export class NotificationManagerService {
    */
   private showInAppNotification(notification: KatuqNotification): void {
     if (!notification.channels.includes(NotificationChannel.IN_APP)) return;
-
-    const template = NOTIFICATION_TEMPLATES[notification.type];
-    const shouldPersist = template?.persistInNotificationCenter ?? true;
 
     // Usar el servicio legacy para mostrar toast
     const notificationType = this.mapPriorityToLegacyType(notification.priority);
@@ -683,9 +772,6 @@ export class NotificationManagerService {
     });
   }
 
-  /**
-   * Tipos de notificación cuyo email va al cliente (requieren toEmail en data).
-   */
   /** Tipos cuyo email va al cliente: el backend debe recibir toEmail. */
   private static readonly CUSTOMER_EMAIL_TYPES: Set<string> = new Set([
     'ORDER_DISPATCHED',
@@ -757,6 +843,9 @@ export class NotificationManagerService {
       console.error('Error cargando notificaciones locales:', error);
       this.localNotifications = [];
     }
+
+    // Cargar IDs descartados
+    this.loadDismissedIds();
   }
 
   /**
@@ -778,6 +867,71 @@ export class NotificationManagerService {
       localStorage.setItem(`katuq_notifications_${this.currentUserId}`, JSON.stringify(toSave));
     } catch (error) {
       console.error('Error guardando notificaciones locales:', error);
+    }
+  }
+
+  // ============= DISMISSED IDs MANAGEMENT =============
+
+  /**
+   * Carga IDs descartados desde localStorage
+   */
+  private loadDismissedIds(): void {
+    try {
+      const stored = localStorage.getItem(`${this.DISMISSED_STORAGE_KEY}_${this.currentUserId}`);
+      if (stored) {
+        const parsed: string[] = JSON.parse(stored);
+        this.dismissedIds = new Set(parsed);
+      }
+    } catch (e) {
+      this.dismissedIds = new Set();
+    }
+  }
+
+  /**
+   * Agrega un ID a la lista de descartados y persiste
+   */
+  private addDismissedId(notificationId: string): void {
+    this.dismissedIds.add(notificationId);
+    this.saveDismissedIds();
+  }
+
+  /**
+   * Guarda IDs descartados en localStorage (máx 500 para no saturar)
+   */
+  private saveDismissedIds(): void {
+    try {
+      const ids = Array.from(this.dismissedIds).slice(-500);
+      localStorage.setItem(
+        `${this.DISMISSED_STORAGE_KEY}_${this.currentUserId}`,
+        JSON.stringify(ids)
+      );
+    } catch (e) {
+      console.error('Error guardando dismissed IDs:', e);
+    }
+  }
+
+  /**
+   * Marca una notificación como read en RTDB (ActualizacionTicket).
+   * Extrae el firebaseId original del id local (formato: "actualizacion_{firebaseKey}").
+   */
+  private markReadInRtdb(notificationId: string): void {
+    try {
+      const companyName = this.resolveCompanyName();
+      if (!companyName) return;
+
+      // Extraer la key de Firebase del ID local
+      const firebaseKey = notificationId.startsWith('actualizacion_')
+        ? notificationId.replace('actualizacion_', '')
+        : null;
+
+      if (firebaseKey) {
+        const rtdbPath = `ActualizacionTicket${companyName}/${firebaseKey}`;
+        this.db.object(rtdbPath).update({ read: true }).catch(() => {
+          // Silenciar error — puede que el nodo ya no exista
+        });
+      }
+    } catch (e) {
+      // No crítico
     }
   }
 
@@ -840,19 +994,13 @@ export class NotificationManagerService {
         this.saveLocalNotifications();
       }
 
-      // Actualizar en Firebase usando colección unificada
-      if (this.currentCompanyId) {
-        const notificationsPath = `notification_queue/${notificationId}`;
-        await this.db.object(notificationsPath).update({
-          status: NotificationStatus.READ,
-          readAt: new Date().toISOString()
-        });
-      }
+      // Marcar como read en RTDB (ActualizacionTicket) para que no reaparezca
+      this.markReadInRtdb(notificationId);
 
       // Actualizar el observable
       const current = this.notificationsSubject.getValue();
-      const updated = current.map(n => 
-        n.id === notificationId 
+      const updated = current.map(n =>
+        n.id === notificationId
           ? { ...n, status: NotificationStatus.READ, readAt: new Date() }
           : n
       );
@@ -886,11 +1034,11 @@ export class NotificationManagerService {
       this.localNotifications = this.localNotifications.filter(n => n.id !== notificationId);
       this.saveLocalNotifications();
 
-      // Eliminar de Firebase usando colección unificada
-      if (this.currentCompanyId) {
-        const notificationsPath = `notification_queue/${notificationId}`;
-        await this.db.object(notificationsPath).remove();
-      }
+      // Agregar a dismissed para que no reaparezca tras refresh
+      this.addDismissedId(notificationId);
+
+      // Marcar como read en RTDB para que el listener no la recoja de nuevo
+      this.markReadInRtdb(notificationId);
 
       // Actualizar observable
       const current = this.notificationsSubject.getValue();
@@ -908,18 +1056,20 @@ export class NotificationManagerService {
    */
   public async clearAllNotifications(): Promise<void> {
     try {
+      // Agregar todas las actuales a dismissed
+      const currentNotifications = this.notificationsSubject.getValue();
+      currentNotifications.forEach(n => {
+        if (n.id) this.addDismissedId(n.id);
+      });
+
+      // Marcar como read en RTDB
+      currentNotifications.forEach(n => {
+        if (n.id) this.markReadInRtdb(n.id);
+      });
+
       // Limpiar notificaciones locales
       this.localNotifications = [];
       this.saveLocalNotifications();
-
-      // Eliminar individualmente todas las notificaciones de la compañía actual
-      if (this.currentCompanyId) {
-        const currentNotifications = this.notificationsSubject.getValue();
-        const deletePromises = currentNotifications.map(notification => 
-          this.db.object(`notification_queue/${notification.id}`).remove()
-        );
-        await Promise.allSettled(deletePromises);
-      }
 
       // Actualizar observables
       this.notificationsSubject.next([]);
