@@ -76,6 +76,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   woDocumentTypes: any[] = [];
   woMonedas: any[] = [];
   woBodegas: any[] = [];
+  woPrefijos: any[] = [];
+  woDefaults: any = null;
   woMasterDataLoading: boolean = false;
   woMasterDataLoaded: boolean = false;
   
@@ -554,6 +556,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         this.woPaymentTypes = [];
         this.woMonedas = [];
         this.woBodegas = [];
+        this.woPrefijos = [];
+        this.woDefaults = null;
         this.setupWOAutoLoad();
         break;
       default:
@@ -691,7 +695,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
 
   deleteIntegration(integration: Integration): void {
     if (confirm(`¿Está seguro que desea eliminar la integración "${integration.name}"?`)) {
-      this.integrationsService.deleteIntegration(integration.id!).subscribe({
+      const provider = integration.provider || integration.type || integration.id!;
+      this.integrationsService.deleteIntegration(provider).subscribe({
         next: () => {
           this.savedIntegrations = this.savedIntegrations.filter(i => i.id !== integration.id);
           this.showStatus('success', 'Integración eliminada correctamente');
@@ -961,8 +966,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       // Credenciales
       apiToken: ['', [Validators.required, Validators.minLength(10)]],
       apiUrl: ['https://api.worldoffice.cloud'],
-      // Configuración de empresa (requeridos por API WO)
-      idEmpresa: ['', Validators.required],
+      // Configuración de empresa (auto-seleccionado si solo hay 1)
+      idEmpresa: [''],
       idTerceroInterno: [''],
       // Facturación (requeridos por API WO para crear documentos)
       idFormaPago: [''],
@@ -1127,14 +1132,47 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         if (data.documentTypes?.length){ this.woDocumentTypes = data.documentTypes; }
         if (data.currencies?.length)   { this.woMonedas = data.currencies; }
         if (data.warehouses?.length)   { this.woBodegas = data.warehouses; }
+        console.log(`🔍 [WO] Prefijos en respuesta:`, data.prefijos?.length || 0, 'keys:', Object.keys(data));
+        if (data.prefijos?.length)     { this.woPrefijos = data.prefijos.filter((p: any) => (p.nombre || p.codigo || '').trim() !== ''); }
+        console.log(`🔍 [WO] Prefijos filtrados:`, this.woPrefijos.length);
+        this.woDefaults = data.defaults || null;
         this.woMasterDataLoaded = true;
-        console.log(`✅ [WO] Datos maestros cargados: ${this.woEmpresas.length} empresas, ${this.woPaymentTypes.length} formas de pago, ${this.woMonedas.length} monedas, ${this.woBodegas.length} bodegas`);
+
+        // Auto-aplicar defaults inteligentes al formulario
+        this.applyWODefaults();
+
+        console.log(`✅ [WO] Conectado. Defaults auto-aplicados:`, this.woDefaults);
       },
       error: () => {
         this.woMasterDataLoading = false;
         console.warn('⚠️ [WO] No se pudieron cargar los datos maestros');
       }
     });
+  }
+
+  /**
+   * Aplica defaults inteligentes al formulario de WO.
+   * Solo aplica si el campo esta vacio (no sobreescribe valores existentes del usuario).
+   */
+  private applyWODefaults(): void {
+    if (!this.woDefaults || !this.integrationForm) return;
+
+    const d = this.woDefaults;
+    const form = this.integrationForm;
+
+    // Solo parchear campos vacios
+    const patchIfEmpty = (field: string, value: any) => {
+      if (value != null && !form.get(field)?.value) {
+        form.get(field)?.setValue(String(value));
+      }
+    };
+
+    patchIfEmpty('idEmpresa', d.idEmpresa);
+    patchIfEmpty('idFormaPago', d.idFormaPago);
+    patchIfEmpty('idMoneda', d.idMoneda);
+    patchIfEmpty('idBodega', d.idBodega);
+    patchIfEmpty('prefijo', d.prefijo);
+    patchIfEmpty('idTerceroInterno', d.idTerceroInterno);
   }
 
   /**

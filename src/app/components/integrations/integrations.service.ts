@@ -1017,6 +1017,22 @@ export class IntegrationsService {
   }
 
   /**
+   * Crear factura async (fire-and-forget) para cualquier proveedor.
+   * Retorna 202 inmediato con jobId. El backend procesa en background.
+   */
+  createAccountingInvoiceAsync(provider: string, orderId: string, options?: any): Observable<any> {
+    const body: any = { orderId };
+    if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
+    if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
+
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order-async`,
+      body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
    * Obtiene formas de pago disponibles en el proveedor contable.
    * Para World Office: GET /v1/accounting/world_office/payment-types
    */

@@ -726,7 +726,10 @@
                                                     </ng-template>
                                                 </ng-container>
                                                 <ng-template #sinFactura>
-                                                    <span class="text-muted">-</span>
+                                                    <span *ngIf="pedido._facturando" class="text-warning">
+                                                        <i class="pi pi-spin pi-spinner mr-1"></i>Facturando...
+                                                    </span>
+                                                    <span *ngIf="!pedido._facturando" class="text-muted">-</span>
                                                 </ng-template>
                                             </td>
 
@@ -965,8 +968,8 @@
                                                                     <!-- Información principal del producto en una sola fila -->
                                                                     <div class="product-main-info">
                                                                         <div class="product-image">
-                                                                            <img [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
-                                                                                 [alt]="item.producto?.crearProducto?.imagenesPrincipales[0].nombreImagen"
+                                                                            <img [src]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                                                                                 [alt]="item.producto?.crearProducto?.imagenesPrincipales?.[0]?.nombreImagen || 'Producto'"
                                                                                  class="product-thumb" />
                                                                         </div>
                                                                         

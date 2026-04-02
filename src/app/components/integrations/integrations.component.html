@@ -1961,160 +1961,113 @@
           </div>
         </ng-container>
 
-        <!-- ===== WORLD OFFICE - SOFTWARE CONTABLE COLOMBIANO ===== -->
+        <!-- ===== WORLD OFFICE - FACTURACIÓN ELECTRÓNICA DIAN ===== -->
         <ng-container *ngIf="selectedIntegrationType === 'world_office'">
 
           <!-- Paso 1: Token -->
           <div class="card mb-4">
             <div class="card-header bg-light">
-              <h6 class="mb-0"><i class="fa fa-key me-2"></i>Token de World Office</h6>
+              <h6 class="mb-0"><i class="fa fa-key me-2"></i>Conectar con World Office</h6>
             </div>
             <div class="card-body">
               <div class="form-group mb-0">
                 <label for="woApiToken">
-                  <i class="fa fa-key"></i> API Token <span class="field-required">*</span>
+                  <i class="fa fa-key"></i> Token de API <span class="field-required">*</span>
                 </label>
                 <div class="input-with-icon password-field">
                   <i class="fa fa-key prefix-icon"></i>
                   <input [type]="showApiSecret ? 'text' : 'password'" id="woApiToken" formControlName="apiToken"
-                    placeholder="Pega aquí tu token JWT de World Office" autocomplete="off">
+                    placeholder="Pega aquí tu token de World Office" autocomplete="off">
                   <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiSecretVisibility()"></i>
                 </div>
                 <div *ngIf="integrationForm.get('apiToken')?.invalid && integrationForm.get('apiToken')?.touched" class="text-danger mt-1">
                   <i class="fa fa-exclamation-triangle"></i> El token es requerido (mínimo 10 caracteres)
                 </div>
                 <small class="form-text text-muted">
-                  Encuéntralo en el panel de World Office › Configuración › Integración API.
-                  El resto de la configuración se cargará automáticamente.
+                  Encuéntralo en World Office &rsaquo; Configuración &rsaquo; Integración API. Todo lo demás se configura automáticamente.
                 </small>
               </div>
 
-              <!-- Estado: cargando -->
+              <!-- Estado: conectando -->
               <div *ngIf="woMasterDataLoading" class="alert alert-info py-2 mt-3 mb-0 d-flex align-items-center gap-2">
                 <i class="fa fa-spinner fa-spin"></i>
-                <small>Conectando con World Office y cargando opciones...</small>
+                <small>Conectando con World Office...</small>
               </div>
 
-              <!-- Estado: cargado -->
-              <div *ngIf="woMasterDataLoaded && !woMasterDataLoading" class="alert alert-success py-2 mt-3 mb-0 d-flex align-items-center gap-2">
-                <i class="fa fa-check-circle"></i>
-                <small>
-                  Token válido —
-                  {{ woEmpresas.length }} empresa(s),
-                  {{ woPaymentTypes.length }} forma(s) de pago,
-                  {{ woMonedas.length }} moneda(s),
-                  {{ woBodegas.length }} bodega(s) disponibles.
+              <!-- Estado: conectado con auto-config -->
+              <div *ngIf="woMasterDataLoaded && !woMasterDataLoading" class="alert alert-success py-2 mt-3 mb-0">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <i class="fa fa-check-circle"></i>
+                  <strong>Conectado exitosamente</strong>
+                </div>
+                <small class="d-block text-muted" *ngIf="woDefaults">
+                  Configuración auto-detectada:
+                  <span *ngIf="woDefaults.idEmpresaAuto"> Empresa seleccionada.</span>
+                  <span *ngIf="woDefaults.idFormaPagoNombre"> Forma de pago: {{ woDefaults.idFormaPagoNombre }}.</span>
+                  <span *ngIf="woDefaults.idMonedaNombre"> Moneda: {{ woDefaults.idMonedaNombre }}.</span>
+                  <span *ngIf="woDefaults.idBodegaAuto"> Bodega seleccionada.</span>
                 </small>
               </div>
             </div>
           </div>
 
-          <!-- Paso 2: Configuración (solo visible tras cargar datos) -->
+          <!-- Paso 2: Solo campos que requieren decisión del usuario -->
           <ng-container *ngIf="woMasterDataLoaded">
 
-            <!-- Empresa y modo prueba -->
-            <div class="card mb-4">
+            <!-- Empresa: solo si hay más de 1 -->
+            <div class="card mb-4" *ngIf="woEmpresas.length > 1">
               <div class="card-header bg-light">
-                <h6 class="mb-0"><i class="fa fa-building me-2"></i>Tu empresa en World Office</h6>
+                <h6 class="mb-0"><i class="fa fa-building me-2"></i>Selecciona tu empresa</h6>
               </div>
               <div class="card-body">
-                <div class="field-row">
-                  <div class="field-col form-group">
-                    <label for="woIdEmpresa">
-                      <i class="fa fa-building"></i> Empresa <span class="field-required">*</span>
-                    </label>
-                    <select id="woIdEmpresa" formControlName="idEmpresa" class="form-control">
-                      <option value="">-- Seleccionar empresa --</option>
-                      <option *ngFor="let empresa of woEmpresas; trackBy: trackById" [value]="empresa.id">
-                        {{ empresa.nombre || empresa.name || empresa.razonSocial || empresa.id }}
-                      </option>
-                    </select>
-                    <div *ngIf="integrationForm.get('idEmpresa')?.invalid && integrationForm.get('idEmpresa')?.touched" class="text-danger mt-1">
-                      <i class="fa fa-exclamation-triangle"></i> Selecciona tu empresa
-                    </div>
-                  </div>
-
-                  <div class="field-col form-group">
-                    <label for="woTestMode"><i class="fa fa-flask"></i> Modo de Prueba</label>
-                    <div class="toggle-container">
-                      <label class="switch">
-                        <input type="checkbox" formControlName="testMode" id="woTestMode">
-                        <span class="slider"></span>
-                      </label>
-                      <span class="toggle-label" [ngClass]="{'active': integrationForm.get('testMode')?.value, 'inactive': !integrationForm.get('testMode')?.value}">
-                        {{ integrationForm.get('testMode')?.value ? 'Pruebas' : 'Producción' }}
-                      </span>
-                    </div>
-                  </div>
+                <div class="form-group mb-0">
+                  <label for="woIdEmpresa">
+                    <i class="fa fa-building"></i> Empresa <span class="field-required">*</span>
+                  </label>
+                  <select id="woIdEmpresa" formControlName="idEmpresa" class="form-control">
+                    <option value="">-- Seleccionar empresa --</option>
+                    <option *ngFor="let empresa of woEmpresas; trackBy: trackById" [value]="empresa.id">
+                      {{ empresa.nombre || empresa.name || empresa.razonSocial || empresa.id }}
+                    </option>
+                  </select>
                 </div>
               </div>
             </div>
 
-            <!-- Facturación -->
-            <div class="card mb-4">
+            <!-- Bodega: solo si hay más de 1 -->
+            <div class="card mb-4" *ngIf="woBodegas.length > 1">
               <div class="card-header bg-light">
-                <h6 class="mb-0"><i class="fa fa-file-invoice me-2"></i>Configuración de Facturación</h6>
+                <h6 class="mb-0"><i class="fa fa-warehouse me-2"></i>Selecciona la bodega</h6>
               </div>
               <div class="card-body">
-                <div class="field-row">
-                  <div class="field-col form-group">
-                    <label for="woIdFormaPago"><i class="fa fa-credit-card"></i> Forma de Pago por defecto</label>
-                    <select id="woIdFormaPago" formControlName="idFormaPago" class="form-control">
-                      <option value="">-- Seleccionar --</option>
-                      <option *ngFor="let fp of woPaymentTypes; trackBy: trackById" [value]="fp.id">
-                        {{ fp.nombre || fp.name || fp.descripcion || fp.id }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="field-col form-group">
-                    <label for="woIdMoneda"><i class="fa fa-coins"></i> Moneda <span class="field-required">*</span></label>
-                    <select id="woIdMoneda" formControlName="idMoneda" class="form-control">
-                      <option value="">-- Seleccionar --</option>
-                      <option *ngFor="let m of woMonedas; trackBy: trackById" [value]="m.id">
-                        {{ m.nombre || m.descripcion || m.codigo || m.id }}
-                      </option>
-                    </select>
-                  </div>
+                <div class="form-group mb-0">
+                  <label for="woIdBodega"><i class="fa fa-warehouse"></i> Bodega</label>
+                  <select id="woIdBodega" formControlName="idBodega" class="form-control">
+                    <option value="">-- Seleccionar --</option>
+                    <option *ngFor="let b of woBodegas; trackBy: trackById" [value]="b.id">
+                      {{ b.nombre || b.descripcion || b.codigo || b.id }}
+                    </option>
+                  </select>
+                  <small class="form-text text-muted">Bodega desde donde se factura el inventario</small>
                 </div>
+              </div>
+            </div>
 
-                <div class="field-row">
-                  <div class="field-col form-group">
-                    <label for="woIdBodega"><i class="fa fa-warehouse"></i> Bodega <span class="field-required">*</span></label>
-                    <select id="woIdBodega" formControlName="idBodega" class="form-control">
-                      <option value="">-- Seleccionar --</option>
-                      <option *ngFor="let b of woBodegas; trackBy: trackById" [value]="b.id">
-                        {{ b.nombre || b.descripcion || b.codigo || b.id }}
-                      </option>
-                    </select>
-                  </div>
-
-                  <div class="field-col form-group">
-                    <label for="woPrefijo"><i class="fa fa-hashtag"></i> Prefijo de Factura</label>
-                    <div class="input-with-icon">
-                      <i class="fa fa-hashtag prefix-icon"></i>
-                      <input type="text" id="woPrefijo" formControlName="prefijo" placeholder="Ej: FE, FV">
-                    </div>
-                  </div>
-                </div>
-
-                <div class="field-row">
-                  <div class="field-col form-group">
-                    <label for="woConcepto"><i class="fa fa-file-alt"></i> Concepto</label>
-                    <div class="input-with-icon">
-                      <i class="fa fa-file-alt prefix-icon"></i>
-                      <input type="text" id="woConcepto" formControlName="concepto" placeholder="Venta Katuq">
-                    </div>
-                  </div>
-
-                  <div class="field-col form-group">
-                    <label for="woIdTerceroInterno"><i class="fa fa-user-tie"></i> Tercero Interno</label>
-                    <div class="input-with-icon">
-                      <i class="fa fa-user-tie prefix-icon"></i>
-                      <input type="text" id="woIdTerceroInterno" formControlName="idTerceroInterno" placeholder="ID del tercero interno en WO">
-                    </div>
-                    <small class="form-text text-muted">Opcional — ID de la empresa vendedora en WO</small>
-                  </div>
+            <!-- Prefijo de facturación: solo si hay más de 1 -->
+            <div class="card mb-4" *ngIf="woPrefijos.length > 1">
+              <div class="card-header bg-light">
+                <h6 class="mb-0"><i class="fa fa-hashtag me-2"></i>Prefijo de facturación electrónica</h6>
+              </div>
+              <div class="card-body">
+                <div class="form-group mb-0">
+                  <label for="woPrefijo"><i class="fa fa-hashtag"></i> Prefijo</label>
+                  <select id="woPrefijo" formControlName="prefijo" class="form-control">
+                    <option value="">-- Seleccionar --</option>
+                    <option *ngFor="let p of woPrefijos; trackBy: trackById" [value]="p.id">
+                      {{ p.nombre || p.codigo || ('Prefijo ' + p.id) }}
+                    </option>
+                  </select>
+                  <small class="form-text text-muted">Selecciona el prefijo con resolución DIAN activa</small>
                 </div>
               </div>
             </div>
@@ -2122,7 +2075,7 @@
             <!-- Automatización -->
             <div class="card mb-4">
               <div class="card-header bg-light">
-                <h6 class="mb-0"><i class="fa fa-robot me-2"></i>Automatización</h6>
+                <h6 class="mb-0"><i class="fa fa-robot me-2"></i>Facturación</h6>
               </div>
               <div class="card-body">
                 <div class="field-row">
@@ -2137,7 +2090,7 @@
                         {{ integrationForm.get('enableAutoInvoicing')?.value ? 'Activado' : 'Desactivado' }}
                       </span>
                     </div>
-                    <small class="form-text text-muted">Crear factura al aprobar el pago del pedido</small>
+                    <small class="form-text text-muted">Factura automáticamente al aprobar el pago</small>
                   </div>
 
                   <div class="field-col form-group">
@@ -2172,11 +2125,10 @@
             </div>
 
           </ng-container>
-          <!-- /Paso 2 -->
 
           <div class="integration-info-box">
             <i class="fa fa-lightbulb"></i>
-            <span><strong>Tip:</strong> Obtén tu token en World Office › Configuración › Integración API. Asegúrate de tener habilitada la facturación electrónica DIAN.</span>
+            <span><strong>Tip:</strong> Solo necesitas el token. Katuq configura automáticamente la empresa, moneda, forma de pago y bodega de tu cuenta de World Office.</span>
           </div>
         </ng-container>
 

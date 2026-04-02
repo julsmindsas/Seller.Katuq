@@ -746,15 +746,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             isConfigured = isActive && (providerConfig?.apiToken || providerConfig?.idEmpresa);
           }
 
+          console.log(`🔍 [Facturación] ${provider}: active=${isActive}, configured=${isConfigured}, config keys=${Object.keys(providerConfig || {}).join(',')}`);
+
           if (isConfigured && !found) {
             found = true;
             this.hasInvoicingIntegration = true;
             this.activeAccountingProvider = provider;
+            console.log(`✅ [Facturación] Provider activo: ${provider}`);
           } else {
             checkProvider(index + 1);
           }
         },
-        error: () => {
+        error: (err) => {
+          console.log(`⚠️ [Facturación] ${provider}: no encontrado (${err?.status || 'error'})`);
           checkProvider(index + 1);
         }
       });
@@ -794,8 +798,8 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!estadosPermitidos.includes(pedido?.estadoPago as EstadoPago)) {
       return false;
     }
-    // No mostrar si ya tiene factura (verificar por nroFactura o pdfUrlInvoice)
-    if (pedido?.nroFactura || pedido?.pdfUrlInvoice) {
+    // No mostrar si ya tiene factura o está en proceso
+    if (pedido?.nroFactura || pedido?.pdfUrlInvoice || (pedido as any)?._facturando) {
       return false;
     }
     return true;
@@ -807,18 +811,43 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   facturarPedidoSiigo(pedido: Pedido): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
-    // Cargar tipos de documento del proveedor contable
+    const provider = this.activeAccountingProvider || 'siigo';
+
+    // World Office: no necesita seleccionar tipo de documento (ya esta en config)
+    if (provider === 'world_office') {
+      Swal.fire({
+        title: '¿Generar Factura Electrónica?',
+        html: `
+          <p>Se generará una factura en <strong>${providerDisplayName}</strong> para:</p>
+          <p><strong>${pedido.nroPedido}</strong></p>
+          <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
+          <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Generar factura',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.ejecutarFacturacionSiigo(pedido);
+        }
+      });
+      return;
+    }
+
+    // Siigo: necesita seleccionar tipo de documento
     Swal.fire({
       title: 'Cargando tipos de documento...',
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     });
 
-    this.integrationsService.getSiigoDocumentTypes().subscribe({
+    this.integrationsService.getAccountingDocumentTypes(provider).subscribe({
       next: (response) => {
         Swal.close();
 
-        // El backend devuelve { success, data: { documentTypes: [...] } }
         let documentTypes: any[] = [];
         if (Array.isArray(response?.data?.documentTypes)) {
           documentTypes = response.data.documentTypes;
@@ -841,18 +870,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-        // Construir opciones para el select
         const inputOptions: { [key: string]: string } = {};
         documentTypes.forEach((dt: any) => {
-          // Siigo devuelve 'id' y 'name'
           const id = dt.id;
-          const name = dt.name || `Documento ${id}`;
+          const name = dt.name || dt.nombre || `Documento ${id}`;
           if (id) {
             inputOptions[id] = `${name}`;
           }
         });
 
-        // Mostrar modal con selector de tipo de documento
         Swal.fire({
           title: '¿Generar Factura Electrónica?',
           html: `
@@ -909,119 +935,55 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    */
   private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
-    // Mostrar loader
-    Swal.fire({
-      title: 'Generando factura...',
-      html: `
-        <p>Por favor espere mientras se procesa la facturación electrónica.</p>
-        <p class="text-muted small">Verificando cliente y creando factura electrónica...</p>
-      `,
-      allowOutsideClick: false,
-      allowEscapeKey: false,
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
+    const nroPedido = pedido.nroPedido || pedido.referencia || pedido._id;
+
+    // Marcar inmediatamente para evitar doble facturación
+    (pedido as any)._facturando = true;
+
+    // Toast inmediato — no bloquea la UI
+    this.toastrService.info(
+      `Generando factura para ${nroPedido}. Te avisaremos cuando termine.`,
+      `${providerDisplayName}`,
+      { timeOut: 5000 }
+    );
 
     // Preparar opciones con el tipo de documento seleccionado
     const options = documentTypeId ? { documentTypeId } : undefined;
 
-    // Usar el endpoint genérico de facturación con el provider activo
+    // Usar endpoint async para no bloquear (responde 202 inmediato)
     const provider = this.activeAccountingProvider || 'siigo';
-    const invoiceCall = provider === 'world_office'
-      ? this.integrationsService.createAccountingInvoiceFromOrder(provider, pedido._id, options)
-      : this.integrationsService.createSiigoInvoiceFromOrder(pedido._id, options);
+    const invoiceCall = this.integrationsService.createAccountingInvoiceAsync(provider, pedido._id, options);
 
     invoiceCall.subscribe({
       next: (response: any) => {
-        Swal.close();
-
         if (response.success) {
-          // Actualizar el pedido en la lista con la información de la factura
-          const invoiceData = response.data?.invoice || response.invoice;
-          const customerData = response.data?.customer || response.customer;
-          const productsData = response.data?.products || response.products;
-
-          if (invoiceData) {
-            pedido.nroFactura = invoiceData.number || invoiceData.id;
-            pedido.pdfUrlInvoice = invoiceData.pdfUrl;
-          }
-
-          // Construir mensaje de éxito
-          let successHtml = '<p>La factura electrónica se ha creado exitosamente.</p>';
-
-          if (invoiceData?.number) {
-            successHtml += `<p><strong>Número de factura:</strong> ${invoiceData.number}</p>`;
-          }
-
-          // Mostrar información de sincronización
-          const syncItems: string[] = [];
-
-          if (customerData?.created) {
-            syncItems.push('<i class="fa fa-user-plus text-success"></i> Cliente creado');
-          }
-
-          if (productsData?.created > 0) {
-            syncItems.push(`<i class="fa fa-cube text-success"></i> ${productsData.created} producto(s) creado(s)`);
-          }
-
-          if (syncItems.length > 0) {
-            successHtml += `<div class="alert alert-info mt-2 p-2 small">
-              <strong>Sincronizado con ${providerDisplayName}:</strong><br>
-              ${syncItems.join('<br>')}
-            </div>`;
-          }
-
-          if (invoiceData?.pdfUrl) {
-            successHtml += `<p><a href="${invoiceData.pdfUrl}" target="_blank" class="btn btn-sm btn-primary mt-2"><i class="fa fa-file-pdf-o"></i> Ver PDF</a></p>`;
-          }
-
-          Swal.fire({
-            title: '¡Factura Generada!',
-            html: successHtml,
-            icon: 'success',
-            confirmButtonText: 'Aceptar'
-          });
-
-          // Refrescar la lista
-          this.refrescar(this.table);
+          // El 202 solo confirma que se recibio — la factura se procesa en background
+          // NO marcar como completada todavia
+          this.toastrService.info(
+            `Facturando pedido ${nroPedido} en segundo plano. Refresca en unos minutos.`,
+            `${providerDisplayName}`,
+            { timeOut: 8000 }
+          );
         } else {
-          Swal.fire({
-            title: 'Error',
-            text: response.message || 'No se pudo generar la factura',
-            icon: 'error',
-            confirmButtonText: 'Aceptar'
-          });
+          this.toastrService.error(
+            response.message || 'No se pudo generar la factura',
+            `Error - ${providerDisplayName}`,
+            { timeOut: 10000 }
+          );
         }
       },
       error: (error) => {
-        Swal.close();
         console.error('Error al facturar pedido:', error);
-
-        // Extraer mensaje de error más específico
         const errorMessage = error.error?.message || error.message || 'Error desconocido';
-        const errorDetails = error.error?.details;
 
-        let errorHtml = `<p>No se pudo generar la factura electrónica.</p>`;
-        errorHtml += `<p class="text-danger">${errorMessage}</p>`;
+        // Limpiar flag para permitir reintento
+        (pedido as any)._facturando = false;
 
-        // Mostrar sugerencias si el error es sobre configuración
-        if (errorMessage.includes('documento') || errorMessage.includes('cliente')) {
-          errorHtml += `<p class="text-muted small mt-2">
-            <i class="fa fa-info-circle"></i> Verifique que el cliente tenga número de documento configurado en los datos de facturación.
-          </p>`;
-        } else if (errorMessage.includes('configuración') || errorMessage.includes('documentTypeId')) {
-          errorHtml += `<p class="text-muted small mt-2">
-            <i class="fa fa-info-circle"></i> Verifique la configuración de ${providerDisplayName} en Integraciones → Contabilidad.
-          </p>`;
-        }
-
-        Swal.fire({
-          title: 'Error de Facturación',
-          html: errorHtml,
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
-        });
+        this.toastrService.error(
+          `${nroPedido}: ${errorMessage}`,
+          `Error - ${providerDisplayName}`,
+          { timeOut: 15000 }
+        );
       }
     });
   }
@@ -1124,8 +1086,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns true si se puede editar facturación
    */
   canEditBilling(order: Pedido): boolean {
-    // TODO: Implementar lógica cuando se tenga el módulo de facturación
-    // Por ahora siempre permite editar
+    if (order?.nroFactura || order?.pdfUrlInvoice || (order as any)?._facturando) {
+      return false;
+    }
     return true;
   }
 
