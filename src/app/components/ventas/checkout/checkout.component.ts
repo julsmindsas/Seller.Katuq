@@ -607,6 +607,24 @@ export class CheckOutComponent implements OnInit, OnChanges {
         }
       }
 
+      // PRIORIDAD 0b: Solo IVA manual (sin precio manual), para cualquier producto
+      // El precio base (sin IVA) no cambia; solo se recalcula el IVA con el nuevo porcentaje
+      if (!(itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+          && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true)
+          && itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null) {
+        const precioSinIvaBase = this.getUnitPriceSinIVAWithScale(itemCarrito);
+        const porcentajeIvaNuevo = Number(itemCarrito._ivaManualOverride);
+        const valorIvaCalculado = precioSinIvaBase * (porcentajeIvaNuevo / 100);
+        const precioItemConDescuento = (valorIvaCalculado * cantidadItem) * (1 - porceDescuento);
+        totalPrecioIVA += precioItemConDescuento;
+        switch (porcentajeIvaNuevo.toString()) {
+          case "0": totalExcluidos += precioItemConDescuento; break;
+          case "5": totalIva5 += precioItemConDescuento; break;
+          case "8": totalImpo += precioItemConDescuento; break;
+          case "19": totalIva19 += precioItemConDescuento; break;
+        }
+      }
+
       // 🔒 PRIORIDAD 1: Verificar si hay precio por categoría de cliente
       const preciosPorTipoCliente = itemCarrito?.producto?.preciosPorTipoCliente ?? [];
       const precioCategoria = categoriaClienteId
@@ -624,9 +642,10 @@ export class CheckOutComponent implements OnInit, OnChanges {
         productoValorIva: productoPrecio?.valorIva
       });
 
-      if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
-          && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true) {
-        // Ya procesado arriba - saltar lógica normal de precio
+      if ((itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
+          && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true)
+          || (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null)) {
+        // Ya procesado arriba (precio manual o IVA manual) - saltar lógica normal de IVA
       } else if (precioCategoria) {
         // Si hay precio por categoría, usar su IVA
         const valorUnitarioIVA = precioCategoria.valorIva || 0;

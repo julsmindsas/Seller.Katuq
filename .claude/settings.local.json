@@ -105,7 +105,9 @@
       "Bash(ls /tmp/*.output)",
       "Bash(start Backend Katuq:*)",
       "Bash(start Frontend Katuq:*)",
-      "Bash(start \"Backend Katuq\" cmd /k \"cd /d C:\\\\Users\\\\julia\\\\Documents\\\\Seller.Katuq.Back\\\\katuq_admin_back_firebase\\\\functions && npm run start-express\")"
+      "Bash(start \"Backend Katuq\" cmd /k \"cd /d C:\\\\Users\\\\julia\\\\Documents\\\\Seller.Katuq.Back\\\\katuq_admin_back_firebase\\\\functions && npm run start-express\")",
+      "Bash(sed:*)",
+      "Bash(python -c:*)"
     ]
   }
 }

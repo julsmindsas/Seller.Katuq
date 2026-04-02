@@ -256,6 +256,16 @@ export class CarritoComponent implements OnInit {
       const iva = this.getIvaActual(itemCarrito);
       return base * (1 + iva / 100);
     }
+    // Si tiene IVA manual override (cualquier producto), recalcular precio con nuevo porcentaje de IVA
+    // El precio base (sin IVA) no cambia; solo cambia el porcentaje aplicado
+    if (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null) {
+      const precioConIvaOriginal = this.getProductPriceWithScale(itemCarrito);
+      const ivaOriginal = Number(itemCarrito?.producto?.precio?.precioUnitarioIva) || 0;
+      const precioSinIva = ivaOriginal > 0
+        ? precioConIvaOriginal / (1 + ivaOriginal / 100)
+        : precioConIvaOriginal;
+      return precioSinIva * (1 + itemCarrito._ivaManualOverride / 100);
+    }
     return this.getProductPriceWithScale(itemCarrito);
   }
 
