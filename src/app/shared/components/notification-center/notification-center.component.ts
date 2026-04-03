@@ -405,8 +405,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       [NotificationType.SIIGO_PRODUCT_SYNCED]: 'fa-refresh',
 
       // Facturación genérica
-      [NotificationType.INVOICE_CREATED]: 'fa-file-text-o',
-      [NotificationType.INVOICE_FAILED]: 'fa-file-excel-o'
+      [NotificationType.INVOICE_CREATED]: 'fa-check-square-o',
+      [NotificationType.INVOICE_FAILED]: 'fa-exclamation-triangle'
     };
 
     return iconMap[type] || 'fa-info-circle';
@@ -428,6 +428,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
     if (type.includes('POS') || type.includes('CASH')) return 'icon-payment';
     if (type.includes('SUPPLIER')) return 'icon-shipping';
     if (type.includes('SIIGO')) return 'icon-accounting';
+    if (type === NotificationType.INVOICE_CREATED) return 'icon-accounting';
+    if (type === NotificationType.INVOICE_FAILED) return 'icon-alert';
 
     return 'icon-info';
   }
