@@ -7,10 +7,10 @@
 </div>
 
 <!-- Notification Panel Overlay -->
-<div class="notification-overlay" *ngIf="isOpen" (click)="closePanel()"></div>
+<div #overlayEl class="notification-overlay" *ngIf="isOpen" (click)="closePanel()"></div>
 
 <!-- Notification Panel -->
-<div class="notification-panel" *ngIf="isOpen" [@slideIn] (click)="$event.stopPropagation()">
+<div #panelEl class="notification-panel" *ngIf="isOpen" [@slideIn] (click)="$event.stopPropagation()">
   
   <!-- Header -->
   <div class="panel-header">

@@ -103,10 +103,10 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.4);
-  z-index: 1040;
+  z-index: 9998;
   backdrop-filter: blur(4px);
   animation: fadeIn 0.2s ease;
 }
@@ -121,7 +121,7 @@
   background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
   box-shadow: -8px 0 32px rgba(0, 0, 0, 0.12),
               -2px 0 8px rgba(0, 0, 0, 0.06);
-  z-index: 1050;
+  z-index: 9999;
   display: flex;
   flex-direction: column;
   overflow: hidden;

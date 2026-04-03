@@ -2363,6 +2363,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Verificar si hay integración de facturación configurada
     this.checkInvoicingIntegration();
 
+    // Leer query param "buscar" (usado por notificaciones para navegar a un pedido)
+    this.route.queryParams.subscribe(params => {
+      if (params['buscar']) {
+        this.searchQuery = params['buscar'];
+      }
+    });
+
     // Initialize dates first before subscribing to service
     const today = new Date();
     this.fechaInicial = today.toISOString().split("T")[0];

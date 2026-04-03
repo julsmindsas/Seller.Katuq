@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewChecked, Renderer2 } from '@angular/core';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { trigger, state, style, transition, animate } from '@angular/animations';
@@ -42,6 +42,8 @@ import {
 })
 export class NotificationCenterComponent implements OnInit, OnDestroy {
   @ViewChild('searchInput', { static: false }) searchInput!: ElementRef;
+  @ViewChild('overlayEl', { static: false }) overlayEl!: ElementRef;
+  @ViewChild('panelEl', { static: false }) panelEl!: ElementRef;
 
   // Estado del componente
   public notifications: KatuqNotification[] = [];
@@ -77,7 +79,8 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
 
   constructor(
     private notificationManager: NotificationManagerService,
-    private preferencesService: NotificationPreferencesService
+    private preferencesService: NotificationPreferencesService,
+    private renderer: Renderer2
   ) {
     this.setupSearchDebouncing();
   }
@@ -221,14 +224,21 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
    */
   public togglePanel(): void {
     this.isOpen = !this.isOpen;
-    
+
     if (this.isOpen) {
       this.resetFilters();
+      // Mover overlay y panel al body para escapar del stacking context del header
       setTimeout(() => {
+        if (this.overlayEl?.nativeElement) {
+          this.renderer.appendChild(document.body, this.overlayEl.nativeElement);
+        }
+        if (this.panelEl?.nativeElement) {
+          this.renderer.appendChild(document.body, this.panelEl.nativeElement);
+        }
         if (this.searchInput) {
           this.searchInput.nativeElement.focus();
         }
-      }, 100);
+      }, 0);
     }
   }
 
@@ -392,7 +402,11 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       [NotificationType.SIIGO_INVOICE_FAILED]: 'fa-file-excel-o',
       [NotificationType.SIIGO_INVOICE_PROCESSING]: 'fa-spinner',
       [NotificationType.SIIGO_CUSTOMER_CREATED]: 'fa-user-plus',
-      [NotificationType.SIIGO_PRODUCT_SYNCED]: 'fa-refresh'
+      [NotificationType.SIIGO_PRODUCT_SYNCED]: 'fa-refresh',
+
+      // Facturación genérica
+      [NotificationType.INVOICE_CREATED]: 'fa-file-text-o',
+      [NotificationType.INVOICE_FAILED]: 'fa-file-excel-o'
     };
 
     return iconMap[type] || 'fa-info-circle';
@@ -516,7 +530,11 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       [NotificationType.SIIGO_INVOICE_FAILED]: 'Error Facturación Siigo',
       [NotificationType.SIIGO_INVOICE_PROCESSING]: 'Procesando Factura',
       [NotificationType.SIIGO_CUSTOMER_CREATED]: 'Cliente Siigo Creado',
-      [NotificationType.SIIGO_PRODUCT_SYNCED]: 'Producto Sincronizado'
+      [NotificationType.SIIGO_PRODUCT_SYNCED]: 'Producto Sincronizado',
+
+      // Facturación genérica
+      [NotificationType.INVOICE_CREATED]: 'Factura Creada',
+      [NotificationType.INVOICE_FAILED]: 'Error de Facturación'
     };
 
     return nameMap[type] || type;

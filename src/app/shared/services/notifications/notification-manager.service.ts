@@ -832,13 +832,23 @@ export class NotificationManagerService {
         this.saveLocalNotifications();
       }
 
-      // Actualizar en Firebase usando colección unificada
+      // Actualizar en Firebase — detectar si viene de ActualizacionTicket o notification_queue
       if (this.currentCompanyId) {
-        const notificationsPath = `notification_queue/${notificationId}`;
-        await this.db.object(notificationsPath).update({
-          status: NotificationStatus.READ,
-          readAt: new Date().toISOString()
-        });
+        if (notificationId.startsWith('actualizacion_')) {
+          const firebaseKey = notificationId.replace('actualizacion_', '');
+          const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+          const companyName = companyData?.nomComercial;
+          if (companyName && firebaseKey) {
+            const rtdbPath = `ActualizacionTicket${companyName}/${firebaseKey}`;
+            await this.db.object(rtdbPath).update({ read: true, readAt: new Date().toISOString() });
+          }
+        } else {
+          const notificationsPath = `notification_queue/${notificationId}`;
+          await this.db.object(notificationsPath).update({
+            status: NotificationStatus.READ,
+            readAt: new Date().toISOString()
+          });
+        }
       }
 
       // Actualizar el observable
@@ -878,10 +888,18 @@ export class NotificationManagerService {
       this.localNotifications = this.localNotifications.filter(n => n.id !== notificationId);
       this.saveLocalNotifications();
 
-      // Eliminar de Firebase usando colección unificada
+      // Eliminar de Firebase — detectar ruta correcta
       if (this.currentCompanyId) {
-        const notificationsPath = `notification_queue/${notificationId}`;
-        await this.db.object(notificationsPath).remove();
+        if (notificationId.startsWith('actualizacion_')) {
+          const firebaseKey = notificationId.replace('actualizacion_', '');
+          const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
+          const companyName = companyData?.nomComercial;
+          if (companyName && firebaseKey) {
+            await this.db.object(`ActualizacionTicket${companyName}/${firebaseKey}`).remove();
+          }
+        } else {
+          await this.db.object(`notification_queue/${notificationId}`).remove();
+        }
       }
 
       // Actualizar observable

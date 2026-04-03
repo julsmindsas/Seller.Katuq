@@ -636,6 +636,40 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     throttlePeriodMinutes: 30,
     persistInNotificationCenter: true,
     expiresInMinutes: 1440
+  },
+
+  // FACTURACIÓN ELECTRÓNICA GENÉRICA (cualquier provider)
+  [NotificationType.INVOICE_CREATED]: {
+    type: NotificationType.INVOICE_CREATED,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.HIGH,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: 'Factura electrónica creada',
+        message: 'Factura {invoiceNumber} generada para pedido #{nroPedido} ({provider})',
+        actionText: 'Ver pedido'
+      }
+    },
+    persistInNotificationCenter: true,
+    expiresInMinutes: 4320
+  },
+
+  [NotificationType.INVOICE_FAILED]: {
+    type: NotificationType.INVOICE_FAILED,
+    channels: [NotificationChannel.IN_APP, NotificationChannel.FIREBASE_REALTIME],
+    priority: NotificationPriority.CRITICAL,
+    targetRoles: [UserRole.ADMIN, UserRole.SELLER],
+    templates: {
+      [NotificationChannel.IN_APP]: {
+        title: 'Error en facturación electrónica',
+        message: 'No se pudo facturar pedido #{nroPedido}: {error}',
+        actionText: 'Ver pedido'
+      }
+    },
+    requiresUserInteraction: true,
+    persistInNotificationCenter: true,
+    expiresInMinutes: 10080
   }
 };
 
