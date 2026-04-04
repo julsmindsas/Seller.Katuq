@@ -20,7 +20,7 @@
             </div>
 
             <!-- Texto descriptivo de política de privacidad -->
-            <div class="privacy-note mb-4">
+            <div class="privacy-note mb-2">
                 <p class="text-muted">
                     {{ 'notificaciones.privacy_note_1' | translate }}
                     <a routerLink="/privacy-policy" class="text-primary font-weight-bold">{{ 'Política de privacidad' | translate }}</a>.
@@ -36,7 +36,6 @@
             <!-- Tarjeta principal de configuración -->
             <div class="card notification-card" *ngIf="!isLoading">
                 <div class="card-body">
-                    <p class="text-muted small mb-3">{{ 'notificaciones.email_active_hint' | translate }}</p>
                     <div class="table-responsive">
                         <table class="table preferences-table">
 
@@ -55,7 +54,7 @@
                                             {{ 'Mensaje de texto' | translate }}
                                         </div>
                                     </th>
-                                    <th class="td-channel text-center td-decorative">
+                                    <th class="td-channel text-center td-whatsapp">
                                         <div class="channel-header">
                                             <i class="fa fa-whatsapp me-1" aria-hidden="true"></i>
                                             WhatsApp
@@ -90,8 +89,8 @@
                                         </div>
                                     </td>
 
-                                    <td class="td-channel td-decorative text-center align-middle">
-                                        <div class="checkbox-container decorative">
+                                    <td class="td-channel td-whatsapp text-center align-middle">
+                                        <div class="checkbox-container whatsapp-disabled">
                                             <input type="checkbox" class="custom-checkbox" [id]="'wa-' + pref.id"
                                                 disabled [attr.checked]="false">
                                             <label [for]="'wa-' + pref.id" [attr.title]="'Próximamente' | translate"></label>

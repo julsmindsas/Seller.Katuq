@@ -95,12 +95,9 @@
             min-width: 100px;
         }
 
-        &.td-decorative {
-            opacity: 0.7;
-
-            .channel-header {
-                font-size: 12px;
-            }
+        &.td-whatsapp {
+            min-width: 100px;
+            opacity: 0.5;
         }
     }
 
@@ -184,18 +181,13 @@
             }
         }
 
-        // Columnas decorativas (SMS, WhatsApp): checkbox deshabilitado
-        &.decorative {
-            input:disabled + label,
-            input[disabled] + label {
-                cursor: not-allowed;
-                border-color: #dee2e6;
-                background: #f8f9fa;
+    }
 
-                &::after {
-                    border-color: #adb5bd;
-                }
-            }
+    &.whatsapp-disabled input[type="checkbox"] {
+        &+label {
+            cursor: not-allowed;
+            border-color: #d1d1d1;
+            background: #f5f5f5;
         }
     }
 }

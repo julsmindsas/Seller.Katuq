@@ -156,6 +156,8 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     this.saveToFirestore(() => { pref.channels.sms = previousValue; });
   }
 
+
+
   /** Guarda todas las preferencias de la empresa en Firestore */
   private saveToFirestore(rollback?: () => void): void {
     const companyName = this.empresaActual?.nomComercial;
