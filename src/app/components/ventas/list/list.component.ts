@@ -2673,6 +2673,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       }
 
+      // PRIORIDAD 0b: IVA manual override para productos sin precio manual
+      // Se aplica después de resolver el precio base (volumen/categoría/base)
+      if (!tienePrecioManual && itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null) {
+        const precioSinIvaBase = Number(producto?.precio?.precioUnitarioSinIva) || 0;
+        porcentajeIvaStr = itemCarrito._ivaManualOverride.toString();
+        precioConIva = precioSinIvaBase * (1 + Number(porcentajeIvaStr) / 100);
+      }
+
       // Calcular IVA del producto principal
       const valorConIva = precioConIva * cantidad;
       const valorConDescuento = valorConIva * (1 - porceDescuento);

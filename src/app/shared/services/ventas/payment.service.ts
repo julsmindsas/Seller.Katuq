@@ -1241,6 +1241,8 @@ export class PaymentService extends BaseService {
       // Totales por cantidad (respetando precio unitario en las columnas unitarias)
       const valorIvaTotalProducto = valorIva * cantidad;
       const totalConIvaProducto = precioUnitarioConIva * cantidad;
+      // Para la sección de productos del PDF, el precio manual se ingresa como BASE (sin IVA)
+      const totalDisplayProducto = tienePrecioManual ? precioUnitarioSinIva * cantidad : totalConIvaProducto;
 
       // ========== MODO COMANDA: Tabla compacta tradicional ==========
       if (isComanda) {
@@ -1485,7 +1487,7 @@ export class PaymentService extends BaseService {
               </div>
             </td>
             <td style="padding: ${styles.spacing.lg} ${styles.spacing.md}; text-align: right; font-size: ${styles.typography.body}; color: ${styles.colors.black};">
-              ${this.formatCurrency(totalConIvaProducto)} COP
+              ${this.formatCurrency(totalDisplayProducto)} COP
             </td>
           </tr>
           ${isComanda && producto?.crearProducto?.descripcion ? `
