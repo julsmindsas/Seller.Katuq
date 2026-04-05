@@ -6233,6 +6233,36 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
                   this.editOrder(order);
                 });
                 return;
+              } else {
+                // Para todos los productos: permitir cambiar el IVA (por defecto el del producto)
+                const ivaDefault = configuracionResult.producto?.precio?.precioUnitarioIva || '0';
+                const tituloProducto = configuracionResult.producto?.crearProducto?.titulo || '';
+                Swal.fire({
+                  title: 'Impuesto (IVA)',
+                  html: `<p style="margin-bottom:0.75rem;">Selecciona el IVA para <b>${tituloProducto}</b>.</p>
+                         <select id="swal-iva-solo" class="swal2-input" style="margin:0;padding:0.4rem 0.5rem;width:100%;">
+                           <option value="0" ${ivaDefault === '0' ? 'selected' : ''}>0% - Excluido</option>
+                           <option value="5" ${ivaDefault === '5' ? 'selected' : ''}>5%</option>
+                           <option value="8" ${ivaDefault === '8' ? 'selected' : ''}>8% - Impoconsumo</option>
+                           <option value="19" ${ivaDefault === '19' ? 'selected' : ''}>19%</option>
+                         </select>`,
+                  showCancelButton: true,
+                  confirmButtonText: 'Aplicar',
+                  cancelButtonText: 'Usar IVA original',
+                  confirmButtonColor: '#8b5cf6',
+                  focusConfirm: false,
+                  preConfirm: () => {
+                    return (document.getElementById('swal-iva-solo') as HTMLSelectElement)?.value;
+                  }
+                }).then((result) => {
+                  if (result.isConfirmed && result.value !== undefined) {
+                    configuracionResult._ivaManualOverride = Number(result.value);
+                  }
+                  this.sincronizarFormaEntrega(order);
+                  order = this.actualizarValoresPedido(order);
+                  this.editOrder(order);
+                });
+                return;
               }
             } else {
               console.error(
