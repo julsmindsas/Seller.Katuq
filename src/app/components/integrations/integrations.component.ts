@@ -548,6 +548,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'prindel':
         this.integrationForm = this.createPrindelForm();
         break;
+      case 'multiop':
+        this.integrationForm = this.createMultiopForm();
+        break;
       case 'world_office':
         this.integrationForm = this.createWorldOfficeForm();
         this.woMasterDataLoaded = false;
@@ -638,6 +641,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'prindel':
         this.integrationForm = this.createPrindelForm();
+        break;
+      case 'multiop':
+        this.integrationForm = this.createMultiopForm();
         break;
       case 'world_office':
         this.integrationForm = this.createWorldOfficeForm();
@@ -956,6 +962,19 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       estimatedDays: ['1-3'],
       // Modo de prueba
       testMode: [false]
+    });
+  }
+
+  createMultiopForm(): FormGroup {
+    return this.fb.group({
+      name: ['MultiOP', Validators.required],
+      enabled: [true],
+      apiUrl: ['https://us-central1-katuq-new.cloudfunctions.net/api/', [Validators.required]],
+      apiKey: ['', [Validators.required, Validators.minLength(20)]],
+      companyNit: ['', Validators.required],
+      companyName: ['', Validators.required],
+      defaultLensType: ['Monofocal'],
+      defaultMaterial: [''],
     });
   }
 
@@ -1342,6 +1361,16 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           defaultRate: formData.defaultRate,
           estimatedDays: formData.estimatedDays,
           testMode: formData.testMode
+        };
+        break;
+      case 'multiop':
+        credentials = {
+          apiUrl: formData.apiUrl,
+          apiKey: formData.apiKey,
+          companyNit: formData.companyNit,
+          companyName: formData.companyName,
+          defaultLensType: formData.defaultLensType || 'Monofocal',
+          defaultMaterial: formData.defaultMaterial || '',
         };
         break;
       case 'siigo':

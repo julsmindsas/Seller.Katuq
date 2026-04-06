@@ -2133,6 +2133,75 @@
         </ng-container>
 
         <!-- Prindel Fields -->
+        <!-- MultiOP Configuration -->
+        <ng-container *ngIf="selectedIntegrationType === 'multiop'">
+          <div class="integration-info-box mb-3">
+            <i class="fa fa-info-circle me-2"></i>
+            <span>Conecta Katuq con el sistema de produccion de lentes MultiOP. Los pedidos con prescripcion optica se enviaran automaticamente al laboratorio.</span>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <div class="form-group">
+                <label for="apiUrl">URL del API <span class="field-required">*</span></label>
+                <input type="text" class="form-control" id="multiopApiUrl" formControlName="apiUrl" placeholder="https://us-central1-..." />
+                <small class="text-muted">URL del backend de MultiOP</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-12 mb-3">
+              <div class="form-group">
+                <label for="apiKey">API Key <span class="field-required">*</span></label>
+                <div class="input-group">
+                  <input [type]="showApiSecret ? 'text' : 'password'" class="form-control" id="multiopApiKey" formControlName="apiKey" placeholder="mop_live_..." />
+                  <button type="button" class="btn btn-outline-secondary" (click)="toggleApiSecretVisibility()">
+                    <i [class]="showApiSecret ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
+                  </button>
+                </div>
+                <small class="text-muted">Genera la API Key desde MultiOP v2 > Maestros > Integraciones</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label for="companyNit">NIT Empresa en MultiOP <span class="field-required">*</span></label>
+                <input type="text" class="form-control" id="companyNit" formControlName="companyNit" placeholder="900123456" />
+                <small class="text-muted">NIT de la empresa registrada en MultiOP</small>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label for="companyName">Nombre Empresa en MultiOP <span class="field-required">*</span></label>
+                <input type="text" class="form-control" id="companyName" formControlName="companyName" placeholder="Optica XYZ" />
+              </div>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label for="defaultLensType">Tipo de Lente por defecto</label>
+                <select class="form-control" id="defaultLensType" formControlName="defaultLensType">
+                  <option value="Monofocal">Monofocal</option>
+                  <option value="Bifocal">Bifocal</option>
+                  <option value="Progresivo">Progresivo</option>
+                  <option value="Ocupacional">Ocupacional</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="form-group">
+                <label for="defaultMaterial">Material por defecto</label>
+                <input type="text" class="form-control" id="defaultMaterial" formControlName="defaultMaterial" placeholder="Ej: CR39, Policarbonato" />
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
         <ng-container *ngIf="selectedIntegrationType === 'prindel'">
           <div class="integration-info-box">
             <i class="fa fa-info-circle"></i>
