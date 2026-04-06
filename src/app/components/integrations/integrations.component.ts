@@ -971,10 +971,6 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       enabled: [true],
       apiUrl: ['https://us-central1-katuq-new.cloudfunctions.net/api/', [Validators.required]],
       apiKey: ['', [Validators.required, Validators.minLength(20)]],
-      companyNit: ['', Validators.required],
-      companyName: ['', Validators.required],
-      defaultLensType: ['Monofocal'],
-      defaultMaterial: [''],
     });
   }
 
@@ -1367,10 +1363,6 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         credentials = {
           apiUrl: formData.apiUrl,
           apiKey: formData.apiKey,
-          companyNit: formData.companyNit,
-          companyName: formData.companyName,
-          defaultLensType: formData.defaultLensType || 'Monofocal',
-          defaultMaterial: formData.defaultMaterial || '',
         };
         break;
       case 'siigo':

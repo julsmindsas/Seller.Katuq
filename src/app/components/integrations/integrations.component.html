@@ -2165,41 +2165,6 @@
             </div>
           </div>
 
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <div class="form-group">
-                <label for="companyNit">NIT Empresa en MultiOP <span class="field-required">*</span></label>
-                <input type="text" class="form-control" id="companyNit" formControlName="companyNit" placeholder="900123456" />
-                <small class="text-muted">NIT de la empresa registrada en MultiOP</small>
-              </div>
-            </div>
-            <div class="col-md-6 mb-3">
-              <div class="form-group">
-                <label for="companyName">Nombre Empresa en MultiOP <span class="field-required">*</span></label>
-                <input type="text" class="form-control" id="companyName" formControlName="companyName" placeholder="Optica XYZ" />
-              </div>
-            </div>
-          </div>
-
-          <div class="row">
-            <div class="col-md-6 mb-3">
-              <div class="form-group">
-                <label for="defaultLensType">Tipo de Lente por defecto</label>
-                <select class="form-control" id="defaultLensType" formControlName="defaultLensType">
-                  <option value="Monofocal">Monofocal</option>
-                  <option value="Bifocal">Bifocal</option>
-                  <option value="Progresivo">Progresivo</option>
-                  <option value="Ocupacional">Ocupacional</option>
-                </select>
-              </div>
-            </div>
-            <div class="col-md-6 mb-3">
-              <div class="form-group">
-                <label for="defaultMaterial">Material por defecto</label>
-                <input type="text" class="form-control" id="defaultMaterial" formControlName="defaultMaterial" placeholder="Ej: CR39, Policarbonato" />
-              </div>
-            </div>
-          </div>
         </ng-container>
 
         <ng-container *ngIf="selectedIntegrationType === 'prindel'">
