@@ -885,6 +885,15 @@
                                             <label class="small fw-bold">{{ campo.etiqueta }} <span *ngIf="campo.requerido" class="text-danger">*</span></label>
                                             <input *ngIf="campo.tipo === 'text'" type="text" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta">
                                             <input *ngIf="campo.tipo === 'number'" type="number" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" [min]="campo.validacion?.min" [max]="campo.validacion?.max" [step]="campo.validacion?.step || 1">
+                                            <select *ngIf="campo.tipo === 'select'" class="form-control form-control-sm" [formControlName]="campo.id">
+                                                <option value="">-- Seleccionar --</option>
+                                                <option *ngFor="let opt of campo.opciones" [value]="opt.valor">{{ opt.etiqueta }}</option>
+                                            </select>
+                                            <div *ngIf="campo.tipo === 'checkbox'" class="form-check mt-1">
+                                                <input type="checkbox" class="form-check-input" [formControlName]="campo.id" [id]="campo.id">
+                                                <label class="form-check-label small" [for]="campo.id">{{ campo.etiqueta }}</label>
+                                            </div>
+                                            <input *ngIf="campo.tipo === 'date'" type="date" class="form-control form-control-sm" [formControlName]="campo.id">
                                             <textarea *ngIf="campo.tipo === 'textarea'" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" rows="2"></textarea>
                                         </div>
                                     </div>
@@ -898,6 +907,15 @@
                                                 <label class="small fw-bold">{{ campo.etiqueta }} <span *ngIf="campo.requerido" class="text-danger">*</span></label>
                                                 <input *ngIf="campo.tipo === 'text'" type="text" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta">
                                                 <input *ngIf="campo.tipo === 'number'" type="number" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" [min]="campo.validacion?.min" [max]="campo.validacion?.max" [step]="campo.validacion?.step || 1">
+                                                <select *ngIf="campo.tipo === 'select'" class="form-control form-control-sm" [formControlName]="campo.id">
+                                                    <option value="">-- Seleccionar --</option>
+                                                    <option *ngFor="let opt of campo.opciones" [value]="opt.valor">{{ opt.etiqueta }}</option>
+                                                </select>
+                                                <div *ngIf="campo.tipo === 'checkbox'" class="form-check mt-1">
+                                                    <input type="checkbox" class="form-check-input" [formControlName]="campo.id" [id]="campo.id">
+                                                    <label class="form-check-label small" [for]="campo.id">{{ campo.etiqueta }}</label>
+                                                </div>
+                                                <input *ngIf="campo.tipo === 'date'" type="date" class="form-control form-control-sm" [formControlName]="campo.id">
                                                 <textarea *ngIf="campo.tipo === 'textarea'" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" rows="2"></textarea>
                                             </div>
                                         </div>
