@@ -156,6 +156,8 @@
   &.action-btn-wa:hover { background: #dcfce7; color: #16a34a; }
   &.action-btn-detail { background: #ede9fe; color: #7c3aed; }
   &.action-btn-detail:hover { background: #ddd6fe; color: #6d28d9; }
+  &.action-btn-delete { background: #fef2f2; color: #d12b38; }
+  &.action-btn-delete:hover { background: #fee2e2; color: #b91c1c; }
 }
 
 // Column value
@@ -169,6 +171,28 @@
 .stat-badge-active {
   outline: 2px solid currentColor;
   outline-offset: 1px;
+}
+
+// Table action buttons (icon-only)
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: #f1f3f5;
+  color: #495057;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-decoration: none;
+
+  &:hover { background: #e5e7eb; color: #1f2937; text-decoration: none; }
+  &.action-btn-wa { background: #f0fdf4; color: #27AE60; }
+  &.action-btn-wa:hover { background: #dcfce7; color: #16a34a; }
+  &.action-btn-delete-table { background: #fef2f2; color: #d12b38; }
+  &.action-btn-delete-table:hover { background: #fee2e2; color: #b91c1c; }
 }
 
 .cursor-pointer { cursor: pointer; }

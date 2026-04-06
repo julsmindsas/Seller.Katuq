@@ -72,6 +72,23 @@ export class CrmService {
       .pipe(catchError(() => of({ success: false })));
   }
 
+  // ─── Delete ─────────────────────────────────────────────────
+
+  deleteLead(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.base}/leads/${id}`)
+      .pipe(catchError(() => of({ success: false })));
+  }
+
+  bulkDeleteLeads(ids: string[]): Observable<any> {
+    return this.http.post<any>(`${this.base}/leads/bulk-delete`, { ids })
+      .pipe(catchError(() => of({ success: false })));
+  }
+
+  findDuplicates(): Observable<any> {
+    return this.http.get<any>(`${this.base}/leads/duplicates`)
+      .pipe(catchError(() => of({ success: false, groups: [] })));
+  }
+
   // ─── Stats & Stages ─────────────────────────────────────────
 
   getStats(): Observable<CrmStats | null> {

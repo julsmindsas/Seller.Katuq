@@ -34,6 +34,11 @@
               </button>
               <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden
                 (change)="onFileImport($event)" />
+              <!-- Gestionar duplicados -->
+              <button class="btn btn-outline-warning btn-sm" (click)="openDuplicatesDialog()"
+                pTooltip="{{ 'Buscar duplicados' | translate }}" [disabled]="leads.length === 0">
+                <i class="fa fa-clone"></i>
+              </button>
               <!-- View toggle -->
               <div class="btn-group btn-group-sm">
                 <button class="btn" [ngClass]="viewMode === 'kanban' ? 'btn-primary' : 'btn-outline-secondary'"
@@ -143,6 +148,10 @@
                     <a class="action-btn-pill action-btn-detail" (click)="viewDetail(lead)">
                       <i class="fa fa-external-link me-1"></i>Ver
                     </a>
+                    <a class="action-btn-pill action-btn-delete" (click)="deleteSingleLead(lead, $event)"
+                      pTooltip="Eliminar" tooltipPosition="top">
+                      <i class="fa fa-trash"></i>
+                    </a>
                   </div>
 
                   <!-- Card footer -->
@@ -173,6 +182,21 @@
           </div>
         </div>
 
+        <!-- Barra de selección masiva -->
+        <div class="card-body py-2 border-bottom bg-light" *ngIf="selectedCount > 0">
+          <div class="d-flex align-items-center gap-3">
+            <span class="fw-semibold" style="color: #334155;">
+              <i class="fa fa-check-square-o me-1"></i>{{ selectedCount }} seleccionado(s)
+            </span>
+            <button class="btn btn-danger btn-sm" (click)="deleteSelectedFromTable()" [disabled]="deletingLeads">
+              <i class="fa fa-trash me-1"></i>Eliminar seleccionados
+            </button>
+            <button class="btn btn-outline-secondary btn-sm" (click)="clearSelection()">
+              <i class="fa fa-times me-1"></i>Limpiar selección
+            </button>
+          </div>
+        </div>
+
         <!-- ═══════ TABLE VIEW ═══════ -->
         <div class="card-body p-2" *ngIf="!loading && viewMode === 'table'">
           <p-table [value]="filteredLeads" dataKey="id"
@@ -184,19 +208,24 @@
 
             <ng-template pTemplate="header">
               <tr>
-                <th style="width:22%">{{ 'Nombre' | translate }}</th>
+                <th style="width:4%"></th>
+                <th style="width:20%">{{ 'Nombre' | translate }}</th>
                 <th style="width:12%" *ngIf="entityType === 'company'">{{ 'Plan' | translate }}</th>
                 <th style="width:10%">{{ 'Etapa' | translate }}</th>
                 <th style="width:8%">{{ 'Estado' | translate }}</th>
                 <th style="width:10%">{{ 'Prioridad' | translate }}</th>
-                <th style="width:14%">{{ 'Asignado' | translate }}</th>
+                <th style="width:12%">{{ 'Asignado' | translate }}</th>
                 <th style="width:10%">{{ 'Valor' | translate }}</th>
-                <th style="width:14%">{{ 'Contacto' | translate }}</th>
+                <th style="width:14%">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-lead>
               <tr class="cursor-pointer" (click)="viewDetail(lead)">
+                <td (click)="$event.stopPropagation()">
+                  <input type="checkbox" [checked]="isDuplicateSelected(lead.id)"
+                    (change)="toggleTableSelection(lead)" class="form-check-input" />
+                </td>
                 <td>
                   <strong>{{ lead.name }}</strong>
                   <small class="d-block text-muted">{{ lead.email || lead.nit || '' }}</small>
@@ -232,15 +261,14 @@
                     {{ formatCurrency(lead.estimatedValue) }}
                   </small>
                 </td>
-                <td>
-                  <div class="d-flex gap-2">
-                    <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn"
-                      (click)="$event.stopPropagation()"><i class="fa fa-phone"></i></a>
-                    <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn"
-                      (click)="$event.stopPropagation()"><i class="fa fa-envelope-o"></i></a>
+                <td (click)="$event.stopPropagation()">
+                  <div class="d-flex gap-2 align-items-center">
+                    <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn"><i class="fa fa-phone"></i></a>
+                    <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn"><i class="fa fa-envelope-o"></i></a>
                     <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
-                      class="action-btn action-btn-wa" (click)="$event.stopPropagation()">
-                      <i class="fa fa-whatsapp"></i></a>
+                      class="action-btn action-btn-wa"><i class="fa fa-whatsapp"></i></a>
+                    <a class="action-btn action-btn-delete-table" (click)="deleteSingleLead(lead, $event)"
+                      pTooltip="Eliminar"><i class="fa fa-trash"></i></a>
                   </div>
                 </td>
               </tr>
@@ -262,4 +290,107 @@
   </div>
 </div>
 
+<!-- ═══════ DIALOG DUPLICADOS ═══════ -->
+<p-dialog header="Leads duplicados" [(visible)]="showDuplicatesDialog"
+  [modal]="true" [style]="{width: '800px', maxHeight: '85vh'}" [closable]="true">
+
+  <!-- Loading -->
+  <div *ngIf="loadingDuplicates" class="text-center py-4">
+    <div class="loader-8"></div>
+    <p class="text-muted mt-2">Analizando duplicados...</p>
+  </div>
+
+  <!-- Stats -->
+  <div *ngIf="!loadingDuplicates" class="mb-3">
+    <div class="d-flex gap-3 align-items-center flex-wrap">
+      <span class="stat-badge stat-badge-primary">{{ duplicateStats.totalLeads }} leads totales</span>
+      <span class="stat-badge" style="background-color:#fff7ed; color:#D35400;">
+        {{ duplicateStats.duplicateGroups }} grupo(s) de duplicados
+      </span>
+      <span class="stat-badge" style="background-color:#fef2f2; color:#d12b38;">
+        {{ duplicateStats.duplicateLeads }} leads duplicados
+      </span>
+      <button *ngIf="selectedForDeletion.size > 0"
+        class="btn btn-danger btn-sm ms-auto" (click)="deleteSelectedDuplicates()" [disabled]="deletingLeads">
+        <i class="fa fa-trash me-1"></i>Eliminar {{ selectedForDeletion.size }} seleccionado(s)
+        <span *ngIf="deletingLeads" class="spinner-border spinner-border-sm ms-1"></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sin duplicados -->
+  <div *ngIf="!loadingDuplicates && duplicateGroups.length === 0" class="text-center py-4">
+    <i class="fa fa-check-circle" style="font-size: 2.5rem; color: #27AE60;"></i>
+    <p class="mt-2 fw-semibold" style="color: #334155;">No se encontraron duplicados</p>
+    <p class="text-muted">Todos los leads son únicos.</p>
+  </div>
+
+  <!-- Grupos de duplicados -->
+  <div *ngIf="!loadingDuplicates && duplicateGroups.length > 0"
+    style="max-height: 55vh; overflow-y: auto;">
+    <div *ngFor="let group of duplicateGroups; let gi = index" class="mb-3">
+      <div class="d-flex align-items-center justify-content-between mb-1">
+        <small class="fw-semibold" style="color: #64748b;">
+          Grupo {{ gi + 1 }} &mdash; coincide por: {{ group.matchedBy.join(', ') }}
+        </small>
+        <div class="d-flex gap-1">
+          <button class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:0.7rem;"
+            (click)="selectAllDuplicatesInGroup(group)"
+            pTooltip="Seleccionar duplicados (conserva el primero)">
+            Seleccionar duplicados
+          </button>
+          <button class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size:0.7rem;"
+            (click)="deselectAllInGroup(group)">
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered mb-0" style="font-size: 0.8rem;">
+          <thead class="table-light">
+            <tr>
+              <th style="width:30px;"></th>
+              <th>Nombre</th>
+              <th>Email</th>
+              <th>Teléfono</th>
+              <th>Etapa</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let lead of group.leads; let li = index"
+              [style.background-color]="isDuplicateSelected(lead.id) ? '#fef2f2' : (li === 0 ? '#f0fdf4' : 'inherit')">
+              <td class="text-center">
+                <input type="checkbox" class="form-check-input"
+                  [checked]="isDuplicateSelected(lead.id)"
+                  (change)="toggleDuplicateSelection(lead.id)" />
+              </td>
+              <td>
+                {{ lead.name }}
+                <span *ngIf="li === 0" class="badge bg-success ms-1" style="font-size:0.6rem;">original</span>
+              </td>
+              <td><small>{{ lead.email || '-' }}</small></td>
+              <td><small>{{ lead.phone || '-' }}</small></td>
+              <td>
+                <span class="stat-badge badge-sm"
+                  [style.background-color]="getStageBgColor(lead.stage)"
+                  [style.color]="getStageColor(lead.stage)">
+                  {{ capitalize(lead.stage) }}
+                </span>
+              </td>
+              <td>
+                <span [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
+                  {{ lead.activo ? 'activo' : 'inactivo' }}
+                </span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</p-dialog>
+
+<p-confirmDialog></p-confirmDialog>
 <p-toast></p-toast>

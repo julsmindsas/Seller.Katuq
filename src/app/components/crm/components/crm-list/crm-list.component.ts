@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { DragulaService } from 'ng2-dragula';
 import { CrmService } from '../../services/crm.service';
 import * as XLSX from 'xlsx';
@@ -27,12 +27,22 @@ export class CrmListComponent implements OnInit, OnDestroy {
   viewMode: 'kanban' | 'table' = 'kanban';
   selectedStage: string | null = null;
 
+  // Duplicados & eliminación
+  showDuplicatesDialog = false;
+  duplicateGroups: any[] = [];
+  duplicateStats = { totalLeads: 0, duplicateGroups: 0, duplicateLeads: 0 };
+  loadingDuplicates = false;
+  selectedForDeletion: Set<string> = new Set();
+  deletingLeads = false;
+  showManageMenu = false;
+
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
   constructor(
     private crmService: CrmService,
     private messageService: MessageService,
+    private confirmationService: ConfirmationService,
     private dragulaService: DragulaService,
     private router: Router,
   ) {}
@@ -441,5 +451,144 @@ export class CrmListComponent implements OnInit, OnDestroy {
       'convertido': 'convertido', 'perdido': 'perdido',
     };
     return map[v] || this.stages[0] || 'nuevo';
+  }
+
+  // ─── Duplicados & Eliminación ─────────────────────────────
+
+  openDuplicatesDialog(): void {
+    this.showDuplicatesDialog = true;
+    this.loadingDuplicates = true;
+    this.selectedForDeletion.clear();
+
+    this.crmService.findDuplicates()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.duplicateGroups = res.groups || [];
+          this.duplicateStats = {
+            totalLeads: res.totalLeads || 0,
+            duplicateGroups: res.duplicateGroups || 0,
+            duplicateLeads: res.duplicateLeads || 0,
+          };
+          this.loadingDuplicates = false;
+        },
+        error: () => {
+          this.loadingDuplicates = false;
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron cargar los duplicados' });
+        },
+      });
+  }
+
+  toggleDuplicateSelection(id: string): void {
+    if (this.selectedForDeletion.has(id)) {
+      this.selectedForDeletion.delete(id);
+    } else {
+      this.selectedForDeletion.add(id);
+    }
+  }
+
+  isDuplicateSelected(id: string): boolean {
+    return this.selectedForDeletion.has(id);
+  }
+
+  selectAllDuplicatesInGroup(group: any): void {
+    // Selecciona todos excepto el primero (se conserva uno)
+    group.leads.slice(1).forEach((lead: CrmLead) => {
+      this.selectedForDeletion.add(lead.id);
+    });
+  }
+
+  deselectAllInGroup(group: any): void {
+    group.leads.forEach((lead: CrmLead) => {
+      this.selectedForDeletion.delete(lead.id);
+    });
+  }
+
+  deleteSelectedDuplicates(): void {
+    const ids = Array.from(this.selectedForDeletion);
+    if (ids.length === 0) {
+      this.messageService.add({ severity: 'warn', summary: 'Selecciona leads', detail: 'Marca los leads que deseas eliminar' });
+      return;
+    }
+
+    this.confirmationService.confirm({
+      message: `¿Eliminar ${ids.length} lead(s) seleccionado(s)? Esta acción no se puede deshacer.`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.deletingLeads = true;
+        this.crmService.bulkDeleteLeads(ids)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (res) => {
+              this.deletingLeads = false;
+              if (res.success) {
+                this.messageService.add({
+                  severity: 'success',
+                  summary: 'Eliminados',
+                  detail: `${res.deleted} lead(s) eliminado(s)${res.failed ? `, ${res.failed} fallido(s)` : ''}`,
+                });
+                this.selectedForDeletion.clear();
+                this.showDuplicatesDialog = false;
+                this.loadLeads();
+                this.loadStats();
+              }
+            },
+            error: () => {
+              this.deletingLeads = false;
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudieron eliminar los leads' });
+            },
+          });
+      },
+    });
+  }
+
+  deleteSingleLead(lead: CrmLead, event: Event): void {
+    event.stopPropagation();
+    this.confirmationService.confirm({
+      message: `¿Eliminar "${lead.name}"? Se borrarán también sus actividades y tareas.`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Eliminar',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.crmService.deleteLead(lead.id)
+          .pipe(takeUntil(this.destroy$))
+          .subscribe({
+            next: (res) => {
+              if (res.success) {
+                this.leads = this.leads.filter(l => l.id !== lead.id);
+                this.groupByStage();
+                this.loadStats();
+                this.messageService.add({ severity: 'success', summary: 'Eliminado', detail: `"${lead.name}" eliminado` });
+              }
+            },
+            error: () => {
+              this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo eliminar el lead' });
+            },
+          });
+      },
+    });
+  }
+
+  // Seleccionar/deseleccionar leads en tabla
+  toggleTableSelection(lead: CrmLead): void {
+    this.toggleDuplicateSelection(lead.id);
+  }
+
+  get selectedCount(): number {
+    return this.selectedForDeletion.size;
+  }
+
+  clearSelection(): void {
+    this.selectedForDeletion.clear();
+  }
+
+  deleteSelectedFromTable(): void {
+    this.deleteSelectedDuplicates();
   }
 }
