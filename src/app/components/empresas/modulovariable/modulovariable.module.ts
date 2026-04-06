@@ -7,6 +7,7 @@ import { CommonModule } from '@angular/common';
 import { ModuloVariableComponent } from './modulovariable.component';
 import { ProcesosComponent } from './produccion/procesos/procesos.component';
 import { DropshippingConfigComponent } from './dropshipping/dropshipping-config.component';
+import { CamposPersonalizadosComponent } from './campos-personalizados/campos-personalizados.component';
 import { OrganizationChartModule } from 'primeng/organizationchart';
 import { PickListModule } from 'primeng/picklist';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -38,7 +39,8 @@ import { InputSwitchModule } from 'primeng/inputswitch';
         CentrotrabajosComponent,
         ModuloVariableComponent,
         ProcesosComponent,
-        DropshippingConfigComponent
+        DropshippingConfigComponent,
+        CamposPersonalizadosComponent
     ],
     providers: [],
 })

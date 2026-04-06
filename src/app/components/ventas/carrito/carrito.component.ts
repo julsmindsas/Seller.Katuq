@@ -169,10 +169,6 @@ export class CarritoComponent implements OnInit {
     // 🔒 Si el producto tiene precio por categoría de cliente, usar precio fijo SIN escalar por volumen
     if (producto?.producto?._precioAplicadoPorCategoria) {
       const precioFijoCategoria = Number(producto?.producto?.precio?.precioUnitarioConIva) || 0;
-      console.log('🔒 CARRITO: Usando precio fijo por categoría (sin aplicar volumen):', {
-        tipoCliente: producto?.producto?._precioAplicadoPorCategoria?.tipoClienteNombre,
-        precioFijo: precioFijoCategoria
-      });
       return precioFijoCategoria;
     }
 

@@ -39,6 +39,7 @@ import { parse } from "flatted";
 import { ToastrService } from "ngx-toastr";
 import { NotificationService } from "../../../../shared/services/notification.service";
 import { takeUntil, switchMap, tap, catchError, take } from "rxjs/operators";
+import { CustomFieldsService, CustomFieldGroup, CustomFieldConfig } from "../../../../shared/services/custom-fields.service";
 @Component({
   selector: "app-conf-product-to-cart",
   templateUrl: "./conf-product-to-cart.component.html",
@@ -186,6 +187,10 @@ export class ConfProductToCartComponent
   formasEntregaProducto: any;
   libConfigCarouselFixed: CarouselLibConfig;
 
+  // Campos personalizados por empresa
+  gruposCamposCustom: CustomFieldGroup[] = [];
+  customFieldsForms: { [grupoId: string]: FormGroup } = {};
+
   constructor(
     private storage: AngularFireStorage,
     private toastrService: ToastrService,
@@ -197,6 +202,7 @@ export class ConfProductToCartComponent
     private notificacionService: NotificationService,
     private renderer: Renderer2,
     private cdr: ChangeDetectorRef,
+    private customFieldsService: CustomFieldsService,
   ) {
     this.libConfigCarouselFixed = {
       carouselPreviewsConfig: {
@@ -638,6 +644,7 @@ export class ConfProductToCartComponent
 
   ngOnInit(): void {
     this.refreshCartWithProducts();
+    this.loadCustomFields();
     console.log(this.productos);
 
     // 🔄 Suscribirse al estado de los maestros para monitoreo en tiempo real
@@ -1590,6 +1597,34 @@ export class ConfProductToCartComponent
         configuracion: this.productoConfiguradoForm.value,
         cantidad: this.cantidad,
       };
+
+      // Agregar campos personalizados si hay
+      if (this.gruposCamposCustom.length > 0) {
+        const camposPersonalizados: { [grupoId: string]: { [campoId: string]: any } } = {};
+        for (const grupo of this.gruposCamposCustom) {
+          const form = this.customFieldsForms[grupo.id];
+          if (form) {
+            // Guardar valores con etiquetas para el PDF
+            const valores: any = {};
+            for (const campo of (grupo.campos || [])) {
+              const val = form.get(campo.id)?.value;
+              if (val != null && val !== '' && val !== false) {
+                valores[campo.id] = val;
+              }
+            }
+            // Guardar etiquetas como metadata para renderizado en PDF
+            valores._etiquetas = {};
+            valores._grupoNombre = grupo.nombre;
+            for (const campo of (grupo.campos || [])) {
+              valores._etiquetas[campo.id] = campo.etiqueta;
+            }
+            camposPersonalizados[grupo.id] = valores;
+          }
+        }
+        if (ProductoCompra.configuracion) {
+          ProductoCompra.configuracion.camposPersonalizados = camposPersonalizados;
+        }
+      }
 
       console.log("ProductoCompra creado:", ProductoCompra);
 
@@ -4508,5 +4543,62 @@ export class ConfProductToCartComponent
     return preciosPorTipo.some(
       (p: any) => p.tipoClienteId === categoriaId && p.activo === true
     );
+  }
+
+  // ============== CAMPOS PERSONALIZADOS ==============
+
+  /**
+   * Carga los grupos de campos custom activos para el contexto "carrito".
+   * Crea un FormGroup dinámico por cada grupo.
+   */
+  private loadCustomFields(): void {
+    this.customFieldsService.getActiveGroups('carrito').subscribe(groups => {
+      this.gruposCamposCustom = groups;
+
+      // Crear FormGroup por cada grupo
+      for (const grupo of groups) {
+        const controls: { [key: string]: FormControl } = {};
+        for (const campo of (grupo.campos || [])) {
+          const defaultValue = campo.tipo === 'checkbox' ? false : campo.tipo === 'number' ? null : '';
+          controls[campo.id] = new FormControl(defaultValue, campo.requerido ? Validators.required : []);
+        }
+        this.customFieldsForms[grupo.id] = new FormGroup(controls);
+      }
+
+      // Forzar change detection para que el template se re-renderice con los nuevos datos
+      this.cdr.detectChanges();
+
+      if (groups.length > 0) {
+        for (const g of groups) {
+          const form = this.customFieldsForms[g.id];
+          console.log(`📋 [CustomFields] Grupo "${g.nombre}" (${g.id}): ${g.campos?.length} campos, form exists: ${!!form}, controls: ${form ? Object.keys(form.controls).join(', ') : 'N/A'}`);
+          for (const c of (g.campos || [])) {
+            const ctrl = form?.get(c.id);
+            console.log(`  → Campo "${c.etiqueta}" (${c.id}): control exists: ${!!ctrl}, tipo: ${c.tipo}, grupo: ${c.grupo}`);
+          }
+        }
+      }
+    });
+  }
+
+  getSubgroups(grupo: CustomFieldGroup): string[] {
+    return this.customFieldsService.getSubgroups(grupo);
+  }
+
+  getFieldsBySubgroup(grupo: CustomFieldGroup, subgroup: string): CustomFieldConfig[] {
+    return this.customFieldsService.getFieldsBySubgroup(grupo, subgroup);
+  }
+
+  getFieldsWithoutSubgroup(grupo: CustomFieldGroup): CustomFieldConfig[] {
+    return this.customFieldsService.getFieldsWithoutSubgroup(grupo);
+  }
+
+  getCustomControl(grupoId: string, campoId: string): FormControl {
+    const form = this.customFieldsForms[grupoId];
+    const ctrl = form?.get(campoId) as FormControl;
+    if (!ctrl) {
+      console.warn(`⚠️ [CustomFields] Control no encontrado: grupo=${grupoId}, campo=${campoId}, form exists=${!!form}, controls=${form ? Object.keys(form.controls) : 'N/A'}`);
+    }
+    return ctrl;
   }
 }

@@ -71,6 +71,7 @@ import { FilterService } from './services/filters/filter.service';
 import { UsageWidgetComponent } from './components/usage-widget/usage-widget.component';
 // Upgrade Modal Component
 import { UpgradeModalComponent } from './components/upgrade-modal/upgrade-modal.component';
+import { DynamicFieldComponent } from './components/dynamic-field/dynamic-field.component';
 // PrimeNG Modules for filters
 import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
@@ -128,7 +129,9 @@ import { DialogModule } from 'primeng/dialog';
     // Usage Widget Component
     UsageWidgetComponent,
     // Upgrade Modal Component
-    UpgradeModalComponent
+    UpgradeModalComponent,
+    // Dynamic Fields
+    DynamicFieldComponent
     // FloatingButtonComponent,
     // ChatFormComponent
   ],

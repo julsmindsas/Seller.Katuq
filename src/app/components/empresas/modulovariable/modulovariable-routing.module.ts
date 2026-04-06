@@ -4,6 +4,7 @@ import { CentrotrabajosComponent } from './produccion/centrotrabajos/centrotraba
 import { ModuloVariableComponent } from './modulovariable.component';
 import { ProcesosComponent } from './produccion/procesos/procesos.component';
 import { DropshippingConfigComponent } from './dropshipping/dropshipping-config.component';
+import { CamposPersonalizadosComponent } from './campos-personalizados/campos-personalizados.component';
 
 const routes: Routes = [
 
@@ -22,6 +23,10 @@ const routes: Routes = [
     {
         path: 'dropshipping/configuracion',
         component: DropshippingConfigComponent
+    },
+    {
+        path: 'campos-personalizados',
+        component: CamposPersonalizadosComponent
     },
 ];
 

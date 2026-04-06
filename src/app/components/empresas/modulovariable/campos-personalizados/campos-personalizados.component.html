@@ -1,0 +1,202 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12">
+
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h4 class="mb-1">Campos Personalizados</h4>
+          <p class="text-muted mb-0">Define campos adicionales que se capturan en la venta asistida</p>
+        </div>
+        <button class="btn btn-primary" (click)="nuevoGrupo()" *ngIf="!showForm">
+          <i class="fa fa-plus me-2"></i>Nuevo Grupo
+        </button>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="loading" class="text-center py-5">
+        <i class="fa fa-spinner fa-spin fa-2x"></i>
+        <p class="text-muted mt-2">Cargando...</p>
+      </div>
+
+      <!-- Lista de grupos -->
+      <div *ngIf="!loading && !showForm">
+
+        <!-- Vacío -->
+        <div *ngIf="grupos.length === 0" class="card">
+          <div class="card-body text-center py-5">
+            <i class="fa fa-list-alt fa-3x text-muted mb-3"></i>
+            <h5 class="text-muted">No hay campos personalizados</h5>
+            <p class="text-muted">Crea un grupo de campos para capturar datos adicionales en tus ventas</p>
+            <button class="btn btn-primary" (click)="nuevoGrupo()">
+              <i class="fa fa-plus me-2"></i>Crear primer grupo
+            </button>
+          </div>
+        </div>
+
+        <!-- Cards de grupos -->
+        <div *ngFor="let grupo of grupos" class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <h5 class="mb-0">{{ grupo.nombre }}</h5>
+                  <span class="badge" [class.bg-success]="grupo.activo" [class.bg-secondary]="!grupo.activo">
+                    {{ grupo.activo ? 'Activo' : 'Inactivo' }}
+                  </span>
+                  <span class="badge bg-info">{{ grupo.contexto }}</span>
+                </div>
+                <p class="text-muted small mb-2" *ngIf="grupo.descripcion">{{ grupo.descripcion }}</p>
+                <div class="d-flex flex-wrap gap-1">
+                  <span *ngFor="let campo of grupo.campos" class="badge bg-light text-dark border">
+                    {{ campo.etiqueta }}
+                    <small class="text-muted">({{ campo.tipo }})</small>
+                  </span>
+                </div>
+                <small class="text-muted d-block mt-1">{{ grupo.campos?.length || 0 }} campo(s)</small>
+              </div>
+              <div class="d-flex gap-2">
+                <button class="btn btn-sm btn-outline-secondary" (click)="toggleActivo(grupo)"
+                        [title]="grupo.activo ? 'Desactivar' : 'Activar'">
+                  <i class="fa" [class.fa-toggle-on]="grupo.activo" [class.fa-toggle-off]="!grupo.activo"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-primary" (click)="editarGrupo(grupo)">
+                  <i class="fa fa-pencil"></i>
+                </button>
+                <button class="btn btn-sm btn-outline-danger" (click)="eliminarGrupo(grupo)">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Formulario de crear/editar grupo -->
+      <div *ngIf="showForm" class="card">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="fa fa-list-alt me-2"></i>
+            {{ editingGroup ? 'Editar' : 'Nuevo' }} Grupo de Campos
+          </h5>
+        </div>
+        <div class="card-body" [formGroup]="groupForm">
+
+          <!-- Info del grupo -->
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Nombre del grupo *</label>
+              <input type="text" class="form-control" formControlName="nombre"
+                     placeholder="Ej: Prescripcion Optica, Tallas, Grabado">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-bold">Descripcion</label>
+              <input type="text" class="form-control" formControlName="descripcion"
+                     placeholder="Descripcion breve">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label fw-bold">Contexto</label>
+              <select class="form-control" formControlName="contexto">
+                <option value="carrito">Al agregar al carrito</option>
+                <option value="pedido">En el pedido</option>
+                <option value="producto">En el producto</option>
+              </select>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label fw-bold">Activo</label>
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" formControlName="activo">
+                <label class="form-check-label">{{ groupForm.get('activo')?.value ? 'Si' : 'No' }}</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campos -->
+          <h6 class="border-bottom pb-2 mb-3">
+            <i class="fa fa-th-list me-1"></i> Campos
+            <button class="btn btn-sm btn-outline-primary ms-3" type="button" (click)="agregarCampo()">
+              <i class="fa fa-plus me-1"></i>Agregar campo
+            </button>
+          </h6>
+
+          <div formArrayName="campos">
+            <div *ngIf="camposArray.length === 0" class="text-center text-muted py-3">
+              Agrega al menos un campo
+            </div>
+
+            <div *ngFor="let campo of camposArray.controls; let i = index" [formGroupName]="i"
+                 class="border rounded p-3 mb-2 bg-light">
+              <div class="row align-items-end">
+                <div class="col-md-3">
+                  <label class="form-label small">Etiqueta *</label>
+                  <input type="text" class="form-control form-control-sm" formControlName="etiqueta"
+                         placeholder="Ej: OD Esfera">
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small">Tipo</label>
+                  <select class="form-control form-control-sm" formControlName="tipo">
+                    <option *ngFor="let t of tiposCampo" [value]="t.valor">{{ t.etiqueta }}</option>
+                  </select>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small">Sub-grupo</label>
+                  <input type="text" class="form-control form-control-sm" formControlName="grupo"
+                         placeholder="Ej: Ojo Derecho">
+                </div>
+                <div class="col-md-1">
+                  <div class="form-check mt-4">
+                    <input class="form-check-input" type="checkbox" formControlName="requerido">
+                    <label class="form-check-label small">Req.</label>
+                  </div>
+                </div>
+
+                <!-- Validaciones para number -->
+                <div class="col-md-1" *ngIf="campo.get('tipo')?.value === 'number'">
+                  <label class="form-label small">Min</label>
+                  <input type="number" class="form-control form-control-sm" formControlName="min">
+                </div>
+                <div class="col-md-1" *ngIf="campo.get('tipo')?.value === 'number'">
+                  <label class="form-label small">Max</label>
+                  <input type="number" class="form-control form-control-sm" formControlName="max">
+                </div>
+
+                <!-- Opciones para select -->
+                <div class="col-md-3" *ngIf="campo.get('tipo')?.value === 'select'">
+                  <label class="form-label small">Opciones (separadas por coma)</label>
+                  <input type="text" class="form-control form-control-sm" formControlName="opciones"
+                         placeholder="Opcion 1, Opcion 2, Opcion 3">
+                </div>
+
+                <!-- Acciones -->
+                <div class="col-auto ms-auto">
+                  <div class="btn-group btn-group-sm">
+                    <button type="button" class="btn btn-outline-secondary" (click)="moverCampo(i, -1)"
+                            [disabled]="i === 0" title="Subir">
+                      <i class="fa fa-arrow-up"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" (click)="moverCampo(i, 1)"
+                            [disabled]="i === camposArray.length - 1" title="Bajar">
+                      <i class="fa fa-arrow-down"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-danger" (click)="eliminarCampo(i)" title="Eliminar">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones -->
+          <div class="d-flex justify-content-end gap-2 mt-4">
+            <button class="btn btn-outline-secondary" (click)="cancelar()">Cancelar</button>
+            <button class="btn btn-primary" (click)="guardar()" [disabled]="groupForm.invalid || camposArray.length === 0">
+              <i class="fa fa-save me-1"></i>{{ editingGroup ? 'Actualizar' : 'Crear' }} Grupo
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

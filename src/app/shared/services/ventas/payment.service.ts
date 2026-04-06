@@ -1382,6 +1382,37 @@ export class PaymentService extends BaseService {
           carritoHtml += `</div>`;
         }
 
+        // 📋 CAMPOS PERSONALIZADOS - Datos custom configurados por empresa
+        if (configuracion?.camposPersonalizados) {
+          const camposCustom: any = configuracion.camposPersonalizados;
+          for (const [grupoId, grupoData] of Object.entries(camposCustom)) {
+            if (!grupoData || typeof grupoData !== 'object') continue;
+            const datos: any = grupoData;
+            const etiquetas = datos._etiquetas || {};
+            const grupoNombre = datos._grupoNombre || 'Datos Adicionales';
+
+            const entries = Object.entries(datos).filter(([k, v]) =>
+              !k.startsWith('_') && v != null && v !== '' && v !== false
+            );
+            if (entries.length === 0) continue;
+
+            carritoHtml += `<div style="margin-top: 4px; padding: 3px 0; border-top: 1px dotted #999;">`;
+            carritoHtml += `<div style="font-size: 8px; color: #000; font-weight: bold; margin-bottom: 2px;">${grupoNombre}:</div>`;
+            carritoHtml += `<table width="100%" cellpadding="0" cellspacing="0">`;
+
+            entries.forEach(([campoId, valor]) => {
+              const etiqueta = etiquetas[campoId] || campoId;
+              carritoHtml += `
+                <tr>
+                  <td style="font-size: 9px; color: #666; padding: 1px 4px; width: 40%;">${etiqueta}</td>
+                  <td style="font-size: 9px; color: #000; font-weight: bold; padding: 1px 4px;">${valor}</td>
+                </tr>`;
+            });
+
+            carritoHtml += `</table></div>`;
+          }
+        }
+
         // 3️⃣ OPCIONES DE PERSONALIZACIÓN - Datos de Entrega (Ocasión, Género, Observaciones)
         if (configuracion?.datosEntrega) {
           const datosEntrega = configuracion.datosEntrega;
@@ -1579,6 +1610,44 @@ export class PaymentService extends BaseService {
                 </td>
               </tr>`;
           });
+        }
+
+        // 📋 CAMPOS PERSONALIZADOS (PDF normal - no comanda)
+        if (configuracion?.camposPersonalizados) {
+          const camposCustom: any = configuracion.camposPersonalizados;
+          for (const [grupoId, grupoData] of Object.entries(camposCustom)) {
+            if (!grupoData || typeof grupoData !== 'object') continue;
+            const datos: any = grupoData;
+            const etiquetas = datos._etiquetas || {};
+            const grupoNombre = datos._grupoNombre || 'Datos Adicionales';
+
+            const entries = Object.entries(datos).filter(([k, v]) =>
+              !k.startsWith('_') && v != null && v !== '' && v !== false
+            );
+            if (entries.length === 0) continue;
+
+            carritoHtml += `
+              <tr>
+                <td colspan="2" style="padding: ${styles.spacing.md};">
+                  <div style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; font-weight: ${styles.typography.semibold}; margin-bottom: 4px;">
+                    ${grupoNombre}
+                  </div>
+                  <table width="100%" cellpadding="0" cellspacing="0">`;
+
+            entries.forEach(([campoId, valor]) => {
+              const etiqueta = etiquetas[campoId] || campoId;
+              carritoHtml += `
+                    <tr>
+                      <td style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.gray}; padding: 2px 4px; width: 40%;">${etiqueta}</td>
+                      <td style="font-size: ${styles.typography.bodySmall}; color: ${styles.colors.black}; font-weight: bold; padding: 2px 4px;">${valor}</td>
+                    </tr>`;
+            });
+
+            carritoHtml += `
+                  </table>
+                </td>
+              </tr>`;
+          }
         }
 
         // Detalles de Entrega (Ocasión, Género, Observaciones) - Condicional

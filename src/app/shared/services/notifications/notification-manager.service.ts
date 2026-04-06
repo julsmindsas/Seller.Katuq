@@ -256,11 +256,19 @@ export class NotificationManagerService {
             companyId: this.currentCompanyId || undefined,
             
             channels: [NotificationChannel.IN_APP],
-            priority: NotificationPriority.NORMAL,
+            priority: newNotification.priority === 'CRITICAL' ? NotificationPriority.CRITICAL
+                    : newNotification.priority === 'HIGH' ? NotificationPriority.HIGH
+                    : NotificationPriority.NORMAL,
             status: newNotification.read ? NotificationStatus.READ : NotificationStatus.PENDING,
-            
+
             createdAt: new Date(newNotification.timestamp || Date.now()),
-            readAt: newNotification.read ? new Date() : undefined
+            readAt: newNotification.read ? new Date() : undefined,
+
+            // Accion y navegacion (enviados por el backend)
+            actionUrl: newNotification.actionUrl || undefined,
+            actionText: newNotification.actionText || undefined,
+            icon: newNotification.icon || undefined,
+            color: newNotification.color || undefined
           };
           
           // Agregar a notificaciones locales
@@ -313,9 +321,15 @@ export class NotificationManagerService {
       'Producción Completada': NotificationType.PRODUCTION_COMPLETED,
       'Empacado': NotificationType.ORDER_PACKED,
       'Despachado': NotificationType.ORDER_DISPATCHED,
-      'Entregado': NotificationType.ORDER_DELIVERED
+      'Entregado': NotificationType.ORDER_DELIVERED,
+
+      // Facturación electrónica
+      'INVOICE_CREATED': NotificationType.INVOICE_CREATED,
+      'INVOICE_FAILED': NotificationType.INVOICE_FAILED,
+      'SIIGO_INVOICE_CREATED': NotificationType.SIIGO_INVOICE_CREATED,
+      'SIIGO_INVOICE_FAILED': NotificationType.SIIGO_INVOICE_FAILED
     };
-    
+
     return typeMap[type] || NotificationType.SYSTEM_ALERT;
   }
 

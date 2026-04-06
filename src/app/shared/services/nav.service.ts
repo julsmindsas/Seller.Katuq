@@ -580,6 +580,12 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "truck",
         },
+        {
+          path: "empresas/modulovariable/campos-personalizados",
+          title: "Campos Personalizados",
+          type: "link",
+          icon: "list",
+        },
         { path: "app-entregas", title: "App de entregas", type: "link", icon: "smartphone" },
       ],
     },

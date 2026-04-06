@@ -416,6 +416,7 @@ export interface Configuracion {
   preferencias: Preferencia[];
   adiciones: Adicion[];
   tarjetas: Tarjeta[];
+  camposPersonalizados?: { [grupoId: string]: { [campoId: string]: any } };
 }
 
 export interface DatosEntrega {

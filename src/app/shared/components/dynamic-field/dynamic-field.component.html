@@ -1,0 +1,63 @@
+<ng-container *ngIf="control">
+  <div class="form-group mb-2">
+    <label [for]="campo?.id" class="small fw-bold" *ngIf="campo?.tipo !== 'checkbox'">
+      {{ campo?.etiqueta }}
+      <span *ngIf="campo?.requerido" class="text-danger">*</span>
+    </label>
+
+    <!-- Text -->
+    <input *ngIf="campo?.tipo === 'text'"
+      type="text"
+      class="form-control form-control-sm"
+      [id]="campo?.id"
+      [formControl]="control"
+      [placeholder]="campo?.etiqueta || ''">
+
+    <!-- Number -->
+    <input *ngIf="campo?.tipo === 'number'"
+      type="number"
+      class="form-control form-control-sm"
+      [id]="campo?.id"
+      [formControl]="control"
+      [min]="campo?.validacion?.min"
+      [max]="campo?.validacion?.max"
+      [step]="campo?.validacion?.step || 1"
+      [placeholder]="campo?.etiqueta || ''">
+
+    <!-- Select -->
+    <select *ngIf="campo?.tipo === 'select'"
+      class="form-control form-control-sm"
+      [id]="campo?.id"
+      [formControl]="control">
+      <option value="">-- Seleccionar --</option>
+      <option *ngFor="let opt of campo?.opciones" [value]="opt.valor">
+        {{ opt.etiqueta }}
+      </option>
+    </select>
+
+    <!-- Checkbox -->
+    <div *ngIf="campo?.tipo === 'checkbox'" class="form-check">
+      <input type="checkbox"
+        class="form-check-input"
+        [id]="campo?.id"
+        [formControl]="control">
+      <label class="form-check-label" [for]="campo?.id">{{ campo?.etiqueta }}</label>
+    </div>
+
+    <!-- Date -->
+    <input *ngIf="campo?.tipo === 'date'"
+      type="date"
+      class="form-control form-control-sm"
+      [id]="campo?.id"
+      [formControl]="control">
+
+    <!-- Textarea -->
+    <textarea *ngIf="campo?.tipo === 'textarea'"
+      class="form-control form-control-sm"
+      [id]="campo?.id"
+      [formControl]="control"
+      [placeholder]="campo?.etiqueta || ''"
+      rows="2">
+    </textarea>
+  </div>
+</ng-container>

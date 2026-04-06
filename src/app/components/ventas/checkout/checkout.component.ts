@@ -631,16 +631,6 @@ export class CheckOutComponent implements OnInit, OnChanges {
         ? preciosPorTipoCliente.find((p: any) => p.tipoClienteId === categoriaClienteId && p.activo === true)
         : null;
 
-      // 🔍 DEBUG: Log para verificar valores
-      console.log('🧾 checkIVAPrice - Checkout:', {
-        titulo: itemCarrito?.producto?.crearProducto?.titulo,
-        categoriaClienteId,
-        preciosPorTipoClienteCount: preciosPorTipoCliente.length,
-        preciosPorTipoCliente: preciosPorTipoCliente,
-        precioCategoria,
-        productoPrecioIva: productoPrecio?.precioUnitarioIva,
-        productoValorIva: productoPrecio?.valorIva
-      });
 
       if ((itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
           && itemCarrito.producto?.procesoComercial?.permitePrecioManual === true)

@@ -149,8 +149,8 @@ export class NotificationPreferencesService {
     try {
       const toSave = {
         ...preferences,
-        createdAt: preferences.createdAt.toISOString(),
-        updatedAt: preferences.updatedAt.toISOString()
+        createdAt: preferences.createdAt?.toISOString?.() || new Date().toISOString(),
+        updatedAt: preferences.updatedAt?.toISOString?.() || new Date().toISOString()
       };
       
       localStorage.setItem(

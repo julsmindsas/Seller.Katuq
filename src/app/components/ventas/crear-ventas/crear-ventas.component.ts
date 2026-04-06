@@ -3244,12 +3244,8 @@ export class CrearVentasComponent
           );
 
           if (tieneProductoSinCalendario) {
-            console.log('✅ Selector de forma de entrega visible: Producto(s) sin calendario activado');
             return true;
           }
-
-          // Todos los productos tienen calendario activado
-          console.log('🚫 Selector de forma de entrega ocultado: Todos los productos tienen calendario activado');
           return false;
         }
       }

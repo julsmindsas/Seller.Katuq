@@ -9,8 +9,12 @@
                 <div class="card">
                     <div class="card-body">
                         <section>
-                            <ks-carousel [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
+                            <ks-carousel *ngIf="imagesRect?.length > 0" [id]="101" [images]="imagesRect" [config]="libConfigCarouselFixed">
                             </ks-carousel>
+                            <div *ngIf="!imagesRect?.length" class="text-center py-4">
+                                <img src="assets/images/placeholders/product-not-found.svg"
+                                     alt="Sin imagen" style="max-height: 200px; opacity: 0.5;">
+                            </div>
                         </section>
                         <section class="product-compact-info">
                             <div class="product-page-details">
@@ -855,6 +859,46 @@
                                                         </div>
                                                     </div>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </ng-template>
+                    </ngb-panel>
+
+                    <!-- Sección: Campos Personalizados (dinámicos por empresa) -->
+                    <ngb-panel *ngFor="let grupo of gruposCamposCustom" [id]="'customFields_' + grupo.id">
+                        <ng-template ngbPanelHeader>
+                            <div class="d-flex align-items-center justify-content-between w-100">
+                                <button ngbPanelToggle class="accordion-button">
+                                    <i class="fa fa-list-alt me-2"></i> {{ grupo.nombre }}
+                                </button>
+                            </div>
+                        </ng-template>
+                        <ng-template ngbPanelContent>
+                            <div *ngIf="customFieldsForms[grupo.id]" [formGroup]="customFieldsForms[grupo.id]">
+                                <!-- Campos sin sub-grupo -->
+                                <div class="row" *ngIf="getFieldsWithoutSubgroup(grupo).length > 0">
+                                    <div *ngFor="let campo of getFieldsWithoutSubgroup(grupo)" class="col-md-4 col-sm-6">
+                                        <div class="form-group mb-2">
+                                            <label class="small fw-bold">{{ campo.etiqueta }} <span *ngIf="campo.requerido" class="text-danger">*</span></label>
+                                            <input *ngIf="campo.tipo === 'text'" type="text" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta">
+                                            <input *ngIf="campo.tipo === 'number'" type="number" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" [min]="campo.validacion?.min" [max]="campo.validacion?.max" [step]="campo.validacion?.step || 1">
+                                            <textarea *ngIf="campo.tipo === 'textarea'" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <!-- Sub-grupos -->
+                                <div *ngFor="let subgrupo of getSubgroups(grupo)" class="mb-3">
+                                    <h6 class="border-bottom pb-1 text-muted"><i class="fa fa-tag me-1"></i>{{ subgrupo }}</h6>
+                                    <div class="row">
+                                        <div *ngFor="let campo of getFieldsBySubgroup(grupo, subgrupo)" class="col-md-4 col-sm-6">
+                                            <div class="form-group mb-2">
+                                                <label class="small fw-bold">{{ campo.etiqueta }} <span *ngIf="campo.requerido" class="text-danger">*</span></label>
+                                                <input *ngIf="campo.tipo === 'text'" type="text" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta">
+                                                <input *ngIf="campo.tipo === 'number'" type="number" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" [min]="campo.validacion?.min" [max]="campo.validacion?.max" [step]="campo.validacion?.step || 1">
+                                                <textarea *ngIf="campo.tipo === 'textarea'" class="form-control form-control-sm" [formControlName]="campo.id" [placeholder]="campo.etiqueta" rows="2"></textarea>
                                             </div>
                                         </div>
                                     </div>
