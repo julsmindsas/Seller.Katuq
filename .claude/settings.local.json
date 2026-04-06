@@ -107,7 +107,11 @@
       "Bash(start Frontend Katuq:*)",
       "Bash(start \"Backend Katuq\" cmd /k \"cd /d C:\\\\Users\\\\julia\\\\Documents\\\\Seller.Katuq.Back\\\\katuq_admin_back_firebase\\\\functions && npm run start-express\")",
       "Bash(sed:*)",
-      "Bash(python -c:*)"
+      "Bash(python -c:*)",
+      "Bash(where python:*)",
+      "Bash(where python3:*)",
+      "Bash(where py:*)",
+      "Bash(python -m pip install python-docx)"
     ]
   }
 }

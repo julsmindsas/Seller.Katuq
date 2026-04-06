@@ -763,6 +763,8 @@ export class IntegrationsService {
       case "siigo":
       case "world_office":
         return IntegrationCategory.ACCOUNTING;
+      case "multiop":
+        return IntegrationCategory.OTHER;
       default:
         return IntegrationCategory.OTHER;
     }
@@ -1356,6 +1358,14 @@ export class IntegrationsService {
         },
       ],
       [IntegrationCategory.OTHER]: [
+        {
+          id: "multiop",
+          name: "MultiOP",
+          description:
+            "Sistema de producción de lentes oftálmicos. Conecta pedidos de óptica con el laboratorio de producción MultiOP.",
+          logo: "assets/images/integrations/multiop-logo.png",
+          active: true,
+        },
         {
           id: "slack",
           name: "Slack",

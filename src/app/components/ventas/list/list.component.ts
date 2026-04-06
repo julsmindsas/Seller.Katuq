@@ -2980,7 +2980,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const filter: any = {
       fechaInicial: startDate.toISOString(),
       fechaFinal: endDate.toISOString(),
-      company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
+      company: (() => { const c = JSON.parse(localStorage.getItem("currentCompany") || '{}'); return c.nomComercial || c.nombreComercio; })(),
       tipoFecha: "fechaEntrega",
       estadoProceso: ["Todos"],
       //se comenta mientras salimos del dia de amor y amistad PARA ALMARA - 17/09/2025
@@ -3487,7 +3487,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const filter: any = {
       fechaInicial: startDate.toISOString(),
       fechaFinal: endDate.toISOString(),
-      company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
+      company: (() => { const c = JSON.parse(localStorage.getItem("currentCompany") || '{}'); return c.nomComercial || c.nombreComercio; })(),
       tipoFecha: "fechaEntrega",
       estadoProceso: ["Todos"],
     };
@@ -7287,7 +7287,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       fechaInicial: this.fechaInicial,
       fechaFinal: this.fechaFinal,
       tipoFecha: "fechaCreacion",
-      company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
+      company: (() => { const c = JSON.parse(localStorage.getItem("currentCompany") || '{}'); return c.nomComercial || c.nombreComercio; })(),
       estadoProceso: this.isFromProduction
         ? [
           EstadoProceso.SinProducir,
@@ -7420,7 +7420,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     try {
       // Obtener datos de la empresa actual
       const currentCompany = JSON.parse(localStorage.getItem("currentCompany") || '{}');
-      const company = currentCompany.nomComercial;
+      const company = currentCompany.nomComercial || currentCompany.nombreComercio;
 
       if (!company) {
         throw new Error('No se encontró la empresa actual');
@@ -7625,7 +7625,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const filter: any = {
       fechaInicial: startDate.toISOString(),
       fechaFinal: endDate.toISOString(),
-      company: JSON.parse(localStorage.getItem("currentCompany")!).nomComercial,
+      company: (() => { const c = JSON.parse(localStorage.getItem("currentCompany") || '{}'); return c.nomComercial || c.nombreComercio; })(),
       tipoFecha: "fechaCreacion", // Cambiado de fechaEntrega a fechaCreacion para incluir TODOS los pedidos
       estadoProceso: ["Todos"],
     };
@@ -8806,6 +8806,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       );
       const companyNom: string =
         empresaActual?.nomComercial ||
+        empresaActual?.nombreComercio ||
         (order.company as unknown as string) ||
         "";
 
