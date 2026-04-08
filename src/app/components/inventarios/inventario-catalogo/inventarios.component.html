@@ -214,19 +214,16 @@
                                         <label class="form-label small text-muted mb-1">
                                             <i class="pi pi-chart-bar me-1"></i>Estado
                                         </label>
-                                        <p-dropdown [options]="[
-                                                      {label: 'Todos', value: ''},
-                                                      {label: 'Agotados (0)', value: 'agotados'},
-                                                      {label: 'Críticos (1-2)', value: 'criticos'},
-                                                      {label: 'Bajos (≤5)', value: 'bajos'},
-                                                      {label: 'Disponibles', value: 'disponibles'},
-                                                      {label: 'Sin inventario', value: 'sinInventario'}
-                                                    ]"
-                                                    [(ngModel)]="filtrosConsolidados.estadoStock"
-                                                    (onChange)="aplicarFiltrosYResetear()"
-                                                    placeholder="Todos"
-                                                    styleClass="w-100 p-inputtext-sm">
-                                        </p-dropdown>
+                                        <select class="form-select form-select-sm"
+                                                [(ngModel)]="filtrosConsolidados.estadoStock"
+                                                (change)="aplicarFiltrosYResetear()">
+                                            <option value="">Todos</option>
+                                            <option value="agotados">Agotados (0)</option>
+                                            <option value="criticos">Críticos (1-2)</option>
+                                            <option value="bajos">Bajos (≤5)</option>
+                                            <option value="disponibles">Disponibles</option>
+                                            <option value="sinInventario">Sin inventario</option>
+                                        </select>
                                     </div>
 
                                     <!-- Filtro por Bodega -->
@@ -234,12 +231,11 @@
                                         <label class="form-label small text-muted mb-1">
                                             <i class="pi pi-box me-1"></i>Bodega
                                         </label>
-                                        <p-dropdown [options]="opcionesBodegasFiltro"
-                                                    [(ngModel)]="filtrosConsolidados.bodegaId"
-                                                    (onChange)="aplicarFiltrosYResetear()"
-                                                    placeholder="Todas"
-                                                    styleClass="w-100 p-inputtext-sm">
-                                        </p-dropdown>
+                                        <select class="form-select form-select-sm"
+                                                [(ngModel)]="filtrosConsolidados.bodegaId"
+                                                (change)="aplicarFiltrosYResetear()">
+                                            <option *ngFor="let b of opcionesBodegasFiltro" [value]="b.value">{{ b.label }}</option>
+                                        </select>
                                     </div>
 
                                     <!-- Filtro Fulfillment -->
@@ -247,16 +243,13 @@
                                         <label class="form-label small text-muted mb-1">
                                             <i class="pi pi-cloud me-1"></i>Fulfillment
                                         </label>
-                                        <p-dropdown [options]="[
-                                                      {label: 'Todos', value: ''},
-                                                      {label: 'Con enlace', value: 'con'},
-                                                      {label: 'Sin enlace', value: 'sin'}
-                                                    ]"
-                                                    [(ngModel)]="filtrosConsolidados.fulfillment"
-                                                    (onChange)="aplicarFiltrosYResetear()"
-                                                    placeholder="Todos"
-                                                    styleClass="w-100 p-inputtext-sm">
-                                        </p-dropdown>
+                                        <select class="form-select form-select-sm"
+                                                [(ngModel)]="filtrosConsolidados.fulfillment"
+                                                (change)="aplicarFiltrosYResetear()">
+                                            <option value="">Todos</option>
+                                            <option value="con">Con enlace</option>
+                                            <option value="sin">Sin enlace</option>
+                                        </select>
                                     </div>
 
                                     <!-- Limpiar filtros -->
@@ -411,7 +404,9 @@
                                                 </span>
                                             </th>
                                             <!-- Columna Precio -->
-                                            <th style="width: 160px; min-width: 160px;" class="text-end pe-3">Precio</th>
+                                            <th style="width: 120px; min-width: 120px;" class="text-end">Precio</th>
+                                            <!-- Columna Valor Total -->
+                                            <th style="width: 130px; min-width: 130px;" class="text-end pe-3">Valor Total</th>
                                             <!-- Columna Acciones -->
                                             <th style="width: 60px;" class="text-center">
                                                 <i class="pi pi-cog"></i>
@@ -441,7 +436,13 @@
                                                 </span>
                                             </th>
                                             <!-- Columna Precio -->
-                                            <th style="width: 160px;" class="text-end pe-3 py-2" style="background: #f0fdf4;"></th>
+                                            <th style="width: 120px;" class="text-end py-2"></th>
+                                            <!-- Columna Valor Total -->
+                                            <th style="width: 130px;" class="text-end pe-3 py-2">
+                                                <span class="fw-bold" style="color: #5c6ac4;">
+                                                    {{ getMetricaValorTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                </span>
+                                            </th>
                                             <!-- Columna Acciones vacía -->
                                             <th style="width: 60px;"></th>
                                         </tr>
@@ -493,7 +494,13 @@
                                             </td>
                                             <!-- Precio -->
                                             <td class="text-end" style="white-space: nowrap;">
-                                                <span class="fw-bold" style="color: #172b4d; font-size: 1rem; padding: 5px 10px; display: inline-block;">{{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #172b4d; font-size: 0.9rem;">{{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">Sin precio</span>
+                                            </td>
+                                            <!-- Valor Total (precio × stock) -->
+                                            <td class="text-end pe-3" style="white-space: nowrap;">
+                                                <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #5c6ac4; font-size: 0.9rem;">{{ (producto.precio * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">—</span>
                                             </td>
                                             <!-- Acciones -->
                                             <td class="text-center" style="width: 60px;">
