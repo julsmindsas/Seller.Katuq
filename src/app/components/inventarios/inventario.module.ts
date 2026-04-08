@@ -39,6 +39,7 @@ import { ImportarBodegasModalComponent } from './bodegas/importar-bodegas-modal/
 import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulfillment-sync-history.component';
 import { ImportModalModule } from '../../shared/components/import-modal/import-modal.module';
 import { CentralAbastecimientoComponent } from './central-abastecimiento/central-abastecimiento.component';
+import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.component';
 
 @NgModule({
     imports: [
@@ -81,7 +82,8 @@ import { CentralAbastecimientoComponent } from './central-abastecimiento/central
         HistorialMovimientosComponent,
         ImportarBodegasModalComponent,
         FulfillmentSyncHistoryComponent,
-        CentralAbastecimientoComponent
+        CentralAbastecimientoComponent,
+        BodegaDetalleComponent
     ],
     providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective, ConfirmationService],
 })

@@ -1,0 +1,224 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12">
+      <!-- Card principal -->
+      <div class="card shadow-sm position-relative">
+        <!-- Loader -->
+        <div class="loader-box" *ngIf="loading">
+          <div class="loader-8"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="module-header px-4 py-3 border-bottom">
+          <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div class="mb-2 mb-md-0">
+              <h4 class="mb-1 fw-bold text-dark">
+                <i class="pi pi-building me-2" style="color: #8b5cf6;"></i>{{ 'Inventario por Bodega' | translate }}
+              </h4>
+              <p class="text-muted small mb-0">
+                {{ 'Detalle de productos y stock por bodega' | translate }}
+              </p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <!-- Botón Refrescar -->
+              <button pButton type="button"
+                      icon="pi pi-refresh"
+                      class="p-button-rounded p-button-outlined"
+                      style="border-color: #8b5cf6; color: #8b5cf6; width: 2.5rem; height: 2.5rem;"
+                      (click)="cargarDetalle()"
+                      [disabled]="loading || !bodegaSeleccionadaId"
+                      pTooltip="{{ 'Actualizar datos' | translate }}"></button>
+              <!-- Botón Exportar Excel -->
+              <button pButton type="button"
+                      icon="pi pi-file-excel"
+                      label="{{ 'Exportar' | translate }}"
+                      class="p-button-outlined p-button-sm"
+                      style="border-color: #8b5cf6; color: #8b5cf6;"
+                      (click)="exportarExcel()"
+                      [disabled]="loading || !productos.length"
+                      pTooltip="{{ 'Exportar a Excel' | translate }}"
+                      tooltipPosition="bottom"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card body -->
+        <div class="card-body px-4 py-3">
+          <!-- Selector de bodega -->
+          <div class="row mb-3">
+            <div class="col-md-6 col-lg-4">
+              <label class="form-label fw-semibold text-dark">{{ 'Seleccionar bodega' | translate }}</label>
+              <select class="form-select" [(ngModel)]="bodegaSeleccionadaId" (change)="onBodegaChange()">
+                <option value="">{{ '-- Seleccione una bodega --' | translate }}</option>
+                <option *ngFor="let bodega of bodegas" [value]="bodega.idBodega">
+                  {{ bodega.nombre || bodega.idBodega }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Stats bar -->
+          <div class="row g-2 mb-3" *ngIf="bodegaSeleccionadaId && bodegaInfo">
+            <!-- SKUs -->
+            <div class="col-lg-3 col-md-6">
+              <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #8b5cf6 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h3 class="mb-0 fw-bold" style="color: #8b5cf6;">{{ totales.totalSKUs | number }}</h3>
+                    <small class="text-muted">{{ 'SKUs' | translate }}</small>
+                  </div>
+                  <i class="pi pi-box" style="font-size: 1.5rem; color: #8b5cf6; opacity: 0.5;"></i>
+                </div>
+              </div>
+            </div>
+            <!-- Unidades -->
+            <div class="col-lg-3 col-md-6">
+              <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #00e5cc !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h3 class="mb-0 fw-bold" style="color: #00e5cc;">{{ totales.totalUnidades | number }}</h3>
+                    <small class="text-muted">{{ 'Unidades' | translate }}</small>
+                  </div>
+                  <i class="pi pi-hashtag" style="font-size: 1.5rem; color: #00e5cc; opacity: 0.5;"></i>
+                </div>
+              </div>
+            </div>
+            <!-- Valor Total -->
+            <div class="col-lg-3 col-md-6">
+              <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #f59e0b !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h3 class="mb-0 fw-bold" style="color: #f59e0b;">{{ totales.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</h3>
+                    <small class="text-muted">{{ 'Valor Total' | translate }}</small>
+                  </div>
+                  <i class="pi pi-dollar" style="font-size: 1.5rem; color: #f59e0b; opacity: 0.5;"></i>
+                </div>
+              </div>
+            </div>
+            <!-- Agotados -->
+            <div class="col-lg-3 col-md-6">
+              <div class="stat-card p-3 bg-white rounded shadow-sm border-start border-4" style="border-color: #ef4444 !important;">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h3 class="mb-0 fw-bold" style="color: #ef4444;">{{ totales.agotados | number }}</h3>
+                    <small class="text-muted">{{ 'Agotados' | translate }}</small>
+                  </div>
+                  <i class="pi pi-exclamation-triangle" style="font-size: 1.5rem; color: #ef4444; opacity: 0.5;"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Search input -->
+          <div class="row mb-3" *ngIf="bodegaSeleccionadaId">
+            <div class="col-md-6 col-lg-4">
+              <span class="p-input-icon-left w-100">
+                <i class="pi pi-search"></i>
+                <input type="text" pInputText
+                       class="w-100"
+                       [(ngModel)]="searchTerm"
+                       (input)="onSearchInput()"
+                       placeholder="{{ 'Buscar por nombre o referencia...' | translate }}" />
+              </span>
+            </div>
+          </div>
+
+          <!-- Data table -->
+          <p-table *ngIf="bodegaSeleccionadaId && productos.length > 0"
+                   [value]="productos"
+                   [lazy]="true"
+                   [paginator]="true"
+                   [rows]="pagination.limit"
+                   [totalRecords]="pagination.totalItems"
+                   [first]="(pagination.page - 1) * pagination.limit"
+                   (onLazyLoad)="onPageChange($event)"
+                   [rowsPerPageOptions]="[10, 20, 50]"
+                   [loading]="loading"
+                   [showCurrentPageReport]="true"
+                   currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords} productos' | translate }}"
+                   styleClass="p-datatable-sm p-datatable-striped"
+                   responsiveLayout="scroll">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 60px;">{{ 'Img' | translate }}</th>
+                <th pSortableColumn="referencia">{{ 'Referencia' | translate }}</th>
+                <th pSortableColumn="nombre">{{ 'Nombre' | translate }}</th>
+                <th pSortableColumn="cantidad" class="text-end">{{ 'Cantidad' | translate }}</th>
+                <th pSortableColumn="precioUnitario" class="text-end">{{ 'Precio Unit.' | translate }}</th>
+                <th pSortableColumn="valorTotal" class="text-end">{{ 'Valor Total' | translate }}</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-producto>
+              <tr>
+                <td>
+                  <img *ngIf="producto.imagen" [src]="producto.imagen"
+                       alt="" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" />
+                  <span *ngIf="!producto.imagen" class="d-inline-flex align-items-center justify-content-center bg-light rounded"
+                        style="width: 40px; height: 40px;">
+                    <i class="pi pi-image text-muted"></i>
+                  </span>
+                </td>
+                <td>
+                  <span class="fw-semibold">{{ producto.referencia }}</span>
+                </td>
+                <td>{{ producto.nombre }}</td>
+                <td class="text-end">
+                  <span [class.text-danger]="producto.cantidad === 0"
+                        [class.fw-bold]="producto.cantidad === 0">
+                    {{ producto.cantidad | number }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <span *ngIf="producto.precioUnitario > 0">{{ producto.precioUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                  <span *ngIf="!producto.precioUnitario || producto.precioUnitario === 0" class="text-muted fst-italic">{{ 'Sin precio' | translate }}</span>
+                </td>
+                <td class="text-end fw-semibold">
+                  <span *ngIf="producto.valorTotal > 0">{{ producto.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                  <span *ngIf="!producto.valorTotal || producto.valorTotal === 0" class="text-muted">-</span>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="6" class="text-center text-muted py-4">
+                  <i class="pi pi-inbox" style="font-size: 2rem; opacity: 0.4;"></i>
+                  <p class="mt-2 mb-0">{{ 'No se encontraron productos en esta bodega' | translate }}</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <!-- Empty state: no bodega selected -->
+          <div *ngIf="!bodegaSeleccionadaId" class="text-center py-5">
+            <i class="pi pi-building" style="font-size: 3rem; color: #8b5cf6; opacity: 0.3;"></i>
+            <p class="text-muted mt-3 mb-0">{{ 'Seleccione una bodega para ver el detalle de inventario' | translate }}</p>
+          </div>
+
+          <!-- Empty state: bodega selected but no products -->
+          <div *ngIf="bodegaSeleccionadaId && !loading && productos.length === 0 && bodegaInfo" class="text-center py-5">
+            <i class="pi pi-inbox" style="font-size: 3rem; color: #8b5cf6; opacity: 0.3;"></i>
+            <p class="text-muted mt-3 mb-0">{{ 'No hay productos registrados en esta bodega' | translate }}</p>
+          </div>
+        </div>
+
+        <!-- Footer with pagination info -->
+        <div class="card-footer bg-light px-4 py-2 border-top" *ngIf="bodegaSeleccionadaId && pagination.totalItems > 0">
+          <div class="d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+              {{ 'Total' | translate }}: {{ pagination.totalItems | number }} {{ 'productos' | translate }}
+              <span *ngIf="pagination.totalPages > 1">
+                | {{ 'Pagina' | translate }} {{ pagination.page }} {{ 'de' | translate }} {{ pagination.totalPages }}
+              </span>
+            </small>
+            <small class="text-muted" *ngIf="bodegaInfo?.nombre">
+              {{ 'Bodega' | translate }}: <span class="fw-semibold">{{ bodegaInfo.nombre }}</span>
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

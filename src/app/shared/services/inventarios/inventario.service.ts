@@ -364,4 +364,23 @@ export class InventarioService {
       }))
     }, { headers });
   }
+
+  /**
+   * Obtiene el detalle de inventario de una bodega con paginación y búsqueda
+   * @param options Opciones: bodegaId, search, page, limit
+   * @returns Observable con productos, totales y paginación
+   */
+  getBodegaDetalle(options: {
+    bodegaId: string;
+    search?: string;
+    page?: number;
+    limit?: number;
+  }): Observable<any> {
+    let params = new HttpParams();
+    params = params.set('bodegaId', options.bodegaId);
+    if (options.search) params = params.set('search', options.search);
+    if (options.page) params = params.set('page', options.page.toString());
+    if (options.limit) params = params.set('limit', options.limit.toString());
+    return this.http.get<any>(`${this.apiUrl}/inventory/bodega-detalle`, { params });
+  }
 }

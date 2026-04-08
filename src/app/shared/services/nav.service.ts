@@ -442,6 +442,12 @@ export class NavService implements OnDestroy {
           icon: "database",
         },
         {
+          path: "inventario/bodega-detalle",
+          title: "Detalle por bodega",
+          type: "link",
+          icon: "eye",
+        },
+        {
           path: "inventario/recepcion-mercancia",
           title: "Ajustes de inventario",
           type: "link",
