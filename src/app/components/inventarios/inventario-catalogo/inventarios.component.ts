@@ -465,10 +465,10 @@ export class InventarioCatalogoComponent implements OnInit {
           this.paginationConsolidada = {
             limit: response.pagination?.limit || 20,
             page: response.pagination?.currentPage || page,
-            totalPages: response.pagination?.totalPages || 0,
-            totalItems: response.pagination?.totalItems || response.totalProductos || 0,
-            hasMore: response.pagination?.hasMore || false,
-            lastDoc: response.pagination?.lastDoc || null,
+            totalPages: response.pagination?.totalPages ?? 0,
+            totalItems: response.pagination?.totalItems ?? response.totalProductos ?? 0,
+            hasMore: response.pagination?.hasMore ?? false,
+            lastDoc: response.pagination?.lastDoc ?? null,
           };
           this.totalItems = this.paginationConsolidada.totalItems;
           if (response.totalesGlobales) {
@@ -604,6 +604,21 @@ export class InventarioCatalogoComponent implements OnInit {
   } | null = null;
 
   // ── Métodos de totales: resuelven automáticamente global vs filtrado ──
+
+  getMetricaValorTotal(): number {
+    if (!this.hayFiltrosActivos()) return this.totalesGlobales.valorTotal ?? 0;
+    // Cuando hay filtros, calcular valor solo de bodegas que apliquen
+    let bodegas = this.bodegasConsolidadas;
+    if (this.filtrosConsolidados.fulfillment === 'con') {
+      bodegas = bodegas.filter(b => !!b.fulfillmentId);
+    } else if (this.filtrosConsolidados.fulfillment === 'sin') {
+      bodegas = bodegas.filter(b => !b.fulfillmentId);
+    }
+    if (this.filtrosConsolidados.bodegaId) {
+      bodegas = bodegas.filter(b => b.id === this.filtrosConsolidados.bodegaId);
+    }
+    return bodegas.reduce((sum, b) => sum + (b.metricas?.valorTotal ?? 0), 0);
+  }
 
   getMetricaUnidades(): number {
     return this._totalesFiltrados?.totalUnidades ?? this.totalesGlobales.totalUnidades ?? 0;

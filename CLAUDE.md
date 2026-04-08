@@ -108,6 +108,12 @@ Bootstrap 5 + PrimeNG 14 + ng-bootstrap. SweetAlert2 para diálogos de confirmac
 
 **REGLA CRÍTICA**: `inventory` e `inventoryMovement` usan business code en `idBodega`. NUNCA Firestore doc ID. Mezclarlos genera movimientos huérfanos y totales incorrectos.
 
+**REGLA CRÍTICA — DOBLE CONTEO**: La colección `inventory` tiene registros legacy donde `productoId` es la referencia del producto (ej: `"JCR4021"`) en vez del Firestore doc ID. Para el mismo producto+bodega pueden existir DOS documentos (uno con cada formato). **SIEMPRE** que leas `inventory` y sumes cantidades, debes:
+1. Construir mapa `normId`: referencia→docId (desde `products.identificacion.referencia`)
+2. Normalizar `inv.productoId` con `normId.get(inv.productoId) || inv.productoId`
+3. Deduplicar con Set de `"${normalizedId}_${inv.idBodega}"` — si ya existe, SKIP
+Sin esto, los totales se inflan ~60%. Ver `calcularMetricasPorBodega` en `controllers/inventory.js` como referencia del patrón.
+
 ## Flujos críticos
 
 ### Pedido → Inventario
@@ -161,5 +167,6 @@ Frontend transforma datos → POST /v1/onboarding/import-{customers|products|inv
 | `console.log` para telemetría | Logs ilegibles, no queryables |
 | Asumir causa de bug sin datos | Usar endpoint de diagnóstico primero |
 | Firestore doc ID en `idBodega` | Movimientos huérfanos, totales incorrectos |
+| Sumar `inventory` sin normalizar `productoId` | Doble conteo ~60% — hay docs con docId Y referencia para mismo producto+bodega |
 | `setTimeout` para sync parent-child | Race conditions — usar callbacks/flags |
 | Filtrar `active !== false` sin mostrar inactivos | Datos ocultos, confusión de usuario |
