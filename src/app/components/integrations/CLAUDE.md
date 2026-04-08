@@ -16,4 +16,10 @@
 |----|------|---|-------|------|
 | #2546 | 10:26 PM | 🔵 | IntegrationsService SIIGO-Specific Methods and Provider Registry | ~196 |
 | #2521 | 10:10 PM | 🔵 | Frontend Integration Architecture Pattern Analysis | ~1105 |
+
+### Apr 8, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #4036 | 10:15 AM | 🔵 | Order Context Not Used in Invoice Creation | ~472 |
 </claude-mem-context>
