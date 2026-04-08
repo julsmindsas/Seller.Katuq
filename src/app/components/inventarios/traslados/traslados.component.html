@@ -32,15 +32,10 @@
                             <i class="pi pi-building" style="font-size: 1.2rem; color: #5c6ac4;"></i>
                         </div>
                         <h6 class="fw-bold mb-2 text-dark">{{ 'Bodega Origen' | translate }}</h6>
-                        <p-dropdown [options]="bodegas"
-                                    [formControl]="bodegaForm.controls['bodegaOrigenId']"
-                                    optionLabel="nombre"
-                                    optionValue="idBodega"
-                                    [placeholder]="'Seleccione origen' | translate"
-                                    [showClear]="true"
-                                    [filter]="bodegas.length > 5"
-                                    styleClass="w-100"
-                                    appendTo="body"></p-dropdown>
+                        <select class="form-select" [formControl]="bodegaForm.controls['bodegaOrigenId']">
+                            <option value="">{{ 'Seleccione origen' | translate }}</option>
+                            <option *ngFor="let b of bodegas" [value]="b.idBodega">{{ b.nombre }}</option>
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-2 text-center py-2">
@@ -54,15 +49,10 @@
                             <i class="pi pi-truck" style="font-size: 1.2rem; color: #36b37e;"></i>
                         </div>
                         <h6 class="fw-bold mb-2 text-dark">{{ 'Bodega Destino' | translate }}</h6>
-                        <p-dropdown [options]="bodegas"
-                                    [formControl]="bodegaForm.controls['bodegaDestinoId']"
-                                    optionLabel="nombre"
-                                    optionValue="idBodega"
-                                    [placeholder]="'Seleccione destino' | translate"
-                                    [showClear]="true"
-                                    [filter]="bodegas.length > 5"
-                                    styleClass="w-100"
-                                    appendTo="body"></p-dropdown>
+                        <select class="form-select" [formControl]="bodegaForm.controls['bodegaDestinoId']">
+                            <option value="">{{ 'Seleccione destino' | translate }}</option>
+                            <option *ngFor="let b of bodegas" [value]="b.idBodega">{{ b.nombre }}</option>
+                        </select>
                         <small class="text-danger d-block mt-1" *ngIf="errorMensaje">{{ errorMensaje }}</small>
                     </div>
                 </div>
@@ -76,37 +66,19 @@
                     <label class="fw-semibold mb-1 d-block">
                         <i class="pi pi-search me-1" style="color: #5c6ac4;"></i>{{ 'Agregar productos' | translate }}
                     </label>
-                    <ng-select [items]="productosFiltrados"
-                               bindLabel="producto.crearProducto.titulo"
-                               [loading]="loadingProductos"
-                               [ngModel]="null"
-                               (ngModelChange)="onProductoSeleccionado($event)"
-                               [placeholder]="'Buscar producto para agregar...' | translate"
-                               [searchable]="true"
-                               [clearable]="true"
-                               notFoundText="Sin resultados">
-                        <ng-template ng-option-tmp let-item="item">
-                            <div class="d-flex align-items-center gap-2 py-1">
-                                <div style="width: 36px; height: 36px; border-radius: 4px; overflow: hidden; background: #e9ecef; flex-shrink: 0;">
-                                    <img *ngIf="item.producto?.crearProducto?.imagenesPrincipales?.length > 0"
-                                         [src]="item.producto?.crearProducto?.imagenesPrincipales[0].urls"
-                                         style="width: 100%; height: 100%; object-fit: cover;">
-                                    <div *ngIf="!item.producto?.crearProducto?.imagenesPrincipales?.length"
-                                         class="d-flex align-items-center justify-content-center h-100">
-                                        <i class="pi pi-box text-muted" style="font-size: 0.8rem;"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <span class="fw-semibold" style="font-size: 0.85rem;">{{ item.producto?.crearProducto?.titulo }}</span>
-                                    <br>
-                                    <small class="text-muted font-monospace">{{ item.producto?.identificacion?.referencia }}</small>
-                                    <span class="badge ms-2" style="background: #eef0fb; color: #5c6ac4; font-size: 0.7rem;">
-                                        {{ item.cantidad }} disp.
-                                    </span>
-                                </div>
-                            </div>
-                        </ng-template>
-                    </ng-select>
+                    <input type="text" class="form-control form-control-sm mb-1"
+                           [(ngModel)]="busquedaProducto"
+                           [placeholder]="'Buscar por nombre o referencia...' | translate">
+                    <select class="form-select" size="5"
+                            (change)="onProductoSeleccionadoSelect($event)"
+                            *ngIf="productosFiltrados.length > 0">
+                        <option *ngFor="let item of productosFiltrados" [value]="item.producto?.cd">
+                            {{ item.producto?.identificacion?.referencia }} — {{ item.producto?.crearProducto?.titulo }} ({{ item.cantidad }} disp.)
+                        </option>
+                    </select>
+                    <div *ngIf="productosFiltrados.length === 0 && busquedaProducto" class="text-muted small mt-1">
+                        Sin resultados para "{{ busquedaProducto }}"
+                    </div>
                 </div>
 
                 <!-- Tabla de productos a trasladar -->

@@ -114,6 +114,14 @@ export class TrasladosComponent implements OnInit {
     this.agregarProducto(item);
   }
 
+  onProductoSeleccionadoSelect(event: any): void {
+    const cd = event.target.value;
+    if (!cd) return;
+    const item = this.productosFiltrados.find((p: any) => p.producto?.cd === cd);
+    if (item) this.agregarProducto(item);
+    event.target.value = '';
+  }
+
   agregarProducto(item: any): void {
     const prod = item.producto;
     if (!prod?.cd) return;
