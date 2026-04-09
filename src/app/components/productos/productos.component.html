@@ -87,18 +87,14 @@
                             <i class="icofont icofont-trash"></i> {{ 'Limpiar BD' | translate }}
                         </button>
                         -->
-                        <button
-                            type="button"
-                            class="btn btn-outline-danger btn-sm"
+                        <!-- Botón Limpiar BD oculto en producción
+                        <button type="button" class="btn btn-outline-danger btn-sm"
                             (click)="limpiarProductosComercio()"
-                            ngbTooltip="{{
-                                'Eliminar TODOS los productos (Admin/Dev)'
-                                    | translate
-                            }}"
-                        >
+                            ngbTooltip="{{ 'Eliminar TODOS los productos (Admin/Dev)' | translate }}">
                             <i class="icofont icofont-trash"></i>
                             {{ "Limpiar BD" | translate }}
                         </button>
+                        -->
                     </div>
                 </div>
 
