@@ -445,7 +445,7 @@ export class NavService implements OnDestroy {
           path: "inventario/bodega-detalle",
           title: "Detalle por bodega",
           type: "link",
-          icon: "eye",
+          icon: "fa-list-alt",
         },
         {
           path: "inventario/recepcion-mercancia",
@@ -463,7 +463,7 @@ export class NavService implements OnDestroy {
           path: "inventario/central-abastecimiento",
           title: "Central de Abastecimiento",
           type: "link",
-          icon: "compass",
+          icon: "fa-line-chart",
         },
         {
           path: "inventario/historial-movimientos",
