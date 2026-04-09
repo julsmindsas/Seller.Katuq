@@ -126,6 +126,7 @@
           <!-- Data table -->
           <p-table *ngIf="bodegaSeleccionadaId && productos.length > 0"
                    [value]="productos"
+                   dataKey="id"
                    [lazy]="true"
                    [paginator]="true"
                    [rows]="pagination.limit"
@@ -141,29 +142,42 @@
 
             <ng-template pTemplate="header">
               <tr>
-                <th style="width: 60px;">{{ 'Img' | translate }}</th>
+                <th style="width: 40px;"></th>
+                <th style="width: 50px;">{{ 'Img' | translate }}</th>
                 <th pSortableColumn="referencia">{{ 'Referencia' | translate }}</th>
                 <th pSortableColumn="nombre">{{ 'Nombre' | translate }}</th>
                 <th pSortableColumn="cantidad" class="text-end">{{ 'Cantidad' | translate }}</th>
                 <th pSortableColumn="precioUnitario" class="text-end">{{ 'Precio Unit.' | translate }}</th>
+                <th class="text-end">{{ 'Lista Precios' | translate }}</th>
                 <th pSortableColumn="valorTotal" class="text-end">{{ 'Valor Total' | translate }}</th>
               </tr>
             </ng-template>
 
-            <ng-template pTemplate="body" let-producto>
+            <ng-template pTemplate="body" let-producto let-expanded="expanded">
               <tr>
+                <!-- Expand toggle -->
+                <td class="text-center">
+                  <button *ngIf="producto.fulfillmentId || producto.preciosPorTipoCliente?.length"
+                          pButton type="button"
+                          [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                          class="p-button-text p-button-rounded p-button-sm p-button-plain"
+                          [pRowToggler]="producto"></button>
+                </td>
                 <td>
                   <img *ngIf="producto.imagen" [src]="producto.imagen"
-                       alt="" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" />
+                       alt="" style="width: 36px; height: 36px; object-fit: cover; border-radius: 4px;" />
                   <span *ngIf="!producto.imagen" class="d-inline-flex align-items-center justify-content-center bg-light rounded"
-                        style="width: 40px; height: 40px;">
-                    <i class="pi pi-image text-muted"></i>
+                        style="width: 36px; height: 36px;">
+                    <i class="pi pi-image text-muted" style="font-size: 0.8rem;"></i>
                   </span>
                 </td>
                 <td>
                   <span class="fw-semibold">{{ producto.referencia }}</span>
                 </td>
-                <td>{{ producto.nombre }}</td>
+                <td>
+                  {{ producto.nombre }}
+                  <span *ngIf="producto.fulfillmentId" class="badge ms-1" style="background: #eef0fb; color: #8b5cf6; font-size: 0.6rem; vertical-align: middle;">FF</span>
+                </td>
                 <td class="text-end">
                   <span [class.text-danger]="producto.cantidad === 0"
                         [class.fw-bold]="producto.cantidad === 0">
@@ -172,18 +186,80 @@
                 </td>
                 <td class="text-end">
                   <span *ngIf="producto.precioUnitario > 0">{{ producto.precioUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-                  <span *ngIf="!producto.precioUnitario || producto.precioUnitario === 0" class="text-muted fst-italic">{{ 'Sin precio' | translate }}</span>
+                  <span *ngIf="!producto.precioUnitario || producto.precioUnitario === 0" class="text-muted fst-italic small">Sin precio</span>
+                </td>
+                <td class="text-end">
+                  <span *ngIf="producto.preciosPorTipoCliente?.length > 0"
+                        class="badge" style="background: #f3f0ff; color: #8b5cf6; cursor: pointer;"
+                        [pRowToggler]="producto">
+                    {{ producto.preciosPorTipoCliente.length }} lista(s)
+                  </span>
+                  <span *ngIf="!producto.preciosPorTipoCliente?.length" class="text-muted small">—</span>
                 </td>
                 <td class="text-end fw-semibold">
                   <span *ngIf="producto.valorTotal > 0">{{ producto.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-                  <span *ngIf="!producto.valorTotal || producto.valorTotal === 0" class="text-muted">-</span>
+                  <span *ngIf="!producto.valorTotal || producto.valorTotal === 0" class="text-muted">—</span>
+                </td>
+              </tr>
+            </ng-template>
+
+            <!-- Row expansion: precios + fulfillment -->
+            <ng-template pTemplate="rowexpansion" let-producto>
+              <tr>
+                <td [attr.colspan]="8">
+                  <div class="p-3" style="background: #fafbfc;">
+                    <div class="row g-3">
+                      <!-- Listas de Precios -->
+                      <div class="col-md-6" *ngIf="producto.preciosPorTipoCliente?.length > 0">
+                        <h6 class="fw-bold small mb-2"><i class="pi pi-tag me-1" style="color: #8b5cf6;"></i>Listas de Precios</h6>
+                        <table class="table table-sm table-bordered mb-0" style="font-size: 0.8rem;">
+                          <thead style="background: #f0ecff;">
+                            <tr>
+                              <th>Tipo Cliente</th>
+                              <th class="text-end">Precio sin IVA</th>
+                              <th class="text-end">Precio con IVA</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr *ngFor="let p of producto.preciosPorTipoCliente">
+                              <td>{{ p.tipoClienteNombre }}</td>
+                              <td class="text-end">{{ p.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                              <td class="text-end fw-semibold">{{ p.precioConIva | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      <!-- Fulfillment info -->
+                      <div class="col-md-6" *ngIf="producto.fulfillmentId">
+                        <h6 class="fw-bold small mb-2"><i class="pi pi-cloud me-1" style="color: #00e5cc;"></i>Fulfillment</h6>
+                        <div class="border rounded p-2" style="font-size: 0.8rem;">
+                          <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Provider:</span>
+                            <span class="fw-semibold">{{ producto.fulfillmentProvider || bodegaInfo?.fulfillmentProvider || '—' }}</span>
+                          </div>
+                          <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">ID Fulfillment:</span>
+                            <span class="font-monospace small">{{ producto.fulfillmentId }}</span>
+                          </div>
+                          <div class="d-flex justify-content-between">
+                            <span class="text-muted">Stock Katuq:</span>
+                            <span class="fw-bold">{{ producto.cantidad | number }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <!-- Sin detalle -->
+                      <div class="col-12" *ngIf="!producto.preciosPorTipoCliente?.length && !producto.fulfillmentId">
+                        <span class="text-muted small">Sin información adicional</span>
+                      </div>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="6" class="text-center text-muted py-4">
+                <td colspan="8" class="text-center text-muted py-4">
                   <i class="pi pi-inbox" style="font-size: 2rem; opacity: 0.4;"></i>
                   <p class="mt-2 mb-0">{{ 'No se encontraron productos en esta bodega' | translate }}</p>
                 </td>
