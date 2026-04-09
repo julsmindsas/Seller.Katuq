@@ -375,36 +375,35 @@ $border-radius: 8px;
 }
 
 // Fila de filtros rápidos tipo pill
-.filtros-rapidos {
-    .filtro-pill {
-        height: 32px;
-        font-size: 0.82rem;
-        padding-top: 0;
-        padding-bottom: 0;
-        border-radius: 20px;
-        white-space: nowrap;
+// Pill compartido entre filtros rápidos y panel de más filtros
+.filtro-pill {
+    height: 32px;
+    font-size: 0.82rem;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+select.filtro-pill {
+    padding-left: 12px;
+    padding-right: 32px;
+    min-width: fit-content;
+    border-color: #dee2e6;
+    background-color: #fff;
+    color: #495057;
+    background-position: right 10px center;
+
+    &:focus {
+        border-color: #a78bfa;
+        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.12);
     }
 
-    select.filtro-pill {
-        padding-left: 10px;
-        padding-right: 24px;
-        min-width: fit-content;
-        border-color: #dee2e6;
-        background-color: #fff;
-        color: #495057;
-
-        &:focus {
-            border-color: #a78bfa;
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.12);
-        }
-
-        // Resalta si tiene valor activo (no vacío)
-        &.ng-valid[ng-reflect-model]:not([ng-reflect-model=""]) {
-            border-color: #8b5cf6;
-            color: #6d28d9;
-            background-color: #f5f3ff;
-            font-weight: 600;
-        }
+    &.ng-valid[ng-reflect-model]:not([ng-reflect-model=""]) {
+        border-color: #8b5cf6;
+        color: #6d28d9;
+        background-color: #f5f3ff;
+        font-weight: 600;
     }
 }
 
