@@ -155,76 +155,52 @@
                             </button>
                         </div>
 
-                        <!-- Panel: Más filtros (expandible) -->
+                        <!-- Panel: Más filtros (expandible) — mismo estilo pill que filtros rápidos -->
                         <div class="mas-filtros-panel px-3 py-2 mb-2" *ngIf="masFiltersVisible">
-                            <div class="d-flex flex-wrap align-items-end gap-2">
-                                <!-- Precio desde -->
-                                <div>
-                                    <label class="form-label text-muted small mb-0">Precio desde</label>
-                                    <div class="input-group input-group-sm" style="width: 130px;">
-                                        <span class="input-group-text py-0">$</span>
-                                        <input type="number" class="form-control py-0" placeholder="0"
-                                            [(ngModel)]="filtros.precioDesde"
-                                            (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
-                                    </div>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <div class="input-group input-group-sm" style="width: 140px;">
+                                    <span class="input-group-text" style="font-size: 0.78rem;">$ Min</span>
+                                    <input type="number" class="form-control" placeholder="0" style="font-size: 0.82rem;"
+                                        [(ngModel)]="filtros.precioDesde"
+                                        (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
                                 </div>
-                                <!-- Precio hasta -->
-                                <div>
-                                    <label class="form-label text-muted small mb-0">Precio hasta</label>
-                                    <div class="input-group input-group-sm" style="width: 130px;">
-                                        <span class="input-group-text py-0">$</span>
-                                        <input type="number" class="form-control py-0" placeholder="∞"
-                                            [(ngModel)]="filtros.precioHasta"
-                                            (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
-                                    </div>
+                                <div class="input-group input-group-sm" style="width: 140px;">
+                                    <span class="input-group-text" style="font-size: 0.78rem;">$ Max</span>
+                                    <input type="number" class="form-control" placeholder="∞" style="font-size: 0.82rem;"
+                                        [(ngModel)]="filtros.precioHasta"
+                                        (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
                                 </div>
-                                <!-- Requiere producción -->
-                                <div>
-                                    <label class="form-label text-muted small mb-0">Producción</label>
-                                    <select class="form-select form-select-sm py-0"
-                                        [(ngModel)]="filtros.requiereProduccion"
-                                        (change)="onFiltroChange()">
-                                        <option value="">Todos</option>
-                                        <option value="si">Requiere</option>
-                                        <option value="no">No requiere</option>
-                                    </select>
-                                </div>
-                                <!-- Inventariable -->
-                                <div>
-                                    <label class="form-label text-muted small mb-0">Inventariable</label>
-                                    <select class="form-select form-select-sm py-0"
-                                        [(ngModel)]="filtros.inventariable"
-                                        (change)="onFiltroChange()">
-                                        <option value="">Todos</option>
-                                        <option value="si">Sí</option>
-                                        <option value="no">No</option>
-                                    </select>
-                                </div>
-                                <!-- Última edición -->
-                                <div>
-                                    <label class="form-label text-muted small mb-0">Edición</label>
-                                    <select class="form-select form-select-sm py-0"
-                                        [(ngModel)]="filtros.ultimaEdicion"
-                                        (change)="onFiltroChange()">
-                                        <option value="">Todas</option>
-                                        <option value="hoy">Hoy</option>
-                                        <option value="7dias">7 días</option>
-                                        <option value="mes">Este mes</option>
-                                        <option value="mes_anterior">Mes anterior</option>
-                                    </select>
-                                </div>
-                                <!-- Completitud -->
-                                <div>
-                                    <label class="form-label text-muted small mb-0">Completitud</label>
-                                    <select class="form-select form-select-sm py-0"
-                                        [(ngModel)]="filtros.completitud"
-                                        (change)="onFiltroChange()">
-                                        <option value="">Todos</option>
-                                        <option value="completo">Completos (≥80%)</option>
-                                        <option value="parcial">Parciales (50-79%)</option>
-                                        <option value="incompleto">Incompletos (&lt;50%)</option>
-                                    </select>
-                                </div>
+                                <select class="form-select form-select-sm filtro-pill"
+                                    [(ngModel)]="filtros.requiereProduccion"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Producción</option>
+                                    <option value="si">Requiere</option>
+                                    <option value="no">No requiere</option>
+                                </select>
+                                <select class="form-select form-select-sm filtro-pill"
+                                    [(ngModel)]="filtros.inventariable"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Inventariable</option>
+                                    <option value="si">Sí</option>
+                                    <option value="no">No</option>
+                                </select>
+                                <select class="form-select form-select-sm filtro-pill"
+                                    [(ngModel)]="filtros.ultimaEdicion"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Edición</option>
+                                    <option value="hoy">Hoy</option>
+                                    <option value="7dias">7 días</option>
+                                    <option value="mes">Este mes</option>
+                                    <option value="mes_anterior">Mes anterior</option>
+                                </select>
+                                <select class="form-select form-select-sm filtro-pill"
+                                    [(ngModel)]="filtros.completitud"
+                                    (change)="onFiltroChange()">
+                                    <option value="">Completitud</option>
+                                    <option value="completo">Completos (≥80%)</option>
+                                    <option value="parcial">Parciales (50-79%)</option>
+                                    <option value="incompleto">Incompletos (&lt;50%)</option>
+                                </select>
                             </div>
                         </div>
 
