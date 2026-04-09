@@ -112,6 +112,37 @@ export class FulfillmentService {
   }
 
   /**
+   * Consulta stock de fulfillment usando el ID de producto de Katuq (docId o referencia).
+   * El backend resuelve internamente el fulfillmentId — no se expone al frontend.
+   */
+  getStockByKatuqId(katuqProductId: string): Observable<{
+    success: boolean;
+    totalStock: number;
+    warehouses?: any[];
+    error?: string;
+  }> {
+    const params = new HttpParams().set('companyId', this.getCompanyId());
+    return this.http.get<any>(
+      `${this.apiUrl}/stock-by-katuq-id/${katuqProductId}`,
+      { params }
+    ).pipe(
+      map(res => {
+        const data = res.data || res;
+        return {
+          success: true,
+          totalStock: data.totalStock ?? data.stock ?? 0,
+          warehouses: data.warehouses || []
+        };
+      }),
+      catchError(error => of({
+        success: false,
+        totalStock: 0,
+        error: error.error?.message || error.message
+      }))
+    );
+  }
+
+  /**
    * Obtiene el stock de un producto en el fulfillment
    * @param provider Nombre del provider (ej: 'aliaddo')
    * @param productId ID del producto
