@@ -416,10 +416,16 @@ $border-radius: 8px;
     animation: slideDown 0.15s ease;
 
     .form-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.03em;
-        font-weight: 600;
+        font-size: 0.7rem;
+        text-transform: none;
+        letter-spacing: 0;
+        font-weight: 500;
+        line-height: 1.2;
+    }
+
+    .form-select, .form-control, .input-group-text {
+        font-size: 0.8rem;
+        height: 30px;
     }
 }
 
