@@ -145,7 +145,7 @@ export class BodegaDetalleComponent implements OnInit {
     }
     producto._ffLoading = true;
     // Usa el docId del producto — el backend resuelve el fulfillmentId internamente
-    this.fulfillmentService.getStockByKatuqId(producto.id).subscribe({
+    this.fulfillmentService.getStockByKatuqId(producto.id, this.bodegaSeleccionadaId).subscribe({
       next: (res: any) => {
         producto._ffLoading = false;
         if (res.success) {

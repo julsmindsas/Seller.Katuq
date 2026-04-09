@@ -20,24 +20,18 @@
               </p>
             </div>
             <div class="d-flex align-items-center gap-2">
-              <!-- Botón Refrescar -->
-              <button pButton type="button"
-                      icon="pi pi-refresh"
-                      class="p-button-rounded p-button-outlined"
-                      style="border-color: #8b5cf6; color: #8b5cf6; width: 2.5rem; height: 2.5rem;"
+              <button class="btn btn-outline-primary btn-sm"
                       (click)="cargarDetalle()"
                       [disabled]="loading || !bodegaSeleccionadaId"
-                      pTooltip="{{ 'Actualizar datos' | translate }}"></button>
-              <!-- Botón Exportar Excel -->
-              <button pButton type="button"
-                      icon="pi pi-file-excel"
-                      label="{{ 'Exportar' | translate }}"
-                      class="p-button-outlined p-button-sm"
-                      style="border-color: #8b5cf6; color: #8b5cf6;"
+                      style="border-color: #8b5cf6; color: #8b5cf6;">
+                <i class="pi pi-refresh me-1"></i>{{ 'Recargar' | translate }}
+              </button>
+              <button class="btn btn-outline-primary btn-sm"
                       (click)="exportarExcel()"
                       [disabled]="loading || !productos.length"
-                      pTooltip="{{ 'Exportar a Excel' | translate }}"
-                      tooltipPosition="bottom"></button>
+                      style="border-color: #8b5cf6; color: #8b5cf6;">
+                <i class="pi pi-file-excel me-1"></i>{{ 'Excel' | translate }}
+              </button>
             </div>
           </div>
         </div>

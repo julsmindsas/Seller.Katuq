@@ -115,13 +115,14 @@ export class FulfillmentService {
    * Consulta stock de fulfillment usando el ID de producto de Katuq (docId o referencia).
    * El backend resuelve internamente el fulfillmentId — no se expone al frontend.
    */
-  getStockByKatuqId(katuqProductId: string): Observable<{
+  getStockByKatuqId(katuqProductId: string, bodegaId?: string): Observable<{
     success: boolean;
     totalStock: number;
     warehouses?: any[];
     error?: string;
   }> {
-    const params = new HttpParams().set('companyId', this.getCompanyId());
+    let params = new HttpParams().set('companyId', this.getCompanyId());
+    if (bodegaId) params = params.set('bodegaId', bodegaId);
     return this.http.get<any>(
       `${this.apiUrl}/stock-by-katuq-id/${katuqProductId}`,
       { params }
