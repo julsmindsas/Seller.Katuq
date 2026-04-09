@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
+import { FulfillmentService } from '../../../shared/services/fulfillment/fulfillment.service';
 import { ToastrService } from 'ngx-toastr';
 import * as XLSX from 'xlsx';
 
@@ -27,6 +28,7 @@ export class BodegaDetalleComponent implements OnInit {
     private route: ActivatedRoute,
     private inventarioService: InventarioService,
     private bodegaService: BodegaService,
+    private fulfillmentService: FulfillmentService,
     private toastr: ToastrService
   ) {}
 
@@ -134,5 +136,33 @@ export class BodegaDetalleComponent implements OnInit {
     const nombre = this.bodegaInfo?.nombre || 'bodega';
     const fecha = new Date().toISOString().split('T')[0];
     XLSX.writeFile(wb, `Inventario_${nombre}_${fecha}.xlsx`);
+  }
+
+  consultarStockFF(producto: any): void {
+    if (!producto.referencia || !this.bodegaInfo?.fulfillmentProvider) {
+      this.toastr.warning('Este producto o bodega no tiene fulfillment configurado');
+      return;
+    }
+    producto._ffLoading = true;
+    this.fulfillmentService.getProductStock(
+      this.bodegaInfo.fulfillmentProvider,
+      producto.referencia
+    ).subscribe({
+      next: (res: any) => {
+        producto._ffLoading = false;
+        if (res.success || res.data?.success) {
+          const data = res.data || res;
+          producto._ffStock = data.totalStock ?? data.stock ?? 0;
+        } else {
+          producto._ffStock = null;
+          this.toastr.error('No se pudo obtener stock de fulfillment');
+        }
+      },
+      error: () => {
+        producto._ffLoading = false;
+        producto._ffStock = null;
+        this.toastr.error('Error consultando fulfillment');
+      }
+    });
   }
 }
