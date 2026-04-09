@@ -74,7 +74,7 @@
                                     <option value="codigoBarras">Cód. Barras</option>
                                 </select>
                                 <span class="input-group-text bg-white border-start-0 border-end-0 px-2">
-                                    <i class="icofont icofont-search text-muted"></i>
+                                    <i class="pi pi-search text-muted"></i>
                                 </span>
                                 <input
                                     type="text"
@@ -90,7 +90,7 @@
                                     type="button"
                                     (click)="limpiarTexto()"
                                     ngbTooltip="Limpiar búsqueda">
-                                    <i class="icofont icofont-close-line"></i>
+                                    <i class="pi pi-times"></i>
                                 </button>
                             </div>
                         </div>
@@ -132,16 +132,18 @@
                             <!-- Botón Más filtros -->
                             <button class="btn btn-sm filtro-pill"
                                 [class.btn-outline-secondary]="masFilterCount === 0"
-                                [class.btn-primary]="masFilterCount > 0"
+                                [style.background]="masFilterCount > 0 ? '#8b5cf6' : ''"
+                                [style.color]="masFilterCount > 0 ? 'white' : ''"
+                                [style.border-color]="masFilterCount > 0 ? '#8b5cf6' : ''"
                                 (click)="masFiltersVisible = !masFiltersVisible">
-                                <i class="icofont icofont-filter me-1"></i>
+                                <i class="pi pi-filter me-1"></i>
                                 Más filtros
                                 <span *ngIf="masFilterCount > 0"
-                                    class="badge bg-white text-primary ms-1"
-                                    style="font-size: 0.7rem;">{{ masFilterCount }}</span>
-                                <i class="fa ms-1 small"
-                                    [class.fa-chevron-down]="!masFiltersVisible"
-                                    [class.fa-chevron-up]="masFiltersVisible"></i>
+                                    class="badge bg-white ms-1"
+                                    style="font-size: 0.7rem; color: #8b5cf6;">{{ masFilterCount }}</span>
+                                <i class="pi ms-1 small"
+                                    [class.pi-chevron-down]="!masFiltersVisible"
+                                    [class.pi-chevron-up]="masFiltersVisible"></i>
                             </button>
 
                             <!-- Limpiar filtros -->
@@ -149,7 +151,7 @@
                                 *ngIf="hayFiltrosActivos"
                                 (click)="limpiarFiltros()"
                                 ngbTooltip="Limpiar todos los filtros">
-                                <i class="icofont icofont-close me-1"></i>Limpiar
+                                <i class="pi pi-times me-1"></i>Limpiar
                             </button>
                         </div>
 
@@ -234,15 +236,16 @@
                                 producto{{ totalItems !== 1 ? 's' : '' }}
                             </span>
                             <span *ngFor="let chip of activeChips"
-                                class="badge rounded-pill bg-primary-subtle text-primary-emphasis border border-primary-subtle d-inline-flex align-items-center gap-1 px-2 py-1">
+                                class="badge rounded-pill d-inline-flex align-items-center gap-1 px-2 py-1"
+                                style="background: #f3f0ff; color: #7c3aed; border: 1px solid #ddd6fe;">
                                 {{ chip.label }}
                                 <button type="button" class="btn-close btn-close-sm ms-1"
                                     style="font-size: 0.6rem;"
                                     (click)="removerChip(chip.key)"></button>
                             </span>
                             <button *ngIf="hasActiveFilters()"
-                                class="btn btn-sm btn-outline-primary py-0 px-2"
-                                style="font-size:0.78rem"
+                                class="btn btn-sm py-0 px-2"
+                                style="font-size:0.78rem; border-color: #8b5cf6; color: #8b5cf6;"
                                 (click)="saveCurrentView()"
                                 ngbTooltip="Guardar estos filtros como vista">
                                 <i class="pi pi-bookmark me-1"></i>
