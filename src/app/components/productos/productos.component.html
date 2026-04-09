@@ -62,31 +62,25 @@
 
                         <!-- Barra de búsqueda principal -->
                         <div class="mb-3">
-                            <div class="input-group search-input-group shadow-sm rounded">
-                                <select
-                                    class="form-select form-select-sm search-criteria-select fw-semibold"
+                            <div class="input-group input-group-sm search-input-group">
+                                <select class="form-select search-criteria-select fw-semibold"
                                     [(ngModel)]="filtros.searchBy"
                                     (change)="onSearchCriteriaChange()"
-                                    style="max-width:148px; border-right: 1px solid #dee2e6; border-radius: 6px 0 0 6px; background-color: #f8f9fa; font-size: 0.82rem;">
+                                    style="max-width: 140px; flex: 0 0 140px;">
                                     <option value="referencia">Referencia</option>
                                     <option value="titulo">Nombre</option>
                                     <option value="marca">Marca</option>
                                     <option value="codigoBarras">Cód. Barras</option>
                                 </select>
-                                <span class="input-group-text bg-white border-start-0 border-end-0 px-2">
+                                <span class="input-group-text">
                                     <i class="pi pi-search text-muted"></i>
                                 </span>
-                                <input
-                                    type="text"
-                                    class="form-control border-start-0 ps-0"
-                                    style="border-radius: 0 6px 6px 0;"
+                                <input type="text" class="form-control"
                                     [value]="filtros.texto"
                                     [placeholder]="searchPlaceholder"
-                                    (input)="onSearchInput($event)"
-                                />
+                                    (input)="onSearchInput($event)" />
                                 <button *ngIf="filtros.texto"
-                                    class="btn btn-outline-secondary border-start-0"
-                                    style="border-radius: 0 6px 6px 0;"
+                                    class="btn btn-outline-secondary"
                                     type="button"
                                     (click)="limpiarTexto()"
                                     ngbTooltip="Limpiar búsqueda">
