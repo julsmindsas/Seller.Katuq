@@ -8,93 +8,50 @@
                     <div class="loader-8"></div>
                 </div>
 
-                <!-- Header Moderno del Módulo -->
-                <div
-                    class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center"
-                >
-                    <div>
-                        <h5 class="mb-1 fw-bold text-primary">
-                            <i class="icofont icofont-box me-2"></i
-                            >{{ "Gestión de Productos" | translate }}
-                        </h5>
-                        <p class="text-muted small mb-0">
-                            {{
-                                "Administra tu catálogo de productos"
-                                    | translate
-                            }}
-                        </p>
-                    </div>
-                    <div class="d-none d-lg-flex align-items-center gap-2">
-                        <button
-                            type="button"
-                            class="btn btn-primary btn-sm"
-                            (click)="crearProducto()"
-                        >
-                            <i class="icofont icofont-plus"></i>
-                            {{ "Crear Producto" | translate }}
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-outline-primary btn-sm"
-                            (click)="openImportModal()"
-                            ngbTooltip="{{
-                                'Importar productos desde Excel' | translate
-                            }}"
-                        >
-                            <i class="icofont icofont-upload-alt"></i>
-                            {{ "Importar" | translate }}
-                        </button>
-                        <button
-                            *ngIf="fulfillmentEnabled"
-                            type="button"
-                            class="btn btn-info btn-sm"
-                            (click)="importarProductosFulfillment()"
-                            [disabled]="importandoProductosFulfillment"
-                            ngbTooltip="Importar productos desde {{
-                                fulfillmentProviderName
-                            }}"
-                        >
-                            <i
-                                class="icofont icofont-cloud-download"
-                                *ngIf="!importandoProductosFulfillment"
-                            ></i>
-                            <i
-                                class="fa fa-spinner fa-spin"
-                                *ngIf="importandoProductosFulfillment"
-                            ></i>
-                            {{ "Fulfillment" | translate }}
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-success btn-sm"
-                            (click)="exportToExcel()"
-                        >
-                            <i class="icofont icofont-file-excel"></i>
-                            {{ "Exportar" | translate }}
-                        </button>
-                        <button
-                            type="button"
-                            class="btn btn-outline-secondary btn-sm"
-                            (click)="showColConfigDialog = true"
-                            ngbTooltip="Configurar columnas"
-                        >
-                            <i class="pi pi-table"></i>
-                        </button>
-                        <!-- Botón Administrativo: Limpiar BD - COMENTADO PARA NO DESPLEGAR
-                        <button type="button" class="btn btn-outline-danger btn-sm"
-                                (click)="limpiarProductosComercio()"
-                                ngbTooltip="{{ 'Eliminar TODOS los productos (Admin/Dev)' | translate }}">
-                            <i class="icofont icofont-trash"></i> {{ 'Limpiar BD' | translate }}
-                        </button>
-                        -->
-                        <!-- Botón Limpiar BD oculto en producción
-                        <button type="button" class="btn btn-outline-danger btn-sm"
-                            (click)="limpiarProductosComercio()"
-                            ngbTooltip="{{ 'Eliminar TODOS los productos (Admin/Dev)' | translate }}">
-                            <i class="icofont icofont-trash"></i>
-                            {{ "Limpiar BD" | translate }}
-                        </button>
-                        -->
+                <!-- Header Katuq Standard -->
+                <div class="module-header px-4 py-3 border-bottom"
+                     style="background: #f8fafc; border-left: 4px solid #8b5cf6;">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="mb-2 mb-md-0">
+                            <h4 class="mb-1 fw-bold text-dark">
+                                <i class="pi pi-box me-2" style="color: #8b5cf6;"></i>{{ "Gestión de Productos" | translate }}
+                            </h4>
+                            <p class="text-muted small mb-0">
+                                {{ "Administra tu catálogo de productos" | translate }}
+                            </p>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <button type="button" class="btn btn-sm"
+                                    style="background: #8b5cf6; color: white; border-color: #8b5cf6;"
+                                    (click)="crearProducto()">
+                                <i class="pi pi-plus me-1"></i>{{ "Crear Producto" | translate }}
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                    style="border-color: #8b5cf6; color: #8b5cf6;"
+                                    (click)="openImportModal()"
+                                    ngbTooltip="{{ 'Importar productos desde Excel' | translate }}">
+                                <i class="pi pi-upload me-1"></i>{{ "Importar" | translate }}
+                            </button>
+                            <button *ngIf="fulfillmentEnabled" type="button" class="btn btn-sm"
+                                    style="background: #00e5cc; color: white; border-color: #00e5cc;"
+                                    (click)="importarProductosFulfillment()"
+                                    [disabled]="importandoProductosFulfillment"
+                                    ngbTooltip="Importar productos desde {{ fulfillmentProviderName }}">
+                                <i class="pi pi-cloud-download me-1" *ngIf="!importandoProductosFulfillment"></i>
+                                <i class="pi pi-spin pi-spinner me-1" *ngIf="importandoProductosFulfillment"></i>
+                                {{ "Fulfillment" | translate }}
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm"
+                                    style="border-color: #8b5cf6; color: #8b5cf6;"
+                                    (click)="exportToExcel()">
+                                <i class="pi pi-file-excel me-1"></i>{{ "Exportar" | translate }}
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    (click)="showColConfigDialog = true"
+                                    ngbTooltip="Configurar columnas">
+                                <i class="pi pi-table"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -315,50 +272,6 @@
                     </div>
                     <!-- ====== FIN FILTROS ====== -->
 
-                    <!-- Barra mobile de acciones (legacy) -->
-                    <div class="row mb-2" style="display:none">
-                        <div class="col-lg-6 col-md-12 mb-3 mb-lg-0"><!-- search legacy --></div>
-                        <div class="col-lg-6 col-md-12 d-lg-none text-center">
-                            <button
-                                type="button"
-                                class="btn btn-primary btn-sm me-2"
-                                (click)="crearProducto()"
-                            >
-                                <i class="icofont icofont-plus"></i>
-                                {{ "Crear" | translate }}
-                            </button>
-                            <button
-                                type="button"
-                                class="btn btn-outline-primary btn-sm me-2"
-                                (click)="openImportModal()"
-                            >
-                                <i class="icofont icofont-upload-alt"></i>
-                            </button>
-                            <button
-                                *ngIf="fulfillmentEnabled"
-                                type="button"
-                                class="btn btn-info btn-sm me-2"
-                                (click)="importarProductosFulfillment()"
-                                [disabled]="importandoProductosFulfillment"
-                            >
-                                <i
-                                    class="icofont icofont-cloud-download"
-                                    *ngIf="!importandoProductosFulfillment"
-                                ></i>
-                                <i
-                                    class="fa fa-spinner fa-spin"
-                                    *ngIf="importandoProductosFulfillment"
-                                ></i>
-                            </button>
-                            <button
-                                type="button"
-                                class="btn btn-success btn-sm"
-                                (click)="exportToExcel()"
-                            >
-                                <i class="icofont icofont-file-excel"></i>
-                            </button>
-                        </div>
-                    </div>
 
                     <!-- Filtros de Dropshipping - OCULTOS -->
                     <!-- <div class="row col-12 mb-3">
