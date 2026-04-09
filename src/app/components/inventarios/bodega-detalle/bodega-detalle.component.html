@@ -157,7 +157,7 @@
               <tr>
                 <!-- Expand toggle -->
                 <td class="text-center">
-                  <button *ngIf="producto.fulfillmentId || producto.preciosPorTipoCliente?.length"
+                  <button *ngIf="producto.tieneFulfillment || producto.preciosPorTipoCliente?.length"
                           pButton type="button"
                           [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
                           class="p-button-text p-button-rounded p-button-sm p-button-plain"
@@ -176,7 +176,7 @@
                 </td>
                 <td>
                   {{ producto.nombre }}
-                  <span *ngIf="producto.fulfillmentId" class="badge ms-1" style="background: #eef0fb; color: #8b5cf6; font-size: 0.6rem; vertical-align: middle;">FF</span>
+                  <span *ngIf="producto.tieneFulfillment" class="badge ms-1" style="background: #eef0fb; color: #8b5cf6; font-size: 0.6rem; vertical-align: middle;">FF</span>
                 </td>
                 <td class="text-end">
                   <span [class.text-danger]="producto.cantidad === 0"
@@ -230,16 +230,12 @@
                         </table>
                       </div>
                       <!-- Fulfillment info -->
-                      <div class="col-md-6" *ngIf="producto.fulfillmentId">
+                      <div class="col-md-6" *ngIf="producto.tieneFulfillment">
                         <h6 class="fw-bold small mb-2"><i class="pi pi-cloud me-1" style="color: #00e5cc;"></i>Fulfillment</h6>
                         <div class="border rounded p-2" style="font-size: 0.8rem;">
                           <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">Provider:</span>
-                            <span class="fw-semibold">{{ producto.fulfillmentProvider || bodegaInfo?.fulfillmentProvider || '—' }}</span>
-                          </div>
-                          <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">ID Fulfillment:</span>
-                            <span class="font-monospace small">{{ producto.fulfillmentId }}</span>
+                            <span class="text-muted">Enlace:</span>
+                            <span class="badge" style="background: #e0faf5; color: #0d9488;">Vinculado</span>
                           </div>
                           <div class="d-flex justify-content-between">
                             <span class="text-muted">Stock Katuq:</span>
@@ -248,7 +244,7 @@
                         </div>
                       </div>
                       <!-- Sin detalle -->
-                      <div class="col-12" *ngIf="!producto.preciosPorTipoCliente?.length && !producto.fulfillmentId">
+                      <div class="col-12" *ngIf="!producto.preciosPorTipoCliente?.length && !producto.tieneFulfillment">
                         <span class="text-muted small">Sin información adicional</span>
                       </div>
                     </div>
