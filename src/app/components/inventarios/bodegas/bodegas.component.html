@@ -145,6 +145,11 @@
                                 </td>
                                 <td class="text-center">
                                     <div class="actions-cell">
+                                        <a class="btn-icon" ngbTooltip="Ver inventario" placement="top"
+                                           [routerLink]="['/inventario/bodega-detalle']"
+                                           [queryParams]="{ bodegaId: bodega.idBodega }">
+                                            <i class="fa fa-boxes" style="color: #8b5cf6;"></i>
+                                        </a>
                                         <button class="btn-icon btn-icon-edit" ngbTooltip="Editar" placement="top"
                                                 (click)="abrirModalEditar(bodega)">
                                             <i class="fa fa-pencil"></i>

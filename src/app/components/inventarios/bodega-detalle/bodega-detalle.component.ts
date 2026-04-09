@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { ToastrService } from 'ngx-toastr';
@@ -23,6 +24,7 @@ export class BodegaDetalleComponent implements OnInit {
   private _searchTimeout: any;
 
   constructor(
+    private route: ActivatedRoute,
     private inventarioService: InventarioService,
     private bodegaService: BodegaService,
     private toastr: ToastrService
@@ -38,7 +40,12 @@ export class BodegaDetalleComponent implements OnInit {
       next: (bodegas) => {
         this.bodegas = bodegas;
         this.loadingBodegas = false;
-        if (bodegas.length === 1) {
+        // Auto-seleccionar si viene por queryParam (desde listado de bodegas)
+        const qp = this.route.snapshot.queryParams['bodegaId'];
+        if (qp && bodegas.some((b: any) => b.idBodega === qp)) {
+          this.bodegaSeleccionadaId = qp;
+          this.cargarDetalle();
+        } else if (bodegas.length === 1) {
           this.bodegaSeleccionadaId = bodegas[0].idBodega;
           this.cargarDetalle();
         }

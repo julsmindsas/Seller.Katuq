@@ -813,27 +813,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const provider = this.activeAccountingProvider || 'siigo';
 
-    // World Office: no necesita seleccionar tipo de documento (ya esta en config)
+    // World Office: resolver prefijo según rol del usuario antes de facturar
     if (provider === 'world_office') {
-      Swal.fire({
-        title: '¿Generar Factura Electrónica?',
-        html: `
-          <p>Se generará una factura en <strong>${providerDisplayName}</strong> para:</p>
-          <p><strong>${pedido.nroPedido}</strong></p>
-          <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
-          <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
-        `,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Generar factura',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          this.ejecutarFacturacionSiigo(pedido);
-        }
-      });
+      this.facturarConPrefijoRol(pedido, provider, providerDisplayName);
       return;
     }
 
@@ -924,6 +906,132 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
+   * Facturación World Office con resolución de prefijo por rol.
+   * 1. Busca el rol del usuario logueado y lee sus prefijos configurados (separados por coma)
+   * 2. Si tiene prefijos, los cruza con los disponibles en WO → muestra selector
+   * 3. Si no tiene prefijos en el rol, factura con el prefijo por defecto de la empresa
+   */
+  private facturarConPrefijoRol(pedido: Pedido, provider: string, providerDisplayName: string): void {
+    const rolUsuario = this.UserLogged?.rol;
+
+    // Buscar el rol en Firestore para obtener prefijoFacturacion
+    (this.maestroService.getRol() as any).subscribe({
+      next: (roles: any[]) => {
+        const rolEncontrado = roles.find((r: any) => r.rol === rolUsuario);
+        const prefijosTexto = (rolEncontrado?.prefijoFacturacion || '').trim();
+
+        if (!prefijosTexto) {
+          // Sin prefijos en el rol → flujo directo como antes
+          this.mostrarConfirmacionFactura(pedido, providerDisplayName);
+          return;
+        }
+
+        // Parsear prefijos del rol (separados por coma)
+        const prefijosRol = prefijosTexto.split(',').map((p: string) => p.trim().toUpperCase()).filter((p: string) => p);
+
+        // Obtener prefijos disponibles del proveedor para cruzar
+        Swal.fire({ title: 'Cargando prefijos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+
+        this.integrationsService.getWOMasterData().subscribe({
+          next: (response: any) => {
+            Swal.close();
+            const prefijosProveedor: any[] = response?.data?.prefijos || response?.prefijos || [];
+
+            // Cruzar: solo mostrar los que coinciden con el rol (por nombre o código)
+            const prefijosDisponibles = prefijosProveedor.filter((p: any) => {
+              const nombre = (p.nombre || '').toUpperCase();
+              const codigo = (p.codigo || '').toUpperCase();
+              return prefijosRol.some((pr: string) => nombre.includes(pr) || codigo.includes(pr) || pr.includes(nombre) || pr.includes(codigo));
+            });
+
+            if (prefijosDisponibles.length === 0) {
+              this.toastrService.warning(
+                `Los prefijos del rol (${prefijosTexto}) no coinciden con los disponibles en ${providerDisplayName}. Se usará el prefijo por defecto.`,
+                'Prefijo no encontrado', { timeOut: 8000 }
+              );
+              this.mostrarConfirmacionFactura(pedido, providerDisplayName);
+              return;
+            }
+
+            if (prefijosDisponibles.length === 1) {
+              // Solo un prefijo coincide → confirmar directamente con ese
+              this.mostrarConfirmacionFactura(pedido, providerDisplayName, prefijosDisponibles[0]);
+              return;
+            }
+
+            // Múltiples prefijos → mostrar selector
+            const inputOptions: { [key: string]: string } = {};
+            prefijosDisponibles.forEach((p: any) => {
+              inputOptions[p.id] = `${p.nombre || p.codigo} (ID: ${p.id})`;
+            });
+
+            Swal.fire({
+              title: '¿Generar Factura Electrónica?',
+              html: `
+                <p>Se generará una factura en <strong>${providerDisplayName}</strong> para:</p>
+                <p><strong>${pedido.nroPedido}</strong></p>
+                <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
+                <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
+                <hr>
+                <p><strong>Seleccione el prefijo de facturación:</strong></p>
+              `,
+              input: 'select',
+              inputOptions,
+              inputPlaceholder: 'Seleccione un prefijo',
+              icon: 'question',
+              showCancelButton: true,
+              confirmButtonColor: '#3085d6',
+              cancelButtonColor: '#d33',
+              confirmButtonText: 'Generar factura',
+              cancelButtonText: 'Cancelar',
+              inputValidator: (value) => !value ? 'Debe seleccionar un prefijo' : null
+            }).then((result) => {
+              if (result.isConfirmed && result.value) {
+                const prefijoSeleccionado = prefijosDisponibles.find((p: any) => String(p.id) === String(result.value));
+                this.ejecutarFacturacionSiigo(pedido, undefined, prefijoSeleccionado?.nombre || prefijoSeleccionado?.codigo);
+              }
+            });
+          },
+          error: () => {
+            Swal.close();
+            this.toastrService.warning('No se pudieron cargar los prefijos. Se usará el prefijo por defecto.', 'Aviso');
+            this.mostrarConfirmacionFactura(pedido, providerDisplayName);
+          }
+        });
+      },
+      error: () => {
+        // Si falla la consulta de roles, continuar sin prefijo específico
+        this.mostrarConfirmacionFactura(pedido, providerDisplayName);
+      }
+    });
+  }
+
+  /** Muestra confirmación simple de facturación (sin selector de prefijo) */
+  private mostrarConfirmacionFactura(pedido: Pedido, providerDisplayName: string, prefijoUnico?: any): void {
+    Swal.fire({
+      title: '¿Generar Factura Electrónica?',
+      html: `
+        <p>Se generará una factura en <strong>${providerDisplayName}</strong> para:</p>
+        <p><strong>${pedido.nroPedido}</strong></p>
+        <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
+        <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
+        ${prefijoUnico ? `<p class="text-muted">Prefijo: ${prefijoUnico.nombre || prefijoUnico.codigo}</p>` : ''}
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Generar factura',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        const prefijoTexto = prefijoUnico ? (prefijoUnico.nombre || prefijoUnico.codigo) : undefined;
+        this.ejecutarFacturacionSiigo(pedido, undefined, prefijoTexto);
+      }
+    });
+  }
+
+  /**
    * Ejecuta la facturación electrónica
    * Utiliza el endpoint genérico que maneja automáticamente:
    * 1. Obtención del pedido completo
@@ -932,8 +1040,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * 4. Actualización del pedido con datos de facturación
    *
    * @param pedido Pedido a facturar
+   * @param prefijoTexto Nombre/código del prefijo a usar (override del rol)
    */
-  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number): void {
+  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoTexto?: string): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const nroPedido = pedido.nroPedido || pedido.referencia || pedido._id;
 
@@ -947,8 +1056,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       { timeOut: 5000 }
     );
 
-    // Preparar opciones con el tipo de documento seleccionado
-    const options = documentTypeId ? { documentTypeId } : undefined;
+    // Preparar opciones con el tipo de documento y/o prefijo seleccionado
+    const options: any = {};
+    if (documentTypeId) options.documentTypeId = documentTypeId;
+    if (prefijoTexto) options.prefijoTexto = prefijoTexto;
 
     // Usar endpoint async para no bloquear (responde 202 inmediato)
     const provider = this.activeAccountingProvider || 'siigo';
