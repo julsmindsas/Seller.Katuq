@@ -323,13 +323,24 @@ $border-radius: 8px;
 // ============================================
 
 .search-input-group {
+    border-radius: 8px !important;
+    overflow: hidden;
+    border: 1px solid #dee2e6;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+
     &:focus-within {
         box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+        border-color: #a78bfa;
     }
 
     .search-criteria-select {
-        background-color: #f8f9fa;
-        font-size: 0.82rem;
+        border-top: none;
+        border-bottom: none;
+        border-left: none;
+        border-right: 1px solid #dee2e6;
+        color: #495057;
+        font-weight: 600;
+        cursor: pointer;
 
         &:focus {
             box-shadow: none;
@@ -337,6 +348,9 @@ $border-radius: 8px;
     }
 
     .form-control {
+        border-top: none;
+        border-bottom: none;
+        border-right: none;
 
         &:focus {
             box-shadow: none;
