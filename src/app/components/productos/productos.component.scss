@@ -322,114 +322,299 @@ $border-radius: 8px;
 // FILTROS — SEARCH BAR + PILLS
 // ============================================
 
+// ====================================================
+// SISTEMA DE FILTROS — diseño compacto
+// ====================================================
+
+// Barra de búsqueda
 .search-input-group {
-    border-radius: 8px !important;
+    border-radius: 6px;
     overflow: hidden;
     border: 1px solid #dee2e6;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: box-shadow 0.2s, border-color 0.2s;
 
     &:focus-within {
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
         border-color: #a78bfa;
     }
 
     .search-criteria-select {
-        border-top: none;
-        border-bottom: none;
-        border-left: none;
+        max-width: 120px;
+        border: none;
         border-right: 1px solid #dee2e6;
-        color: #495057;
+        background-color: #f8f9fa;
+        font-size: 0.8rem;
         font-weight: 600;
-        cursor: pointer;
-
-        &:focus {
-            box-shadow: none;
-        }
+        color: #495057;
+        &:focus { box-shadow: none; }
     }
 
     .form-control {
-        border-top: none;
-        border-bottom: none;
-        border-right: none;
-
-        &:focus {
-            box-shadow: none;
-        }
-
-        &::placeholder {
-            color: #adb5bd;
-            font-size: 0.88rem;
-        }
+        border: none;
+        font-size: 0.85rem;
+        &:focus { box-shadow: none; }
+        &::placeholder { color: #adb5bd; font-size: 0.83rem; }
     }
 
     .btn-outline-secondary {
-        border-top: none;
-        border-bottom: none;
+        border: none;
         color: #adb5bd;
-
-        &:hover {
-            color: #6c757d;
-            background: transparent;
-        }
+        &:hover { color: #6c757d; background: transparent; }
     }
 }
 
-// Fila de filtros rápidos tipo pill
-// Pill compartido entre filtros rápidos y panel de más filtros
-.filtro-pill {
-    height: 32px;
-    font-size: 0.82rem;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-radius: 20px;
-    white-space: nowrap;
+// --------------------------------------------------
+// Tira de filtros: variables compartidas
+// --------------------------------------------------
+$fs-height: 30px;
+$fs-font: 0.78rem;
+$fs-radius: 5px;
+$fs-border: #dee2e6;
+$fs-active-color: #5b21b6;
+$fs-active-bg: #f0ebff;
+$fs-active-border: #a78bfa;
+
+// Fila principal (no wrapping, scroll horizontal si es necesario)
+.filter-strip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+
+    &::-webkit-scrollbar { display: none; }
 }
 
-select.filtro-pill {
-    padding-left: 12px;
-    padding-right: 32px;
-    min-width: fit-content;
-    border-color: #dee2e6;
-    background-color: #fff;
+// Fila de filtros secundarios (puede wrappear en pantallas pequeñas)
+.filter-secondary {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 8px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    animation: slideDown 0.15s ease;
+}
+
+// Select base (usado en ambas filas)
+.fs-select {
+    height: $fs-height;
+    font-size: $fs-font;
+    border: 1px solid $fs-border;
+    border-radius: $fs-radius;
+    background: #fff;
     color: #495057;
-    background-position: right 10px center;
+    padding: 0 20px 0 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    appearance: auto;
+    flex-shrink: 0;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
 
     &:focus {
-        border-color: #a78bfa;
-        box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.12);
+        outline: none;
+        border-color: $fs-active-border;
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
     }
 
-    &.ng-valid[ng-reflect-model]:not([ng-reflect-model=""]) {
-        border-color: #8b5cf6;
-        color: #6d28d9;
-        background-color: #f5f3ff;
+    &.fs-active {
+        border-color: $fs-active-border;
+        background: $fs-active-bg;
+        color: $fs-active-color;
+        font-weight: 600;
+    }
+
+    &.fs-active-sub {
+        border-color: $fs-active-border;
+        background: $fs-active-bg;
+        color: $fs-active-color;
         font-weight: 600;
     }
 }
 
-// Panel de más filtros
-.mas-filtros-panel {
-    background: #fafafa;
-    border: 1px solid #e9ecef;
-    border-radius: 8px;
-    animation: slideDown 0.15s ease;
+// Separador vertical
+.fs-divider {
+    display: inline-block;
+    width: 1px;
+    height: 18px;
+    background: #dee2e6;
+    margin: 0 2px;
+    flex-shrink: 0;
+}
 
-    .form-label {
-        font-size: 0.7rem;
-        text-transform: none;
-        letter-spacing: 0;
-        font-weight: 500;
-        line-height: 1.2;
-    }
+// Botón "Más filtros"
+.fs-btn-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: $fs-height;
+    padding: 0 10px;
+    font-size: $fs-font;
+    font-weight: 500;
+    border: 1px solid $fs-border;
+    border-radius: $fs-radius;
+    background: #fff;
+    color: #6c757d;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s;
 
-    .form-select, .form-control, .input-group-text {
-        font-size: 0.8rem;
-        height: 30px;
+    &:hover { border-color: #adb5bd; color: #495057; }
+
+    &--active {
+        border-color: $fs-active-border;
+        background: $fs-active-bg;
+        color: $fs-active-color;
+        font-weight: 600;
     }
 }
 
+// Badge contador de filtros activos
+.fs-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    border-radius: 50%;
+    background: $fs-active-color;
+    color: #fff;
+}
+
+// Botón limpiar
+.fs-btn-clear {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: $fs-height;
+    padding: 0 8px;
+    font-size: $fs-font;
+    border: 1px solid #f5c2c7;
+    border-radius: $fs-radius;
+    background: #fff5f5;
+    color: #b02a37;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.15s;
+    &:hover { background: #f8d7da; }
+}
+
+// Contador de resultados (al extremo derecho de la tira)
+.fs-count {
+    font-size: $fs-font;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+// Inputs de precio en la fila secundaria
+.fs-price-range {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.fs-price-input {
+    width: 72px;
+    height: $fs-height;
+    font-size: $fs-font;
+    border: 1px solid $fs-border;
+    border-radius: $fs-radius;
+    padding: 0 6px;
+    text-align: right;
+    &:focus {
+        outline: none;
+        border-color: $fs-active-border;
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2);
+    }
+}
+
+// Fila de chips activos + vistas
+.filter-status {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    min-height: 24px;
+    margin-top: 4px;
+}
+
+// Chip de filtro activo
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.74rem;
+    font-weight: 500;
+    padding: 2px 8px 2px 10px;
+    border-radius: 20px;
+    background: #ede9fe;
+    color: $fs-active-color;
+    border: 1px solid #c4b5fd;
+}
+
+// Chip de vista guardada
+.filter-view-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.74rem;
+    padding: 2px 8px 2px 10px;
+    border-radius: 20px;
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    cursor: pointer;
+
+    &--active {
+        background: #e0e7ff;
+        color: #3730a3;
+        border-color: #a5b4fc;
+        font-weight: 600;
+    }
+}
+
+.chip-remove {
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
+    font-size: 0.9rem;
+    color: inherit;
+    opacity: 0.6;
+    cursor: pointer;
+    &:hover { opacity: 1; }
+}
+
+.fs-btn-save {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 8px;
+    font-size: 0.74rem;
+    border: 1px solid #c4b5fd;
+    border-radius: 20px;
+    background: #fff;
+    color: $fs-active-color;
+    cursor: pointer;
+    &:hover { background: $fs-active-bg; }
+}
+
+.fs-views-label {
+    font-size: 0.72rem;
+    color: #adb5bd;
+}
+
 @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-6px); }
+    from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 

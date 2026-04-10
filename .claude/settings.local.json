@@ -111,7 +111,12 @@
       "Bash(where python:*)",
       "Bash(where python3:*)",
       "Bash(where py:*)",
-      "Bash(python -m pip install python-docx)"
+      "Bash(python -m pip install python-docx)",
+      "Read(//c/Users/julia/AppData/Local/Temp/claude/C--Users-julia-Documents-Seller-Katuq/5e120b5d-be76-4583-b7e9-263e6d07c857/tasks/**)",
+      "Bash(cmd:*)",
+      "Bash(git fetch:*)",
+      "Bash(git stash:*)",
+      "Bash(git pull:*)"
     ]
   }
 }

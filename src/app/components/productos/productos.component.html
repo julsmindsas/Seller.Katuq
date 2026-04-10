@@ -60,26 +60,28 @@
                     <!-- ====== SISTEMA DE FILTROS ====== -->
                     <div class="filtros-wrapper mb-3">
 
-                        <!-- Barra de búsqueda principal -->
-                        <div class="mb-3">
-                            <div class="input-group search-input-group shadow-sm rounded">
-                                <select
-                                    class="form-select form-select-sm search-criteria-select fw-semibold"
+                        <!-- Fila 1: Búsqueda -->
+                        <div class="filter-search-row mb-2">
+                            <div class="input-group search-input-group">
+                                <select class="form-select form-select-sm search-criteria-select fw-semibold"
                                     [(ngModel)]="filtros.searchBy"
-                                    (change)="onSearchCriteriaChange()"
-                                    style="max-width:148px; border-right: 1px solid #dee2e6; border-radius: 6px 0 0 6px; background-color: #f8f9fa; font-size: 0.82rem;">
-                                    <option value="referencia">Referencia</option>
+                                    (change)="onSearchCriteriaChange()">
+                                    <option value="referencia">Ref.</option>
                                     <option value="titulo">Nombre</option>
                                     <option value="marca">Marca</option>
-                                    <option value="codigoBarras">Cód. Barras</option>
+                                    <option value="codigoBarras">Cód.Barras</option>
+                                    <option value="categoria">Categoría</option>
+                                    <option value="etiquetas">Etiquetas</option>
+                                    <option value="descripcion">Descripción</option>
+                                    <option value="caracAdicionales">Características</option>
+                                    <option value="garantias">Garantías</option>
+                                    <option value="restricciones">Restricciones</option>
+                                    <option value="cuidadoConsumo">Cómo cuidarse</option>
                                 </select>
                                 <span class="input-group-text bg-white border-start-0 border-end-0 px-2">
                                     <i class="pi pi-search text-muted"></i>
                                 </span>
-                                <input
-                                    type="text"
-                                    class="form-control border-start-0 ps-0"
-                                    style="border-radius: 0 6px 6px 0;"
+                                <input type="text" class="form-control border-start-0 ps-1"
                                     [value]="filtros.texto"
                                     [placeholder]="searchPlaceholder"
                                     (input)="onSearchInput($event)"
@@ -95,159 +97,207 @@
                             </div>
                         </div>
 
-                        <!-- Fila de filtros rápidos -->
-                        <div class="filtros-rapidos d-flex flex-wrap align-items-center gap-2 mb-2">
+                        <!-- Fila 2: Tira de filtros (scrollable, sin wrap) -->
+                        <div class="filter-strip mb-1">
+
+                            <!-- Categoría -->
+                            <select class="fs-select" [class.fs-active]="filtros.categoria"
+                                [(ngModel)]="filtros.categoria" (change)="onCategoriaChange()">
+                                <option value="">Categoría</option>
+                                <option *ngFor="let c of categoriasList" [value]="c.label">{{ c.label }}</option>
+                            </select>
+
+                            <!-- Subcategoría (solo si la categoría tiene hijos) -->
+                            <ng-container *ngIf="subcategoriasList.length > 0">
+                                <span class="fs-divider"></span>
+                                <select class="fs-select fs-active-sub"
+                                    [(ngModel)]="filtros.subcategoria" (change)="onFiltroChange()">
+                                    <option value="">Subcategoría</option>
+                                    <option *ngFor="let s of subcategoriasList" [value]="s">{{ s }}</option>
+                                </select>
+                            </ng-container>
+
+                            <span class="fs-divider"></span>
 
                             <!-- Estado -->
-                            <select class="form-select form-select-sm filtro-pill"
-                                [(ngModel)]="filtros.estado"
-                                (change)="onFiltroChange()">
-                                <option value="">Todos los estados</option>
+                            <select class="fs-select" [class.fs-active]="filtros.estado && filtros.estado !== 'activo'"
+                                [(ngModel)]="filtros.estado" (change)="onFiltroChange()">
+                                <option value="">Estado</option>
                                 <option value="activo">Activo</option>
                                 <option value="inactivo">Inactivo</option>
                             </select>
 
                             <!-- Disponibilidad -->
-                            <select class="form-select form-select-sm filtro-pill"
-                                [(ngModel)]="filtros.disponibilidad"
-                                (change)="onFiltroChange()">
+                            <select class="fs-select" [class.fs-active]="filtros.disponibilidad"
+                                [(ngModel)]="filtros.disponibilidad" (change)="onFiltroChange()">
                                 <option value="">Disponibilidad</option>
                                 <option value="disponible">Disponible</option>
                                 <option value="agotado">Agotado</option>
                             </select>
 
-                            <!-- Tipo de producto -->
-                            <select class="form-select form-select-sm filtro-pill"
-                                [(ngModel)]="filtros.tipoProducto"
-                                (change)="onFiltroChange()">
-                                <option value="">Tipo producto</option>
+                            <!-- Tipo producto -->
+                            <select class="fs-select" [class.fs-active]="filtros.tipoProducto"
+                                [(ngModel)]="filtros.tipoProducto" (change)="onFiltroChange()">
+                                <option value="">Tipo</option>
                                 <option value="propio">Propio</option>
                                 <option value="externo">Externo</option>
                                 <option value="dropshipping">Dropshipping</option>
                             </select>
 
-                            <!-- Separador -->
-                            <span class="text-muted" style="font-size: 1.1rem; line-height: 1;">|</span>
+                            <span class="fs-divider"></span>
 
-                            <!-- Botón Más filtros -->
-                            <button class="btn btn-sm filtro-pill"
-                                [class.btn-outline-secondary]="masFilterCount === 0"
-                                [style.background]="masFilterCount > 0 ? '#8b5cf6' : ''"
-                                [style.color]="masFilterCount > 0 ? 'white' : ''"
-                                [style.border-color]="masFilterCount > 0 ? '#8b5cf6' : ''"
+                            <!-- Más filtros toggle -->
+                            <button class="fs-btn-more"
+                                [class.fs-btn-more--active]="masFilterCount > 0 || masFiltersVisible"
                                 (click)="masFiltersVisible = !masFiltersVisible">
-                                <i class="pi pi-filter me-1"></i>
-                                Más filtros
-                                <span *ngIf="masFilterCount > 0"
-                                    class="badge bg-white ms-1"
-                                    style="font-size: 0.7rem; color: #8b5cf6;">{{ masFilterCount }}</span>
+                                <i class="pi pi-filter"></i>
+                                Más
+                                <span *ngIf="masFilterCount > 0" class="fs-count-badge">{{ masFilterCount }}</span>
                                 <i class="pi ms-1 small"
                                     [class.pi-chevron-down]="!masFiltersVisible"
-                                    [class.pi-chevron-up]="masFiltersVisible"></i>
+                                    [class.pi-chevron-up]="masFiltersVisible"
+                                    [style.transform]="masFiltersVisible ? 'rotate(180deg)' : 'none'"></i>
                             </button>
 
-                            <!-- Limpiar filtros -->
-                            <button class="btn btn-sm btn-outline-danger filtro-pill"
-                                *ngIf="hayFiltrosActivos"
-                                (click)="limpiarFiltros()"
-                                ngbTooltip="Limpiar todos los filtros">
-                                <i class="pi pi-times me-1"></i>Limpiar
+                            <!-- Limpiar -->
+                            <button *ngIf="hayFiltrosActivos" class="fs-btn-clear"
+                                (click)="limpiarFiltros()" ngbTooltip="Limpiar filtros">
+                                <i class="pi pi-times"></i> Limpiar
                             </button>
+
+                            <!-- Contador (al final de la tira) -->
+                            <span class="fs-count ms-auto" *ngIf="totalItems > 0 || cargando">
+                                <span *ngIf="cargando" class="spinner-border spinner-border-sm text-secondary me-1" style="width:10px;height:10px"></span>
+                                <strong>{{ totalItems | number }}</strong>
+                                <span class="text-muted"> prod.</span>
+                            </span>
                         </div>
 
-                        <!-- Panel: Más filtros (expandible) — mismo estilo pill que filtros rápidos -->
-                        <div class="mas-filtros-panel px-3 py-2 mb-2" *ngIf="masFiltersVisible">
-                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                <div class="input-group input-group-sm" style="width: 140px;">
-                                    <span class="input-group-text" style="font-size: 0.78rem;">$ Min</span>
-                                    <input type="number" class="form-control" placeholder="0" style="font-size: 0.82rem;"
-                                        [(ngModel)]="filtros.precioDesde"
-                                        (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
-                                </div>
-                                <div class="input-group input-group-sm" style="width: 140px;">
-                                    <span class="input-group-text" style="font-size: 0.78rem;">$ Max</span>
-                                    <input type="number" class="form-control" placeholder="∞" style="font-size: 0.82rem;"
-                                        [(ngModel)]="filtros.precioHasta"
-                                        (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
-                                </div>
-                                <select class="form-select form-select-sm filtro-pill"
-                                    [(ngModel)]="filtros.requiereProduccion"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Producción</option>
-                                    <option value="si">Requiere</option>
-                                    <option value="no">No requiere</option>
-                                </select>
-                                <select class="form-select form-select-sm filtro-pill"
-                                    [(ngModel)]="filtros.inventariable"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Inventariable</option>
-                                    <option value="si">Sí</option>
-                                    <option value="no">No</option>
-                                </select>
-                                <select class="form-select form-select-sm filtro-pill"
-                                    [(ngModel)]="filtros.ultimaEdicion"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Edición</option>
-                                    <option value="hoy">Hoy</option>
-                                    <option value="7dias">7 días</option>
-                                    <option value="mes">Este mes</option>
-                                    <option value="mes_anterior">Mes anterior</option>
-                                </select>
-                                <select class="form-select form-select-sm filtro-pill"
-                                    [(ngModel)]="filtros.completitud"
-                                    (change)="onFiltroChange()">
-                                    <option value="">Completitud</option>
-                                    <option value="completo">Completos (≥80%)</option>
-                                    <option value="parcial">Parciales (50-79%)</option>
-                                    <option value="incompleto">Incompletos (&lt;50%)</option>
-                                </select>
+                        <!-- Fila 3: Filtros secundarios (desplegable compacto) -->
+                        <div class="filter-secondary" *ngIf="masFiltersVisible">
+                            <!-- Entrega -->
+                            <select class="fs-select" [class.fs-active]="filtros.tipoEntrega"
+                                [(ngModel)]="filtros.tipoEntrega" (change)="onFiltroChange()">
+                                <option value="">Tipo entrega</option>
+                                <option *ngFor="let t of tiposEntrega" [value]="t.nombreInterno || t.label || t.cd">
+                                    {{ t.nombreExterno || t.label || t.nombreInterno }}
+                                </option>
+                            </select>
+                            <select class="fs-select" [class.fs-active]="filtros.tiempoEntrega"
+                                [(ngModel)]="filtros.tiempoEntrega" (change)="onFiltroChange()">
+                                <option value="">Tiempo entrega</option>
+                                <option *ngFor="let t of tiemposEntrega" [value]="t.nombreInterno || t.label || t.cd">
+                                    {{ t.nombreExterno || t.label || t.nombreInterno }}
+                                </option>
+                            </select>
+                            <select class="fs-select" [class.fs-active]="filtros.exposicion"
+                                [(ngModel)]="filtros.exposicion" (change)="onFiltroChange()">
+                                <option value="">Exposición</option>
+                                <option value="oferta">Oferta</option>
+                                <option value="nuevo">Nuevo</option>
+                                <option value="destacado">Destacado</option>
+                                <option value="recomendado">Recomendado</option>
+                                <option value="masvendido">Más vendido</option>
+                            </select>
+                            <select class="fs-select" [class.fs-active]="filtros.canal"
+                                [(ngModel)]="filtros.canal" (change)="onFiltroChange()">
+                                <option value="">Canal</option>
+                                <option value="web">Web</option>
+                                <option value="pos">POS</option>
+                                <option value="shopify">Shopify</option>
+                            </select>
+
+                            <span class="fs-divider"></span>
+
+                            <!-- Proceso -->
+                            <select class="fs-select" [class.fs-active]="filtros.requiereProduccion"
+                                [(ngModel)]="filtros.requiereProduccion" (change)="onFiltroChange()">
+                                <option value="">Producción</option>
+                                <option value="si">Requiere prod.</option>
+                                <option value="no">Sin producción</option>
+                            </select>
+                            <select class="fs-select" [class.fs-active]="filtros.inventariable"
+                                [(ngModel)]="filtros.inventariable" (change)="onFiltroChange()">
+                                <option value="">Inventariable</option>
+                                <option value="si">Sí</option>
+                                <option value="no">No</option>
+                            </select>
+                            <select class="fs-select" [class.fs-active]="filtros.aceptaAdiciones"
+                                [(ngModel)]="filtros.aceptaAdiciones" (change)="onFiltroChange()">
+                                <option value="">Adiciones</option>
+                                <option value="si">Acepta</option>
+                                <option value="no">No acepta</option>
+                            </select>
+                            <select class="fs-select" [class.fs-active]="filtros.aceptaCalendario"
+                                [(ngModel)]="filtros.aceptaCalendario" (change)="onFiltroChange()">
+                                <option value="">Calendario</option>
+                                <option value="si">Acepta</option>
+                                <option value="no">No acepta</option>
+                            </select>
+                            <select class="fs-select" [class.fs-active]="filtros.permitePrecioManual"
+                                [(ngModel)]="filtros.permitePrecioManual" (change)="onFiltroChange()">
+                                <option value="">Precio manual</option>
+                                <option value="si">Permitido</option>
+                                <option value="no">No permitido</option>
+                            </select>
+
+                            <span class="fs-divider"></span>
+
+                            <!-- Precio -->
+                            <div class="fs-price-range">
+                                <span class="text-muted" style="font-size:0.75rem;white-space:nowrap">$</span>
+                                <input type="number" class="fs-price-input" placeholder="desde"
+                                    [(ngModel)]="filtros.precioDesde"
+                                    (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
+                                <span class="text-muted" style="font-size:0.75rem">—</span>
+                                <input type="number" class="fs-price-input" placeholder="hasta"
+                                    [(ngModel)]="filtros.precioHasta"
+                                    (blur)="onPrecioBlur()" (keyup.enter)="onPrecioBlur()" min="0" />
                             </div>
+
+                            <span class="fs-divider"></span>
+
+                            <!-- Catálogo -->
+                            <select class="fs-select" [class.fs-active]="filtros.completitud"
+                                [(ngModel)]="filtros.completitud" (change)="onFiltroChange()">
+                                <option value="">Completitud</option>
+                                <option value="completo">✅ Completos</option>
+                                <option value="parcial">🟡 Parciales</option>
+                                <option value="incompleto">🔴 Incompletos</option>
+                            </select>
+                            <select class="fs-select" [class.fs-active]="filtros.ultimaEdicion"
+                                [(ngModel)]="filtros.ultimaEdicion" (change)="onFiltroChange()">
+                                <option value="">Editado</option>
+                                <option value="hoy">Hoy</option>
+                                <option value="7dias">Últ. 7 días</option>
+                                <option value="mes">Este mes</option>
+                                <option value="mes_anterior">Mes anterior</option>
+                            </select>
                         </div>
 
-                        <!-- Chips de filtros activos + Contador -->
-                        <div class="d-flex flex-wrap align-items-center gap-2 mt-1"
-                            *ngIf="activeChips.length > 0 || totalItems > 0">
-                            <span class="text-muted small">
-                                <strong class="text-dark">{{ totalItems | number }}</strong>
-                                producto{{ totalItems !== 1 ? 's' : '' }}
-                            </span>
-                            <span *ngFor="let chip of activeChips"
-                                class="badge rounded-pill d-inline-flex align-items-center gap-1 px-2 py-1"
-                                style="background: #f3f0ff; color: #7c3aed; border: 1px solid #ddd6fe;">
-                                {{ chip.label }}
-                                <button type="button" class="btn-close btn-close-sm ms-1"
-                                    style="font-size: 0.6rem;"
-                                    (click)="removerChip(chip.key)"></button>
-                            </span>
-                            <button *ngIf="hasActiveFilters()"
-                                class="btn btn-sm py-0 px-2"
-                                style="font-size:0.78rem; border-color: #8b5cf6; color: #8b5cf6;"
-                                (click)="saveCurrentView()"
-                                ngbTooltip="Guardar estos filtros como vista">
-                                <i class="pi pi-bookmark me-1"></i>
-                                {{ activeViewName ? 'Actualizar "' + activeViewName + '"' : 'Guardar vista' }}
-                            </button>
+                        <!-- Fila 4: Chips activos + vistas guardadas -->
+                        <div class="filter-status" *ngIf="activeChips.length > 0 || savedViews.length > 0">
+                            <ng-container *ngIf="activeChips.length > 0">
+                                <span *ngFor="let chip of activeChips" class="filter-chip">
+                                    {{ chip.label }}
+                                    <button type="button" class="chip-remove" (click)="removerChip(chip.key)">×</button>
+                                </span>
+                                <button *ngIf="hayFiltrosActivos" class="fs-btn-save"
+                                    (click)="saveCurrentView()" ngbTooltip="Guardar vista">
+                                    <i class="pi pi-bookmark"></i>
+                                </button>
+                            </ng-container>
+                            <ng-container *ngIf="savedViews.length > 0">
+                                <span class="fs-views-label">Vistas:</span>
+                                <span *ngFor="let v of savedViews" class="filter-view-chip"
+                                    [class.filter-view-chip--active]="activeViewName === v.name"
+                                    (click)="loadView(v)" ngbTooltip="Aplicar vista">
+                                    {{ v.name }}
+                                    <button type="button" class="chip-remove" (click)="deleteView(v, $event)">×</button>
+                                </span>
+                            </ng-container>
                         </div>
 
-                        <!-- Saved views row -->
-                        <div class="d-flex flex-wrap align-items-center gap-2 mt-2" *ngIf="savedViews.length > 0">
-                            <span class="text-muted small"><i class="pi pi-bookmark me-1"></i>Vistas:</span>
-                            <span *ngFor="let v of savedViews"
-                                class="badge d-inline-flex align-items-center gap-1 px-2 py-1"
-                                [class.bg-primary]="activeViewName === v.name"
-                                [class.bg-light]="activeViewName !== v.name"
-                                [class.text-white]="activeViewName === v.name"
-                                [class.text-dark]="activeViewName !== v.name"
-                                style="cursor:pointer; border: 1px solid #dee2e6; font-size:0.78rem"
-                                (click)="loadView(v)"
-                                ngbTooltip="Aplicar vista">
-                                {{ v.name }}
-                                <button type="button" class="btn-close ms-1"
-                                    [class.btn-close-white]="activeViewName === v.name"
-                                    style="font-size: 0.55rem"
-                                    (click)="deleteView(v, $event)"></button>
-                            </span>
-                        </div>
                     </div>
                     <!-- ====== FIN FILTROS ====== -->
 
