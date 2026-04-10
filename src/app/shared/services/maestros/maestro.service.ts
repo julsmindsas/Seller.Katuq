@@ -192,6 +192,10 @@ export class MaestroService {
   public createProduct(product: any) {
     return this.http.post(this.urlBase + '/v1/productos/create', product, this.httpOptions);
   }
+
+  public bulkPatchProductos(ids: string[], accion: 'activar' | 'desactivar' | 'disponible' | 'agotado' | 'eliminar'): Observable<any> {
+    return this.http.patch<any>(this.urlBase + '/v1/productos/bulk-patch', { ids, accion }, this.httpOptions);
+  }
   quickSearchProducts(q: string, limit: number = 50, searchBy: string = 'referencia'): Observable<any> {
     const params = new HttpParams()
       .set('q', q.trim())
@@ -214,6 +218,15 @@ export class MaestroService {
     if (filtros.requiereProduccion) params = params.set('requiereProduccion', filtros.requiereProduccion);
     if (filtros.inventariable) params = params.set('inventariable', filtros.inventariable);
     if (filtros.ultimaEdicion) params = params.set('ultimaEdicion', filtros.ultimaEdicion);
+    if (filtros.categoria) params = params.set('categoria', filtros.categoria);
+    if (filtros.subcategoria) params = params.set('subcategoria', filtros.subcategoria);
+    if (filtros.exposicion) params = params.set('exposicion', filtros.exposicion);
+    if (filtros.tipoEntrega) params = params.set('tipoEntrega', filtros.tipoEntrega);
+    if (filtros.tiempoEntrega) params = params.set('tiempoEntrega', filtros.tiempoEntrega);
+    if (filtros.canal) params = params.set('canal', filtros.canal);
+    if (filtros.aceptaAdiciones) params = params.set('aceptaAdiciones', filtros.aceptaAdiciones);
+    if (filtros.aceptaCalendario) params = params.set('aceptaCalendario', filtros.aceptaCalendario);
+    if (filtros.permitePrecioManual) params = params.set('permitePrecioManual', filtros.permitePrecioManual);
     if (lastDocId) params = params.set('lastDocId', lastDocId);
 
     return this.http.get<any>(this.urlBase + '/v1/productos/all', { params });

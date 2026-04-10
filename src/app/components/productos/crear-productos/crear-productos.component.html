@@ -1786,9 +1786,9 @@
 													<td>
 														<span class="fw-semibold text-primary">{{ pedido.referencia || pedido.nroPedido }}</span>
 													</td>
-													<td>{{ pedido.cliente?.nombre || pedido.cliente?.razonSocial || '—' }}</td>
+													<td>{{ pedido.cliente?.nombres_completos || pedido.cliente?.nombre || pedido.cliente?.razonSocial || '—' }}</td>
 													<td>
-														<small class="text-muted">{{ pedido.date_reg | date:'dd/MM/yyyy' }}</small>
+														<small class="text-muted">{{ (pedido.fechaCreacion || pedido.date_reg) | date:'dd/MM/yyyy' }}</small>
 													</td>
 													<td>
 														<span class="badge rounded-pill"

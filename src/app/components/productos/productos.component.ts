@@ -18,6 +18,7 @@ import { IntegrationsService } from '../integrations/integrations.service';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { parse as flatedParse } from 'flatted';
 
 const FILTROS_SESSION_KEY = 'productos_filtros';
 
@@ -56,7 +57,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   // ---- Sistema de Filtros ----
   filtros = {
     texto: '',
-    searchBy: 'referencia',  // referencia | titulo | marca | codigoBarras
+    searchBy: 'referencia',
     estado: 'activo',
     disponibilidad: '',
     tipoProducto: '',
@@ -66,10 +67,25 @@ export class ProductosComponent implements OnInit, OnDestroy {
     requiereProduccion: '',
     inventariable: '',
     ultimaEdicion: '',
-    completitud: '',        // '' | 'completo' | 'parcial' | 'incompleto'
+    completitud: '',
+    // Nuevos filtros
+    categoria: '',
+    subcategoria: '',
+    exposicion: '',          // oferta | nuevo | destacado | recomendado | masvendido
+    tipoEntrega: '',
+    tiempoEntrega: '',
+    canal: '',               // pos | web | shopify
+    aceptaAdiciones: '',     // si | no
+    aceptaCalendario: '',    // si | no
+    permitePrecioManual: '', // si | no
   };
+  tiposEntrega: any[] = [];
+  tiemposEntrega: any[] = [];
+  categoriasList: { label: string; children: { label: string }[] }[] = [];
+  subcategoriasList: string[] = [];
   masFiltersVisible = false;
   private searchSubject = new Subject<string>();
+  private filterSubject = new Subject<void>();
   private destroy$ = new Subject<void>();
 
   // Saved filter views
@@ -195,6 +211,23 @@ export class ProductosComponent implements OnInit, OnDestroy {
     return col ? col.visible : true;
   }
 
+  private normalizeProducts(products: any[]): any[] {
+    return products.map(p => {
+      if (p.categorias && typeof p.categorias === 'string') {
+        try {
+          const parsed = flatedParse(p.categorias);
+          // Reconstruir sin referencias circulares (parent) para que JSON.stringify funcione
+          p.categorias = {
+            label: parsed.label,
+            data: parsed.data,
+            children: (parsed.children || []).map((c: any) => ({ label: c.label, data: c.data })),
+          };
+        } catch { }
+      }
+      return p;
+    });
+  }
+
   saveColConfig(): void {
     const saved = this.colConfig.map(c => ({ key: c.key, visible: c.visible }));
     localStorage.setItem(this.COL_CONFIG_KEY, JSON.stringify(saved));
@@ -230,6 +263,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   // Selección múltiple
   selectedProductos: any[] = [];
+  private selectedIds = new Set<string>(); // Set para O(1) en isSelected
   ejecutandoAccionMasiva = false;
 
   // Fulfillment
@@ -255,6 +289,21 @@ export class ProductosComponent implements OnInit, OnDestroy {
     this.empresaActual = currentCompany ? JSON.parse(currentCompany) : {};
     const texto = this.empresaActual.nomComercial.toString();
     this.ultimasLetras = texto.substring(texto.length - 3);
+
+    // Cargar opciones de tipo/tiempo de entrega y categorías para filtros
+    this.service.getTipoEntrega().subscribe((r: any) => { this.tiposEntrega = r || []; });
+    this.service.getTiempoEntrega().subscribe((r: any) => { this.tiemposEntrega = r || []; });
+    this.service.getCategorias().subscribe((r: any) => {
+      try {
+        const tree = flatedParse((r as any[])[0].categoria);
+        this.categoriasList = (tree as any[]).map((p: any) => ({
+          label: p.data?.nombre || p.label || '',
+          children: (p.children || []).map((c: any) => ({ label: c.data?.nombre || c.label || '' })),
+        })).filter(c => c.label);
+        // Restaurar subcategorías si hay categoría activa
+        if (this.filtros.categoria) this.actualizarSubcategorias(this.filtros.categoria);
+      } catch { this.categoriasList = []; }
+    });
 
     // Restaurar filtros de sesión si existen
     this.restaurarFiltros();
@@ -291,15 +340,17 @@ export class ProductosComponent implements OnInit, OnDestroy {
           if (this.filtros.disponibilidad === 'disponible') products = products.filter(p => p.exposicion?.disponible === true);
           else if (this.filtros.disponibilidad === 'agotado') products = products.filter(p => p.exposicion?.disponible === false);
           if (this.filtros.tipoProducto) products = products.filter(p => p.crearProducto?.tipoProducto === this.filtros.tipoProducto);
-          this.temp = [...products];
-          this.rows = products;
-          this.totalItems = products.length;
+          const normalized = this.normalizeProducts(products);
+          this.temp = [...normalized];
+          this.rows = normalized;
+          this.totalItems = normalized.length;
           this.totalPages = 1;
           this.lastDocId = null;
         } else {
           // Respuesta de getProductsFiltered
-          this.temp = [...response.products];
-          this.rows = response.products;
+          const normalized = this.normalizeProducts(response.products);
+          this.temp = [...normalized];
+          this.rows = normalized;
           this.totalItems = response.pagination.totalItems;
           this.totalPages = response.pagination.totalPages;
           this.lastDocId = response.pagination.lastDocId;
@@ -308,6 +359,32 @@ export class ProductosComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error en búsqueda:', err);
+        this.cargando = false;
+      }
+    });
+
+    // Debounce para cambios de filtros de dropdown (400ms, cancela request previo)
+    this.filterSubject.pipe(
+      debounceTime(400),
+      switchMap(() => {
+        this.resetPaginacion();
+        this.cargando = true;
+        this.guardarFiltros();
+        return this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage);
+      }),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: (response: any) => {
+        const normalized = this.normalizeProducts(response.products);
+        this.temp = [...normalized];
+        this.rows = normalized;
+        this.totalItems = response.pagination.totalItems;
+        this.totalPages = response.pagination.totalPages;
+        this.lastDocId = response.pagination.lastDocId;
+        this.cargando = false;
+      },
+      error: (err) => {
+        console.error('Error al aplicar filtros:', err);
         this.cargando = false;
       }
     });
@@ -345,7 +422,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   get activeChips(): { label: string; key: string }[] {
     const chips = [];
     if (this.filtros.texto) {
-      const criteriaLabel: { [key: string]: string } = { referencia: 'Ref', titulo: 'Nombre', marca: 'Marca', codigoBarras: 'C.Barras' };
+      const criteriaLabel: { [key: string]: string } = { referencia: 'Ref', titulo: 'Nombre', marca: 'Marca', codigoBarras: 'C.Barras', categoria: 'Categoría', etiquetas: 'Etiquetas', descripcion: 'Descripción', caracAdicionales: 'Características', garantias: 'Garantías', restricciones: 'Restricciones', cuidadoConsumo: 'Cómo cuidarse' };
       chips.push({ label: `${criteriaLabel[this.filtros.searchBy] || 'Texto'}: "${this.filtros.texto}"`, key: 'texto' });
     }
     if (this.filtros.estado === 'activo') chips.push({ label: 'Activo', key: 'estado' });
@@ -361,6 +438,17 @@ export class ProductosComponent implements OnInit, OnDestroy {
     if (this.filtros.completitud === 'completo') chips.push({ label: 'Completos', key: 'completitud' });
     if (this.filtros.completitud === 'parcial') chips.push({ label: 'Parciales', key: 'completitud' });
     if (this.filtros.completitud === 'incompleto') chips.push({ label: 'Incompletos', key: 'completitud' });
+    if (this.filtros.categoria) chips.push({ label: `Cat: ${this.filtros.categoria}`, key: 'categoria' });
+    if (this.filtros.subcategoria) chips.push({ label: `Sub: ${this.filtros.subcategoria}`, key: 'subcategoria' });
+    const expMap: any = { oferta: 'Oferta', nuevo: 'Nuevo', destacado: 'Destacado', recomendado: 'Recomendado', masvendido: 'Más vendido' };
+    if (this.filtros.exposicion) chips.push({ label: expMap[this.filtros.exposicion] || this.filtros.exposicion, key: 'exposicion' });
+    if (this.filtros.tipoEntrega) chips.push({ label: `T.Entrega: ${this.filtros.tipoEntrega}`, key: 'tipoEntrega' });
+    if (this.filtros.tiempoEntrega) chips.push({ label: `T.Tiempo: ${this.filtros.tiempoEntrega}`, key: 'tiempoEntrega' });
+    const canalMap: any = { pos: 'POS', web: 'Web', shopify: 'Shopify' };
+    if (this.filtros.canal) chips.push({ label: `Canal: ${canalMap[this.filtros.canal] || this.filtros.canal}`, key: 'canal' });
+    if (this.filtros.aceptaAdiciones) chips.push({ label: `Adiciones: ${this.filtros.aceptaAdiciones === 'si' ? 'Sí' : 'No'}`, key: 'aceptaAdiciones' });
+    if (this.filtros.aceptaCalendario) chips.push({ label: `Calendario: ${this.filtros.aceptaCalendario === 'si' ? 'Sí' : 'No'}`, key: 'aceptaCalendario' });
+    if (this.filtros.permitePrecioManual) chips.push({ label: `Precio manual: ${this.filtros.permitePrecioManual === 'si' ? 'Sí' : 'No'}`, key: 'permitePrecioManual' });
     return chips;
   }
 
@@ -374,6 +462,13 @@ export class ProductosComponent implements OnInit, OnDestroy {
       titulo: 'Buscar por nombre de producto…',
       marca: 'Buscar por marca…',
       codigoBarras: 'Buscar por código de barras…',
+      categoria: 'Buscar por categoría…',
+      etiquetas: 'Buscar por etiqueta…',
+      descripcion: 'Buscar en descripción…',
+      caracAdicionales: 'Buscar en características adicionales…',
+      garantias: 'Buscar en garantías…',
+      restricciones: 'Buscar en restricciones…',
+      cuidadoConsumo: 'Buscar en cómo cuidarse / consumirse…',
     };
     return map[this.filtros.searchBy] || 'Buscar…';
   }
@@ -386,6 +481,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
     if (this.filtros.inventariable) count++;
     if (this.filtros.ultimaEdicion) count++;
     if (this.filtros.completitud) count++;
+    if (this.filtros.categoria) count++;
+    if (this.filtros.subcategoria) count++;
+    if (this.filtros.exposicion) count++;
+    if (this.filtros.tipoEntrega) count++;
+    if (this.filtros.tiempoEntrega) count++;
+    if (this.filtros.canal) count++;
+    if (this.filtros.aceptaAdiciones) count++;
+    if (this.filtros.aceptaCalendario) count++;
+    if (this.filtros.permitePrecioManual) count++;
     return count;
   }
 
@@ -400,6 +504,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
     else if (key === 'inventariable') this.filtros.inventariable = '';
     else if (key === 'ultimaEdicion') this.filtros.ultimaEdicion = '';
     else if (key === 'completitud') this.filtros.completitud = '';
+    else if (key === 'categoria') { this.filtros.categoria = ''; this.filtros.subcategoria = ''; this.subcategoriasList = []; }
+    else if (key === 'subcategoria') this.filtros.subcategoria = '';
+    else if (key === 'exposicion') this.filtros.exposicion = '';
+    else if (key === 'tipoEntrega') this.filtros.tipoEntrega = '';
+    else if (key === 'tiempoEntrega') this.filtros.tiempoEntrega = '';
+    else if (key === 'canal') this.filtros.canal = '';
+    else if (key === 'aceptaAdiciones') this.filtros.aceptaAdiciones = '';
+    else if (key === 'aceptaCalendario') this.filtros.aceptaCalendario = '';
+    else if (key === 'permitePrecioManual') this.filtros.permitePrecioManual = '';
     this.resetPaginacion();
     this.cargarConFiltros();
   }
@@ -458,9 +571,10 @@ export class ProductosComponent implements OnInit, OnDestroy {
             if (this.filtros.tipoProducto) {
               products = products.filter(p => p.crearProducto?.tipoProducto === this.filtros.tipoProducto);
             }
-            this.temp = [...products];
-            this.rows = products;
-            this.totalItems = products.length;
+            const normalized = this.normalizeProducts(products);
+            this.temp = [...normalized];
+            this.rows = normalized;
+            this.totalItems = normalized.length;
             this.totalPages = 1;
             this.lastDocId = null;
             this.cargando = false;
@@ -474,8 +588,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
       this.service.getProductsFiltered(this.filtros, this.pageSize, this.currentPage, this.lastDocId ?? undefined)
         .subscribe({
           next: (response: any) => {
-            this.temp = [...response.products];
-            this.rows = response.products;
+            const normalized = this.normalizeProducts(response.products);
+            this.temp = [...normalized];
+            this.rows = normalized;
             this.totalItems = response.pagination.totalItems;
             this.totalPages = response.pagination.totalPages;
             this.lastDocId = response.pagination.lastDocId;
@@ -490,8 +605,19 @@ export class ProductosComponent implements OnInit, OnDestroy {
   }
 
   onFiltroChange(): void {
-    this.resetPaginacion();
-    this.cargarConFiltros();
+    this.filterSubject.next();
+  }
+
+  onCategoriaChange(): void {
+    this.filtros.subcategoria = '';
+    this.subcategoriasList = [];
+    this.actualizarSubcategorias(this.filtros.categoria);
+    this.filterSubject.next();
+  }
+
+  actualizarSubcategorias(categoriaLabel: string): void {
+    const cat = this.categoriasList.find(c => c.label === categoriaLabel);
+    this.subcategoriasList = cat ? cat.children.map(c => c.label).filter(Boolean) : [];
   }
 
   onSearchInput(event: any): void {
@@ -565,7 +691,19 @@ export class ProductosComponent implements OnInit, OnDestroy {
       inventariable: '',
       ultimaEdicion: '',
       completitud: '',
+      categoria: '',
+      subcategoria: '',
+      exposicion: '',
+      tipoEntrega: '',
+      tiempoEntrega: '',
+      canal: '',
+      aceptaAdiciones: '',
+      aceptaCalendario: '',
+      permitePrecioManual: '',
     };
+    this.subcategoriasList = [];
+    this.selectedProductos = [];
+    this.selectedIds.clear();
     this.selectedProveedor = null;
     this.mostrarSoloDropshipping = false;
     this.resetPaginacion();
@@ -579,8 +717,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
     if (this.selectedProveedor) {
       // Filtrar por proveedor específico
       this.service.getProductosByProveedor(this.selectedProveedor, this.pageSize, this.currentPage).subscribe((response: any) => {
-        this.temp = [...response.products];
-        this.rows = response.products;
+        const normalized = this.normalizeProducts(response.products);
+        this.temp = [...normalized];
+        this.rows = normalized;
         this.totalItems = response.pagination.totalItems;
         this.totalPages = response.pagination.totalPages;
         this.cargando = false;
@@ -591,8 +730,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
     } else if (this.mostrarSoloDropshipping) {
       // Filtrar solo productos dropshipping
       this.service.getProductosDropshipping(this.pageSize, this.currentPage).subscribe((response: any) => {
-        this.temp = [...response.products];
-        this.rows = response.products;
+        const normalized = this.normalizeProducts(response.products);
+        this.temp = [...normalized];
+        this.rows = normalized;
         this.totalItems = response.pagination.totalItems;
         this.totalPages = response.pagination.totalPages;
         this.cargando = false;
@@ -913,96 +1053,100 @@ export class ProductosComponent implements OnInit, OnDestroy {
   }
 
   // ---- Selección múltiple ----
+  private rowId(row: any): string {
+    return row.cd || row.id || row._id || '';
+  }
+
   get allPageSelected(): boolean {
-    return this.rows.length > 0 && this.rows.every(r => this.isSelected(r));
+    return this.rows.length > 0 && this.rows.every(r => this.selectedIds.has(this.rowId(r)));
   }
 
   isSelected(row: any): boolean {
-    const id = row.cd || row.id || row._id;
-    return this.selectedProductos.some(p => (p.cd || p.id || p._id) === id);
+    return this.selectedIds.has(this.rowId(row));
   }
 
   toggleSelectAll(): void {
     if (this.allPageSelected) {
-      this.selectedProductos = [];
+      this.rows.forEach(r => this.selectedIds.delete(this.rowId(r)));
+      this.selectedProductos = this.selectedProductos.filter(p => !this.rows.some(r => this.rowId(r) === this.rowId(p)));
     } else {
-      this.selectedProductos = [...this.rows];
+      this.rows.forEach(r => {
+        const id = this.rowId(r);
+        if (!this.selectedIds.has(id)) {
+          this.selectedIds.add(id);
+          this.selectedProductos = [...this.selectedProductos, r];
+        }
+      });
     }
   }
 
   toggleSelectRow(row: any): void {
-    const id = row.cd || row.id || row._id;
-    const idx = this.selectedProductos.findIndex(p => (p.cd || p.id || p._id) === id);
-    if (idx >= 0) {
-      this.selectedProductos.splice(idx, 1);
+    const id = this.rowId(row);
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
+      this.selectedProductos = this.selectedProductos.filter(p => this.rowId(p) !== id);
     } else {
-      this.selectedProductos.push(row);
+      this.selectedIds.add(id);
+      this.selectedProductos = [...this.selectedProductos, row];
     }
   }
 
   async accionMasiva(accion: 'activar' | 'desactivar' | 'disponible' | 'agotado' | 'eliminar'): Promise<void> {
-    if (this.selectedProductos.length === 0) return;
-
     const n = this.selectedProductos.length;
+    if (n === 0) return;
 
     if (accion === 'eliminar') {
-      const confirm = await Swal.fire({
-        title: `¿Eliminar ${n} producto${n > 1 ? 's' : ''}?`,
+      const confirmed = await Swal.fire({
+        title: `¿Eliminar ${n} producto${n !== 1 ? 's' : ''}?`,
         text: 'Esta acción no se puede deshacer.',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonText: `Eliminar ${n} producto${n > 1 ? 's' : ''}`,
+        confirmButtonText: `Eliminar ${n} producto${n !== 1 ? 's' : ''}`,
         cancelButtonText: 'Cancelar',
         confirmButtonColor: '#dc3545'
       });
-      if (!confirm.isConfirmed) return;
+      if (!confirmed.isConfirmed) return;
     }
 
     this.ejecutandoAccionMasiva = true;
-    let exitos = 0;
-    let errores = 0;
+    const ids = this.selectedProductos.map(p => this.rowId(p)).filter(Boolean);
 
-    for (const prod of [...this.selectedProductos]) {
-      try {
-        if (accion === 'eliminar') {
-          await this.service.deleteProducto(prod).toPromise();
-        } else {
-          const copia = { ...prod };
-          if (!copia.exposicion) copia.exposicion = {};
-          if (accion === 'activar') copia.exposicion.activar = true;
-          else if (accion === 'desactivar') copia.exposicion.activar = false;
-          else if (accion === 'disponible') copia.exposicion.disponible = true;
-          else if (accion === 'agotado') copia.exposicion.disponible = false;
-          await this.service.createProduct(copia).toPromise();
-          // Actualizar fila en memoria
-          const id = prod.cd || prod.id || prod._id;
-          const rowRef = this.rows.find(r => (r.cd || r.id || r._id) === id);
-          if (rowRef) {
-            if (!rowRef.exposicion) rowRef.exposicion = {};
-            if (accion === 'activar') rowRef.exposicion.activar = true;
-            else if (accion === 'desactivar') rowRef.exposicion.activar = false;
-            else if (accion === 'disponible') rowRef.exposicion.disponible = true;
-            else if (accion === 'agotado') rowRef.exposicion.disponible = false;
-          }
-        }
-        exitos++;
-      } catch {
-        errores++;
+    try {
+      const resultado: any = await this.service.bulkPatchProductos(ids, accion).toPromise();
+
+      // Actualizar filas en memoria sin recargar (excepto eliminar)
+      if (accion !== 'eliminar') {
+        this.rows = this.rows.map(r => {
+          if (!this.selectedIds.has(this.rowId(r))) return r;
+          const exp = { ...(r.exposicion || {}) };
+          if (accion === 'activar')    exp.activar    = true;
+          if (accion === 'desactivar') exp.activar    = false;
+          if (accion === 'disponible') exp.disponible = true;
+          if (accion === 'agotado')    exp.disponible = false;
+          return { ...r, exposicion: exp };
+        });
+        this.temp = [...this.rows];
       }
+
+      // Limpiar selección
+      this.selectedProductos = [];
+      this.selectedIds.clear();
+
+      if (accion === 'eliminar') this.cargarConFiltros();
+
+      const procesados = resultado?.procesados ?? ids.length;
+      const omitidos   = resultado?.omitidos   ?? 0;
+      const msgOmit    = omitidos > 0 ? ` (${omitidos} con stock no eliminados)` : '';
+      this.toastr.success(
+        `${procesados} producto${procesados !== 1 ? 's' : ''} ${accion === 'eliminar' ? 'eliminado' : 'actualizado'}${procesados !== 1 ? 's' : ''}${msgOmit}`,
+        'Listo', { timeOut: 4000 }
+      );
+    } catch (err: any) {
+      const msg = err?.error?.message || 'Error al aplicar la acción';
+      this.toastr.error(msg, 'Error');
+    } finally {
+      this.ejecutandoAccionMasiva = false;
     }
-
-    this.ejecutandoAccionMasiva = false;
-    this.selectedProductos = [];
-
-    if (accion === 'eliminar') this.cargarConFiltros();
-
-    const msg = exitos > 0
-      ? `${exitos} producto${exitos > 1 ? 's' : ''} actualizado${exitos > 1 ? 's' : ''}`
-      : '';
-    const errMsg = errores > 0 ? ` (${errores} error${errores > 1 ? 'es' : ''})` : '';
-
-    if (exitos > 0) this.toastr.success(msg + errMsg, 'Acción completada', { timeOut: 4000 });
-    else this.toastr.error('No se pudo completar la acción', 'Error');
   }
 
   viewProduct(row) {
