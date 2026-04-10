@@ -1,0 +1,264 @@
+// ===== Card & Header =====
+:host {
+  display: block;
+
+  .card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.rol-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 12px;
+}
+
+.rol-header-left {
+  .rol-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+  }
+
+  .rol-subtitle {
+    font-size: 14px;
+    color: #9ca3af;
+    margin: 2px 0 0;
+  }
+}
+
+.btn-crear {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #8b5cf6;
+  border-color: #8b5cf6;
+  color: #fff;
+  font-weight: 500;
+  font-size: 14px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  transition: all 0.2s;
+
+  &:hover {
+    background-color: #7c3aed;
+    border-color: #7c3aed;
+    color: #fff;
+  }
+
+  i {
+    font-size: 14px;
+  }
+}
+
+// ===== Table Wrapper =====
+.roles-table-wrapper {
+  padding: 0 24px 24px;
+}
+
+// ===== PrimeNG Table Deep Overrides =====
+::ng-deep .roles-table {
+  .p-datatable {
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+  }
+
+  // Caption (search bar)
+  .p-datatable-header {
+    background: #faf8ff;
+    border-bottom: 1px solid #ede9fe;
+    padding: 12px 16px;
+  }
+
+  // Header cells
+  .p-datatable-thead > tr > th {
+    background: #f9fafb;
+    color: #6b7280;
+    font-weight: 600;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 10px 14px;
+    border-color: #e5e7eb;
+  }
+
+  // Body cells
+  .p-datatable-tbody > tr > td {
+    padding: 12px 14px;
+    border-color: #f3f4f6;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  // Row hover
+  .p-datatable-tbody > tr:hover {
+    background: #faf8ff !important;
+  }
+
+  // Striped
+  .p-datatable-tbody > tr:nth-child(even) {
+    background: #fafafa;
+  }
+
+  // Paginator
+  .p-paginator {
+    border-top: 1px solid #e5e7eb;
+    background: #f9fafb;
+    padding: 8px 16px;
+
+    .p-paginator-element {
+      border-radius: 6px;
+      min-width: 32px;
+      height: 32px;
+      font-size: 13px;
+
+      &.p-highlight {
+        background: #8b5cf6;
+        border-color: #8b5cf6;
+        color: #fff;
+      }
+    }
+  }
+}
+
+// ===== Search =====
+.table-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-wrapper {
+  position: relative;
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .search-input {
+    padding-left: 36px;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 260px;
+    border: 1px solid #dee2e6;
+    height: 36px;
+
+    &:focus {
+      border-color: #a78bfa;
+      box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+    }
+  }
+}
+
+.roles-count {
+  font-size: 13px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+// ===== Cell Styles =====
+.role-name {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.role-empresa {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.prefijo-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  margin: 1px 3px;
+  border-radius: 12px;
+  background: #ede9fe;
+  color: #7c3aed;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.default-label {
+  color: #d1d5db;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.user-edit {
+  color: #9ca3af;
+  font-size: 13px;
+}
+
+// ===== Action Buttons =====
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.15s;
+  padding: 0;
+
+  i {
+    font-size: 15px;
+  }
+
+  &.action-edit {
+    color: #8b5cf6;
+
+    &:hover {
+      background: #f3efff;
+      border-color: #c4b5fd;
+    }
+  }
+
+  &.action-delete {
+    color: #d1d5db;
+
+    &:hover {
+      background: #fef2f2;
+      border-color: #fecaca;
+      color: #d12b38;
+    }
+  }
+}
+
+// ===== Empty State =====
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 40px;
+    color: #d1d5db;
+    margin-bottom: 12px;
+  }
+
+  .empty-text {
+    font-size: 15px;
+    color: #9ca3af;
+    margin: 0;
+  }
+
+  .empty-hint {
+    font-size: 13px;
+    color: #d1d5db;
+    margin-top: 4px;
+  }
+}

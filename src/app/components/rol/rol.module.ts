@@ -6,7 +6,7 @@ import { RolRoutingModule } from './rol-routing.module';
 import { RolComponent } from './rol.component';
 import { RolesModule } from './roles/roles.module';
 import { TableModule } from 'primeng/table';
-
+import { InputTextModule } from 'primeng/inputtext';
 
 @NgModule({
   imports: [
@@ -15,7 +15,8 @@ import { TableModule } from 'primeng/table';
     RolesModule,
     RolRoutingModule,
     NgxDatatableModule,
-    TableModule
+    TableModule,
+    InputTextModule
   ],
   declarations: [RolComponent]
 })

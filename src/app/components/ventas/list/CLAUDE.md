@@ -13,5 +13,6 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #4078 | 10:56 PM | 🟣 | Frontend ejecutarFacturacionSiigo Method Accepts Prefix Parameter | ~404 |
 | #4036 | 10:15 AM | 🔵 | Order Context Not Used in Invoice Creation | ~472 |
 </claude-mem-context>

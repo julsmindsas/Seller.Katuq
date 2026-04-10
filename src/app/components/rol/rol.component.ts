@@ -1,7 +1,8 @@
-import { Component, ViewChild, Input, OnInit } from '@angular/core';
+import { Component, ViewChild, OnInit } from '@angular/core';
 import { DatatableComponent, ColumnMode } from "@swimlane/ngx-datatable";
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
 @Component({
   selector: 'app-rol',
   templateUrl: './rol.component.html',
@@ -57,11 +58,33 @@ export class RolComponent implements OnInit {
   }
 
   eliminarRol(role: any) {
-    if (confirm('¿Está seguro de que desea eliminar este rol?')) {
-      this.service.deleteRol(role.id).subscribe(() => {
-        this.cargarDatos();
-      });
-    }
+    Swal.fire({
+      title: '¿Eliminar rol?',
+      html: `Se eliminará el rol <strong>${role.rol}</strong>. Esta acción no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d12b38',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.service.deleteRol(role.id).subscribe({
+          next: () => {
+            this.cargarDatos();
+            Swal.fire({ title: 'Eliminado', text: 'Rol eliminado correctamente', icon: 'success', timer: 1500, showConfirmButton: false });
+          },
+          error: () => {
+            Swal.fire({ title: 'Error', text: 'No se pudo eliminar el rol', icon: 'error' });
+          }
+        });
+      }
+    });
+  }
+
+  parsePrefijos(texto: string): string[] {
+    if (!texto) return [];
+    return texto.split(',').map(p => p.trim()).filter(p => p);
   }
   updateFilter(event: any) {
 

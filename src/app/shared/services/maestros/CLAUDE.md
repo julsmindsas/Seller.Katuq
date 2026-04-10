@@ -8,4 +8,10 @@
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
 | #3235 | 6:31 PM | 🔴 | Fixed SweetAlert Dialog Cancellation Logic for IVA Price Import | ~420 |
+
+### Apr 8, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #4042 | 10:12 PM | ⚖️ | Role-Based Invoice Prefix Resolution Strategy Defined | ~469 |
 </claude-mem-context>

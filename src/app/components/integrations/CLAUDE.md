@@ -21,5 +21,6 @@
 
 | ID | Time | T | Title | Read |
 |----|------|---|-------|------|
+| #4042 | 10:12 PM | ⚖️ | Role-Based Invoice Prefix Resolution Strategy Defined | ~469 |
 | #4036 | 10:15 AM | 🔵 | Order Context Not Used in Invoice Creation | ~472 |
 </claude-mem-context>

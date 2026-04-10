@@ -18,6 +18,7 @@ export interface Role {
   empresa: string; // Empresa a la que pertenece el rol
   permissions: string[]; // Lista de permisos asociados al rol
   menus: Menu[]; // Lista de menús que puede ver el rol
+  prefijoFacturacion?: string; // Prefijos de facturación separados por coma (ej: "FE, POS") — se cruzan con el proveedor contable al facturar
   date_edit: Date; // Fecha de la última edición
   user_edit: string; // Usuario que realizó la última edición
 }

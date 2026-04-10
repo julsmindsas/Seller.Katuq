@@ -1,5 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { NavService, Menu } from '../../../shared/services/nav.service';
 import { Role } from '../../../shared/models/roles/roles';
@@ -20,15 +22,19 @@ export class RolesComponent implements OnInit {
   public selectedMenus: Menu[] = [];
   public empresas: string[] = [];
   public isJulsmind: boolean = false;
-  private editingRoleId: string | null = null; // nuevo
+  public editingRoleId: string | null = null;
+  @ViewChild('configModal') configModal: TemplateRef<any>;
 
   constructor(private fb: FormBuilder,
+    private router: Router,
+    private modalService: NgbModal,
     private utilsService: UtilsService,
     private maestroService: MaestroService, private navService: NavService) {
     this.roleForm = this.fb.group({
       rol: ['', Validators.required],
       menus: [[], Validators.required],
-      empresa: [null]
+      empresa: [null],
+      prefijoFacturacion: ['']
     });
   }
 
@@ -131,7 +137,8 @@ export class RolesComponent implements OnInit {
       this.roleForm.patchValue({
         rol: role.rol,
         empresa: role.empresa,
-        menus: role.menus
+        menus: role.menus,
+        prefijoFacturacion: role.prefijoFacturacion || ''
       });
       this.selectedMenus = role.menus;
       // Actualizar availableMenus eliminando los seleccionados
@@ -196,6 +203,15 @@ export class RolesComponent implements OnInit {
         });
       }
     }
+  }
+
+  abrirConfiguraciones(): void {
+    this.modalService.open(this.configModal, { size: 'lg', centered: true });
+  }
+
+  volver(): void {
+    localStorage.removeItem('currentRole');
+    this.router.navigateByUrl('/rol');
   }
 
   onMenuChange(event: any, modeDirection: string): void {

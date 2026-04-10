@@ -1026,10 +1026,23 @@ export class IntegrationsService {
     const body: any = { orderId };
     if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
     if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
+    if (options?.prefijoId) body.prefijoId = options.prefijoId;
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order-async`,
       body,
+      { headers: this.getApiHeaders() }
+    );
+  }
+
+  /**
+   * Resolver prefijos de facturación por texto.
+   * Envía textos del rol (ej: ["FE", "POS"]) y retorna los prefijos del proveedor que matchean + default.
+   */
+  resolvePrefixes(provider: string, prefixFilters: string[]): Observable<any> {
+    return this.http.post<any>(
+      `${environment.urlApi}/v1/accounting/${provider}/resolve-prefixes`,
+      { prefixFilters },
       { headers: this.getApiHeaders() }
     );
   }

@@ -1,25 +1,240 @@
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #8b5cf6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #f0ecff;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
+
+  label {
+    font-weight: 500;
+    font-size: 13px;
+    color: #495057;
+    margin-bottom: 4px;
+  }
+}
+
+.form-control {
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+  transition: border-color 0.2s;
+
+  &:focus {
+    border-color: #a78bfa;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.1);
+  }
+
+  &.is-invalid {
+    border-color: #d12b38;
+  }
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
+  font-size: 13px;
+
+  &.menu-parent {
+    color: #8b5cf6;
+  }
 }
 
 .btn-primary {
-  margin-top: 10px;
+  background-color: #8b5cf6;
+  border-color: #8b5cf6;
+
+  &:hover {
+    background-color: #7c3aed;
+    border-color: #7c3aed;
+  }
+
+  &:disabled {
+    background-color: #c4b5fd;
+    border-color: #c4b5fd;
+  }
 }
 
+.btn-outline-secondary {
+  border-color: #dee2e6;
+  color: #6c757d;
 
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #adb5bd;
+    color: #495057;
+  }
+}
+
+// PrimeNG PickList overrides
 ::ng-deep .p-picklist-buttons .p-button {
   display: none;
-  /* Oculta todos los botones */
 }
 
-/* Muestra solo los botones individuales (mover uno a uno) */
 ::ng-deep .p-picklist-buttons .p-button:nth-child(1),
 ::ng-deep .p-picklist-buttons .p-button:nth-child(3) {
   display: inline-flex;
+}
+
+::ng-deep .p-picklist {
+  .p-picklist-header {
+    background: #f8f6ff;
+    color: #495057;
+    font-weight: 600;
+    font-size: 13px;
+    border-bottom: 2px solid #ede9fe;
+  }
+
+  .p-picklist-list {
+    border: 1px solid #dee2e6;
+    border-radius: 0 0 6px 6px;
+  }
+
+  .p-picklist-item {
+    padding: 6px 12px;
+    font-size: 13px;
+
+    &.p-highlight {
+      background: #ede9fe;
+      color: #7c3aed;
+    }
+  }
+
+  .p-picklist-filter-container .p-inputtext {
+    border-radius: 6px;
+    font-size: 13px;
+  }
+}
+
+.gap-2 {
+  gap: 8px;
+}
+
+// ===== Config Banner (clickable, in-form) =====
+.config-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border: 1px solid #ede9fe;
+  border-left: 3px solid #8b5cf6;
+  border-radius: 8px;
+  background: #faf8ff;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f3efff;
+    border-color: #c4b5fd;
+  }
+}
+
+.config-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  > i {
+    font-size: 22px;
+    color: #8b5cf6;
+  }
+}
+
+.config-banner-title {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+}
+
+.config-banner-desc {
+  display: block;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.config-banner-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  > i {
+    color: #9ca3af;
+    font-size: 14px;
+  }
+}
+
+.config-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #ede9fe;
+  color: #7c3aed;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+// ===== Config Modal =====
+::ng-deep .config-modal-header {
+  background: #faf8ff;
+  border-bottom: 2px solid #ede9fe;
+
+  .modal-title {
+    color: #8b5cf6;
+    font-weight: 600;
+    font-size: 16px;
+
+    i {
+      font-size: 18px;
+    }
+  }
+}
+
+.config-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  overflow: hidden;
+
+  &.config-section-disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+.config-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+
+  > i {
+    font-size: 16px;
+    color: #8b5cf6;
+  }
+}
+
+.config-section-body {
+  padding: 16px;
+}
+
+.coming-soon-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: #f3f4f6;
+  color: #9ca3af;
+  font-size: 11px;
+  font-weight: 500;
 }

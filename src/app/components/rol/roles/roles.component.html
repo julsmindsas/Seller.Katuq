@@ -1,38 +1,171 @@
-<div class="">
-  <h2>Gestión de Roles</h2>
-  <form [formGroup]="roleForm" (ngSubmit)="saveRole()">
-    <div class="form-group">
-      <label for="rol">Nombre del Rol</label>
-      <input type="text" autocomplete="off" id="rol" formControlName="rol" class="form-control" />
-    </div>
-    <div *ngIf="isJulsmind" class="form-group">
-      <label for="empresa">Empresa</label>
-      <select id="empresa" formControlName="empresa" class="form-control">
-        <option *ngFor="let empresa of empresas" [value]="empresa.nomComercial">{{ empresa.nomComercial }}</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label for="menus">Menús</label>
-      <p-pickList [source]="availableMenus" [target]="selectedMenus" sourceHeader="Menús disponibles"
-        targetHeader="Menús seleccionados" [dragdrop]="false" [responsive]="true" [sourceStyle]="{'height':'20rem'}"
-        [targetStyle]="{'height':'20rem'}" sourceFilterPlaceholder="Buscar por título" filterBy="title"
-        targetFilterPlaceholder="Buscar por título" (onMoveToTarget)="onMenuChange($event,'target')"
-        (onMoveToSource)="onMenuChange($event,'source')" [showSourceControls]="false" [showTargetControls]="false">
-        <ng-template let-menu pTemplate="item">
-          <div *ngIf="!menu.children">
-            <label style="margin-left: 20px;">{{ menu.title }}</label>
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12 p-2">
+      <div class="card">
+
+        <!-- Header -->
+        <div class="row col-12 m-2">
+          <div class="col-6">
+            <p class="text-left fc-secondary fs-24 m-0 p-0">
+              {{ editingRoleId ? 'Editar Rol' : 'Crear Rol' }}
+            </p>
+            <p class="text-left text-muted fs-18 m-0 p-0">
+              {{ editingRoleId ? 'Modifica la configuración del rol.' : 'Define un nuevo rol con sus permisos y accesos.' }}
+            </p>
           </div>
-          <div *ngIf="menu.children">
-            <strong>{{ menu.title }}</strong>
-            <div *ngFor="let child of menu.children" style="margin-left: 20px;">
-              {{ child.title }}
+          <div class="col-6 p-3" style="text-align: end">
+            <button class="btn btn-outline-secondary" type="button" (click)="volver()">
+              <i class="icofont icofont-arrow-left"></i>&nbsp; Volver al listado
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <form [formGroup]="roleForm" (ngSubmit)="saveRole()">
+
+            <!-- Sección: Información básica -->
+            <div class="section-title">Información del Rol</div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <div class="form-group">
+                  <label for="rol">Nombre del Rol <span class="text-danger">*</span></label>
+                  <input type="text" autocomplete="off" id="rol" formControlName="rol"
+                    class="form-control" [class.is-invalid]="roleForm.get('rol')?.invalid && roleForm.get('rol')?.touched"
+                    placeholder="Ej: Vendedor, Administrador, Despachador" />
+                  <div class="invalid-feedback">El nombre del rol es obligatorio.</div>
+                </div>
+              </div>
+              <div class="col-md-6" *ngIf="isJulsmind">
+                <div class="form-group">
+                  <label for="empresa">Empresa</label>
+                  <select id="empresa" formControlName="empresa" class="form-control">
+                    <option [ngValue]="null" disabled>Seleccione una empresa</option>
+                    <option *ngFor="let empresa of empresas" [value]="empresa.nomComercial">{{ empresa.nomComercial }}</option>
+                  </select>
+                </div>
+              </div>
             </div>
-          </div>
-        </ng-template>
-      </p-pickList>
+
+            <!-- Botón Configuraciones -->
+            <div class="config-banner mb-4" (click)="abrirConfiguraciones()">
+              <div class="config-banner-left">
+                <i class="icofont icofont-gear"></i>
+                <div>
+                  <span class="config-banner-title">Configuraciones</span>
+                  <span class="config-banner-desc">Facturación, prefijos y más opciones del rol</span>
+                </div>
+              </div>
+              <div class="config-banner-right">
+                <span class="config-badge" *ngIf="roleForm.get('prefijoFacturacion')?.value">
+                  {{ roleForm.get('prefijoFacturacion')?.value }}
+                </span>
+                <i class="icofont icofont-simple-right"></i>
+              </div>
+            </div>
+
+            <!-- Sección: Menús y permisos -->
+            <div class="section-title">Menús y Permisos</div>
+            <div class="row mb-4">
+              <div class="col-12">
+                <p-pickList [source]="availableMenus" [target]="selectedMenus"
+                  sourceHeader="Menús disponibles" targetHeader="Menús asignados al rol"
+                  [dragdrop]="false" [responsive]="true"
+                  [sourceStyle]="{'height':'22rem'}" [targetStyle]="{'height':'22rem'}"
+                  sourceFilterPlaceholder="Buscar menú..." filterBy="title"
+                  targetFilterPlaceholder="Buscar menú..."
+                  (onMoveToTarget)="onMenuChange($event,'target')"
+                  (onMoveToSource)="onMenuChange($event,'source')"
+                  [showSourceControls]="false" [showTargetControls]="false">
+                  <ng-template let-menu pTemplate="item">
+                    <div class="menu-item" *ngIf="!menu.children">
+                      <i class="icofont icofont-sub-listing" style="margin-right: 6px; opacity: 0.5;"></i>
+                      <span>{{ menu.title }}</span>
+                    </div>
+                    <div class="menu-item menu-parent" *ngIf="menu.children">
+                      <i class="icofont icofont-listine-dots" style="margin-right: 6px;"></i>
+                      <strong>{{ menu.title }}</strong>
+                    </div>
+                  </ng-template>
+                </p-pickList>
+                <small class="form-text text-muted mt-1" *ngIf="selectedMenus.length === 0">
+                  Seleccione al menos un menú para este rol.
+                </small>
+              </div>
+            </div>
+
+            <!-- Acciones -->
+            <div class="row">
+              <div class="col-12 d-flex justify-content-end gap-2">
+                <button class="btn btn-outline-secondary mr-2" type="button" (click)="volver()">
+                  Cancelar
+                </button>
+                <button class="btn btn-primary" type="submit" [disabled]="roleForm.invalid || selectedMenus.length === 0">
+                  <i class="icofont icofont-check-circled"></i>&nbsp;
+                  {{ editingRoleId ? 'Actualizar Rol' : 'Guardar Rol' }}
+                </button>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Configuraciones del Rol -->
+<ng-template #configModal let-modal>
+  <div class="modal-header config-modal-header">
+    <h5 class="modal-title">
+      <i class="icofont icofont-gear"></i>&nbsp; Configuraciones del Rol
+    </h5>
+    <button type="button" class="close" (click)="modal.dismiss()">
+      <span>&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+
+    <!-- Config: Facturación Electrónica -->
+    <div class="config-section">
+      <div class="config-section-header">
+        <i class="icofont icofont-file-document"></i>
+        <span>Facturación Electrónica</span>
+      </div>
+      <div class="config-section-body">
+        <div class="form-group">
+          <label for="prefijoFacturacion">Prefijos de facturación</label>
+          <input type="text" autocomplete="off" id="prefijoFacturacion"
+            [formControl]="roleForm.get('prefijoFacturacion')"
+            class="form-control" placeholder="Ej: FE, POS, SETT" />
+          <small class="form-text text-muted">
+            Prefijos separados por coma. Al facturar, el usuario podrá elegir entre estos.
+            Si se deja vacío, se usará el prefijo por defecto de la empresa.
+          </small>
+        </div>
+      </div>
     </div>
 
-    <button type="submit" class="btn btn-primary">Guardar Rol</button>
-  </form>
-  <hr />
-</div>
+    <!-- Placeholder para futuras configs -->
+    <div class="config-section config-section-disabled">
+      <div class="config-section-header">
+        <i class="icofont icofont-chart-bar-graph"></i>
+        <span>Reportes y Dashboard</span>
+        <span class="coming-soon-badge">Próximamente</span>
+      </div>
+    </div>
+
+    <div class="config-section config-section-disabled">
+      <div class="config-section-header">
+        <i class="icofont icofont-notification"></i>
+        <span>Notificaciones</span>
+        <span class="coming-soon-badge">Próximamente</span>
+      </div>
+    </div>
+
+  </div>
+  <div class="modal-footer">
+    <button type="button" class="btn btn-primary" (click)="modal.close()">
+      <i class="icofont icofont-check"></i>&nbsp; Listo
+    </button>
+  </div>
+</ng-template>
