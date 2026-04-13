@@ -2291,14 +2291,26 @@ export class PaymentService extends BaseService {
     `;
 
     // Construir URL de pago: usar linkId si existe, sino usar linkPago como fallback
+    // Solo mostrar el link si el monto del pedido coincide con el monto del link.
+    // Si el pedido fue modificado después de generar el link, el monto ya no coincide
+    // y mostrar el link confunde al cliente ("otro valor").
     let linkPagoUrl: string | null = null;
     if (!isComanda && pedido.pagoInformation) {
-      if (pedido.pagoInformation.linkId) {
-        // Construir URL desde linkId: https://checkout.wompi.co/l/{linkId}
-        linkPagoUrl = `https://checkout.wompi.co/l/${pedido.pagoInformation.linkId}`;
-      } else if (pedido.pagoInformation.linkPago) {
-        // Fallback: usar linkPago completo si existe
-        linkPagoUrl = pedido.pagoInformation.linkPago;
+      // Verificar que el monto actual del pedido coincida con el del link
+      const montoActual = Math.round((pedido.totalPedididoConDescuento || 0) * 100);
+      const montoLink = pedido.pagoInformation.monto
+        ? Math.round(pedido.pagoInformation.monto * 100)
+        : null;
+      const montoCoincide = montoLink === null || montoLink === montoActual;
+
+      if (montoCoincide) {
+        if (pedido.pagoInformation.linkId) {
+          linkPagoUrl = `https://checkout.wompi.co/l/${pedido.pagoInformation.linkId}`;
+        } else if (pedido.pagoInformation.linkPago) {
+          linkPagoUrl = pedido.pagoInformation.linkPago;
+        }
+      } else {
+        console.warn(`⚠️ [PDF] Link de pago desactualizado: monto pedido=${montoActual} vs monto link=${montoLink}. No se muestra el botón PAGAR.`);
       }
     }
 

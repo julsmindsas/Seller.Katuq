@@ -117,7 +117,9 @@
       "Bash(git fetch:*)",
       "Bash(git stash:*)",
       "Bash(git pull:*)",
-      "mcp__claude_ai_ClickUp__clickup_search"
+      "mcp__claude_ai_ClickUp__clickup_search",
+      "Read(//Users/danielga/Downloads/_Organizado/01_Katuq/**)",
+      "mcp__plugin_claude-mem_mcp-search__smart_outline"
     ]
   }
 }
