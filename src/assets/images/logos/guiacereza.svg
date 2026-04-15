@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Fondo circular rojo -->
+  <circle cx="60" cy="60" r="56" fill="#C0392B"/>
+  <!-- Cereza izquierda (amarilla) -->
+  <ellipse cx="38" cy="80" rx="14" ry="15" fill="#F39C12"/>
+  <!-- Cereza derecha (roja oscura) -->
+  <ellipse cx="72" cy="84" rx="15" ry="15" fill="#E74C3C" stroke="#922B21" stroke-width="1.5"/>
+  <!-- Tallo izquierdo -->
+  <path d="M38 66 C38 52 60 44 60 32" stroke="#27AE60" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Tallo derecho -->
+  <path d="M72 69 C72 54 60 44 60 32" stroke="#27AE60" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <!-- Hoja -->
+  <ellipse cx="74" cy="36" rx="11" ry="6" fill="#2ECC71" transform="rotate(-35 74 36)"/>
+  <!-- Brillo cereza izquierda -->
+  <ellipse cx="32" cy="73" rx="4" ry="3" fill="rgba(255,255,255,0.35)"/>
+  <!-- Brillo cereza derecha -->
+  <ellipse cx="66" cy="77" rx="4" ry="3" fill="rgba(255,255,255,0.25)"/>
+</svg>

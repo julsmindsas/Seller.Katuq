@@ -2280,6 +2280,133 @@
           </div>
         </ng-container>
 
+        <!-- ===== OSMOSIS / GUIACEREZA ===== -->
+        <ng-container *ngIf="selectedIntegrationType === 'osmosis'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>Configure la integración con <strong>Guiacereza (Osmosis)</strong> para sincronizar productos, stock por bodega y enviar pedidos automáticamente al ERP/ICG.</span>
+            <a href="https://osmosis-api.guiacereza.tech/api" target="_blank" class="learn-more">
+              <i class="fa fa-external-link"></i> Ver documentación
+            </a>
+          </div>
+
+          <!-- Node Slug -->
+          <div class="form-group">
+            <label for="nodeSlug">
+              <i class="fa fa-plug"></i> Node Slug:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-plug prefix-icon"></i>
+              <input type="text" id="nodeSlug" formControlName="nodeSlug"
+                     placeholder="Ej: mi-tienda-colombia" autocomplete="off">
+            </div>
+            <div *ngIf="integrationForm.get('nodeSlug')?.invalid && integrationForm.get('nodeSlug')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> El Node Slug es obligatorio (solo letras, números y guiones)
+            </div>
+            <small class="form-text text-muted">Identificador único de tu nodo en Osmosis. Lo provee el equipo de Guiacereza.</small>
+          </div>
+
+          <!-- Client ID -->
+          <div class="form-group">
+            <label for="osmosisClientId">
+              <i class="fa fa-id-card"></i> Client ID:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-id-card prefix-icon"></i>
+              <input type="text" id="osmosisClientId" formControlName="clientId"
+                     placeholder="Ingrese el Client ID de Osmosis" autocomplete="off">
+            </div>
+            <div *ngIf="integrationForm.get('clientId')?.invalid && integrationForm.get('clientId')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> El Client ID es obligatorio
+            </div>
+            <small class="form-text text-muted">Credencial OAuth2 proporcionada por Guiacereza.</small>
+          </div>
+
+          <!-- Client Secret -->
+          <div class="form-group">
+            <label for="osmosisClientSecret">
+              <i class="fa fa-key"></i> Client Secret:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-lock prefix-icon"></i>
+              <input [type]="showApiKey ? 'text' : 'password'" id="osmosisClientSecret"
+                     formControlName="clientSecret" placeholder="Ingrese el Client Secret de Osmosis" autocomplete="off">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
+            </div>
+            <div *ngIf="integrationForm.get('clientSecret')?.invalid && integrationForm.get('clientSecret')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> El Client Secret es obligatorio
+            </div>
+            <small class="form-text text-muted">Credencial secreta OAuth2. No la compartas con nadie.</small>
+          </div>
+
+          <!-- Sync toggles -->
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label><i class="fa fa-box"></i> Sincronizar productos:</label>
+              <div class="toggle-container">
+                <label class="switch">
+                  <input type="checkbox" formControlName="syncProducts" id="syncProducts">
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('syncProducts')?.value, 'inactive': !integrationForm.get('syncProducts')?.value}">
+                  {{ integrationForm.get('syncProducts')?.value ? 'Activado' : 'Desactivado' }}
+                </span>
+              </div>
+              <small class="form-text text-muted">Importa catálogo de productos desde Osmosis</small>
+            </div>
+
+            <div class="field-col form-group">
+              <label><i class="fa fa-shopping-cart"></i> Sincronizar pedidos:</label>
+              <div class="toggle-container">
+                <label class="switch">
+                  <input type="checkbox" formControlName="syncOrders" id="syncOrders">
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('syncOrders')?.value, 'inactive': !integrationForm.get('syncOrders')?.value}">
+                  {{ integrationForm.get('syncOrders')?.value ? 'Activado' : 'Desactivado' }}
+                </span>
+              </div>
+              <small class="form-text text-muted">Envía pedidos de Katuq al ERP de Guiacereza</small>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-col form-group">
+              <label><i class="fa fa-sync"></i> Sincronización automática:</label>
+              <div class="toggle-container">
+                <label class="switch">
+                  <input type="checkbox" formControlName="autoSyncProducts" id="autoSyncProducts">
+                  <span class="slider"></span>
+                </label>
+                <span class="toggle-label" [ngClass]="{'active': integrationForm.get('autoSyncProducts')?.value, 'inactive': !integrationForm.get('autoSyncProducts')?.value}">
+                  {{ integrationForm.get('autoSyncProducts')?.value ? 'Activado' : 'Desactivado' }}
+                </span>
+              </div>
+              <small class="form-text text-muted">Sincroniza el catálogo periódicamente de forma automática</small>
+            </div>
+
+            <div class="field-col form-group" *ngIf="integrationForm.get('autoSyncProducts')?.value">
+              <label for="productSyncInterval">
+                <i class="fa fa-clock"></i> Intervalo (horas):
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-clock prefix-icon"></i>
+                <input type="number" id="productSyncInterval" formControlName="productSyncInterval"
+                       min="1" max="24" placeholder="6" autocomplete="off">
+              </div>
+              <small class="form-text text-muted">Cada cuántas horas se sincroniza (1–24)</small>
+            </div>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-lightbulb"></i>
+            <span><strong>Nota:</strong> Osmosis utiliza OAuth2 (Client Credentials). El token se renueva automáticamente cada 24 horas. Asegúrate de que el <em>nodeSlug</em> coincida exactamente con el registrado en la plataforma de Guiacereza.</span>
+          </div>
+        </ng-container>
+
         <!-- ===== FORMULARIO DINÁMICO BASADO EN ESQUEMA ===== -->
         <ng-container *ngIf="isDynamicForm && currentSchema">
           <div class="dynamic-form-container">

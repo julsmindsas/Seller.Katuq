@@ -1341,6 +1341,14 @@ export class IntegrationsService {
       ],
       [IntegrationCategory.OTHER]: [
         {
+          id: "osmosis",
+          name: "Guiacereza",
+          description:
+            "Conecta tu tienda con el ERP/ICG de Guiacereza. Sincroniza productos, stock por bodega y envía pedidos automáticamente.",
+          logo: "assets/images/logos/guiacereza.svg",
+          active: true,
+        },
+        {
           id: "slack",
           name: "Slack",
           description: "Plataforma de comunicación empresarial",
