@@ -109,3 +109,4 @@ src/environments/environment.prod.ts
 katuq_admin_back_firebase/
 NUL
 kai
+.claude/settings.local.json

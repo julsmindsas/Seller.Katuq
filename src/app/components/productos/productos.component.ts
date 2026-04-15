@@ -272,6 +272,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   fulfillmentProviderName: string = '';
   importandoProductosFulfillment: boolean = false;
 
+
   constructor(
     private service: MaestroService,
     private imageService: ImagenService,
@@ -1275,7 +1276,6 @@ export class ProductosComponent implements OnInit, OnDestroy {
     // Usar IntegrationsService para obtener todas las integraciones
     this.integrationsService.getIntegrations().subscribe({
       next: (integrations) => {
-        console.log('[Productos] Integraciones cargadas:', integrations);
         // Buscar integración de fulfillment (aliaddo, aliaddo_fulfillment)
         const fulfillmentIntegration = integrations.find(i =>
           i.enabled && (i.provider === 'aliaddo' || i.type === 'aliaddo' ||
@@ -1286,9 +1286,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
           this.fulfillmentEnabled = true;
           this.fulfillmentProvider = fulfillmentIntegration.provider || fulfillmentIntegration.type;
           this.fulfillmentProviderName = this.fulfillmentService.getProviderDisplayName(this.fulfillmentProvider);
-          console.log(`✅ Fulfillment habilitado: ${this.fulfillmentProviderName}`);
         } else {
-          console.log('⚠️ No se encontró integración de fulfillment activa');
           this.fulfillmentEnabled = false;
         }
       },
@@ -1309,35 +1307,76 @@ export class ProductosComponent implements OnInit, OnDestroy {
     }
 
     Swal.fire({
-      title: 'Importar Productos de Fulfillment',
-      html: `<p>¿Desea importar los productos desde ${this.fulfillmentProviderName}?</p>
-             <small class="text-muted">Se importará el inventario por cada bodega sincronizada.</small>`,
+      title: `Importar desde ${this.fulfillmentProviderName}`,
+      html: `<p>¿Cómo desea importar los productos?</p>`,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonText: 'Sí, importar',
-      cancelButtonText: 'Cancelar'
+      showDenyButton: true,
+      confirmButtonText: '<i class="pi pi-cloud-download"></i> Importar todos',
+      denyButtonText: '<i class="pi pi-search"></i> Por referencia',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#8b5cf6',
+      denyButtonColor: '#00e5cc'
     }).then((result) => {
       if (result.isConfirmed) {
         this.ejecutarImportacionFulfillment();
+      } else if (result.isDenied) {
+        this.importarPorReferencia();
+      }
+    });
+  }
+
+  /**
+   * Pide la referencia/código al usuario y ejecuta la importación filtrada
+   */
+  private importarPorReferencia(): void {
+    Swal.fire({
+      title: `Importar por referencia`,
+      html: `<p>Ingrese el código o referencia del producto en ${this.fulfillmentProviderName}:</p>`,
+      input: 'text',
+      inputPlaceholder: 'Ej: JCR4021',
+      showCancelButton: true,
+      confirmButtonText: 'Importar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#8b5cf6',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) {
+          return 'Debe ingresar un código o referencia';
+        }
+        return null;
+      }
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.ejecutarImportacionFulfillment(result.value.trim());
       }
     });
   }
 
   /**
    * Ejecuta la importación de productos desde fulfillment
+   * @param filterBySku Si se proporciona, solo importa el producto con ese código
    */
-  private ejecutarImportacionFulfillment(): void {
+  private ejecutarImportacionFulfillment(filterBySku?: string): void {
     this.importandoProductosFulfillment = true;
+
+    const loadingText = filterBySku
+      ? `Buscando producto "${filterBySku}" en ${this.fulfillmentProviderName}...`
+      : `Importando todos los productos desde ${this.fulfillmentProviderName}...`;
 
     Swal.fire({
       title: 'Importando productos...',
-      text: 'Por favor espera mientras se importan los productos desde el fulfillment.',
+      text: loadingText,
       allowOutsideClick: false,
       showConfirmButton: false,
       didOpen: () => Swal.showLoading()
     });
 
-    this.fulfillmentService.importProductsFromFulfillment(this.fulfillmentProvider, { fetchStockPerWarehouse: true })
+    const options: any = { fetchStockPerWarehouse: true };
+    if (filterBySku) {
+      options.filterBySku = filterBySku;
+    }
+
+    this.fulfillmentService.importProductsFromFulfillment(this.fulfillmentProvider, options)
       .subscribe({
         next: (res) => {
           this.importandoProductosFulfillment = false;
@@ -1345,21 +1384,26 @@ export class ProductosComponent implements OnInit, OnDestroy {
             this.cargarDatos();
             const data = res.data || res;
             const inventoryInfo = data.inventoryByWarehouse;
-            
+
             let inventoryHtml = '';
             if (inventoryInfo && inventoryInfo.totalBodegas > 0) {
               inventoryHtml = `<hr><p><strong>Inventario por bodega:</strong></p>
                                <p><i class="fa fa-warehouse"></i> ${inventoryInfo.creados} bodegas con stock</p>
                                ${inventoryInfo.sinMapeo > 0 ? `<p class="text-warning"><i class="fa fa-exclamation-triangle"></i> ${inventoryInfo.sinMapeo} bodegas sin mapear</p>` : ''}`;
             }
-            
+
+            const title = filterBySku
+              ? (data.created > 0 ? 'Producto Importado' : 'Producto no encontrado')
+              : 'Importación Completada';
+
             Swal.fire({
-              title: 'Importación Completada',
+              title,
               html: `<p><strong>${data.created || 0}</strong> productos creados</p>
                      <p><strong>${data.skipped || 0}</strong> productos omitidos</p>
                      ${(data.errors || 0) > 0 ? `<p class="text-danger"><strong>${data.errors}</strong> errores</p>` : ''}
-                     ${inventoryHtml}`,
-              icon: (data.errors || 0) > 0 ? 'warning' : 'success'
+                     ${inventoryHtml}
+                     ${data.message ? `<p class="text-muted mt-2"><small>${data.message}</small></p>` : ''}`,
+              icon: (data.created || 0) > 0 ? 'success' : ((data.errors || 0) > 0 ? 'warning' : 'info')
             });
           } else {
             Swal.fire('Error', res.error || 'Error al importar productos', 'error');
@@ -1368,7 +1412,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
         error: (error) => {
           this.importandoProductosFulfillment = false;
           console.error('Error importando productos:', error);
-          Swal.fire('Error', 'Error al importar productos del fulfillment', 'error');
+          Swal.fire('Error', `Error al importar productos desde ${this.fulfillmentProviderName}`, 'error');
         }
       });
   }

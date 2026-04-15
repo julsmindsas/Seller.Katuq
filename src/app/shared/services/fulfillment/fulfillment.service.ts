@@ -432,10 +432,11 @@ export class FulfillmentService {
    */
   importProductsFromFulfillment(
     provider: string,
-    options: { 
-      bodegaId?: string; 
+    options: {
+      bodegaId?: string;
       updateExisting?: boolean;
       fetchStockPerWarehouse?: boolean;
+      filterBySku?: string;
     } = {}
   ): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/import-products`, {
@@ -443,10 +444,14 @@ export class FulfillmentService {
       companyId: this.getCompanyId(),
       options: {
         ...options,
-        fetchStockPerWarehouse: options.fetchStockPerWarehouse ?? true // Por defecto obtener stock por bodega
+        fetchStockPerWarehouse: options.fetchStockPerWarehouse ?? true
       }
     }).pipe(
-      map(res => res.data || res),
+      map(res => ({
+        success: res.success ?? true,
+        data: res.data || res,
+        message: res.message
+      })),
       catchError(error => {
         console.error('Error importando productos desde fulfillment:', error);
         return of({ success: false, error: error.error?.message || error.message });

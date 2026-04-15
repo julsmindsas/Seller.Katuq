@@ -26,21 +26,32 @@
                                     (click)="crearProducto()">
                                 <i class="pi pi-plus me-1"></i>{{ "Crear Producto" | translate }}
                             </button>
-                            <button type="button" class="btn btn-outline-primary btn-sm"
-                                    style="border-color: #8b5cf6; color: #8b5cf6;"
-                                    (click)="openImportModal()"
-                                    ngbTooltip="{{ 'Importar productos desde Excel' | translate }}">
-                                <i class="pi pi-upload me-1"></i>{{ "Importar" | translate }}
-                            </button>
-                            <button *ngIf="fulfillmentEnabled" type="button" class="btn btn-sm"
-                                    style="background: #00e5cc; color: white; border-color: #00e5cc;"
-                                    (click)="importarProductosFulfillment()"
-                                    [disabled]="importandoProductosFulfillment"
-                                    ngbTooltip="Importar productos desde {{ fulfillmentProviderName }}">
-                                <i class="pi pi-cloud-download me-1" *ngIf="!importandoProductosFulfillment"></i>
-                                <i class="pi pi-spin pi-spinner me-1" *ngIf="importandoProductosFulfillment"></i>
-                                {{ "Fulfillment" | translate }}
-                            </button>
+                            <!-- Split: Importar Excel + dropdown integraciones -->
+                            <div class="btn-group" ngbDropdown>
+                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                        style="border-color: #8b5cf6; color: #8b5cf6;"
+                                        (click)="openImportModal()">
+                                    <i class="pi pi-upload me-1"></i>{{ "Importar" | translate }}
+                                </button>
+                                <button type="button"
+                                        class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split"
+                                        style="border-color: #8b5cf6; color: #8b5cf6;"
+                                        ngbDropdownToggle>
+                                </button>
+                                <div ngbDropdownMenu>
+                                    <button ngbDropdownItem (click)="openImportModal()">
+                                        <i class="pi pi-file-excel me-1"></i>Importar desde Excel
+                                    </button>
+                                    <div class="dropdown-divider" *ngIf="fulfillmentEnabled"></div>
+                                    <button ngbDropdownItem *ngIf="fulfillmentEnabled"
+                                            [disabled]="importandoProductosFulfillment"
+                                            (click)="importarProductosFulfillment()">
+                                        <i class="pi pi-cloud-download me-1" *ngIf="!importandoProductosFulfillment"></i>
+                                        <i class="pi pi-spin pi-spinner me-1" *ngIf="importandoProductosFulfillment"></i>
+                                        Importar desde {{ fulfillmentProviderName }}
+                                    </button>
+                                </div>
+                            </div>
                             <button type="button" class="btn btn-outline-primary btn-sm"
                                     style="border-color: #8b5cf6; color: #8b5cf6;"
                                     (click)="exportToExcel()">
