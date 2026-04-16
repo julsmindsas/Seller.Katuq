@@ -108,6 +108,12 @@ export class EcomerceProductsComponent
   // Flag para evitar doble carga entre ngOnInit y ngAfterViewInit
   private _initialLoadTriggered: boolean = false;
 
+  /** Expuesto para que el padre evite llamar cargarTodo() si ngOnInit ya lo hizo */
+  public get initialLoadDone(): boolean { return this._initialLoadTriggered; }
+
+  // Subject para debounce de cambios de @Input bodega/ciudad desde ngOnChanges
+  private inputChanges$ = new Subject<void>();
+
   // Subject para debounce de cambios de filtros (checkboxes)
   private filterSubject$ = new Subject<void>();
 
@@ -241,6 +247,22 @@ export class EcomerceProductsComponent
   ngOnInit(): void {
     // Inicializar cache de categoría de cliente
     this.refreshClienteCache();
+
+    // Debounce para cambios de @Input (bodega/ciudad) — evita llamadas duplicadas cuando
+    // el padre asigna bodega y ciudad casi simultáneamente
+    this.inputChanges$
+      .pipe(debounceTime(80), takeUntil(this.destroy$))
+      .subscribe(() => {
+        if (
+          this.bodega &&
+          this.bodega.idBodega &&
+          this.ciudad &&
+          this.ciudad !== 'seleccione' &&
+          this.ciudad.trim() !== ''
+        ) {
+          this.filtrarProductos();
+        }
+      });
 
     // Configurar debounce para búsqueda
     this.searchSubject$
@@ -917,21 +939,9 @@ export class EcomerceProductsComponent
         this.verificarYLimpiarCarritoPorCiudad(this.ciudad, changes["ciudad"].previousValue);
       }
 
-      // Solo filtrar si tenemos tanto bodega como ciudad
-      if (
-        this.bodega &&
-        this.bodega.idBodega &&
-        this.ciudad &&
-        this.ciudad !== "seleccione" &&
-        this.ciudad.trim() !== ""
-      ) {
-        this.filtrarProductos();
-      } else {
-        console.warn("No se puede filtrar: faltan bodega o ciudad", {
-          bodega: this.bodega?.idBodega || "NO_DEFINIDA",
-          ciudad: this.ciudad || "NO_DEFINIDA",
-        });
-      }
+      // Emitir al subject con debounce — agrupa cambios rápidos de bodega+ciudad
+      // y evita doble llamada cuando el padre ya invocó cargarTodo()
+      this.inputChanges$.next();
     }
   }
 

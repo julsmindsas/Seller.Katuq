@@ -604,8 +604,8 @@ export class CrearVentasComponent
             this.productos.ciudad = this.selectedCity;
           }
 
-          // Cargar productos con los filtros establecidos
-          if (typeof this.productos.cargarTodo === "function") {
+          // Cargar productos solo si ngOnInit del hijo no lo hizo ya (evita doble request)
+          if (!this.productos.initialLoadDone && typeof this.productos.cargarTodo === "function") {
             this.productos.cargarTodo();
           }
         }
@@ -2329,10 +2329,10 @@ export class CrearVentasComponent
     // Guardar la ciudad seleccionada
     this.selectedCity = value;
 
-    // Actualizar componentes relacionados
+    // Actualizar ciudad en el hijo — ngOnChanges (con debounce) dispara filtrarProductos()
+    // No llamar filtrarProductos() directamente aquí: causaría doble request
     if (this.productos) {
       this.productos.ciudad = value;
-      this.productos.filtrarProductos();
     }
 
     // Resto del código existente...
@@ -3232,6 +3232,24 @@ export class CrearVentasComponent
    * ya que el calendario maneja la configuración de entrega.
    * Si al menos un producto NO tiene calendario activado, SÍ se muestra el selector.
    */
+
+  /** true cuando el cliente activo es persona jurídica (NIT / empresa) */
+  get clienteEsEmpresa(): boolean {
+    return this.pedidoGral?.cliente?.tipo_documento_comprador === 'CC-NIT';
+  }
+
+  /** Nombre de empresa: nombres_completos para NIT, nombre completo para persona natural */
+  get clienteNombreEmpresa(): string {
+    return this.pedidoGral?.cliente?.nombres_completos || '';
+  }
+
+  /** Contacto principal: apellidos_completos solo cuando es empresa (NIT) */
+  get clienteNombreContacto(): string {
+    const c = this.pedidoGral?.cliente;
+    if (!c || c.tipo_documento_comprador !== 'CC-NIT') return '';
+    return c.apellidos_completos || '';
+  }
+
   get mostrarSelectorFormaEntrega(): boolean {
     try {
       const carrito = localStorage.getItem("carrito");

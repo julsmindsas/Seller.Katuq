@@ -13,10 +13,14 @@
                   <h4 class="mb-0 fc-secondary">Crear Venta</h4>
                   <div class="d-flex align-items-center mt-1">
                     <span class="badge bg-light text-primary me-2">Preventa #{{pedidoGral?.nroPedido || 'TEMP-000000'}}</span>
-                    <span *ngIf="pedidoGral?.cliente" class="badge bg-light text-dark">
-                      <i class="fa fa-user me-1"></i>{{pedidoGral?.cliente.nombres_completos}}
-                      {{pedidoGral?.cliente.apellidos_completos}}
-                    </span>
+                    <ng-container *ngIf="pedidoGral?.cliente">
+                      <span class="badge bg-light text-dark me-1">
+                        <i class="fa {{ clienteEsEmpresa ? 'fa-building' : 'fa-user' }} me-1"></i>{{ clienteNombreEmpresa }}
+                      </span>
+                      <span *ngIf="clienteEsEmpresa && clienteNombreContacto" class="badge bg-light text-secondary">
+                        <i class="fa fa-id-badge me-1"></i>{{ clienteNombreContacto }}
+                      </span>
+                    </ng-container>
                   </div>
                 </div>
               </div>
@@ -104,6 +108,39 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        <!-- BARRA DE CONTEXTO DEL CLIENTE - Visible en todos los pasos -->
+        <div class="client-context-bar" *ngIf="pedidoGral?.cliente">
+          <div class="ccb-group">
+            <span class="ccb-icon"><i class="fa fa-user-circle"></i></span>
+            <span class="ccb-label">{{ pedidoGral.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'Empresa' : 'Cliente' }}</span>
+            <span class="ccb-value">{{ pedidoGral.cliente?.nombres_completos }}{{ pedidoGral.cliente?.apellidos_completos ? ' ' + pedidoGral.cliente?.apellidos_completos : '' }}</span>
+          </div>
+          <ng-container *ngIf="pedidoGral.cliente?.tipo_documento_comprador === 'CC-NIT' && pedidoGral.cliente?.apellidos_completos">
+            <span class="ccb-sep"></span>
+            <div class="ccb-group">
+              <span class="ccb-icon"><i class="fa fa-id-badge"></i></span>
+              <span class="ccb-label">Contacto</span>
+              <span class="ccb-value">{{ pedidoGral.cliente?.apellidos_completos }}</span>
+            </div>
+          </ng-container>
+          <span class="ccb-sep"></span>
+          <div class="ccb-group">
+            <span class="ccb-icon"><i class="fa fa-tag"></i></span>
+            <span class="ccb-label">Tipo</span>
+            <span class="ccb-value ccb-badge" [class.ccb-badge--muted]="!categoriaClienteSeleccionada">
+              {{ categoriaClienteSeleccionada?.descripcion || categoriaClienteSeleccionada?.nombre || 'Sin categoría' }}
+            </span>
+          </div>
+          <span class="ccb-sep"></span>
+          <div class="ccb-group">
+            <span class="ccb-icon"><i class="fa fa-list-alt"></i></span>
+            <span class="ccb-label">Lista de precios</span>
+            <span class="ccb-value ccb-badge ccb-badge--price" [class.ccb-badge--muted]="!categoriaClienteSeleccionada">
+              {{ categoriaClienteSeleccionada?.descripcion || categoriaClienteSeleccionada?.nombre || 'General' }}
+            </span>
           </div>
         </div>
 
@@ -246,11 +283,14 @@
                       <ng-template let-cliente pTemplate="item">
                         <div class="cliente-item">
                           <div class="cliente-avatar">
-                            <i class="fa fa-user"></i>
+                            <i class="fa {{ cliente.tipo_documento_comprador === 'CC-NIT' ? 'fa-building' : 'fa-user' }}"></i>
                           </div>
                           <div class="cliente-info">
                             <div class="cliente-nombre">
-                              {{ cliente.nombres_completos }} {{ cliente.apellidos_completos }}
+                              {{ cliente.nombres_completos }}
+                            </div>
+                            <div class="cliente-contacto-line" *ngIf="cliente.tipo_documento_comprador === 'CC-NIT' && cliente.apellidos_completos">
+                              <i class="fa fa-id-badge"></i> {{ cliente.apellidos_completos }}
                             </div>
                             <div class="cliente-documento">
                               <span class="badge-doc">{{ cliente.documento }}</span>
@@ -287,8 +327,15 @@
                 <i class="fa fa-check-circle client-ok-icon"></i>
                 <div class="client-inline-info">
                   <span class="client-inline-name">
-                    {{ pedidoGral.cliente?.nombres_completos }} {{ pedidoGral.cliente?.apellidos_completos }}
+                    <i class="fa {{ clienteEsEmpresa ? 'fa-building' : 'fa-user' }} me-1" style="font-size:0.8rem;opacity:0.7"></i>
+                    {{ clienteNombreEmpresa }}
                   </span>
+                  <ng-container *ngIf="clienteEsEmpresa && clienteNombreContacto">
+                    <span class="client-inline-sep">·</span>
+                    <span class="client-inline-meta">
+                      <i class="fa fa-id-badge"></i> {{ clienteNombreContacto }}
+                    </span>
+                  </ng-container>
                   <span class="client-inline-sep">·</span>
                   <span class="client-inline-doc">
                     {{ pedidoGral.cliente?.tipo_documento_comprador }} {{ pedidoGral.cliente?.documento }}

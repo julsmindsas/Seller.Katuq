@@ -109,14 +109,25 @@
                   </div>
                   <div class="row">
                     <div class="mb-3 col-sm-6">
-                      <label for="nombres_completos"><strong>{{ 'Nombres:' | translate }}</strong></label>
-                      <p id="nombres_completos" class="form-control-static">{{pedido?.cliente?.nombres_completos ||
-                        '-'}}</p>
+                      <label for="nombres_completos">
+                        <strong>{{ pedido?.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'Empresa:' : 'Nombres:' }}</strong>
+                      </label>
+                      <p id="nombres_completos" class="form-control-static">
+                        <i class="fa {{ pedido?.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'fa-building' : 'fa-user' }} me-1 text-muted"></i>
+                        {{pedido?.cliente?.nombres_completos || '-'}}
+                      </p>
                     </div>
                     <div class="mb-3 col-sm-6">
-                      <label for="apellidos_completos"><strong>{{ 'Apellidos:' | translate }}</strong></label>
-                      <p id="apellidos_completos" class="form-control-static">{{pedido?.cliente?.apellidos_completos ||
-                        '-'}}</p>
+                      <label for="apellidos_completos">
+                        <strong>{{ pedido?.cliente?.tipo_documento_comprador === 'CC-NIT' ? 'Contacto:' : 'Apellidos:' }}</strong>
+                      </label>
+                      <p id="apellidos_completos" class="form-control-static">
+                        <ng-container *ngIf="pedido?.cliente?.tipo_documento_comprador === 'CC-NIT'; else apellidoPersona">
+                          <i class="fa fa-id-badge me-1 text-muted"></i>
+                          {{pedido?.cliente?.apellidos_completos || 'Sin contacto registrado'}}
+                        </ng-container>
+                        <ng-template #apellidoPersona>{{pedido?.cliente?.apellidos_completos || '-'}}</ng-template>
+                      </p>
                     </div>
                   </div>
                   <div class="row">

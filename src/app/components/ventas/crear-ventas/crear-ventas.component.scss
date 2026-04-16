@@ -2506,6 +2506,17 @@ $step1-radius: 8px;
       text-overflow: ellipsis;
     }
 
+    .cliente-contacto-line {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.78rem;
+      color: #4361ee;
+      margin-top: 2px;
+
+      i { font-size: 0.72rem; }
+    }
+
     .cliente-documento {
       display: flex;
       align-items: center;
@@ -4419,5 +4430,79 @@ $step7-success-border: rgba(16, 185, 129, 0.3);
         }
       }
     }
+  }
+}
+
+// ============================================================================
+// BARRA DE CONTEXTO DEL CLIENTE - Persistente en todos los pasos
+// ============================================================================
+.client-context-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 0.5rem 1.5rem;
+  background: #f0f4ff;
+  border-bottom: 1px solid #d0d9f7;
+  font-size: 0.8rem;
+
+  .ccb-group {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.75rem 0.25rem 0;
+  }
+
+  .ccb-icon {
+    color: #4361ee;
+    font-size: 0.85rem;
+    opacity: 0.75;
+    flex-shrink: 0;
+  }
+
+  .ccb-label {
+    color: #6b7280;
+    font-weight: 500;
+    white-space: nowrap;
+
+    &::after {
+      content: ':';
+    }
+  }
+
+  .ccb-value {
+    color: #1f2937;
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ccb-badge {
+    background: #e0e7ff;
+    color: #3730a3;
+    border-radius: 4px;
+    padding: 0.1rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+
+    &--price {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    &--muted {
+      background: #f3f4f6;
+      color: #9ca3af;
+    }
+  }
+
+  .ccb-sep {
+    width: 1px;
+    height: 18px;
+    background: #c7d2fe;
+    margin: 0 0.625rem 0 0;
+    flex-shrink: 0;
   }
 }
