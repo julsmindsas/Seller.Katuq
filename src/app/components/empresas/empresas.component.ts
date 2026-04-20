@@ -488,6 +488,60 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Parsea un Firestore Timestamp o string ISO a Date */
+  private parseFirestoreDate(raw: any): Date | null {
+    if (!raw) return null;
+    let date: Date;
+    if (raw._seconds) {
+      date = new Date(raw._seconds * 1000);
+    } else if (raw.seconds) {
+      date = new Date(raw.seconds * 1000);
+    } else {
+      date = new Date(raw);
+    }
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  /** Resuelve la fecha de expiración: nextBillingDate o subscriptionStartDate + 30 días */
+  private resolveExpirationDate(empresa: Empresa): Date | null {
+    // Prioridad 1: nextBillingDate (set por billing/payments)
+    const next = this.parseFirestoreDate(empresa.nextBillingDate);
+    if (next) return next;
+
+    // Prioridad 2: calcular desde subscriptionStartDate + 30 días
+    const start = this.parseFirestoreDate(empresa.subscriptionStartDate);
+    if (start) {
+      const expiry = new Date(start);
+      expiry.setMonth(expiry.getMonth() + 1);
+      return expiry;
+    }
+
+    return null;
+  }
+
+  /** Obtiene la fecha de expiración formateada */
+  getExpirationDate(empresa: Empresa): string | null {
+    const date = this.resolveExpirationDate(empresa);
+    if (!date) return null;
+    return date.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  /** Verifica si la suscripción ya expiró */
+  isExpired(empresa: Empresa): boolean {
+    const date = this.resolveExpirationDate(empresa);
+    if (!date) return false;
+    return date < new Date();
+  }
+
+  /** Verifica si la suscripción expira en los próximos 7 días */
+  isExpiringSoon(empresa: Empresa): boolean {
+    const date = this.resolveExpirationDate(empresa);
+    if (!date) return false;
+    const now = new Date();
+    const sevenDays = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    return date >= now && date <= sevenDays;
+  }
+
   eliminarEmpresa(empresa: Empresa): void {
     const nombreEmpresa = empresa.nomComercial || empresa.nombre;
 

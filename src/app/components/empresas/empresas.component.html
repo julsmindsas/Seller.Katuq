@@ -232,6 +232,10 @@
                 <th *ngIf="!isMobile" style="width: 7%">{{ 'País' | translate }}</th>
                 <th *ngIf="!isMobile" style="width: 7%">{{ 'Estado' | translate }}</th>
                 <th *ngIf="isAdminUser && !isMobile" style="width: 9%">{{ 'Plan' | translate }}</th>
+                <th *ngIf="isAdminUser && !isMobile" pSortableColumn="nextBillingDate" style="width: 9%">
+                  {{ 'Expiración' | translate }}
+                  <p-sortIcon field="nextBillingDate"></p-sortIcon>
+                </th>
                 <th [style.width]="isMobile ? '40%' : '10%'" class="text-center">{{ 'Acciones' | translate }}</th>
               </tr>
             </ng-template>
@@ -305,6 +309,22 @@
                     <i *ngIf="upgradingPlan.has(empresa.nit || empresa.nomComercial)"
                        class="fa fa-spinner fa-spin"></i>
                   </button>
+                </td>
+
+                <!-- Expiración del plan - Solo para superadmin, desktop -->
+                <td *ngIf="isAdminUser && !isMobile">
+                  <span *ngIf="getExpirationDate(empresa) as expDate"
+                    class="badge"
+                    [class.bg-danger]="isExpired(empresa)"
+                    [class.text-white]="isExpired(empresa)"
+                    [class.bg-warning]="isExpiringSoon(empresa) && !isExpired(empresa)"
+                    [class.text-dark]="isExpiringSoon(empresa) && !isExpired(empresa)"
+                    [class.bg-light]="!isExpired(empresa) && !isExpiringSoon(empresa)"
+                    [class.text-dark]="!isExpired(empresa) && !isExpiringSoon(empresa)"
+                    [title]="isExpired(empresa) ? 'Plan expirado' : 'Fecha de próxima facturación'">
+                    {{ expDate }}
+                  </span>
+                  <span *ngIf="!getExpirationDate(empresa)" class="text-muted">-</span>
                 </td>
 
                 <!-- Acciones -->

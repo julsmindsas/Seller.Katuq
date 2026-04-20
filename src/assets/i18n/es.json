@@ -703,5 +703,6 @@
     "Cargando...": "Cargando...",
     "notificaciones.email_only_hint": "Activa o desactiva el envío de notificaciones por correo electrónico para cada categoría.",
     "notificaciones.email_active_hint": "Solo el canal Email está activo. Activa o desactiva el envío por correo para cada categoría. SMS y WhatsApp estarán disponibles próximamente.",
+    "notificaciones.channels_hint": "Activa o desactiva el envío de notificaciones por Email, SMS o WhatsApp para cada categoría.",
     "Próximamente": "Próximamente"
 }
