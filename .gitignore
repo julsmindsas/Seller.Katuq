@@ -110,3 +110,54 @@ katuq_admin_back_firebase/
 NUL
 kai
 .claude/settings.local.json
+
+# === Credentials / Secrets ===
+# Google / Firebase service-account JSONs
+**/serviceAccountKey*.json
+**/service-account*.json
+**/serviceAccount*.json
+**/firebase-adminsdk*.json
+**/*-firebase-adminsdk-*.json
+**/google-credentials*.json
+**/gcp-*-credentials*.json
+**/application_default_credentials.json
+**/credentials.json
+
+# OAuth / client secret exports
+**/client_secret*.json
+**/client-secret*.json
+**/oauth-client*.json
+
+# Generic secret JSONs
+**/secrets*.json
+**/*.secret.json
+**/*.secrets.json
+
+# Environment files (.env variants)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.sample
+!**/.env.template
+
+# Private keys / certificates
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+**/id_rsa
+**/id_ed25519
+
+# Gemini / AI provider keys (token dumps)
+**/gemini-key*
+**/gemini_key*
+**/*gemini*api*key*
+**/openai-key*
+**/anthropic-key*
