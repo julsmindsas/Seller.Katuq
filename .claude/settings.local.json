@@ -119,7 +119,11 @@
       "Bash(git pull:*)",
       "mcp__claude_ai_ClickUp__clickup_search",
       "Read(//Users/danielga/Downloads/_Organizado/01_Katuq/**)",
-      "mcp__plugin_claude-mem_mcp-search__smart_outline"
+      "mcp__plugin_claude-mem_mcp-search__smart_outline",
+      "Bash(mkdir -p /Users/danielga/Downloads/_Organizado/01_Katuq/credenciales_backup_2026-04-21/src/environments)",
+      "Bash(mkdir -p /Users/danielga/Downloads/_Organizado/01_Katuq/credenciales_backup_2026-04-21/katuq_admin_back_firebase/functions/controllers)",
+      "Bash(mkdir -p /Users/danielga/Downloads/_Organizado/01_Katuq/credenciales_backup_2026-04-21/katuq_admin_back_firebase/functions/services/assets/config)",
+      "Bash(git rm *)"
     ]
   }
 }
