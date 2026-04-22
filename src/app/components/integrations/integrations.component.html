@@ -2276,6 +2276,19 @@
             </a>
           </div>
 
+          <!-- API URL (opcional) -->
+          <div class="form-group">
+            <label for="osmosisApiUrl">
+              <i class="fa fa-globe"></i> API URL:
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-globe prefix-icon"></i>
+              <input type="text" id="osmosisApiUrl" formControlName="apiUrl"
+                     placeholder="https://osmosis-api.guiacereza.tech/api" autocomplete="off">
+            </div>
+            <small class="form-text text-muted">URL base del API de Osmosis. Déjalo vacío para usar la URL por defecto.</small>
+          </div>
+
           <!-- Node Slug -->
           <div class="form-group">
             <label for="nodeSlug">

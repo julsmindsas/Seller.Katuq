@@ -272,6 +272,10 @@ export class ProductosComponent implements OnInit, OnDestroy {
   fulfillmentProviderName: string = '';
   importandoProductosFulfillment: boolean = false;
 
+  // Osmosis
+  osmosisEnabled: boolean = false;
+  importandoProductosOsmosis: boolean = false;
+
 
   constructor(
     private service: MaestroService,
@@ -392,7 +396,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
     this.cargarConFiltros();
     this.cargarProveedores();
-    this.checkFulfillmentConfig();
+    this.checkIntegrationsConfig();
   }
 
   ngOnDestroy(): void {
@@ -1269,19 +1273,15 @@ export class ProductosComponent implements OnInit, OnDestroy {
   // ============== MÉTODOS DE FULFILLMENT ==============
 
   /**
-   * Verifica si hay un proveedor de fulfillment configurado
-   * Usa IntegrationsService (mismo patrón que despachos)
+   * Una sola llamada a getIntegrations() para detectar fulfillment y Osmosis.
    */
-  checkFulfillmentConfig(): void {
-    // Usar IntegrationsService para obtener todas las integraciones
+  checkIntegrationsConfig(): void {
     this.integrationsService.getIntegrations().subscribe({
       next: (integrations) => {
-        // Buscar integración de fulfillment (aliaddo, aliaddo_fulfillment)
         const fulfillmentIntegration = integrations.find(i =>
           i.enabled && (i.provider === 'aliaddo' || i.type === 'aliaddo' ||
                         i.provider === 'aliaddo_fulfillment' || i.type === 'aliaddo_fulfillment')
         );
-
         if (fulfillmentIntegration) {
           this.fulfillmentEnabled = true;
           this.fulfillmentProvider = fulfillmentIntegration.provider || fulfillmentIntegration.type;
@@ -1289,10 +1289,16 @@ export class ProductosComponent implements OnInit, OnDestroy {
         } else {
           this.fulfillmentEnabled = false;
         }
+
+        const osmosisIntegration = integrations.find(i =>
+          i.enabled && (i.provider === 'osmosis' || i.type === 'osmosis' || i.id === 'osmosis')
+        );
+        this.osmosisEnabled = !!osmosisIntegration;
       },
       error: (err) => {
         console.error('[Productos] Error cargando integraciones:', err);
         this.fulfillmentEnabled = false;
+        this.osmosisEnabled = false;
       }
     });
   }
@@ -1415,6 +1421,66 @@ export class ProductosComponent implements OnInit, OnDestroy {
           Swal.fire('Error', `Error al importar productos desde ${this.fulfillmentProviderName}`, 'error');
         }
       });
+  }
+
+  // ============================================================
+  // OSMOSIS
+  // ============================================================
+
+  /**
+   * Importa el catálogo completo desde Osmosis/Guiacereza.
+   */
+  importarProductosOsmosis(): void {
+    if (!this.osmosisEnabled) {
+      this.toastr.warning('No hay integración Osmosis configurada', 'Advertencia');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Importar desde Guiacereza (Osmosis)',
+      html: '<p>Se importará el catálogo completo de productos desde Osmosis. Los productos existentes se actualizarán.</p>',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: '<i class="pi pi-cloud-download"></i> Importar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#8b5cf6'
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      this.importandoProductosOsmosis = true;
+
+      Swal.fire({
+        title: 'Importando productos...',
+        text: 'Sincronizando catálogo desde Osmosis/Guiacereza...',
+        allowOutsideClick: false,
+        showConfirmButton: false,
+        didOpen: () => Swal.showLoading()
+      });
+
+      this.fulfillmentService.importProductsFromOsmosis().subscribe({
+        next: (res) => {
+          this.importandoProductosOsmosis = false;
+          if (res.success) {
+            this.cargarDatos();
+            const data = res.data || res;
+            Swal.fire({
+              title: 'Importación completada',
+              html: `<p><strong>${data.created || data.imported || 0}</strong> productos creados</p>
+                     <p><strong>${data.updated || data.skipped || 0}</strong> productos actualizados/omitidos</p>
+                     ${(data.errors || 0) > 0 ? `<p class="text-danger"><strong>${data.errors}</strong> errores</p>` : ''}
+                     ${data.message ? `<p class="text-muted mt-2"><small>${data.message}</small></p>` : ''}`,
+              icon: (data.created || data.imported || 0) > 0 ? 'success' : 'info'
+            });
+          } else {
+            Swal.fire('Error', res.error || 'Error al importar productos desde Osmosis', 'error');
+          }
+        },
+        error: () => {
+          this.importandoProductosOsmosis = false;
+          Swal.fire('Error', 'Error al importar productos desde Osmosis/Guiacereza', 'error');
+        }
+      });
+    });
   }
 
   /**

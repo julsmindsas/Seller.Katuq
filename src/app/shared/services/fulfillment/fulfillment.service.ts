@@ -459,6 +459,27 @@ export class FulfillmentService {
     );
   }
 
+  // ============== OSMOSIS ==============
+
+  /**
+   * Dispara la sincronización completa del catálogo de Osmosis hacia Katuq.
+   * Llama GET /v1/osmosis/products/sync
+   */
+  importProductsFromOsmosis(): Observable<any> {
+    const headers = this.getApiHeaders();
+    return this.http.get<any>(`${environment.urlApi}/v1/osmosis/products/sync`, { headers }).pipe(
+      map(res => ({
+        success: res.success ?? true,
+        data: res.data || res,
+        message: res.message
+      })),
+      catchError(error => {
+        console.error('[FulfillmentService] Error importando productos desde Osmosis:', error);
+        return of({ success: false, error: error.error?.message || error.message });
+      })
+    );
+  }
+
   // ============== INICIALIZACIÓN DE INVENTARIO ==============
 
   /**
