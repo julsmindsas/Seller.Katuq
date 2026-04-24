@@ -40,8 +40,23 @@ export class ChangePasswordComponent implements OnInit {
 
             this.service.changePassword(user).subscribe({
                 next: (result: any) => {
-                    console.log("Contraseña actualizada", result);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Contraseña actualizada',
+                        text: result?.message || 'Tu contraseña fue actualizada correctamente.',
+                        timer: 2200,
+                        showConfirmButton: false
+                    });
                     this.router.navigate(['/dashboard']);
+                },
+                error: (err: any) => {
+                    console.error('Error al cambiar contraseña', err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo actualizar',
+                        text: err?.error?.message || err?.message || 'Error desconocido al actualizar la contraseña.'
+                    });
+                    this.confirmVisible = false;
                 }
             });
         }

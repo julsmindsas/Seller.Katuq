@@ -186,8 +186,10 @@ export class MaestroService {
   public editCompany(company: any) {
     return this.http.post(this.urlBase + '/v1/companies/edit', company, this.httpOptions);
   }
-  public deleteCompany(nit: string) {
-    return this.http.post(this.urlBase + '/v1/companies/delete', { nit }, this.httpOptions);
+  public deleteCompany(identifier: string | { nit?: string; companyDocId?: string }) {
+    const payload: { nit?: string; companyDocId?: string } =
+      typeof identifier === 'string' ? { nit: identifier } : (identifier || {});
+    return this.http.post(this.urlBase + '/v1/companies/delete', payload, this.httpOptions);
   }
   public createProduct(product: any) {
     return this.http.post(this.urlBase + '/v1/productos/create', product, this.httpOptions);

@@ -52,6 +52,10 @@ export class UpgradeModalComponent implements OnChanges {
   // Cargar acceptance tokens desde Wompi (public key — seguro en frontend)
   private loadAcceptanceTokens(): void {
     const publicKey = environment.wompi.public_key;
+    if (!publicKey) {
+      this.cardError = 'Wompi no está configurado en este entorno';
+      return;
+    }
     this.http.get<any>(`https://production.wompi.co/v1/merchants/${publicKey}`)
       .subscribe({
         next: (resp) => {

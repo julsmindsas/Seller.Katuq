@@ -192,10 +192,25 @@
           </div>
 
           <!-- Información de resultados -->
-          <div class="d-flex justify-content-between align-items-center mb-3">
+          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
             <span class="text-muted small">
               {{ 'Mostrando' | translate }} {{ rows.length }} {{ 'de' | translate }} {{ totalRecords }} {{ 'empresas' | translate }}
+              <span *ngIf="isAdminUser && empresasSeleccionadas.length > 0" class="ms-2 badge bg-primary">
+                {{ empresasSeleccionadas.length }} {{ 'seleccionada(s)' | translate }}
+              </span>
             </span>
+            <div *ngIf="isAdminUser">
+              <button
+                class="btn btn-danger btn-sm"
+                type="button"
+                (click)="eliminarSeleccionadas()"
+                [disabled]="empresasSeleccionadas.length === 0 || eliminandoSeleccionadas">
+                <i class="icofont icofont-trash me-1" *ngIf="!eliminandoSeleccionadas"></i>
+                <i class="icofont icofont-spinner-alt-3 icofont-spin me-1" *ngIf="eliminandoSeleccionadas"></i>
+                {{ eliminandoSeleccionadas ? ('Eliminando...' | translate) : ('Eliminar seleccionadas' | translate) }}
+                <span *ngIf="empresasSeleccionadas.length > 0"> ({{ empresasSeleccionadas.length }})</span>
+              </button>
+            </div>
           </div>
 
           <!-- Tabla principal -->
@@ -209,12 +224,17 @@
             [sortField]="'nombre'"
             [sortOrder]="1"
             [responsive]="true"
+            [(selection)]="empresasSeleccionadas"
+            dataKey="_docId"
             styleClass="p-datatable-sm p-datatable-striped"
             [tableStyle]="{'min-width': '900px'}"
             [globalFilterFields]="['nit', 'nombre', 'nomComercial', 'emailContactoGeneral', 'pais']">
             
             <ng-template pTemplate="header">
               <tr>
+                <th *ngIf="isAdminUser" style="width: 3rem" class="text-center">
+                  <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                </th>
                 <th *ngIf="!isMobile" pSortableColumn="nit" style="width: 10%">
                   {{ 'NIT' | translate }}
                   <p-sortIcon field="nit"></p-sortIcon>
@@ -238,6 +258,9 @@
 
             <ng-template pTemplate="body" let-empresa let-rowIndex="rowIndex">
               <tr [class.table-warning]="!empresa.activo">
+                <td *ngIf="isAdminUser" class="text-center">
+                  <p-tableCheckbox [value]="empresa"></p-tableCheckbox>
+                </td>
                 <!-- NIT -->
                 <td *ngIf="!isMobile">
                   <span class="fw-bold">{{ formatearNit(empresa) }}</span>
@@ -335,7 +358,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td [attr.colspan]="isMobile ? 3 : (isAdminUser ? 9 : 8)" class="text-center py-4">
+                <td [attr.colspan]="isMobile ? (isAdminUser ? 4 : 3) : (isAdminUser ? 10 : 8)" class="text-center py-4">
                   <div class="text-muted">
                     <i class="icofont icofont-search-document display-4"></i>
                     <p class="mt-2 mb-0">{{ 'No se encontraron empresas' | translate }}</p>

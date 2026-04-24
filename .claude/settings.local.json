@@ -123,7 +123,15 @@
       "Bash(mkdir -p /Users/danielga/Downloads/_Organizado/01_Katuq/credenciales_backup_2026-04-21/src/environments)",
       "Bash(mkdir -p /Users/danielga/Downloads/_Organizado/01_Katuq/credenciales_backup_2026-04-21/katuq_admin_back_firebase/functions/controllers)",
       "Bash(mkdir -p /Users/danielga/Downloads/_Organizado/01_Katuq/credenciales_backup_2026-04-21/katuq_admin_back_firebase/functions/services/assets/config)",
-      "Bash(git rm *)"
+      "Bash(git rm *)",
+      "Bash(grep -q \"serviceAccountKey\" .gitignore)",
+      "Bash(printf \"\\\\n# Firebase Admin SDK — NUNCA commitear\\\\nfunctions/serviceAccountKey.json\\\\nserviceAccountKey.json\\\\n**/serviceAccountKey*.json\\\\n**/*firebase-adminsdk*.json\\\\n\")",
+      "Bash(pip install *)",
+      "Bash(\"C:/Users/danie/AppData/Local/Programs/Python/Python310/python.exe\" -m pip install git-filter-repo)",
+      "Bash(git branch *)",
+      "Bash(export PATH=\"/c/Users/danie/AppData/Local/Programs/Python/Python310/Scripts:$PATH\")",
+      "Bash(git filter-repo *)",
+      "Bash(git check-ignore *)"
     ]
   }
 }

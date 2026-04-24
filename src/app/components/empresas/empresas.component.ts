@@ -2,8 +2,8 @@ import { Component, ViewChild, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { MaestroService } from '../../shared/services/maestros/maestro.service';
 import { BreakpointObserver, Breakpoints } from '@angular/cdk/layout';
-import { Subject } from 'rxjs';
-import { takeUntil, map, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, forkJoin, of } from 'rxjs';
+import { takeUntil, map, debounceTime, distinctUntilChanged, catchError } from 'rxjs/operators';
 import { DataStoreService } from '../../shared/services/dataStoreService';
 import { FormControl } from '@angular/forms';
 import { Table } from 'primeng/table';
@@ -13,6 +13,7 @@ import Swal from 'sweetalert2';
 
 // Interfaz mejorada basada en el modelo completo de Empresa
 export interface Empresa {
+  _docId?: string;
   nit: string;
   digitoVerificacion?: string;
   nombre: string;
@@ -81,6 +82,10 @@ export class EmpresasComponent implements OnInit, OnDestroy {
   isJulsmind = false;
   isAdminUser = false;
   upgradingPlan = new Set<string>(); // NITs en proceso de cambio de plan
+
+  // Selección múltiple
+  empresasSeleccionadas: Empresa[] = [];
+  eliminandoSeleccionadas = false;
   
   // Filtros
   filtros: FiltrosAvanzados = {
@@ -180,8 +185,10 @@ export class EmpresasComponent implements OnInit, OnDestroy {
 
   private procesarDatos(datos: Empresa[]): void {
     // Procesar y normalizar datos
-    this.temp = datos.map(empresa => ({
+    this.temp = datos.map((empresa, idx) => ({
       ...empresa,
+      // Garantizar clave única para la tabla (fallback si no viene _docId del backend)
+      _docId: empresa._docId || `${empresa.nit || 'sin-nit'}__${empresa.nomComercial || empresa.nombre || 'sin-nombre'}__${idx}`,
       // Normalizar campos de teléfono
       celular: empresa.cel || empresa.celular,
       // Procesar fechas si existen
@@ -488,6 +495,13 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     });
   }
 
+  private buildDeletePayload(empresa: Empresa): { nit?: string; companyDocId?: string } {
+    const payload: { nit?: string; companyDocId?: string } = {};
+    if (empresa.nit) payload.nit = empresa.nit;
+    if (empresa._docId && !empresa._docId.includes('__')) payload.companyDocId = empresa._docId;
+    return payload;
+  }
+
   eliminarEmpresa(empresa: Empresa): void {
     const nombreEmpresa = empresa.nomComercial || empresa.nombre;
 
@@ -529,7 +543,16 @@ export class EmpresasComponent implements OnInit, OnDestroy {
     });
 
     // Llamar al servicio de eliminación
-    this.service.deleteCompany(empresa.nit).subscribe({
+    const payload = this.buildDeletePayload(empresa);
+    if (!payload.nit && !payload.companyDocId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'No se puede eliminar: la empresa no tiene NIT ni identificador válido.'
+      });
+      return;
+    }
+    this.service.deleteCompany(payload).subscribe({
       next: (response: any) => {
         console.log('Empresa eliminada exitosamente:', response);
 
@@ -554,5 +577,135 @@ export class EmpresasComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  eliminarSeleccionadas(): void {
+    const todas = this.empresasSeleccionadas || [];
+    const seleccionadas = todas.filter(e => {
+      const p = this.buildDeletePayload(e);
+      return !!(p.nit || p.companyDocId);
+    });
+    const descartadas = todas.length - seleccionadas.length;
+    if (seleccionadas.length === 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Sin selección válida',
+        detail: 'Las empresas seleccionadas no tienen NIT ni doc ID para eliminar.'
+      });
+      return;
+    }
+    if (descartadas > 0) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Aviso',
+        detail: `${descartadas} empresa(s) sin identificador fueron omitidas.`,
+        life: 4000
+      });
+    }
+
+    const total = seleccionadas.length;
+    const listadoHtml = seleccionadas
+      .slice(0, 10)
+      .map(e => `<li><b>${e.nomComercial || e.nombre || '-'}</b> <small class="text-muted">(${e.nit})</small></li>`)
+      .join('');
+    const extra = total > 10 ? `<li class="text-muted">… y ${total - 10} más</li>` : '';
+
+    Swal.fire({
+      title: `¿Eliminar ${total} empresa(s)?`,
+      html:
+        `<div class="text-start">` +
+        `<p>Se eliminarán <b>PERMANENTEMENTE</b> las empresas y <b>TODOS</b> sus datos relacionados ` +
+        `(usuarios, roles, bodegas, productos, pedidos, clientes, etc.). Esta acción <b>NO</b> se puede deshacer.</p>` +
+        `<ul>${listadoHtml}${extra}</ul>` +
+        `</div>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: `Sí, eliminar ${total}`,
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6b7280',
+      reverseButtons: true,
+      focusCancel: true
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Confirmación final',
+        html: `Escribe <b>ELIMINAR</b> para confirmar la eliminación de <b>${total}</b> empresa(s).`,
+        input: 'text',
+        inputPlaceholder: 'ELIMINAR',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar definitivamente',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545',
+        reverseButtons: true,
+        focusCancel: true,
+        inputValidator: (value) => {
+          if ((value || '').trim().toUpperCase() !== 'ELIMINAR') {
+            return 'Debes escribir exactamente ELIMINAR para continuar';
+          }
+          return null;
+        }
+      }).then(confirmacionFinal => {
+        if (!confirmacionFinal.isConfirmed) return;
+        this.ejecutarEliminacionMasiva(seleccionadas);
+      });
+    });
+  }
+
+  private ejecutarEliminacionMasiva(seleccionadas: Empresa[]): void {
+    this.eliminandoSeleccionadas = true;
+
+    Swal.fire({
+      title: 'Eliminando empresas…',
+      html: `Procesando <b>${seleccionadas.length}</b> empresa(s). Esto puede tardar unos minutos.`,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    const peticiones = seleccionadas.map(empresa =>
+      this.service.deleteCompany(this.buildDeletePayload(empresa)).pipe(
+        map(() => ({ empresa, ok: true as const })),
+        catchError(err => of({ empresa, ok: false as const, error: err }))
+      )
+    );
+
+    forkJoin(peticiones)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (resultados) => {
+          const exitosas = resultados.filter(r => r.ok);
+          const fallidas = resultados.filter(r => !r.ok);
+
+          const exitosasHtml = exitosas
+            .map(r => `<li>✅ ${r.empresa.nomComercial || r.empresa.nombre} <small class="text-muted">(${r.empresa.nit})</small></li>`)
+            .join('');
+          const fallidasHtml = fallidas
+            .map((r: any) => `<li>❌ ${r.empresa.nomComercial || r.empresa.nombre} <small class="text-muted">(${r.empresa.nit})</small> — ${r.error?.error?.message || r.error?.message || 'Error'}</li>`)
+            .join('');
+
+          Swal.fire({
+            title: fallidas.length === 0 ? 'Eliminación completa' : 'Eliminación parcial',
+            icon: fallidas.length === 0 ? 'success' : 'warning',
+            html:
+              `<div class="text-start">` +
+              `<p><b>${exitosas.length}</b> eliminada(s) correctamente, <b>${fallidas.length}</b> con error.</p>` +
+              (exitosasHtml ? `<p class="mb-1"><b>Eliminadas:</b></p><ul>${exitosasHtml}</ul>` : '') +
+              (fallidasHtml ? `<p class="mb-1"><b>Con error:</b></p><ul>${fallidasHtml}</ul>` : '') +
+              `</div>`,
+            confirmButtonText: 'Aceptar'
+          });
+
+          this.empresasSeleccionadas = [];
+          this.eliminandoSeleccionadas = false;
+          this.cargarDatos();
+        },
+        error: (err) => {
+          console.error('Error inesperado en eliminación masiva:', err);
+          this.eliminandoSeleccionadas = false;
+          Swal.fire('Error', 'Ocurrió un error inesperado durante la eliminación masiva.', 'error');
+        }
+      });
   }
 }
