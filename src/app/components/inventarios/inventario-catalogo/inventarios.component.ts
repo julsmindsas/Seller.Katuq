@@ -1,4 +1,4 @@
-import { Component, OnInit, TemplateRef, ViewChild } from "@angular/core";
+import { Component, OnInit, OnDestroy, TemplateRef, ViewChild } from "@angular/core";
 import { Router } from "@angular/router";
 import { NgbModal, NgbModalOptions } from "@ng-bootstrap/ng-bootstrap";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
@@ -18,6 +18,8 @@ import { FulfillmentService } from "../../../shared/services/fulfillment/fulfill
 import { ToastrService } from "ngx-toastr";
 import { Table } from "primeng/table";
 import { MenuItem } from "primeng/api";
+import { Subject } from "rxjs";
+import { takeUntil } from "rxjs/operators";
 
 // Tipo extendido para productos con información de inventario
 interface ProductoInventario extends Producto {
@@ -60,7 +62,8 @@ interface PageReference {
   templateUrl: "./inventarios.component.html",
   styleUrls: ["./inventarios.component.scss"],
 })
-export class InventarioCatalogoComponent implements OnInit {
+export class InventarioCatalogoComponent implements OnInit, OnDestroy {
+  private destroy$ = new Subject<void>();
   @ViewChild("dt") dt: Table; // Referencia a la tabla PrimeNG (vista por bodega)
   @ViewChild("dtConsolidado") dtConsolidado: Table; // Referencia a la tabla consolidada
 
@@ -226,6 +229,8 @@ export class InventarioCatalogoComponent implements OnInit {
   // Totales globales calculados en backend
   totalesGlobales: {
     valorTotal: number;
+    valorCostoTotal?: number;
+    margenEstimado?: number;
     totalUnidades: number;
     totalProductos: number;
     totalSKUsCatalogo: number;
@@ -233,6 +238,8 @@ export class InventarioCatalogoComponent implements OnInit {
     productosBajoStock: number;
   } = {
     valorTotal: 0,
+    valorCostoTotal: 0,
+    margenEstimado: 0,
     totalUnidades: 0,
     totalProductos: 0,
     totalSKUsCatalogo: 0,
@@ -317,6 +324,66 @@ export class InventarioCatalogoComponent implements OnInit {
     });
   }
 
+  // ============== REPARAR INVENTARIO (DEDUP / FIX) ==============
+  reparandoInventario: boolean = false;
+
+  repararInventario(): void {
+    Swal.fire({
+      title: 'Reparar inventario',
+      html: `
+        <div class="text-start">
+          <p>Esta operación analiza el inventario y corrige inconsistencias:</p>
+          <ul>
+            <li><b>Deduplicar:</b> normaliza <code>idBodega</code> usando el business code (ej. <code>BOD-001</code>) cuando se está usando el Firestore docId.</li>
+            <li><b>Bodegas huérfanas:</b> elimina registros cuyo <code>idBodega</code> ya no existe.</li>
+            <li><b>Productos fantasma:</b> elimina registros cuyo producto fue eliminado.</li>
+          </ul>
+          <p class="text-muted small">Es una operación reversible solo restaurando desde un backup. Se audita en <code>inventory_audit</code>.</p>
+        </div>
+      `,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, reparar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#f59e0b',
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      this.reparandoInventario = true;
+      Swal.fire({
+        title: 'Reparando inventario…',
+        html: 'Esto puede tomar varios segundos.',
+        allowOutsideClick: false,
+        didOpen: () => { Swal.showLoading(); }
+      });
+      this.inventarioService.repararInventario().subscribe({
+        next: (resp: any) => {
+          this.reparandoInventario = false;
+          const corregidos = resp?.corregidos ?? resp?.fixCount ?? 0;
+          const eliminados = resp?.eliminados ?? resp?.deleteCount ?? 0;
+          Swal.fire({
+            title: '✅ Reparación completa',
+            html: `
+              <div class="text-start">
+                <p><b>${corregidos}</b> registro(s) con <code>idBodega</code> corregido.</p>
+                <p><b>${eliminados}</b> registro(s) huérfanos eliminados.</p>
+              </div>
+            `,
+            icon: 'success',
+          });
+          this.recargarInventarioConsolidado();
+        },
+        error: (err) => {
+          this.reparandoInventario = false;
+          Swal.fire({
+            title: 'Error',
+            text: err?.error?.error || err?.error?.message || 'No se pudo reparar el inventario',
+            icon: 'error',
+          });
+        }
+      });
+    });
+  }
+
   // ============== IMPORTACIÓN ==============
   showImportModal: boolean = false;
 
@@ -346,6 +413,11 @@ export class InventarioCatalogoComponent implements OnInit {
     private fulfillmentService: FulfillmentService,
     private toastr: ToastrService,
   ) {}
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   ngOnInit(): void {
     this.empresaActual = JSON.parse(
@@ -452,7 +524,9 @@ export class InventarioCatalogoComponent implements OnInit {
       search: this.filtrosConsolidados.busqueda?.trim() || undefined,
       bodega: this.filtrosConsolidados.bodegaId || undefined,
       fulfillment: this.filtrosConsolidados.fulfillment || undefined,
-    }).subscribe({
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
       next: (response: any) => {
         if (response.success) {
           this.productosConsolidados = response.productos;
@@ -618,6 +692,21 @@ export class InventarioCatalogoComponent implements OnInit {
       bodegas = bodegas.filter(b => b.id === this.filtrosConsolidados.bodegaId);
     }
     return bodegas.reduce((sum, b) => sum + (b.metricas?.valorTotal ?? 0), 0);
+  }
+
+  /** Suma del valor a costo (stock × costoUnitario) respetando los filtros activos. */
+  getMetricaValorCostoTotal(): number {
+    if (!this.hayFiltrosActivos()) return this.totalesGlobales.valorCostoTotal ?? 0;
+    let bodegas = this.bodegasConsolidadas;
+    if (this.filtrosConsolidados.fulfillment === 'con') {
+      bodegas = bodegas.filter(b => !!b.fulfillmentId);
+    } else if (this.filtrosConsolidados.fulfillment === 'sin') {
+      bodegas = bodegas.filter(b => !b.fulfillmentId);
+    }
+    if (this.filtrosConsolidados.bodegaId) {
+      bodegas = bodegas.filter(b => b.id === this.filtrosConsolidados.bodegaId);
+    }
+    return bodegas.reduce((sum, b) => sum + (b.metricas?.valorCostoTotal ?? 0), 0);
   }
 
   getMetricaUnidades(): number {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { CrearBodegasComponent } from './crear-bodegas/crear-bodegas.component';
@@ -10,20 +10,21 @@ import { DaneCodesService } from '../../../shared/services/dane-codes.service';
 import { CiudadCobertura } from '../../../shared/models/inventarios/bodega.model';
 import { FulfillmentWarehouse } from '../../../shared/models/fulfillment/fulfillment.model';
 import Swal from 'sweetalert2';
-import { forkJoin, of } from 'rxjs';
-import { catchError, take } from 'rxjs/operators';
+import { forkJoin, of, Subject } from 'rxjs';
+import { catchError, take, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-bodegas',
   templateUrl: './bodegas.component.html',
   styleUrls: ['./bodegas.component.scss']
 })
-export class BodegasComponent implements OnInit {
+export class BodegasComponent implements OnInit, OnDestroy {
   cargando: boolean = false;
   bodegas: any[] = [];
   todasLasBodegas: any[] = [];  // Incluye inactivas para verificar fulfillmentId
   selectedColumns: any[] = [];
   importandoFulfillment: boolean = false;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private modalService: NgbModal,
@@ -36,13 +37,20 @@ export class BodegasComponent implements OnInit {
     this.cargarBodegas();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   cargarBodegas() {
     this.cargando = true;
-    this.bodegaService.getBodegas().subscribe(bodegas => {
-      this.todasLasBodegas = bodegas;
-      this.bodegas = bodegas;
-      this.cargando = false;
-    });
+    this.bodegaService.getBodegas()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(bodegas => {
+        this.todasLasBodegas = bodegas;
+        this.bodegas = bodegas;
+        this.cargando = false;
+      });
   }
 
   abrirModalCrear() {
