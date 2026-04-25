@@ -131,7 +131,27 @@
       "Bash(git branch *)",
       "Bash(export PATH=\"/c/Users/danie/AppData/Local/Programs/Python/Python310/Scripts:$PATH\")",
       "Bash(git filter-repo *)",
-      "Bash(git check-ignore *)"
+      "Bash(git check-ignore *)",
+      "Bash(gcloud --version)",
+      "Bash(docker --version)",
+      "Bash(gcloud auth *)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" auth list)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" config get-value project)",
+      "Bash(\"C:\\\\Program Files \\(x86\\)\\\\Google\\\\Cloud SDK\\\\google-cloud-sdk\\\\bin\\\\gcloud.cmd\" services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com --project=katuq-new)",
+      "Read(//c/c/sourcecodejuls/katuq_admin_back_firebase/**)",
+      "Bash(firebase login:list)",
+      "Bash(firebase use *)",
+      "Bash(firebase projects:list)",
+      "Bash(firebase hosting:sites:create katuq-app --project katuq-new)",
+      "Bash(firebase target:apply hosting katuq-app katuq-app --project katuq-new)",
+      "Bash(git -C /c/sourcecodejuls/katuq_admin_back_firebase check-ignore .env.lightsail)",
+      "Bash(git -C /c/sourcecodejuls/katuq_admin_back_firebase check-ignore setup-lightsail.sh)",
+      "Bash(firebase firestore:indexes --project katuq-new)",
+      "Bash(chmod 600 \"/c/sourcecodejuls/katuq_admin_back_firebase/api-katuq.pem\")",
+      "Bash(git -C /c/sourcecodejuls/katuq_admin_back_firebase check-ignore api-katuq.pem)",
+      "Bash(nslookup api.katuq.com)",
+      "Bash(ssh -i /c/sourcecodejuls/katuq_admin_back_firebase/api-katuq.pem -o StrictHostKeyChecking=no ubuntu@34.237.136.82 \"cd /home/ubuntu/katuq_admin_back_firebase && git log --oneline -5 && echo '---pm2 status---' && pm2 status\")",
+      "Bash(ssh -i /c/sourcecodejuls/katuq_admin_back_firebase/api-katuq.pem ubuntu@34.237.136.82 \"pm2 logs index --err --lines 60 --nostream\")"
     ]
   }
 }

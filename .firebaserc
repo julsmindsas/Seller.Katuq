@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "katuq-new"
-  }
+  },
+  "targets": {
+    "katuq-new": {
+      "hosting": {
+        "katuq-app": [
+          "katuq-app"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
