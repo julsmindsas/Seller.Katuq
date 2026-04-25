@@ -80,13 +80,13 @@ export const NOTIFICATION_TEMPLATES: Record<NotificationType, NotificationTempla
     targetRoles: [UserRole.ADMIN, UserRole.SELLER],
     templates: {
       [NotificationChannel.IN_APP]: {
-        title: '✅ Pago aprobado',
-        message: 'Pago de ${monto} aprobado para pedido #{nroPedido}',
-        actionText: 'Procesar pedido'
+        title: '✅ Pago recibido',
+        message: 'Pago de ${monto} recibido para pedido #{nroPedido}. ${textoRestante}',
+        actionText: 'Ver pedido'
       },
       [NotificationChannel.PUSH]: {
-        title: '💰 Pago aprobado',
-        message: 'Pedido #{nroPedido} - ${monto}'
+        title: '💰 Pago recibido',
+        message: 'Pedido #{nroPedido} - ${monto} ${textoRestante}'
       }
     },
     persistInNotificationCenter: true

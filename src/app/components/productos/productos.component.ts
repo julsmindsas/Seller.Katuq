@@ -1512,125 +1512,120 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   // ============== MÉTODOS ADMINISTRATIVOS ==============
 
-  /**
-   * Elimina FÍSICAMENTE todos los productos del comercio actual
-   * ⚠️ OPERACIÓN DESTRUCTIVA - USO ADMINISTRATIVO/DESARROLLO
-   */
-  limpiarProductosComercio(): void {
-    const companyName = this.empresaActual?.nomComercial;
-    
-    if (!companyName) {
-      Swal.fire('Error', 'No se pudo obtener el nombre del comercio', 'error');
-      return;
-    }
+  // /**
+  //  * Elimina FÍSICAMENTE todos los productos del comercio actual
+  //  * ⚠️ OPERACIÓN DESTRUCTIVA - USO ADMINISTRATIVO/DESARROLLO
+  //  * DESHABILITADO: botón y endpoint comentados por seguridad
+  //  */
+  // limpiarProductosComercio(): void {
+  //   const companyName = this.empresaActual?.nomComercial;
+  //
+  //   if (!companyName) {
+  //     Swal.fire('Error', 'No se pudo obtener el nombre del comercio', 'error');
+  //     return;
+  //   }
+  //
+  //   Swal.fire({
+  //     title: '⚠️ Eliminación Masiva de Productos',
+  //     html: `
+  //       <div class="text-start">
+  //         <p class="text-danger fw-bold">Esta acción eliminará FÍSICAMENTE todos los productos del comercio:</p>
+  //         <p class="text-primary fw-bold fs-5">"${companyName}"</p>
+  //         <hr>
+  //         <p class="text-muted">Total de productos a eliminar: <strong>${this.totalItems}</strong></p>
+  //         <p class="text-danger"><i class="fa fa-exclamation-triangle"></i> Esta acción NO se puede deshacer.</p>
+  //         <p>Uso recomendado solo para:</p>
+  //         <ul class="text-start">
+  //           <li>Entornos de desarrollo</li>
+  //           <li>Limpieza de datos de prueba</li>
+  //           <li>Reinicio completo del catálogo</li>
+  //         </ul>
+  //       </div>
+  //     `,
+  //     icon: 'warning',
+  //     showCancelButton: true,
+  //     confirmButtonColor: '#dc3545',
+  //     cancelButtonColor: '#6c757d',
+  //     confirmButtonText: '⚠️ Continuar',
+  //     cancelButtonText: 'Cancelar',
+  //     focusCancel: true
+  //   }).then((result) => {
+  //     if (result.isConfirmed) {
+  //       Swal.fire({
+  //         title: 'Confirmaci��n Final',
+  //         html: `
+  //           <p>Para confirmar, escriba el nombre del comercio:</p>
+  //           <p class="fw-bold text-primary">"${companyName}"</p>
+  //         `,
+  //         input: 'text',
+  //         inputPlaceholder: 'Escriba el nombre del comercio',
+  //         inputAttributes: {
+  //           autocapitalize: 'off'
+  //         },
+  //         showCancelButton: true,
+  //         confirmButtonColor: '#dc3545',
+  //         cancelButtonColor: '#6c757d',
+  //         confirmButtonText: '🗑️ Eliminar TODO',
+  //         cancelButtonText: 'Cancelar',
+  //         focusCancel: true,
+  //         inputValidator: (value) => {
+  //           if (!value) {
+  //             return 'Debe escribir el nombre del comercio';
+  //           }
+  //           if (value !== companyName) {
+  //             return 'El nombre no coincide. Intente de nuevo.';
+  //           }
+  //           return null;
+  //         }
+  //       }).then((confirmResult) => {
+  //         if (confirmResult.isConfirmed && confirmResult.value === companyName) {
+  //           this.ejecutarLimpiezaProductos(companyName);
+  //         }
+  //       });
+  //     }
+  //   });
+  // }
 
-    // Primera confirmación
-    Swal.fire({
-      title: '⚠️ Eliminación Masiva de Productos',
-      html: `
-        <div class="text-start">
-          <p class="text-danger fw-bold">Esta acción eliminará FÍSICAMENTE todos los productos del comercio:</p>
-          <p class="text-primary fw-bold fs-5">"${companyName}"</p>
-          <hr>
-          <p class="text-muted">Total de productos a eliminar: <strong>${this.totalItems}</strong></p>
-          <p class="text-danger"><i class="fa fa-exclamation-triangle"></i> Esta acción NO se puede deshacer.</p>
-          <p>Uso recomendado solo para:</p>
-          <ul class="text-start">
-            <li>Entornos de desarrollo</li>
-            <li>Limpieza de datos de prueba</li>
-            <li>Reinicio completo del catálogo</li>
-          </ul>
-        </div>
-      `,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: '⚠️ Continuar',
-      cancelButtonText: 'Cancelar',
-      focusCancel: true
-    }).then((result) => {
-      if (result.isConfirmed) {
-        // Segunda confirmación con input del nombre
-        Swal.fire({
-          title: 'Confirmación Final',
-          html: `
-            <p>Para confirmar, escriba el nombre del comercio:</p>
-            <p class="fw-bold text-primary">"${companyName}"</p>
-          `,
-          input: 'text',
-          inputPlaceholder: 'Escriba el nombre del comercio',
-          inputAttributes: {
-            autocapitalize: 'off'
-          },
-          showCancelButton: true,
-          confirmButtonColor: '#dc3545',
-          cancelButtonColor: '#6c757d',
-          confirmButtonText: '🗑️ Eliminar TODO',
-          cancelButtonText: 'Cancelar',
-          focusCancel: true,
-          inputValidator: (value) => {
-            if (!value) {
-              return 'Debe escribir el nombre del comercio';
-            }
-            if (value !== companyName) {
-              return 'El nombre no coincide. Intente de nuevo.';
-            }
-            return null;
-          }
-        }).then((confirmResult) => {
-          if (confirmResult.isConfirmed && confirmResult.value === companyName) {
-            this.ejecutarLimpiezaProductos(companyName);
-          }
-        });
-      }
-    });
-  }
-
-  /**
-   * Ejecuta la eliminación masiva de productos
-   */
-  private ejecutarLimpiezaProductos(companyName: string): void {
-    Swal.fire({
-      title: 'Eliminando productos...',
-      html: 'Por favor espere. Esta operación puede tomar varios minutos dependiendo de la cantidad de productos.',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      didOpen: () => Swal.showLoading()
-    });
-
-    this.service.deleteAllProductsByCompany(companyName).subscribe({
-      next: (response) => {
-        if (response.success) {
-          Swal.fire({
-            title: '✅ Limpieza Completada',
-            html: `
-              <div class="text-start">
-                <p><strong>${response.deletedCount}</strong> productos eliminados físicamente.</p>
-                <p class="text-muted">Comercio: ${response.company}</p>
-                <p class="text-muted small">Timestamp: ${response.timestamp}</p>
-              </div>
-            `,
-            icon: 'success',
-            confirmButtonText: 'Entendido'
-          });
-          // Recargar la lista (debería estar vacía)
-          this.cargarDatos();
-        } else {
-          Swal.fire('Error', response.error || 'Error desconocido', 'error');
-        }
-      },
-      error: (error) => {
-        console.error('Error eliminando productos:', error);
-        Swal.fire({
-          title: 'Error',
-          html: `
-            <p>No se pudieron eliminar los productos.</p>
-            <p class="text-danger">${error.error?.error || error.message || 'Error desconocido'}</p>
-          `,
-          icon: 'error'
-        });
-      }
-    });
-  }
+  // private ejecutarLimpiezaProductos(companyName: string): void {
+  //   Swal.fire({
+  //     title: 'Eliminando productos...',
+  //     html: 'Por favor espere. Esta operación puede tomar varios minutos dependiendo de la cantidad de productos.',
+  //     allowOutsideClick: false,
+  //     showConfirmButton: false,
+  //     didOpen: () => Swal.showLoading()
+  //   });
+  //
+  //   this.service.deleteAllProductsByCompany(companyName).subscribe({
+  //     next: (response) => {
+  //       if (response.success) {
+  //         Swal.fire({
+  //           title: '✅ Limpieza Completada',
+  //           html: `
+  //             <div class="text-start">
+  //               <p><strong>${response.deletedCount}</strong> productos eliminados físicamente.</p>
+  //               <p class="text-muted">Comercio: ${response.company}</p>
+  //               <p class="text-muted small">Timestamp: ${response.timestamp}</p>
+  //             </div>
+  //           `,
+  //           icon: 'success',
+  //           confirmButtonText: 'Entendido'
+  //         });
+  //         this.cargarDatos();
+  //       } else {
+  //         Swal.fire('Error', response.error || 'Error desconocido', 'error');
+  //       }
+  //     },
+  //     error: (error) => {
+  //       console.error('Error eliminando productos:', error);
+  //       Swal.fire({
+  //         title: 'Error',
+  //         html: `
+  //           <p>No se pudieron eliminar los productos.</p>
+  //           <p class="text-danger">${error.error?.error || error.message || 'Error desconocido'}</p>
+  //         `,
+  //         icon: 'error'
+  //       });
+  //     }
+  //   });
+  // }
 }
