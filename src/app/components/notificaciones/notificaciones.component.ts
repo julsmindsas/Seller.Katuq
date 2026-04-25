@@ -141,8 +141,9 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     const pref = this.preferences.find(p => p.id === preferenceId);
     if (!pref || this.isSaving) return;
 
+    const previousValue = pref.channels.email;
     pref.channels.email = !pref.channels.email;
-    this.saveToFirestore();
+    this.saveToFirestore(() => { pref.channels.email = previousValue; });
   }
 
   /** Activa o desactiva las notificaciones por SMS para una categoría y guarda en Firestore */
@@ -150,12 +151,15 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     const pref = this.preferences.find(p => p.id === preferenceId);
     if (!pref || this.isSaving) return;
 
+    const previousValue = pref.channels.sms;
     pref.channels.sms = !pref.channels.sms;
-    this.saveToFirestore();
+    this.saveToFirestore(() => { pref.channels.sms = previousValue; });
   }
 
+
+
   /** Guarda todas las preferencias de la empresa en Firestore */
-  private saveToFirestore(): void {
+  private saveToFirestore(rollback?: () => void): void {
     const companyName = this.empresaActual?.nomComercial;
     if (!companyName) return;
 
@@ -177,6 +181,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
         },
         error: (err) => {
           this.isSaving = false;
+          if (rollback) rollback();
           this.toastr.error('Error al guardar preferencias', 'Notificaciones');
           console.error('Error guardando preferencias:', err);
         }

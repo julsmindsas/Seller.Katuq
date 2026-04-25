@@ -563,6 +563,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         this.woDefaults = null;
         this.setupWOAutoLoad();
         break;
+      case 'osmosis':
+        this.integrationForm = this.createOsmosisForm();
+        break;
       default:
         this.integrationForm = this.createShopifyForm();
         break;
@@ -649,6 +652,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         this.integrationForm = this.createWorldOfficeForm();
         // Auto-load usando config guardada en Firestore (sin necesidad de token)
         setTimeout(() => this.loadWOMasterData(), 0);
+        break;
+      case 'osmosis':
+        this.integrationForm = this.createOsmosisForm();
         break;
       default:
         this.integrationForm = this.createShopifyForm();
@@ -971,6 +977,25 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       enabled: [true],
       apiUrl: ['https://us-central1-katuq-new.cloudfunctions.net/api/', [Validators.required]],
       apiKey: ['', [Validators.required, Validators.minLength(20)]],
+    });
+  }
+
+  createOsmosisForm(): FormGroup {
+    return this.fb.group({
+      name: ['Guiacereza', Validators.required],
+      enabled: [true],
+      // URL base del API (opcional, si no se pone se usa el default)
+      apiUrl: [''],
+      // Identificador del nodo en Osmosis (requerido)
+      nodeSlug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/i)]],
+      // Credenciales OAuth2 (requeridas, sensibles)
+      clientId: ['', Validators.required],
+      clientSecret: ['', Validators.required],
+      // Opciones de sincronizacion
+      syncProducts: [true],
+      syncOrders: [true],
+      autoSyncProducts: [false],
+      productSyncInterval: [6, [Validators.min(1), Validators.max(24)]]
     });
   }
 
@@ -1384,6 +1409,17 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           costAccount: formData.costAccount,
           inventoryAccount: formData.inventoryAccount,
           discountAccount: formData.discountAccount
+        };
+        break;
+      case 'osmosis':
+        credentials = {
+          nodeSlug:            formData.nodeSlug,
+          clientId:            formData.clientId,
+          clientSecret:        formData.clientSecret,
+          syncProducts:        formData.syncProducts        ?? true,
+          syncOrders:          formData.syncOrders          ?? true,
+          autoSyncProducts:    formData.autoSyncProducts    ?? false,
+          productSyncInterval: formData.productSyncInterval ?? 6
         };
         break;
       case 'world_office':
@@ -1875,6 +1911,49 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             tooltip: 'Concepto por defecto para las facturas'
           }
         ];
+      case 'osmosis':
+        return [
+          {
+            id: 'nodeSlug',
+            label: 'Node Slug',
+            type: 'string',
+            placeholder: 'Ej: mi-tienda-colombia',
+            icon: 'fa-plug',
+            tooltip: 'Identificador del nodo de tu tienda en Osmosis (solo letras, números y guiones)'
+          },
+          {
+            id: 'syncProducts',
+            label: 'Sincronizar productos',
+            type: 'boolean',
+            placeholder: '',
+            icon: 'fa-box',
+            tooltip: 'Importa el catálogo de productos desde Osmosis/Guiacereza'
+          },
+          {
+            id: 'syncOrders',
+            label: 'Sincronizar pedidos',
+            type: 'boolean',
+            placeholder: '',
+            icon: 'fa-shopping-cart',
+            tooltip: 'Envía los pedidos de Katuq al ERP de Guiacereza'
+          },
+          {
+            id: 'autoSyncProducts',
+            label: 'Sincronización automática de productos',
+            type: 'boolean',
+            placeholder: '',
+            icon: 'fa-sync',
+            tooltip: 'Activa la sincronización periódica automática del catálogo'
+          },
+          {
+            id: 'productSyncInterval',
+            label: 'Intervalo de sincronización (horas)',
+            type: 'number',
+            placeholder: '6',
+            icon: 'fa-clock',
+            tooltip: 'Cada cuántas horas se sincroniza el catálogo automáticamente (1-24)'
+          }
+        ];
       default:
         return [];
     }
@@ -1899,7 +1978,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'paypal': 'https://developer.paypal.com/docs/api/overview/',
       'stripe': 'https://stripe.com/docs/api',
       'mercadopago': 'https://www.mercadopago.com.co/developers',
-      'siigo': 'https://siigoapi.docs.apiary.io'
+      'siigo': 'https://siigoapi.docs.apiary.io',
+      'osmosis': 'https://osmosis-api.guiacereza.tech/api'
     };
     return urls[integrationType] || null;
   }
@@ -1917,7 +1997,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'stripe': 'Stripe',
       'mercadopago': 'Mercado Pago',
       'partners_logistics': 'Partners Logística',
-      'siigo': 'Siigo'
+      'siigo': 'Siigo',
+      'osmosis': 'Guiacereza'
     };
     return names[this.selectedIntegrationType] || this.selectedIntegrationType;
   }
