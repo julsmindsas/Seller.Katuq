@@ -50,6 +50,14 @@
                                         <i class="pi pi-spin pi-spinner me-1" *ngIf="importandoProductosFulfillment"></i>
                                         Importar desde {{ fulfillmentProviderName }}
                                     </button>
+                                    <div class="dropdown-divider" *ngIf="osmosisEnabled"></div>
+                                    <button ngbDropdownItem *ngIf="osmosisEnabled"
+                                            [disabled]="importandoProductosOsmosis"
+                                            (click)="importarProductosOsmosis()">
+                                        <i class="pi pi-cloud-download me-1" *ngIf="!importandoProductosOsmosis"></i>
+                                        <i class="pi pi-spin pi-spinner me-1" *ngIf="importandoProductosOsmosis"></i>
+                                        Importar desde Guiacereza (Osmosis)
+                                    </button>
                                 </div>
                             </div>
                             <button type="button" class="btn btn-outline-primary btn-sm"
@@ -62,6 +70,11 @@
                                     ngbTooltip="Configurar columnas">
                                 <i class="pi pi-table"></i>
                             </button>
+                            <!-- <button type="button" class="btn btn-outline-danger btn-sm"
+                                    (click)="limpiarProductosComercio()"
+                                    ngbTooltip="Eliminar todos los productos del comercio">
+                                <i class="pi pi-trash me-1"></i>Eliminar Base de Datos
+                            </button> -->
                         </div>
                     </div>
                 </div>

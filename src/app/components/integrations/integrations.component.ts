@@ -986,6 +986,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return this.fb.group({
       name: ['Guiacereza', Validators.required],
       enabled: [true],
+      // URL base del API (opcional, si no se pone se usa el default)
+      apiUrl: [''],
       // Identificador del nodo en Osmosis (requerido)
       nodeSlug: ['', [Validators.required, Validators.pattern(/^[a-z0-9-]+$/i)]],
       // Credenciales OAuth2 (requeridas, sensibles)

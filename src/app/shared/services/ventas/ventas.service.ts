@@ -626,15 +626,30 @@ export class VentasService extends BaseService {
           return;
       }
 
+      // Calcular datos de pago parcial/total si hay PagosAsentados
+      const pagos = order?.PagosAsentados || [];
+      const ultimoPago = pagos.length > 0 ? pagos[pagos.length - 1] : null;
+      const valorTotal = order?.totalPedididoConDescuento || order?.subtotal || 0;
+      const totalPagado = pagos.reduce((acc: number, p: any) => acc + (p.valor || 0), 0);
+      const valorRestante = Math.max(0, valorTotal - totalPagado);
+      const montoPagado = ultimoPago?.valor || valorTotal;
+
+      const textoRestante = valorRestante > 0
+        ? `Resta: ${this.formatCurrency(valorRestante)}`
+        : '';
+
       const event: NotificationEvent = {
         type: notificationType,
         data: {
           nroPedido: numeroPedido,
           estadoPago: estadoPago,
-          monto: order ? this.formatCurrency(order.subtotal || 0) : '',
+          monto: this.formatCurrency(montoPagado),
           orderId: order?._id,
           cliente: order?.cliente?.nombres_completos,
-          clienteEmail: order?.cliente?.correo_electronico_comprador 
+          clienteEmail: order?.cliente?.correo_electronico_comprador,
+          textoRestante,
+          valorRestante: this.formatCurrency(valorRestante),
+          esPagoTotal: valorRestante <= 0,
         },
         priority,
         channels
