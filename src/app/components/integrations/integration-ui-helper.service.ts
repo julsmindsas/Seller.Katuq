@@ -461,7 +461,7 @@ export class IntegrationUIHelperService {
 
     switch (integrationType) {
       case 'shopify':
-        return !!(credentials.shopUrl && credentials.apiKey && credentials.apiSecret);
+        return !!(credentials.shopDomain && credentials.accessToken);
       case 'wompi':
         return !!(credentials.publicKey && credentials.privateKey);
       case 'epayco':

@@ -1,88 +1,91 @@
+// Entorno de desarrollo local
+// Para apuntar a producción cambiar `urlApi` a https://back.katuq.com
+
 export const environment = {
-  production: true,
-  version: "2026.04.15.1 - 15 de Abril 2026 (Beta)",
+  production: false,
+  version: "2026.04.22.1 - 22 de Abril 2026 (Beta)",
+
+  // Backend Express (Lightsail / local)
+  urlApi: 'http://localhost:3300',
+  urlApi2: 'http://localhost:3300',
+  apiUrl: 'http://localhost:3300',
+
+  // KAI Genkit backend
+  kaiBackendUrl: 'http://localhost:3890',
+  kaiBackendWs: 'ws://localhost:3892',
+
+  // ADK Python/Flask
+  adkBackendApi: 'http://localhost:8080',
+
+  // Agent Builder (ADK AG-UI)
+  agentBuilderApi: 'http://localhost:8080',
+  agentBuilderWs: 'ws://localhost:8080',
+
+  // Voice/video agent
+  voiceWsUrl: 'ws://localhost:3892',
+  wsVoiceServiceUrl: 'ws://localhost:3892',
+
+  // Firebase (cuenta nueva katuq-new)
   firebase: {
-    apiKey: "AIzaSyAmAnBBefe_f6rwSLIUK0e1JexuDGP2w_4",
-    authDomain: "julsmind-katuq.firebaseapp.com",
-    databaseURL: "https://julsmind-katuq-default-rtdb.firebaseio.com",
-    projectId: "julsmind-katuq",
-    storageBucket: "julsmind-katuq.appspot.com",
-    messagingSenderId: "262274219539",
-    appId: "1:262274219539:web:bd63a33f16779c7d4689e6",
-    measurementId: "G-LFYSZ78R7F",
+    apiKey: 'AIzaSyBahbMqiodjonKOLeAuLRzUGEV0sw4GUwc',
+    authDomain: 'katuq-new.firebaseapp.com',
+    databaseURL: 'https://katuq-new-default-rtdb.firebaseio.com',
+    projectId: 'katuq-new',
+    storageBucket: 'katuq-new.firebasestorage.app',
+    messagingSenderId: '295918419655',
+    appId: '1:295918419655:web:35ac55904bbad705a348e2',
+    measurementId: 'G-K2C9EF97ML'
   },
-  urlPermitidas:
-    "https://sellercenter.katuq.com, http://100.27.36.49:3300, http://localhost:4200",
-  urlApi: "http://localhost:3300", // API Local - Backend Principal Katuq
-  //urlApi: "https://back.katuq.com",
-  //urlApi: "https://us-central1-katuq-new.cloudfunctions.net/api", // API GCP
 
-  // Agent Builder Backend (KAI) - A través del backend principal (proxy)
-  agentBuilderApi: "http://localhost:3300", // REST API a través del backend principal
-  agentBuilderWs: "ws://localhost:3892/ws", // WebSocket directo (no puede usar proxy HTTP)
-
-  // ADK Backend directo (Python/Flask) - Para Chat Pro streaming
-  // adkBackendApi: "https://back.katuq.com/adk",
-  adkBackendApi: "http://localhost:8080", // ADK Flask server directo
-
-  // KAI Backend URL - Para Video Agent potenciado con ADK
-  kaiBackendUrl: "https://back.katuq.com/adk", // Produccion
-  // kaiBackendUrl: "http://localhost:8080", // Local development
-
-  // KAI Backend WebSocket - Para Video Agent Live Streaming (ADK run_live)
-  // kaiBackendWs: "wss://back.katuq.com/adk", // Produccion
-  // kaiBackendWs: "ws://localhost:8081", // Local development (solo PC)
-  kaiBackendWs: "wss://kai-video-agent-295918419655.us-central1.run.app", // GCP Cloud Run
-
-  wsVoiceServiceUrl: "wss://api.tuservidor.com/voice-websocket",
-  voiceWsUrl: "wss://api.katuq.com/voice-websocket",
-  wompi: {
-    // Credenciales para pagos de pedidos normales
-    prod_intrity: "test_integrity_gD6XzNRKmItupFPhyEj09rycF7orECGD",
-    public_key_test: "pub_test_sNdWRfLNp683Ex0hLby4nxcOBIkH38Jy",
-    public_key: "pub_prod_cN70rb6aXdHMiBWj9fwY26Xyh1Oz5PUf",
-    event: "test_events_AaaZdg5VB8tngBhZkogbXmDpbT9nWMH5",
-    redirectURL: "https://sellercenter.katuq.com/payment-callback",
-    redirectURLTest: "http://localhost:4200/payment-callback",
-
-    // Credenciales SANDBOX para suscripciones (desarrollo/pruebas)
-    subscriptions_public_key: "pub_test_ar0LwbvdFVYNCSkEgK4KlteidqCTOiub",
-    subscriptions_integrity: "test_integrity_LQdnpWwH116PRZZtzYThCGIe4qKvh16E",
-  },
-  useModelBig: false,
+  // API keys de terceros — reemplazar con las nuevas claves de la cuenta limpia
+  GEMINI_API_KEY: '',
+  googleMapsApiKey: '',
   geocoding: {
-    // GeoBlr - Proveedor prioritario para Latinoamérica
+    apiKey: '',
+    googleMaps: {
+      apiKey: '',
+      endpoint: 'gmaps-proxy'
+    },
     geoBlr: {
-      apiKey: "geoblr_live_tDttVxHzyNZ8o3Zsup1QkoaMIzQDEDAT166foJ_ein4", // GeoBlr API Key
-      origin: "http://localhost:4200", // Dominio autorizado para desarrollo
-      baseUrl: "https://apibluerp-107bd.web.app/v1",
-      endpoint: "addresses/geocoder",
+      apiKey: '',
+      origin: 'http://localhost:4200',
+      baseUrl: '',
+      endpoint: ''
     },
     openRouteService: {
-      apiKey: "5b3ce3597851110001cf6248b2c4b1e9f8dd42fc8a1b4f7d1e2bb38c", // OpenRouteService API Key
-      endpoint: "openroute-proxy",
-    },
-    googleMaps: {
-      apiKey: "AIzaSyDskNnjpps_YO0ZU7kny5tzlkv28zdVq9I", // Google Maps API Key
-      endpoint: "gmaps-proxy",
-    },
+      apiKey: '',
+      endpoint: 'openroute-proxy'
+    }
   },
-  // GEMINI_API_KEY is injected at runtime via window['GEMINI_API_KEY']
-  GEMINI_API_KEY: "AIzaSyDKYiPW1w9TBrCzSgTtMs52jJna_LqCI2o_", //s(typeof window !== 'undefined' && window['GEMINI_API_KEY']) ? window['GEMINI_API_KEY'] : '',
 
-  // 🎯 VIDEO AGENT CONFIGURATION
+  // Wompi / pagos — claves vacías para dev local; llenar con test keys cuando se pruebe checkout
+  wompi: {
+    public_key: '',
+    publicKey: '',
+    public_key_test: '',
+    prod_intrity: '',
+    integrityKey: '',
+    event: '',
+    redirectURL: 'http://localhost:4200/payment-callback',
+    redirectURLTest: 'http://localhost:4200/payment-callback',
+    subscriptions_public_key: '',
+    subscriptions_integrity: ''
+  },
+
+  // Video Agent (config legacy — mantener para compatibilidad)
   videoAgent: {
-    // DEMO MODE: Solo pide nombre, auto-agenda para mañana sin validaciones
-    // PRODUCTION MODE: Validaciones completas, slots disponibles, confirmación por email
-    mode: "DEMO" as "DEMO" | "PRODUCTION",
-
-    // Auto-detect location in demo mode
+    mode: 'DEMO' as 'DEMO' | 'PRODUCTION',
     autoDetectLocation: true,
-
-    // Default appointment settings (DEMO mode)
     defaultAppointment: {
-      time: "10:00 - 12:00",
-      daysAhead: 1, // Tomorrow
-    },
+      time: '10:00 - 12:00',
+      daysAhead: 1
+    }
   },
+
+  // Flags varios
+  useModelBig: false,
+  user: 'katuq_user',
+
+  // CORS — string simple (el interceptor lo usa como header Access-Control-Allow-Origin)
+  urlPermitidas: 'http://localhost:4200'
 };

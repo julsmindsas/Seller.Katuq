@@ -1171,16 +1171,18 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     //   return;
     // }
 
-    // Validar si el producto tiene imágenes principales
-    if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
-      Swal.fire(
-        "Error",
-        "El producto debe tener obligatoriamente al menos una imagen principal",
-        "error",
-      );
-      this.saving = false;
-      return;
-    }
+    // TEMP: restricción de imagen principal desactivada para permitir editar
+    // productos existentes mientras se corrigen las Storage Rules de katuq-new.
+    // Revertir descomentando el bloque cuando se pueda volver a subir imagenes.
+    // if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
+    //   Swal.fire(
+    //     "Error",
+    //     "El producto debe tener obligatoriamente al menos una imagen principal",
+    //     "error",
+    //   );
+    //   this.saving = false;
+    //   return;
+    // }
 
     // Validar unicidad de referencia (solo referencias manuales)
     const referenciaValida = await this.validarReferenciaUnica();
@@ -1273,14 +1275,15 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
-      Swal.fire(
-        "Error",
-        "El producto debe tener obligatoriamente al menos una imagen principal",
-        "error",
-      );
-      return;
-    }
+    // TEMP: restricción de imagen principal desactivada (ver nota anterior).
+    // if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
+    //   Swal.fire(
+    //     "Error",
+    //     "El producto debe tener obligatoriamente al menos una imagen principal",
+    //     "error",
+    //   );
+    //   return;
+    // }
 
     this.procesoComercial.controls["variablesForm"].setValue(
       stringify(this.variables),

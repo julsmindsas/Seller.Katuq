@@ -288,27 +288,17 @@ export class IntegrationFormValidatorService {
   }
 
   private validateShopifyForm(formValue: any, result: ValidationResult): void {
-    // Validar URL de tienda
-    if (formValue.shopUrl) {
-      if (!this.patterns.shopifyUrl.test(formValue.shopUrl)) {
-        result.errors!['shopUrl'] = this.errorMessages.shopifyUrl;
+    // Validar dominio de tienda (*.myshopify.com)
+    if (formValue.shopDomain) {
+      if (!this.patterns.shopifyUrl.test(formValue.shopDomain)) {
+        result.errors!['shopDomain'] = this.errorMessages.shopifyUrl;
       }
     }
 
-    // Validar API Key y Secret
-    if (!formValue.apiKey || formValue.apiKey.length < 32) {
-      result.errors!['apiKey'] = 'La API Key debe tener al menos 32 caracteres';
-    }
-
-    if (!formValue.apiSecret || formValue.apiSecret.length < 32) {
-      result.errors!['apiSecret'] = 'El API Secret debe tener al menos 32 caracteres';
-    }
-
-    // Validar Access Token
-    if (!formValue.accessToken || !formValue.accessToken.startsWith('shpat_')) {
-      result.errors!['accessToken'] = 'El Access Token de Shopify debe comenzar con "shpat_"';
-    } else if (formValue.accessToken.length < 32) {
-      result.errors!['accessToken'] = 'El Access Token parece ser demasiado corto';
+    // Validar Access Token (Admin API). Custom apps: shpat_, public OAuth: shpca_/shpua_.
+    // Aceptamos cualquier prefijo pero exigimos longitud mínima.
+    if (!formValue.accessToken || formValue.accessToken.length < 20) {
+      result.errors!['accessToken'] = 'El Access Token es requerido (mínimo 20 caracteres)';
     }
 
     // Sugerencias
@@ -640,9 +630,9 @@ export class IntegrationFormValidatorService {
     switch (integrationType) {
       case 'shopify':
         return {
-          shopUrl: formValue?.shopUrl,
-          apiKey: formValue?.apiKey,
-          apiSecret: formValue?.apiSecret
+          shopDomain: formValue?.shopDomain,
+          accessToken: formValue?.accessToken,
+          apiVersion: formValue?.apiVersion
         };
       case 'wompi':
         return {
@@ -734,7 +724,8 @@ export class IntegrationFormValidatorService {
 
   private getFieldValidator(field: string, integrationType: string, environment?: string): ValidatorFn | null {
     switch (field) {
-      case 'shopUrl':
+      case 'shopDomain':
+      case 'shopUrl': // alias legacy
         return this.createShopifyUrlValidator();
       case 'publicKey':
         if (integrationType === 'wompi') {
@@ -873,7 +864,8 @@ export class IntegrationFormValidatorService {
   private getShopifySecurityScore(credentials: any): number {
     let score = 0;
     if (credentials.apiVersion && credentials.apiVersion >= '2023-01') score += 10;
-    if (credentials.shopUrl && credentials.shopUrl.includes('.myshopify.com')) score += 15;
+    if (credentials.shopDomain && credentials.shopDomain.includes('.myshopify.com')) score += 15;
+    if (credentials.webhookSecret) score += 10;
     return score;
   }
 
@@ -895,7 +887,10 @@ export class IntegrationFormValidatorService {
       name: 'Nombre',
       apiKey: 'API Key',
       apiSecret: 'API Secret',
+      shopDomain: 'Dominio de la tienda',
       shopUrl: 'URL de la tienda',
+      accessToken: 'Access Token',
+      webhookSecret: 'Webhook Secret',
       webhookUrl: 'URL del webhook',
       publicKey: 'Clave pública',
       privateKey: 'Clave privada',

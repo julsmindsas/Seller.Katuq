@@ -738,14 +738,16 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
   
   createShopifyForm(): FormGroup {
+    // Schema alineado a PROVIDER_SCHEMAS.shopify del backend:
+    //   required: shopDomain, accessToken
+    //   optional: apiVersion, webhookSecret, scopes
     return this.fb.group({
       name: ['', Validators.required],
       enabled: [true],
-      shopUrl: ['', [Validators.required, this.formValidator.createShopifyUrlValidator()]],
-      apiKey: ['', Validators.required],
-      apiSecret: ['', Validators.required],
+      shopDomain: ['', [Validators.required, this.formValidator.createShopifyUrlValidator()]],
       accessToken: ['', Validators.required],
-      apiVersion: ['2025-07']
+      apiVersion: ['2025-07'],
+      webhookSecret: ['']
     });
   }
 
@@ -1236,11 +1238,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     switch (this.selectedIntegrationType) {
       case 'shopify':
         credentials = {
-          shopUrl: formData.shopUrl,
-          apiKey: formData.apiKey,
-          apiSecret: formData.apiSecret,
+          shopDomain: String(formData.shopDomain || '').toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, ''),
           accessToken: formData.accessToken,
-          apiVersion: formData.apiVersion
+          apiVersion: formData.apiVersion || '2025-07',
+          ...(formData.webhookSecret ? { webhookSecret: formData.webhookSecret } : {})
         };
         break;
       case 'wompi':
@@ -1689,6 +1690,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'privateKey': 'Clave Privada',
       'clientId': 'ID de Cliente',
       'clientSecret': 'Secreto de Cliente',
+      'shopDomain': 'Dominio de la Tienda',
       'shopUrl': 'URL de la Tienda',
       'webhookSecret': 'Secreto de Webhook',
       'redirectUrl': 'URL de Redirección',
@@ -1718,6 +1720,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'privateKey': 'fa-lock',
       'clientId': 'fa-id-card',
       'clientSecret': 'fa-user-secret',
+      'shopDomain': 'fa-link',
       'shopUrl': 'fa-link',
       'storeUrl': 'fa-link',
       'baseUrl': 'fa-link',
