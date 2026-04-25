@@ -253,7 +253,13 @@ export class AppComponent implements OnInit, OnDestroy {
     // Restaurar datos de sesión al inicializar la aplicación
     this.initializeSessionData();
 
-    this.UserLogged = JSON.parse(localStorage.getItem('user')!);
+    try {
+      const raw = localStorage.getItem('user');
+      this.UserLogged = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn('user en localStorage corrupto, ignorado:', e);
+      this.UserLogged = null;
+    }
 
     const tema = this.UserLogged?.tema;
 

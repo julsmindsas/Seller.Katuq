@@ -52,7 +52,13 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
   ngAfterViewInit(): void {
     // Carga inicial de productos después de que los componentes hijos estén listos
     // Verifica si ya hay una bodega seleccionada en localStorage al iniciar
-    const initialBodega = JSON.parse(localStorage.getItem('warehousePOS')!);
+    let initialBodega: any = null;
+    try {
+      const raw = localStorage.getItem('warehousePOS');
+      initialBodega = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn('warehousePOS en localStorage corrupto, ignorado:', e);
+    }
     const initialBodegaId = initialBodega?.idBodega;
 
     if (this.productComponent) {
@@ -92,7 +98,13 @@ export class PosComponent implements OnInit, AfterViewInit { // Implementar OnIn
   }
 
   onWarehouseChanged() {
-    const bodegaSeleccionada = JSON.parse(localStorage.getItem('warehousePOS')!);
+    let bodegaSeleccionada: any = null;
+    try {
+      const raw = localStorage.getItem('warehousePOS');
+      bodegaSeleccionada = raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn('warehousePOS en localStorage corrupto, ignorado:', e);
+    }
     const bodegaId = bodegaSeleccionada ? bodegaSeleccionada.idBodega : undefined;
     // Asegúrate de que productComponent esté inicializado
     if (this.productComponent) {
