@@ -57,6 +57,10 @@
                 <small class="text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px;">{{ 'Valor Total' | translate }}</small>
                 <h3 class="fw-bold mb-0 mt-1" style="color: #5c6ac4;">{{ formatCurrency(resumen.valorTotal) }}</h3>
                 <small class="text-muted">{{ resumen.totalUnidades | number }} {{ 'unidades' | translate }}</small>
+                <div *ngIf="resumen.valorTotalCosto !== undefined" class="mt-1">
+                  <small class="text-muted d-block" style="font-size: 0.7rem;">{{ 'A costo' | translate }}: <span class="fw-semibold" style="color: #f59e0b;">{{ formatCurrency(resumen.valorTotalCosto) }}</span></small>
+                  <small class="text-muted d-block" style="font-size: 0.7rem;">{{ 'Margen potencial' | translate }}: <span class="fw-semibold" style="color: #10b981;">{{ formatCurrency(resumen.margenPotencial || 0) }}</span></small>
+                </div>
               </div>
               <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: #eef0fb;">
                 <i class="pi pi-dollar" style="color: #5c6ac4;"></i>

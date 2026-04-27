@@ -245,6 +245,15 @@ export const content: Routes = [
     // Freemium permite 1 integración (límite validado en backend)
   },
   {
+    path: "flows",
+    loadChildren: () =>
+      import("../../components/flows/flows.module").then(
+        (m) => m.FlowsModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Flujos automatizados" },
+  },
+  {
     path: "dropshipping",
     loadChildren: () =>
       import("../../components/dropshipping/dropshipping.module").then(

@@ -1,0 +1,260 @@
+<section class="kf-editor">
+  <header class="kf-editor__header">
+    <button type="button" class="kf-btn kf-btn--ghost" (click)="goBack()" aria-label="Volver">
+      <i class="pi pi-arrow-left"></i>
+    </button>
+
+    <div class="kf-editor__name">
+      <input
+        type="text"
+        class="kf-name-input"
+        [(ngModel)]="flowName"
+        (ngModelChange)="hasUnsaved = true"
+        placeholder="Nombre del flujo..."
+      />
+      <input
+        type="text"
+        class="kf-desc-input"
+        [(ngModel)]="flowDescription"
+        (ngModelChange)="hasUnsaved = true"
+        placeholder="Descripción corta (opcional)"
+      />
+    </div>
+
+    <div class="kf-editor__meta">
+      <span *ngIf="flow" class="kf-meta-pill">v{{ flow.version }}</span>
+      <span
+        *ngIf="flowStatus === 'active'"
+        class="kf-meta-pill kf-meta-pill--success"
+        title="Flow activo"
+      >
+        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--active"></i> activo
+      </span>
+      <span
+        *ngIf="flowStatus === 'draft'"
+        class="kf-meta-pill"
+        title="Borrador"
+      >
+        <i class="pi pi-circle-fill kf-status-dot kf-status-dot--draft"></i> borrador
+      </span>
+      <span *ngIf="hasUnsaved" class="kf-meta-pill kf-meta-pill--warn">cambios sin guardar</span>
+      <span *ngIf="saving" class="kf-meta-pill kf-meta-pill--info">
+        <i class="pi pi-spin pi-spinner"></i> guardando
+      </span>
+    </div>
+
+    <div class="kf-editor__actions">
+      <button
+        type="button"
+        class="kf-btn"
+        (click)="toggleConfigPanel()"
+        [class.kf-btn--toggled]="configPanelOpen"
+        title="Configuración del flow (tags, schedule, webhook)"
+      >
+        <i class="pi pi-cog"></i>
+        Configuración
+      </button>
+      <button
+        *ngIf="!isNew"
+        type="button"
+        class="kf-btn"
+        (click)="goToRuns()"
+        title="Ver runs históricos"
+      >
+        <i class="pi pi-history"></i>
+        Runs
+      </button>
+      <button
+        *ngIf="!isNew"
+        type="button"
+        class="kf-btn"
+        (click)="toggleActivate()"
+        [class.kf-btn--success]="flowStatus !== 'active'"
+        [class.kf-btn--warn]="flowStatus === 'active'"
+      >
+        <i class="pi" [ngClass]="flowStatus === 'active' ? 'pi-pause' : 'pi-play'"></i>
+        {{ flowStatus === 'active' ? 'Desactivar' : 'Activar' }}
+      </button>
+      <button type="button" class="kf-btn kf-btn--primary" (click)="save()" [disabled]="saving">
+        <i class="pi pi-save"></i>
+        Guardar
+      </button>
+    </div>
+  </header>
+
+  <!-- Collapsible flow configuration panel -->
+  <div class="kf-config-bar" *ngIf="configPanelOpen" role="region" aria-label="Configuración del flow">
+    <div class="kf-config-bar__inner">
+      <div class="kf-config-section">
+        <label class="kf-config-label">
+          <i class="pi pi-tag"></i> Etiquetas
+        </label>
+        <div class="kf-tag-list">
+          <span class="kf-tag-chip" *ngFor="let tag of flowTags">
+            {{ tag }}
+            <button type="button" class="kf-tag-chip__remove" (click)="removeTag(tag)" aria-label="Quitar">
+              <i class="pi pi-times"></i>
+            </button>
+          </span>
+          <input
+            type="text"
+            class="kf-tag-input"
+            [(ngModel)]="newTagInput"
+            (keyup.enter)="addTag()"
+            placeholder="Nueva etiqueta + Enter"
+          />
+        </div>
+      </div>
+
+      <div
+        class="kf-config-section"
+        *ngIf="triggerType === 'cron' || triggerType === 'polling'"
+      >
+        <label class="kf-config-label">
+          <i class="pi pi-clock"></i> Programación del trigger
+        </label>
+        <div class="kf-schedule-grid">
+          <div class="kf-field">
+            <label>Cron expression</label>
+            <input
+              type="text"
+              class="kf-input"
+              [(ngModel)]="scheduleDraft.cron"
+              (ngModelChange)="onScheduleChange()"
+              placeholder="*/5 * * * *"
+            />
+            <small class="kf-hint">Ej: <code>*/5 * * * *</code> = cada 5 min, <code>0 9 * * *</code> = diario 9am</small>
+          </div>
+          <div class="kf-field">
+            <label>O cada N minutos</label>
+            <input
+              type="number"
+              class="kf-input"
+              [(ngModel)]="scheduleDraft.intervalMinutes"
+              (ngModelChange)="onScheduleChange()"
+              min="1"
+              placeholder="Ej: 60 (cada hora)"
+            />
+            <small class="kf-hint">Si llenás esto, ignora el cron.</small>
+          </div>
+        </div>
+      </div>
+
+      <div class="kf-config-section" *ngIf="triggerType === 'webhook' && webhookUrl">
+        <label class="kf-config-label">
+          <i class="pi pi-link"></i> URL pública del webhook
+        </label>
+        <div class="kf-webhook-row">
+          <input
+            type="text"
+            class="kf-input kf-input--mono"
+            [value]="webhookUrl"
+            readonly
+          />
+          <button type="button" class="kf-btn" (click)="copyWebhookUrl()">
+            <i class="pi pi-copy"></i> Copiar
+          </button>
+        </div>
+        <small class="kf-hint">Apuntá tu sistema externo a esta URL para que dispare el flow.</small>
+      </div>
+
+      <div class="kf-config-section" *ngIf="!triggerType">
+        <label class="kf-config-label">
+          <i class="pi pi-info-circle"></i> Trigger
+        </label>
+        <small class="kf-hint">
+          Agregá un nodo trigger desde el catálogo y guardá el flow para configurar la programación
+          o webhook acá.
+        </small>
+      </div>
+
+      <button
+        type="button"
+        class="kf-btn kf-btn--ghost kf-config-bar__close"
+        (click)="closeConfigPanel()"
+        aria-label="Cerrar configuración"
+      >
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="kf-loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    Cargando flujo...
+  </div>
+
+  <div *ngIf="!webComponentReady && !errorMessage" class="kf-loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    Cargando editor visual...
+  </div>
+
+  <div *ngIf="webComponentReady && !loading" class="kf-canvas-host">
+    <katuq-flow-canvas
+      #canvasEl
+      (graphChange)="onGraphChange($event)"
+      (nodeSelected)="onNodeSelected($event)"
+      (runRequested)="onRunRequested($event)"
+      (canvasIntent)="onCanvasIntent($event)"
+    ></katuq-flow-canvas>
+  </div>
+
+  <!-- Keyboard shortcuts modal -->
+  <div
+    *ngIf="shortcutsModalOpen"
+    class="kf-modal-backdrop"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Atajos de teclado"
+    (click)="closeShortcutsModal()"
+  >
+    <div class="kf-modal" (click)="$event.stopPropagation()">
+      <div class="kf-modal__header">
+        <h3><i class="pi pi-keyboard"></i> Atajos de teclado</h3>
+        <button type="button" class="kf-btn kf-btn--ghost" (click)="closeShortcutsModal()" aria-label="Cerrar">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+      <div class="kf-modal__body">
+        <div class="kf-shortcut-list">
+          <div class="kf-shortcut-row">
+            <kbd>Ctrl</kbd> + <kbd>S</kbd>
+            <span>Guardar el flow</span>
+          </div>
+          <div class="kf-shortcut-row">
+            <kbd>Ctrl</kbd> + <kbd>Enter</kbd>
+            <span>Ejecutar test-run</span>
+          </div>
+          <div class="kf-shortcut-row">
+            <kbd>Esc</kbd>
+            <span>Cerrar panel / modal</span>
+          </div>
+          <div class="kf-shortcut-row">
+            <kbd>Delete</kbd>
+            <span>Eliminar nodo seleccionado</span>
+          </div>
+          <div class="kf-shortcut-row">
+            <kbd>Click derecho</kbd>
+            <span>Sobre un nodo: ver logs y output del último run</span>
+          </div>
+          <div class="kf-shortcut-row">
+            <kbd>?</kbd>
+            <span>Mostrar este modal</span>
+          </div>
+          <div class="kf-shortcut-row">
+            <kbd>Espacio</kbd> + <kbd>arrastrar</kbd>
+            <span>Pan en el canvas</span>
+          </div>
+          <div class="kf-shortcut-row">
+            <kbd>Scroll</kbd>
+            <span>Zoom in/out</span>
+          </div>
+        </div>
+        <div class="kf-shortcut-tip">
+          <i class="pi pi-info-circle"></i>
+          En Mac, usá <kbd>Cmd</kbd> en lugar de <kbd>Ctrl</kbd>.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

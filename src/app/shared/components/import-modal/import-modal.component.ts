@@ -295,12 +295,14 @@ export class ImportModalComponent implements OnInit, OnDestroy {
       { field: 'referencia', header: 'Referencia/SKU', required: true, example: 'PROD001' },
       { field: 'cantidad', header: 'Cantidad/Stock', required: true, example: '100' },
       { field: 'bodega', header: 'Bodega', required: false, example: 'Bodega Principal' },
+      { field: 'costoUnitario', header: 'Costo Unitario', required: false, example: '12500' },
       { field: 'observaciones', header: 'Observaciones', required: false, example: 'Inventario inicial' }
     ],
     fieldLabels: {
       'referencia': 'Referencia/SKU',
       'cantidad': 'Cantidad/Stock',
       'bodega': 'Bodega',
+      'costoUnitario': 'Costo Unitario',
       'observaciones': 'Observaciones'
     }
   };

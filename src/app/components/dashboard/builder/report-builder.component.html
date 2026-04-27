@@ -1,0 +1,179 @@
+<div class="builder-container">
+  <!-- Toolbar -->
+  <header class="builder-toolbar">
+    <button type="button" class="btn-icon" (click)="goHome()" title="Volver">
+      <i class="fa fa-arrow-left"></i>
+    </button>
+    <input type="text" class="title-input" [(ngModel)]="reportName" placeholder="Nombre del reporte" />
+    <span class="spacer"></span>
+    <button type="button" class="btn-secondary" (click)="exportCsv()" [disabled]="!result">
+      <i class="fa fa-file-csv me-1"></i> Exportar
+    </button>
+    <button type="button" class="btn-secondary" (click)="save()" [disabled]="saving">
+      <i class="fa fa-floppy-disk me-1"></i> Guardar
+    </button>
+    <button type="button" class="btn-primary" (click)="run()" [disabled]="running">
+      <i class="fa" [class.fa-play]="!running" [class.fa-spinner]="running" [class.fa-spin]="running"></i>
+      {{ running ? 'Ejecutando…' : 'Ejecutar' }}
+    </button>
+  </header>
+
+  <div class="builder-body">
+    <!-- Panel izquierdo: source + campos -->
+    <aside class="panel-left">
+      <div class="panel-section">
+        <label class="panel-label">Fuente de datos</label>
+        <select class="panel-select" [ngModel]="source?.id" (ngModelChange)="selectSourceById($event)">
+          <option *ngFor="let s of catalog" [value]="s.id">{{ s.label }}</option>
+        </select>
+        <p class="panel-hint" *ngIf="source">{{ source.description }}</p>
+      </div>
+
+      <div class="panel-section" *ngIf="source">
+        <label class="panel-label">Dimensiones</label>
+        <ul class="field-list" cdkDropList #palette="cdkDropList" id="palette" [cdkDropListData]="[]" [cdkDropListConnectedTo]="['rows-zone','cols-zone']">
+          <li *ngFor="let d of source.dimensions"
+              class="field-pill"
+              [class.is-date]="d.type==='date'"
+              [class.is-number]="d.type==='number'"
+              cdkDrag
+              [cdkDragData]="asFieldFromDim(d)">
+            <i class="fa" [class.fa-calendar]="d.type==='date'" [class.fa-hashtag]="d.type==='number'" [class.fa-font]="d.type==='string'" [class.fa-toggle-on]="d.type==='boolean'"></i>
+            <span>{{ d.label }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="panel-section" *ngIf="source">
+        <label class="panel-label">Medidas</label>
+        <ul class="field-list" cdkDropList id="palette-m" [cdkDropListData]="[]" [cdkDropListConnectedTo]="['values-zone']">
+          <li *ngFor="let m of source.measures"
+              class="field-pill is-measure"
+              cdkDrag
+              [cdkDragData]="asFieldFromMeasure(m)">
+            <i class="fa fa-ruler"></i>
+            <span>{{ m.label }}</span>
+          </li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Panel central: zonas drop + visualización -->
+    <main class="panel-center">
+      <section class="drop-zones">
+        <div class="drop-zone"
+          cdkDropList
+          id="rows-zone"
+          [cdkDropListData]="rows"
+          [cdkDropListConnectedTo]="['cols-zone','values-zone','palette']"
+          (cdkDropListDropped)="drop($event,'rows')">
+          <h4 class="zone-title"><i class="fa fa-grip-lines me-1"></i> Filas</h4>
+          <div class="zone-content">
+            <ng-container *ngIf="rows.length === 0">
+              <span class="zone-empty">Arrastra una dimensión aquí</span>
+            </ng-container>
+            <div *ngFor="let f of rows; let i = index" class="zone-pill" cdkDrag [cdkDragData]="f">
+              <span>{{ f.label }}</span>
+              <select *ngIf="f.dataType === 'date'" [ngModel]="f.granularity" (ngModelChange)="changeGranularity(f, $event)" class="pill-select">
+                <option *ngFor="let g of availableGranularities(f)" [value]="g">{{ g }}</option>
+              </select>
+              <button type="button" class="pill-x" (click)="removeFromZone('rows', i)">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="drop-zone"
+          cdkDropList
+          id="cols-zone"
+          [cdkDropListData]="cols"
+          [cdkDropListConnectedTo]="['rows-zone','values-zone','palette']"
+          (cdkDropListDropped)="drop($event,'cols')">
+          <h4 class="zone-title"><i class="fa fa-grip-lines-vertical me-1"></i> Columnas</h4>
+          <div class="zone-content">
+            <ng-container *ngIf="cols.length === 0">
+              <span class="zone-empty">Opcional · arrastra para pivot</span>
+            </ng-container>
+            <div *ngFor="let f of cols; let i = index" class="zone-pill" cdkDrag [cdkDragData]="f">
+              <span>{{ f.label }}</span>
+              <select *ngIf="f.dataType === 'date'" [ngModel]="f.granularity" (ngModelChange)="changeGranularity(f, $event)" class="pill-select">
+                <option *ngFor="let g of availableGranularities(f)" [value]="g">{{ g }}</option>
+              </select>
+              <button type="button" class="pill-x" (click)="removeFromZone('cols', i)">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="drop-zone"
+          cdkDropList
+          id="values-zone"
+          [cdkDropListData]="values"
+          [cdkDropListConnectedTo]="['rows-zone','cols-zone','palette-m']"
+          (cdkDropListDropped)="drop($event,'values')">
+          <h4 class="zone-title"><i class="fa fa-ruler me-1"></i> Valores</h4>
+          <div class="zone-content">
+            <ng-container *ngIf="values.length === 0">
+              <span class="zone-empty">Arrastra una medida aquí</span>
+            </ng-container>
+            <div *ngFor="let f of values; let i = index" class="zone-pill is-measure" cdkDrag [cdkDragData]="f">
+              <select [ngModel]="f.agg" (ngModelChange)="changeAgg(f, $event)" class="pill-select">
+                <option *ngFor="let a of availableAggs(f)" [value]="a">{{ a }}</option>
+              </select>
+              <span>{{ f.label }}</span>
+              <button type="button" class="pill-x" (click)="removeFromZone('values', i)">×</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="result-area">
+        <div *ngIf="errorMsg" class="result-error">
+          <i class="fa fa-triangle-exclamation me-1"></i>{{ errorMsg }}
+        </div>
+
+        <div *ngIf="!result && !running && !errorMsg" class="result-empty">
+          <i class="fa fa-magnifying-glass-chart"></i>
+          <p>Configura filas, columnas y valores. Después haz clic en <strong>Ejecutar</strong>.</p>
+        </div>
+
+        <div *ngIf="running" class="result-empty">
+          <i class="fa fa-spinner fa-spin fa-3x"></i>
+          <p>Calculando…</p>
+        </div>
+
+        <ng-container *ngIf="result && !running">
+          <app-viz-kpi *ngIf="vizType === 'kpi'" [result]="result"></app-viz-kpi>
+          <app-viz-table *ngIf="vizType === 'table' || vizType === 'pivot'" [result]="result" [pivot]="vizType==='pivot'"></app-viz-table>
+          <app-viz-chart *ngIf="['bar','line','pie'].includes(vizType)" [result]="result" [chartType]="vizType"></app-viz-chart>
+        </ng-container>
+      </section>
+    </main>
+
+    <!-- Panel derecho: visualización -->
+    <aside class="panel-right">
+      <label class="panel-label">Visualización</label>
+      <div class="viz-options">
+        <button type="button"
+          *ngFor="let v of vizOptions"
+          class="viz-btn"
+          [class.is-active]="vizType === v"
+          (click)="vizType = v">
+          <i class="fa"
+            [class.fa-table]="v==='table'"
+            [class.fa-th]="v==='pivot'"
+            [class.fa-chart-bar]="v==='bar'"
+            [class.fa-chart-line]="v==='line'"
+            [class.fa-chart-pie]="v==='pie'"
+            [class.fa-gauge-high]="v==='kpi'"></i>
+          <span>{{ v }}</span>
+        </button>
+      </div>
+
+      <div *ngIf="result" class="result-meta">
+        <h5>Detalle</h5>
+        <p><strong>{{ result.meta.totalRows }}</strong> filas</p>
+        <p><strong>{{ result.meta.durationMs }}</strong> ms</p>
+        <p *ngIf="result.meta.truncated" class="warn"><i class="fa fa-triangle-exclamation me-1"></i>Resultado truncado</p>
+      </div>
+    </aside>
+  </div>
+</div>

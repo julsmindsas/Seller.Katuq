@@ -48,17 +48,14 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   ];
 
   apiVersionOptions = [
-    { label: '2025-07 (Recomendada)', value: '2025-07' },
+    { label: '2026-04 (Última estable)', value: '2026-04' },
+    { label: '2026-01', value: '2026-01' },
+    { label: '2025-10', value: '2025-10' },
+    { label: '2025-07', value: '2025-07' },
     { label: '2025-04', value: '2025-04' },
     { label: '2025-01', value: '2025-01' },
     { label: '2024-10', value: '2024-10' },
-    { label: '2024-07', value: '2024-07' },
-    { label: '2024-04', value: '2024-04' },
-    { label: '2024-01', value: '2024-01' },
-    { label: '2023-10', value: '2023-10' },
-    { label: '2023-07', value: '2023-07' },
-    { label: '2023-04', value: '2023-04' },
-    { label: '2023-01', value: '2023-01' }
+    { label: '2024-07', value: '2024-07' }
   ];
   
   selectedIntegrationType = 'shopify';
@@ -738,14 +735,17 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
   
   createShopifyForm(): FormGroup {
+    // accessToken es opcional cuando se proveen apiKey+apiSecret (clientId+clientSecret).
+    // El backend genera el access token vía OAuth client_credentials y lo refresca
+    // automáticamente al recibir 401 (Custom Apps post-2026 expiran cada 24h).
     return this.fb.group({
       name: ['', Validators.required],
       enabled: [true],
       shopUrl: ['', [Validators.required, this.formValidator.createShopifyUrlValidator()]],
       apiKey: ['', Validators.required],
       apiSecret: ['', Validators.required],
-      accessToken: ['', Validators.required],
-      apiVersion: ['2025-07']
+      accessToken: [''],
+      apiVersion: ['2026-04']
     });
   }
 
@@ -1237,11 +1237,16 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     
     switch (this.selectedIntegrationType) {
       case 'shopify':
+        // Mapeo dual a nombres canónicos del backend (shopDomain/clientId/clientSecret)
+        // manteniendo los aliases previos (shopUrl/apiKey/apiSecret) para retro-compat.
         credentials = {
           shopUrl: formData.shopUrl,
+          shopDomain: formData.shopUrl,
           apiKey: formData.apiKey,
+          clientId: formData.apiKey,
           apiSecret: formData.apiSecret,
-          accessToken: formData.accessToken,
+          clientSecret: formData.apiSecret,
+          accessToken: formData.accessToken || undefined,
           apiVersion: formData.apiVersion
         };
         break;

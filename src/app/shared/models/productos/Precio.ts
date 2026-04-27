@@ -6,5 +6,8 @@ export interface Precio {
     precioPorVolumenSinIva?: string;
     precioUnitarioSinIva?: number;
     precioUnitarioIva?: string;
-    precioTotalVolumenConIva?  : string;
+    precioTotalVolumenConIva?: string;
+    /** Costo de compra del producto (sin IVA). Importado desde proveedores
+     *  de fulfillment (ej. Aliaddo `priceBuy` / `cost`). Útil para márgenes. */
+    costoUnitario?: number;
 }

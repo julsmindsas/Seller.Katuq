@@ -1,0 +1,106 @@
+<section class="kf-runs">
+  <header class="kf-runs__header">
+    <button type="button" class="kf-btn kf-btn--ghost" (click)="goBack()">
+      <i class="pi pi-arrow-left"></i>
+      Volver
+    </button>
+    <div>
+      <h1 class="kf-runs__title">{{ flow?.name || 'Historial de ejecuciones' }}</h1>
+      <p class="kf-runs__sub">{{ runs.length }} runs registrados</p>
+    </div>
+    <div style="flex:1"></div>
+    <button type="button" class="kf-btn" (click)="goToEditor()">
+      <i class="pi pi-pencil"></i>
+      Abrir editor
+    </button>
+    <button type="button" class="kf-btn" (click)="loadRuns()">
+      <i class="pi pi-refresh"></i>
+      Refrescar
+    </button>
+  </header>
+
+  <div *ngIf="errorMessage" class="kf-alert">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <div class="kf-runs__layout" *ngIf="!loading && runs.length > 0">
+    <ul class="kf-runs__list">
+      <li
+        *ngFor="let run of runs; trackBy: trackByRunId"
+        class="kf-runs__item"
+        [class.is-selected]="selectedRun?.runId === run.runId"
+        [style.borderLeftColor]="borderColor(run.status)"
+        (click)="selectRun(run)"
+      >
+        <div class="kf-runs__item-head">
+          <span class="kf-runs__item-id">{{ run.runId | slice : 0 : 12 }}…</span>
+          <span [class]="statusClass(run.status)">{{ run.status }}</span>
+        </div>
+        <div class="kf-runs__item-meta">
+          <div>{{ run.startedAt }}</div>
+          <div>{{ run.totalDurationMs ? run.totalDurationMs + ' ms' : '—' }}</div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="kf-runs__detail" *ngIf="selectedRun">
+      <div class="kf-runs__detail-head">
+        <h2>Run {{ selectedRun.runId }}</h2>
+        <span [class]="statusClass(selectedRun.status)">{{ selectedRun.status }}</span>
+      </div>
+
+      <dl class="kf-runs__detail-meta">
+        <div>
+          <dt>Inicio</dt>
+          <dd>{{ selectedRun.startedAt }}</dd>
+        </div>
+        <div>
+          <dt>Fin</dt>
+          <dd>{{ selectedRun.finishedAt || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Versión flow</dt>
+          <dd>v{{ selectedRun.flowVersion }}</dd>
+        </div>
+        <div>
+          <dt>Disparado por</dt>
+          <dd>{{ selectedRun.triggeredBy || 'trigger' }}</dd>
+        </div>
+      </dl>
+
+      <h3 class="kf-runs__section-title">Nodos ejecutados</h3>
+      <div class="kf-empty" *ngIf="nodeStates.length === 0">
+        Este run no ejecutó ningún nodo.
+      </div>
+      <ul class="kf-runs__nodes">
+        <li
+          *ngFor="let n of nodeStates; trackBy: trackByNodeId"
+          [style.borderLeftColor]="borderColor(n.status)"
+        >
+          <div class="kf-runs__node-head">
+            <strong>{{ n.nodeId }}</strong>
+            <span [class]="'kf-runbadge kf-runbadge--' + n.status">{{ n.status }}</span>
+          </div>
+          <div class="kf-runs__node-meta">
+            {{ n.startedAt || '—' }} · {{ n.durationMs || '—' }} ms · intento {{ n.attempt }}
+          </div>
+          <pre *ngIf="n.error" class="kf-runs__error">
+{{ n.error.code }}: {{ n.error.message }}
+{{ n.error.stack }}</pre>
+          <pre *ngIf="n.output" class="kf-runs__output">{{ formatJson(n.output) }}</pre>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="kf-loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    Cargando runs...
+  </div>
+
+  <div *ngIf="!loading && runs.length === 0" class="kf-empty">
+    <h3>Todavía no hay ejecuciones</h3>
+    <p>Activá el flow o ejecutalo manualmente desde el editor.</p>
+  </div>
+</section>

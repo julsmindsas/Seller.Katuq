@@ -622,6 +622,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     if (this.dtConsolidado) {
       this.dtConsolidado.first = 0;
     }
+    this._metricasCargadas = false;
     this.cargarInventarioConsolidado(1);
   }
 

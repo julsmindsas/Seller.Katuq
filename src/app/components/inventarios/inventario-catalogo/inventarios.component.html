@@ -30,6 +30,15 @@
                                     (click)="cargarInventarioConsolidado()"
                                     [disabled]="loadingConsolidado"
                                     pTooltip="Actualizar datos"></button>
+                            <!-- Botón Reparar Inventario (corrige duplicados/idBodega/huérfanos) -->
+                            <button pButton type="button"
+                                    icon="pi pi-wrench"
+                                    class="p-button-rounded p-button-outlined p-button-warning"
+                                    style="width: 2.5rem; height: 2.5rem;"
+                                    (click)="repararInventario()"
+                                    [disabled]="loadingConsolidado || reparandoInventario"
+                                    pTooltip="Reparar inventario (deduplicar, corregir idBodega, eliminar huérfanos)"
+                                    tooltipPosition="bottom"></button>
                             <!-- Botón Eliminar Inventario (temporal/admin) -->
                             <button pButton type="button"
                                     icon="pi pi-trash"
@@ -404,10 +413,14 @@
                                                     {{ bodega.nombre }}
                                                 </span>
                                             </th>
+                                            <!-- Columna Costo Unitario -->
+                                            <th style="width: 110px; min-width: 110px;" class="text-end" pTooltip="Costo de compra unitario (importado de fulfillment)">Costo</th>
                                             <!-- Columna Precio -->
                                             <th style="width: 120px; min-width: 120px;" class="text-end">Precio</th>
-                                            <!-- Columna Valor Total -->
-                                            <th style="width: 130px; min-width: 130px;" class="text-end pe-3">Valor Total</th>
+                                            <!-- Columna Valor Total a precio venta -->
+                                            <th style="width: 130px; min-width: 130px;" class="text-end" pTooltip="Stock × precio de venta">Valor Total</th>
+                                            <!-- Columna Valor a Costo -->
+                                            <th style="width: 130px; min-width: 130px;" class="text-end pe-3" pTooltip="Stock × costo unitario">Valor a Costo</th>
                                             <!-- Columna Acciones -->
                                             <th style="width: 60px;" class="text-center">
                                                 <i class="pi pi-cog"></i>
@@ -436,12 +449,20 @@
                                                     {{ getTotalBodegaFooter(bodega.id) | number }}
                                                 </span>
                                             </th>
+                                            <!-- Columna Costo Unit. -->
+                                            <th style="width: 110px;" class="text-end py-2"></th>
                                             <!-- Columna Precio -->
                                             <th style="width: 120px;" class="text-end py-2"></th>
                                             <!-- Columna Valor Total -->
-                                            <th style="width: 130px;" class="text-end pe-3 py-2">
+                                            <th style="width: 130px;" class="text-end py-2">
                                                 <span class="fw-bold" style="color: #5c6ac4;">
                                                     {{ getMetricaValorTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                </span>
+                                            </th>
+                                            <!-- Columna Valor a Costo -->
+                                            <th style="width: 130px;" class="text-end pe-3 py-2">
+                                                <span class="fw-bold" style="color: #f59e0b;">
+                                                    {{ getMetricaValorCostoTotal() | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                 </span>
                                             </th>
                                             <!-- Columna Acciones vacía -->
@@ -493,15 +514,25 @@
                                                     {{ getStockBodega(producto, bodega.id) }}
                                                 </span>
                                             </td>
+                                            <!-- Costo Unitario -->
+                                            <td class="text-end" style="white-space: nowrap;">
+                                                <span *ngIf="producto.costoUnitario && producto.costoUnitario > 0" class="fw-semibold" style="color: #f59e0b; font-size: 0.9rem;">{{ producto.costoUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="!producto.costoUnitario || producto.costoUnitario === 0" class="text-muted small">—</span>
+                                            </td>
                                             <!-- Precio -->
                                             <td class="text-end" style="white-space: nowrap;">
                                                 <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #172b4d; font-size: 0.9rem;">{{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">Sin precio</span>
                                             </td>
                                             <!-- Valor Total (precio × stock) -->
-                                            <td class="text-end pe-3" style="white-space: nowrap;">
+                                            <td class="text-end" style="white-space: nowrap;">
                                                 <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #5c6ac4; font-size: 0.9rem;">{{ (producto.precio * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">—</span>
+                                            </td>
+                                            <!-- Valor a Costo (costo × stock) -->
+                                            <td class="text-end pe-3" style="white-space: nowrap;">
+                                                <span *ngIf="producto.costoUnitario && producto.costoUnitario > 0" class="fw-semibold" style="color: #f59e0b; font-size: 0.9rem;">{{ (producto.costoUnitario * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                                                <span *ngIf="!producto.costoUnitario || producto.costoUnitario === 0" class="text-muted small">—</span>
                                             </td>
                                             <!-- Acciones -->
                                             <td class="text-center" style="width: 60px;">
@@ -517,7 +548,7 @@
 
                                         <!-- Row Expansion - Detalles por Bodega -->
                                         <tr *ngIf="producto.expanded">
-                                            <td [attr.colspan]="bodegasConsolidadas.length + 7" class="p-0">
+                                            <td [attr.colspan]="bodegasConsolidadas.length + 9" class="p-0">
                                                 <div class="p-3 bg-light">
                                                     <!-- Loader mientras carga fulfillment -->
                                                     <div *ngIf="producto.fulfillmentLoading" class="text-center py-3">
@@ -653,7 +684,7 @@
                                     <!-- Mensaje cuando no hay datos -->
                                     <ng-template pTemplate="emptymessage">
                                         <tr>
-                                            <td [attr.colspan]="bodegasConsolidadas.length + 7" class="text-center py-5">
+                                            <td [attr.colspan]="bodegasConsolidadas.length + 9" class="text-center py-5">
                                                 <i class="pi pi-inbox text-muted" style="font-size: 3rem;"></i>
                                                 <p class="mt-3 mb-0 text-muted">No hay productos en el inventario</p>
                                             </td>

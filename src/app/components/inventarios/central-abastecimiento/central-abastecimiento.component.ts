@@ -12,6 +12,10 @@ interface ProductoAlerta {
   velocidadSemanal: number;
   diasParaAgotar: number | null;
   valorEnRiesgo: number;
+  /** Stock × costoUnitario (valor a costo del stock en riesgo) */
+  valorEnRiesgoCosto?: number;
+  costoUnitario?: number;
+  precioUnitario?: number;
   ultimoMovimiento: string | null;
   bodegasDetalle: { idBodega: string; nombre: string; cantidad: number }[];
 }
@@ -30,6 +34,10 @@ interface ResumenGeneral {
   totalProductos: number;
   totalUnidades: number;
   valorTotal: number;
+  /** Valor total a costo del inventario completo */
+  valorTotalCosto?: number;
+  /** Margen potencial: valorTotal - valorTotalCosto */
+  margenPotencial?: number;
   productosCriticos: number;
   productosEnRuptura: number;
   productosDormidos: number;

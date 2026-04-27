@@ -1,0 +1,55 @@
+<div class="home-container">
+  <header class="home-header">
+    <div>
+      <h1 class="home-title">Reportes</h1>
+      <p class="home-subtitle">Crea, guarda y comparte reportes dinámicos sobre tus datos.</p>
+    </div>
+    <div class="home-actions">
+      <button type="button" class="btn-secondary" (click)="openClassic()">
+        <i class="fa fa-chart-line me-1"></i> Vista clásica
+      </button>
+      <button type="button" class="btn-primary" (click)="newReport()">
+        <i class="fa fa-plus me-1"></i> Nuevo reporte
+      </button>
+    </div>
+  </header>
+
+  <div *ngIf="loading" class="state-empty">
+    <i class="fa fa-spinner fa-spin"></i> Cargando reportes…
+  </div>
+
+  <div *ngIf="loadError && !loading" class="state-error">
+    <i class="fa fa-triangle-exclamation"></i> {{ loadError }}
+  </div>
+
+  <div *ngIf="!loading && !loadError && reports.length === 0" class="state-empty">
+    <h2>Aún no tienes reportes</h2>
+    <p>Empieza creando uno desde cero. Elige una fuente, arrastra campos a filas, columnas o valores y elige tu visualización.</p>
+    <button type="button" class="btn-primary" (click)="newReport()">
+      <i class="fa fa-plus me-1"></i> Crear el primer reporte
+    </button>
+  </div>
+
+  <div *ngIf="!loading && reports.length > 0" class="reports-grid">
+    <article
+      *ngFor="let r of reports; trackBy: trackById"
+      class="report-card"
+      (click)="openReport(r)">
+      <div class="report-card-icon">
+        <i class="fa" [class.fa-chart-bar]="r.viz?.type === 'bar'"
+          [class.fa-chart-line]="r.viz?.type === 'line'"
+          [class.fa-chart-pie]="r.viz?.type === 'pie' || r.viz?.type === 'donut'"
+          [class.fa-table]="r.viz?.type === 'table' || r.viz?.type === 'pivot'"
+          [class.fa-gauge-high]="r.viz?.type === 'kpi'"></i>
+      </div>
+      <div class="report-card-body">
+        <h3 class="report-card-title">{{ r.name }}</h3>
+        <p class="report-card-desc">{{ r.description || (r.source + ' · ' + (r.viz?.type || 'tabla')) }}</p>
+        <div class="report-card-meta">
+          <span><i class="fa fa-database me-1"></i>{{ r.source }}</span>
+          <span *ngIf="r.updatedAt"><i class="fa fa-clock me-1"></i>{{ r.updatedAt | date: 'short' }}</span>
+        </div>
+      </div>
+    </article>
+  </div>
+</div>

@@ -367,14 +367,14 @@
 
           <div class="form-group">
             <label for="accessToken">
-              <i class="fa fa-shield-alt"></i> Access Token:
-              <span class="field-required">*</span>
+              <i class="fa fa-shield-alt"></i> Access Token (opcional):
             </label>
-            <p-password id="accessToken" formControlName="accessToken" [feedback]="false" [toggleMask]="true" placeholder="shpat_..." autocomplete="off"></p-password>
-            <div *ngIf="integrationForm.get('accessToken')?.invalid && integrationForm.get('accessToken')?.touched" class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> El Access Token es requerido y debe empezar con shpat_
-            </div>
-            <small class="form-text text-muted">Token de acceso de la app privada (comienza con shpat_)</small>
+            <p-password id="accessToken" formControlName="accessToken" [feedback]="false" [toggleMask]="true" placeholder="shpat_... (dejar vacío para auto-generar)" autocomplete="off"></p-password>
+            <small class="form-text text-muted">
+              Si dejás este campo vacío, el sistema genera el access token automáticamente con el Cliente ID + Secreto vía OAuth
+              <code>client_credentials</code> y lo refresca cada vez que Shopify retorna 401 (los tokens de Custom Apps post-2026 expiran cada 24h).
+              Solo pegá un <code>shpat_*</code> aquí si tenés un token permanente generado manualmente.
+            </small>
           </div>
 
           <div class="form-group">

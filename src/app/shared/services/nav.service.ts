@@ -662,6 +662,7 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "integrations", title: "Integraciones", type: "link", icon: "link-2" },
+        { path: "flows", title: "Flujos automatizados", type: "link", icon: "git-merge" },
       ],
     },
     {

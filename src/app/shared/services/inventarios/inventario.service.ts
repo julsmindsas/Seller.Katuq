@@ -17,9 +17,13 @@ export interface ProductoConsolidado {
   imagen: string | null;
   precio: number;
   precioSinIva: number;
+  /** Costo unitario de compra (importado desde fulfillment / Aliaddo) */
+  costoUnitario?: number;
   inventariable: boolean;
   stockPorBodega: { [bodegaId: string]: number };
   stockTotal: number;
+  /** Valor total a costo del producto (costoUnitario * stockTotal) */
+  valorCostoTotal?: number;
   fulfillmentId: string | null;
   fulfillmentProvider: string | null;
   // Campos para UI
@@ -45,6 +49,10 @@ export interface MetricasIABodega {
  */
 export interface MetricasBodega {
   valorTotal: number;
+  /** Valor a costo del inventario (suma de costoUnitario * stock) */
+  valorCostoTotal?: number;
+  /** Margen estimado en pesos: valorTotal - valorCostoTotal */
+  margenEstimado?: number;
   totalUnidades: number;
   totalProductos: number;
   productosSinStock: number;
@@ -84,10 +92,26 @@ export interface MetricasIAGlobal {
  */
 export interface TotalesGlobales {
   valorTotal: number;
+  /** Valor a costo total del inventario */
+  valorCostoTotal?: number;
+  /** Margen estimado global: valorTotal - valorCostoTotal */
+  margenEstimado?: number;
   totalUnidades: number;
   totalProductos: number;        // SKUs únicos con stock
   totalSKUsCatalogo: number;     // Total SKUs inventariables
   ia?: MetricasIAGlobal;
+}
+
+/**
+ * Totales calculados sobre el subconjunto filtrado (cuando hay filtros activos).
+ * `porBodega` mapea idBodega → unidades en esa bodega para los productos filtrados.
+ */
+export interface TotalesFiltrados {
+  totalUnidades: number;
+  totalProductos: number;
+  productosSinStock: number;
+  productosBajoStock: number;
+  porBodega: { [bodegaId: string]: number };
 }
 
 /**
@@ -104,8 +128,12 @@ export interface InventarioConsolidadoResponse {
     productosBajoStock: number;
   };
   totalesGlobales: TotalesGlobales;
+  totalesFiltrados?: TotalesFiltrados | null;
   pagination: {
     limit: number;
+    currentPage?: number;
+    totalPages?: number;
+    totalItems?: number;
     returned: number;
     hasMore: boolean;
     lastDoc: string | null;
@@ -337,6 +365,33 @@ export class InventarioService {
       confirmDelete: 'ELIMINAR_TODO_EL_INVENTARIO'
     };
     return this.http.post(`${this.apiUrl}/inventory/delete-all-by-company`, payload);
+  }
+
+  /**
+   * Diagnóstico del inventario: detecta inconsistencias sin modificar nada.
+   * - Registros con idBodega usando Firestore docId en vez de business code.
+   * - Bodegas huérfanas (idBodega que ya no existe).
+   * - Productos fantasma (productoId sin documento).
+   */
+  diagnosticarInventario(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/inventory/diagnostico`);
+  }
+
+  /**
+   * Repara el inventario corrigiendo idBodega y eliminando huérfanos.
+   * @param options Flags para activar/desactivar cada tipo de corrección.
+   */
+  repararInventario(options: {
+    corregirBodegas?: boolean;
+    eliminarBodegasHuerfanas?: boolean;
+    eliminarProductosFantasma?: boolean;
+  } = {}): Observable<any> {
+    const params: any = {
+      corregirBodegas: String(options.corregirBodegas ?? true),
+      eliminarBodegasHuerfanas: String(options.eliminarBodegasHuerfanas ?? true),
+      eliminarProductosFantasma: String(options.eliminarProductosFantasma ?? true),
+    };
+    return this.http.post(`${this.apiUrl}/inventory/reparar`, {}, { params });
   }
 
   /**

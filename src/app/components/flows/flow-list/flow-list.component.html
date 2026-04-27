@@ -1,0 +1,122 @@
+<section class="kf-page">
+  <header class="kf-page__header">
+    <div>
+      <h1 class="kf-page__title">Flujos automatizados</h1>
+      <p class="kf-page__subtitle">
+        Editor visual estilo n8n para conectar Osmosis, Shopify y Katuq sin escribir código.
+      </p>
+    </div>
+    <div class="kf-page__actions">
+      <button type="button" class="kf-btn" (click)="goToTemplates()">
+        <i class="pi pi-th-large"></i>
+        Plantillas
+      </button>
+      <button type="button" class="kf-btn kf-btn--primary" (click)="goToEditor()">
+        <i class="pi pi-plus"></i>
+        Nuevo flujo
+      </button>
+    </div>
+  </header>
+
+  <div class="kf-toolbar">
+    <input
+      type="search"
+      class="kf-search"
+      placeholder="Buscar por nombre, descripción o tag..."
+      [(ngModel)]="search"
+      (ngModelChange)="onSearchChange()"
+    />
+    <div class="kf-status-filter">
+      <button
+        *ngFor="let opt of statusOptions"
+        type="button"
+        class="kf-chip"
+        [class.is-active]="statusFilter === opt.value"
+        (click)="setStatusFilter(opt.value)"
+      >
+        {{ opt.label }}
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="errorMessage" class="kf-alert">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>{{ errorMessage }}</span>
+    <button type="button" class="kf-btn kf-btn--ghost" (click)="refresh()">Reintentar</button>
+  </div>
+
+  <div *ngIf="loading" class="kf-empty">
+    <i class="pi pi-spin pi-spinner"></i>
+    Cargando flujos...
+  </div>
+
+  <div *ngIf="!loading && filteredFlows.length === 0" class="kf-empty">
+    <h3>No tenés flows todavía</h3>
+    <p>Empezá desde una plantilla o creá uno desde cero.</p>
+    <div class="kf-empty__actions">
+      <button type="button" class="kf-btn kf-btn--primary" (click)="goToEditor()">
+        <i class="pi pi-plus"></i>
+        Crear nuevo flujo
+      </button>
+      <button type="button" class="kf-btn" (click)="goToTemplates()">
+        Ver plantillas
+      </button>
+    </div>
+  </div>
+
+  <ul class="kf-grid" *ngIf="!loading && filteredFlows.length > 0">
+    <li
+      *ngFor="let flow of filteredFlows; trackBy: trackById"
+      class="kf-card"
+      [style.borderLeftColor]="borderColor(flow.status)"
+    >
+      <div class="kf-card__head">
+        <div>
+          <h2 class="kf-card__title">{{ flow.name }}</h2>
+          <span [ngClass]="statusBadgeClass(flow.status)">{{ statusLabel(flow.status) }}</span>
+        </div>
+        <div class="kf-card__version">v{{ flow.version || 1 }}</div>
+      </div>
+
+      <p class="kf-card__desc">
+        {{ flow.description || 'Sin descripción.' }}
+      </p>
+
+      <dl class="kf-card__meta">
+        <div>
+          <dt>Última ejecución</dt>
+          <dd>{{ flow.lastRunAt || '—' }}</dd>
+        </div>
+        <div>
+          <dt>Resultado</dt>
+          <dd [class]="'kf-runstatus kf-runstatus--' + (flow.lastRunStatus || 'pending')">
+            {{ flow.lastRunStatus || 'sin runs' }}
+          </dd>
+        </div>
+        <div>
+          <dt>Nodos</dt>
+          <dd>{{ flow.graph?.nodes?.length || 0 }}</dd>
+        </div>
+      </dl>
+
+      <div class="kf-card__actions">
+        <button type="button" class="kf-btn" (click)="goToEditor(flow)">
+          <i class="pi pi-pencil"></i>
+          Editar
+        </button>
+        <button type="button" class="kf-btn" (click)="goToRuns(flow)">
+          <i class="pi pi-history"></i>
+          Runs
+        </button>
+        <button type="button" class="kf-btn" (click)="duplicate(flow)">
+          <i class="pi pi-clone"></i>
+          Duplicar
+        </button>
+        <button type="button" class="kf-btn" (click)="toggleActive(flow)">
+          <i class="pi" [ngClass]="flow.status === 'active' ? 'pi-pause' : 'pi-play'"></i>
+          {{ flow.status === 'active' ? 'Desactivar' : 'Activar' }}
+        </button>
+      </div>
+    </li>
+  </ul>
+</section>

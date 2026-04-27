@@ -1,0 +1,58 @@
+<div class="ai-panel">
+  <header>
+    <h3>Asistente IA</h3>
+    <small>Describe lo que querés automatizar</small>
+  </header>
+
+  <textarea
+    [(ngModel)]="prompt"
+    placeholder="Ej: cuando un pedido Shopify se cree, replicarlo a Cereza y crear factura SIIGO"
+    rows="4"
+    class="prompt-input">
+  </textarea>
+
+  <div class="actions">
+    <button class="btn-primary" (click)="generate()" [disabled]="loading || !prompt">
+      {{ loading ? 'Generando...' : 'Generar flow' }}
+    </button>
+  </div>
+
+  <section class="examples" *ngIf="!result">
+    <p class="hint">Ejemplos:</p>
+    <ul>
+      <li *ngFor="let ex of examples">
+        <button class="example-link" (click)="useExample(ex)">{{ ex }}</button>
+      </li>
+    </ul>
+  </section>
+
+  <section *ngIf="error" class="error">{{ error }}</section>
+
+  <section *ngIf="result?.flow" class="result">
+    <header>
+      <span class="badge" [class.kai]="result.source === 'kai'" [class.fallback]="result.source === 'fallback'">
+        {{ result.source }}
+      </span>
+      <span class="confidence">Confianza: {{ result.confidence }}</span>
+    </header>
+    <h4>{{ result.flow.name }}</h4>
+    <p>{{ result.flow.description }}</p>
+    <div class="flow-preview">
+      <span class="node-count">{{ result.flow.graph?.nodes?.length || 0 }} nodos</span>
+      <span class="edge-count">{{ result.flow.graph?.edges?.length || 0 }} edges</span>
+    </div>
+    <button class="btn-primary" (click)="applyToCanvas()">Aplicar al canvas</button>
+  </section>
+
+  <section *ngIf="history.length" class="history">
+    <h4>Historial</h4>
+    <ul>
+      <li *ngFor="let item of history; let i = index">
+        <button class="history-item" (click)="loadFromHistory(i)">
+          <span class="prompt-snippet">{{ item.prompt | slice:0:60 }}{{ item.prompt.length > 60 ? '...' : '' }}</span>
+          <small>{{ item.ts | date:'short' }}</small>
+        </button>
+      </li>
+    </ul>
+  </section>
+</div>

@@ -1,0 +1,25 @@
+module.exports = {
+  id: 'products',
+  label: 'Productos',
+  description: 'Catálogo con precio, stock y disponibilidad.',
+  view: 'v_products',
+  tenantFilter: { column: 'company_id' },
+  dimensions: [
+    { id: 'referencia', column: 'referencia', label: 'Referencia', type: 'string' },
+    { id: 'titulo', column: 'titulo', label: 'Título', type: 'string' },
+    { id: 'marca', column: 'marca', label: 'Marca', type: 'string' },
+    { id: 'tipo_producto', column: 'tipo_producto', label: 'Tipo de producto', type: 'string' },
+    { id: 'tipo_entrega', column: 'tipo_entrega', label: 'Tipo de entrega', type: 'string' },
+    { id: 'activo', column: 'activo', label: 'Activo', type: 'boolean' },
+    { id: 'company_id', column: 'company_id', label: 'Empresa', type: 'string' },
+    { id: 'fecha_creacion', column: 'fecha_creacion', label: 'Fecha creación', type: 'date', granularities: ['day', 'month', 'year'] },
+  ],
+  measures: [
+    { id: 'producto_doc_id', column: 'producto_doc_id', label: 'Productos', aggs: ['count', 'count_distinct'], format: 'number' },
+    { id: 'precio_con_iva', column: 'precio_con_iva', label: 'Precio con IVA', aggs: ['avg', 'min', 'max', 'sum'], format: 'currency' },
+    { id: 'precio_sin_iva', column: 'precio_sin_iva', label: 'Precio sin IVA', aggs: ['avg', 'min', 'max', 'sum'], format: 'currency' },
+    { id: 'stock_disponible', column: 'stock_disponible', label: 'Stock disponible', aggs: ['sum', 'avg'], format: 'number' },
+    { id: 'inventario_seguridad', column: 'inventario_seguridad', label: 'Inventario seguridad', aggs: ['sum', 'avg'], format: 'number' },
+    { id: 'total_ventas', column: 'total_ventas', label: 'Total ventas (histórico)', aggs: ['sum', 'avg'], format: 'number' },
+  ],
+};

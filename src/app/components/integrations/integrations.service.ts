@@ -1372,6 +1372,14 @@ export class IntegrationsService {
       ],
       [IntegrationCategory.OTHER]: [
         {
+          id: "flows",
+          name: "Flujos Automatizados",
+          description:
+            "Editor visual estilo n8n. Conectá Osmosis, Shopify, Katuq y otros con triggers, acciones y lógica condicional sin escribir código.",
+          logo: "assets/images/integrations/flows-logo.svg",
+          active: true,
+        },
+        {
           id: "multiop",
           name: "MultiOP",
           description:

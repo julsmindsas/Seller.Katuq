@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Katuq Flow Canvas — Dev</title>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; font-family: 'Geometr415', system-ui, sans-serif; }
+      #root { width: 100vw; height: 100vh; display: flex; }
+      katuq-flow-canvas { flex: 1; display: block; min-height: 0; }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <katuq-flow-canvas id="canvas"></katuq-flow-canvas>
+    </div>
+    <script type="module">
+      import './src/main.tsx';
+      // Smoke-test: feed the WC a minimal graph + the catalog so we can
+      // poke around in `npm run dev`.
+      import('./src/contracts/sample-data').then(({ SAMPLE_GRAPH, SAMPLE_CATALOG }) => {
+        const el = document.getElementById('canvas');
+        if (!el) return;
+        el.nodeCatalog = SAMPLE_CATALOG;
+        el.graph = SAMPLE_GRAPH;
+        el.addEventListener('graphChange', (e) => console.info('graphChange', e.detail));
+        el.addEventListener('nodeSelected', (e) => console.info('nodeSelected', e.detail));
+        el.addEventListener('runRequested', (e) => console.info('runRequested', e.detail));
+      });
+    </script>
+  </body>
+</html>

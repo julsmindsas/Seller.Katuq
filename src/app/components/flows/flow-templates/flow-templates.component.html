@@ -1,0 +1,50 @@
+<section class="kf-templates">
+  <header class="kf-templates__header">
+    <button type="button" class="kf-btn kf-btn--ghost" (click)="goBack()">
+      <i class="pi pi-arrow-left"></i>
+      Volver
+    </button>
+    <div>
+      <h1>Plantillas de flujos</h1>
+      <p>Empezá rápido con casos comunes ya armados.</p>
+    </div>
+  </header>
+
+  <div *ngIf="errorMessage" class="kf-alert">
+    <i class="pi pi-exclamation-triangle"></i>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <div *ngIf="loading" class="kf-loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    Cargando plantillas...
+  </div>
+
+  <ul class="kf-templates__grid" *ngIf="!loading">
+    <li
+      *ngFor="let t of templates; trackBy: trackById"
+      class="kf-template-card"
+    >
+      <div class="kf-template-card__icon">
+        <i class="pi pi-th-large"></i>
+      </div>
+      <h2>{{ t.name }}</h2>
+      <p>{{ t.description }}</p>
+      <ul class="kf-template-card__tags" *ngIf="t.tags && t.tags.length">
+        <li *ngFor="let tag of t.tags">#{{ tag }}</li>
+      </ul>
+      <div class="kf-template-card__meta">
+        {{ t.graph.nodes.length }} nodos · {{ t.graph.edges.length }} conexiones
+      </div>
+      <button
+        type="button"
+        class="kf-btn kf-btn--primary"
+        (click)="installAndOpen(t)"
+        [disabled]="installingTemplateId === t.id"
+      >
+        <i class="pi" [ngClass]="installingTemplateId === t.id ? 'pi-spin pi-spinner' : 'pi-plus'"></i>
+        Activar plantilla
+      </button>
+    </li>
+  </ul>
+</section>

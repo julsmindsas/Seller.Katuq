@@ -26,11 +26,11 @@ import {
 } from './model/dashboard-interfaces';
 
 @Component({
-  selector: 'app-dashboard',
-  templateUrl: './dashboard.component.html',
-  styleUrls: ['./dashboard.component.scss'],
+  selector: 'app-legacy-dashboard',
+  templateUrl: './legacy-dashboard.component.html',
+  styleUrls: ['./legacy-dashboard.component.scss'],
 })
-export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
+export class LegacyDashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   // === Estados de carga según nueva arquitectura ===
