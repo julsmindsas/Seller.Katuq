@@ -66,6 +66,60 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
     tags: ['osmosis', 'order', 'webhook']
   },
   {
+    type: 'osmosis-stock-changed',
+    category: 'trigger',
+    group: 'osmosis',
+    displayName: 'Osmosis: Stock cambiado',
+    description: 'Polling Osmosis: emite un InventoryAdjustment por cada combinación size/color/bodega cuyo stock_available cambió respecto al último poll.',
+    icon: 'pi pi-box',
+    color: '#C8102E',
+    version: 1,
+    inputs: [],
+    outputs: [{ name: 'main', label: 'CanonicalInventoryAdjustment', dataType: 'item[]' }],
+    credentials: 'osmosis',
+    schema: {
+      type: 'object',
+      properties: {
+        nodeSlug: { type: 'string', title: 'Node slug', default: 'cereza' },
+        defaultBodegaCode: {
+          type: 'string',
+          title: 'Bodega Katuq destino',
+          description: "Business code de la bodega Katuq destino (ej 'BOD-001').",
+          default: 'BOD-001'
+        },
+        reason: {
+          type: 'string',
+          title: 'Reason del movimiento',
+          enum: ['osmosis_sync', 'restock', 'manual_adjustment'],
+          default: 'osmosis_sync'
+        },
+        intervalMinutes: {
+          type: 'integer',
+          title: 'Intervalo de polling (min)',
+          minimum: 1,
+          maximum: 60,
+          default: 15
+        },
+        limit: {
+          type: 'integer',
+          title: 'Límite por corrida (0 = sin límite)',
+          minimum: 0,
+          maximum: 100000,
+          default: 0
+        }
+      },
+      required: ['nodeSlug', 'defaultBodegaCode', 'reason']
+    },
+    defaults: {
+      nodeSlug: 'cereza',
+      defaultBodegaCode: 'BOD-001',
+      reason: 'osmosis_sync',
+      intervalMinutes: 15,
+      limit: 0
+    },
+    tags: ['osmosis', 'cereza', 'inventory', 'stock', 'polling', 'trigger']
+  },
+  {
     type: 'osmosis-product-fetch',
     category: 'action',
     group: 'osmosis',
@@ -900,39 +954,5 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
     },
     defaults: { matchBy: 'sku', publishStatus: 'publish' },
     tags: ['woocommerce', 'product', 'upsert']
-  },
-
-  // -------- SHOPIFY EXTRA (1 nodo: bulk sync) --------
-  {
-    type: 'shopify-bulk-product-sync',
-    category: 'action',
-    group: 'shopify',
-    displayName: 'Shopify: Bulk sync productos',
-    description: 'Sincronización masiva via bulk operations API (>1000 SKUs).',
-    icon: 'pi pi-database',
-    color: '#95BF47',
-    version: 1,
-    inputs: [{ name: 'main', dataType: 'item[]' }],
-    outputs: [
-      { name: 'main', dataType: 'item[]' },
-      { name: 'error', isError: true, dataType: 'item[]' }
-    ],
-    credentials: 'shopify',
-    timeoutMs: 700000,
-    schema: {
-      type: 'object',
-      properties: {
-        mode: { type: 'string', enum: ['export', 'import'], default: 'export' },
-        query: {
-          type: 'string',
-          title: 'GraphQL query',
-          description: 'Query para mode=export (default: products+variants completos)'
-        },
-        pollIntervalMs: { type: 'number', default: 5000 },
-        timeoutMs: { type: 'number', default: 600000 }
-      }
-    },
-    defaults: { mode: 'export', pollIntervalMs: 5000, timeoutMs: 600000 },
-    tags: ['shopify', 'bulk', 'product', 'sync']
   }
 ];
