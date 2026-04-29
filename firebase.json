@@ -1,6 +1,5 @@
 {
   "hosting": {
-    "target": "katuq-app",
     "public": "dist/cuba",
     "ignore": [
       "firebase.json",
@@ -15,3 +14,4 @@
     ]
   }
 }
+
