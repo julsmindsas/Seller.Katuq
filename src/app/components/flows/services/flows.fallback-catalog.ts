@@ -347,6 +347,78 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
 
   // -------- KATUQ INTERNAL --------
   {
+    type: 'webhook-listener',
+    category: 'trigger',
+    group: 'internal',
+    displayName: 'Webhook (HTTP)',
+    description:
+      'Recibe POST en una URL pública. Cualquier sistema externo (Zapier, Make, app custom, partner) puede pegarle y dispara el flow con el body como primer item. HMAC opcional via webhookSecret.',
+    icon: 'pi pi-link',
+    color: '#5E72E4',
+    version: 1,
+    inputs: [],
+    outputs: [{ name: 'main', label: 'Body recibido', dataType: 'item[]' }],
+    schema: {
+      type: 'object',
+      properties: {
+        method: {
+          type: 'string',
+          title: 'Método HTTP esperado',
+          enum: ['POST'],
+          default: 'POST',
+          description: 'Hoy el endpoint solo acepta POST. GET reservado para futuras versiones.'
+        },
+        webhookSecret: {
+          type: 'string',
+          title: 'Secret HMAC (opcional)',
+          description:
+            'Si se configura, el sistema externo debe enviar el header x-katuq-signature con HMAC-SHA256 del body. Si lo dejás vacío, la URL es pública sin verificación. Recomendado para producción.'
+        },
+        payloadDescription: {
+          type: 'string',
+          title: 'Descripción del payload esperado',
+          description: 'Notas para vos/equipo sobre qué shape de body llega. No se valida — solo documentación.'
+        }
+      }
+    },
+    defaults: { method: 'POST' },
+    tags: ['trigger', 'webhook', 'http', 'generic']
+  },
+  {
+    type: 'schedule-cron',
+    category: 'trigger',
+    group: 'internal',
+    displayName: 'Schedule (cron)',
+    description:
+      'Dispara el flow según una expresión cron (ej: "0 9 * * 1" para todos los lunes a las 9am). Soporta zona horaria configurable.',
+    icon: 'pi pi-clock',
+    color: '#5E72E4',
+    version: 1,
+    inputs: [],
+    outputs: [{ name: 'main', label: 'Tick', dataType: 'item[]' }],
+    schema: {
+      type: 'object',
+      properties: {
+        cronExpression: {
+          type: 'string',
+          title: 'Expresión cron',
+          description:
+            'Formato estándar de 5 campos (min, hora, día-mes, mes, día-semana). Ejemplos: "0 9 * * 1" lunes 9am — "*/15 * * * *" cada 15min — "0 0 1 * *" día 1 del mes.',
+          default: '0 9 * * 1'
+        },
+        timezone: {
+          type: 'string',
+          title: 'Zona horaria',
+          description: 'IANA timezone (ej: America/Bogota, Europe/Madrid). Default: America/Bogota.',
+          default: 'America/Bogota'
+        }
+      },
+      required: ['cronExpression']
+    },
+    defaults: { cronExpression: '0 9 * * 1', timezone: 'America/Bogota' },
+    tags: ['trigger', 'cron', 'schedule', 'time']
+  },
+  {
     type: 'katuq-canonical-mapper',
     category: 'transform',
     group: 'katuq',
