@@ -975,7 +975,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return this.fb.group({
       name: ['MultiOP', Validators.required],
       enabled: [true],
-      apiUrl: ['https://us-central1-katuq-new.cloudfunctions.net/api/', [Validators.required]],
+      apiUrl: ['https://back.katuq.com/api/', [Validators.required]],
       apiKey: ['', [Validators.required, Validators.minLength(20)]],
     });
   }

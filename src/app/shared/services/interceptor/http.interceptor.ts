@@ -95,7 +95,6 @@ export class HttpInterceptor2 implements HttpInterceptor {
       'api.katuq.com',
       'localhost:3300',
       '100.27.36.49:3300',
-      'us-central1-katuq-new.cloudfunctions.net',
       'us-central1-bluerp-107bd.cloudfunctions.net'
     ];
 
