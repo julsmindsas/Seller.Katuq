@@ -1296,14 +1296,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns Número de orden con prefijo (ej: "WC-1001") o null
    */
   getExternalOrderNumber(pedido: Pedido): string | null {
-    if (!pedido.integrations) {
+    const integ: any = (pedido as any).integrations || (pedido as any).integraciones;
+    if (!integ) {
       return null;
     }
-    if (pedido.integrations.woocommerce?.orderNumber) {
-      return `WC-${pedido.integrations.woocommerce.orderNumber}`;
+    if (integ.woocommerce?.orderNumber) {
+      return `WC-${integ.woocommerce.orderNumber}`;
     }
-    if (pedido.integrations.shopify?.orderNumber) {
-      return `SH-${pedido.integrations.shopify.orderNumber}`;
+    if (integ.shopify?.orderNumber) {
+      return `SH-${integ.shopify.orderNumber}`;
+    }
+    const osmosisId = integ.osmosis?.orderId || integ.osmosis?.osmosisOrderId || integ.osmosis?.id;
+    if (osmosisId) {
+      return `OSM-${osmosisId}`;
     }
     return null;
   }
@@ -1323,14 +1328,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @returns Nombre de la plataforma ("WooCommerce" o "Shopify") o null
    */
   getIntegrationPlatform(pedido: Pedido): string | null {
-    if (!pedido.integrations) {
+    const integ: any = (pedido as any).integrations || (pedido as any).integraciones;
+    if (!integ) {
       return null;
     }
-    if (pedido.integrations.woocommerce?.orderNumber) {
+    if (integ.woocommerce?.orderNumber) {
       return 'WooCommerce';
     }
-    if (pedido.integrations.shopify?.orderNumber) {
+    if (integ.shopify?.orderNumber) {
       return 'Shopify';
+    }
+    if (integ.osmosis?.orderId || integ.osmosis?.osmosisOrderId || integ.osmosis?.id) {
+      return 'Osmosis (Cereza)';
     }
     return null;
   }
