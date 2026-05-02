@@ -699,11 +699,11 @@
                                                     <!-- Número principal de Katuq -->
                                                     <span class="pedido-number">{{ pedido.nroPedido }}</span>
 
-                                                    <!-- Número externo (WooCommerce/Shopify) -->
-                                                    <span *ngIf="getExternalOrderNumber(pedido)"
+                                                    <!-- Numeros externos (Shopify / Osmosis / WooCommerce / etc) -->
+                                                    <span *ngFor="let ref of getExternalOrderNumbers(pedido)"
                                                           class="external-order-number"
-                                                          [title]="'Orden de ' + getIntegrationPlatform(pedido)">
-                                                        {{ getExternalOrderNumber(pedido) }}
+                                                          [title]="'Orden de ' + ref.platform">
+                                                        {{ ref.label }}
                                                     </span>
                                                 </div>
                                             </td>

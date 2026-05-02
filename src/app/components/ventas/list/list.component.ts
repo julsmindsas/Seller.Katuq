@@ -1295,22 +1295,37 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * @param pedido Pedido a verificar
    * @returns Número de orden con prefijo (ej: "WC-1001") o null
    */
-  getExternalOrderNumber(pedido: Pedido): string | null {
-    const integ: any = (pedido as any).integrations || (pedido as any).integraciones;
-    if (!integ) {
-      return null;
+  /**
+   * Devuelve TODAS las referencias externas del pedido (Shopify, Osmosis,
+   * WooCommerce, etc). Un mismo pedido puede tener varias (ej. Shopify->Cereza
+   * tiene SH-XXX y OSM-YYY simultaneamente).
+   */
+  getExternalOrderNumbers(pedido: Pedido): { label: string; platform: string }[] {
+    const integ: any = (pedido as any).integrations || (pedido as any).integraciones || {};
+    const out: { label: string; platform: string }[] = [];
+    if (integ.shopify?.orderNumber) {
+      out.push({ label: `SH-${integ.shopify.orderNumber}`, platform: 'Shopify' });
+    } else if (integ.shopify?.orderName) {
+      out.push({ label: `SH-${integ.shopify.orderName}`, platform: 'Shopify' });
     }
     if (integ.woocommerce?.orderNumber) {
-      return `WC-${integ.woocommerce.orderNumber}`;
-    }
-    if (integ.shopify?.orderNumber) {
-      return `SH-${integ.shopify.orderNumber}`;
+      out.push({ label: `WC-${integ.woocommerce.orderNumber}`, platform: 'WooCommerce' });
     }
     const osmosisId = integ.osmosis?.orderId || integ.osmosis?.osmosisOrderId || integ.osmosis?.id;
     if (osmosisId) {
-      return `OSM-${osmosisId}`;
+      out.push({ label: `OSM-${osmosisId}`, platform: 'Osmosis (Cereza)' });
     }
-    return null;
+    return out;
+  }
+
+  /**
+   * Compatibilidad con código que aún espera string|null (un solo numero).
+   * Devuelve la primera referencia o null. Para mostrar todas usar
+   * getExternalOrderNumbers().
+   */
+  getExternalOrderNumber(pedido: Pedido): string | null {
+    const all = this.getExternalOrderNumbers(pedido);
+    return all.length > 0 ? all[0].label : null;
   }
 
   /**
