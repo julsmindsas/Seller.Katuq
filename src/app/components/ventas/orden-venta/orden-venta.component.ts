@@ -27,12 +27,14 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   private readonly DEFAULT_LOGO = "assets/images/logo/Katuq/faviconkatuq.png";
   private readonly FALLBACK_LOGO = "assets/images/logo/Katuq/katuq_light.svg";
 
-  // Información calculada
-  subtotalSinImpuestos: number = 0;
-  totalImpuestos: number = 0;
-  totalDescuentos: number = 0;
-  totalEnvio: number = 0;
-  totalFinal: number = 0;
+  // Información calculada — getters reactivos al @Input() pedido para evitar
+  // valores stale cuando se reusa la instancia con otra orden (caso PDF desde
+  // list.component que actualiza pedidoParaOrdenVenta sin re-instanciar).
+  get subtotalSinImpuestos(): number { return Number(this.pedido?.subtotal) || 0; }
+  get totalImpuestos(): number { return Number(this.pedido?.totalImpuesto) || 0; }
+  get totalDescuentos(): number { return Number(this.pedido?.totalDescuento) || 0; }
+  get totalEnvio(): number { return Number(this.pedido?.totalEnvio) || 0; }
+  get totalFinal(): number { return Number(this.pedido?.totalPedididoConDescuento) || 0; }
 
   // Fecha de emisión
   fechaEmision: Date = new Date();
@@ -53,7 +55,6 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.cargarDatosEmpresa();
     this.cargarCompanyInformation();
-    this.calcularTotales();
   }
 
   ngOnDestroy(): void {
@@ -100,16 +101,11 @@ export class OrdenVentaComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Calcula todos los totales del pedido
+   * @deprecated Los totales son getters reactivos al @Input() pedido.
+   * Mantenido como noop por si algún caller externo lo invoca.
    */
   private calcularTotales(): void {
-    if (!this.pedido) return;
-
-    this.subtotalSinImpuestos = this.pedido.subtotal || 0;
-    this.totalImpuestos = this.pedido.totalImpuesto || 0;
-    this.totalDescuentos = this.pedido.totalDescuento || 0;
-    this.totalEnvio = this.pedido.totalEnvio || 0;
-    this.totalFinal = this.pedido.totalPedididoConDescuento || 0;
+    // noop — totales son getters
   }
 
   /**
