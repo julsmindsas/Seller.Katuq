@@ -152,11 +152,8 @@ export class NotificationManagerService {
   private setupFirebaseListener(): void {
     console.log('🔔 NotificationManager: Configurando listeners de Firebase...');
     
-    // Escuchar AMBAS rutas para compatibilidad
-    // 1. Ruta nueva (notification_queue) - para futuro
-    this.listenToNotificationQueue();
-    
-    // 2. Ruta legacy (ActualizacionTicket) - actual sistema en producción
+    // Solo escuchar ActualizacionTicket (Realtime DB) — única fuente de verdad
+    // notification_queue en RTDB removido: el backend ya no escribe ahí
     this.listenToActualizacionTicket();
   }
 

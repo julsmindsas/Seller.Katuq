@@ -18,10 +18,7 @@ export class NotificationrlService implements OnDestroy {
     private db: AngularFireDatabase,
     private toastr: ToastrService
   ) {
-    console.log('🔔 NotificationRL: Inicializando servicio (LEGACY - solo para compatibilidad)...');
-    // NOTA: Este servicio ahora es solo para compatibilidad con componentes legacy
-    // Las notificaciones reales se procesan en NotificationManagerService
-    this.listenForNotifications();
+    console.log('🔔 NotificationRL: Servicio legacy cargado (listener desactivado — NotificationManagerService es la única fuente)');
   }
 
   private listenForNotifications() {
