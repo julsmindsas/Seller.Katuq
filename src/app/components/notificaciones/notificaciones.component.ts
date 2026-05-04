@@ -14,6 +14,7 @@ export interface NotificationPreferenceView {
     sms: boolean;
     whatsapp: boolean;
     email: boolean;
+    company_copy: boolean;
   };
 }
 
@@ -38,7 +39,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       types: [
         NotificationType.ORDER_CREATED
       ],
-      channels: { sms: false, whatsapp: false, email: false }
+      channels: { sms: false, whatsapp: false, email: false, company_copy: false }
     },
     {
       id: 'payment_approved',
@@ -47,7 +48,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       types: [
         NotificationType.PAYMENT_APPROVED
       ],
-      channels: { sms: false, whatsapp: false, email: false }
+      channels: { sms: false, whatsapp: false, email: false, company_copy: false }
     },
     {
       id: 'order_produced',
@@ -56,7 +57,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       types: [
         NotificationType.PRODUCTION_COMPLETED
       ],
-      channels: { sms: false, whatsapp: false, email: false }
+      channels: { sms: false, whatsapp: false, email: false, company_copy: false }
     },
     {
       id: 'order_dispatched',
@@ -65,7 +66,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       types: [
         NotificationType.ORDER_DISPATCHED
       ],
-      channels: { sms: false, whatsapp: false, email: false }
+      channels: { sms: false, whatsapp: false, email: false, company_copy: false }
     },
     {
       id: 'order_delivered',
@@ -74,7 +75,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       types: [
         NotificationType.ORDER_DELIVERED
       ],
-      channels: { sms: false, whatsapp: false, email: false }
+      channels: { sms: false, whatsapp: false, email: false, company_copy: false }
     },
     {
       id: 'order_rejected',
@@ -83,7 +84,7 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
       types: [
         NotificationType.ORDER_PROCESS_REJECTED
       ],
-      channels: { sms: false, whatsapp: false, email: false }
+      channels: { sms: false, whatsapp: false, email: false, company_copy: false }
     }
   ];
 
@@ -128,6 +129,13 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
               }
             });
           }
+          if (saved && saved.company_copy_notifications) {
+            this.preferences.forEach(pref => {
+              if (saved.company_copy_notifications[pref.id] !== undefined) {
+                pref.channels.company_copy = saved.company_copy_notifications[pref.id];
+              }
+            });
+          }
           this.isLoading = false;
         },
         error: () => {
@@ -156,6 +164,16 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     this.saveToFirestore(() => { pref.channels.sms = previousValue; });
   }
 
+  /** Activa o desactiva la copia a empresa para una categoría y guarda en Firestore */
+  public toggleCompanyCopy(preferenceId: string): void {
+    const pref = this.preferences.find(p => p.id === preferenceId);
+    if (!pref || this.isSaving) return;
+
+    const previousValue = pref.channels.company_copy;
+    pref.channels.company_copy = !pref.channels.company_copy;
+    this.saveToFirestore(() => { pref.channels.company_copy = previousValue; });
+  }
+
 
 
   /** Guarda todas las preferencias de la empresa en Firestore */
@@ -167,12 +185,14 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
 
     const notifications: { [key: string]: boolean } = {};
     const sms_notifications: { [key: string]: boolean } = {};
+    const company_copy_notifications: { [key: string]: boolean } = {};
     this.preferences.forEach(pref => {
       notifications[pref.id] = pref.channels.email;
       sms_notifications[pref.id] = pref.channels.sms;
+      company_copy_notifications[pref.id] = pref.channels.company_copy;
     });
 
-    this.maestroService.saveCompanyNotificationPreferences(companyName, { notifications, sms_notifications })
+    this.maestroService.saveCompanyNotificationPreferences(companyName, { notifications, sms_notifications, company_copy_notifications })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {

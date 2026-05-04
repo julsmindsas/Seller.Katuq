@@ -54,6 +54,12 @@
                                             {{ 'Mensaje de texto' | translate }}
                                         </div>
                                     </th>
+                                    <th class="td-channel text-center td-company-copy">
+                                        <div class="channel-header">
+                                            <i class="fa fa-building me-1" aria-hidden="true"></i>
+                                            {{ 'Copia a empresa' | translate }}
+                                        </div>
+                                    </th>
                                     <th class="td-channel text-center td-whatsapp">
                                         <div class="channel-header">
                                             <i class="fa fa-whatsapp me-1" aria-hidden="true"></i>
@@ -86,6 +92,15 @@
                                                 [checked]="pref.channels.sms"
                                                 (change)="toggleSms(pref.id)">
                                             <label [for]="'sms-' + pref.id"></label>
+                                        </div>
+                                    </td>
+
+                                    <td class="td-channel td-company-copy text-center align-middle">
+                                        <div class="checkbox-container">
+                                            <input type="checkbox" class="custom-checkbox" [id]="'cc-' + pref.id"
+                                                [checked]="pref.channels.company_copy"
+                                                (change)="toggleCompanyCopy(pref.id)">
+                                            <label [for]="'cc-' + pref.id"></label>
                                         </div>
                                     </td>
 
