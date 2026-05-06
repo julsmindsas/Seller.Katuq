@@ -14,6 +14,7 @@ import { DropdownModule } from 'primeng/dropdown';
 
 import { ProviderDashboardComponent } from './provider-dashboard/provider-dashboard.component';
 import { ProviderIssuesTableComponent } from './provider-issues-table/provider-issues-table.component';
+import { ProviderSummaryComponent } from './provider-summary/provider-summary.component';
 import { ProviderDashboardService } from './provider-dashboard.service';
 
 const routes: Routes = [
@@ -24,6 +25,7 @@ const routes: Routes = [
   declarations: [
     ProviderDashboardComponent,
     ProviderIssuesTableComponent,
+    ProviderSummaryComponent,
   ],
   imports: [
     CommonModule,

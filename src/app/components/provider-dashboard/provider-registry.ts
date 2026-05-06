@@ -23,6 +23,7 @@ export interface ProviderConfig {
   /** Endpoints específicos del provider (relativos a endpointBase). */
   endpoints: {
     issues?: string;
+    summary?: string;
     pushOrder?: (orderId: string) => string;
   };
 }
@@ -34,10 +35,11 @@ export const PROVIDER_REGISTRY: Record<string, ProviderConfig> = {
       'Integración con Osmosis (Cereza Media). Sincroniza productos, stock y estados de pedidos.',
     icon: 'box',
     endpointBase: '/v1/osmosis',
-    features: ['issues'], // KPIs y products vendrán en iteraciones siguientes
+    features: ['issues', 'kpis'],
     hasIssuesEndpoint: true,
     endpoints: {
       issues: '/dashboard/orders-with-issues',
+      summary: '/dashboard/summary',
       pushOrder: (orderId: string) => `/orders/${orderId}/push`,
     },
   },

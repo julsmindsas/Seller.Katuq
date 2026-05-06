@@ -1,0 +1,104 @@
+<div class="summary-wrapper">
+  <div *ngIf="error" class="state-msg error">
+    <i class="pi pi-times-circle"></i> {{ error }}
+  </div>
+
+  <div *ngIf="loading && !error" class="loading-skeletons">
+    <p-skeleton height="6rem" *ngFor="let _ of [1,2,3,4,5,6,7,8]" styleClass="kpi-skeleton"></p-skeleton>
+  </div>
+
+  <ng-container *ngIf="!loading && !error && kpis">
+    <!-- Operacional: pendientes y errores -->
+    <h3 class="section-title">Operación actual</h3>
+    <div class="kpi-grid">
+      <div class="kpi-card" [class.alert]="kpis.pendientes > 0">
+        <div class="kpi-label">Sin enviar al proveedor</div>
+        <div class="kpi-value">{{ kpis.pendientes }}</div>
+        <div class="kpi-hint">Pedidos pendientes de push</div>
+      </div>
+      <div class="kpi-card" [class.danger]="kpis.errores > 0">
+        <div class="kpi-label">Errores activos</div>
+        <div class="kpi-value">{{ kpis.errores }}</div>
+        <div class="kpi-hint">Push falló, requiere revisión</div>
+      </div>
+      <div class="kpi-card" [class.info]="kpis.cancelados > 0">
+        <div class="kpi-label">Cancelados por proveedor</div>
+        <div class="kpi-value">{{ kpis.cancelados }}</div>
+        <div class="kpi-hint">Cereza marcó como cancelled</div>
+      </div>
+    </div>
+
+    <!-- Throughput: enviados/despachados últimos N días -->
+    <h3 class="section-title">Últimos {{ days }} días</h3>
+    <div class="kpi-grid">
+      <div class="kpi-card success">
+        <div class="kpi-label">Enviados hoy</div>
+        <div class="kpi-value">{{ kpis.enviadosHoy }}</div>
+        <div class="kpi-hint">Push exitoso últimas 24h</div>
+      </div>
+      <div class="kpi-card success">
+        <div class="kpi-label">Enviados {{ days }}d</div>
+        <div class="kpi-value">{{ kpis.enviados7d }}</div>
+        <div class="kpi-hint">Total exitosos en ventana</div>
+      </div>
+      <div class="kpi-card success">
+        <div class="kpi-label">Despachados {{ days }}d</div>
+        <div class="kpi-value">{{ kpis.despachados7d }}</div>
+        <div class="kpi-hint">Cereza marcó como shipped</div>
+      </div>
+      <div class="kpi-card success">
+        <div class="kpi-label">Entregados {{ days }}d</div>
+        <div class="kpi-value">{{ kpis.entregados7d }}</div>
+        <div class="kpi-hint">Cereza marcó como delivered</div>
+      </div>
+      <div class="kpi-card highlight">
+        <div class="kpi-label">Tasa éxito {{ days }}d</div>
+        <div class="kpi-value">
+          <ng-container *ngIf="kpis.tasaExito7d !== null; else sinDatos">
+            {{ kpis.tasaExito7d }}%
+          </ng-container>
+          <ng-template #sinDatos>—</ng-template>
+        </div>
+        <div class="kpi-hint">Enviados / (enviados + errores)</div>
+      </div>
+    </div>
+
+    <!-- Ultima actividad del cron -->
+    <h3 class="section-title">Última actividad automática</h3>
+    <div class="activity-grid">
+      <div class="activity-item">
+        <div class="activity-label">Último push exitoso</div>
+        <div class="activity-value">{{ fechaRelativa(kpis.lastPushAt) }}</div>
+        <div class="activity-detail">{{ formatFecha(kpis.lastPushAt) }}</div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-label">Último sync de estados</div>
+        <div class="activity-value">{{ fechaRelativa(kpis.lastStatusSyncAt) }}</div>
+        <div class="activity-detail">
+          {{ formatFecha(kpis.lastStatusSyncAt) }}
+          <span class="muted">(cron */30 min)</span>
+        </div>
+      </div>
+      <div class="activity-item">
+        <div class="activity-label">Pedidos con OSM-ID asignado</div>
+        <div class="activity-value">{{ kpis.totalConOsmosisId }}</div>
+        <div class="activity-detail muted">de {{ kpis.scannedOrders }} pedidos escaneados</div>
+      </div>
+    </div>
+
+    <div class="actions-row">
+      <button
+        pButton
+        type="button"
+        icon="pi pi-refresh"
+        label="Refrescar KPIs"
+        class="p-button-text"
+        (click)="load()"
+        [disabled]="loading"
+      ></button>
+      <a routerLink="/flows" class="link-btn">
+        <i class="pi pi-sitemap"></i> Ver flujos del proveedor
+      </a>
+    </div>
+  </ng-container>
+</div>

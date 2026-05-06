@@ -30,7 +30,7 @@
         *ngIf="hasFeature('kpis')"
         header="Resumen"
         leftIcon="pi pi-chart-bar">
-        <p class="placeholder">KPIs próximamente.</p>
+        <app-provider-summary [provider]="provider!"></app-provider-summary>
       </p-tabPanel>
 
       <p-tabPanel

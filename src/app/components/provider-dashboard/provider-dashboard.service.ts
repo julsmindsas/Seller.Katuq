@@ -31,6 +31,28 @@ export interface IssuesResponse {
   issues: ProviderIssue[];
 }
 
+export interface SummaryKpis {
+  pendientes: number;
+  errores: number;
+  cancelados: number;
+  enviadosHoy: number;
+  enviados7d: number;
+  errores7d: number;
+  despachados7d: number;
+  entregados7d: number;
+  tasaExito7d: number | null;
+  totalConOsmosisId: number;
+  lastPushAt: string | null;
+  lastStatusSyncAt: string | null;
+  scannedOrders: number;
+}
+
+export interface SummaryResponse {
+  success: boolean;
+  days: number;
+  summary: SummaryKpis;
+}
+
 @Injectable()
 export class ProviderDashboardService {
   constructor(private http: HttpClient) {}
@@ -68,6 +90,20 @@ export class ProviderDashboardService {
     }
     return this.http.get<IssuesResponse>(
       `${environment.urlApi}${cfg.endpointBase}${cfg.endpoints.issues}?limit=${limit}`,
+      { headers: this.buildHeaders() },
+    );
+  }
+
+  /**
+   * Obtiene KPIs del provider (resumen ejecutivo).
+   */
+  getSummary(provider: string, days = 7): Observable<SummaryResponse> {
+    const cfg = getProviderConfig(provider);
+    if (!cfg || !cfg.endpoints.summary) {
+      return throwError(() => new Error(`Provider "${provider}" no soporta summary endpoint.`));
+    }
+    return this.http.get<SummaryResponse>(
+      `${environment.urlApi}${cfg.endpointBase}${cfg.endpoints.summary}?days=${days}`,
       { headers: this.buildHeaders() },
     );
   }
