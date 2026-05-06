@@ -254,19 +254,6 @@ export const content: Routes = [
     data: { title: "Flujos automatizados" },
   },
   {
-    // Dashboard genérico por proveedor de integración. El componente lee
-    // :provider del route y delega a un registry para configurar tabs/datos.
-    // Ej: /integrations/osmosis/dashboard, /integrations/shopify/dashboard.
-    // Cero hardcoding por integración; multi-tenant friendly.
-    path: "integrations/:provider/dashboard",
-    loadChildren: () =>
-      import("../../components/provider-dashboard/provider-dashboard.module").then(
-        (m) => m.ProviderDashboardModule,
-      ),
-    canActivate: [AuthGuard],
-    data: { title: "Dashboard de integración" },
-  },
-  {
     path: "dropshipping",
     loadChildren: () =>
       import("../../components/dropshipping/dropshipping.module").then(

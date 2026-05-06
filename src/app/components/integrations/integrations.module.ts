@@ -37,6 +37,17 @@ const routes: Routes = [
   { path: 'configure', component: IntegrationsComponent },
   // Siigo configuration
   { path: 'siigo', component: SiigoConfigComponent },
+  // Dashboard genérico por proveedor (lazy). DEBE ir antes del catch-all '**'.
+  // Ej: /integrations/osmosis/dashboard, /integrations/shopify/dashboard
+  // El componente lee :provider y resuelve config con provider-registry.
+  {
+    path: ':provider/dashboard',
+    loadChildren: () =>
+      import('../provider-dashboard/provider-dashboard.module').then(
+        (m) => m.ProviderDashboardModule,
+      ),
+    data: { title: 'Dashboard de integración' },
+  },
   // Fallback: redirigir rutas desconocidas de este módulo al listado
   { path: '**', redirectTo: '' }
 ];
