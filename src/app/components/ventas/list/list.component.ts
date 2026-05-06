@@ -1402,10 +1402,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Devuelve TODAS las referencias externas del pedido (Shopify, Osmosis,
    * WooCommerce, etc). Un mismo pedido puede tener varias (ej. Shopify->Cereza
    * tiene SH-XXX y OSM-YYY simultaneamente).
+   *
+   * Para Osmosis incluye un `tooltip` HTML con estado actual + tracking + ultimo
+   * sync (capturado por el flow cereza-orders-status-pull cada 30 min).
    */
-  getExternalOrderNumbers(pedido: Pedido): { label: string; platform: string }[] {
+  getExternalOrderNumbers(pedido: Pedido): { label: string; platform: string; tooltip?: string; hasNote?: boolean }[] {
     const integ: any = (pedido as any).integrations || (pedido as any).integraciones || {};
-    const out: { label: string; platform: string }[] = [];
+    const out: { label: string; platform: string; tooltip?: string; hasNote?: boolean }[] = [];
     if (integ.shopify?.orderNumber) {
       out.push({ label: `SH-${integ.shopify.orderNumber}`, platform: 'Shopify' });
     } else if (integ.shopify?.orderName) {
@@ -1416,9 +1419,50 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     }
     const osmosisId = integ.osmosis?.orderId || integ.osmosis?.osmosisOrderId || integ.osmosis?.id;
     if (osmosisId) {
-      out.push({ label: `OSM-${osmosisId}`, platform: 'Osmosis (Cereza)' });
+      const tooltip = this.buildOsmosisTooltip(integ.osmosis);
+      out.push({
+        label: `OSM-${osmosisId}`,
+        platform: 'Osmosis (Cereza)',
+        tooltip,
+        hasNote: !!(integ.osmosis?.lastNote),
+      });
     }
     return out;
+  }
+
+  /**
+   * Construye tooltip HTML para una referencia OSM-XX que incluye:
+   *   - Estado actual en Cereza (mapeado a Katuq)
+   *   - Tracking / guia (lastNote) si existe
+   *   - Timestamp del ultimo sync
+   * Capturado por el flow cereza-orders-status-pull cada 30 min en producción.
+   */
+  private buildOsmosisTooltip(osmosis: any): string {
+    if (!osmosis) return '';
+    const parts: string[] = [];
+    parts.push(`<strong>Cereza / Guía Cereza</strong>`);
+    if (osmosis.status) {
+      const labelMap: Record<string, string> = {
+        pending: 'Pendiente',
+        confirmed: 'Confirmado',
+        processing: 'En producción',
+        shipped: 'Despachado',
+        delivered: 'Entregado',
+        cancelled: 'Cancelado',
+      };
+      const label = labelMap[String(osmosis.status).toLowerCase()] || osmosis.status;
+      parts.push(`Estado: <b>${label}</b>`);
+    }
+    if (osmosis.lastNote) {
+      parts.push(`Tracking: ${osmosis.lastNote}`);
+    }
+    if (osmosis.lastStatusSync) {
+      try {
+        const d = new Date(osmosis.lastStatusSync);
+        parts.push(`Último sync: ${d.toLocaleString('es-CO', { dateStyle: 'short', timeStyle: 'short' })}`);
+      } catch (_) { /* skip */ }
+    }
+    return parts.join('<br>');
   }
 
   /**

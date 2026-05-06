@@ -699,11 +699,19 @@
                                                     <!-- Número principal de Katuq -->
                                                     <span class="pedido-number">{{ pedido.nroPedido }}</span>
 
-                                                    <!-- Numeros externos (Shopify / Osmosis / WooCommerce / etc) -->
+                                                    <!-- Numeros externos (Shopify / Osmosis / WooCommerce / etc).
+                                                         Para OSM-XX el tooltip incluye estado actual + tracking + ultimo sync,
+                                                         capturado por el flow cereza-orders-status-pull cada 30 min. -->
                                                     <span *ngFor="let ref of getExternalOrderNumbers(pedido)"
                                                           class="external-order-number"
-                                                          [title]="'Orden de ' + ref.platform">
+                                                          [pTooltip]="ref.tooltip || ('Orden de ' + ref.platform)"
+                                                          [escape]="false"
+                                                          tooltipPosition="top">
                                                         {{ ref.label }}
+                                                        <i *ngIf="ref.hasNote"
+                                                           class="pi pi-truck ml-1"
+                                                           style="font-size: 0.75rem; color: #10B981; vertical-align: middle;"
+                                                           aria-label="Con tracking"></i>
                                                     </span>
                                                 </div>
                                             </td>
