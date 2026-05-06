@@ -1,0 +1,134 @@
+.issues-wrapper {
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    .kpi {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-left: 4px solid #d1d5db;
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      transition: all 0.15s ease;
+
+      &.highlight {
+        border-left-color: #4a44c2;
+        box-shadow: 0 0 0 2px rgba(74, 68, 194, 0.12);
+      }
+      &.total { border-left-color: #4a44c2; }
+
+      .kpi-label {
+        font-size: 0.78rem;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.35rem;
+      }
+      .kpi-value {
+        font-size: 1.55rem;
+        font-weight: 600;
+        color: #1f2937;
+
+        &.warning { color: #d97706; }
+        &.danger  { color: #dc2626; }
+        &.info    { color: #2563eb; }
+      }
+    }
+  }
+
+  .filters-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+
+    ::ng-deep .filter-dropdown { min-width: 220px; }
+
+    .search-input {
+      position: relative;
+      flex: 1;
+      max-width: 420px;
+
+      i {
+        position: absolute;
+        left: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #9ca3af;
+        font-size: 0.85rem;
+      }
+      input {
+        width: 100%;
+        padding-left: 2.25rem;
+      }
+    }
+  }
+
+  .state-msg {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+
+    i {
+      font-size: 1.5rem;
+      margin-right: 0.5rem;
+      vertical-align: middle;
+    }
+
+    &.error { border-color: #fca5a5; background: #fef2f2; color: #b91c1c; }
+    &.empty i { color: #10b981; }
+  }
+
+  .loading-skeletons {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 1rem;
+  }
+
+  ::ng-deep .provider-issues-table {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+
+    th {
+      background: #f9fafb !important;
+      color: #374151 !important;
+      font-weight: 600 !important;
+      font-size: 0.85rem !important;
+    }
+
+    .cell-nopedido {
+      div { font-weight: 500; }
+      small { display: block; font-size: 0.72rem; }
+    }
+
+    .badge-soft {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: #f3f4f6;
+      border-radius: 12px;
+      font-size: 0.78rem;
+      color: #4b5563;
+    }
+
+    .cell-detalle {
+      max-width: 320px;
+      .error-text {
+        color: #b91c1c;
+        font-size: 0.85rem;
+        i { margin-right: 0.25rem; }
+      }
+    }
+
+    .cell-actions { text-align: center; }
+    .muted { color: #9ca3af; font-size: 0.85rem; }
+  }
+}

@@ -1,0 +1,53 @@
+<div class="provider-dashboard">
+  <ng-container *ngIf="!unknownProvider; else providerNotFound">
+    <header class="dashboard-header">
+      <div class="header-text">
+        <h1>
+          <i class="pi" [ngClass]="'pi-' + (config?.icon || 'box')"></i>
+          {{ config?.label }}
+        </h1>
+        <p class="muted">{{ config?.description }}</p>
+      </div>
+      <div class="header-actions">
+        <a routerLink="/flows" class="btn-link" pTooltip="Ver flujos automatizados" tooltipPosition="bottom">
+          <i class="pi pi-sitemap"></i> Flujos
+        </a>
+        <a routerLink="/integrations" class="btn-link" pTooltip="Volver a integraciones" tooltipPosition="bottom">
+          <i class="pi pi-cog"></i> Credenciales
+        </a>
+      </div>
+    </header>
+
+    <p-tabView [(activeIndex)]="activeTab" styleClass="provider-tabs">
+      <p-tabPanel
+        *ngIf="hasFeature('issues')"
+        header="Pedidos con problemas"
+        leftIcon="pi pi-exclamation-triangle">
+        <app-provider-issues-table [provider]="provider!"></app-provider-issues-table>
+      </p-tabPanel>
+
+      <p-tabPanel
+        *ngIf="hasFeature('kpis')"
+        header="Resumen"
+        leftIcon="pi pi-chart-bar">
+        <p class="placeholder">KPIs próximamente.</p>
+      </p-tabPanel>
+
+      <p-tabPanel
+        *ngIf="hasFeature('products')"
+        header="Productos"
+        leftIcon="pi pi-box">
+        <p class="placeholder">Estado de sincronización de productos próximamente.</p>
+      </p-tabPanel>
+    </p-tabView>
+  </ng-container>
+
+  <ng-template #providerNotFound>
+    <div class="not-found">
+      <i class="pi pi-info-circle"></i>
+      <h2>Integración no encontrada</h2>
+      <p>El proveedor <strong>{{ provider }}</strong> no está configurado en este comercio o no existe en el sistema.</p>
+      <button pButton type="button" label="Volver a integraciones" icon="pi pi-arrow-left" (click)="goBackToIntegrations()"></button>
+    </div>
+  </ng-template>
+</div>
