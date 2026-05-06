@@ -1413,4 +1413,27 @@ export class IntegrationsService {
       ],
     };
   }
+
+  // ===== MÉTODOS ESPECÍFICOS PARA OSMOSIS / GUÍA CEREZA =====
+
+  /**
+   * Reenvía manualmente un pedido Katuq a Cereza/Osmosis.
+   * Útil cuando el push automático falló o el pedido no tiene osmosisOrderId.
+   * Backend: POST /v1/osmosis/orders/:id/push
+   *
+   * @param katuqOrderId  cd Firestore del pedido (no nroPedido)
+   */
+  pushOrderToOsmosis(
+    katuqOrderId: string,
+  ): Observable<{ success: boolean; osmosisOrderId?: number; message?: string }> {
+    return this.http.post<{
+      success: boolean;
+      osmosisOrderId?: number;
+      message?: string;
+    }>(
+      `${environment.urlApi}/v1/osmosis/orders/${katuqOrderId}/push`,
+      {},
+      { headers: this.getApiHeaders() },
+    );
+  }
 }

@@ -456,6 +456,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       });
     }
 
+    // Reenviar a Cereza/Osmosis: visible en pedidos no-produccion no-cancelados.
+    // Útil para retry manual cuando el push automatico fallo o el pedido no tiene
+    // osmosisOrderId todavia. El backend (POST /v1/osmosis/orders/:id/push) es
+    // idempotente: si ya existe en Cereza, hace lookup por nroPedido y no duplica.
+    if (!this.isFromProduction && this.puedeReenviarACereza(pedido)) {
+      const yaTieneOsmosis = !!(pedido as any)?.integraciones?.osmosis?.id;
+      items.push({
+        label: yaTieneOsmosis ? 'Resincronizar con Cereza' : 'Enviar a Cereza',
+        icon: 'pi pi-send',
+        command: () => this.reenviarACereza(this.selectedMenuPedido)
+      });
+    }
+
     // Separador y más opciones al final
     items.push(
       { separator: true },
@@ -468,6 +481,96 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.rowMenuItems = items;
     menu.toggle(event);
+  }
+
+  /**
+   * Determina si el pedido puede reenviarse a Cereza/Osmosis.
+   * Criterios:
+   *   - No esta cancelado.
+   *   - Tiene cd Firestore (necesario para el endpoint).
+   * Si la empresa no tiene Osmosis configurado, el backend respondera 400/500
+   * con mensaje claro y se mostrara en el Swal de error.
+   */
+  puedeReenviarACereza(pedido: Pedido): boolean {
+    if (!pedido) return false;
+    const cd = (pedido as any)?.cd || (pedido as any)?.id;
+    if (!cd) return false;
+    const estado = String(pedido?.estadoProceso || '').toLowerCase();
+    if (estado === 'cancelado') return false;
+    return true;
+  }
+
+  /**
+   * Reenvia un pedido a Cereza/Osmosis. Muestra confirmacion + feedback.
+   * Idempotente: si ya existe en Cereza, hace lookup y solo refresca cache.
+   */
+  reenviarACereza(pedido: Pedido): void {
+    if (!pedido) return;
+    const katuqOrderId = (pedido as any)?.cd || (pedido as any)?.id;
+    if (!katuqOrderId) {
+      Swal.fire({ icon: 'error', title: 'Pedido sin ID', text: 'No se pudo identificar el pedido.' });
+      return;
+    }
+
+    const yaTiene = !!(pedido as any)?.integraciones?.osmosis?.id;
+    const titulo = yaTiene ? 'Resincronizar con Cereza' : 'Enviar pedido a Cereza';
+    const detalle = yaTiene
+      ? `Se forzara una sincronizacion con Cereza para el pedido <strong>${pedido.nroPedido}</strong> (OSM-${(pedido as any).integraciones.osmosis.id}).`
+      : `El pedido <strong>${pedido.nroPedido}</strong> sera enviado a Cereza/Guia Cereza para fulfillment.`;
+
+    Swal.fire({
+      title: titulo,
+      html: `${detalle}<br><br><span class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</span>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4A44C2',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: yaTiene ? 'Resincronizar' : 'Enviar',
+      cancelButtonText: 'Cancelar',
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+
+      Swal.fire({
+        title: 'Enviando a Cereza...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading(),
+      });
+
+      this.integrationsService.pushOrderToOsmosis(katuqOrderId).subscribe({
+        next: (resp: any) => {
+          Swal.close();
+          const osmId = resp?.osmosisOrderId || resp?.osmosisId || (pedido as any)?.integraciones?.osmosis?.id;
+          if (resp?.success !== false) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Pedido enviado a Cereza',
+              html: `<p>Pedido <strong>${pedido.nroPedido}</strong> sincronizado.</p>${osmId ? `<p>Identificador Cereza: <strong>OSM-${osmId}</strong></p>` : ''}`,
+              confirmButtonColor: '#10B981',
+            });
+            // Refrescar la lista para mostrar el nuevo OSM-XX en la fila
+            setTimeout(() => {
+              try { this.refrescarDespuesDeCambio(); } catch (_) { /* best effort */ }
+            }, 800);
+          } else {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Cereza respondio con error',
+              text: resp?.message || 'No se pudo enviar el pedido. Revisa la configuracion de Osmosis.',
+            });
+          }
+        },
+        error: (err: any) => {
+          Swal.close();
+          const msg = err?.error?.message || err?.message || 'Error desconocido al contactar Cereza.';
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al enviar a Cereza',
+            text: msg,
+            footer: 'Verifica que la integracion Osmosis este configurada en /integrations.',
+          });
+        },
+      });
+    });
   }
 
   openOptionsModal(order: any, producto?: any) {
