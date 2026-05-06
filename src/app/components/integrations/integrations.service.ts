@@ -1303,6 +1303,19 @@ export class IntegrationsService {
           logo: "assets/images/logos/prindel.png",
           active: true,
         },
+        {
+          // Osmosis (Cereza Media / Guía Cereza). Cereza opera como proveedor
+          // logístico además de catálogo/ICG. El adapter osmosisProvider.js
+          // expone los métodos createShipment/trackShipment/cancelShipment al
+          // LogisticsManager igual que Prindel/Enviame, lo que permite
+          // seleccionar Cereza desde el módulo de Despachos.
+          id: "osmosis",
+          name: "Cereza / Guía Cereza",
+          description:
+            "Proveedor logístico + catálogo Cereza Media (Osmosis ERP/ICG). Sincroniza productos y stock por bodega; recibe pedidos y los despacha desde sus bodegas.",
+          logo: "assets/images/logos/guiacereza.svg",
+          active: true,
+        },
       ],
       [IntegrationCategory.MARKETING]: [
         {
@@ -1385,14 +1398,6 @@ export class IntegrationsService {
           description:
             "Sistema de producción de lentes oftálmicos. Conecta pedidos de óptica con el laboratorio de producción MultiOP.",
           logo: "assets/images/integrations/multiop-logo.png",
-          active: true,
-        },
-        {
-          id: "osmosis",
-          name: "Guiacereza",
-          description:
-            "Conecta tu tienda con el ERP/ICG de Guiacereza. Sincroniza productos, stock por bodega y envía pedidos automáticamente.",
-          logo: "assets/images/logos/guiacereza.svg",
           active: true,
         },
         {
