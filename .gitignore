@@ -111,6 +111,11 @@ NUL
 kai
 .claude/settings.local.json
 
+# EC2 / cloud keys exports
+ops/ec2-keys/
+ops/CLAUDE.md
+.claude/scheduled_tasks.lock
+
 # === Credentials / Secrets ===
 # Google / Firebase service-account JSONs
 **/serviceAccountKey*.json

@@ -15,4 +15,10 @@
 |----|------|---|-------|------|
 | #4078 | 10:56 PM | 🟣 | Frontend ejecutarFacturacionSiigo Method Accepts Prefix Parameter | ~404 |
 | #4036 | 10:15 AM | 🔵 | Order Context Not Used in Invoice Creation | ~472 |
+
+### May 2, 2026
+
+| ID | Time | T | Title | Read |
+|----|------|---|-------|------|
+| #5905 | 10:54 AM | 🟣 | Enhanced Order List to Display Multiple External Order References | ~505 |
 </claude-mem-context>
