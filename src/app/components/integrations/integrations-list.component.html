@@ -258,6 +258,9 @@
                         <button class="action-btn" (click)="testIntegration(integration, $event); $event.stopPropagation();" title="Probar Conexión" [disabled]="isOperationLoading('test', integration.id)">
                           <i class="fa" [ngClass]="isOperationLoading('test', integration.id) ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
                         </button>
+                        <button *ngIf="hasDashboard(integration)" class="action-btn" (click)="goToDashboard(integration, $event); $event.stopPropagation();" title="Ver dashboard de esta integración">
+                          <i class="fa fa-tachometer"></i>
+                        </button>
                         <button class="action-btn" (click)="editIntegration(integration, $event); $event.stopPropagation();" title="Editar">
                           <i class="fa fa-pencil"></i>
                         </button>
@@ -362,6 +365,12 @@
                                 (click)="toggleIntegrationStatus(integration, $event)"
                                 [title]="integration.enabled ? 'Desactivar' : 'Activar'">
                           <i class="fa" [ngClass]="integration.enabled ? 'fa-pause' : 'fa-play'"></i>
+                        </button>
+                        <button *ngIf="hasDashboard(integration)" type="button"
+                                class="btn btn-sm btn-outline-primary"
+                                (click)="goToDashboard(integration, $event)"
+                                title="Ver dashboard de esta integración">
+                          <i class="fa fa-tachometer"></i>
                         </button>
                         <button type="button"
                                 class="btn btn-sm btn-outline-danger"

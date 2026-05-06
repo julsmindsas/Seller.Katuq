@@ -14,6 +14,7 @@ import { Subject, combineLatest } from "rxjs";
 import { takeUntil, debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { IntegrationManualControlService } from "./integration-manual-control.service";
 import { Router } from "@angular/router";
+import { listSupportedProviders } from "../provider-dashboard/provider-registry";
 
 interface Toast {
   type: "success" | "error" | "warning" | "info";
@@ -632,6 +633,28 @@ export class IntegrationsListComponent implements OnInit, OnDestroy {
   editIntegration(integration: Integration, event: Event): void {
     event.stopPropagation();
     this.openIntegrationModal(integration);
+  }
+
+  /**
+   * Indica si el provider de la integracion tiene un dashboard generico
+   * disponible (esta registrado en provider-registry.ts).
+   * Usado para mostrar el boton "Dashboard" solo cuando aplica.
+   */
+  hasDashboard(integration: Integration): boolean {
+    const provider = String(integration?.provider || integration?.type || '').toLowerCase();
+    return listSupportedProviders().includes(provider);
+  }
+
+  /**
+   * Navega al dashboard generico del provider, ej:
+   *   /integrations/osmosis/dashboard
+   * Multi-tenant safe: solo se navega cuando el provider esta registrado.
+   */
+  goToDashboard(integration: Integration, event: Event): void {
+    event.stopPropagation();
+    const provider = String(integration?.provider || integration?.type || '').toLowerCase();
+    if (!provider) return;
+    this.router.navigate(['/integrations', provider, 'dashboard']);
   }
 
   // Propiedades para la vista de lista
