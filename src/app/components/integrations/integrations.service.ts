@@ -751,6 +751,7 @@ export class IntegrationsService {
       case "enviame":
       case "partners_logistics":
       case "prindel":
+      case "osmosis": // Cereza/Guía Cereza opera como proveedor logístico (despacha desde sus bodegas)
         return IntegrationCategory.LOGISTICS;
       case "mailchimp":
       case "hubspot":
