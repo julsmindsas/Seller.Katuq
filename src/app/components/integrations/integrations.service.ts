@@ -716,7 +716,10 @@ export class IntegrationsService {
       id: integrationV2.id || provider,
       type: provider,
       provider: provider,
-      name: integrationV2.name || provider,
+      // Si el backend no manda name, fallback a un display name canónico antes
+      // del provider raw. Asi en /despachos aparece "Guía Cereza" en vez de
+      // "osmosis", "Siigo" en vez de "siigo", etc.
+      name: integrationV2.name || this.getDisplayNameForProvider(provider) || provider,
       enabled: enabled,
       category: resolvedCategory,
       credentials: credentials,
@@ -725,6 +728,39 @@ export class IntegrationsService {
       updatedAt: integrationV2.updatedAt,
       metadata: integrationV2.metadata,
     };
+  }
+
+  /**
+   * Display name canónico de cada provider para mostrar al usuario cuando el
+   * backend no manda `name` poblado. Mantiene consistencia con el catálogo
+   * `availableIntegrations` y con los labels de proveedores logísticos.
+   */
+  private getDisplayNameForProvider(provider: string): string | null {
+    const map: Record<string, string> = {
+      osmosis:           'Guía Cereza',
+      prindel:           'Prindel',
+      enviame:           'Envíame.io',
+      partners_logistics:'Partners Logística',
+      aliaddo_fulfillment:'Aliaddo Fulfillment',
+      fedex:             'FedEx',
+      dhl:               'DHL',
+      servientrega:      'Servientrega',
+      coordinadora:      'Coordinadora',
+      shopify:           'Shopify',
+      woocommerce:       'WooCommerce',
+      magento:           'Magento',
+      siigo:             'Siigo',
+      world_office:      'World Office',
+      quickbooks:        'QuickBooks',
+      wompi:             'Wompi',
+      epayco:            'ePayco',
+      paypal:            'PayPal',
+      stripe:            'Stripe',
+      payu:              'PayU',
+      mercadopago:       'Mercado Pago',
+      multiop:           'MultiOP',
+    };
+    return map[provider] || null;
   }
 
   /**
