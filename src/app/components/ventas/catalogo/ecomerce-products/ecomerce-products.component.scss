@@ -198,6 +198,27 @@
    TARJETAS DE PRODUCTOS MODERNIZADAS - MATERIAL DESIGN 3
    ================================================================= */
 
+.product-card-inactive {
+  opacity: 0.55;
+  filter: grayscale(60%);
+}
+
+.inactive-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #dc3545;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.5rem;
+  z-index: 15;
+  text-transform: uppercase;
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
+}
+
 .product-card-modern {
   // Borde más sutil
   border: 1px solid var(--gray-300);

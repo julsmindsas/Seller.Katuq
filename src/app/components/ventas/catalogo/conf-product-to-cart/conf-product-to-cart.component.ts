@@ -1670,10 +1670,16 @@ export class ConfProductToCartComponent
     return Array.from(deduped.values()).map((p) => {
       const titulo = (p?.titulo || "").trim();
       const subtitulo = p?.subtitulo || "";
-      const valorUnitarioSinIva = Number(p?.valorUnitarioSinIva || 0);
+      let valorUnitarioSinIva = Number(p?.valorUnitarioSinIva || 0);
       const valorIva = Number(p?.valorIva || 0);
       const porcentajeIva = Number(p?.porcentajeIva || 0);
       const precioTotalConIva = Number(p?.precioTotalConIva || 0);
+      // Si valorUnitarioSinIva no fue definido pero sí precioTotalConIva, derivarlo
+      if (valorUnitarioSinIva === 0 && precioTotalConIva > 0) {
+        valorUnitarioSinIva = porcentajeIva > 0
+          ? precioTotalConIva / (1 + porcentajeIva / 100)
+          : precioTotalConIva;
+      }
       // Imagen: si no viene, intentar obtenerla desde adicionesPreferencias por el subtitulo (título del hijo)
       let imagen = p?.imagen || "";
       if (!imagen && subtitulo) {
@@ -2234,13 +2240,19 @@ export class ConfProductToCartComponent
         const childCtrl = childrenArray.at(childrenSelectedIdx);
         const childValue = childCtrl?.value;
         if (childValue) {
+          const _pIva = Number(childValue?.data?.porcentajeIva || 0);
+          const _precioConIva = Number(childValue?.data?.precioTotalConIva || 0);
+          let _valorSinIva = Number(childValue?.data?.valorUnitarioSinIva || 0);
+          if (_valorSinIva === 0 && _precioConIva > 0) {
+            _valorSinIva = _pIva > 0 ? _precioConIva / (1 + _pIva / 100) : _precioConIva;
+          }
           const preference = {
             titulo: tituloVariable,
             subtitulo: childValue?.data?.titulo || "",
-            valorUnitarioSinIva: childValue?.data?.valorUnitarioSinIva || 0,
-            valorIva: childValue?.data?.valorIva || 0,
-            porcentajeIva: childValue?.data?.porcentajeIva || 0,
-            precioTotalConIva: childValue?.data?.precioTotalConIva || 0,
+            valorUnitarioSinIva: _valorSinIva,
+            valorIva: Number(childValue?.data?.valorIva || 0),
+            porcentajeIva: _pIva,
+            precioTotalConIva: _precioConIva,
             imagen: childValue?.data?.titulo
               ? this.getImgAdicion(childValue.data.titulo)
               : "assets/images/other-images/sinimagen.webp",

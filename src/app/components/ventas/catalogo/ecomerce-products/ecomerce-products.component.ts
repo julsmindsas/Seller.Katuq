@@ -555,6 +555,7 @@ export class EcomerceProductsComponent
     filter.bodega = this.bodega;
     filter.bodegaId = this.bodega.idBodega || this.bodega;
     filter.isChannelManual = true;
+    filter.estado = 'activo';
 
     // Guardar filtros actuales
     this.filtrosActuales = { ...filter };
@@ -648,6 +649,10 @@ export class EcomerceProductsComponent
    * @param producto Producto a comprar
    */
   comprarProducto(producto: Producto) {
+    if ((producto as any).exposicion?.activar === false) {
+      this.toastrService.warning('Este producto está inactivo y no puede agregarse al carrito.', 'Producto inactivo');
+      return;
+    }
     if (this.requiereConfiguracion(producto)) {
       // Abrir modal de configuración para productos que lo necesitan
       this.configurarProducto(producto);
@@ -754,6 +759,7 @@ export class EcomerceProductsComponent
       this.filtrosActuales.bodega = this.bodega;
       this.filtrosActuales.bodegaId = this.bodega?.idBodega || this.bodega;
       this.filtrosActuales.isChannelManual = true;
+      this.filtrosActuales.estado = 'activo';
     }
 
     this.filtrosActuales.searchTerm = searchTerm;

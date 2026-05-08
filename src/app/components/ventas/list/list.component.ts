@@ -5655,7 +5655,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.ventasService.editOrder(order).subscribe((data) => {
-      this.refrescarDatos();
+      this.refrescarDatos(true);
       Swal.fire({
         icon: "success",
         title: "Pedido actualizado correctamente",
@@ -5797,10 +5797,22 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (reason == "Cross click") {
             return;
           }
+          const costoEnvioAnterior = order.totalEnvio || 0;
           this.pedidoUtilService.pedido = order;
-          order.totalEnvio = Number(
+          const costoEnvioNuevo = Number(
             this.pedidoUtilService.getShippingCost(this.allBillingZone),
           );
+          order.totalEnvio = costoEnvioNuevo;
+
+          // Propagar delta de envío a los totales para que editOrder detecte correctamente
+          // si el pedido quedó con saldo pendiente (Aprobado → PreAprobado)
+          const deltaEnvio = costoEnvioNuevo - costoEnvioAnterior;
+          if (deltaEnvio !== 0) {
+            order.subtotal = (order.subtotal || 0) + deltaEnvio;
+            order.totalPedididoConDescuento = (order.totalPedididoConDescuento || 0) + deltaEnvio;
+            order.faltaPorPagar = Math.max(0, order.totalPedididoConDescuento - (Number(order.anticipo) || 0));
+          }
+
           this.editOrder(order);
         },
       );

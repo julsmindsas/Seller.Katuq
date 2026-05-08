@@ -139,16 +139,19 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   }
   ngAfterViewInit(): void {
     if (this.isEdit) {
-      const data = {
-        documento: this.documentoBusqueda,
-      };
-      this.datosEntregas = [];
+      const data = { documento: this.documentoBusqueda };
       this.service.getClientByDocument(data).subscribe((res: any) => {
-        if (res && res.datosEntrega && Array.isArray(res.datosEntrega)) {
-          res.datosEntrega.map((x) => {
-            this.datosEntregas.push(x);
-          });
+        let entregasArray: any[] = [];
+        if (res && res.datosEntrega) {
+          entregasArray = Array.isArray(res.datosEntrega)
+            ? res.datosEntrega
+            : [res.datosEntrega];
         }
+        // Fallback: si el cliente no tiene direcciones, mostrar la del pedido
+        if (entregasArray.length === 0 && this.pedidoGral?.envio) {
+          entregasArray = [this.pedidoGral.envio];
+        }
+        this.datosEntregas = [...entregasArray];
       });
     }
   }

@@ -311,7 +311,7 @@
             <div class="row">
                 <div [class]="'col-xl-'+col+' col-lg-'+col+' col-md-'+(col < 4 ? 4 : col)+' col-sm-6 col-12'" [class.col-xl-12]="listView"
                     *ngFor="let producto of productosPaginados; trackBy: trackByProducto">
-                    <div class="card product-card-modern">
+                    <div class="card product-card-modern" [class.product-card-inactive]="producto.exposicion?.activar === false">
                         <div class="product-box-modern">
                             <div class="product-img-wrapper">
                                 <img *ngIf="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || producto.crearProducto?.imagenesProductos?.[0]"
@@ -328,6 +328,11 @@
                                     <i class="pi pi-box text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
                                 </div>
 
+                                <!-- Badge producto inactivo -->
+                                <span *ngIf="producto.exposicion?.activar === false" class="inactive-badge">
+                                    INACTIVO
+                                </span>
+
                                 <!-- Badge de disponibilidad discreto -->
                                 <span class="stock-badge-simple"
                                       [ngClass]="{
@@ -342,7 +347,7 @@
                                 </span>
 
                                 <!-- Overlay de acciones MODERNIZADO -->
-                                <div class="product-actions-overlay">
+                                <div class="product-actions-overlay" *ngIf="producto.exposicion?.activar !== false">
                                     <!-- Botón Quick Add: Siempre visible para agregar rápido -->
                                     <button class="btn-action btn-action-quick"
                                             type="button"

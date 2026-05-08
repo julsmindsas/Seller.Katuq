@@ -1390,11 +1390,18 @@
 
 
 <ng-template #datosEnregaModal let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title"></h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
+    <div class="modal-header pdf-print-modal-header">
+        <div class="d-flex align-items-center justify-content-between w-100">
+            <div class="d-flex align-items-center gap-2">
+                <i class="fa fa-truck" style="color: #8b5cf6; font-size: 1.1rem;"></i>
+                <div>
+                    <h5 class="modal-title mb-0" id="modal-basic-title">Editar dirección de entrega</h5>
+                    <small class="text-muted d-none d-sm-inline">{{ pedidoSeleccionado?.nroPedido }}</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close pdf-print-modal-close" aria-label="Close"
+                (click)="modal.dismiss('Cross click')"></button>
+        </div>
     </div>
     <div class="modal-body">
         <pedido-entrega #entrega [pedidoGral]="pedidoSeleccionado" [formulario]="formulario" [isEdit]="true"
