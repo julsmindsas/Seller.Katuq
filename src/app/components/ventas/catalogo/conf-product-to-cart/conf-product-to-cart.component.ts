@@ -40,6 +40,8 @@ import { ToastrService } from "ngx-toastr";
 import { NotificationService } from "../../../../shared/services/notification.service";
 import { takeUntil, switchMap, tap, catchError, take } from "rxjs/operators";
 import { CustomFieldsService, CustomFieldGroup, CustomFieldConfig } from "../../../../shared/services/custom-fields.service";
+import { VentasService } from "../../../../shared/services/ventas/ventas.service";
+import { firstValueFrom } from "rxjs";
 @Component({
   selector: "app-conf-product-to-cart",
   templateUrl: "./conf-product-to-cart.component.html",
@@ -203,6 +205,7 @@ export class ConfProductToCartComponent
     private renderer: Renderer2,
     private cdr: ChangeDetectorRef,
     private customFieldsService: CustomFieldsService,
+    private ventasService: VentasService,
   ) {
     this.libConfigCarouselFixed = {
       carouselPreviewsConfig: {
@@ -645,6 +648,10 @@ export class ConfProductToCartComponent
   ngOnInit(): void {
     this.refreshCartWithProducts();
     this.loadCustomFields();
+    // Refrescar stock real desde el backend al abrir el modal — el snapshot del
+    // catálogo puede estar desactualizado vs la colección inventory (la fuente
+    // de verdad). Ver docs/arquitectura/INVENTORY_SOURCE_OF_TRUTH.md
+    this.refreshStockFromServer();
     console.log(this.productos);
 
     // 🔄 Suscribirse al estado de los maestros para monitoreo en tiempo real
@@ -1507,6 +1514,32 @@ export class ConfProductToCartComponent
     } else {
       // Fallback: cerrar todos los modales si no hay referencia específica
       this.modalService.dismissAll(result);
+    }
+  }
+
+  /**
+   * Refresca disponibilidad.cantidadDisponible del producto consultando al
+   * backend (que ya deriva el stock desde la colección inventory).
+   * Best-effort: si falla, mantiene el valor del snapshot.
+   */
+  private async refreshStockFromServer(): Promise<void> {
+    const ref = this.producto?.identificacion?.referencia;
+    if (!ref || !this.producto?.disponibilidad?.inventariable) return;
+    try {
+      const resp: any = await firstValueFrom(
+        this.ventasService.quickSearchProducts(ref, 1),
+      );
+      const fresh = resp?.products?.[0];
+      const stockReal = fresh?.disponibilidad?.cantidadDisponible;
+      if (stockReal !== undefined && stockReal !== null) {
+        this.producto.disponibilidad = {
+          ...this.producto.disponibilidad,
+          cantidadDisponible: stockReal,
+        };
+        this.cdr.detectChanges();
+      }
+    } catch (e) {
+      console.warn("[ConfProductToCart] No se pudo refrescar stock:", e);
     }
   }
 

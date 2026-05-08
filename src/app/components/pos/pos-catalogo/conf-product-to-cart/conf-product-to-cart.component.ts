@@ -14,6 +14,8 @@ import { POSPedidosUtilService } from '../../pos-service/pos-pedidos.util.servic
 import { parse } from 'flatted';
 import { ToastrService } from "ngx-toastr";
 import { NotificationService } from '../../../../shared/services/notification.service';
+import { VentasService } from '../../../../shared/services/ventas/ventas.service';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-conf-product-to-cart',
@@ -105,7 +107,8 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
   libConfigCarouselFixed: CarouselLibConfig;
 
   constructor(private storage: AngularFireStorage, private toastrService: ToastrService, private modalService: NgbModal, private carsingleton: CartSingletonService, private maestroService: MaestroService, private fb: FormBuilder,
-    private pedidoUtilService: POSPedidosUtilService, private notificacionService: NotificationService) {
+    private pedidoUtilService: POSPedidosUtilService, private notificacionService: NotificationService,
+    private ventasService: VentasService) {
 
 
     this.libConfigCarouselFixed = {
@@ -322,8 +325,11 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
 
 
   ngOnInit(): void {
-  
+
     this.refreshCartWithProducts()
+    // Refrescar stock real desde el backend (fuente única de verdad: inventory).
+    // Ver docs/arquitectura/INVENTORY_SOURCE_OF_TRUTH.md
+    this.refreshStockFromServer();
     console.log(this.productos)
 
     // this.initForm();
@@ -578,11 +584,36 @@ export class POSConfProductToCartComponent implements OnInit, AfterContentChecke
     }
   }
 
+  /**
+   * Refresca disponibilidad.cantidadDisponible del producto consultando al
+   * backend (que ya deriva el stock desde la colección inventory).
+   * Best-effort: si falla, mantiene el valor del snapshot.
+   */
+  private async refreshStockFromServer(): Promise<void> {
+    const ref = this.producto?.identificacion?.referencia;
+    if (!ref || !this.producto?.disponibilidad?.inventariable) return;
+    try {
+      const resp: any = await firstValueFrom(
+        this.ventasService.quickSearchProducts(ref, 1),
+      );
+      const fresh = resp?.products?.[0];
+      const stockReal = fresh?.disponibilidad?.cantidadDisponible;
+      if (stockReal !== undefined && stockReal !== null) {
+        this.producto.disponibilidad = {
+          ...this.producto.disponibilidad,
+          cantidadDisponible: stockReal,
+        };
+      }
+    } catch (e) {
+      console.warn("[POS-ConfProductToCart] No se pudo refrescar stock:", e);
+    }
+  }
+
   addToCar() {
     // Validar disponibilidad de stock antes de agregar al carrito
     if (this.producto?.disponibilidad?.inventariable) {
       const stockDisponible = this.producto.disponibilidad.cantidadDisponible || 0;
-      
+
       if (stockDisponible === 0) {
         this.toastrService.error('No hay unidades disponibles para este producto', 'Sin Stock', {
           timeOut: 4000,
