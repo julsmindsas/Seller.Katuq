@@ -689,6 +689,7 @@ export const NOTIFICATION_CONFIG: NotificationConfig = {
     endpoints: {
       send: '/v1/notifications/send',
       history: '/v1/notifications/history',
+      seller: '/v1/notifications/seller',
       preferences: '/v1/notification-preferences',
       markRead: '/v1/notifications/mark-read',
       stats: '/v1/notifications/stats'

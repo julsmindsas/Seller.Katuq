@@ -79,9 +79,12 @@ export class NotificationManagerService {
       // Cargar notificaciones desde caché local
       this.loadLocalNotifications();
       
-      // Configurar escucha en Firebase Realtime Database
+      // Cargar notificaciones existentes desde el backend
+      await this.loadExistingNotifications();
+
+      // Configurar escucha en Firebase Realtime Database (solo nuevas en tiempo real)
       this.setupFirebaseListener();
-      
+
       // Configurar procesamiento de eventos
       this.setupEventProcessing();
       
@@ -144,6 +147,65 @@ export class NotificationManagerService {
     };
     
     return roleMap[user.role.toLowerCase()] || UserRole.SELLER;
+  }
+
+  /**
+   * Carga notificaciones existentes desde el backend API
+   */
+  private async loadExistingNotifications(): Promise<void> {
+    if (!this.currentCompanyId) return;
+
+    try {
+      const endpoint = `${NOTIFICATION_CONFIG.api.baseUrl}${NOTIFICATION_CONFIG.api.endpoints.seller}/${encodeURIComponent(this.currentCompanyId)}?limit=50`;
+      const response: any = await this.http.get(endpoint).toPromise();
+
+      if (!response?.success || !response.notifications?.length) return;
+
+      for (const raw of response.notifications) {
+        const id = 'actualizacion_' + raw.id;
+        if (this.localNotifications.some(n => n.id === id)) continue;
+
+        const notification: KatuqNotification = {
+          id,
+          type: this.mapLegacyType(raw.type),
+          title: this.extractTitle(raw),
+          message: raw.message || raw.type || 'Notificación',
+          data: {
+            orderId: raw.data?.orderId || raw.data?.nroPedido,
+            cliente: raw.data?.cliente,
+            total: raw.data?.total,
+            originalType: raw.type,
+            firebaseId: raw.id,
+            ...raw.data
+          },
+          userId: this.currentUserId || undefined,
+          userRole: this.currentUserRole,
+          companyId: this.currentCompanyId || undefined,
+          channels: [NotificationChannel.IN_APP],
+          priority: raw.priority === 'CRITICAL' ? NotificationPriority.CRITICAL
+                  : raw.priority === 'HIGH' ? NotificationPriority.HIGH
+                  : NotificationPriority.NORMAL,
+          status: raw.read ? NotificationStatus.READ : NotificationStatus.PENDING,
+          createdAt: new Date(raw.timestamp || raw.createdAt || Date.now()),
+          readAt: raw.read ? new Date() : undefined,
+          actionUrl: raw.actionUrl || undefined,
+          actionText: raw.actionText || undefined,
+          icon: raw.icon || undefined,
+          color: raw.color || undefined
+        };
+
+        this.localNotifications.push(notification);
+      }
+
+      this.saveLocalNotifications();
+      const sorted = [...this.localNotifications].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      this.notificationsSubject.next(sorted);
+      this.updateUnreadCount(sorted);
+
+      console.log(`✅ ${response.notifications.length} notificaciones existentes cargadas desde API`);
+    } catch (error) {
+      console.warn('⚠️ No se pudieron cargar notificaciones existentes (no crítico):', error);
+    }
   }
 
   /**

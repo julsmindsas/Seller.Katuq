@@ -266,6 +266,7 @@ export interface NotificationConfig {
     endpoints: {
       send: string;
       history: string;
+      seller: string;
       preferences: string;
       markRead: string;
       stats: string;
