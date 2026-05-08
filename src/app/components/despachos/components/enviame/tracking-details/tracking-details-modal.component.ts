@@ -293,6 +293,17 @@ export class TrackingDetailsModalComponent implements OnInit {
       return 'enviame';
     }
 
+    // Cereza/Osmosis: el pedido tiene integraciones.osmosis.id (asignado por el
+    // flow shopify-orders-to-cereza o por push manual desde /despachos).
+    const integ: any = (this.pedido as any).integrations
+                    || (this.pedido as any).integraciones
+                    || {};
+    if (integ?.osmosis?.id
+        || integ?.osmosis?.osmosisOrderId
+        || (this.pedido as any).transportador === 'osmosis') {
+      return 'osmosis';
+    }
+
     // Detectar otros proveedores por el formato de guía o campos específicos
     const trackingNumber = this.pedido.shippingOrder || '';
 
@@ -801,6 +812,8 @@ export class TrackingDetailsModalComponent implements OnInit {
       'enviame': 'Enviame.io',
       'servientrega': 'Servientrega',
       'interrapidisimo': 'Interrapidísimo',
+      'osmosis': 'Guía Cereza',
+      'prindel': 'Prindel',
       'transportadora': 'Transportadora Propia',
       'otro': 'Otro Proveedor'
     };
@@ -813,6 +826,8 @@ export class TrackingDetailsModalComponent implements OnInit {
       'enviame': 'https://enviame.io/assets/images/logo-enviame.png',
       'servientrega': 'assets/logos/servientrega.png',
       'interrapidisimo': 'assets/logos/interrapidisimo.png',
+      'osmosis': 'assets/images/logos/guiacereza.svg',
+      'prindel': 'assets/images/logos/prindel.png',
       'transportadora': 'assets/logos/katuq.png',
       'otro': ''
     };

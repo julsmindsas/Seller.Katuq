@@ -1569,7 +1569,11 @@ export class OrdenesDespachoV2Component implements OnInit {
       'coordinadora': 'Coordinadora',
       'interrapidisimo': 'Interrapidísimo',
       'tcc': 'TCC',
-      'deprisa': 'Deprisa'
+      'deprisa': 'Deprisa',
+      'osmosis': 'Guía Cereza',
+      'prindel': 'Prindel',
+      'partners_logistics': 'Partners Logística',
+      'aliaddo_fulfillment': 'Aliaddo'
     };
 
     // Verificar si es un nombre conocido (case-insensitive)
