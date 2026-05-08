@@ -18,7 +18,7 @@ export interface TrackingEvent {
 
 export interface TrackingResponse {
   success: boolean;
-  provider: 'enviame' | 'transportadora' | 'servientrega' | 'interrapidisimo' | 'otro';
+  provider: 'enviame' | 'osmosis' | 'transportadora' | 'servientrega' | 'interrapidisimo' | 'otro';
   trackingNumber: string;
   currentStatus: TrackingStatus;
   currentStatusName?: string;
@@ -324,6 +324,8 @@ export class TrackingDetailsModalComponent implements OnInit {
     switch (provider) {
       case 'enviame':
         return this.normalizeEnviameResponse(response);
+      case 'osmosis':
+        return this.normalizeOsmosisResponse(response);
       case 'servientrega':
         return this.normalizeServientregaResponse(response);
       case 'interrapidisimo':
@@ -331,6 +333,59 @@ export class TrackingDetailsModalComponent implements OnInit {
       default:
         return this.normalizeDefaultResponse(response);
     }
+  }
+
+  private mapOsmosisStatus(status: string): TrackingStatus {
+    const map: { [key: string]: TrackingStatus } = {
+      'pending':    TrackingStatus.CREATED,
+      'confirmed':  TrackingStatus.PROCESSING,
+      'processing': TrackingStatus.PROCESSING,
+      'in_transit': TrackingStatus.IN_TRANSIT,
+      'shipped':    TrackingStatus.IN_TRANSIT,
+      'delivered':  TrackingStatus.DELIVERED,
+      'cancelled':  TrackingStatus.CANCELLED,
+    };
+    return map[String(status || '').toLowerCase()] || TrackingStatus.PROCESSING;
+  }
+
+  private normalizeOsmosisResponse(response: any): TrackingResponse {
+    // OsmosisProvider.trackShipment ya devuelve el shape estandarizado:
+    // { success, provider, trackingNumber, status, katuqStatus, shipmentNote, total, lastUpdate, raw }
+    const rawOrder = response?.raw || {};
+    const status = this.mapOsmosisStatus(response?.status);
+    const statusName = response?.katuqStatus || response?.status || 'En proceso';
+    const lastUpdate = response?.lastUpdate || rawOrder.updated_at || new Date().toISOString();
+
+    const events: TrackingEvent[] = [{
+      timestamp: lastUpdate,
+      status,
+      statusName,
+      description: response?.shipmentNote || `Estado en Cereza: ${response?.status || 'desconocido'}`,
+      location: rawOrder.shipping_city || rawOrder.shipping_address || '',
+      providerSpecific: {
+        osmosisOrderId:  response?.trackingNumber,
+        osmosisStatus:   response?.status,
+        katuqStatus:     response?.katuqStatus,
+        shipmentNote:    response?.shipmentNote,
+      }
+    }];
+
+    return {
+      success:           response?.success !== false,
+      provider:          'osmosis',
+      trackingNumber:    response?.trackingNumber || this.pedido?.shippingOrder || '',
+      currentStatus:     status,
+      currentStatusName: statusName,
+      events,
+      recipientInfo: {
+        name:    rawOrder.customer_name    || this.pedido?.cliente?.nombres_completos || '',
+        address: rawOrder.shipping_address || this.pedido?.envio?.direccionEntrega    || '',
+        phone:   rawOrder.customer_phone   || this.pedido?.cliente?.numero_celular_comprador || ''
+      },
+      estimatedDelivery: rawOrder.estimated_delivery_date || undefined,
+      actualDelivery:    status === TrackingStatus.DELIVERED ? lastUpdate : undefined,
+      lastKnownLocation: rawOrder.shipping_city ? { address: rawOrder.shipping_city } : undefined,
+    };
   }
 
   private normalizeEnviameResponse(response: any): TrackingResponse {
