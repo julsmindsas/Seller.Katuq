@@ -31,14 +31,15 @@
 
       <div class="panel-section" *ngIf="source">
         <label class="panel-label">Dimensiones</label>
-        <ul class="field-list" cdkDropList #palette="cdkDropList" id="palette" [cdkDropListData]="[]" [cdkDropListConnectedTo]="['rows-zone','cols-zone']">
-          <li *ngFor="let d of source.dimensions"
+        <ul class="field-list" cdkDropList id="palette" [cdkDropListData]="dimFields" [cdkDropListConnectedTo]="['rows-zone','cols-zone']" [cdkDropListSortingDisabled]="true">
+          <li *ngFor="let d of dimFields"
               class="field-pill"
-              [class.is-date]="d.type==='date'"
-              [class.is-number]="d.type==='number'"
+              [class.is-date]="d.dataType==='date'"
+              [class.is-number]="d.dataType==='number'"
               cdkDrag
-              [cdkDragData]="asFieldFromDim(d)">
-            <i class="fa" [class.fa-calendar]="d.type==='date'" [class.fa-hashtag]="d.type==='number'" [class.fa-font]="d.type==='string'" [class.fa-toggle-on]="d.type==='boolean'"></i>
+              [cdkDragData]="d"
+              (click)="addToZone('rows', d)">
+            <i class="fa" [class.fa-calendar]="d.dataType==='date'" [class.fa-hashtag]="d.dataType==='number'" [class.fa-font]="d.dataType==='string'" [class.fa-toggle-on]="d.dataType==='boolean'"></i>
             <span>{{ d.label }}</span>
           </li>
         </ul>
@@ -46,11 +47,12 @@
 
       <div class="panel-section" *ngIf="source">
         <label class="panel-label">Medidas</label>
-        <ul class="field-list" cdkDropList id="palette-m" [cdkDropListData]="[]" [cdkDropListConnectedTo]="['values-zone']">
-          <li *ngFor="let m of source.measures"
+        <ul class="field-list" cdkDropList id="palette-m" [cdkDropListData]="measFields" [cdkDropListConnectedTo]="['values-zone']" [cdkDropListSortingDisabled]="true">
+          <li *ngFor="let m of measFields"
               class="field-pill is-measure"
               cdkDrag
-              [cdkDragData]="asFieldFromMeasure(m)">
+              [cdkDragData]="m"
+              (click)="addToZone('values', m)">
             <i class="fa fa-ruler"></i>
             <span>{{ m.label }}</span>
           </li>
@@ -65,7 +67,7 @@
           cdkDropList
           id="rows-zone"
           [cdkDropListData]="rows"
-          [cdkDropListConnectedTo]="['cols-zone','values-zone','palette']"
+          [cdkDropListConnectedTo]="['cols-zone','values-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'rows')">
           <h4 class="zone-title"><i class="fa fa-grip-lines me-1"></i> Filas</h4>
           <div class="zone-content">
@@ -86,7 +88,7 @@
           cdkDropList
           id="cols-zone"
           [cdkDropListData]="cols"
-          [cdkDropListConnectedTo]="['rows-zone','values-zone','palette']"
+          [cdkDropListConnectedTo]="['rows-zone','values-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'cols')">
           <h4 class="zone-title"><i class="fa fa-grip-lines-vertical me-1"></i> Columnas</h4>
           <div class="zone-content">
@@ -107,7 +109,7 @@
           cdkDropList
           id="values-zone"
           [cdkDropListData]="values"
-          [cdkDropListConnectedTo]="['rows-zone','cols-zone','palette-m']"
+          [cdkDropListConnectedTo]="['rows-zone','cols-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'values')">
           <h4 class="zone-title"><i class="fa fa-ruler me-1"></i> Valores</h4>
           <div class="zone-content">

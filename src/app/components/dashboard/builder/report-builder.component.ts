@@ -58,7 +58,11 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   saving = false;
   errorMsg: string | null = null;
 
-  readonly fieldDropIds = ['rows-zone', 'cols-zone', 'values-zone', 'palette'];
+  readonly fieldDropIds = ['rows-zone', 'cols-zone', 'values-zone', 'palette', 'palette-m'];
+
+  // Listas computadas para el CDK drag — se recalculan al cambiar de source
+  dimFields: FieldRef[] = [];
+  measFields: FieldRef[] = [];
 
   constructor(
     private reportsService: ReportsService,
@@ -89,6 +93,8 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     this.values = [];
     this.filters = [];
     this.result = null;
+    this.dimFields = s.dimensions.map(d => this.asFieldFromDim(d));
+    this.measFields = s.measures.map(m => this.asFieldFromMeasure(m));
   }
 
   selectSourceById(id: string): void {
@@ -197,21 +203,26 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   run(): void {
     this.errorMsg = null;
     const spec = this.buildSpec();
+    console.log('[ReportBuilder] spec:', spec);
     if (!spec) {
+      console.warn('[ReportBuilder] buildSpec() returned null');
       return;
     }
     this.running = true;
+    console.log('[ReportBuilder] Calling runQuery...');
     this.reportsService
       .runQuery(spec)
       .pipe(
         takeUntil(this.destroy$),
         catchError((err) => {
-          this.errorMsg = err?.error?.message || 'Error al ejecutar la consulta.';
+          console.error('[ReportBuilder] Query error:', err);
+          this.errorMsg = err?.error?.error || err?.error?.message || err?.message || 'Error al ejecutar la consulta.';
           return of(null);
         }),
         finalize(() => (this.running = false))
       )
       .subscribe((res) => {
+        console.log('[ReportBuilder] Query result:', res);
         this.result = res;
       });
   }
