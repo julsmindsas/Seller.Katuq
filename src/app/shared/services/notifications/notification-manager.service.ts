@@ -261,40 +261,40 @@ export class NotificationManagerService {
   private listenToActualizacionTicket(): void {
     // Obtener company data del localStorage
     const companyData = JSON.parse(localStorage.getItem('currentCompany') || '{}');
-    
+
     if (!companyData || !companyData.nomComercial) {
       console.log('⚠️ No hay datos de empresa para ActualizacionTicket');
       return;
     }
-    
+
     const notificationPath = 'ActualizacionTicket' + companyData.nomComercial;
     console.log('🔔 Escuchando ActualizacionTicket en:', notificationPath);
-    
-    // Suscripción para rastrear última notificación procesada
-    let lastProcessedId: string | null = null;
-    
+
+    // IDs ya procesados para evitar duplicados
+    const processedIds = new Set<string>();
+
     this.db.list(notificationPath)
       .snapshotChanges()
       .subscribe((snapshots) => {
         console.log('📨 Notificaciones de ActualizacionTicket:', snapshots.length);
-        
+
         const notifications = snapshots.map((snapshot) => {
           const data: any = snapshot.payload.val();
           const id = snapshot.key;
           return { id, ...data };
         });
 
-        // Ordenar por timestamp
+        // Ordenar por timestamp (más recientes primero)
         const sorted = notifications.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        
-        // Buscar nueva notificación no leída
-        const newNotification = sorted.find((n) => !n.read);
-        
-        if (newNotification && newNotification.id !== lastProcessedId) {
-          lastProcessedId = newNotification.id;
-          
-          console.log('🔔 Nueva notificación de ActualizacionTicket:', newNotification);
-          
+
+        // Procesar TODAS las notificaciones no leídas que no hayamos procesado aún
+        const unprocessed = sorted.filter((n) => !n.read && !processedIds.has(n.id));
+
+        for (const newNotification of unprocessed) {
+          processedIds.add(newNotification.id);
+
+          console.log('🔔 Nueva notificación de ActualizacionTicket:', newNotification.type, newNotification.id);
+
           // Convertir al formato KatuqNotification
           const katuqNotification: KatuqNotification = {
             id: 'actualizacion_' + newNotification.id,
@@ -309,11 +309,11 @@ export class NotificationManagerService {
               firebaseId: newNotification.id,
               ...newNotification
             },
-            
+
             userId: this.currentUserId || undefined,
             userRole: this.currentUserRole,
             companyId: this.currentCompanyId || undefined,
-            
+
             channels: [NotificationChannel.IN_APP],
             priority: newNotification.priority === 'CRITICAL' ? NotificationPriority.CRITICAL
                     : newNotification.priority === 'HIGH' ? NotificationPriority.HIGH
@@ -329,7 +329,7 @@ export class NotificationManagerService {
             icon: newNotification.icon || undefined,
             color: newNotification.color || undefined
           };
-          
+
           // Agregar a notificaciones locales
           this.addLocalNotification(katuqNotification);
         }
@@ -365,13 +365,19 @@ export class NotificationManagerService {
    */
   private mapLegacyType(type: string): NotificationType {
     const typeMap: Record<string, NotificationType> = {
-      // Mapeos en inglés
+      // Mapeos en inglés (tipos que envía el backend)
       'ORDER_CREATED': NotificationType.ORDER_CREATED,
       'ORDER_UPDATED': NotificationType.ORDER_UPDATED,
       'PAYMENT_APPROVED': NotificationType.PAYMENT_APPROVED,
       'PAYMENT_REJECTED': NotificationType.PAYMENT_REJECTED,
-      
-      // Mapeos en español
+      'PRODUCTION_STARTED': NotificationType.PRODUCTION_STARTED,
+      'PRODUCTION_COMPLETED': NotificationType.PRODUCTION_COMPLETED,
+      'ORDER_PACKED': NotificationType.ORDER_PACKED,
+      'ORDER_DISPATCHED': NotificationType.ORDER_DISPATCHED,
+      'ORDER_DELIVERED': NotificationType.ORDER_DELIVERED,
+      'ORDER_PROCESS_REJECTED': NotificationType.ORDER_PROCESS_REJECTED,
+
+      // Mapeos en español (legacy)
       'Pedido Creado': NotificationType.ORDER_CREATED,
       'Pedido Actualizado': NotificationType.ORDER_UPDATED,
       'Pago Aprobado': NotificationType.PAYMENT_APPROVED,
