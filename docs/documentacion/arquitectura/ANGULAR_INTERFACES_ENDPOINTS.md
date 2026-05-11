@@ -11,8 +11,8 @@
 
 ## 📦 Dropshipping
 
-- Guía completa: `docs/DROPSHIPPING_GUIDE.md`
-- Diagrama de procesos: `docs/dropshipping-map.svg` (fuente: `docs/dropshipping-map.mmd`)
+- Guía completa: [DROPSHIPPING_GUIDE.md](../integraciones/dropshipping/DROPSHIPPING_GUIDE.md)
+- Diagrama de procesos: [dropshipping-map.svg](../integraciones/dropshipping/dropshipping-map.svg) (fuente: [dropshipping-map.mmd](../integraciones/dropshipping/dropshipping-map.mmd))
 
 ---
 
