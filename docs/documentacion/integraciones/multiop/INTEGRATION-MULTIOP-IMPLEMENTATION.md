@@ -6,7 +6,7 @@ MultiOP v2 es un sistema de producción de lentes oftálmicos. Las ópticas que 
 La integración usa el sistema de `camposPersonalizados` (módulo variable) de Katuq para capturar los datos ópticos en la venta asistida, y el strategy pattern de integraciones existente (como Shopify/WooCommerce) para la conexión con MultiOP.
 
 ## Documentación de referencia
-- **Mapeo de campos**: `docs/campos-personalizados-integracion-multiop.md` — Contiene el mapeo completo de campos MultiOP ↔ Katuq, validaciones, estructura de datos en Firestore
+- **Mapeo de campos**: [campos-personalizados-integracion-multiop.md](campos-personalizados-integracion-multiop.md) — Contiene el mapeo completo de campos MultiOP ↔ Katuq, validaciones, estructura de datos en Firestore
 - **Plan completo**: El plan de 5 fases está en el repo multiop-v2
 
 ## Estado actual — Qué ya está implementado

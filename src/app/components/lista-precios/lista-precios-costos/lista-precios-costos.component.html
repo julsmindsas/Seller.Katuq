@@ -1,0 +1,104 @@
+<div class="page-wrapper">
+  <div class="page-header">
+    <div>
+      <h3 class="mb-1">Costos de inventario</h3>
+      <p class="text-muted mb-0">
+        Importa los costos desde tu proveedor de fulfillment (Prindel/Aliaddo).
+        Los costos alimentan el valor del inventario y el informe de utilidad.
+      </p>
+    </div>
+    <div>
+      <p-menu #accionesMenu [model]="accionesMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
+      <button pButton type="button"
+              icon="pi pi-ellipsis-v"
+              label="Acciones"
+              class="p-button-sm"
+              (click)="accionesMenu.toggle($event)"
+              pTooltip="Importar / Exportar Excel"
+              tooltipPosition="bottom"></button>
+    </div>
+  </div>
+
+  <!-- Resumen del último import -->
+  <div *ngIf="ultimoImport" class="card last-import-card mt-3">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start mb-2">
+        <div>
+          <small class="text-muted">Último import</small>
+          <h5 class="mb-0">{{ ultimoImport.fileName || ultimoImport.id }}</h5>
+        </div>
+        <span class="badge bg-secondary">{{ ultimoImport.fuente }}</span>
+      </div>
+      <div class="row g-2 mt-3">
+        <div class="col-md-3">
+          <div class="stat stat-success">
+            <small>Productos actualizados</small>
+            <div class="stat-value">{{ ultimoImport.totalProcesados || 0 }}</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat stat-info">
+            <small>Sin cambios</small>
+            <div class="stat-value">{{ ultimoImport.summary?.noChange || 0 }}</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat stat-warning">
+            <small>No encontrados</small>
+            <div class="stat-value">{{ ultimoImport.summary?.unmatched || 0 }}</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="stat stat-neutral">
+            <small>Delta inventario</small>
+            <div class="stat-value">{{ formatCOP(ultimoImport.summary?.deltaTotal) }}</div>
+          </div>
+        </div>
+      </div>
+      <small class="text-muted mt-3 d-block">
+        Importado por <b>{{ ultimoImport.importedBy }}</b> · {{ formatDate(ultimoImport.importedAt || ultimoImport.importedAtISO) }}
+      </small>
+    </div>
+  </div>
+
+  <!-- Historial -->
+  <div class="card mt-4">
+    <div class="card-header">
+      <h5 class="mb-0">Histórico de imports</h5>
+    </div>
+    <div class="card-body p-0">
+      <div *ngIf="cargando" class="text-center py-4">
+        <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem;"></i>
+      </div>
+
+      <div *ngIf="!cargando && imports.length === 0" class="text-center py-5 text-muted">
+        <i class="pi pi-inbox" style="font-size: 3rem;"></i>
+        <p class="mt-2 mb-0">Aún no has importado costos.</p>
+        <small>Empieza con el botón "Importar Excel".</small>
+      </div>
+
+      <table *ngIf="!cargando && imports.length > 0" class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Archivo</th>
+            <th>Fuente</th>
+            <th class="text-end">Procesados</th>
+            <th class="text-end">Delta inventario</th>
+            <th>Importado por</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let imp of imports">
+            <td>{{ imp.fileName || imp.id }}</td>
+            <td><span class="badge bg-secondary">{{ imp.fuente }}</span></td>
+            <td class="text-end">{{ imp.totalProcesados || 0 }}</td>
+            <td class="text-end">{{ formatCOP(imp.summary?.deltaTotal) }}</td>
+            <td>{{ imp.importedBy }}</td>
+            <td>{{ formatDate(imp.importedAt || imp.importedAtISO) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

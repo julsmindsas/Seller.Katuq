@@ -22,8 +22,8 @@ Conclusión: la app está lista para una implementación ágil del flujo de drop
 ---
 
 ### Mapa de procesos (Mermaid)
-- Fuente Mermaid: `docs/dropshipping-map.mmd`
-- Exportados: `docs/dropshipping-map.svg`, `docs/dropshipping-map.png`
+- Fuente Mermaid: [dropshipping-map.mmd](dropshipping-map.mmd)
+- Exportados: [dropshipping-map.svg](dropshipping-map.svg), [dropshipping-map.png](dropshipping-map.png)
 
 ![Mapa de procesos de dropshipping](./dropshipping-map.svg)
 
@@ -127,6 +127,5 @@ export interface Producto {
 - `src/app/shared/services/ventas/ventas.service.ts`
 - `src/app/shared/services/despachos/logistica.services.ts` y `logistica.service.v2.ts`
 - `src/app/components/integrations/`
-- Diagrama: `docs/dropshipping-map.mmd` → `docs/dropshipping-map.svg`
-
+- Diagrama: [dropshipping-map.mmd](dropshipping-map.mmd) → [dropshipping-map.svg](dropshipping-map.svg)
 

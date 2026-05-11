@@ -10,6 +10,12 @@ import { Traslado } from '../../models/inventarios/traslado.model';
 /**
  * Interfaz para producto en vista consolidada de inventario
  */
+export interface PrecioPorTipoClienteResp {
+  tipoClienteId: string;
+  tipoClienteNombre: string;
+  precioConIva: number;
+}
+
 export interface ProductoConsolidado {
   id: string;
   referencia: string;
@@ -19,6 +25,8 @@ export interface ProductoConsolidado {
   precioSinIva: number;
   /** Costo unitario de compra (importado desde fulfillment / Aliaddo) */
   costoUnitario?: number;
+  /** Precios por tipo de cliente (lista de precios activa). */
+  preciosPorTipoCliente?: PrecioPorTipoClienteResp[];
   inventariable: boolean;
   stockPorBodega: { [bodegaId: string]: number };
   stockTotal: number;
@@ -26,11 +34,20 @@ export interface ProductoConsolidado {
   valorCostoTotal?: number;
   fulfillmentId: string | null;
   fulfillmentProvider: string | null;
+  /** Fuente del costo: aliaddo-api | prindel-excel | manual | null. */
+  costoFuente?: string | null;
   // Campos para UI
   expanded?: boolean;
   fulfillmentLoading?: boolean;
   fulfillmentStock?: { [warehouseId: string]: number };
   fulfillmentWarehouses?: any[];
+}
+
+/** Tipo de cliente (lista de precios) activo del comercio. */
+export interface TipoClienteResp {
+  id: string;
+  nombre: string;
+  [key: string]: any;
 }
 
 /**
@@ -51,6 +68,8 @@ export interface MetricasBodega {
   valorTotal: number;
   /** Valor a costo del inventario (suma de costoUnitario * stock) */
   valorCostoTotal?: number;
+  /** Valor venta por cada tipo de cliente { tipoClienteId → total }. */
+  valorPorTipoCliente?: { [tipoClienteId: string]: number };
   /** Margen estimado en pesos: valorTotal - valorCostoTotal */
   margenEstimado?: number;
   totalUnidades: number;
@@ -94,6 +113,8 @@ export interface TotalesGlobales {
   valorTotal: number;
   /** Valor a costo total del inventario */
   valorCostoTotal?: number;
+  /** Valor venta global por cada tipo de cliente. */
+  valorPorTipoCliente?: { [tipoClienteId: string]: number };
   /** Margen estimado global: valorTotal - valorCostoTotal */
   margenEstimado?: number;
   totalUnidades: number;
@@ -112,6 +133,9 @@ export interface TotalesFiltrados {
   productosSinStock: number;
   productosBajoStock: number;
   porBodega: { [bodegaId: string]: number };
+  valorTotal?: number;
+  valorCostoTotal?: number;
+  valorPorTipoCliente?: { [tipoClienteId: string]: number };
 }
 
 /**
@@ -121,6 +145,8 @@ export interface InventarioConsolidadoResponse {
   success: boolean;
   productos: ProductoConsolidado[];
   bodegas: BodegaConsolidada[];
+  /** Tipos de cliente activos del comercio (lista de precios). */
+  tiposCliente: TipoClienteResp[];
   totalProductos: number;
   estadisticas: {
     totalStock: number;
@@ -239,6 +265,32 @@ export class InventarioService {
    * @param options Opciones de paginación y filtro
    * @returns Observable con productos, bodegas y estadísticas
    */
+  /**
+   * Exporta el inventario consolidado a Excel (.xlsx) respetando los filtros activos.
+   * Devuelve un Blob para descarga directa desde el browser.
+   */
+  exportarInventarioExcel(options: {
+    bodega?: string;
+    linkedToFulfillment?: string;
+    search?: string;
+    stockFilter?: string;
+    onlyWithStock?: boolean;
+    soloInventariables?: boolean;
+  } = {}): Observable<Blob> {
+    let params = new HttpParams();
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.linkedToFulfillment) params = params.set('linkedToFulfillment', options.linkedToFulfillment);
+    if (options.search) params = params.set('search', options.search);
+    if (options.stockFilter) params = params.set('stockFilter', options.stockFilter);
+    if (options.onlyWithStock !== undefined) params = params.set('onlyWithStock', String(options.onlyWithStock));
+    if (options.soloInventariables !== undefined) params = params.set('soloInventariables', String(options.soloInventariables));
+
+    return this.http.get(`${this.apiUrl}/inventory/export-excel`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
   obtenerInventarioConsolidado(options: {
     limit?: number;
     page?: number;
@@ -248,7 +300,10 @@ export class InventarioService {
     stockFilter?: string;
     search?: string;
     bodega?: string;
+    /** @deprecated Filtro legacy sobre bodegas warehouses.fulfillmentId. Usar linkedToFulfillment. */
     fulfillment?: string;
+    /** 'con' = producto con costoFuente=aliaddo-api o integrations.fulfillment.id; 'sin' = ninguno. */
+    linkedToFulfillment?: string;
   } = {}): Observable<InventarioConsolidadoResponse> {
     let params = new HttpParams();
 
@@ -261,6 +316,7 @@ export class InventarioService {
     if (options.search) params = params.set('search', options.search);
     if (options.bodega) params = params.set('bodega', options.bodega);
     if (options.fulfillment) params = params.set('fulfillment', options.fulfillment);
+    if (options.linkedToFulfillment) params = params.set('linkedToFulfillment', options.linkedToFulfillment);
 
     return this.http.get<InventarioConsolidadoResponse>(
       `${this.apiUrl}/inventory/consolidado`,

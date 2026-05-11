@@ -1,0 +1,203 @@
+<div class="modal-header">
+  <h5 class="modal-title">
+    <i class="pi pi-cloud-upload me-2"></i>
+    Importar costos desde fulfillment (Excel Prindel/Aliaddo)
+  </h5>
+  <button type="button" class="btn-close" aria-label="Close" (click)="cerrar('cancelled')"></button>
+</div>
+
+<div class="modal-body">
+  <!-- Indicador de pasos -->
+  <div class="stepper mb-3">
+    <span class="step" [class.active]="step === 'upload'" [class.done]="step !== 'upload'">1. Cargar archivo</span>
+    <span class="step-divider"></span>
+    <span class="step" [class.active]="step === 'preview'" [class.done]="step === 'applying' || step === 'done'">2. Revisar preview</span>
+    <span class="step-divider"></span>
+    <span class="step" [class.active]="step === 'done'">3. Aplicar</span>
+  </div>
+
+  <!-- Paso 1: Upload -->
+  <div *ngIf="step === 'upload'">
+    <div class="drop-zone"
+         [class.dragover]="dragOver"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         (drop)="onDrop($event)"
+         (click)="triggerFileInput()">
+      <i class="pi pi-file-excel" style="font-size: 3rem;"></i>
+      <p class="mt-3 mb-1"><b>Arrastra el Excel aquí</b> o haz clic para seleccionarlo</p>
+      <small class="text-muted">Formato: hoja "Inventario y Precios" + (opcional) hoja "Alertas"</small>
+      <input #fileInput type="file" accept=".xlsx,.xls" class="d-none" (change)="onFileSelected($event)"/>
+    </div>
+
+    <div *ngIf="fileName" class="alert alert-info mt-3 d-flex align-items-center">
+      <i class="pi pi-file-excel me-2"></i>
+      <div>
+        <b>{{ fileName }}</b><br/>
+        <small>{{ parsedRows.length }} productos detectados · {{ parsedAlerts.length }} alertas</small>
+      </div>
+    </div>
+
+    <div *ngIf="parseErrors.length > 0" class="alert alert-danger mt-3">
+      <b>Errores al procesar el archivo:</b>
+      <ul class="mb-0">
+        <li *ngFor="let err of parseErrors">{{ err }}</li>
+      </ul>
+    </div>
+
+    <!-- Muestra de primeras filas -->
+    <div *ngIf="parsedRows.length > 0" class="mt-3">
+      <h6>Vista previa (primeras 5 filas)</h6>
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Nombre</th>
+            <th class="text-end">Costo unitario</th>
+            <th class="text-end">Total stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of parsedRows.slice(0, 5)">
+            <td><code>{{ r.codigo }}</code></td>
+            <td class="text-truncate" style="max-width: 250px;">{{ r.nombre }}</td>
+            <td class="text-end">{{ formatCOP(r.costoUnitario) }}</td>
+            <td class="text-end">{{ r.stocks?.total }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Paso 2: Preview -->
+  <div *ngIf="step === 'preview' && preview">
+    <div class="row g-2 mb-3">
+      <div class="col-md-3">
+        <div class="stat-card stat-success">
+          <small>Con cambios</small>
+          <div class="stat-value">{{ preview.summary.matched }}</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card stat-info">
+          <small>Sin cambios</small>
+          <div class="stat-value">{{ preview.summary.noChange }}</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card stat-warning">
+          <small>No encontrados</small>
+          <div class="stat-value">{{ preview.summary.unmatched }}</div>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="stat-card stat-neutral">
+          <small>Delta inventario</small>
+          <div class="stat-value">{{ formatCOP(preview.summary.deltaTotal) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Alertas -->
+    <div *ngIf="preview.alerts && preview.alerts.length > 0" class="alert alert-warning">
+      <b><i class="pi pi-exclamation-triangle me-2"></i>{{ preview.alerts.length }} alerta(s) del Excel:</b>
+      <ul class="mb-0 mt-2">
+        <li *ngFor="let a of preview.alerts">
+          <b>{{ a.tipo }}</b> — <code>{{ a.codigo }}</code>: {{ a.descripcion }}
+          <em *ngIf="a.accionSugerida">— Acción: {{ a.accionSugerida }}</em>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Productos con cambios -->
+    <h6 class="mt-3">Productos con cambios ({{ preview.matched.length }})</h6>
+    <div class="table-wrapper">
+      <table class="table table-sm table-hover">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th class="text-end">Costo anterior</th>
+            <th class="text-end">Costo nuevo</th>
+            <th class="text-end">Delta</th>
+            <th class="text-end">Delta %</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let m of preview.matched">
+            <td>
+              <code>{{ m.codigoNormalizado }}</code>
+              <span *ngIf="m.aliasAplicado" class="badge bg-info ms-1" title="Alias aplicado">
+                ← {{ m.aliasAplicado.de }}
+              </span>
+            </td>
+            <td class="text-end text-muted">{{ formatCOP(m.costoAnterior) }}</td>
+            <td class="text-end"><b>{{ formatCOP(m.costoNuevo) }}</b></td>
+            <td class="text-end" [class.text-success]="(m.delta || 0) > 0" [class.text-danger]="(m.delta || 0) < 0">
+              {{ formatCOP(m.delta) }}
+            </td>
+            <td class="text-end">
+              <span *ngIf="m.deltaPct !== null && m.deltaPct !== undefined">{{ m.deltaPct | number:'1.2-2' }}%</span>
+              <span *ngIf="m.deltaPct === null || m.deltaPct === undefined">—</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- No encontrados -->
+    <div *ngIf="preview.unmatched && preview.unmatched.length > 0" class="mt-3">
+      <h6 class="text-warning">No encontrados en Katuq ({{ preview.unmatched.length }})</h6>
+      <p class="text-muted small">
+        Estos códigos no existen en tu catálogo. Verifica que la referencia esté bien escrita o créalos antes de re-importar.
+      </p>
+      <ul class="small">
+        <li *ngFor="let u of preview.unmatched"><code>{{ u.codigoOriginal }}</code> — {{ u.reason }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Paso 3: Done -->
+  <div *ngIf="step === 'done' && applyResult">
+    <div class="text-center py-4">
+      <i class="pi pi-check-circle text-success" style="font-size: 4rem;"></i>
+      <h4 class="mt-3">Importación aplicada</h4>
+      <p class="lead">{{ applyResult.message }}</p>
+      <div class="row g-2 mt-4 justify-content-center">
+        <div class="col-md-4">
+          <div class="stat-card stat-success">
+            <small>Procesados</small>
+            <div class="stat-value">{{ applyResult.processed }}</div>
+          </div>
+        </div>
+        <div class="col-md-4" *ngIf="applyResult.failed > 0">
+          <div class="stat-card stat-warning">
+            <small>Fallidos</small>
+            <div class="stat-value">{{ applyResult.failed }}</div>
+          </div>
+        </div>
+      </div>
+      <div *ngIf="applyResult.errors && applyResult.errors.length > 0" class="alert alert-warning mt-3 text-start">
+        <b>Errores:</b>
+        <ul class="mb-0 small">
+          <li *ngFor="let e of applyResult.errors"><code>{{ e.codigo }}</code>: {{ e.reason }}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button *ngIf="step === 'upload'" type="button" class="btn btn-secondary" (click)="cerrar('cancelled')">Cancelar</button>
+  <button *ngIf="step === 'upload'" type="button" class="btn btn-primary" [disabled]="parsedRows.length === 0" (click)="generarPreview()">
+    <i class="pi pi-search me-2"></i>Generar preview
+  </button>
+
+  <button *ngIf="step === 'preview'" type="button" class="btn btn-link" (click)="reiniciar()">
+    <i class="pi pi-arrow-left me-2"></i>Volver
+  </button>
+  <button *ngIf="step === 'preview'" type="button" class="btn btn-danger" [disabled]="preview?.matched?.length === 0" (click)="confirmarAplicar()">
+    <i class="pi pi-check me-2"></i>Aplicar cambios
+  </button>
+
+  <button *ngIf="step === 'done'" type="button" class="btn btn-primary" (click)="cerrar('applied')">Cerrar</button>
+</div>
