@@ -194,12 +194,19 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   productosConsolidadosFiltrados: ProductoConsolidado[] = []; // Lista filtrada para mostrar
   bodegasConsolidadas: BodegaConsolidada[] = [];
 
+  /** Tipos de cliente activos del comercio (lista de precios). Vienen del
+   * backend al cargar el consolidado. Se usan para renderizar una columna
+   * "Valor [tipo cliente]" por cada uno (estilo bodegas). */
+  tiposClienteActivos: { id: string; nombre: string }[] = [];
+
   // Filtros para vista consolidada
   filtrosConsolidados = {
     busqueda: "",
     estadoStock: "", // 'agotados', 'bajos', 'disponibles', 'criticos', ''
     bodegaId: "", // ID de bodega específica o '' para todas
-    fulfillment: "", // 'con', 'sin', '' para todos
+    fulfillment: "", // 'con', 'sin', '' — opera sobre productos: producto con
+                    // costoFuente=aliaddo-api o integrations.fulfillment.id (con) / ninguno (sin).
+                    // Param backend: linkedToFulfillment.
   };
   estadisticasConsolidadas: {
     totalStock: number;
@@ -230,6 +237,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   totalesGlobales: {
     valorTotal: number;
     valorCostoTotal?: number;
+    valorPorTipoCliente?: { [tipoClienteId: string]: number };
     margenEstimado?: number;
     totalUnidades: number;
     totalProductos: number;
@@ -239,6 +247,7 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
   } = {
     valorTotal: 0,
     valorCostoTotal: 0,
+    valorPorTipoCliente: {},
     margenEstimado: 0,
     totalUnidades: 0,
     totalProductos: 0,
@@ -523,7 +532,8 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       stockFilter: this.filtrosConsolidados.estadoStock || undefined,
       search: this.filtrosConsolidados.busqueda?.trim() || undefined,
       bodega: this.filtrosConsolidados.bodegaId || undefined,
-      fulfillment: this.filtrosConsolidados.fulfillment || undefined,
+      // Filtro fulfillment a nivel producto: con/sin sync de costo Aliaddo.
+      linkedToFulfillment: this.filtrosConsolidados.fulfillment || undefined,
     })
     .pipe(takeUntil(this.destroy$))
     .subscribe({
@@ -535,6 +545,12 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
           // Actualizar métricas solo si vienen en la respuesta (primera carga o recarga)
           if (response.bodegas) {
             this.bodegasConsolidadas = response.bodegas;
+          }
+          if (response.tiposCliente) {
+            this.tiposClienteActivos = response.tiposCliente.map((tc: any) => ({
+              id: tc.id,
+              nombre: tc.nombre || tc.tipoClienteNombre || tc.id,
+            }));
           }
           this.paginationConsolidada = {
             limit: response.pagination?.limit || 20,
@@ -676,38 +692,52 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     productosSinStock: number;
     productosBajoStock: number;
     porBodega: { [id: string]: number };
+    valorTotal?: number;
+    valorCostoTotal?: number;
+    valorPorTipoCliente?: { [tipoClienteId: string]: number };
   } | null = null;
 
   // ── Métodos de totales: resuelven automáticamente global vs filtrado ──
+  // Cuando hay filtros activos, el backend devuelve `totalesFiltrados` con
+  // valorTotal/valorCostoTotal/valorPorTipoCliente ya recalculados sobre los
+  // productos filtrados — preferimos esos en lugar de re-derivar en cliente.
 
   getMetricaValorTotal(): number {
     if (!this.hayFiltrosActivos()) return this.totalesGlobales.valorTotal ?? 0;
-    // Cuando hay filtros, calcular valor solo de bodegas que apliquen
-    let bodegas = this.bodegasConsolidadas;
-    if (this.filtrosConsolidados.fulfillment === 'con') {
-      bodegas = bodegas.filter(b => !!b.fulfillmentId);
-    } else if (this.filtrosConsolidados.fulfillment === 'sin') {
-      bodegas = bodegas.filter(b => !b.fulfillmentId);
-    }
-    if (this.filtrosConsolidados.bodegaId) {
-      bodegas = bodegas.filter(b => b.id === this.filtrosConsolidados.bodegaId);
-    }
-    return bodegas.reduce((sum, b) => sum + (b.metricas?.valorTotal ?? 0), 0);
+    return this._totalesFiltrados?.valorTotal
+      ?? this.totalesGlobales.valorTotal
+      ?? 0;
   }
 
   /** Suma del valor a costo (stock × costoUnitario) respetando los filtros activos. */
   getMetricaValorCostoTotal(): number {
     if (!this.hayFiltrosActivos()) return this.totalesGlobales.valorCostoTotal ?? 0;
-    let bodegas = this.bodegasConsolidadas;
-    if (this.filtrosConsolidados.fulfillment === 'con') {
-      bodegas = bodegas.filter(b => !!b.fulfillmentId);
-    } else if (this.filtrosConsolidados.fulfillment === 'sin') {
-      bodegas = bodegas.filter(b => !b.fulfillmentId);
+    return this._totalesFiltrados?.valorCostoTotal
+      ?? this.totalesGlobales.valorCostoTotal
+      ?? 0;
+  }
+
+  /** Precio (precioConIva) para un producto en un tipo de cliente específico.
+   *  Retorna 0 si el producto no tiene precio configurado para ese tipo. */
+  getPrecioTipoCliente(producto: any, tipoClienteId: string): number {
+    const found = (producto?.preciosPorTipoCliente || []).find(
+      (p: any) => p.tipoClienteId === tipoClienteId,
+    );
+    return Number(found?.precioConIva) || 0;
+  }
+
+  /** Valor venta total del producto en el tipo de cliente: precioConIva × stockTotal. */
+  getValorVentaPorTipo(producto: any, tipoClienteId: string): number {
+    return this.getPrecioTipoCliente(producto, tipoClienteId) * (producto?.stockTotal || 0);
+  }
+
+  /** Suma del valor venta para un tipo de cliente sobre todos los productos
+   *  (filtrados o totales globales). */
+  getMetricaValorVentaPorTipo(tipoClienteId: string): number {
+    if (this.hayFiltrosActivos()) {
+      return this._totalesFiltrados?.valorPorTipoCliente?.[tipoClienteId] ?? 0;
     }
-    if (this.filtrosConsolidados.bodegaId) {
-      bodegas = bodegas.filter(b => b.id === this.filtrosConsolidados.bodegaId);
-    }
-    return bodegas.reduce((sum, b) => sum + (b.metricas?.valorCostoTotal ?? 0), 0);
+    return this.totalesGlobales.valorPorTipoCliente?.[tipoClienteId] ?? 0;
   }
 
   getMetricaUnidades(): number {
@@ -948,18 +978,23 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Ajuste de inventario (ingreso/retiro)
-    items.push({ separator: true });
-    items.push({
-      label: 'Ingresar stock',
-      icon: 'pi pi-plus-circle',
-      command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'INGRESO'),
-    });
-    items.push({
-      label: 'Retirar stock',
-      icon: 'pi pi-minus-circle',
-      command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'SALIDA'),
-    });
+    // Ajuste de inventario (ingreso/retiro). Solo para productos inventariables:
+    // los no-inventariables no llevan stock real, permitirles ajustes genera
+    // unidades fantasma que después bloquean su eliminación de la bodega.
+    const esInventariable = (producto as any).disponibilidad?.inventariable !== false;
+    if (esInventariable) {
+      items.push({ separator: true });
+      items.push({
+        label: 'Ingresar stock',
+        icon: 'pi pi-plus-circle',
+        command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'INGRESO'),
+      });
+      items.push({
+        label: 'Retirar stock',
+        icon: 'pi pi-minus-circle',
+        command: () => this.abrirAjusteInventario(this.selectedMenuProducto!, 'SALIDA'),
+      });
+    }
 
     // Quitar producto de bodegas sin stock
     const tieneBodegasSinStock = producto.stockPorBodega &&

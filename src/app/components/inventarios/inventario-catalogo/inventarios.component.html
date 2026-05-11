@@ -417,6 +417,16 @@
                                             <th style="width: 110px; min-width: 110px;" class="text-end" pTooltip="Costo de compra unitario (importado de fulfillment)">Costo</th>
                                             <!-- Columna Precio -->
                                             <th style="width: 120px; min-width: 120px;" class="text-end">Precio</th>
+                                            <!-- Columnas Dinámicas por Tipo de Cliente (lista de precios) -->
+                                            <th *ngFor="let tc of tiposClienteActivos"
+                                                style="width: 130px; min-width: 130px;"
+                                                class="text-end"
+                                                [pTooltip]="'Valor venta @ ' + tc.nombre + ' (stock × precio ' + tc.nombre + ')'"
+                                                tooltipPosition="top">
+                                                <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85rem; display: block; color: #0d6efd;">
+                                                    Valor {{ tc.nombre }}
+                                                </span>
+                                            </th>
                                             <!-- Columna Valor Total a precio venta -->
                                             <th style="width: 130px; min-width: 130px;" class="text-end" pTooltip="Stock × precio de venta">Valor Total</th>
                                             <!-- Columna Valor a Costo -->
@@ -453,6 +463,13 @@
                                             <th style="width: 110px;" class="text-end py-2"></th>
                                             <!-- Columna Precio -->
                                             <th style="width: 120px;" class="text-end py-2"></th>
+                                            <!-- Totales por Tipo de Cliente -->
+                                            <th *ngFor="let tc of tiposClienteActivos"
+                                                style="width: 130px;" class="text-end py-2">
+                                                <span class="fw-bold" style="color: #0d6efd;">
+                                                    {{ getMetricaValorVentaPorTipo(tc.id) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                </span>
+                                            </th>
                                             <!-- Columna Valor Total -->
                                             <th style="width: 130px;" class="text-end py-2">
                                                 <span class="fw-bold" style="color: #5c6ac4;">
@@ -514,25 +531,45 @@
                                                     {{ getStockBodega(producto, bodega.id) }}
                                                 </span>
                                             </td>
-                                            <!-- Costo Unitario -->
-                                            <td class="text-end" style="white-space: nowrap;">
-                                                <span *ngIf="producto.costoUnitario && producto.costoUnitario > 0" class="fw-semibold" style="color: #f59e0b; font-size: 0.9rem;">{{ producto.costoUnitario | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-                                                <span *ngIf="!producto.costoUnitario || producto.costoUnitario === 0" class="text-muted small">—</span>
+                                            <!-- Costo Unitario (siempre visible: $0 si no asignado para detectar gaps) -->
+                                            <td class="text-end" style="white-space: nowrap;"
+                                                [pTooltip]="(!producto.costoUnitario || producto.costoUnitario === 0) ? 'Sin costo asignado — actualizar desde fulfillment o manual' : null">
+                                                <span class="fw-semibold"
+                                                      [style.color]="(producto.costoUnitario && producto.costoUnitario > 0) ? '#f59e0b' : '#9ca3af'"
+                                                      style="font-size: 0.9rem;">
+                                                    {{ (producto.costoUnitario || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                </span>
                                             </td>
                                             <!-- Precio -->
                                             <td class="text-end" style="white-space: nowrap;">
                                                 <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #172b4d; font-size: 0.9rem;">{{ producto.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">Sin precio</span>
                                             </td>
+                                            <!-- Valores por Tipo de Cliente (lista de precios) -->
+                                            <td *ngFor="let tc of tiposClienteActivos"
+                                                class="text-end" style="white-space: nowrap;">
+                                                <ng-container *ngIf="getPrecioTipoCliente(producto, tc.id) as precioTC; else sinPrecioTC">
+                                                    <span *ngIf="precioTC > 0" class="fw-semibold"
+                                                          style="color: #0d6efd; font-size: 0.9rem;">
+                                                        {{ getValorVentaPorTipo(producto, tc.id) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    </span>
+                                                    <span *ngIf="precioTC === 0" class="text-muted small">—</span>
+                                                </ng-container>
+                                                <ng-template #sinPrecioTC><span class="text-muted small">—</span></ng-template>
+                                            </td>
                                             <!-- Valor Total (precio × stock) -->
                                             <td class="text-end" style="white-space: nowrap;">
                                                 <span *ngIf="producto.precio > 0" class="fw-bold" style="color: #5c6ac4; font-size: 0.9rem;">{{ (producto.precio * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
                                                 <span *ngIf="!producto.precio || producto.precio === 0" class="text-muted small">—</span>
                                             </td>
-                                            <!-- Valor a Costo (costo × stock) -->
-                                            <td class="text-end pe-3" style="white-space: nowrap;">
-                                                <span *ngIf="producto.costoUnitario && producto.costoUnitario > 0" class="fw-semibold" style="color: #f59e0b; font-size: 0.9rem;">{{ (producto.costoUnitario * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
-                                                <span *ngIf="!producto.costoUnitario || producto.costoUnitario === 0" class="text-muted small">—</span>
+                                            <!-- Valor a Costo (costo × stock) — siempre visible -->
+                                            <td class="text-end pe-3" style="white-space: nowrap;"
+                                                [pTooltip]="(!producto.costoUnitario || producto.costoUnitario === 0) ? 'Sin costo asignado' : null">
+                                                <span class="fw-semibold"
+                                                      [style.color]="(producto.costoUnitario && producto.costoUnitario > 0) ? '#f59e0b' : '#9ca3af'"
+                                                      style="font-size: 0.9rem;">
+                                                    {{ ((producto.costoUnitario || 0) * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                </span>
                                             </td>
                                             <!-- Acciones -->
                                             <td class="text-center" style="width: 60px;">
@@ -548,7 +585,7 @@
 
                                         <!-- Row Expansion - Detalles por Bodega -->
                                         <tr *ngIf="producto.expanded">
-                                            <td [attr.colspan]="bodegasConsolidadas.length + 9" class="p-0">
+                                            <td [attr.colspan]="bodegasConsolidadas.length + tiposClienteActivos.length + 9" class="p-0">
                                                 <div class="p-3 bg-light">
                                                     <!-- Loader mientras carga fulfillment -->
                                                     <div *ngIf="producto.fulfillmentLoading" class="text-center py-3">
