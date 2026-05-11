@@ -68,6 +68,16 @@
                                     [loading]="analizandoIA"
                                     pTooltip="Analizar inventario con IA"
                                     tooltipPosition="bottom"></button>
+                            <!-- Dropdown Acciones -->
+                            <p-menu #accionesMenu [model]="accionesMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
+                            <button pButton type="button"
+                                    icon="pi pi-ellipsis-v"
+                                    label="Acciones"
+                                    class="p-button-outlined p-button-sm"
+                                    (click)="accionesMenu.toggle($event)"
+                                    [disabled]="loadingConsolidado"
+                                    pTooltip="Acciones disponibles (exportar, etc.)"
+                                    tooltipPosition="bottom"></button>
                             <!-- Última análisis IA -->
                             <span *ngIf="iaLastAnalysis" class="badge d-flex align-items-center gap-1"
                                   style="background: #e8eaf6; color: #5c6ac4; font-size: 0.75rem;">

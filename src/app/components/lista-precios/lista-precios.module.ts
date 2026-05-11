@@ -15,6 +15,7 @@ import { TabViewModule } from 'primeng/tabview';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
+import { MenuModule } from 'primeng/menu';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { ReactiveFormsModule } from '@angular/forms';
 
@@ -31,6 +32,7 @@ import { ReactiveFormsModule } from '@angular/forms';
     InputTextModule,
     ButtonModule,
     TooltipModule,
+    MenuModule,
     NgbModule
   ],
   declarations: [

@@ -199,6 +199,16 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
    * "Valor [tipo cliente]" por cada uno (estilo bodegas). */
   tiposClienteActivos: { id: string; nombre: string }[] = [];
 
+  /** Items del dropdown "Acciones" en el header. */
+  accionesMenuItems: any[] = [
+    {
+      label: 'Exportar a Excel',
+      icon: 'pi pi-file-excel',
+      command: () => this.exportarConsolidadoExcel(),
+    },
+  ];
+  exportandoExcel = false;
+
   // Filtros para vista consolidada
   filtrosConsolidados = {
     busqueda: "",
@@ -707,6 +717,44 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     return this._totalesFiltrados?.valorTotal
       ?? this.totalesGlobales.valorTotal
       ?? 0;
+  }
+
+  /** Exporta el inventario consolidado actual a Excel respetando los filtros activos.
+   *  Descarga el archivo directo al browser. */
+  exportarConsolidadoExcel(): void {
+    if (this.exportandoExcel) return;
+    this.exportandoExcel = true;
+    this.toastr?.info?.('Generando Excel...', 'Espera unos segundos');
+    this.inventarioService.exportarInventarioExcel({
+      bodega: this.filtrosConsolidados.bodegaId || undefined,
+      linkedToFulfillment: this.filtrosConsolidados.fulfillment || undefined,
+      search: this.filtrosConsolidados.busqueda?.trim() || undefined,
+      stockFilter: this.filtrosConsolidados.estadoStock || undefined,
+      soloInventariables: true,
+    })
+    .pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (blob: Blob) => {
+        try {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `inventario_${new Date().toISOString().slice(0, 10)}.xlsx`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          this.toastr?.success?.('Excel descargado', 'Listo');
+        } catch (err) {
+          this.toastr?.error?.('Error guardando archivo', 'Error');
+        }
+        this.exportandoExcel = false;
+      },
+      error: () => {
+        this.toastr?.error?.('Error generando Excel del inventario', 'Error');
+        this.exportandoExcel = false;
+      },
+    });
   }
 
   /** Suma del valor a costo (stock × costoUnitario) respetando los filtros activos. */

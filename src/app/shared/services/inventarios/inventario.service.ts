@@ -265,6 +265,32 @@ export class InventarioService {
    * @param options Opciones de paginación y filtro
    * @returns Observable con productos, bodegas y estadísticas
    */
+  /**
+   * Exporta el inventario consolidado a Excel (.xlsx) respetando los filtros activos.
+   * Devuelve un Blob para descarga directa desde el browser.
+   */
+  exportarInventarioExcel(options: {
+    bodega?: string;
+    linkedToFulfillment?: string;
+    search?: string;
+    stockFilter?: string;
+    onlyWithStock?: boolean;
+    soloInventariables?: boolean;
+  } = {}): Observable<Blob> {
+    let params = new HttpParams();
+    if (options.bodega) params = params.set('bodega', options.bodega);
+    if (options.linkedToFulfillment) params = params.set('linkedToFulfillment', options.linkedToFulfillment);
+    if (options.search) params = params.set('search', options.search);
+    if (options.stockFilter) params = params.set('stockFilter', options.stockFilter);
+    if (options.onlyWithStock !== undefined) params = params.set('onlyWithStock', String(options.onlyWithStock));
+    if (options.soloInventariables !== undefined) params = params.set('soloInventariables', String(options.soloInventariables));
+
+    return this.http.get(`${this.apiUrl}/inventory/export-excel`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
   obtenerInventarioConsolidado(options: {
     limit?: number;
     page?: number;

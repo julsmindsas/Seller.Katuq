@@ -8,10 +8,14 @@
       </p>
     </div>
     <div>
-      <button type="button" class="btn btn-primary" (click)="abrirModalImport()">
-        <i class="pi pi-cloud-upload me-2"></i>
-        Importar Excel
-      </button>
+      <p-menu #accionesMenu [model]="accionesMenuItems" [popup]="true" [appendTo]="'body'"></p-menu>
+      <button pButton type="button"
+              icon="pi pi-ellipsis-v"
+              label="Acciones"
+              class="p-button-sm"
+              (click)="accionesMenu.toggle($event)"
+              pTooltip="Importar / Exportar Excel"
+              tooltipPosition="bottom"></button>
     </div>
   </div>
 

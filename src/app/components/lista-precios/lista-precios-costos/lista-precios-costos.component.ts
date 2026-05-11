@@ -3,6 +3,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { ProductCostsService } from 'src/app/shared/services/lista-precios/product-costs.service';
+import { InventarioService } from 'src/app/shared/services/inventarios/inventario.service';
 import { ImportarCostosModalComponent } from '../importar-costos-modal/importar-costos-modal.component';
 
 interface ImportSummary {
@@ -36,8 +37,24 @@ export class ListaPreciosCostosComponent implements OnInit, OnDestroy {
   imports: ImportSummary[] = [];
   ultimoImport: ImportSummary | null = null;
 
+  /** Items del dropdown "Acciones": importar costos + exportar inventario. */
+  accionesMenuItems = [
+    {
+      label: 'Importar Excel de costos',
+      icon: 'pi pi-cloud-upload',
+      command: () => this.abrirModalImport(),
+    },
+    {
+      label: 'Exportar inventario a Excel',
+      icon: 'pi pi-file-excel',
+      command: () => this.exportarInventarioExcel(),
+    },
+  ];
+  exportandoExcel = false;
+
   constructor(
     private costsService: ProductCostsService,
+    private inventarioService: InventarioService,
     private modalService: NgbModal,
   ) {}
 
@@ -62,6 +79,35 @@ export class ListaPreciosCostosComponent implements OnInit, OnDestroy {
         this.cargando = false;
       },
     });
+  }
+
+  /** Descarga el Excel consolidado del inventario completo (sin filtros). */
+  exportarInventarioExcel(): void {
+    if (this.exportandoExcel) return;
+    this.exportandoExcel = true;
+    this.inventarioService.exportarInventarioExcel({ soloInventariables: true })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (blob: Blob) => {
+          try {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `inventario_${new Date().toISOString().slice(0, 10)}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          } catch (err) {
+            console.error('Error guardando archivo Excel', err);
+          }
+          this.exportandoExcel = false;
+        },
+        error: (err) => {
+          console.error('Error exportando inventario', err);
+          this.exportandoExcel = false;
+        },
+      });
   }
 
   abrirModalImport() {
