@@ -79,6 +79,11 @@
                         {{ 'de' | translate }} {{ usarPaginacionServidor ? totalProductos : productosCompletos?.length || 0 }}
                         {{ 'Resultados' | translate }}
                     </span>
+                    <!-- Hint: solo productos con stock para esta bodega -->
+                    <i *ngIf="!cargandoProductos && bodega?.idBodega && (totalProductos > 0 || productosPaginados?.length > 0)"
+                       class="fa fa-info-circle text-info ms-1"
+                       ngbTooltip="Solo se muestran productos con stock disponible en la bodega seleccionada. Si esperás ver más productos del catálogo, cambiá de bodega o revisá el módulo de inventario."
+                       placement="bottom"></i>
                     <!-- Badge de modo server-side -->
                     <span *ngIf="usarPaginacionServidor" class="badge bg-success ms-2" title="Paginación optimizada desde el servidor">
                         <i class="fa fa-server"></i>
