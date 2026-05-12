@@ -552,11 +552,18 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
           this.productosConsolidados = response.productos;
           this.aplicarFiltrosConsolidados();
 
-          // Actualizar métricas solo si vienen en la respuesta (primera carga o recarga)
-          if (response.bodegas) {
+          // Solo actualizar bodegas/tiposCliente cuando incluyen métricas (primera
+          // carga). En page 2+ con includeMetrics=false el backend retorna las
+          // bodegas SIN .metricas; si sobrescribimos, los totales del header de
+          // tabla se vacían al paginar. Las bodegas no cambian entre páginas, por
+          // lo que mantener las del primer fetch es seguro.
+          const bodegasTraenMetricas = Array.isArray(response.bodegas)
+            && response.bodegas.length > 0
+            && !!response.bodegas[0]?.metricas;
+          if (bodegasTraenMetricas) {
             this.bodegasConsolidadas = response.bodegas;
           }
-          if (response.tiposCliente) {
+          if (response.tiposCliente && includeMetrics) {
             this.tiposClienteActivos = response.tiposCliente.map((tc: any) => ({
               id: tc.id,
               nombre: tc.nombre || tc.tipoClienteNombre || tc.id,
