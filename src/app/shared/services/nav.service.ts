@@ -517,6 +517,7 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "dashboards", title: "Dashboard gerencial", type: "link", icon: "pie-chart" },
+        { path: "dashboards/builder", title: "Constructor de reportes", type: "link", icon: "edit-3" },
       ],
     },
     {

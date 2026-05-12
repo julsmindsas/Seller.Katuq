@@ -5,6 +5,15 @@
       <i class="fa fa-arrow-left"></i>
     </button>
     <input type="text" class="title-input" [(ngModel)]="reportName" placeholder="Nombre del reporte" />
+
+    <!-- Filtro global de fecha -->
+    <div class="date-filter">
+      <label class="date-label"><i class="fa fa-calendar me-1"></i>Desde</label>
+      <input type="date" class="date-input" [(ngModel)]="dateFrom" />
+      <label class="date-label">Hasta</label>
+      <input type="date" class="date-input" [(ngModel)]="dateTo" />
+    </div>
+
     <span class="spacer"></span>
     <button type="button" class="btn-secondary" (click)="exportCsv()" [disabled]="!result">
       <i class="fa fa-file-csv me-1"></i> Exportar
@@ -143,22 +152,26 @@
         </div>
 
         <ng-container *ngIf="result && !running">
-          <app-viz-kpi *ngIf="vizType === 'kpi'" [result]="result"></app-viz-kpi>
-          <app-viz-table *ngIf="vizType === 'table' || vizType === 'pivot'" [result]="result" [pivot]="vizType==='pivot'"></app-viz-table>
-          <app-viz-chart *ngIf="['bar','line','pie'].includes(vizType)" [result]="result" [chartType]="vizType"></app-viz-chart>
+          <app-viz-kpi *ngIf="activeVizTypes.has('kpi')" [result]="result"></app-viz-kpi>
+          <app-viz-table *ngIf="activeVizTypes.has('table')" [result]="result" [pivot]="false"></app-viz-table>
+          <app-viz-table *ngIf="activeVizTypes.has('pivot')" [result]="result" [pivot]="true"></app-viz-table>
+          <app-viz-chart *ngIf="activeVizTypes.has('bar')" [result]="result" [chartType]="'bar'"></app-viz-chart>
+          <app-viz-chart *ngIf="activeVizTypes.has('line')" [result]="result" [chartType]="'line'"></app-viz-chart>
+          <app-viz-chart *ngIf="activeVizTypes.has('pie')" [result]="result" [chartType]="'pie'"></app-viz-chart>
         </ng-container>
       </section>
     </main>
 
-    <!-- Panel derecho: visualización -->
+    <!-- Panel derecho: visualización (multi-selección) -->
     <aside class="panel-right">
-      <label class="panel-label">Visualización</label>
+      <label class="panel-label">Visualizaciones</label>
+      <p class="panel-hint">Selecciona una o más</p>
       <div class="viz-options">
         <button type="button"
           *ngFor="let v of vizOptions"
           class="viz-btn"
-          [class.is-active]="vizType === v"
-          (click)="vizType = v">
+          [class.is-active]="activeVizTypes.has(v)"
+          (click)="toggleViz(v)">
           <i class="fa"
             [class.fa-table]="v==='table'"
             [class.fa-th]="v==='pivot'"

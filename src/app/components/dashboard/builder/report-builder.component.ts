@@ -52,6 +52,11 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
 
   vizType: VizType = 'table';
   vizOptions: VizType[] = ['table', 'pivot', 'bar', 'line', 'pie', 'kpi'];
+  activeVizTypes: Set<VizType> = new Set(['table']);
+
+  // Filtro global de fecha
+  dateFrom: string = '';
+  dateTo: string = '';
 
   result: ReportResult | null = null;
   running = false;
@@ -160,6 +165,20 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     this.addToZone(zone, item);
   }
 
+  toggleViz(v: VizType): void {
+    if (this.activeVizTypes.has(v)) {
+      if (this.activeVizTypes.size > 1) {
+        this.activeVizTypes.delete(v);
+        if (this.vizType === v) {
+          this.vizType = this.activeVizTypes.values().next().value;
+        }
+      }
+    } else {
+      this.activeVizTypes.add(v);
+    }
+    this.vizType = v;
+  }
+
   changeAgg(field: FieldRef, agg: MeasureAgg): void {
     field.agg = agg;
   }
@@ -186,17 +205,33 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     if (!this.source) {
       return null;
     }
-    if (this.values.length === 0 && this.vizType !== 'table') {
+    if (this.values.length === 0 && !this.activeVizTypes.has('table')) {
       this.errorMsg = 'Agrega al menos una medida en Valores.';
       return null;
     }
+
+    // Construir filtros incluyendo rango de fecha global
+    const allFilters: FilterClause[] = [...this.filters];
+    if (this.dateFrom || this.dateTo) {
+      const dateField = this.source.dimensions.find(d => d.type === 'date');
+      if (dateField) {
+        if (this.dateFrom) {
+          allFilters.push({ field: dateField.id, op: 'gte', value: this.dateFrom });
+        }
+        if (this.dateTo) {
+          allFilters.push({ field: dateField.id, op: 'lte', value: this.dateTo + 'T23:59:59.999Z' });
+        }
+      }
+    }
+
+    const hasKpi = this.activeVizTypes.has('kpi');
     return {
       source: this.source.id,
       rows: this.rows.map<DimensionRef>((r) => ({ id: r.id, granularity: r.granularity })),
       cols: this.cols.map<DimensionRef>((c) => ({ id: c.id, granularity: c.granularity })),
       values: this.values.map<MeasureRef>((v) => ({ id: v.id, agg: v.agg || 'sum' })),
-      filters: this.filters,
-      limit: this.vizType === 'kpi' ? 1 : 1000,
+      filters: allFilters,
+      limit: hasKpi && this.activeVizTypes.size === 1 ? 1 : 1000,
     };
   }
 

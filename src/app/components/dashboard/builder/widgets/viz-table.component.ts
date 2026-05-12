@@ -83,8 +83,14 @@ interface PivotData {
 })
 export class VizTableComponent {
   private _result: ReportResult | null = null;
-  @Input() pivot = false;
+  private _pivot = false;
   pivotData: PivotData | null = null;
+
+  @Input() set pivot(v: boolean) {
+    this._pivot = v;
+    this.compute();
+  }
+  get pivot(): boolean { return this._pivot; }
 
   @Input() set result(r: ReportResult | null) {
     this._result = r;
@@ -96,12 +102,32 @@ export class VizTableComponent {
   }
 
   private compute(): void {
-    if (!this._result || !this.pivot) {
+    if (!this._result || !this._pivot) {
       this.pivotData = null;
       return;
     }
     const dims = this._result.columns.filter((c) => c.type === 'dimension');
     const measures = this._result.columns.filter((c) => c.type === 'measure');
+    // Pivot con 1 sola dimensión: pivotar por los valores de esa dimensión
+    if (dims.length === 1 && measures.length > 0) {
+      const dimCol = dims[0];
+      const measureCol = measures[0];
+      const colKeys = Array.from(new Set(this._result.rows.map((r) => String(r[dimCol.field] ?? ''))));
+      colKeys.sort();
+      // Una sola fila con cada valor de la dimensión como columna
+      const cells: Record<string, unknown> = {};
+      for (const row of this._result.rows) {
+        const colKey = String(row[dimCol.field] ?? '');
+        cells[colKey] = row[measureCol.field];
+      }
+      this.pivotData = {
+        rowDims: [],
+        colKeys,
+        measureCols: [measureCol],
+        rows: [{ rowVals: [], cells }],
+      };
+      return;
+    }
     if (dims.length < 2 || measures.length === 0) {
       this.pivotData = null;
       return;

@@ -47,6 +47,33 @@
   }
 }
 
+.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.date-label {
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.date-input {
+  padding: 5px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+  width: 140px;
+
+  &:focus {
+    border-color: #2563eb;
+    outline: none;
+  }
+}
+
 .spacer {
   flex: 1;
 }
