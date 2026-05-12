@@ -214,13 +214,19 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       return null;
     }
 
-    // Construir filtros incluyendo rango de fecha global
+    // Construir filtros incluyendo rango de fecha global.
+    // El input <type="date"> devuelve "YYYY-MM-DD" (sin hora). Lo expandimos
+    // a ISO con hora explícita para que `gte` incluya desde las 00:00:00 del
+    // primer día y `lte` cubra hasta el final del último día. El backend
+    // (firestore.engine.coerceFilterValue) además convierte el string a Date
+    // antes de Firestore.where() para que la comparación contra Timestamp
+    // funcione (sin esto la comparación string vs Timestamp falla silencioso).
     const allFilters: FilterClause[] = [...this.filters];
     if (this.dateFrom || this.dateTo) {
       const dateField = this.source.dimensions.find(d => d.type === 'date');
       if (dateField) {
         if (this.dateFrom) {
-          allFilters.push({ field: dateField.id, op: 'gte', value: this.dateFrom });
+          allFilters.push({ field: dateField.id, op: 'gte', value: this.dateFrom + 'T00:00:00.000Z' });
         }
         if (this.dateTo) {
           allFilters.push({ field: dateField.id, op: 'lte', value: this.dateTo + 'T23:59:59.999Z' });
