@@ -97,9 +97,15 @@ export interface SavedReport {
   source: string;
   spec: ReportSpec;
   viz: {
+    /** Tipo principal seleccionado (la visualización activa por defecto). */
     type: VizType;
+    /** Multi-selección de visualizaciones activas (bar + line + table, etc.). */
+    activeTypes?: VizType[];
     options?: Record<string, unknown>;
   };
+  /** Rango de fechas usado en el filtro global cuando se guardó el reporte. */
+  dateFrom?: string;
+  dateTo?: string;
   ownerEmail: string;
   ownerCompany: string;
   createdAt?: string;

@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Subject, of } from 'rxjs';
@@ -61,7 +61,11 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   result: ReportResult | null = null;
   running = false;
   saving = false;
+  exporting = false;
   errorMsg: string | null = null;
+
+  /** Contenedor de la visualización (table + chart + kpi). Capturable a imagen/PDF. */
+  @ViewChild('vizContainer', { read: ElementRef }) vizContainer?: ElementRef<HTMLElement>;
 
   readonly fieldDropIds = ['rows-zone', 'cols-zone', 'values-zone', 'palette', 'palette-m'];
 
@@ -287,7 +291,14 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       name: this.reportName,
       source: this.source.id,
       spec,
-      viz: { type: this.vizType },
+      viz: {
+        type: this.vizType,
+        activeTypes: [...this.activeVizTypes],
+      },
+      // Persistir el rango de fecha del filtro global para que al reabrir el
+      // reporte los inputs se restauren con los mismos valores.
+      dateFrom: this.dateFrom || undefined,
+      dateTo: this.dateTo || undefined,
       ownerEmail,
       ownerCompany,
     };
@@ -329,6 +340,102 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     URL.revokeObjectURL(url);
   }
 
+  /**
+   * Captura el área de visualización (tabla + gráficas + KPIs) como Canvas
+   * usando html2canvas. Dynamic import para no inflar el bundle inicial.
+   */
+  private async captureVizCanvas(): Promise<HTMLCanvasElement | null> {
+    if (!this.result || !this.vizContainer) {
+      return null;
+    }
+    const { default: html2canvas } = await import('html2canvas');
+    // Esperar 1 tick para que ECharts termine de pintar antes de capturar.
+    await new Promise((r) => setTimeout(r, 100));
+    const el = this.vizContainer.nativeElement;
+    return await html2canvas(el, {
+      backgroundColor: '#ffffff',
+      scale: 2, // doble resolución para que el PDF/PNG no salga pixelado
+      useCORS: true,
+      logging: false,
+    });
+  }
+
+  async exportPng(): Promise<void> {
+    if (!this.result || this.exporting) {
+      return;
+    }
+    this.exporting = true;
+    try {
+      const canvas = await this.captureVizCanvas();
+      if (!canvas) {
+        return;
+      }
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          return;
+        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${this.reportName}.png`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+    } catch (err) {
+      console.error('[ReportBuilder] Error exportPng:', err);
+      Swal.fire('Error', 'No se pudo exportar la imagen.', 'error');
+    } finally {
+      this.exporting = false;
+    }
+  }
+
+  async exportPdf(): Promise<void> {
+    if (!this.result || this.exporting) {
+      return;
+    }
+    this.exporting = true;
+    try {
+      const canvas = await this.captureVizCanvas();
+      if (!canvas) {
+        return;
+      }
+      const { default: jsPDF } = await import('jspdf');
+      // PDF landscape A4 (842 × 595 puntos)
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+
+      // Header del PDF
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(14);
+      pdf.text(this.reportName, margin, margin + 8);
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(9);
+      const subtitle: string[] = [];
+      subtitle.push(`Fuente: ${this.source?.label || this.source?.id || '—'}`);
+      if (this.dateFrom || this.dateTo) {
+        subtitle.push(`Rango: ${this.dateFrom || '—'} a ${this.dateTo || '—'}`);
+      }
+      subtitle.push(`Generado: ${new Date().toLocaleString('es-CO')}`);
+      pdf.text(subtitle.join('   ·   '), margin, margin + 24);
+
+      // Imagen del viz, escalada para caber en la página debajo del header
+      const headerSpace = 48;
+      const imgWidth = pageWidth - margin * 2;
+      const imgHeight = Math.min(canvas.height * (imgWidth / canvas.width), pageHeight - margin * 2 - headerSpace);
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', margin, margin + headerSpace, imgWidth, imgHeight);
+
+      pdf.save(`${this.reportName}.pdf`);
+    } catch (err) {
+      console.error('[ReportBuilder] Error exportPdf:', err);
+      Swal.fire('Error', 'No se pudo exportar el PDF.', 'error');
+    } finally {
+      this.exporting = false;
+    }
+  }
+
   goHome(): void {
     this.router.navigate(['/dashboards']);
   }
@@ -352,6 +459,15 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         this.reportName = r.name;
         this.reportId = r.id || null;
         this.vizType = r.viz?.type || 'table';
+        // Restaurar multi-selección de visualizaciones. Fallback al viz.type
+        // como único elemento si el reporte fue guardado antes del fix.
+        const activeTypes = r.viz?.activeTypes && r.viz.activeTypes.length > 0
+          ? r.viz.activeTypes
+          : [this.vizType];
+        this.activeVizTypes = new Set<VizType>(activeTypes);
+        // Restaurar rango de fechas global
+        this.dateFrom = r.dateFrom || '';
+        this.dateTo = r.dateTo || '';
         this.rows = (r.spec.rows || []).map((d) => this.dimRefToField(d));
         this.cols = (r.spec.cols || []).map((d) => this.dimRefToField(d));
         this.values = (r.spec.values || []).map((m) => this.measureRefToField(m));
