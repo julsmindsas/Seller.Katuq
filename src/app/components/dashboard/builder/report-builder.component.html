@@ -24,6 +24,9 @@
     <button type="button" class="btn-secondary" (click)="exportPdf()" [disabled]="!result || exporting" title="Exportar reporte completo como PDF">
       <i class="fa fa-file-pdf me-1"></i> PDF
     </button>
+    <button type="button" class="btn-secondary" (click)="openShareModal()" title="Configurar permisos del reporte">
+      <i class="fa fa-users me-1"></i> Compartir
+    </button>
     <button type="button" class="btn-secondary" (click)="save()" [disabled]="saving">
       <i class="fa fa-floppy-disk me-1"></i> Guardar
     </button>

@@ -58,6 +58,11 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   dateFrom: string = '';
   dateTo: string = '';
 
+  // Permisos del reporte
+  isPublic: boolean = false;
+  visibleToUsers: string[] = [];
+  visibleToRoles: string[] = [];
+
   result: ReportResult | null = null;
   running = false;
   saving = false;
@@ -80,6 +85,20 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Cargar lista de sources visibles desde el backend (filtra por integraciones
+    // activas de la empresa). El backend retorna IDs que aplica como whitelist
+    // sobre el catálogo hardcoded. Si la llamada falla, dejamos el catálogo completo.
+    this.reportsService.getSources()
+      .pipe(catchError(() => of(null)), takeUntil(this.destroy$))
+      .subscribe((backendSources) => {
+        if (backendSources && Array.isArray(backendSources) && backendSources.length > 0) {
+          const allowedIds = new Set(backendSources.map((s) => s.id));
+          this.catalog = SOURCE_CATALOG.filter((s) => allowedIds.has(s.id));
+        }
+        if (this.catalog.length === 0) this.catalog = SOURCE_CATALOG;
+        if (!this.source) this.selectSource(this.catalog[0]);
+      });
+
     this.selectSource(this.catalog[0]);
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -307,6 +326,9 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       dateTo: this.dateTo || undefined,
       ownerEmail,
       ownerCompany,
+      isPublic: this.isPublic,
+      visibleToUsers: this.visibleToUsers.length ? this.visibleToUsers : undefined,
+      visibleToRoles: this.visibleToRoles.length ? this.visibleToRoles : undefined,
     };
 
     this.reportsService
@@ -446,6 +468,58 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     this.router.navigate(['/dashboards']);
   }
 
+  /**
+   * Abre un modal de SweetAlert para configurar quién puede ver el reporte.
+   * El usuario edita 3 cosas: público sí/no, lista de emails, lista de roles.
+   * Los valores se guardan en el state del componente y se persisten al hacer Guardar.
+   */
+  openShareModal(): void {
+    const usersStr = this.visibleToUsers.join(', ');
+    const rolesStr = this.visibleToRoles.join(', ');
+    const checkedAttr = this.isPublic ? 'checked' : '';
+    const html = `
+      <div style="text-align:left; font-size:13px;">
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:14px; cursor:pointer;">
+          <input id="share-public" type="checkbox" ${checkedAttr} style="transform:scale(1.2);" />
+          <span><strong>Reporte público</strong> — visible para todos los usuarios de la empresa</span>
+        </label>
+        <div style="margin-bottom:12px;">
+          <label style="display:block; font-weight:600; margin-bottom:4px;">Usuarios específicos (emails, separados por coma):</label>
+          <textarea id="share-users" rows="2" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="vendedor1@empresa.com, vendedor2@empresa.com">${usersStr}</textarea>
+        </div>
+        <div>
+          <label style="display:block; font-weight:600; margin-bottom:4px;">Roles (separados por coma):</label>
+          <textarea id="share-roles" rows="2" style="width:100%; padding:6px; border:1px solid #ccc; border-radius:4px;" placeholder="Vendedor, Administrador">${rolesStr}</textarea>
+        </div>
+        <p style="margin-top:12px; color:#666; font-size:12px;">El propietario del reporte siempre tiene acceso.</p>
+      </div>
+    `;
+    Swal.fire({
+      title: 'Compartir reporte',
+      html,
+      showCancelButton: true,
+      confirmButtonText: 'Aplicar',
+      cancelButtonText: 'Cancelar',
+      focusConfirm: false,
+      preConfirm: () => {
+        const isPub = (document.getElementById('share-public') as HTMLInputElement)?.checked || false;
+        const usersRaw = (document.getElementById('share-users') as HTMLTextAreaElement)?.value || '';
+        const rolesRaw = (document.getElementById('share-roles') as HTMLTextAreaElement)?.value || '';
+        return {
+          isPublic: isPub,
+          users: usersRaw.split(',').map((s) => s.trim()).filter(Boolean),
+          roles: rolesRaw.split(',').map((s) => s.trim()).filter(Boolean),
+        };
+      },
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.isPublic = result.value.isPublic;
+        this.visibleToUsers = result.value.users;
+        this.visibleToRoles = result.value.roles;
+      }
+    });
+  }
+
   private loadReport(id: string): void {
     this.reportsService
       .getById(id)
@@ -474,6 +548,10 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         // Restaurar rango de fechas global
         this.dateFrom = r.dateFrom || '';
         this.dateTo = r.dateTo || '';
+        // Restaurar permisos
+        this.isPublic = !!r.isPublic;
+        this.visibleToUsers = Array.isArray(r.visibleToUsers) ? r.visibleToUsers : [];
+        this.visibleToRoles = Array.isArray(r.visibleToRoles) ? r.visibleToRoles : [];
         this.rows = (r.spec.rows || []).map((d) => this.dimRefToField(d));
         this.cols = (r.spec.cols || []).map((d) => this.dimRefToField(d));
         this.values = (r.spec.values || []).map((m) => this.measureRefToField(m));

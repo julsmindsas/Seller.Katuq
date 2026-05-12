@@ -33,6 +33,8 @@ export interface SourceDef {
   id: string;
   label: string;
   description: string;
+  /** Si está presente, el source solo aparece para empresas con esa integración activa. */
+  requiresIntegration?: string;
   dimensions: DimensionDef[];
   measures: MeasureDef[];
 }
@@ -108,6 +110,12 @@ export interface SavedReport {
   dateTo?: string;
   ownerEmail: string;
   ownerCompany: string;
+  /** Si true, todos los usuarios de la empresa pueden ver el reporte. */
+  isPublic?: boolean;
+  /** Emails de usuarios específicos con acceso (además del owner). */
+  visibleToUsers?: string[];
+  /** Roles con acceso (además del owner). */
+  visibleToRoles?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
