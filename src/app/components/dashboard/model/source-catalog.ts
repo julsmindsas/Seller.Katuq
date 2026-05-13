@@ -170,6 +170,24 @@ export const SOURCE_CATALOG: SourceDef[] = [
       { id: 'descuento', label: 'Descuento', aggs: ['sum', 'avg'], format: 'currency' },
     ],
   },
+  {
+    id: 'accounting_balances',
+    label: 'Cartera (CxC / CxP)',
+    description: 'Saldos pendientes por tercero sincronizados desde World Office. Filtrar esCliente=true → CxC, esProveedor=true → CxP.',
+    requiresIntegration: 'worldoffice',
+    dimensions: [
+      { id: 'tercero_id', label: 'ID Tercero WO', type: 'number', group: 'Tercero' },
+      { id: 'tercero_nombre', label: 'Tercero', type: 'string', group: 'Tercero' },
+      { id: 'es_cliente', label: 'Es Cliente (CxC)', type: 'boolean', group: 'Tipo' },
+      { id: 'es_proveedor', label: 'Es Proveedor (CxP)', type: 'boolean', group: 'Tipo' },
+    ],
+    measures: [
+      { id: 'saldo', label: 'Saldo', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
+      { id: 'terceros', label: 'Terceros', aggs: ['count', 'count_distinct'], format: 'number' },
+      { id: 'docs_fv', label: 'Facturas Venta', aggs: ['sum', 'avg'], format: 'number' },
+      { id: 'docs_fc', label: 'Facturas Compra', aggs: ['sum', 'avg'], format: 'number' },
+    ],
+  },
 ];
 
 export function findSource(id: string) {
