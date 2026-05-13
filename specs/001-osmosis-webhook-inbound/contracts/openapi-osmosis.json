@@ -1,0 +1,1043 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Katuq <-> Cereza/Osmosis API",
+    "version": "1.2.0",
+    "description": "Subconjunto Cereza/Osmosis: outbound (Katuq->Osmosis) y webhook inbound (Osmosis->Katuq, auth Bearer token con evidencia opcional de entrega).",
+    "contact": {
+      "name": "Soporte Katuq",
+      "email": "soporte@katuq.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3300/v1",
+      "description": "Dev local"
+    },
+    {
+      "url": "https://api.katuq.com/v1",
+      "description": "Producción"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Integraciones - Cereza/Osmosis",
+      "description": "ERP Cereza vía API Osmosis: sincronización de catálogo, push de órdenes y webhooks entrantes (cambios de estado de orden y actualizaciones de producto)."
+    }
+  ],
+  "paths": {
+    "/osmosis/status": {
+      "get": {
+        "summary": "Verifica la conexión con Osmosis (Cereza)",
+        "description": "Prueba el flujo OAuth2 contra Osmosis para la empresa indicada en el header `company`.",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "company",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID de la empresa Katuq."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Conexión exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/osmosis/products/sync": {
+      "get": {
+        "summary": "Sincroniza el catálogo completo de Osmosis hacia Katuq",
+        "description": "Dispara una sincronización completa del catálogo. Lee productos en Osmosis y los upserta en Katuq. Esta ruta va antes de `/products` para evitar conflicto de parámetros.",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "company",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Sincronización iniciada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate-limit excedido (máx. 60 req / 15 min)."
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/osmosis/products": {
+      "get": {
+        "summary": "Lista productos de Osmosis (paginado, lectura directa)",
+        "description": "Lectura paginada directa de productos en Osmosis sin guardarlos en Katuq.",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "company",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "in": "query",
+            "name": "per_page",
+            "schema": {
+              "type": "integer",
+              "default": 50,
+              "maximum": 200
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Productos paginados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/osmosis/dashboard/orders-with-issues": {
+      "get": {
+        "summary": "Pedidos con problemas en la integración Cereza",
+        "description": "Devuelve pedidos Katuq con issues agrupados por categoría (`missing_osmosis_id`, `push_error`, `cancelled_in_cereza`, `unknown_osmosis_order`).",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "company",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "default": 100,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de pedidos con issues.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OsmosisDashboardOrderIssue"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/osmosis/dashboard/summary": {
+      "get": {
+        "summary": "Resumen ejecutivo (KPIs) de la integración Cereza",
+        "description": "KPIs de la integración para el comercio en una ventana de N días.",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "company",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "days",
+            "schema": {
+              "type": "integer",
+              "default": 7,
+              "minimum": 1,
+              "maximum": 90
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resumen de KPIs.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OsmosisDashboardSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/osmosis/orders": {
+      "get": {
+        "summary": "Lista órdenes de Osmosis con filtro opcional de estado",
+        "description": "Lectura paginada de órdenes desde Osmosis. Opcionalmente filtra por estado.",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "company",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "confirmed",
+                "processing",
+                "shipped",
+                "delivered",
+                "cancelled"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Órdenes paginadas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          }
+        }
+      }
+    },
+    "/osmosis/orders/{id}/push": {
+      "post": {
+        "summary": "Envía una orden de Katuq a Osmosis para procesamiento ICG",
+        "description": "Empuja la orden Katuq identificada por `id` a Osmosis. Operación idempotente desde el lado Katuq.",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "company",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID de la orden en Katuq."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Orden enviada (o ya enviada previamente).",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/osmosis/orders/{id}/status": {
+      "patch": {
+        "summary": "Sincroniza el estado de una orden de Katuq hacia Osmosis",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "company",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "status"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "confirmed",
+                      "processing",
+                      "shipped",
+                      "delivered",
+                      "cancelled"
+                    ]
+                  },
+                  "notes": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Estado sincronizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/osmosis/webhook/{companyId}": {
+      "post": {
+        "summary": "Recibe webhooks entrantes desde Osmosis (Cereza)",
+        "description": "Endpoint público al que Osmosis envía eventos de la empresa identificada por `companyId`.\nResponde `200` de forma inmediata y procesa el evento de manera asíncrona.\n\n**Seguridad**:\n- Token Bearer en el header `Authorization: Bearer <webhookSecret>`.\n- Comparación directa contra el `webhookSecret` configurado en la integración Osmosis de la empresa.\n- Si el token no coincide, el evento se rechaza (estado de log: `rejected_invalid_token`).\n- Si la empresa aún no tiene `webhookSecret` configurado, el evento se acepta pero se loguea con advertencia.\n\n**Trazabilidad**:\n- El payload crudo se persiste en Firestore (`osmosis_webhook_log/{companyId}/events/{eventId}`) ANTES de procesar.\n- El estado de procesamiento se actualiza: `received → processed | skipped | error | rejected_invalid_token | rejected_missing_event | rejected_missing_data`.\n\n**Eventos soportados**:\n- `order.status_updated`: actualiza `estadoProceso` del pedido (mapeo Osmosis→Katuq). Acepta `notes` (historial en `notasPedido.notasOsmosis[]`) y `evidence` (URL o base64, historial en `integraciones.osmosis.evidenciasEntrega[]`, recomendada si `status=\"delivered\"`).\n- `product.updated`: sincroniza producto existente.\n- `product.created`: crea o actualiza producto.\n",
+        "tags": [
+          "Integraciones - Cereza/Osmosis"
+        ],
+        "security": [
+          {
+            "osmosisWebhookToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "companyId",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "ID de la empresa Katuq dueña del evento (URL-encoded; ej. `OH%20MY%20STORE`)."
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OsmosisWebhookEvent"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Evento aceptado. El procesamiento real ocurre de forma asíncrona.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OsmosisWebhookAck"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Payload mal formado (no es JSON parseable). El endpoint normalmente responde 200 y registra el rechazo en el log."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Token de autenticación JWT."
+      },
+      "osmosisWebhookToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Token compartido (webhookSecret) para autenticar webhooks entrantes desde Osmosis. Se manda tal cual: `Authorization: Bearer <webhookSecret>`. Sin firma HMAC."
+      }
+    },
+    "schemas": {
+      "OsmosisWebhookEvent": {
+        "type": "object",
+        "description": "Payload genérico de un webhook entrante desde Osmosis (Cereza).",
+        "required": [
+          "event",
+          "data"
+        ],
+        "properties": {
+          "event": {
+            "type": "string",
+            "enum": [
+              "order.status_updated",
+              "product.updated",
+              "product.created"
+            ],
+            "description": "Tipo de evento. Eventos no listados son ignorados (logueados pero no procesados)."
+          },
+          "nodeSlug": {
+            "type": "string",
+            "description": "Identificador del nodo/empresa en Osmosis (opcional, informativo)."
+          },
+          "data": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OsmosisOrderEventData"
+              },
+              {
+                "$ref": "#/components/schemas/OsmosisProductEventData"
+              }
+            ],
+            "description": "Cuerpo del evento. Su forma depende del campo \"event\"."
+          }
+        },
+        "example": {
+          "event": "order.status_updated",
+          "data": {
+            "id": "OSM-12345",
+            "external_id": "ORE-000207",
+            "status": "shipped",
+            "notes": "Guia 999-ABC"
+          }
+        }
+      },
+      "OsmosisOrderEventData": {
+        "type": "object",
+        "description": "Datos de un evento order.status_updated. Katuq busca la orden por external_id (= nroPedido) y como fallback por integraciones.osmosis.osmosisOrderId == id.",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "ID de la orden en Osmosis."
+          },
+          "external_id": {
+            "type": "string",
+            "description": "nroPedido de Katuq (la orden original que Katuq envió a Osmosis)."
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "processing",
+              "shipped",
+              "delivered",
+              "cancelled"
+            ],
+            "description": "Estado nuevo de la orden. Mapeo: pending/confirmed→SinProducir, processing→EnProduccion, shipped→Despachado, delivered→Entregado, cancelled→Cancelado. Otros valores se ignoran."
+          },
+          "notes": {
+            "type": "string",
+            "description": "Notas opcionales (ej. número de guía). Se acumulan en notasPedido.notasOsmosis[]."
+          },
+          "evidence": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OsmosisDeliveryEvidence"
+              }
+            ],
+            "description": "Evidencia de entrega. Opcional, recomendada cuando status=\"delivered\". Se acumula en integraciones.osmosis.evidenciasEntrega[]."
+          }
+        }
+      },
+      "OsmosisDeliveryEvidence": {
+        "type": "object",
+        "description": "Evidencia adjunta al cambio de estado. Se acepta URL, base64, o ambos. Katuq guarda lo que llegue tal cual, sin subir a ningún almacenamiento.",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "nullable": true,
+            "description": "URL pública del archivo (foto, comprobante, etc.) ya hospedado por Cereza."
+          },
+          "base64": {
+            "type": "string",
+            "nullable": true,
+            "description": "Contenido del archivo en base64 (sin prefijo data:...). Se guarda inline en el documento de la orden."
+          },
+          "contentType": {
+            "type": "string",
+            "nullable": true,
+            "example": "image/jpeg",
+            "description": "MIME type del archivo."
+          },
+          "filename": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nombre original del archivo."
+          },
+          "note": {
+            "type": "string",
+            "nullable": true,
+            "description": "Nota libre (ej. \"Recibido por <persona>\")."
+          }
+        }
+      },
+      "OsmosisProductEventData": {
+        "type": "object",
+        "description": "Datos de un evento product.updated o product.created. Es el mismo objeto Product que retorna la API REST de Osmosis (GET /products/:id).",
+        "required": [
+          "reference"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID del producto en Osmosis (numérico)."
+          },
+          "reference": {
+            "type": "string",
+            "description": "SKU/referencia. Es la clave que Katuq usa para upsert en su catálogo (identificacion.referencia)."
+          },
+          "active": {
+            "type": "integer",
+            "enum": [
+              0,
+              1
+            ],
+            "description": "1 = activo, 0 = inactivo."
+          },
+          "data": {
+            "type": "array",
+            "description": "Información descriptiva por store. Katuq usa data[0] como datos principales.",
+            "items": {
+              "$ref": "#/components/schemas/OsmosisProductData"
+            }
+          },
+          "images": {
+            "type": "array",
+            "description": "Imágenes del producto. Se ordenan por position antes de mapear.",
+            "items": {
+              "$ref": "#/components/schemas/OsmosisProductImage"
+            }
+          },
+          "price": {
+            "type": "array",
+            "description": "Precios por variante (talla + color + lista de precio).",
+            "items": {
+              "$ref": "#/components/schemas/OsmosisProductPrice"
+            }
+          },
+          "stock": {
+            "type": "array",
+            "description": "Stock por bodega y variante. Se sincroniza a la colección inventory en Katuq.",
+            "items": {
+              "$ref": "#/components/schemas/OsmosisProductStock"
+            }
+          }
+        }
+      },
+      "OsmosisProductData": {
+        "type": "object",
+        "description": "Información descriptiva de un producto (un elemento de Product.data[]).",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Nombre del producto."
+          },
+          "description": {
+            "type": "string",
+            "description": "Descripción larga."
+          },
+          "barcode": {
+            "type": "string",
+            "nullable": true,
+            "description": "Código de barras."
+          },
+          "manufacturer": {
+            "type": "string",
+            "nullable": true,
+            "description": "Marca / fabricante."
+          },
+          "type": {
+            "type": "string",
+            "nullable": true,
+            "description": "Tipo de producto."
+          }
+        }
+      },
+      "OsmosisProductImage": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Path relativo (ej. /osmosis/products/0/123/abc.png) o URL completa. Se prefija con https://images2.guiacereza.com si es relativo."
+          },
+          "color": {
+            "type": "string",
+            "nullable": true,
+            "description": "Color asociado a la imagen, si aplica."
+          },
+          "position": {
+            "type": "integer",
+            "description": "Orden de la imagen."
+          }
+        }
+      },
+      "OsmosisProductPrice": {
+        "type": "object",
+        "description": "Precio para una variante (talla + color + lista).",
+        "required": [
+          "price"
+        ],
+        "properties": {
+          "size": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          },
+          "price": {
+            "type": "number",
+            "description": "Precio (number o string parseable a number)."
+          },
+          "price_list": {
+            "type": "string",
+            "nullable": true,
+            "description": "Lista de precios a la que pertenece."
+          }
+        }
+      },
+      "OsmosisProductStock": {
+        "type": "object",
+        "required": [
+          "storage_code",
+          "stock_available"
+        ],
+        "properties": {
+          "storage_code": {
+            "type": "string",
+            "description": "Código de bodega en Osmosis. Katuq lo mapea a idBodega; si no existe, auto-crea la bodega en warehouses."
+          },
+          "stock_available": {
+            "type": "integer",
+            "description": "Cantidad disponible en esa bodega."
+          },
+          "size": {
+            "type": "string",
+            "nullable": true
+          },
+          "color": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "OsmosisWebhookAck": {
+        "type": "object",
+        "description": "Respuesta inmediata del webhook. El procesamiento ocurre asíncrono después.",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "received": {
+            "type": "boolean",
+            "example": true
+          }
+        }
+      },
+      "OsmosisDashboardOrderIssue": {
+        "type": "object",
+        "properties": {
+          "katuqOrderId": {
+            "type": "string"
+          },
+          "osmosisOrderId": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "missing_osmosis_id",
+              "push_error",
+              "cancelled_in_cereza",
+              "unknown_osmosis_order"
+            ]
+          },
+          "osmosisStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "osmosisError": {
+            "type": "string",
+            "nullable": true
+          },
+          "osmosisLastSync": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "OsmosisDashboardSummary": {
+        "type": "object",
+        "properties": {
+          "rangeDays": {
+            "type": "integer",
+            "example": 7
+          },
+          "totalOrders": {
+            "type": "integer"
+          },
+          "ordersPushed": {
+            "type": "integer"
+          },
+          "ordersWithError": {
+            "type": "integer"
+          },
+          "ordersCancelledInCereza": {
+            "type": "integer"
+          },
+          "productsSynced": {
+            "type": "integer"
+          },
+          "lastWebhookAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Indica si la operación fue exitosa."
+          },
+          "message": {
+            "type": "string",
+            "description": "Mensaje de éxito."
+          },
+          "data": {
+            "type": "object",
+            "description": "Datos de respuesta."
+          }
+        }
+      },
+      "PaginatedResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Array de elementos."
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "description": "Página actual."
+              },
+              "limit": {
+                "type": "integer",
+                "description": "Elementos por página."
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total de elementos."
+              },
+              "totalPages": {
+                "type": "integer",
+                "description": "Total de páginas."
+              }
+            }
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Mensaje de error."
+          },
+          "error": {
+            "type": "string",
+            "description": "Código o tipo de error."
+          },
+          "details": {
+            "type": "object",
+            "description": "Detalles adicionales del error."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      }
+    },
+    "responses": {
+      "SuccessResponse": {
+        "description": "Operación exitosa.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/SuccessResponse"
+            }
+          }
+        }
+      },
+      "BadRequest": {
+        "description": "Solicitud incorrecta. Parámetros inválidos o faltantes.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "Parámetros inválidos o faltantes.",
+              "error": "BAD_REQUEST"
+            }
+          }
+        }
+      },
+      "UnauthorizedError": {
+        "description": "No autorizado. Token no válido o faltante.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "Token de autenticación no válido o faltante.",
+              "error": "UNAUTHORIZED"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Acceso prohibido. No tiene permisos suficientes.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "No tiene permisos para realizar esta acción.",
+              "error": "FORBIDDEN"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Recurso no encontrado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "El recurso solicitado no fue encontrado.",
+              "error": "NOT_FOUND"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflicto. El recurso ya existe o hay un conflicto de estado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "El recurso ya existe o hay un conflicto.",
+              "error": "CONFLICT"
+            }
+          }
+        }
+      },
+      "InternalError": {
+        "description": "Error interno del servidor.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "example": {
+              "message": "Ha ocurrido un error interno en el servidor.",
+              "error": "INTERNAL_ERROR"
+            }
+          }
+        }
+      }
+    }
+  }
+}

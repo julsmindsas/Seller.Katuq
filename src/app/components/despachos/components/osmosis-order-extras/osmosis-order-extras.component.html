@@ -1,0 +1,117 @@
+<!--
+  Bloque AISLADO de extras Osmosis. Solo se monta si trackingData.provider === 'osmosis'.
+  Cada subseccion tiene su propio *ngIf: si no hay datos, no aparece.
+-->
+<div class="osmosis-extras"
+     *ngIf="evidencias.length || statusHistory.length || notas.length">
+
+  <!-- ============== EVIDENCIAS ============== -->
+  <section class="oe-section" *ngIf="evidencias.length">
+    <header class="oe-section-header" (click)="toggle('evidencias')">
+      <i class="pi pi-image oe-section-icon"></i>
+      <h6 class="oe-section-title">
+        Evidencias de entrega <span class="oe-count">({{ evidencias.length }})</span>
+      </h6>
+      <i class="pi" [class.pi-chevron-down]="!expanded.evidencias" [class.pi-chevron-up]="expanded.evidencias"></i>
+    </header>
+
+    <div class="oe-section-body" *ngIf="expanded.evidencias">
+      <div class="oe-evidence-grid">
+        <article *ngFor="let ev of evidencias; let i = index" class="oe-evidence-card">
+          <!-- Imagen -->
+          <div class="oe-evidence-media" *ngIf="isImage(ev); else nonImageTpl"
+               (click)="openLightbox(ev)" pTooltip="Ver completo" tooltipPosition="top">
+            <img [src]="resolveImageSrc(ev)" [alt]="ev.filename || 'Evidencia'" loading="lazy">
+            <div class="oe-evidence-zoom"><i class="pi pi-search-plus"></i></div>
+          </div>
+
+          <!-- No-imagen (PDF u otro): boton de descarga -->
+          <ng-template #nonImageTpl>
+            <a class="oe-evidence-file"
+               *ngIf="resolveImageSrc(ev) as src"
+               [href]="src"
+               [download]="ev.filename || 'evidencia'"
+               target="_blank" rel="noopener">
+              <i class="pi pi-file"></i>
+              <span>{{ ev.filename || 'Abrir archivo' }}</span>
+            </a>
+          </ng-template>
+
+          <div class="oe-evidence-meta">
+            <div class="oe-evidence-date" *ngIf="ev.fecha">
+              <i class="pi pi-calendar"></i> {{ ev.fecha | date:'dd/MM/yyyy HH:mm' }}
+            </div>
+            <div class="oe-evidence-note" *ngIf="ev.nota">{{ ev.nota }}</div>
+            <div class="oe-evidence-status" *ngIf="ev.statusKatuq">
+              <span class="oe-pill">{{ ev.statusKatuq }}</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== HISTORIAL DE ESTADOS ============== -->
+  <section class="oe-section" *ngIf="statusHistory.length">
+    <header class="oe-section-header" (click)="toggle('historial')">
+      <i class="pi pi-history oe-section-icon"></i>
+      <h6 class="oe-section-title">
+        Cambios de estado <span class="oe-count">({{ statusHistory.length }})</span>
+      </h6>
+      <i class="pi" [class.pi-chevron-down]="!expanded.historial" [class.pi-chevron-up]="expanded.historial"></i>
+    </header>
+
+    <div class="oe-section-body" *ngIf="expanded.historial">
+      <ol class="oe-timeline">
+        <li *ngFor="let h of statusHistory" class="oe-timeline-item">
+          <span class="oe-timeline-dot" [ngClass]="transitionClass(h)"></span>
+          <div class="oe-timeline-content">
+            <div class="oe-timeline-row">
+              <span class="oe-timeline-date" *ngIf="h.fecha">{{ h.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span class="oe-pill oe-pill-source" *ngIf="h.source">{{ h.source }}</span>
+            </div>
+            <div class="oe-timeline-transition">
+              <span class="oe-prev" *ngIf="h.previousStatus">{{ h.previousStatus }}</span>
+              <i class="pi pi-arrow-right oe-arrow" *ngIf="h.previousStatus"></i>
+              <span class="oe-pill" [ngClass]="transitionClass(h)">{{ h.statusKatuq }}</span>
+              <span class="oe-osmosis-status" *ngIf="h.statusOsmosis">(Osmosis: {{ h.statusOsmosis }})</span>
+            </div>
+            <div class="oe-timeline-note" *ngIf="h.notes"><i class="pi pi-comment"></i> {{ h.notes }}</div>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ============== NOTAS DE OSMOSIS ============== -->
+  <section class="oe-section" *ngIf="notas.length">
+    <header class="oe-section-header" (click)="toggle('notas')">
+      <i class="pi pi-comments oe-section-icon"></i>
+      <h6 class="oe-section-title">
+        Notas de Osmosis <span class="oe-count">({{ notas.length }})</span>
+      </h6>
+      <i class="pi" [class.pi-chevron-down]="!expanded.notas" [class.pi-chevron-up]="expanded.notas"></i>
+    </header>
+
+    <div class="oe-section-body" *ngIf="expanded.notas">
+      <div class="oe-notes-list">
+        <div *ngFor="let n of notas" class="oe-note-item">
+          <div class="oe-note-header">
+            <span class="oe-note-date" *ngIf="n.fecha">{{ n.fecha | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span class="oe-note-user" *ngIf="n.usuario">{{ n.usuario }}</span>
+          </div>
+          <div class="oe-note-body">{{ n.nota }}</div>
+          <div class="oe-note-meta" *ngIf="n.descripcion">{{ n.descripcion }}</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============== LIGHTBOX (preview imagen completa) ============== -->
+<div class="oe-lightbox" *ngIf="lightboxOpen" (click)="closeLightbox()">
+  <button class="oe-lightbox-close" (click)="closeLightbox()" aria-label="Cerrar">
+    <i class="pi pi-times"></i>
+  </button>
+  <img [src]="lightboxSrc" [alt]="lightboxAlt" (click)="$event.stopPropagation()">
+</div>

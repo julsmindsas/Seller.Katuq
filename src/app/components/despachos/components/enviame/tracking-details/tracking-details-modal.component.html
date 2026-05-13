@@ -312,6 +312,13 @@
     </div>
   </div>
 
+  <!-- Extras EXCLUSIVOS de Osmosis (evidencias, historial de estados, notas).
+       Componente AISLADO: no afecta otras integraciones. Solo se monta para Osmosis. -->
+  <app-osmosis-order-extras
+    *ngIf="trackingData?.provider === 'osmosis'"
+    [pedido]="pedido">
+  </app-osmosis-order-extras>
+
   <!-- Estado sin datos mejorado -->
   <div class="empty-state-modern" *ngIf="!loading && !trackingData" [@fadeIn]>
     <div class="empty-illustration">

@@ -59,6 +59,7 @@ import { ZonaGestionModalComponent } from "./components/zona-gestion-modal/zona-
 import { EnviameRatesModalComponent } from "./components/enviame/rates-modal/enviame-rates-modal.component";
 import { EnviameCancelModalComponent } from "./components/enviame/cancel-modal/enviame-cancel-modal.component";
 import { TrackingDetailsModalComponent } from "./components/enviame/tracking-details/tracking-details-modal.component";
+import { OsmosisOrderExtrasComponent } from "./components/osmosis-order-extras/osmosis-order-extras.component";
 import { EnviameHelperService } from "./components/enviame/services/enviame-helper.service";
 import { EvidenciaEmpacadoModalComponent } from "./components/evidencia-empacado-modal/evidencia-empacado-modal.component";
 
@@ -135,6 +136,7 @@ import { TotalValorACobrarPipe } from "./pipes/total-valor-cobrar.pipe";
     EnviameRatesModalComponent,
     EnviameCancelModalComponent,
     TrackingDetailsModalComponent,
+    OsmosisOrderExtrasComponent,
     EvidenciaEmpacadoModalComponent,
   ],
   exports: [DetalleEntregaComponent],
