@@ -173,19 +173,52 @@ export const SOURCE_CATALOG: SourceDef[] = [
   {
     id: 'accounting_balances',
     label: 'Cartera (CxC / CxP)',
-    description: 'Saldos pendientes por tercero sincronizados desde World Office. Filtrar esCliente=true → CxC, esProveedor=true → CxP.',
+    description: 'Saldos por tercero con aging (corriente, 0-30, 31-60, 61-90, 90+) y datos de contacto. Filtrar esCliente=true → CxC, esProveedor=true → CxP.',
     requiresIntegration: 'worldoffice',
     dimensions: [
+      // Tercero
       { id: 'tercero_id', label: 'ID Tercero WO', type: 'number', group: 'Tercero' },
       { id: 'tercero_nombre', label: 'Tercero', type: 'string', group: 'Tercero' },
-      { id: 'es_cliente', label: 'Es Cliente (CxC)', type: 'boolean', group: 'Tipo' },
-      { id: 'es_proveedor', label: 'Es Proveedor (CxP)', type: 'boolean', group: 'Tipo' },
+      { id: 'identificacion', label: 'NIT / Cédula', type: 'string', group: 'Tercero' },
+      // Contacto
+      { id: 'email', label: 'Email', type: 'string', group: 'Contacto' },
+      { id: 'telefono', label: 'Teléfono', type: 'string', group: 'Contacto' },
+      { id: 'ciudad', label: 'Ciudad', type: 'string', group: 'Contacto' },
+      { id: 'departamento', label: 'Departamento', type: 'string', group: 'Contacto' },
+      { id: 'pais', label: 'País', type: 'string', group: 'Contacto' },
+      { id: 'direccion', label: 'Dirección', type: 'string', group: 'Contacto' },
+      // Relación
+      { id: 'es_cliente', label: 'Es Cliente (CxC)', type: 'boolean', group: 'Relación' },
+      { id: 'es_proveedor', label: 'Es Proveedor (CxP)', type: 'boolean', group: 'Relación' },
+      { id: 'forma_pago_predominante', label: 'Forma Pago Habitual', type: 'string', group: 'Relación', enumValues: ['CR', 'CO', 'OTRO'] },
+      // Vendedor
+      { id: 'vendedor_id', label: 'ID Vendedor', type: 'number', group: 'Vendedor' },
+      { id: 'vendedor_nombre', label: 'Vendedor', type: 'string', group: 'Vendedor' },
+      // Cartera
+      { id: 'estado_cartera', label: 'Estado Cartera', type: 'string', group: 'Cartera', enumValues: ['al_dia', 'corriente', 'vencido', 'con_saldo_sin_docs'] },
+      // Fechas
+      { id: 'primera_factura_fecha', label: 'Primera Factura', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
+      { id: 'ultima_factura_fecha', label: 'Última Factura', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
     ],
     measures: [
-      { id: 'saldo', label: 'Saldo', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
+      // Saldo
+      { id: 'saldo', label: 'Saldo Total', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
       { id: 'terceros', label: 'Terceros', aggs: ['count', 'count_distinct'], format: 'number' },
+      // Aging
+      { id: 'saldo_corriente', label: 'Saldo Corriente', aggs: ['sum', 'avg'], format: 'currency' },
+      { id: 'saldo_vencido_0_30', label: 'Vencido 0-30 días', aggs: ['sum', 'avg'], format: 'currency' },
+      { id: 'saldo_vencido_31_60', label: 'Vencido 31-60 días', aggs: ['sum', 'avg'], format: 'currency' },
+      { id: 'saldo_vencido_61_90', label: 'Vencido 61-90 días', aggs: ['sum', 'avg'], format: 'currency' },
+      { id: 'saldo_vencido_90_plus', label: 'Vencido +90 días', aggs: ['sum', 'avg'], format: 'currency' },
+      { id: 'dias_mora_promedio', label: 'Días Mora Promedio', aggs: ['avg', 'min', 'max'], format: 'number' },
+      // Histórico
+      { id: 'monto_facturado_historico', label: 'Facturado Histórico', aggs: ['sum', 'avg'], format: 'currency' },
+      { id: 'monto_pagado_historico', label: 'Pagado Histórico', aggs: ['sum', 'avg'], format: 'currency' },
+      { id: 'dias_desde_ultima_factura', label: 'Días Desde Última Factura', aggs: ['avg', 'min', 'max'], format: 'number' },
+      // Documentos
       { id: 'docs_fv', label: 'Facturas Venta', aggs: ['sum', 'avg'], format: 'number' },
       { id: 'docs_fc', label: 'Facturas Compra', aggs: ['sum', 'avg'], format: 'number' },
+      { id: 'docs_rc', label: 'Recibos Caja', aggs: ['sum', 'avg'], format: 'number' },
     ],
   },
 ];
