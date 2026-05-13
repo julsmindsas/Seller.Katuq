@@ -3,6 +3,7 @@ import { BehaviorSubject, Observable, Subject, fromEvent, merge } from 'rxjs';
 import { filter, debounceTime, distinctUntilChanged, map } from 'rxjs/operators';
 import { AngularFireDatabase } from '@angular/fire/compat/database';
 import { HttpClient } from '@angular/common/http';
+import { ToastrService } from 'ngx-toastr';
 
 import { 
   KatuqNotification, 
@@ -16,6 +17,7 @@ import {
 } from './notification.types';
 import { NOTIFICATION_TEMPLATES, NOTIFICATION_CONFIG } from './notification.config';
 import { NotificationService } from '../notification.service';
+import { NotificationPreferencesService } from './notification-preferences.service';
 
 @Injectable({
   providedIn: 'root'
@@ -32,6 +34,8 @@ export class NotificationManagerService {
   // Cache local de notificaciones
   private localNotifications: KatuqNotification[] = [];
   private throttleCache = new Map<string, number>();
+  private toastThrottleCache = new Map<string, number>();
+  private static readonly TOAST_THROTTLE_MS = 5 * 60 * 1000; // 5 minutos
   
   // Estado del usuario actual
   private currentUserId: string | null = null;
@@ -45,7 +49,9 @@ export class NotificationManagerService {
   constructor(
     private http: HttpClient,
     private db: AngularFireDatabase,
-    private legacyNotificationService: NotificationService
+    private legacyNotificationService: NotificationService,
+    private toastr: ToastrService,
+    private preferencesService: NotificationPreferencesService
   ) {
     this.initializeService();
     this.setupOnlineDetection();
@@ -422,6 +428,11 @@ export class NotificationManagerService {
    * Agrega una notificación local sin duplicar
    */
   private addLocalNotification(notification: KatuqNotification): void {
+    // Verificar preferencias del usuario — si el tipo está deshabilitado, no agregar
+    if (!this.preferencesService.shouldSendNotification(notification.type, NotificationChannel.IN_APP)) {
+      return;
+    }
+
     // Verificar si ya existe
     const exists = this.localNotifications.some(n => n.id === notification.id);
     if (!exists) {
@@ -502,29 +513,40 @@ export class NotificationManagerService {
   }
 
   /**
-   * Muestra una notificación in-app usando el servicio legacy
+   * Muestra una notificación in-app (toast emergente).
+   * Throttle por tipo: solo 1 toast por tipo cada 5 min para evitar spam.
+   * La notificación siempre se guarda en la campana (addLocalNotification),
+   * este método solo controla el popup visual.
    */
   private showInAppNotification(notification: KatuqNotification): void {
     if (!notification.channels.includes(NotificationChannel.IN_APP)) return;
 
-    const template = NOTIFICATION_TEMPLATES[notification.type];
-    const shouldPersist = template?.persistInNotificationCenter ?? true;
+    // Throttle por tipo: solo mostrar 1 toast por tipo cada 5 min
+    const lastShown = this.toastThrottleCache.get(notification.type);
+    if (lastShown && (Date.now() - lastShown) < NotificationManagerService.TOAST_THROTTLE_MS) {
+      return;
+    }
+    this.toastThrottleCache.set(notification.type, Date.now());
 
-    // Usar el servicio legacy para mostrar toast
-    const notificationType = this.mapPriorityToLegacyType(notification.priority);
-    
-    this.legacyNotificationService.addNotification({
-      message: notification.message,
-      details: notification.title,
-      timestamp: notification.createdAt,
-      type: notificationType,
-      typeIcon: notificationType,
-      action: notification.actionUrl ? () => {
-        // Navegar a la URL de acción
-        window.location.href = notification.actionUrl!;
-      } : undefined,
-      btnName: notification.actionText
-    });
+    // Toast emergente real via ToastrService
+    const title = notification.title || 'Notificación';
+    const message = notification.message || '';
+    const toastrOpts = { timeOut: 5000, progressBar: true, closeButton: true };
+
+    switch (this.mapPriorityToLegacyType(notification.priority)) {
+      case 'danger':
+        this.toastr.error(message, title, toastrOpts);
+        break;
+      case 'warning':
+        this.toastr.warning(message, title, toastrOpts);
+        break;
+      case 'success':
+        this.toastr.success(message, title, toastrOpts);
+        break;
+      default:
+        this.toastr.info(message, title, toastrOpts);
+        break;
+    }
   }
 
   /**

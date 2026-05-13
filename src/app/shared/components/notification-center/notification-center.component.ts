@@ -72,6 +72,9 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   private searchSubject = new Subject<string>();
   private cleanupInterval: any;
 
+  // Preferencias in-app por tipo
+  public typePreferences: { type: NotificationType; label: string; enabled: boolean }[] = [];
+
   // Enums para template
   public NotificationPriority = NotificationPriority;
   public NotificationStatus = NotificationStatus;
@@ -124,6 +127,9 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
       .subscribe(status => {
         this.connectionStatus = status;
       });
+
+    // Cargar preferencias in-app
+    this.loadTypePreferences();
 
     // Configurar limpeza automática de notificaciones expiradas
     this.cleanupInterval = setInterval(() => {
@@ -662,4 +668,46 @@ export class NotificationCenterComponent implements OnInit, OnDestroy {
   //     console.log('🔔 Notificaciones de prueba agregadas para verificar la campanita');
   //   }, 1000);
   // }
+
+  /**
+   * Carga las preferencias por tipo desde NotificationPreferencesService
+   */
+  private loadTypePreferences(): void {
+    const labels: Partial<Record<NotificationType, string>> = {
+      [NotificationType.ORDER_CREATED]: 'Nuevo pedido',
+      [NotificationType.PAYMENT_APPROVED]: 'Pago aprobado',
+      [NotificationType.PAYMENT_REJECTED]: 'Pago rechazado',
+      [NotificationType.PRODUCTION_STARTED]: 'Producción iniciada',
+      [NotificationType.PRODUCTION_COMPLETED]: 'Producción completada',
+      [NotificationType.ORDER_PACKED]: 'Pedido empacado',
+      [NotificationType.ORDER_DISPATCHED]: 'Pedido despachado',
+      [NotificationType.ORDER_DELIVERED]: 'Pedido entregado',
+      [NotificationType.ORDER_PROCESS_REJECTED]: 'Pedido rechazado',
+      [NotificationType.LOW_STOCK]: 'Stock bajo',
+      [NotificationType.OUT_OF_STOCK]: 'Producto agotado',
+      [NotificationType.INVOICE_CREATED]: 'Factura creada',
+      [NotificationType.INVOICE_FAILED]: 'Error de facturación',
+    };
+
+    this.preferencesService.preferences$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(prefs => {
+        this.typePreferences = Object.entries(labels).map(([type, label]) => {
+          const typePrefs = prefs?.types?.[type as NotificationType];
+          const enabled = typePrefs ? typePrefs.enabled : true;
+          return { type: type as NotificationType, label: label!, enabled };
+        });
+      });
+  }
+
+  /**
+   * Toggle preferencia de un tipo de notificación
+   */
+  public async toggleTypePreference(type: NotificationType): Promise<void> {
+    const pref = this.typePreferences.find(p => p.type === type);
+    if (!pref) return;
+
+    pref.enabled = !pref.enabled;
+    await this.preferencesService.updateTypePreferences(type, { enabled: pref.enabled });
+  }
 }
