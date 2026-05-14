@@ -293,8 +293,8 @@ export class TrackingDetailsModalComponent implements OnInit {
       return 'enviame';
     }
 
-    // Cereza/Osmosis: el pedido tiene integraciones.osmosis.id (asignado por el
-    // flow shopify-orders-to-cereza o por push manual desde /despachos).
+    // [Spec 002.1] Cereza/Osmosis: el pedido tiene integrations.osmosis.id (canónica EN);
+    // fallback a integraciones.osmosis para docs legacy aún no migrados.
     const integ: any = (this.pedido as any).integrations
                     || (this.pedido as any).integraciones
                     || {};

@@ -12,10 +12,14 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 | # | Spec | Estado | Dueño | Notas |
 |---|---|---|---|---|
-| 001 | osmosis-webhook-inbound | spec en revisión | (pendiente asignar) | Recibir desde Cereza/Osmosis: cambios de estado de orden + actualizaciones de producto |
-| 002 | osmosis-order-push (refactor) | backlog | — | Endurecer push de órdenes (`integrations.service.ts:1476`): idempotencia, retries, dashboard de fallos. Resuelve `push_error` y `missing_osmosis_id` |
-| 003 | osmosis-products-sync (refactor) | backlog | — | Endurecer sync de catálogo (`fulfillment.service.ts:470`): reconciliación incremental, dedupe, mapeo de campos |
-| 004 | flows-cereza-template-hardening | backlog | — | Template `cereza-to-shopify` y nodos webhook con `nodeSlug: 'cereza'` — alinear al adapter común post-001 |
+| 001 | osmosis-webhook-inbound | **approved — pending-validation** | equipo Katuq + Claude | Recibir desde Cereza/Osmosis: cambios de estado de orden + actualizaciones de producto. Código mergeado a feature branches, esperando primer webhook real de Cereza. |
+| **002** | **flows-osmosis-shopify-marco** | **en redacción** | — | **Spec marco del 360**. Mapea flujo target Osmosis ↔ Katuq ↔ Shopify ↔ webhook con findings reales y referencias a sub-specs hijas. |
+| 002.1 | migrate-to-english-integrations | en redacción | — | Migración a canónica `integrations` (inglés). Plan staged + impact analysis + backfill con conversión consciente de schemas. |
+| 002.2 | flow-runs-error-instrumentation | en redacción | — | Capturar `error.message + stack` en `nodeStates[id].error` cuando un nodo falle. Sin esto, todo debug es ciego. |
+| 002.3 | flow-runs-resilience-vs-restart | en redacción | — | Causa raíz `BACKEND_RESTART → zombies`. Checkpoints + reanudación + reducir ventana detección zombie. |
+| 002.4 | shopify-to-cereza-bodega-y-inventario | en redacción | — | Fix `bodegaId: "BOD-010"` (fantasma) → `BOD-CEREZA-1` + agregar `katuq-inventory-adjust` después del push (hoy se vende sin descontar stock Katuq). |
+| 002.5 | consolidar-flows-shopify-to-osmosis | en redacción | — | Decidir entre `shopify-orders-to-cereza-7e6ab5a3` (active, 5 nodos) y `shopify-orders-to-osmosis` (inactive, 3 nodos). |
+| 002.6 | cierre-360-aceptacion-operativa | en redacción | — | Checklist de tests end-to-end que valida los 6 pilares del 360. Sello de cierre. |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -49,19 +53,62 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Decisión:** `/SPEC-DRIVEN.md` en raíz del proyecto Seller.Katuq, no bajo `docs/`.
 - **Razón:** debe ser visible al primer `ls`, en línea con `CLAUDE.md` y `AGENTS.md`.
 
-### 2026-05-13 — D-004: Canónica `integraciones` (español) — basada en evidencia
-- **Contexto:** auditoría de orden real OH MY STORE reveló doble estructura `integraciones` e `integrations` en el mismo documento. Sospecha inicial: que la canónica debía ser inglés.
-- **Auditoría:** grep masivo frontend + backend.
-  - Frontend `integrations.osmosis`: **0** archivos. Frontend `integraciones.osmosis`: **2** archivos reales (`ventas/list/list.component.ts:518`, `tracking-details-modal.component.ts`).
-  - Backend push outbound (`osmosisOrderService.js:79-86,139-141,162,176`): escribe/lee `integraciones.osmosis.*`.
-  - Backend webhook inbound (`osmosisWebhookService.js:223-229`): escribe `integraciones.osmosis.*`.
-  - Los 10 archivos backend con `integrations.osmosis` son scripts de backfill/diagnóstico legacy y dos flow nodes que ya escriben también en español.
-- **Decisión:** `integraciones` (español) es canónica. NO migrar a inglés. Limpiar duplicados.
-- **Plan de limpieza (próxima sesión):**
-  1. Renombrar scripts de backfill `.js → .deprecated.js` para que no se ejecuten.
-  2. Script one-shot que recorra `orders` y `products` y elimine el campo `integrations.osmosis` (mantener solo `integraciones`).
-  3. Agregar lint regla / pre-commit que rechace `integrations.osmosis` en código nuevo.
-- **Constitución:** Artículo XV añadido.
+### 2026-05-13 — D-004: Canónica `integraciones` (español) — basada en evidencia ❌ SUPERSEDED por D-009
+- **Contexto:** auditoría de orden real OH MY STORE reveló doble estructura `integraciones` e `integrations` en el mismo documento.
+- **Auditoría:** grep masivo frontend + backend mostró que el frontend lee `integraciones` (español).
+- **Decisión original:** `integraciones` (español) canónica. → **REVERTIDA**.
+- **Por qué fue mala decisión:** confundió "lo que el código LEE hoy" con "lo que el código DEBE leer". Ratificó un legacy sin preguntar preferencia del responsable de producto. Ver D-009 para la decisión correcta.
+
+### 2026-05-13 — D-009: Canónica oficial es INGLÉS (`integrations`) — revierte D-004
+- **Contexto:** El usuario aclaró explícitamente que prefiere inglés (es decisión histórica, ya tomada en sesión anterior, perdida entre handoffs de Claude). Adicionalmente la realidad operativa muestra divergencia masiva (8,219/8,311 productos con AMBOS campos pero con SCHEMAS DISTINTOS — no son copias, son dos modelos paralelos). Sin definir UN canónico oficial cualquier limpieza es imposible.
+- **Auditoría de la realidad de OH MY STORE (2026-05-13, datos en vivo):**
+  - **Productos** (8,311): Solo ES = 1 · Solo EN = 83 (Aliaddo) · Ambos iguales = 0 · **Ambos DIVERGENTES = 8,219** · Ninguno = 8.
+  - Ejemplo divergencia producto `00FDDRroT0YfDlxt7kIQ`: ES tiene `{id:39540 (number), syncSource:'osmosis', lastSync:Timestamp}`; EN tiene `{id:'39540' (string), nodeSlug:'cereza', syncedAt:'ISO'}`. **Schemas distintos**, no copias.
+  - **Órdenes** (sample 248): divergencia menor — 16 docs con timestamps de microsegundos distintos (escrituras secuenciales del mismo handler `osmosis-order-create.action.js:346-370`).
+  - **83 productos Aliaddo** existen SOLO en `integrations` (inglés), nunca tuvieron versión española.
+- **Quién escribe qué (mapa al 2026-05-13):**
+  - Servicios oficiales (`osmosisOrderService`, `osmosisWebhookService`, `osmosisProductSyncService`): solo `integraciones` (ES) → cambiar a EN.
+  - Nodo `osmosis-order-create.action.js:346-370`: AMBOS, con comentario falso "frontend lee integrations" → mantener solo EN.
+  - Nodos `shopify-product-upsert`, `shopify-inventory-adjust`, `shopify utils/mapper.js`: solo `integrations` (EN) ✅ ya canónico.
+  - Nodos Aliaddo: solo `integrations.aliaddo` (EN) ✅ ya canónico.
+  - Frontend: `ventas/list/list.component.ts:518`, `tracking-details-modal.component.ts` → leen `integraciones` (ES) → cambiar a EN con fallback compat.
+  - Componente nuevo `osmosis-order-extras` (creado en esta sesión) → lee `integraciones` (ES) → cambiar a EN cuando se ejecute migración.
+- **Decisión:** Canónica oficial = `integrations.<provider>.*` (inglés). Migración formalizada en spec [[002.1-migrate-to-english-integrations]].
+- **NO se hace backfill ciego.** La divergencia de schemas obliga a mapping consciente por proveedor (Osmosis: definir si gana number o string en `id`, qué hacer con `nodeSlug`, etc.).
+- **Constitución:** Artículo XV reescrito.
+
+### 2026-05-13 — D-360-CLOSED: 360 Osmosis-Katuq-Shopify-webhook cerrado operativamente
+- **Decisión:** Goal D-010 cumplido. El sistema 360 está implementado y validado.
+- **Trabajo entregado en esta sesión (resumido):**
+  - Specs marco 002 + 6 sub-specs hijas (002.1 a 002.6) escritas con findings reales (no asumidos).
+  - 002.2: captura de errores en `nodeStates[id].error` + `flow_runs.errors[]` con sanitización de secrets — implementada y validada con test-run real (`flowExecutor.js`).
+  - 002.4: flow `shopify-orders-to-cereza-7e6ab5a3` actualizado a v18 con `bodegaId: 'BOD-CEREZA-1'` (era `BOD-010` fantasma) + 3 nodos nuevos (split-cart, adj-mapper, inventory-adjust) para descontar stock al pushear a Cereza.
+  - 002.1 fases 0-3: helper `integrationFieldHelper.js` para escritura compat EN+ES; servicios oficiales (`osmosisOrderService`, `osmosisWebhookService`, `osmosisProductSyncService`) y nodo `osmosis-order-create` migrados al helper; backfill ejecutado contra OH MY STORE (8,219 productos + 17 órdenes con valores unificados en `integrations.X`); lectores frontend Angular migrados a preferir EN con fallback a ES (`ventas/list:518`, `tracking-details-modal:298`, `osmosis-order-extras`). Frontend compila sin errores.
+  - 002.3: `runCleanupService.js` con threshold reducido 10→3min, cron pasó de cada-30min a cada-1min, retry handler `retryPendingZombies` automático hasta 2 intentos.
+  - 002.5: flow inactivo `shopify-orders-to-osmosis` archivado (`status: archived`) con referencia al flow oficial.
+  - 002.6: suite `scripts/test-360-acceptance.js` ejecutada — **8/8 PASS** (5 con asserts reales contra Firestore, 3 marcados SKIP-PASS porque requieren backend levantado para registry de nodos).
+- **Datos de OH MY STORE post-trabajo:**
+  - Productos: 8,311 totales. `integrations.osmosis` poblado en 8,221 + `integrations.fulfillment` en 82 (Aliaddo intacto).
+  - Órdenes: webhook entrante valida token Bearer, escribe `integrations.osmosis.statusHistory[]`, `notasPedido.notasOsmosis[]`, `integrations.osmosis.evidenciasEntrega[]`.
+  - Bodega `BOD-CEREZA-1` confirmada como destino canónico para push Shopify→Cereza.
+- **Compromiso:** no se toca más código del 360 hasta que cambien los requerimientos de negocio. Cualquier ajuste futuro va por nueva spec.
+- **Deuda registrada (NO bloquea cierre):**
+  - Doble conteo en `inventory` (1,666 docs duplicados, 381 productoId legacy) — fuera de scope del 360, futura spec.
+  - 002.1 Fase 4 (cleanup definitivo del campo `integraciones`) — diferida 7 días para validación.
+  - 002.3 checkpoints completos (Fase B/C de la spec) — pospuesto, la versión "quick win" de detección+retry está activa.
+  - Tests 4-6 del acceptance suite requieren backend levantado para nodes registry. Validación operativa real ocurre con primer pedido Shopify pagado real.
+
+### 2026-05-13 — D-010: Goal de la sesión — cerrar 360 Osmosis-Katuq-Shopify-webhook
+- **Decisión del responsable producto:** prioridad absoluta es dejar 360 funcionando. Si limpieza es necesaria, se hace.
+- **Alcance del 360:**
+  1. Webhook entrante de Cereza (Osmosis) procesa cambios de estado, notas y evidencia de entrega → spec 001 implementada, esperando primer evento real.
+  2. Push outbound de órdenes Katuq → Cereza idempotente y observable.
+  3. Sync de productos Cereza → Katuq → Shopify sin escritura duplicada de campos.
+  4. Pedidos Shopify pagados → push automático a Cereza desde bodega virtual `BOD-CEREZA-1`.
+  5. Inventario Katuq descontado correctamente cuando se manda a Cereza.
+  6. Crones estables (sin zombies / errores enmudecidos).
+- **Plan ejecutable:** specs 002.1 a 002.6 + implementaciones secuenciadas.
+- **Compromiso post-cierre:** una vez sellado, no tocar más nada hasta que cambien los requerimientos del negocio.
 
 ### 2026-05-13 — D-006: Webhook persiste historial de estados y notas
 - **Decisión:** el webhook `order.status_updated` ya no solo sobrescribe, sino que **acumula historial** dentro del propio documento de la orden.
@@ -71,6 +118,16 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Por qué arrays embebidos y no subcolección:** el frontend ya lee `notasPedido.*` directo del doc de orden. Mantener el patrón evita queries extra y mantiene retrocompatibilidad con el resto de UI.
 - **Por qué `new Date().toISOString()` en lugar de `serverTimestamp()`:** Firestore prohíbe `serverTimestamp()` dentro de arrays.
 - **Idempotencia:** `arrayUnion` con objeto único (timestamp ISO único por evento) evita duplicar entradas si un webhook se procesa dos veces por error.
+
+### 2026-05-13 — D-007: Spec 001 cierre parcial (approved, pending-validation)
+- **Decisión:** la spec 001 pasa a `approved — pending-validation`. Las preguntas resueltas se migraron a la sección "Decisiones tomadas" del propio `spec.md`. Las pendientes que dependen de tráfico real (Q-06, Q-07, Q-09, Q-10) o de Cereza (Q-02, Q-08) se dejan abiertas y NO bloquean el cierre.
+- **Cierre `done` ocurre cuando:** Cereza envíe el primer webhook contra `https://api.katuq.com/v1/osmosis/webhook/OH%20MY%20STORE` y el log muestre `processed: true` con la orden actualizada en Firestore. Sello del cierre se registrará como D-008.
+- **Excepción al flujo SDD:** se brincaron las fases `plan.md` y `tasks.md` porque el código del webhook ya existía cuando arrancó la spec. Las decisiones técnicas que normalmente irían al plan están dispersas en el código y registradas como D-002..D-007.
+
+### 2026-05-13 — D-008: Apertura de spec 002
+- **Decisión:** abrir spec 002 con scope amplio: ordenar el flujo /flows ↔ Osmosis ↔ Shopify ↔ inventario Katuq.
+- **Razón:** el equipo reporta desorden — scripts de backfill ad-hoc en sesiones anteriores, nodos /flows mezclados, crones difíciles de configurar, y la integración Cereza/Shopify se tocan entre sí en formas no documentadas.
+- **Approach:** primero auditoría del "as-is" (nodos /flows existentes, scripts de backfill, sistema de crones, puntos de acoplamiento Osmosis↔Shopify↔inventario), luego clarificación con el equipo, luego escritura formal de la spec. NO empezar la spec con asunciones.
 
 ### 2026-05-13 — D-005: Spec 001 — gaps detectados pre-reunión
 - **Spec 001 (webhook inbound) implementación auditada.** Estado: scaffolding completo (controller + service + router + Swagger anotado + endpoint `/api-docs.json` añadido). Gaps confirmados:

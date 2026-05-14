@@ -54,15 +54,19 @@ Specs grandes se parten. Si una spec excede 3 páginas o 3 user stories no relac
 ## Artículo XIV — El contrato vivo se actualiza
 Toda decisión que tomemos como equipo (humano + IA) y toda excepción a esta constitución se registra en `CONTRACT.md`. Si no está escrito, no pasó.
 
-## Artículo XV — Canónica de integraciones en Firestore: ESPAÑOL (`integraciones`)
-El campo en los documentos `orders` y `products` es **`integraciones`** (con tilde, español), no `integrations`. Justificación basada en código (auditoría 2026-05-13):
-- `osmosisOrderService.js:79-86,139-141,162,176` (push outbound oficial) escribe/lee `integraciones.osmosis.*`.
-- `osmosisWebhookService.js:223-229` (webhook inbound) escribe `integraciones.osmosis.*`.
-- Frontend Angular (`ventas/list/list.component.ts:518`, `tracking-details-modal.component.ts`) lee `integraciones.osmosis.*`.
-- Todos los archivos `integrations.osmosis.*` son scripts de backfill/diagnóstico legacy o duplican.
+## Artículo XV — Canónica de integraciones en Firestore: INGLÉS (`integrations`)
+> **Versión 2.0 — 2026-05-13.** Esta es una **enmienda al Artículo XV original** que decía "español". Razones del flip detalladas en CONTRACT.md decisión D-009.
 
-Reglas:
-- Cualquier código nuevo (push, pull, webhook, flow node, sync) escribe y lee `integraciones.<provider>.*`.
-- Los campos `integrations.<provider>` en documentos existentes son duplicados legacy a limpiar.
-- Los scripts/flow-nodes que aún escriban en inglés se deprecan y migran.
-- Aplica también a Shopify, WooCommerce y cualquier integración futura: español, no inglés.
+El campo canónico en los documentos `orders`, `products` y `warehouses` es **`integrations.<provider>.*`** (en inglés), NO `integraciones`.
+
+**Por qué se cambió la decisión:**
+- La auditoría inicial (D-004) confundió "lo que el código LEE hoy" con "lo que el código DEBE leer". El frontend lee `integraciones` por inercia, no por design.
+- Decisión explícita del usuario (responsable producto, 2026-05-13): preferencia por inglés. Razones: (a) consistencia con SDKs externos (Shopify, WooCommerce, Aliaddo todos usan `integrations`); (b) evita la fricción de mezclar español con inglés en identifiers; (c) decisión histórica del usuario que ya había sido tomada y se perdió entre sesiones de Claude.
+- La realidad operativa ya tiene contradicciones graves: 8,219/8,311 productos con AMBOS campos `integraciones.osmosis` y `integrations.osmosis` con SCHEMAS DISTINTOS — no son copias, son dos modelos paralelos. Definir UN canónico oficial es prerrequisito para cualquier limpieza.
+
+**Reglas (vigentes):**
+1. Todo código nuevo (servicios backend, nodos /flows, scripts, frontend) ESCRIBE solo en `integrations.<provider>.*` (inglés).
+2. Todo código nuevo LEE de `integrations.<provider>.*`. Si no está ahí, fallback temporal a `integraciones.<provider>.*` durante la migración. Nunca leer solo español post-migración.
+3. La migración formal sigue el plan staged en spec [[002.1-migrate-to-english-integrations]]: doble escritura compat → backfill con conversión de schemas → migración de lectores → cleanup.
+4. Aplica a TODOS los proveedores (Osmosis, Shopify, WooCommerce, Aliaddo, etc.).
+5. Convención de campos dentro del provider object: usar `snake_case` para campos copiados literalmente del proveedor externo (`order_id`, `product_id`); `camelCase` para campos derivados/internos (`pushedAt`, `lastSyncedAt`, `isPushed`).

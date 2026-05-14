@@ -63,7 +63,8 @@ export class OsmosisOrderExtrasComponent implements OnChanges {
   lightboxAlt = '';
 
   ngOnChanges(_changes: SimpleChanges): void {
-    const osm = this.pedido?.integraciones?.osmosis || {};
+    // [Spec 002.1 Fase 3] Canónica = inglés (`integrations`); fallback a `integraciones` para legacy.
+    const osm = this.pedido?.integrations?.osmosis || this.pedido?.integraciones?.osmosis || {};
     this.evidencias    = Array.isArray(osm.evidenciasEntrega) ? [...osm.evidenciasEntrega].reverse() : [];
     this.statusHistory = Array.isArray(osm.statusHistory)     ? [...osm.statusHistory].reverse()     : [];
     this.notas         = Array.isArray(this.pedido?.notasPedido?.notasOsmosis)

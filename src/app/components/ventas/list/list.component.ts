@@ -512,10 +512,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    const yaTiene = !!(pedido as any)?.integraciones?.osmosis?.id;
+    // [Spec 002.1 Fase 3] Canónica = inglés (`integrations`); fallback temporal a español.
+    const _osmosis = (pedido as any)?.integrations?.osmosis || (pedido as any)?.integraciones?.osmosis || {};
+    const yaTiene = !!_osmosis.id;
     const titulo = yaTiene ? 'Resincronizar con Cereza' : 'Enviar pedido a Cereza';
     const detalle = yaTiene
-      ? `Se forzara una sincronizacion con Cereza para el pedido <strong>${pedido.nroPedido}</strong> (OSM-${(pedido as any).integraciones.osmosis.id}).`
+      ? `Se forzara una sincronizacion con Cereza para el pedido <strong>${pedido.nroPedido}</strong> (OSM-${_osmosis.id}).`
       : `El pedido <strong>${pedido.nroPedido}</strong> sera enviado a Cereza/Guia Cereza para fulfillment.`;
 
     Swal.fire({

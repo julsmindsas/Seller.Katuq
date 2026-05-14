@@ -1,9 +1,28 @@
 # Spec 001 — Webhook entrante de Osmosis (Cereza)
 
-> Estado: **draft — in-review**
+> Estado: **approved — pending-validation** (código en feature branches, esperando primer webhook real de Cereza para sellar `done`)
 > Autor(es): equipo Katuq + Claude
 > Última actualización: 2026-05-13
 > Carpeta: `specs/001-osmosis-webhook-inbound/`
+
+## Decisiones tomadas (resolución del bloque [NEEDS CLARIFICATION])
+
+| ID | Pregunta | Resolución 2026-05-13 |
+|---|---|---|
+| Q-01 | Backend que recibe el webhook | **Firebase Functions** (`katuq_admin_back_firebase/functions/`). Endpoint `POST /v1/osmosis/webhook/:companyId` ya montado en `index.js:590`. |
+| Q-03 | Algoritmo de firma | **No HMAC** — token Bearer simple. Header `Authorization: Bearer <webhookSecret>` (fallback `X-Webhook-Token`). Comparación directa contra `config.webhookSecret`. Decisión registrada por solicitud explícita del equipo: simplicidad para Cereza. |
+| Q-04 | Catálogo de eventos v1 | `order.status_updated`, `product.updated`, `product.created`. |
+| Q-05 | Estados de orden | Mapping fijo en `osmosisWebhookService.js:10-17`: pending/confirmed→SinProducir, processing→EnProduccion, shipped→Despachado, delivered→Entregado, cancelled→Cancelado. Otros se ignoran. |
+| Q-04+ | Evidencia de entrega | Campo opcional `data.evidence` con `{url, base64, contentType, filename, note}`. Se acumula en `integraciones.osmosis.evidenciasEntrega[]` aunque el estado no cambie o la orden esté en estado final. |
+| Q-11 | RBAC re-encolar | Pospuesto a operación inicial — todavía sin dead-letter explícito. |
+| Q-12 | Orden de eventos | El timestamp del evento (`fecha` ISO en cada entrada del historial) manda; el receptor no asume orden. |
+
+## Pendientes deliberadamente abiertos (no bloquean cierre)
+
+- **Q-02:** Documentación oficial de Cereza sobre webhooks salientes — esperando que Cereza confirme con base en el `.docx` entregado.
+- **Q-06, Q-07:** Tamaño de payload y volumen — se medirá con tráfico real (M-01..M-05).
+- **Q-08:** Política de retención del log crudo — pendiente decisión legal/costo.
+- **Q-09, Q-10:** Umbrales de alerta y N de reintentos — pendientes hasta tener tráfico para calibrar.
 
 ## 1. Contexto / Por qué
 
