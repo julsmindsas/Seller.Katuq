@@ -679,8 +679,10 @@ export class CheckOutComponent implements OnInit, OnChanges {
             case "19": totalIva19 += precioItemConDescuento; break;
           }
         } else {
-          const valorUnitarioConIVA = productoPrecio.valorIva || 0; 
-          const valorIVABase = productoPrecio.precioUnitarioIva?.toString(); 
+          const precioSinIvaDefault = Number(productoPrecio.precioUnitarioSinIva) || 0;
+          const porcentajeIvaDefault = Number(productoPrecio.precioUnitarioIva) || 0;
+          const valorUnitarioConIVA = precioSinIvaDefault * (porcentajeIvaDefault / 100);
+          const valorIVABase = porcentajeIvaDefault.toString();
           const precioItemConDescuento = (valorUnitarioConIVA * cantidadItem) * (1 - porceDescuento);
           totalPrecioIVA += precioItemConDescuento;
           switch (valorIVABase) {
@@ -691,8 +693,10 @@ export class CheckOutComponent implements OnInit, OnChanges {
           }
         }
       } else if (productoPrecio) {
-        const valorUnitarioConIVA = productoPrecio.valorIva || 0; 
-        const valorIVABase = productoPrecio.precioUnitarioIva?.toString(); 
+        const precioSinIvaDefault = Number(productoPrecio.precioUnitarioSinIva) || 0;
+        const porcentajeIvaDefault = Number(productoPrecio.precioUnitarioIva) || 0;
+        const valorUnitarioConIVA = precioSinIvaDefault * (porcentajeIvaDefault / 100);
+        const valorIVABase = porcentajeIvaDefault.toString();
         const precioItemConDescuento = (valorUnitarioConIVA * cantidadItem) * (1 - porceDescuento);
         totalPrecioIVA += precioItemConDescuento;
         switch (valorIVABase) {

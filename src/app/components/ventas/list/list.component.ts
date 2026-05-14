@@ -2757,12 +2757,19 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
+  private tieneIvaManualActivo(order: any): boolean {
+    return (order?.carrito || []).some((item: any) =>
+      item._ivaManualOverride !== undefined && item._ivaManualOverride !== null
+    );
+  }
+
   /**
    * Determina si un pedido necesita recálculo de totales en frontend.
    */
   private necesitaRecalculoFrontend(order: any): boolean {
     return !order._calculadoEnBackend
       || this.tienePreciosManualActivos(order)
+      || this.tieneIvaManualActivo(order)
       || this.tienePreciosPorVolumen(order);
   }
 
@@ -2894,9 +2901,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       const cantidad = Number(itemCarrito?.cantidad) || 0;
       const preciosVolumen = producto?.precio?.preciosVolumen ?? [];
 
-      // Obtener precio CON IVA y porcentaje de IVA
-      let precioConIva = Number(producto?.precio?.precioUnitarioConIva) || 0;
-      let porcentajeIvaStr = (producto?.precio?.precioUnitarioIva ?? "0").toString();
+      // Inicializar desde precioUnitarioSinIva * iva% para evitar inconsistencias con precioUnitarioConIva
+      const _precioSinIvaDefault = Number(producto?.precio?.precioUnitarioSinIva) || 0;
+      const _porcentajeIvaDefault = Number(producto?.precio?.precioUnitarioIva ?? 0);
+      let precioConIva = _precioSinIvaDefault * (1 + _porcentajeIvaDefault / 100);
+      let porcentajeIvaStr = _porcentajeIvaDefault.toString();
 
       // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
       // _precioManualOverride es el precio BASE (sin IVA), se calcula el precio con IVA sumando el porcentaje
@@ -2931,6 +2940,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           return tieneMinimo && tieneMaximo;
         });
 
+        let rangoEncontrado = false;
         for (const x of rangosValidos) {
           const unidadesInicial = Number(x.numeroUnidadesInicial) || 0;
           const unidadesLimite = Number(x.numeroUnidadesLimite) || Infinity;
@@ -2938,7 +2948,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           if (cantidad >= unidadesInicial && cantidad <= unidadesLimite) {
             precioConIva = Number(x.valorUnitarioPorVolumenConIVA) || 0;
             porcentajeIvaStr = (x.valorIVAPorVolumen ?? "0").toString();
+            rangoEncontrado = true;
             break;
+          }
+        }
+
+        // Gap fallback: cantidad no cae en ningún rango definido (ej: rangos 1-1 y 20-49 pero qty=5).
+        // Usar el IVA% del primer rango disponible con IVA > 0 y el precioUnitarioSinIva base.
+        if (!rangoEncontrado && _precioSinIvaDefault > 0) {
+          const rangoConIva = rangosValidos.find((x: any) => Number(x.valorIVAPorVolumen) > 0);
+          if (rangoConIva) {
+            porcentajeIvaStr = rangoConIva.valorIVAPorVolumen.toString();
+            precioConIva = _precioSinIvaDefault * (1 + Number(porcentajeIvaStr) / 100);
+          } else {
+            // Segunda opción: derivar IVA% de la relación precioConIva/precioSinIva almacenada en el producto
+            const _precioConIvaStored = Number(producto?.precio?.precioUnitarioConIva) || 0;
+            if (_precioConIvaStored > _precioSinIvaDefault) {
+              const ivaRatePct = Math.round((_precioConIvaStored / _precioSinIvaDefault - 1) * 100);
+              if (ivaRatePct > 0) {
+                porcentajeIvaStr = ivaRatePct.toString();
+                precioConIva = _precioConIvaStored;
+              }
+            }
           }
         }
       }
@@ -3478,7 +3509,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
             const ivaResult = this.checkIVAPrice(order);
-            // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
             order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || order.totalImpuesto || 0);
 
             // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
@@ -3810,7 +3840,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
               // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
               const ivaResultSinPag = this.checkIVAPrice(order);
-              // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
               order.totalImpuesto = Number(ivaResultSinPag.totalPrecioIVADef || order.totalImpuesto || 0);
 
               // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)
@@ -5153,7 +5182,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
     const ivaResultTotales = this.checkIVAPrice(pedido);
-    // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
     const totalImpuesto = Number(ivaResultTotales.totalPrecioIVADef || pedido.totalImpuesto || 0);
     pedido.totalImpuesto = totalImpuesto;
 
@@ -5268,7 +5296,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Recalcular IVA (incluye IVA del envío, con descuento aplicado internamente)
     const ivaResultRecalc = this.checkIVAPrice(order);
-    // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
     order.totalImpuesto = Number(ivaResultRecalc.totalPrecioIVADef || order.totalImpuesto || 0);
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
@@ -7329,7 +7356,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // 5. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado)
     const ivaResult = this.checkIVAPrice(order);
-    // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
     order.totalImpuesto = Number(ivaResult.totalPrecioIVADef || order.totalImpuesto || 0);
 
     // 6. Total = subtotal + IVA (envío ya está incluido en subtotal)
@@ -7752,7 +7778,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // 4. Calcular IVA (incluye IVA de productos + envío, con descuento aplicado internamente)
           const ivaResultExport = this.checkIVAPrice(order);
-          // Usar el IVA calculado, o preservar el existente del backend si no hay carrito
           order.totalImpuesto = Number(ivaResultExport.totalPrecioIVADef || order.totalImpuesto || 0);
 
           // 5. Total = subtotal + IVA (envío ya está incluido en subtotal)

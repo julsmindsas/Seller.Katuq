@@ -253,13 +253,27 @@ export class CarritoComponent implements OnInit {
       return base * (1 + iva / 100);
     }
     // Si tiene IVA manual override (cualquier producto), recalcular precio con nuevo porcentaje de IVA
-    // El precio base (sin IVA) no cambia; solo cambia el porcentaje aplicado
+    // Usa precioUnitarioSinIva directamente (con soporte de precios por volumen)
+    // para evitar doble-IVA cuando precioUnitarioIva está en 0 pero precioUnitarioConIva ya lo incluye
     if (itemCarrito._ivaManualOverride !== undefined && itemCarrito._ivaManualOverride !== null) {
-      const precioConIvaOriginal = this.getProductPriceWithScale(itemCarrito);
-      const ivaOriginal = Number(itemCarrito?.producto?.precio?.precioUnitarioIva) || 0;
-      const precioSinIva = ivaOriginal > 0
-        ? precioConIvaOriginal / (1 + ivaOriginal / 100)
-        : precioConIvaOriginal;
+      const precio = itemCarrito?.producto?.precio;
+      let precioSinIva: number;
+      const preciosVolumen = precio?.preciosVolumen ?? [];
+      if (itemCarrito?.producto?._precioAplicadoPorCategoria) {
+        precioSinIva = Number(precio?.precioUnitarioSinIva) || 0;
+      } else if (Array.isArray(preciosVolumen) && preciosVolumen.length > 0) {
+        const cantidad = Number(itemCarrito?.cantidad) || 0;
+        const rangosValidos = preciosVolumen.filter((pv: any) =>
+          pv?.numeroUnidadesInicial !== undefined && pv?.numeroUnidadesInicial !== null &&
+          pv?.numeroUnidadesLimite !== undefined && pv?.numeroUnidadesLimite !== null
+        );
+        const rangoActual = rangosValidos.find((pv: any) =>
+          cantidad >= Number(pv.numeroUnidadesInicial) && cantidad <= Number(pv.numeroUnidadesLimite)
+        );
+        precioSinIva = rangoActual?.valorUnitarioPorVolumenSinIVA || Number(precio?.precioUnitarioSinIva) || 0;
+      } else {
+        precioSinIva = Number(precio?.precioUnitarioSinIva) || 0;
+      }
       return precioSinIva * (1 + itemCarrito._ivaManualOverride / 100);
     }
     return this.getProductPriceWithScale(itemCarrito);
