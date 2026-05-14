@@ -543,11 +543,11 @@
                                             </td>
                                             <!-- Costo Unitario (siempre visible: $0 si no asignado para detectar gaps) -->
                                             <td class="text-end" style="white-space: nowrap;"
-                                                [pTooltip]="(!producto.costoUnitario || producto.costoUnitario === 0) ? 'Sin costo asignado — actualizar desde fulfillment o manual' : null">
+                                                [pTooltip]="getCostoUnitario(producto) === 0 ? 'Sin costo asignado — actualizar desde lista de precios COSTO' : null">
                                                 <span class="fw-semibold"
-                                                      [style.color]="(producto.costoUnitario && producto.costoUnitario > 0) ? '#f59e0b' : '#9ca3af'"
+                                                      [style.color]="getCostoUnitario(producto) > 0 ? '#f59e0b' : '#9ca3af'"
                                                       style="font-size: 0.9rem;">
-                                                    {{ (producto.costoUnitario || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    {{ getCostoUnitario(producto) | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                 </span>
                                             </td>
                                             <!-- Precio -->
@@ -574,11 +574,11 @@
                                             </td>
                                             <!-- Valor a Costo (costo × stock) — siempre visible -->
                                             <td class="text-end pe-3" style="white-space: nowrap;"
-                                                [pTooltip]="(!producto.costoUnitario || producto.costoUnitario === 0) ? 'Sin costo asignado' : null">
+                                                [pTooltip]="getCostoUnitario(producto) === 0 ? 'Sin costo asignado' : null">
                                                 <span class="fw-semibold"
-                                                      [style.color]="(producto.costoUnitario && producto.costoUnitario > 0) ? '#f59e0b' : '#9ca3af'"
+                                                      [style.color]="getCostoUnitario(producto) > 0 ? '#f59e0b' : '#9ca3af'"
                                                       style="font-size: 0.9rem;">
-                                                    {{ ((producto.costoUnitario || 0) * producto.stockTotal) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                                                    {{ getValorCostoProducto(producto) | currency:'COP':'symbol-narrow':'1.0-0' }}
                                                 </span>
                                             </td>
                                             <!-- Acciones -->

@@ -1,7 +1,7 @@
 <div class="modal-header">
   <h5 class="modal-title">
     <i class="pi pi-cloud-upload me-2"></i>
-    Importar costos desde fulfillment (Excel Prindel/Aliaddo)
+    Importar costos por Excel
   </h5>
   <button type="button" class="btn-close" aria-label="Close" (click)="cerrar('cancelled')"></button>
 </div>
@@ -26,7 +26,7 @@
          (click)="triggerFileInput()">
       <i class="pi pi-file-excel" style="font-size: 3rem;"></i>
       <p class="mt-3 mb-1"><b>Arrastra el Excel aquí</b> o haz clic para seleccionarlo</p>
-      <small class="text-muted">Formato: hoja "Inventario y Precios" + (opcional) hoja "Alertas"</small>
+      <small class="text-muted">Columnas: REFERENCIA, COSTO y FECHA_VIGENCIA opcional. También acepta el Excel Prindel/Aliaddo.</small>
       <input #fileInput type="file" accept=".xlsx,.xls" class="d-none" (change)="onFileSelected($event)"/>
     </div>
 
@@ -34,7 +34,7 @@
       <i class="pi pi-file-excel me-2"></i>
       <div>
         <b>{{ fileName }}</b><br/>
-        <small>{{ parsedRows.length }} productos detectados · {{ parsedAlerts.length }} alertas</small>
+        <small>{{ parsedRows.length }} productos detectados · {{ filasIgnoradas }} filas ignoradas · {{ parsedAlerts.length }} alertas</small>
       </div>
     </div>
 
@@ -54,6 +54,7 @@
             <th>Código</th>
             <th>Nombre</th>
             <th class="text-end">Costo unitario</th>
+            <th>Vigencia</th>
             <th class="text-end">Total stock</th>
           </tr>
         </thead>
@@ -62,6 +63,7 @@
             <td><code>{{ r.codigo }}</code></td>
             <td class="text-truncate" style="max-width: 250px;">{{ r.nombre }}</td>
             <td class="text-end">{{ formatCOP(r.costoUnitario) }}</td>
+            <td>{{ r.fechaVigencia || '—' }}</td>
             <td class="text-end">{{ r.stocks?.total }}</td>
           </tr>
         </tbody>

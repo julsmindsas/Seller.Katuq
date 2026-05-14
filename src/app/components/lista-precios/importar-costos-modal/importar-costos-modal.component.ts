@@ -9,6 +9,7 @@ import {
 } from 'src/app/shared/services/lista-precios/product-costs.service';
 
 type Step = 'upload' | 'preview' | 'applying' | 'done';
+type CostImportSource = 'prindel-excel' | 'costos-excel';
 
 @Component({
   selector: 'app-importar-costos-modal',
@@ -24,6 +25,8 @@ export class ImportarCostosModalComponent {
   parsedRows: PrindelExcelRow[] = [];
   parsedAlerts: any[] = [];
   parseErrors: string[] = [];
+  filasIgnoradas = 0;
+  detectedSource: CostImportSource = 'costos-excel';
 
   preview: CostPreviewResponse | null = null;
   applyResult: { processed: number; failed: number; errors: any[]; message: string } | null = null;
@@ -69,6 +72,8 @@ export class ImportarCostosModalComponent {
     this.parseErrors = [];
     this.parsedRows = [];
     this.parsedAlerts = [];
+    this.filasIgnoradas = 0;
+    this.detectedSource = 'costos-excel';
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -78,7 +83,7 @@ export class ImportarCostosModalComponent {
         this.extractRows(wb);
         this.extractAlerts(wb);
         if (this.parsedRows.length === 0) {
-          this.parseErrors.push('No se encontraron filas válidas en la hoja "Inventario y Precios".');
+          this.parseErrors.push('No se encontraron filas válidas. Usa columnas "REFERENCIA", "COSTO" y opcionalmente "FECHA_VIGENCIA".');
         }
       } catch (err: any) {
         this.parseErrors.push(`Error leyendo Excel: ${err?.message || err}`);
@@ -89,38 +94,46 @@ export class ImportarCostosModalComponent {
   }
 
   private extractRows(wb: XLSX.WorkBook) {
-    const sheetName = wb.SheetNames.find((s) => s.toLowerCase().includes('inventario'));
+    const sheetName = wb.SheetNames.find((s) => s.toLowerCase().includes('inventario')) || wb.SheetNames[0];
     if (!sheetName) {
-      this.parseErrors.push('No se encontró la hoja "Inventario y Precios".');
+      this.parseErrors.push('No se encontró ninguna hoja en el Excel.');
       return;
     }
+    this.detectedSource = sheetName.toLowerCase().includes('inventario') ? 'prindel-excel' : 'costos-excel';
     const ws = wb.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json<any>(ws, { defval: null });
 
     for (const row of json) {
-      const codigo = (row['Código'] || row['Codigo'] || '').toString().trim();
-      if (!codigo || codigo.toUpperCase() === 'TOTAL') continue;
+      const codigo = (this.getCell(row, ['REFERENCIA', 'Referencia', 'reference', 'ref', 'SKU', 'Código', 'Codigo']) || '').toString().trim();
+      if (!codigo || codigo.toUpperCase() === 'TOTAL') {
+        this.filasIgnoradas++;
+        continue;
+      }
 
-      const costoUnitario = Number(row['Costo unitario'] || row['Costo Unitario'] || 0);
-      if (!Number.isFinite(costoUnitario)) continue;
+      const costoUnitario = this.parseNumber(this.getCell(row, ['COSTO', 'Costo', 'Costo unitario', 'Costo Unitario', 'costoUnitario']));
+      if (!Number.isFinite(costoUnitario) || costoUnitario <= 0) {
+        this.filasIgnoradas++;
+        continue;
+      }
 
       this.parsedRows.push({
         codigo,
-        nombre: (row['Nombre'] || '').toString().trim() || undefined,
+        nombre: (this.getCell(row, ['Nombre', 'PRODUCTO', 'Producto', 'Descripción', 'Descripcion']) || '').toString().trim() || undefined,
         costoUnitario,
+        fechaVigencia: this.parseDateCell(this.getCell(row, ['FECHA_VIGENCIA', 'Fecha Vigencia', 'fechaVigencia', 'Vigencia'])),
         stocks: {
-          BOGOTA: this.numOrZero(row['BOGOTA']),
-          BUCARAMANGA: this.numOrZero(row['BUCARAMANGA']),
-          CALI: this.numOrZero(row['CALI']),
-          MEDELLIN: this.numOrZero(row['MEDELLIN']),
-          PEREIRA: this.numOrZero(row['PEREIRA']),
-          Principal: this.numOrZero(row['Principal']),
-          total: this.numOrZero(row['Total existencias']),
+          BOGOTA: this.numOrZero(this.getCell(row, ['BOGOTA'])),
+          BUCARAMANGA: this.numOrZero(this.getCell(row, ['BUCARAMANGA'])),
+          CALI: this.numOrZero(this.getCell(row, ['CALI'])),
+          MEDELLIN: this.numOrZero(this.getCell(row, ['MEDELLIN'])),
+          PEREIRA: this.numOrZero(this.getCell(row, ['PEREIRA'])),
+          Principal: this.numOrZero(this.getCell(row, ['Principal'])),
+          total: this.numOrZero(this.getCell(row, ['Total existencias', 'TOTAL', 'Total'])),
         },
         precios: {
-          mayorista: this.numOrUndef(row['P. Mayorista']),
-          modelo: this.numOrUndef(row['P. Modelo']),
-          publico: this.numOrUndef(row['P. Público'] || row['P. Publico']),
+          mayorista: this.numOrUndef(this.getCell(row, ['P. Mayorista'])),
+          modelo: this.numOrUndef(this.getCell(row, ['P. Modelo'])),
+          publico: this.numOrUndef(this.getCell(row, ['P. Público', 'P. Publico'])),
         },
       });
     }
@@ -144,13 +157,56 @@ export class ImportarCostosModalComponent {
   }
 
   private numOrZero(v: any): number {
-    const n = Number(v);
+    const n = this.parseNumber(v);
     return Number.isFinite(n) ? n : 0;
   }
 
   private numOrUndef(v: any): number | undefined {
-    const n = Number(v);
+    const n = this.parseNumber(v);
     return Number.isFinite(n) ? n : undefined;
+  }
+
+  private getCell(row: any, aliases: string[]): any {
+    const entries = Object.entries(row || {});
+    for (const alias of aliases) {
+      const found = entries.find(([key]) => this.normalizeHeader(key) === this.normalizeHeader(alias));
+      if (found) return found[1];
+    }
+    return undefined;
+  }
+
+  private normalizeHeader(value: string): string {
+    return (value || '').toString().trim().toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+
+  private parseNumber(value: any): number {
+    if (typeof value === 'number') return value;
+    const raw = (value ?? '').toString().trim();
+    if (!raw) return NaN;
+    const sanitized = raw
+      .replace(/\s/g, '')
+      .replace(/[^0-9,.-]/g, '')
+      .replace(/\.(?=\d{3}(\D|$))/g, '')
+      .replace(',', '.');
+    return Number(sanitized);
+  }
+
+  private parseDateCell(value: any): string | undefined {
+    if (!value) return undefined;
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      return value.toISOString().slice(0, 10);
+    }
+    if (typeof value === 'number') {
+      const parsed = XLSX.SSF.parse_date_code(value);
+      if (parsed) {
+        const month = String(parsed.m).padStart(2, '0');
+        const day = String(parsed.d).padStart(2, '0');
+        return `${parsed.y}-${month}-${day}`;
+      }
+    }
+    return value.toString().trim() || undefined;
   }
 
   // ── Acciones ──
@@ -186,7 +242,7 @@ export class ImportarCostosModalComponent {
 
     this.costsService.previewImport({
       fileName: this.fileName,
-      fuente: 'prindel-excel',
+      fuente: this.detectedSource,
       rows,
       codeAliases,
     }).subscribe({
@@ -231,7 +287,7 @@ export class ImportarCostosModalComponent {
     this.costsService.applyImport({
       importId: this.preview.previewId,
       fileName: this.preview.fileName || this.fileName,
-      fuente: 'prindel-excel',
+      fuente: this.preview.fuente || this.detectedSource,
       matched: this.preview.matched,
       summary: this.preview.summary,
       alerts: this.preview.alerts,
@@ -255,6 +311,8 @@ export class ImportarCostosModalComponent {
     this.parsedRows = [];
     this.parsedAlerts = [];
     this.parseErrors = [];
+    this.filasIgnoradas = 0;
+    this.detectedSource = 'costos-excel';
     this.preview = null;
     this.applyResult = null;
   }

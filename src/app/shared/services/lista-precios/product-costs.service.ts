@@ -7,6 +7,7 @@ export interface PrindelExcelRow {
   codigo: string;
   nombre?: string;
   costoUnitario: number;
+  fechaVigencia?: string;
   stocks?: {
     BOGOTA?: number;
     BUCARAMANGA?: number;
@@ -30,7 +31,7 @@ export interface PrindelExcelRow {
 
 export interface CostPreviewRequest {
   fileName?: string;
-  fuente?: 'prindel-excel' | 'aliaddo-api' | 'aliaddo-excel' | 'manual';
+  fuente?: 'prindel-excel' | 'aliaddo-api' | 'aliaddo-excel' | 'costos-excel' | 'manual';
   rows: PrindelExcelRow[];
   codeAliases?: { [from: string]: string };
 }

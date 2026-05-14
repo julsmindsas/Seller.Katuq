@@ -702,6 +702,21 @@ export class InventarioCatalogoComponent implements OnInit, OnDestroy {
     return producto.stockPorBodega?.[bodegaId] ?? 0;
   }
 
+  getCostoUnitario(producto: any): number {
+    const costoPlano = Number(producto?.costoUnitario);
+    if (Number.isFinite(costoPlano) && costoPlano > 0) return costoPlano;
+
+    const costoPrecio = Number(producto?.precio?.costoUnitario);
+    if (Number.isFinite(costoPrecio) && costoPrecio > 0) return costoPrecio;
+
+    const costoObj = Number(producto?.costo?.costoUnitario ?? producto?.costo?.valor);
+    return Number.isFinite(costoObj) && costoObj > 0 ? costoObj : 0;
+  }
+
+  getValorCostoProducto(producto: any): number {
+    return this.getCostoUnitario(producto) * (Number(producto?.stockTotal) || 0);
+  }
+
   // Totales filtrados del backend (null cuando no hay filtro)
   private _totalesFiltrados: {
     totalUnidades: number;

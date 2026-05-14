@@ -8,6 +8,7 @@ import Swal from 'sweetalert2';
 import { EditarPreciosTipoClienteComponent } from '../editar-precios-tipo-cliente/editar-precios-tipo-cliente.component';
 import { EditarPrecioUnitarioComponent } from '../editar-precio-unitario/editar-precio-unitario.component';
 import { EditarPrecioVolumenComponent } from '../editar-precio-volumen/editar-precio-volumen.component';
+import { ImportarCostosModalComponent } from '../importar-costos-modal/importar-costos-modal.component';
 import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
 
 @Component({
@@ -26,6 +27,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   tiposCliente: any[] = [];
   searchTerm: string = '';
   activeTab: number = 0;
+  readonly COSTO_TAB_INDEX = 3;
 
   // Paginación server-side
   pageSize = 10;
@@ -246,6 +248,7 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       case 0: this.editarPrecioTipoCliente(producto); break;
       case 1: this.editarPrecioUnitario(producto); break;
       case 2: this.editarPrecioVolumen(producto); break;
+      case this.COSTO_TAB_INDEX: this.abrirModalImportarCostos(); break;
     }
   }
 
@@ -299,9 +302,33 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     }
   }
 
+  obtenerCostoUnitario(producto: Producto): number {
+    const costoPlano = Number((producto as any)?.costoUnitario);
+    if (Number.isFinite(costoPlano) && costoPlano > 0) return costoPlano;
+
+    const costoPrecio = Number(producto?.precio?.costoUnitario);
+    if (Number.isFinite(costoPrecio) && costoPrecio > 0) return costoPrecio;
+
+    const costoObj = Number((producto as any)?.costo?.costoUnitario ?? (producto as any)?.costo?.valor);
+    return Number.isFinite(costoObj) && costoObj > 0 ? costoObj : 0;
+  }
+
+  obtenerFuenteCosto(producto: Producto): string {
+    return (producto as any)?.costoFuente || (producto as any)?.costo?.fuente || '-';
+  }
+
+  obtenerFechaVigenciaCosto(producto: Producto): string {
+    return (producto as any)?.costo?.fechaVigencia || (producto as any)?.fechaVigenciaCosto || '-';
+  }
+
   // ── Exportación Excel ──
 
   descargarFormatoExcel() {
+    if (this.activeTab === this.COSTO_TAB_INDEX) {
+      this.generarPlantillaCostosExcel();
+      return;
+    }
+
     if (this.tiposCliente.length === 0) {
       Swal.fire({
         title: 'Cargando tipos de cliente...',
@@ -359,6 +386,22 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     });
   }
 
+  private generarPlantillaCostosExcel() {
+    const headers = ['REFERENCIA', 'COSTO', 'FECHA_VIGENCIA'];
+    const rows = [
+      headers,
+      ['REF-001', 15000, new Date().toISOString().slice(0, 10)],
+    ];
+    const worksheet = XLSX.utils.aoa_to_sheet(rows);
+    worksheet['!cols'] = [{ wch: 20 }, { wch: 15 }, { wch: 18 }];
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Costos');
+
+    const fecha = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(workbook, `Plantilla_Costos_${fecha}.xlsx`);
+  }
+
   /**
    * Exporta todos los productos con precios a Excel.
    * Carga el catálogo completo solo cuando se exporta.
@@ -394,6 +437,10 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         case 2:
           workbook = this.generarExcelVolumen(productos);
           filename = `Precios_Volumen_${fecha}.xlsx`;
+          break;
+        case this.COSTO_TAB_INDEX:
+          workbook = this.generarExcelCostos(productos);
+          filename = `Costos_${fecha}.xlsx`;
           break;
         default:
           Swal.close();
@@ -497,10 +544,52 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
     return wb;
   }
 
+  private generarExcelCostos(productos: Producto[]): XLSX.WorkBook {
+    const headers = ['REFERENCIA', 'PRODUCTO', 'COSTO', 'FUENTE', 'FECHA_VIGENCIA', 'PRECIO VENTA'];
+    const rows: any[][] = [headers];
+
+    productos.forEach(p => {
+      rows.push([
+        p.identificacion?.referencia || '',
+        p.crearProducto?.titulo || '',
+        this.obtenerCostoUnitario(p),
+        this.obtenerFuenteCosto(p),
+        this.obtenerFechaVigenciaCosto(p),
+        p.precio?.precioUnitarioConIva || p.precio?.precioUnitarioSinIva || 0
+      ]);
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 20 }, { wch: 35 }, { wch: 15 }, { wch: 18 }, { wch: 18 }, { wch: 18 }];
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Costos');
+    return wb;
+  }
+
   // ── Importación Excel ──
 
   importarPrecios() {
+    if (this.activeTab === this.COSTO_TAB_INDEX) {
+      this.abrirModalImportarCostos();
+      return;
+    }
     this.fileInput.nativeElement.click();
+  }
+
+  abrirModalImportarCostos() {
+    const modalRef = this.modalService.open(ImportarCostosModalComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      keyboard: false,
+    });
+
+    modalRef.result.then((result) => {
+      if (result?.result === 'applied') {
+        this._todosLosProductos = null;
+        this.cargarPagina(1);
+      }
+    }).catch(() => {});
   }
 
   onFileSelected(event: any) {

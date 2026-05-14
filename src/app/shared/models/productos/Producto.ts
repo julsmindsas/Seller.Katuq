@@ -44,6 +44,15 @@ export interface Producto {
   cd?: string;
   crearProducto?: CrearProducto;
   precio?: Precio;
+  /** Costo unitario vigente del producto. Puede venir plano desde backend o dentro de precio/costo. */
+  costoUnitario?: number;
+  costoFuente?: string;
+  costo?: {
+    costoUnitario?: number;
+    valor?: number;
+    fechaVigencia?: string;
+    fuente?: string;
+  };
   date_edit?: string;
   variableForm?: string;
   rating?: number;

@@ -10,12 +10,12 @@
               <p class="text-muted mb-0">Administra los precios de tus productos</p>
             </div>
             <div class="col-md-6 text-end">
-              <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()" *ngIf="activeTab === 0"
-                pTooltip="Importar precios desde Excel" tooltipPosition="bottom">
+              <button class="btn btn-outline-secondary me-2" (click)="importarPrecios()" *ngIf="activeTab === 0 || activeTab === COSTO_TAB_INDEX"
+                [pTooltip]="activeTab === COSTO_TAB_INDEX ? 'Importar costos desde Excel' : 'Importar precios desde Excel'" tooltipPosition="bottom">
                 <i class="icofont icofont-upload"></i> Importar
               </button>
-              <button class="btn btn-outline-success me-2" (click)="descargarFormatoExcel()" *ngIf="activeTab === 0"
-                pTooltip="Descargar plantilla vacía para importar" tooltipPosition="bottom">
+              <button class="btn btn-outline-success me-2" (click)="descargarFormatoExcel()" *ngIf="activeTab === 0 || activeTab === COSTO_TAB_INDEX"
+                [pTooltip]="activeTab === COSTO_TAB_INDEX ? 'Descargar plantilla de costos' : 'Descargar plantilla vacía para importar'" tooltipPosition="bottom">
                 <i class="icofont icofont-download"></i> Plantilla
               </button>
               <button class="btn btn-success me-2" (click)="exportarExcel()"
@@ -461,6 +461,102 @@
                 <ng-template pTemplate="emptymessage">
                   <tr>
                     <td colspan="6" class="text-center">No hay productos disponibles</td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </p-tabPanel>
+
+          <!-- Tab 4: Costo -->
+          <p-tabPanel header="COSTO">
+            <div class="p-3">
+              <div class="mb-3">
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="icofont icofont-search"></i>
+                  </span>
+                  <input
+                    type="text"
+                    class="form-control"
+                    placeholder="Buscar por referencia o nombre..."
+                    [(ngModel)]="searchTerm"
+                    (input)="onSearchInput($event)"
+                    (keyup.enter)="buscarProducto()"
+                  />
+                </div>
+              </div>
+
+              <p-table
+                [value]="productosFiltrados"
+                [loading]="cargando"
+                [lazy]="true"
+                (onLazyLoad)="onLazyLoad($event)"
+                [paginator]="true"
+                [rows]="pageSize"
+                [totalRecords]="totalRecords"
+                [rowsPerPageOptions]="[10, 20, 50, 100]"
+                [showCurrentPageReport]="true"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} productos"
+                styleClass="p-datatable-gridlines p-datatable-striped">
+
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th style="width: 80px;" class="text-center">IMAGEN</th>
+                    <th>REFERENCIA</th>
+                    <th class="text-end">COSTO</th>
+                    <th>FUENTE</th>
+                    <th>VIGENCIA</th>
+                    <th class="text-end">PRECIO VENTA</th>
+                    <th>ÚLTIMA EDICIÓN</th>
+                    <th style="width: 120px;" class="text-center">ACCIONES</th>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="body" let-producto>
+                  <tr>
+                    <td class="text-center">
+                      <img
+                        [src]="producto.crearProducto?.imagenesPrincipales?.[0]?.urls || 'assets/images/placeholders/product-not-found.svg'"
+                        [alt]="producto.crearProducto?.titulo"
+                        appImageFallback
+                        width="50" height="50"
+                        style="border-radius: 8px; object-fit: cover;"
+                      />
+                    </td>
+                    <td>
+                      <div class="fw-bold">{{ producto.crearProducto?.titulo }}</div>
+                      <small class="text-muted">{{ producto.identificacion?.referencia }}</small>
+                    </td>
+                    <td class="text-end">
+                      <span class="fw-bold" [ngClass]="obtenerCostoUnitario(producto) > 0 ? 'text-warning' : 'text-muted'">
+                        $ {{ obtenerCostoUnitario(producto) | number:'1.0-0' }}
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge bg-light text-dark border">{{ obtenerFuenteCosto(producto) }}</span>
+                    </td>
+                    <td>{{ obtenerFechaVigenciaCosto(producto) }}</td>
+                    <td class="text-end">
+                      <span class="text-primary fw-bold">
+                        $ {{ obtenerPrecioBase(producto) | number:'1.0-0' }}
+                      </span>
+                    </td>
+                    <td>{{ obtenerFechaEdicion(producto) }}</td>
+                    <td class="text-center">
+                      <button
+                        class="btn btn-sm btn-outline-primary"
+                        (click)="abrirModalImportarCostos()"
+                        pTooltip="Importar/actualizar costos por Excel"
+                        tooltipPosition="left">
+                        <i class="pi pi-upload"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </ng-template>
+
+                <ng-template pTemplate="emptymessage">
+                  <tr>
+                    <td colspan="8" class="text-center">No hay productos disponibles</td>
                   </tr>
                 </ng-template>
               </p-table>

@@ -25,6 +25,13 @@ export interface ProductoConsolidado {
   precioSinIva: number;
   /** Costo unitario de compra (importado desde fulfillment / Aliaddo) */
   costoUnitario?: number;
+  /** Costo alternativo si backend decide exponer objeto histórico/último costo. */
+  costo?: {
+    costoUnitario?: number;
+    valor?: number;
+    fechaVigencia?: string;
+    fuente?: string;
+  };
   /** Precios por tipo de cliente (lista de precios activa). */
   preciosPorTipoCliente?: PrecioPorTipoClienteResp[];
   inventariable: boolean;
