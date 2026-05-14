@@ -2,6 +2,62 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🟢 Metodología activa: Spec-Driven Development (SDD)
+
+**Este proyecto trabaja con SDD desde 2026-05-13.** Cualquier sesión de Claude DEBE respetar el flujo y la ceremonia. Si una sesión "se salta" SDD pone en riesgo el goal D-360-CLOSED y rompe la cadena de decisiones registradas.
+
+### Lectura obligatoria al iniciar sesión (en este orden)
+1. **`/SPEC-DRIVEN.md`** — manual canon del método (4 fases, EARS, contrato vivo, guardarrailes).
+2. **`/specs/CONTRACT.md`** — contrato vivo: roadmap priorizado + decisiones D-001..D-XXX + bitácora. **Es el primer archivo a abrir**, nunca asumir nada antes de leerlo.
+3. **`/specs/constitution.md`** — 15 artículos inmutables. Especialmente:
+   - **Artículo XV v2 — Canónica de integraciones = INGLÉS (`integrations.<provider>`)**, NO `integraciones`. Ver `~/.claude/.../memory/canonical-integrations-english.md`.
+   - **Artículo XIII** — specs ≤ 3 páginas. Si crece, partir en sub-specs.
+4. **`/specs/002-flows-osmosis-shopify-marco/findings.md`** — datos REALES de OH MY STORE (productos, bodegas, flows, runs). Si una sesión asume algo del código sin chequear esto, corre riesgo de equivocarse como pasó en sesiones previas.
+
+### Las 4 fases SDD (no se saltan)
+1. **`spec.md`** — qué y por qué (criterios EARS, NFRs, sin tecnología). Checkpoint humano antes de planear.
+2. **`plan.md`** — cómo (stack, contratos, fases, gates contra constitución). Checkpoint humano antes de tasks.
+3. **`tasks.md`** — pasos atómicos paralelizables. Checkpoint humano antes de implementar.
+4. **`implement`** — código que respeta las tasks aprobadas. Cualquier desvío se registra en CONTRACT.md.
+
+### Ceremonia mínima por sesión
+- **Al iniciar**: leer CONTRACT.md + última spec activa.
+- **Al decidir algo no trivial**: registrar como D-XXX en CONTRACT.md con fecha y razón. Decisiones revertidas se marcan SUPERSEDED, no se borran.
+- **Al hacer un cambio**: si toca código del 360 (Osmosis/Shopify/Webhook/inventario), debe haber spec aprobada.
+- **Al cerrar**: actualizar CONTRACT.md con la bitácora de la sesión + commit con sello.
+
+### Estructura de specs
+```
+/SPEC-DRIVEN.md                    ← manual canon
+/specs/
+├── README.md                      ← índice
+├── constitution.md                ← principios inmutables (15 artículos)
+├── CONTRACT.md                    ← roadmap + decisiones + bitácora (PRIMER archivo)
+├── templates/                     ← spec/plan/tasks templates
+├── 001-osmosis-webhook-inbound/   ← spec piloto, status: approved-pending-validation
+├── 002-flows-osmosis-shopify-marco/  ← spec MARCO del 360 (D-360-CLOSED)
+│   ├── spec.md
+│   ├── findings.md                ← datos REALES verificados (NO asumir desde docs)
+│   ├── sub-specs.md               ← roadmap de sub-specs hijas
+│   └── runbook-debug-flow.md      ← snippets ejecutables reusables
+└── 002.{1..6}-<slug>/             ← 6 sub-specs hijas (todas done excepto Fase 4 de 002.1)
+```
+
+### Memoria persistente vinculada
+- `canonical-integrations-english.md` — REGLA DURA: campo en INGLÉS, no español.
+- `oh-my-store-test-tenant.md` — `company` es string libre `"OH MY STORE"`, no docId.
+- `cereza-osmosis-integration.md` — Osmosis = API de Cereza.
+- `sdd-adoption.md` — adopción SDD desde 2026-05-13.
+
+### Lo que NO se hace bajo SDD
+- Cambiar comportamiento del 360 sin spec aprobada.
+- Asumir desde docs viejos sin verificar contra Firestore real (usar el runbook).
+- Decidir canónica entre español/inglés en cada sesión — está cerrado en INGLÉS, ver Artículo XV v2.
+- Crear flows duplicados — ver Artículo VI (no acoplar UI a proveedor) y D-008/002.5.
+- Ejecutar scripts de backfill sin `--dry-run` primero.
+
+---
+
 ## Commands
 
 ```bash
