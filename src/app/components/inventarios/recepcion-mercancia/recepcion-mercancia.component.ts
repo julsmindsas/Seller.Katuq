@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { BodegaService } from '../../../shared/services/bodegas/bodega.service';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import { InventarioService } from '../../../shared/services/inventarios/inventario.service';
@@ -59,7 +60,8 @@ export class RecepcionMercanciaComponent implements OnInit {
     private inventarioService: InventarioService,
     private toastr: ToastrService,
     private confirmationService: ConfirmationService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router
   ) {
     this.productoForm = this.fb.group({
       bodegaSeleccionada: ['', Validators.required],
@@ -217,10 +219,62 @@ export class RecepcionMercanciaComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error al guardar recepción:', error);
-        this.toastr.error('Error al guardar la recepción de mercancía', 'Error');
         this.guardandoRecepcion = false;
+        this.mostrarErrorRecepcion(error);
       }
     });
+  }
+
+  /**
+   * Muestra el error real devuelto por el backend. Si el motivo es que el
+   * producto está marcado como no-inventariable, el toast es clickeable y
+   * lleva al editor de productos para reconfigurarlo.
+   */
+  private mostrarErrorRecepcion(error: any): void {
+    const backendMsg: string =
+      error?.error?.error || error?.error?.message || error?.message || '';
+
+    // Patrón emitido por el backend (controllers/inventory.js):
+    //   "Producto <id> es no-inventariable y no admite ajustes de stock."
+    const matchNoInv = /Producto\s+(\S+)\s+es no-inventariable/i.exec(backendMsg);
+    if (matchNoInv) {
+      const productoId = matchNoInv[1];
+      const item = this.productos.find(
+        p => p.producto?.cd === productoId || p.id === productoId
+      );
+      const nombre =
+        item?.producto?.crearProducto?.titulo ||
+        item?.producto?.identificacion?.referencia ||
+        productoId;
+
+      const toast = this.toastr.error(
+        `<div>El producto <strong>${nombre}</strong> está marcado como <strong>no inventariable</strong> y no admite ajustes de stock.</div>` +
+        `<div class="mt-2"><u>Clic aquí para reconfigurarlo</u></div>`,
+        'No se puede ajustar el inventario',
+        { enableHtml: true, tapToDismiss: false, closeButton: true, timeOut: 8000 }
+      );
+      toast.onTap.subscribe(() => this.abrirEditorProducto(item?.producto));
+      return;
+    }
+
+    // Cualquier otro error: mostrar el mensaje real del backend.
+    this.toastr.error(
+      backendMsg || 'Error al guardar la recepción de mercancía',
+      'Error'
+    );
+  }
+
+  /**
+   * Abre el editor de productos con el producto cargado (mismo flujo que
+   * usa `productos.component.ts → editarProducto`).
+   */
+  private abrirEditorProducto(producto: Producto | undefined): void {
+    if (producto) {
+      sessionStorage.setItem('infoForms', JSON.stringify(producto));
+    } else {
+      sessionStorage.removeItem('infoForms');
+    }
+    this.router.navigateByUrl('productos/crearProductos');
   }
 
   // Manejar evento keydown para agregar producto al presionar Enter
