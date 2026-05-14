@@ -1,15 +1,23 @@
-# Spec 002.8 — Crones dinámicos vía Firestore (registrables sin redeploy)
+# Spec 002.8 — Crones del SISTEMA dinámicos vía Firestore
 
-> Estado: **draft — in-review**
+> Estado: **done — alcance limitado**
 > Fecha: 2026-05-13
 > Padre: [[002-flows-osmosis-shopify-marco]]
-> Goal D-011: dejar `/flows` funcionando bien sin dañar lo que ya funciona — incluye que crones se puedan ajustar/registrar dinámicamente.
+> Goal D-011: dejar `/flows` funcionando bien sin dañar lo que ya funciona.
+
+## ⚠️ Aclaración crítica sobre el alcance
+
+**Esta spec NO cubre los crones de FLOW.** Esos ya tienen su sistema funcionando:
+- En el editor `/flows` se agrega un nodo trigger `schedule-cron` con su `cronExpression`.
+- Al activar el flow, queda registrado en colección `flow_trigger_bindings` con `kind: 'cron'`.
+- El dispatcher `cronService.initFlowCronDispatcherJob` corre cada 30s sincronizando bindings con `node-cron`. Hot-reload nativo: cambio de `cronExpression` se aplica al siguiente tick del dispatcher.
+- Verificado en producción: OH MY STORE tiene `cereza-orders-status-pull-rdoavk0b` corriendo `*/30 * * * *` por este mecanismo.
+
+**Esta spec cubre solo los crones del SISTEMA** — tareas internas del backend que NO ejecutan flows: `zombieCleanup`, `fullInventorySync`, `osmosisProductSync` (cron, no el flow), `subscriptionCheck`, etc. Eran 7 hardcoded en `cronService.js:14-30` y cambiar frecuencia requería redeploy. Ahora son configurables vía API.
 
 ## 1. Por qué
 
-Hoy los 7 crones del sistema (`fullInventorySync`, `osmosisProductSync`, `osmosisOrderSync`, etc.) están **hardcoded en `cronService.js:14-30`**. Cambiar `*/30 * * * *` a `*/15 * * * *` requiere editar código + redeploy de Cloud Functions. El operador no puede autoservir.
-
-Adicionalmente, **no existe forma de registrar un cron nuevo sin código** — bloqueante para crear crones por empresa o por flow específico.
+Los 7 crones del sistema están **hardcoded en `cronService.js:14-30`**. Cambiar `*/30 * * * *` a `*/15 * * * *` requiere editar código + redeploy de Cloud Functions. El operador no puede autoservir.
 
 ## 2. Criterios EARS
 
