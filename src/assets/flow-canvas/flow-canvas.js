@@ -10089,7 +10089,7 @@ const RS = ({ id: e, type: t, color: n, width: r = 12.5, height: o = 12.5, marke
       const l = Fu(s, t);
       r.includes(l) || (o.push({ id: l, color: s.color || e, ...s }), r.push(l));
     }
-  }), o), []).sort((o, i) => o.id.localeCompare(i.id));
+  }), o), []).sort((o, i) => String(o && o.id || '').localeCompare(String(i && i.id || '')));
 }, Vm = ({ defaultColor: e, rfId: t }) => {
   const n = le(
     P.useCallback($S({ defaultColor: e, rfId: t }), [e, t]),
@@ -11352,7 +11352,7 @@ function bk(e, t) {
   for (const i of r)
     o[i.group] || (o[i.group] = []), o[i.group].push(i);
   for (const i of Object.keys(o))
-    o[i].sort((s, l) => s.displayName.localeCompare(l.displayName));
+    o[i].sort((s, l) => String(s && s.displayName || '').localeCompare(String(l && l.displayName || '')));
   return o;
 }
 const Uk = ({ onClose: e }) => {
