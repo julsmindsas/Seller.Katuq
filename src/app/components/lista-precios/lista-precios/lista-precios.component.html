@@ -508,7 +508,6 @@
                     <th>VIGENCIA</th>
                     <th class="text-end">PRECIO VENTA</th>
                     <th>ÚLTIMA EDICIÓN</th>
-                    <th style="width: 120px;" class="text-center">ACCIONES</th>
                   </tr>
                 </ng-template>
 
@@ -542,21 +541,12 @@
                       </span>
                     </td>
                     <td>{{ obtenerFechaEdicion(producto) }}</td>
-                    <td class="text-center">
-                      <button
-                        class="btn btn-sm btn-outline-primary"
-                        (click)="abrirModalImportarCostos()"
-                        pTooltip="Importar/actualizar costos por Excel"
-                        tooltipPosition="left">
-                        <i class="pi pi-upload"></i>
-                      </button>
-                    </td>
                   </tr>
                 </ng-template>
 
                 <ng-template pTemplate="emptymessage">
                   <tr>
-                    <td colspan="8" class="text-center">No hay productos disponibles</td>
+                    <td colspan="7" class="text-center">No hay productos disponibles</td>
                   </tr>
                 </ng-template>
               </p-table>
