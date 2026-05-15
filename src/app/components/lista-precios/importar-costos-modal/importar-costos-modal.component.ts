@@ -9,7 +9,7 @@ import {
 } from 'src/app/shared/services/lista-precios/product-costs.service';
 
 type Step = 'upload' | 'preview' | 'applying' | 'done';
-type CostImportSource = 'prindel-excel' | 'costos-excel';
+type CostImportSource = 'prindel-excel' | 'manual';
 
 @Component({
   selector: 'app-importar-costos-modal',
@@ -26,7 +26,7 @@ export class ImportarCostosModalComponent {
   parsedAlerts: any[] = [];
   parseErrors: string[] = [];
   filasIgnoradas = 0;
-  detectedSource: CostImportSource = 'costos-excel';
+  detectedSource: CostImportSource = 'manual';
 
   preview: CostPreviewResponse | null = null;
   applyResult: { processed: number; failed: number; errors: any[]; message: string } | null = null;
@@ -73,7 +73,7 @@ export class ImportarCostosModalComponent {
     this.parsedRows = [];
     this.parsedAlerts = [];
     this.filasIgnoradas = 0;
-    this.detectedSource = 'costos-excel';
+    this.detectedSource = 'manual';
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -99,7 +99,7 @@ export class ImportarCostosModalComponent {
       this.parseErrors.push('No se encontró ninguna hoja en el Excel.');
       return;
     }
-    this.detectedSource = sheetName.toLowerCase().includes('inventario') ? 'prindel-excel' : 'costos-excel';
+    this.detectedSource = sheetName.toLowerCase().includes('inventario') ? 'prindel-excel' : 'manual';
     const ws = wb.Sheets[sheetName];
     const json = XLSX.utils.sheet_to_json<any>(ws, { defval: null });
 
@@ -312,7 +312,7 @@ export class ImportarCostosModalComponent {
     this.parsedAlerts = [];
     this.parseErrors = [];
     this.filasIgnoradas = 0;
-    this.detectedSource = 'costos-excel';
+    this.detectedSource = 'manual';
     this.preview = null;
     this.applyResult = null;
   }
