@@ -52,7 +52,16 @@ export class VizChartComponent {
       return;
     }
     const xDim = dims[0];
-    const labels = this._result.rows.map((r) => String(r[xDim.field] ?? ''));
+    const labels = this._result.rows.map((r) => {
+      const raw = String(r[xDim.field] ?? '');
+      if (xDim.dataType === 'date') {
+        const dayM = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (dayM) return `${dayM[3]}/${dayM[2]}/${dayM[1]}`;
+        const monM = raw.match(/^(\d{4})-(\d{2})$/);
+        if (monM) return `${monM[2]}/${monM[1]}`;
+      }
+      return raw;
+    });
 
     if (this._chartType === 'pie') {
       const m = measures[0];

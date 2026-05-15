@@ -79,16 +79,22 @@
 }
 
 .btn-primary,
-.btn-secondary {
+.btn-secondary,
+.btn-outline {
   padding: 7px 14px;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
   border: 1px solid transparent;
   cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s, border-color 0.15s;
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 }
@@ -96,9 +102,11 @@
 .btn-primary {
   background: #2563eb;
   color: #fff;
+  border-color: #2563eb;
 
   &:hover:not(:disabled) {
     background: #1d4ed8;
+    border-color: #1d4ed8;
   }
 }
 
@@ -109,6 +117,16 @@
 
   &:hover:not(:disabled) {
     background: #f3f4f6;
+  }
+}
+
+.btn-outline {
+  background: transparent;
+  color: #2563eb;
+  border-color: #2563eb;
+
+  &:hover:not(:disabled) {
+    background: #eff6ff;
   }
 }
 
