@@ -2128,6 +2128,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     return result.isConfirmed;
   }
 
+  removePendingImage(index: number) {
+    this.fileImg.splice(index, 1);
+    this.carrouselImg.splice(index, 1);
+    this.filesNames.splice(index, 1);
+    this.cdr.detectChanges();
+  }
+
   private resetImageStates(event: any) {
     this.fileImg = [];
     this.carrouselImg = [];
