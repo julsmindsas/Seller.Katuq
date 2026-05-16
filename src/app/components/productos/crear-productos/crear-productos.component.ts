@@ -616,7 +616,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   async fileChangeEvent(event: any, tipoImagen: string): Promise<void> {
     const selectedFiles: FileList = event.target.files;
-    
+
     if (!selectedFiles || selectedFiles.length === 0) {
       return;
     }
@@ -628,7 +628,6 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     }
 
     await this.processSelectedFiles(selectedFiles, tipoImagen);
-    this.uploadImgAndSave();
     this.cdr.detectChanges();
   }
 
@@ -683,6 +682,72 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
         }
       });
     }
+  }
+
+  private async uploadPendingImages(): Promise<void> {
+    if (this.fileImg.length === 0) return;
+
+    this.uploadingImages = true;
+    const total = this.fileImg.length;
+
+    Swal.fire({
+      title: 'Subiendo imágenes...',
+      html: `<h6>Por favor espere</h6><br>
+             <div class="progress">
+               <div class="progress-bar progress-bar-striped progress-bar-animated"
+                    id="progressbar" style="width:0%"></div>
+             </div>`,
+      showConfirmButton: false,
+      allowOutsideClick: false,
+    });
+
+    const nuevosFilesPaths: { name: string; pathName: string; tipo: string }[] = [];
+
+    for (let i = 0; i < this.fileImg.length; i++) {
+      if (!this.filesNames[i]) continue;
+      const path = 'Productos/' + this.filesNames[i];
+      const task = this.storage.upload(path, this.fileImg[i].img);
+
+      const sub = task.percentageChanges().subscribe(pct => {
+        const progreso = ((i + (pct || 0) / 100) / total) * 100;
+        const el = document.getElementById('progressbar');
+        if (el) el.style.width = Math.round(progreso) + '%';
+      });
+
+      await task;
+      sub.unsubscribe();
+      nuevosFilesPaths.push({ name: this.filesNames[i], pathName: path, tipo: this.fileImg[i].tipo });
+    }
+
+    // Obtener URLs de descarga
+    const nuevosUrls: { urls: string; nombreImagen: string; path: string; tipo: string }[] = [];
+    for (const img of nuevosFilesPaths) {
+      const url = await new Promise<string>((resolve, reject) => {
+        this.storage.ref(img.pathName).getDownloadURL().subscribe(resolve, reject);
+      });
+      nuevosUrls.push({ urls: url, nombreImagen: img.name, path: img.pathName, tipo: img.tipo });
+    }
+
+    this.filesPaths = [...this.filesPaths, ...nuevosFilesPaths];
+    this.fileUrls = [...this.fileUrls, ...nuevosUrls];
+
+    const principales = nuevosUrls.filter(u => u.tipo === 'principal');
+    const secundarias = nuevosUrls.filter(u => u.tipo === 'secundaria');
+
+    if (principales.length > 0) {
+      const current = this.crearProducto.controls['imagenesPrincipales'].value || [];
+      this.crearProducto.controls['imagenesPrincipales'].setValue([...current, ...principales]);
+    }
+    if (secundarias.length > 0) {
+      const current = this.crearProducto.controls['imagenesSecundarias'].value || [];
+      this.crearProducto.controls['imagenesSecundarias'].setValue([...current, ...secundarias]);
+    }
+
+    this.fileImg = [];
+    this.filesNames = [];
+    this.flag = [];
+    this.uploadingImages = false;
+    Swal.close();
   }
 
   isValidUrl(url: string): boolean {
@@ -1171,8 +1236,9 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     //   return;
     // }
 
-    // Validar si el producto tiene imágenes principales
-    if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
+    // Validar si el producto tiene imágenes principales (ya subidas o pendientes)
+    const tieneImagenesPrincipalesPendientes = this.fileImg.some(f => f.tipo === 'principal');
+    if ((!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) && !tieneImagenesPrincipalesPendientes) {
       Swal.fire(
         "Error",
         "El producto debe tener obligatoriamente al menos una imagen principal",
@@ -1226,6 +1292,19 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       "modulosVariables"
     ].controls["produccion"].setValue(this.productosArticulos);
     this.formGeneral.controls["kaiForm"].setValue(this.kaiForm.value);
+
+    // Subir imágenes pendientes antes de crear el producto
+    try {
+      await this.uploadPendingImages();
+    } catch (e) {
+      Swal.fire("Error", "No se pudieron subir las imágenes. Intente de nuevo.", "error");
+      this.saving = false;
+      return;
+    }
+
+    // Sincronizar imagenesPrincipales ya subidas al formGeneral
+    this.formGeneral.controls["crearProducto"].setValue(this.crearProducto.value);
+
     const context = this;
     this.service.createProduct(this.formGeneral.value).subscribe({
       next(r: any) {
@@ -1259,7 +1338,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       },
     });
   }
-  editarProducto() {
+  async editarProducto() {
     let preciosVolumen = this.precio.get("preciosVolumen") as FormArray;
     let preciosVolumenSinPrecio = preciosVolumen.controls.filter(
       (p) => p.get("valorUnitarioPorVolumenSinIVA").value == 0,
@@ -1273,12 +1352,21 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    if (!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) {
+    const tieneImagenesPrincipalesPendientesEdit = this.fileImg.some(f => f.tipo === 'principal');
+    if ((!this.crearProducto.value.imagenesPrincipales || this.crearProducto.value.imagenesPrincipales.length === 0) && !tieneImagenesPrincipalesPendientesEdit) {
       Swal.fire(
         "Error",
         "El producto debe tener obligatoriamente al menos una imagen principal",
         "error",
       );
+      return;
+    }
+
+    // Subir imágenes pendientes antes de editar
+    try {
+      await this.uploadPendingImages();
+    } catch (e) {
+      Swal.fire("Error", "No se pudieron subir las imágenes. Intente de nuevo.", "error");
       return;
     }
 
@@ -2028,13 +2116,13 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
   private async confirmImageUpload(): Promise<boolean> {
     const result = await Swal.fire({
-      title: "¿Está seguro? estas imágenes se subirán de inmediato a la base de datos",
-      text: "¡No podrás revertir esto!",
-      icon: "warning",
+      title: "¿Agregar imágenes?",
+      text: "Las imágenes se subirán al guardar el producto.",
+      icon: "question",
       showCancelButton: true,
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
-      confirmButtonText: "Sí, súbelas!",
+      confirmButtonText: "Sí, agregar",
       cancelButtonText: "Cancelar",
     });
     return result.isConfirmed;
