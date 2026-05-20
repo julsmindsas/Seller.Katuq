@@ -1,0 +1,168 @@
+.view-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #f8fafc;
+}
+
+// ── Toolbar ────────────────────────────────────────────────────
+
+.view-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  flex-shrink: 0;
+}
+
+.view-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.view-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 480px;
+}
+
+.view-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.meta-sep {
+  color: #d1d5db;
+}
+
+.meta-warn {
+  color: #d97706;
+}
+
+.spacer {
+  flex: 1;
+}
+
+// ── Buttons ────────────────────────────────────────────────────
+
+.btn-icon {
+  width: 34px;
+  height: 34px;
+  border: none;
+  background: #f3f4f6;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  flex-shrink: 0;
+  transition: background 0.15s;
+
+  &:hover {
+    background: #e5e7eb;
+  }
+}
+
+.btn-outline {
+  padding: 6px 14px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #374151;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background: #f3f4f6;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.btn-primary {
+  padding: 6px 16px;
+  border: none;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+
+  &:hover {
+    background: #1d4ed8;
+  }
+}
+
+// ── Body ───────────────────────────────────────────────────────
+
+.view-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.viz-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ── States ─────────────────────────────────────────────────────
+
+.view-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 64px 24px;
+  color: #6b7280;
+  font-size: 14px;
+
+  i {
+    font-size: 2rem;
+    color: #9ca3af;
+  }
+}
+
+.view-error {
+  padding: 12px 16px;
+  background: #fef2f2;
+  border: 1px solid #fca5a5;
+  border-radius: 8px;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+.view-refreshing {
+  font-size: 13px;
+  color: #6b7280;
+  padding: 4px 0;
+}

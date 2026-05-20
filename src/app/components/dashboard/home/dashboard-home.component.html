@@ -34,9 +34,11 @@
     <article
       *ngFor="let r of reports; trackBy: trackById"
       class="report-card"
-      (click)="openReport(r)">
+      [class.is-selected]="selected?.id === r.id"
+      (click)="selectReport(r)">
       <div class="report-card-icon">
-        <i class="fa" [class.fa-chart-bar]="r.viz?.type === 'bar'"
+        <i class="fa"
+          [class.fa-chart-bar]="r.viz?.type === 'bar'"
           [class.fa-chart-line]="r.viz?.type === 'line'"
           [class.fa-chart-pie]="r.viz?.type === 'pie' || r.viz?.type === 'donut'"
           [class.fa-table]="r.viz?.type === 'table' || r.viz?.type === 'pivot'"
@@ -52,4 +54,54 @@
       </div>
     </article>
   </div>
+
+  <!-- Inline preview panel -->
+  <section class="preview-panel" #previewPanel *ngIf="selected">
+    <div class="preview-header">
+      <div class="preview-title-block">
+        <span class="preview-label">Vista previa</span>
+        <h2 class="preview-title">{{ selected.name }}</h2>
+        <div class="preview-meta" *ngIf="selectedSource">
+          <span><i class="fa fa-database me-1"></i>{{ selectedSource.label }}</span>
+          <ng-container *ngIf="selected.dateFrom || selected.dateTo">
+            <span class="meta-sep">·</span>
+            <span><i class="fa fa-calendar me-1"></i>{{ selected.dateFrom || '-' }} al {{ selected.dateTo || '-' }}</span>
+          </ng-container>
+          <ng-container *ngIf="result?.meta">
+            <span class="meta-sep">·</span>
+            <span>{{ result!.meta.totalRows }} filas</span>
+            <span *ngIf="result!.meta.truncated" class="meta-warn">
+              <i class="fa fa-triangle-exclamation me-1"></i>truncado
+            </span>
+          </ng-container>
+        </div>
+      </div>
+      <div class="preview-actions">
+        <button type="button" class="btn-outline-sm" (click)="editSelected()">
+          <i class="fa fa-pen me-1"></i> Editar
+        </button>
+        <button type="button" class="btn-icon-sm" (click)="closePreview()" title="Cerrar">
+          <i class="fa fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="preview-body">
+      <div *ngIf="previewRunning" class="preview-state">
+        <i class="fa fa-spinner fa-spin"></i> Ejecutando consulta…
+      </div>
+      <div *ngIf="previewError && !previewRunning" class="preview-error">
+        <i class="fa fa-triangle-exclamation me-1"></i>{{ previewError }}
+      </div>
+      <div class="preview-viz" *ngIf="result && !previewRunning">
+        <app-viz-kpi   *ngIf="activeVizTypes.has('kpi')"   [result]="result"></app-viz-kpi>
+        <app-viz-table *ngIf="activeVizTypes.has('table')" [result]="result" [pivot]="false"></app-viz-table>
+        <app-viz-table *ngIf="activeVizTypes.has('pivot')" [result]="result" [pivot]="true"></app-viz-table>
+        <app-viz-chart *ngIf="activeVizTypes.has('bar')"   [result]="result" [chartType]="'bar'"></app-viz-chart>
+        <app-viz-chart *ngIf="activeVizTypes.has('line')"  [result]="result" [chartType]="'line'"></app-viz-chart>
+        <app-viz-chart *ngIf="activeVizTypes.has('pie')"   [result]="result" [chartType]="'pie'"></app-viz-chart>
+      </div>
+    </div>
+  </section>
+
 </div>

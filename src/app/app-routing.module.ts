@@ -155,6 +155,17 @@ const routes: Routes = [
       }
     ]
   },
+  // Reportes públicos — accesibles sin login
+  {
+    path: 'r',
+    component: BlankComponent,
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/report-public/report-public.module').then(m => m.ReportPublicModule),
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,

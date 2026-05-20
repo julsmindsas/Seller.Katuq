@@ -1,0 +1,85 @@
+<div class="view-container">
+
+  <!-- Not found -->
+  <div *ngIf="notFound" class="view-state">
+    <i class="fa fa-circle-exclamation"></i>
+    <p>Reporte no encontrado.</p>
+    <button type="button" class="btn-outline" (click)="goHome()">
+      <i class="fa fa-arrow-left me-1"></i> Volver
+    </button>
+  </div>
+
+  <!-- Loading initial -->
+  <div *ngIf="!notFound && running && !result" class="view-state">
+    <i class="fa fa-spinner fa-spin fa-2x"></i>
+    <p>Cargando reporte…</p>
+  </div>
+
+  <!-- Main view -->
+  <ng-container *ngIf="!notFound && (result || !running)">
+
+    <!-- Toolbar -->
+    <header class="view-toolbar">
+      <button type="button" class="btn-icon" (click)="goHome()" title="Volver">
+        <i class="fa fa-arrow-left"></i>
+      </button>
+
+      <div class="view-title-block">
+        <h1 class="view-title">{{ reportName }}</h1>
+        <div class="view-meta" *ngIf="source">
+          <span><i class="fa fa-database me-1"></i>{{ source.label }}</span>
+          <ng-container *ngIf="dateFrom || dateTo">
+            <span class="meta-sep">·</span>
+            <span><i class="fa fa-calendar me-1"></i>{{ dateFrom || '-' }} al {{ dateTo || '-' }}</span>
+          </ng-container>
+          <ng-container *ngIf="result?.meta">
+            <span class="meta-sep">·</span>
+            <span>{{ result!.meta.totalRows }} filas</span>
+            <span *ngIf="result!.meta.truncated" class="meta-warn">
+              <i class="fa fa-triangle-exclamation me-1"></i>truncado
+            </span>
+          </ng-container>
+        </div>
+      </div>
+
+      <span class="spacer"></span>
+
+      <button type="button" class="btn-outline" (click)="exportExcel()" [disabled]="!result || exporting" title="Exportar Excel">
+        <i class="fa fa-file-excel"></i> Excel
+      </button>
+      <button type="button" class="btn-outline" (click)="exportPng()" [disabled]="!result || exporting" title="Exportar PNG">
+        <i class="fa fa-file-image"></i> PNG
+      </button>
+      <button type="button" class="btn-outline" (click)="exportPdf()" [disabled]="!result || exporting" title="Exportar PDF">
+        <i class="fa fa-file-pdf"></i> PDF
+      </button>
+      <button type="button" class="btn-primary" (click)="goEdit()" title="Editar reporte">
+        <i class="fa fa-pen me-1"></i> Editar
+      </button>
+    </header>
+
+    <!-- Viz area -->
+    <main class="view-body">
+
+      <div *ngIf="errorMsg" class="view-error">
+        <i class="fa fa-triangle-exclamation me-1"></i>{{ errorMsg }}
+      </div>
+
+      <div *ngIf="running && result" class="view-refreshing">
+        <i class="fa fa-spinner fa-spin me-1"></i> Actualizando…
+      </div>
+
+      <section class="viz-area" #vizContainer *ngIf="result && !running">
+        <app-viz-kpi   *ngIf="activeVizTypes.has('kpi')"   [result]="result"></app-viz-kpi>
+        <app-viz-table *ngIf="activeVizTypes.has('table')" [result]="result" [pivot]="false"></app-viz-table>
+        <app-viz-table *ngIf="activeVizTypes.has('pivot')" [result]="result" [pivot]="true"></app-viz-table>
+        <app-viz-chart *ngIf="activeVizTypes.has('bar')"   [result]="result" [chartType]="'bar'"></app-viz-chart>
+        <app-viz-chart *ngIf="activeVizTypes.has('line')"  [result]="result" [chartType]="'line'"></app-viz-chart>
+        <app-viz-chart *ngIf="activeVizTypes.has('pie')"   [result]="result" [chartType]="'pie'"></app-viz-chart>
+      </section>
+
+    </main>
+
+  </ng-container>
+
+</div>

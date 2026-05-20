@@ -41,4 +41,12 @@ export class ReportsService extends BaseService {
   remove(id: string): Observable<void> {
     return this.delete<void>(`/v1/reports/${id}`);
   }
+
+  getPublicReport(id: string): Observable<SavedReport> {
+    return this.get<SavedReport>(`/v1/reports/public/${id}`);
+  }
+
+  runPublicQuery(id: string): Observable<ReportResult> {
+    return this.post<ReportResult>(`/v1/reports/public/${id}/query`, {});
+  }
 }

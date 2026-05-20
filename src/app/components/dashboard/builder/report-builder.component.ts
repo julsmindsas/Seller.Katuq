@@ -5,6 +5,7 @@ import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
+import { environment } from '../../../../environments/environment';
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 import { SOURCE_CATALOG, findDimension, findMeasure, findSource } from '../model/source-catalog';
 import {
@@ -68,6 +69,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   running = false;
   saving = false;
   exporting = false;
+  publishing = false;
   errorMsg: string | null = null;
 
   /** Contenedor de la visualización (table + chart + kpi). Capturable a imagen/PDF. */
@@ -354,60 +356,163 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   async exportExcel(): Promise<void> {
     if (!this.result || this.exporting) return;
     this.exporting = true;
+    Swal.fire({ title: 'Generando Excel…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
-      const { utils, writeFile } = await import('xlsx');
+      const ExcelJS = await import('exceljs');
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'Katuq';
       const cols = this.result.columns;
-      const wb = utils.book_new();
 
-      // Hoja 1: datos completos
-      const header = cols.map(c => c.label);
-      const data = this.result.rows.map(row =>
-        cols.map(col => {
+      // ── Hoja de datos ──────────────────────────────────────────
+      const ws = wb.addWorksheet('Datos');
+
+      // Cabecera estilizada
+      ws.addRow(cols.map(c => c.label));
+      const headerRow = ws.getRow(1);
+      headerRow.eachCell(cell => {
+        cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+        cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = { bottom: { style: 'thin', color: { argb: 'FF1D4ED8' } } };
+      });
+      headerRow.height = 22;
+      ws.views = [{ state: 'frozen', ySplit: 1 }];
+
+      // Filas de datos con colores alternos
+      this.result.rows.forEach((row, rowIdx) => {
+        const values = cols.map(col => {
           const val = row[col.field];
           if (val === null || val === undefined || val === '') return '';
           if (col.dataType === 'date') return this.formatDateStr(String(val));
           const n = Number(val);
           if (!Number.isNaN(n) && (col.type === 'measure' || col.dataType === 'number')) return n;
           return String(val);
-        })
-      );
-      const wsData = utils.aoa_to_sheet([header, ...data]);
-      wsData['!cols'] = cols.map(() => ({ wch: 20 }));
-      utils.book_append_sheet(wb, wsData, 'Datos');
+        });
+        const dataRow = ws.addRow(values);
+        const bgColor = rowIdx % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFF';
+        dataRow.eachCell({ includeEmpty: true }, (cell, colIdx) => {
+          const col = cols[colIdx - 1];
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+          cell.alignment = { horizontal: col?.type === 'measure' ? 'right' : 'left', vertical: 'middle' };
+          if (col?.format === 'currency') cell.numFmt = '"$"#,##0';
+          else if (col?.type === 'measure') cell.numFmt = '#,##0.##';
+        });
+        dataRow.height = 18;
+      });
 
-      // Hojas por visualización activa (gráficas)
-      const dimCols  = cols.filter(c => c.type === 'dimension');
-      const measCols = cols.filter(c => c.type === 'measure');
-      const xDim = dimCols[0] ?? null;
-      const xLabel = xDim ? xDim.label : 'Fila';
-      const toXVal = (row: Record<string, unknown>, idx: number): string | number =>
-        xDim ? (row[xDim.field] != null ? String(row[xDim.field]) : '') : idx + 1;
+      // Anchos de columna automáticos (máx 40, mín 10)
+      cols.forEach((col, i) => {
+        const maxLen = Math.max(
+          col.label.length,
+          ...this.result!.rows.slice(0, 50).map(r => String(r[col.field] ?? '').length)
+        );
+        ws.getColumn(i + 1).width = Math.min(40, Math.max(10, maxLen + 2));
+      });
 
-      const chartSheets: { type: VizType; label: string }[] = [
-        { type: 'bar',  label: 'Barras'  },
-        { type: 'line', label: 'Linea'   },
-        { type: 'pie',  label: 'Pastel'  },
-      ];
-      for (const { type, label } of chartSheets) {
-        if (!this.activeVizTypes.has(type) || measCols.length === 0) continue;
-        const chartHeader = [xLabel, ...measCols.map(m => m.label)];
-        const chartData = this.result!.rows.map((row, idx) => [
-          toXVal(row, idx),
-          ...measCols.map(m => { const n = Number(row[m.field]); return Number.isNaN(n) ? 0 : n; }),
-        ]);
-        const ws = utils.aoa_to_sheet([chartHeader, ...chartData]);
-        ws['!cols'] = [{ wch: 22 }, ...measCols.map(() => ({ wch: 16 }))];
-        utils.book_append_sheet(wb, ws, label);
+      // ── Hoja única de gráficas ─────────────────────────────────
+      const hasCharts = this.activeVizTypes.has('bar') || this.activeVizTypes.has('line') || this.activeVizTypes.has('pie');
+      if (hasCharts && this.vizContainer) {
+        const { default: html2canvas } = await import('html2canvas');
+        await new Promise(r => setTimeout(r, 600));
+        const el = this.vizContainer.nativeElement as HTMLElement;
+        const chartHosts = Array.from(el.querySelectorAll<HTMLElement>('.chart-host'));
+
+        const activeChartTypes = (['bar', 'line', 'pie'] as VizType[])
+          .filter(t => this.activeVizTypes.has(t));
+        const chartLabels: Record<string, string> = { bar: 'Barras', line: 'Linea', pie: 'Pastel' };
+
+        const grafSheet = wb.addWorksheet('Graficas');
+
+        // Geometría fija de la hoja
+        const COLS      = 14;   // columnas visibles
+        const COL_W     = 10;   // ancho de columna (unidades Excel ≈ 70 px)
+        const COL_W_PX  = 70;   // píxeles por columna (aproximado)
+        const ROW_H_PT  = 18;   // altura de fila en puntos
+        const ROW_H_PX  = Math.round(ROW_H_PT * 96 / 72); // ≈ 24 px por fila
+
+        for (let c = 1; c <= COLS; c++) grafSheet.getColumn(c).width = COL_W;
+
+        const IMG_W_PX = COLS * COL_W_PX; // ancho total de la imagen ≈ 980 px
+        let rowCursor = 0; // fila actual en índice 0-based (para tl.row)
+
+        for (let ci = 0; ci < Math.min(activeChartTypes.length, chartHosts.length); ci++) {
+          const label   = chartLabels[activeChartTypes[ci]] ?? `Grafica ${ci + 1}`;
+          const chartEl = chartHosts[ci];
+
+          // — Fila de título
+          const titleRow = grafSheet.getRow(rowCursor + 1); // exceljs es 1-indexed
+          titleRow.height = ROW_H_PT + 4;
+          const cell = titleRow.getCell(1);
+          cell.value = label;
+          cell.font  = { bold: true, size: 12, color: { argb: 'FF2563EB' } };
+          cell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } };
+          // Merge el título en todo el ancho
+          grafSheet.mergeCells(rowCursor + 1, 1, rowCursor + 1, COLS);
+          rowCursor++;
+
+          // — Capturar gráfica
+          const canvas = await html2canvas(chartEl, {
+            backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false,
+          });
+          const b64    = canvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, '');
+          const imgBuf = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+          const imgH   = Math.round(IMG_W_PX * (canvas.height / canvas.width));
+
+          // — Insertar imagen en la hoja
+          const imgId = wb.addImage({ buffer: imgBuf, extension: 'png' });
+          grafSheet.addImage(imgId, {
+            tl: { col: 0, row: rowCursor } as any,
+            ext: { width: IMG_W_PX, height: imgH },
+          });
+
+          // — Definir alturas de las filas que cubre la imagen
+          const imgRowSpan = Math.ceil(imgH / ROW_H_PX);
+          for (let r = rowCursor + 1; r <= rowCursor + imgRowSpan; r++) {
+            grafSheet.getRow(r).height = ROW_H_PT;
+          }
+          rowCursor += imgRowSpan;
+
+          // — Fila de separación entre gráficas (excepto la última)
+          if (ci < activeChartTypes.length - 1) {
+            grafSheet.getRow(rowCursor + 1).height = ROW_H_PT;
+            rowCursor += 2;
+          }
+        }
       }
+
+      // ── Hoja pivot si está activa ──────────────────────────────
       if (this.activeVizTypes.has('pivot')) {
-        utils.book_append_sheet(wb, utils.aoa_to_sheet([header, ...data]), 'Pivot');
+        const pvSheet = wb.addWorksheet('Pivot');
+        pvSheet.addRow(cols.map(c => c.label));
+        const pvHeader = pvSheet.getRow(1);
+        pvHeader.eachCell(cell => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        });
+        this.result.rows.forEach(row => {
+          pvSheet.addRow(cols.map(col => {
+            const val = row[col.field];
+            if (val === null || val === undefined || val === '') return '';
+            const n = Number(val);
+            return !Number.isNaN(n) && col.type === 'measure' ? n : String(val ?? '');
+          }));
+        });
       }
 
-      writeFile(wb, `${this.reportName}.xlsx`);
+      // ── Descargar ──────────────────────────────────────────────
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.reportName}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
     } catch (err) {
       console.error('[ReportBuilder] Error exportExcel:', err);
       Swal.fire('Error', 'No se pudo exportar el Excel.', 'error');
     } finally {
+      Swal.close();
       this.exporting = false;
     }
   }
@@ -724,6 +829,119 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         : { halign: 'left'  as const,  cellWidth: dimW   };
     });
     return styles;
+  }
+
+  publish(): void {
+    if (this.isPublic && this.reportId) {
+      this.showPublishUrl();
+      return;
+    }
+    if (!this.source) {
+      Swal.fire('Atención', 'Guarda el reporte antes de publicarlo.', 'warning');
+      return;
+    }
+    this.publishing = true;
+    this.isPublic = true;
+    const spec = this.buildSpec();
+    if (!spec) { this.publishing = false; return; }
+    const userStr = localStorage.getItem('user');
+    let ownerEmail = '';
+    let ownerCompany = '';
+    try {
+      const u = userStr ? JSON.parse(userStr) : null;
+      ownerEmail = u?.email || '';
+      ownerCompany = u?.company || '';
+    } catch { /* noop */ }
+
+    const report: SavedReport = {
+      id: this.reportId || undefined,
+      name: this.reportName,
+      source: this.source.id,
+      spec,
+      viz: { type: this.vizType, activeTypes: [...this.activeVizTypes] },
+      dateFrom: this.dateFrom || undefined,
+      dateTo: this.dateTo || undefined,
+      ownerEmail,
+      ownerCompany,
+      isPublic: true,
+      visibleToUsers: this.visibleToUsers.length ? this.visibleToUsers : undefined,
+      visibleToRoles: this.visibleToRoles.length ? this.visibleToRoles : undefined,
+    };
+
+    this.reportsService
+      .save(report)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          this.isPublic = false;
+          Swal.fire('Error', err?.error?.message || 'No se pudo publicar.', 'error');
+          return of(null);
+        }),
+        finalize(() => (this.publishing = false)),
+      )
+      .subscribe((saved) => {
+        if (!saved) return;
+        this.reportId = saved.id || this.reportId;
+        this.showPublishUrl();
+      });
+  }
+
+  private showPublishUrl(): void {
+    const url = `${environment.appUrl}/r/${this.reportId}`;
+    Swal.fire({
+      title: 'Reporte publicado',
+      html: `
+        <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">
+          Cualquier persona con el enlace puede ver este reporte.
+        </p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="pub-url" readonly value="${url}"
+            style="flex:1;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#f9fafb;color:#111827;" />
+          <button id="copy-btn" type="button"
+            style="padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;">
+            Copiar
+          </button>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;">
+          <a href="${url}" target="_blank"
+            style="font-size:12px;color:#2563eb;text-decoration:none;">
+            <i class="fa fa-external-link-alt"></i> Abrir enlace
+          </a>
+          <span style="color:#d1d5db;">·</span>
+          <button id="unpublish-btn" type="button"
+            style="font-size:12px;color:#6b7280;background:none;border:none;cursor:pointer;padding:0;">
+            Despublicar
+          </button>
+        </div>
+      `,
+      showConfirmButton: false,
+      showCloseButton: true,
+      didOpen: () => {
+        document.getElementById('copy-btn')?.addEventListener('click', () => {
+          navigator.clipboard.writeText(url).then(() => {
+            const btn = document.getElementById('copy-btn') as HTMLButtonElement;
+            if (btn) { btn.textContent = '¡Copiado!'; btn.style.background = '#16a34a'; }
+          });
+        });
+        document.getElementById('unpublish-btn')?.addEventListener('click', () => {
+          Swal.close();
+          this.unpublish();
+        });
+      },
+    });
+  }
+
+  private unpublish(): void {
+    if (!this.reportId) return;
+    this.isPublic = false;
+    const report = { id: this.reportId } as any;
+    this.reportsService
+      .save({ ...report, isPublic: false })
+      .pipe(takeUntil(this.destroy$), catchError(() => of(null)))
+      .subscribe((saved) => {
+        if (saved) Swal.fire({ icon: 'success', title: 'Reporte despublicado', timer: 1500, showConfirmButton: false });
+        else this.isPublic = true;
+      });
   }
 
   goHome(): void {

@@ -8,8 +8,9 @@
 .builder-toolbar {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px 16px;
   background: #fff;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -29,50 +30,48 @@
 }
 
 .title-input {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 500;
   border: 1px solid transparent;
-  padding: 6px 10px;
+  padding: 5px 8px;
   border-radius: 6px;
-  min-width: 280px;
+  min-width: 0;
+  width: 160px;
   color: #111827;
+  flex-shrink: 1;
 
-  &:hover {
-    border-color: #e5e7eb;
-  }
-
-  &:focus {
-    border-color: #2563eb;
-    outline: none;
-  }
+  &:hover { border-color: #e5e7eb; }
+  &:focus { border-color: #2563eb; outline: none; }
 }
 
 .date-filter {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-left: 8px;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
-.date-label {
+.date-icon {
   font-size: 12px;
-  color: #6b7280;
-  white-space: nowrap;
+  color: #9ca3af;
+}
+
+.date-sep {
+  font-size: 11px;
+  color: #d1d5db;
 }
 
 .date-input {
-  padding: 5px 8px;
+  padding: 4px 6px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 12px;
   color: #374151;
-  width: 140px;
+  width: 130px;
 
-  &:focus {
-    border-color: #2563eb;
-    outline: none;
-  }
+  &:focus { border-color: #2563eb; outline: none; }
 }
+
 
 .spacer {
   flex: 1;
@@ -81,7 +80,7 @@
 .btn-primary,
 .btn-secondary,
 .btn-outline {
-  padding: 7px 14px;
+  padding: 6px 12px;
   border-radius: 6px;
   font-size: 13px;
   font-weight: 500;
@@ -91,6 +90,7 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
   transition: background 0.15s, border-color 0.15s;
 
   &:disabled {
@@ -127,6 +127,41 @@
 
   &:hover:not(:disabled) {
     background: #eff6ff;
+  }
+}
+
+.btn-publish {
+  padding: 7px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid #d97706;
+  background: #fffbeb;
+  color: #92400e;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s, border-color 0.15s;
+
+  &:hover:not(:disabled) {
+    background: #fef3c7;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.is-published {
+    border-color: #16a34a;
+    background: #f0fdf4;
+    color: #166534;
+
+    &:hover:not(:disabled) {
+      background: #dcfce7;
+    }
   }
 }
 

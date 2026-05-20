@@ -10,6 +10,7 @@ import { ReportBuilderComponent } from './builder/report-builder.component';
 import { VizKpiComponent } from './builder/widgets/viz-kpi.component';
 import { VizTableComponent } from './builder/widgets/viz-table.component';
 import { VizChartComponent } from './builder/widgets/viz-chart.component';
+import { ReportViewComponent } from './view/report-view.component';
 
 import { NgSelectModule } from '@ng-select/ng-select';
 import { NgxHotkeysModule } from '@balticcode/ngx-hotkeys';
@@ -58,6 +59,7 @@ import { AnalyticsService } from '../../shared/services/dashboard/analytics.serv
     LegacyDashboardComponent,
     DashboardHomeComponent,
     ReportBuilderComponent,
+    ReportViewComponent,
     VizKpiComponent,
     VizTableComponent,
     VizChartComponent,
