@@ -5,7 +5,6 @@ import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
-import { environment } from '../../../../environments/environment';
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 import { SOURCE_CATALOG, findDimension, findMeasure, findSource } from '../model/source-catalog';
 import {
@@ -887,7 +886,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   }
 
   private showPublishUrl(): void {
-    const url = `${environment.appUrl}/r/${this.reportId}`;
+    const url = `${window.location.origin}/r/${this.reportId}`;
     Swal.fire({
       title: 'Reporte publicado',
       html: `
