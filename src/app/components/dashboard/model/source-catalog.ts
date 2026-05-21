@@ -190,6 +190,9 @@ export const SOURCE_CATALOG: SourceDef[] = [
       // Relación
       { id: 'es_cliente', label: 'Es Cliente (CxC)', type: 'boolean', group: 'Relación' },
       { id: 'es_proveedor', label: 'Es Proveedor (CxP)', type: 'boolean', group: 'Relación' },
+      { id: 'es_empleado', label: 'Es Empleado (nómina)', type: 'boolean', group: 'Relación' },
+      { id: 'es_socio', label: 'Es Socio', type: 'boolean', group: 'Relación' },
+      { id: 'tipo_tercero_wo', label: 'Tipos WO (códigos)', type: 'string', group: 'Relación' },
       { id: 'forma_pago_predominante', label: 'Forma Pago Habitual', type: 'string', group: 'Relación', enumValues: ['CR', 'CO', 'OTRO'] },
       // Vendedor
       { id: 'vendedor_id', label: 'ID Vendedor', type: 'number', group: 'Vendedor' },
