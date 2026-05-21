@@ -59,6 +59,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   @Output() overridePedido = new EventEmitter<Pedido>();
   @Output() generarFacturaChange = new EventEmitter<boolean>();
   idenxFacturacion: any;
+  private originalAliasFact: string;
   editandodato: boolean;
   alias_entrega: string;
   nombres_entrega: string;
@@ -191,7 +192,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   }
 
   seleccionarDireccionFE(index) {
-    this.pedidoGral.facturacion = this.datosFacturacionElectronica[index];
+    this.pedidoGral.facturacion = { ...this.datosFacturacionElectronica[index] };
 
     // Recalcular el costo de envío (domicilio) si hay información de envío
     if (this.pedidoGral.envio && this.pedidoGral.envio.zonaCobro) {
@@ -288,6 +289,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
   }
   editarDatos1(modal, index) {
     this.idenxFacturacion = index;
+    this.originalAliasFact = this.datosFacturacionElectronica[index].alias;
     this.editandodato = true;
     this.alias_facturacion = this.datosFacturacionElectronica[index].alias;
     this.razon_social = this.datosFacturacionElectronica[index].nombres;
@@ -364,7 +366,7 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
       datosFacturacionElec;
 
     // Si los datos editados son los que están en uso en el pedido, actualizarlos
-    if (this.pedidoGral?.facturacion && this.pedidoGral.facturacion.alias === datosFacturacionElec.alias) {
+    if (this.pedidoGral?.facturacion && this.pedidoGral.facturacion.alias === this.originalAliasFact) {
       this.pedidoGral.facturacion = { ...datosFacturacionElec };
       this.pedidoGral = { ...this.pedidoGral };
       // Emitir el cambio al componente padre
@@ -395,7 +397,8 @@ export class PedidoFacturacionComponent implements OnInit, AfterContentInit {
               clientRes.datosFacturacionElectronica &&
               Array.isArray(clientRes.datosFacturacionElectronica)
             ) {
-              this.datosFacturacionElectronica = clientRes.datosFacturacionElectronica;
+              // Actualizar en-place para que Angular no sobreescriba con el array viejo del padre
+              this.datosFacturacionElectronica.splice(0, this.datosFacturacionElectronica.length, ...clientRes.datosFacturacionElectronica);
             }
           });
 
