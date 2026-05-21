@@ -199,6 +199,8 @@ export const SOURCE_CATALOG: SourceDef[] = [
       // Fechas
       { id: 'primera_factura_fecha', label: 'Primera Factura', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
       { id: 'ultima_factura_fecha', label: 'Última Factura', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
+      { id: 'fecha_corte', label: 'Fecha Corte', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
+      { id: 'universe_source', label: 'Fuente Universo', type: 'string', enumValues: ['wo', 'docs', 'docs-fallback'], group: 'Cartera' },
     ],
     measures: [
       // Saldo
@@ -219,6 +221,38 @@ export const SOURCE_CATALOG: SourceDef[] = [
       { id: 'docs_fv', label: 'Facturas Venta', aggs: ['sum', 'avg'], format: 'number' },
       { id: 'docs_fc', label: 'Facturas Compra', aggs: ['sum', 'avg'], format: 'number' },
       { id: 'docs_rc', label: 'Recibos Caja', aggs: ['sum', 'avg'], format: 'number' },
+      { id: 'docs_ce', label: 'Comprobantes Egreso', aggs: ['sum', 'avg'], format: 'number' },
+    ],
+  },
+  {
+    id: 'accounting_document_lines',
+    label: 'Líneas de documentos (WO)',
+    description: 'Renglones individuales de facturas, notas y comprobantes WO. Habilita reportes por producto/servicio comprado o vendido. Requiere persistLines=true en el sync.',
+    requiresIntegration: 'worldoffice',
+    dimensions: [
+      { id: 'doc_code', label: 'Código documento', type: 'string', enumValues: ['FV','CZ','NCV','NDV','PD','REM','RC','CE','FC','NCC','NDC'], group: 'Documento' },
+      { id: 'doc_category', label: 'Categoría', type: 'string', group: 'Documento' },
+      { id: 'doc_id', label: 'ID Documento WO', type: 'number', group: 'Documento' },
+      { id: 'doc_numero', label: 'Número', type: 'string', group: 'Documento' },
+      { id: 'doc_prefijo', label: 'Prefijo', type: 'string', group: 'Documento' },
+      { id: 'doc_fecha', label: 'Fecha documento', type: 'date', granularities: ['day', 'week', 'month', 'quarter', 'year'], group: 'Tiempo' },
+      { id: 'id_inventario', label: 'ID Producto WO', type: 'number', group: 'Producto' },
+      { id: 'concepto', label: 'Concepto / Producto', type: 'string', group: 'Producto' },
+      { id: 'unidad_medida', label: 'Unidad medida', type: 'string', group: 'Producto' },
+      { id: 'id_bodega', label: 'ID Bodega WO', type: 'number', group: 'Logística' },
+      { id: 'id_centro_costo', label: 'ID Centro Costo', type: 'number', group: 'Logística' },
+      { id: 'tercero_id', label: 'ID Tercero WO', type: 'number', group: 'Tercero' },
+      { id: 'tercero_nombre', label: 'Tercero', type: 'string', group: 'Tercero' },
+      { id: 'line_index', label: 'Posición renglón', type: 'number', group: 'Documento' },
+    ],
+    measures: [
+      { id: 'count', label: 'Renglones', aggs: ['count', 'count_distinct'], format: 'number' },
+      { id: 'cantidad', label: 'Cantidad', aggs: ['sum', 'avg', 'min', 'max'], format: 'number' },
+      { id: 'valor_unitario', label: 'Valor unitario', aggs: ['avg', 'min', 'max'], format: 'currency' },
+      { id: 'valor_total', label: 'Valor total renglón', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
+      { id: 'valor_descuento', label: 'Descuento', aggs: ['sum', 'avg'], format: 'currency' },
+      { id: 'por_descuento', label: '% Descuento', aggs: ['avg', 'min', 'max'], format: 'number' },
+      { id: 'valor_iva', label: 'IVA', aggs: ['sum', 'avg'], format: 'currency' },
     ],
   },
 ];

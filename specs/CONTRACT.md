@@ -23,6 +23,7 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **002.7** | **flows-multitenant-via-companyConfig** | **done** | — | `$companyConfig.<provider>.<campo>` en expressionEngine + bodegaCode en schema osmosis + flow doc dinámico + defaults peligrosos eliminados. Validado end-to-end. |
 | **002.8** | **crones-dinamicos-firestore** | **done** | — | Colección `cron_jobs_config` + endpoints REST CRUD + hot-reload + seed automático. SOLO crones del SISTEMA (no de flow). |
 | **002.9** | **flow-cron-catchup-on-boot** | **done** | — | `lastTriggeredAt` por binding + catchup post-restart + endpoint `GET /v1/health/crons`. Resuelve gaps en EC2/PM2. |
+| **003** | **wo-cartera-universo-completo** | **draft (código mergeado, pendiente validación)** | Daniel | Refactor `woBalancesSyncService`: universo desde `listCustomers` (resuelve bug Harmony $1.553M→$1.860M). Suma CE en montoPagadoHistorico + docsCE. `fechaCorte` param. Fix descuento (`porDescuento` vs `porcentajeDescuento`). Persist renglones opt-in en `accounting_document_lines`. |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -219,3 +220,12 @@ _(vacío)_
 - Adoptamos SDD.
 - Creamos `SPEC-DRIVEN.md`, `/specs/{README, constitution, CONTRACT, templates/}` y `/specs/001-osmosis-webhook-inbound/spec.md`.
 - Próximo paso: completar bloques `[NEEDS CLARIFICATION]` de la spec 001 (sección 8 de la spec). Sin eso, no se planea.
+
+### 2026-05-21 (sesión Harmony Lens)
+- Documento "Revisión Harmony Lens.docx" reportó 2 bugs críticos + 6 features de builder.
+- **D-015**: Refactor WO Cartera (spec 003) — universo de terceros desde `listCustomers` (WO) en lugar de derivarse de `accounting_documents` incremental. Resuelve descalce $1.553M vs $1.860M.
+- **D-016**: Fix descuento — `_woGetRenglones.js` ahora lee defensivamente `valorDescuento`/`descuentoValor`/`montoDescuento` (monto directo) o `porDescuento` (% real WO) en lugar de `porcentajeDescuento` (campo inexistente). Bug histórico que daba $2 vs $195 WO.
+- **D-017**: Suma CE en `montoPagadoHistorico` + nuevo contador `docsCE`. Antes solo RC contaba → métrica rota para CxP.
+- **D-018**: Param `fechaCorte` parametrizable en `worldoffice-balances-sync` (era hardcoded `today`).
+- **D-019**: Opt-in `persistLines: true` en `worldoffice-documents-sync` → nueva colección `accounting_document_lines` + source `accounting_document_lines` en el builder.
+- Pendientes para próxima sesión: correr `scripts/explore-wo-renglones.js` contra Harmony para confirmar shape del descuento; correr historical run + balances-sync con `universeSource='wo'` y validar `sum(saldoTotal) ≈ $1.553M ± 1%`.
