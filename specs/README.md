@@ -13,7 +13,12 @@ Este directorio contiene las especificaciones del proyecto bajo la metodología 
 
 | # | Slug | Estado | Tema |
 |---|---|---|---|
-| 001 | osmosis-webhook-inbound | spec en revisión | Webhook entrante de Osmosis (Cereza) para estados de órdenes y actualizaciones de productos |
+| 001 | osmosis-webhook-inbound | approved — pending-validation | Webhook entrante de Osmosis (Cereza) para estados de órdenes y actualizaciones de productos |
+| 002 | flows-osmosis-shopify-marco | done | Spec marco del 360 Osmosis-Katuq-Shopify-webhook + 9 sub-specs hijas (002.1..002.9). Sello D-360-CLOSED-V2. |
+| 003 | woocommerce-360-marco | **implementación done — pending Emulator validation** | Spec marco del 360 WooCommerce plug-and-play + 6 sub-specs hijas (003.1..003.6 todas implementadas). Goal: cualquier comercio puede integrar Woo "facilísimo". |
+| 004 | user-docs-flows | spec + USER-GUIDE-FLOWS.md publicada | Documentación de `/flows` orientada al comerciante final (no técnico). |
+
+> Roadmap completo + decisiones D-001..D-021 en `CONTRACT.md`.
 
 ## Cómo crear una nueva spec
 

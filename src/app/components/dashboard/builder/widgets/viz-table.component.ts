@@ -343,7 +343,12 @@ export class VizTableComponent {
       return String(value);
     }
     if (col.dataType === 'date') {
-      return String(value);
+      const s = String(value);
+      const dayM = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (dayM) return `${dayM[3]}/${dayM[2]}/${dayM[1]}`;
+      const monM = s.match(/^(\d{4})-(\d{2})$/);
+      if (monM) return `${monM[2]}/${monM[1]}`;
+      return s;
     }
     const n = Number(value);
     if (Number.isNaN(n)) {

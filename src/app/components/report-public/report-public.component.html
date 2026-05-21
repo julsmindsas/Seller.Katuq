@@ -1,0 +1,70 @@
+<div class="pub-page">
+
+  <!-- Header -->
+  <header class="pub-header">
+    <div class="pub-brand">
+      <span class="pub-logo">KATUQ</span>
+    </div>
+    <div class="pub-report-meta" *ngIf="report">
+      <h1 class="pub-report-name">{{ report.name }}</h1>
+      <div class="pub-meta-strip">
+        <span *ngIf="report.dateFrom || report.dateTo">
+          <i class="fa fa-calendar me-1"></i>{{ report.dateFrom || '-' }} al {{ report.dateTo || '-' }}
+        </span>
+        <span *ngIf="result?.meta">
+          <i class="fa fa-table me-1"></i>{{ result!.meta.totalRows | number }} registros
+        </span>
+        <span *ngIf="result?.meta?.truncated" class="warn">
+          <i class="fa fa-triangle-exclamation me-1"></i>resultado truncado
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Content -->
+  <main class="pub-body">
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="pub-state">
+      <i class="fa fa-spinner fa-spin fa-2x"></i>
+      <p>Cargando reporte…</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="error && !loading" class="pub-state pub-error">
+      <i class="fa fa-circle-exclamation fa-2x"></i>
+      <p>{{ error }}</p>
+    </div>
+
+    <!-- Table -->
+    <div *ngIf="result && !loading" class="pub-table-wrap">
+      <div *ngIf="rows.length === 0" class="pub-state">
+        <i class="fa fa-inbox fa-2x"></i>
+        <p>No hay datos para mostrar.</p>
+      </div>
+      <table *ngIf="rows.length > 0" class="pub-table">
+        <thead>
+          <tr>
+            <th *ngFor="let col of columns" [class.is-num]="col.type === 'measure'">
+              {{ col.label }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of rows; let i = index" [class.alt]="i % 2 !== 0">
+            <td *ngFor="let col of columns" [class.is-num]="col.type === 'measure'">
+              {{ formatCell(row[col.field], col) }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="pub-footer">
+    <span>Generado con <strong>Katuq</strong> · {{ result?.meta?.totalRows | number }} registros · {{ result?.meta?.durationMs }}ms</span>
+  </footer>
+
+</div>

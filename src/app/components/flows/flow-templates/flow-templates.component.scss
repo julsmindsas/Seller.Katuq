@@ -143,3 +143,82 @@
   text-align: left;
   margin-bottom: 16px;
 }
+
+// ============================================================
+// Spec 003.5 — chips filtro por proveedor + empty state + tarjeta extendida.
+// ============================================================
+
+.kf-templates__chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.kf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  color: #4b5563;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+  }
+
+  &--active {
+    background: #1f2937;
+    border-color: #1f2937;
+    color: #fff;
+
+    &:hover {
+      background: #111827;
+      border-color: #111827;
+      color: #fff;
+    }
+  }
+
+  i { font-size: 12px; }
+}
+
+.kf-empty {
+  padding: 24px;
+  border-radius: 8px;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  color: #6b7280;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.kf-template-card {
+  &__icon img {
+    max-width: 48px;
+    max-height: 48px;
+    object-fit: contain;
+  }
+
+  &__exp {
+    color: #d97706;
+    font-weight: 500;
+    margin-left: 4px;
+  }
+
+  &--experimental {
+    border-style: dashed;
+    border-color: #fde68a;
+    background: linear-gradient(180deg, #fffbeb 0%, #ffffff 100%);
+  }
+}

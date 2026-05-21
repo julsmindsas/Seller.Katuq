@@ -14,6 +14,7 @@ import {
   MeasureAgg,
   MeasureDef,
   MeasureRef,
+  ReportColumn,
   ReportResult,
   ReportSpec,
   SavedReport,
@@ -67,6 +68,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   running = false;
   saving = false;
   exporting = false;
+  publishing = false;
   errorMsg: string | null = null;
 
   /** Contenedor de la visualización (table + chart + kpi). Capturable a imagen/PDF. */
@@ -350,58 +352,217 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       });
   }
 
-  exportCsv(): void {
-    if (!this.result) {
-      return;
+  async exportExcel(): Promise<void> {
+    if (!this.result || this.exporting) return;
+    this.exporting = true;
+    Swal.fire({ title: 'Generando Excel…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
+    try {
+      const ExcelJS = await import('exceljs');
+      const wb = new ExcelJS.Workbook();
+      wb.creator = 'Katuq';
+      const cols = this.result.columns;
+
+      // ── Hoja de datos ──────────────────────────────────────────
+      const ws = wb.addWorksheet('Datos');
+
+      // Cabecera estilizada
+      ws.addRow(cols.map(c => c.label));
+      const headerRow = ws.getRow(1);
+      headerRow.eachCell(cell => {
+        cell.fill   = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+        cell.font   = { bold: true, color: { argb: 'FFFFFFFF' }, size: 10 };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = { bottom: { style: 'thin', color: { argb: 'FF1D4ED8' } } };
+      });
+      headerRow.height = 22;
+      ws.views = [{ state: 'frozen', ySplit: 1 }];
+
+      // Filas de datos con colores alternos
+      this.result.rows.forEach((row, rowIdx) => {
+        const values = cols.map(col => {
+          const val = row[col.field];
+          if (val === null || val === undefined || val === '') return '';
+          if (col.dataType === 'date') return this.formatDateStr(String(val));
+          const n = Number(val);
+          if (!Number.isNaN(n) && (col.type === 'measure' || col.dataType === 'number')) return n;
+          return String(val);
+        });
+        const dataRow = ws.addRow(values);
+        const bgColor = rowIdx % 2 === 0 ? 'FFFFFFFF' : 'FFF8FAFF';
+        dataRow.eachCell({ includeEmpty: true }, (cell, colIdx) => {
+          const col = cols[colIdx - 1];
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+          cell.alignment = { horizontal: col?.type === 'measure' ? 'right' : 'left', vertical: 'middle' };
+          if (col?.format === 'currency') cell.numFmt = '"$"#,##0';
+          else if (col?.type === 'measure') cell.numFmt = '#,##0.##';
+        });
+        dataRow.height = 18;
+      });
+
+      // Anchos de columna automáticos (máx 40, mín 10)
+      cols.forEach((col, i) => {
+        const maxLen = Math.max(
+          col.label.length,
+          ...this.result!.rows.slice(0, 50).map(r => String(r[col.field] ?? '').length)
+        );
+        ws.getColumn(i + 1).width = Math.min(40, Math.max(10, maxLen + 2));
+      });
+
+      // ── Hoja única de gráficas ─────────────────────────────────
+      const hasCharts = this.activeVizTypes.has('bar') || this.activeVizTypes.has('line') || this.activeVizTypes.has('pie');
+      if (hasCharts && this.vizContainer) {
+        const { default: html2canvas } = await import('html2canvas');
+        await new Promise(r => setTimeout(r, 600));
+        const el = this.vizContainer.nativeElement as HTMLElement;
+        const chartHosts = Array.from(el.querySelectorAll<HTMLElement>('.chart-host'));
+
+        const activeChartTypes = (['bar', 'line', 'pie'] as VizType[])
+          .filter(t => this.activeVizTypes.has(t));
+        const chartLabels: Record<string, string> = { bar: 'Barras', line: 'Linea', pie: 'Pastel' };
+
+        const grafSheet = wb.addWorksheet('Graficas');
+
+        // Geometría fija de la hoja
+        const COLS      = 14;   // columnas visibles
+        const COL_W     = 10;   // ancho de columna (unidades Excel ≈ 70 px)
+        const COL_W_PX  = 70;   // píxeles por columna (aproximado)
+        const ROW_H_PT  = 18;   // altura de fila en puntos
+        const ROW_H_PX  = Math.round(ROW_H_PT * 96 / 72); // ≈ 24 px por fila
+
+        for (let c = 1; c <= COLS; c++) grafSheet.getColumn(c).width = COL_W;
+
+        const IMG_W_PX = COLS * COL_W_PX; // ancho total de la imagen ≈ 980 px
+        let rowCursor = 0; // fila actual en índice 0-based (para tl.row)
+
+        for (let ci = 0; ci < Math.min(activeChartTypes.length, chartHosts.length); ci++) {
+          const label   = chartLabels[activeChartTypes[ci]] ?? `Grafica ${ci + 1}`;
+          const chartEl = chartHosts[ci];
+
+          // — Fila de título
+          const titleRow = grafSheet.getRow(rowCursor + 1); // exceljs es 1-indexed
+          titleRow.height = ROW_H_PT + 4;
+          const cell = titleRow.getCell(1);
+          cell.value = label;
+          cell.font  = { bold: true, size: 12, color: { argb: 'FF2563EB' } };
+          cell.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEFF6FF' } };
+          // Merge el título en todo el ancho
+          grafSheet.mergeCells(rowCursor + 1, 1, rowCursor + 1, COLS);
+          rowCursor++;
+
+          // — Capturar gráfica
+          const canvas = await html2canvas(chartEl, {
+            backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false,
+          });
+          const b64    = canvas.toDataURL('image/png').replace(/^data:image\/png;base64,/, '');
+          const imgBuf = Uint8Array.from(atob(b64), ch => ch.charCodeAt(0));
+          const imgH   = Math.round(IMG_W_PX * (canvas.height / canvas.width));
+
+          // — Insertar imagen en la hoja
+          const imgId = wb.addImage({ buffer: imgBuf, extension: 'png' });
+          grafSheet.addImage(imgId, {
+            tl: { col: 0, row: rowCursor } as any,
+            ext: { width: IMG_W_PX, height: imgH },
+          });
+
+          // — Definir alturas de las filas que cubre la imagen
+          const imgRowSpan = Math.ceil(imgH / ROW_H_PX);
+          for (let r = rowCursor + 1; r <= rowCursor + imgRowSpan; r++) {
+            grafSheet.getRow(r).height = ROW_H_PT;
+          }
+          rowCursor += imgRowSpan;
+
+          // — Fila de separación entre gráficas (excepto la última)
+          if (ci < activeChartTypes.length - 1) {
+            grafSheet.getRow(rowCursor + 1).height = ROW_H_PT;
+            rowCursor += 2;
+          }
+        }
+      }
+
+      // ── Hoja pivot si está activa ──────────────────────────────
+      if (this.activeVizTypes.has('pivot')) {
+        const pvSheet = wb.addWorksheet('Pivot');
+        pvSheet.addRow(cols.map(c => c.label));
+        const pvHeader = pvSheet.getRow(1);
+        pvHeader.eachCell(cell => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } };
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        });
+        this.result.rows.forEach(row => {
+          pvSheet.addRow(cols.map(col => {
+            const val = row[col.field];
+            if (val === null || val === undefined || val === '') return '';
+            const n = Number(val);
+            return !Number.isNaN(n) && col.type === 'measure' ? n : String(val ?? '');
+          }));
+        });
+      }
+
+      // ── Descargar ──────────────────────────────────────────────
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${this.reportName}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('[ReportBuilder] Error exportExcel:', err);
+      Swal.fire('Error', 'No se pudo exportar el Excel.', 'error');
+    } finally {
+      Swal.close();
+      this.exporting = false;
     }
-    const headers = this.result.columns.map((c) => c.label).join(',');
-    const lines = this.result.rows.map((r) =>
-      this.result!.columns.map((c) => JSON.stringify(r[c.field] ?? '')).join(',')
-    );
-    const csv = [headers, ...lines].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${this.reportName}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   }
 
-  /**
-   * Captura el área de visualización (tabla + gráficas + KPIs) como Canvas
-   * usando html2canvas. Dynamic import para no inflar el bundle inicial.
-   */
   private async captureVizCanvas(): Promise<HTMLCanvasElement | null> {
-    if (!this.result || !this.vizContainer) {
-      return null;
-    }
+    if (!this.result || !this.vizContainer) return null;
     const { default: html2canvas } = await import('html2canvas');
-    // Esperar 1 tick para que ECharts termine de pintar antes de capturar.
-    await new Promise((r) => setTimeout(r, 100));
-    const el = this.vizContainer.nativeElement;
-    return await html2canvas(el, {
-      backgroundColor: '#ffffff',
-      scale: 2, // doble resolución para que el PDF/PNG no salga pixelado
-      useCORS: true,
-      logging: false,
-    });
+    await new Promise(r => setTimeout(r, 300));
+    return this.captureExpanded(this.vizContainer.nativeElement, html2canvas);
+  }
+
+  private async captureExpanded(
+    el: HTMLElement,
+    html2canvas: (el: HTMLElement, opts: object) => Promise<HTMLCanvasElement>
+  ): Promise<HTMLCanvasElement> {
+    type S = { t: HTMLElement; ov: string; h: string; mh: string };
+    const saved: S[] = [];
+    const expand = (t: HTMLElement) => {
+      saved.push({ t, ov: t.style.overflow, h: t.style.height, mh: t.style.maxHeight });
+      t.style.overflow  = 'visible';
+      t.style.height    = t.scrollHeight + 'px';
+      t.style.maxHeight = 'none';
+    };
+    // Expand el target y todos los ancestros que recorten overflow
+    expand(el);
+    let node: HTMLElement | null = el.parentElement;
+    while (node && node !== document.body) {
+      const cs = window.getComputedStyle(node);
+      if (['hidden', 'auto', 'scroll'].includes(cs.overflow) ||
+          ['hidden', 'auto', 'scroll'].includes(cs.overflowY)) {
+        expand(node);
+      }
+      node = node.parentElement;
+    }
+    await new Promise(r => setTimeout(r, 80));
+    try {
+      return await html2canvas(el, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
+    } finally {
+      saved.forEach(s => { s.t.style.overflow = s.ov; s.t.style.height = s.h; s.t.style.maxHeight = s.mh; });
+    }
   }
 
   async exportPng(): Promise<void> {
-    if (!this.result || this.exporting) {
-      return;
-    }
+    if (!this.result || this.exporting) return;
     this.exporting = true;
+    Swal.fire({ title: 'Generando imagen…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
       const canvas = await this.captureVizCanvas();
-      if (!canvas) {
-        return;
-      }
+      if (!canvas) return;
       canvas.toBlob((blob) => {
-        if (!blob) {
-          return;
-        }
+        if (!blob) return;
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -413,55 +574,373 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       console.error('[ReportBuilder] Error exportPng:', err);
       Swal.fire('Error', 'No se pudo exportar la imagen.', 'error');
     } finally {
+      Swal.close();
       this.exporting = false;
     }
   }
 
   async exportPdf(): Promise<void> {
-    if (!this.result || this.exporting) {
-      return;
-    }
+    if (!this.result || this.exporting) return;
     this.exporting = true;
+    Swal.fire({ title: 'Generando PDF…', html: 'Capturando visualizaciones…', allowOutsideClick: false, allowEscapeKey: false, didOpen: () => Swal.showLoading() });
     try {
-      const canvas = await this.captureVizCanvas();
-      if (!canvas) {
-        return;
-      }
       const { default: jsPDF } = await import('jspdf');
-      // PDF landscape A4 (842 × 595 puntos)
+      const { default: autoTable } = await import('jspdf-autotable');
+
       const pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const margin = 24;
+      const W = pdf.internal.pageSize.getWidth();   // 841.89
+      const H = pdf.internal.pageSize.getHeight();  // 595.28
+      const M = 24;
+      const HEADER_H = 90;
+      const FOOTER_H = 22;
 
-      // Header del PDF
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(14);
-      pdf.text(this.reportName, margin, margin + 8);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(9);
-      const subtitle: string[] = [];
-      subtitle.push(`Fuente: ${this.source?.label || this.source?.id || '—'}`);
-      if (this.dateFrom || this.dateTo) {
-        subtitle.push(`Rango: ${this.dateFrom || '—'} a ${this.dateTo || '—'}`);
+      const drawPageHeader = () => {
+        pdf.setFillColor(37, 99, 235);
+        pdf.rect(0, 0, W, 52, 'F');
+        pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(16);
+        pdf.setTextColor(255, 255, 255);
+        // Truncar título si es muy largo para que no solape con "KATUQ"
+        const titleMax = W - M * 2 - 60;
+        const titleLines = pdf.splitTextToSize(this.reportName, titleMax);
+        pdf.text(titleLines[0], M, 33);
+        pdf.setFontSize(10);
+        pdf.setTextColor(191, 219, 254);
+        pdf.text('KATUQ', W - M - 36, 33);
+
+        pdf.setFillColor(239, 246, 255);
+        pdf.rect(0, 52, W, 28, 'F');
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(8.5);
+        pdf.setTextColor(30, 64, 175);
+        const metaParts: string[] = [`Fuente: ${this.source?.label || '-'}`];
+        if (this.dateFrom || this.dateTo) metaParts.push(`Periodo: ${this.dateFrom || '-'} al ${this.dateTo || '-'}`);
+        if (this.result?.meta) {
+          const { totalRows, totalDocsScanned, totalDocsAfterFilter } = this.result.meta as any;
+          const filtered = totalDocsAfterFilter != null && totalDocsAfterFilter !== totalDocsScanned
+            ? `${totalRows} filas (de ${totalDocsAfterFilter} filtrados / ${totalDocsScanned} total)`
+            : `${totalRows} filas`;
+          metaParts.push(filtered);
+        }
+        metaParts.push(`Generado: ${new Date().toLocaleString('es-CO')}`);
+        // Usar solo ASCII: ni flechas ni rayas que Helvetica no soporta
+        const metaStr = metaParts.join('   |   ');
+        const metaMaxW = W - M * 2;
+        // Medir manualmente para truncar sin splitTextToSize (que falla con ciertos chars)
+        let metaDisplay = metaStr;
+        while (pdf.getTextWidth(metaDisplay) > metaMaxW && metaDisplay.length > 10) {
+          metaDisplay = metaDisplay.slice(0, -4) + '...';
+        }
+        pdf.text(metaDisplay, M, 70);
+        pdf.setDrawColor(219, 234, 254);
+        pdf.line(M, 82, W - M, 82);
+      };
+
+      const drawPageFooter = () => {
+        pdf.setFillColor(248, 250, 252);
+        pdf.rect(0, H - FOOTER_H, W, FOOTER_H, 'F');
+        pdf.setDrawColor(226, 232, 240);
+        pdf.line(0, H - FOOTER_H, W, H - FOOTER_H);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(148, 163, 184);
+        pdf.text('Katuq · Reportes Inteligentes', M, H - 7);
+        // El número de página se añade al final cuando se conoce el total
+      };
+
+      drawPageHeader();
+      let curY = HEADER_H;
+
+      const hasKpi = this.activeVizTypes.has('kpi');
+
+      // Gráficas: capturar cada .chart-host individualmente para evitar recortes por overflow
+      const hasChart = this.activeVizTypes.has('bar') || this.activeVizTypes.has('line') || this.activeVizTypes.has('pie');
+      const hasTable = this.activeVizTypes.has('table') || this.activeVizTypes.has('pivot');
+      if (hasChart && this.vizContainer) {
+        const { default: html2canvas } = await import('html2canvas');
+        // Dar tiempo a ECharts para pintar todas las gráficas activas
+        await new Promise(r => setTimeout(r, 600));
+        const el = this.vizContainer.nativeElement as HTMLElement;
+        const chartHosts = Array.from(el.querySelectorAll<HTMLElement>('.chart-host'));
+
+        // Máximo alto de contenido en una página limpia
+        const maxContentH = H - HEADER_H - FOOTER_H - 10;
+
+        for (const chartEl of chartHosts) {
+          const chartCanvas = await html2canvas(chartEl, {
+            backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false,
+          });
+
+          const cW = chartCanvas.width;
+          const cH = chartCanvas.height;
+          const pdfImgW = W - M * 2;
+
+          // Altura en PDF manteniendo la proporción original
+          let imgW = pdfImgW;
+          let imgH = imgW * (cH / cW);
+
+          // Si la imagen es más alta que toda una página de contenido, escalarla para que entre
+          if (imgH > maxContentH) {
+            imgH = maxContentH;
+            imgW = imgH * (cW / cH);
+          }
+
+          // Si no cabe en el espacio restante de esta página, pasar a una nueva
+          const availNow = H - curY - FOOTER_H - 10;
+          if (imgH > availNow) {
+            drawPageFooter(); pdf.addPage(); drawPageHeader(); curY = HEADER_H;
+          }
+
+          // Centrar horizontalmente cuando el ancho se redujo por la escala
+          const xOffset = M + (pdfImgW - imgW) / 2;
+          pdf.addImage(chartCanvas.toDataURL('image/png'), 'PNG', xOffset, curY, imgW, imgH);
+          curY += imgH + 12;
+        }
       }
-      subtitle.push(`Generado: ${new Date().toLocaleString('es-CO')}`);
-      pdf.text(subtitle.join('   ·   '), margin, margin + 24);
 
-      // Imagen del viz, escalada para caber en la página debajo del header
-      const headerSpace = 48;
-      const imgWidth = pageWidth - margin * 2;
-      const imgHeight = Math.min(canvas.height * (imgWidth / canvas.width), pageHeight - margin * 2 - headerSpace);
-      const imgData = canvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', margin, margin + headerSpace, imgWidth, imgHeight);
+      // Tabla de datos real con autoTable
+      if (hasTable && this.result.rows.length > 0) {
+        if (hasChart && (H - curY - FOOTER_H) < 80) {
+          drawPageFooter(); pdf.addPage(); drawPageHeader(); curY = HEADER_H;
+        }
+        const cols = this.result.columns;
+        const tableW = W - M * 2;
+        autoTable(pdf, {
+          head: [cols.map(c => c.label)],
+          body: this.result.rows.map(row => cols.map(col => this.pdfFormatValue(row[col.field], col))),
+          startY: curY,
+          margin: { top: HEADER_H, bottom: FOOTER_H + 6, left: M, right: M },
+          tableWidth: tableW,
+          styles: { fontSize: 8, cellPadding: { top: 4, bottom: 4, left: 6, right: 6 }, overflow: 'linebreak', textColor: [31, 41, 55] as any, lineColor: [226, 232, 240] as any, lineWidth: 0.3 },
+          headStyles: { fillColor: [37, 99, 235] as any, textColor: [255, 255, 255] as any, fontStyle: 'bold', fontSize: 8.5, cellPadding: { top: 6, bottom: 6, left: 6, right: 6 } },
+          alternateRowStyles: { fillColor: [248, 250, 252] as any },
+          columnStyles: this.buildPdfColumnStyles(cols, tableW),
+          didDrawCell: (data: any) => {
+            if (data.column.index < cols.length - 1) {
+              const x = data.cell.x + data.cell.width;
+              const isHead = data.section === 'head';
+              pdf.setDrawColor(isHead ? 99 : 209, isHead ? 144 : 213, isHead ? 255 : 219);
+              pdf.setLineWidth(0.3);
+              pdf.line(x, data.cell.y, x, data.cell.y + data.cell.height);
+            }
+          },
+          didDrawPage: (data: any) => {
+            if (data.pageNumber > 1) drawPageHeader();
+            drawPageFooter();
+          },
+        });
+      } else {
+        drawPageFooter();
+      }
+
+      // KPI cards al final del PDF
+      if (hasKpi && this.result.rows.length > 0) {
+        const measCols = this.result.columns.filter(c => c.type === 'measure');
+        const firstRow = this.result.rows[0];
+        const kpiItems = measCols.map(col => ({ label: col.label, value: this.pdfFormatValue(firstRow[col.field], col) }));
+        const count = Math.min(kpiItems.length, 4);
+        const kpiW = (W - M * 2 - (count - 1) * 10) / count;
+
+        // Si no caben en el espacio restante, agregar nueva página
+        if (H - curY - FOOTER_H - 10 < 66) {
+          drawPageFooter(); pdf.addPage(); drawPageHeader(); curY = HEADER_H;
+        }
+
+        kpiItems.slice(0, count).forEach((kpi, i) => {
+          const x = M + i * (kpiW + 10);
+          pdf.setFillColor(255, 255, 255); pdf.setDrawColor(229, 231, 235);
+          pdf.rect(x, curY, kpiW, 54, 'FD');
+          pdf.setFillColor(37, 99, 235); pdf.rect(x, curY, 4, 54, 'F');
+
+          // Label: uppercase, truncado al ancho de la tarjeta
+          pdf.setFont('helvetica', 'normal'); pdf.setFontSize(7); pdf.setTextColor(107, 114, 128);
+          const labelFit = pdf.splitTextToSize(kpi.label.toUpperCase(), kpiW - 20);
+          pdf.text(labelFit[0], x + 12, curY + 16);
+
+          // Valor: font size reducido automáticamente si el texto es largo
+          pdf.setTextColor(17, 24, 39);
+          const valueMaxW = kpiW - 20;
+          let valueFontSize = 15;
+          pdf.setFont('helvetica', 'bold');
+          pdf.setFontSize(valueFontSize);
+          while (pdf.getTextWidth(kpi.value) > valueMaxW && valueFontSize > 8) {
+            valueFontSize -= 1;
+            pdf.setFontSize(valueFontSize);
+          }
+          pdf.text(kpi.value, x + 12, curY + 40);
+        });
+        curY += 66;
+
+        // Si quedó espacio sin footer en esta última página, dibujarlo
+        drawPageFooter();
+      }
+
+      // Añadir número de página a todas las páginas ahora que se conoce el total
+      const totalPages = pdf.getNumberOfPages();
+      for (let p = 1; p <= totalPages; p++) {
+        pdf.setPage(p);
+        pdf.setFont('helvetica', 'normal');
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(148, 163, 184);
+        pdf.text(`${p} / ${totalPages}`, W - M, H - 7, { align: 'right' });
+      }
 
       pdf.save(`${this.reportName}.pdf`);
     } catch (err) {
       console.error('[ReportBuilder] Error exportPdf:', err);
       Swal.fire('Error', 'No se pudo exportar el PDF.', 'error');
     } finally {
+      Swal.close();
       this.exporting = false;
     }
+  }
+
+  private formatDateStr(s: string): string {
+    const dayM = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dayM) return `${dayM[3]}/${dayM[2]}/${dayM[1]}`;
+    const monM = s.match(/^(\d{4})-(\d{2})$/);
+    if (monM) return `${monM[2]}/${monM[1]}`;
+    return s;
+  }
+
+  private pdfFormatValue(value: unknown, col: ReportColumn): string {
+    if (value === null || value === undefined || value === '') return '—';
+    if (col.dataType === 'date') return this.formatDateStr(String(value));
+    const n = Number(value);
+    if (Number.isNaN(n)) return String(value);
+    if (col.format === 'currency') return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n);
+    if (col.format === 'percent') return `${(n * 100).toFixed(2)}%`;
+    if (col.type === 'measure') return new Intl.NumberFormat('es-CO').format(n);
+    return String(value);
+  }
+
+  private buildPdfColumnStyles(cols: ReportColumn[], tableW: number): Record<number, object> {
+    const styles: Record<number, object> = {};
+    const MEAS_W = 85; // ancho fijo por columna de medida
+    const measCount = cols.filter(c => c.type === 'measure').length;
+    const dimCount  = cols.filter(c => c.type === 'dimension').length;
+    const totalMeasW = measCount * MEAS_W;
+    const dimW = dimCount > 0 ? Math.max(60, (tableW - totalMeasW) / dimCount) : tableW / cols.length;
+
+    cols.forEach((col, i) => {
+      styles[i] = col.type === 'measure'
+        ? { halign: 'right' as const,  cellWidth: MEAS_W }
+        : { halign: 'left'  as const,  cellWidth: dimW   };
+    });
+    return styles;
+  }
+
+  publish(): void {
+    if (this.isPublic && this.reportId) {
+      this.showPublishUrl();
+      return;
+    }
+    if (!this.source) {
+      Swal.fire('Atención', 'Guarda el reporte antes de publicarlo.', 'warning');
+      return;
+    }
+    this.publishing = true;
+    this.isPublic = true;
+    const spec = this.buildSpec();
+    if (!spec) { this.publishing = false; return; }
+    const userStr = localStorage.getItem('user');
+    let ownerEmail = '';
+    let ownerCompany = '';
+    try {
+      const u = userStr ? JSON.parse(userStr) : null;
+      ownerEmail = u?.email || '';
+      ownerCompany = u?.company || '';
+    } catch { /* noop */ }
+
+    const report: SavedReport = {
+      id: this.reportId || undefined,
+      name: this.reportName,
+      source: this.source.id,
+      spec,
+      viz: { type: this.vizType, activeTypes: [...this.activeVizTypes] },
+      dateFrom: this.dateFrom || undefined,
+      dateTo: this.dateTo || undefined,
+      ownerEmail,
+      ownerCompany,
+      isPublic: true,
+      visibleToUsers: this.visibleToUsers.length ? this.visibleToUsers : undefined,
+      visibleToRoles: this.visibleToRoles.length ? this.visibleToRoles : undefined,
+    };
+
+    this.reportsService
+      .save(report)
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          this.isPublic = false;
+          Swal.fire('Error', err?.error?.message || 'No se pudo publicar.', 'error');
+          return of(null);
+        }),
+        finalize(() => (this.publishing = false)),
+      )
+      .subscribe((saved) => {
+        if (!saved) return;
+        this.reportId = saved.id || this.reportId;
+        this.showPublishUrl();
+      });
+  }
+
+  private showPublishUrl(): void {
+    const url = `${window.location.origin}/r/${this.reportId}`;
+    Swal.fire({
+      title: 'Reporte publicado',
+      html: `
+        <p style="font-size:13px;color:#6b7280;margin-bottom:12px;">
+          Cualquier persona con el enlace puede ver este reporte.
+        </p>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="pub-url" readonly value="${url}"
+            style="flex:1;padding:8px 10px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;background:#f9fafb;color:#111827;" />
+          <button id="copy-btn" type="button"
+            style="padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;white-space:nowrap;">
+            Copiar
+          </button>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px;justify-content:center;">
+          <a href="${url}" target="_blank"
+            style="font-size:12px;color:#2563eb;text-decoration:none;">
+            <i class="fa fa-external-link-alt"></i> Abrir enlace
+          </a>
+          <span style="color:#d1d5db;">·</span>
+          <button id="unpublish-btn" type="button"
+            style="font-size:12px;color:#6b7280;background:none;border:none;cursor:pointer;padding:0;">
+            Despublicar
+          </button>
+        </div>
+      `,
+      showConfirmButton: false,
+      showCloseButton: true,
+      didOpen: () => {
+        document.getElementById('copy-btn')?.addEventListener('click', () => {
+          navigator.clipboard.writeText(url).then(() => {
+            const btn = document.getElementById('copy-btn') as HTMLButtonElement;
+            if (btn) { btn.textContent = '¡Copiado!'; btn.style.background = '#16a34a'; }
+          });
+        });
+        document.getElementById('unpublish-btn')?.addEventListener('click', () => {
+          Swal.close();
+          this.unpublish();
+        });
+      },
+    });
+  }
+
+  private unpublish(): void {
+    if (!this.reportId) return;
+    this.isPublic = false;
+    const report = { id: this.reportId } as any;
+    this.reportsService
+      .save({ ...report, isPublic: false })
+      .pipe(takeUntil(this.destroy$), catchError(() => of(null)))
+      .subscribe((saved) => {
+        if (saved) Swal.fire({ icon: 'success', title: 'Reporte despublicado', timer: 1500, showConfirmButton: false });
+        else this.isPublic = true;
+      });
   }
 
   goHome(): void {

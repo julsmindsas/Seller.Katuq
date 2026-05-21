@@ -4,31 +4,40 @@
     <button type="button" class="btn-icon" (click)="goHome()" title="Volver">
       <i class="fa fa-arrow-left"></i>
     </button>
+
     <input type="text" class="title-input" [(ngModel)]="reportName" placeholder="Nombre del reporte" />
 
-    <!-- Filtro global de fecha -->
     <div class="date-filter">
-      <label class="date-label"><i class="fa fa-calendar me-1"></i>Desde</label>
-      <input type="date" class="date-input" [(ngModel)]="dateFrom" />
-      <label class="date-label">Hasta</label>
-      <input type="date" class="date-input" [(ngModel)]="dateTo" />
+      <i class="fa fa-calendar date-icon"></i>
+      <input type="date" class="date-input" [(ngModel)]="dateFrom" title="Desde" />
+      <span class="date-sep">—</span>
+      <input type="date" class="date-input" [(ngModel)]="dateTo" title="Hasta" />
     </div>
 
     <span class="spacer"></span>
-    <button type="button" class="btn-secondary" (click)="exportCsv()" [disabled]="!result" title="Exportar datos a CSV">
-      <i class="fa fa-file-csv me-1"></i> CSV
+
+    <button type="button" class="btn-outline" (click)="exportExcel()" [disabled]="!result || exporting">
+      <i class="fa fa-file-excel"></i> Excel
     </button>
-    <button type="button" class="btn-secondary" (click)="exportPng()" [disabled]="!result || exporting" title="Exportar gráfica + tabla como imagen PNG">
-      <i class="fa fa-file-image me-1"></i> PNG
+    <button type="button" class="btn-outline" (click)="exportPng()" [disabled]="!result || exporting">
+      <i class="fa fa-file-image"></i> PNG
     </button>
-    <button type="button" class="btn-secondary" (click)="exportPdf()" [disabled]="!result || exporting" title="Exportar reporte completo como PDF">
-      <i class="fa fa-file-pdf me-1"></i> PDF
+    <button type="button" class="btn-outline" (click)="exportPdf()" [disabled]="!result || exporting">
+      <i class="fa fa-file-pdf"></i> PDF
     </button>
-    <button type="button" class="btn-secondary" (click)="openShareModal()" title="Configurar permisos del reporte">
-      <i class="fa fa-users me-1"></i> Compartir
+    <button type="button" class="btn-outline" (click)="openShareModal()">
+      <i class="fa fa-users"></i> Compartir
     </button>
-    <button type="button" class="btn-secondary" (click)="save()" [disabled]="saving">
-      <i class="fa fa-floppy-disk me-1"></i> Guardar
+    <button type="button"
+      class="btn-publish"
+      [class.is-published]="isPublic"
+      (click)="publish()"
+      [disabled]="publishing">
+      <i class="fa" [class.fa-globe]="!isPublic" [class.fa-check-circle]="isPublic"></i>
+      {{ publishing ? 'Publicando…' : (isPublic ? 'Publicado' : 'Publicar') }}
+    </button>
+    <button type="button" class="btn-outline" (click)="save()" [disabled]="saving">
+      <i class="fa fa-floppy-disk"></i> {{ saving ? 'Guardando…' : 'Guardar' }}
     </button>
     <button type="button" class="btn-primary" (click)="run()" [disabled]="running">
       <i class="fa" [class.fa-play]="!running" [class.fa-spinner]="running" [class.fa-spin]="running"></i>
