@@ -260,6 +260,19 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Deuda:** spec 003.8 futura para armonizar shapes — requiere migración de datos + actualizar lectores Angular + plan de rollout en feature flag.
 - **Mientras tanto:** tenants nuevos deben usar SOLO el sync incremental (003.3). NO mezclar paths.
 
+### 2026-05-21 — D-026: REVISION GUIA CEREZA — fixes Puntos 1, 5, 6
+
+- **Contexto:** el comerciante de OH MY STORE envió `REVISION GUIA CEREZA.docx` con 7 puntos. Ver `specs/004.5-revision-guia-cereza/spec.md` para detalle.
+- **Punto 1 (cache stock):** detectada causa raíz REAL — no era cache desync sino **1,666 docs duplicados en `inventory` collection** para mismo `(productoId, idBodega)` en OH MY STORE. `productStockHelper.enrichProductsWithStock` dedupea first-wins → cuando el primer doc tenía qty=0 y el max-doc qty>0, descartaba el correcto → 106 productos visibles en venta asistida con 0 unidades en lugar del stock real.
+  - **Fix A aplicado:** cambio dedup `first-wins → MAX-WINS` en `services/productStockHelper.js:73-110`. Verificado 30/30 productos del sample.
+  - **Fix B disponible (no aplicado):** `scripts/cleanup-inventory-duplicates.js` con dry-run para limpiar los 5,375 docs duplicados. Decisión del usuario cuándo correrlo.
+  - **Fix C diferido:** writer `osmosisProductSyncService._syncInventory` sigue usando `.add()` con auto-id — futura spec 003.8 cambia a docId predictible `${pid}_${bod}` con merge.
+- **Punto 5 (auto-push solo si pagado):** agregado gate `requirePaid` (default `true`) en nodo `services/flows/nodes/osmosis/osmosis-order-create.action.js`. Si `!isPaid` y `requirePaid`, skip silencioso con item `{skipped: true, reason: 'not_paid'}`. Operador hace push manual desde módulo logística (endpoint REST directo, NO afectado).
+- **Punto 6 (estado "PARA DESPACHAR"):** resuelto indirectamente por P5. Cereza marca "PARA DESPACHAR" cuando recibe `is_paid: true`; el gate garantiza que solo se pushean pagadas. Nota adicional sobre "no marcado como se produce" queda fuera de scope (campo a nivel producto, requiere coordinación con Cereza).
+- **Punto 2 (categorías):** standby por instrucción del usuario.
+- **Punto 3 (China + Tecnología en web):** investigado, 0 productos OH MY STORE tienen campos `proveedor`/`origen`/`fabricante` con esos valores; tampoco aparece en marca/etiquetas/categorías ni en `integraciones.osmosis`. **Pendiente clarificación**: cómo se identifican esos productos en Cereza.
+- **Puntos 4 y 7:** sin acción (P4 funciona, P7 requiere confirmación humana con Michael Pratt).
+
 ### 2026-05-21 — D-025: Fechas de retiro código legacy WC (003.7 Fase 4)
 
 - **Decisión:** registrar fechas concretas de retiro (Art XII constitución — feature flags y código transitorio llevan dueño y fecha).
