@@ -106,14 +106,20 @@ comerciante tendría que reportarlo y re-correr el script.
   de logística (que llama el endpoint REST `osmosis-order-create` directo,
   NO el flow — no afectado por el gate).
 
-### ✅ Punto 6 — Pedidos deben llegar a Cereza "PARA DESPACHAR" (no "SIN PRODUCIR")
+### ✅ Punto 6 — Estados de pedido bien mapeados Katuq ↔ Cereza
 
-**Resuelto indirectamente por P5**: el comportamiento de Cereza es:
-- `is_paid: true` → orden marcada "PARA DESPACHAR".
-- `is_paid: false` → orden marcada "SIN PRODUCIR".
+**Corrección de nomenclatura (2026-05-22)** — la lógica real es:
 
-Con el gate de P5 activo, solo se pushean órdenes pagadas → Cereza recibe
-`is_paid: true` → "PARA DESPACHAR".
+| Pedido Shopify | Estado interno Katuq | Auto-push Cereza | Estado en Cereza |
+|---|---|---|---|
+| NO pagado | "PARA DESPACHAR" (queda en Katuq, operador gestiona manual) | ❌ NO | (no entra) |
+| Pagado | (Katuq lo marca pagado) | ✅ SÍ | **"DESPACHADO"** |
+
+**Resuelto indirectamente por P5**: con el gate `requirePaid`, ningún pedido
+NO pagado entra a Cereza con estado "SIN PRODUCIR" (situación previa que
+reportaste). Los no pagados se quedan en Katuq con estado "PARA DESPACHAR"
+para que el operador los gestione manual desde el módulo de logística
+cuando confirme pago.
 
 **Nota adicional del usuario**: "no están marcados en la creación del
 producto, este producto se produce". Esto es un campo a nivel de producto
