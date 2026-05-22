@@ -204,13 +204,14 @@ export const SOURCE_CATALOG: SourceDef[] = [
       { id: 'ultima_factura_fecha', label: 'Última Factura', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
       { id: 'fecha_corte', label: 'Fecha Corte', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
       { id: 'universe_source', label: 'Fuente Universo', type: 'string', enumValues: ['wo', 'docs', 'docs-fallback'], group: 'Cartera' },
-      { id: 'split_method', label: 'Método split CxC/CxP', type: 'string', enumValues: ['cliente_puro', 'proveedor_puro', 'ambos_prorrateo_docs', 'ambos_50_50', 'empleado', 'socio', 'sin_clasificar', 'zero'], group: 'Cartera' },
+      { id: 'cxc_source', label: 'Fuente CxC/CxP', type: 'string', enumValues: ['endpoint', 'endpoint_empty', 'endpoint_error'], group: 'Cartera' },
+      { id: 'run_id', label: 'Run ID', type: 'string', group: 'Cartera' },
     ],
     measures: [
-      // Saldo
-      { id: 'saldo', label: 'Saldo Total (neto WO)', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
-      { id: 'saldo_estimado_cxc', label: 'Saldo CxC (estimado)', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
-      { id: 'saldo_estimado_cxp', label: 'Saldo CxP (estimado)', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
+      // Saldo (REAL desde cuentasPorCobrar — movimientos pendientes desglosados)
+      { id: 'saldo_cxc', label: 'Saldo CxC', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
+      { id: 'saldo_cxp', label: 'Saldo CxP', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
+      { id: 'saldo', label: 'Saldo Total (neto)', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
       { id: 'terceros', label: 'Terceros', aggs: ['count', 'count_distinct'], format: 'number' },
       // Aging
       { id: 'saldo_corriente', label: 'Saldo Corriente', aggs: ['sum', 'avg'], format: 'currency' },
