@@ -48,24 +48,45 @@ El usuario pidió explícitamente **dejar en standby**. Si surgía como
 trabajo fácil del Punto 3, lo revisaría — pero P3 requirió clarificación
 y no llegué a tocar P2.
 
-### ❓ Punto 3 — Productos China + Tecnología deben aparecer en web
+### ✅ Punto 3 — Productos China + Tecnología deben aparecer en web (RESUELTO)
 
-**Investigación realizada**: 0 productos en `OH MY STORE` tienen campos
-`proveedor`, `idProveedor`, `origen`, `fabricante`, `pais_origen` con valores
-"china" o "tecnologia". Tampoco aparece en `marca`, `etiquetas` o
-`categorias`. `integraciones.osmosis` solo expone 4 campos (id, reference,
-syncSource, lastSync) — no incluye proveedor sub-id de Cereza.
+**Clarificación del usuario**: "China" y "Tecnología" en la jerga del
+comerciante son los **productos NO-Cereza con stock** — productos propios,
+del aliado Aliaddo, y casos mixtos. NO son categorías, ni un campo
+específico de Cereza, ni un proveedor con nombre literal.
 
-**Necesita clarificación del usuario**:
-- ¿Cómo se identifican esos productos en Cereza? ¿Tienen un campo
-  específico (proveedor_nombre, supplier_code, tag) que llega al sync?
-- ¿Es un filtro lógico en la página web (Shopify collection) que NO
-  depende de un campo del producto?
-- ¿O es un campo en Cereza que NO está sincronizando a Katuq y hay que
-  expandir `osmosisProductSyncService` para traerlo?
+**Audit OH MY STORE**:
+- 91 productos NO-Cereza en total (criterio: sin `integraciones.osmosis.id`).
+  - 81 con `integraciones.fulfillment` (origen Aliaddo).
+  - 8 propios (sin integraciones).
+  - 1 mixto fulfillment+shopify.
+  - 1 solo shopify.
+- **83 productos** tenían stock > 0 pero no se podían vender por flags
+  `exposicion.activo: false/undefined` y `disponibilidad.activo: false/undefined`.
 
-**Pendiente**: el usuario debe aclarar cómo se reconocen estos productos
-para implementar el fix.
+**Fix aplicado en prod (2026-05-22)**: script
+`functions/scripts/activate-no-cereza-products-for-sale.js --apply --company "OH MY STORE"`
+ejecutado en EC2.
+
+Para cada producto NO-Cereza con stock > 0 (o no inventariable), activó los
+flags faltantes (idempotente — no toca los que ya estaban true):
+- `marketplace.paginaWeb`
+- `marketplace.puntoDeVenta` (venta asistida)
+- `marketplace.sellerCenter`
+- `exposicion.{activo, activar, disponible}`
+- `disponibilidad.activo`
+- `date_edit` + `user_edit: 'revision-guia-cereza-p3'` (auditoría)
+
+**Resultado verificado**:
+- 83 productos actualizados en una sola operación batch.
+- Verificación post-update con 5 muestras (JCR4011, JCR4012, JCR4004-,
+  JCR4156, JCR4206): **TODOS quedaron con los 4 flags críticos en `true`**.
+- Re-audit: **0 productos no-Cereza con stock pendientes de activación**.
+
+**Deuda 004.5.1** (futura): registrar el script como cron del sistema para
+activar automáticamente nuevos productos no-Cereza importados de Aliaddo o
+creados manualmente. Sin esto, cada vez que aparezca un producto nuevo el
+comerciante tendría que reportarlo y re-correr el script.
 
 ### ✅ Punto 4 — Pedido cuando se compra llega perfecto a Katuq
 
