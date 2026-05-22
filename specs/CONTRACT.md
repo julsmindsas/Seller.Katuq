@@ -260,6 +260,15 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Deuda:** spec 003.8 futura para armonizar shapes — requiere migración de datos + actualizar lectores Angular + plan de rollout en feature flag.
 - **Mientras tanto:** tenants nuevos deben usar SOLO el sync incremental (003.3). NO mezclar paths.
 
+### 2026-05-22 — D-027: Cleanup inventory duplicates DIFERIDO como deuda
+
+- **Contexto:** audit del 003.7 / D-026 reveló 3,709 docs "perdedores" en `inventory` collection de OH MY STORE (1,666 keys con N≥2 docs por mismo `productoId+idBodega`; caso peor producto `53A3SL65FUNkL9NKAD4X` con 12 docs). Causa: bug histórico en `osmosisProductSyncService._syncInventory` que con race condition o fallo de query creaba doc auto-id en vez de actualizar el existente. Cron 6h × meses → acumulación.
+- **Impacto operativo HOY:** ✅ helper `productStockHelper.enrichProductsWithStock` ya maneja correctamente (MAX-WINS dedup post fix D-026 P1). Venta asistida y POS muestran stock correcto.
+- **Costo de NO limpiar:** ~40% reads extra en Firestore (12,859 docs vs 9,150 esperados). Queries de inventory más lentos. Riesgo de que código nuevo que sume sin dedup arroje números inflados.
+- **Decisión del usuario (2026-05-22):** dejar como deuda. NO ejecutar `cleanup-inventory-duplicates.js --apply` ahora. Re-evaluar cuando el costo Firestore amerite o haya ventana operativa cómoda (off-hours fin de semana).
+- **Script listo:** `functions/scripts/cleanup-inventory-duplicates.js` (idempotente, dry-run por default, picks winner por qty desc → updatedAt desc → createdAt desc).
+- **Fix definitivo del writer:** spec 003.8 futura — `osmosisProductSyncService._syncInventory` debe usar docId predictible `${productoId}_${idBodega}` con `.set({merge:true})` para prevenir nuevos duplicados.
+
 ### 2026-05-21 — D-026: REVISION GUIA CEREZA — fixes Puntos 1, 5, 6
 
 - **Contexto:** el comerciante de OH MY STORE envió `REVISION GUIA CEREZA.docx` con 7 puntos. Ver `specs/004.5-revision-guia-cereza/spec.md` para detalle.
