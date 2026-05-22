@@ -278,6 +278,25 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 ---
 
+
+### 2026-05-21 — D-WOO-360-MVP: Sello operativo WooCommerce 360 plug-and-play
+
+- **Contexto:** suite `scripts/test-woocommerce-360-acceptance.js` ejecutada con resultado 8/8 PASS contra Firestore Emulator + commit hash `0fc59cd7`.
+- **Decisión:** Spec 003 marco + sub-specs 003.1..003.6 done. Goal del usuario *"cualquier comerciante WooCommerce puede integrar facilísimo"* CUMPLIDO técnicamente.
+- **Habilitado:** invitación a primer comerciante piloto (M-WOO-02 del marco).
+- **Tests results:**
+  - ✅ Test 1: Configurar Woo en /integrations
+  - ✅ Test 2: HMAC rechaza POST sin firma
+  - ✅ Test 3: Dedup retorna duplicate en segundo POST
+  - ✅ Test 4: Cron sync productos crea producto en Katuq
+  - ✅ Test 5: Webhook order.created se procesa sin crashear pipeline
+  - ✅ Test 6: Soft delete desactiva sin borrar
+  - ✅ Test 7: Nodo Woo sin config falla con WC-CONFIG-MISSING
+  - ✅ Test 8: Template plug-and-play instancia flow en ≤ 2s
+- **Compromiso post-sello:** monitorear con `flow-cron-monitoring-playbook.md` durante primer mes con piloto. Cualquier ajuste futuro va por nueva spec.
+
+---
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
