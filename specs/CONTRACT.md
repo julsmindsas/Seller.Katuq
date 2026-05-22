@@ -277,7 +277,11 @@ Orden = prioridad. La spec piloto siempre encabeza.
   - **Fix B disponible (no aplicado):** `scripts/cleanup-inventory-duplicates.js` con dry-run para limpiar los 5,375 docs duplicados. Decisión del usuario cuándo correrlo.
   - **Fix C diferido:** writer `osmosisProductSyncService._syncInventory` sigue usando `.add()` con auto-id — futura spec 003.8 cambia a docId predictible `${pid}_${bod}` con merge.
 - **Punto 5 (auto-push solo si pagado):** agregado gate `requirePaid` (default `true`) en nodo `services/flows/nodes/osmosis/osmosis-order-create.action.js`. Si `!isPaid` y `requirePaid`, skip silencioso con item `{skipped: true, reason: 'not_paid'}`. Operador hace push manual desde módulo logística (endpoint REST directo, NO afectado).
-- **Punto 6 (estado "PARA DESPACHAR"):** resuelto indirectamente por P5. Cereza marca "PARA DESPACHAR" cuando recibe `is_paid: true`; el gate garantiza que solo se pushean pagadas. Nota adicional sobre "no marcado como se produce" queda fuera de scope (campo a nivel producto, requiere coordinación con Cereza).
+- **Punto 6 (mapeo de estados Katuq ↔ Cereza):** corrección de nomenclatura (2026-05-22) — la lógica real es:
+  - Pedido NO pagado → Katuq lo guarda en estado interno **"PARA DESPACHAR"** (queda en Katuq esperando gestión manual del operador desde módulo logística). NO se pushea a Cereza.
+  - Pedido pagado → auto-push a Cereza. Cereza lo recibe con `is_paid: true` y lo marca **"DESPACHADO"**.
+  - El gate `requirePaid` de P5 garantiza que ningún pedido NO pagado entre a Cereza con estado "SIN PRODUCIR" (situación previa que el comerciante reportó).
+  - Nota adicional sobre "no marcado como se produce" queda fuera de scope (campo a nivel producto, requiere coordinación con Cereza).
 - **Punto 2 (categorías):** standby por instrucción del usuario.
 - **Punto 3 (China + Tecnología en web):** clarificado por el usuario — son los productos NO-Cereza con stock (Aliaddo + propios + mixtos). Audit OH MY STORE: 91 NO-Cereza, 83 con stock + flags `exposicion.activo` y `disponibilidad.activo` faltantes. **Fix aplicado en prod (2026-05-22)** con script `activate-no-cereza-products-for-sale.js --apply --company "OH MY STORE"`: 83 productos activados (paginaWeb, puntoDeVenta, sellerCenter, exposicion.{activo,activar,disponible}, disponibilidad.activo). Verificado 5 muestras + re-audit 0 remanentes. Deuda 004.5.1: registrar el script como cron del sistema para activación automática futura.
 - **Puntos 4 y 7:** sin acción (P4 funciona, P7 requiere confirmación humana con Michael Pratt).
