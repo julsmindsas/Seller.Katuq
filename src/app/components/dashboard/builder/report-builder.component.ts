@@ -1,5 +1,6 @@
 import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { VizTableComponent } from './widgets/viz-table.component';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Subject, of } from 'rxjs';
 import { catchError, finalize, takeUntil } from 'rxjs/operators';
@@ -64,6 +65,24 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   visibleToUsers: string[] = [];
   visibleToRoles: string[] = [];
 
+  // Límite de filas configurable (HARD_LIMIT backend = 10000)
+  rowsLimit: number = 1000;
+
+  // Comparativo de periodos (Harmony Lens punto 5)
+  compareMode: 'none' | 'prev_month' | 'prev_year' = 'none';
+
+  // Rol y email del usuario logueado — usado para mostrar banner de
+  // "solo verás tus ventas" cuando rol es Vendedor (Harmony Lens punto 5).
+  // El filtro real se aplica server-side en firestore.engine.runQuery().
+  userRole: string = '';
+  userEmail: string = '';
+  get isSeller(): boolean {
+    return /vendedor|asesor|seller/i.test(this.userRole || '');
+  }
+  get sourceHasSellerField(): boolean {
+    return !!(this.source && (this.source as any).sellerField);
+  }
+
   result: ReportResult | null = null;
   running = false;
   saving = false;
@@ -73,6 +92,40 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
 
   /** Contenedor de la visualización (table + chart + kpi). Capturable a imagen/PDF. */
   @ViewChild('vizContainer', { read: ElementRef }) vizContainer?: ElementRef<HTMLElement>;
+  @ViewChild(VizTableComponent) vizTableRef?: VizTableComponent;
+
+  /**
+   * Filas a exportar (PDF/Excel/PNG): si la tabla tiene filtros aplicados,
+   * devuelve `filteredRows` para que el export respete el subset visible.
+   * Si no hay tabla activa o sin filtros, devuelve `result.rows` (todas).
+   * Request Harmony Lens: "Cuando filtro por vendedor el PDF debe sacar solo ese vendedor".
+   */
+  private getRowsForExport(): Record<string, unknown>[] {
+    const allRows = this.result?.rows || [];
+    const hasTable = this.activeVizTypes.has('table');
+    if (!hasTable || !this.vizTableRef?.hasActiveFilters()) return allRows;
+    return this.vizTableRef.filteredRows;
+  }
+
+  /**
+   * Descripción legible de filtros activos para el header del PDF.
+   * Ej: "vendedor=Juan, estado=Pagado".
+   */
+  private getActiveFiltersLabel(): string {
+    if (!this.vizTableRef?.hasActiveFilters()) return '';
+    const parts: string[] = [];
+    const state = this.vizTableRef.filterState || {};
+    const cols = this.result?.columns || [];
+    for (const col of cols) {
+      const f = state[col.field];
+      if (!f) continue;
+      if (f.text) parts.push(`${col.label}~"${f.text}"`);
+      else if (f.selected) parts.push(`${col.label}=${f.selected}`);
+      else if (f.min != null || f.max != null) parts.push(`${col.label} ${f.min ?? ''}..${f.max ?? ''}`);
+      else if (f.from || f.to) parts.push(`${col.label} ${f.from ?? ''}→${f.to ?? ''}`);
+    }
+    return parts.join(' · ');
+  }
 
   readonly fieldDropIds = ['rows-zone', 'cols-zone', 'values-zone', 'palette', 'palette-m'];
 
@@ -87,6 +140,17 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Leer rol y email del user logueado para mostrar banner cuando es Vendedor
+    // (filtro real se aplica server-side, esto es solo informativo).
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        this.userRole = u?.rol || u?.role || '';
+        this.userEmail = u?.email || '';
+      }
+    } catch { /* ignore */ }
+
     // Cargar lista de sources visibles desde el backend (filtra por integraciones
     // activas de la empresa). El backend retorna IDs que aplica como whitelist
     // sobre el catálogo hardcoded. Si la llamada falla, dejamos el catálogo completo.
@@ -105,7 +169,47 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadReport(id);
+    } else {
+      // Cargar preset desde query param ?preset=top20-productos-unidades
+      const presetId = this.route.snapshot.queryParamMap.get('preset');
+      if (presetId) this.loadPreset(presetId);
     }
+  }
+
+  /**
+   * Carga un preset (plantilla pre-armada) en el builder. No guarda — solo
+   * llena el estado para que el usuario lo edite y opcionalmente guarde.
+   * Request Harmony Lens punto 6.
+   */
+  private async loadPreset(presetId: string): Promise<void> {
+    const mod = await import('../home/preset-reports');
+    const preset = mod.findPreset(presetId);
+    if (!preset) return;
+    const src = this.catalog.find((s) => s.id === preset.spec.source);
+    if (!src) return;
+    this.selectSource(src);
+    // Resolver dimensions, measures y filters del spec del preset
+    this.rows = (preset.spec.rows || [])
+      .map((r) => {
+        const dim = src.dimensions.find((d) => d.id === r.id);
+        return dim ? { ...this.asFieldFromDim(dim), granularity: r.granularity } : null;
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+    this.cols = (preset.spec.cols || [])
+      .map((c) => {
+        const dim = src.dimensions.find((d) => d.id === c.id);
+        return dim ? { ...this.asFieldFromDim(dim), granularity: c.granularity } : null;
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+    this.values = (preset.spec.values || [])
+      .map((v) => {
+        const meas = src.measures.find((m) => m.id === v.id);
+        return meas ? { ...this.asFieldFromMeasure(meas), agg: v.agg } : null;
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null);
+    this.filters = [...(preset.spec.filters || [])];
+    this.rowsLimit = preset.spec.limit || 1000;
+    this.activeVizTypes = new Set(preset.viz.activeTypes || [preset.viz.type]);
   }
 
   ngOnDestroy(): void {
@@ -262,8 +366,17 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       cols: this.cols.map<DimensionRef>((c) => ({ id: c.id, granularity: c.granularity })),
       values: this.values.map<MeasureRef>((v) => ({ id: v.id, agg: v.agg || 'sum' })),
       filters: allFilters,
-      limit: hasKpi && this.activeVizTypes.size === 1 ? 1 : 1000,
+      limit: hasKpi && this.activeVizTypes.size === 1 ? 1 : this.rowsLimit,
     };
+  }
+
+  /**
+   * Ajusta el límite de filas (entre 100 y 10.000). Clampa para evitar
+   * sobrepasar el HARD_LIMIT del backend (firestore.engine.spec-validator).
+   */
+  onLimitChange(value: number | string): void {
+    const n = Math.max(100, Math.min(10000, Number(value) || 1000));
+    this.rowsLimit = n;
   }
 
   run(): void {
@@ -290,7 +403,82 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       .subscribe((res) => {
         console.log('[ReportBuilder] Query result:', res);
         this.result = res;
+        // Si el usuario activó comparativo, ejecutar run adicional con periodo anterior
+        // y mergear columnas. Request Harmony Lens punto 5.
+        if (res && this.compareMode !== 'none') {
+          this.runComparePeriod(spec);
+        }
       });
+  }
+
+  /**
+   * Ejecuta una query adicional con el rango de fechas del periodo anterior y
+   * agrega las medidas como columnas paralelas al `result` actual.
+   * - prev_month: si dateFrom/dateTo son del mes M/año Y, compara contra M-1/Y.
+   * - prev_year: compara contra mismo rango pero un año atrás.
+   * Sin date range definido, no hace nada.
+   */
+  private runComparePeriod(currentSpec: ReportSpec): void {
+    if (!this.dateFrom || !this.dateTo || !this.source || !this.result) return;
+    const dateField = this.source.dimensions.find((d) => d.type === 'date');
+    if (!dateField) return;
+
+    const prev = this.computePreviousPeriod(this.dateFrom, this.dateTo, this.compareMode);
+    if (!prev) return;
+
+    const compareSpec: ReportSpec = {
+      ...currentSpec,
+      filters: (currentSpec.filters || []).filter((f) => f.field !== dateField.id).concat([
+        { field: dateField.id, op: 'gte', value: prev.from + 'T00:00:00.000Z' },
+        { field: dateField.id, op: 'lte', value: prev.to + 'T23:59:59.999Z' },
+      ]),
+    };
+
+    this.reportsService
+      .runQuery(compareSpec)
+      .pipe(takeUntil(this.destroy$), catchError(() => of(null)))
+      .subscribe((compareRes) => {
+        if (!compareRes || !this.result) return;
+        this.mergeCompareResult(compareRes, prev.label);
+      });
+  }
+
+  private computePreviousPeriod(from: string, to: string, mode: 'prev_month' | 'prev_year' | 'none'): { from: string; to: string; label: string } | null {
+    if (mode === 'none') return null;
+    const monthsBack = mode === 'prev_year' ? 12 : 1;
+    const shift = (d: string) => {
+      const [y, m, day] = d.split('-').map(Number);
+      const dt = new Date(Date.UTC(y, m - 1 - monthsBack, day));
+      return dt.toISOString().slice(0, 10);
+    };
+    return { from: shift(from), to: shift(to), label: mode === 'prev_year' ? 'año_anterior' : 'mes_anterior' };
+  }
+
+  private mergeCompareResult(compareRes: ReportResult, label: string): void {
+    if (!this.result) return;
+    // Construir índice por clave de dimensiones (filas)
+    const dimCols = this.result.columns.filter((c) => c.type === 'dimension');
+    const measCols = this.result.columns.filter((c) => c.type === 'measure');
+    const keyOf = (row: Record<string, unknown>) => dimCols.map((c) => String(row[c.field] ?? '')).join('|');
+    const compareIndex = new Map<string, Record<string, unknown>>();
+    for (const row of compareRes.rows) compareIndex.set(keyOf(row), row);
+
+    // Agregar columnas paralelas <measure>_<label>
+    const newCols = measCols.map((c) => ({
+      ...c,
+      field: c.field + '_' + label,
+      label: c.label + ' (' + label + ')',
+    }));
+    this.result.columns = [...this.result.columns, ...newCols];
+
+    for (const row of this.result.rows) {
+      const prevRow = compareIndex.get(keyOf(row));
+      for (const c of measCols) {
+        row[c.field + '_' + label] = prevRow ? prevRow[c.field] : null;
+      }
+    }
+    // Forzar redibujo (Angular detecta nuevo objeto)
+    this.result = { ...this.result, columns: [...this.result.columns], rows: [...this.result.rows] };
   }
 
   save(): void {
@@ -377,11 +565,18 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       headerRow.height = 22;
       ws.views = [{ state: 'frozen', ySplit: 1 }];
 
-      // Filas de datos con colores alternos
-      this.result.rows.forEach((row, rowIdx) => {
+      // Filas de datos con colores alternos. Respeta filtros activos del viz-table
+      // si el usuario los aplicó (Harmony Lens: "PDF/Excel debe filtrar igual que pantalla").
+      const exportRows = this.getRowsForExport();
+      exportRows.forEach((row, rowIdx) => {
         const values = cols.map(col => {
           const val = row[col.field];
           if (val === null || val === undefined || val === '') return '';
+          // Boolean en español (request Harmony Lens)
+          if (col.dataType === 'boolean' || val === true || val === false) {
+            if (val === true || val === 'true' || val === 1 || val === '1') return 'Sí';
+            if (val === false || val === 'false' || val === 0 || val === '0') return 'No';
+          }
           if (col.dataType === 'date') return this.formatDateStr(String(val));
           const n = Number(val);
           if (!Number.isNaN(n) && (col.type === 'measure' || col.dataType === 'number')) return n;
@@ -698,16 +893,24 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         }
       }
 
-      // Tabla de datos real con autoTable
-      if (hasTable && this.result.rows.length > 0) {
+      // Tabla de datos real con autoTable. Respeta filtros activos del viz-table.
+      const pdfRows = this.getRowsForExport();
+      if (hasTable && pdfRows.length > 0) {
         if (hasChart && (H - curY - FOOTER_H) < 80) {
           drawPageFooter(); pdf.addPage(); drawPageHeader(); curY = HEADER_H;
         }
         const cols = this.result.columns;
         const tableW = W - M * 2;
+        // Notice de filtros activos (header de la sección de tabla)
+        const filtersLabel = this.getActiveFiltersLabel();
+        if (filtersLabel) {
+          pdf.setFont('helvetica', 'italic'); pdf.setFontSize(8); pdf.setTextColor(75, 85, 99);
+          pdf.text('Filtros aplicados: ' + filtersLabel, M, curY); curY += 12;
+          pdf.setTextColor(31, 41, 55);
+        }
         autoTable(pdf, {
           head: [cols.map(c => c.label)],
-          body: this.result.rows.map(row => cols.map(col => this.pdfFormatValue(row[col.field], col))),
+          body: pdfRows.map(row => cols.map(col => this.pdfFormatValue(row[col.field], col))),
           startY: curY,
           margin: { top: HEADER_H, bottom: FOOTER_H + 6, left: M, right: M },
           tableWidth: tableW,
@@ -805,6 +1008,11 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
 
   private pdfFormatValue(value: unknown, col: ReportColumn): string {
     if (value === null || value === undefined || value === '') return '—';
+    // Boolean en español (Harmony Lens: Sí/No en lugar de true/false)
+    if (col.dataType === 'boolean' || value === true || value === false) {
+      if (value === true || value === 'true' || value === 1 || value === '1') return 'Sí';
+      if (value === false || value === 'false' || value === 0 || value === '0') return 'No';
+    }
     if (col.dataType === 'date') return this.formatDateStr(String(value));
     const n = Number(value);
     if (Number.isNaN(n)) return String(value);

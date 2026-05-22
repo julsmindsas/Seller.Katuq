@@ -14,6 +14,13 @@
       <input type="date" class="date-input" [(ngModel)]="dateTo" title="Hasta" />
     </div>
 
+    <!-- Comparativo (Harmony Lens punto 5) -->
+    <select class="date-input" [(ngModel)]="compareMode" title="Comparar contra">
+      <option value="none">Sin comparar</option>
+      <option value="prev_month">vs mes anterior</option>
+      <option value="prev_year">vs año anterior</option>
+    </select>
+
     <span class="spacer"></span>
 
     <button type="button" class="btn-outline" (click)="exportExcel()" [disabled]="!result || exporting">
@@ -44,6 +51,15 @@
       {{ running ? 'Ejecutando…' : 'Ejecutar' }}
     </button>
   </header>
+
+  <!-- Banner para usuarios con rol Vendedor: filtro server-side aplicado -->
+  <div *ngIf="isSeller && sourceHasSellerField" class="seller-banner">
+    <i class="fa fa-user-shield me-1"></i>
+    <span>
+      Solo verás los registros donde el campo de vendedor coincide con tu usuario
+      (<strong>{{ userEmail }}</strong>). El filtro se aplica automáticamente en el servidor.
+    </span>
+  </div>
 
   <div class="builder-body">
     <!-- Panel izquierdo: source + campos -->
@@ -205,7 +221,20 @@
         <h5>Detalle</h5>
         <p><strong>{{ result.meta.totalRows }}</strong> filas</p>
         <p><strong>{{ result.meta.durationMs }}</strong> ms</p>
-        <p *ngIf="result.meta.truncated" class="warn"><i class="fa fa-triangle-exclamation me-1"></i>Resultado truncado</p>
+        <div *ngIf="result.meta.truncated" class="truncated-notice">
+          <p class="info">
+            <i class="fa fa-info-circle me-1"></i>
+            Se muestran las primeras {{ rowsLimit }} filas. Aumenta el límite o agrega filtros para ver más.
+          </p>
+          <div class="limit-control">
+            <label for="limitInput">Límite de filas:</label>
+            <input id="limitInput" type="number" min="100" max="10000" step="100"
+                   [ngModel]="rowsLimit"
+                   (ngModelChange)="onLimitChange($event)"
+                   class="form-control form-control-sm" />
+            <button type="button" class="btn btn-sm btn-primary" (click)="run()">Actualizar</button>
+          </div>
+        </div>
       </div>
     </aside>
   </div>

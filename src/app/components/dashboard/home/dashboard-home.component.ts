@@ -5,6 +5,7 @@ import { catchError, finalize, takeUntil } from 'rxjs/operators';
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 import { findSource } from '../model/source-catalog';
 import { ReportResult, SavedReport, SourceDef, VizType } from '../model/report-spec.interfaces';
+import { REPORT_PRESETS, ReportPreset } from './preset-reports';
 
 @Component({
   selector: 'app-dashboard-home',
@@ -28,7 +29,20 @@ export class DashboardHomeComponent implements OnInit, OnDestroy {
 
   @ViewChild('previewPanel') previewPanel?: ElementRef<HTMLElement>;
 
+  presets: ReportPreset[] = REPORT_PRESETS;
+
   constructor(private reportsService: ReportsService, private router: Router) {}
+
+  /**
+   * Navega al builder con la spec del preset pre-cargada via query params.
+   * El builder lee el preset y arma su estado interno (sin guardar nada).
+   * Request Harmony Lens punto 6: "Métricas para análisis de productos".
+   */
+  openPreset(preset: ReportPreset): void {
+    this.router.navigate(['/dashboards/builder'], {
+      queryParams: { preset: preset.id },
+    });
+  }
 
   ngOnInit(): void {
     this.reportsService

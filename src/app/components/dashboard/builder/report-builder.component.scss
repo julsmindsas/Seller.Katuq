@@ -455,3 +455,33 @@
 .cdk-drop-list-dragging .zone-pill:not(.cdk-drag-placeholder) {
   transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
 }
+
+/* Banner para rol Vendedor (Harmony Lens punto 5) */
+.seller-banner {
+  background: #eef2ff;
+  border-left: 3px solid #4338ca;
+  color: #1e1b4b;
+  padding: 10px 16px;
+  font-size: 13px;
+  margin: 0 16px 12px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.seller-banner strong { color: #4338ca; }
+
+/* Truncated notice (F8) */
+.truncated-notice .info {
+  color: #1e40af;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.truncated-notice .limit-control {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+.truncated-notice .limit-control label { margin: 0; }
+.truncated-notice .limit-control input { width: 100px; }

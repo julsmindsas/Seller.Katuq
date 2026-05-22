@@ -310,6 +310,10 @@ export class ReportViewComponent implements OnInit, OnDestroy {
         const values = cols.map(col => {
           const val = row[col.field];
           if (val === null || val === undefined || val === '') return '';
+          if (col.dataType === 'boolean' || val === true || val === false) {
+            if (val === true || val === 'true' || val === 1 || val === '1') return 'Sí';
+            if (val === false || val === 'false' || val === 0 || val === '0') return 'No';
+          }
           if (col.dataType === 'date') return this.formatDateStr(String(val));
           const n = Number(val);
           if (!Number.isNaN(n) && (col.type === 'measure' || col.dataType === 'number')) return n;
@@ -423,6 +427,10 @@ export class ReportViewComponent implements OnInit, OnDestroy {
 
   private pdfFormatValue(value: unknown, col: ReportColumn): string {
     if (value === null || value === undefined || value === '') return '-';
+    if (col.dataType === 'boolean' || value === true || value === false) {
+      if (value === true || value === 'true' || value === 1 || value === '1') return 'Sí';
+      if (value === false || value === 'false' || value === 0 || value === '0') return 'No';
+    }
     if (col.dataType === 'date') return this.formatDateStr(String(value));
     const n = Number(value);
     if (Number.isNaN(n)) return String(value);

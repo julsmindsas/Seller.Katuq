@@ -35,8 +35,8 @@
           <ng-container *ngIf="result?.meta">
             <span class="meta-sep">·</span>
             <span>{{ result!.meta.totalRows }} filas</span>
-            <span *ngIf="result!.meta.truncated" class="meta-warn">
-              <i class="fa fa-triangle-exclamation me-1"></i>truncado
+            <span *ngIf="result!.meta.truncated" class="meta-info" title="Se muestran las primeras 1000 filas. Edita el reporte para aumentar el límite o agregar filtros.">
+              <i class="fa fa-info-circle me-1"></i>primeras 1000
             </span>
           </ng-container>
         </div>

@@ -110,7 +110,9 @@ No hay límite práctico de perfiles. Sí hay límite de **2 access keys por usu
 
 ## Acceso SSH a producción
 
-- **Prod backend Express** (`julsmind-api` EC2 → `back.katuq.com`): key en `ops/ec2-keys/julsmind-api-prod-legacy.pem`
-- **Staging Lightsail** (`julsmind-api` Lightsail → katuq-test): key en `ops/ec2-keys/lightsail-default-us-east-1.pem`
+- **Prod backend Express** (`julsmind-api` EC2 → `back.katuq.com`, `13.222.206.185`): key en `ops/ec2-keys/lightsail-default-us-east-1.pem` (user `ubuntu`). Verificado funcional 2026-05-21.
+- **Staging Lightsail** (`julsmind-api` Lightsail → katuq-test, `34.237.136.82`): key en `ops/ec2-keys/julsmind-api-prod-legacy.pem` (a confirmar — los nombres de archivo están invertidos respecto al uso real).
+
+> Nota 2026-05-21: las dos .pem tienen nombres engañosos. La que dice "prod-legacy" no abre prod EC2; la que dice "lightsail-default" sí. La instancia EC2 prod no tiene KeyName asociado en AWS (`KeyName: null` en describe-instances) — la auth depende exclusivamente de `~/.ssh/authorized_keys` en la VM.
 
 Las pem **NO se comitean** (`.gitignore` cubre `*.pem`). Detalles del workflow de deploy y operación en producción (pm2 como root, logs en `/root/.pm2/logs/`, sin hot-reload) viven en la memoria del proyecto.

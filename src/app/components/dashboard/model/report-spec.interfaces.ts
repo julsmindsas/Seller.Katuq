@@ -71,6 +71,13 @@ export interface ReportSpec {
   filters?: FilterClause[];
   orderBy?: OrderClause[];
   limit?: number;
+  /**
+   * Periodos a comparar (request Harmony Lens punto 5: "comparativos por rango").
+   * Si presente, el frontend ejecuta N queries adicionales con date filters
+   * sobrescritos y merge las columnas como `<measure>_<periodLabel>`.
+   * Backend opcional — implementación FE first.
+   */
+  comparePeriods?: Array<{ label: string; from: string; to: string }>;
 }
 
 export interface ReportColumn {

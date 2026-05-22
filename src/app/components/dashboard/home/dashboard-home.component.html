@@ -30,6 +30,31 @@
     </button>
   </div>
 
+  <!-- Plantillas pre-armadas (request Harmony Lens punto 6) -->
+  <section *ngIf="!loading && presets.length > 0" class="presets-section">
+    <header class="presets-header">
+      <h2><i class="fa fa-wand-magic-sparkles me-1"></i> Plantillas listas</h2>
+      <small>Arranca con un reporte pre-armado. Lo puedes editar libremente antes de guardar.</small>
+    </header>
+    <div class="presets-grid">
+      <article
+        *ngFor="let p of presets"
+        class="preset-card"
+        (click)="openPreset(p)"
+        [title]="p.description">
+        <div class="preset-icon"><i class="fa" [ngClass]="p.icon"></i></div>
+        <div class="preset-body">
+          <div class="preset-name">{{ p.name }}</div>
+          <div class="preset-desc">{{ p.description }}</div>
+          <div class="preset-meta">
+            <span class="preset-category">{{ p.category }}</span>
+            <span class="preset-viz">{{ p.viz.type }}</span>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
   <div *ngIf="!loading && reports.length > 0" class="reports-grid">
     <article
       *ngFor="let r of reports; trackBy: trackById"
@@ -70,8 +95,8 @@
           <ng-container *ngIf="result?.meta">
             <span class="meta-sep">·</span>
             <span>{{ result!.meta.totalRows }} filas</span>
-            <span *ngIf="result!.meta.truncated" class="meta-warn">
-              <i class="fa fa-triangle-exclamation me-1"></i>truncado
+            <span *ngIf="result!.meta.truncated" class="meta-info" title="Se muestran las primeras 1000 filas. Edita el reporte para aumentar el límite o agregar filtros.">
+              <i class="fa fa-info-circle me-1"></i>primeras 1000
             </span>
           </ng-container>
         </div>
