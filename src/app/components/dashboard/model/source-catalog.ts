@@ -9,6 +9,7 @@ export const SOURCE_CATALOG: SourceDef[] = [
     id: 'orders',
     label: 'Pedidos',
     description: 'Pedidos con totales, canal, estado y entrega.',
+    sellerField: 'asesor_email',
     dimensions: [
       // Pedido
       { id: 'nro_pedido', label: 'Nro. Pedido', type: 'string', group: 'Pedido' },
@@ -142,6 +143,7 @@ export const SOURCE_CATALOG: SourceDef[] = [
     label: 'Documentos contables (WO)',
     description: 'Facturas venta, notas crédito/débito, recibos y comprobantes sincronizados desde World Office.',
     requiresIntegration: 'worldoffice',
+    sellerField: 'vendedor_id',
     dimensions: [
       { id: 'tipo', label: 'Tipo documento', type: 'string', enumValues: ['factura_venta','cotizacion','nota_credito_venta','nota_debito_venta','pedido','remision_venta','recibo_caja','comprobante_egreso','factura_compra','nota_credito_compra','nota_debito_compra'], group: 'Documento' },
       { id: 'tipo_codigo', label: 'Código (WO)', type: 'string', group: 'Documento' },
@@ -175,6 +177,7 @@ export const SOURCE_CATALOG: SourceDef[] = [
     label: 'Cartera (CxC / CxP)',
     description: 'Saldos por tercero con aging (corriente, 0-30, 31-60, 61-90, 90+) y datos de contacto. Filtrar esCliente=true → CxC, esProveedor=true → CxP.',
     requiresIntegration: 'worldoffice',
+    sellerField: 'vendedor_id',
     dimensions: [
       // Tercero
       { id: 'tercero_id', label: 'ID Tercero WO', type: 'number', group: 'Tercero' },

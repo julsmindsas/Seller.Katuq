@@ -35,6 +35,8 @@ export interface SourceDef {
   description: string;
   /** Si está presente, el source solo aparece para empresas con esa integración activa. */
   requiresIntegration?: string;
+  /** Si está presente, indica que la source tiene un campo de vendedor — habilita el banner "Estás viendo solo tus ventas" cuando el rol del user es vendedor. */
+  sellerField?: string;
   dimensions: DimensionDef[];
   measures: MeasureDef[];
 }
