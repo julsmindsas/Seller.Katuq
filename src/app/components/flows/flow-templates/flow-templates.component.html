@@ -5,10 +5,31 @@
       Volver
     </button>
     <div>
-      <h1>Plantillas de flujos</h1>
-      <p>Empezá rápido con casos comunes ya armados.</p>
+      <h1>Plantillas listas para usar</h1>
+      <p>Elegí una sincronización armada y activala en un click.</p>
     </div>
   </header>
+
+  <!-- Spec 003.5 — chips filtro por proveedor (AC-003.5-02) -->
+  <nav class="kf-templates__chips" *ngIf="!loading && availableProviders.length > 0" aria-label="Filtrar por tienda">
+    <button
+      type="button"
+      class="kf-chip"
+      [class.kf-chip--active]="selectedProvider === 'all'"
+      (click)="selectProvider('all')"
+    >
+      <i class="pi pi-th-large"></i> {{ providerLabel('all') }}
+    </button>
+    <button
+      type="button"
+      *ngFor="let p of availableProviders"
+      class="kf-chip"
+      [class.kf-chip--active]="selectedProvider === p"
+      (click)="selectProvider(p)"
+    >
+      {{ providerLabel(p) }}
+    </button>
+  </nav>
 
   <div *ngIf="errorMessage" class="kf-alert">
     <i class="pi pi-exclamation-triangle"></i>
@@ -20,13 +41,21 @@
     Cargando plantillas...
   </div>
 
-  <ul class="kf-templates__grid" *ngIf="!loading">
+  <div *ngIf="!loading && filteredTemplates.length === 0" class="kf-empty">
+    <i class="pi pi-info-circle"></i>
+    No hay plantillas para esta tienda todavía.
+  </div>
+
+  <ul class="kf-templates__grid" *ngIf="!loading && filteredTemplates.length > 0">
     <li
-      *ngFor="let t of templates; trackBy: trackById"
+      *ngFor="let t of filteredTemplates; trackBy: trackById"
       class="kf-template-card"
+      [class.kf-template-card--experimental]="t.experimental"
     >
       <div class="kf-template-card__icon">
-        <i class="pi pi-th-large"></i>
+        <img *ngIf="t.iconLogo" [src]="t.iconLogo" [alt]="(t.provider || '') + ' logo'"
+             (error)="$any($event.target).style.display='none'">
+        <i *ngIf="!t.iconLogo" class="pi pi-th-large"></i>
       </div>
       <h2>{{ t.name }}</h2>
       <p>{{ t.description }}</p>
@@ -34,7 +63,8 @@
         <li *ngFor="let tag of t.tags">#{{ tag }}</li>
       </ul>
       <div class="kf-template-card__meta">
-        {{ t.graph.nodes.length }} nodos · {{ t.graph.edges.length }} conexiones
+        {{ t.graph.nodes.length }} pasos
+        <span *ngIf="t.experimental" class="kf-template-card__exp">· experimental</span>
       </div>
       <button
         type="button"
@@ -42,8 +72,8 @@
         (click)="installAndOpen(t)"
         [disabled]="installingTemplateId === t.id"
       >
-        <i class="pi" [ngClass]="installingTemplateId === t.id ? 'pi-spin pi-spinner' : 'pi-plus'"></i>
-        Activar plantilla
+        <i class="pi" [ngClass]="installingTemplateId === t.id ? 'pi-spin pi-spinner' : 'pi-bolt'"></i>
+        Activar
       </button>
     </li>
   </ul>

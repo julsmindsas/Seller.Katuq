@@ -50,6 +50,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   codigo_postal_entrega: any;
   @Input() pedidoGral: Pedido;
   idenxEntrega: any;
+  private originalAliasEntrega: string;
   filteredResults: any;
   allBillingZone: any;
   ciudades1: any;
@@ -413,7 +414,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
   }
 
   seleccionarDireccionEntrega(index) {
-    this.pedidoGral.envio = this.datosEntregas[index];
+    this.pedidoGral.envio = { ...this.datosEntregas[index] };
     this.pedidoGral = { ...this.pedidoGral };
     Swal.fire({
       title: "Direccion Seleccionada!",
@@ -472,7 +473,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     this.datosEntregas[this.idenxEntrega] = datosEntreg;
 
     // Si la dirección editada es la que está en uso en el pedido, actualizarla
-    if (this.pedidoGral?.envio && this.pedidoGral.envio.alias === datosEntreg.alias) {
+    if (this.pedidoGral?.envio && this.pedidoGral.envio.alias === this.originalAliasEntrega) {
       this.pedidoGral.envio = { ...datosEntreg };
       this.pedidoGral = { ...this.pedidoGral };
       this.overridePedido.emit(this.pedidoGral);
@@ -500,14 +501,14 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
               clientRes.datosEntrega &&
               Array.isArray(clientRes.datosEntrega)
             ) {
+              let nuevas = clientRes.datosEntrega;
               // Filtrar por ciudad si hay un pedido con envío definido
               if (this.pedidoGral?.envio?.ciudad) {
-                this.datosEntregas = clientRes.datosEntrega.filter((x) => {
-                  return x.ciudad == this.pedidoGral.envio.ciudad;
-                });
-              } else {
-                this.datosEntregas = clientRes.datosEntrega;
+                const filtradas = nuevas.filter((x) => x.ciudad == this.pedidoGral.envio.ciudad);
+                if (filtradas.length > 0) nuevas = filtradas;
               }
+              // Actualizar en-place para que Angular no sobreescriba con el array viejo del padre
+              this.datosEntregas.splice(0, this.datosEntregas.length, ...nuevas);
             }
           });
 
@@ -782,6 +783,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
 
   editarDatos(modal, index) {
     this.idenxEntrega = index;
+    this.originalAliasEntrega = this.datosEntregas[index].alias;
     this.editandodato = true;
     this.alias_entrega = this.datosEntregas[index].alias;
     this.nombres_entrega = this.datosEntregas[index].nombres;

@@ -979,33 +979,72 @@
           </div>
         </ng-container>
 
-        <!-- WooCommerce Fields -->
+<!-- WooCommerce Fields — Spec 003.1 plug-and-play onboarding -->
         <ng-container *ngIf="selectedIntegrationType === 'woocommerce'">
-          <div class="integration-info-box">
-            <i class="fa fa-info-circle"></i>
-            <span>Para conectar WooCommerce, necesitas generar las claves de API desde tu panel de administración de
-              WordPress.</span>
-            <a href="https://woocommerce.github.io/woocommerce-rest-api-docs/" target="_blank" class="learn-more">
-              <i class="fa fa-external-link"></i> Ver documentación
+
+          <!-- Info-box guía de 3 pasos -->
+          <div class="wc-onboarding-steps">
+            <h4 class="wc-onboarding-steps__title">
+              <i class="fa fa-magic"></i> Cómo conectar tu tienda en 3 pasos
+            </h4>
+            <ol class="wc-onboarding-steps__list">
+              <li class="wc-onboarding-steps__item">
+                <div class="wc-onboarding-steps__num">1</div>
+                <div class="wc-onboarding-steps__body">
+                  <strong>Entrá a tu WooCommerce admin</strong>
+                  <span>Ajustes → Avanzado → REST API.</span>
+                  <img src="assets/integrations/woocommerce/step-1.png"
+                       alt="Ubicación de la opción REST API en WooCommerce admin"
+                       class="wc-onboarding-steps__img"
+                       (error)="$any($event.target).style.display='none'">
+                </div>
+              </li>
+              <li class="wc-onboarding-steps__item">
+                <div class="wc-onboarding-steps__num">2</div>
+                <div class="wc-onboarding-steps__body">
+                  <strong>Creá una clave</strong>
+                  <span>Click en "Crear clave", dale permiso de <b>Lectura/Escritura</b>.</span>
+                  <img src="assets/integrations/woocommerce/step-2.png"
+                       alt="Pantalla de creación de Consumer Key con permiso Lectura/Escritura"
+                       class="wc-onboarding-steps__img"
+                       (error)="$any($event.target).style.display='none'">
+                </div>
+              </li>
+              <li class="wc-onboarding-steps__item">
+                <div class="wc-onboarding-steps__num">3</div>
+                <div class="wc-onboarding-steps__body">
+                  <strong>Copiá el Consumer Key y Secret</strong>
+                  <span>Pegalos en los campos de abajo. Listo.</span>
+                  <img src="assets/integrations/woocommerce/step-3.png"
+                       alt="Pantalla final con Consumer Key y Consumer Secret generados"
+                       class="wc-onboarding-steps__img"
+                       (error)="$any($event.target).style.display='none'">
+                </div>
+              </li>
+            </ol>
+            <a href="https://woocommerce.github.io/woocommerce-rest-api-docs/" target="_blank" rel="noopener" class="wc-onboarding-steps__doclink">
+              <i class="fa fa-external-link"></i> Ver documentación oficial de WooCommerce
             </a>
           </div>
 
+          <!-- URL de la tienda -->
           <div class="form-group">
-            <label for="siteUrl">
+            <label for="storeUrl">
               <i class="fa fa-globe"></i> URL del sitio:
               <span class="field-required">*</span>
             </label>
             <div class="input-with-icon">
               <i class="fa fa-globe prefix-icon"></i>
-              <input type="text" id="siteUrl" formControlName="siteUrl" placeholder="https://mitienda.com">
+              <input type="text" id="storeUrl" formControlName="storeUrl" placeholder="https://mitienda.com">
             </div>
-            <div *ngIf="integrationForm.get('siteUrl')?.invalid && integrationForm.get('siteUrl')?.touched"
+            <div *ngIf="integrationForm.get('storeUrl')?.invalid && integrationForm.get('storeUrl')?.touched"
               class="text-danger">
               <i class="fa fa-exclamation-triangle"></i> URL del sitio es requerida
             </div>
-            <small class="form-text text-muted">URL completa de tu tienda WooCommerce</small>
+            <small class="form-text text-muted">URL completa de tu tienda WooCommerce (con https://)</small>
           </div>
 
+          <!-- Consumer Key + Secret -->
           <div class="field-row">
             <div class="field-col form-group">
               <label for="consumerKey">
@@ -1044,6 +1083,7 @@
             </div>
           </div>
 
+          <!-- Versión API -->
           <div class="field-row">
             <div class="field-col form-group">
               <label for="apiVersion">
@@ -1058,22 +1098,80 @@
             </div>
           </div>
 
-          <!-- Webhook Secret -->
+          <!-- Bodega destino del stock (spec 003.1 AC-003.1-04 + AC-003.1-06) -->
+          <div class="form-group">
+            <label for="bodegaCode">
+              <i class="fa fa-warehouse"></i> Bodega destino del stock:
+              <span class="field-required">*</span>
+            </label>
+            <select id="bodegaCode"
+                    formControlName="bodegaCode"
+                    class="custom-select"
+                    [disabled]="wooBodegasLoading">
+              <option [ngValue]="''" disabled>
+                {{ wooBodegasLoading ? 'Cargando bodegas...' : 'Elegí una bodega' }}
+              </option>
+              <option *ngFor="let b of wooBodegas" [ngValue]="b.idBodega || b.id || b.cd">
+                {{ (b.idBodega || b.id || b.cd) }} — {{ b.nombre || b.name }}
+              </option>
+            </select>
+            <div *ngIf="!wooBodegasLoading && !wooBodegasError && wooBodegas.length === 0"
+                 class="wc-onboarding-empty">
+              <i class="fa fa-exclamation-circle"></i>
+              No tenés bodegas activas. <a routerLink="/inventarios/bodegas">Creá una bodega primero</a>, después volvé acá.
+            </div>
+            <div *ngIf="wooBodegasError" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> {{ wooBodegasError }}
+              <button type="button" class="btn btn-sm btn-link" (click)="loadBodegasForWooForm()">Reintentar</button>
+            </div>
+            <div *ngIf="integrationForm.get('bodegaCode')?.invalid && integrationForm.get('bodegaCode')?.touched"
+                 class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> Elegí en qué bodega registrar el stock de WooCommerce.
+            </div>
+            <small class="form-text text-muted">Donde Katuq va a registrar el stock que viene de tu tienda WooCommerce.</small>
+          </div>
+
+          <!-- Caja "Configurar webhook entrante" — AC-003.1-05 -->
+          <div class="wc-webhook-box">
+            <div class="wc-webhook-box__header">
+              <i class="fa fa-link"></i>
+              <span>Configurá el webhook entrante en tu tienda</span>
+            </div>
+            <p class="wc-webhook-box__intro">
+              Copiá esta URL y pegala en tu WooCommerce admin:
+              <br><strong>Ajustes → Avanzado → Webhooks → Añadir webhook</strong>
+              (Estado: Activo, Tema: Pedido creado/actualizado).
+            </p>
+            <div class="wc-webhook-box__url-row">
+              <input type="text"
+                     class="wc-webhook-box__url"
+                     [value]="webhookUrlForWooCommerce"
+                     readonly
+                     onfocus="this.select()">
+              <button type="button"
+                      class="btn btn-outline-primary wc-webhook-box__copy"
+                      (click)="copyWebhookUrl()"
+                      [class.wc-webhook-box__copy--ok]="wooWebhookCopyOk">
+                <i [class]="wooWebhookCopyOk ? 'fa fa-check' : 'fa fa-clipboard'"></i>
+                {{ wooWebhookCopyOk ? '¡Copiada!' : 'Copiar' }}
+              </button>
+            </div>
+            <small class="form-text text-muted">
+              Después de crear el webhook en WooCommerce, copiá el <em>Webhook Secret</em> que te muestra y pegalo abajo (opcional al crear, pero recomendado).
+            </small>
+          </div>
+
+          <!-- Webhook Secret (OPCIONAL en MVP — se completa después de crear el webhook en WC) -->
           <div class="form-group">
             <label for="webhookSecret">
-              <i class="fa fa-shield-alt"></i> Webhook Secret:
-              <span class="field-required">*</span>
+              <i class="fa fa-shield-alt"></i> Webhook Secret <small class="text-muted">(opcional al crear)</small>:
             </label>
             <div class="input-with-icon password-field">
               <i class="fa fa-shield-alt prefix-icon"></i>
               <input type="password" id="webhookSecret" formControlName="webhookSecret" placeholder="whsec_...">
               <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar"></i>
             </div>
-            <div *ngIf="integrationForm.get('webhookSecret')?.invalid && integrationForm.get('webhookSecret')?.touched"
-              class="text-danger">
-              <i class="fa fa-exclamation-triangle"></i> Webhook Secret es requerido
-            </div>
-            <small class="form-text text-muted">Se utilizará para verificar la autenticidad de los webhooks</small>
+            <small class="form-text text-muted">Se usa para validar que los webhooks vengan realmente de tu tienda. Lo pegás después de crear el webhook en WC.</small>
           </div>
 
           <!-- Verificar SSL -->

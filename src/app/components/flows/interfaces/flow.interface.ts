@@ -169,4 +169,9 @@ export interface FlowTemplate {
   tags?: string[];
   graph: FlowGraph;
   triggers?: FlowTriggerBinding[];
+  // Spec 003.5: campos opcionales para filtros UI por proveedor.
+  provider?: string;
+  iconLogo?: string;
+  color?: string;
+  experimental?: boolean;
 }

@@ -4,6 +4,8 @@ import { IntegrationsService, Integration, IntegrationCategory, CATEGORY_LABELS,
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { IntegrationFormValidatorService, ValidationResult } from './integration-form-validator.service';
 import { IntegrationUIHelperService } from './integration-ui-helper.service';
+import { BodegaService } from '../../shared/services/bodegas/bodega.service';
+import { environment } from '../../../environments/environment';
 import { Subject, timer, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError, filter } from 'rxjs/operators';
 
@@ -99,14 +101,21 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   fieldHelp: { [fieldName: string]: any } = {};
   
   private destroy$ = new Subject<void>();
-  
+
   private validationSubject = new Subject<{ provider: string; config: any }>();
+
+  // Spec 003.1 — UX onboarding WooCommerce.
+  wooBodegas: any[] = [];
+  wooBodegasLoading = false;
+  wooBodegasError: string | null = null;
+  wooWebhookCopyOk = false;
 
   constructor(
     private fb: FormBuilder,
     private integrationsService: IntegrationsService,
     private formValidator: IntegrationFormValidatorService,
     private uiHelper: IntegrationUIHelperService,
+    private bodegaService: BodegaService,
     public activeModal?: NgbActiveModal
   ) {
     this.integrationForm = this.createShopifyForm();
@@ -523,6 +532,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'woocommerce':
         this.integrationForm = this.createWooCommerceForm();
+        this.loadBodegasForWooForm();
         break;
       case 'magento':
         this.integrationForm = this.createMagentoForm();
@@ -620,6 +630,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'woocommerce':
         this.integrationForm = this.createWooCommerceForm();
+        this.loadBodegasForWooForm();
         break;
       case 'magento':
         this.integrationForm = this.createMagentoForm();
@@ -822,12 +833,16 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     return this.fb.group({
       name: ['WooCommerce', Validators.required],
       enabled: [true],
-      siteUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
+      storeUrl: ['', [Validators.required, Validators.pattern(/^https?:\/\/.+/)]],
       consumerKey: ['', Validators.required],
       consumerSecret: ['', Validators.required],
-      webhookSecret: ['', Validators.required],
+      // webhookSecret se pega después de crear el webhook en WC admin — opcional al crear,
+      // requerido cuando 003.2 active la verificación HMAC.
+      webhookSecret: [''],
       apiVersion: ['v3'],
-      verifySsl: [true]
+      verifySsl: [true],
+      // Spec 003.1 AC-003.1-04 — bodega Katuq donde se registra el stock sincronizado desde Woo.
+      bodegaCode: ['', Validators.required]
     });
   }
 
@@ -1308,12 +1323,13 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'woocommerce':
         credentials = {
-          storeUrl: formData.siteUrl,
+          storeUrl: formData.storeUrl,
           consumerKey: formData.consumerKey,
           consumerSecret: formData.consumerSecret,
           webhookSecret: formData.webhookSecret,
           version: formData.apiVersion,
-          verifySsl: formData.verifySsl
+          verifySsl: formData.verifySsl,
+          bodegaCode: formData.bodegaCode
         };
         break;
       case 'magento':
@@ -1984,7 +2000,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'stripe': 'https://stripe.com/docs/api',
       'mercadopago': 'https://www.mercadopago.com.co/developers',
       'siigo': 'https://siigoapi.docs.apiary.io',
-      'osmosis': 'https://osmosis-api.guiacereza.tech/api'
+      'osmosis': 'https://osmosis-api.guiacereza.tech/api',
+      'woocommerce': 'https://woocommerce.github.io/woocommerce-rest-api-docs/'
     };
     return urls[integrationType] || null;
   }
@@ -2003,7 +2020,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'mercadopago': 'Mercado Pago',
       'partners_logistics': 'Partners Logística',
       'siigo': 'Siigo',
-      'osmosis': 'Guiacereza'
+      'osmosis': 'Guiacereza',
+      'woocommerce': 'WooCommerce'
     };
     return names[this.selectedIntegrationType] || this.selectedIntegrationType;
   }
@@ -2071,6 +2089,93 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   backToSelection(): void {
     this.showOnlyForm = false;
     this.isPlatformSelectorCollapsed = true;
+  }
+
+  // ============================================================
+  // Spec 003.1 — Onboarding WooCommerce (helpers UX)
+  // ============================================================
+
+  /**
+   * Carga las bodegas activas del comercio para alimentar el picker `bodegaCode`
+   * del form WooCommerce. Se invoca al seleccionar o editar una integración Woo.
+   * Spec 003.1 AC-003.1-04 + Q-003.1-01 (solo activas).
+   */
+  loadBodegasForWooForm(): void {
+    this.wooBodegasLoading = true;
+    this.wooBodegasError = null;
+
+    this.bodegaService.getActiveBodegas()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (bodegas) => {
+          this.wooBodegas = Array.isArray(bodegas) ? bodegas : [];
+          this.wooBodegasLoading = false;
+        },
+        error: (err) => {
+          this.wooBodegasError = 'No pudimos cargar las bodegas. Intentá de nuevo.';
+          this.wooBodegas = [];
+          this.wooBodegasLoading = false;
+          console.error('[Integrations][Woo] loadBodegasForWooForm error', err);
+        }
+      });
+  }
+
+  /**
+   * URL pública del webhook entrante WooCommerce para este comercio.
+   * Spec 003.1 AC-003.1-05.
+   *
+   * Pattern: `{API_BASE}/v1/woocommerceWebhook/{companyId-url-encoded}`.
+   * companyId viene de localStorage.user.company (consistente con
+   * HttpInterceptor2 que ya lo lee de ahí — ver CLAUDE.md frontend).
+   */
+  get webhookUrlForWooCommerce(): string {
+    let companyId = '';
+    try {
+      const userRaw = localStorage.getItem('user');
+      if (userRaw) {
+        const u = JSON.parse(userRaw);
+        companyId = (u && u.company) || '';
+      }
+    } catch (_) {
+      // localStorage corrupto — devolver placeholder visible al usuario.
+    }
+    if (!companyId) return 'https://back.katuq.com/v1/woocommerceWebhook/{COMPANY}';
+    const base = (environment as any).urlApi || 'https://back.katuq.com';
+    return `${base}/v1/woocommerceWebhook/${encodeURIComponent(companyId)}`;
+  }
+
+  /**
+   * Copia la URL del webhook al portapapeles + feedback visual 2s.
+   * Spec 003.1 AC-003.1-05 + T-08.
+   */
+  copyWebhookUrl(): void {
+    const url = this.webhookUrlForWooCommerce;
+    const onDone = () => {
+      this.wooWebhookCopyOk = true;
+      setTimeout(() => { this.wooWebhookCopyOk = false; }, 2000);
+    };
+
+    if (navigator && (navigator as any).clipboard && (navigator as any).clipboard.writeText) {
+      (navigator as any).clipboard.writeText(url).then(onDone).catch(() => this._fallbackCopy(url, onDone));
+    } else {
+      this._fallbackCopy(url, onDone);
+    }
+  }
+
+  private _fallbackCopy(text: string, onDone: () => void): void {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      onDone();
+    } catch (e) {
+      console.error('[Integrations][Woo] copyWebhookUrl fallback failed', e);
+    }
   }
 
 }

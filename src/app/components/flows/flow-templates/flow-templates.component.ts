@@ -67,6 +67,11 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
   errorMessage = '';
   installingTemplateId: string | null = null;
 
+  // Spec 003.5 — filtro por proveedor (AC-003.5-02).
+  selectedProvider: string = 'all';
+  availableProviders: string[] = [];
+  filteredTemplates: FlowTemplate[] = [];
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -87,14 +92,66 @@ export class FlowTemplatesComponent implements OnInit, OnDestroy {
             PILOT_TEMPLATE
           ];
           this.templates = merged;
+          this._recomputeProvidersAndFilter();
           this.loading = false;
         },
         error: () => {
           // graceful degrade: just show the pilot
           this.templates = [PILOT_TEMPLATE];
+          this._recomputeProvidersAndFilter();
           this.loading = false;
         }
       });
+  }
+
+  /** Spec 003.5 — usuario hace click en un chip de proveedor. */
+  selectProvider(provider: string): void {
+    this.selectedProvider = provider;
+    this._recomputeProvidersAndFilter();
+  }
+
+  /** Nombre amigable para mostrar en el chip. */
+  providerLabel(provider: string): string {
+    if (provider === 'all') return 'Todas';
+    const map: { [k: string]: string } = {
+      woocommerce: 'WooCommerce',
+      shopify: 'Shopify',
+      osmosis: 'Cereza',
+      wompi: 'Wompi',
+      siigo: 'Siigo',
+    };
+    return map[provider] || provider;
+  }
+
+  private _recomputeProvidersAndFilter(): void {
+    const providers = new Set<string>();
+    for (const t of this.templates) {
+      const p = this._inferProvider(t);
+      if (p) providers.add(p);
+    }
+    this.availableProviders = Array.from(providers).sort();
+
+    if (this.selectedProvider === 'all') {
+      this.filteredTemplates = [...this.templates];
+    } else {
+      this.filteredTemplates = this.templates.filter(
+        (t) => this._inferProvider(t) === this.selectedProvider
+      );
+    }
+  }
+
+  /**
+   * Resuelve el proveedor de un template. Prioriza `template.provider` explícito
+   * (seedeado Spec 003.5). Para templates legacy sin provider, lo infiere de tags.
+   */
+  private _inferProvider(t: FlowTemplate): string | null {
+    if (t.provider) return t.provider;
+    const tags = (t.tags || []).map((x) => x.toLowerCase());
+    const known = ['woocommerce', 'shopify', 'osmosis', 'cereza', 'wompi', 'siigo'];
+    for (const p of known) {
+      if (tags.includes(p)) return p === 'cereza' ? 'osmosis' : p;
+    }
+    return null;
   }
 
   ngOnDestroy(): void {
