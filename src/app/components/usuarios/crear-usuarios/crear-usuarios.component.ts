@@ -1,12 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UtilsService } from '../../../shared/services/utils.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { InfoIndicativos } from '../../../../Mock/indicativosPais';
-import { environment } from '../../../../environments/environment';
+import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 
 @Component({
   selector: 'app-crear-usuarios',
@@ -35,7 +34,7 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
     private route: Router,
     private activatedRoute: ActivatedRoute,
     private infoIndicativo: InfoIndicativos,
-    private http: HttpClient
+    private reportsService: ReportsService
   ) {
     this.f = fb.group({
       cd: [''],
@@ -93,7 +92,7 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
    * y los campos del form se ocultan (`hasWOVendedores === false`).
    */
   cargarVendedoresWO(): void {
-    this.http.get<Array<{ id: number; nombre: string }>>(environment.urlApi + '/v1/reports/sellers/wo').subscribe({
+    this.reportsService.getSellersWO().subscribe({
       next: (list) => {
         this.vendedoresWO = list || [];
         this.hasWOVendedores = this.vendedoresWO.length > 0;

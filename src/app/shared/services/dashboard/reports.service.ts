@@ -19,6 +19,12 @@ export class ReportsService extends BaseService {
     return this.get<SourceDef[]>('/v1/reports/sources');
   }
 
+  /** Lista de vendedores distintos encontrados en accounting_documents (sync WO).
+   *  Solo retorna data si la empresa tiene integración worldoffice activa. */
+  getSellersWO(): Observable<Array<{ id: number; nombre: string }>> {
+    return this.get<Array<{ id: number; nombre: string }>>('/v1/reports/sellers/wo');
+  }
+
   runQuery(spec: ReportSpec): Observable<ReportResult> {
     return this.post<ReportResult>('/v1/reports/query', spec);
   }
