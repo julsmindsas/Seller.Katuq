@@ -148,6 +148,34 @@
                                 </select>
                             </div>
                         </div>
+
+                        <!-- Mapeo vendedor World Office (Harmony Lens punto 5).
+                             Solo aparece si la empresa tiene integración WO activa
+                             (hasWOVendedores se setea desde /v1/reports/sellers/wo). -->
+                        <div class="row" *ngIf="hasWOVendedores">
+                            <div class="col-md-12 mb-2">
+                                <h6 class="mb-1"><i class="fa fa-link"></i> Vendedor World Office</h6>
+                                <small class="text-muted">
+                                    Si este usuario es vendedor en World Office, asigná su mapeo. Sus reportes WO
+                                    se filtrarán automáticamente para que solo vea SUS ventas.
+                                </small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label" for="vendedorNombreWO">Nombre del vendedor en WO</label>
+                                <input formControlName="vendedorNombreWO" class="form-control" id="vendedorNombreWO"
+                                       list="vendedoresWOList" placeholder="Empezá a escribir el nombre..."
+                                       (change)="onVendedorNombreChange($any($event.target).value)" />
+                                <datalist id="vendedoresWOList">
+                                    <option *ngFor="let v of vendedoresWO" [value]="v.nombre">{{ v.id }} — {{ v.nombre }}</option>
+                                </datalist>
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label" for="vendedorIdWO">ID WO</label>
+                                <input formControlName="vendedorIdWO" class="form-control" id="vendedorIdWO"
+                                       type="number" placeholder="Auto" readonly />
+                            </div>
+                        </div>
+
                         <div class="row">
                             <div class="col-sm-3">
                                 <button (click)="guardar()" class="btn btn-lg btn-primary">Guardar</button>

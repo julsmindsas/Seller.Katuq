@@ -77,7 +77,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   userRole: string = '';
   userEmail: string = '';
   get isSeller(): boolean {
-    return /vendedor|asesor|seller/i.test(this.userRole || '');
+    return /vendedor|asesor|seller|ventas/i.test(this.userRole || '');
   }
   get sourceHasSellerField(): boolean {
     return !!(this.source && (this.source as any).sellerField);
