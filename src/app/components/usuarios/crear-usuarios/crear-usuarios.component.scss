@@ -1,7 +1,51 @@
 .select-default {
-    color: gray; /* Cambia "gray" por el color que desees */
-  }
-  select ::selection {
+    color: gray;
+}
+select ::selection {
     background-color: transparent;
-    color: gray; /* Cambia "gray" por el color que desees */
-  }
+    color: gray;
+}
+
+// Modal de configuración de bienvenida
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+}
+
+.modal-box {
+    background: #fff;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 520px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 18px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .modal-body-custom {
+        padding: 16px 18px;
+    }
+
+    .modal-footer-custom {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        padding: 12px 18px;
+        border-top: 1px solid #e9ecef;
+    }
+}

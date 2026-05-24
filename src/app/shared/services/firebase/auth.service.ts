@@ -132,14 +132,15 @@ export class AuthService implements OnInit {
             this.router.navigate(["/welcome"]);
           }
         } else {
-          // OTROS ROLES (Vendedor, Cajero, Operador, etc.): Ir directo a welcome
-          console.log(`👤 Usuario con rol "${result.rol}" - redirigiendo a /welcome`);
-
-          // Cargar empresa sin esperar (no bloquea navegación)
+          // OTROS ROLES (Vendedor, Cajero, Operador, etc.): respetar bienvenida
+          // personalizada si el admin la configuró desde /usuarios. Default: /welcome.
           this.services.getEmpresaByName({ company: result.company });
 
-          // Ir directo a welcome
-          this.router.navigate(["/welcome"]);
+          const destino = (result.bienvenidaPath && typeof result.bienvenidaPath === 'string')
+            ? result.bienvenidaPath
+            : '/welcome';
+          console.log(`👤 Usuario con rol "${result.rol}" - redirigiendo a ${destino}`);
+          this.router.navigate([destino]);
         }
       }
     } else {
