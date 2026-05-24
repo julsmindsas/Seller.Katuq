@@ -7,6 +7,7 @@ import { NavService, Menu } from '../../../shared/services/nav.service';
 import { Role } from '../../../shared/models/roles/roles';
 import Swal from 'sweetalert2';
 import { UtilsService } from '../../../shared/services/utils.service';
+import { ROLE_TEMPLATES, RoleTemplate } from '../../../shared/models/roles/role-templates';
 
 @Component({
   selector: 'app-roles',
@@ -25,6 +26,12 @@ export class RolesComponent implements OnInit {
   public editingRoleId: string | null = null;
   @ViewChild('configModal') configModal: TemplateRef<any>;
 
+  // ─── Plantillas de roles ────────────────────────────────────────
+  // Catálogo declarativo en shared/models/roles/role-templates.ts.
+  // Al elegir una plantilla, se pre-llenan: nombre + menús del pickList + permissions.
+  public plantillasDisponibles: RoleTemplate[] = ROLE_TEMPLATES;
+  public showTemplateModal: boolean = false;
+
   constructor(private fb: FormBuilder,
     private router: Router,
     private modalService: NgbModal,
@@ -34,7 +41,12 @@ export class RolesComponent implements OnInit {
       rol: ['', Validators.required],
       menus: [[], Validators.required],
       empresa: [null],
-      prefijoFacturacion: ['']
+      prefijoFacturacion: [''],
+      // Permisos granulares por módulo (base sólida para iterar, no rompe nada).
+      // Roles existentes no tienen este campo → backend NO lo valida hasta que
+      // se active requirePermission en endpoints específicos. Las plantillas lo
+      // pueblan, los roles manuales lo dejan vacío {}.
+      permissions: [{}]
     });
   }
 
@@ -138,7 +150,8 @@ export class RolesComponent implements OnInit {
         rol: role.rol,
         empresa: role.empresa,
         menus: role.menus,
-        prefijoFacturacion: role.prefijoFacturacion || ''
+        prefijoFacturacion: role.prefijoFacturacion || '',
+        permissions: (role as any).permissions || {}
       });
       this.selectedMenus = role.menus;
       // Actualizar availableMenus eliminando los seleccionados
@@ -146,6 +159,71 @@ export class RolesComponent implements OnInit {
         !this.selectedMenus.some(selected => selected.path === menu.path && selected.title === menu.title)
       );
     }
+  }
+
+  // ─── Plantillas: abrir/cerrar modal + aplicar ──────────────────────────
+  abrirSelectorPlantillas(): void {
+    this.showTemplateModal = true;
+  }
+
+  cerrarSelectorPlantillas(): void {
+    this.showTemplateModal = false;
+  }
+
+  /**
+   * Aplicar una plantilla al form: pre-llena nombre, menús seleccionados y
+   * permissions. El admin puede ajustar después antes de guardar.
+   *
+   * Matching de menús: la plantilla declara paths (`ventas/crear`, `pedidos`,
+   * etc). Buscamos esos paths en `availableMenusCopy` y los movemos a
+   * `selectedMenus`. Si el path no existe (porque el menú fue removido del
+   * proyecto), se ignora silenciosamente.
+   *
+   * Si el rol con `nombreSugerido` ya existe en la empresa, el admin verá el
+   * conflicto al guardar (el backend lo rechazará por unique) o lo cambiará
+   * manualmente.
+   */
+  aplicarPlantilla(tpl: RoleTemplate): void {
+    // 1. Reset selectedMenus + availableMenus
+    this.selectedMenus = [];
+    this.availableMenus = this.utilsService.deepClone(this.availableMenusCopy);
+
+    // 2. Si la plantilla usa wildcard '*', seleccionar TODOS los menús
+    if (tpl.menus.length === 1 && tpl.menus[0] === '*') {
+      this.selectedMenus = this.utilsService.deepClone(this.availableMenusCopy);
+      this.availableMenus = [];
+    } else {
+      // 3. Matchear paths de la plantilla con menús reales (movables)
+      const wantedPaths = new Set(tpl.menus);
+      const toSelect: Menu[] = [];
+      const toKeep: Menu[] = [];
+      for (const menu of this.availableMenus) {
+        if (menu['movable'] !== false && menu.path && wantedPaths.has(menu.path)) {
+          toSelect.push(menu);
+        } else {
+          toKeep.push(menu);
+        }
+      }
+      this.selectedMenus = toSelect;
+      this.availableMenus = toKeep;
+    }
+
+    // 4. Patch form con nombre + permissions de la plantilla
+    this.roleForm.patchValue({
+      rol: tpl.nombreSugerido,
+      menus: this.selectedMenus,
+      permissions: tpl.permissions
+    });
+
+    // 5. Cerrar modal y feedback visual
+    this.showTemplateModal = false;
+    Swal.fire({
+      title: 'Plantilla aplicada',
+      text: `Se cargaron los menús y permisos de "${tpl.nombreSugerido}". Ajustá lo que necesites y guardá.`,
+      icon: 'success',
+      timer: 2500,
+      showConfirmButton: false
+    });
   }
 
   saveRole(): void {

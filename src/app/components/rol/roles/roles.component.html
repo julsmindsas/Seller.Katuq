@@ -23,6 +23,22 @@
         <div class="card-body">
           <form [formGroup]="roleForm" (ngSubmit)="saveRole()">
 
+            <!-- Banner: usar plantilla (solo al CREAR, no al editar) -->
+            <div class="template-banner mb-4" *ngIf="!editingRoleId" (click)="abrirSelectorPlantillas()">
+              <div class="template-banner-icon">
+                <i class="icofont icofont-magic-alt"></i>
+              </div>
+              <div class="template-banner-text">
+                <strong>¿Querés empezar más rápido?</strong>
+                <small class="d-block text-muted">Elegí una plantilla (Administrador, Vendedor, Cajero, Bodeguero, etc) y armá un rol con permisos pre-configurados. Después podés personalizarlo.</small>
+              </div>
+              <div class="template-banner-action">
+                <button type="button" class="btn btn-primary btn-sm">
+                  Ver plantillas <i class="icofont icofont-simple-right"></i>
+                </button>
+              </div>
+            </div>
+
             <!-- Sección: Información básica -->
             <div class="section-title">Información del Rol</div>
             <div class="row mb-3">
@@ -169,3 +185,33 @@
     </button>
   </div>
 </ng-template>
+
+<!-- Modal: Selector de plantilla de rol -->
+<div class="template-modal-overlay" *ngIf="showTemplateModal" (click)="cerrarSelectorPlantillas()">
+  <div class="template-modal-box" (click)="$event.stopPropagation()">
+    <div class="template-modal-header">
+      <h5 class="mb-1"><i class="icofont icofont-magic-alt"></i> Elegí una plantilla</h5>
+      <small class="text-muted">El rol se creará con los menús y permisos pre-configurados. Después podés ajustarlo.</small>
+      <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarSelectorPlantillas()"></button>
+    </div>
+    <div class="template-modal-body">
+      <div class="template-grid">
+        <div *ngFor="let tpl of plantillasDisponibles"
+             class="template-card"
+             [style.border-left-color]="tpl.color"
+             (click)="aplicarPlantilla(tpl)">
+          <div class="template-card-icon" [style.background-color]="tpl.color + '22'" [style.color]="tpl.color">
+            <i class="fa fa-{{ tpl.icon }}"></i>
+          </div>
+          <div class="template-card-body">
+            <strong>{{ tpl.nombreSugerido }}</strong>
+            <p class="text-muted small mb-0">{{ tpl.descripcion }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="template-modal-footer">
+      <button type="button" class="btn btn-light" (click)="cerrarSelectorPlantillas()">Cancelar</button>
+    </div>
+  </div>
+</div>
