@@ -1,262 +1,272 @@
-<!-- <app-breadcrumb [title]="'Crear Usuarios'" [items]="['Maestros/Usuarios']" [active_item]="'Crear Usuarios'"> -->
-<!-- </app-breadcrumb> -->
-<div class="container-fluid">
+<div class="container-fluid usuarios-form">
     <div class="row">
-        <div class="col-sm-12">
-            <div class="card">
-                <form cForm [formGroup]="f">
+        <div class="col-12">
 
-                    <div style="text-align: left; margin: 10px 0 0 15px;">
-                        <i placement="top" ngbTooltip="{{ 'Regresar al listado' | translate }}"
-                            style="font-size: 24px; color: #007bff; cursor: pointer;" 
-                            class="icofont icofont-arrow-left" (click)="irAlListado()"></i>
+            <!-- Header de la página -->
+            <div class="page-header">
+                <button type="button" class="btn-back" (click)="irAlListado()"
+                        placement="top" ngbTooltip="{{ 'Regresar al listado' | translate }}">
+                    <i class="icofont icofont-arrow-left"></i>
+                </button>
+                <div>
+                    <h3 class="mb-1">Crear / Editar Usuario</h3>
+                    <p class="text-muted small mb-0">
+                        Información personal, accesos al sistema y configuración avanzada del usuario.
+                    </p>
+                </div>
+            </div>
+
+            <form cForm [formGroup]="f">
+
+                <!-- ─── SECCIÓN 1: Datos personales ─── -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <i class="fa fa-user-circle section-icon"></i>
+                        <div>
+                            <h5 class="mb-0">Datos personales</h5>
+                            <small class="text-muted">Nombre completo e identificación.</small>
+                        </div>
                     </div>
-
-                    <div class="card-body">
-                        <div class="row">
-                            <h5>Datos Básicos</h5>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                              <p style="font-size: 14px; color: #6c757d; margin-bottom: 15px;">
-                                Esta pantalla permite la creación de usuarios en el sistema a través de un formulario que recopila la información personal, de contacto y de configuración básica del nuevo usuario.
-                              </p>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label" for="nombre">Nombres <span class="req">*</span></label>
+                                <input formControlName="nombre" class="form-control" id="nombre" type="text"
+                                       placeholder="Ej: Juan Carlos">
                             </div>
-                          </div>
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label" for="nombre">Nombres</label>
-                                <input formControlName="nombre" class="form-control" id="Nombre" type="text"
-                                    placeholder="Nombres" required="">
-
-                            </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label" for="validationCustom01">Apellidos</label>
+                            <div class="col-md-4">
+                                <label class="form-label" for="apellido">Apellidos <span class="req">*</span></label>
                                 <input formControlName="apellido" class="form-control" id="apellido" type="text"
-                                    placeholder="Apellidos" required="">
-
+                                       placeholder="Ej: Pérez García">
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label" for="validationCustom01">Tipo de Identificación</label>
-                                <select formControlName="tipoIdentificacion" class="form-control digits" name=""
-                                    id="tipoIdentificacion">
-                                    <option value="1">Seleccione</option>
-                                    <option value="TI">TI</option>
+                            <div class="col-md-2">
+                                <label class="form-label" for="tipoIdentificacion">Tipo doc. <span class="req">*</span></label>
+                                <select formControlName="tipoIdentificacion" class="form-control" id="tipoIdentificacion">
                                     <option value="CC">CC</option>
+                                    <option value="TI">TI</option>
                                     <option value="CE">CE</option>
-                                    <option value="PASAPORTE">PASAPORTE</option>
+                                    <option value="PASAPORTE">Pasaporte</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label" for="validationCustom01">Identificación</label>
+                            <div class="col-md-2">
+                                <label class="form-label" for="identificacion">Identificación <span class="req">*</span></label>
                                 <input formControlName="identificacion" class="form-control" id="identificacion"
-                                    type="text" placeholder="Identificacion" required="">
-
+                                       type="text" placeholder="123456789">
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label" for="email">Email</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ─── SECCIÓN 2: Acceso al sistema ─── -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <i class="fa fa-lock section-icon"></i>
+                        <div>
+                            <h5 class="mb-0">Acceso al sistema</h5>
+                            <small class="text-muted">Credenciales y rol del usuario.</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label" for="email">Email <span class="req">*</span></label>
                                 <input formControlName="email" autocomplete="off" class="form-control" id="email"
-                                    type="text" placeholder="Email" required="">
-
+                                       type="email" placeholder="usuario@empresa.com">
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label" for="validationCustom01">Contraseña</label>
-                                <input formControlName="password" autocomplete="off" class="form-control" id="password"
-                                    type="password" placeholder="Contraseña" required="">
-
+                            <div class="col-md-4">
+                                <label class="form-label" for="password">Contraseña <span class="req">*</span></label>
+                                <input formControlName="password" autocomplete="new-password" class="form-control"
+                                       id="password" type="password" placeholder="••••••••">
                             </div>
-
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <label class="form-label" for="validationCustom01">Número de teléfono fijo</label>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="validationCustom01">Número de Celular</label>
-                            </div>
-
-                        </div>
-                        <div class="row">
-                            <div class="col-md-2 mb-3">
-
-                                <select autocomplete="on" formControlName="indicativoFijoLocal"
-                                    class="form-control select-default" id="validationCustom01" type="number"
-                                    placeholder="Indicativo Local">
-                                    <option disabled selected class="select-default">Indicativo Area</option>
-                                    <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
-                                        {{item.Ciudad}} (+{{item.CodigoArea}})</option>
-                                </select>
-                            </div>
-
-                            <div class="col-md-2 mb-3">
-
-                                <input formControlName="fijo" class="form-control" id="validationCustom01" type="number"
-                                    placeholder="Número de telefono
-                                    fijo">
-
-                            </div>
-                            <div class="col-md-1 mb-3">
-
-                                <input formControlName="extensionFijo" class="form-control" id="validationCustom01"
-                                    type="number" placeholder="Extension">
-                            </div>
-                            <div class="col-md-1"></div>
-                            <div class="col-md-2 mb-3">
-
-                                <select autocomplete="on" formControlName="indicativoCel"
-                                    class="form-control select-default" id="validationCustom01" type="number"
-                                    placeholder="Número de Celular" required="">
-                                    <option disabled selected class="select-default">Indicativo País</option>
-                                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
-                                        (+{{item.phone_code}})</option>
-                                </select>
-
-                            </div>
-                            <div class="col-md-4 mb-3">
-
-                                <input formControlName="cel" class="form-control" id="validationCustom01" type="number"
-                                    placeholder="Número de Celular" required="">
-
-                            </div>
-
-                        </div>
-
-                        <div class="row">
-
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label" for="validationCustom01">Roles</label>
-                                <select formControlName="roles" class="form-control digits" name="" id="">
-                                    <option value="1">Seleccione</option>
+                            <div class="col-md-3">
+                                <label class="form-label" for="roles">Rol <span class="req">*</span></label>
+                                <select formControlName="roles" class="form-control" id="roles">
+                                    <option value="">Seleccionar…</option>
                                     <option *ngFor="let role of roles" [value]="role.rol">{{ role.rol }}</option>
                                 </select>
-
                             </div>
-                            <div class="col-md-4 mb-3">
-                                <label class="form-label" for="validationCustom01">Activo</label>
-                                <input id="checkbox-primary-1" type="checkbox" formControlName="activo">
-
+                            <div class="col-md-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" formControlName="activo" id="activoSwitch">
+                                    <label class="form-check-label" for="activoSwitch">
+                                        Usuario <strong>activo</strong> (puede iniciar sesión)
+                                    </label>
+                                </div>
                             </div>
-
-                        </div>
-                        <div class="row" *ngIf="showCompanySelect">
-                            <div class="col-md-4 mb-3">
+                            <div class="col-md-6" *ngIf="showCompanySelect">
                                 <label class="form-label" for="empresa">Empresa</label>
                                 <select formControlName="empresa" class="form-control" id="empresa">
                                     <option *ngFor="let company of empresas" [value]="company.nomComercial">{{ company.nomComercial }}</option>
                                 </select>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Mapeo vendedor World Office (Harmony Lens punto 5).
-                             Solo aparece si la empresa tiene integración WO activa
-                             (hasWOVendedores se setea desde /v1/reports/sellers/wo). -->
-                        <div class="row" *ngIf="hasWOVendedores">
-                            <div class="col-md-12 mb-2">
-                                <h6 class="mb-1"><i class="fa fa-link"></i> Vendedor World Office</h6>
-                                <small class="text-muted">
-                                    Si este usuario es vendedor en World Office, asigná su mapeo. Sus reportes WO
-                                    se filtrarán automáticamente para que solo vea SUS ventas.
-                                </small>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label" for="vendedorNombreWO">Nombre del vendedor en WO</label>
-                                <input formControlName="vendedorNombreWO" class="form-control" id="vendedorNombreWO"
-                                       list="vendedoresWOList" placeholder="Empezá a escribir el nombre..."
-                                       (change)="onVendedorNombreChange($any($event.target).value)" />
-                                <datalist id="vendedoresWOList">
-                                    <option *ngFor="let v of vendedoresWO" [value]="v.nombre">{{ v.id }} — {{ v.nombre }}</option>
-                                </datalist>
-                            </div>
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label" for="vendedorIdWO">ID WO</label>
-                                <input formControlName="vendedorIdWO" class="form-control" id="vendedorIdWO"
-                                       type="number" placeholder="Auto" readonly />
-                            </div>
-                        </div>
-
-                        <!-- Configuración avanzada de bienvenida (solo si rol != Administrador).
-                             Permite al admin elegir a qué pantalla entra el usuario tras login. -->
-                        <div class="row" *ngIf="!esRolAdmin && f.controls['roles'].value">
-                            <div class="col-md-12 mb-3">
-                                <h6 class="mb-1"><i class="fa fa-cog"></i> Pantalla de bienvenida</h6>
-                                <small class="text-muted d-block mb-2">
-                                    Al iniciar sesión, este usuario verá: <strong>{{ bienvenidaLabelActual }}</strong>
-                                </small>
-                                <button type="button" class="btn btn-outline-secondary btn-sm"
-                                        (click)="abrirBienvenidaModal()">
-                                    <i class="fa fa-cog"></i> Configuración avanzada
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-sm-3">
-                                <button (click)="guardar()" class="btn btn-lg btn-primary">Guardar</button>
-                            </div>
+                <!-- ─── SECCIÓN 3: Contacto ─── -->
+                <div class="section-card">
+                    <div class="section-header">
+                        <i class="fa fa-phone section-icon"></i>
+                        <div>
+                            <h5 class="mb-0">Contacto</h5>
+                            <small class="text-muted">Teléfonos para contactar al usuario.</small>
                         </div>
                     </div>
-                </form>
-
-                <!-- Modal: configurar pantalla de bienvenida -->
-                <div class="modal-overlay" *ngIf="showBienvenidaModal" (click)="cerrarBienvenidaModal()">
-                    <div class="modal-box" (click)="$event.stopPropagation()">
-                        <div class="modal-header">
-                            <h5 class="mb-0"><i class="fa fa-cog"></i> Pantalla de bienvenida</h5>
-                            <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarBienvenidaModal()"></button>
-                        </div>
-                        <div class="modal-body-custom">
-                            <p class="text-muted small">Elegí a qué pantalla irá este usuario justo después de iniciar sesión.</p>
-
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" id="bienvDefault"
-                                       name="bienvTipo" value="default"
-                                       [(ngModel)]="bienvenidaTipoSeleccionado" />
-                                <label class="form-check-label" for="bienvDefault">
-                                    <strong>Pantalla de bienvenida (Default)</strong>
-                                    <br><small class="text-muted">Va a la pantalla con accesos rápidos y resumen del día.</small>
-                                </label>
+                    <div class="section-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Teléfono fijo</label>
+                                <div class="d-flex gap-2">
+                                    <select formControlName="indicativoFijoLocal" class="form-control select-default flex-shrink-0" style="max-width: 160px;">
+                                        <option disabled selected class="select-default">Indicativo</option>
+                                        <option value="{{item.CodigoArea}}" *ngFor="let item of indicativosLocales">
+                                            {{item.Ciudad}} (+{{item.CodigoArea}})
+                                        </option>
+                                    </select>
+                                    <input formControlName="fijo" class="form-control" type="number" placeholder="Número fijo">
+                                    <input formControlName="extensionFijo" class="form-control flex-shrink-0" style="max-width: 100px;"
+                                           type="number" placeholder="Ext.">
+                                </div>
                             </div>
-
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" id="bienvRuta"
-                                       name="bienvTipo" value="ruta"
-                                       [(ngModel)]="bienvenidaTipoSeleccionado" />
-                                <label class="form-check-label" for="bienvRuta">
-                                    <strong>Una página específica de la app</strong>
-                                </label>
-                                <select class="form-select form-select-sm mt-1" *ngIf="bienvenidaTipoSeleccionado === 'ruta'"
-                                        [(ngModel)]="bienvenidaRutaSeleccionada">
-                                    <option value="">Elegir página…</option>
-                                    <option *ngFor="let r of rutasDisponibles" [value]="r.path">{{ r.label }}</option>
-                                </select>
+                            <div class="col-md-6">
+                                <label class="form-label">Celular</label>
+                                <div class="d-flex gap-2">
+                                    <select formControlName="indicativoCel" class="form-control select-default flex-shrink-0" style="max-width: 160px;">
+                                        <option disabled selected class="select-default">País</option>
+                                        <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
+                                            {{item.nombre}} (+{{item.phone_code}})
+                                        </option>
+                                    </select>
+                                    <input formControlName="cel" class="form-control" type="number" placeholder="Número celular">
+                                </div>
                             </div>
-
-                            <div class="form-check mb-2">
-                                <input class="form-check-input" type="radio" id="bienvReporte"
-                                       name="bienvTipo" value="reporte"
-                                       [(ngModel)]="bienvenidaTipoSeleccionado" />
-                                <label class="form-check-label" for="bienvReporte">
-                                    <strong>Un reporte guardado</strong>
-                                    <br><small class="text-muted">Va directo al reporte ejecutado con sus datos filtrados.</small>
-                                </label>
-                                <select class="form-select form-select-sm mt-1" *ngIf="bienvenidaTipoSeleccionado === 'reporte'"
-                                        [(ngModel)]="bienvenidaReporteSeleccionado">
-                                    <option value="">Elegir reporte…</option>
-                                    <option *ngFor="let r of reportesGuardados" [value]="r.id">{{ r.nombre }}</option>
-                                </select>
-                                <small *ngIf="bienvenidaTipoSeleccionado === 'reporte' && reportesGuardados.length === 0"
-                                       class="text-muted d-block mt-1">No hay reportes guardados todavía.</small>
-                            </div>
-                        </div>
-                        <div class="modal-footer-custom">
-                            <button type="button" class="btn btn-light" (click)="cerrarBienvenidaModal()">Cancelar</button>
-                            <button type="button" class="btn btn-primary" (click)="guardarBienvenida()">Guardar</button>
                         </div>
                     </div>
                 </div>
+
+                <!-- ─── SECCIÓN 4: Configuración avanzada (vendedor WO + bienvenida) ───
+                     Solo aparece si la empresa tiene WO O el rol del usuario no es admin
+                     (para mostrar la pantalla de bienvenida configurable). -->
+                <div class="section-card" *ngIf="hasWOVendedores || (!esRolAdmin && f.controls['roles'].value)">
+                    <div class="section-header">
+                        <i class="fa fa-cog section-icon"></i>
+                        <div>
+                            <h5 class="mb-0">Configuración avanzada</h5>
+                            <small class="text-muted">Opciones específicas para este usuario.</small>
+                        </div>
+                    </div>
+                    <div class="section-body">
+
+                        <!-- Vendedor WO (Harmony Lens punto 5) -->
+                        <div class="advanced-block" *ngIf="hasWOVendedores">
+                            <div class="advanced-label">
+                                <i class="fa fa-link"></i>
+                                <span>Vendedor en World Office</span>
+                            </div>
+                            <small class="text-muted d-block mb-2">
+                                Si este usuario es vendedor en WO, asigná el mapeo. Sus reportes WO se filtrarán
+                                automáticamente para que solo vea SUS ventas.
+                            </small>
+                            <div class="row g-2">
+                                <div class="col-md-8">
+                                    <input formControlName="vendedorNombreWO" class="form-control" id="vendedorNombreWO"
+                                           list="vendedoresWOList" placeholder="Empezá a escribir el nombre del vendedor…"
+                                           (change)="onVendedorNombreChange($any($event.target).value)" />
+                                    <datalist id="vendedoresWOList">
+                                        <option *ngFor="let v of vendedoresWO" [value]="v.nombre">{{ v.id }} — {{ v.nombre }}</option>
+                                    </datalist>
+                                </div>
+                                <div class="col-md-4">
+                                    <input formControlName="vendedorIdWO" class="form-control" id="vendedorIdWO"
+                                           type="number" placeholder="ID auto" readonly />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pantalla de bienvenida (solo no-admin) -->
+                        <div class="advanced-block" *ngIf="!esRolAdmin && f.controls['roles'].value">
+                            <div class="advanced-label">
+                                <i class="fa fa-home"></i>
+                                <span>Pantalla de bienvenida</span>
+                            </div>
+                            <small class="text-muted d-block mb-2">
+                                Al iniciar sesión, este usuario verá: <strong>{{ bienvenidaLabelActual }}</strong>
+                            </small>
+                            <button type="button" class="btn btn-outline-secondary btn-sm"
+                                    (click)="abrirBienvenidaModal()">
+                                <i class="fa fa-cog"></i> Cambiar pantalla de bienvenida
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer con acciones -->
+                <div class="form-actions">
+                    <button type="button" class="btn btn-light btn-lg" (click)="irAlListado()">Cancelar</button>
+                    <button type="button" (click)="guardar()" class="btn btn-primary btn-lg">
+                        <i class="fa fa-save"></i> Guardar usuario
+                    </button>
+                </div>
+            </form>
+
+            <!-- Modal: configurar pantalla de bienvenida -->
+            <div class="modal-overlay" *ngIf="showBienvenidaModal" (click)="cerrarBienvenidaModal()">
+                <div class="modal-box" (click)="$event.stopPropagation()">
+                    <div class="modal-header">
+                        <h5 class="mb-0"><i class="fa fa-home"></i> Pantalla de bienvenida</h5>
+                        <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrarBienvenidaModal()"></button>
+                    </div>
+                    <div class="modal-body-custom">
+                        <p class="text-muted small">Elegí a qué pantalla irá este usuario justo después de iniciar sesión.</p>
+
+                        <div class="bienvenida-option">
+                            <input class="form-check-input" type="radio" id="bienvDefault"
+                                   name="bienvTipo" value="default"
+                                   [(ngModel)]="bienvenidaTipoSeleccionado" />
+                            <label class="form-check-label" for="bienvDefault">
+                                <strong>Pantalla de bienvenida (Default)</strong>
+                                <br><small class="text-muted">Va a la pantalla con accesos rápidos y resumen del día.</small>
+                            </label>
+                        </div>
+
+                        <div class="bienvenida-option">
+                            <input class="form-check-input" type="radio" id="bienvRuta"
+                                   name="bienvTipo" value="ruta"
+                                   [(ngModel)]="bienvenidaTipoSeleccionado" />
+                            <label class="form-check-label" for="bienvRuta">
+                                <strong>Una página específica de la app</strong>
+                            </label>
+                            <select class="form-select form-select-sm mt-2" *ngIf="bienvenidaTipoSeleccionado === 'ruta'"
+                                    [(ngModel)]="bienvenidaRutaSeleccionada">
+                                <option value="">Elegir página…</option>
+                                <option *ngFor="let r of rutasDisponibles" [value]="r.path">{{ r.label }}</option>
+                            </select>
+                        </div>
+
+                        <div class="bienvenida-option">
+                            <input class="form-check-input" type="radio" id="bienvReporte"
+                                   name="bienvTipo" value="reporte"
+                                   [(ngModel)]="bienvenidaTipoSeleccionado" />
+                            <label class="form-check-label" for="bienvReporte">
+                                <strong>Un reporte guardado</strong>
+                                <br><small class="text-muted">Va directo al reporte ejecutado con sus datos filtrados.</small>
+                            </label>
+                            <select class="form-select form-select-sm mt-2" *ngIf="bienvenidaTipoSeleccionado === 'reporte'"
+                                    [(ngModel)]="bienvenidaReporteSeleccionado">
+                                <option value="">Elegir reporte…</option>
+                                <option *ngFor="let r of reportesGuardados" [value]="r.id">{{ r.nombre }}</option>
+                            </select>
+                            <small *ngIf="bienvenidaTipoSeleccionado === 'reporte' && reportesGuardados.length === 0"
+                                   class="text-muted d-block mt-2">No hay reportes guardados todavía.</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer-custom">
+                        <button type="button" class="btn btn-light" (click)="cerrarBienvenidaModal()">Cancelar</button>
+                        <button type="button" class="btn btn-primary" (click)="guardarBienvenida()">Guardar</button>
+                    </div>
+                </div>
             </div>
+
         </div>
     </div>
 </div>
