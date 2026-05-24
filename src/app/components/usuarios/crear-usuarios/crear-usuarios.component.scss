@@ -1,26 +1,35 @@
-// ─── Form maestro de usuarios — estilo limpio en secciones ─────────────────
+// ─── Form maestro de usuarios — UNA card con secciones internas ───────────
 .usuarios-form {
-    padding: 20px 0;
+    padding: 10px 0;
+
+    .card {
+        border: 1px solid #e9ecef;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
 }
 
 .page-header {
     display: flex;
     align-items: center;
     gap: 14px;
-    margin-bottom: 24px;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e9ecef;
 
     .btn-back {
         background: #fff;
         border: 1px solid #e0e4e8;
         border-radius: 50%;
-        width: 40px;
-        height: 40px;
+        width: 38px;
+        height: 38px;
         display: flex;
         align-items: center;
         justify-content: center;
         color: #007bff;
         cursor: pointer;
         transition: all 0.15s;
+        flex-shrink: 0;
 
         &:hover {
             background: #007bff;
@@ -29,96 +38,92 @@
         }
 
         i {
-            font-size: 18px;
+            font-size: 16px;
         }
     }
 
-    h3 {
+    h4 {
         font-weight: 600;
         color: #1f2937;
     }
 }
 
-// Cada sección es una card independiente — más fácil de escanear visualmente
-.section-card {
-    background: #fff;
-    border: 1px solid #e9ecef;
-    border-radius: 10px;
-    margin-bottom: 16px;
-    overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+// Secciones dentro de la card (sin bordes/cards anidadas)
+.form-section {
+    margin-bottom: 24px;
 
-    .section-header {
+    &:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .section-title {
         display: flex;
         align-items: center;
-        gap: 14px;
-        padding: 16px 22px;
-        background: #f8f9fa;
-        border-bottom: 1px solid #e9ecef;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding-bottom: 8px;
+        border-bottom: 1px dashed #e9ecef;
 
         .section-icon {
-            font-size: 22px;
+            font-size: 16px;
             color: #007bff;
             background: #e7f1ff;
-            width: 42px;
-            height: 42px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
         }
 
-        h5 {
+        h6 {
             font-weight: 600;
             color: #1f2937;
+            font-size: 14px;
         }
     }
 
-    .section-body {
-        padding: 20px 22px;
+    .form-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: #4b5563;
+        margin-bottom: 4px;
 
-        .form-label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #4b5563;
-            margin-bottom: 4px;
-
-            .req {
-                color: #dc3545;
-                margin-left: 2px;
-            }
+        .req {
+            color: #dc3545;
+            margin-left: 2px;
         }
+    }
 
-        .form-control {
-            border-radius: 6px;
-            border-color: #d1d5db;
-            transition: border-color 0.15s, box-shadow 0.15s;
+    .form-control {
+        border-radius: 6px;
+        border-color: #d1d5db;
+        transition: border-color 0.15s, box-shadow 0.15s;
 
-            &:focus {
-                border-color: #80bdff;
-                box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
-            }
+        &:focus {
+            border-color: #80bdff;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
         }
+    }
 
-        .form-check-input {
-            cursor: pointer;
-        }
+    .form-check-input {
+        cursor: pointer;
+    }
 
-        .form-check-label {
-            cursor: pointer;
-            color: #4b5563;
-        }
+    .form-check-label {
+        cursor: pointer;
+        color: #4b5563;
     }
 }
 
-// Bloques dentro de la sección "Configuración avanzada"
+// Bloques anidados dentro de "Configuración avanzada"
 .advanced-block {
-    padding: 14px 16px;
+    padding: 12px 14px;
     border: 1px solid #e9ecef;
     border-left: 3px solid #6c757d;
     border-radius: 6px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     background: #fafbfc;
 
     &:last-child {
@@ -131,7 +136,7 @@
         gap: 8px;
         font-weight: 600;
         color: #1f2937;
-        font-size: 14px;
+        font-size: 13px;
         margin-bottom: 4px;
 
         i {
@@ -140,13 +145,14 @@
     }
 }
 
-// Footer de acciones — sticky look
+// Footer de acciones — dentro de la card
 .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 12px;
-    padding: 16px 0 30px;
-    margin-top: 8px;
+    padding-top: 20px;
+    margin-top: 24px;
+    border-top: 1px solid #e9ecef;
 
     .btn-lg {
         padding: 10px 24px;
