@@ -159,7 +159,18 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
     if (!tipo || tipo === 'default' || !path) return 'Pantalla de bienvenida (Default)';
     if (tipo === 'reporte') {
       const rep = this.reportesGuardados.find((r) => `/dashboards/builder/${r.id}` === path);
-      return rep ? `Reporte: ${rep.nombre}` : 'Reporte guardado';
+      if (rep) return `Reporte: ${rep.nombre}`;
+      // Lazy-load: si el modal nunca se abrió, los reportes no están en cache.
+      // Disparamos el fetch y mostramos placeholder mientras tanto.
+      if (this.reportesGuardados.length === 0) {
+        this.reportsService.list().subscribe({
+          next: (list) => {
+            this.reportesGuardados = (list || []).map((r: any) => ({ id: r.id, nombre: r.name || r.nombre || r.title || '(sin nombre)' }));
+          },
+          error: () => { },
+        });
+      }
+      return 'Reporte guardado';
     }
     const ruta = this.rutasDisponibles.find((r) => r.path === path);
     return ruta ? ruta.label : path;
@@ -170,7 +181,7 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
     if (this.reportesGuardados.length === 0) {
       this.reportsService.list().subscribe({
         next: (list) => {
-          this.reportesGuardados = (list || []).map((r: any) => ({ id: r.id, nombre: r.nombre || r.title || r.id }));
+          this.reportesGuardados = (list || []).map((r: any) => ({ id: r.id, nombre: r.name || r.nombre || r.title || '(sin nombre)' }));
         },
         error: () => { this.reportesGuardados = []; },
       });
