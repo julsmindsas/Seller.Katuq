@@ -12,6 +12,12 @@ export class WelcomeComponent implements OnInit {
   public userActive: any;
   public currentCompany: any;
 
+  // Set de paths del menú asignados al rol del usuario (sin barra inicial).
+  // Se llena en ngOnInit leyendo user.menu del localStorage. Los admins lo dejan
+  // vacío y `canAccess()` retorna true siempre para ellos (escape hatch).
+  private userMenuPaths: Set<string> = new Set();
+  private isAdminRole = false;
+
   // Onboarding banner
   showOnboardingBanner = false;
 
@@ -35,12 +41,49 @@ export class WelcomeComponent implements OnInit {
     this.currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
     this.userActive = JSON.parse(localStorage.getItem('user') ?? '{}');
 
+    // Construir set de paths del menú del rol — usado por canAccess() para
+    // ocultar cards del welcome que el rol no puede usar.
+    const rol = (this.userActive?.rol || this.userActive?.role || '').toLowerCase();
+    this.isAdminRole = rol === 'administrador' || rol === 'super administrador';
+    const menus = Array.isArray(this.userActive?.menu) ? this.userActive.menu : [];
+    for (const m of menus) {
+      if (m && typeof m.path === 'string') {
+        // Normalizar: sin barra inicial (los routerLinks del HTML sí la llevan)
+        this.userMenuPaths.add(m.path.replace(/^\/+/, ''));
+      }
+    }
+
     if (localStorage.getItem('showOnboardingBanner') === 'true') {
       this.showOnboardingBanner = true;
     }
 
     this.cargarTRM();
     this.cargarIndicadoresEconomicos();
+  }
+
+  /**
+   * Verifica si el rol del usuario tiene acceso a un path específico del welcome.
+   * - Admin/Super Admin: siempre true.
+   * - Otros: chequea contra el set de menús asignados al rol.
+   *
+   * @param path Ruta del routerLink (con o sin barra inicial).
+   * @returns true si el usuario puede ver la card.
+   */
+  canAccess(path: string): boolean {
+    if (this.isAdminRole) return true;
+    if (!path) return false;
+    const normalized = path.replace(/^\/+/, '');
+    return this.userMenuPaths.has(normalized);
+  }
+
+  /**
+   * Verifica si el usuario tiene acceso a AL MENOS uno de los paths.
+   * Útil para mostrar una sección entera del welcome que tiene varias cards
+   * de la misma categoría.
+   */
+  canAccessAny(paths: string[]): boolean {
+    if (this.isAdminRole) return true;
+    return paths.some((p) => this.canAccess(p));
   }
 
   dismissOnboarding(): void {

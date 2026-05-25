@@ -12,9 +12,10 @@
                     Gestiona productos, ventas, inventarios y envios desde un solo lugar.
                 </p>
                 <div class="hero-actions">
-                    <a class="btn btn-katuq-solid btn-sm" routerLink="/ventas/crear-ventas">
+                    <a *ngIf="canAccess('ventas/crear-ventas')" class="btn btn-katuq-solid btn-sm" routerLink="/ventas/crear-ventas">
                         <i class="fa fa-plus me-1"></i>Nueva venta
                     </a>
+                    <!-- Mi perfil siempre visible — todos pueden editar su perfil propio -->
                     <a class="btn btn-katuq-outline-light btn-sm" routerLink="/usuarios/editarUsuario">
                         <i class="fa fa-user me-1"></i>Mi perfil
                     </a>
@@ -40,25 +41,25 @@
                 </button>
             </div>
             <div class="row g-2">
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3" *ngIf="canAccess('productos/crearProductos')">
                     <a routerLink="/productos/crearProductos" class="setup-link" style="background: #faf5ff; border-color: #e9d5ff;">
                         <i class="fa fa-cube" style="color: #8b5cf6;"></i>
                         <small class="fw-semibold" style="color: #334155;">Agregar productos</small>
                     </a>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3" *ngIf="canAccess('ventas/clientes')">
                     <a routerLink="/ventas/clientes" class="setup-link" style="background: #f0fdf4; border-color: #bbf7d0;">
                         <i class="fa fa-user-plus" style="color: #27ae60;"></i>
                         <small class="fw-semibold" style="color: #334155;">Agregar clientes</small>
                     </a>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3" *ngIf="canAccess('empresas')">
                     <a routerLink="/empresas" class="setup-link" style="background: #fef3c7; border-color: #fde68a;">
                         <i class="fa fa-building" style="color: #e67e22;"></i>
                         <small class="fw-semibold" style="color: #334155;">Info de tu empresa</small>
                     </a>
                 </div>
-                <div class="col-6 col-md-3">
+                <div class="col-6 col-md-3" *ngIf="canAccess('empresas')">
                     <a routerLink="/empresas" class="setup-link" style="background: #f1f5f9; border-color: #e2e8f0;">
                         <i class="fa fa-cog" style="color: #64748b;"></i>
                         <small class="fw-semibold" style="color: #334155;">Personalizar</small>
@@ -111,14 +112,16 @@
     </div>
 </div>
 
-<!-- Acciones rapidas -->
-<div class="container-fluid px-4 mb-2">
+<!-- Acciones rapidas — solo si el usuario tiene acceso a al menos una -->
+<div class="container-fluid px-4 mb-2"
+     *ngIf="canAccessAny(['ventas/crear-ventas','pos','ventas/ventas-pos','productos','ventas/pedidos','inventario/inventario-catalogo','ventas/clienteslista','crm/list'])">
     <h6 class="section-title">Acciones rapidas</h6>
 </div>
 
-<div class="container-fluid px-4 mb-4">
+<div class="container-fluid px-4 mb-4"
+     *ngIf="canAccessAny(['ventas/crear-ventas','pos','ventas/ventas-pos','productos','ventas/pedidos','inventario/inventario-catalogo','ventas/clienteslista','crm/list'])">
     <div class="row g-3">
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-4" *ngIf="canAccess('ventas/crear-ventas')">
             <a routerLink="/ventas/crear-ventas" class="action-card">
                 <div class="action-icon" style="background: #faf5ff;">
                     <i class="fa fa-shopping-cart" style="color: #8b5cf6;"></i>
@@ -131,7 +134,7 @@
             </a>
         </div>
 
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-4" *ngIf="canAccess('pos') || canAccess('ventas/ventas-pos')">
             <a routerLink="/pos" class="action-card">
                 <div class="action-icon" style="background: #f0fdf4;">
                     <i class="fa fa-calculator" style="color: #27ae60;"></i>
@@ -144,7 +147,7 @@
             </a>
         </div>
 
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-4" *ngIf="canAccess('productos')">
             <a routerLink="/productos" class="action-card">
                 <div class="action-icon" style="background: #fff7ed;">
                     <i class="fa fa-cube" style="color: #e67e22;"></i>
@@ -157,7 +160,7 @@
             </a>
         </div>
 
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-4" *ngIf="canAccess('ventas/pedidos')">
             <a routerLink="/ventas/pedidos" class="action-card">
                 <div class="action-icon" style="background: #eff6ff;">
                     <i class="fa fa-file-text" style="color: #3b82f6;"></i>
@@ -170,7 +173,7 @@
             </a>
         </div>
 
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-4" *ngIf="canAccess('inventario/inventario-catalogo')">
             <a routerLink="/inventario/inventario-catalogo" class="action-card">
                 <div class="action-icon" style="background: #fef3c7;">
                     <i class="fa fa-cubes" style="color: #d97706;"></i>
@@ -183,7 +186,7 @@
             </a>
         </div>
 
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-4" *ngIf="canAccess('ventas/clienteslista')">
             <a routerLink="/ventas/clienteslista" class="action-card">
                 <div class="action-icon" style="background: #fdf2f8;">
                     <i class="fa fa-users" style="color: #ec4899;"></i>
@@ -196,7 +199,7 @@
             </a>
         </div>
 
-        <div class="col-6 col-lg-4">
+        <div class="col-6 col-lg-4" *ngIf="canAccess('crm/list')">
             <a routerLink="/crm/list" class="action-card">
                 <div class="action-icon" style="background: #eef2ff;">
                     <i class="fa fa-bullseye" style="color: #6366f1;"></i>
@@ -211,35 +214,37 @@
     </div>
 </div>
 
-<!-- Herramientas -->
-<div class="container-fluid px-4 mb-2">
+<!-- Herramientas — solo si el usuario tiene acceso a al menos una -->
+<div class="container-fluid px-4 mb-2"
+     *ngIf="canAccessAny(['despachos','dashboards','dashboards/builder','empresas','integrations'])">
     <h6 class="section-title">Herramientas</h6>
 </div>
 
-<div class="container-fluid px-4 mb-4">
+<div class="container-fluid px-4 mb-4"
+     *ngIf="canAccessAny(['despachos','dashboards','dashboards/builder','empresas','integrations'])">
     <div class="row g-3">
-        <div class="col-6 col-md-4 col-lg-3">
+        <div class="col-6 col-md-4 col-lg-3" *ngIf="canAccess('despachos')">
             <a routerLink="/despachos" class="tool-card">
                 <i class="fa fa-truck tool-icon" style="color: #8b5cf6;"></i>
                 <span class="tool-label">Despachos</span>
             </a>
         </div>
 
-        <div class="col-6 col-md-4 col-lg-3">
+        <div class="col-6 col-md-4 col-lg-3" *ngIf="canAccess('dashboards') || canAccess('dashboards/builder')">
             <a routerLink="/dashboards" class="tool-card">
                 <i class="fa fa-bar-chart tool-icon" style="color: #27ae60;"></i>
                 <span class="tool-label">Analiticas</span>
             </a>
         </div>
 
-        <div class="col-6 col-md-4 col-lg-3">
+        <div class="col-6 col-md-4 col-lg-3" *ngIf="canAccess('empresas')">
             <a routerLink="/empresas" class="tool-card">
                 <i class="fa fa-building tool-icon" style="color: #e67e22;"></i>
                 <span class="tool-label">Mi Empresa</span>
             </a>
         </div>
 
-        <div class="col-6 col-md-4 col-lg-3">
+        <div class="col-6 col-md-4 col-lg-3" *ngIf="canAccess('integrations')">
             <a routerLink="/integrations" class="tool-card">
                 <i class="fa fa-plug tool-icon" style="color: #3b82f6;"></i>
                 <span class="tool-label">Integraciones</span>
