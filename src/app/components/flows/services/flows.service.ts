@@ -46,14 +46,13 @@ export class FlowsService extends BaseService {
   }
 
   /**
-   * Lista flows del tenant.
-   * Por default `excludeEmpty=true` para no mostrar borradores con grafo vacío
-   * (artefactos de pruebas o templates abandonados). Pasar `{includeEmpty: true}`
-   * para verlos todos.
+   * Lista flows del tenant. Incluye borradores con grafo vacío por default
+   * para que el usuario vea todo lo que ha creado. Pasar `{excludeEmpty: true}`
+   * para ocultar borradores sin nodos.
    */
-  list(opts: { includeEmpty?: boolean; status?: string; limit?: number } = {}): Observable<FlowSpec[]> {
+  list(opts: { includeEmpty?: boolean; excludeEmpty?: boolean; status?: string; limit?: number } = {}): Observable<FlowSpec[]> {
     const params: string[] = [];
-    if (!opts.includeEmpty) params.push('excludeEmpty=true');
+    if (opts.excludeEmpty) params.push('excludeEmpty=true');
     if (opts.status) params.push(`status=${encodeURIComponent(opts.status)}`);
     if (opts.limit) params.push(`limit=${opts.limit}`);
     const url = params.length > 0 ? `${this.baseUrl}?${params.join('&')}` : this.baseUrl;
