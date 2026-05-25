@@ -38,19 +38,26 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
   ) {
     this.f = fb.group({
       cd: [''],
+      // Críticos — sin estos no podés crear/usar al user.
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required],
       nombre: ['', [Validators.required]],
       apellido: ['', Validators.required],
       tipoIdentificacion: ['CC', Validators.required],
       identificacion: ['', [Validators.required]],
-      activo: [true, Validators.required],
       roles: ['', Validators.required],
-      indicativoFijoLocal: ['Indicativo Area', Validators.required],
-      fijo: ['', Validators.required],
-      extensionFijo: ['', Validators.required],
-      indicativoCel: ['Indicativo País', Validators.required],
-      cel: ['', Validators.required],
+      // No críticos: estado + contacto.
+      // `activo` siempre tiene valor (boolean), no necesita required.
+      activo: [true],
+      // Teléfono fijo, extensión e indicativo del fijo son opcionales — muchos
+      // usuarios no tienen teléfono fijo o no aplica (vendedor móvil, etc).
+      indicativoFijoLocal: ['Indicativo Area'],
+      fijo: [''],
+      extensionFijo: [''],
+      // Celular: opcional. Si lo llenás, el indicativo país también ayuda pero
+      // no se fuerza para no romper el guardado por un placeholder.
+      indicativoCel: ['Indicativo País'],
+      cel: [''],
       empresa: [''],
       // Mapeo vendedor WO (Harmony Lens punto 5). Opcional, solo se usa
       // cuando el rol es VENTAS/Vendedor/Asesor y la empresa tiene integración WO.
@@ -276,13 +283,43 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
         });
       }
     } else {
+      // Marcar todos los controls como touched para que la UI muestre los errores
+      // inline. Y armar mensaje específico con los campos faltantes.
+      this.f.markAllAsTouched();
+      const camposFaltantes = this.getCamposInvalidos();
       Swal.fire({
         icon: 'error',
-        title: 'Falta algún dato requerido, por favor verifique',
-        showConfirmButton: false,
-        timer: 1500
+        title: 'Faltan datos para guardar',
+        html: camposFaltantes.length > 0
+          ? `Por favor completá:<br><strong>${camposFaltantes.join(', ')}</strong>`
+          : 'Por favor verificá los datos del formulario.',
+        confirmButtonText: 'Entendido'
       });
     }
+  }
+
+  /**
+   * Devuelve la lista de labels en español de los controls del form que están
+   * en estado inválido. Útil para mensaje específico al guardar.
+   */
+  private getCamposInvalidos(): string[] {
+    const labels: Record<string, string> = {
+      email: 'Email',
+      password: 'Contraseña',
+      nombre: 'Nombres',
+      apellido: 'Apellidos',
+      tipoIdentificacion: 'Tipo de identificación',
+      identificacion: 'Identificación',
+      roles: 'Rol',
+    };
+    const faltantes: string[] = [];
+    for (const key of Object.keys(this.f.controls)) {
+      const ctrl = this.f.controls[key];
+      if (ctrl.invalid && labels[key]) {
+        faltantes.push(labels[key]);
+      }
+    }
+    return faltantes;
   }
 
   public irAlListado() {
