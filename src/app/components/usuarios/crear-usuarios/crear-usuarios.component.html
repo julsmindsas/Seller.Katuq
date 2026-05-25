@@ -73,9 +73,14 @@
                                            type="email" placeholder="usuario@empresa.com">
                                 </div>
                                 <div class="col-md-4">
-                                    <label class="form-label" for="password">Contraseña <span class="req">*</span></label>
+                                    <label class="form-label" for="password">
+                                        Contraseña
+                                        <span class="req" *ngIf="!esModoEdicion">*</span>
+                                        <small class="text-muted ms-1" *ngIf="esModoEdicion">(opcional al editar)</small>
+                                    </label>
                                     <input formControlName="password" autocomplete="new-password" class="form-control"
-                                           id="password" type="password" placeholder="••••••••">
+                                           id="password" type="password"
+                                           [placeholder]="esModoEdicion ? 'Dejar vacío para mantener la actual' : '••••••••'">
                                 </div>
                                 <div class="col-md-3">
                                     <label class="form-label" for="roles">Rol <span class="req">*</span></label>

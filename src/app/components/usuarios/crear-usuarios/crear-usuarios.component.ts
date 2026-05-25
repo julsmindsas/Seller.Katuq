@@ -248,11 +248,20 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** True si estamos editando un usuario existente (vs creando uno nuevo) */
+  get esModoEdicion(): boolean {
+    return localStorage.getItem('currentUsuario') !== null;
+  }
+
   cargarUsuario() {
     const usuario = JSON.parse(localStorage.getItem('currentUsuario') || '[]');
     if (usuario) {
       this.f.patchValue(usuario);
       this.f.controls['password'].setValue(''); // Clear password field
+      // En modo edición, la contraseña es OPCIONAL: si el admin la deja vacía,
+      // se mantiene la actual del Firestore. Solo se actualiza si escribe una nueva.
+      this.f.controls['password'].clearValidators();
+      this.f.controls['password'].updateValueAndValidity();
     }
   }
 
@@ -270,8 +279,17 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
           this.route.navigateByUrl('/usuarios');
         });
       } else {
-        this.f.controls['password'].setValue(this.utils.hash(this.f.controls['password'].value));
-        const usuario = this.f.value;
+        // Modo edición: solo hashear y enviar password si el admin escribió una
+        // nueva. Si la dejó vacía, NO se incluye en el payload (el backend
+        // mantiene la actual de Firestore intacta).
+        const nuevaPassword = this.f.controls['password'].value;
+        if (nuevaPassword && nuevaPassword.trim().length > 0) {
+          this.f.controls['password'].setValue(this.utils.hash(nuevaPassword));
+        }
+        const usuario = { ...this.f.value };
+        if (!nuevaPassword || nuevaPassword.trim().length === 0) {
+          delete usuario.password;
+        }
         this.service.updateUser(usuario).subscribe((response: any) => {
           Swal.fire({
             title: 'Guardado!',
