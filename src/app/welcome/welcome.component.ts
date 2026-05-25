@@ -17,6 +17,9 @@ export class WelcomeComponent implements OnInit {
   // vacío y `canAccess()` retorna true siempre para ellos (escape hatch).
   private userMenuPaths: Set<string> = new Set();
   private isAdminRole = false;
+  // Si el JWT no tiene menu (sesión legacy / token viejo), mostrar TODO en lugar
+  // de ocultar — no romper operación de users con tokens previos al cambio.
+  private hasMenuMetadata = false;
 
   // Onboarding banner
   showOnboardingBanner = false;
@@ -46,6 +49,7 @@ export class WelcomeComponent implements OnInit {
     const rol = (this.userActive?.rol || this.userActive?.role || '').toLowerCase();
     this.isAdminRole = rol === 'administrador' || rol === 'super administrador';
     const menus = Array.isArray(this.userActive?.menu) ? this.userActive.menu : [];
+    this.hasMenuMetadata = menus.length > 0;
     for (const m of menus) {
       if (m && typeof m.path === 'string') {
         // Normalizar: sin barra inicial (los routerLinks del HTML sí la llevan)
@@ -71,6 +75,11 @@ export class WelcomeComponent implements OnInit {
    */
   canAccess(path: string): boolean {
     if (this.isAdminRole) return true;
+    // Fallback defensivo: si el JWT no trae menu (sesión legacy / token viejo
+    // anterior al cambio), mostrar TODO. Evita romper operación de users con
+    // sesiones previas. Cuando re-loguean, el JWT nuevo trae menu y el filtro
+    // empieza a aplicar.
+    if (!this.hasMenuMetadata) return true;
     if (!path) return false;
     const normalized = path.replace(/^\/+/, '');
     return this.userMenuPaths.has(normalized);
@@ -83,6 +92,7 @@ export class WelcomeComponent implements OnInit {
    */
   canAccessAny(paths: string[]): boolean {
     if (this.isAdminRole) return true;
+    if (!this.hasMenuMetadata) return true;
     return paths.some((p) => this.canAccess(p));
   }
 
