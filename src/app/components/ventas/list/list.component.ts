@@ -1418,9 +1418,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const motivos: Record<string, string> = {
       falta_cedula: '⚠️ Push a Guía Cereza bloqueado: falta cédula del cliente. Capturar el documento y reintentar push manual desde logística.',
       missing_nroPedido: '⚠️ Push externo bloqueado: pedido sin número. Revisar integración.',
+      push_cereza_failed: '⚠️ Cereza rechazó el push automático. Ver notas de facturación/pagos para el detalle del error. Reintentar push manual desde logística.',
     };
     const m = pedido?.motivoAtencion;
-    return motivos[m] || '⚠️ Pedido requiere atención del operador. Ver notas del pedido.';
+    const base = motivos[m] || '⚠️ Pedido requiere atención del operador. Ver notas del pedido.';
+    // Si hay ultimoErrorPush, anexarlo (acotado para tooltip legible)
+    if (pedido?.ultimoErrorPush) {
+      const err = String(pedido.ultimoErrorPush).substring(0, 150);
+      return `${base}\n\nError: ${err}`;
+    }
+    return base;
   }
 
   getExternalOrderNumbers(pedido: Pedido): { label: string; platform: string; tooltip?: string; hasNote?: boolean }[] {
