@@ -158,7 +158,11 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
     const path = this.f?.controls['bienvenidaPath']?.value;
     if (!tipo || tipo === 'default' || !path) return 'Pantalla de bienvenida (Default)';
     if (tipo === 'reporte') {
-      const rep = this.reportesGuardados.find((r) => `/dashboards/builder/${r.id}` === path);
+      // Match contra /view/ (preferido) y /builder/ (legacy, paths viejos antes
+      // del cambio a vista previa ejecutada).
+      const rep = this.reportesGuardados.find((r) =>
+        `/dashboards/view/${r.id}` === path || `/dashboards/builder/${r.id}` === path
+      );
       if (rep) return `Reporte: ${rep.nombre}`;
       // Lazy-load: si el modal nunca se abrió, los reportes no están en cache.
       // Disparamos el fetch y mostramos placeholder mientras tanto.
@@ -192,8 +196,9 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
     const pathActual = this.f.controls['bienvenidaPath'].value || '';
     if (tipoActual === 'ruta') this.bienvenidaRutaSeleccionada = pathActual;
     if (tipoActual === 'reporte') {
-      const match = pathActual.match(/^\/dashboards\/builder\/(.+)$/);
-      this.bienvenidaReporteSeleccionado = match ? match[1] : '';
+      // Aceptar /view/:id (nuevo) y /builder/:id (legacy) para compat.
+      const match = pathActual.match(/^\/dashboards\/(view|builder)\/(.+)$/);
+      this.bienvenidaReporteSeleccionado = match ? match[2] : '';
     }
     this.showBienvenidaModal = true;
   }
@@ -212,7 +217,10 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
       path = this.bienvenidaRutaSeleccionada || null;
       if (!path) tipo = null;
     } else if (tipo === 'reporte') {
-      path = this.bienvenidaReporteSeleccionado ? `/dashboards/builder/${this.bienvenidaReporteSeleccionado}` : null;
+      // /view/:id es el modo "vista previa ejecutada" (no el builder editable).
+      // El usuario abre el reporte directamente con sus datos filtrados, sin
+      // ver la UI de drag-and-drop del constructor.
+      path = this.bienvenidaReporteSeleccionado ? `/dashboards/view/${this.bienvenidaReporteSeleccionado}` : null;
       if (!path) tipo = null;
     }
     this.f.controls['bienvenidaTipo'].setValue(tipo);
