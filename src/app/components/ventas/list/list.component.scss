@@ -745,6 +745,21 @@ $filter-border-color: #e0e0e0;
     }
   }
 
+  // Insignia de "pedido requiere atención" (push externo bloqueado, etc).
+  // Backend setea requiereAtencionLogistica=true cuando un integration node
+  // (osmosis-order-create) bloquea el push por dato faltante.
+  .pedido-alerta-icon {
+    color: #F59E0B;
+    font-size: 0.95rem;
+    vertical-align: middle;
+    cursor: help;
+    animation: alerta-pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes alerta-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.55; transform: scale(1.12); }
+  }
+
   .external-order-number {
     font-family: "Courier New", monospace;
     font-weight: 500;

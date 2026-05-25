@@ -1408,6 +1408,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * Para Osmosis incluye un `tooltip` HTML con estado actual + tracking + ultimo
    * sync (capturado por el flow cereza-orders-status-pull cada 30 min).
    */
+  /**
+   * Tooltip para el ícono de "pedido requiere atención" que aparece junto
+   * al nroPedido cuando el backend setea `requiereAtencionLogistica=true`.
+   * El motivo concreto viene en `motivoAtencion`; mapeamos a un mensaje
+   * accionable. La nota completa vive en notasPedido.notasFacturacionPagos.
+   */
+  getAtencionTooltip(pedido: any): string {
+    const motivos: Record<string, string> = {
+      falta_cedula: '⚠️ Push a Guía Cereza bloqueado: falta cédula del cliente. Capturar el documento y reintentar push manual desde logística.',
+      missing_nroPedido: '⚠️ Push externo bloqueado: pedido sin número. Revisar integración.',
+    };
+    const m = pedido?.motivoAtencion;
+    return motivos[m] || '⚠️ Pedido requiere atención del operador. Ver notas del pedido.';
+  }
+
   getExternalOrderNumbers(pedido: Pedido): { label: string; platform: string; tooltip?: string; hasNote?: boolean }[] {
     const integ: any = (pedido as any).integrations || (pedido as any).integraciones || {};
     const out: { label: string; platform: string; tooltip?: string; hasNote?: boolean }[] = [];
