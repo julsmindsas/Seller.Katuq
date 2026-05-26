@@ -6,6 +6,7 @@ import { NgbActiveModal, NgbModal, NgbModalOptions } from '@ng-bootstrap/ng-boot
 import { ProductDetailsComponent } from './product-details/product-details.component';
 import Swal from 'sweetalert2';
 import { ImagenService } from '../../shared/utils/image.service';
+import { AngularFireStorage } from '@angular/fire/compat/storage';
 import { LazyLoadEvent } from 'primeng/api';
 import * as XLSX from 'xlsx';
 import { UtilsService } from '../../shared/services/utils.service';
@@ -280,6 +281,7 @@ export class ProductosComponent implements OnInit, OnDestroy {
   constructor(
     private service: MaestroService,
     private imageService: ImagenService,
+    private storage: AngularFireStorage,
     private router: Router,
     private modalService: NgbModal,
     private utilsService: UtilsService,
@@ -818,11 +820,35 @@ export class ProductosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private ejecutarDuplicacion(row) {
+  private async copiarImagenesEnStorage(imagenes: any[]): Promise<any[]> {
+    if (!imagenes?.length) return [];
+    const resultado = [];
+    for (const img of imagenes) {
+      if (!img?.urls) { resultado.push(img); continue; }
+      try {
+        const blob = await fetch(img.urls).then(r => r.blob());
+        const timestamp = new Date().getTime();
+        const nombreOriginal = img.nombreImagen || img.path?.split('/').pop() || `imagen_${timestamp}`;
+        const partes = nombreOriginal.split('.');
+        const ext = partes.length > 1 ? partes.pop() : 'jpg';
+        const nuevaNombre = `${partes.join('.')}_copia_${timestamp}.${ext}`;
+        const nuevaRuta = `Productos/${nuevaNombre}`;
+        await this.storage.upload(nuevaRuta, blob);
+        const nuevaUrl = await this.storage.ref(nuevaRuta).getDownloadURL().toPromise();
+        resultado.push({ ...img, urls: nuevaUrl, path: nuevaRuta, nombreImagen: nuevaNombre });
+      } catch {
+        // Si falla la copia, se conserva la referencia original
+        resultado.push({ ...img, path: undefined });
+      }
+    }
+    return resultado;
+  }
+
+  private async ejecutarDuplicacion(row) {
     // Mostrar loading
     Swal.fire({
       title: 'Duplicando producto...',
-      text: 'Por favor espera mientras se crea la copia del producto.',
+      text: 'Copiando imágenes y creando el producto. Por favor espera.',
       allowOutsideClick: false,
       showConfirmButton: false,
       didOpen: () => { Swal.showLoading(); }
@@ -866,6 +892,14 @@ export class ProductosComponent implements OnInit, OnDestroy {
     // Código de barras único
     if (productoDuplicado.identificacion?.codigoBarras) {
       productoDuplicado.identificacion.codigoBarras = `${productoDuplicado.identificacion.codigoBarras}-${timestamp}`;
+    }
+
+    // Copiar archivos de imagen en Storage para que el duplicado sea independiente del original
+    if (productoDuplicado.crearProducto) {
+      productoDuplicado.crearProducto.imagenesPrincipales =
+        await this.copiarImagenesEnStorage(productoDuplicado.crearProducto.imagenesPrincipales || []);
+      productoDuplicado.crearProducto.imagenesSecundarias =
+        await this.copiarImagenesEnStorage(productoDuplicado.crearProducto.imagenesSecundarias || []);
     }
 
     this.service.createProduct(productoDuplicado).subscribe({
