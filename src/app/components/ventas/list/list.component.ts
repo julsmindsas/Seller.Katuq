@@ -55,7 +55,7 @@ import * as XLSX from "xlsx";
 import { EcomerceProductsComponent } from "../catalogo/ecomerce-products/ecomerce-products.component";
 import { PedidoEntrega } from "../../despachos/interfaces/pedido-entrega.interface";
 import { Subject, forkJoin, of } from "rxjs";
-import { debounceTime, distinctUntilChanged, takeUntil } from "rxjs/operators";
+import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
 
@@ -148,6 +148,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   // Propiedades para búsqueda mejorada
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
+  private editOrderSubject = new Subject<Pedido>();
   isSearching: boolean = false;
   searchError: string | null = null;
   searchMinLength: number = 2;
@@ -2644,6 +2645,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Serializar saves del carrito: evita carrera cuando el usuario elimina/agrega
+    // productos en ráfaga rápida (múltiples editOrder en vuelo simultáneos)
+    this.editOrderSubject.pipe(
+      debounceTime(400),
+      switchMap(order => this.ventasService.editOrder(order)),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: () => {
+        this.refrescarDatos(true);
+        Swal.fire({ icon: 'success', title: 'Pedido actualizado correctamente',
+                    showConfirmButton: false, timer: 1500 });
+      },
+      error: () => {
+        Swal.fire({ icon: 'error', title: 'Error al actualizar el pedido',
+                    text: 'No se pudieron guardar los cambios. Intenta nuevamente.' });
+      }
+    });
+
     // Setup debouncing para filtros de columna (copiado de tabla-pedidos)
     this.filterSubscription = this.filterSubject.pipe(
       debounceTime(300), // Esperar 300ms después del último evento
@@ -5705,15 +5724,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       payloadCompleto: order,
     });
 
-    this.ventasService.editOrder(order).subscribe((data) => {
-      this.refrescarDatos(true);
-      Swal.fire({
-        icon: "success",
-        title: "Pedido actualizado correctamente",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    });
+    this.editOrderSubject.next(order);
   }
 
   // NUEVO MÉTODO SEGURO: Solo actualizar notas sin tocar carrito
