@@ -6210,6 +6210,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               window.scrollTo({ top: last });
             }, 0);
           }
+          if (reason === "confirmed") {
+            return;
+          }
           // Restaurar valores originales
           order.estadoPago = this.originalEstadoPago;
           order.estadoProceso = this.originalEstadoProceso;
@@ -6220,29 +6223,31 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   cambiarEstadoPago(order: Pedido) {
-    // Aplicar los valores temporales al pedido
-    order.estadoPago = this.tempEstadoPago;
-    order.estadoProceso = this.tempEstadoProceso;
+    const orderToUpdate = {
+      ...order,
+      estadoPago: this.tempEstadoPago,
+      estadoProceso: this.tempEstadoProceso
+    };
 
     // Marcar como calculado en frontend para evitar recálculo automático
-    (order as any)._estadoCalculadoEnFrontend = true;
+    (orderToUpdate as any)._estadoCalculadoEnFrontend = true;
 
     // Si se marca como PreAprobado manualmente, establecer la bandera
-    if (order.estadoPago === "PreAprobado") {
-      (order as any).preAprobadoManual = true;
+    if (orderToUpdate.estadoPago === "PreAprobado") {
+      (orderToUpdate as any).preAprobadoManual = true;
     }
 
     // Actualizar el pedido (skip check: el usuario cambió el estado manualmente)
-    this.editOrder(order, true);
+    this.editOrder(orderToUpdate as Pedido, true);
 
-    // Cerrar el modal
-    this.modalService.dismissAll();
+    // Cerrar el modal como confirmado para no ejecutar la restauración del handler de cancelación.
+    this.modalService.dismissAll("confirmed");
 
     // Mostrar mensaje de confirmación
     Swal.fire({
       icon: "success",
       title: "Estado de pago actualizado",
-      text: `El estado se cambió a: ${order.estadoPago}`,
+      text: `El estado se cambió a: ${orderToUpdate.estadoPago}`,
       showConfirmButton: false,
       timer: 1500,
     });
