@@ -14,6 +14,7 @@ import { ReportsService } from '../../../shared/services/dashboard/reports.servi
 })
 export class CrearUsuariosComponent implements OnInit, OnDestroy {
   public f: FormGroup;
+  private readonly passwordMinLength = 8;
   indicativos: { nombre: string; name: string; nom: string; iso2: string; iso3: string; phone_code: string; }[];
   indicativosLocales: any[];
   empresas: any[] = [];
@@ -40,7 +41,7 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
       cd: [''],
       // Críticos — sin estos no podés crear/usar al user.
       email: ['', [Validators.required, Validators.email]],
-      password: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(this.passwordMinLength)]],
       nombre: ['', [Validators.required]],
       apellido: ['', Validators.required],
       tipoIdentificacion: ['CC', Validators.required],
@@ -260,7 +261,7 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
       this.f.controls['password'].setValue(''); // Clear password field
       // En modo edición, la contraseña es OPCIONAL: si el admin la deja vacía,
       // se mantiene la actual del Firestore. Solo se actualiza si escribe una nueva.
-      this.f.controls['password'].clearValidators();
+      this.f.controls['password'].setValidators([Validators.minLength(this.passwordMinLength)]);
       this.f.controls['password'].updateValueAndValidity();
     }
   }
@@ -268,7 +269,7 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
   guardar() {
     if (this.f.valid) {
       if (localStorage.getItem('currentUsuario') === null) {
-        const usuario = this.f.value;
+        const usuario = this.buildUsuarioPayload();
         this.service.createUser(usuario).subscribe((response: any) => {
           Swal.fire({
             title: 'Guardado!',
@@ -277,19 +278,14 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
             confirmButtonText: 'Ok'
           });
           this.route.navigateByUrl('/usuarios');
+        }, error => {
+          this.mostrarErrorGuardado(error);
         });
       } else {
         // Modo edición: solo hashear y enviar password si el admin escribió una
         // nueva. Si la dejó vacía, NO se incluye en el payload (el backend
         // mantiene la actual de Firestore intacta).
-        const nuevaPassword = this.f.controls['password'].value;
-        if (nuevaPassword && nuevaPassword.trim().length > 0) {
-          this.f.controls['password'].setValue(this.utils.hash(nuevaPassword));
-        }
-        const usuario = { ...this.f.value };
-        if (!nuevaPassword || nuevaPassword.trim().length === 0) {
-          delete usuario.password;
-        }
+        const usuario = this.buildUsuarioPayload();
         this.service.updateUser(usuario).subscribe((response: any) => {
           Swal.fire({
             title: 'Guardado!',
@@ -298,6 +294,8 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
             confirmButtonText: 'Ok'
           });
           this.route.navigateByUrl('/usuarios');
+        }, error => {
+          this.mostrarErrorGuardado(error);
         });
       }
     } else {
@@ -338,6 +336,30 @@ export class CrearUsuariosComponent implements OnInit, OnDestroy {
       }
     }
     return faltantes;
+  }
+
+  private buildUsuarioPayload(): any {
+    const usuario = { ...this.f.value };
+    const password = (usuario.password || '').trim();
+
+    if (password) {
+      usuario.password = this.utils.hash(password);
+    } else {
+      delete usuario.password;
+    }
+
+    usuario.email = (usuario.email || '').trim().toLowerCase();
+    return usuario;
+  }
+
+  private mostrarErrorGuardado(error: any): void {
+    const mensaje = error?.error?.message || error?.error?.msg || 'No fue posible guardar el usuario.';
+    Swal.fire({
+      icon: 'error',
+      title: 'Error al guardar',
+      text: mensaje,
+      confirmButtonText: 'Entendido'
+    });
   }
 
   public irAlListado() {

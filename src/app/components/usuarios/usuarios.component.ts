@@ -30,13 +30,15 @@ export class UsuariosComponent implements OnInit {
   cargarDatos() {
     this.cargando = true
     this.service.consultarUsuarios().subscribe((x: any) => {
-      const datos = x
+      const datos = (x || []).map((usuario: any) => ({
+        ...usuario,
+        id: usuario.id || usuario.cd
+      }));
       this.temp = [...datos];
       this.cargando = false;
       this.rows = datos;
       this.usuarios = datos;
       localStorage.setItem('usuarios', JSON.stringify(datos)); // Guardar en localStorage
-      console.log(this.rows)
       this.cargando = false
     })
   }
@@ -45,7 +47,6 @@ export class UsuariosComponent implements OnInit {
     if (window.screen.width < 700) {
       this.isMobile = true;
     }
-    console.log(this.rows)
   }
   
   crearUsuario() {
@@ -84,6 +85,16 @@ export class UsuariosComponent implements OnInit {
   }
   
   eliminarUsuario(usuario: any) {
+    const usuarioId = usuario?.cd || usuario?.id;
+    if (!usuarioId) {
+      Swal.fire(
+        'Error',
+        'No fue posible identificar el usuario a eliminar.',
+        'error'
+      );
+      return;
+    }
+
     Swal.fire({
       title: `¿Está seguro de eliminar el usuario ${usuario.nombre}?`,
       text: "Esta acción no se puede deshacer.",
@@ -96,15 +107,15 @@ export class UsuariosComponent implements OnInit {
     }).then((result) => {
       if (result.isConfirmed) {
         // Llamar al servicio para eliminar el usuario.
-        this.service.eliminarUsuario(usuario.id).subscribe(response => {
+        this.service.eliminarUsuario(usuarioId).subscribe(response => {
           Swal.fire(
             'Eliminado',
             'El usuario ha sido eliminado exitosamente.',
             'success'
           );
           // Actualizar los arreglos de usuarios
-          this.temp = this.temp.filter(u => u.id !== usuario.id);
-          this.usuarios = this.usuarios.filter(u => u.id !== usuario.id);
+          this.temp = this.temp.filter(u => (u.cd || u.id) !== usuarioId);
+          this.usuarios = this.usuarios.filter(u => (u.cd || u.id) !== usuarioId);
         }, error => {
           Swal.fire(
             'Error',

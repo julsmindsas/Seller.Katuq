@@ -34,6 +34,7 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **004** | **user-docs-flows** | **en redacción** | — | Documentación de /flows orientada al comerciante final (no técnico). Vocabulario: sincronización/pedido/producto/stock. Prohibido: trigger/nodo/expression/binding. |
 | **005** | **wo-cartera-universo-completo** | **draft (código mergeado, pendiente validación)** | Daniel | Refactor `woBalancesSyncService`: universo desde `listCustomers` (resuelve bug Harmony $1.553M→$1.860M). Suma CE en montoPagadoHistorico + docsCE. `fechaCorte` param. Fix descuento (`porDescuento` vs `porcentajeDescuento`). Persist renglones opt-in en `accounting_document_lines`. |
 | **006** | **harmony-vendedor-filter** | **done** | Daniel | Filtro server-side multi-source por vendedor: orders por `asesor_email`, accounting_documents/balances por `vendedor_id` con fallback a `vendedor_nombre`. JWT con `vendedorIdWO/NombreWO`. Política estricta sin mapeo → 0 docs. Form crear-usuarios con dropdown autocomplete desde `/v1/reports/sellers/wo`. E2E PASS Harmony LUZ MARIA = 24 docs subset. |
+| **007** | **user-admin-credentials-delete** | **done** | Daniel | Normaliza contraseña en crear/editar usuarios y habilita eliminar usuario desde `/usuarios` con validación de empresa. |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -387,3 +388,8 @@ _(vacío)_
 - **D-035**: Endpoint `GET /v1/reports/sellers/wo` retorna distinct vendedores desde `accounting_documents` para autocomplete admin. Form `crear-usuarios` consume con datalist.
 - **D-036**: Cleanup auto-sesión via `scripts/audit-session-changes.js` (read-only). NO tocar admins reales (`luisfernanaristi@hotmail.com`, `wdsg11@hotmail.com`). Tests con users desechables `test-vendedor-wo@katuq.test` + `test-sin-mapeo@katuq.test`, eliminados post-validación.
 - E2E PASS: vendedor con mapeo (LUZ MARIA 2137) ve 24 docs subset; sin mapeo ve 0; admin sin tocar comportamiento existente.
+
+### 2026-05-28 (sesión usuarios — spec 007)
+- **D-037**: Contraseña de usuarios se estandariza a SHA256 Base64 compatible con el login actual. El frontend hashea al crear y al editar; el backend conserva hashes existentes y normaliza contraseñas crudas si llegan por API.
+- **D-038**: Eliminación de usuarios queda habilitada vía `POST /v1/users/delete` solo para Administrador, usando el doc id `cd` y validando que el usuario pertenezca a la empresa activa salvo superadmin `Julsmind`.
+- Implementado en frontend `/usuarios` y backend `/v1/users`, sin migración de contraseñas históricas ni cambio del flujo completo de autenticación.
