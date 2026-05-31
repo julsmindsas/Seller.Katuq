@@ -444,7 +444,7 @@
 										</label>
 										<select formControlName="tiempoEntrega" class="form-control">
 											<option value="seleccione" selected disabled>Seleccione</option>
-											<option *ngFor="let item of tiempoEntrega" value="{{item.minDias}}">
+											<option *ngFor="let item of tiempoEntrega" [value]="item.nombreInterno">
 												{{item.nombreInterno}}</option>
 										</select>
 									</div>

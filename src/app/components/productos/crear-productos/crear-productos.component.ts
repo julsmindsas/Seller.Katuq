@@ -1427,12 +1427,12 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
     formGeneralEditar["cd"] = this.cd;
 
     this.edit = formGeneralEditar;
+    sessionStorage.setItem("infoForms", JSON.stringify(this.edit));
 
     this.service.editProductByReference(formGeneralEditar).subscribe((res) => {
       console.log(res);
       if (res) {
         Swal.fire("Editato", "Producto editado correctamente", "success");
-        sessionStorage.setItem("infoForms", JSON.stringify(this.edit));
         // Limpiar arrays DESPUÉS de que el servidor confirme éxito
         this.filesPaths = [];
         this.fileUrls = [];
@@ -2217,6 +2217,7 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
 
     this.service.getTiempoEntrega().subscribe((r: any) => {
       this.tiempoEntrega = r as any[];
+
     });
 
     this.service.consultarOcasion().subscribe((r: any) => {
@@ -2295,7 +2296,16 @@ export class CrearProductosComponent implements OnInit, OnChanges, OnDestroy {
   private loadBasicData() {
     this.crearProducto.patchValue(this.edit.crearProducto);
     this.Dimensiones.patchValue(this.edit.dimensiones);
-    this.disponibilidad.patchValue(this.edit.disponibilidad);
+    const disp = { ...this.edit.disponibilidad };
+    // Si tiempoEntrega es un número (minDias legacy), convertir al nombreInterno correspondiente
+    const teVal = disp.tiempoEntrega;
+    const isLegacyNumeric = teVal !== null && teVal !== undefined && !isNaN(Number(teVal)) &&
+      !this.tiempoEntrega.some(i => i.nombreInterno === teVal);
+    if (isLegacyNumeric && this.tiempoEntrega.length > 0) {
+      const match = this.tiempoEntrega.find(i => String(i.minDias) === String(teVal));
+      if (match) disp.tiempoEntrega = match.nombreInterno;
+    }
+    this.disponibilidad.patchValue(disp);
     this.identificacion.patchValue(this.edit.identificacion);
     this.exposicion.patchValue(this.edit.exposicion);
     this.etiquetas = this.edit.exposicion.etiquetas;
