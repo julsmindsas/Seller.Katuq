@@ -214,6 +214,16 @@
                         </div>
                     </div>
                 </div>
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="zonasCobertura">{{ 'Zonas de Cobertura' | translate }}</label>
+                            <p-multiSelect [options]="zonasCobroOptions" formControlName="zonasCobertura"
+                                placeholder="Zonas de cobertura" [filter]="true" display="chip">
+                            </p-multiSelect>
+                        </div>
+                    </div>
+                </div>
                 <div class="mt-4 text-end">
                     <button type="button" class="btn btn-secondary me-2" (click)="resetForm()" [disabled]="isLoading">
                         <i class="pi pi-refresh me-1"></i>

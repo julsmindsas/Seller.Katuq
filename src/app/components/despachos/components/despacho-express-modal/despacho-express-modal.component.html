@@ -1,0 +1,151 @@
+<p-dialog
+  header="Despacho Express"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{width: '65vw', maxWidth: '900px'}"
+  [closable]="true"
+  (onHide)="cerrar()"
+  [draggable]="false">
+
+  <!-- Loading suggestions -->
+  <div *ngIf="loading" style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 8px 12px; background: #eef2ff; border-radius: 6px;">
+    <i class="pi pi-spin pi-spinner" style="color: #6366f1;"></i>
+    <span style="font-size: 0.85rem; color: #4338ca;">Buscando transportadores sugeridos...</span>
+  </div>
+
+  <!-- Summary Header -->
+  <div style="display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap;">
+    <div style="background: #f0f4ff; border-radius: 8px; padding: 12px 20px; flex: 1; min-width: 150px;">
+      <div style="font-size: 0.8rem; color: #666;">Pedidos</div>
+      <div style="font-size: 1.4rem; font-weight: 700; color: #1a1a2e;">{{totalPedidos}}</div>
+    </div>
+    <div style="background: #f0fff4; border-radius: 8px; padding: 12px 20px; flex: 1; min-width: 150px;">
+      <div style="font-size: 0.8rem; color: #666;">Grupos por zona</div>
+      <div style="font-size: 1.4rem; font-weight: 700; color: #16a34a;">{{grupos.length}}</div>
+    </div>
+    <div style="background: #fffbeb; border-radius: 8px; padding: 12px 20px; flex: 1; min-width: 150px;">
+      <div style="font-size: 0.8rem; color: #666;">Valor total</div>
+      <div style="font-size: 1.4rem; font-weight: 700; color: #d97706;">{{totalValor | currency:'COP':'symbol-narrow':'1.0-0'}}</div>
+    </div>
+  </div>
+
+  <!-- Warning for orders already in shipping orders -->
+  <div *ngIf="pedidosConOrden.length > 0"
+       style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
+    <i class="pi pi-exclamation-triangle" style="color: #856404; margin-right: 8px;"></i>
+    <span style="color: #856404;">
+      {{pedidosConOrden.length}} pedido(s) ya tienen orden de envio y seran reasignados.
+    </span>
+  </div>
+
+  <!-- Groups -->
+  <div *ngFor="let grupo of grupos; let i = index"
+       style="border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 12px;">
+
+    <!-- Group Header -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+      <div>
+        <span style="font-weight: 600; font-size: 1.05rem;">
+          <i class="pi pi-map-marker" style="color: #6366f1; margin-right: 6px;"></i>
+          {{grupo.ciudad}} &mdash; {{grupo.zona}}
+        </span>
+        <span style="background: #e0e7ff; color: #4338ca; border-radius: 12px; padding: 2px 10px; font-size: 0.8rem; margin-left: 8px;">
+          {{grupo.pedidos.length}} pedido{{grupo.pedidos.length > 1 ? 's' : ''}}
+        </span>
+      </div>
+      <span style="font-weight: 600; color: #059669;">
+        {{grupo.totalValor | currency:'COP':'symbol-narrow':'1.0-0'}}
+      </span>
+    </div>
+
+    <!-- Transporter & Method Selection -->
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+      <div style="min-width: 180px;">
+        <label style="font-size: 0.8rem; color: #666; display: block; margin-bottom: 4px;">Metodo</label>
+        <p-dropdown
+          [options]="[{label: 'Mensajero propio', value: 'mensajeroPropio'}, {label: 'Transportadora', value: 'transportadora'}, {label: 'Recoge en tienda', value: 'recogeEnTienda'}]"
+          [(ngModel)]="grupo.metodoEnvio"
+          optionLabel="label"
+          optionValue="value"
+          appendTo="body"
+          [style]="{width: '100%'}"
+          (onChange)="onMetodoChange(grupo, $event.value)">
+        </p-dropdown>
+      </div>
+      <div *ngIf="grupo.metodoEnvio !== 'recogeEnTienda'" style="flex: 1; min-width: 250px;">
+        <label style="font-size: 0.8rem; color: #666; display: block; margin-bottom: 4px;">Transportador</label>
+        <p-dropdown
+          [options]="vendorOptions"
+          [(ngModel)]="grupo.transportadorId"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          filterBy="label"
+          placeholder="Seleccionar transportador"
+          [showClear]="true"
+          appendTo="body"
+          [style]="{width: '100%'}"
+          (onChange)="onTransportadorChange(grupo, $event.value)">
+        </p-dropdown>
+      </div>
+      <div *ngIf="grupo.metodoEnvio === 'recogeEnTienda'" style="flex: 1; min-width: 250px; display: flex; align-items: center; padding-top: 18px;">
+        <i class="pi pi-home" style="color: #6366f1; margin-right: 8px;"></i>
+        <span style="color: #666; font-size: 0.9rem;">El cliente recoge en tienda</span>
+      </div>
+    </div>
+
+    <!-- Confidence badge -->
+    <div *ngIf="grupo.razon" style="margin-top: 8px;">
+      <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;"
+            [ngStyle]="{
+              'background': grupo.confianza === 'alta' ? '#dcfce7' : grupo.confianza === 'media' ? '#fef9c3' : '#fee2e2',
+              'color': grupo.confianza === 'alta' ? '#166534' : grupo.confianza === 'media' ? '#854d0e' : '#991b1b'
+            }">
+        {{grupo.razon}}
+      </span>
+    </div>
+
+    <!-- Collapsed pedidos list -->
+    <details style="margin-top: 8px;">
+      <summary style="cursor: pointer; font-size: 0.85rem; color: #6b7280;">
+        Ver pedidos del grupo
+      </summary>
+      <div style="margin-top: 8px; max-height: 200px; overflow-y: auto;">
+        <table style="width: 100%; font-size: 0.85rem; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f9fafb;">
+              <th style="padding: 4px 8px; text-align: left;">Nro</th>
+              <th style="padding: 4px 8px; text-align: left;">Cliente</th>
+              <th style="padding: 4px 8px; text-align: right;">Valor</th>
+              <th style="padding: 4px 8px; text-align: left;">Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of grupo.pedidos" style="border-bottom: 1px solid #f3f4f6;">
+              <td style="padding: 4px 8px;">{{p.nroPedido}}</td>
+              <td style="padding: 4px 8px;">{{p.cliente?.nombres_completos || p.clienteNombre || '-'}}</td>
+              <td style="padding: 4px 8px; text-align: right;">{{(p.faltaPorPagar || p.totalPedidoConDescuento || 0) | currency:'COP':'symbol-narrow':'1.0-0'}}</td>
+              <td style="padding: 4px 8px;">{{p.estadoProceso}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+
+  <!-- Footer Actions -->
+  <ng-template pTemplate="footer">
+    <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <button pButton type="button" label="Cancelar"
+              icon="pi pi-times" class="p-button-text"
+              (click)="cerrar()"></button>
+      <button pButton type="button"
+              [label]="dispatching ? 'Despachando...' : 'Despachar Todo (' + totalPedidos + ')'"
+              icon="pi pi-send"
+              class="p-button-warning"
+              [loading]="dispatching"
+              [disabled]="!canDispatch"
+              (click)="despacharTodo()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,112 @@
+.shopify-dashboard {
+  padding: 1.5rem;
+}
+
+.dashboard-header h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+:host ::ng-deep .dashboard-card .p-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  height: 100%;
+}
+
+:host ::ng-deep .dashboard-card .p-card-body {
+  padding: 1.25rem;
+}
+
+.card-content {
+  padding: 0.5rem 0;
+}
+
+/* Status Icon */
+.status-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.status-connected {
+  background: #dcfce7;
+  color: #22C55E;
+}
+
+.status-disconnected {
+  background: #fee2e2;
+  color: #EF4444;
+}
+
+.status-checking {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+/* Metrics */
+.metric-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.metric-icon {
+  opacity: 0.9;
+}
+
+/* Actions */
+.action-btn {
+  text-align: left;
+}
+
+.nav-links .p-button {
+  justify-content: flex-start;
+}
+
+/* Timeline */
+.timeline-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+
+.marker-success {
+  background: #dcfce7;
+  color: #22C55E;
+}
+
+.marker-error {
+  background: #fee2e2;
+  color: #EF4444;
+}
+
+.marker-info {
+  background: #dbeafe;
+  color: #3b82f6;
+}
+
+.event-item {
+  padding-bottom: 0.75rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .shopify-dashboard {
+    padding: 1rem;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+}

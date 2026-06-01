@@ -1,23 +1,22 @@
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-sm-12">
-            <div class="card p-0">
-                <div class="card-body pb-0 px-0">
+<div class="tabla-pedidos-container">
+            <div class="card p-0 shadow-none border-0">
+                <div class="card-body p-0">
                     <p-table #dt1 [value]="orders" dataKey="nroPedido" [rows]="rowsPerPage" [showCurrentPageReport]="true"
                         [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading" [resizableColumns]="true"
                         [reorderableColumns]="true" [autoLayout]="true" [scrollable]="true"
-                        [scrollHeight]="'calc(100vh - 400px)'" [paginator]="true"
+                        [scrollHeight]="'calc(100vh - 290px)'" [paginator]="true"
                         [lazy]="useLazyMode" [totalRecords]="useLazyMode ? totalRecords : orders.length"
                         (onLazyLoad)="loadOrdersLazy($event)"
+                        [(selection)]="selectedPedidos" (selectionChange)="onSelectionChange($event)"
                         currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords} pedidos' | translate }}"
                         [globalFilterFields]="['nroPedido','documento','validacion','formaDePago','estadoPago']"
                         styleClass="p-datatable-sm p-datatable-customers p-datatable-gridlines p-datatable-striped"
-                        [tableStyle]="{ 'min-width': '20rem', 'padding':'5px' }"
+                        [tableStyle]="{ 'min-width': '100%' }"
                         style="font-size: 0.8em; table-layout: auto;">
 
                         <ng-template pTemplate="caption">
-                            <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center p-2 table-header-actions">
-                                <h5 class="m-0 fw-bold mb-3 mb-md-0">{{ 'Pedidos para Despachar' | translate }}</h5>
+                            <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center px-2 py-1 table-header-actions">
+                                <h6 class="m-0 fw-bold mb-1 mb-md-0" style="font-size: 0.85rem;">{{ 'Pedidos para Despachar' | translate }}</h6>
                                 <div class="d-flex align-items-center gap-2">
                                     <!-- Column Selector - ✅ Responsive multiselect -->
                                     <p-multiSelect [options]="displayedColumns"
@@ -46,13 +45,17 @@
                         <!-- HEADER: Encabezados y filtros -->
                         <ng-template pTemplate="header">
                             <tr class="p-table-tr-th" style="font-size: 0.8rem; background-color: #f8f9fa; font-weight: 600;">
-                                <!-- Recorremos todas las columnas -->
-                                <ng-container *ngFor="let col of selectedColumns">
+                                <!-- Checkbox de selección masiva -->
+                                <th style="width: 3rem">
+                                    <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
+                                </th>
+                                <!-- Recorremos todas las columnas con trackBy para optimizar rendering -->
+                                <ng-container *ngFor="let col of selectedColumns; trackBy: trackByColumnField">
                                     <!-- Columnas especiales sin ordenamiento -->
                                     <th *ngIf="isColumnVisible(col.field) && (col.field === 'detalles' || col.field === 'opciones')"
                                         class="text-center"
-                                        style="padding: 0.75rem 0.5rem; vertical-align: middle;">
-                                        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        style="width: 38px; padding: 0.4rem 0.15rem; vertical-align: middle;">
+                                        <span style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.3px; opacity: 0.7;">
                                             {{ col.header | translate }}
                                         </span>
                                     </th>
@@ -60,8 +63,8 @@
                                     <th *ngIf="isColumnVisible(col.field) && col.field !== 'detalles' && col.field !== 'opciones'"
                                         class="text-center"
                                         [pSortableColumn]="col.field"
-                                        style="padding: 0.75rem 0.5rem; vertical-align: middle; white-space: nowrap;">
-                                        <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        style="padding: 0.4rem 0.25rem; vertical-align: middle; white-space: nowrap;">
+                                        <span style="font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.3px;">
                                             {{ col.header | translate }}
                                         </span>
                                         <p-sortIcon [field]="col.field" style="margin-left: 0.25rem;"></p-sortIcon>
@@ -122,6 +125,10 @@
                         <!-- CUERPO: filas y row expansion -->
                         <ng-template pTemplate="body" let-pedido let-expanded="expanded" let-rowIndex="rowIndex">
                             <tr class="p-table-tr-td" [ngClass]="{'table-row-odd': rowIndex % 2 !== 0}" style="font-size: 0.85em;">
+                                <!-- Checkbox de selección -->
+                                <td>
+                                    <p-tableCheckbox [value]="pedido"></p-tableCheckbox>
+                                </td>
                                 <!-- Botón para row expansion (Detalles) -->
                                 <td *ngIf="isColumnVisible('detalles')" style="width: 3rem; text-align: center;">
                                     <button type="button" pButton pRipple [pRowToggler]="pedido"
@@ -135,8 +142,8 @@
                                     <button pButton pRipple type="button" icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" (click)="onRowMenuClick($event, rowMenu, pedido)"></button>
                                 </td>
                                 
-                                <!-- Columnas dinámicas -->
-                                <ng-container *ngFor="let col of selectedColumns">
+                                <!-- Columnas dinámicas con trackBy para optimizar rendering -->
+                                <ng-container *ngFor="let col of selectedColumns; trackBy: trackByColumnField">
                                     <ng-container *ngIf="col.field !== 'detalles' && col.field !== 'opciones' && isColumnVisible(col.field)">
                                         <!-- Estado de Pago - Optimizado y Compacto -->
                                         <td *ngIf="col.field === 'estadoPago'" class="estado-cell text-center col-estadoPago" [attr.data-label]="col.header | translate" style="padding: 0.5rem;">
@@ -161,29 +168,39 @@
                                         
                                         <!-- Estado de Proceso - Optimizado y Compacto -->
                                         <td *ngIf="col.field === 'estadoProceso'" class="estado-cell text-center col-estadoProceso" [attr.data-label]="col.header | translate" style="padding: 0.5rem;">
-                                            <span class="modern-badge"
-                                                [pTooltip]="getStatusDisplay(pedido?.estadoProceso).full"
-                                                tooltipPosition="top"
-                                                [ngClass]="{
-                                                    'badge-secondary': pedido?.estadoProceso === 'SinProducir',
-                                                    'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                                    'badge-primary': pedido?.estadoProceso === 'Empacado',
-                                                    'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                                    'badge-success': pedido?.estadoProceso === 'Entregado',
-                                                    'badge-danger': pedido?.estadoProceso === 'Rechazado',
-                                                    'badge-dark': pedido?.estadoProceso === 'Cerrado'
-                                                }">
-                                                <i class="status-icon pi" [ngClass]="{
-                                                    'pi-circle': pedido?.estadoProceso === 'SinProducir',
-                                                    'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
-                                                    'pi-box': pedido?.estadoProceso === 'Empacado',
-                                                    'pi-truck': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
-                                                    'pi-check-circle': pedido?.estadoProceso === 'Entregado',
-                                                    'pi-times-circle': pedido?.estadoProceso === 'Rechazado',
-                                                    'pi-lock': pedido?.estadoProceso === 'Cerrado'
-                                                }"></i>
-                                                {{ getStatusDisplay(pedido?.estadoProceso).short }}
-                                            </span>
+                                            <div class="estado-proceso-wrapper">
+                                                <span class="modern-badge"
+                                                    [pTooltip]="getStatusDisplay(pedido?.estadoProceso).full"
+                                                    tooltipPosition="top"
+                                                    [ngClass]="{
+                                                        'badge-secondary': pedido?.estadoProceso === 'SinProducir',
+                                                        'badge-info': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                        'badge-primary': pedido?.estadoProceso === 'Empacado',
+                                                        'badge-warning': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                        'badge-success': pedido?.estadoProceso === 'Entregado',
+                                                        'badge-danger': pedido?.estadoProceso === 'Rechazado',
+                                                        'badge-dark': pedido?.estadoProceso === 'Cerrado'
+                                                    }">
+                                                    <i class="status-icon pi" [ngClass]="{
+                                                        'pi-circle': pedido?.estadoProceso === 'SinProducir',
+                                                        'pi-cog': pedido?.estadoProceso === 'Producido' || pedido?.estadoProceso === 'ProducidoTotalmente' || pedido?.estadoProceso === 'ProducidoParcialmente',
+                                                        'pi-box': pedido?.estadoProceso === 'Empacado',
+                                                        'pi-truck': pedido?.estadoProceso === 'Despachado' || pedido?.estadoProceso === 'ParaDespachar',
+                                                        'pi-check-circle': pedido?.estadoProceso === 'Entregado',
+                                                        'pi-times-circle': pedido?.estadoProceso === 'Rechazado',
+                                                        'pi-lock': pedido?.estadoProceso === 'Cerrado'
+                                                    }"></i>
+                                                    {{ getStatusDisplay(pedido?.estadoProceso).short }}
+                                                    <button *ngIf="getNextState(pedido.estadoProceso)"
+                                                            pButton type="button"
+                                                            [icon]="getNextStateIcon(pedido.estadoProceso)"
+                                                            [pTooltip]="getNextStateLabel(pedido.estadoProceso)"
+                                                            tooltipPosition="top"
+                                                            class="p-button-rounded p-button-text p-button-sm estado-next-btn"
+                                                            (click)="quickChangeState(pedido); $event.stopPropagation()">
+                                                    </button>
+                                                </span>
+                                            </div>
                                         </td>
                                         
                                         <!-- Prioridad - Nueva columna -->
@@ -394,7 +411,7 @@
                         <!-- EXPANSIÓN DE FILAS: Productos del carrito con preferencias y adiciones -->
                         <ng-template pTemplate="rowexpansion" let-pedido>
                             <tr style="font-size: 0.85em;">
-                                <td [attr.colspan]="selectedColumns.length">
+                                <td [attr.colspan]="selectedColumns.length + 1">
                                     <div class="p-2">
                                         <p-table [value]="pedido.carrito" dataKey="pedido.carrito" styleClass="p-datatable-sm expanded-table">
                                             <ng-template pTemplate="header">
@@ -513,22 +530,47 @@
                         <!-- MENSAJE SI LA TABLA ESTÁ VACÍA -->
                         <ng-template pTemplate="emptymessage">
                             <tr>
-                                <td [attr.colspan]="selectedColumns.length">{{ 'Productos no encontrados.' | translate }}</td>
+                                <td [attr.colspan]="selectedColumns.length + 1">{{ 'Productos no encontrados.' | translate }}</td>
                             </tr>
                         </ng-template>
 
                         <!-- FOOTER: Totales (adaptar el colspan en función del número de columnas visibles) -->
                         <ng-template pTemplate="summary">
                             <tr class="summary-row" style="font-size: 0.85em; background-color: #f8f9fa; border-top: 2px solid #007bff;" *ngIf="getVisibleColumnsCount() > 0">
-                                <td [attr.colspan]="getVisibleColumnsCount()" class="text-end" style="padding: 1rem; font-weight: bold;">
+                                <td [attr.colspan]="getVisibleColumnsCount() + 1" class="text-end" style="padding: 1rem; font-weight: bold;">
                                     <strong>{{ 'Total Envío:' | translate }}</strong> {{ calculateTotalEnvio(orders) | currency }} | 
                                     <strong>{{ 'Falta Por Pagar:' | translate }}</strong> {{ calculateFaltaPorPagar(orders) | currency }}
                                 </td>
                             </tr>
                         </ng-template>
                     </p-table>
+
+                    <!-- Floating Batch Action Bar -->
+                    <div class="batch-action-bar" *ngIf="selectedPedidos.length > 0"
+                         style="position: sticky; bottom: 0; z-index: 100; background: linear-gradient(135deg, #1a1a2e, #16213e);
+                                color: white; padding: 12px 24px; border-radius: 12px 12px 0 0;
+                                display: flex; align-items: center; justify-content: space-between;
+                                box-shadow: 0 -4px 20px rgba(0,0,0,0.3);">
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <span style="font-weight: 600;">
+                                {{selectedPedidos.length}} pedido{{selectedPedidos.length > 1 ? 's' : ''}} seleccionado{{selectedPedidos.length > 1 ? 's' : ''}}
+                            </span>
+                            <span style="opacity: 0.7; font-size: 0.85rem;">
+                                Valor: {{getTotalValorSeleccionados() | currency:'COP':'symbol-narrow':'1.0-0'}}
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button pButton type="button" label="Despacho Rápido ({{selectedPedidos.length}})"
+                                    icon="pi pi-send" class="p-button-warning p-button-sm"
+                                    (click)="emitBatchAction('despachoRapido')"></button>
+                            <button pButton type="button" label="Cambiar Estado ({{selectedPedidos.length}})"
+                                    icon="pi pi-refresh" class="p-button-info p-button-sm"
+                                    (click)="emitBatchAction('cambiarEstado')"></button>
+                            <button pButton type="button" icon="pi pi-times"
+                                    class="p-button-text p-button-sm" style="color: white;"
+                                    (click)="clearSelection()" pTooltip="Deseleccionar"></button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-</div> 
+</div>

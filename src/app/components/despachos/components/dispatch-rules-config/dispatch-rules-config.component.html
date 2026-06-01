@@ -1,0 +1,331 @@
+<p-dialog
+  header="Reglas de Despacho"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '780px' }"
+  [breakpoints]="{ '960px': '95vw' }"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cerrar()"
+  styleClass="dispatch-rules-dialog"
+>
+  <!-- Loading state -->
+  <div *ngIf="loading" class="text-center py-5">
+    <p-progressSpinner [style]="{ width: '50px', height: '50px' }"></p-progressSpinner>
+    <p class="mt-2 text-muted">Cargando reglas de despacho...</p>
+  </div>
+
+  <div *ngIf="!loading">
+    <!-- ====== Global Settings Section ====== -->
+    <div class="section-card mb-3">
+      <h6 class="section-title">
+        <i class="pi pi-cog mr-2"></i>
+        Configuracion General
+      </h6>
+      <div class="row">
+        <div class="col-md-6 col-12 mb-3">
+          <div class="toggle-row">
+            <p-inputSwitch [(ngModel)]="config.autoAsignarTransportador"></p-inputSwitch>
+            <div class="toggle-label">
+              <span class="label-text">Auto-asignar transportador</span>
+              <small class="text-muted d-block">Asigna transportador automaticamente segun las reglas</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-12 mb-3">
+          <div class="toggle-row">
+            <p-inputSwitch [(ngModel)]="config.autoDespachar"></p-inputSwitch>
+            <div class="toggle-label">
+              <span class="label-text">Auto-despachar</span>
+              <small class="text-muted d-block">Despacha automaticamente pedidos con transportador asignado</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-12 mb-3">
+          <div class="toggle-row">
+            <p-inputSwitch [(ngModel)]="config.autoImprimir"></p-inputSwitch>
+            <div class="toggle-label">
+              <span class="label-text">Auto-imprimir guia</span>
+              <small class="text-muted d-block">Imprime guia de despacho al asignar transportador</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6 col-12 mb-3">
+          <label class="form-label fw-semibold">Metodo de envio por defecto</label>
+          <p-dropdown
+            [options]="metodoEnvioOptions"
+            [(ngModel)]="config.defaultMetodoEnvio"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Seleccionar metodo"
+            [style]="{ width: '100%' }"
+          ></p-dropdown>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-md-6 col-12 mb-2">
+          <label class="form-label fw-semibold">Transportador fallback</label>
+          <p-dropdown
+            [options]="vendors"
+            [(ngModel)]="config.fallbackTransportadorId"
+            [optionLabel]="'nombres'"
+            [optionValue]="'_id'"
+            placeholder="Sin fallback"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="nombres,nombre"
+            [style]="{ width: '100%' }"
+          >
+            <ng-template let-vendor pTemplate="item">
+              {{ vendor.nombres || vendor.nombre }}
+            </ng-template>
+            <ng-template let-vendor pTemplate="selectedItem">
+              {{ vendor.nombres || vendor.nombre }}
+            </ng-template>
+          </p-dropdown>
+          <small class="text-muted">Se usa cuando ninguna regla coincida</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- ====== Rules Section ====== -->
+    <div class="section-card mb-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="section-title mb-0">
+          <i class="pi pi-list mr-2"></i>
+          Reglas de Asignacion
+          <span class="badge bg-secondary ms-2">{{ config.reglas.length }}</span>
+        </h6>
+        <button
+          pButton
+          type="button"
+          label="Agregar Regla"
+          icon="pi pi-plus"
+          class="p-button-sm p-button-outlined"
+          (click)="addRule()"
+          [disabled]="showRuleForm"
+        ></button>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="config.reglas.length === 0 && !showRuleForm" class="text-center py-4">
+        <i class="pi pi-inbox" style="font-size: 2rem; color: #ccc;"></i>
+        <p class="text-muted mt-2 mb-0">No hay reglas configuradas.</p>
+        <small class="text-muted">Las reglas permiten asignar transportadores automaticamente segun condiciones.</small>
+      </div>
+
+      <!-- Rules list -->
+      <div *ngFor="let rule of config.reglas; let i = index" class="rule-card" [class.rule-inactive]="!rule.activa">
+        <div class="d-flex align-items-start">
+          <!-- Priority arrows -->
+          <div class="priority-controls me-2">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-chevron-up"
+              class="p-button-text p-button-sm p-button-rounded"
+              (click)="moveRuleUp(i)"
+              [disabled]="i === 0"
+              pTooltip="Subir prioridad"
+            ></button>
+            <span class="priority-number">{{ rule.prioridad }}</span>
+            <button
+              pButton
+              type="button"
+              icon="pi pi-chevron-down"
+              class="p-button-text p-button-sm p-button-rounded"
+              (click)="moveRuleDown(i)"
+              [disabled]="i === config.reglas.length - 1"
+              pTooltip="Bajar prioridad"
+            ></button>
+          </div>
+
+          <!-- Rule content -->
+          <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="rule-name fw-semibold">
+                {{ rule.nombre }}
+                <span *ngIf="!rule.activa" class="badge bg-warning ms-1">Inactiva</span>
+              </span>
+              <div class="rule-actions">
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm p-button-rounded"
+                  (click)="editRule(rule)"
+                  pTooltip="Editar"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  icon="pi pi-trash"
+                  class="p-button-text p-button-sm p-button-rounded p-button-danger"
+                  (click)="deleteRule(rule)"
+                  pTooltip="Eliminar"
+                ></button>
+              </div>
+            </div>
+            <div class="rule-details">
+              <small class="text-muted d-block">
+                <strong>Condiciones:</strong>
+                <span *ngIf="rule.condiciones.zonaCobro?.length"> Zonas: {{ rule.condiciones.zonaCobro.join(', ') }}</span>
+                <span *ngIf="rule.condiciones.ciudad?.length"> | Ciudades: {{ rule.condiciones.ciudad.join(', ') }}</span>
+                <span *ngIf="rule.condiciones.valorMinimo != null"> | Min: ${{ rule.condiciones.valorMinimo | number }}</span>
+                <span *ngIf="rule.condiciones.valorMaximo != null"> | Max: ${{ rule.condiciones.valorMaximo | number }}</span>
+                <span *ngIf="!rule.condiciones.zonaCobro?.length && !rule.condiciones.ciudad?.length && rule.condiciones.valorMinimo == null && rule.condiciones.valorMaximo == null">
+                  Aplica a todos los pedidos
+                </span>
+              </small>
+              <small class="text-muted d-block">
+                <strong>Accion:</strong>
+                Asignar a <strong>{{ getVendorName(rule.accion.transportadorId) }}</strong>
+                <span *ngIf="rule.accion.metodoEnvio"> | {{ getMetodoEnvioLabel(rule.accion.metodoEnvio) }}</span>
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ====== Rule Form (inline) ====== -->
+      <div *ngIf="showRuleForm" class="rule-form-card mt-3">
+        <h6 class="mb-3">
+          <i class="pi pi-pencil mr-2"></i>
+          {{ editingRule ? 'Editar Regla' : 'Nueva Regla' }}
+        </h6>
+        <form [formGroup]="ruleForm">
+          <div class="row">
+            <div class="col-md-8 col-12 mb-2">
+              <label class="form-label fw-semibold">Nombre de la regla *</label>
+              <input type="text" pInputText formControlName="nombre" placeholder="Ej: Zona Norte - MensajeroRapido" class="w-100" />
+              <small *ngIf="ruleForm.get('nombre')?.invalid && ruleForm.get('nombre')?.touched" class="p-error">
+                El nombre es requerido
+              </small>
+            </div>
+            <div class="col-md-2 col-6 mb-2">
+              <label class="form-label fw-semibold">Prioridad *</label>
+              <p-inputNumber formControlName="prioridad" [min]="1" [showButtons]="true" [style]="{ width: '100%' }"></p-inputNumber>
+            </div>
+            <div class="col-md-2 col-6 mb-2">
+              <label class="form-label fw-semibold">Activa</label>
+              <div class="mt-1">
+                <p-inputSwitch formControlName="activa"></p-inputSwitch>
+              </div>
+            </div>
+          </div>
+
+          <p-divider align="left"><span class="text-muted small">Condiciones</span></p-divider>
+
+          <div class="row">
+            <div class="col-md-6 col-12 mb-2">
+              <label class="form-label fw-semibold">Zonas de cobro</label>
+              <p-chips formControlName="zonaCobro" placeholder="Escriba y presione Enter" [style]="{ width: '100%' }"></p-chips>
+              <small class="text-muted">Deje vacio para aplicar a todas las zonas</small>
+            </div>
+            <div class="col-md-6 col-12 mb-2">
+              <label class="form-label fw-semibold">Ciudades</label>
+              <p-chips formControlName="ciudad" placeholder="Escriba y presione Enter" [style]="{ width: '100%' }"></p-chips>
+              <small class="text-muted">Deje vacio para aplicar a todas las ciudades</small>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 col-12 mb-2">
+              <label class="form-label fw-semibold">Valor minimo del pedido</label>
+              <p-inputNumber
+                formControlName="valorMinimo"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                placeholder="Sin minimo"
+                [style]="{ width: '100%' }"
+              ></p-inputNumber>
+            </div>
+            <div class="col-md-6 col-12 mb-2">
+              <label class="form-label fw-semibold">Valor maximo del pedido</label>
+              <p-inputNumber
+                formControlName="valorMaximo"
+                mode="currency"
+                currency="COP"
+                locale="es-CO"
+                [minFractionDigits]="0"
+                placeholder="Sin maximo"
+                [style]="{ width: '100%' }"
+              ></p-inputNumber>
+            </div>
+          </div>
+
+          <p-divider align="left"><span class="text-muted small">Accion</span></p-divider>
+
+          <div class="row">
+            <div class="col-md-6 col-12 mb-2">
+              <label class="form-label fw-semibold">Transportador *</label>
+              <p-dropdown
+                [options]="vendors"
+                formControlName="transportadorId"
+                [optionLabel]="'nombres'"
+                [optionValue]="'_id'"
+                placeholder="Seleccionar transportador"
+                [filter]="true"
+                filterBy="nombres,nombre"
+                [showClear]="true"
+                [style]="{ width: '100%' }"
+              >
+                <ng-template let-vendor pTemplate="item">
+                  {{ vendor.nombres || vendor.nombre }}
+                </ng-template>
+                <ng-template let-vendor pTemplate="selectedItem">
+                  {{ vendor.nombres || vendor.nombre }}
+                </ng-template>
+              </p-dropdown>
+              <small *ngIf="ruleForm.get('transportadorId')?.invalid && ruleForm.get('transportadorId')?.touched" class="p-error">
+                Debe seleccionar un transportador
+              </small>
+            </div>
+            <div class="col-md-6 col-12 mb-2">
+              <label class="form-label fw-semibold">Metodo de envio</label>
+              <p-dropdown
+                [options]="metodoEnvioOptions"
+                formControlName="metodoEnvio"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Seleccionar metodo"
+                [style]="{ width: '100%' }"
+              ></p-dropdown>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-end gap-2 mt-3">
+            <button pButton type="button" label="Cancelar" class="p-button-text p-button-sm" (click)="cancelRule()"></button>
+            <button
+              pButton
+              type="button"
+              label="{{ editingRule ? 'Actualizar Regla' : 'Agregar Regla' }}"
+              icon="pi pi-check"
+              class="p-button-sm"
+              (click)="saveRule()"
+              [disabled]="ruleForm.invalid"
+            ></button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== Dialog Footer ====== -->
+  <ng-template pTemplate="footer">
+    <div class="d-flex justify-content-between w-100">
+      <button pButton type="button" label="Cerrar" class="p-button-text" icon="pi pi-times" (click)="cerrar()"></button>
+      <button
+        pButton
+        type="button"
+        label="Guardar Configuracion"
+        icon="pi pi-save"
+        class="p-button-success"
+        (click)="saveConfig()"
+        [loading]="saving"
+        [disabled]="loading"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>

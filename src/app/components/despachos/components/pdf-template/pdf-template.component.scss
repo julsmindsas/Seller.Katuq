@@ -1,8 +1,11 @@
+/* Katuq Design Tokens */
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
 /* Variables de Diseño Mejoradas */
 :root {
-  --primary-color: #2563eb;
-  --secondary-color: #059669;
-  --accent-color: #dc2626;
+  --primary-color: #{$katuq-primary};
+  --secondary-color: #{$katuq-success-dark};
+  --accent-color: #{$katuq-danger-dark};
   --text-color: #1f2937;
   --light-gray-color: #f8fafc;
   --medium-gray-color: #e2e8f0;
