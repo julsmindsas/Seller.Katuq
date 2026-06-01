@@ -16,11 +16,29 @@
 
 import { CalculatedMeasureDef, ReportColumn, ReportResult } from './report-spec.interfaces';
 
-type CalcOp = '+' | '-' | '*' | '/' | '(' | ')';
+type CalcOp = '+' | '-' | '*' | '/' | '(' | ')' | ',';
 interface CalcNumToken { kind: 'num'; value: number; }
 interface CalcRefToken { kind: 'ref'; label: string; }
 interface CalcOpToken  { kind: 'op'; value: CalcOp; }
-export type CalcToken = CalcNumToken | CalcRefToken | CalcOpToken;
+interface CalcFnToken  { kind: 'fn'; name: string; }
+interface CalcStrToken { kind: 'str'; value: string; }
+export type CalcToken = CalcNumToken | CalcRefToken | CalcOpToken | CalcFnToken | CalcStrToken;
+
+/** Whitelist de funciones soportadas en v1. */
+export const CALC_FUNCTIONS = ['total', 'pct_of_total', 'running_total', 'rank'] as const;
+export type CalcFunctionName = typeof CALC_FUNCTIONS[number];
+
+/**
+ * Metadata de un function call extraído de los tokens.
+ * Restricciones v1: arg0 obligatorio y debe ser un ref, arg1 opcional string.
+ */
+interface CalcFunctionCall {
+  /** Id sintético usado como ref-name en los tokens reescritos. */
+  syntheticId: string;
+  name: CalcFunctionName;
+  refLabel: string;
+  arg2?: string;
+}
 
 export function tokenizeCalc(expr: string): CalcToken[] {
   const tokens: CalcToken[] = [];
@@ -35,7 +53,16 @@ export function tokenizeCalc(expr: string): CalcToken[] {
       i = end + 1;
       continue;
     }
-    if ('+-*/()'.includes(c)) {
+    if (c === "'" || c === '"') {
+      // String literal — usado como segundo arg de funciones (ej: rank(..., 'asc'))
+      const quote = c;
+      const end = expr.indexOf(quote, i + 1);
+      if (end === -1) throw new Error(`Falta ${quote} para cerrar string`);
+      tokens.push({ kind: 'str', value: expr.slice(i + 1, end) });
+      i = end + 1;
+      continue;
+    }
+    if ('+-*/(),'.includes(c)) {
       tokens.push({ kind: 'op', value: c as CalcOp });
       i++;
       continue;
@@ -49,9 +76,133 @@ export function tokenizeCalc(expr: string): CalcToken[] {
       i = j;
       continue;
     }
+    if (/[a-z_]/i.test(c)) {
+      // Identificador: solo válido si va seguido de '(' → es una función.
+      let j = i;
+      while (j < expr.length && /[a-z0-9_]/i.test(expr[j])) j++;
+      const name = expr.slice(i, j).toLowerCase();
+      // Saltar espacios entre nombre y '('
+      let k = j;
+      while (k < expr.length && (expr[k] === ' ' || expr[k] === '\t')) k++;
+      if (expr[k] !== '(') {
+        throw new Error(`Identificador "${name}" debe ser una función seguida de "(" — referencias a columnas van entre corchetes [Label].`);
+      }
+      if (!(CALC_FUNCTIONS as readonly string[]).includes(name)) {
+        throw new Error(`Función desconocida: "${name}". Disponibles: ${CALC_FUNCTIONS.join(', ')}.`);
+      }
+      tokens.push({ kind: 'fn', name });
+      i = j;
+      continue;
+    }
     throw new Error(`Caracter inesperado en posición ${i}: "${c}"`);
   }
   return tokens;
+}
+
+/**
+ * Pre-pass: encuentra llamadas a funciones (`fn ( [ref] (, str)? )`),
+ * las reemplaza con un ref-sintético (`__fn_<n>__`) que luego se resuelve
+ * via pre-cómputo en `precomputeFunctions`. Devuelve los tokens reescritos
+ * y la lista de calls extraídos.
+ *
+ * v1 restrictivo: arg0 debe ser un ref, arg1 (opcional) debe ser string literal.
+ * Esto evita anidamiento (rank(total(...))) que no tiene semántica clara.
+ */
+export function extractFunctionCalls(tokens: CalcToken[]): { rewritten: CalcToken[]; calls: CalcFunctionCall[] } {
+  const rewritten: CalcToken[] = [];
+  const calls: CalcFunctionCall[] = [];
+  let i = 0;
+  while (i < tokens.length) {
+    const t = tokens[i];
+    if (t.kind !== 'fn') {
+      rewritten.push(t);
+      i++;
+      continue;
+    }
+    const name = t.name as CalcFunctionName;
+    // Espera "(" siguiente
+    const lparen = tokens[i + 1];
+    if (!lparen || lparen.kind !== 'op' || lparen.value !== '(') {
+      throw new Error(`Función "${name}" debe ir seguida de "("`);
+    }
+    // Espera ref como primer arg
+    const ref = tokens[i + 2];
+    if (!ref || ref.kind !== 'ref') {
+      throw new Error(`Función "${name}" requiere una referencia [Label] como primer argumento`);
+    }
+    // Segundo arg opcional: coma + string
+    let arg2: string | undefined;
+    let j = i + 3;
+    if (tokens[j] && tokens[j].kind === 'op' && (tokens[j] as CalcOpToken).value === ',') {
+      const strTok = tokens[j + 1];
+      if (!strTok || strTok.kind !== 'str') {
+        throw new Error(`Función "${name}" — el segundo argumento debe ser un string entre comillas (ej: 'asc')`);
+      }
+      arg2 = strTok.value;
+      j += 2;
+    }
+    // Espera ")"
+    const rparen = tokens[j];
+    if (!rparen || rparen.kind !== 'op' || rparen.value !== ')') {
+      throw new Error(`Función "${name}" — falta ")" al cerrar argumentos`);
+    }
+
+    const syntheticId = `__fn_${calls.length}__`;
+    calls.push({ syntheticId, name, refLabel: ref.label, arg2 });
+    // Reemplaza el slice de tokens [fn, (, [ref], (,, str)?, )] con un single ref-token sintético
+    rewritten.push({ kind: 'ref', label: syntheticId });
+    i = j + 1;
+  }
+  return { rewritten, calls };
+}
+
+/**
+ * Pre-computa el valor de cada function call sobre el result completo.
+ * - total: escalar (mismo valor para todas las filas)
+ * - pct_of_total: vector indexado por fila
+ * - running_total: vector indexado por fila
+ * - rank: vector indexado por fila (1-based)
+ *
+ * Retorna `Record<syntheticId, number[]>` (siempre array; los escalares son
+ * array con el mismo valor en cada posición — simplifica el consumer).
+ */
+function precomputeFunctions(
+  calls: CalcFunctionCall[],
+  rows: Record<string, unknown>[],
+  labelToField: Map<string, string>,
+): Record<string, number[]> {
+  const out: Record<string, number[]> = {};
+  for (const call of calls) {
+    const field = labelToField.get(call.refLabel);
+    if (!field) {
+      console.warn(`[calc-engine] función ${call.name}: ref "${call.refLabel}" no encontrada`);
+      out[call.syntheticId] = rows.map(() => 0);
+      continue;
+    }
+    const colVals = rows.map((r) => {
+      const v = Number(r[field]);
+      return Number.isFinite(v) ? v : 0;
+    });
+
+    if (call.name === 'total') {
+      const sum = colVals.reduce((a, b) => a + b, 0);
+      out[call.syntheticId] = rows.map(() => sum);
+    } else if (call.name === 'pct_of_total') {
+      const sum = colVals.reduce((a, b) => a + b, 0);
+      out[call.syntheticId] = colVals.map((v) => (sum === 0 ? 0 : (v / sum) * 100));
+    } else if (call.name === 'running_total') {
+      let acc = 0;
+      out[call.syntheticId] = colVals.map((v) => { acc += v; return acc; });
+    } else if (call.name === 'rank') {
+      const dir = call.arg2 === 'asc' ? 1 : -1; // default desc (mayor = rank 1)
+      const indexed = colVals.map((v, idx) => ({ v, idx }));
+      indexed.sort((a, b) => (a.v - b.v) * dir);
+      const ranks = new Array(rows.length).fill(0);
+      indexed.forEach((entry, rankIdx) => { ranks[entry.idx] = rankIdx + 1; });
+      out[call.syntheticId] = ranks;
+    }
+  }
+  return out;
 }
 
 /**
@@ -122,9 +273,10 @@ export function evalCalcTokens(tokens: CalcToken[], vars: Record<string, number>
 export function validateCalcExpression(expression: string): string | null {
   try {
     const tokens = tokenizeCalc(expression);
+    const { rewritten } = extractFunctionCalls(tokens);
     const dryVars: Record<string, number> = {};
-    for (const t of tokens) if (t.kind === 'ref') dryVars[t.label] = 0;
-    evalCalcTokens(tokens, dryVars);
+    for (const t of rewritten) if (t.kind === 'ref') dryVars[t.label] = 0;
+    evalCalcTokens(rewritten, dryVars);
     return null;
   } catch (e) {
     return (e as Error).message;
@@ -155,9 +307,9 @@ export function applyCalculatedMeasures(result: ReportResult, calculated: Calcul
 
   for (const calc of calculated) {
     const calcField = `calc_${calc.id}`;
-    let tokens: CalcToken[];
+    let rawTokens: CalcToken[];
     try {
-      tokens = tokenizeCalc(calc.expression);
+      rawTokens = tokenizeCalc(calc.expression);
     } catch (e) {
       console.warn(`[calc-engine] "${calc.label}" tokenize falló:`, e);
       fillCalcColumn(result, calcField, calc, null);
@@ -165,21 +317,50 @@ export function applyCalculatedMeasures(result: ReportResult, calculated: Calcul
       continue;
     }
 
-    const unknownRefs = tokens
-      .filter((t): t is CalcRefToken => t.kind === 'ref')
-      .map((t) => t.label)
-      .filter((label) => !labelToField.has(label));
-    if (unknownRefs.length > 0) {
-      console.warn(`[calc-engine] "${calc.label}" refs no encontradas:`, unknownRefs);
+    // Extraer y pre-computar function calls (total, pct_of_total, running_total, rank).
+    // Reemplaza el slice de tokens por una ref sintética (`__fn_N__`) que se resuelve
+    // contra vectores pre-calculados sobre la columna entera.
+    let tokens: CalcToken[];
+    let fnCalls: CalcFunctionCall[];
+    try {
+      const extracted = extractFunctionCalls(rawTokens);
+      tokens = extracted.rewritten;
+      fnCalls = extracted.calls;
+    } catch (e) {
+      console.warn(`[calc-engine] "${calc.label}" función inválida:`, e);
       fillCalcColumn(result, calcField, calc, null);
       labelToField.set(calc.label, calcField);
       continue;
     }
 
-    for (const row of result.rows) {
+    // Validar refs no sintéticas — las sintéticas se resuelven via fnVectors.
+    const unknownRefs = tokens
+      .filter((t): t is CalcRefToken => t.kind === 'ref' && !t.label.startsWith('__fn_'))
+      .map((t) => t.label)
+      .filter((label) => !labelToField.has(label));
+    // También validar que los refs DENTRO de funciones existan
+    const unknownFnRefs = fnCalls
+      .map((c) => c.refLabel)
+      .filter((label) => !labelToField.has(label));
+    if (unknownRefs.length > 0 || unknownFnRefs.length > 0) {
+      console.warn(`[calc-engine] "${calc.label}" refs no encontradas:`, [...unknownRefs, ...unknownFnRefs]);
+      fillCalcColumn(result, calcField, calc, null);
+      labelToField.set(calc.label, calcField);
+      continue;
+    }
+
+    // Pre-computar los vectores de funciones una sola vez por calc.
+    const fnVectors = precomputeFunctions(fnCalls, result.rows, labelToField);
+
+    for (let rowIdx = 0; rowIdx < result.rows.length; rowIdx++) {
+      const row = result.rows[rowIdx];
       const vars: Record<string, number> = {};
       for (const t of tokens) {
-        if (t.kind === 'ref') {
+        if (t.kind !== 'ref') continue;
+        if (t.label.startsWith('__fn_')) {
+          // Synthetic ref → leer del vector pre-computado
+          vars[t.label] = fnVectors[t.label]?.[rowIdx] ?? 0;
+        } else {
           const field = labelToField.get(t.label)!;
           const v = Number(row[field]);
           vars[t.label] = Number.isFinite(v) ? v : 0;
