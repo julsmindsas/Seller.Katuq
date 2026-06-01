@@ -49,13 +49,6 @@
   <header class="sidebar-header unified-header"
           [class.collapsed]="collapseMenu && !isTemporarilyExpanded">
 
-    <!-- Puntos decorativos (Figma design) -->
-    <div class="decorative-dots" *ngIf="!collapseMenu || isTemporarilyExpanded">
-      <span class="dot dot-red"></span>
-      <span class="dot dot-yellow"></span>
-      <span class="dot dot-green"></span>
-    </div>
-
     <!-- Contenido principal del header -->
     <div class="header-content">
       <!-- Logo + Avatar combinados -->
@@ -85,8 +78,8 @@
         <!-- Info expandida: Saludo + Logo -->
         <div class="expanded-info" *ngIf="!collapseMenu || isTemporarilyExpanded">
           <div class="greeting-section">
-            <span class="greeting-text">Hello <span class="emoji">👋</span></span>
-            <span class="user-name">{{userName}}</span>
+            <span class="greeting-text">{{greeting}} <span class="emoji">👋</span></span>
+            <span class="user-name">{{firstName}}</span>
           </div>
           <div class="brand-logo">
             <img class="logo-light"
@@ -630,14 +623,9 @@
 
 </aside>
 
-<!-- Botón flotante para expandir cuando está colapsado (solo móviles) -->
-<button class="sidebar-toggle-btn"
-        *ngIf="collapseMenu && isMobile()"
-        (click)="toggleSidebarMobile($event)"
-        [attr.aria-label]="'Expandir menú'"
-        title="Expandir menú">
-  <i class="fa fa-bars" aria-hidden="true"></i>
-</button>
+<!-- El menú en móvil se abre desde la barra inferior (botón "Menú"); el hamburguesa
+     flotante se retiró para no duplicar el punto de entrada. -->
+
 
 <!-- Upgrade Modal -->
 <app-upgrade-modal

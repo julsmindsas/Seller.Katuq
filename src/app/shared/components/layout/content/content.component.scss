@@ -2,12 +2,8 @@ a {
     cursor: pointer;
 }
 
-// Hybrid Navigation System Styles
-.desktop-sidebar {
-  @media (max-width: 991px) {
-    display: none !important;
-  }
-}
+// El sidebar funciona como menú lateral en escritorio y como drawer deslizable
+// en móvil (su propio .sidebar-container es position:fixed con translateX).
 
 // Page Body Layout - Consistente con Header
 .page-body {
@@ -45,19 +41,3 @@ a {
   }
 }
 
-// Age-specific adjustments
-:global(body.nav-young) {
-  .page-body {
-    @media (max-width: 991px) {
-      padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
-    }
-  }
-}
-
-:global(body.nav-senior) {
-  .page-body {
-    @media (max-width: 991px) {
-      padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
-    }
-  }
-}

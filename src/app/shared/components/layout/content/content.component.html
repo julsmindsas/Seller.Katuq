@@ -4,8 +4,8 @@
     <app-header></app-header>
     <!-- Page Body Start-->
     <div class="page-body-wrapper">
-      <!-- Desktop Sidebar (hidden on mobile/tablet) -->
-      <div class="sidebar-wrapper desktop-sidebar"
+      <!-- Sidebar: menú lateral en escritorio, drawer deslizable en móvil (se abre con "Menú") -->
+      <div class="sidebar-wrapper"
            [attr.sidebar-layout]="layout.config.settings.sidebar_type"
            [class.close_icon]="navServices.collapseSidebar">
         <app-sidebar></app-sidebar>
@@ -28,7 +28,7 @@
     <!-- Page Body End-->
   </div>
 
-  <!-- Adaptive Navigation System (Bottom Nav + Mobile Sidebar) -->
-  <app-adaptive-navigation></app-adaptive-navigation>
+  <!-- Navegación móvil: barra inferior fija. El menú completo se abre como drawer (botón "Menú"). -->
+  <app-bottom-navigation></app-bottom-navigation>
 </div>
 <!-- page-wrapper End-->

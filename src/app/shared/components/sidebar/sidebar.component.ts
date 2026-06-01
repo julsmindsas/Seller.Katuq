@@ -35,8 +35,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
    */
   @HostListener('mouseenter')
   onMouseEnter() {
-    // Solo activar si está en modo colapso tradicional (no auto-collapse)
-    console.log('Sidebar mouseenter - collapseMenu:', this.collapseMenu, 'isAutoCollapseEnabled:', this.isAutoCollapseEnabled, 'isMobile:', this.isMobile(), 'isTemporarilyExpanded:', this.isTemporarilyExpanded);
+    // Solo activar en modo colapso tradicional (desktop, sin auto-collapse)
     if (this.collapseMenu && !this.isAutoCollapseEnabled && !this.isMobile()) {
       // Limpiar cualquier timeout pendiente de colapso
       if (this.hoverExpandTimeout) {
@@ -44,112 +43,26 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         this.hoverExpandTimeout = null;
       }
 
-      // Expandir INSTANTÁNEAMENTE sin delay
+      // Expandir instantáneamente
       this.isTemporarilyExpanded = true;
       this.isMouseInsideSidebar = true;
 
-      // Marcar visualmente para que el header se ajuste
+      // Marcar visualmente para que el header/wrapper se ajusten al ancho expandido
       const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
       if (wrapper) {
         wrapper.classList.add('sidebar-temporarily-expanded');
-        console.log('Added class sidebar-temporarily-expanded to page-wrapper');
-        // Forzar actualización del layout
         wrapper.style.display = 'block';
       }
 
       const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
       if (sidebar) {
         this.renderer.addClass(sidebar, 'temporarily-expanded');
-        console.log('Added class temporarily-expanded to sidebar-container');
       }
 
-      // Marcar header directamente (modo Dubai)
       const headerEl = document.querySelector('.page-header') as HTMLElement;
       if (headerEl) {
         headerEl.classList.add('temporarily-expanded');
-        console.log('Added class temporarily-expanded to page-header');
-        // Forzar reflow para que CSS se aplique inmediatamente
-        headerEl.offsetHeight;
-
-        // Debug: mostrar estado actual de clases CSS
-        const wrapperClassName = wrapper?.className || 'undefined';
-        const sidebarClassName = sidebar?.className || 'undefined';
-        const headerClassName = headerEl.className;
-        const computedMargin = getComputedStyle(headerEl).marginLeft;
-
-        console.log('Current CSS classes on page-wrapper:', wrapperClassName);
-        console.log('Current CSS classes on sidebar-container:', sidebarClassName);
-        console.log('Current CSS classes on page-header:', headerClassName);
-        console.log('Computed margin-left of header:', computedMargin);
-
-        // Verificar si hay clases del tema Dubai
-        const bodyClassName = document.body.className;
-        console.log('Current body classes (theme):', bodyClassName);
-        const compactWrapper = document.querySelector('.compact-wrapper');
-        console.log('Has compact-wrapper:', !!compactWrapper);
-
-        // Verificar si las reglas CSS específicas están siendo aplicadas
-        const style = getComputedStyle(headerEl);
-        console.log('All computed styles for header:');
-        console.log('- margin-left:', style.marginLeft);
-        console.log('- width:', style.width);
-        console.log('- transform:', style.transform);
-        console.log('- position:', style.position);
-        console.log('- z-index:', style.zIndex);
-        console.log('- left:', style.left);
-        console.log('- right:', style.right);
-
-        // Verificar si hay estilos inline o reglas CSS que están sobreescribiendo
-        console.log('Checking for inline styles and CSS conflicts...');
-        console.log('- inline styles:', headerEl.getAttribute('style'));
-        console.log('- header style property:', headerEl.style.cssText);
-
-        // Verificar si hay alguna regla CSS específica que esté aplicando 90px
-        const allStyles = getComputedStyle(headerEl);
-        console.log('All CSS properties that contain "margin":');
-        for (let i = 0; i < allStyles.length; i++) {
-          const prop = allStyles[i];
-          if (prop.includes('margin')) {
-            console.log(`- ${prop}: ${allStyles.getPropertyValue(prop)}`);
-          }
-        }
-
-        // Verificar si hay reglas CSS que podrían estar sobreescribiendo
-        console.log('Header parent computed styles:');
-        const parentStyle = getComputedStyle(headerEl.parentElement!);
-        console.log('- parent margin-left:', parentStyle.marginLeft);
-        console.log('- parent width:', parentStyle.width);
-        console.log('- parent position:', parentStyle.position);
-
-        // Verificar si hay algún elemento que esté sobreescribiendo el margin
-        console.log('Checking for CSS specificity conflicts...');
-        console.log('Header classes:', headerEl.className);
-        console.log('Parent classes:', headerEl.parentElement?.className);
-        console.log('Grandparent classes:', headerEl.parentElement?.parentElement?.className);
-
-        // Verificar computed styles del wrapper
-        if (wrapper) {
-          const wrapperStyle = getComputedStyle(wrapper);
-          console.log('Page wrapper computed styles:');
-          console.log('- margin-left:', wrapperStyle.marginLeft);
-          console.log('- width:', wrapperStyle.width);
-          console.log('- position:', wrapperStyle.position);
-
-          // Verificar si nuestras reglas específicas están siendo aplicadas
-          console.log('Checking if our CSS rules are being applied...');
-          const computedStyle = getComputedStyle(headerEl);
-          const marginLeftValue = computedStyle.marginLeft;
-
-          // Si el margin-left es 260px, nuestras reglas están funcionando
-          if (marginLeftValue === '260px') {
-            console.log('✅ SUCCESS: Header margin-left is 260px - our CSS rules are working!');
-          } else if (marginLeftValue === '90px') {
-            console.log('❌ PROBLEM: Header margin-left is still 90px - global CSS rules are overriding ours');
-            console.log('This means we need even higher CSS specificity');
-          } else {
-            console.log('⚠️  WARNING: Header margin-left is', marginLeftValue, '- unexpected value');
-          }
-        }
+        headerEl.offsetHeight; // forzar reflow para aplicar el CSS de inmediato
       }
     }
   }
@@ -179,7 +92,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   private collapseTemporaryExpansion(): void {
     this.isTemporarilyExpanded = false;
     this.cleanupTemporaryExpansionClasses();
-    console.log('Sidebar collapsed from temporary expansion');
   }
 
   /**
@@ -274,7 +186,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
   public isCollapsed: boolean = false;
   public collapseMenu: boolean = false;
-  public isPlanCardCollapsed: boolean = false;
+  public isPlanCardCollapsed: boolean = true; // compacto por defecto: libera espacio para el menú
   public isAdminUser: boolean = false;
 
   // Nuevas propiedades
@@ -289,6 +201,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   public userName: string = '';
   public userInitials: string = '';
   public userAvatarUrl: string = '';
+  public greeting: string = 'Hola'; // saludo dinámico en español según la hora
+
+  // Solo el primer nombre, para un saludo más limpio
+  get firstName(): string {
+    return (this.userName || '').trim().split(' ')[0] || this.userName;
+  }
 
   // Variables para control de gestos en móviles
   private touchStartX: number = 0;
@@ -341,161 +259,48 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     private subscriptionService: SubscriptionService,
     private cdr: ChangeDetectorRef
   ) {
-    this.navServices.items.subscribe(menuItems => {
-      this.processMenuItems(menuItems); // Procesar items para crear secciones
+    // Procesar items del menú en secciones cada vez que cambian
+    this.navServices.items.pipe(takeUntil(this.destroy$)).subscribe(menuItems => {
+      this.processMenuItems(menuItems);
+    });
 
-      // El resto de la lógica de suscripción para activar items se mantiene
-      this.router.events.subscribe((event) => {
-        if (event instanceof NavigationEnd) {
-          // Actualizar active state en los items originales o en las secciones
-          const originalMenuItems = this.navServices.getMenuItems();
+    // Marcar el item activo según la ruta — UNA sola suscripción
+    // (antes estaba anidada dentro de items.subscribe, lo que acumulaba suscripciones y filtraba memoria)
+    this.router.events.pipe(takeUntil(this.destroy$)).subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        // Marcar como activo el item correspondiente a la URL actual
+        // (los padres se marcan automáticamente en setActiveRecursive())
+        const originalMenuItems = this.navServices.getMenuItems();
 
-          // MEJORA: NO limpiar los estados activos - mantener submenús abiertos
-          // Solo marcamos el item correspondiente a la URL actual como activo
-          // Los padres se marcan automáticamente en setActiveRecursive()
-
-          // Volver a marcar como activo basado en la URL actual
-          let activeItemFound = false;
-          originalMenuItems.forEach(items => {
+        let activeItemFound = false;
+        originalMenuItems.forEach(items => {
+          if (activeItemFound) return;
+          if (items.path === event.url) { this.setNavActive(items); activeItemFound = true; return; }
+          if (!items.children) return;
+          items.children.forEach(subItems => {
             if (activeItemFound) return;
-            if (items.path === event.url) { this.setNavActive(items); activeItemFound = true; return; }
-            if (!items.children) return;
-            items.children.forEach(subItems => {
+            if (subItems.path === event.url) { this.setNavActive(subItems); activeItemFound = true; return; }
+            if (!subItems.children) return;
+            subItems.children.forEach(subSubItems => {
               if (activeItemFound) return;
-              if (subItems.path === event.url) { this.setNavActive(subItems); activeItemFound = true; return; }
-              if (!subItems.children) return;
-              subItems.children.forEach(subSubItems => {
-                if (activeItemFound) return;
-                if (subSubItems.path === event.url) { this.setNavActive(subSubItems); activeItemFound = true; return; }
-              });
+              if (subSubItems.path === event.url) { this.setNavActive(subSubItems); activeItemFound = true; return; }
             });
           });
+        });
 
-          // Reflejar cambios de active state en las secciones procesadas
-          this.processMenuItems(originalMenuItems);
-          this.collapseMenu = this.navServices.collapseSidebar;
+        // Reflejar cambios de active state en las secciones procesadas
+        this.processMenuItems(originalMenuItems);
+        this.collapseMenu = this.navServices.collapseSidebar;
 
-          // En móviles, cerrar el menú después de navegar
-          if (window.innerWidth < 992) {
-            this.collapseMenu = true;
-            this.restoreBodyScroll(); // Restaurar scroll del body
-          }
+        // En móviles, cerrar el menú después de navegar
+        if (window.innerWidth < 992) {
+          this.collapseMenu = true;
+          this.restoreBodyScroll();
         }
-      });
+      }
     });
   }
 
-  // Propiedades para efectos cinematográficos
-  private spotlightElement: HTMLElement | null = null;
-  private isMouseInSidebar: boolean = false;
-  private animationFrameId: number | null = null;
-
-  // Método de debug público para verificar estado del hover
-  public debugHoverState() {
-    console.log('=== DEBUG HOVER STATE ===');
-    console.log('collapseMenu:', this.collapseMenu);
-    console.log('isAutoCollapseEnabled:', this.isAutoCollapseEnabled);
-    console.log('isMobile():', this.isMobile());
-    console.log('isTemporarilyExpanded:', this.isTemporarilyExpanded);
-    console.log('LayoutService state:', this.layout.getSidebarState());
-
-    const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
-    const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
-    const headerEl = document.querySelector('.page-header') as HTMLElement;
-
-    console.log('page-wrapper classes:', wrapper?.className || 'undefined');
-    console.log('sidebar-container classes:', sidebar?.className || 'undefined');
-    console.log('page-header classes:', headerEl?.className || 'undefined');
-    console.log('header computed margin-left:', headerEl ? getComputedStyle(headerEl).marginLeft : 'undefined');
-    console.log('=========================');
-  }
-
-  // Método público para forzar hover manualmente
-  public forceHoverExpand() {
-    console.log('Forcing hover expand...');
-    this.onMouseEnter();
-    setTimeout(() => {
-      console.log('Hover expand applied, checking result:');
-      this.debugHoverState();
-    }, 100);
-  }
-
-  // Método público para forzar colapso manualmente
-  public forceHoverCollapse() {
-    console.log('Forcing hover collapse...');
-    this.onMouseLeave();
-    setTimeout(() => {
-      console.log('Hover collapse applied, checking result:');
-      this.debugHoverState();
-    }, 400);
-  }
-
-  // Método para verificar qué reglas CSS están siendo aplicadas
-  public debugCSSRules() {
-    console.log('=== DEBUG CSS RULES ===');
-    const headerEl = document.querySelector('.page-header') as HTMLElement;
-    if (headerEl) {
-      const style = getComputedStyle(headerEl);
-
-      // Verificar si nuestras reglas específicas se están aplicando
-      console.log('Header computed styles:');
-      console.log('- margin-left:', style.marginLeft);
-      console.log('- width:', style.width);
-      console.log('- left:', style.left);
-      console.log('- position:', style.position);
-      console.log('- transform:', style.transform);
-
-      // Verificar specificity de las clases aplicadas
-      console.log('Applied CSS classes:', headerEl.className);
-
-      // Verificar si hay reglas CSS que están sobreescribiendo
-      const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
-      if (wrapper) {
-        console.log('Page wrapper classes:', wrapper.className);
-        const wrapperStyle = getComputedStyle(wrapper);
-        console.log('Page wrapper computed margin-left:', wrapperStyle.marginLeft);
-      }
-
-      // Verificar specificity de selectores
-      console.log('Checking CSS specificity...');
-      const allSelectors = [
-        '.page-header.close_icon.temporarily-expanded',
-        '.compact-wrapper .page-header.temporarily-expanded.close_icon',
-        '.compact-wrapper .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon',
-        '.page-wrapper.ng-tns-c127-1.sidebar-temporarily-expanded .page-header.close_icon',
-        ':host-context(.compact-wrapper) .page-wrapper.sidebar-temporarily-expanded .page-header.close_icon'
-      ];
-
-      allSelectors.forEach(selector => {
-        const elements = document.querySelectorAll(selector);
-        console.log(`Selector "${selector}": ${elements.length} matches`);
-      });
-    }
-    console.log('=========================');
-  }
-
-  // Método para verificar el estado actual del header
-  public checkCurrentHeaderState() {
-    console.log('=== CURRENT HEADER STATE ===');
-    const headerEl = document.querySelector('.page-header') as HTMLElement;
-    if (headerEl) {
-      const style = getComputedStyle(headerEl);
-      console.log('Header classes:', headerEl.className);
-      console.log('Header computed margin-left:', style.marginLeft);
-      console.log('Header computed width:', style.width);
-      console.log('Header computed position:', style.position);
-      console.log('Header computed transform:', style.transform);
-      console.log('Header computed z-index:', style.zIndex);
-
-      const wrapper = document.querySelector('.page-wrapper') as HTMLElement;
-      if (wrapper) {
-        console.log('Page wrapper classes:', wrapper.className);
-        const wrapperStyle = getComputedStyle(wrapper);
-        console.log('Page wrapper computed margin-left:', wrapperStyle.marginLeft);
-      }
-    }
-    console.log('============================');
-  }
 
   ngOnInit(): void {
     this.loadSubscriptionData();
@@ -545,9 +350,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Inicializar efectos cinematográficos después de que la vista esté lista
-    this.initializeCinematographicEffects();
-
     // Configurar zona de hover para auto-hide
     this.setupHoverZone();
   }
@@ -597,7 +399,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       const userStr = localStorage.getItem('user');
 
       if (!userStr) {
-        console.log('[Plan Card Access] No user found in localStorage');
         return false;
       }
 
@@ -605,26 +406,21 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       const user = JSON.parse(userStr);
 
       if (!user || !user.rol) {
-        console.log('[Plan Card Access] User object or role not found', user);
         return false;
       }
 
       const userRole = user.rol;
-      console.log('[Plan Card Access] User role detected:', userRole);
 
       // Verificar si es Super Administrador (case sensitive)
       if (userRole === 'Super Administrador') {
-        console.log('[Plan Card Access] User is Super Administrador - Access GRANTED');
         return true;
       }
 
       // Verificar si contiene "admin" (case insensitive)
       if (userRole.toLowerCase().includes('admin')) {
-        console.log('[Plan Card Access] User role contains "admin" - Access GRANTED');
         return true;
       }
 
-      console.log('[Plan Card Access] User is not an administrator - Access DENIED');
       return false;
 
     } catch (error) {
@@ -940,7 +736,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.calculateWidth((event.target as Window).innerWidth);
   }
   openPlanModal() {
-    console.log('🚀 Abriendo modal de upgrade...');
     this.showPlanModal = true;
   }
 
@@ -956,14 +751,12 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private loadSubscriptionData(): void {
-    console.log('📊 Cargando datos de suscripción...');
 
     // Cargar estado de suscripción
     this.subscriptionService.subscription$.pipe(
       takeUntil(this.destroy$)
     ).subscribe(subscription => {
       if (subscription) {
-        console.log('✅ Suscripción cargada:', subscription);
         this.currentPlan.type = subscription.plan === 'premium' ? 'Premium' : 'Freemium';
         this.currentPlan.status = subscription.status;
 
@@ -979,7 +772,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       takeUntil(this.destroy$)
     ).subscribe(usage => {
       if (usage) {
-        console.log('📈 Uso cargado:', usage);
         this.currentPlan.usage = {
           orders: {
             current: usage.orders?.current || 0,
@@ -1007,12 +799,10 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Trigger initial load
     this.subscriptionService.loadSubscriptionStatus().subscribe({
-      next: () => console.log('✅ Estado de suscripción cargado'),
       error: (err) => console.error('❌ Error cargando suscripción:', err)
     });
 
     this.subscriptionService.getUsageStats().subscribe({
-      next: () => console.log('✅ Estadísticas de uso cargadas'),
       error: (err) => console.error('❌ Error cargando uso:', err)
     });
   }
@@ -2409,18 +2199,36 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   // Cargar favoritos desde localStorage
   private loadFavoriteItems(): void {
     const savedFavorites = localStorage.getItem('sidebarFavoriteItems');
-    if (savedFavorites) {
-      try {
-        this.favoriteItems = JSON.parse(savedFavorites);
-      } catch (e) {
-        console.error('Error loading favorite items:', e);
-        this.favoriteItems = [];
-      }
+    if (!savedFavorites) {
+      return;
+    }
+    try {
+      const parsed: Menu[] = JSON.parse(savedFavorites);
+
+      // SEGURIDAD DE ROLES: descartar favoritos cuya ruta ya no esté en el menú
+      // autorizado del usuario (el menú ya viene filtrado por NavService).
+      const authorizedPaths = new Set(
+        this.getAllMenuItems()
+          .map(i => (i.path || '').replace(/^\/+/, '').toLowerCase())
+          .filter(p => p.length > 0)
+      );
+
+      // Si el menú aún no cargó (set vacío), no filtrar para no ocultar favoritos válidos.
+      this.favoriteItems = authorizedPaths.size === 0
+        ? parsed
+        : parsed.filter(fav => {
+            const p = (fav.path || '').replace(/^\/+/, '').toLowerCase();
+            return p.length > 0 && authorizedPaths.has(p);
+          });
+    } catch (e) {
+      console.error('Error loading favorite items:', e);
+      this.favoriteItems = [];
     }
   }
 
   // Métodos para perfil de usuario (Glassmorphism redesign)
   private initializeUserProfile(): void {
+    this.greeting = this.computeGreeting();
     try {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       this.userName = user.nombre || user.name || user.displayName || 'Usuario';
@@ -2439,6 +2247,14 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       this.userInitials = 'US';
       this.userAvatarUrl = '';
     }
+  }
+
+  // Saludo en español según la franja horaria
+  private computeGreeting(): string {
+    const h = new Date().getHours();
+    if (h < 12) return 'Buenos días';
+    if (h < 19) return 'Buenas tardes';
+    return 'Buenas noches';
   }
 
   onAvatarError(event: Event): void {
@@ -3043,7 +2859,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   clearIconCache(): void {
     this.iconCache.clear();
     if (!environment.production) {
-      console.log('Icon cache cleared');
     }
   }
 
@@ -3064,105 +2879,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
   /**
    * Inicializar efectos cinematográficos después de que la vista esté lista
    */
-  private initializeCinematographicEffects(): void {
-    this.createSpotlightElement();
-    this.setupMouseTrackingEvents();
-    this.setupMagneticEffects();
-    this.animateInitialLoad();
-  }
-
-  /**
-   * Crear elemento spotlight para seguir el cursor
-   */
-  private createSpotlightElement(): void {
-    const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
-    if (sidebar) {
-      this.spotlightElement = this.renderer.createElement('div');
-      this.renderer.addClass(this.spotlightElement, 'sidebar-spotlight');
-      this.renderer.appendChild(sidebar, this.spotlightElement);
-    }
-  }
-
-  /**
-   * Configurar eventos de seguimiento del mouse
-   */
-  private setupMouseTrackingEvents(): void {
-    const sidebar = this.elementRef.nativeElement.querySelector('.sidebar-container');
-    if (!sidebar) return;
-
-    // Mouse enter - activar spotlight
-    this.renderer.listen(sidebar, 'mouseenter', () => {
-      this.isMouseInSidebar = true;
-      if (this.spotlightElement) {
-        this.renderer.setStyle(this.spotlightElement, 'opacity', '1');
-      }
-    });
-
-    // Mouse leave - desactivar spotlight
-    this.renderer.listen(sidebar, 'mouseleave', () => {
-      this.isMouseInSidebar = false;
-      if (this.spotlightElement) {
-        this.renderer.setStyle(this.spotlightElement, 'opacity', '0');
-      }
-    });
-
-    // Mouse move - seguir cursor con spotlight
-    this.renderer.listen(sidebar, 'mousemove', (event: MouseEvent) => {
-      if (this.isMouseInSidebar && this.spotlightElement) {
-        const rect = sidebar.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
-
-        if (this.animationFrameId) {
-          cancelAnimationFrame(this.animationFrameId);
-        }
-
-        this.animationFrameId = requestAnimationFrame(() => {
-          if (this.spotlightElement) {
-            this.renderer.setStyle(this.spotlightElement, 'left', `${x} px`);
-            this.renderer.setStyle(this.spotlightElement, 'top', `${y} px`);
-          }
-        });
-      }
-    });
-  }
-
-  /**
-   * Configurar efectos magnéticos en elementos del menú
-   */
-  private setupMagneticEffects(): void {
-    // Aplicar efecto magnético a todos los enlaces del menú
-    const menuLinks = this.elementRef.nativeElement.querySelectorAll('.menu-link');
-
-    menuLinks.forEach((link: HTMLElement) => {
-      this.renderer.listen(link, 'mouseenter', () => {
-        this.renderer.addClass(link, 'magnetic-hover');
-      });
-
-      this.renderer.listen(link, 'mouseleave', () => {
-        this.renderer.removeClass(link, 'magnetic-hover');
-      });
-    });
-  }
-
-  /**
-   * Inicializar elementos con efectos suaves (sin animaciones problemáticas)
-   */
-  private animateInitialLoad(): void {
-    const menuItems = this.elementRef.nativeElement.querySelectorAll('.menu-item');
-
-    menuItems.forEach((item: HTMLElement) => {
-      // Asegurar que todos los elementos sean visibles
-      this.renderer.setStyle(item, 'opacity', '1');
-      this.renderer.setStyle(item, 'transform', 'translateY(0) scale(1)');
-
-      // Agregar clases para animaciones breathing sutiles (solo algunas)
-      if (Math.random() > 0.7) {
-        this.renderer.addClass(item, 'breathing-element');
-      }
-    });
-  }
-
   /**
    * Activar estado de demo highlight para video
    */
@@ -3279,7 +2995,6 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + 0.2);
     } catch (error) {
-      console.log('No se pudo reproducir el sonido de notificación', error);
     }
   }
 
@@ -3348,11 +3063,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     this.hoverZoneListener = this.renderer.listen(hoverZone, 'mouseenter', () => {
       // Forzar expansión temporal visual del header/sidebar cuando está colapsado
       if (this.collapseMenu && !this.isAutoCollapseEnabled && !this.isMobile()) {
-        console.log('Hover zone ACTIVATING - calling onMouseEnter()');
         this.onMouseEnter();
-      } else {
-        // Debug: log para verificar si la condición se cumple
-        console.log('Hover zone mouseenter - collapseMenu:', this.collapseMenu, 'isAutoCollapseEnabled:', this.isAutoCollapseEnabled, 'isMobile:', this.isMobile(), 'isTemporarilyExpanded:', this.isTemporarilyExpanded);
       }
       if (this.isAutoHideEnabled && !this.isSidebarVisible) {
         // Limpiar timeout de ocultar si existe
@@ -3370,9 +3081,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     // Listener para ocultar sidebar cuando el mouse sale
     this.renderer.listen(hoverZone, 'mouseleave', () => {
-      console.log('Hover zone mouseleave - collapseMenu:', this.collapseMenu, 'isTemporarilyExpanded:', this.isTemporarilyExpanded, 'isAutoCollapseEnabled:', this.isAutoCollapseEnabled, 'isMobile:', this.isMobile());
       if (this.collapseMenu && this.isTemporarilyExpanded && !this.isAutoCollapseEnabled && !this.isMobile()) {
-        console.log('Hover zone DEACTIVATING - calling onMouseLeave()');
         this.onMouseLeave();
       }
     });

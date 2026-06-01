@@ -67,6 +67,14 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
+  // Escala tipográfica coherente (reemplaza los ~11 tamaños sueltos)
+  --fs-2xs: 10px;   // micro-labels, version badge, contadores
+  --fs-xs: 11px;    // labels de sección (uppercase), nivel 3
+  --fs-sm: 12px;    // submenú (nivel 2), texto secundario
+  --fs-base: 13px;  // menú nivel 1, búsqueda, cuerpo
+  --fs-md: 14px;    // énfasis / iconos de campana
+  --fs-lg: 16px;    // nombre de usuario, títulos
+
   // =============================================
   // TEXTO - Usando variables de glassmorphism
   // =============================================
@@ -80,7 +88,7 @@
   // =============================================
   --bg-hover: rgba(0, 0, 0, 0.04);
   --bg-active: rgba(99, 102, 241, 0.08);
-  --bg-section: rgba(0, 0, 0, 0.02);
+  --bg-section: rgba(0, 0, 0, 0.045); // más visible para inputs/búsqueda
 
   // =============================================
   // TRANSICIONES OPTIMIZADAS
@@ -754,9 +762,9 @@ body.dark-only {
   transition: all var(--transition-fast);
   background: transparent;
 
-  // Puntos decorativos (Figma design - macOS style)
+  // Puntos decorativos macOS — ocultos: no cumplen función en web y agregan ruido
   .decorative-dots {
-    display: flex;
+    display: none;
     gap: 6px;
 
     .dot {
@@ -1106,13 +1114,7 @@ body.dark-only {
     i {
       margin-right: var(--spacing-md);
       color: #f39c12;
-      font-size: 12px;
-      animation: star-pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes star-pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.7; transform: scale(1.1); }
+      font-size: var(--fs-sm);
     }
   }
 
@@ -1351,7 +1353,8 @@ body.dark-only {
     .section-title {
       flex: 1;
       text-align: left;
-      font-size: 10px;
+      font-size: var(--fs-xs);
+      letter-spacing: 0.6px;
     }
 
     .section-chevron {
@@ -1381,27 +1384,23 @@ body.dark-only {
 
 .menu-items {
   list-style: none;
-  margin: 0;
-  padding: 4px var(--spacing-md) 4px calc(var(--spacing-md) + 20px);
+  padding: 4px var(--spacing-md) 4px var(--spacing-xl);
   transition: opacity var(--transition-ultrafast), max-height var(--transition-normal);
   position: relative;
   background: rgba(167, 139, 250, 0.02);
   border-radius: 0 0 10px 10px;
   margin: 0 8px 4px;
 
-  // Línea vertical conectora (tree style) - más visible
+  // Línea vertical conectora (tree) — sutil, sin gradiente fuerte
   &::before {
     content: '';
     position: absolute;
-    left: 16px;
-    top: 8px;
-    bottom: 16px;
-    width: 2px;
-    background: linear-gradient(180deg,
-      var(--primary-color) 0%,
-      rgba(167, 139, 250, 0.3) 100%
-    );
-    border-radius: 2px;
+    left: 14px;
+    top: 6px;
+    bottom: 12px;
+    width: 1px;
+    background: var(--divider-color);
+    border-radius: 1px;
   }
 
   &.collapsed {
@@ -1415,41 +1414,6 @@ body.dark-only {
   .menu-item {
     margin-bottom: 4px;
     position: relative;
-
-    // Línea horizontal conectora a cada item - más visible
-    &::before {
-      content: '';
-      position: absolute;
-      left: -18px;
-      top: 50%;
-      width: 14px;
-      height: 2px;
-      background: linear-gradient(90deg,
-        rgba(167, 139, 250, 0.4) 0%,
-        rgba(167, 139, 250, 0.2) 100%
-      );
-      border-radius: 2px;
-    }
-
-    // Punto en la conexión
-    &::after {
-      content: '';
-      position: absolute;
-      left: -6px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 6px;
-      height: 6px;
-      background: rgba(167, 139, 250, 0.3);
-      border-radius: 50%;
-      transition: all var(--transition-fast);
-    }
-
-    &:hover::after {
-      background: var(--primary-color);
-      transform: translateY(-50%) scale(1.2);
-      box-shadow: 0 0 8px rgba(167, 139, 250, 0.5);
-    }
 
     .menu-link {
       display: flex;
@@ -2783,7 +2747,8 @@ body.dark-only {
 @media (max-width: 991.98px) {
   .sidebar-container {
     width: 280px !important;
-    z-index: var(--z-modal) !important;
+    // Drawer por encima del overlay (1054) para que no quede oscurecido
+    z-index: 1056 !important;
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -2809,6 +2774,17 @@ body.dark-only {
 
   .plan-card-container {
     display: none !important;
+  }
+
+  // El wrapper del tema (Cuba) no debe interferir con el drawer: el .sidebar-container
+  // (position:fixed) maneja por sí solo el deslizamiento. Neutralizamos el transform del
+  // wrapper para que su translate no arrastre al hijo fixed durante la animación.
+  .sidebar-wrapper {
+    width: 0 !important;
+
+    &.close_icon {
+      transform: none !important;
+    }
   }
 }
 
