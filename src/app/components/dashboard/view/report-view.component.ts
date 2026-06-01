@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 import { findDimension, findMeasure, findSource } from '../model/source-catalog';
+import { applyCalculatedMeasures } from '../model/calc-engine';
 import {
   DimensionRef,
   MeasureRef,
@@ -110,7 +111,15 @@ export class ReportViewComponent implements OnInit, OnDestroy {
         }),
         finalize(() => (this.running = false)),
       )
-      .subscribe((res) => { this.result = res; });
+      .subscribe((res) => {
+        // Aplicar medidas calculadas del SavedReport (definidas en el builder, persisted en spec).
+        if (res && r.spec.calculated && r.spec.calculated.length > 0) {
+          applyCalculatedMeasures(res, r.spec.calculated);
+          this.result = { ...res, columns: [...res.columns], rows: [...res.rows] };
+        } else {
+          this.result = res;
+        }
+      });
   }
 
   private buildSpec(r: SavedReport): ReportSpec | null {

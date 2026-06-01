@@ -287,6 +287,30 @@
   color: #6b7280;
   margin: 0 0 8px;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-calc-add {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fbbf24;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  cursor: pointer;
+
+  &:hover {
+    background: #fde68a;
+  }
+
+  i {
+    margin-right: 4px;
+  }
 }
 
 .zone-content {
@@ -315,6 +339,17 @@
   &.is-measure {
     border-color: #2563eb;
     color: #1d4ed8;
+  }
+
+  &.is-calc {
+    border-color: #fbbf24;
+    background: #fef3c7;
+    color: #92400e;
+    cursor: pointer;
+
+    &:hover {
+      background: #fde68a;
+    }
   }
 }
 

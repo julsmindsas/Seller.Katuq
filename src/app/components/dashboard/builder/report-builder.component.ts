@@ -9,6 +9,12 @@ import Swal from 'sweetalert2';
 import { ReportsService } from '../../../shared/services/dashboard/reports.service';
 import { SOURCE_CATALOG, findDimension, findMeasure, findSource } from '../model/source-catalog';
 import {
+  applyCalculatedMeasures,
+  availableCalcRefs,
+  validateCalcExpression,
+} from '../model/calc-engine';
+import {
+  CalculatedMeasureDef,
   DimensionDef,
   DimensionRef,
   FilterClause,
@@ -34,6 +40,7 @@ interface FieldRef {
   group?: string;
 }
 
+
 @Component({
   selector: 'app-report-builder',
   templateUrl: './report-builder.component.html',
@@ -51,6 +58,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
   cols: FieldRef[] = [];
   values: FieldRef[] = [];
   filters: FilterClause[] = [];
+  calculated: CalculatedMeasureDef[] = [];
 
   vizType: VizType = 'table';
   vizOptions: VizType[] = ['table', 'pivot', 'bar', 'line', 'pie', 'kpi'];
@@ -208,6 +216,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       })
       .filter((x): x is NonNullable<typeof x> => x !== null);
     this.filters = [...(preset.spec.filters || [])];
+    this.calculated = Array.isArray(preset.spec.calculated) ? [...preset.spec.calculated] : [];
     this.rowsLimit = preset.spec.limit || 1000;
     this.activeVizTypes = new Set(preset.viz.activeTypes || [preset.viz.type]);
   }
@@ -226,6 +235,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
     this.cols = [];
     this.values = [];
     this.filters = [];
+    this.calculated = [];
     this.result = null;
     this.dimFields = s.dimensions.map(d => this.asFieldFromDim(d));
     this.measFields = s.measures.map(m => this.asFieldFromMeasure(m));
@@ -367,6 +377,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       values: this.values.map<MeasureRef>((v) => ({ id: v.id, agg: v.agg || 'sum' })),
       filters: allFilters,
       limit: hasKpi && this.activeVizTypes.size === 1 ? 1 : this.rowsLimit,
+      calculated: this.calculated.length > 0 ? [...this.calculated] : undefined,
     };
   }
 
@@ -403,12 +414,152 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
       .subscribe((res) => {
         console.log('[ReportBuilder] Query result:', res);
         this.result = res;
+        // Aplicar medidas calculadas sobre las filas agregadas que vienen del backend.
+        // Mutamos result.rows/columns in-place; el pivot y los charts las consumen
+        // automáticamente porque van marcadas con axis='measure'.
+        if (res && this.calculated.length > 0) {
+          this.applyCalculatedMeasures();
+        }
         // Si el usuario activó comparativo, ejecutar run adicional con periodo anterior
         // y mergear columnas. Request Harmony Lens punto 5.
         if (res && this.compareMode !== 'none') {
           this.runComparePeriod(spec);
         }
       });
+  }
+
+  // ─── Medidas calculadas ─────────────────────────────────────────────
+  // Aritmética (+ - * /) sobre refs `[Label (agg)]`. El backend no las conoce;
+  // el FE las computa sobre los resultados ya agregados. Ver calc-engine.ts.
+
+  private applyCalculatedMeasures(): void {
+    if (!this.result) return;
+    applyCalculatedMeasures(this.result, this.calculated);
+    // Forzar redibujo (Angular detecta nueva referencia)
+    this.result = { ...this.result, columns: [...this.result.columns], rows: [...this.result.rows] };
+  }
+
+  /**
+   * Abre el modal para crear o editar una calc. Si `existing` está presente,
+   * edita; si no, crea una nueva.
+   */
+  openCalcModal(existing?: CalculatedMeasureDef): void {
+    if (this.values.length === 0 && !existing) {
+      Swal.fire('Atención', 'Agrega al menos una medida en Valores antes de crear un cálculo.', 'warning');
+      return;
+    }
+    const isEdit = !!existing;
+    const refs = availableCalcRefs(this.values, this.calculated, existing?.id);
+    const refButtons = refs.length === 0
+      ? '<p style="font-size:12px;color:#9ca3af;font-style:italic;">No hay medidas disponibles.</p>'
+      : refs.map((r) => `
+          <button type="button" class="calc-ref-btn" data-label="${this.escapeHtml(r.label)}"
+            style="margin:3px;padding:4px 10px;background:${r.kind === 'calc' ? '#fef3c7' : '#dbeafe'};
+                   color:${r.kind === 'calc' ? '#92400e' : '#1e40af'};border:1px solid ${r.kind === 'calc' ? '#fbbf24' : '#93c5fd'};
+                   border-radius:4px;font-size:11px;cursor:pointer;">
+            ${r.kind === 'calc' ? '<i class="fa fa-calculator" style="margin-right:4px;"></i>' : ''}[${this.escapeHtml(r.label)}]
+          </button>
+        `).join('');
+
+    const html = `
+      <div style="text-align:left;font-size:13px;">
+        <label style="display:block;font-weight:600;margin-bottom:4px;">Nombre del cálculo</label>
+        <input id="calc-label" type="text" value="${this.escapeHtml(existing?.label || '')}"
+          placeholder="Ej: Margen"
+          style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;margin-bottom:12px;font-size:13px;" />
+
+        <label style="display:block;font-weight:600;margin-bottom:4px;">Expresión</label>
+        <textarea id="calc-expr" rows="3"
+          placeholder="Ej: [Total Pedido (sum)] - [Costo (sum)]"
+          style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;font-family:monospace;font-size:12px;margin-bottom:6px;">${this.escapeHtml(existing?.expression || '')}</textarea>
+
+        <p style="font-size:11px;color:#6b7280;margin:0 0 6px;">
+          Operadores soportados: <code>+ - * /</code> y paréntesis. Clic en una medida para insertarla:
+        </p>
+        <div id="calc-refs" style="margin-bottom:12px;max-height:120px;overflow-y:auto;">${refButtons}</div>
+
+        <label style="display:block;font-weight:600;margin-bottom:4px;">Formato</label>
+        <select id="calc-format" style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
+          <option value="number" ${existing?.format === 'number' || !existing?.format ? 'selected' : ''}>Número</option>
+          <option value="currency" ${existing?.format === 'currency' ? 'selected' : ''}>Moneda (COP)</option>
+          <option value="percent" ${existing?.format === 'percent' ? 'selected' : ''}>Porcentaje</option>
+        </select>
+      </div>
+    `;
+    Swal.fire({
+      title: isEdit ? 'Editar cálculo' : 'Nuevo cálculo',
+      html,
+      width: 560,
+      showCancelButton: true,
+      confirmButtonText: isEdit ? 'Guardar' : 'Crear',
+      cancelButtonText: 'Cancelar',
+      focusConfirm: false,
+      didOpen: () => {
+        // Click en una ref → insertarla en el textarea en la posición del cursor
+        const expr = document.getElementById('calc-expr') as HTMLTextAreaElement;
+        const refsEl = document.getElementById('calc-refs');
+        refsEl?.querySelectorAll<HTMLButtonElement>('.calc-ref-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const label = btn.getAttribute('data-label') || '';
+            const insertion = `[${label}]`;
+            const start = expr.selectionStart ?? expr.value.length;
+            const end = expr.selectionEnd ?? expr.value.length;
+            expr.value = expr.value.slice(0, start) + insertion + expr.value.slice(end);
+            const newCursor = start + insertion.length;
+            expr.focus();
+            expr.setSelectionRange(newCursor, newCursor);
+          });
+        });
+      },
+      preConfirm: () => {
+        const labelEl = document.getElementById('calc-label') as HTMLInputElement;
+        const exprEl = document.getElementById('calc-expr') as HTMLTextAreaElement;
+        const fmtEl = document.getElementById('calc-format') as HTMLSelectElement;
+        const label = (labelEl?.value || '').trim();
+        const expression = (exprEl?.value || '').trim();
+        const format = (fmtEl?.value || 'number') as 'number' | 'currency' | 'percent';
+        if (!label) { Swal.showValidationMessage('Falta el nombre'); return false; }
+        if (!expression) { Swal.showValidationMessage('Falta la expresión'); return false; }
+        const err = validateCalcExpression(expression);
+        if (err) {
+          Swal.showValidationMessage('Expresión inválida: ' + err);
+          return false;
+        }
+        return { label, expression, format };
+      },
+    }).then((result) => {
+      if (!result.isConfirmed || !result.value) return;
+      const { label, expression, format } = result.value as { label: string; expression: string; format: 'number' | 'currency' | 'percent' };
+      if (isEdit && existing) {
+        existing.label = label;
+        existing.expression = expression;
+        existing.format = format;
+      } else {
+        this.calculated.push({
+          id: `${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
+          label,
+          expression,
+          format,
+        });
+      }
+      // Re-evaluar sobre el result actual si ya hay datos
+      if (this.result) this.applyCalculatedMeasures();
+    });
+  }
+
+  /** Quita una calc del array y re-evalúa los cálculos restantes. */
+  removeCalc(id: string): void {
+    const idx = this.calculated.findIndex((c) => c.id === id);
+    if (idx === -1) return;
+    this.calculated.splice(idx, 1);
+    // applyCalculatedMeasures limpia calc_* previas antes de re-evaluar, así que
+    // re-aplicar sobre el result actual basta — no hace falta volver a pegar al backend.
+    if (this.result) this.applyCalculatedMeasures();
+  }
+
+  /** Helper para escape de HTML en el modal Swal. */
+  private escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch] as string));
   }
 
   /**
@@ -1243,6 +1394,7 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
         this.cols = (r.spec.cols || []).map((d) => this.dimRefToField(d));
         this.values = (r.spec.values || []).map((m) => this.measureRefToField(m));
         this.filters = r.spec.filters || [];
+        this.calculated = Array.isArray(r.spec.calculated) ? [...r.spec.calculated] : [];
         this.run();
       });
   }
