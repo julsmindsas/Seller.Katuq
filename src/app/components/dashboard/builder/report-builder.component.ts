@@ -474,9 +474,27 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
           style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;font-family:monospace;font-size:12px;margin-bottom:6px;">${this.escapeHtml(existing?.expression || '')}</textarea>
 
         <p style="font-size:11px;color:#6b7280;margin:0 0 6px;">
-          Operadores soportados: <code>+ - * /</code> y paréntesis. Clic en una medida para insertarla:
+          Operadores: <code>+ - * /</code> y paréntesis. Clic en una medida para insertarla:
         </p>
-        <div id="calc-refs" style="margin-bottom:12px;max-height:120px;overflow-y:auto;">${refButtons}</div>
+        <div id="calc-refs" style="margin-bottom:10px;max-height:120px;overflow-y:auto;">${refButtons}</div>
+
+        <p style="font-size:11px;color:#6b7280;margin:0 0 6px;">
+          Funciones agregadas (clic para insertar plantilla; reemplaza el <code>[]</code> por una medida):
+        </p>
+        <div id="calc-fns" style="margin-bottom:12px;">
+          <button type="button" class="calc-fn-btn" data-template="total([])"
+            style="margin:3px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;font-size:11px;cursor:pointer;font-family:monospace;"
+            title="Suma total de la columna (escalar)">total([])</button>
+          <button type="button" class="calc-fn-btn" data-template="pct_of_total([])"
+            style="margin:3px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;font-size:11px;cursor:pointer;font-family:monospace;"
+            title="Porcentaje sobre el total de la columna (0-100)">pct_of_total([])</button>
+          <button type="button" class="calc-fn-btn" data-template="running_total([])"
+            style="margin:3px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;font-size:11px;cursor:pointer;font-family:monospace;"
+            title="Suma acumulada de arriba hacia abajo">running_total([])</button>
+          <button type="button" class="calc-fn-btn" data-template="rank([])"
+            style="margin:3px;padding:4px 10px;background:#dcfce7;color:#166534;border:1px solid #86efac;border-radius:4px;font-size:11px;cursor:pointer;font-family:monospace;"
+            title="Ranking 1-based (1 = mayor valor). Para ascendente usa rank([], 'asc')">rank([])</button>
+        </div>
 
         <label style="display:block;font-weight:600;margin-bottom:4px;">Formato</label>
         <select id="calc-format" style="width:100%;padding:7px 9px;border:1px solid #d1d5db;border-radius:4px;font-size:13px;">
@@ -508,6 +526,20 @@ export class ReportBuilderComponent implements OnInit, OnDestroy {
             const newCursor = start + insertion.length;
             expr.focus();
             expr.setSelectionRange(newCursor, newCursor);
+          });
+        });
+        // Botones de funciones agregadas: insertan plantilla y dejan el cursor dentro de `[]`
+        document.querySelectorAll<HTMLButtonElement>('.calc-fn-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const tmpl = btn.getAttribute('data-template') || '';
+            const start = expr.selectionStart ?? expr.value.length;
+            const end = expr.selectionEnd ?? expr.value.length;
+            expr.value = expr.value.slice(0, start) + tmpl + expr.value.slice(end);
+            // Posicionar cursor entre los corchetes `[]` de la plantilla
+            const bracketPos = tmpl.indexOf('[');
+            const cursorPos = start + bracketPos + 1;
+            expr.focus();
+            expr.setSelectionRange(cursorPos, cursorPos);
           });
         });
       },
