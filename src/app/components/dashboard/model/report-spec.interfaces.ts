@@ -64,6 +64,23 @@ export interface OrderClause {
   dir: 'asc' | 'desc';
 }
 
+/**
+ * Medida calculada: fórmula aritmética que combina otras medidas del reporte.
+ * El backend NO la conoce — el frontend evalúa la expresión sobre las filas
+ * agregadas y agrega la columna resultado con `axis='measure'`.
+ *
+ * Sintaxis: `[Label (agg)] op [Label (agg)] op número`
+ *   - Operadores: + - * / ( )
+ *   - Refs: `[Total Pedido (sum)]` — exact match con el label de la columna agregada
+ *   - Calcs pueden referenciar otros calcs SI vienen antes en el array (orden de evaluación)
+ */
+export interface CalculatedMeasureDef {
+  id: string;
+  label: string;
+  expression: string;
+  format?: 'number' | 'currency' | 'percent';
+}
+
 /** Cuerpo del POST /v1/reports/query */
 export interface ReportSpec {
   source: string;
@@ -73,6 +90,11 @@ export interface ReportSpec {
   filters?: FilterClause[];
   orderBy?: OrderClause[];
   limit?: number;
+  /**
+   * Medidas calculadas — evaluadas en frontend tras recibir el result.
+   * Persistidas en el SavedReport para que se restauren al reabrir.
+   */
+  calculated?: CalculatedMeasureDef[];
   /**
    * Periodos a comparar (request Harmony Lens punto 5: "comparativos por rango").
    * Si presente, el frontend ejecuta N queries adicionales con date filters
@@ -88,6 +110,13 @@ export interface ReportColumn {
   type: 'dimension' | 'measure';
   dataType: DimensionType;
   format?: 'number' | 'currency' | 'percent';
+  /**
+   * Eje al que pertenece esta columna en el ReportSpec original.
+   * Permite a las vizualizaciones pivotar correctamente (row → eje Y de la tabla,
+   * col → headers pivotados, measure → cells). Opcional para compat con backends
+   * antiguos: si falta, las vizes caen al heurístico "última dim = col".
+   */
+  axis?: 'row' | 'col' | 'measure';
 }
 
 export interface ReportResult {

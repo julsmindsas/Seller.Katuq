@@ -135,7 +135,7 @@
           <h4 class="zone-title"><i class="fa fa-grip-lines-vertical me-1"></i> Columnas</h4>
           <div class="zone-content">
             <ng-container *ngIf="cols.length === 0">
-              <span class="zone-empty">Opcional · arrastra para pivot</span>
+              <span class="zone-empty">Opcional · cada valor genera una columna (pivot Excel)</span>
             </ng-container>
             <div *ngFor="let f of cols; let i = index" class="zone-pill" cdkDrag [cdkDragData]="f">
               <span>{{ f.label }}</span>
@@ -153,9 +153,14 @@
           [cdkDropListData]="values"
           [cdkDropListConnectedTo]="['rows-zone','cols-zone','palette','palette-m']"
           (cdkDropListDropped)="drop($event,'values')">
-          <h4 class="zone-title"><i class="fa fa-ruler me-1"></i> Valores</h4>
+          <h4 class="zone-title">
+            <i class="fa fa-ruler me-1"></i> Valores
+            <button type="button" class="btn-calc-add" (click)="openCalcModal()" title="Crear medida calculada (fórmula)">
+              <i class="fa fa-calculator"></i> + Cálculo
+            </button>
+          </h4>
           <div class="zone-content">
-            <ng-container *ngIf="values.length === 0">
+            <ng-container *ngIf="values.length === 0 && calculated.length === 0">
               <span class="zone-empty">Arrastra una medida aquí</span>
             </ng-container>
             <div *ngFor="let f of values; let i = index" class="zone-pill is-measure" cdkDrag [cdkDragData]="f">
@@ -164,6 +169,11 @@
               </select>
               <span>{{ f.label }}</span>
               <button type="button" class="pill-x" (click)="removeFromZone('values', i)">×</button>
+            </div>
+            <div *ngFor="let c of calculated" class="zone-pill is-calc" (click)="openCalcModal(c)" title="Clic para editar">
+              <i class="fa fa-calculator"></i>
+              <span>{{ c.label }}</span>
+              <button type="button" class="pill-x" (click)="removeCalc(c.id); $event.stopPropagation()">×</button>
             </div>
           </div>
         </div>

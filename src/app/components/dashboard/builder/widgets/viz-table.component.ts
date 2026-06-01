@@ -1,11 +1,43 @@
 import { Component, Input } from '@angular/core';
 import { ReportColumn, ReportResult } from '../../model/report-spec.interfaces';
 
+interface PivotHeaderCell {
+  label: string;
+  colspan: number;
+  /** Clave del nivel anterior + este valor — usado para construir el key del cell. */
+  pathKey: string;
+}
+
+interface PivotMeasureLeaf {
+  /** Combinación de valores de col-dims que identifican esta columna pivotada. */
+  pathKey: string;
+  /** Measure que se renderea bajo esta combinación (cuando hay varias measures). */
+  measureCol: ReportColumn;
+  /** Etiqueta corta a mostrar bajo la última fila de headers cuando hay 2+ measures. */
+  measureLabel: string;
+}
+
 interface PivotData {
+  /** Dimensiones que van en el lado izquierdo (eje Y de la tabla). */
   rowDims: ReportColumn[];
-  colKeys: string[];
-  measureCols: ReportColumn[];
-  rows: { rowVals: unknown[]; cells: Record<string, unknown> }[];
+  /** Dimensiones que van arriba (eje X — generan los headers anidados). */
+  colDims: ReportColumn[];
+  /** Measures activas (1+). Si hay 2+ se renderea una fila adicional de header con sus labels. */
+  measures: ReportColumn[];
+  /**
+   * Headers anidados. Cada elemento del array externo es un nivel del header
+   * (de arriba hacia abajo). Cada celda tiene colspan según cuántas hojas
+   * agrupa. Si hay 2+ measures se agrega una fila final con measure labels.
+   */
+  headerRows: PivotHeaderCell[][];
+  /** Hojas finales: una columna pivotada por combinación-de-col-values × measure. */
+  leaves: PivotMeasureLeaf[];
+  /** Filas: valores del lado izquierdo + cells indexadas por leaf.pathKey + '||' + measureField. */
+  rows: { rowVals: unknown[]; cells: Record<string, unknown>; rowTotal: Record<string, number> }[];
+  /** Totales por columna (suma sobre todas las filas), indexados igual que cells. */
+  colTotals: Record<string, number>;
+  /** Total general por measure — clave = measureField. */
+  grandTotal: Record<string, number>;
 }
 
 type FilterMode = 'text' | 'select' | 'number' | 'date';
@@ -27,7 +59,7 @@ interface FilterOption {
 @Component({
   selector: 'app-viz-table',
   template: `
-    <div class="table-wrap" *ngIf="!pivot && result">
+    <div class="table-wrap" *ngIf="!pivotData && result">
       <div class="table-toolbar">
         <span class="rows-count">{{ filteredRows.length }} / {{ result.rows.length }} filas</span>
         <div class="toolbar-actions">
@@ -123,30 +155,56 @@ interface FilterOption {
       </table>
     </div>
 
-    <div class="table-wrap" *ngIf="pivot && pivotData">
-      <table class="data-table">
+    <div class="table-wrap" *ngIf="pivotData">
+      <table class="data-table pivot-table">
         <thead>
-          <tr>
-            <th *ngFor="let d of pivotData.rowDims">{{ d.label }}</th>
-            <th *ngFor="let c of pivotData.colKeys">{{ c }}</th>
+          <!-- Niveles de headers anidados (uno por col-dim) -->
+          <tr *ngFor="let hRow of pivotData.headerRows; let lvl = index">
+            <!-- Esquina vacía o etiquetas de row-dims solo en el último nivel -->
+            <ng-container *ngIf="lvl === pivotData.headerRows.length - 1 && !pivotShowsMeasureHeader; else cornerEmpty">
+              <th *ngFor="let d of pivotData.rowDims" class="pivot-row-header">{{ d.label }}</th>
+            </ng-container>
+            <ng-template #cornerEmpty>
+              <th *ngFor="let d of pivotData.rowDims" class="pivot-corner"></th>
+            </ng-template>
+            <th *ngFor="let h of hRow" [attr.colspan]="h.colspan" class="pivot-col-header">{{ h.label }}</th>
+            <th *ngIf="lvl === 0 && showTotals" [attr.rowspan]="pivotData.headerRows.length + (pivotShowsMeasureHeader ? 1 : 0)" class="pivot-total-header">Total</th>
+          </tr>
+          <!-- Fila extra con labels de measures (solo si hay 2+ measures) -->
+          <tr *ngIf="pivotShowsMeasureHeader">
+            <th *ngFor="let d of pivotData.rowDims" class="pivot-row-header">{{ d.label }}</th>
+            <th *ngFor="let leaf of pivotData.leaves" class="pivot-measure-header">{{ leaf.measureLabel }}</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let row of pivotData.rows">
-            <td *ngFor="let v of row.rowVals; let i = index">{{ format(v, pivotData.rowDims[i]) }}</td>
-            <td *ngFor="let ck of pivotData.colKeys">
-              {{ format(row.cells[ck], pivotData.measureCols[0]) }}
+            <td *ngFor="let v of row.rowVals; let i = index" class="pivot-row-label">{{ format(v, pivotData.rowDims[i]) }}</td>
+            <td *ngFor="let leaf of pivotData.leaves" class="pivot-cell measure-col">
+              {{ format(pivotCell(row, leaf), leaf.measureCol) }}
+            </td>
+            <td *ngIf="showTotals" class="pivot-row-total measure-col">
+              <ng-container *ngIf="pivotData.measures.length === 1">
+                <strong>{{ format(pivotRowTotal(row, pivotData.measures[0]), pivotData.measures[0]) }}</strong>
+              </ng-container>
+              <ng-container *ngIf="pivotData.measures.length > 1">
+                <!-- Multi-measure: sumar todas no es semántico. Mostrar la primera medida. -->
+                <strong>{{ format(pivotRowTotal(row, pivotData.measures[0]), pivotData.measures[0]) }}</strong>
+              </ng-container>
             </td>
           </tr>
         </tbody>
-        <tfoot *ngIf="showTotals && pivotData.rows.length > 0">
+        <!-- Tfoot solo cuando hay row-dims; sin row-dims el body ya es 1 fila = total -->
+        <tfoot *ngIf="showTotals && pivotData.rows.length > 0 && pivotData.rowDims.length > 0">
           <tr class="totals-row">
             <td *ngFor="let d of pivotData.rowDims; let i = index">
               <strong *ngIf="i === 0">Total</strong>
               <ng-container *ngIf="i > 0">—</ng-container>
             </td>
-            <td *ngFor="let ck of pivotData.colKeys" class="measure-col">
-              <strong>{{ format(getPivotColumnTotal(ck), pivotData.measureCols[0]) }}</strong>
+            <td *ngFor="let leaf of pivotData.leaves" class="measure-col">
+              <strong>{{ format(pivotColTotal(leaf), leaf.measureCol) }}</strong>
+            </td>
+            <td class="pivot-grand-total measure-col">
+              <strong>{{ format(pivotData.grandTotal[pivotData.measures[0].field], pivotData.measures[0]) }}</strong>
             </td>
           </tr>
         </tfoot>
@@ -320,6 +378,62 @@ interface FilterOption {
         text-align: right;
         color: #92400e;
       }
+
+      /* ── Pivot multi-nivel (Excel-like) ────────────────────── */
+      .pivot-table thead th {
+        background: #eff6ff;
+        color: #1e40af;
+        border-right: 1px solid #dbeafe;
+      }
+      .pivot-corner {
+        background: #f8fafc !important;
+        border-right: 1px solid #e5e7eb !important;
+      }
+      .pivot-row-header {
+        background: #e0e7ff !important;
+        color: #312e81 !important;
+        font-weight: 700;
+      }
+      .pivot-col-header {
+        text-align: center !important;
+        font-weight: 600;
+        border-bottom: 1px solid #bfdbfe;
+      }
+      .pivot-measure-header {
+        text-align: center !important;
+        font-size: 11px;
+        font-style: italic;
+        background: #f1f5f9 !important;
+        color: #475569 !important;
+      }
+      .pivot-row-label {
+        background: #f9fafb;
+        font-weight: 500;
+        position: sticky;
+        left: 0;
+        z-index: 1;
+      }
+      .pivot-cell {
+        text-align: right;
+        color: #1f2937;
+      }
+      .pivot-row-total {
+        background: #fef3c7;
+        color: #92400e;
+        text-align: right;
+        font-weight: 600;
+      }
+      .pivot-total-header {
+        background: #fde68a !important;
+        color: #92400e !important;
+        text-align: center !important;
+        font-weight: 700;
+      }
+      .pivot-grand-total {
+        background: #fbbf24 !important;
+        color: #78350f !important;
+        font-weight: 700;
+      }
     `,
   ],
 })
@@ -472,19 +586,6 @@ export class VizTableComponent {
     return total;
   }
 
-  /**
-   * Suma una columna del pivot (clave de columna) sobre todas las filas pivoteadas.
-   */
-  getPivotColumnTotal(colKey: string): number {
-    if (!this.pivotData) return 0;
-    let total = 0;
-    for (const row of this.pivotData.rows) {
-      const v = row.cells[colKey];
-      const n = Number(v);
-      if (Number.isFinite(n)) total += n;
-    }
-    return total;
-  }
 
   /**
    * Columnas dimension disponibles para el dropdown de "agrupar por".
@@ -537,63 +638,240 @@ export class VizTableComponent {
     return 'text';
   }
 
+  /**
+   * Calcula pivotData con soporte para:
+   *   - Múltiples col-dims (headers anidados como Excel).
+   *   - Múltiples measures (sub-columnas bajo cada combinación de col-values).
+   *   - Subtotales por fila y por columna + total general.
+   *
+   * Decisión de cuándo pivotar:
+   *   1. Si las columnas vienen con `axis` (backend nuevo) → respeta axis.
+   *      Pivota si hay al menos una col con `axis='col'`.
+   *   2. Si NO viene `axis` (compat con backend viejo) y `pivot=true`:
+   *      cae al heurístico anterior (última dim = col).
+   *   3. Si no se cumple ninguna → pivotData=null (renderiza tabla plana).
+   */
   private compute(): void {
-    if (!this._result || !this._pivot) {
+    if (!this._result || this._result.rows.length === 0) {
       this.pivotData = null;
       return;
     }
-    const dims = this._result.columns.filter((c) => c.type === 'dimension');
-    const measures = this._result.columns.filter((c) => c.type === 'measure');
+    const cols = this._result.columns;
+    const hasAxis = cols.some((c) => !!c.axis);
 
-    if (dims.length === 1 && measures.length > 0) {
-      const dimCol = dims[0];
-      const measureCol = measures[0];
-      const colKeys = Array.from(new Set(this._result.rows.map((r) => String(r[dimCol.field] ?? ''))));
-      colKeys.sort();
-      const cells: Record<string, unknown> = {};
-      for (const row of this._result.rows) {
-        const colKey = String(row[dimCol.field] ?? '');
-        cells[colKey] = row[measureCol.field];
+    let rowDims: ReportColumn[];
+    let colDims: ReportColumn[];
+    let measures: ReportColumn[];
+
+    if (hasAxis) {
+      rowDims = cols.filter((c) => c.axis === 'row');
+      colDims = cols.filter((c) => c.axis === 'col');
+      measures = cols.filter((c) => c.axis === 'measure' || c.type === 'measure');
+      // Si el spec no tiene cols definidas, no pivotamos (el render flat es lo correcto).
+      // Excepción: si el usuario activó la viz `pivot` explícitamente y solo hay 1 row-dim,
+      // tomamos esa dim como col (heurístico legacy) para que `pivot` aún haga algo útil.
+      if (colDims.length === 0) {
+        if (!this._pivot) {
+          this.pivotData = null;
+          return;
+        }
+        if (rowDims.length >= 2) {
+          colDims = [rowDims[rowDims.length - 1]];
+          rowDims = rowDims.slice(0, -1);
+        } else if (rowDims.length === 1) {
+          colDims = [rowDims[0]];
+          rowDims = [];
+        } else {
+          this.pivotData = null;
+          return;
+        }
       }
-      this.pivotData = {
-        rowDims: [],
-        colKeys,
-        measureCols: [measureCol],
-        rows: [{ rowVals: [], cells }],
-      };
-      return;
+    } else {
+      // Backend viejo (sin axis): mantener heurístico solo cuando _pivot=true.
+      if (!this._pivot) {
+        this.pivotData = null;
+        return;
+      }
+      const dims = cols.filter((c) => c.type === 'dimension');
+      measures = cols.filter((c) => c.type === 'measure');
+      if (dims.length === 0 || measures.length === 0) {
+        this.pivotData = null;
+        return;
+      }
+      if (dims.length === 1) {
+        rowDims = [];
+        colDims = [dims[0]];
+      } else {
+        rowDims = dims.slice(0, -1);
+        colDims = [dims[dims.length - 1]];
+      }
     }
-    if (dims.length < 2 || measures.length === 0) {
+
+    if (measures.length === 0) {
       this.pivotData = null;
       return;
     }
-    const rowDims = dims.slice(0, dims.length - 1);
-    const colDim = dims[dims.length - 1];
-    const measureCol = measures[0];
 
-    const colKeys = Array.from(new Set(this._result.rows.map((r) => String(r[colDim.field] ?? ''))));
-    colKeys.sort();
-
-    const grouped = new Map<string, { rowVals: unknown[]; cells: Record<string, unknown> }>();
+    // 1. Extraer combinaciones únicas de col-values, ordenadas.
+    const colCombos: string[][] = [];
+    const seenCombos = new Set<string>();
     for (const row of this._result.rows) {
-      const key = rowDims.map((d) => String(row[d.field] ?? '')).join('||');
-      if (!grouped.has(key)) {
-        grouped.set(key, {
-          rowVals: rowDims.map((d) => row[d.field]),
-          cells: {},
+      const vals = colDims.map((d) => String(row[d.field] ?? ''));
+      const key = vals.join('||');
+      if (!seenCombos.has(key)) {
+        seenCombos.add(key);
+        colCombos.push(vals);
+      }
+    }
+    // Orden lexicográfico por valores; numérico si todos parseables a número.
+    colCombos.sort((a, b) => {
+      for (let i = 0; i < a.length; i++) {
+        const na = Number(a[i]);
+        const nb = Number(b[i]);
+        let c: number;
+        if (!Number.isNaN(na) && !Number.isNaN(nb)) c = na - nb;
+        else c = a[i].localeCompare(b[i]);
+        if (c !== 0) return c;
+      }
+      return 0;
+    });
+
+    // 2. Construir headerRows (matriz de celdas con colspan) — niveles top-down
+    //    según colDims. Si hay 2+ measures, agregamos una fila final con labels
+    //    de measures bajo cada combo.
+    const measuresPerCombo = measures.length;
+    const headerRows: PivotHeaderCell[][] = [];
+    for (let lvl = 0; lvl < colDims.length; lvl++) {
+      const row: PivotHeaderCell[] = [];
+      let i = 0;
+      while (i < colCombos.length) {
+        const labelVal = colCombos[i][lvl];
+        const pathKey = colCombos[i].slice(0, lvl + 1).join('||');
+        // Agrupa combos contiguos con mismo valor en niveles 0..lvl.
+        let span = 1;
+        while (
+          i + span < colCombos.length &&
+          colCombos[i + span].slice(0, lvl + 1).join('||') === pathKey
+        ) {
+          span++;
+        }
+        row.push({
+          label: this.formatColLabel(labelVal, colDims[lvl]),
+          colspan: span * measuresPerCombo,
+          pathKey,
+        });
+        i += span;
+      }
+      headerRows.push(row);
+    }
+
+    // 3. Construir leaves: una columna por (combo × measure).
+    const leaves: PivotMeasureLeaf[] = [];
+    for (const combo of colCombos) {
+      const pathKey = combo.join('||');
+      for (const m of measures) {
+        leaves.push({
+          pathKey,
+          measureCol: m,
+          measureLabel: m.label,
         });
       }
-      const target = grouped.get(key)!;
-      const colKey = String(row[colDim.field] ?? '');
-      target.cells[colKey] = row[measureCol.field];
+    }
+
+    // 4. Agrupar filas por combinación de row-dim values y poblar cells.
+    const grouped = new Map<
+      string,
+      { rowVals: unknown[]; cells: Record<string, unknown>; rowTotal: Record<string, number> }
+    >();
+    const cellKey = (combo: string, measureField: string) => combo + '||' + measureField;
+
+    for (const row of this._result.rows) {
+      const rowKey = rowDims.map((d) => String(row[d.field] ?? '')).join('||');
+      let entry = grouped.get(rowKey);
+      if (!entry) {
+        entry = {
+          rowVals: rowDims.map((d) => row[d.field]),
+          cells: {},
+          rowTotal: {},
+        };
+        for (const m of measures) entry.rowTotal[m.field] = 0;
+        grouped.set(rowKey, entry);
+      }
+      const comboKey = colDims.map((d) => String(row[d.field] ?? '')).join('||');
+      for (const m of measures) {
+        const v = row[m.field];
+        entry.cells[cellKey(comboKey, m.field)] = v;
+        const n = Number(v);
+        if (Number.isFinite(n)) entry.rowTotal[m.field] += n;
+      }
+    }
+
+    // 5. Calcular totales por columna y total general.
+    const colTotals: Record<string, number> = {};
+    const grandTotal: Record<string, number> = {};
+    for (const m of measures) grandTotal[m.field] = 0;
+    for (const combo of colCombos) {
+      const comboKey = combo.join('||');
+      for (const m of measures) {
+        let sum = 0;
+        for (const entry of grouped.values()) {
+          const v = entry.cells[cellKey(comboKey, m.field)];
+          const n = Number(v);
+          if (Number.isFinite(n)) sum += n;
+        }
+        colTotals[cellKey(comboKey, m.field)] = sum;
+        grandTotal[m.field] += sum;
+      }
     }
 
     this.pivotData = {
       rowDims,
-      colKeys,
-      measureCols: [measureCol],
+      colDims,
+      measures,
+      headerRows,
+      leaves,
       rows: Array.from(grouped.values()),
+      colTotals,
+      grandTotal,
     };
+  }
+
+  /** Formato para el label de un valor de col-dim en el header pivotado. */
+  private formatColLabel(value: unknown, col: ReportColumn): string {
+    if (value === null || value === undefined || value === '' || value === 'null') return '(sin valor)';
+    if (col.dataType === 'date') {
+      const s = String(value);
+      const dayM = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (dayM) return `${dayM[3]}/${dayM[2]}/${dayM[1]}`;
+      const monM = s.match(/^(\d{4})-(\d{2})$/);
+      if (monM) return `${monM[2]}/${monM[1]}`;
+      return s;
+    }
+    if (col.dataType === 'boolean') {
+      if (value === true || value === 'true') return 'Sí';
+      if (value === false || value === 'false') return 'No';
+    }
+    return String(value);
+  }
+
+  /** Lookup de cell por leaf (usado desde el template). */
+  pivotCell(row: PivotData['rows'][number], leaf: PivotMeasureLeaf): unknown {
+    return row.cells[leaf.pathKey + '||' + leaf.measureCol.field];
+  }
+
+  /** Total de columna para una hoja (usado desde el template). */
+  pivotColTotal(leaf: PivotMeasureLeaf): number {
+    return this.pivotData?.colTotals[leaf.pathKey + '||' + leaf.measureCol.field] ?? 0;
+  }
+
+  /** True si hay 2+ measures — render la fila adicional de header con labels de measure. */
+  get pivotShowsMeasureHeader(): boolean {
+    return (this.pivotData?.measures.length || 0) > 1;
+  }
+
+  /** Total de fila (sumando todas las combos × esta measure). Usado en columna Total. */
+  pivotRowTotal(row: PivotData['rows'][number], measure: ReportColumn): number {
+    return row.rowTotal[measure.field] ?? 0;
   }
 
   format(value: unknown, col: ReportColumn | undefined): string {
