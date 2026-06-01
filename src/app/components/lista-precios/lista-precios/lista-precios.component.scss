@@ -3,13 +3,47 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-::ng-deep .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-  background-color: var(--theme-primary, #7366ff);
-  color: white;
-}
+/* === Tabs (p-tabView): legibilidad + estilo limpio ===
+   Antes los tabs inactivos no tenían color definido y quedaban con el gris
+   clarísimo de PrimeNG (casi ilegible). Ahora: texto inactivo oscuro y con peso,
+   activo con alto contraste (morado lleno + blanco), hover sutil. */
+::ng-deep .p-tabview {
+  .p-tabview-nav {
+    background: transparent;
+    border-bottom: 1px solid #e9ecef;
+    gap: 0.25rem;
 
-::ng-deep .p-tabview .p-tabview-nav-link {
-  padding: 1rem 1.5rem;
+    li .p-tabview-nav-link {
+      color: #3f4254;                 /* texto inactivo legible (antes casi invisible) */
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.1px;
+      padding: 0.85rem 1.5rem;
+      background: transparent;
+      border: 1px solid transparent;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+
+      &:hover {
+        color: var(--theme-primary, #7366ff);
+        background-color: #f4f3ff;     /* hover suave con tinte del primario */
+      }
+
+      &:focus,
+      &:focus-visible {
+        box-shadow: none;
+        outline: none;
+      }
+    }
+
+    li.p-highlight .p-tabview-nav-link {
+      background-color: var(--theme-primary, #7366ff);
+      color: #ffffff;                 /* blanco sobre morado = alto contraste */
+      font-weight: 700;
+      border-color: var(--theme-primary, #7366ff);
+    }
+  }
 }
 
 ::ng-deep .p-datatable .p-datatable-tbody > tr {
