@@ -265,6 +265,38 @@ export const SOURCE_CATALOG: SourceDef[] = [
       { id: 'valor_iva', label: 'IVA', aggs: ['sum', 'avg'], format: 'currency' },
     ],
   },
+  {
+    id: 'accounting_receivables',
+    label: 'Cartera detalle (por documento)',
+    description: 'Renglones de cartera pendientes por documento (estilo Estado de Cuenta WO): saldo, naturaleza CxC/CxP, vendedor, documento origen y aging por antigüedad. Filtrar naturaleza=CxC → por cobrar, CxP → por pagar.',
+    requiresIntegration: 'worldoffice',
+    sellerField: 'vendedor_id',
+    dimensions: [
+      // Tercero
+      { id: 'tercero_id', label: 'ID Tercero WO', type: 'number', group: 'Tercero' },
+      { id: 'tercero_nombre', label: 'Tercero', type: 'string', group: 'Tercero' },
+      // Vendedor
+      { id: 'vendedor_id', label: 'ID Vendedor', type: 'number', group: 'Vendedor' },
+      { id: 'vendedor_nombre', label: 'Vendedor', type: 'string', group: 'Vendedor' },
+      // Cartera
+      { id: 'naturaleza', label: 'Naturaleza', type: 'string', enumValues: ['CxC', 'CxP'], group: 'Cartera' },
+      { id: 'bucket', label: 'Antigüedad', type: 'string', enumValues: ['corriente', 'vencido_0_30', 'vencido_31_60', 'vencido_61_90', 'vencido_90_plus'], group: 'Cartera' },
+      // Documento origen
+      { id: 'doc_origen_tipo', label: 'Tipo Documento', type: 'string', group: 'Documento' },
+      { id: 'doc_origen_prefijo', label: 'Prefijo', type: 'string', group: 'Documento' },
+      { id: 'doc_origen_numero', label: 'Número', type: 'number', group: 'Documento' },
+      { id: 'concepto', label: 'Concepto', type: 'string', group: 'Documento' },
+      // Fechas
+      { id: 'fecha', label: 'Fecha Documento', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
+      { id: 'fecha_vencimiento_estimada', label: 'Vencimiento (estimado)', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
+      { id: 'fecha_corte', label: 'Fecha Corte', type: 'date', granularities: ['day', 'month', 'year'], group: 'Fechas' },
+      { id: 'run_id', label: 'Run ID', type: 'string', group: 'Cartera' },
+    ],
+    measures: [
+      { id: 'saldo', label: 'Saldo', aggs: ['sum', 'avg', 'min', 'max'], format: 'currency' },
+      { id: 'renglones', label: 'Renglones', aggs: ['count'], format: 'number' },
+    ],
+  },
 ];
 
 export function findSource(id: string) {
