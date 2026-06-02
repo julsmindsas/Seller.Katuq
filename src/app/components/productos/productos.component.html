@@ -831,7 +831,8 @@
         </div>
         <div *ngIf="!selectedProductos?.length" class="alert alert-secondary py-2 mb-3">
             <i class="pi pi-filter me-1"></i>
-            Se exportarán los <strong>{{ rows.length }}</strong> productos de la página actual (con filtros activos).
+            Se exportarán <strong>todos</strong> los productos que cumplen los filtros actuales
+            (<strong>{{ totalItems }}</strong> productos), no solo la página visible.
         </div>
 
         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -852,9 +853,15 @@
         </div>
     </div>
     <ng-template pTemplate="footer">
-        <button type="button" class="btn btn-secondary btn-sm me-2" (click)="showExportDialog = false">Cancelar</button>
-        <button type="button" class="btn btn-success btn-sm" (click)="doExport()">
-            <i class="icofont icofont-file-excel me-1"></i>Descargar Excel
+        <div *ngIf="exportando" class="text-muted small mb-2 text-start">
+            <i class="pi pi-spin pi-spinner me-1"></i>
+            Trayendo productos… <strong>{{ exportProgress }}</strong><span *ngIf="exportTotal"> / {{ exportTotal }}</span>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm me-2" (click)="showExportDialog = false" [disabled]="exportando">Cancelar</button>
+        <button type="button" class="btn btn-success btn-sm" (click)="doExport()" [disabled]="exportando">
+            <i class="icofont icofont-file-excel me-1" *ngIf="!exportando"></i>
+            <i class="pi pi-spin pi-spinner me-1" *ngIf="exportando"></i>
+            {{ exportando ? 'Exportando…' : 'Descargar Excel' }}
         </button>
     </ng-template>
 </p-dialog>

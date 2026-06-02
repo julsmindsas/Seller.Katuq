@@ -1,56 +1,379 @@
-.card {
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* ============================================================
+   Lista de Precios — rediseño visual (Katuq)
+   SOLO estilos. Paleta púrpura + acento cyan. Todo scopeado a
+   :host para NO filtrar estilos al resto de la app (antes los
+   ::ng-deep eran globales).
+   ============================================================ */
+
+:host {
+  --lp-primary:        #7366ff;
+  --lp-primary-dark:   #5b4ee0;
+  --lp-primary-soft:   #f1efff;
+  --lp-primary-softer: #f8f7ff;
+  --lp-cyan:           #00a5d2;
+  --lp-ink:            #1f2433;
+  --lp-ink-soft:       #4a5160;
+  --lp-muted:          #8a90a2;
+  --lp-line:           #ecedf3;
+  --lp-bg:             #f6f7fb;
+  --lp-radius:         14px;
+  --lp-radius-sm:      10px;
+  --lp-shadow:         0 1px 2px rgba(16, 24, 40, .04), 0 4px 16px rgba(16, 24, 40, .05);
+
+  display: block;
+  background: var(--lp-bg);
+  min-height: 100%;
+  color: var(--lp-ink);
 }
 
-/* === Tabs (p-tabView): legibilidad + estilo limpio ===
-   Antes los tabs inactivos no tenían color definido y quedaban con el gris
-   clarísimo de PrimeNG (casi ilegible). Ahora: texto inactivo oscuro y con peso,
-   activo con alto contraste (morado lleno + blanco), hover sutil. */
-::ng-deep .p-tabview {
-  .p-tabview-nav {
-    background: transparent;
-    border-bottom: 1px solid #e9ecef;
-    gap: 0.25rem;
-
-    li .p-tabview-nav-link {
-      color: #3f4254;                 /* texto inactivo legible (antes casi invisible) */
-      font-weight: 600;
-      font-size: 0.95rem;
-      letter-spacing: 0.1px;
-      padding: 0.85rem 1.5rem;
-      background: transparent;
-      border: 1px solid transparent;
-      border-bottom: none;
-      border-radius: 8px 8px 0 0;
-      transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
-
-      &:hover {
-        color: var(--theme-primary, #7366ff);
-        background-color: #f4f3ff;     /* hover suave con tinte del primario */
-      }
-
-      &:focus,
-      &:focus-visible {
-        box-shadow: none;
-        outline: none;
-      }
-    }
-
-    li.p-highlight .p-tabview-nav-link {
-      background-color: var(--theme-primary, #7366ff);
-      color: #ffffff;                 /* blanco sobre morado = alto contraste */
-      font-weight: 700;
-      border-color: var(--theme-primary, #7366ff);
-    }
-  }
+/* ---------------------------------------------------------- */
+/*  Cards base                                                */
+/* ---------------------------------------------------------- */
+:host .card {
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
+  box-shadow: var(--lp-shadow);
+  background: #fff;
+  overflow: hidden;
 }
 
-::ng-deep .p-datatable .p-datatable-tbody > tr {
+/* ---------------------------------------------------------- */
+/*  Header                                                    */
+/* ---------------------------------------------------------- */
+:host .lp-header {
+  position: relative;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(115, 102, 255, .08) 0%, rgba(115, 102, 255, 0) 55%),
+    #fff;
+}
+:host .lp-header .card-body { padding: 1.35rem 1.5rem; }
+
+:host .lp-title-wrap { display: flex; align-items: center; gap: .9rem; }
+:host .lp-title-icon {
+  flex: 0 0 auto;
+  width: 46px; height: 46px;
+  display: grid; place-items: center;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1.25rem;
+  background: linear-gradient(135deg, var(--lp-primary) 0%, #9a7bff 100%);
+  box-shadow: 0 6px 14px rgba(115, 102, 255, .35);
+}
+:host .lp-header h4 {
+  color: var(--lp-ink);
+  font-weight: 700;
+  letter-spacing: -.01em;
+  font-size: 1.3rem;
+}
+:host .lp-header p { color: var(--lp-muted); font-size: .875rem; }
+
+/* ---------------------------------------------------------- */
+/*  Toolbar (botones de acción)                               */
+/* ---------------------------------------------------------- */
+:host .lp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: flex-end;
+  align-items: center;
+}
+:host .lp-actions .btn {
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: .82rem;
+  padding: .5rem .9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease, color .12s ease;
+  margin: 0 !important;            /* anula me-2 sueltos, el gap maneja el espacio */
+}
+:host .lp-actions .btn i { font-size: .95rem; line-height: 1; }
+:host .lp-actions .btn:hover { transform: translateY(-1px); }
+
+/* Exportar (verde Excel, lleno) */
+:host .lp-actions .btn-success {
+  background: linear-gradient(135deg, #16a34a 0%, #12b76a 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(18, 183, 106, .28);
+}
+:host .lp-actions .btn-success:hover { box-shadow: 0 6px 16px rgba(18, 183, 106, .36); }
+
+/* Outline refinados */
+:host .lp-actions .btn-outline-secondary {
+  color: var(--lp-ink-soft); border-color: #dcdfe7; background: #fff;
+}
+:host .lp-actions .btn-outline-secondary:hover {
+  background: #f4f5f8; color: var(--lp-ink); border-color: #cfd3dd;
+}
+:host .lp-actions .btn-outline-success { border-color: #9be3bf; color: #0f9d58; background: #fff; }
+:host .lp-actions .btn-outline-success:hover { background: #effaf3; color: #0c8a4d; }
+:host .lp-actions .btn-outline-danger { border-color: #f3b9bd; color: #e0414c; background: #fff; }
+:host .lp-actions .btn-outline-danger:hover { background: #fdf1f2; color: #c5343e; }
+
+/* ---------------------------------------------------------- */
+/*  Tabs (p-tabView)                                          */
+/* ---------------------------------------------------------- */
+:host ::ng-deep .p-tabview .p-tabview-nav {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--lp-line);
+  gap: .35rem;
+  padding: .6rem .75rem 0;
+}
+:host ::ng-deep .p-tabview .p-tabview-nav li {
+  margin-right: 0;
+}
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link {
+  color: #000;                      /* inactivo: negro legible */
+  font-weight: 600;
+  font-size: .9rem;
+  letter-spacing: .1px;
+  padding: .7rem 1.15rem;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 10px 10px 0 0;
+  background: transparent;
+  transition: color .15s ease, background-color .15s ease;
+}
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link:hover {
+  color: #000;
+  background: var(--lp-primary-soft);
+}
+:host ::ng-deep .p-tabview .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+  color: #fff;                      /* activo: blanco sobre púrpura */
+  background: linear-gradient(135deg, var(--lp-primary) 0%, #8b7bff 100%);
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(115, 102, 255, .3);
+}
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link:focus,
+:host ::ng-deep .p-tabview .p-tabview-nav li .p-tabview-nav-link:focus-visible {
+  box-shadow: none; outline: none;
+}
+/* PrimeNG dibuja una barra inferior animada — la ocultamos, ya hay píldora */
+:host ::ng-deep .p-tabview .p-tabview-nav-link .p-ink { display: none; }
+:host ::ng-deep .p-tabview .p-tabview-panels {
+  background: transparent;
+  padding: 0;
+  border: none;
+}
+
+/* ---------------------------------------------------------- */
+/*  Buscador                                                  */
+/* ---------------------------------------------------------- */
+:host .input-group {
+  max-width: 460px;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, .04);
+  overflow: hidden;
+  border: 1px solid #e2e4ec;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+:host .input-group:focus-within {
+  border-color: var(--lp-primary);
+  box-shadow: 0 0 0 3px rgba(115, 102, 255, .15);
+}
+:host .input-group .input-group-text {
+  background: #fff;
+  border: none;
+  color: var(--lp-muted);
+  padding-left: .95rem;
+}
+:host .input-group .form-control {
+  border: none;
+  box-shadow: none !important;
+  font-size: .9rem;
+  padding: .6rem .5rem;
+}
+:host .input-group .form-control::placeholder { color: #b3b8c5; }
+
+/* ---------------------------------------------------------- */
+/*  Tabla (p-table)                                           */
+/* ---------------------------------------------------------- */
+:host ::ng-deep .p-datatable {
+  border-radius: var(--lp-radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--lp-line);
+}
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th {
+  background: #fafafe;
+  color: var(--lp-muted);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-color: var(--lp-line);
+  padding: .8rem 1rem;
+}
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr {
+  transition: background-color .12s ease;
+}
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td {
+  border-color: var(--lp-line);
+  padding: .7rem 1rem;
+  vertical-align: middle;
+  color: var(--lp-ink-soft);
+}
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
+  background: var(--lp-primary-softer);
   cursor: pointer;
 }
-
-::ng-deep .p-datatable .p-datatable-tbody > tr:hover {
-  background-color: #f8f9fa;
+/* gridlines/striped más suaves */
+:host ::ng-deep .p-datatable.p-datatable-striped .p-datatable-tbody > tr.p-row-odd {
+  background: #fcfcff;
+}
+:host ::ng-deep .p-datatable.p-datatable-striped .p-datatable-tbody > tr.p-row-odd:hover {
+  background: var(--lp-primary-softer);
 }
 
+/* Imagen de producto */
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td img {
+  border-radius: 10px !important;
+  border: 1px solid var(--lp-line);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, .06);
+}
+
+/* Título + referencia */
+:host ::ng-deep .p-datatable .p-datatable-tbody .fw-bold {
+  color: var(--lp-ink);
+  font-weight: 600;
+  font-size: .9rem;
+}
+:host ::ng-deep .p-datatable .p-datatable-tbody small.text-muted {
+  font-size: .76rem;
+  color: var(--lp-muted) !important;
+}
+
+/* Precio destacado */
+:host ::ng-deep .p-datatable .text-primary {
+  color: var(--lp-primary) !important;
+  font-weight: 700;
+}
+
+/* Badges */
+:host ::ng-deep .badge {
+  font-weight: 600;
+  border-radius: 8px;
+  padding: .38em .6em;
+  letter-spacing: .2px;
+}
+:host ::ng-deep .badge.bg-light {
+  background: var(--lp-primary-soft) !important;
+  color: var(--lp-primary-dark) !important;
+  border: 1px solid #e3def9 !important;
+}
+
+/* Botón de acción (editar) → icono circular */
+:host ::ng-deep .p-datatable .btn-outline-primary {
+  width: 36px; height: 36px;
+  display: inline-grid; place-items: center;
+  border-radius: 10px;
+  border-color: #e0dcff;
+  color: var(--lp-primary);
+  background: var(--lp-primary-soft);
+  padding: 0;
+  transition: all .12s ease;
+}
+:host ::ng-deep .p-datatable .btn-outline-primary:hover {
+  background: var(--lp-primary);
+  border-color: var(--lp-primary);
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(115, 102, 255, .3);
+}
+
+/* Toggler de fila expandible */
+:host ::ng-deep .p-datatable .p-row-toggler {
+  color: var(--lp-muted);
+  width: 32px; height: 32px;
+}
+:host ::ng-deep .p-datatable .p-row-toggler:hover {
+  background: var(--lp-primary-soft);
+  color: var(--lp-primary);
+}
+
+/* ---------------------------------------------------------- */
+/*  Fila expandida (detalle de precios)                       */
+/* ---------------------------------------------------------- */
+:host .lp-expansion {
+  background: var(--lp-primary-softer) !important;
+  border-left: 3px solid var(--lp-primary);
+  border-radius: 0 10px 10px 0;
+}
+:host .lp-expansion h6 {
+  color: var(--lp-ink);
+  font-weight: 700;
+  display: flex; align-items: center;
+}
+:host .lp-expansion h6 i { color: var(--lp-primary); }
+
+:host .lp-expansion .table {
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--lp-line);
+}
+:host .lp-expansion .table thead.table-light th {
+  background: #fafafe;
+  color: var(--lp-muted);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+  border-color: var(--lp-line);
+}
+:host .lp-expansion .table td { border-color: var(--lp-line); color: var(--lp-ink-soft); }
+
+/* Cards-resumen por tipo de cliente */
+:host .lp-expansion .card.border-primary {
+  border: 1px solid #e3def9 !important;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(115, 102, 255, .08);
+  overflow: hidden;
+}
+:host .lp-expansion .card.border-primary .card-header.bg-primary {
+  background: linear-gradient(135deg, var(--lp-primary) 0%, #8b7bff 100%) !important;
+  border: none;
+}
+
+/* ---------------------------------------------------------- */
+/*  Estados (vacío / paginador)                               */
+/* ---------------------------------------------------------- */
+:host ::ng-deep .p-paginator {
+  background: transparent;
+  border: none;
+  padding: .85rem .25rem .25rem;
+  color: var(--lp-muted);
+}
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page {
+  border-radius: 8px;
+  min-width: 2rem; height: 2rem;
+  color: var(--lp-ink-soft);
+}
+:host ::ng-deep .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+  background: var(--lp-primary);
+  color: #fff;
+}
+:host ::ng-deep .p-paginator .p-dropdown { border-radius: 8px; }
+
+:host ::ng-deep .p-datatable .p-datatable-emptymessage > td {
+  text-align: center;
+  color: var(--lp-muted);
+  padding: 2.5rem 1rem;
+  font-size: .9rem;
+}
+
+/* Alert "sin configurar" */
+:host ::ng-deep .alert-info {
+  background: #eef9fd;
+  border: 1px solid #cdeef7;
+  color: #0b6e88;
+  border-radius: 12px;
+}
+
+/* Loading mask de la tabla */
+:host ::ng-deep .p-datatable .p-datatable-loading-overlay {
+  background: rgba(255, 255, 255, .65);
+  backdrop-filter: blur(1px);
+}
+:host ::ng-deep .p-datatable .p-datatable-loading-icon { color: var(--lp-primary); }

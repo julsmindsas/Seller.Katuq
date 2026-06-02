@@ -175,6 +175,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
 
   // Export dialog
   showExportDialog = false;
+  exportando = false;        // export en progreso (trayendo todas las páginas)
+  exportProgress = 0;        // productos traídos hasta ahora
+  exportTotal = 0;           // total esperado (según la paginación)
   exportColumnas = [
     { label: 'Referencia',         key: 'referencia',         selected: true,  getValue: (r: any) => r.identificacion?.referencia || '' },
     { label: 'Título',             key: 'titulo',             selected: true,  getValue: (r: any) => r.crearProducto?.titulo || '' },
@@ -1248,13 +1251,73 @@ export class ProductosComponent implements OnInit, OnDestroy {
   }
 
   doExport(): void {
-    const source = this.selectedProductos?.length > 0 ? this.selectedProductos : this.rows;
     const cols = this.exportColumnas.filter(c => c.selected);
     if (!cols.length) {
       this.toastr.warning('Selecciona al menos una columna para exportar.', 'Exportar');
       return;
     }
-    const data = (source as any[]).map(row => {
+
+    // Caso 1: hay productos seleccionados → exportar solo esos (ya están en memoria).
+    if (this.selectedProductos?.length > 0) {
+      this.generarExcelExport(this.selectedProductos, cols, true);
+      return;
+    }
+
+    // Caso 2: exportar TODOS los productos que cumplen los filtros actuales.
+    // OJO: this.rows es solo la página visible (paginación server-side). Hay que
+    // traer todas las páginas antes de exportar, si no solo sale la primera "hoja".
+    this.exportando = true;
+    this.exportProgress = 0;
+    this.exportTotal = this.totalItems || 0;
+    this.fetchAllProductosParaExport()
+      .then(todos => {
+        this.exportando = false;
+        if (!todos.length) {
+          this.toastr.warning('No hay productos para exportar.', 'Exportar');
+          return;
+        }
+        this.generarExcelExport(todos, cols, false);
+      })
+      .catch(err => {
+        this.exportando = false;
+        console.error('[Export] Error trayendo todos los productos:', err);
+        this.toastr.error('No se pudieron traer todos los productos. Intenta de nuevo.', 'Exportar');
+      });
+  }
+
+  /**
+   * Trae TODAS las páginas que cumplen los filtros actuales.
+   * El backend capa pageSize a 100, así que paginamos; las páginas son
+   * independientes (offset), por eso las pedimos en paralelo (batches de 6)
+   * para que sea rápido aun con miles de productos.
+   */
+  private async fetchAllProductosParaExport(): Promise<any[]> {
+    const PAGE = 100;        // máx que acepta el backend
+    const CONCURRENCY = 6;   // requests en paralelo por batch
+
+    // Página 1: nos da el total de páginas e items reales (con los filtros).
+    const first: any = await this.service.getProductsFiltered(this.filtros, PAGE, 1).toPromise();
+    const all: any[] = [...(first?.products || [])];
+    const totalPages = Math.max(1, first?.pagination?.totalPages || 1);
+    this.exportTotal = first?.pagination?.totalItems || all.length;
+    this.exportProgress = all.length;
+
+    for (let start = 2; start <= totalPages; start += CONCURRENCY) {
+      const batch: Promise<any>[] = [];
+      for (let p = start; p < start + CONCURRENCY && p <= totalPages; p++) {
+        batch.push(this.service.getProductsFiltered(this.filtros, PAGE, p).toPromise());
+      }
+      const results = await Promise.all(batch);
+      for (const r of results) all.push(...((r as any)?.products || []));
+      this.exportProgress = all.length;
+    }
+
+    return this.normalizeProducts(all);
+  }
+
+  /** Arma y descarga el .xlsx con las columnas elegidas. */
+  private generarExcelExport(source: any[], cols: any[], hasSelected: boolean): void {
+    const data = source.map(row => {
       const obj: any = {};
       cols.forEach(col => { obj[col.label] = col.getValue(row); });
       return obj;
@@ -1263,8 +1326,9 @@ export class ProductosComponent implements OnInit, OnDestroy {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Productos');
     const hasFilters = Object.values(this.filtros).some(v => v !== '' && v !== null && v !== 'activo');
-    const hasSelected = this.selectedProductos?.length > 0;
-    const suffix = hasSelected ? `_seleccionados(${source.length})` : hasFilters ? '_filtrados' : '_todos';
+    const suffix = hasSelected
+      ? `_seleccionados(${source.length})`
+      : hasFilters ? `_filtrados(${source.length})` : `_todos(${source.length})`;
     const date = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(wb, `productos${suffix}_${date}.xlsx`);
     this.showExportDialog = false;

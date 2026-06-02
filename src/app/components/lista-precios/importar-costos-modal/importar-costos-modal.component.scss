@@ -1,107 +1,116 @@
+/* Tema visual compartido de los modales de Lista de Precios (solo estilos). */
+@import '../lp-modal-theme';
+
+/* ---------- Stepper ---------- */
 .stepper {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--bs-border-color, #dee2e6);
+  padding: 0.25rem 0 0.9rem;
+  border-bottom: 1px solid var(--lp-line);
 
   .step {
-    font-size: 0.875rem;
-    color: var(--bs-secondary-color, #6c757d);
-    padding: 0.25rem 0.75rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--lp-muted);
+    padding: 0.3rem 0.85rem;
     border-radius: 999px;
     background: transparent;
+    transition: all .15s ease;
 
     &.active {
-      color: var(--bs-primary, #0d6efd);
-      background: rgba(13, 110, 253, 0.1);
-      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--lp-primary) 0%, #8b7bff 100%);
+      box-shadow: 0 3px 10px rgba(115, 102, 255, .3);
     }
 
     &.done {
-      color: #198754;
+      color: #0f9d58;
+      background: #e9f9f0;
     }
   }
 
   .step-divider {
     flex: 0 0 24px;
-    height: 1px;
-    background: var(--bs-border-color, #dee2e6);
+    height: 2px;
+    border-radius: 2px;
+    background: var(--lp-line);
   }
 }
 
+/* ---------- Drop zone ---------- */
 .drop-zone {
-  border: 2px dashed var(--bs-border-color, #ced4da);
-  border-radius: 0.5rem;
-  padding: 2.5rem 1rem;
+  border: 2px dashed #d7d9e3;
+  border-radius: var(--lp-radius);
+  padding: 2.75rem 1rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: var(--bs-tertiary-bg, #f8f9fa);
+  transition: all 0.18s ease;
+  background: var(--lp-primary-softer);
 
   &:hover,
   &.dragover {
-    border-color: var(--bs-primary, #0d6efd);
-    background: rgba(13, 110, 253, 0.05);
+    border-color: var(--lp-primary);
+    background: var(--lp-primary-soft);
+    transform: translateY(-1px);
   }
 
   i.pi {
-    color: var(--bs-primary, #0d6efd);
+    color: var(--lp-primary);
   }
+
+  p { color: var(--lp-ink); }
 }
 
+/* ---------- Stat cards (colores semánticos) ---------- */
 .stat-card {
-  padding: 1rem;
-  border-radius: 0.5rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--lp-radius);
+  border: 1px solid var(--lp-line);
   border-left: 4px solid;
-  background: var(--bs-tertiary-bg, #f8f9fa);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, .05);
 
   small {
-    color: var(--bs-secondary-color, #6c757d);
+    color: var(--lp-muted);
     display: block;
     margin-bottom: 0.25rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: .68rem;
+    letter-spacing: .03em;
   }
 
   .stat-value {
     font-size: 1.5rem;
     font-weight: 700;
+    color: var(--lp-ink);
   }
 
-  &.stat-success {
-    border-left-color: #198754;
-    .stat-value { color: #198754; }
-  }
-
-  &.stat-info {
-    border-left-color: #0dcaf0;
-    .stat-value { color: #0dcaf0; }
-  }
-
-  &.stat-warning {
-    border-left-color: #ffc107;
-    .stat-value { color: #b58900; }
-  }
-
-  &.stat-neutral {
-    border-left-color: #6c757d;
-    .stat-value { color: #495057; }
-  }
+  &.stat-success { border-left-color: #16a34a; background: #f3fbf6; .stat-value { color: #15803d; } }
+  &.stat-info    { border-left-color: var(--lp-primary); background: var(--lp-primary-softer); .stat-value { color: var(--lp-primary-dark); } }
+  &.stat-warning { border-left-color: #f59e0b; background: #fffaf0; .stat-value { color: #b45309; } }
+  &.stat-neutral { border-left-color: #94a3b8; background: #f8fafc; .stat-value { color: #475569; } }
 }
 
+/* ---------- Tabla con scroll y header sticky ---------- */
 .table-wrapper {
   max-height: 360px;
   overflow-y: auto;
-  border: 1px solid var(--bs-border-color, #dee2e6);
-  border-radius: 0.375rem;
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius);
 
   table {
     margin: 0;
     thead {
       position: sticky;
       top: 0;
-      background: var(--bs-body-bg, #fff);
+      background: #fafafe;
       z-index: 1;
-      box-shadow: 0 1px 0 var(--bs-border-color, #dee2e6);
+      box-shadow: 0 1px 0 var(--lp-line);
     }
   }
 }
+
+/* Estado "done" — check grande */
+.pi-check-circle.text-success { color: #16a34a !important; }

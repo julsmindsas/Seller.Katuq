@@ -1,0 +1,205 @@
+/* ============================================================
+   Tema visual COMPARTIDO de los modales de Lista de Precios.
+   SOLO estilos — se @importa en cada modal y queda auto-scopeado
+   al :host de ese componente (Emulated), no filtra a otros modales.
+   El shell .modal-content lo agrega NgbModal fuera del host, así que
+   acá se estiliza header/body/footer y todo su contenido interno.
+   Paleta Katuq (púrpura). Igual línea visual que la pantalla principal.
+   ============================================================ */
+
+:host {
+  --lp-primary:        #7366ff;
+  --lp-primary-dark:   #5b4ee0;
+  --lp-primary-soft:   #f1efff;
+  --lp-primary-softer: #f8f7ff;
+  --lp-ink:            #1f2433;
+  --lp-ink-soft:       #4a5160;
+  --lp-muted:          #8a90a2;
+  --lp-line:           #ecedf3;
+  --lp-radius:         12px;
+
+  display: block;
+  color: var(--lp-ink);
+}
+
+/* ---------- Header ---------- */
+.modal-header {
+  background:
+    radial-gradient(120% 180% at 0% 0%, rgba(115, 102, 255, .08) 0%, rgba(115, 102, 255, 0) 60%),
+    #fff;
+  border-bottom: 1px solid var(--lp-line);
+  padding: 1.1rem 1.35rem;
+  align-items: center;
+}
+.modal-header .modal-title {
+  font-weight: 700;
+  font-size: 1.08rem;
+  color: var(--lp-ink);
+  letter-spacing: -.01em;
+  display: flex;
+  align-items: center;
+}
+.modal-header .modal-title i { color: var(--lp-primary); }
+.modal-header .btn-close {
+  border-radius: 8px;
+  opacity: .55;
+  transition: opacity .12s ease, background-color .12s ease;
+}
+.modal-header .btn-close:hover { opacity: 1; background-color: var(--lp-primary-soft); }
+
+/* ---------- Body ---------- */
+.modal-body { padding: 1.35rem; background: #fff; }
+
+/* ---------- Footer ---------- */
+.modal-footer {
+  border-top: 1px solid var(--lp-line);
+  padding: 1rem 1.35rem;
+  gap: .5rem;
+}
+.modal-footer .btn { margin: 0; }
+
+/* ---------- Card "info del producto" (bg-light.rounded) ---------- */
+.bg-light.rounded {
+  background: linear-gradient(180deg, var(--lp-primary-softer) 0%, #fff 100%) !important;
+  border: 1px solid var(--lp-line);
+  border-radius: var(--lp-radius) !important;
+}
+.bg-light.rounded img {
+  border-radius: 10px !important;
+  border: 1px solid var(--lp-line);
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(16, 24, 40, .06);
+}
+.bg-light.rounded h6 { color: var(--lp-ink); font-weight: 700; }
+.bg-light.rounded small.text-muted { color: var(--lp-muted) !important; }
+
+/* ---------- Card con header púrpura (config IVA, etc.) ---------- */
+.card.border-primary {
+  border: 1px solid #e3def9 !important;
+  border-radius: var(--lp-radius);
+  box-shadow: 0 2px 10px rgba(115, 102, 255, .07);
+  overflow: hidden;
+}
+.card.border-primary .card-header.bg-primary {
+  background: linear-gradient(135deg, var(--lp-primary) 0%, #8b7bff 100%) !important;
+  border: none;
+  font-weight: 600;
+  letter-spacing: .2px;
+}
+
+/* ---------- Tablas ---------- */
+.table { color: var(--lp-ink-soft); margin-bottom: 0; }
+.table thead th {
+  background: #fafafe;
+  color: var(--lp-muted);
+  font-size: .73rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  border-color: var(--lp-line);
+  vertical-align: middle;
+}
+.table td { border-color: var(--lp-line); vertical-align: middle; }
+.table.table-hover tbody tr:hover { background: var(--lp-primary-softer); }
+.table .fw-bold { color: var(--lp-ink); }
+.table .text-primary { color: var(--lp-primary) !important; font-weight: 700; }
+.table code { color: var(--lp-primary-dark); background: var(--lp-primary-soft); padding: .12rem .4rem; border-radius: 6px; }
+
+/* ---------- Inputs ---------- */
+.form-control,
+.form-select,
+select.form-control {
+  border-radius: 9px;
+  border-color: #e2e4ec;
+  font-size: .9rem;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.form-control:focus,
+.form-select:focus,
+select.form-control:focus {
+  border-color: var(--lp-primary);
+  box-shadow: 0 0 0 3px rgba(115, 102, 255, .15);
+}
+.form-label { font-weight: 600; color: var(--lp-ink-soft); font-size: .85rem; }
+
+.input-group .input-group-text {
+  background: #f7f7fb;
+  border-color: #e2e4ec;
+  color: var(--lp-muted);
+  font-weight: 600;
+}
+
+/* Display boxes "precio con IVA" / "valor IVA" */
+.form-control.bg-primary {
+  background: linear-gradient(135deg, var(--lp-primary) 0%, #8b7bff 100%) !important;
+  border: none;
+}
+.form-control.bg-light { background: #f7f7fb !important; border-color: #e2e4ec; }
+
+/* ---------- Botones ---------- */
+.btn {
+  border-radius: 9px;
+  font-weight: 600;
+  font-size: .85rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  transition: transform .12s ease, box-shadow .12s ease, background-color .12s ease, color .12s ease;
+}
+.btn i { line-height: 1; }
+.btn-primary {
+  background: linear-gradient(135deg, var(--lp-primary) 0%, #8b7bff 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(115, 102, 255, .28);
+}
+.btn-primary:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(115, 102, 255, .36); transform: translateY(-1px); }
+.btn-primary:disabled { background: #c7c2f0; box-shadow: none; transform: none; }
+.btn-secondary { background: #6b7280; border: none; }
+.btn-secondary:hover { background: #565d68; }
+.btn-danger {
+  background: linear-gradient(135deg, #e0414c 0%, #f0606a 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(224, 65, 76, .25);
+}
+.btn-danger:hover:not(:disabled) { box-shadow: 0 6px 16px rgba(224, 65, 76, .33); transform: translateY(-1px); }
+.btn-danger:disabled { background: #ecb6ba; box-shadow: none; }
+.btn-outline-secondary { color: var(--lp-ink-soft); border-color: #dcdfe7; }
+.btn-outline-secondary:hover { background: #f4f5f8; color: var(--lp-ink); border-color: #cfd3dd; }
+.btn-outline-danger { border-color: #f3b9bd; color: #e0414c; }
+.btn-outline-danger:hover { background: #fdf1f2; color: #c5343e; border-color: #ec9ca2; }
+.btn-link { color: var(--lp-primary); font-weight: 600; text-decoration: none; }
+.btn-link:hover { color: var(--lp-primary-dark); text-decoration: underline; }
+
+/* ---------- Alerts ---------- */
+.alert-info {
+  background: #eef9fd;
+  border: 1px solid #cdeef7;
+  color: #0b6e88;
+  border-radius: 10px;
+}
+.alert-light.border {
+  border-radius: 10px;
+  background: var(--lp-primary-softer);
+  border-color: var(--lp-line) !important;
+  color: var(--lp-ink-soft);
+}
+.alert-warning { border-radius: 10px; }
+.alert-danger { border-radius: 10px; }
+
+/* ---------- Spinner ---------- */
+.spinner-border.text-primary { color: var(--lp-primary) !important; }
+
+/* ---------- PrimeNG dropdown ---------- */
+:host ::ng-deep .p-dropdown {
+  border-radius: 9px;
+  border-color: #e2e4ec;
+}
+:host ::ng-deep .p-dropdown:not(.p-disabled).p-focus {
+  border-color: var(--lp-primary);
+  box-shadow: 0 0 0 3px rgba(115, 102, 255, .15);
+}
+:host ::ng-deep .p-dropdown .p-dropdown-label { color: var(--lp-ink); font-size: .9rem; }
+:host ::ng-deep .p-dropdown-panel .p-dropdown-items .p-dropdown-item.p-highlight {
+  background: var(--lp-primary-soft);
+  color: var(--lp-primary-dark);
+}

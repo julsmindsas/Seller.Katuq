@@ -137,35 +137,84 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Carga TODOS los productos recursivamente — solo para exportar Excel.
+   * Carga TODOS los productos (todas las páginas) — solo para exportar Excel.
+   * Paginación en PARALELO (batches) → rápido aun con miles de productos.
+   * Siempre trae fresco (precios actuales), reintenta páginas que fallen y, si
+   * queda incompleto, pide confirmación en vez de exportar parcial en silencio.
    */
-  private cargarTodosLosProductos(callback: () => void) {
-    if (this._todosLosProductos) {
+  private async cargarTodosLosProductos(callback: () => void) {
+    // Cache: exports repetidos (p.ej. cambiar de pestaña) no re-paginan el catálogo.
+    // Se invalida al editar/importar/eliminar precios (this._todosLosProductos = null).
+    if (this._todosLosProductos) { callback(); return; }
+
+    const PAGE = 100;        // máx que acepta el backend
+    const CONCURRENCY = 6;   // páginas en paralelo por batch
+
+    const actualizarProgreso = (cargados: number, total: number) => {
+      const el = Swal.getHtmlContainer();
+      if (el) el.innerHTML = `Cargando catálogo… <b>${cargados}</b>${total ? ' / ' + total : ''} productos`;
+    };
+
+    try {
+      // Página 1 → total real de páginas/items (con count del backend).
+      const first: any = await this.service.getAllProductsPagination(PAGE, 1)
+        .pipe(takeUntil(this.destroy$)).toPromise();
+      const all: Producto[] = Array.isArray(first?.products) ? [...first.products] : [];
+      const totalItems = first?.pagination?.totalItems || all.length;
+      const totalPages = Math.max(1, first?.pagination?.totalPages || 1);
+      actualizarProgreso(all.length, totalItems);
+
+      // Resto de páginas en paralelo (offset → páginas independientes).
+      for (let start = 2; start <= totalPages; start += CONCURRENCY) {
+        const batch: Promise<any>[] = [];
+        for (let p = start; p < start + CONCURRENCY && p <= totalPages; p++) {
+          batch.push(this.fetchPaginaConReintento(p, PAGE));
+        }
+        const results = await Promise.all(batch);
+        for (const r of results) {
+          if (Array.isArray(r?.products)) all.push(...r.products);
+        }
+        actualizarProgreso(all.length, totalItems);
+      }
+
+      // Anti parcial-silencioso: si faltan productos, avisar antes de exportar.
+      const incompleto = !!(totalItems && all.length < totalItems);
+      if (incompleto) {
+        const resp = await Swal.fire({
+          title: 'Exportación incompleta',
+          html: `Se cargaron <b>${all.length}</b> de <b>${totalItems}</b> productos (alguna página falló).<br>¿Exportar de todos modos?`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Exportar lo cargado',
+          cancelButtonText: 'Cancelar'
+        });
+        if (!resp.isConfirmed) return; // cancela sin exportar ni error
+      }
+
+      this._todosLosProductos = all;
       callback();
-      return;
+      // No cachear un export parcial: la próxima vez se reintenta completo.
+      if (incompleto) this._todosLosProductos = null;
+    } catch (err) {
+      console.error('[ListaPrecios][Export] Error cargando catálogo completo:', err);
+      Swal.fire('Error', 'No se pudo cargar el catálogo completo para exportar. Intenta de nuevo.', 'error');
     }
-    this._todosLosProductos = [];
-    this.cargarPaginaRecursiva(1, null, callback);
   }
 
-  private cargarPaginaRecursiva(page: number, lastDocId: string | null, callback: () => void) {
-    this.service.getAllProductsPagination(100, page, lastDocId ?? undefined)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (data: any) => {
-          const nuevos = Array.isArray(data?.products) ? data.products : [];
-          this._todosLosProductos = [...(this._todosLosProductos || []), ...nuevos];
-          const totalPages = data?.pagination?.totalPages || 1;
-          const currentPage = data?.pagination?.currentPage || page;
-          const newLastDocId = data?.pagination?.lastDocId;
-          if (currentPage < totalPages && nuevos.length > 0) {
-            this.cargarPaginaRecursiva(currentPage + 1, newLastDocId, callback);
-          } else {
-            callback();
-          }
-        },
-        error: () => { callback(); }
-      });
+  /** Trae una página de productos con reintento; si falla del todo, devuelve vacío. */
+  private async fetchPaginaConReintento(page: number, pageSize: number, intentos = 2): Promise<any> {
+    for (let i = 0; i < intentos; i++) {
+      try {
+        return await this.service.getAllProductsPagination(pageSize, page)
+          .pipe(takeUntil(this.destroy$)).toPromise();
+      } catch (e) {
+        if (i === intentos - 1) {
+          console.warn(`[ListaPrecios][Export] Página ${page} falló tras ${intentos} intentos`, e);
+          return { products: [] };
+        }
+      }
+    }
+    return { products: [] };
   }
 
   // ── Búsqueda ──
