@@ -376,21 +376,15 @@ export class CarritoComponent implements OnInit {
       return;
     }
 
-    // Normalizar a entero positivo
+    // Dejar que el usuario termine de escribir; solo guardar el valor raw.
+    // La validación contra el mínimo se hace en blur/enter (onCantidadChange).
     const cantidadNormalizada = Math.floor(Number(value));
     if (isNaN(cantidadNormalizada) || cantidadNormalizada <= 0) {
-      // No recalcular aún; se validará en blur/enter
       itemCarrito.cantidad = value;
       return;
     }
 
-    // Respetar cantidad mínima si existe
-    const cantidadMinima = itemCarrito.producto?.disponibilidad?.cantidadMinVenta || 1;
-    const nuevaCantidad = Math.max(cantidadMinima, cantidadNormalizada);
-    if (itemCarrito.cantidad !== nuevaCantidad) {
-      itemCarrito.cantidad = nuevaCantidad;
-      this.updateCartAndCheckPriceScale(itemCarrito);
-    }
+    itemCarrito.cantidad = cantidadNormalizada;
   }
 
   onCantidadChange(itemCarrito: any): void {

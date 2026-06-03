@@ -961,10 +961,15 @@
                                                 (click)="menosCantidad()">
                                                 <i class="fa fa-minus"></i>
                                             </button>
-                                            <input #cantidad class="form-control input-number text-center" type="text"
-                                                name="cantidad" id="cantidad" readonly style="width: 60px;"
+                                            <input #cantidadInput class="form-control input-number text-center" type="number"
+                                                name="cantidad" id="cantidad" style="width: 80px;"
                                                 [class.is-invalid]="isStockUnavailable()"
-                                                min="{{producto?.disponibilidad?.cantidadMinVenta}}" max="100">
+                                                [(ngModel)]="cantidad"
+                                                (focus)="onCantidadFocus()"
+                                                (blur)="onCantidadManualBlur()"
+                                                (keyup.enter)="onCantidadManualBlur()"
+                                                min="{{producto?.disponibilidad?.cantidadMinVenta}}"
+                                                [max]="producto?.disponibilidad?.cantidadDisponible || 99999">
                                             <button class="btn btn-outline-secondary" type="button"
                                                 [disabled]="isStockUnavailable() || isQuantityAtMaxStock()"
                                                 [title]="getQuantityButtonTooltip()"

@@ -155,7 +155,7 @@ export class ConfProductToCartComponent
   }
 
   @ViewChild("quickView", { static: false }) QuickView: TemplateRef<any>;
-  @ViewChild("cantidad") cantidadControl: ElementRef;
+  @ViewChild("cantidadInput") cantidadControl: ElementRef;
   public closeResult: string;
   public modalOpen: boolean = false;
 
@@ -166,6 +166,7 @@ export class ConfProductToCartComponent
   @Input() public modalRef: any; // Referencia al modal para cerrarlo selectivamente
 
   public cantidad: number = 1;
+  private digitandoCantidad = false;
   public tipoEntrega: any[];
   public ocasiones: any[] = [
     { value: "Elegir Ocasion", label: "Elegir Ocasion" },
@@ -845,14 +846,34 @@ export class ConfProductToCartComponent
     });
   }
 
+  onCantidadFocus(): void {
+    this.digitandoCantidad = true;
+  }
+
+  onCantidadManualBlur(): void {
+    this.digitandoCantidad = false;
+    const cantidadMinima = this.producto?.disponibilidad?.cantidadMinVenta || 1;
+    const valor = Number(this.cantidad);
+    if (isNaN(valor) || valor < cantidadMinima) {
+      this.cantidad = cantidadMinima;
+      this.toastrService.warning(
+        `La cantidad mínima para este producto es ${cantidadMinima}`,
+        'Cantidad mínima'
+      );
+    } else {
+      this.cantidad = Math.floor(valor);
+    }
+    this.actualizarTodosLosInputsCantidad();
+  }
+
   ngAfterViewInit() {
     this.actualizarTodosLosInputsCantidad();
   }
 
   ngAfterViewChecked() {
-    // Este método se llama después de cada ciclo de detección de cambios
-    // Es un buen lugar para asegurarnos de que el valor del input esté actualizado
-    this.actualizarTodosLosInputsCantidad();
+    if (!this.digitandoCantidad) {
+      this.actualizarTodosLosInputsCantidad();
+    }
   }
 
   // Eliminar el método menosCantidad1 que está duplicado y quedarse solo con menosCantidad
