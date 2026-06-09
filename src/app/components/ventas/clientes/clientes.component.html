@@ -23,7 +23,7 @@
 
         <!-- Buscador de cliente -->
         <div class="search-section px-4 py-3 bg-light border-bottom">
-            <div class="row align-items-end gap-2">
+            <div class="row align-items-end g-2">
                 <div class="col-12 col-md-3">
                     <label class="form-label fw-semibold small">{{ "Buscar por" | translate }}</label>
                     <p-dropdown [(ngModel)]="tipoBusqueda"
@@ -36,7 +36,8 @@
                                 optionValue="value"
                                 placeholder="{{ 'Seleccionar...' | translate }}"
                                 [showClear]="false"
-                                styleClass="w-100"></p-dropdown>
+                                styleClass="w-100 search-input-tall"
+                                panelStyleClass="buscar-por-panel"></p-dropdown>
                 </div>
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold small">{{ "Buscar cliente" | translate }}</label>
@@ -44,7 +45,7 @@
                            pInputText
                            type="text"
                            placeholder="{{ 'Documento, email o nombre...' | translate }}"
-                           class="w-100"
+                           class="w-100 search-input-tall"
                            (keyup.enter)="buscar()" />
                 </div>
                 <div class="col-12 col-md-3">
@@ -52,7 +53,7 @@
                             type="button"
                             icon="pi pi-search"
                             label="{{ 'Buscar' | translate }}"
-                            class="p-button-primary w-100"
+                            class="p-button-primary w-100 search-input-tall"
                             (click)="buscar()"></button>
                 </div>
             </div>
@@ -785,31 +786,27 @@
 </ng-template>
 <ng-template #nota let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Crear Nota </h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
+        <h4 class="modal-title" id="modal-basic-title"><strong>Crear Nota</strong></h4>
     </div>
     <div class="modal-body">
         <form class="custom-datepicker custom-datepicker-dropdown">
-            <div class="row">
-                <div class="col-md-3">
-                    <label for="date">Fecha:</label>
-                    <div id="date" class="input-group">
-                        <p>{{ dateactual }}</p>
-                    </div>
+            <div class="form-group mb-3">
+                <label for="date"><strong>Fecha</strong></label>
+                <div id="date" class="form-control-plaintext border rounded px-3 py-2 bg-light">
+                    {{ dateactual }}
                 </div>
-                <div class="col-md-9">
-                    <label for="note">Nota:</label>
-                    <div id="note" class="input-group">
-                        <textarea [(ngModel)]="notaNueva" class="form-control" rows="3" placeholder="Notas"></textarea>
-                    </div>
-                </div>
+            </div>
+            <div class="form-group mb-2">
+                <label for="note"><strong>Nota</strong></label>
+                <textarea id="note" [(ngModel)]="notaNueva" name="notaNueva" class="form-control" rows="5" placeholder="Escriba su nota aquí..."></textarea>
             </div>
         </form>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="guardarNota()">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+            Cerrar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarNota()">
             Guardar
         </button>
     </div>

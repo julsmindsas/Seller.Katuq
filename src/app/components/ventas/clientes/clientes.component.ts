@@ -891,17 +891,20 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.ciudad_municipio = ""
     this.codigo_postal = ""
   }
+  private notaModalRef: any;
+
   openLg(notaAclaratoria) {
-    this.modalService.open(notaAclaratoria, { size: 'lg' }).result.then(
+    this.notaModalRef = this.modalService.open(notaAclaratoria, { size: 'lg' });
+    this.notaModalRef.result.then(
       () => {
         this.limpiarVariables();
       },
       () => {
-        // Esto se ejecutará cuando el modal se cierre sin completarse (por ejemplo, al hacer clic fuera del modal)
         this.limpiarVariables();
       }
     );
   }
+
   guardarNota() {
     this.fecha = new Date()
     this.notas = []
@@ -916,7 +919,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.service.getClientByDocument(data).subscribe((res: any) => {
       res.notas.map(x => {
         this.notas.push(x)
-
       })
       this.notas.push(nota)
       this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
@@ -924,16 +926,17 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['notas'].setValue(this.notas)
       this.formulario.controls['estado'].setValue(res.estado)
       this.service.editClient(this.formulario.value).subscribe(r => {
-        console.log(r)
+        if (this.notaModalRef) {
+          this.notaModalRef.close();
+        }
         Swal.fire({
           title: 'Guardado!',
-          text: 'Guardado con exito',
+          text: 'Guardado con éxito',
           icon: 'success',
           confirmButtonText: 'Ok'
         });
-        this.notaNueva = ""
+        this.notaNueva = "";
       });
-
     })
   }
   guardarDatosFacturacionElectronica() {

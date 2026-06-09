@@ -835,6 +835,64 @@ input[type="checkbox"] {
   }
 }
 
+// ==============================================
+// BUSCADOR CLIENTE - ALTURA AUMENTADA
+// ==============================================
+::ng-deep .search-section {
+  .search-input-tall,
+  .search-input-tall.p-inputtext,
+  .search-input-tall.p-button {
+    height: 48px !important;
+  }
+
+  .search-input-tall.p-dropdown {
+    height: 48px !important;
+
+    .p-dropdown-label {
+      line-height: 46px;
+      font-weight: 600;
+    }
+  }
+
+}
+
+// ==============================================
+// MODAL NOTA - BOTONES CON HOVER TEMA LILA
+// ==============================================
+::ng-deep .modal-footer {
+  .btn-primary {
+    background-color: var(--primary-dark-color);
+    border-color: var(--primary-dark-color);
+    color: #fff;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover,
+    &:active,
+    &:focus {
+      background-color: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35) !important;
+      color: #fff !important;
+    }
+  }
+
+  .btn-outline-secondary {
+    color: var(--primary-dark-color);
+    border-color: var(--primary-dark-color);
+    background-color: transparent;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover,
+    &:active,
+    &:focus {
+      background-color: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+      color: #fff !important;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35) !important;
+    }
+  }
+}
+
 ::ng-deep {
   .p-inputtext,
   .p-inputtext-sm {
