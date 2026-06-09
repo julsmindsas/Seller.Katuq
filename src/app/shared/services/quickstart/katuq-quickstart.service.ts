@@ -43,6 +43,8 @@ export interface QuickStartResult {
   configuraciones?: any;
   message?: string;
   error?: string;
+  errorCode?: string; // COMERCIO_YA_EXISTE | EMAIL_YA_EXISTE | USUARIO_YA_EXISTE | VALIDATION_ERROR | REGISTRATION_BLOCKED
+  pendingReview?: boolean; // 202: registro en cuarentena, pendiente de revisión humana
   nextSteps?: string[];
   adminUser?: any;
   serverResponse?: any; // Respuesta completa del servidor
@@ -172,8 +174,13 @@ export class KatuqQuickStartService {
 
       this.updateStatus(false, 'Configuración completada exitosamente');
 
+      // El backend puede responder 202 con status PENDING_REVIEW cuando el registro
+      // entra en cuarentena anti-abuso: la empresa se crea inactiva y un humano la revisa.
+      const pendingReview = serverResponse?.status === 'PENDING_REVIEW';
+
       return {
         success: true,
+        pendingReview,
         empresa: empresa,
         rol: rol,
         bodega: bodega,
@@ -183,7 +190,9 @@ export class KatuqQuickStartService {
         serverResponse: serverResponse, // Respuesta completa del servidor
         companyName: serverResponse.companyName || empresa.nomComercial,
         userEmail: serverResponse.userEmail || diagnosticData.registration.correo,
-        message: serverResponse.message || `¡Tu comercio ${serverResponse.companyName || empresa.nomComercial} está configurado y listo para operar!`,
+        message: serverResponse.message || (pendingReview
+          ? 'Tu registro está en revisión. Te enviaremos tus credenciales por correo al validarlo.'
+          : `¡Tu comercio ${serverResponse.companyName || empresa.nomComercial} está configurado y listo para operar!`),
         nextSteps: this.getNextStepsBySector(diagnosticData.responses.q1 || 'Retail - Comercial')
       };
 
@@ -194,6 +203,7 @@ export class KatuqQuickStartService {
       return {
         success: false,
         error: error.message || 'Error en la configuración automática',
+        errorCode: error.code,
         message: 'Error durante la configuración automática. Por favor, intenta nuevamente.'
       };
     }
@@ -442,7 +452,12 @@ export class KatuqQuickStartService {
       }
     } catch (error) {
       console.error('Error al guardar diagnóstico:', error);
-      throw new Error(`Error al guardar el diagnóstico: ${error.message || error}`);
+      // Conservar el mensaje y código del backend (ej: 409 COMERCIO_YA_EXISTE)
+      const backendMessage = error?.error?.message;
+      const err: any = new Error(backendMessage || `Error al guardar el diagnóstico: ${error.message || error}`);
+      err.status = error?.status;
+      err.code = error?.error?.error; // COMERCIO_YA_EXISTE | EMAIL_YA_EXISTE | USUARIO_YA_EXISTE
+      throw err;
     }
   }
 

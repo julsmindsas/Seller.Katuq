@@ -46,6 +46,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private readonly PUBLIC_ROUTES = [
     '/login',
     '/authentication',
+    '/registrarse',
     '/nuevo-registro',
     '/change-password',
     '/terms-conditions',

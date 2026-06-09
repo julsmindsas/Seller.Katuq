@@ -47,7 +47,9 @@ export class ChangePasswordComponent implements OnInit {
                         timer: 2200,
                         showConfirmButton: false
                     });
-                    this.router.navigate(['/dashboard']);
+                    // '/dashboard' (singular) no existe como ruta → caía en el wildcard 404.
+                    // '/welcome' es a donde el login envía a un admin (ruta con AuthGuard, token ya válido).
+                    this.router.navigate(['/welcome']);
                 },
                 error: (err: any) => {
                     console.error('Error al cambiar contraseña', err);

@@ -40,7 +40,7 @@ const routes: Routes = [
     loadChildren: () => import('./pages/authentication/authentication.module').then(m => m.AuthenticationModule)
   },
   {
-    path: 'nuevo-registro', // antes era 'diagnostic-survey'
+    path: 'registrarse', // onboarding de registro con encuesta de diagnóstico
     component: BlankComponent,
     children: [
       {
@@ -48,6 +48,11 @@ const routes: Routes = [
         loadChildren: () => import('./components/diagnostic-survey/diagnostic-survey.module').then(m => m.DiagnosticSurveyModule)
       }
     ]
+  },
+  {
+    path: 'nuevo-registro', // alias legacy de /registrarse
+    redirectTo: 'registrarse',
+    pathMatch: 'full'
   },
   {
     path: 'onboarding',

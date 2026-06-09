@@ -136,6 +136,9 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy, DoCheck {
     quickStartInProgress: boolean = false;
     quickStartCompleted: boolean = false;
     quickStartError: string = "";
+    registrationAlreadyExists: boolean = false; // 409: comercio/usuario ya registrado
+    registrationPendingReview: boolean = false; // 202: registro en cuarentena anti-abuso
+    registrationBlocked: boolean = false; // 403/422: bloqueado o datos inválidos
     quickStartMessage: string = "";
     nextSteps: string[] = [];
 
@@ -184,7 +187,11 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy, DoCheck {
                 nombre: ['', [Validators.required, Validators.minLength(2), Validators.pattern('^[a-zA-ZÀ-ÿ\\s]+$')]],
                 nit: ['', [Validators.required, Validators.pattern('^[0-9]{8,11}$')]],
                 correo: ['', [Validators.required, Validators.email, Validators.pattern('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$')]],
-                celular: ['', [Validators.required, Validators.pattern('^3[0-9]{9}$')]]
+                celular: ['', [Validators.required, Validators.pattern('^3[0-9]{9}$')]],
+                // 🍯 Honeypot anti-bot: invisible para humanos. Si llega con valor, el
+                // backend descarta el registro en silencio. Sin validadores (no debe
+                // afectar la validez del formulario para usuarios reales).
+                website: ['']
             })
         });
     }
@@ -697,30 +704,61 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy, DoCheck {
             const quickStartResult = await this.quickStartService.setupQuickStart(diagnosticData);
             
             if (quickStartResult.success) {
-                this.quickStartCompleted = true;
                 this.quickStartInProgress = false;
                 this.welcomeMessage = registrationData.nombre;
-                this.nextSteps = quickStartResult.nextSteps || [];
                 this.quickStartMessage = quickStartResult.message || "¡Tu comercio está configurado y listo!";
-                
-                // Limpiar progreso guardado después de éxito
                 this.clearProgress();
-                
+
+                if (quickStartResult.pendingReview) {
+                    // Cuarentena anti-abuso: NO hay credenciales todavía, no redirigir al panel.
+                    this.registrationPendingReview = true;
+                    return;
+                }
+
+                this.quickStartCompleted = true;
+                this.nextSteps = quickStartResult.nextSteps || [];
+
                 // Redirigir después de mostrar éxito
                 setTimeout(() => {
                     this.redirectToMainSystem();
                 }, 8000);
-                
+
             } else {
-                throw new Error(quickStartResult.error || 'Error en configuración automática');
+                const err: any = new Error(quickStartResult.error || 'Error en configuración automática');
+                err.code = quickStartResult.errorCode;
+                throw err;
             }
-            
+
         } catch (error) {
             console.error('Error en Quick Start:', error);
             this.quickStartInProgress = false;
+
+            // Si el comercio/usuario ya existe, NO mostrar el mensaje de éxito:
+            // informar claramente y ofrecer ir al login
+            const duplicateCodes = ['COMERCIO_YA_EXISTE', 'EMAIL_YA_EXISTE', 'USUARIO_YA_EXISTE'];
+            if (duplicateCodes.includes(error.code)) {
+                this.registrationAlreadyExists = true;
+                this.quickStartError = error.message || 'Ya existe un registro con estos datos. Si ya tienes cuenta, ingresa con tu correo y contraseña.';
+                return;
+            }
+
+            // Datos inválidos (422): dejar corregir sin falso "éxito"
+            if (error.code === 'VALIDATION_ERROR') {
+                this.registrationBlocked = true;
+                this.quickStartError = error.message || 'Algunos datos no son válidos. Revísalos e intenta de nuevo.';
+                return;
+            }
+
+            // Bloqueado por anti-abuso (403): mensaje claro + contacto a soporte
+            if (error.code === 'REGISTRATION_BLOCKED') {
+                this.registrationBlocked = true;
+                this.quickStartError = error.message || 'No pudimos completar tu registro automáticamente. Escríbenos a soporte@katuq.com.';
+                return;
+            }
+
             this.quickStartError = error.message || 'Error en la configuración automática';
-            
-            // Fallback al proceso tradicional
+
+            // Fallback al proceso tradicional (solo errores desconocidos / 500 / red)
             setTimeout(() => {
                 this.submissionSuccess = true;
                 this.welcomeMessage = registrationData.nombre;
@@ -755,9 +793,19 @@ export class DiagnosticSurveyComponent implements OnInit, OnDestroy, DoCheck {
         // Mostrar botón para que el usuario decida si quiere ir al login
     }
 
-    // Método para ir al login manualmente 
+    // Método para ir al login manualmente
     goToLogin(): void {
         this.router.navigate(['/login']);
+    }
+
+    // Volver al paso de registro para corregir datos (ej: tras un 409 de duplicado)
+    backToRegistration(): void {
+        this.registrationAlreadyExists = false;
+        this.registrationBlocked = false;
+        this.registrationPendingReview = false;
+        this.quickStartError = "";
+        this.currentStep = 'registration';
+        this.registrationIndex = 0;
     }
 
     // Métodos para cambiar de paso

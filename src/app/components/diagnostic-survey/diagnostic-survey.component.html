@@ -30,7 +30,17 @@
         <div class="welcome-text-sm" style="margin: 20px 0;">
           {{ quickStartMessage }}
         </div>
-        
+
+        <!-- Credenciales: la contraseña solo llega por correo, hay que decírselo al usuario -->
+        <div class="credentials-notice" style="background: #f8f9fa; border-left: 4px solid #9020FF; padding: 16px; margin: 20px 0; text-align: left; border-radius: 6px;">
+          <p style="margin: 0 0 6px; font-weight: bold; color: #9020FF;">📧 {{ 'Revisa tu correo para ingresar' | translate }}</p>
+          <p style="margin: 0; font-size: 1.05rem;">
+            {{ 'Te enviamos tu usuario y contraseña a' | translate }}
+            <strong>{{ mainForm.get('registration.correo')?.value }}</strong>.
+            {{ 'Úsalas para iniciar sesión y luego cámbiala por seguridad.' | translate }}
+          </p>
+        </div>
+
         <div class="next-steps-container" style="margin: 30px 0; text-align: left;">
           <h3 style="color: #9020FF; font-size: 1.5rem; margin-bottom: 15px;">
             {{ '¿Qué puedes hacer ahora?' | translate }}
@@ -49,8 +59,59 @@
         </div>
       </div>
 
+      <!-- Registro en revisión / cuarentena anti-abuso (202) -->
+      <div *ngIf="registrationPendingReview && !quickStartInProgress" class="quickstart-review" style="text-align:center;">
+        <div class="welcome-text">🔎 {{ 'Tu registro está en revisión' | translate }}</div>
+        <div class="welcome-text-sm" style="margin: 20px 0;">
+          {{ quickStartMessage }}
+        </div>
+        <div style="background: #fff8e1; border-left: 4px solid #FF9800; padding: 16px; margin: 20px auto; max-width: 560px; text-align: left; border-radius: 6px;">
+          <p style="margin: 0;">
+            {{ 'Por seguridad validamos algunos registros manualmente. Te enviaremos tu usuario y contraseña a' | translate }}
+            <strong>{{ mainForm.get('registration.correo')?.value }}</strong>
+            {{ 'en cuanto se complete. ¿Dudas? Escríbenos a' | translate }} <a href="mailto:soporte@katuq.com">soporte@katuq.com</a>.
+          </p>
+        </div>
+        <button class="cta-button secondary" (click)="goToLogin()">
+          {{ 'Ir al login' | translate }}
+        </button>
+      </div>
+
+      <!-- Registro bloqueado o datos inválidos (403 / 422) -->
+      <div *ngIf="registrationBlocked && !quickStartInProgress" class="quickstart-error" style="text-align:center;">
+        <div style="color: #ff6b6b; font-size: 1.3rem; margin: 20px 0;">
+          {{ quickStartError }}
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <button class="cta-button primary" (click)="backToRegistration()">
+            {{ 'Corregir mis datos' | translate }}
+          </button>
+          <button class="cta-button secondary" (click)="goToLogin()">
+            {{ 'Ir al login' | translate }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Comercio/usuario ya registrado (409) -->
+      <div *ngIf="registrationAlreadyExists && !quickStartInProgress" class="quickstart-error">
+        <div style="color: #ff6b6b; font-size: 1.3rem; margin: 20px 0;">
+          {{ quickStartError }}
+        </div>
+        <div style="font-size: 1.1rem; margin: 15px 0;">
+          {{ 'Si ya tienes una cuenta, ingresa con tu correo y contraseña. Si crees que es un error, corrige tus datos e intenta de nuevo.' | translate }}
+        </div>
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <button class="cta-button primary" (click)="goToLogin()">
+            {{ 'Ir al login' | translate }}
+          </button>
+          <button class="cta-button secondary" (click)="backToRegistration()">
+            {{ 'Corregir mis datos' | translate }}
+          </button>
+        </div>
+      </div>
+
       <!-- Error en Quick Start - Fallback -->
-      <div *ngIf="quickStartError && !quickStartInProgress" class="quickstart-error">
+      <div *ngIf="quickStartError && !registrationAlreadyExists && !registrationBlocked && !registrationPendingReview && !quickStartInProgress" class="quickstart-error">
         <div style="color: #ff6b6b; font-size: 1.3rem; margin: 20px 0;">
           {{ quickStartError }}
         </div>
@@ -326,6 +387,11 @@
       <div *ngIf="currentStep === 'registration'" [formGroup]="mainForm.get('registration')">
         <h2>{{ 'Información Básica de tu Empresa' | translate }}</h2>
         <p class="registration-help">Cada dato nos ayuda a personalizar mejor tu experiencia</p>
+        <!-- 🍯 Honeypot anti-bot: oculto para humanos (fuera de pantalla, sin tab ni autocompletar). -->
+        <input type="text" formControlName="website" autocomplete="off" tabindex="-1"
+               aria-hidden="true"
+               style="position:absolute; left:-9999px; top:-9999px; width:1px; height:1px; opacity:0; pointer-events:none;">
+
         <!-- Nombre empresa -->
         <ng-container *ngIf="registrationIndex === 0">
           <div class="survey-question">
