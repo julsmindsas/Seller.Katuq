@@ -524,7 +524,10 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
         const precioTipo = p.preciosPorTipoCliente?.find(
           (pt: PrecioPorTipoCliente) => pt.tipoClienteId === tipo.id
         );
-        fila.push(precioTipo?.precio || '');
+        // Exportar el precio CON IVA (lo que muestra la UI), no el precio sin IVA.
+        // `precio` es el valor sin IVA (ej. 96025); `precioConIva` es el real (ej. 114270).
+        // Mismo criterio que PRECIO BASE arriba (prefiere ...ConIva).
+        fila.push(precioTipo?.precioConIva || precioTipo?.precio || '');
       });
       rows.push(fila);
     });
