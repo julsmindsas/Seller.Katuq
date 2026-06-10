@@ -90,6 +90,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
 
   latitud: string;
   longitud: string;
+  coordenadas: string;
 
   // Propiedades para DANE codes
   departamentosDane: string[] = [];
@@ -301,6 +302,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
       codigoPV: this.codigo_postal_entrega,
       latitud: this.latitud,
       longitud: this.longitud,
+      coordenadas: this.coordenadas,
     };
     this.datosEntregas.push(datosEntreg);
 
@@ -392,6 +394,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.codigo_postal_entrega = "";
         this.latitud = "";
         this.longitud = "";
+        this.coordenadas = "";
 
         // Limpiar variables DANE
         this.searchQueryCiudadDane = "";
@@ -823,6 +826,11 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     // Cargar coordenadas si existen
     this.latitud = this.datosEntregas[index].latitud || "";
     this.longitud = this.datosEntregas[index].longitud || "";
+    this.coordenadas =
+      this.datosEntregas[index].coordenadas ||
+      (this.latitud && this.longitud
+        ? `${this.latitud}, ${this.longitud}`
+        : "");
 
     this.modalService.open(modal, { size: "lg" }).result.then(
       () => {
@@ -865,6 +873,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     // Coordenadas
     this.latitud = "";
     this.longitud = "";
+    this.coordenadas = "";
 
     // Variables DANE
     this.searchQueryCiudadDane = "";
@@ -1016,6 +1025,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
 
           // Guardar las coordenadas si existen
           if (resultado.coordenadas) {
+            // Conservar el string completo "lat, lng" para persistirlo en el
+            // campo `coordenadas` junto a la dirección de entrega
+            this.coordenadas = resultado.coordenadas;
+
             // Extraer latitud y longitud del string formato "lat, lng"
             const coords = resultado.coordenadas
               .split(",")

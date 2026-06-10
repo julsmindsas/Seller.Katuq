@@ -8,7 +8,7 @@
                     <i class="pi pi-users"></i>{{ "Clientes" | translate }}
                     <i *ngIf="isEdit" class="pi pi-arrow-right text-muted" style="font-size: 0.9rem;"></i>
                 </h5>
-                <p class="text-muted small mb-0">
+                <p class="text-muted mb-0" style="font-size: 0.95rem;">
                     {{ isEdit ? ("Editar datos del cliente" | translate) : ("Ingresa todos los datos para crear un cliente nuevo" | translate) }}
                 </p>
             </div>
@@ -23,20 +23,21 @@
 
         <!-- Buscador de cliente -->
         <div class="search-section px-4 py-3 bg-light border-bottom">
-            <div class="row align-items-end gap-2">
+            <div class="row align-items-end g-2">
                 <div class="col-12 col-md-3">
                     <label class="form-label fw-semibold small">{{ "Buscar por" | translate }}</label>
                     <p-dropdown [(ngModel)]="tipoBusqueda"
                                 [options]="[
                                     {label: 'Documento', value: 'CC-NIT'},
-                                    {label: 'Email', value: 'PA'},
-                                    {label: 'Nombre', value: 'TI'}
+                                    {label: 'Email', value: 'email'},
+                                    {label: 'Nombre', value: 'nombre'}
                                 ]"
                                 optionLabel="label"
                                 optionValue="value"
                                 placeholder="{{ 'Seleccionar...' | translate }}"
                                 [showClear]="false"
-                                styleClass="w-100"></p-dropdown>
+                                styleClass="w-100 search-input-tall"
+                                panelStyleClass="buscar-por-panel"></p-dropdown>
                 </div>
                 <div class="col-12 col-md-6">
                     <label class="form-label fw-semibold small">{{ "Buscar cliente" | translate }}</label>
@@ -44,7 +45,7 @@
                            pInputText
                            type="text"
                            placeholder="{{ 'Documento, email o nombre...' | translate }}"
-                           class="w-100"
+                           class="w-100 search-input-tall"
                            (keyup.enter)="buscar()" />
                 </div>
                 <div class="col-12 col-md-3">
@@ -52,9 +53,42 @@
                             type="button"
                             icon="pi pi-search"
                             label="{{ 'Buscar' | translate }}"
-                            class="p-button-primary w-100"
+                            class="p-button-primary w-100 search-input-tall"
                             (click)="buscar()"></button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Resultados de búsqueda por email/nombre -->
+        <div *ngIf="resultadosBusqueda && resultadosBusqueda.length > 0" class="px-4 py-3 bg-white border-bottom">
+            <p class="fw-semibold small mb-2 text-muted">
+                <i class="pi pi-list me-1"></i>{{ resultadosBusqueda.length }} resultados encontrados — selecciona el cliente:
+            </p>
+            <div class="table-responsive">
+                <table class="table table-hover table-sm table-bordered mb-0 resultados-busqueda-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Documento</th>
+                            <th>Email</th>
+                            <th>Teléfono</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngFor="let c of resultadosBusqueda" style="cursor: pointer;" (click)="seleccionarClienteResultado(c)">
+                            <td>{{ c.nombres_completos }} {{ c.apellidos_completos }}</td>
+                            <td>{{ c.documento }}</td>
+                            <td>{{ c.correo_electronico_comprador }}</td>
+                            <td>{{ c.numero_celular_comprador }}</td>
+                            <td class="text-center">
+                                <button pButton type="button" icon="pi pi-check" label="Seleccionar"
+                                        class="p-button-sm p-button-primary"
+                                        (click)="seleccionarClienteResultado(c); $event.stopPropagation()"></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
@@ -84,7 +118,8 @@
                                     placeholder="{{ 'Seleccionar...' | translate }}"
                                     [disabled]="isEdit"
                                     formControlName="tipo_documento_comprador"
-                                    styleClass="w-100"></p-dropdown>
+                                    styleClass="w-100"
+                                    panelStyleClass="buscar-por-panel"></p-dropdown>
                                     <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched"
                                         class="error-message mt-1">
                                         <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
@@ -168,7 +203,8 @@
                                                     optionValue="phone_code"
                                                     placeholder="{{ 'Código' | translate }}"
                                                     formControlName="indicativo_celular_comprador"
-                                                    styleClass="country-code"></p-dropdown>
+                                                    styleClass="country-code"
+                                                    panelStyleClass="buscar-por-panel"></p-dropdown>
                                         <input pInputText
                                                type="text"
                                                placeholder="{{ 'Número celular' | translate }}"
@@ -219,7 +255,8 @@
                                                         optionValue="phone_code"
                                                         placeholder="{{ 'Código' | translate }}"
                                                         formControlName="indicativo_celular_whatsapp"
-                                                        styleClass="country-code"></p-dropdown>
+                                                        styleClass="country-code"
+                                                        panelStyleClass="buscar-por-panel"></p-dropdown>
                                             <input pInputText
                                                    type="text"
                                                    placeholder="{{ 'Número WhatsApp' | translate }}"
@@ -338,7 +375,7 @@
                     <!-- Notas -->
                     <div *ngIf="activarNotas">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5>Notas del Cliente</h5>
+                            <h5><strong>Notas del Cliente</strong></h5>
                             <button class="btn btn-sm btn-primary" (click)="openLg(nota)">
                                 <i class="fa fa-plus me-1"></i>Agregar Nota
                             </button>
@@ -367,7 +404,7 @@
                     <!-- Facturación -->
                     <div *ngIf="activarDatosFact">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5>Datos de Facturación</h5>
+                            <h5><strong>Datos de Facturación</strong></h5>
                             <button class="btn btn-sm btn-primary" (click)="openLg(facturacion)">
                                 <i class="fa fa-plus me-1"></i>Agregar Datos
                             </button>
@@ -414,7 +451,7 @@
                     <!-- Entrega -->
                     <div *ngIf="activarDatosEntrega">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5>Datos de Entrega</h5>
+                            <h5><strong>Datos de Entrega</strong></h5>
                             <button class="btn btn-sm btn-primary" (click)="openLg(entrega)">
                                 <i class="fa fa-plus me-1"></i>Agregar Datos
                             </button>
@@ -459,357 +496,320 @@
 </div>
 <ng-template #entrega let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Crear Datos de Entrega</h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
+        <h4 class="modal-title" id="modal-basic-title"><strong>Crear Datos de Entrega</strong></h4>
     </div>
-    <div class="modal-body">
+    <div class="modal-body py-2">
 
-        <input [(ngModel)]="entregar" type="checkbox" (change)="datosEntregass($event)">
-        <label class="form-label" for="razon_social">Los datos de Entraga son iguales a los datos de
-            cliente</label>
-        <div class="row">
-            <div class="col-sm-12">
-                <label class="form-label" for="alias_entrega">Referencia Para Datos de Entrega</label>
-                <input class="form-control" type="text" id="alias_entrega" [(ngModel)]="alias_entrega" />
+        <!-- Fila 0: Checkbox -->
+        <div class="form-check mb-2">
+            <input [(ngModel)]="entregar" type="checkbox" class="form-check-input" id="checkEntrega"
+                (change)="datosEntregass($event)">
+            <label class="form-check-label" for="checkEntrega">
+                <strong>Los datos de entrega son iguales a los datos del cliente</strong>
+            </label>
+        </div>
+
+        <!-- Fila 1: Referencia | Nombres | Apellidos -->
+        <div class="row g-2 mb-2">
+            <div class="col-4">
+                <label class="form-label mb-1"><strong>Referencia</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="alias_entrega" />
+            </div>
+            <div class="col-4">
+                <label class="form-label mb-1"><strong>Nombres</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="nombres_entrega" />
+            </div>
+            <div class="col-4">
+                <label class="form-label mb-1"><strong>Apellidos</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="apellidos_entrega" />
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-sm-3">
-                <label class="form-label" for="nombres_entrega">Nombres:</label>
-            </div>
-            <div class="col-sm-3">
-                <label class="form-label" for="nombres_entrega">Apellidos:</label>
-            </div>
-
-            <div class="col-sm-6">
-                <label class="form-label" for="indicativo_entrega">Número de Celular:</label>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-3">
-
-                <input class="form-control" type="text" id="nombres_entrega" [(ngModel)]="nombres_entrega" />
-            </div>
-            <div class="col-sm-3">
-
-                <input class="form-control" type="text" id="apellidos_entrega" [(ngModel)]="apellidos_entrega" />
-            </div>
-
-
-            <div class="col-sm-3 mb-3">
-
-                <select autocomplete="on" [(ngModel)]="indicativo_celular_entrega" class="form-control select-default"
-                    id="validationCustom01" type="number" required="">
-                    <option disabled selected>Indicativo Celular</option>
-                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
-                        (+{{item.phone_code}})</option>
-                </select>
-
-            </div>
-            <div class="col-sm-3">
-                <input class="form-control" type="text" id="numero_celular_entrega"
-                    [(ngModel)]="numero_celular_entrega" />
-            </div>
-
-        </div>
-        <div class="row">
-            <div class="col-sm-6">
-                <label class="form-label" for="otro_numero_entrega">Agregar Otro Número:</label>
-            </div>
-
-            <div class="col-sm-6">
-                <label class="form-label" for="direccion_entrega">Dirección:</label>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-3">
-                <select autocomplete="on" [(ngModel)]="indicativo_celular_entrega2" class="form-control select-default"
-                    id="validationCustom01" type="number" required="">
-                    <option disabled selected>Indicativo Celular</option>
-                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
-                        (+{{item.phone_code}})</option>
+        <!-- Fila 2: Ind.Cel | Celular | Ind.Otro | Otro Núm | Dirección -->
+        <div class="row g-2 mb-2">
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Indicativo</strong></label>
+                <select [(ngModel)]="indicativo_celular_entrega" class="form-control form-control-sm select-default">
+                    <option disabled selected>Ind.</option>
+                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">+{{item.phone_code}}</option>
                 </select>
             </div>
-            <div class="col-sm-3">
-
-                <input class="form-control" type="text" id="otro_numero_entrega" [(ngModel)]="otro_numero_entrega" />
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Celular</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_celular_entrega" />
             </div>
-            <div class="col-sm-6">
-
-                <input class="form-control" type="text" id="direccion_entrega" [(ngModel)]="direccion_entrega" />
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Ind. Otro</strong></label>
+                <select [(ngModel)]="indicativo_celular_entrega2" class="form-control form-control-sm select-default">
+                    <option disabled selected>Ind.</option>
+                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">+{{item.phone_code}}</option>
+                </select>
+            </div>
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Otro Núm.</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="otro_numero_entrega" />
+            </div>
+            <div class="col-4">
+                <label class="form-label mb-1"><strong>Dirección</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="direccion_entrega" />
             </div>
         </div>
-        <div class="row">
-            <div class="col-sm-6">
-                <label class="form-label" for="observaciones">Nombre de la Unidad o Edificio</label>
-                <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="nombreUnidad" />
+
+        <!-- Fila 3: Barrio | Nombre Unidad | Especificaciones | Observaciones -->
+        <div class="row g-2 mb-2">
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Barrio / Sector</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="barrio" />
             </div>
-            <div class="col-sm-6">
-                <label class="form-label" for="observaciones">Especificaciones Internas: Torre, Apto, Oficina</label>
-                <input class="form-control" type="text" id="especificaciones_internas"
-                    [(ngModel)]="especificacionesInternas" />
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Nombre Unidad / Edificio</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="nombreUnidad" />
+            </div>
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Torre / Apto / Oficina</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="especificacionesInternas" />
+            </div>
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Observaciones</strong></label>
+                <textarea class="form-control form-control-sm" rows="1" [(ngModel)]="observaciones"></textarea>
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-sm-12">
-                <label class="form-label" for="observaciones">Observaciones Adicionales / Generales para la
-                    entrega:</label>
-                <textarea class="form-control" id="observaciones" [(ngModel)]="observaciones"></textarea>
-            </div>
-
-        </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <label class="form-label" for="observaciones">Barrio/Sector</label>
-                <input class="form-control" type="text" id="codigo_postal_entrega" [(ngModel)]="barrio" />
-            </div>
-
-        </div>
-        <div class="row">
-
-            <div class="col-sm-4 mb-3">
-                <label class="form-label" class="form-label" for="validationCustom01">País</label>
-
-                <select [(ngModel)]="pais_entrega" class="form-control select-default" name="" id=""
+        <!-- Fila 4: País | Departamento | Ciudad | Zona Cobro | Código Postal | Botón -->
+        <div class="row g-2">
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>País</strong></label>
+                <select [(ngModel)]="pais_entrega" class="form-control form-control-sm select-default"
                     (change)="identificarDepto1()">
                     <option disabled selected>País</option>
                     <option *ngFor="let item of paises" value="{{item}}">{{item}}</option>
                 </select>
-
             </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label" class="form-label" for="validationCustom01">Departamento</label>
-                <select [(ngModel)]="departamento_entrega" class="form-control select-default" id="validationCustom01"
-                    type="text" placeholder="Departamento" required="" (change)="identificarCiu1()">
-                    <option disabled selected>Departamento</option>
-                    <option *ngFor="let item of departamentos1" value="{{item}}">{{item}}
-                    </option>
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Departamento</strong></label>
+                <select [(ngModel)]="departamento_entrega" class="form-control form-control-sm select-default"
+                    (change)="identificarCiu1()">
+                    <option disabled selected>Dpto.</option>
+                    <option *ngFor="let item of departamentos1" value="{{item}}">{{item}}</option>
                 </select>
-
             </div>
-
-            <div class="col-md-4 mb-3">
-                <label class="form-label" class="form-label" for="validationCustom01">Ciudad</label>
-                <select [(ngModel)]="ciudad_municipio_entrega" class="form-control select-default"
-                    id="validationCustom01" type="text" placeholder="Ciudad" required="" (change)="idBillingZone('')">
-                    <option disabled selected>Ciudad / Municipio</option>
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Ciudad</strong></label>
+                <select [(ngModel)]="ciudad_municipio_entrega" class="form-control form-control-sm select-default"
+                    (change)="idBillingZone('')">
+                    <option disabled selected>Ciudad</option>
                     <option *ngFor="let item of ciudades1" value="{{item}}">{{item}}</option>
                 </select>
             </div>
-
-
-        </div>
-        <div class="row">
-            <div class="col-sm-4">
-                <label class="form-label" class="form-label" for="validationCustom01">Zona Cobro</label>
-            </div>
-            <div class="col-sm-4">
-                <label class="form-label" for="codigo_postal_entrega">Código Postal:</label>
-            </div>
-
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3">
-
-                <select class="form-control select-default" [(ngModel)]="zona_cobro" id="validationCustom01" type="text"
-                    placeholder="Zona Cobro" required="" (change)="idBillingZone($event)">
-                    <option disabled selected>
-                        Zona Cobro
-                    </option>
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Zona Cobro</strong></label>
+                <select class="form-control form-control-sm select-default" [(ngModel)]="zona_cobro"
+                    (change)="idBillingZone($event)">
+                    <option disabled selected>Zona</option>
                     <option *ngFor="let item of filteredResults" value="{{ item.nombreZonaCobro }}">
                         {{ item.nombreZonaCobro }}
                     </option>
                 </select>
             </div>
-            <div class="col-md-4">
-
-                <input class="form-control" type="text" id="codigo_postal_entrega"
-                    [(ngModel)]="codigo_postal_entrega" />
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Código Postal</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="codigo_postal_entrega" />
             </div>
-            <div class="col-md-4 mb-3">
-                <button class="btn btn-primary" (click)="redirectToPostalCode()">
-                    Conoce Tu Codigo Postal
+            <div class="col-2 d-flex flex-column">
+                <label class="form-label mb-1" style="visibility:hidden;">.</label>
+                <button type="button" class="btn btn-postal btn-sm w-100" (click)="redirectToPostalCode()">
+                    <i class="pi pi-map-marker me-1"></i>Cód. Postal
                 </button>
             </div>
         </div>
 
-
-
     </div>
     <div class="modal-footer">
-        <button *ngIf="!editandodato" type="button" class="btn btn-outline-dark" (click)="guardarDatosEntrega()">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+            Cerrar
+        </button>
+        <button *ngIf="!editandodato" type="button" class="btn btn-primary" (click)="guardarDatosEntrega()">
             Guardar
         </button>
-        <button *ngIf="editandodato" type="button" class="btn btn-outline-dark" (click)="editarDatosEntrega()">
+        <button *ngIf="editandodato" type="button" class="btn btn-primary" (click)="editarDatosEntrega()">
             Guardar
         </button>
     </div>
 </ng-template>
 <ng-template #facturacion let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Crear Datos Facturacion Electrónica </h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
+        <h4 class="modal-title" id="modal-basic-title"><strong>Crear Datos Facturación Electrónica</strong></h4>
     </div>
-    <div class="modal-body">
+    <div class="modal-body py-2">
 
-        <input [(ngModel)]="facturacionElectronica" type="checkbox" (change)="datosFacElect($event)">
-        <label class="form-label" for="razon_social">Los datos de facturacion electronica son iguales a los del
-            cliente</label>
+        <!-- Fila 0: Checkbox -->
+        <div class="form-check mb-2">
+            <input [(ngModel)]="facturacionElectronica" type="checkbox" class="form-check-input"
+                id="checkFacElect" (change)="datosFacElect($event)">
+            <label class="form-check-label" for="checkFacElect">
+                <strong>Los datos de facturación electrónica son iguales a los del cliente</strong>
+            </label>
+        </div>
 
-        <div class="row">
-            <div class="col-sm-6">
-                <label class="form-label" for="razon_social">Referencia para guardar datos:</label>
-                <input placeholder="Ej: Factura para compras de la empresa" class="form-control" type="text"
-                    id="razon_social" [(ngModel)]="alias_facturacion" />
+        <!-- Fila 1: Referencia | Razón Social | Tipo Doc | Documento -->
+        <div class="row g-2 mb-2">
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Referencia</strong></label>
+                <input placeholder="Ej: Empresa principal" class="form-control form-control-sm" type="text"
+                    [(ngModel)]="alias_facturacion" />
             </div>
-            <div class="col-sm-6">
-                <label class="form-label" for="razon_social">Razón Social / Nombre Completo:</label>
-                <input class="form-control" type="text" id="razon_social" [(ngModel)]="razon_social" />
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Razón Social / Nombre</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="razon_social" />
             </div>
-            <div class="col-sm-6">
-                <label class="form-label" for="tipo_documento_facturacion">Tipo de Documento:</label>
-                <select class="form-control" id="tipo_documento_facturacion" [(ngModel)]="tipo_documento_facturacion">
-                    <option value="CC-NIT">Cedula de Ciudadania</option>
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Tipo de Documento</strong></label>
+                <select class="form-control form-control-sm" [(ngModel)]="tipo_documento_facturacion">
+                    <option value="CC-NIT">CC-NIT</option>
                     <option value="PA">PA</option>
                     <option value="TI">TI</option>
                     <option value="NIT">NIT</option>
                 </select>
             </div>
-            <div class="col-sm-6">
-                <label class="form-label" for="tipo_documento_facturacion">Documento:</label>
-                <input class="form-control" type="text" id="numero_documento_facturacion"
-                    [(ngModel)]="numero_documento_facturacion" />
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Documento</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_documento_facturacion" />
             </div>
         </div>
-        <div class="row">
-            <div class="col-sm-6">
-                <label class="form-label" for="indicativo">Número de Celular:</label>
-            </div>
-            <div class="col-sm-6">
-                <label class="form-label" for="correo_electronico">Correo Electrónico:</label>
-            </div>
-        </div>
-        <div class="row">
 
-            <div class="col-sm-3 mb-3">
-
+        <!-- Fila 2: Indicativo | Celular | Correo | Dirección -->
+        <div class="row g-2 mb-2">
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Indicativo</strong></label>
                 <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion"
-                    class="form-control select-default" id="validationCustom01" type="number" required="">
-                    <option disabled selected>Indicativo Celular</option>
-                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}}
-                        (+{{item.phone_code}})</option>
+                    class="form-control form-control-sm select-default">
+                    <option disabled selected>Ind.</option>
+                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
+                        +{{item.phone_code}}
+                    </option>
                 </select>
-
             </div>
-            <div class="col-sm-3">
-
-
-                <input class="form-control" type="text" id="numero_celular" [(ngModel)]="numero_celular_facturacion" />
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Celular</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_celular_facturacion" />
             </div>
-
-            <div class="col-sm-6">
-
-                <input class="form-control" type="email" id="correo_electronico"
-                    [(ngModel)]="correo_electronico_facturacion" />
+            <div class="col-4">
+                <label class="form-label mb-1"><strong>Correo Electrónico</strong></label>
+                <input class="form-control form-control-sm" type="email" [(ngModel)]="correo_electronico_facturacion" />
             </div>
-
+            <div class="col-4">
+                <label class="form-label mb-1"><strong>Dirección</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="direccion_facturacion" />
+            </div>
         </div>
-        <div class="row">
-            <div class="col-sm-12">
-                <label class="form-label" for="direccion">Dirección del Comprador:</label>
-                <input class="form-control" type="text" id="direccion" [(ngModel)]="direccion_facturacion" />
-            </div>
-            <div class="col-sm-4 mb-3">
-                <label class="form-label" class="form-label" for="validationCustom01">País</label>
 
-                <select [(ngModel)]="pais" class="form-control select-default" name="" id=""
-                    (change)="identificarDepto()">
+        <!-- Fila 3: País | Departamento | Ciudad | Código Postal | Botón postal -->
+        <div class="row g-2">
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>País</strong></label>
+                <select [(ngModel)]="pais" class="form-control form-control-sm select-default" (change)="identificarDepto()">
                     <option disabled selected>País</option>
                     <option *ngFor="let item of paises" value="{{item}}">{{item}}</option>
                 </select>
-
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label" class="form-label" for="validationCustom01">Departamento</label>
-                <select [(ngModel)]="departamento" class="form-control select-default" id="validationCustom01"
-                    type="text" placeholder="Departamento" required="" (change)="identificarCiu()">
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Departamento</strong></label>
+                <select [(ngModel)]="departamento" class="form-control form-control-sm select-default" (change)="identificarCiu()">
                     <option disabled selected>Departamento</option>
-                    <option *ngFor="let item of departamentos" value="{{item}}">{{item}}
-                    </option>
+                    <option *ngFor="let item of departamentos" value="{{item}}">{{item}}</option>
                 </select>
-
             </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label" class="form-label" for="validationCustom01">Ciudad</label>
-                <select [(ngModel)]="ciudad_municipio" class="form-control select-default" id="validationCustom01"
-                    type="text" placeholder="Ciudad" required="">
+            <div class="col-3">
+                <label class="form-label mb-1"><strong>Ciudad</strong></label>
+                <select [(ngModel)]="ciudad_municipio" class="form-control form-control-sm select-default">
                     <option disabled selected>Ciudad / Municipio</option>
                     <option *ngFor="let item of ciudades" value="{{item}}">{{item}}</option>
                 </select>
             </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-4">
-                <label class="form-label" for="codigo_postal">Código Postal:</label>
+            <div class="col-2">
+                <label class="form-label mb-1"><strong>Código Postal</strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="codigo_postal" />
+            </div>
+            <div class="col-2 d-flex flex-column">
+                <label class="form-label mb-1" style="visibility:hidden;">.</label>
+                <button type="button" class="btn btn-postal btn-sm w-100" (click)="redirectToPostalCode()">
+                    <i class="pi pi-map-marker me-1"></i>Cód. Postal
+                </button>
             </div>
         </div>
-        <div class="row">
-            <div class="col-sm-4">
-
-                <input class="form-control" type="text" id="codigo_postal" [(ngModel)]="codigo_postal" />
-            </div>
-            <div class="col-md-4 mb-3">
-                <button class="btn btn-primary" (click)="redirectToPostalCode()">Conoce Tu Codigo Postal</button>
-            </div>
-        </div>
-
 
     </div>
     <div class="modal-footer">
-        <button type="button" *ngIf="!editandodato" class="btn btn-outline-dark"
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+            Cerrar
+        </button>
+        <button type="button" *ngIf="!editandodato" class="btn btn-primary"
             (click)="guardarDatosFacturacionElectronica()">
             Guardar
         </button>
-        <button type="button" *ngIf="editandodato" class="btn btn-outline-dark" (click)="editarDatosFacturacion()">
+        <button type="button" *ngIf="editandodato" class="btn btn-primary" (click)="editarDatosFacturacion()">
             Guardar
         </button>
     </div>
 </ng-template>
+<ng-template #resultadosModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title"><strong>Resultados de búsqueda</strong></h4>
+    </div>
+    <div class="modal-body p-0">
+        <table class="table table-hover table-sm mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-3">Nombre</th>
+                    <th>Documento</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let c of resultadosBusqueda">
+                    <td class="ps-3">{{ c.nombres_completos }} {{ c.apellidos_completos }}</td>
+                    <td>{{ c.documento }}</td>
+                    <td>{{ c.correo_electronico_comprador }}</td>
+                    <td>{{ c.numero_celular_comprador }}</td>
+                    <td>
+                        <button pButton type="button" label="Seleccionar" icon="pi pi-check"
+                                class="p-button-sm p-button-primary"
+                                (click)="seleccionarClienteResultado(c); modal.close()"></button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.close()">Cerrar</button>
+    </div>
+</ng-template>
+
 <ng-template #nota let-modal>
     <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title">Crear Nota </h4>
-        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
-            <span aria-hidden="true">&times;</span>
-        </button>
+        <h4 class="modal-title" id="modal-basic-title"><strong>Crear Nota</strong></h4>
     </div>
     <div class="modal-body">
         <form class="custom-datepicker custom-datepicker-dropdown">
-            <div class="row">
-                <div class="col-md-3">
-                    <label for="date">Fecha:</label>
-                    <div id="date" class="input-group">
-                        <p>{{ dateactual }}</p>
-                    </div>
+            <div class="form-group mb-3">
+                <label for="date"><strong>Fecha</strong></label>
+                <div id="date" class="form-control-plaintext border rounded px-3 py-2 bg-light">
+                    {{ dateactual }}
                 </div>
-                <div class="col-md-9">
-                    <label for="note">Nota:</label>
-                    <div id="note" class="input-group">
-                        <textarea [(ngModel)]="notaNueva" class="form-control" rows="3" placeholder="Notas"></textarea>
-                    </div>
-                </div>
+            </div>
+            <div class="form-group mb-2">
+                <label for="note"><strong>Nota</strong></label>
+                <textarea id="note" [(ngModel)]="notaNueva" name="notaNueva" class="form-control" rows="5" placeholder="Escriba su nota aquí..."></textarea>
             </div>
         </form>
     </div>
     <div class="modal-footer">
-        <button type="button" class="btn btn-outline-dark" (click)="guardarNota()">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss()">
+            Cerrar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarNota()">
             Guardar
         </button>
     </div>

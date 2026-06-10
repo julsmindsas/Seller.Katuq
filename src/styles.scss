@@ -1437,3 +1437,21 @@ form.integration-form,
   .mb-4 { margin-bottom: 1.25rem !important; }
   .mt-4 { margin-top: 1.25rem !important; }
 }
+
+/* ===========================================
+   DROPDOWN BUSCAR POR - CLIENTES
+   =========================================== */
+.buscar-por-panel .p-dropdown-items {
+  padding: 0.25rem 0;
+
+  .p-dropdown-item {
+    padding: 0.8rem 1.25rem;
+    font-weight: 400;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 46px;
+    line-height: 1.2;
+  }
+}

@@ -218,6 +218,35 @@
   }
 }
 
+::ng-deep .btn-postal {
+  border: 2px solid var(--primary-dark-color) !important;
+  color: var(--primary-dark-color) !important;
+  background-color: transparent !important;
+  font-weight: 500;
+
+  &:hover {
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: #fff !important;
+  }
+}
+
+.resultados-busqueda-table {
+  font-size: 0.875rem;
+
+  thead th {
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6c757d;
+  }
+
+  tbody tr:hover {
+    background-color: rgba(167, 139, 250, 0.08);
+  }
+}
+
 .form-select {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
   background-repeat: no-repeat;
@@ -631,7 +660,8 @@ input[type="checkbox"] {
   transition: all 0.3s ease;
 
   h5 {
-    font-size: 1.3rem;
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
     color: #495057;
 
     i {
@@ -831,6 +861,64 @@ input[type="checkbox"] {
       margin-bottom: 0;
       font-weight: 500;
       cursor: pointer;
+    }
+  }
+}
+
+// ==============================================
+// BUSCADOR CLIENTE - ALTURA AUMENTADA
+// ==============================================
+::ng-deep .search-section {
+  .search-input-tall,
+  .search-input-tall.p-inputtext,
+  .search-input-tall.p-button {
+    height: 34px !important;
+  }
+
+  .search-input-tall.p-dropdown {
+    height: 34px !important;
+
+    .p-dropdown-label {
+      line-height: 32px;
+      font-weight: 400;
+    }
+  }
+
+}
+
+// ==============================================
+// MODAL NOTA - BOTONES CON HOVER TEMA LILA
+// ==============================================
+::ng-deep .modal-footer {
+  .btn-primary {
+    background-color: var(--primary-dark-color);
+    border-color: var(--primary-dark-color);
+    color: #fff;
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover,
+    &:active,
+    &:focus {
+      background-color: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35) !important;
+      color: #fff !important;
+    }
+  }
+
+  .btn-outline-secondary {
+    color: var(--primary-dark-color);
+    border-color: var(--primary-dark-color);
+    background-color: transparent;
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover,
+    &:active,
+    &:focus {
+      background-color: var(--primary-color) !important;
+      border-color: var(--primary-color) !important;
+      color: #fff !important;
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.35) !important;
     }
   }
 }

@@ -407,6 +407,7 @@ export interface Envio {
   valorZonaCobro?: number;
   latitud?: string;
   longitud?: string;
+  coordenadas?: string;
 }
 
 //Configuracion de producto

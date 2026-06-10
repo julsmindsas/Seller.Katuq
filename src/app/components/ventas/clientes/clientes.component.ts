@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, Input, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MaestroService } from '../../../shared/services/maestros/maestro.service';
 import Swal from 'sweetalert2'
@@ -17,6 +17,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
   @ViewChild('documentoBusqueda') documentoBusqueda: ElementRef
   @ViewChild('whatsapp') whatsapp: ElementRef
+  @ViewChild('resultadosModal') resultadosModal: any;
 
   @Input() clienteEdit: any;
   formulario: any;
@@ -88,9 +89,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   allBillingZone: any;
   zona_cobro: any;
   valor_zona_cobro: any;
+  resultadosBusqueda: any[] = [];
 
 
-  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos) {
+  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef) {
 
   }
 
@@ -331,14 +333,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             confirmButtonText: 'Ok'
           });
         } else {
-
           sessionStorage.setItem('cliente', JSON.stringify(res))
-
           try {
             this.formulario.patchValue(res)
-
             this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
-
             this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
             this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
             this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
@@ -348,14 +346,11 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             this.formulario.controls['documento'].setValue(res.documento);
             this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
             this.formulario.controls['estado'].setValue(res.estado);
-
             this.activarNotas = false;
             this.verNotas();
-
           } catch (error) {
             console.log(error);
           }
-
           this.datos = res
           this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
           this.formularioEntrega.patchValue(res.datosEntrega)
@@ -369,14 +364,76 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           }
           Swal.fire({
             title: 'Consultado!',
-            text: 'Consultado con exito',
+            text: 'Consultado con éxito',
             icon: 'success',
             confirmButtonText: 'Ok'
           });
         }
+      });
 
+    } else if (this.tipoBusqueda === 'email' || this.tipoBusqueda === 'nombre') {
+
+      const term = this.documentoBusqueda.nativeElement.value.toLowerCase().trim();
+      this.service.obtenerClientes().subscribe((res: any) => {
+        const todos: any[] = Array.isArray(res) ? res : (res.data || res.clients || res.clientes || []);
+        let lista: any[];
+        if (this.tipoBusqueda === 'email') {
+          lista = todos.filter(c =>
+            (c.correo_electronico_comprador || '').toLowerCase().includes(term)
+          );
+        } else {
+          lista = todos.filter(c => {
+            const nombre = `${c.nombres_completos || ''} ${c.apellidos_completos || ''}`.toLowerCase();
+            return nombre.includes(term);
+          });
+        }
+        if (!lista || lista.length === 0) {
+          this.resultadosBusqueda = [];
+          this.encontrado = false;
+          this.bloqueado = false;
+          Swal.fire({
+            title: 'No encontrado!',
+            text: 'No se encontró ningún cliente con ese criterio.',
+            icon: 'warning',
+            confirmButtonText: 'Ok'
+          });
+        } else {
+          this.resultadosBusqueda = [...lista];
+          this.notaModalRef = this.modalService.open(this.resultadosModal, { size: 'lg', backdrop: 'static' });
+        }
       });
     }
+  }
+
+  seleccionarClienteResultado(cliente: any) {
+    this.resultadosBusqueda = [];
+    sessionStorage.setItem('cliente', JSON.stringify(cliente));
+    try {
+      this.formulario.patchValue(cliente);
+      this.formulario.controls['tipo_documento_comprador'].setValue(cliente.tipo_documento_comprador);
+      this.formulario.controls['indicativo_celular_comprador'].setValue(cliente.indicativo_celular_comprador);
+      this.formulario.controls['numero_celular_comprador'].setValue(cliente.numero_celular_comprador);
+      this.formulario.controls['indicativo_celular_whatsapp'].setValue(cliente.indicativo_celular_whatsapp);
+      this.formulario.controls['numero_celular_whatsapp'].setValue(cliente.numero_celular_whatsapp);
+      this.formulario.controls['apellidos_completos'].setValue(cliente.apellidos_completos);
+      this.formulario.controls['nombres_completos'].setValue(cliente.nombres_completos);
+      this.formulario.controls['documento'].setValue(cliente.documento);
+      this.formulario.controls['correo_electronico_comprador'].setValue(cliente.correo_electronico_comprador);
+      this.formulario.controls['estado'].setValue(cliente.estado);
+      this.activarNotas = false;
+      this.verNotas();
+    } catch (error) {
+      console.log(error);
+    }
+    this.datos = cliente;
+    if (cliente.datosFacturacionElectronica) this.formularioFacturacion.patchValue(cliente.datosFacturacionElectronica);
+    if (cliente.datosEntrega) this.formularioEntrega.patchValue(cliente.datosEntrega);
+    this.identificarDepto();
+    this.identificarCiu();
+    this.identificarDepto1();
+    this.identificarCiu1();
+    this.encontrado = true;
+    this.bloqueado = this.formulario.value.estado === 'bloqueado';
   }
 
   toggleWithGreeting(tooltip, greeting: string) {
@@ -494,6 +551,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
   ngOnInit(): void {
     this.getBillingZone()
+    this.pais = 'Colombia';
+    this.pais_entrega = 'Colombia';
     this.fecha = new Date()
     this.dateactual = this.fecha.getFullYear() + '-' + (this.fecha.getMonth() + 1).toString().padStart(2, '0') + '-' + this.fecha.getDate().toString().padStart(2, '0')
     this.paises = this.inforPaises.paises.map(x => {
@@ -506,11 +565,11 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       cd: [''],
       nombres_completos: ['', Validators.required],
       apellidos_completos: ['', Validators.required],
-      tipo_documento_comprador: ['', Validators.required],
+      tipo_documento_comprador: ['CC-NIT', Validators.required],
       documento: ['', Validators.required],
-      indicativo_celular_comprador: ['', Validators.required],
+      indicativo_celular_comprador: ['57', Validators.required],
       numero_celular_comprador: ['', Validators.required],
-      indicativo_celular_whatsapp: ['', Validators.required],
+      indicativo_celular_whatsapp: ['57', Validators.required],
       numero_celular_whatsapp: ['', Validators.required],
       correo_electronico_comprador: ['', [Validators.required, Validators.email]],
       datosFacturacionElectronica: [['']],
@@ -718,14 +777,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.codigo_postal = this.datosFacturacionElectronica[index].codigoPostal
     this.identificarDepto()
     this.identificarCiu()
-    this.modalService.open(modal, { size: 'lg' }).result.then(
-      () => {
-        this.limpiarVariables();
-      },
-      () => {
-        // Esto se ejecutará cuando el modal se cierre sin completarse (por ejemplo, al hacer clic fuera del modal)
-        this.limpiarVariables();
-      }
+    this.notaModalRef = this.modalService.open(modal, { size: 'lg' });
+    this.notaModalRef.result.then(
+      () => { this.limpiarVariables(); },
+      () => { this.limpiarVariables(); }
     );
   }
   editarDatosFacturacion() {
@@ -754,10 +809,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['notas'].setValue(res.notas)
       this.formulario.controls['estado'].setValue(res.estado)
       this.service.editClient(this.formulario.value).subscribe(r => {
-
+        if (this.notaModalRef) { this.notaModalRef.close(); }
         Swal.fire({
           title: 'Editado!',
-          text: 'Editado con exito',
+          text: 'Editado con éxito',
           icon: 'success',
           confirmButtonText: 'Ok'
         });
@@ -800,14 +855,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.identificarDepto1()
     this.identificarCiu1()
     this.zona_cobro = this.datosEntregas[index].zonaCobro
-    this.modalService.open(modal, { size: 'lg' }).result.then(
-      () => {
-        this.limpiarVariables();
-      },
-      () => {
-        // Esto se ejecutará cuando el modal se cierre sin completarse (por ejemplo, al hacer clic fuera del modal)
-        this.limpiarVariables();
-      }
+    this.notaModalRef = this.modalService.open(modal, { size: 'lg' });
+    this.notaModalRef.result.then(
+      () => { this.limpiarVariables(); },
+      () => { this.limpiarVariables(); }
     );
   }
   editarDatosEntrega() {
@@ -841,10 +892,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['notas'].setValue(res.notas)
       this.formulario.controls['estado'].setValue(res.estado)
       this.service.editClient(this.formulario.value).subscribe(r => {
-        console.log(r)
+        if (this.notaModalRef) { this.notaModalRef.close(); }
         Swal.fire({
           title: 'Editado!',
-          text: 'Editado con exito',
+          text: 'Editado con éxito',
           icon: 'success',
           confirmButtonText: 'Ok'
         });
@@ -855,7 +906,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         this.otro_numero_entrega = ""
         this.direccion_entrega = ""
         this.observaciones = ""
-        this.pais_entrega = ""
+        this.pais_entrega = "Colombia"
         this.departamento_entrega = ""
         this.ciudad_municipio_entrega = ""
         this.codigo_postal_entrega = ""
@@ -873,7 +924,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.otro_numero_entrega = "";
     this.direccion_entrega = "";
     this.observaciones = "";
-    this.pais_entrega = "";
+    this.pais_entrega = "Colombia";
     this.departamento_entrega = "";
     this.ciudad_municipio_entrega = "";
     this.codigo_postal_entrega = "";
@@ -886,22 +937,25 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.numero_celular_facturacion = ""
     this.correo_electronico_facturacion = ""
     this.direccion_facturacion = ""
-    this.pais = ""
+    this.pais = "Colombia";
     this.departamento = ""
     this.ciudad_municipio = ""
     this.codigo_postal = ""
   }
+  private notaModalRef: any;
+
   openLg(notaAclaratoria) {
-    this.modalService.open(notaAclaratoria, { size: 'lg' }).result.then(
+    this.notaModalRef = this.modalService.open(notaAclaratoria, { size: 'lg' });
+    this.notaModalRef.result.then(
       () => {
         this.limpiarVariables();
       },
       () => {
-        // Esto se ejecutará cuando el modal se cierre sin completarse (por ejemplo, al hacer clic fuera del modal)
         this.limpiarVariables();
       }
     );
   }
+
   guardarNota() {
     this.fecha = new Date()
     this.notas = []
@@ -916,7 +970,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.service.getClientByDocument(data).subscribe((res: any) => {
       res.notas.map(x => {
         this.notas.push(x)
-
       })
       this.notas.push(nota)
       this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
@@ -924,16 +977,17 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['notas'].setValue(this.notas)
       this.formulario.controls['estado'].setValue(res.estado)
       this.service.editClient(this.formulario.value).subscribe(r => {
-        console.log(r)
+        if (this.notaModalRef) {
+          this.notaModalRef.close();
+        }
         Swal.fire({
           title: 'Guardado!',
-          text: 'Guardado con exito',
+          text: 'Guardado con éxito',
           icon: 'success',
           confirmButtonText: 'Ok'
         });
-        this.notaNueva = ""
+        this.notaNueva = "";
       });
-
     })
   }
   guardarDatosFacturacionElectronica() {
@@ -968,10 +1022,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['notas'].setValue(res.notas)
       this.formulario.controls['estado'].setValue(res.estado)
       this.service.editClient(this.formulario.value).subscribe(r => {
-        console.log(r)
+        if (this.notaModalRef) { this.notaModalRef.close(); }
         Swal.fire({
           title: 'Guardado!',
-          text: 'Guardado con exito',
+          text: 'Guardado con éxito',
           icon: 'success',
           confirmButtonText: 'Ok'
         });
@@ -1029,10 +1083,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['notas'].setValue(res.notas)
       this.formulario.controls['estado'].setValue(res.estado)
       this.service.editClient(this.formulario.value).subscribe(r => {
-        console.log(r)
+        if (this.notaModalRef) { this.notaModalRef.close(); }
         Swal.fire({
           title: 'Guardado!',
-          text: 'Guardado con exito',
+          text: 'Guardado con éxito',
           icon: 'success',
           confirmButtonText: 'Ok'
         });
@@ -1043,7 +1097,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         this.otro_numero_entrega = ""
         this.direccion_entrega = ""
         this.observaciones = ""
-        this.pais_entrega = ""
+        this.pais_entrega = "Colombia"
         this.departamento_entrega = ""
         this.ciudad_municipio_entrega = ""
         this.codigo_postal_entrega = ""
