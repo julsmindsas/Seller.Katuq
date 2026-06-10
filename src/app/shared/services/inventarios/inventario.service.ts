@@ -403,6 +403,20 @@ export class InventarioService {
     return this.http.get(`${this.apiUrl}/productos/all`, { params });
   }
 
+  /**
+   * Búsqueda de productos sobre el catálogo completo (índice ligero en backend).
+   * Busca por referencia o título, incluyendo productos inactivos
+   * (un movimiento histórico puede ser de un producto descontinuado).
+   */
+  buscarProductosQuick(termino: string, limit: number = 30): Observable<any> {
+    const params = new HttpParams()
+      .set('q', termino)
+      .set('searchBy', 'general')
+      .set('incluirInactivos', 'true')
+      .set('limit', limit.toString());
+    return this.http.get(`${this.apiUrl}/productos/search/quick`, { params });
+  }
+
   getMovimientoDetalle(id: string): Observable<any> {
     return this.http.get(`${this.apiUrl}/movimiento/${id}`);
   }

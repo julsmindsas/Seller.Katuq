@@ -76,9 +76,13 @@
                                 </label>
                                 <p-dropdown [options]="productos"
                                             formControlName="producto"
-                                            optionLabel="crearProducto.titulo"
+                                            optionLabel="labelBusqueda"
+                                            dataKey="cd"
                                             [showClear]="true"
                                             [filter]="true"
+                                            filterBy="labelBusqueda"
+                                            (onFilter)="onProductoFilter($event)"
+                                            emptyFilterMessage="Sin coincidencias en el catálogo"
                                             placeholder="Todos los productos"
                                             styleClass="w-100"></p-dropdown>
                             </div>

@@ -15,8 +15,8 @@ import { MessageService } from "primeng/api";
 import * as XLSX from "xlsx";
 import { Bodega } from "../../../shared/models/inventarios/bodega.model";
 import { MovimientosResponse, Movimiento } from "../model/movimientoinventario";
-import { Subject } from "rxjs";
-import { debounceTime, distinctUntilChanged } from "rxjs/operators";
+import { Subject, of } from "rxjs";
+import { debounceTime, distinctUntilChanged, switchMap, map, catchError } from "rxjs/operators";
 
 @Component({
   selector: "app-historial-movimientos",
@@ -29,6 +29,7 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
 
   movimientos: Movimiento[] = [];
   productos: Producto[] = [];
+  productosBase: Producto[] = []; // carga inicial, se restaura al limpiar el filtro
   bodegas: Bodega[] = [];
   loading: boolean = false;
   formFiltros: FormGroup;
@@ -44,6 +45,9 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
   // Propiedades para debounce en búsqueda global
   private searchSubject = new Subject<string>();
   globalFilterValue: string = "";
+
+  // Debounce para búsqueda de productos en el dropdown (server-side sobre todo el catálogo)
+  private productoFilterSubject = new Subject<string>();
 
   // Propiedad para filtros rápidos por tipo
   selectedTipoFilter: "todos" | "ingreso" | "salida" = "todos";
@@ -99,6 +103,54 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
         this.currentPage = 0;
         this.buscarMovimientos();
       });
+
+    // Búsqueda de productos del dropdown contra el catálogo completo en backend
+    // (la carga inicial solo trae los más recientes; sin esto, las referencias
+    // antiguas no aparecen en el selector). switchMap cancela respuestas viejas
+    // para que un término anterior lento no pise los resultados del actual.
+    this.productoFilterSubject
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        switchMap((termino) => {
+          const t = (termino || "").trim();
+          if (t.length < 2) {
+            return of(this.productosBase);
+          }
+          return this.inventarioService.buscarProductosQuick(t).pipe(
+            map((resp: any) =>
+              (resp.products || []).map((p: any) => this.conLabelBusqueda(p)),
+            ),
+            // Mantener las opciones actuales si la búsqueda remota falla
+            catchError(() => of(this.productos)),
+          );
+        }),
+      )
+      .subscribe((lista) => this.asignarOpcionesProductos(lista));
+  }
+
+  onProductoFilter(event: any): void {
+    this.productoFilterSubject.next(event?.filter || "");
+  }
+
+  // Label "REFERENCIA - Título" para mostrar y filtrar en el dropdown
+  private conLabelBusqueda(p: any): any {
+    const referencia = p.identificacion?.referencia;
+    const titulo = p.crearProducto?.titulo || "";
+    return {
+      ...p,
+      labelBusqueda: referencia ? `${referencia} - ${titulo}` : titulo,
+    };
+  }
+
+  // PrimeNG anula el formControl si la selección actual no está en [options];
+  // siempre incluirla para que sobreviva al reemplazo de la lista
+  private asignarOpcionesProductos(lista: any[]): void {
+    const seleccion = this.formFiltros.get("producto")?.value;
+    if (seleccion?.cd && !lista.some((p: any) => p.cd === seleccion.cd)) {
+      lista = [this.conLabelBusqueda(seleccion), ...lista];
+    }
+    this.productos = lista;
   }
 
   // Método para cambiar el modo de visualización de la tabla
@@ -122,7 +174,10 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
   cargarProductos(): void {
     this.inventarioService.getProductos().subscribe({
       next: (response) => {
-        this.productos = response.products;
+        this.productosBase = (response.products || []).map((p: any) =>
+          this.conLabelBusqueda(p),
+        );
+        this.asignarOpcionesProductos(this.productosBase);
       },
       error: (error) => {
         this.messageService.add({
@@ -260,11 +315,11 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
 
     // Extraer IDs de los objetos seleccionados
     if (filtros.producto) {
-      // Intentar diferentes propiedades posibles
-      filtrosParaBackend.productoId = filtros.producto._id
+      // cd es el Firestore doc ID (estándar Katuq)
+      filtrosParaBackend.productoId = filtros.producto.cd
+        || filtros.producto._id
         || filtros.producto.id
-        || filtros.producto.productId
-        || filtros.producto.cd;
+        || filtros.producto.productId;
     }
 
     if (filtros.bodega) {
@@ -371,6 +426,13 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
   }
 
   onPageChange(event: any): void {
+    // Con búsqueda global activa el backend devuelve todos los resultados
+    // filtrados en una sola respuesta (sin cursor); re-consultar por página
+    // repetiría las mismas filas
+    if (this.globalFilterValue?.trim()) {
+      return;
+    }
+
     this.rows = event.rows;
     const newPage = Math.floor((event.first || 0) / event.rows);
 
@@ -393,6 +455,7 @@ export class HistorialMovimientosComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.searchSubject.complete();
+    this.productoFilterSubject.complete();
   }
 
   // Control del menú de acciones
