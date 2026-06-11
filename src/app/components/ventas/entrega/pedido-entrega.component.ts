@@ -280,6 +280,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     reader.readAsBinaryString(this.file);
   }
   guardarDatosEntrega() {
+    if (!this.nombres_entrega || !this.numero_celular_entrega || !this.direccion_entrega || !this.ciudad_municipio_entrega) {
+      Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Dirección y Ciudad son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
+      return;
+    }
     this.datosEntregas = [];
     const datosEntreg = {
       alias: this.alias_entrega,
@@ -377,8 +381,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.alias_entrega = "";
         this.nombres_entrega = "";
         this.apellidos_entrega = "";
-        this.indicativo_celular_entrega = "";
-        this.indicativo_celular_entrega2 = "";
+        this.indicativo_celular_entrega = "57";
+        this.indicativo_celular_entrega2 = "57";
         this.numero_celular_entrega = "";
         this.otro_numero_entrega = "";
         this.direccion_entrega = "";
@@ -386,7 +390,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.barrio = "";
         this.nombreUnidad = "";
         this.especificacionesInternas = "";
-        this.pais_entrega = "";
+        this.pais_entrega = "Colombia";
         this.departamento_entrega = "";
         this.ciudad_municipio_entrega = "";
         this.zona_cobro = "";
@@ -410,6 +414,10 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
 
   abrirModalCrearEntrega(modal: any): void {
     this.editandodato = false;
+    this.indicativo_celular_entrega = '57';
+    this.indicativo_celular_entrega2 = '57';
+    this.pais_entrega = 'Colombia';
+    this.identificarDepto1();
     this.modalService.open(modal, { size: 'lg' }).result.then(
       () => {},
       () => {}
@@ -527,8 +535,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.alias_entrega = "";
         this.nombres_entrega = "";
         this.apellidos_entrega = "";
-        this.indicativo_celular_entrega = "";
-        this.indicativo_celular_entrega2 = "";
+        this.indicativo_celular_entrega = "57";
+        this.indicativo_celular_entrega2 = "57";
         this.numero_celular_entrega = "";
         this.otro_numero_entrega = "";
         this.direccion_entrega = "";
@@ -536,7 +544,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
         this.barrio = "";
         this.nombreUnidad = "";
         this.especificacionesInternas = "";
-        this.pais_entrega = "";
+        this.pais_entrega = "Colombia";
         this.departamento_entrega = "";
         this.ciudad_municipio_entrega = "";
         this.zona_cobro = "";
@@ -770,7 +778,7 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     } else {
       this.nombres_entrega = "";
       this.apellidos_entrega = "";
-      this.indicativo_celular_entrega = "";
+      this.indicativo_celular_entrega = "57";
       this.numero_celular_entrega = "";
       this.direccion_entrega = "";
     }
@@ -852,8 +860,8 @@ export class PedidoEntregaComponent implements OnInit, AfterViewInit {
     this.alias_entrega = "";
     this.nombres_entrega = "";
     this.apellidos_entrega = "";
-    this.indicativo_celular_entrega = "";
-    this.indicativo_celular_entrega2 = "";
+    this.indicativo_celular_entrega = "57";
+    this.indicativo_celular_entrega2 = "57";
     this.numero_celular_entrega = "";
     this.otro_numero_entrega = "";
     this.direccion_entrega = "";

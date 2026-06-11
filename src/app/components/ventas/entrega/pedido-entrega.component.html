@@ -340,13 +340,13 @@
 
         <div class="row">
             <div class="col-sm-3">
-                <label class="form-label" for="nombres_entrega">Nombres:</label>
+                <label class="form-label" for="nombres_entrega">Nombres: <span class="text-danger">*</span></label>
             </div>
             <div class="col-sm-3">
                 <label class="form-label" for="apellidos_entrega">Apellidos:</label>
             </div>
             <div class="col-sm-6">
-                <label class="form-label" for="indicativo_entrega">N&uacute;mero de Celular:</label>
+                <label class="form-label" for="indicativo_entrega">N&uacute;mero de Celular: <span class="text-danger">*</span></label>
             </div>
         </div>
         <div class="row mb-3">
@@ -375,7 +375,7 @@
                     type="number"
                     required=""
                 >
-                    <option disabled selected>Indicativo Celular</option>
+                    <option value="57">Colombia (+57)</option>
                     <option
                         value="{{ item.phone_code }}"
                         *ngFor="let item of indicativos"
@@ -399,7 +399,7 @@
                 <label class="form-label" for="otro_numero_entrega">Agregar Otro N&uacute;mero:</label>
             </div>
             <div class="col-sm-6">
-                <label class="form-label" for="direccion_entrega">Direcci&oacute;n:</label>
+                <label class="form-label" for="direccion_entrega">Direcci&oacute;n: <span class="text-danger">*</span></label>
             </div>
         </div>
         <div class="row mb-3">
@@ -410,9 +410,8 @@
                     class="form-control select-default"
                     id="indicativo_celular_crear2"
                     type="number"
-                    required=""
                 >
-                    <option disabled selected>Indicativo Celular</option>
+                    <option value="57">Colombia (+57)</option>
                     <option
                         value="{{ item.phone_code }}"
                         *ngFor="let item of indicativos"
@@ -595,7 +594,7 @@
                 </select>
             </div>
             <div class="col-md-4 mb-3">
-                <label class="form-label" for="ciudad_crear">Ciudad</label>
+                <label class="form-label" for="ciudad_crear">Ciudad <span class="text-danger">*</span></label>
                 <select
                     [(ngModel)]="ciudad_municipio_entrega"
                     class="form-control select-default"
@@ -734,7 +733,7 @@
                     type="number"
                     required=""
                 >
-                    <option disabled selected>Indicativo Celular</option>
+                    <option value="57">Colombia (+57)</option>
                     <option
                         value="{{ item.phone_code }}"
                         *ngFor="let item of indicativos"
@@ -772,11 +771,10 @@
                     autocomplete="on"
                     [(ngModel)]="indicativo_celular_entrega2"
                     class="form-control select-default"
-                    id="validationCustom01"
+                    id="indicativo_celular_editar2"
                     type="number"
-                    required=""
                 >
-                    <option disabled selected>Indicativo Celular</option>
+                    <option value="57">Colombia (+57)</option>
                     <option
                         value="{{ item.phone_code }}"
                         *ngFor="let item of indicativos"

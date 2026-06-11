@@ -329,13 +329,17 @@ export class CrearVentasComponent
 
     this.pedidoPrm = this.route.snapshot.queryParamMap.get("pedido") || "";
     this.numberProduct = this.route.snapshot.queryParamMap.get("product") || "";
+    const documentoParam = this.route.snapshot.queryParamMap.get("documento") || "";
 
     if (this.pedidoPrm) {
       this.pedidoGral = JSON.parse(this.pedidoPrm);
     } else {
       this.newPedido();
 
-      if (this.numberProduct) {
+      if (documentoParam) {
+        this.selectedClienteAutocomplete = documentoParam;
+        setTimeout(() => { this.buscar(); }, 0);
+      } else if (this.numberProduct) {
         this.ventasService
           .getProductByNumber(this.numberProduct)
           .subscribe((res: any) => {

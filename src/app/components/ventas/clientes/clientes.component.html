@@ -336,7 +336,7 @@
                             <button class="btn btn-sm btn-outline-primary" ngbTooltip="Pedidos Relacionados">
                                 <i class="fa fa-list-alt"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-primary" ngbTooltip="Nuevo Pedido">
+                            <button class="btn btn-sm btn-outline-primary" ngbTooltip="Nuevo Pedido" (click)="nuevoPedido()">
                                 <i class="fa fa-plus-square"></i>
                             </button>
                             <button class="btn btn-sm btn-outline-primary" ngbTooltip="Notas" (click)="openLg(nota)">
@@ -417,7 +417,6 @@
                                         <th>Nombre/Razón Social</th>
                                         <th>Tipo Documento</th>
                                         <th>Documento</th>
-                                        <th>Dirección</th>
                                         <th>Acciones</th>
                                     </tr>
                                 </thead>
@@ -427,7 +426,6 @@
                                         <td>{{item.nombres}}</td>
                                         <td>{{item.tipoDocumento}}</td>
                                         <td>{{item.documento}}</td>
-                                        <td>{{item.direccion}}</td>
                                         <td>
                                             <button class="btn btn-sm btn-outline-primary me-1"
                                                 (click)="editarDatos1(facturacion,i)">
@@ -452,7 +450,7 @@
                     <div *ngIf="activarDatosEntrega">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h5><strong>Datos de Entrega</strong></h5>
-                            <button class="btn btn-sm btn-primary" (click)="openLg(entrega)">
+                            <button class="btn btn-sm btn-primary" (click)="abrirModalAgregarEntrega(entrega)">
                                 <i class="fa fa-plus me-1"></i>Agregar Datos
                             </button>
                         </div>
@@ -513,10 +511,10 @@
         <div class="row g-2 mb-2">
             <div class="col-4">
                 <label class="form-label mb-1"><strong>Referencia</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="alias_entrega" />
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="alias_entrega" placeholder="Ej: Casa principal, Oficina..." />
             </div>
             <div class="col-4">
-                <label class="form-label mb-1"><strong>Nombres</strong></label>
+                <label class="form-label mb-1"><strong>Nombres <span class="text-danger">*</span></strong></label>
                 <input class="form-control form-control-sm" type="text" [(ngModel)]="nombres_entrega" />
             </div>
             <div class="col-4">
@@ -528,21 +526,21 @@
         <!-- Fila 2: Ind.Cel | Celular | Ind.Otro | Otro Núm | Dirección -->
         <div class="row g-2 mb-2">
             <div class="col-2">
-                <label class="form-label mb-1"><strong>Indicativo</strong></label>
+                <label class="form-label mb-1"><strong>Indicativo <span class="text-danger">*</span></strong></label>
                 <select [(ngModel)]="indicativo_celular_entrega" class="form-control form-control-sm select-default">
-                    <option disabled selected>Ind.</option>
-                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">+{{item.phone_code}}</option>
+                    <option value="57">Colombia (+57)</option>
+                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}} (+{{item.phone_code}})</option>
                 </select>
             </div>
             <div class="col-2">
-                <label class="form-label mb-1"><strong>Celular</strong></label>
+                <label class="form-label mb-1"><strong>Celular <span class="text-danger">*</span></strong></label>
                 <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_celular_entrega" />
             </div>
             <div class="col-2">
                 <label class="form-label mb-1"><strong>Ind. Otro</strong></label>
                 <select [(ngModel)]="indicativo_celular_entrega2" class="form-control form-control-sm select-default">
-                    <option disabled selected>Ind.</option>
-                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">+{{item.phone_code}}</option>
+                    <option value="57">Colombia (+57)</option>
+                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">{{item.nombre}} (+{{item.phone_code}})</option>
                 </select>
             </div>
             <div class="col-2">
@@ -550,8 +548,15 @@
                 <input class="form-control form-control-sm" type="text" [(ngModel)]="otro_numero_entrega" />
             </div>
             <div class="col-4">
-                <label class="form-label mb-1"><strong>Dirección</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="direccion_entrega" />
+                <label class="form-label mb-1"><strong>Dirección <span class="text-danger">*</span></strong></label>
+                <div class="input-group">
+                    <input class="form-control form-control-sm" type="text" [(ngModel)]="direccion_entrega"
+                        placeholder="Clic para crear dirección estructurada"
+                        (click)="abrirModalDireccion()" readonly style="cursor:pointer;" />
+                    <span class="input-group-text" style="cursor:pointer;" (click)="abrirModalDireccion()">
+                        <i class="fa fa-map-marker"></i>
+                    </span>
+                </div>
             </div>
         </div>
 
@@ -575,12 +580,50 @@
             </div>
         </div>
 
+        <!-- Buscador DANE -->
+        <div class="row g-2 mb-2">
+            <div class="col-6">
+                <label class="form-label mb-1"><strong><i class="fa fa-search me-1"></i>Buscar ciudad / municipio (DANE)</strong></label>
+                <div class="input-group">
+                    <input type="text" class="form-control form-control-sm" [(ngModel)]="searchQueryCiudadDane"
+                        placeholder="Nombre o código DANE..." (input)="buscarMunicipioDane(searchQueryCiudadDane)" />
+                    <span class="input-group-text"><i class="fa fa-search"></i></span>
+                </div>
+                <small class="text-muted">Base DANE – 1122 municipios de Colombia</small>
+            </div>
+            <div class="col-6">
+                <label class="form-label mb-1"><strong>Filtrar por departamento (DANE)</strong></label>
+                <select class="form-control form-control-sm" (change)="onDepartamentoDaneChange($event.target.value)">
+                    <option value="">-- Todos los departamentos --</option>
+                    <option *ngFor="let depto of departamentosDane" [value]="depto">{{depto}}</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-2 mb-2" *ngIf="municipiosDane.length > 0">
+            <div class="col-12">
+                <label class="form-label mb-1"><strong>Municipios encontrados</strong> <small class="text-muted">(clic para seleccionar)</small></label>
+                <div class="d-flex flex-wrap gap-1" style="max-height:120px;overflow-y:auto;">
+                    <span *ngFor="let municipio of municipiosDane"
+                        class="badge bg-light text-dark border p-2" style="cursor:pointer;"
+                        (click)="seleccionarMunicipioDane(municipio)">
+                        <strong>{{municipio.nombre}}</strong>
+                        <small class="text-muted"> – {{municipio.departamento}} ({{municipio.codigo}})</small>
+                    </span>
+                </div>
+            </div>
+        </div>
+        <div class="row mb-1" *ngIf="cargandoCiudadesDane">
+            <div class="col-12 text-center"><i class="fa fa-spinner fa-spin"></i> Cargando...</div>
+        </div>
+
+        <hr class="my-2">
+
         <!-- Fila 4: País | Departamento | Ciudad | Zona Cobro | Código Postal | Botón -->
         <div class="row g-2">
             <div class="col-2">
                 <label class="form-label mb-1"><strong>País</strong></label>
                 <select [(ngModel)]="pais_entrega" class="form-control form-control-sm select-default"
-                    (change)="identificarDepto1()">
+                    (change)="onPaisChange()">
                     <option disabled selected>País</option>
                     <option *ngFor="let item of paises" value="{{item}}">{{item}}</option>
                 </select>
@@ -588,15 +631,15 @@
             <div class="col-2">
                 <label class="form-label mb-1"><strong>Departamento</strong></label>
                 <select [(ngModel)]="departamento_entrega" class="form-control form-control-sm select-default"
-                    (change)="identificarCiu1()">
+                    (change)="onDepartamentoChange()">
                     <option disabled selected>Dpto.</option>
                     <option *ngFor="let item of departamentos1" value="{{item}}">{{item}}</option>
                 </select>
             </div>
             <div class="col-3">
-                <label class="form-label mb-1"><strong>Ciudad</strong></label>
+                <label class="form-label mb-1"><strong>Ciudad <span class="text-danger">*</span></strong></label>
                 <select [(ngModel)]="ciudad_municipio_entrega" class="form-control form-control-sm select-default"
-                    (change)="idBillingZone('')">
+                    (change)="onCiudadChange()">
                     <option disabled selected>Ciudad</option>
                     <option *ngFor="let item of ciudades1" value="{{item}}">{{item}}</option>
                 </select>
@@ -604,15 +647,16 @@
             <div class="col-2">
                 <label class="form-label mb-1"><strong>Zona Cobro</strong></label>
                 <select class="form-control form-control-sm select-default" [(ngModel)]="zona_cobro"
-                    (change)="idBillingZone($event)">
+                    (ngModelChange)="onZonaCobroSelected()">
                     <option disabled selected>Zona</option>
                     <option *ngFor="let item of filteredResults" value="{{ item.nombreZonaCobro }}">
-                        {{ item.nombreZonaCobro }}
+                        {{ item.nombreZonaCobro }} ({{ item.valorZonaCobro | currency }})
                     </option>
                 </select>
+                <small *ngIf="valor_zona_cobro" class="text-muted">Domicilio: <strong>{{valor_zona_cobro | currency}}</strong></small>
             </div>
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Código Postal</strong></label>
+            <div class="col-1">
+                <label class="form-label mb-1"><strong>Cód. Postal</strong></label>
                 <input class="form-control form-control-sm" type="text" [(ngModel)]="codigo_postal_entrega" />
             </div>
             <div class="col-2 d-flex flex-column">
@@ -659,12 +703,12 @@
                     [(ngModel)]="alias_facturacion" />
             </div>
             <div class="col-3">
-                <label class="form-label mb-1"><strong>Razón Social / Nombre</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="razon_social" />
+                <label class="form-label mb-1"><strong>Razón Social / Nombre <span class="text-danger">*</span></strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="razon_social" required />
             </div>
             <div class="col-3">
-                <label class="form-label mb-1"><strong>Tipo de Documento</strong></label>
-                <select class="form-control form-control-sm" [(ngModel)]="tipo_documento_facturacion">
+                <label class="form-label mb-1"><strong>Tipo de Documento <span class="text-danger">*</span></strong></label>
+                <select class="form-control form-control-sm" [(ngModel)]="tipo_documento_facturacion" required>
                     <option value="CC-NIT">CC-NIT</option>
                     <option value="PA">PA</option>
                     <option value="TI">TI</option>
@@ -672,69 +716,8 @@
                 </select>
             </div>
             <div class="col-3">
-                <label class="form-label mb-1"><strong>Documento</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_documento_facturacion" />
-            </div>
-        </div>
-
-        <!-- Fila 2: Indicativo | Celular | Correo | Dirección -->
-        <div class="row g-2 mb-2">
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Indicativo</strong></label>
-                <select autocomplete="on" [(ngModel)]="indicativo_celular_facturacion"
-                    class="form-control form-control-sm select-default">
-                    <option disabled selected>Ind.</option>
-                    <option value="{{item.phone_code}}" *ngFor="let item of indicativos">
-                        +{{item.phone_code}}
-                    </option>
-                </select>
-            </div>
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Celular</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_celular_facturacion" />
-            </div>
-            <div class="col-4">
-                <label class="form-label mb-1"><strong>Correo Electrónico</strong></label>
-                <input class="form-control form-control-sm" type="email" [(ngModel)]="correo_electronico_facturacion" />
-            </div>
-            <div class="col-4">
-                <label class="form-label mb-1"><strong>Dirección</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="direccion_facturacion" />
-            </div>
-        </div>
-
-        <!-- Fila 3: País | Departamento | Ciudad | Código Postal | Botón postal -->
-        <div class="row g-2">
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>País</strong></label>
-                <select [(ngModel)]="pais" class="form-control form-control-sm select-default" (change)="identificarDepto()">
-                    <option disabled selected>País</option>
-                    <option *ngFor="let item of paises" value="{{item}}">{{item}}</option>
-                </select>
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Departamento</strong></label>
-                <select [(ngModel)]="departamento" class="form-control form-control-sm select-default" (change)="identificarCiu()">
-                    <option disabled selected>Departamento</option>
-                    <option *ngFor="let item of departamentos" value="{{item}}">{{item}}</option>
-                </select>
-            </div>
-            <div class="col-3">
-                <label class="form-label mb-1"><strong>Ciudad</strong></label>
-                <select [(ngModel)]="ciudad_municipio" class="form-control form-control-sm select-default">
-                    <option disabled selected>Ciudad / Municipio</option>
-                    <option *ngFor="let item of ciudades" value="{{item}}">{{item}}</option>
-                </select>
-            </div>
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Código Postal</strong></label>
-                <input class="form-control form-control-sm" type="text" [(ngModel)]="codigo_postal" />
-            </div>
-            <div class="col-2 d-flex flex-column">
-                <label class="form-label mb-1" style="visibility:hidden;">.</label>
-                <button type="button" class="btn btn-postal btn-sm w-100" (click)="redirectToPostalCode()">
-                    <i class="pi pi-map-marker me-1"></i>Cód. Postal
-                </button>
+                <label class="form-label mb-1"><strong>Documento <span class="text-danger">*</span></strong></label>
+                <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_documento_facturacion" required />
             </div>
         </div>
 

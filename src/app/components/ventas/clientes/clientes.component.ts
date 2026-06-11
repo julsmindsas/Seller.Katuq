@@ -8,6 +8,9 @@ import { InfoIndicativos } from '../../../../Mock/indicativosPais'
 import { NgbActiveModal, NgbModal, ModalDismissReasons, NgbModalConfig } from '@ng-bootstrap/ng-bootstrap';
 import { Router } from '@angular/router';
 import { CrearClienteModalComponent } from './crear-cliente-modal/crear-cliente-modal.component';
+import { DireccionEstructuradaComponent } from '../entrega/direccion-estructurada/direccion-estructurada.component';
+import { DaneCodesService } from '../../../shared/services/dane-codes.service';
+import { MunicipioDane } from '../../../shared/data/colombia-dane-codes';
 @Component({
   selector: 'app-clientes',
   templateUrl: './clientes.component.html',
@@ -81,6 +84,13 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   barrio: any;
   nombreUnidad: any;
   especificacionesInternas: any;
+  latitud: string;
+  longitud: string;
+  coordenadas: string;
+  departamentosDane: string[] = [];
+  municipiosDane: MunicipioDane[] = [];
+  searchQueryCiudadDane: string = '';
+  cargandoCiudadesDane: boolean = false;
   editandodato: boolean;
   idenxEntrega: any;
   idenxFacturacion: any;
@@ -92,8 +102,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   resultadosBusqueda: any[] = [];
 
 
-  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef) {
-
+  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef, private daneCodesService: DaneCodesService) {
+    this.daneCodesService.getDepartamentos().subscribe(deptos => {
+      this.departamentosDane = deptos;
+    });
   }
 
   async ngAfterViewInit(): Promise<void> {
@@ -217,21 +229,127 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     })
   }
 
+  onPaisChange() {
+    this.identificarDepto1();
+    this.departamento_entrega = '';
+    this.ciudad_municipio_entrega = '';
+    this.ciudades1 = [];
+    this.zona_cobro = '';
+    this.valor_zona_cobro = '';
+    this.filteredResults = [];
+  }
+
+  onDepartamentoChange() {
+    this.identificarCiu1();
+    this.ciudad_municipio_entrega = '';
+    this.zona_cobro = '';
+    this.valor_zona_cobro = '';
+    this.filteredResults = [];
+  }
+
+  onCiudadChange() {
+    this.zona_cobro = '';
+    this.valor_zona_cobro = '';
+    this.filteredResults = [];
+    setTimeout(() => { this.idBillingZone(''); }, 100);
+  }
+
+  onZonaCobroSelected(): void {
+    if (!this.zona_cobro || !this.filteredResults || this.filteredResults.length === 0) {
+      this.valor_zona_cobro = '';
+      return;
+    }
+    const zonaSeleccionada = this.filteredResults.find((item: any) => item.nombreZonaCobro === this.zona_cobro);
+    this.valor_zona_cobro = zonaSeleccionada ? zonaSeleccionada.valorZonaCobro : '';
+  }
+
+  abrirModalDireccion() {
+    const modalRef = this.modalService.open(DireccionEstructuradaComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      keyboard: false,
+    });
+    modalRef.componentInstance.direccionActual = this.direccion_entrega || '';
+    modalRef.componentInstance.ciudadActual = this.ciudad_municipio_entrega || '';
+    modalRef.result.then(
+      (resultado) => {
+        if (typeof resultado === 'object') {
+          this.direccion_entrega = resultado.direccion;
+          if (resultado.ciudad && resultado.ciudad !== this.ciudad_municipio_entrega) {
+            this.ciudad_municipio_entrega = resultado.ciudad;
+            if (resultado.estructura && resultado.estructura.departamento) {
+              this.departamento_entrega = resultado.estructura.departamento;
+            }
+            this.zona_cobro = '';
+            this.valor_zona_cobro = '';
+            this.filteredResults = [];
+            setTimeout(() => { this.idBillingZone(''); }, 500);
+          }
+          if (resultado.coordenadas) {
+            this.coordenadas = resultado.coordenadas;
+            const coords = resultado.coordenadas.split(',').map((c: string) => c.trim());
+            if (coords.length === 2) {
+              this.latitud = coords[0];
+              this.longitud = coords[1];
+            }
+          }
+        } else {
+          this.direccion_entrega = resultado;
+        }
+      },
+      () => {}
+    );
+  }
+
+  buscarMunicipioDane(query: string): void {
+    if (!query || query.length < 2) {
+      this.municipiosDane = [];
+      return;
+    }
+    this.cargandoCiudadesDane = true;
+    this.daneCodesService.searchMunicipios(query).subscribe(resultados => {
+      this.municipiosDane = resultados;
+      this.cargandoCiudadesDane = false;
+    });
+  }
+
+  onDepartamentoDaneChange(departamento: string): void {
+    if (!departamento) {
+      this.municipiosDane = [];
+      this.ciudades1 = [];
+      return;
+    }
+    this.cargandoCiudadesDane = true;
+    this.daneCodesService.getMunicipiosByDepartamento(departamento).subscribe(municipios => {
+      this.municipiosDane = municipios;
+      this.ciudades1 = municipios.map(m => m.nombre);
+      this.cargandoCiudadesDane = false;
+    });
+  }
+
+  seleccionarMunicipioDane(municipio: MunicipioDane): void {
+    this.pais_entrega = 'Colombia';
+    this.departamento_entrega = municipio.departamento;
+    this.ciudad_municipio_entrega = municipio.nombre;
+    this.ciudades1 = [municipio.nombre];
+    this.daneCodesService.addMunicipioFrecuente(municipio);
+    this.zona_cobro = '';
+    this.valor_zona_cobro = '';
+    this.filteredResults = [];
+    setTimeout(() => { this.idBillingZone(''); }, 300);
+    this.municipiosDane = [];
+    this.searchQueryCiudadDane = '';
+  }
+
   datosFacElect(event) {
     if (this.facturacionElectronica === true) {
       this.razon_social = this.formulario.value.nombres_completos + ' ' + this.formulario.value.apellidos_completos
       this.tipo_documento_facturacion = this.formulario.value.tipo_documento_comprador
       this.numero_documento_facturacion = this.formulario.value.documento
-      this.indicativo_celular_facturacion = this.formulario.value.indicativo_celular_comprador
-      this.numero_celular_facturacion = this.formulario.value.numero_celular_comprador
-      this.correo_electronico_facturacion = this.formulario.value.correo_electronico_comprador
     } else {
       this.razon_social = ""
       this.tipo_documento_facturacion = ""
       this.numero_documento_facturacion = ""
-      this.indicativo_celular_facturacion = ""
-      this.numero_celular_facturacion = ""
-      this.correo_electronico_facturacion = ""
     }
   }
 
@@ -474,12 +592,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.indicativo_celular_entrega = this.formulario.value.indicativo_celular_comprador
       this.numero_celular_entrega = this.formulario.value.numero_celular_comprador
     } else {
-      this.nombres_entrega = ""
-      this.indicativo_celular_entrega = ""
-      this.numero_celular_entrega = ""
-
+      this.nombres_entrega = "";
+      this.indicativo_celular_entrega = "57";
+      this.numero_celular_entrega = "";
     }
-
   }
   idBillingZone(zona_cobro: any) {
     console.log(this.ciudad_municipio_entrega)
@@ -502,52 +618,52 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   eliminarDato(index: number): void {
-    // Eliminar el elemento en el índice especificado
-    this.datosFacturacionElectronica.splice(index, 1);
-    const data = {
-      documento: this.formulario.value.documento
-    }
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-
-
-      this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
-      this.formulario.controls['notas'].setValue(res.notas)
-      this.formulario.controls['estado'].setValue(res.estado)
-      this.service.editClient(this.formulario.value).subscribe(r => {
-        console.log(r)
-        Swal.fire({
-          title: 'Eliminado!',
-          text: 'Eliminado con exito',
-          icon: 'success',
-          confirmButtonText: 'Ok'
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: '¿Desea eliminar este registro de facturación?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      this.datosFacturacionElectronica.splice(index, 1);
+      const data = { documento: this.formulario.value.documento };
+      this.service.getClientByDocument(data).subscribe((res: any) => {
+        this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
+        this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
+        this.formulario.controls['notas'].setValue(res.notas);
+        this.formulario.controls['estado'].setValue(res.estado);
+        this.service.editClient(this.formulario.value).subscribe(r => {
+          Swal.fire({ title: 'Eliminado!', text: 'Eliminado con éxito', icon: 'success', confirmButtonText: 'Ok' });
         });
-      })
-    })
+      });
+    });
   }
   eliminarDato1(index: number): void {
-    // Eliminar el elemento en el índice especificado
-    this.datosEntregas.splice(index, 1);
-    const data = {
-      documento: this.formulario.value.documento
-    }
-    this.service.getClientByDocument(data).subscribe((res: any) => {
-
-
-      this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
-      this.formulario.controls['notas'].setValue(res.notas)
-      this.formulario.controls['estado'].setValue(res.estado)
-      this.service.editClient(this.formulario.value).subscribe(r => {
-        console.log(r)
-        Swal.fire({
-          title: 'Eliminado!',
-          text: 'Eliminado con exito',
-          icon: 'success',
-          confirmButtonText: 'Ok'
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: '¿Desea eliminar este registro de entrega?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      confirmButtonColor: '#d33',
+    }).then((result) => {
+      if (!result.isConfirmed) return;
+      this.datosEntregas.splice(index, 1);
+      const data = { documento: this.formulario.value.documento };
+      this.service.getClientByDocument(data).subscribe((res: any) => {
+        this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
+        this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
+        this.formulario.controls['notas'].setValue(res.notas);
+        this.formulario.controls['estado'].setValue(res.estado);
+        this.service.editClient(this.formulario.value).subscribe(r => {
+          Swal.fire({ title: 'Eliminado!', text: 'Eliminado con éxito', icon: 'success', confirmButtonText: 'Ok' });
         });
-      })
-    })
+      });
+    });
   }
   ngOnInit(): void {
     this.getBillingZone()
@@ -579,18 +695,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     });
 
     this.formularioFacturacion = this.formBuilder.group({
-      // Datos para facturación electrónica
+      alias_facturacion: [''],
       razon_social: ['', Validators.required],
       tipo_documento_facturacion: ['', Validators.required],
       numero_documento_facturacion: ['', Validators.required],
-      indicativo_celular_facturacion: ['', Validators.required],
-      numero_celular_facturacion: ['', Validators.required],
-      correo_electronico_facturacion: ['', [Validators.required, Validators.email]],
-      direccion_facturacion: ['', Validators.required],
-      pais: ['', Validators.required],
-      departamento: ['', Validators.required],
-      ciudad_municipio: ['', Validators.required],
-      codigo_postal: ['', Validators.required]
     })
 
     this.formularioEntrega = this.formBuilder.group({
@@ -767,9 +875,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.razon_social = this.datosFacturacionElectronica[index].nombres
     this.tipo_documento_facturacion = this.datosFacturacionElectronica[index].tipoDocumento
     this.numero_documento_facturacion = this.datosFacturacionElectronica[index].documento
-    this.indicativo_celular_facturacion = this.datosFacturacionElectronica[index].indicativoCel
-    this.numero_celular_facturacion = this.datosFacturacionElectronica[index].celular
-    this.correo_electronico_facturacion = this.datosFacturacionElectronica[index].correoElectronico
     this.direccion_facturacion = this.datosFacturacionElectronica[index].direccion
     this.pais = this.datosFacturacionElectronica[index].pais
     this.departamento = this.datosFacturacionElectronica[index].departamento
@@ -784,19 +889,15 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     );
   }
   editarDatosFacturacion() {
+    if (!this.razon_social || !this.tipo_documento_facturacion || !this.numero_documento_facturacion) {
+      Swal.fire({ title: 'Error', text: 'Razón Social, Tipo de Documento y Documento son obligatorios', icon: 'error', confirmButtonText: 'Ok' });
+      return;
+    }
     const datosFacturacionElec = {
       alias: this.alias_facturacion,
       nombres: this.razon_social,
       tipoDocumento: this.tipo_documento_facturacion,
       documento: this.numero_documento_facturacion,
-      indicativoCel: this.indicativo_celular_facturacion,
-      celular: this.numero_celular_facturacion,
-      correoElectronico: this.correo_electronico_facturacion,
-      direccion: this.direccion_facturacion,
-      pais: this.pais,
-      departamento: this.departamento,
-      ciudad: this.ciudad_municipio,
-      codigoPostal: this.codigo_postal
     }
     this.datosFacturacionElectronica[this.idenxFacturacion] = datosFacturacionElec
     const data = {
@@ -805,56 +906,44 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
       this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
-      this.formulario.controls['datosEntrega'].setValue(res.datosEntregas);
-      this.formulario.controls['notas'].setValue(res.notas)
-      this.formulario.controls['estado'].setValue(res.estado)
+      this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
+      this.formulario.controls['notas'].setValue(res.notas);
+      this.formulario.controls['estado'].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe(r => {
         if (this.notaModalRef) { this.notaModalRef.close(); }
-        Swal.fire({
-          title: 'Editado!',
-          text: 'Editado con éxito',
-          icon: 'success',
-          confirmButtonText: 'Ok'
-        });
-        this.alias_entrega = ""
-        this.nombres_entrega = ""
-        this.indicativo_celular_entrega = ""
-        this.numero_celular_entrega = ""
-        this.otro_numero_entrega = ""
-        this.direccion_entrega = ""
-        this.observaciones = ""
-        this.pais_entrega = ""
-        this.departamento_entrega = ""
-        this.ciudad_municipio_entrega = ""
-        this.codigo_postal_entrega = ""
+        Swal.fire({ title: 'Editado!', text: 'Editado con éxito', icon: 'success', confirmButtonText: 'Ok' });
       });
 
 
     })
   }
   editarDatos(modal, index) {
-    this.idenxEntrega = index
-    this.editandodato = true
-    this.alias_entrega = this.datosEntregas[index].alias
-    this.nombres_entrega = this.datosEntregas[index].nombres
-    this.apellidos_entrega = this.datosEntregas[index].apellidos
-    this.indicativo_celular_entrega = this.datosEntregas[index].indicativoCel
-    this.numero_celular_entrega = this.datosEntregas[index].celular
-    this.indicativo_celular_entrega2 = this.datosEntregas[index].indicativoOtroNumero
-    this.otro_numero_entrega = this.datosEntregas[index].otroNumero
-    this.direccion_entrega = this.datosEntregas[index].direccionEntrega
-    this.observaciones = this.datosEntregas[index].observaciones
-    this.barrio = this.datosEntregas[index].barrio
-    this.nombreUnidad = this.datosEntregas[index].nombreUnidad
-    this.especificacionesInternas = this.datosEntregas[index].especificacionesInternas
-    this.pais_entrega = this.datosEntregas[index].pais
-    this.departamento_entrega = this.datosEntregas[index].departamento
-    this.ciudad_municipio_entrega = this.datosEntregas[index].ciudad
-    this.codigo_postal_entrega = this.datosEntregas[index].codigoPV
-
-    this.identificarDepto1()
-    this.identificarCiu1()
-    this.zona_cobro = this.datosEntregas[index].zonaCobro
+    this.idenxEntrega = index;
+    this.editandodato = true;
+    const d = this.datosEntregas[index];
+    this.alias_entrega = d.alias;
+    this.nombres_entrega = d.nombres;
+    this.apellidos_entrega = d.apellidos;
+    this.indicativo_celular_entrega = d.indicativoCel || '57';
+    this.numero_celular_entrega = d.celular;
+    this.indicativo_celular_entrega2 = d.indicativoOtroNumero || '57';
+    this.otro_numero_entrega = d.otroNumero;
+    this.direccion_entrega = d.direccionEntrega;
+    this.observaciones = d.observaciones;
+    this.barrio = d.barrio;
+    this.nombreUnidad = d.nombreUnidad;
+    this.especificacionesInternas = d.especificacionesInternas;
+    this.pais_entrega = d.pais;
+    this.departamento_entrega = d.departamento;
+    this.ciudad_municipio_entrega = d.ciudad;
+    this.zona_cobro = d.zonaCobro;
+    this.valor_zona_cobro = d.valorZonaCobro;
+    this.codigo_postal_entrega = d.codigoPV;
+    this.latitud = d.latitud || '';
+    this.longitud = d.longitud || '';
+    this.coordenadas = d.coordenadas || '';
+    this.identificarDepto1();
+    this.identificarCiu1();
     this.notaModalRef = this.modalService.open(modal, { size: 'lg' });
     this.notaModalRef.result.then(
       () => { this.limpiarVariables(); },
@@ -862,6 +951,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     );
   }
   editarDatosEntrega() {
+    if (!this.nombres_entrega || !this.numero_celular_entrega || !this.direccion_entrega || !this.ciudad_municipio_entrega) {
+      Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Dirección y Ciudad son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
+      return;
+    }
     const datosEntreg = {
       alias: this.alias_entrega,
       nombres: this.nombres_entrega,
@@ -878,71 +971,83 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       pais: this.pais_entrega,
       departamento: this.departamento_entrega,
       ciudad: this.ciudad_municipio_entrega,
+      zonaCobro: this.zona_cobro,
+      valorZonaCobro: this.valor_zona_cobro,
       codigoPV: this.codigo_postal_entrega,
-
-    }
-    this.datosEntregas[this.idenxEntrega] = datosEntreg
-    const data = {
-      documento: this.documentoBusqueda.nativeElement.value
-    }
+      latitud: this.latitud,
+      longitud: this.longitud,
+      coordenadas: this.coordenadas,
+    };
+    this.datosEntregas[this.idenxEntrega] = datosEntreg;
+    const data = { documento: this.documentoBusqueda.nativeElement.value };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
       this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
       this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
-      this.formulario.controls['notas'].setValue(res.notas)
-      this.formulario.controls['estado'].setValue(res.estado)
+      this.formulario.controls['notas'].setValue(res.notas);
+      this.formulario.controls['estado'].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe(r => {
         if (this.notaModalRef) { this.notaModalRef.close(); }
-        Swal.fire({
-          title: 'Editado!',
-          text: 'Editado con éxito',
-          icon: 'success',
-          confirmButtonText: 'Ok'
-        });
-        this.alias_entrega = ""
-        this.nombres_entrega = ""
-        this.indicativo_celular_entrega = ""
-        this.numero_celular_entrega = ""
-        this.otro_numero_entrega = ""
-        this.direccion_entrega = ""
-        this.observaciones = ""
-        this.pais_entrega = "Colombia"
-        this.departamento_entrega = ""
-        this.ciudad_municipio_entrega = ""
-        this.codigo_postal_entrega = ""
+        Swal.fire({ title: 'Editado!', text: 'Editado con éxito', icon: 'success', confirmButtonText: 'Ok' });
+        this.limpiarVariablesEntrega();
       });
-
-
-    })
+    });
   }
+  limpiarVariablesEntrega() {
+    this.alias_entrega = '';
+    this.nombres_entrega = '';
+    this.apellidos_entrega = '';
+    this.indicativo_celular_entrega = '57';
+    this.indicativo_celular_entrega2 = '57';
+    this.numero_celular_entrega = '';
+    this.otro_numero_entrega = '';
+    this.direccion_entrega = '';
+    this.observaciones = '';
+    this.barrio = '';
+    this.nombreUnidad = '';
+    this.especificacionesInternas = '';
+    this.pais_entrega = 'Colombia';
+    this.departamento_entrega = '';
+    this.ciudad_municipio_entrega = '';
+    this.zona_cobro = '';
+    this.valor_zona_cobro = '';
+    this.codigo_postal_entrega = '';
+    this.latitud = '';
+    this.longitud = '';
+    this.coordenadas = '';
+    this.searchQueryCiudadDane = '';
+    this.municipiosDane = [];
+  }
+
   limpiarVariables() {
-    this.editandodato = false
-    this.alias_entrega = "";
-    this.nombres_entrega = "";
-    this.indicativo_celular_entrega = "";
-    this.numero_celular_entrega = "";
-    this.otro_numero_entrega = "";
-    this.direccion_entrega = "";
-    this.observaciones = "";
-    this.pais_entrega = "Colombia";
-    this.departamento_entrega = "";
-    this.ciudad_municipio_entrega = "";
-    this.codigo_postal_entrega = "";
-    this.facturacionElectronica = false
-    this.alias_facturacion = ""
-    this.razon_social = ""
-    this.tipo_documento_facturacion = ""
-    this.numero_documento_facturacion = ""
-    this.indicativo_celular_facturacion = ""
-    this.numero_celular_facturacion = ""
-    this.correo_electronico_facturacion = ""
-    this.direccion_facturacion = ""
-    this.pais = "Colombia";
-    this.departamento = ""
-    this.ciudad_municipio = ""
-    this.codigo_postal = ""
+    this.editandodato = false;
+    this.limpiarVariablesEntrega();
+    this.facturacionElectronica = false;
+    this.alias_facturacion = '';
+    this.razon_social = '';
+    this.tipo_documento_facturacion = 'CC-NIT';
+    this.numero_documento_facturacion = '';
   }
   private notaModalRef: any;
+
+  nuevoPedido() {
+    const documento = this.documentoBusqueda?.nativeElement?.value || this.formulario?.value?.documento;
+    if (!documento) {
+      Swal.fire({ title: 'Sin cliente', text: 'Primero busca o crea un cliente para crear un pedido', icon: 'warning', confirmButtonText: 'Ok' });
+      return;
+    }
+    this.router.navigate(['/ventas/crear-ventas'], { queryParams: { documento } });
+  }
+
+  abrirModalAgregarEntrega(modal: any) {
+    this.editandodato = false;
+    this.limpiarVariablesEntrega();
+    this.notaModalRef = this.modalService.open(modal, { size: 'lg' });
+    this.notaModalRef.result.then(
+      () => { this.limpiarVariables(); },
+      () => { this.limpiarVariables(); }
+    );
+  }
 
   openLg(notaAclaratoria) {
     this.notaModalRef = this.modalService.open(notaAclaratoria, { size: 'lg' });
@@ -991,6 +1096,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     })
   }
   guardarDatosFacturacionElectronica() {
+    if (!this.razon_social || !this.tipo_documento_facturacion || !this.numero_documento_facturacion) {
+      Swal.fire({ title: 'Error', text: 'Razón Social, Tipo de Documento y Documento son obligatorios', icon: 'error', confirmButtonText: 'Ok' });
+      return;
+    }
 
     this.datosFacturacionElectronica = []
     const datosFacturacionElec = {
@@ -998,23 +1107,14 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       nombres: this.razon_social,
       tipoDocumento: this.tipo_documento_facturacion,
       documento: this.numero_documento_facturacion,
-      indicativoCel: this.indicativo_celular_facturacion,
-      celular: this.numero_celular_facturacion,
-      correoElectronico: this.correo_electronico_facturacion,
-      direccion: this.direccion_facturacion,
-      pais: this.pais,
-      departamento: this.departamento,
-      ciudad: this.ciudad_municipio,
-      codigoPostal: this.codigo_postal
     }
     const data = {
       documento: this.documentoBusqueda.nativeElement.value
     }
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
-      res.datosFacturacionElectronica.map(x => {
+      (res.datosFacturacionElectronica || []).forEach(x => {
         this.datosFacturacionElectronica.push(x)
-
       })
       this.datosFacturacionElectronica.push(datosFacturacionElec)
       this.formulario.controls['datosFacturacionElectronica'].setValue(this.datosFacturacionElectronica);
@@ -1034,21 +1134,16 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         this.razon_social = ""
         this.tipo_documento_facturacion = ""
         this.numero_documento_facturacion = ""
-        this.indicativo_celular_facturacion = ""
-        this.numero_celular_facturacion = ""
-        this.correo_electronico_facturacion = ""
-        this.direccion_facturacion = ""
-        this.pais = ""
-        this.departamento = ""
-        this.ciudad_municipio = ""
-        this.codigo_postal = ""
       });
 
     })
   }
   guardarDatosEntrega() {
-
-    this.datosEntregas = []
+    if (!this.nombres_entrega || !this.numero_celular_entrega || !this.direccion_entrega || !this.ciudad_municipio_entrega) {
+      Swal.fire({ title: 'Campos obligatorios', text: 'Nombres, Celular, Dirección y Ciudad son requeridos', icon: 'warning', confirmButtonText: 'Ok' });
+      return;
+    }
+    this.datosEntregas = [];
     const datosEntreg = {
       alias: this.alias_entrega,
       nombres: this.nombres_entrega,
@@ -1065,45 +1160,28 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       pais: this.pais_entrega,
       departamento: this.departamento_entrega,
       ciudad: this.ciudad_municipio_entrega,
+      zonaCobro: this.zona_cobro,
+      valorZonaCobro: this.valor_zona_cobro,
       codigoPV: this.codigo_postal_entrega,
-
-    }
-    const data = {
-      documento: this.documentoBusqueda.nativeElement.value
-    }
+      latitud: this.latitud,
+      longitud: this.longitud,
+      coordenadas: this.coordenadas,
+    };
+    const data = { documento: this.documentoBusqueda.nativeElement.value };
 
     this.service.getClientByDocument(data).subscribe((res: any) => {
-      res.datosEntrega.map(x => {
-        this.datosEntregas.push(x)
-
-      })
-      this.datosEntregas.push(datosEntreg)
+      (res.datosEntrega || []).forEach((x: any) => { this.datosEntregas.push(x); });
+      this.datosEntregas.push(datosEntreg);
       this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
       this.formulario.controls['datosEntrega'].setValue(this.datosEntregas);
-      this.formulario.controls['notas'].setValue(res.notas)
-      this.formulario.controls['estado'].setValue(res.estado)
+      this.formulario.controls['notas'].setValue(res.notas);
+      this.formulario.controls['estado'].setValue(res.estado);
       this.service.editClient(this.formulario.value).subscribe(r => {
         if (this.notaModalRef) { this.notaModalRef.close(); }
-        Swal.fire({
-          title: 'Guardado!',
-          text: 'Guardado con éxito',
-          icon: 'success',
-          confirmButtonText: 'Ok'
-        });
-        this.alias_entrega = ""
-        this.nombres_entrega = ""
-        this.indicativo_celular_entrega = ""
-        this.numero_celular_entrega = ""
-        this.otro_numero_entrega = ""
-        this.direccion_entrega = ""
-        this.observaciones = ""
-        this.pais_entrega = "Colombia"
-        this.departamento_entrega = ""
-        this.ciudad_municipio_entrega = ""
-        this.codigo_postal_entrega = ""
+        Swal.fire({ title: 'Guardado!', text: 'Guardado con éxito', icon: 'success', confirmButtonText: 'Ok' });
+        this.limpiarVariablesEntrega();
       });
-
-    })
+    });
   }
   desbloquear() {
 
