@@ -339,7 +339,7 @@
   margin-bottom: $clientes-spacing-lg;
 
   .nav-link {
-    color: $clientes-grey;
+    color: #8b5cf6;
     font-weight: 700;
     font-size: 0.75rem;
     text-transform: uppercase;
@@ -353,14 +353,14 @@
     margin-bottom: -2px;
 
     &:hover:not(.active) {
-      color: $clientes-dark-light;
+      color: #7c3aed;
       background: $clientes-bg-light;
     }
 
     &.active {
-      color: #5b21b6;
+      color: #8b5cf6;
       background: $clientes-white;
-      border-bottom: 3px solid #5b21b6;
+      border-bottom: 3px solid #8b5cf6;
 
       &:after {
         content: '';
@@ -369,7 +369,7 @@
         left: 0;
         right: 0;
         height: 3px;
-        background: $clientes-primary;
+        background: #8b5cf6;
         border-radius: $clientes-border-radius-pill $clientes-border-radius-pill 0 0;
       }
     }
@@ -753,7 +753,7 @@ input[type="checkbox"] {
       margin: 0;
       font-size: 0.85rem;
       font-weight: 700;
-      color: #5b21b6;
+      color: #8b5cf6;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -1139,7 +1139,7 @@ input[type="checkbox"] {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #5b21b6;
+  color: #8b5cf6;
 }
 
 // ==============================================
