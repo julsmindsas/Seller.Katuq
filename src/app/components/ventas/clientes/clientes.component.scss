@@ -340,8 +340,10 @@
 
   .nav-link {
     color: $clientes-grey;
-    font-weight: $clientes-font-weight-medium;
-    font-size: $clientes-font-size-base;
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
     padding: $clientes-spacing-sm $clientes-spacing-md;
     border: none;
     border-radius: 0;
@@ -356,9 +358,9 @@
     }
 
     &.active {
-      color: $clientes-primary;
+      color: #5b21b6;
       background: $clientes-white;
-      border-bottom: 3px solid $clientes-primary;
+      border-bottom: 3px solid #5b21b6;
 
       &:after {
         content: '';
@@ -938,6 +940,269 @@ input[type="checkbox"] {
     &:disabled {
       background-color: #f0f0f0;
       color: #6c757d;
+    }
+  }
+}
+
+
+// ==============================================
+// BOTONES DE ACCIÓN DENTRO DE TABLA (info cliente)
+// ==============================================
+.btn-tbl-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+
+  &.btn-tbl-neutral {
+    background: #f3f4f6;
+    color: #495057;
+    &:hover { background: #e9ecef; color: #2F2F3B; }
+  }
+  &.btn-tbl-primary {
+    background: #8b5cf6;
+    color: #fff;
+    &:hover { background: #7c3aed; }
+  }
+  &.btn-tbl-danger {
+    background: #fee2e2;
+    color: #dc2626;
+    &:hover { background: #dc2626; color: #fff; }
+  }
+  &.btn-tbl-success {
+    background: #d1fae5;
+    color: #059669;
+    &:hover { background: #059669; color: #fff; }
+  }
+}
+
+// ==============================================
+// CUSTOMER ACTION BUTTONS
+// ==============================================
+.btn-client-action {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+
+  i { font-size: 0.8rem; }
+
+  &.btn-client-primary {
+    background: #8b5cf6;
+    color: #fff;
+    &:hover { background: #7c3aed; }
+  }
+
+  &.btn-client-neutral {
+    background: #fff;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    &:hover { background: #f8f9fa; border-color: #8b5cf6; color: #8b5cf6; }
+  }
+
+  &.btn-client-danger {
+    background: #fff3f4;
+    color: #d12b38;
+    border: 1px solid #f5c2c7;
+    &:hover { background: #d12b38; color: #fff; border-color: #d12b38; }
+  }
+
+  &.btn-client-success {
+    background: #f0fdf4;
+    color: #27AE60;
+    border: 1px solid #bbf7d0;
+    &:hover { background: #27AE60; color: #fff; border-color: #27AE60; }
+  }
+}
+
+// ==============================================
+// TABLAS DE DATOS DEL CLIENTE
+// ==============================================
+.table-data {
+  font-size: 0.8375rem;
+  margin-bottom: 0;
+
+  thead tr {
+    background: #f4f3ff;
+
+    th {
+      font-weight: 700;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #5b21b6;
+      padding: 0.6rem 0.875rem;
+      border-bottom: 2px solid #ddd6fe;
+      white-space: nowrap;
+      border-top: none;
+    }
+  }
+
+  tbody td {
+    padding: 0.6rem 0.875rem;
+    vertical-align: middle;
+    border-color: #f0f0f5;
+    color: #374151;
+  }
+
+  tbody tr:hover td {
+    background: #faf8ff;
+  }
+
+  .col-fecha { width: 140px; }
+  .col-acciones { width: 100px; text-align: center; }
+}
+
+// ==============================================
+// TABLE ACTION BUTTONS
+// ==============================================
+.table-actions {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: center;
+}
+
+.btn-tbl-edit,
+.btn-tbl-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s ease;
+}
+
+.btn-tbl-edit {
+  background: #ede9fe;
+  color: #7c3aed;
+  &:hover { background: #7c3aed; color: #fff; }
+}
+
+.btn-tbl-delete {
+  background: #fee2e2;
+  color: #dc2626;
+  &:hover { background: #dc2626; color: #fff; }
+}
+
+// ==============================================
+// BADGE ALIAS Y CÓDIGO DE DOCUMENTO
+// ==============================================
+.badge-alias {
+  display: inline-block;
+  background: #ede9fe;
+  color: #5b21b6;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.doc-code {
+  background: #f3f4f6;
+  color: #374151;
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+}
+
+// ==============================================
+// TÍTULOS DE SECCIÓN EN PESTAÑAS
+// ==============================================
+.tab-section-title {
+  margin: 0;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #5b21b6;
+}
+
+// ==============================================
+// EMPTY STATE EN TABLAS
+// ==============================================
+.empty-state {
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.825rem;
+  padding: 1.5rem !important;
+  font-style: italic;
+}
+
+// ==============================================
+// TOGGLE DE VISIBILIDAD DE COLUMNAS
+// ==============================================
+.btn-col-toggle {
+  display: inline-flex;
+  align-items: center;
+  height: 31px;
+  padding: 0 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #5b21b6;
+  background: #ede9fe;
+  border: 1px solid #ddd6fe;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #ddd6fe;
+    border-color: #c4b5fd;
+  }
+
+  // quitar la flecha nativa del ngbDropdownToggle
+  &::after { display: none; }
+
+  i { font-size: 0.75rem; }
+}
+
+::ng-deep .col-toggle-menu {
+  min-width: 200px;
+  padding: 0.5rem 0;
+  border: 1px solid #ede9fe;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.12);
+
+  .col-toggle-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.9rem;
+    cursor: pointer;
+    font-size: 0.82rem;
+    color: #374151;
+    transition: background 0.12s ease;
+    user-select: none;
+
+    &:hover {
+      background: #f5f3ff;
+    }
+
+    .col-toggle-check {
+      width: 15px;
+      height: 15px;
+      accent-color: #7c3aed;
+      cursor: pointer;
+      flex-shrink: 0;
+      pointer-events: none;
     }
   }
 }

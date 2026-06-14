@@ -19,8 +19,9 @@ $border-radius: 8px;
     transition: all 0.3s ease;
 
     h5 {
-        font-size: 1.3rem;
-        color: #495057;
+        font-size: 1.1rem !important;
+        font-weight: 800 !important;
+        color: #8b5cf6 !important;
 
         i {
             font-size: 1.1rem;
@@ -302,32 +303,34 @@ $border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1px solid #dee2e6;
-    background-color: #fff;
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid #ddd6fe;
+    background-color: #ede9fe;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 
     &:hover {
-        background-color: #f8f9fa;
-        border-color: #2196F3;
+        background-color: #7c3aed;
+        border-color: #7c3aed;
         transform: scale(1.05);
+
+        .pi { color: #fff; }
     }
 
     .pi {
-        font-size: 0.875rem;
-        color: #495057;
+        font-size: 0.8rem;
+        color: #7c3aed;
     }
 }
 
 .list-actions {
     position: fixed;
-    width: 200px;
+    width: 190px;
     background-color: #fff;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-radius: 6px;
+    box-shadow: 0 4px 16px rgba(139, 92, 246, 0.12);
+    border-radius: 8px;
     margin: 0;
     padding: 0.25rem 0;
     list-style: none;
@@ -336,7 +339,7 @@ $border-radius: 8px;
     visibility: hidden;
     transform: scale(0.95);
     transition: all 0.15s ease;
-    border: 1px solid #e9ecef;
+    border: 1px solid #ede9fe;
 
     &.show {
         opacity: 1;
@@ -345,46 +348,39 @@ $border-radius: 8px;
     }
 
     li {
-        padding: 0.6rem 1rem;
+        padding: 0.5rem 0.9rem;
         cursor: pointer;
-        font-size: 0.875rem;
+        font-size: 0.82rem;
         display: flex;
         align-items: center;
-        transition: all 0.15s;
-        color: #495057;
+        transition: all 0.12s;
+        color: #374151;
 
         &:hover {
-            background-color: #f8f9fa;
-            color: #2196F3;
+            background-color: #f5f3ff;
+            color: #5b21b6;
 
-            i {
-                color: #2196F3;
-            }
+            i { color: #5b21b6; }
         }
 
         i {
-            margin-right: 0.75rem;
-            font-size: 0.9rem;
+            margin-right: 0.65rem;
+            font-size: 0.85rem;
             width: 1rem;
             text-align: center;
-            transition: color 0.15s;
+            color: #7c3aed;
+            transition: color 0.12s;
         }
 
-        span {
-            font-weight: 500;
-        }
+        span { font-weight: 500; }
 
         &.separator {
             height: 1px;
-            background-color: #e9ecef;
+            background-color: #ede9fe;
             margin: 0.25rem 0;
             padding: 0;
             cursor: default;
-
-            &:hover {
-                background-color: #e9ecef;
-                color: inherit;
-            }
+            &:hover { background-color: #ede9fe; color: inherit; }
         }
     }
 }
@@ -661,30 +657,30 @@ $border-radius: 8px;
 
     // Table Header (Column Headers)
     .p-datatable-thead > tr > th {
-      background: $clientes-table-header-bg;
-      color: $clientes-grey;
-      font-weight: $clientes-font-weight-semibold;
+      background: #f4f3ff;
+      color: #5b21b6;
+      font-weight: 700;
       text-transform: uppercase;
-      font-size: $clientes-font-size-small;
+      font-size: 0.75rem;
       letter-spacing: 0.5px;
       padding: $clientes-spacing-md;
       border: none;
-      border-bottom: 2px solid $clientes-border-light;
+      border-bottom: 2px solid #ddd6fe;
       transition: $clientes-transition-fast;
 
       &:hover {
-        background: $clientes-border-light;
+        background: #ede9fe;
       }
 
       // Sort Icon
       .p-sortable-column-icon {
-        color: $clientes-grey-light;
+        color: #a78bfa;
         margin-left: $clientes-spacing-xs;
         font-size: 0.75rem;
       }
 
       &.p-highlight {
-        background: $clientes-primary;
+        background: #8b5cf6;
         color: $clientes-white;
 
         .p-sortable-column-icon {
@@ -719,24 +715,21 @@ $border-radius: 8px;
         }
 
         &:hover {
-          background: $clientes-table-row-hover;
+          background: #faf8ff;
         }
 
         &.p-highlight {
-          background: rgba($clientes-primary, 0.1);
+          background: rgba(#8b5cf6, 0.08);
           color: $clientes-dark;
         }
 
         > td {
-          padding: $clientes-spacing-md;
+          padding: 0.6rem $clientes-spacing-md;
           border: none;
-          border-bottom: 1px solid $clientes-border-light;
-          color: $clientes-dark-light;
+          border-bottom: 1px solid #f0f0f5;
+          color: #374151;
           vertical-align: middle;
-
-          &:first-child {
-            font-weight: $clientes-font-weight-medium;
-          }
+          font-size: 0.8375rem;
         }
       }
     }

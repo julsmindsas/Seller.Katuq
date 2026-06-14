@@ -39,12 +39,12 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     globalFilterValue: string = '';
 
     // Filtros rápidos por estado
-    selectedEstadoFilter: 'todos' | 'activo' | 'inactivo' = 'todos';
+    selectedEstadoFilter: 'todos' | 'activo' | 'bloqueado' = 'todos';
 
     // Opciones para dropdown de estado
     estadoOptions = [
         { label: 'Activo', value: 'activo' },
-        { label: 'Inactivo', value: 'inactivo' }
+        { label: 'Bloqueado', value: 'bloqueado' }
     ];
 
     // Import modal
@@ -60,18 +60,16 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         private messageService: MessageService,
         private http: HttpClient
     ) {
-        // Intentar cargar filtros guardados
-        const savedFilters = this.loadSavedFilters();
+        this.formFiltros = this.fb.group({
+            cliente: [''],
+            documento: [''],
+            email: [''],
+            estado: [null]
+        });
 
+        const savedFilters = this.loadSavedFilters();
         if (savedFilters) {
-            this.formFiltros = this.fb.group(savedFilters);
-        } else {
-            this.formFiltros = this.fb.group({
-                cliente: [''],
-                documento: [''],
-                email: [''],
-                estado: [null]
-            });
+            this.formFiltros.patchValue(savedFilters);
         }
     }
 
@@ -100,7 +98,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     // Filtros rápidos por estado
-    applyEstadoFilter(estado: 'todos' | 'activo' | 'inactivo'): void {
+    applyEstadoFilter(estado: 'todos' | 'activo' | 'bloqueado'): void {
         this.selectedEstadoFilter = estado;
 
         // Actualizar el valor en el formulario
@@ -123,6 +121,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         this.cargando = true;
         this.clienteService.obtenerClientes().subscribe({
             next: (clientes: any) => {
+                console.log('[clientes/all] total:', clientes?.length);
+                console.log('[clientes/all] primer registro:', clientes?.[0]);
                 this.clientesOriginales = clientes; // Guardar datos originales
                 this.clientes = clientes;
                 this.totalRecords = clientes.length;
@@ -247,20 +247,20 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         });
     }
 
-    async editarCliente(cliente: any): Promise<void> {
+    editarCliente(cliente: any): void {
         this.selectedCliente = null;
-        try {
-            await this.storeService.set('cliente', cliente);
-            await this.storeService.set('isEdit', true);
-            this.router.navigate(['/ventas/clientes']);
-        } catch (error) {
-            console.error('Error al guardar datos en IndexedDB:', error);
-            this.messageService.add({
-                severity: 'error',
-                summary: 'Error',
-                detail: 'Error al editar el cliente'
-            });
-        }
+        const modalRef = this.modalService.open(CrearClienteModalComponent, {
+            size: 'lg',
+            centered: true
+        });
+        modalRef.componentInstance.isEdit = true;
+        modalRef.componentInstance.clienteData = cliente;
+
+        modalRef.result.then((result) => {
+            if (result?.action === 'updated' || result?.action === 'created') {
+                this.cargarClientes();
+            }
+        }).catch(() => {});
     }
 
     verDetalles(cliente: any): void {
@@ -351,7 +351,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     getEstadoClass(estado: string): string {
         if (estado === 'activo') {
             return 'badge-success';
-        } else if (estado === 'inactivo') {
+        } else if (estado === 'bloqueado') {
             return 'badge-danger';
         } else {
             return 'badge-secondary';

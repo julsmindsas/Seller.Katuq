@@ -101,6 +101,49 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   valor_zona_cobro: any;
   resultadosBusqueda: any[] = [];
 
+  // Visibilidad de columnas por tabla
+  colsCliente = [
+    { key: 'cliente',   label: 'Cliente',     visible: true },
+    { key: 'tipoDoc',   label: 'Tipo Doc.',   visible: true },
+    { key: 'documento', label: 'Documento',   visible: true },
+    { key: 'correo',    label: 'Correo',      visible: true },
+    { key: 'acciones',  label: 'Acciones',    visible: true },
+  ];
+
+  colsNotas = [
+    { key: 'fecha',  label: 'Fecha', visible: true },
+    { key: 'nota',   label: 'Nota',  visible: true },
+  ];
+
+  colsFact = [
+    { key: 'referencia',     label: 'Referencia',           visible: true },
+    { key: 'nombre',         label: 'Nombre / Razón Social', visible: true },
+    { key: 'tipoDocumento',  label: 'Tipo Documento',        visible: true },
+    { key: 'documento',      label: 'Documento',             visible: true },
+    { key: 'acciones',       label: 'Acciones',              visible: true },
+  ];
+
+  colsEntrega = [
+    { key: 'referencia', label: 'Referencia', visible: true },
+    { key: 'nombre',     label: 'Nombre',     visible: true },
+    { key: 'direccion',  label: 'Dirección',  visible: true },
+    { key: 'acciones',   label: 'Acciones',   visible: true },
+  ];
+
+  toggleCol(cols: { key: string; label: string; visible: boolean }[], key: string): void {
+    const col = cols.find(c => c.key === key);
+    if (col) col.visible = !col.visible;
+  }
+
+  colVisible(cols: { key: string; label: string; visible: boolean }[], key: string): boolean {
+    const col = cols.find(c => c.key === key);
+    return col ? col.visible : true;
+  }
+
+  visibleCount(cols: { key: string; label: string; visible: boolean }[]): number {
+    return cols.filter(c => c.visible).length;
+  }
+
 
   constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef, private daneCodesService: DaneCodesService) {
     this.daneCodesService.getDepartamentos().subscribe(deptos => {
@@ -393,8 +436,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           this.encontrado = true;
 
           if (this.formulario.value.estado == 'bloqueado') {
-            this.bloqueado = true;
-          }
+          this.bloqueado = true
+        } else {
+          this.bloqueado = false
+        }
 
           console.log('✅ Cliente cargado exitosamente en modo edición');
         } catch (error) {
@@ -478,8 +523,10 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           this.identificarCiu1()
           this.encontrado = true
           if (this.formulario.value.estado == 'bloqueado') {
-            this.bloqueado = true
-          }
+          this.bloqueado = true
+        } else {
+          this.bloqueado = false
+        }
           Swal.fire({
             title: 'Consultado!',
             text: 'Consultado con éxito',
@@ -783,9 +830,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             this.identificarCiu1();
             this.encontrado = true;
 
-            if (res.estado == 'bloqueado') {
-              this.bloqueado = true;
-            }
+            this.bloqueado = res.estado === 'inactivo';
           });
         } else {
           // Cliente no existe - proceder con la creación
@@ -836,7 +881,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
 
     this.formulario.controls['estado'].setValue('bloqueado')
     this.service.editClient(this.formulario.value).subscribe(r => {
-      console.log(r)
       Swal.fire({
         title: 'Usuario Bloqueado!',
         text: 'Usuario bloqueado con exito',
@@ -860,8 +904,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         if (this.formulario.value.estado == 'bloqueado') {
           this.bloqueado = true
         } else {
-          this.bloqueado = false;
-
+          this.bloqueado = false
         }
       })
     });
@@ -1365,8 +1408,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
         if (this.formulario.value.estado == 'bloqueado') {
           this.bloqueado = true
         } else {
-          this.bloqueado = false;
-
+          this.bloqueado = false
         }
       })
     });

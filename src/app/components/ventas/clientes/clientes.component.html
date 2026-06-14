@@ -94,7 +94,7 @@
 
         <!-- Formulario principal -->
         <div class="card-body form-container">
-            <form [formGroup]="formulario">
+            <form *ngIf="formulario" [formGroup]="formulario">
                 <div class="row g-4">
                     <!-- Sección de información básica -->
                     <div class="col-lg-6">
@@ -311,47 +311,63 @@
                 </span>
             </div>
         </div>
-        <div class="card-body">
-            <div class="customer-info">
-                <div class="row">
-                    <div class="col-md-3">
-                        <h6>Cliente</h6>
-                        <p>{{datos.nombres_completos}}</p>
-                    </div>
-                    <div class="col-md-2">
-                        <h6>Tipo Documento</h6>
-                        <p>{{datos.tipo_documento_comprador}}</p>
-                    </div>
-                    <div class="col-md-2">
-                        <h6>Documento</h6>
-                        <p>{{datos.documento}}</p>
-                    </div>
-                    <div class="col-md-3">
-                        <h6>Correo Electrónico</h6>
-                        <p>{{datos.correo_electronico_comprador}}</p>
-                    </div>
-                    <div class="col-md-2">
-                        <h6>Acciones</h6>
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-outline-primary" ngbTooltip="Pedidos Relacionados">
-                                <i class="fa fa-list-alt"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-primary" ngbTooltip="Nuevo Pedido" (click)="nuevoPedido()">
-                                <i class="fa fa-plus-square"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-primary" ngbTooltip="Notas" (click)="openLg(nota)">
-                                <i class="fa fa-sticky-note"></i>
-                            </button>
-                            <button *ngIf="!bloqueado" class="btn btn-sm btn-outline-danger" ngbTooltip="Bloquear"
-                                (click)="bloquear()">
-                                <i class="fa fa-lock"></i>
-                            </button>
-                            <button *ngIf="bloqueado" class="btn btn-sm btn-outline-success" ngbTooltip="Desbloquear"
-                                (click)="desbloquear()">
-                                <i class="fa fa-unlock"></i>
-                            </button>
+        <div class="card-body p-0">
+            <!-- Tabla de información del cliente -->
+            <div class="p-3">
+                <div class="d-flex justify-content-end align-items-center mb-2">
+                    <div ngbDropdown autoClose="outside">
+                        <button ngbDropdownToggle class="btn-col-toggle" type="button">
+                            <i class="pi pi-eye me-1"></i>Columnas
+                        </button>
+                        <div ngbDropdownMenu class="col-toggle-menu">
+                            <div *ngFor="let col of colsCliente"
+                                 class="col-toggle-item"
+                                 (click)="toggleCol(colsCliente, col.key); $event.stopPropagation()">
+                                <input type="checkbox" [checked]="col.visible" class="col-toggle-check" readonly>
+                                <span>{{ col.label }}</span>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-data mb-0">
+                        <thead>
+                            <tr>
+                                <th *ngIf="colVisible(colsCliente, 'cliente')">Cliente</th>
+                                <th *ngIf="colVisible(colsCliente, 'tipoDoc')">Tipo Doc.</th>
+                                <th *ngIf="colVisible(colsCliente, 'documento')">Documento</th>
+                                <th *ngIf="colVisible(colsCliente, 'correo')">Correo</th>
+                                <th *ngIf="colVisible(colsCliente, 'acciones')" class="col-acciones">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td *ngIf="colVisible(colsCliente, 'cliente')">{{datos.nombres_completos}}</td>
+                                <td *ngIf="colVisible(colsCliente, 'tipoDoc')">{{datos.tipo_documento_comprador}}</td>
+                                <td *ngIf="colVisible(colsCliente, 'documento')">{{datos.documento}}</td>
+                                <td *ngIf="colVisible(colsCliente, 'correo')">{{datos.correo_electronico_comprador}}</td>
+                                <td *ngIf="colVisible(colsCliente, 'acciones')" class="col-acciones">
+                                    <div class="table-actions">
+                                        <button class="btn-tbl-action btn-tbl-neutral" ngbTooltip="Pedidos relacionados">
+                                            <i class="fa fa-list-alt"></i>
+                                        </button>
+                                        <button class="btn-tbl-action btn-tbl-primary" ngbTooltip="Nuevo Pedido" (click)="nuevoPedido()">
+                                            <i class="fa fa-plus"></i>
+                                        </button>
+                                        <button class="btn-tbl-action btn-tbl-neutral" ngbTooltip="Agregar Nota" (click)="openLg(nota)">
+                                            <i class="fa fa-sticky-note"></i>
+                                        </button>
+                                        <button *ngIf="!bloqueado" class="btn-tbl-action btn-tbl-danger" ngbTooltip="Bloquear" (click)="bloquear()">
+                                            <i class="fa fa-lock"></i>
+                                        </button>
+                                        <button *ngIf="bloqueado" class="btn-tbl-action btn-tbl-success" ngbTooltip="Desbloquear" (click)="desbloquear()">
+                                            <i class="fa fa-unlock"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -375,26 +391,43 @@
                     <!-- Notas -->
                     <div *ngIf="activarNotas">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5><strong>Notas del Cliente</strong></h5>
-                            <button class="btn btn-sm btn-primary" (click)="openLg(nota)">
-                                <i class="fa fa-plus me-1"></i>Agregar Nota
-                            </button>
+                            <h6 class="tab-section-title">Notas del Cliente</h6>
+                            <div class="d-flex gap-2">
+                                <div ngbDropdown autoClose="outside">
+                                    <button ngbDropdownToggle class="btn-col-toggle" type="button">
+                                        <i class="pi pi-eye me-1"></i>Columnas
+                                    </button>
+                                    <div ngbDropdownMenu class="col-toggle-menu">
+                                        <div *ngFor="let col of colsNotas"
+                                             class="col-toggle-item"
+                                             (click)="toggleCol(colsNotas, col.key); $event.stopPropagation()">
+                                            <input type="checkbox" [checked]="col.visible" class="col-toggle-check" readonly>
+                                            <span>{{ col.label }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-primary" (click)="openLg(nota)">
+                                    <i class="fa fa-plus me-1"></i>Agregar Nota
+                                </button>
+                            </div>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
+                            <table class="table table-hover table-data">
+                                <thead>
                                     <tr>
-                                        <th>Fecha</th>
-                                        <th>Nota</th>
+                                        <th *ngIf="colVisible(colsNotas, 'fecha')" class="col-fecha">Fecha</th>
+                                        <th *ngIf="colVisible(colsNotas, 'nota')">Nota</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr *ngFor="let item of notas">
-                                        <td style="width: 150px;">{{item.fecha}}</td>
-                                        <td>{{item.nota}}</td>
+                                        <td *ngIf="colVisible(colsNotas, 'fecha')" class="col-fecha text-muted small">{{item.fecha}}</td>
+                                        <td *ngIf="colVisible(colsNotas, 'nota')">{{item.nota}}</td>
                                     </tr>
                                     <tr *ngIf="!notas || notas.length === 0">
-                                        <td colspan="2" class="text-center text-muted">No hay notas registradas</td>
+                                        <td [attr.colspan]="visibleCount(colsNotas)" class="empty-state">
+                                            <i class="fa fa-sticky-note me-2"></i>No hay notas registradas
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -404,42 +437,59 @@
                     <!-- Facturación -->
                     <div *ngIf="activarDatosFact">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5><strong>Datos de Facturación</strong></h5>
-                            <button class="btn btn-sm btn-primary" (click)="openLg(facturacion)">
-                                <i class="fa fa-plus me-1"></i>Agregar Datos
-                            </button>
+                            <h6 class="tab-section-title">Datos de Facturación</h6>
+                            <div class="d-flex gap-2">
+                                <div ngbDropdown autoClose="outside">
+                                    <button ngbDropdownToggle class="btn-col-toggle" type="button">
+                                        <i class="pi pi-eye me-1"></i>Columnas
+                                    </button>
+                                    <div ngbDropdownMenu class="col-toggle-menu">
+                                        <div *ngFor="let col of colsFact"
+                                             class="col-toggle-item"
+                                             (click)="toggleCol(colsFact, col.key); $event.stopPropagation()">
+                                            <input type="checkbox" [checked]="col.visible" class="col-toggle-check" readonly>
+                                            <span>{{ col.label }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-primary" (click)="openLg(facturacion)">
+                                    <i class="fa fa-plus me-1"></i>Agregar Datos
+                                </button>
+                            </div>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
+                            <table class="table table-hover table-data">
+                                <thead>
                                     <tr>
-                                        <th>Referencia</th>
-                                        <th>Nombre/Razón Social</th>
-                                        <th>Tipo Documento</th>
-                                        <th>Documento</th>
-                                        <th>Acciones</th>
+                                        <th *ngIf="colVisible(colsFact, 'referencia')">Referencia</th>
+                                        <th *ngIf="colVisible(colsFact, 'nombre')">Nombre / Razón Social</th>
+                                        <th *ngIf="colVisible(colsFact, 'tipoDocumento')">Tipo Documento</th>
+                                        <th *ngIf="colVisible(colsFact, 'documento')">Documento</th>
+                                        <th *ngIf="colVisible(colsFact, 'acciones')" class="col-acciones">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr *ngFor="let item of datosFacturacionElectronica; let i = index">
-                                        <td>{{item.alias}}</td>
-                                        <td>{{item.nombres}}</td>
-                                        <td>{{item.tipoDocumento}}</td>
-                                        <td>{{item.documento}}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1"
-                                                (click)="editarDatos1(facturacion,i)">
-                                                <i class="fa fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" (click)="eliminarDato(i)">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
+                                        <td *ngIf="colVisible(colsFact, 'referencia')">{{item.alias}}</td>
+                                        <td *ngIf="colVisible(colsFact, 'nombre')">{{item.nombres}}</td>
+                                        <td *ngIf="colVisible(colsFact, 'tipoDocumento')">{{item.tipoDocumento}}</td>
+                                        <td *ngIf="colVisible(colsFact, 'documento')">{{item.documento}}</td>
+                                        <td *ngIf="colVisible(colsFact, 'acciones')" class="col-acciones">
+                                            <div class="table-actions">
+                                                <button class="btn-tbl-edit" ngbTooltip="Editar"
+                                                    (click)="editarDatos1(facturacion,i)">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <button class="btn-tbl-delete" ngbTooltip="Eliminar" (click)="eliminarDato(i)">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
-                                    <tr
-                                        *ngIf="!datosFacturacionElectronica || datosFacturacionElectronica.length === 0">
-                                        <td colspan="6" class="text-center text-muted">No hay datos de facturación
-                                            registrados</td>
+                                    <tr *ngIf="!datosFacturacionElectronica || datosFacturacionElectronica.length === 0">
+                                        <td [attr.colspan]="visibleCount(colsFact)" class="empty-state">
+                                            <i class="fa fa-file-text me-2"></i>No hay datos de facturación registrados
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -449,39 +499,57 @@
                     <!-- Entrega -->
                     <div *ngIf="activarDatosEntrega">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5><strong>Datos de Entrega</strong></h5>
-                            <button class="btn btn-sm btn-primary" (click)="abrirModalAgregarEntrega(entrega)">
-                                <i class="fa fa-plus me-1"></i>Agregar Datos
-                            </button>
+                            <h6 class="tab-section-title">Datos de Entrega</h6>
+                            <div class="d-flex gap-2">
+                                <div ngbDropdown autoClose="outside">
+                                    <button ngbDropdownToggle class="btn-col-toggle" type="button">
+                                        <i class="pi pi-eye me-1"></i>Columnas
+                                    </button>
+                                    <div ngbDropdownMenu class="col-toggle-menu">
+                                        <div *ngFor="let col of colsEntrega"
+                                             class="col-toggle-item"
+                                             (click)="toggleCol(colsEntrega, col.key); $event.stopPropagation()">
+                                            <input type="checkbox" [checked]="col.visible" class="col-toggle-check" readonly>
+                                            <span>{{ col.label }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-primary" (click)="abrirModalAgregarEntrega(entrega)">
+                                    <i class="fa fa-plus me-1"></i>Agregar Datos
+                                </button>
+                            </div>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead class="table-light">
+                            <table class="table table-hover table-data">
+                                <thead>
                                     <tr>
-                                        <th>Referencia</th>
-                                        <th>Nombre</th>
-                                        <th>Dirección</th>
-                                        <th>Acciones</th>
+                                        <th *ngIf="colVisible(colsEntrega, 'referencia')">Referencia</th>
+                                        <th *ngIf="colVisible(colsEntrega, 'nombre')">Nombre</th>
+                                        <th *ngIf="colVisible(colsEntrega, 'direccion')">Dirección</th>
+                                        <th *ngIf="colVisible(colsEntrega, 'acciones')" class="col-acciones">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr *ngFor="let item of datosEntregas;let i=index">
-                                        <td>{{item.alias}}</td>
-                                        <td>{{item.nombres}} {{item.apellidos}}</td>
-                                        <td>{{item.direccionEntrega}}</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline-primary me-1"
-                                                (click)="editarDatos(entrega,i)">
-                                                <i class="fa fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline-danger" (click)="eliminarDato1(i)">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
+                                        <td *ngIf="colVisible(colsEntrega, 'referencia')">{{item.alias}}</td>
+                                        <td *ngIf="colVisible(colsEntrega, 'nombre')">{{item.nombres}} {{item.apellidos}}</td>
+                                        <td *ngIf="colVisible(colsEntrega, 'direccion')"><i class="fa fa-map-marker me-1 text-muted"></i>{{item.direccionEntrega}}</td>
+                                        <td *ngIf="colVisible(colsEntrega, 'acciones')" class="col-acciones">
+                                            <div class="table-actions">
+                                                <button class="btn-tbl-edit" ngbTooltip="Editar"
+                                                    (click)="editarDatos(entrega,i)">
+                                                    <i class="fa fa-pencil"></i>
+                                                </button>
+                                                <button class="btn-tbl-delete" ngbTooltip="Eliminar" (click)="eliminarDato1(i)">
+                                                    <i class="fa fa-trash"></i>
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr *ngIf="!datosEntregas || datosEntregas.length === 0">
-                                        <td colspan="4" class="text-center text-muted">No hay datos de entrega
-                                            registrados</td>
+                                        <td [attr.colspan]="visibleCount(colsEntrega)" class="empty-state">
+                                            <i class="fa fa-map-marker me-2"></i>No hay datos de entrega registrados
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
