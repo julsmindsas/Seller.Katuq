@@ -1384,3 +1384,76 @@ $border-radius: 8px;
     padding: $clientes-spacing-sm;
   }
 }
+
+// ===================================
+// CONFIG MODAL: Tipos y Etiquetas
+// ===================================
+.config-tabs {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 2px solid #ede9fe;
+    padding-bottom: 0;
+}
+
+.config-tab-btn {
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    padding: 0.45rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover { color: #5b21b6; }
+
+    &.active {
+        color: #5b21b6;
+        border-bottom-color: #8b5cf6;
+        font-weight: 600;
+    }
+}
+
+.config-list {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.25rem 0;
+}
+
+.config-list-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.84rem;
+    transition: background 0.1s;
+
+    &:hover { background: #f9fafb; }
+
+    .btn-link { font-size: 0.85rem; }
+}
+
+.tag-preview {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.color-swatch {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.12s;
+
+    &:hover { transform: scale(1.15); }
+    &.selected { transform: scale(1.2); }
+}

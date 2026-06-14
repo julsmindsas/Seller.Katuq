@@ -736,18 +736,26 @@ input[type="checkbox"] {
     gap: 0.5rem;
     margin-bottom: 1rem;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid #667eea;
+    border-bottom: 1.5px solid #ede9fe;
 
     i {
-      font-size: 1.1rem;
-      color: #667eea;
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: #ede9fe;
+      color: #7c3aed;
+      font-size: 0.75rem;
     }
 
     h6 {
       margin: 0;
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: #333;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #5b21b6;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
   }
 }
@@ -1172,6 +1180,203 @@ input[type="checkbox"] {
   &::after { display: none; }
 
   i { font-size: 0.75rem; }
+}
+
+// ==============================================
+// FICHA 360° DEL CLIENTE
+// ==============================================
+.c360-card {
+  overflow: hidden;
+}
+
+.c360-body {
+  padding: 1.25rem 1.5rem 0;
+  background: #fff;
+}
+
+.c360-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 1.1rem;
+  border-bottom: 1px solid #ede9fe;
+  flex-wrap: wrap;
+}
+
+.c360-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #8b5cf6, #5b21b6);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 1.15rem;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+
+.c360-id {
+  flex: 1;
+  min-width: 200px;
+}
+
+.c360-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e1b2e;
+  margin: 0 0 0.2rem;
+}
+
+.c360-sub {
+  font-size: 0.8rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+
+  i {
+    font-size: 0.72rem;
+    color: #a78bfa;
+  }
+}
+
+.c360-dot {
+  color: #d1d5db;
+  margin: 0 0.15rem;
+}
+
+.c360-chips-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.c360-actions-sep {
+  width: 1px;
+  height: 20px;
+  background: #ede9fe;
+  margin: 0 0.2rem;
+}
+
+.c360-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+
+  i { font-size: 0.7rem; }
+
+  &.chip-ok {
+    background: #e9f8ef;
+    color: #16a34a;
+    border-color: #bfe9cd;
+  }
+
+  &.chip-danger {
+    background: #fdeaea;
+    color: #dc2626;
+    border-color: #f3c6c6;
+  }
+}
+
+.c360-metrics {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: #ede9fe;
+  border-top: 1px solid #ede9fe;
+  margin: 0 -1.5rem;
+  overflow: hidden;
+
+  @media (max-width: 760px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.c360-metric {
+  background: #fff;
+  padding: 0.9rem 1rem;
+
+  &.c360-metric-alert .c360-metric-val {
+    color: #dc2626;
+  }
+}
+
+.c360-metric-val {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #5b21b6;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.c360-metric-key {
+  font-size: 0.72rem;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-top: 0.2rem;
+}
+
+// ==============================================
+// TAGS PICKER (Etiquetas en formulario)
+// ==============================================
+.tags-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 0;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.28rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1.5px solid #d1d5db;
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+
+  &:hover {
+    border-color: #a78bfa;
+    background: #f5f3ff;
+    color: #5b21b6;
+  }
+
+  &.tag-chip-selected {
+    border-color: transparent;
+    font-weight: 600;
+
+    .pi-check {
+      font-size: 0.7rem;
+    }
+  }
+
+  .pi {
+    font-size: 0.72rem;
+  }
+}
+
+.tags-empty-hint {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
 }
 
 ::ng-deep .col-toggle-menu {

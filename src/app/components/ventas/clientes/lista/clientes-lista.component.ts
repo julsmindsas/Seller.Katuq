@@ -14,6 +14,7 @@ import { CrearClienteModalComponent } from '../crear-cliente-modal/crear-cliente
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ImportResult } from '../../../../shared/models/column-mapping.model';
+import { ClientConfigService, ClientTag } from '../services/client-config.service';
 
 @Component({
     selector: 'app-clientes-lista',
@@ -50,6 +51,18 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     // Import modal
     showImportModal: boolean = false;
 
+    // Config modal (tipos y etiquetas)
+    showConfigModal: boolean = false;
+    configTab: 'types' | 'tags' = 'types';
+    // tipos
+    editableTypes: string[] = [];
+    newTypeName: string = '';
+    // etiquetas
+    editableTags: ClientTag[] = [];
+    newTagName: string = '';
+    newTagColor: string = 'violet';
+    availableColors: string[] = [];
+
     constructor(
         private modalService: NgbModal,
         private router: Router,
@@ -58,7 +71,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         private fb: FormBuilder,
         private datePipe: DatePipe,
         private messageService: MessageService,
-        private http: HttpClient
+        private http: HttpClient,
+        private clientConfig: ClientConfigService
     ) {
         this.formFiltros = this.fb.group({
             cliente: [''],
@@ -261,6 +275,77 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
                 this.cargarClientes();
             }
         }).catch(() => {});
+    }
+
+    // ── Config modal ─────────────────────────────────────────────────
+
+    abrirConfigModal(tab: 'types' | 'tags' = 'types'): void {
+        this.configTab = tab;
+        this.editableTypes = [...this.clientConfig.getClientTypes()];
+        this.editableTags = this.clientConfig.getClientTags().map(t => ({ ...t }));
+        this.availableColors = this.clientConfig.getColors();
+        this.newTypeName = '';
+        this.newTagName = '';
+        this.newTagColor = 'violet';
+        this.showConfigModal = true;
+    }
+
+    cerrarConfigModal(): void {
+        this.showConfigModal = false;
+    }
+
+    // Tipos
+    addType(): void {
+        const name = this.newTypeName.trim();
+        if (name && !this.editableTypes.includes(name)) {
+            this.editableTypes.push(name);
+        }
+        this.newTypeName = '';
+    }
+
+    removeType(index: number): void {
+        this.editableTypes.splice(index, 1);
+    }
+
+    // Etiquetas
+    addTag(): void {
+        const name = this.newTagName.trim();
+        if (name && !this.editableTags.find(t => t.name === name)) {
+            this.editableTags.push({ name, color: this.newTagColor });
+        }
+        this.newTagName = '';
+    }
+
+    removeTag(index: number): void {
+        this.editableTags.splice(index, 1);
+    }
+
+    guardarConfig(): void {
+        this.clientConfig.saveClientTypes(this.editableTypes);
+        this.clientConfig.saveClientTags(this.editableTags);
+        this.showConfigModal = false;
+        this.messageService.add({
+            severity: 'success',
+            summary: 'Configuración guardada',
+            detail: 'Los tipos y etiquetas han sido actualizados.',
+            life: 3000
+        });
+    }
+
+    getTagBgColor(color: string): string {
+        const map: Record<string, string> = {
+            violet: '#ede9fe', green: '#d1fae5', blue: '#dbeafe',
+            amber: '#fef3c7', red: '#fee2e2', gray: '#f3f4f6'
+        };
+        return map[color] || '#f3f4f6';
+    }
+
+    getTagFgColor(color: string): string {
+        const map: Record<string, string> = {
+            violet: '#5b21b6', green: '#065f46', blue: '#1e40af',
+            amber: '#92400e', red: '#991b1b', gray: '#374151'
+        };
+        return map[color] || '#374151';
     }
 
     verDetalles(cliente: any): void {

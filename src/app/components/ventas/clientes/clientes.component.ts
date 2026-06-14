@@ -11,6 +11,7 @@ import { CrearClienteModalComponent } from './crear-cliente-modal/crear-cliente-
 import { DireccionEstructuradaComponent } from '../entrega/direccion-estructurada/direccion-estructurada.component';
 import { DaneCodesService } from '../../../shared/services/dane-codes.service';
 import { MunicipioDane } from '../../../shared/data/colombia-dane-codes';
+import { ClientConfigService, ClientTag } from './services/client-config.service';
 @Component({
   selector: 'app-clientes',
   templateUrl: './clientes.component.html',
@@ -101,6 +102,11 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   valor_zona_cobro: any;
   resultadosBusqueda: any[] = [];
 
+  // Tipo de cliente y etiquetas
+  clientTypes: string[] = [];
+  clientTagsCatalog: ClientTag[] = [];
+  etiquetasSeleccionadas: string[] = [];
+
   // Visibilidad de columnas por tabla
   colsCliente = [
     { key: 'cliente',   label: 'Cliente',     visible: true },
@@ -145,7 +151,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
 
-  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef, private daneCodesService: DaneCodesService) {
+  constructor(private router: Router, private dataStore: DataStoreService, private modalService: NgbModal, private inforPaises: InfoPaises, private formBuilder: FormBuilder, private service: MaestroService, private infoIndicativo: InfoIndicativos, private cdr: ChangeDetectorRef, private daneCodesService: DaneCodesService, private clientConfig: ClientConfigService) {
     this.daneCodesService.getDepartamentos().subscribe(deptos => {
       this.departamentosDane = deptos;
     });
@@ -422,6 +428,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           this.formulario.controls['documento'].setValue(res.documento);
           this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
           this.formulario.controls['estado'].setValue(res.estado);
+          this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? [...res.etiquetas] : [];
 
           this.activarNotas = false;
           this.verNotas();
@@ -724,6 +731,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.IndicativoPlaceholder = 'indicativo'
     this.indicativos = this.infoIndicativo.datos
 
+    this.clientTypes = this.clientConfig.getClientTypes();
+    this.clientTagsCatalog = this.clientConfig.getClientTags();
+
     this.formulario = this.formBuilder.group({
       cd: [''],
       nombres_completos: ['', Validators.required],
@@ -735,6 +745,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       indicativo_celular_whatsapp: ['57', Validators.required],
       numero_celular_whatsapp: ['', Validators.required],
       correo_electronico_comprador: ['', [Validators.required, Validators.email]],
+      tipoCliente: [''],
+      etiquetas: [[]],
       datosFacturacionElectronica: [['']],
       datosEntrega: [['']],
       notas: [['']],
@@ -1414,6 +1426,80 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     });
 
 
+  }
+
+  // =============================================
+  // ETIQUETAS
+  // =============================================
+  toggleEtiqueta(nombre: string): void {
+    const idx = this.etiquetasSeleccionadas.indexOf(nombre);
+    if (idx >= 0) {
+      this.etiquetasSeleccionadas.splice(idx, 1);
+    } else {
+      this.etiquetasSeleccionadas.push(nombre);
+    }
+    this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
+  }
+
+  tieneEtiqueta(nombre: string): boolean {
+    return this.etiquetasSeleccionadas.includes(nombre);
+  }
+
+  getTagColor(tag: ClientTag): string {
+    const map: Record<string, string> = {
+      violet: '#ede9fe',
+      green:  '#e9f8ef',
+      blue:   '#e8f0fe',
+      amber:  '#fdf3e3',
+      red:    '#fdeaea',
+      gray:   '#f1eef9',
+    };
+    return map[tag.color] || '#f1eef9';
+  }
+
+  getTagTextColor(tag: ClientTag): string {
+    const map: Record<string, string> = {
+      violet: '#5b21b6',
+      green:  '#15803d',
+      blue:   '#1d4ed8',
+      amber:  '#b45309',
+      red:    '#b91c1c',
+      gray:   '#5a5470',
+    };
+    return map[tag.color] || '#5a5470';
+  }
+
+  // =============================================
+  // FICHA 360° — helpers de presentación
+  // =============================================
+  getInitials(): string {
+    if (!this.datos) return '?';
+    const n = (this.datos.nombres_completos || '').trim();
+    const a = (this.datos.apellidos_completos || '').trim();
+    return ((n[0] || '') + (a[0] || '')).toUpperCase() || '?';
+  }
+
+  formatMetricCurrency(val: any): string {
+    if (val === null || val === undefined) return '—';
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency', currency: 'COP', maximumFractionDigits: 0
+    }).format(val);
+  }
+
+  formatMetricDate(val: any): string {
+    if (!val) return '—';
+    try {
+      const d = val._seconds ? new Date(val._seconds * 1000) : new Date(val);
+      return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
+    } catch { return '—'; }
+  }
+
+  getDaysSince(val: any): any {
+    if (!val) return '—';
+    try {
+      const d = val._seconds ? new Date(val._seconds * 1000) : new Date(val);
+      return Math.floor((Date.now() - d.getTime()) / 86400000);
+    } catch { return '—'; }
   }
 
 }
