@@ -197,7 +197,12 @@
 
                                 <!-- Etiquetas -->
                                 <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
-                                    <label class="form-label-modern"><i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}</label>
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <label class="form-label-modern mb-0"><i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}</label>
+                                        <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;" (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
+                                            <i class="pi pi-cog"></i>
+                                        </button>
+                                    </div>
                                     <div class="tags-picker">
                                         <span *ngFor="let tag of clientTagsCatalog"
                                               class="tag-chip"
@@ -211,10 +216,15 @@
                                     </div>
                                 </div>
                                 <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
-                                    <label class="form-label-modern">{{ "Etiquetas" | translate }}</label>
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <label class="form-label-modern mb-0"><i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}</label>
+                                        <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;" (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
+                                            <i class="pi pi-cog"></i>
+                                        </button>
+                                    </div>
                                     <div class="tags-empty-hint">
                                         <i class="pi pi-info-circle me-1"></i>
-                                        {{ "No hay etiquetas configuradas. Ve al listado de clientes y usa el botón de configuración para crearlas." | translate }}
+                                        {{ "No hay etiquetas configuradas. Usa el botón ⚙ para crearlas." | translate }}
                                     </div>
                                 </div>
                             </div>
@@ -897,3 +907,49 @@
         </button>
     </div>
 </ng-template>
+
+<!-- Modal configuración de etiquetas -->
+<p-dialog
+    header="{{ 'Configurar Etiquetas' | translate }}"
+    [(visible)]="showEtiquetasConfig"
+    [modal]="true"
+    [closable]="true"
+    [dismissableMask]="true"
+    [style]="{ width: '460px' }">
+
+    <p class="text-muted small mb-3">Crea etiquetas con color para segmentar a tus clientes.</p>
+
+    <div class="config-list mb-3">
+        <div *ngFor="let tag of editableTagsCfg; let i = index" class="config-list-item">
+            <span class="tag-preview"
+                  [style.background]="getTagBgColorCfg(tag.color)"
+                  [style.color]="getTagFgColorCfg(tag.color)">{{ tag.name }}</span>
+            <button type="button" class="btn btn-link text-danger p-0" (click)="removeTagCfg(i)">
+                <i class="pi pi-times-circle"></i>
+            </button>
+        </div>
+        <div *ngIf="editableTagsCfg.length === 0" class="text-muted small text-center py-2">Sin etiquetas configuradas</div>
+    </div>
+
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <input pInputText type="text" [(ngModel)]="newTagNameCfg" placeholder="Nombre etiqueta..."
+               class="flex-grow-1" style="min-width:140px;" (keyup.enter)="addTagCfg()" />
+        <div class="d-flex gap-1 flex-wrap">
+            <span *ngFor="let c of availableColorsCfg"
+                  class="color-swatch"
+                  [class.selected]="newTagColorCfg === c"
+                  [style.background]="getTagBgColorCfg(c)"
+                  [style.border-color]="newTagColorCfg === c ? getTagFgColorCfg(c) : 'transparent'"
+                  (click)="newTagColorCfg = c"
+                  [title]="c"></span>
+        </div>
+        <button pButton type="button" icon="pi pi-plus" class="p-button-primary p-button-sm" (click)="addTagCfg()"></button>
+    </div>
+
+    <ng-template pTemplate="footer">
+        <button pButton type="button" label="{{ 'Cancelar' | translate }}" icon="pi pi-times"
+                class="p-button-text" (click)="showEtiquetasConfig = false"></button>
+        <button pButton type="button" label="{{ 'Guardar' | translate }}" icon="pi pi-check"
+                class="p-button-primary" (click)="guardarConfigEtiquetas()"></button>
+    </ng-template>
+</p-dialog>

@@ -1475,6 +1475,57 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   // =============================================
+  // CONFIG ETIQUETAS (modal en crear cliente)
+  // =============================================
+  showEtiquetasConfig: boolean = false;
+  editableTagsCfg: ClientTag[] = [];
+  newTagNameCfg: string = '';
+  newTagColorCfg: string = 'violet';
+  availableColorsCfg: string[] = [];
+
+  abrirConfigEtiquetas(): void {
+    this.editableTagsCfg = this.clientConfig.getClientTags().map(t => ({ ...t }));
+    this.availableColorsCfg = this.clientConfig.getColors();
+    this.newTagNameCfg = '';
+    this.newTagColorCfg = 'violet';
+    this.showEtiquetasConfig = true;
+  }
+
+  addTagCfg(): void {
+    const name = this.newTagNameCfg.trim();
+    if (name && !this.editableTagsCfg.find(t => t.name === name)) {
+      this.editableTagsCfg.push({ name, color: this.newTagColorCfg });
+    }
+    this.newTagNameCfg = '';
+  }
+
+  removeTagCfg(index: number): void {
+    this.editableTagsCfg.splice(index, 1);
+  }
+
+  guardarConfigEtiquetas(): void {
+    this.clientConfig.saveClientTags(this.editableTagsCfg);
+    this.clientTagsCatalog = [...this.editableTagsCfg];
+    this.showEtiquetasConfig = false;
+  }
+
+  getTagBgColorCfg(color: string): string {
+    const map: Record<string, string> = {
+      violet: '#ede9fe', green: '#d1fae5', blue: '#dbeafe',
+      amber: '#fef3c7', red: '#fee2e2', gray: '#f3f4f6'
+    };
+    return map[color] || '#f3f4f6';
+  }
+
+  getTagFgColorCfg(color: string): string {
+    const map: Record<string, string> = {
+      violet: '#5b21b6', green: '#065f46', blue: '#1e40af',
+      amber: '#92400e', red: '#991b1b', gray: '#374151'
+    };
+    return map[color] || '#374151';
+  }
+
+  // =============================================
   // FICHA 360° — helpers de presentación
   // =============================================
   getInitials(): string {
