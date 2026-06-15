@@ -51,13 +51,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     // Import modal
     showImportModal: boolean = false;
 
-    // Config modal (tipos y etiquetas)
+    // Config modal (etiquetas)
     showConfigModal: boolean = false;
-    configTab: 'types' | 'tags' = 'types';
-    // tipos
-    editableTypes: string[] = [];
-    newTypeName: string = '';
-    // etiquetas
     editableTags: ClientTag[] = [];
     newTagName: string = '';
     newTagColor: string = 'violet';
@@ -279,12 +274,9 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     // ── Config modal ─────────────────────────────────────────────────
 
-    abrirConfigModal(tab: 'types' | 'tags' = 'types'): void {
-        this.configTab = tab;
-        this.editableTypes = [...this.clientConfig.getClientTypes()];
+    abrirConfigModal(): void {
         this.editableTags = this.clientConfig.getClientTags().map(t => ({ ...t }));
         this.availableColors = this.clientConfig.getColors();
-        this.newTypeName = '';
         this.newTagName = '';
         this.newTagColor = 'violet';
         this.showConfigModal = true;
@@ -292,19 +284,6 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     cerrarConfigModal(): void {
         this.showConfigModal = false;
-    }
-
-    // Tipos
-    addType(): void {
-        const name = this.newTypeName.trim();
-        if (name && !this.editableTypes.includes(name)) {
-            this.editableTypes.push(name);
-        }
-        this.newTypeName = '';
-    }
-
-    removeType(index: number): void {
-        this.editableTypes.splice(index, 1);
     }
 
     // Etiquetas
@@ -321,7 +300,6 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     guardarConfig(): void {
-        this.clientConfig.saveClientTypes(this.editableTypes);
         this.clientConfig.saveClientTags(this.editableTags);
         this.showConfigModal = false;
         this.messageService.add({

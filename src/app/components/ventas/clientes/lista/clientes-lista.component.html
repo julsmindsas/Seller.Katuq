@@ -47,8 +47,8 @@
                         <button pButton type="button"
                                 icon="pi pi-cog"
                                 class="p-button-outlined p-button-secondary p-button-sm"
-                                (click)="abrirConfigModal('types')"
-                                pTooltip="{{ 'Configurar tipos y etiquetas de clientes' | translate }}"></button>
+                                (click)="abrirConfigModal()"
+                                pTooltip="{{ 'Configurar etiquetas de clientes' | translate }}"></button>
                     </div>
                 </div>
 
@@ -437,77 +437,43 @@
     (importComplete)="onImportComplete($event)">
 </app-import-modal>
 
-<!-- Modal de Configuración: Tipos y Etiquetas -->
+<!-- Modal de Configuración: Etiquetas -->
 <p-dialog
-    header="{{ 'Configuración de Clientes' | translate }}"
+    header="{{ 'Configuración de Etiquetas' | translate }}"
     [(visible)]="showConfigModal"
     [modal]="true"
     [closable]="true"
     [dismissableMask]="true"
-    [style]="{ width: '520px' }"
+    [style]="{ width: '480px' }"
     styleClass="config-clientes-dialog">
 
-    <!-- Tabs -->
-    <div class="config-tabs mb-3">
-        <button class="config-tab-btn" [class.active]="configTab === 'types'" (click)="configTab = 'types'">
-            <i class="pi pi-tag me-1"></i>Tipos de Cliente
-        </button>
-        <button class="config-tab-btn" [class.active]="configTab === 'tags'" (click)="configTab = 'tags'">
-            <i class="pi pi-tags me-1"></i>Etiquetas
-        </button>
+    <p class="text-muted small mb-3">Crea etiquetas con color para segmentar a tus clientes.</p>
+
+    <div class="config-list mb-3">
+        <div *ngFor="let tag of editableTags; let i = index" class="config-list-item">
+            <span class="tag-preview"
+                  [style.background]="getTagBgColor(tag.color)"
+                  [style.color]="getTagFgColor(tag.color)">{{ tag.name }}</span>
+            <button type="button" class="btn btn-link text-danger p-0" (click)="removeTag(i)">
+                <i class="pi pi-times-circle"></i>
+            </button>
+        </div>
+        <div *ngIf="editableTags.length === 0" class="text-muted small text-center py-2">Sin etiquetas configuradas</div>
     </div>
 
-    <!-- Tab: Tipos de Cliente -->
-    <div *ngIf="configTab === 'types'">
-        <p class="text-muted small mb-3">Define los tipos de cliente disponibles para tu empresa (ej: Minorista, Mayorista, VIP).</p>
-
-        <div class="config-list mb-3">
-            <div *ngFor="let t of editableTypes; let i = index" class="config-list-item">
-                <span>{{ t }}</span>
-                <button type="button" class="btn btn-link text-danger p-0" (click)="removeType(i)">
-                    <i class="pi pi-times-circle"></i>
-                </button>
-            </div>
-            <div *ngIf="editableTypes.length === 0" class="text-muted small text-center py-2">Sin tipos configurados</div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+        <input pInputText type="text" [(ngModel)]="newTagName" placeholder="Nombre etiqueta..."
+               class="flex-grow-1 min-w-0" style="min-width: 140px;" (keyup.enter)="addTag()" />
+        <div class="d-flex gap-1 flex-wrap">
+            <span *ngFor="let c of availableColors"
+                  class="color-swatch"
+                  [class.selected]="newTagColor === c"
+                  [style.background]="getTagBgColor(c)"
+                  [style.border-color]="newTagColor === c ? getTagFgColor(c) : 'transparent'"
+                  (click)="newTagColor = c"
+                  [title]="c"></span>
         </div>
-
-        <div class="d-flex gap-2">
-            <input pInputText type="text" [(ngModel)]="newTypeName" placeholder="Nuevo tipo..."
-                   class="flex-grow-1" (keyup.enter)="addType()" />
-            <button pButton type="button" icon="pi pi-plus" class="p-button-primary p-button-sm" (click)="addType()"></button>
-        </div>
-    </div>
-
-    <!-- Tab: Etiquetas -->
-    <div *ngIf="configTab === 'tags'">
-        <p class="text-muted small mb-3">Crea etiquetas con color para segmentar a tus clientes.</p>
-
-        <div class="config-list mb-3">
-            <div *ngFor="let tag of editableTags; let i = index" class="config-list-item">
-                <span class="tag-preview"
-                      [style.background]="getTagBgColor(tag.color)"
-                      [style.color]="getTagFgColor(tag.color)">{{ tag.name }}</span>
-                <button type="button" class="btn btn-link text-danger p-0" (click)="removeTag(i)">
-                    <i class="pi pi-times-circle"></i>
-                </button>
-            </div>
-            <div *ngIf="editableTags.length === 0" class="text-muted small text-center py-2">Sin etiquetas configuradas</div>
-        </div>
-
-        <div class="d-flex gap-2 align-items-center flex-wrap">
-            <input pInputText type="text" [(ngModel)]="newTagName" placeholder="Nombre etiqueta..."
-                   class="flex-grow-1 min-w-0" style="min-width: 140px;" (keyup.enter)="addTag()" />
-            <div class="d-flex gap-1 flex-wrap">
-                <span *ngFor="let c of availableColors"
-                      class="color-swatch"
-                      [class.selected]="newTagColor === c"
-                      [style.background]="getTagBgColor(c)"
-                      [style.border-color]="newTagColor === c ? getTagFgColor(c) : 'transparent'"
-                      (click)="newTagColor = c"
-                      [title]="c"></span>
-            </div>
-            <button pButton type="button" icon="pi pi-plus" class="p-button-primary p-button-sm" (click)="addTag()"></button>
-        </div>
+        <button pButton type="button" icon="pi pi-plus" class="p-button-primary p-button-sm" (click)="addTag()"></button>
     </div>
 
     <ng-template pTemplate="footer">

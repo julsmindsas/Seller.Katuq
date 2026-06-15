@@ -731,8 +731,13 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.IndicativoPlaceholder = 'indicativo'
     this.indicativos = this.infoIndicativo.datos
 
-    this.clientTypes = this.clientConfig.getClientTypes();
     this.clientTagsCatalog = this.clientConfig.getClientTags();
+    this.service.consultarTiposClienteActivos().subscribe({
+      next: (tipos: any) => {
+        this.clientTypes = Array.isArray(tipos) ? tipos.filter((t: any) => t.active !== false).map((t: any) => t.nombre) : [];
+      },
+      error: () => { this.clientTypes = []; }
+    });
 
     this.formulario = this.formBuilder.group({
       cd: [''],

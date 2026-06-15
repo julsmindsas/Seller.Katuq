@@ -182,8 +182,8 @@
                                     </div>
                                 </div>
 
-                                <!-- Tipo de Cliente -->
-                                <div class="col-12">
+                                <!-- Tipo de Cliente (solo si hay tipos configurados en el módulo de configuración) -->
+                                <div class="col-12" *ngIf="clientTypes && clientTypes.length > 0">
                                     <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
                                     <p-dropdown
                                         formControlName="tipoCliente"
