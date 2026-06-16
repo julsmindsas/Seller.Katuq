@@ -12,13 +12,22 @@
                     {{ isEdit ? ("Editar datos del cliente" | translate) : ("Ingresa todos los datos para crear un cliente nuevo" | translate) }}
                 </p>
             </div>
-            <button *ngIf="isEdit"
-                    pButton
-                    type="button"
-                    icon="pi pi-arrow-left"
-                    label="{{ 'Volver al listado' | translate }}"
-                    class="p-button-secondary p-button-sm"
-                    [routerLink]="'/ventas/clienteslista'"></button>
+            <div class="d-flex gap-2">
+                <button *ngIf="!isEdit"
+                        pButton
+                        type="button"
+                        icon="pi pi-plus"
+                        label="{{ 'Crear Cliente' | translate }}"
+                        class="p-button-primary p-button-sm"
+                        (click)="abrirModalCrear()"></button>
+                <button *ngIf="isEdit"
+                        pButton
+                        type="button"
+                        icon="pi pi-arrow-left"
+                        label="{{ 'Volver al listado' | translate }}"
+                        class="p-button-secondary p-button-sm"
+                        [routerLink]="'/ventas/clienteslista'"></button>
+            </div>
         </div>
 
         <!-- Buscador de cliente -->
@@ -92,252 +101,18 @@
             </div>
         </div>
 
-        <!-- Formulario principal -->
-        <div class="card-body form-container">
-            <form *ngIf="formulario" [formGroup]="formulario">
-                <div class="row g-4">
-                    <!-- Sección de información básica -->
-                    <div class="col-lg-6">
-                        <div class="form-section-modern">
-                            <div class="section-header">
-                                <i class="pi pi-user"></i>
-                                <h6>{{ "Información Básica" | translate }}</h6>
-                            </div>
-
-                            <div class="row g-3">
-                                <!-- Tipo de Documento -->
-                                <div class="col-12 col-sm-6">
-                                    <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
-                                    <p-dropdown [options]="[
-                                        {label: 'CC-NIT', value: 'CC-NIT'},
-                                        {label: 'Pasaporte', value: 'PA'},
-                                        {label: 'TI', value: 'TI'}
-                                    ]"
-                                    optionLabel="label"
-                                    optionValue="value"
-                                    placeholder="{{ 'Seleccionar...' | translate }}"
-                                    [disabled]="isEdit"
-                                    formControlName="tipo_documento_comprador"
-                                    styleClass="w-100"
-                                    panelStyleClass="buscar-por-panel"></p-dropdown>
-                                    <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched"
-                                        class="error-message mt-1">
-                                        <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                                    </div>
-                                </div>
-
-                                <!-- Documento -->
-                                <div class="col-12 col-sm-6">
-                                    <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
-                                    <input pInputText
-                                        type="text"
-                                        placeholder="{{ 'Número de documento' | translate }}"
-                                        formControlName="documento"
-                                        [disabled]="isEdit"
-                                        class="w-100">
-                                    <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched"
-                                        class="error-message mt-1">
-                                        <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                                    </div>
-                                </div>
-
-                                <!-- Nombres Completos -->
-                                <div class="col-12 col-sm-6">
-                                    <label class="form-label-modern">{{ "Nombres Completos" | translate }} <span class="required">*</span></label>
-                                    <input pInputText
-                                        type="text"
-                                        placeholder="{{ 'Nombres completos' | translate }}"
-                                        formControlName="nombres_completos"
-                                        class="w-100">
-                                    <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched"
-                                        class="error-message mt-1">
-                                        <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                                    </div>
-                                </div>
-
-                                <!-- Apellidos Completos -->
-                                <div class="col-12">
-                                    <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required">*</span></label>
-                                    <input pInputText
-                                        type="text"
-                                        placeholder="{{ 'Apellidos completos' | translate }}"
-                                        formControlName="apellidos_completos"
-                                        class="w-100">
-                                    <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched"
-                                        class="error-message mt-1">
-                                        <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-                                    </div>
-                                </div>
-
-                                <!-- Estado -->
-                                <div class="col-12">
-                                    <label class="form-label-modern">{{ "Estado" | translate }}</label>
-                                    <div class="estado-toggle">
-                                        <p-inputSwitch
-                                            formControlName="estado"
-                                            [ngModel]="!bloqueado"
-                                            (onChange)="bloqueado ? desbloquear() : bloquear()">
-                                        </p-inputSwitch>
-                                        <span class="ms-2">{{!bloqueado ? 'Activo' : 'Bloqueado'}}</span>
-                                    </div>
-                                </div>
-
-                                <!-- Tipo de Cliente (solo si hay tipos configurados en el módulo de configuración) -->
-                                <div class="col-12" *ngIf="clientTypes && clientTypes.length > 0">
-                                    <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
-                                    <p-dropdown
-                                        formControlName="tipoCliente"
-                                        [options]="clientTypes"
-                                        placeholder="{{ 'Seleccionar tipo...' | translate }}"
-                                        [showClear]="true"
-                                        styleClass="w-100"
-                                        panelStyleClass="buscar-por-panel">
-                                    </p-dropdown>
-                                </div>
-
-                                <!-- Etiquetas -->
-                                <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
-                                    <div class="d-flex align-items-center justify-content-between mb-1">
-                                        <label class="form-label-modern mb-0"><i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}</label>
-                                        <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;" (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
-                                            <i class="pi pi-cog"></i>
-                                        </button>
-                                    </div>
-                                    <div class="tags-picker">
-                                        <span *ngFor="let tag of clientTagsCatalog"
-                                              class="tag-chip"
-                                              [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
-                                              [style.background-color]="tieneEtiqueta(tag.name) ? getTagColor(tag) : ''"
-                                              [style.color]="tieneEtiqueta(tag.name) ? getTagTextColor(tag) : ''"
-                                              (click)="toggleEtiqueta(tag.name)">
-                                            <i class="pi pi-check" *ngIf="tieneEtiqueta(tag.name)"></i>
-                                            {{ tag.name }}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
-                                    <div class="d-flex align-items-center justify-content-between mb-1">
-                                        <label class="form-label-modern mb-0"><i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}</label>
-                                        <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;" (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
-                                            <i class="pi pi-cog"></i>
-                                        </button>
-                                    </div>
-                                    <div class="tags-empty-hint">
-                                        <i class="pi pi-info-circle me-1"></i>
-                                        {{ "No hay etiquetas configuradas. Usa el botón ⚙ para crearlas." | translate }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sección de contacto -->
-                    <div class="col-lg-6">
-                        <div class="form-section-modern">
-                            <div class="section-header">
-                                <i class="pi pi-phone"></i>
-                                <h6>{{ "Información de Contacto" | translate }}</h6>
-                            </div>
-
-                            <div class="row g-3">
-                                <!-- Teléfono Celular -->
-                                <div class="col-12">
-                                    <label class="form-label-modern">{{ "Teléfono Celular" | translate }} <span class="required">*</span></label>
-                                    <div class="phone-input-group">
-                                        <p-dropdown [options]="indicativos"
-                                                    optionLabel="phone_code"
-                                                    optionValue="phone_code"
-                                                    placeholder="{{ 'Código' | translate }}"
-                                                    formControlName="indicativo_celular_comprador"
-                                                    styleClass="country-code"
-                                                    panelStyleClass="buscar-por-panel"></p-dropdown>
-                                        <input pInputText
-                                               type="text"
-                                               placeholder="{{ 'Número celular' | translate }}"
-                                               formControlName="numero_celular_comprador"
-                                               (keypress)="validarSoloNumeros($event)"
-                                               class="flex-grow-1">
-                                    </div>
-                                    <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched"
-                                        class="error-message mt-1">
-                                        <i class="pi pi-exclamation-circle"></i>{{ "Número de celular requerido" | translate }}
-                                    </div>
-                                </div>
-
-                                <!-- Correo Electrónico -->
-                                <div class="col-12">
-                                    <label class="form-label-modern">{{ "Correo Electrónico" | translate }} <span class="required">*</span></label>
-                                    <input pInputText
-                                           type="email"
-                                           placeholder="{{ 'correo@ejemplo.com' | translate }}"
-                                           formControlName="correo_electronico_comprador"
-                                           class="w-100">
-                                    <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid"
-                                        class="error-message mt-1">
-                                        <i class="pi pi-exclamation-circle"></i>
-                                        <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
-                                        <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Ingrese un correo válido" | translate }}</span>
-                                    </div>
-                                </div>
-
-                                <!-- WhatsApp Section -->
-                                <div class="col-12">
-                                    <div class="whatsapp-section">
-                                        <div class="checkbox-group">
-                                            <input type="checkbox"
-                                                   id="whatsappCheckbox"
-                                                   #whatsapp
-                                                   (change)="replicarWhatsApp($event)"
-                                                   class="form-check-input">
-                                            <label for="whatsappCheckbox" class="form-label-modern">
-                                                {{ "Usar el mismo número para WhatsApp" | translate }}
-                                            </label>
-                                        </div>
-
-                                        <label class="form-label-modern mt-3">{{ "WhatsApp" | translate }}</label>
-                                        <div class="phone-input-group">
-                                            <p-dropdown [options]="indicativos"
-                                                        optionLabel="phone_code"
-                                                        optionValue="phone_code"
-                                                        placeholder="{{ 'Código' | translate }}"
-                                                        formControlName="indicativo_celular_whatsapp"
-                                                        styleClass="country-code"
-                                                        panelStyleClass="buscar-por-panel"></p-dropdown>
-                                            <input pInputText
-                                                   type="text"
-                                                   placeholder="{{ 'Número WhatsApp' | translate }}"
-                                                   formControlName="numero_celular_whatsapp"
-                                                   (keypress)="validarSoloNumeros($event)"
-                                                   class="flex-grow-1">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                </div>
-
-                <!-- Botones de acción -->
+        <!-- Formulario inline solo cuando isEdit=true (dentro del modal del listado) -->
+        <div *ngIf="isEdit" class="card-body form-container">
+            <form *ngIf="formulario" [formGroup]="formulario" autocomplete="off">
+                <ng-container *ngTemplateOutlet="formBody"></ng-container>
                 <div class="row mt-4">
                     <div class="col-12 d-flex gap-2">
-                        <button *ngIf="!encontrado"
-                                pButton
-                                type="button"
-                                icon="pi pi-save"
-                                label="{{ 'Crear Cliente' | translate }}"
-                                class="p-button-primary"
-                                [disabled]="!formulario.valid"
-                                (click)="crearCliente()"></button>
-                        <button *ngIf="encontrado"
-                                pButton
-                                type="button"
-                                icon="pi pi-user-edit"
-                                label="{{ 'Actualizar Cliente' | translate }}"
-                                class="p-button-primary"
-                                [disabled]="!formulario.valid"
-                                (click)="editarCliente()"></button>
+                        <button *ngIf="!encontrado" pButton type="button" icon="pi pi-save"
+                                label="{{ 'Crear Cliente' | translate }}" class="p-button-primary"
+                                [disabled]="!formulario.valid" (click)="crearCliente()"></button>
+                        <button *ngIf="encontrado" pButton type="button" icon="pi pi-user-edit"
+                                label="{{ 'Actualizar Cliente' | translate }}" class="p-button-primary"
+                                [disabled]="!formulario.valid" (click)="editarCliente()"></button>
                     </div>
                 </div>
             </form>
@@ -368,6 +143,9 @@
                         <i class="pi pi-lock"></i> Bloqueado
                     </span>
                     <div class="c360-actions-sep"></div>
+                    <button *ngIf="!isEdit" class="btn-tbl-action btn-tbl-primary" ngbTooltip="Editar cliente" (click)="abrirModalEditar()">
+                        <i class="pi pi-user-edit"></i>
+                    </button>
                     <button class="btn-tbl-action btn-tbl-neutral" ngbTooltip="Pedidos relacionados">
                         <i class="fa fa-list-alt"></i>
                     </button>
@@ -384,6 +162,15 @@
                         <i class="fa fa-unlock"></i>
                     </button>
                 </div>
+            </div>
+
+            <!-- Etiquetas del cliente -->
+            <div *ngIf="etiquetasSeleccionadas && etiquetasSeleccionadas.length > 0" class="c360-tags px-4 pb-2">
+                <span *ngFor="let tagName of etiquetasSeleccionadas" class="c360-tag-chip"
+                      [style.background]="getTagFromCatalog(tagName) ? getTagColor(getTagFromCatalog(tagName)) : '#ede9fe'"
+                      [style.color]="getTagFromCatalog(tagName) ? getTagTextColor(getTagFromCatalog(tagName)) : '#5b21b6'">
+                    <i class="pi pi-tag me-1" style="font-size:0.7rem;"></i>{{ tagName }}
+                </span>
             </div>
 
             <!-- Métricas -->
@@ -417,14 +204,14 @@
             <div class="mt-4">
                 <ul class="nav nav-tabs" id="customerTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" [class.active]="activarNotas" (click)="verNotas()">Notas</button>
+                        <button class="nav-link nav-link-dark" [class.active]="activarNotas" (click)="verNotas()">Notas</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" [class.active]="activarDatosFact"
+                        <button class="nav-link nav-link-dark" [class.active]="activarDatosFact"
                             (click)="verDatosFacturacion()">Facturación</button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" [class.active]="activarDatosEntrega"
+                        <button class="nav-link nav-link-dark" [class.active]="activarDatosEntrega"
                             (click)="verDatosEntrega()">Entrega</button>
                     </li>
                 </ul>
@@ -603,8 +390,14 @@
     </div>
 </div>
 <ng-template #entrega let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title"><strong>Crear Datos de Entrega</strong></h4>
+    <div class="modal-header" style="background:#fff; border-bottom:1.5px solid #ede9fe; padding:1rem 1.25rem;">
+        <div class="d-flex align-items-center gap-3">
+            <i class="pi pi-map-marker" style="font-size:1.4rem; color:#8b5cf6;"></i>
+            <div class="d-flex flex-column" style="line-height:1.2;">
+                <span style="font-size:1.1rem; font-weight:800; color:#111;">Crear Datos de Entrega</span>
+                <span style="font-size:0.78rem; font-weight:400; color:#6b7280;">Dirección y datos de envío del cliente</span>
+            </div>
+        </div>
     </div>
     <div class="modal-body py-2">
 
@@ -791,8 +584,14 @@
     </div>
 </ng-template>
 <ng-template #facturacion let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title"><strong>Crear Datos Facturación Electrónica</strong></h4>
+    <div class="modal-header" style="background:#fff; border-bottom:1.5px solid #ede9fe; padding:1rem 1.25rem;">
+        <div class="d-flex align-items-center gap-3">
+            <i class="pi pi-file-edit" style="font-size:1.4rem; color:#8b5cf6;"></i>
+            <div class="d-flex flex-column" style="line-height:1.2;">
+                <span style="font-size:1.1rem; font-weight:800; color:#111;">Crear Datos Facturación Electrónica</span>
+                <span style="font-size:0.78rem; font-weight:400; color:#6b7280;">Información fiscal para emisión de facturas</span>
+            </div>
+        </div>
     </div>
     <div class="modal-body py-2">
 
@@ -880,9 +679,469 @@
     </div>
 </ng-template>
 
+<!-- ====================================================
+     TEMPLATE: Campos del formulario (reutilizado en inline y en dialog)
+     ==================================================== -->
+<ng-template #formBody>
+    <div class="row g-4 mx-0">
+        <!-- Sección de información básica -->
+        <div class="col-lg-6">
+            <div class="form-section-modern">
+                <div class="section-header">
+                    <i class="pi pi-user" style="color:#8b5cf6;"></i>
+                    <h6>{{ "Información Básica" | translate }}</h6>
+                </div>
+                <div class="row g-3">
+                    <!-- Tipo de Documento -->
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
+                        <p-dropdown [options]="[
+                            {label: 'CC-NIT', value: 'CC-NIT'},
+                            {label: 'Pasaporte', value: 'PA'},
+                            {label: 'TI', value: 'TI'}
+                        ]"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="{{ 'Seleccionar...' | translate }}"
+                        formControlName="tipo_documento_comprador"
+                        styleClass="w-100"
+                        panelStyleClass="buscar-por-panel"></p-dropdown>
+                        <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched"
+                            class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                        </div>
+                    </div>
+                    <!-- Documento -->
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
+                        <input pInputText type="text" placeholder="{{ 'Número de documento' | translate }}"
+                            formControlName="documento" [attr.disabled]="encontrado ? true : null" class="w-100">
+                        <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched"
+                            class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                        </div>
+                    </div>
+                    <!-- Nombres -->
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">{{ "Nombres Completos" | translate }} <span class="required">*</span></label>
+                        <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
+                            formControlName="nombres_completos" class="w-100">
+                        <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched"
+                            class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                        </div>
+                    </div>
+                    <!-- Apellidos -->
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required">*</span></label>
+                        <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
+                            formControlName="apellidos_completos" class="w-100">
+                        <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched"
+                            class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                        </div>
+                    </div>
+                    <!-- Estado + Tipo de Cliente en misma fila -->
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label-modern">{{ "Estado" | translate }}</label>
+                        <div class="estado-toggle">
+                            <p-inputSwitch formControlName="estado"
+                                [ngModel]="!bloqueado"
+                                (onChange)="bloqueado ? desbloquear() : bloquear()">
+                            </p-inputSwitch>
+                            <span class="ms-2">{{!bloqueado ? 'Activo' : 'Bloqueado'}}</span>
+                        </div>
+                    </div>
+                    <!-- Tipo de Cliente -->
+                    <div class="col-12 col-sm-6" *ngIf="clientTypes && clientTypes.length > 0">
+                        <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
+                        <p-dropdown formControlName="tipoCliente" [options]="clientTypes"
+                            placeholder="{{ 'Seleccionar tipo...' | translate }}"
+                            [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel">
+                        </p-dropdown>
+                    </div>
+                    <!-- Fecha de Cumpleaños -->
+                    <div class="col-12" [class.col-sm-6]="clientTypes && clientTypes.length > 0">
+                        <label class="form-label-modern">
+                            <i class="pi pi-gift me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Fecha de Cumpleaños" | translate }}
+                        </label>
+                        <p-calendar formControlName="fechaCumpleanos"
+                            dateFormat="dd/mm/yy"
+                            [showIcon]="true"
+                            placeholder="dd/mm/aaaa"
+                            styleClass="w-100"
+                            inputStyleClass="w-100"
+                            autocomplete="bday"
+                            [appendTo]="'body'">
+                        </p-calendar>
+                    </div>
+                    <!-- Etiquetas con catálogo -->
+                    <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label-modern mb-0">
+                                <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
+                            </label>
+                            <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;"
+                                    (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
+                                <i class="pi pi-cog"></i>
+                            </button>
+                        </div>
+                        <div class="tags-picker">
+                            <span *ngFor="let tag of clientTagsCatalog"
+                                  class="tag-chip"
+                                  [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
+                                  [style.background-color]="tieneEtiqueta(tag.name) ? getTagColor(tag) : ''"
+                                  [style.color]="tieneEtiqueta(tag.name) ? getTagTextColor(tag) : ''"
+                                  (click)="toggleEtiqueta(tag.name)">
+                                <i class="pi pi-check" *ngIf="tieneEtiqueta(tag.name)"></i>
+                                {{ tag.name }}
+                            </span>
+                        </div>
+                    </div>
+                    <!-- Etiquetas sin catálogo -->
+                    <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <label class="form-label-modern mb-0">
+                                <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
+                            </label>
+                            <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;"
+                                    (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
+                                <i class="pi pi-cog"></i>
+                            </button>
+                        </div>
+                        <div class="tags-empty-hint">
+                            <i class="pi pi-info-circle me-1"></i>
+                            {{ "No hay etiquetas configuradas. Usa el botón ⚙ para crearlas." | translate }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sección de contacto -->
+        <div class="col-lg-6">
+            <div class="form-section-modern">
+                <div class="section-header">
+                    <i class="pi pi-phone" style="color:#8b5cf6;"></i>
+                    <h6>{{ "Información de Contacto" | translate }}</h6>
+                </div>
+                <div class="row g-3">
+                    <!-- Teléfono Celular -->
+                    <div class="col-12">
+                        <label class="form-label-modern">{{ "Teléfono Celular" | translate }} <span class="required">*</span></label>
+                        <div class="phone-input-group">
+                            <p-dropdown [options]="indicativos"
+                                        optionLabel="phone_code" optionValue="phone_code"
+                                        placeholder="{{ 'Código' | translate }}"
+                                        formControlName="indicativo_celular_comprador"
+                                        styleClass="country-code"
+                                        panelStyleClass="buscar-por-panel"></p-dropdown>
+                            <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
+                                   formControlName="numero_celular_comprador" autocomplete="tel" maxlength="10"
+                                   (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                        </div>
+                        <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched"
+                            class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i>
+                            <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                            <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                        </div>
+                    </div>
+                    <!-- Correo + Cómo nos conoció en misma fila -->
+                    <div class="col-12 col-sm-7">
+                        <label class="form-label-modern">{{ "Correo Electrónico" | translate }} <span class="required">*</span></label>
+                        <input pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
+                               formControlName="correo_electronico_comprador" class="w-100">
+                        <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid"
+                            class="error-message mt-1">
+                            <i class="pi pi-exclamation-circle"></i>
+                            <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                            <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Correo inválido" | translate }}</span>
+                        </div>
+                    </div>
+                    <div class="col-12 col-sm-5">
+                        <label class="form-label-modern">
+                            <i class="pi pi-compass me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "¿Cómo nos conoció?" | translate }}
+                        </label>
+                        <p-dropdown formControlName="comoNosConocio"
+                            [options]="[
+                                {label: 'Redes Sociales', value: 'Redes Sociales'},
+                                {label: 'Referido / Amigo', value: 'Referido / Amigo'},
+                                {label: 'Google / Búsqueda web', value: 'Google / Búsqueda web'},
+                                {label: 'Publicidad online', value: 'Publicidad online'},
+                                {label: 'Evento / Feria', value: 'Evento / Feria'},
+                                {label: 'Visita en tienda', value: 'Visita en tienda'},
+                                {label: 'WhatsApp / Email', value: 'WhatsApp / Email'},
+                                {label: 'Otro', value: 'Otro'}
+                            ]"
+                            optionLabel="label"
+                            optionValue="value"
+                            placeholder="{{ 'Seleccionar...' | translate }}"
+                            [showClear]="true"
+                            styleClass="w-100"
+                            panelStyleClass="buscar-por-panel">
+                        </p-dropdown>
+                    </div>
+                    <!-- WhatsApp -->
+                    <div class="col-12">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-modern mb-0">{{ "WhatsApp" | translate }}</label>
+                            <div class="d-flex align-items-center gap-2">
+                                <input type="checkbox" id="whatsappCheckbox" #whatsapp
+                                       (change)="replicarWhatsApp($event)" class="form-check-input mt-0">
+                                <label for="whatsappCheckbox" class="form-label-modern mb-0" style="font-size:0.8rem;color:#6b7280;">
+                                    {{ "Mismo número" | translate }}
+                                </label>
+                            </div>
+                        </div>
+                        <div class="phone-input-group">
+                            <p-dropdown [options]="indicativos"
+                                        optionLabel="phone_code" optionValue="phone_code"
+                                        placeholder="{{ 'Código' | translate }}"
+                                        formControlName="indicativo_celular_whatsapp"
+                                        styleClass="country-code"
+                                        panelStyleClass="buscar-por-panel"></p-dropdown>
+                            <input pInputText type="text" placeholder="{{ 'Número WhatsApp' | translate }}"
+                                   formControlName="numero_celular_whatsapp" autocomplete="tel-national"
+                                   (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</ng-template>
+
+<!-- ====================================================
+     DIALOG: Crear / Editar Cliente (modo standalone)
+     ==================================================== -->
+<p-dialog *ngIf="!isEdit"
+    [(visible)]="showClienteModal"
+    [modal]="true"
+    [closable]="true"
+    [dismissableMask]="false"
+    [appendTo]="'body'"
+    [baseZIndex]="10000"
+    [style]="{ width: '92vw', maxWidth: '920px' }"
+    [contentStyle]="{ padding: '0.75rem 1.25rem 1.25rem', background: '#fafbfc', overflow: 'hidden' }"
+    styleClass="cliente-form-dialog">
+    <ng-template pTemplate="header">
+        <div class="d-flex align-items-center gap-3">
+            <i class="dialog-header-icon"
+               [ngClass]="encontrado ? 'pi pi-user-edit' : 'pi pi-user-plus'"></i>
+            <div class="d-flex flex-column" style="line-height:1.15;">
+                <h2 class="dialog-header-title">
+                    {{ encontrado ? 'Editar Cliente' : 'Crear Cliente' }}
+                </h2>
+                <span class="dialog-header-sub">
+                    {{ encontrado ? 'Actualización de datos del cliente' : 'Creación del cliente' }}
+                </span>
+            </div>
+        </div>
+    </ng-template>
+
+    <form *ngIf="formulario" [formGroup]="formulario" autocomplete="off">
+        <div class="row g-4 mx-0">
+            <!-- Información Básica -->
+            <div class="col-lg-6">
+                <div class="form-section-modern">
+                    <div class="section-header">
+                        <i class="pi pi-user" style="color:#8b5cf6;"></i>
+                        <h6>{{ "Información Básica" | translate }}</h6>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
+                            <p-dropdown [options]="[{label:'CC-NIT',value:'CC-NIT'},{label:'Pasaporte',value:'PA'},{label:'TI',value:'TI'}]"
+                                optionLabel="label" optionValue="value"
+                                placeholder="{{ 'Seleccionar...' | translate }}"
+                                formControlName="tipo_documento_comprador"
+                                styleClass="w-100" panelStyleClass="buscar-por-panel"></p-dropdown>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
+                            <input pInputText type="text" placeholder="{{ 'Número de documento' | translate }}"
+                                formControlName="documento" [attr.disabled]="encontrado ? true : null" class="w-100">
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label-modern">{{ "Nombres Completos" | translate }} <span class="required">*</span></label>
+                            <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
+                                formControlName="nombres_completos" class="w-100">
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required">*</span></label>
+                            <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
+                                formControlName="apellidos_completos" class="w-100">
+                        </div>
+                        <!-- Tipo de Cliente + Fecha Cumpleaños en misma fila -->
+                        <div class="col-12 col-sm-6" *ngIf="clientTypes && clientTypes.length > 0">
+                            <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
+                            <p-dropdown formControlName="tipoCliente" [options]="clientTypes"
+                                placeholder="{{ 'Seleccionar tipo...' | translate }}"
+                                [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel">
+                            </p-dropdown>
+                        </div>
+                        <!-- Fecha de Cumpleaños -->
+                        <div class="col-12" [class.col-sm-6]="clientTypes && clientTypes.length > 0">
+                            <label class="form-label-modern">
+                                <i class="pi pi-gift me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Fecha de Cumpleaños" | translate }}
+                            </label>
+                            <p-calendar formControlName="fechaCumpleanos"
+                                dateFormat="dd/mm/yy"
+                                [showIcon]="true"
+                                placeholder="dd/mm/aaaa"
+                                styleClass="w-100"
+                                inputStyleClass="w-100"
+                                [appendTo]="'body'">
+                            </p-calendar>
+                        </div>
+                        <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern mb-0">
+                                    <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
+                                </label>
+                                <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;"
+                                    (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
+                                    <i class="pi pi-cog"></i>
+                                </button>
+                            </div>
+                            <div class="tags-picker">
+                                <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"
+                                    [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
+                                    [style.background-color]="tieneEtiqueta(tag.name) ? getTagColor(tag) : ''"
+                                    [style.color]="tieneEtiqueta(tag.name) ? getTagTextColor(tag) : ''"
+                                    (click)="toggleEtiqueta(tag.name)">
+                                    <i class="pi pi-check" *ngIf="tieneEtiqueta(tag.name)"></i>{{ tag.name }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label-modern mb-0">
+                                    <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
+                                </label>
+                                <button type="button" class="btn btn-link p-0" style="color:#8b5cf6;font-size:0.8rem;"
+                                    (click)="abrirConfigEtiquetas()" pTooltip="Configurar etiquetas">
+                                    <i class="pi pi-cog"></i>
+                                </button>
+                            </div>
+                            <div class="tags-empty-hint">
+                                <i class="pi pi-info-circle me-1"></i>{{ "No hay etiquetas configuradas. Usa el botón ⚙ para crearlas." | translate }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Información de Contacto -->
+            <div class="col-lg-6">
+                <div class="form-section-modern">
+                    <div class="section-header">
+                        <i class="pi pi-phone" style="color:#8b5cf6;"></i>
+                        <h6>{{ "Información de Contacto" | translate }}</h6>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label-modern">{{ "Teléfono Celular" | translate }} <span class="required">*</span></label>
+                            <div class="phone-input-group">
+                                <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
+                                    placeholder="{{ 'Código' | translate }}"
+                                    formControlName="indicativo_celular_comprador"
+                                    styleClass="country-code" panelStyleClass="buscar-por-panel"></p-dropdown>
+                                <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
+                                    formControlName="numero_celular_comprador" autocomplete="tel" maxlength="10"
+                                    (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                            </div>
+                            <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched"
+                                class="error-message mt-1">
+                                <i class="pi pi-exclamation-circle"></i>
+                                <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                                <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                            </div>
+                        </div>
+                        <!-- Correo + Cómo nos conoció en misma fila -->
+                        <div class="col-12 col-sm-7">
+                            <label class="form-label-modern">{{ "Correo Electrónico" | translate }} <span class="required">*</span></label>
+                            <input pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
+                                formControlName="correo_electronico_comprador" class="w-100">
+                            <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid"
+                                class="error-message mt-1">
+                                <i class="pi pi-exclamation-circle"></i>
+                                <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                                <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Correo inválido" | translate }}</span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-5">
+                            <label class="form-label-modern">
+                                <i class="pi pi-compass me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "¿Cómo nos conoció?" | translate }}
+                            </label>
+                            <p-dropdown formControlName="comoNosConocio"
+                                [options]="[
+                                    {label: 'Redes Sociales', value: 'Redes Sociales'},
+                                    {label: 'Referido / Amigo', value: 'Referido / Amigo'},
+                                    {label: 'Google / Búsqueda web', value: 'Google / Búsqueda web'},
+                                    {label: 'Publicidad online', value: 'Publicidad online'},
+                                    {label: 'Evento / Feria', value: 'Evento / Feria'},
+                                    {label: 'Visita en tienda', value: 'Visita en tienda'},
+                                    {label: 'WhatsApp / Email', value: 'WhatsApp / Email'},
+                                    {label: 'Otro', value: 'Otro'}
+                                ]"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="{{ 'Seleccionar...' | translate }}"
+                                [showClear]="true"
+                                styleClass="w-100"
+                                panelStyleClass="buscar-por-panel">
+                            </p-dropdown>
+                        </div>
+                        <!-- WhatsApp compacto -->
+                        <div class="col-12">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <label class="form-label-modern mb-0">{{ "WhatsApp" | translate }}</label>
+                                <div class="d-flex align-items-center gap-2">
+                                    <input type="checkbox" id="whatsappCheckboxDlg"
+                                        (change)="replicarWhatsApp($event)" class="form-check-input mt-0">
+                                    <label for="whatsappCheckboxDlg" class="form-label-modern mb-0" style="font-size:0.8rem;color:#6b7280;">
+                                        {{ "Mismo número" | translate }}
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="phone-input-group">
+                                <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
+                                    placeholder="{{ 'Código' | translate }}"
+                                    formControlName="indicativo_celular_whatsapp"
+                                    styleClass="country-code" panelStyleClass="buscar-por-panel"></p-dropdown>
+                                <input pInputText type="text" placeholder="{{ 'Número WhatsApp' | translate }}"
+                                    formControlName="numero_celular_whatsapp" autocomplete="tel-national"
+                                    (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <ng-template pTemplate="footer">
+        <button pButton type="button" icon="pi pi-times" label="{{ 'Cancelar' | translate }}"
+                class="p-button-text" (click)="showClienteModal = false"></button>
+        <button *ngIf="!encontrado" pButton type="button" icon="pi pi-save"
+                label="{{ 'Crear Cliente' | translate }}" class="p-button-primary"
+                [disabled]="!formulario?.valid" (click)="crearCliente()"></button>
+        <button *ngIf="encontrado" pButton type="button" icon="pi pi-user-edit"
+                label="{{ 'Actualizar Cliente' | translate }}" class="p-button-primary"
+                [disabled]="!formulario?.valid" (click)="editarCliente()"></button>
+    </ng-template>
+</p-dialog>
+
 <ng-template #nota let-modal>
-    <div class="modal-header">
-        <h4 class="modal-title" id="modal-basic-title"><strong>Crear Nota</strong></h4>
+    <div class="modal-header" style="background:#fff; border-bottom:1.5px solid #ede9fe; padding:1rem 1.25rem;">
+        <div class="d-flex align-items-center gap-3">
+            <i class="pi pi-pencil" style="font-size:1.4rem; color:#8b5cf6;"></i>
+            <div class="d-flex flex-column" style="line-height:1.2;">
+                <span style="font-size:1.1rem; font-weight:800; color:#111;">Crear Nota</span>
+                <span style="font-size:0.78rem; font-weight:400; color:#6b7280;">Agrega una observación o comentario del cliente</span>
+            </div>
+        </div>
     </div>
     <div class="modal-body">
         <form class="custom-datepicker custom-datepicker-dropdown">
@@ -915,7 +1174,9 @@
     [modal]="true"
     [closable]="true"
     [dismissableMask]="true"
-    [style]="{ width: '460px' }">
+    [appendTo]="'body'"
+    [style]="{ width: '460px' }"
+    [baseZIndex]="11000">
 
     <p class="text-muted small mb-3">Crea etiquetas con color para segmentar a tus clientes.</p>
 

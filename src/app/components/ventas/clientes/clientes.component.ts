@@ -522,6 +522,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             console.log(error);
           }
           this.datos = res
+          this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? [...res.etiquetas] : [];
           this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
           this.formularioEntrega.patchValue(res.datosEntrega)
           this.identificarDepto()
@@ -598,6 +599,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       console.log(error);
     }
     this.datos = cliente;
+    this.etiquetasSeleccionadas = Array.isArray(cliente.etiquetas) ? [...cliente.etiquetas] : [];
     if (cliente.datosFacturacionElectronica) this.formularioFacturacion.patchValue(cliente.datosFacturacionElectronica);
     if (cliente.datosEntrega) this.formularioEntrega.patchValue(cliente.datosEntrega);
     this.identificarDepto();
@@ -620,13 +622,13 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   replicarWhatsApp(event) {
-    console.log(event)
-    if (this.whatsapp.nativeElement.checked === true) {
-      this.formulario.controls['indicativo_celular_whatsapp'].setValue(this.formulario.value.indicativo_celular_comprador)
-      this.formulario.controls['numero_celular_whatsapp'].setValue(this.formulario.value.numero_celular_comprador)
+    const checked = event?.target?.checked ?? (this.whatsapp?.nativeElement?.checked === true);
+    if (checked) {
+      this.formulario.controls['indicativo_celular_whatsapp'].setValue(this.formulario.value.indicativo_celular_comprador);
+      this.formulario.controls['numero_celular_whatsapp'].setValue(this.formulario.value.numero_celular_comprador);
     } else {
-      this.formulario.controls['indicativo_celular_whatsapp'].setValue("")
-      this.formulario.controls['numero_celular_whatsapp'].setValue("")
+      this.formulario.controls['indicativo_celular_whatsapp'].setValue('');
+      this.formulario.controls['numero_celular_whatsapp'].setValue('');
     }
   }
   getBillingZone() {
@@ -746,11 +748,13 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       tipo_documento_comprador: ['CC-NIT', Validators.required],
       documento: ['', Validators.required],
       indicativo_celular_comprador: ['57', Validators.required],
-      numero_celular_comprador: ['', Validators.required],
+      numero_celular_comprador: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
       indicativo_celular_whatsapp: ['57', Validators.required],
       numero_celular_whatsapp: ['', Validators.required],
       correo_electronico_comprador: ['', [Validators.required, Validators.email]],
       tipoCliente: [''],
+      fechaCumpleanos: [''],
+      comoNosConocio: [''],
       etiquetas: [[]],
       datosFacturacionElectronica: [['']],
       datosEntrega: [['']],
@@ -781,9 +785,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     });
   }
   validarSoloNumeros(event: KeyboardEvent) {
-    const input = event.target as HTMLInputElement;
-    // Reemplaza cualquier cosa que no sea un número (0-9) con una cadena vacía
-    input.value = input.value.replace(/[^0-9]/g, '');
+    if (!/[0-9]/.test(event.key)) {
+      event.preventDefault();
+    }
   }
 
 
@@ -866,32 +870,38 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   private ejecutarCreacionCliente() {
     this.formulario.controls['datosFacturacionElectronica'].setValue([]);
     this.formulario.controls['datosEntrega'].setValue([]);
-    this.formulario.controls['notas'].setValue([])
-    this.formulario.controls['estado'].setValue('activo')
+    this.formulario.controls['notas'].setValue([]);
+    this.formulario.controls['estado'].setValue('activo');
+    this.formulario.controls['etiquetas'].setValue(this.etiquetasSeleccionadas);
     this.service.createClient(this.formulario.value).subscribe(r => {
-      console.log(r)
-      Swal.fire({
-        title: 'Guardado!',
-        text: 'Guardado con exito',
-        icon: 'success',
-        confirmButtonText: 'Ok'
-      });
-      const data = {
-        documento: this.formulario.value.documento
-      }
+      const data = { documento: this.formulario.value.documento };
       this.service.getClientByDocument(data).subscribe((res: any) => {
-        console.log(res)
-        sessionStorage.setItem('cliente', JSON.stringify(res))
-        this.formulario.patchValue(res)
-        this.datos = res
-        this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
-        this.formularioEntrega.patchValue(res.datosEntrega)
-        this.identificarDepto()
-        this.identificarCiu()
-        this.identificarDepto1()
-        this.identificarCiu1()
-        this.encontrado = true
-      })
+        sessionStorage.setItem('cliente', JSON.stringify(res));
+        this.formulario.patchValue(res);
+        this.datos = res;
+        this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? [...res.etiquetas] : [];
+        this.datosFacturacionElectronica = res.datosFacturacionElectronica || [];
+        this.datosEntregas = res.datosEntrega || [];
+        this.notas = res.notas || [];
+        this.formularioFacturacion.patchValue(res.datosFacturacionElectronica);
+        this.formularioEntrega.patchValue(res.datosEntrega);
+        this.identificarDepto();
+        this.identificarCiu();
+        this.identificarDepto1();
+        this.identificarCiu1();
+        this.encontrado = true;
+        this.showClienteModal = false;
+        Swal.fire({
+          title: '¡Cliente creado!',
+          text: `${res.nombres_completos} ${res.apellidos_completos || ''} fue guardado exitosamente.`,
+          icon: 'success',
+          timer: 2500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      });
     });
   }
   bloquear() {
@@ -1339,48 +1349,45 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.service.getClientByDocument(data).subscribe((res: any) => {
       this.formulario.controls['datosFacturacionElectronica'].setValue(res.datosFacturacionElectronica);
       this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
-      this.formulario.controls['notas'].setValue(res.notas)
-      this.formulario.controls['estado'].setValue(res.estado)
+      this.formulario.controls['notas'].setValue(res.notas);
+      this.formulario.controls['estado'].setValue(res.estado);
+      // Guardar etiquetas seleccionadas en el formulario antes de enviar
+      this.formulario.controls['etiquetas'].setValue(this.etiquetasSeleccionadas);
       this.service.editClient(this.formulario.value).subscribe(r => {
-        // Si estamos en modo edición (desde el modal de list.component)
         if (this.isEdit) {
-          // Obtener el cliente actualizado completo para devolverlo al modal
           this.service.getClientByDocument(data).subscribe((clienteActualizado: any) => {
-            console.log('✅ Cliente actualizado obtenido:', clienteActualizado);
-            // Cerrar el modal pasando el cliente completo actualizado
             this.modalService.dismissAll(clienteActualizado);
-
-            // Mostrar mensaje de éxito
-            Swal.fire({
-              title: 'Editado!',
-              text: 'Cliente actualizado con éxito',
-              icon: 'success',
-              confirmButtonText: 'Ok'
-            });
+            Swal.fire({ title: 'Editado!', text: 'Cliente actualizado con éxito', icon: 'success', confirmButtonText: 'Ok' });
           }, error => {
-            console.error('❌ Error obteniendo cliente actualizado:', error);
-            // En caso de error, cerrar con los datos del formulario
             this.modalService.dismissAll(this.formulario.value);
-
-            Swal.fire({
-              title: 'Editado!',
-              text: 'Cliente actualizado (con advertencia)',
-              icon: 'warning',
-              confirmButtonText: 'Ok'
-            });
+            Swal.fire({ title: 'Editado!', text: 'Cliente actualizado (con advertencia)', icon: 'warning', confirmButtonText: 'Ok' });
           });
         } else {
-          // Si no estamos en modo edición, mostrar mensaje de éxito normal
-          console.log(r)
-          Swal.fire({
-            title: 'Editado!',
-            text: 'Usuario editado con exito',
-            icon: 'success',
-            confirmButtonText: 'Ok'
+          // Recargar datos del cliente y refrescar ficha 360°
+          this.service.getClientByDocument(data).subscribe((clienteActualizado: any) => {
+            this.datos = clienteActualizado;
+            this.etiquetasSeleccionadas = Array.isArray(clienteActualizado.etiquetas) ? [...clienteActualizado.etiquetas] : [];
+            this.formulario.patchValue(clienteActualizado);
+            this.bloqueado = clienteActualizado.estado === 'bloqueado';
+            this.datosFacturacionElectronica = clienteActualizado.datosFacturacionElectronica || [];
+            this.datosEntregas = clienteActualizado.datosEntrega || [];
+            this.notas = clienteActualizado.notas || [];
+            this.encontrado = true;
+            sessionStorage.setItem('cliente', JSON.stringify(clienteActualizado));
+            this.showClienteModal = false;
+            Swal.fire({
+              title: '¡Cliente actualizado!',
+              text: `${clienteActualizado.nombres_completos} ${clienteActualizado.apellidos_completos || ''} fue actualizado exitosamente.`,
+              icon: 'success',
+              timer: 2500,
+              timerProgressBar: true,
+              showConfirmButton: false,
+              toast: true,
+              position: 'top-end'
+            });
           });
         }
       });
-
     })
 
   }
@@ -1472,6 +1479,53 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       gray:   '#5a5470',
     };
     return map[tag.color] || '#5a5470';
+  }
+
+  getTagFromCatalog(nombre: string): ClientTag | undefined {
+    return this.clientTagsCatalog.find(t => t.name === nombre);
+  }
+
+  // =============================================
+  // DIALOG CREAR / EDITAR (modo standalone)
+  // =============================================
+  showClienteModal: boolean = false;
+
+  abrirModalCrear(): void {
+    this.encontrado = false;
+    this.bloqueado = false;
+    this.etiquetasSeleccionadas = [];
+    this.resultadosBusqueda = [];
+    if (this.formulario) {
+      this.formulario.reset();
+      this.formulario.patchValue({
+        indicativo_celular_comprador: '57',
+        indicativo_celular_whatsapp: '57',
+        tipo_documento_comprador: 'CC-NIT',
+        estado: 'activo'
+      });
+    }
+    this.showClienteModal = true;
+  }
+
+  abrirModalEditar(): void {
+    if (this.datos) {
+      this.formulario.patchValue(this.datos);
+      this.formulario.controls['tipo_documento_comprador'].setValue(this.datos.tipo_documento_comprador);
+      this.formulario.controls['indicativo_celular_comprador'].setValue(this.datos.indicativo_celular_comprador);
+      this.formulario.controls['numero_celular_comprador'].setValue(this.datos.numero_celular_comprador);
+      this.formulario.controls['indicativo_celular_whatsapp'].setValue(this.datos.indicativo_celular_whatsapp);
+      this.formulario.controls['numero_celular_whatsapp'].setValue(this.datos.numero_celular_whatsapp);
+      this.formulario.controls['apellidos_completos'].setValue(this.datos.apellidos_completos);
+      this.formulario.controls['nombres_completos'].setValue(this.datos.nombres_completos);
+      this.formulario.controls['documento'].setValue(this.datos.documento);
+      this.formulario.controls['correo_electronico_comprador'].setValue(this.datos.correo_electronico_comprador);
+      this.formulario.controls['estado'].setValue(this.datos.estado);
+      if (this.datos.tipoCliente) {
+        this.formulario.controls['tipoCliente'].setValue(this.datos.tipoCliente);
+      }
+      this.etiquetasSeleccionadas = Array.isArray(this.datos.etiquetas) ? [...this.datos.etiquetas] : [];
+    }
+    this.showClienteModal = true;
   }
 
   // =============================================

@@ -1455,3 +1455,19 @@ form.integration-form,
     line-height: 1.2;
   }
 }
+
+/* ===========================================
+   DIALOG CREAR / EDITAR CLIENTE (global)
+   =========================================== */
+.cliente-form-dialog .p-dialog-title {
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  color: #8b5cf6 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cliente-form-dialog .p-dialog-content {
+  overflow: hidden !important;
+}
+

@@ -763,8 +763,8 @@ input[type="checkbox"] {
 .form-label-modern {
   display: block;
   font-size: 0.85rem;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #111;
   margin-bottom: 0.4rem;
 
   .required {
@@ -1133,13 +1133,30 @@ input[type="checkbox"] {
 // ==============================================
 // TÍTULOS DE SECCIÓN EN PESTAÑAS
 // ==============================================
+.nav-link.nav-link-dark {
+  color: #4b5563 !important;
+
+  &:hover:not(.active) {
+    color: #1f2937 !important;
+  }
+
+  &.active {
+    color: #1f2937 !important;
+    border-bottom-color: #4b5563 !important;
+
+    &:after {
+      background: #4b5563 !important;
+    }
+  }
+}
+
 .tab-section-title {
   margin: 0;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: #8b5cf6;
+  color: #111;
 }
 
 // ==============================================
@@ -1285,6 +1302,23 @@ input[type="checkbox"] {
     color: #dc2626;
     border-color: #f3c6c6;
   }
+}
+
+.c360-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-top: 0.25rem;
+}
+
+.c360-tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .c360-metrics {
@@ -1451,5 +1485,71 @@ input[type="checkbox"] {
       flex-shrink: 0;
       pointer-events: none;
     }
+  }
+}
+
+// ==============================================
+// DIALOG CREAR / EDITAR CLIENTE
+// ==============================================
+::ng-deep .cliente-form-dialog {
+  .p-dialog {
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .p-dialog-header {
+    background: #fff;
+    padding: 1.1rem 1.5rem;
+    border-bottom: 1.5px solid #ede9fe;
+
+    .p-dialog-title {
+      font-size: 1.55rem !important;
+      font-weight: 800;
+      color: #111;
+    }
+
+    .p-dialog-header-icons .p-dialog-header-close {
+      color: #6b7280;
+    }
+  }
+
+  .dialog-header-icon {
+    font-size: 1.1rem !important;
+    color: #8b5cf6 !important;
+  }
+
+  .dialog-header-title {
+    font-size: 1.1rem !important;
+    font-weight: 800 !important;
+    color: #111 !important;
+    margin: 0 !important;
+    line-height: 1.1 !important;
+  }
+
+  .dialog-header-sub {
+    font-size: 0.8rem !important;
+    font-weight: 400 !important;
+    color: #6b7280 !important;
+  }
+
+  .p-dialog-content {
+    padding: 0.75rem 1.25rem 1.25rem;
+    background: #fafbfc;
+
+    form {
+      .row.g-4 {
+        margin: 0;
+        --bs-gutter-y: 0.875rem;
+      }
+    }
+  }
+
+  .p-dialog-footer {
+    padding: 1rem 1.5rem;
+    background: #fff;
+    border-top: 1px solid #ede9fe;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
   }
 }

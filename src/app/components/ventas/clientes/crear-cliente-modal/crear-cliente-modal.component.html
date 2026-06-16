@@ -1,9 +1,9 @@
 <div class="modal-content cliente-modal">
-  <!-- Encabezado del modal - Moderno y Katuq Style -->
+  <!-- Encabezado -->
   <div class="modal-header-modern">
     <div class="header-content">
       <div class="header-title">
-        <i class="pi" [ngClass]="isEdit ? 'pi-user-edit' : 'pi-user-plus'"></i>
+        <i class="pi" [ngClass]="isEdit ? 'pi-user-edit' : 'pi-user-plus'" style="color:#8b5cf6;"></i>
         <div>
           <h5>{{ isEdit ? 'Editar Cliente' : 'Crear Nuevo Cliente' }}</h5>
           <p>{{ isEdit ? 'Actualiza los datos del cliente' : 'Completa los datos para registrar un nuevo cliente' }}</p>
@@ -15,176 +15,218 @@
     </div>
   </div>
 
-  <!-- Cuerpo del modal -->
+  <!-- Cuerpo -->
   <div class="modal-body-modern">
-    <form [formGroup]="formulario">
-      <!-- Sección 1: Información Básica -->
-      <div class="form-section-modern">
-        <div class="section-header">
-          <i class="pi pi-user"></i>
-          <h6>{{ "Información Básica" | translate }}</h6>
-        </div>
+    <form [formGroup]="formulario" autocomplete="off">
+      <div class="row g-4 mx-0">
 
-        <div class="row g-3">
-          <!-- Tipo de Documento -->
-          <div class="col-md-6">
-            <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
-            <p-dropdown
-              [options]="[
-                {label: 'CC-NIT', value: 'CC-NIT'},
-                {label: 'Pasaporte', value: 'PA'},
-                {label: 'TI', value: 'TI'}
-              ]"
-              formControlName="tipo_documento_comprador"
-              placeholder="{{ 'Seleccionar...' | translate }}"
-              [disabled]="isEdit"
-              styleClass="w-100">
-            </p-dropdown>
-            <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched" class="error-message">
-              <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+        <!-- ── Información Básica ── -->
+        <div class="col-md-6">
+          <div class="form-section-modern">
+            <div class="section-header">
+              <i class="pi pi-user" style="color:#8b5cf6;"></i>
+              <h6>{{ "Información Básica" | translate }}</h6>
             </div>
-          </div>
+            <div class="row g-3">
 
-          <!-- Documento -->
-          <div class="col-md-6">
-            <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
-            <input pInputText
-              type="text"
-              placeholder="{{ 'Número de documento' | translate }}"
-              formControlName="documento"
-              [disabled]="isEdit"
-              class="w-100">
-            <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="error-message">
-              <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-            </div>
-          </div>
-
-          <!-- Nombres -->
-          <div class="col-12">
-            <label class="form-label-modern">{{ "Nombres Completos" | translate }} <span class="required">*</span></label>
-            <input pInputText
-              type="text"
-              placeholder="{{ 'Nombres completos' | translate }}"
-              formControlName="nombres_completos"
-              class="w-100">
-            <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched" class="error-message">
-              <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-            </div>
-          </div>
-
-          <!-- Apellidos -->
-          <div class="col-12">
-            <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required">*</span></label>
-            <input pInputText
-              type="text"
-              placeholder="{{ 'Apellidos completos' | translate }}"
-              formControlName="apellidos_completos"
-              class="w-100">
-            <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched" class="error-message">
-              <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sección 2: Información de Contacto -->
-      <div class="form-section-modern">
-        <div class="section-header">
-          <i class="pi pi-phone"></i>
-          <h6>{{ "Información de Contacto" | translate }}</h6>
-        </div>
-
-        <div class="row g-3">
-          <!-- Teléfono Celular -->
-          <div class="col-12">
-            <label class="form-label-modern">{{ "Teléfono Celular" | translate }} <span class="required">*</span></label>
-            <div class="phone-input-group">
-              <p-dropdown
-                [options]="indicativos"
-                optionLabel="phone_code"
-                optionValue="phone_code"
-                placeholder="{{ 'Código' | translate }}"
-                formControlName="indicativo_celular_comprador"
-                styleClass="country-code">
-              </p-dropdown>
-              <input pInputText
-                type="text"
-                placeholder="{{ 'Número celular' | translate }}"
-                formControlName="numero_celular_comprador"
-                (keypress)="validarSoloNumeros($event)"
-                class="flex-grow-1">
-            </div>
-            <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched" class="error-message">
-              <i class="pi pi-exclamation-circle"></i>{{ "Número de celular requerido" | translate }}
-            </div>
-          </div>
-
-          <!-- Correo Electrónico -->
-          <div class="col-12">
-            <label class="form-label-modern">{{ "Correo Electrónico" | translate }} <span class="required">*</span></label>
-            <input pInputText
-              type="email"
-              placeholder="{{ 'correo@ejemplo.com' | translate }}"
-              formControlName="correo_electronico_comprador"
-              class="w-100">
-            <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid" class="error-message">
-              <i class="pi pi-exclamation-circle"></i>
-              <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
-              <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Ingrese un correo válido" | translate }}</span>
-            </div>
-          </div>
-
-          <!-- WhatsApp Section -->
-          <div class="col-12">
-            <div class="whatsapp-section">
-              <div class="checkbox-group">
-                <input type="checkbox"
-                  id="whatsappCheckbox"
-                  formControlName="whatsappSameAsPhone"
-                  (change)="replicarWhatsApp($event)"
-                  class="form-check-input">
-                <label for="whatsappCheckbox" class="form-label-modern">{{ "Usar el mismo número para WhatsApp" | translate }}</label>
-              </div>
-
-              <label class="form-label-modern mt-3">{{ "WhatsApp" | translate }}</label>
-              <div class="phone-input-group">
-                <p-dropdown
-                  [options]="indicativos"
-                  optionLabel="phone_code"
-                  optionValue="phone_code"
-                  placeholder="{{ 'Código' | translate }}"
-                  formControlName="indicativo_celular_whatsapp"
-                  [disabled]="formulario.get('indicativo_celular_whatsapp')?.disabled"
-                  styleClass="country-code">
+              <!-- Tipo Doc + Documento -->
+              <div class="col-12 col-sm-6">
+                <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
+                <p-dropdown [options]="[
+                    {label: 'CC-NIT', value: 'CC-NIT'},
+                    {label: 'Pasaporte', value: 'PA'},
+                    {label: 'TI', value: 'TI'}
+                  ]"
+                  formControlName="tipo_documento_comprador"
+                  optionLabel="label" optionValue="value"
+                  placeholder="{{ 'Seleccionar...' | translate }}"
+                  [disabled]="isEdit"
+                  styleClass="w-100" panelStyleClass="buscar-por-panel">
                 </p-dropdown>
-                <input pInputText
-                  type="text"
-                  placeholder="{{ 'Número WhatsApp' | translate }}"
-                  formControlName="numero_celular_whatsapp"
-                  [disabled]="formulario.get('numero_celular_whatsapp')?.disabled"
-                  (keypress)="validarSoloNumeros($event)"
-                  class="flex-grow-1">
+                <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched" class="error-message mt-1">
+                  <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                </div>
               </div>
+              <div class="col-12 col-sm-6">
+                <label class="form-label-modern">{{ "Número de Documento" | translate }} <span class="required">*</span></label>
+                <input pInputText type="text" placeholder="{{ 'Número de documento' | translate }}"
+                  formControlName="documento" [attr.disabled]="isEdit ? true : null" class="w-100">
+                <div *ngIf="formulario.get('documento')?.invalid && formulario.get('documento')?.touched" class="error-message mt-1">
+                  <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                </div>
+              </div>
+
+              <!-- Nombres + Apellidos -->
+              <div class="col-12 col-sm-6">
+                <label class="form-label-modern">{{ "Nombres Completos" | translate }} <span class="required">*</span></label>
+                <input pInputText type="text" placeholder="{{ 'Nombres completos' | translate }}"
+                  formControlName="nombres_completos" class="w-100">
+                <div *ngIf="formulario.get('nombres_completos')?.invalid && formulario.get('nombres_completos')?.touched" class="error-message mt-1">
+                  <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                </div>
+              </div>
+              <div class="col-12 col-sm-6">
+                <label class="form-label-modern">{{ "Apellidos Completos" | translate }} <span class="required">*</span></label>
+                <input pInputText type="text" placeholder="{{ 'Apellidos completos' | translate }}"
+                  formControlName="apellidos_completos" class="w-100">
+                <div *ngIf="formulario.get('apellidos_completos')?.invalid && formulario.get('apellidos_completos')?.touched" class="error-message mt-1">
+                  <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
+                </div>
+              </div>
+
+              <!-- Tipo de Cliente + Fecha Cumpleaños -->
+              <div class="col-12 col-sm-6" *ngIf="clientTypes && clientTypes.length > 0">
+                <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
+                <p-dropdown formControlName="tipoCliente" [options]="clientTypes"
+                  placeholder="{{ 'Seleccionar tipo...' | translate }}"
+                  [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel">
+                </p-dropdown>
+              </div>
+              <div class="col-12" [class.col-sm-6]="clientTypes && clientTypes.length > 0">
+                <label class="form-label-modern">
+                  <i class="pi pi-gift me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "Fecha de Cumpleaños" | translate }}
+                </label>
+                <input type="date" formControlName="fechaCumpleanos"
+                  autocomplete="bday"
+                  class="w-100 p-inputtext"
+                  style="height:36px; border:1px solid #e9ecef; border-radius:6px; padding:0 0.65rem; font-size:0.85rem;">
+              </div>
+
+              <!-- Etiquetas con catálogo -->
+              <div class="col-12" *ngIf="clientTagsCatalog && clientTagsCatalog.length > 0">
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                  <label class="form-label-modern mb-0">
+                    <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
+                  </label>
+                </div>
+                <div class="tags-picker">
+                  <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"
+                    [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
+                    [style.background-color]="tieneEtiqueta(tag.name) ? getTagColor(tag) : ''"
+                    [style.color]="tieneEtiqueta(tag.name) ? getTagTextColor(tag) : ''"
+                    (click)="toggleEtiqueta(tag.name)">
+                    <i class="pi pi-check" *ngIf="tieneEtiqueta(tag.name)"></i>{{ tag.name }}
+                  </span>
+                </div>
+              </div>
+              <!-- Sin catálogo -->
+              <div class="col-12" *ngIf="!clientTagsCatalog || clientTagsCatalog.length === 0">
+                <label class="form-label-modern mb-0">
+                  <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ "Etiquetas" | translate }}
+                </label>
+                <div class="tags-empty-hint mt-1">
+                  <i class="pi pi-info-circle me-1"></i>{{ "No hay etiquetas configuradas." | translate }}
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
+
+        <!-- ── Información de Contacto ── -->
+        <div class="col-md-6">
+          <div class="form-section-modern">
+            <div class="section-header">
+              <i class="pi pi-phone" style="color:#8b5cf6;"></i>
+              <h6>{{ "Información de Contacto" | translate }}</h6>
+            </div>
+            <div class="row g-3">
+
+              <!-- Teléfono -->
+              <div class="col-12">
+                <label class="form-label-modern">{{ "Teléfono Celular" | translate }} <span class="required">*</span></label>
+                <div class="phone-input-group">
+                  <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
+                    placeholder="{{ 'Código' | translate }}"
+                    formControlName="indicativo_celular_comprador"
+                    styleClass="country-code" panelStyleClass="buscar-por-panel">
+                  </p-dropdown>
+                  <input pInputText type="text" placeholder="{{ 'Número celular' | translate }}"
+                    formControlName="numero_celular_comprador" autocomplete="tel" maxlength="10"
+                    (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                </div>
+                <div *ngIf="formulario.get('numero_celular_comprador')?.invalid && formulario.get('numero_celular_comprador')?.touched" class="error-message mt-1">
+                  <i class="pi pi-exclamation-circle"></i>
+                  <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                  <span *ngIf="formulario.get('numero_celular_comprador')?.hasError('pattern')">{{ "Debe tener exactamente 10 dígitos" | translate }}</span>
+                </div>
+              </div>
+
+              <!-- Correo + Cómo nos conoció en misma fila -->
+              <div class="col-12 col-sm-7">
+                <label class="form-label-modern">{{ "Correo Electrónico" | translate }} <span class="required">*</span></label>
+                <input pInputText type="email" placeholder="{{ 'correo@ejemplo.com' | translate }}"
+                  formControlName="correo_electronico_comprador" class="w-100">
+                <div *ngIf="formulario.get('correo_electronico_comprador')?.touched && formulario.get('correo_electronico_comprador')?.invalid" class="error-message mt-1">
+                  <i class="pi pi-exclamation-circle"></i>
+                  <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('required')">{{ "Campo obligatorio" | translate }}</span>
+                  <span *ngIf="formulario.get('correo_electronico_comprador')?.hasError('email')">{{ "Correo inválido" | translate }}</span>
+                </div>
+              </div>
+              <div class="col-12 col-sm-5">
+                <label class="form-label-modern">
+                  <i class="pi pi-compass me-1" style="color:#8b5cf6;font-size:0.85rem;"></i>{{ "¿Cómo nos conoció?" | translate }}
+                </label>
+                <p-dropdown formControlName="comoNosConocio"
+                  [options]="[
+                    {label: 'Redes Sociales', value: 'Redes Sociales'},
+                    {label: 'Referido / Amigo', value: 'Referido / Amigo'},
+                    {label: 'Google / Búsqueda web', value: 'Google / Búsqueda web'},
+                    {label: 'Publicidad online', value: 'Publicidad online'},
+                    {label: 'Evento / Feria', value: 'Evento / Feria'},
+                    {label: 'Visita en tienda', value: 'Visita en tienda'},
+                    {label: 'WhatsApp / Email', value: 'WhatsApp / Email'},
+                    {label: 'Otro', value: 'Otro'}
+                  ]"
+                  optionLabel="label" optionValue="value"
+                  placeholder="{{ 'Seleccionar...' | translate }}"
+                  [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel">
+                </p-dropdown>
+              </div>
+
+              <!-- WhatsApp compacto -->
+              <div class="col-12">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                  <label class="form-label-modern mb-0">{{ "WhatsApp" | translate }}</label>
+                  <div class="d-flex align-items-center gap-2">
+                    <input type="checkbox" id="whatsappCheckboxModal"
+                      formControlName="whatsappSameAsPhone"
+                      (change)="replicarWhatsApp($event)" class="form-check-input mt-0">
+                    <label for="whatsappCheckboxModal" class="form-label-modern mb-0" style="font-size:0.8rem;color:#6b7280;">
+                      {{ "Mismo número" | translate }}
+                    </label>
+                  </div>
+                </div>
+                <div class="phone-input-group">
+                  <p-dropdown [options]="indicativos" optionLabel="phone_code" optionValue="phone_code"
+                    placeholder="{{ 'Código' | translate }}"
+                    formControlName="indicativo_celular_whatsapp"
+                    styleClass="country-code" panelStyleClass="buscar-por-panel">
+                  </p-dropdown>
+                  <input pInputText type="text" placeholder="{{ 'Número WhatsApp' | translate }}"
+                    formControlName="numero_celular_whatsapp" autocomplete="tel-national"
+                    (keypress)="validarSoloNumeros($event)" class="flex-grow-1">
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
       </div>
     </form>
   </div>
 
-  <!-- Footer del modal - Moderno -->
+  <!-- Footer -->
   <div class="modal-footer-modern">
-    <button pButton
-      type="button"
-      icon="pi pi-times"
+    <button pButton type="button" icon="pi pi-times"
       label="{{ 'Cancelar' | translate }}"
       class="p-button-outlined p-button-secondary"
       (click)="activeModal.dismiss()">
     </button>
-    <button pButton
-      type="button"
-      [icon]="isEdit ? 'pi pi-pencil' : 'pi pi-save'"
-      [label]="(isEdit ? 'Actualizar' : 'Guardar') | translate"
+    <button pButton type="button"
+      [icon]="isEdit ? 'pi pi-check' : 'pi pi-save'"
+      [label]="(isEdit ? 'Actualizar Cliente' : 'Crear Cliente') | translate"
       class="p-button-primary"
       (click)="guardarCliente()"
       [disabled]="formulario.invalid">
