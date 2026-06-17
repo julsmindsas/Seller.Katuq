@@ -164,6 +164,14 @@ export class ConfProductToCartComponent
   @Input() public configuracionCarrito: Carrito;
   @Input() isEdit: boolean = false;
   @Input() public modalRef: any; // Referencia al modal para cerrarlo selectivamente
+  /**
+   * Modo "solo retornar" (spec 008 — T-19). Cuando es true, `agregar()` NO toca
+   * el carrito singleton de venta asistida: devuelve el `Carrito` configurado vía
+   * `modalRef.dismiss(ProductoCompra)` para que el consumidor (p.ej. el editor de
+   * cotizaciones) lo agregue a su propia lista. Default false → comportamiento de
+   * venta asistida intacto.
+   */
+  @Input() public returnOnly: boolean = false;
 
   public cantidad: number = 1;
   private digitandoCantidad = false;
@@ -1682,7 +1690,10 @@ export class ConfProductToCartComponent
 
       console.log("ProductoCompra creado:", ProductoCompra);
 
-      if (!this.isEdit && !this.isRebuy) {
+      if (this.returnOnly) {
+        // T-19: solo retornar el Carrito configurado, sin tocar el singleton.
+        this.dismissCurrentModal(ProductoCompra);
+      } else if (!this.isEdit && !this.isRebuy) {
         console.log("Agregar al carrito...");
         this.carsingleton.addToCart(ProductoCompra);
         this.dismissCurrentModal();

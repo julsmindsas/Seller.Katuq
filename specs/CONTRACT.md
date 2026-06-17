@@ -35,6 +35,7 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **005** | **wo-cartera-universo-completo** | **draft (código mergeado, pendiente validación)** | Daniel | Refactor `woBalancesSyncService`: universo desde `listCustomers` (resuelve bug Harmony $1.553M→$1.860M). Suma CE en montoPagadoHistorico + docsCE. `fechaCorte` param. Fix descuento (`porDescuento` vs `porcentajeDescuento`). Persist renglones opt-in en `accounting_document_lines`. |
 | **006** | **harmony-vendedor-filter** | **done** | Daniel | Filtro server-side multi-source por vendedor: orders por `asesor_email`, accounting_documents/balances por `vendedor_id` con fallback a `vendedor_nombre`. JWT con `vendedorIdWO/NombreWO`. Política estricta sin mapeo → 0 docs. Form crear-usuarios con dropdown autocomplete desde `/v1/reports/sellers/wo`. E2E PASS Harmony LUZ MARIA = 24 docs subset. |
 | **007** | **user-admin-credentials-delete** | **done** | Daniel | Normaliza contraseña en crear/editar usuarios y habilita eliminar usuario desde `/usuarios` con validación de empresa. |
+| **008** | **cotizaciones-mvp** | **tasks in-progress (Bloque 0 done)** | — | Módulo de Cotizaciones, Fase 1: listado + métricas + export + editor (cliente, fechas, productos con popup de config y precio/IVA editable, totales, términos, estados, guardar borrador, PDF, WhatsApp, vendedor). Colección propia, NO toca inventario/pedidos. **Existe implementación previa** (backend completo + rama frontend `origin/cotizaciones`) → se adopta/ajusta backend y se construye frontend fresco (ver D-040/D-041). Sub-fases: 008.2 conversión a pedido, 008.3 portal de aprobación por correo. |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -326,11 +327,58 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 ---
 
+### 2026-06-14 — D-039: Apertura spec 008 — Cotizaciones MVP (colección propia)
+- **Contexto:** el responsable de producto entregó 4 mocks HTML (`mock cotizacion/`) de un módulo de cotizaciones. El objetivo final (`katuq-cotizaciones-flujo.html`) reusa los 3 primeros pasos de la venta asistida (cliente → productos → entrega/facturación) y añade conversión a pedido y portal de aprobación por correo. Se decidió abrir el módulo por fases.
+- **Decisión de modelo:** la cotización vive en una **colección propia `cotizaciones`** (multi-tenant por `company`), NO se modela sobre `orders` ni con un flag. Razón: una cotización no debe descontar inventario ni entrar a fulfillment hasta convertirse; reusar `orders` ensuciaría el 360 (inventoryService toca POS/ventas/fulfillment/Shopify — regla crítica del CLAUDE.md). La conversión a pedido (fase 008.2) es el único punto que crea un `order`.
+- **Alcance Fase 1 (008):** listado con KPIs + filtros + buscador + export + consecutivo; editor con selección de cliente existente, fechas, productos (con popup de configuración comercial reusado y edición de precio/IVA por línea como en el carrito), totales (subtotal/desc línea/desc global/IVA), términos y condiciones, estados (borrador/enviada/aceptada/rechazada/vencida), guardar borrador, PDF y WhatsApp, campo vendedor.
+- **Reuso confirmado (frontend):** `MaestroService` (clientes), `VentasService.getProductsByFilterPaginated/quickSearchProducts` (productos), `PaymentService.checkPriceScale/checkIVAPrice` (cálculo), `ConfProductToCartComponent` (popup config), modelo `Pedido/Carrito/Configuracion`. **Nada de esto se reescribe.**
+- **Riesgo arquitectónico clave (R-01 de la spec):** `CartSingletonService` es un carrito **singleton global**; la cotización debe mantener su **propio arreglo de líneas** y reusar solo funciones puras de cálculo + el popup de configuración en modo aislado, para no contaminar una venta asistida activa.
+- **Backend:** repo `C:\Users\julia\Documents\Seller.Katuq.Back\katuq_admin_back_firebase`. Nuevos endpoints `/v1/cotizaciones/{create,edit,getById}`, `/v1/cotizaciones/all/filter/paginated`, `/v1/cotizaciones/metrics` + consecutivo transaccional + `cotizaciones_config/{company}.terminosBase`.
+- **Numeración:** se usa `008` para evitar colisión con el folder local `007-assisted-sale-step1-customer` y el `007` del roadmap.
+- **Alternativas descartadas:** modelar sobre `orders` con flag (riesgo alto para el 360); KPIs en frontend (inexactos); términos en `CompanyInformation` (modelo muy usado, invasivo).
+
+### 2026-06-14 — D-CLAR-01..05: Clarifications resueltas de spec 008 (defaults aprobados)
+- **D-CLAR-01 — Métricas en backend:** endpoint `/v1/cotizaciones/metrics` agrega por empresa (cotizado del mes, pipeline activo, tasa de conversión, borradores). Razón: requieren todos los docs del periodo, no la página cargada.
+- **D-CLAR-02 — Consecutivo continuo por empresa:** `COT-AAAA-MMDD-####` con contador transaccional por empresa que NO reinicia (la fecha es solo la de emisión). Razón: coincide con los mocks; evita números repetidos entre periodos.
+- **D-CLAR-03 — Términos base en doc dedicado:** `cotizaciones_config/{company}.terminosBase`, no en `CompanyInformation`. Razón: aislar config de cotizaciones; modelo de empresa es pequeño y muy usado.
+- **D-CLAR-04 — Paginación server-side desde día 1:** reusa patrón de `orders`/`productos`. Razón: multi-tenant que crece; evita refactor; estandarización del proyecto.
+- **D-CLAR-05 — Solo selección de cliente existente en Fase 1:** creación rápida de cliente diferida (servicio `createClient` ya existe → bajo costo añadirla luego). Razón: alcance acordado ajustado.
+
+### 2026-06-14 — D-040: Descubrimiento — ya existe implementación previa de cotizaciones
+- **Contexto:** al redactar el plan 008 se descubrió implementación previa NO mencionada en el roadmap:
+  - **Backend** (`Seller.Katuq.Back`): `controllers/cotizaciones.js` (803 LOC) + `services/cotizacionService.js` (233 LOC) + `routers/cotizaciones.js`, montado en `index.js` como `/v1/cotizaciones`. Tiene create, getAll, getById, getByNumber, edit, delete, filter, convertir-pedido, estadísticas. PDF y email son stubs 501.
+  - **Frontend**: rama `origin/cotizaciones` con módulo completo (`cotizaciones.component.ts` 56KB, `cotizaciones-lista` 21KB, service, module, routing). Rama muy divergida (~190 archivos vs main).
+- **Divergencias del backend existente vs spec 008 aprobada:** consecutivo `COT-AAAA-NNNNNN` NO transaccional (vs `COT-AAAA-MMDD-####` transaccional, D-CLAR-02); `calcularTotales` simplista (vs fidelidad venta asistida); estados `Aprobada/Expirada` (vs `aceptada/vencida`); métricas con forma distinta a los 4 KPIs; sin `cotizaciones_config`.
+- **Problemas del frontend de la rama:** `cotizaciones.service.ts` NO extiende `BaseService` y tiene endpoints rotos (`/:id/estado`, `/:id/enviar`); al crear solo envía ítems simples → NO reusa pricing de venta asistida → NO cumple fidelidad de precios de la spec.
+- **Decisión:** tratar esto como cambio de alcance (de "crear" a "adoptar/ajustar + construir fresco frontend"). Registrado abajo en §4.
+
+### 2026-06-14 — D-041: Estrategia de implementación 008 (frontend fresco + backend adoptado)
+- **Frontend:** construir módulo nuevo en la rama actual (`feature/venta-asistida-mejorada`) reusando `PaymentService` + `ConfProductToCartComponent` + `MaestroService` + `VentasService`, con `CotizacionesService extends BaseService`. Usar HTML/SCSS de `origin/cotizaciones` SOLO como referencia visual. NO fusionar la rama divergida.
+  - **Razón:** garantiza fidelidad de precios (requisito central de la spec), respeta Art IX (BaseService, no HttpClient directo), evita arrastrar ~190 archivos mezclados.
+  - **Alternativas descartadas:** adoptar el módulo de la rama (no reusa pricing, deuda técnica); merge completo de la rama (riesgo alto).
+- **Backend:** adoptar y ajustar `controllers/cotizaciones.js` — consecutivo transaccional (`cotizaciones_counters/{company}` + `runTransaction`) con formato `COT-AAAA-MMDD-####`; almacenar totales del frontend (quitar recálculo lossy); estados canónicos + lectura tolerante de legacy; nuevo `GET /v1/cotizaciones/metrics` (4 KPIs); `GET/PUT /v1/cotizaciones/config` (`cotizaciones_config/{company}.terminosBase`).
+  - **Razón:** conserva trabajo funcional ya hecho (convertir-pedido para 008.2, filtros, stats) y minimiza riesgo.
+  - **Alternativa descartada:** reescribir con repository/service como `orders` (descarta trabajo útil).
+- **Source of truth de totales = frontend** (con `PaymentService`); el backend almacena lo recibido y no recalcula. Riesgo aceptado: la cotización es interna (no enviada por el cliente) en Fase 1.
+- **Plan creado:** `specs/008-cotizaciones-mvp/plan.md` (estado draft, 9 fases A–I). Spec marcada `approved`.
+
+### 2026-06-15 — D-042: Reuso de `ConfProductToCartComponent` vía módulo compartido (T-19)
+- **Contexto:** el editor de cotizaciones (T-19) necesita el popup de configuración de producto (`ConfProductToCartComponent`) para mantener fidelidad de precio/IVA, pero estaba **declarado dentro de `VentasModule`** (lazy) y no exportado → no reusable desde el lazy `CotizacionesModule`.
+- **Verificación previa:** el popup es autocontenido en su template — solo usa `SharedModule` (`app-feather-icons`, `app-katuqintelligence`, `NgbModule`, Forms), `GalleryModule` (`ks-carousel`), `NgSelectModule` (`ng-select`) y `NgxStarRatingModule`. No usa ningún componente hermano de `VentasModule` ni PrimeNG/archwizard en su HTML. Todos los servicios que inyecta son `providedIn: 'root'` → funciona abierto con `NgbModal.open()` desde cualquier inyector.
+- **Decisión (Opción A):** crear `src/app/components/ventas/catalogo/catalogo-shared.module.ts` (`CatalogoSharedModule`) que **declara y exporta** `ConfProductToCartComponent`; `VentasModule` quita la declaración e importa el módulo (sin cambios de comportamiento); `CotizacionesModule` lo importa también.
+  - **Razón:** reusa la UI idéntica (cero divergencia de precios), respeta Art. VI (no acoplar UI a flujo) y SRP; riesgo bajo confirmado por la verificación.
+  - **Alternativas descartadas:** importar `VentasModule` completo en cotizaciones (arrastra `VentasRoutingModule`/providers, acopla todo ventas); diferir productos con config (deja T-19 a medias y sin el caso que más exige fidelidad).
+- **Cambio aditivo en el popup:** `@Input() returnOnly: boolean = false`. Cuando es true, `agregar()` devuelve el `Carrito` vía `modalRef.dismiss(...)` sin tocar el carrito singleton; con `returnOnly=false` el comportamiento de venta asistida es idéntico al previo.
+- **Precio por categoría en el popup desde cotizaciones:** se hace save/restore de `sessionStorage['cliente']` alrededor del modal (el popup lee de ahí), sin contaminar el estado de venta asistida (R-01 de la spec respetado).
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
 
-_(vacío)_
+### 2026-06-14 — SC-008-01: Cotizaciones pasa de "greenfield" a "adoptar existente + frontend fresco"
+- **Spec afectada:** 008-cotizaciones-mvp.
+- **Cambio:** la spec se redactó asumiendo construcción desde cero. Al planear se halló backend completo + módulo en rama `origin/cotizaciones` (ver D-040). El alcance funcional de Fase 1 NO cambia; cambia la **estrategia**: backend se adopta/ajusta, frontend se construye fresco reusando venta asistida (D-041).
+- **Impacto en spec:** ninguno en criterios EARS ni out-of-scope. Solo afecta plan/tasks.
 
 ---
 
@@ -388,6 +436,59 @@ _(vacío)_
 - **D-035**: Endpoint `GET /v1/reports/sellers/wo` retorna distinct vendedores desde `accounting_documents` para autocomplete admin. Form `crear-usuarios` consume con datalist.
 - **D-036**: Cleanup auto-sesión via `scripts/audit-session-changes.js` (read-only). NO tocar admins reales (`luisfernanaristi@hotmail.com`, `wdsg11@hotmail.com`). Tests con users desechables `test-vendedor-wo@katuq.test` + `test-sin-mapeo@katuq.test`, eliminados post-validación.
 - E2E PASS: vendedor con mapeo (LUZ MARIA 2137) ve 24 docs subset; sin mapeo ve 0; admin sin tocar comportamiento existente.
+
+### 2026-06-15 (sesión cotizaciones — cierre con estado guardado)
+- **Avance de la sesión:** completados Bloque C (scaffolding) y Bloque D (listado) del frontend, además de extensiones backend para soportarlos.
+  - **T-11** módulo lazy `cotizaciones/` + routing + 2 componentes + registro en `routes.ts`, `nav.service.ts` (Gestión Comercial), `modules-catalog.ts`.
+  - **T-12** `cotizaciones.service.ts extends BaseService` (método de borrado renombrado `deleteCotizacion` para no chocar con `BaseService.delete`).
+  - **T-13** `modelo/cotizacion.ts` (reusa `Carrito`/`Cliente` de ventas).
+  - **T-14** listado real: tabla server-side, paginación, chips por estado, buscador `q`, orden, badges, alerta de validez.
+  - **T-15** KPIs (4 cards plano border-left) + conteos por estado en chips.
+  - **T-16** export Excel (`xlsx`, todo el filtro vigente). **T-17** acciones de fila (abrir + duplicar).
+- **Backend (aditivo, sin levantar):** `getAll` acepta `?q=` (búsqueda en memoria por número/cliente); `getMetrics` devuelve `total`+`porEstado`.
+- **Estado de verificación:** `tsc --noEmit` 0 errores en todo el proyecto; backend `node -c` OK. Pendiente: T-10 integración (emulador/Java) y verificación de templates vía `npm start`/`ng build`.
+- **Archivos tocados (NADA commiteado aún):**
+  - Frontend `Seller.Katuq` (rama `feature/venta-asistida-mejorada`): `src/app/components/cotizaciones/**` (módulo, routing, service, modelo, lista, editor placeholder); `src/app/shared/routes/routes.ts`; `src/app/shared/services/nav.service.ts`; `src/app/shared/models/roles/modules-catalog.ts`.
+  - Backend `Seller.Katuq.Back` (rama `backend-aws-security`): `functions/controllers/cotizaciones.js`, `functions/routers/cotizaciones.js`, `functions/firestore.indexes.json`, `functions/scripts/test-cotizaciones-contract.js`, `functions/package.json` (script test).
+- **RETOMAR EN:** **T-18** (editor: cliente+fechas+términos). Ver `specs/008-cotizaciones-mvp/tasks.md` (tracker vivo con el detalle por tarea).
+
+### 2026-06-15 (sesión cotizaciones — editor T-18 + T-19)
+- **Avance:** completado el editor base y el módulo de productos del editor.
+  - **T-18** `cotizacion-editor`: picker de cliente (autocomplete debounce vía `MaestroService.searchClients`) + tarjeta del cliente; fecha de emisión (auto hoy) + validez (días) ↔ "válida hasta" con recálculo bidireccional; vendedor = usuario en sesión (readonly); términos precargados de `GET /v1/cotizaciones/config` (editables). Modo edición carga vía `getById`.
+  - **T-19** productos: picker por nombre/ref (`VentasService.quickSearchProducts`, debounce); `requiereConfiguracion()` replicado → con config abre `ConfProductToCartComponent` (`returnOnly=true`, sin tocar el carrito singleton; save/restore de `sessionStorage.cliente` para precio por categoría), sin config línea directa (réplica `agregarRapido` + precio por categoría desde `cotizacion.cliente`); ítem libre; tabla de líneas (cant. editable, subtotal, eliminar).
+- **D-042 (Opción A) — reuso del popup:** nuevo `src/app/components/ventas/catalogo/catalogo-shared.module.ts` (`CatalogoSharedModule`) declara+exporta `ConfProductToCartComponent`; `VentasModule` quitó la declaración e importa el shared; `CotizacionesModule` lo importa. `@Input returnOnly` aditivo en el popup (venta asistida intacta con default false). Verificado: el popup es template-autocontenido (solo Shared + Gallery/NgSelect/StarRating) y todos sus servicios son `providedIn:'root'`.
+- **Verificación:** `tsc --noEmit` 0 errores; **build AOT (`ng build`) 0 errores en cotizaciones/catálogo** (valida el wiring entre módulos lazy). ⚠️ El build global falla por **2 errores AOT PREEXISTENTES** en `ventas/clientes/lista/clientes-lista.component.html` (chip "Inactivos" → `applyEstadoFilter('inactivo')` fuera del tipo `'todos'|'activo'|'bloqueado'`), ajeno a 008 y del commit `feat(clientes)`; **no arreglado** (requiere decisión del dueño de clientes: ¿'inactivo'='bloqueado' o estado nuevo?).
+- **Archivos tocados (NADA commiteado aún) — frontend `feature/venta-asistida-mejorada`:** `cotizaciones/cotizacion-editor/*` (ts/html/scss), `cotizaciones/cotizaciones.module.ts`; nuevo `ventas/catalogo/catalogo-shared.module.ts`; `ventas/ventas.module.ts` (quita decl + importa shared); `ventas/catalogo/conf-product-to-cart/conf-product-to-cart.component.ts` (`@Input returnOnly` + branch en `agregar()`).
+- **RETOMAR EN:** **T-20** (edición de precio/IVA por línea: `permitePrecioManual`, `_precioManualOverride`, `_ivaManualOverride`, `getIvaActual`). Luego T-21 (totales+desc global+estado), T-22 (guardar). Decidir aparte si se arregla el bug de `clientes-lista` para desbloquear `build:prod`.
+
+### 2026-06-14 (sesión cotizaciones — Bloque A/B backend)
+- Implementado el bloque backend de la spec 008 en `Seller.Katuq.Back` (branch `backend-aws-security`, sin commitear aún), TODO aislado al módulo de cotizaciones (no toca orders/inventory/products/clients):
+  - **T-03** consecutivo transaccional `COT-AAAA-MMDD-####` vía `cotizaciones_counters/{company}` + `runTransaction`.
+  - **T-04** create/edit almacenan los totales del frontend (source of truth); `calcularTotales` solo como fallback si no llegan.
+  - **T-05** `EstadoCotizacion` con valores canónicos (`borrador/enviada/aceptada/rechazada/vencida/convertida`) + helper `normalizarEstado` aplicado en getAll/getById/getByNumber/filter (lectura tolerante de legacy `Borrador/Aprobada/Expirada`).
+  - **T-06** `GET /v1/cotizaciones/metrics` (cotizadoMes, pipelineActivo, tasaConversion, borradores).
+  - **T-07** `GET/PUT /v1/cotizaciones/config` (`cotizaciones_config/{company}.terminosBase`, con default sembrado).
+  - **T-08** `getAll` usa `count().get()` (fallback a lectura) en vez de leer toda la colección.
+  - **T-09** índices Firestore `cotizaciones (company, fechaCreacion)` y `(company, estadoCotizacion, fechaCreacion)`.
+  - Router reordenado: rutas GET de segmento fijo (`/all`, `/metrics`, `/config`, `/number`) ANTES de la dinámica `/:id` (evita que `/:id` capture `/metrics` y `/config`).
+- **T-10 contract tests** (`functions/scripts/test-cotizaciones-contract.js`, `npm run test:cotizaciones-contract`): 9/9 funciones puras PASS (normalizarEstado, calcularTotales). 6 pruebas de integración (consecutivo concurrente, formato, config, create canónico, multi-tenant) escritas con guard emulator-only; SKIP local porque no hay Java para el emulador Firestore. Pendiente: correr con emulador o tenant de prueba.
+- Sintaxis validada (`node -c`) en controller, router e indexes.json. Sin commits (pendiente autorización del usuario).
+- **Próximo:** Bloque C frontend (T-11…) o cerrar T-10 integración con emulador.
+
+### 2026-06-14 (sesión cotizaciones — Bloque 0 de tasks)
+- Spec 008 `approved`, plan `approved`, tasks generadas (25 tareas). Iniciada implementación por el Bloque 0 (pre-flight).
+- **T-01 (auditoría read-only de `cotizaciones`):** 3 docs de prueba (1 empresa), estado `Borrador` legacy, consecutivo `COT-2025-00000N`; `cotizaciones_counters`/`cotizaciones_config` inexistentes. Decisión: lectura tolerante (map legacy→canónico), sin backfill destructivo; contador nuevo arranca en 1 por empresa (formato `COT-AAAA-MMDD-####` no colisiona). Script efímero read-only ejecutado contra prod julsmind-katuq con `NODE_TLS_REJECT_UNAUTHORIZED=0` (proxy del entorno inyecta cert; cero escrituras) y eliminado tras correr.
+- **T-02 (spike popup config):** `ConfProductToCartComponent` ya retorna el `Carrito` sin tocar `CartSingletonService` en modo `isEdit||isRebuy` (`dismissCurrentModal(ProductoCompra)`). Cotizaciones lo reusará vía `NgbModal` leyendo el resultado; flag de retorno aditivo si hace falta. RT-01 (carrito singleton) baja a riesgo BAJO.
+- Ambas open questions técnicas del plan quedaron resueltas; `PUT /config` se incluye en Fase 1.
+- **Próximo paso:** Bloque A/B backend — T-03 (consecutivo transaccional) en `Seller.Katuq.Back`.
+
+### 2026-06-14 (sesión cotizaciones — apertura spec 008)
+- El responsable de producto entregó 4 mocks HTML en `mock cotizacion/`. Analizados: el objetivo final es `katuq-cotizaciones-flujo.html` (reusa los 3 primeros pasos de la venta asistida + conversión a pedido + portal de aprobación por correo).
+- Exploración paralela del código (3 agentes): confirmado que existe todo lo necesario para reusar — `MaestroService` (clientes), `VentasService.getProductsByFilterPaginated/quickSearchProducts` (productos), `PaymentService.checkPriceScale/checkIVAPrice` (cálculo), `ConfProductToCartComponent` (popup config), modelo `Pedido/Carrito/Configuracion`, patrones de routing/nav/permisos. NO existe servicio de cotizaciones (crear desde cero).
+- Análisis a fondo de la sección de productos: `requiereConfiguracion()` (ecomerce-products:1057) decide el popup; `permitePrecioManual` + `_precioManualOverride`/`_ivaManualOverride` (carrito:282-332) controlan edición de precio/IVA. Riesgo detectado: `CartSingletonService` es singleton global → la cotización usará su propio arreglo de líneas.
+- Decisiones registradas: **D-039** (apertura spec 008, colección propia) + 5 clarifications (D-CLAR-01..05).
+- Creada `specs/008-cotizaciones-mvp/spec.md` (estado `in-review`, clarifications resueltas).
+- **Próximo paso:** checkpoint humano de la spec → si se aprueba, redactar `plan.md` (stack, contratos de endpoints, fases, gates vs constitución).
 
 ### 2026-05-28 (sesión usuarios — spec 007)
 - **D-037**: Contraseña de usuarios se estandariza a SHA256 Base64 compatible con el login actual. El frontend hashea al crear y al editar; el backend conserva hashes existentes y normaliza contraseñas crudas si llegan por API.

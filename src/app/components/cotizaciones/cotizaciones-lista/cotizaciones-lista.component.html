@@ -1,0 +1,213 @@
+<div class="container-fluid cotizaciones-lista">
+  <!-- Encabezado / breadcrumb -->
+  <div class="page-title">
+    <div class="row">
+      <div class="col-12 col-sm-6">
+        <h3>Listado de Cotizaciones</h3>
+      </div>
+      <div class="col-12 col-sm-6">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a routerLink="/dashboards"><i class="fa fa-home"></i></a>
+          </li>
+          <li class="breadcrumb-item">Gestión Comercial</li>
+          <li class="breadcrumb-item active">Cotizaciones</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row kpis-row">
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card kpi-card kpi-cotizado">
+        <div class="card-body">
+          <div class="kpi-label">Cotizado (este mes)</div>
+          <div class="kpi-value">{{ money(metrics?.cotizadoMes) }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card kpi-card kpi-pipeline">
+        <div class="card-body">
+          <div class="kpi-label">Pipeline activo</div>
+          <div class="kpi-value">{{ money(metrics?.pipelineActivo) }}</div>
+          <div class="kpi-sub">enviadas + aceptadas</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card kpi-card kpi-conversion">
+        <div class="card-body">
+          <div class="kpi-label">Tasa de conversión</div>
+          <div class="kpi-value">{{ metrics ? (metrics.tasaConversion + '%') : '—' }}</div>
+          <div class="kpi-sub">cotización → pedido</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card kpi-card kpi-borradores">
+        <div class="card-body">
+          <div class="kpi-label">Borradores</div>
+          <div class="kpi-value">{{ metrics ? metrics.borradores : '—' }}</div>
+          <div class="kpi-sub">pendientes de enviar</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <h5 class="mb-0">Filtros de Búsqueda</h5>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" (click)="exportar()" [disabled]="exporting">
+              <i class="fa fa-download me-1"></i>
+              {{ exporting ? "Exportando…" : "Exportar" }}
+            </button>
+            <button class="btn btn-primary btn-sm" (click)="nuevaCotizacion()">
+              <i class="fa fa-plus me-1"></i>
+              Nueva Cotización
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-5">
+              <label class="form-label">Buscar</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Número, cliente o documento"
+                [value]="q"
+                (input)="onSearch($any($event.target).value)"
+              />
+            </div>
+            <div class="col-md-7">
+              <label class="form-label d-block">Estado</label>
+              <div class="chips">
+                <button
+                  *ngFor="let chip of chips"
+                  type="button"
+                  class="chip"
+                  [class.active]="filtroEstado === chip.value"
+                  (click)="setEstado(chip.value)"
+                >
+                  {{ chip.label }}<span *ngIf="chipCount(chip.value) !== null"> ({{ chipCount(chip.value) }})</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            Cotizaciones
+            <span class="badge bg-secondary ms-1">{{ total }} total</span>
+          </h5>
+          <div *ngIf="loading" class="spinner-border spinner-border-sm text-primary" role="status">
+            <span class="visually-hidden">Cargando…</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-striped table-hover align-middle mb-0">
+              <thead>
+                <tr>
+                  <th role="button" (click)="sortBy('nroCotizacion')">Número</th>
+                  <th role="button" (click)="sortBy('cliente')">Cliente</th>
+                  <th role="button" (click)="sortBy('fechaCreacion')">Emisión</th>
+                  <th role="button" (click)="sortBy('fechaVencimiento')">Válida hasta</th>
+                  <th class="text-end" role="button" (click)="sortBy('total')">Total</th>
+                  <th>Estado</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="loading">
+                  <td colspan="7" class="text-center text-muted py-4">Cargando…</td>
+                </tr>
+                <tr *ngIf="!loading && error">
+                  <td colspan="7" class="text-center text-danger py-4">{{ error }}</td>
+                </tr>
+                <tr *ngIf="!loading && !error && cotizaciones.length === 0">
+                  <td colspan="7" class="text-center py-5">
+                    <i class="fa fa-file-text-o fa-2x text-muted mb-2 d-block"></i>
+                    <div class="text-muted mb-2">No hay cotizaciones que coincidan con el filtro.</div>
+                    <button class="btn btn-primary btn-sm" (click)="nuevaCotizacion()">
+                      <i class="fa fa-plus me-1"></i> Crear cotización
+                    </button>
+                  </td>
+                </tr>
+                <tr
+                  *ngFor="let c of cotizaciones; trackBy: trackById"
+                  class="cot-row"
+                  role="button"
+                  (click)="abrir(c)"
+                >
+                  <td><strong>{{ c.nroCotizacion || "—" }}</strong></td>
+                  <td>
+                    <div class="fw-semibold">{{ clienteNombre(c) }}</div>
+                    <small class="text-muted">{{ clienteSub(c) }}</small>
+                  </td>
+                  <td>{{ fecha(c.fechaCreacion) }}</td>
+                  <td><span [ngClass]="validezClase(c)">{{ fecha(c.fechaVencimiento) }}</span></td>
+                  <td class="text-end"><strong>{{ money(c.total) }}</strong></td>
+                  <td>
+                    <span class="badge" [ngClass]="getEstadoClass(c.estadoCotizacion)">
+                      {{ estadoLabel(c.estadoCotizacion) }}
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm" role="group" (click)="$event.stopPropagation()">
+                      <button class="btn btn-outline-primary" title="Abrir / Editar" (click)="abrir(c)">
+                        <i class="fa fa-edit"></i>
+                      </button>
+                      <button class="btn btn-outline-info" title="Duplicar" (click)="duplicar(c, $event)">
+                        <i class="fa fa-copy"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación -->
+          <div
+            *ngIf="!loading && cotizaciones.length > 0"
+            class="d-flex justify-content-between align-items-center mt-3 flex-wrap gap-2"
+          >
+            <small class="text-muted">{{ total }} cotización(es)</small>
+            <nav *ngIf="totalPages > 1">
+              <ul class="pagination pagination-sm mb-0">
+                <li class="page-item" [class.disabled]="page <= 1">
+                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(page - 1)">
+                    <i class="fa fa-angle-left"></i>
+                  </a>
+                </li>
+                <li class="page-item disabled">
+                  <span class="page-link">Página {{ page }} de {{ totalPages }}</span>
+                </li>
+                <li class="page-item" [class.disabled]="page >= totalPages">
+                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(page + 1)">
+                    <i class="fa fa-angle-right"></i>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

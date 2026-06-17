@@ -1,0 +1,365 @@
+<div class="cot-wrap">
+  <div class="cot-head">
+    <button class="btn btn-light" (click)="volver()">← Volver</button>
+    <h1>
+      Cotización
+      <span class="muted">{{ cotizacion.nroCotizacion ? cotizacion.nroCotizacion : '(nueva)' }}</span>
+    </h1>
+    <div class="estado-wrap">
+      <span class="estado-badge estado-{{ estado }}">{{ estadoLabel(estado) }}</span>
+      <select
+        class="form-select form-select-sm estado-select"
+        [ngModel]="estado"
+        (ngModelChange)="cambiarEstado($event)"
+        title="Cambiar estado"
+      >
+        <option *ngFor="let e of estadosEditables" [ngValue]="e.value">{{ e.label }}</option>
+      </select>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="cot-loading">Cargando cotización…</div>
+
+  <div *ngIf="!loading" class="cot-grid">
+    <!-- Cliente -->
+    <section class="cot-card">
+      <h2>Cliente</h2>
+
+      <ng-container *ngIf="!clienteSeleccionado">
+        <div class="cot-field cot-cliente-search">
+          <label>Buscar cliente</label>
+          <input
+            type="text"
+            class="form-control"
+            placeholder="Nombre, documento, correo o teléfono…"
+            [value]="clienteTerm"
+            (input)="onClienteInput($any($event.target).value)"
+            autocomplete="off"
+          />
+          <div class="cot-suggestions" *ngIf="clienteTerm && clienteTerm.length >= 2">
+            <div class="cot-sugg-loading" *ngIf="buscandoCliente">Buscando…</div>
+            <ng-container *ngIf="!buscandoCliente">
+              <button
+                type="button"
+                class="cot-sugg-item"
+                *ngFor="let cli of clienteSuggestions"
+                (click)="seleccionarCliente(cli)"
+              >
+                <span class="cot-sugg-name">{{ clienteNombre(cli) }}</span>
+                <span class="cot-sugg-sub">
+                  {{ clienteDocumento(cli) }}
+                  <ng-container *ngIf="clienteCorreo(cli)"> · {{ clienteCorreo(cli) }}</ng-container>
+                </span>
+              </button>
+              <div class="cot-sugg-empty" *ngIf="clienteSuggestions.length === 0">
+                Sin resultados.
+              </div>
+            </ng-container>
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="cot-cliente-card" *ngIf="clienteSeleccionado">
+        <div class="cot-cliente-info">
+          <div class="cot-cliente-name">{{ clienteNombre(clienteSeleccionado) }}</div>
+          <div class="cot-cliente-meta">
+            <span *ngIf="clienteDocumento(clienteSeleccionado)">
+              Doc: {{ clienteDocumento(clienteSeleccionado) }}
+            </span>
+            <span *ngIf="clienteCorreo(clienteSeleccionado)">
+              {{ clienteCorreo(clienteSeleccionado) }}
+            </span>
+            <span *ngIf="clienteCelular(clienteSeleccionado)">
+              {{ clienteCelular(clienteSeleccionado) }}
+            </span>
+          </div>
+        </div>
+        <button type="button" class="btn btn-sm btn-light" (click)="quitarCliente()">
+          Cambiar
+        </button>
+      </div>
+    </section>
+
+    <!-- Fechas y vendedor -->
+    <section class="cot-card">
+      <h2>Vigencia</h2>
+      <div class="cot-row">
+        <div class="cot-field">
+          <label>Fecha de emisión</label>
+          <input
+            type="date"
+            class="form-control"
+            [value]="fechaEmision"
+            (change)="onEmisionChange($any($event.target).value)"
+          />
+        </div>
+        <div class="cot-field cot-field-sm">
+          <label>Validez (días)</label>
+          <input
+            type="number"
+            min="0"
+            class="form-control"
+            [value]="validezDias"
+            (input)="onValidezChange($any($event.target).value)"
+          />
+        </div>
+        <div class="cot-field">
+          <label>Válida hasta</label>
+          <input
+            type="date"
+            class="form-control"
+            [value]="fechaVencimiento"
+            (change)="onVencimientoChange($any($event.target).value)"
+          />
+        </div>
+      </div>
+      <div class="cot-field cot-vendedor">
+        <label>Vendedor</label>
+        <div class="cot-readonly">{{ vendedorLabel }}</div>
+      </div>
+    </section>
+
+    <!-- Productos -->
+    <section class="cot-card cot-productos">
+      <div class="cot-prod-head">
+        <h2>Productos</h2>
+        <button type="button" class="btn btn-sm btn-light" (click)="agregarItemLibre()">
+          + Ítem libre
+        </button>
+      </div>
+
+      <div class="cot-field cot-prod-search">
+        <label>Buscar producto</label>
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Nombre o referencia…"
+          [value]="productoTerm"
+          (input)="onProductoInput($any($event.target).value)"
+          autocomplete="off"
+        />
+        <div class="cot-suggestions" *ngIf="productoTerm && productoTerm.length >= 2">
+          <div class="cot-sugg-loading" *ngIf="buscandoProducto">Buscando…</div>
+          <ng-container *ngIf="!buscandoProducto">
+            <button
+              type="button"
+              class="cot-sugg-item cot-sugg-prod"
+              *ngFor="let p of productoSuggestions"
+              (click)="agregarProducto(p)"
+            >
+              <span class="cot-sugg-name">{{ productoTitulo(p) }}</span>
+              <span class="cot-sugg-sub">
+                <ng-container *ngIf="productoReferencia(p)">Ref: {{ productoReferencia(p) }} · </ng-container>
+                {{ productoPrecio(p) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                <span class="cot-sugg-tag" *ngIf="requiereConfiguracion(p)">configurable</span>
+              </span>
+            </button>
+            <div class="cot-sugg-empty" *ngIf="productoSuggestions.length === 0">
+              Sin resultados.
+            </div>
+          </ng-container>
+        </div>
+      </div>
+
+      <div class="cot-empty-lines" *ngIf="cotizacion.items.length === 0">
+        Aún no hay productos en la cotización.
+      </div>
+
+      <div class="cot-lines" *ngIf="cotizacion.items.length > 0">
+        <div class="cot-line-row cot-line-head">
+          <span class="cl-prod">Producto</span>
+          <span class="cl-cant">Cant.</span>
+          <span class="cl-precio">Precio</span>
+          <span class="cl-sub">Subtotal</span>
+          <span class="cl-acc"></span>
+        </div>
+        <div class="cot-line-row" *ngFor="let item of cotizacion.items; let i = index">
+          <span class="cl-prod">
+            <ng-container *ngIf="!itemEsLibre(item)">
+              <span class="cl-titulo">{{ itemTitulo(item) }}</span>
+              <span class="cl-ref" *ngIf="itemReferencia(item)">Ref: {{ itemReferencia(item) }}</span>
+            </ng-container>
+            <input
+              *ngIf="itemEsLibre(item)"
+              type="text"
+              class="form-control form-control-sm"
+              placeholder="Descripción del ítem"
+              [(ngModel)]="item.producto.crearProducto.titulo"
+            />
+          </span>
+          <span class="cl-cant">
+            <input
+              type="number"
+              min="1"
+              class="form-control form-control-sm"
+              [value]="item.cantidad"
+              (input)="setCantidad(item, $any($event.target).value)"
+            />
+          </span>
+          <span class="cl-precio">
+            <ng-container *ngIf="permitePrecioManual(item); else soloIvaEditable">
+              <!-- Precio base editable + IVA editable -->
+              <div class="cl-price-edit">
+                <div class="cl-price-row">
+                  <input
+                    class="form-control form-control-sm cl-price-input"
+                    type="number"
+                    min="0"
+                    step="100"
+                    placeholder="Precio base"
+                    [ngModel]="item._precioManualTemp !== undefined ? item._precioManualTemp : (item._precioManualOverride !== undefined ? item._precioManualOverride : getPrecioSinIva(item))"
+                    (ngModelChange)="onPrecioManualInput(item, $event)"
+                    (blur)="onPrecioManualConfirm(item)"
+                    (keyup.enter)="onPrecioManualConfirm(item)"
+                  />
+                  <select
+                    class="form-select form-select-sm cl-iva-select"
+                    [ngModel]="getIvaActual(item)"
+                    (ngModelChange)="onIvaManualChange(item, $event)"
+                  >
+                    <option [ngValue]="0">0%</option>
+                    <option [ngValue]="5">5%</option>
+                    <option [ngValue]="8">8%</option>
+                    <option [ngValue]="19">19%</option>
+                  </select>
+                </div>
+                <div class="cl-price-break">
+                  + {{ getValorIva(item) | currency:'COP':'symbol-narrow':'1.0-0' }} IVA
+                  = {{ itemPrecio(item) | currency:'COP':'symbol-narrow':'1.0-0' }}
+                </div>
+                <div class="cl-price-orig" *ngIf="tieneOverride(item)">
+                  <s>{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</s>
+                  <span class="cl-price-orig-iva">(IVA {{ (item.producto?.precio?.precioUnitarioIva) || 0 }}%)</span>
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #soloIvaEditable>
+              <!-- Precio fijo + IVA editable -->
+              <div class="cl-price-edit">
+                <div class="cl-price-row">
+                  <span class="cl-price-value">{{ itemPrecio(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+                  <select
+                    class="form-select form-select-sm cl-iva-select"
+                    [ngModel]="getIvaActual(item)"
+                    (ngModelChange)="onIvaManualChange(item, $event)"
+                  >
+                    <option [ngValue]="0">0%</option>
+                    <option [ngValue]="5">5%</option>
+                    <option [ngValue]="8">8%</option>
+                    <option [ngValue]="19">19%</option>
+                  </select>
+                </div>
+                <div class="cl-price-break" *ngIf="item._ivaManualOverride !== undefined && item._ivaManualOverride !== null">
+                  + {{ getValorIva(item) | currency:'COP':'symbol-narrow':'1.0-0' }} IVA
+                  <s class="cl-price-orig">{{ itemPrecioOriginal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</s>
+                </div>
+              </div>
+            </ng-template>
+          </span>
+          <span class="cl-sub">{{ itemSubtotal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span class="cl-acc">
+            <button type="button" class="btn btn-sm btn-link cot-del" (click)="eliminarItem(i)" title="Eliminar">
+              ✕
+            </button>
+          </span>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Totales -->
+    <section class="cot-card cot-totales">
+      <h2>Totales</h2>
+      <div class="cot-tot-grid">
+        <div class="cot-tot-row">
+          <span class="cot-tot-label">Subtotal</span>
+          <span class="cot-tot-value">{{ subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+
+        <div class="cot-tot-row cot-tot-desc">
+          <span class="cot-tot-label">
+            Descuento global
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="1"
+              class="form-control form-control-sm cot-desc-input"
+              [ngModel]="cotizacion.descGlobal || 0"
+              (ngModelChange)="onDescGlobalChange($event)"
+            />
+            <span class="cot-tot-pct">%</span>
+          </span>
+          <span class="cot-tot-value cot-tot-neg">
+            − {{ totalDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}
+          </span>
+        </div>
+
+        <div class="cot-tot-row">
+          <span class="cot-tot-label">Base gravable</span>
+          <span class="cot-tot-value">{{ baseGravable | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+
+        <div class="cot-tot-row">
+          <span class="cot-tot-label">IVA</span>
+          <span class="cot-tot-value">{{ totalImpuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+
+        <div class="cot-tot-row cot-tot-total">
+          <span class="cot-tot-label">Total</span>
+          <span class="cot-tot-value">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+      </div>
+      <small class="cot-hint">El descuento global se aplica antes del IVA.</small>
+    </section>
+
+    <!-- Términos y condiciones -->
+    <section class="cot-card">
+      <h2>Términos y condiciones</h2>
+      <div class="cot-field">
+        <textarea
+          class="form-control"
+          rows="6"
+          placeholder="Términos y condiciones de la cotización…"
+          [(ngModel)]="cotizacion.terminos"
+        ></textarea>
+        <small class="cot-hint">Precargados del default de la empresa. Editables por cotización.</small>
+      </div>
+    </section>
+
+    <!-- Acciones -->
+    <div class="cot-footer">
+      <div class="cot-footer-left">
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          (click)="descargarPDF()"
+          [disabled]="generandoPDF || !puedeGuardar"
+        >
+          {{ generandoPDF ? "Generando…" : "Descargar PDF" }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-outline-success"
+          (click)="enviarWhatsApp()"
+          [disabled]="!puedeGuardar"
+        >
+          WhatsApp
+        </button>
+      </div>
+      <div class="cot-footer-right">
+        <button type="button" class="btn btn-light" (click)="volver()" [disabled]="saving">
+          Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="guardar()"
+          [disabled]="saving || !puedeGuardar"
+        >
+          {{ saving ? "Guardando…" : (cotizacionId ? "Guardar cambios" : "Guardar borrador") }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

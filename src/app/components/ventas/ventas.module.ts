@@ -12,7 +12,7 @@ import { QuickViewComponent } from "./quick-view/quick-view.component";
 import { EcomerceProductsComponent } from "./catalogo/ecomerce-products/ecomerce-products.component";
 import { TreeSelectModule } from "primeng/treeselect";
 import { SliderModule } from "primeng/slider";
-import { ConfProductToCartComponent } from "./catalogo/conf-product-to-cart/conf-product-to-cart.component";
+import { CatalogoSharedModule } from "./catalogo/catalogo-shared.module";
 import {
   GalleryModule,
   ModalGalleryService,
@@ -123,6 +123,7 @@ import { ImportModalModule } from "../../shared/components/import-modal/import-m
     CardModule,
     MenuModule,
     ImportModalModule,
+    CatalogoSharedModule,
   ],
   declarations: [
     PedidoFacturacionComponent,
@@ -134,7 +135,6 @@ import { ImportModalModule } from "../../shared/components/import-modal/import-m
     ClientesComponent,
     QuickViewComponent,
     EcomerceProductsComponent,
-    ConfProductToCartComponent,
     CarritoComponent,
     NotasComponent,
     ConfirmComponent,

@@ -329,6 +329,16 @@ export class NavService implements OnDestroy {
       ],
     },
     {
+      title: "Cotizaciones",
+      icon: "file-text",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "cotizaciones", title: "Listado de cotizaciones", type: "link", icon: "list" },
+        { path: "cotizaciones/editor", title: "Nueva cotización", type: "link", icon: "file-plus" },
+      ],
+    },
+    {
       title: "Dropshipping",
       icon: "truck",
       type: "sub",
