@@ -9213,8 +9213,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       (cloned as any).shippment = undefined;
       (cloned as any)._estadoCalculadoEnFrontend = undefined;
 
-      // Limpiar integraciones externas (WooCommerce, Shopify)
+      // Limpiar integraciones externas (WooCommerce, Shopify, Osmosis/Cereza).
+      // Una orden duplicada NO debe heredar el estado de push/sync de la original
+      // (ej. osmosisOrderId), o el guard anti-doble-push del backend la bloquea.
+      // Se limpian AMBAS variantes: EN (canónica) y ES (compat de migración).
       (cloned as any).integrations = undefined;
+      (cloned as any).integraciones = undefined;
 
       // Mantener las notas del pedido original (ya no se limpian)
 
