@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from "@angular/core";
+import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
 import { Subject, Subscription, of } from "rxjs";
 import {
@@ -46,6 +46,12 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   loading = false;
   saving = false;
   generandoPDF = false;
+
+  /** Overlay de "Vista previa del cliente" (documento de cotización). */
+  showPreview = false;
+
+  /** Elemento oculto con el documento, capturado por html2pdf para el PDF. */
+  @ViewChild("docCapture") docCapture?: ElementRef<HTMLElement>;
 
   // Modelo en edición.
   cotizacion: Cotizacion = {
@@ -630,6 +636,51 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return [ind, num].filter(Boolean).join(" ");
   }
 
+  clienteCiudad(cli: any): string {
+    if (!cli) return "";
+    return cli.ciudad || cli.municipio || cli.ciudad_comprador || "";
+  }
+
+  /** Meta del cliente para el documento: documento · ciudad · correo. */
+  clienteMetaDoc(cli: any): string {
+    return [
+      this.clienteDocumento(cli),
+      this.clienteCiudad(cli),
+      this.clienteCorreo(cli),
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  // ---- Datos de empresa para el encabezado del documento ----
+
+  /** Nombre comercial / razón social usado como "logo" textual del documento. */
+  get empresaNombre(): string {
+    const e = this.security.getCompanyInformationLogged();
+    return (e && ((e as any).nombreComercio || e.razonSocial)) || "Cotización";
+  }
+
+  /** Línea secundaria del encabezado: razón social · NIT (si difiere). */
+  get empresaMeta(): string {
+    const e = this.security.getCompanyInformationLogged();
+    const razon = (e && e.razonSocial) || "";
+    let nit = "";
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      nit = user && user.nit ? `NIT ${user.nit}` : "";
+    } catch {
+      nit = "";
+    }
+    return [razon !== this.empresaNombre ? razon : "", nit]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  /** Precio unitario SIN IVA para la columna "Precio" del documento. */
+  docPrecioUnit(item: Carrito): number {
+    return this.getPrecioSinIva(item);
+  }
+
   get clienteSeleccionado(): any | null {
     return this.cotizacion.cliente || null;
   }
@@ -806,10 +857,29 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return ref ? `${titulo} (Ref: ${ref})` : titulo;
   }
 
+  // ---- Vista previa del documento (mismo HTML que el PDF) ----
+
+  /** Abre el overlay con la vista previa del documento para el cliente. */
+  abrirVistaPrevia(): void {
+    if (!this.puedeGuardar) {
+      this.toastr.warning(
+        "Agrega un cliente y al menos un producto para ver la cotización.",
+        "Faltan datos"
+      );
+      return;
+    }
+    this.showPreview = true;
+  }
+
+  cerrarVistaPrevia(): void {
+    this.showPreview = false;
+  }
+
   /**
-   * Genera y descarga el PDF de la cotización (cliente, ítems, totales, términos,
-   * validez). jsPDF + autoTable se importan dinámicamente para no engordar el
-   * bundle inicial del módulo.
+   * Genera y descarga el PDF capturando el documento HTML (`#docCapture`) con
+   * html2pdf.js — el mismo marcado que muestra la vista previa, de modo que el
+   * PDF y la previsualización son idénticos al diseño de referencia. html2pdf se
+   * importa dinámicamente para no engordar el bundle inicial del módulo.
    */
   async descargarPDF(): Promise<void> {
     if (this.generandoPDF) return;
@@ -822,150 +892,24 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     }
     this.generandoPDF = true;
     try {
-      const { default: jsPDF } = await import("jspdf");
-      const { default: autoTable } = await import("jspdf-autotable");
+      const html2pdf = (await import("html2pdf.js")).default;
 
-      const empresa = this.security.getCompanyInformationLogged();
-      const nombreEmpresa =
-        (empresa && (empresa.razonSocial || (empresa as any).nombreComercio)) ||
-        "Cotización";
-
-      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      const W = pdf.internal.pageSize.getWidth();
-      const M = 36;
-
-      // Encabezado.
-      pdf.setFillColor(37, 99, 235);
-      pdf.rect(0, 0, W, 56, "F");
-      pdf.setFont("helvetica", "bold");
-      pdf.setFontSize(15);
-      pdf.setTextColor(255, 255, 255);
-      pdf.text(String(nombreEmpresa).toUpperCase(), M, 34);
-      pdf.setFont("helvetica", "normal");
-      pdf.setFontSize(11);
-      pdf.text("COTIZACIÓN", W - M, 34, { align: "right" });
-
-      let y = 84;
-      pdf.setTextColor(31, 41, 55);
-      pdf.setFontSize(10);
-
-      // Número + estado.
-      pdf.setFont("helvetica", "bold");
-      pdf.text(`N°: ${this.cotizacion.nroCotizacion || "(borrador)"}`, M, y);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(`Estado: ${this.estadoLabel(this.estado)}`, W - M, y, { align: "right" });
-      y += 18;
-
-      // Fechas + vendedor.
-      pdf.text(`Emisión: ${this.fechaEmision || "-"}`, M, y);
-      pdf.text(`Válida hasta: ${this.fechaVencimiento || "-"}`, W - M, y, { align: "right" });
-      y += 16;
-      pdf.text(`Vendedor: ${this.vendedorLabel}`, M, y);
-      y += 22;
-
-      // Cliente.
-      const cli = this.cotizacion.cliente;
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Cliente", M, y);
-      y += 15;
-      pdf.setFont("helvetica", "normal");
-      pdf.text(this.clienteNombre(cli) || "-", M, y);
-      y += 14;
-      const cliMeta = [
-        this.clienteDocumento(cli) ? `Doc: ${this.clienteDocumento(cli)}` : "",
-        this.clienteCorreo(cli),
-        this.clienteCelular(cli),
-      ]
-        .filter(Boolean)
-        .join("   ·   ");
-      if (cliMeta) {
-        pdf.setTextColor(107, 111, 133);
-        pdf.text(cliMeta, M, y);
-        pdf.setTextColor(31, 41, 55);
-        y += 16;
+      const element = this.docCapture?.nativeElement?.querySelector(".cot-doc");
+      if (!element) {
+        throw new Error("Documento no encontrado");
       }
-      y += 6;
 
-      // Tabla de ítems.
-      const body = (this.cotizacion.items || []).map((it, i) => [
-        String(i + 1),
-        this.itemDescripcion(it),
-        String(it.cantidad || 0),
-        `${this.getIvaActual(it)}%`,
-        this.formatCurrency(this.itemPrecio(it)),
-        this.formatCurrency(this.itemSubtotal(it)),
-      ]);
-
-      autoTable(pdf, {
-        head: [["#", "Descripción", "Cant.", "IVA", "V. Unit.", "Subtotal"]],
-        body,
-        startY: y,
-        margin: { left: M, right: M },
-        styles: {
-          fontSize: 9,
-          cellPadding: { top: 5, bottom: 5, left: 6, right: 6 },
-          overflow: "linebreak",
-          textColor: [31, 41, 55] as any,
-          lineColor: [226, 232, 240] as any,
-          lineWidth: 0.3,
-        },
-        headStyles: {
-          fillColor: [37, 99, 235] as any,
-          textColor: [255, 255, 255] as any,
-          fontStyle: "bold",
-        },
-        alternateRowStyles: { fillColor: [248, 250, 252] as any },
-        columnStyles: {
-          0: { cellWidth: 24, halign: "center" },
-          2: { cellWidth: 40, halign: "center" },
-          3: { cellWidth: 40, halign: "center" },
-          4: { cellWidth: 80, halign: "right" },
-          5: { cellWidth: 84, halign: "right" },
-        },
-      });
-
-      // Totales.
-      let ty = (pdf as any).lastAutoTable.finalY + 18;
-      const labelX = W - M - 200;
-      const valueX = W - M;
-      const totalRow = (label: string, value: string, bold = false) => {
-        pdf.setFont("helvetica", bold ? "bold" : "normal");
-        pdf.text(label, labelX, ty);
-        pdf.text(value, valueX, ty, { align: "right" });
-        ty += bold ? 18 : 15;
+      const filename = `cotizacion-${this.cotizacion.nroCotizacion || "borrador"}.pdf`;
+      const options = {
+        margin: [10, 10, 12, 10],
+        filename,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: ["avoid-all", "css", "legacy"] },
       };
-      pdf.setFontSize(10);
-      totalRow("Subtotal", this.formatCurrency(this.subtotal));
-      if (this.descGlobalPct > 0) {
-        totalRow(
-          `Descuento (${this.descGlobalPct}%)`,
-          `- ${this.formatCurrency(this.totalDescuento)}`
-        );
-      }
-      totalRow("Base gravable", this.formatCurrency(this.baseGravable));
-      totalRow("IVA", this.formatCurrency(this.totalImpuesto));
-      pdf.setDrawColor(226, 232, 240);
-      pdf.line(labelX, ty - 6, valueX, ty - 6);
-      pdf.setFontSize(12);
-      totalRow("TOTAL", this.formatCurrency(this.total), true);
 
-      // Términos.
-      if ((this.cotizacion.terminos || "").trim()) {
-        ty += 12;
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(10);
-        pdf.text("Términos y condiciones", M, ty);
-        ty += 14;
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(9);
-        pdf.setTextColor(80, 84, 102);
-        const lines = pdf.splitTextToSize(this.cotizacion.terminos!.trim(), W - M * 2);
-        pdf.text(lines, M, ty);
-        pdf.setTextColor(31, 41, 55);
-      }
-
-      const nombre = `cotizacion-${this.cotizacion.nroCotizacion || "borrador"}.pdf`;
-      pdf.save(nombre);
+      await html2pdf().from(element).set(options).save();
     } catch (e) {
       this.toastr.error("No se pudo generar el PDF.");
     } finally {

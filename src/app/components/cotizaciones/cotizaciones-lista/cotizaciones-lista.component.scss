@@ -1,6 +1,7 @@
 :host {
   --muted: #7a7f95;
   --line: #e8e9f1;
+  --line2: #f0f1f6;
   --ink: #16161f;
   --primary: #5a45e0;
   --money: #0e9f6e;
@@ -8,6 +9,10 @@
   --conv: #5a45e0;
   --warn: #b9760f;
   --danger: #d6455b;
+
+  display: block;
+  font-family: "Inter", system-ui, sans-serif;
+  font-feature-settings: "tnum" 1;
 }
 
 .cotizaciones-lista {
@@ -18,8 +23,10 @@
 
     h3 {
       margin: 0;
-      font-weight: 700;
-      letter-spacing: -0.01em;
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.02em;
     }
 
     .breadcrumb {
@@ -32,17 +39,18 @@
   // ---- Cards ----
   .card {
     border: 1px solid var(--line);
-    border-radius: 12px;
+    border-radius: 14px;
     margin-bottom: 18px;
   }
 
   .card-header {
     background: #fff;
     border-bottom: 1px solid var(--line);
-    border-radius: 12px 12px 0 0;
+    border-radius: 14px 14px 0 0;
     padding: 14px 18px;
 
     h5 {
+      font-family: "Plus Jakarta Sans", sans-serif;
       font-size: 15px;
       font-weight: 700;
     }
@@ -67,6 +75,7 @@
     }
 
     .kpi-value {
+      font-family: "Plus Jakarta Sans", sans-serif;
       font-size: 24px;
       font-weight: 800;
       letter-spacing: -0.02em;

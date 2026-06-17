@@ -1,30 +1,83 @@
+:host {
+  --ink: #16161f;
+  --ink2: #3c3e52;
+  --muted: #7a7f95;
+  --line: #e8e9f1;
+  --line2: #f0f1f6;
+  --canvas: #f5f6fa;
+  --surface: #fff;
+  --primary: #5a45e0;
+  --primary-ink: #4734c2;
+  --primary-wash: #efedfc;
+  --money: #0e9f6e;
+  --money-wash: #e6f7f0;
+  --warn: #b9760f;
+  --warn-wash: #fbf0db;
+  --danger: #d6455b;
+  --danger-wash: #fbe7ea;
+  --blue: #2f6fed;
+  --blue-wash: #e7eefc;
+
+  display: block;
+  color: var(--ink);
+}
+
 .cot-wrap {
   max-width: 1180px;
   margin: 0 auto;
   padding: 22px;
+  font-family: "Inter", system-ui, sans-serif;
+  font-feature-settings: "tnum" 1;
 }
 
+// ---- Encabezado ----
 .cot-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 18px;
   flex-wrap: wrap;
 
+  .cot-head-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
   h1 {
+    font-family: "Plus Jakarta Sans", sans-serif;
     font-size: 20px;
+    font-weight: 800;
     letter-spacing: -0.02em;
     margin: 0;
   }
 
-  .muted {
-    color: #7a7f95;
-    font-size: 14px;
+  .ednum {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 13px;
+  }
+}
+
+.cot-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-weight: 600;
+  color: var(--ink2);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--canvas);
   }
 }
 
 .estado-wrap {
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -36,47 +89,102 @@
 }
 
 .estado-badge {
-  text-transform: capitalize;
+  display: inline-flex;
+  align-items: center;
   font-size: 12px;
-  font-weight: 600;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: #eef0f7;
-  color: #4a4f63;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: var(--warn-wash);
+  color: var(--warn);
+  text-transform: capitalize;
 
-  &.estado-borrador { background: #eef0f7; color: #4a4f63; }
-  &.estado-enviada { background: #e6f0ff; color: #1f5fd1; }
-  &.estado-aceptada { background: #e4f7ec; color: #1c8a4d; }
-  &.estado-rechazada { background: #fdeaea; color: #c0392b; }
-  &.estado-vencida { background: #fff2e0; color: #c47b16; }
-  &.estado-convertida { background: #ece8fb; color: #5a45e0; }
+  &.estado-borrador { background: var(--warn-wash); color: var(--warn); }
+  &.estado-enviada { background: var(--blue-wash); color: var(--blue); }
+  &.estado-aceptada { background: var(--money-wash); color: #0a7d56; }
+  &.estado-rechazada { background: var(--danger-wash); color: var(--danger); }
+  &.estado-vencida { background: var(--line2); color: var(--muted); }
+  &.estado-convertida { background: #ece9ff; color: var(--primary-ink); }
 }
 
 .cot-loading {
-  background: #fff;
-  border: 1px solid #e8e9f1;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 14px;
   padding: 32px;
-  color: #7a7f95;
+  color: var(--muted);
 }
 
+// ---- Layout 2 columnas ----
 .cot-grid {
   display: grid;
-  gap: 16px;
+  grid-template-columns: 1fr 340px;
+  gap: 18px;
+  align-items: start;
+
+  @media (max-width: 880px) {
+    grid-template-columns: 1fr;
+  }
 }
 
+.col-main {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.col-side {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  @media (max-width: 880px) {
+    position: static;
+  }
+}
+
+// ---- Cards ----
 .cot-card {
-  background: #fff;
-  border: 1px solid #e8e9f1;
-  border-left: 4px solid #5a45e0;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 14px;
-  padding: 20px 22px;
+  padding: 16px 18px;
+}
+
+.cot-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
 
   h2 {
-    font-size: 15px;
-    font-weight: 600;
-    margin: 0 0 16px;
-    color: #2a2e3f;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+}
+
+.cot-link {
+  background: none;
+  border: none;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    color: var(--primary-ink);
   }
 }
 
@@ -90,56 +198,37 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1 1 220px;
-  min-width: 180px;
+  flex: 1 1 200px;
+  min-width: 160px;
 
   label {
     font-size: 12px;
     font-weight: 600;
-    color: #6a6f85;
+    color: var(--muted);
+  }
+
+  .form-control {
+    border: 1px solid var(--line);
+    border-radius: 9px;
   }
 
   &.cot-field-sm {
-    flex: 0 0 140px;
-    min-width: 120px;
-  }
-}
-
-// ---- Barra de acciones (T-22) ----
-.cot-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  flex-wrap: wrap;
-  padding: 12px 0 8px;
-  position: sticky;
-  bottom: 0;
-  background: #f8f9fc;
-  border-top: 1px solid #e8e9f1;
-
-  .cot-footer-left,
-  .cot-footer-right {
-    display: flex;
-    gap: 10px;
-  }
-
-  .btn-primary {
-    min-width: 160px;
+    flex: 0 0 130px;
+    min-width: 110px;
   }
 }
 
 .cot-hint {
-  color: #9095a8;
+  color: var(--muted);
   font-size: 12px;
 }
 
 .cot-readonly {
-  padding: 8px 12px;
-  background: #f6f7fb;
-  border: 1px solid #e8e9f1;
-  border-radius: 8px;
-  color: #2a2e3f;
+  padding: 9px 12px;
+  background: var(--line2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--ink2);
   font-size: 14px;
 }
 
@@ -147,9 +236,21 @@
   margin-top: 16px;
 }
 
-/* --- Picker de cliente --- */
-.cot-cliente-search {
+.cot-notas {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+/* --- Picker de cliente / producto --- */
+.cot-cliente-search,
+.cot-prod-search {
   position: relative;
+}
+
+.cot-prod-search {
+  margin-bottom: 14px;
 }
 
 .cot-suggestions {
@@ -159,10 +260,10 @@
   right: 0;
   z-index: 30;
   margin-top: 4px;
-  background: #fff;
-  border: 1px solid #e8e9f1;
-  border-radius: 10px;
-  box-shadow: 0 8px 24px rgba(20, 23, 40, 0.12);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  box-shadow: 0 12px 30px rgba(20, 20, 40, 0.12);
   max-height: 320px;
   overflow-y: auto;
 }
@@ -170,7 +271,7 @@
 .cot-sugg-loading,
 .cot-sugg-empty {
   padding: 12px 14px;
-  color: #9095a8;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -182,8 +283,8 @@
   text-align: left;
   background: none;
   border: none;
-  border-bottom: 1px solid #f0f1f6;
-  padding: 10px 14px;
+  border-bottom: 1px solid var(--line2);
+  padding: 11px 14px;
   cursor: pointer;
 
   &:last-child {
@@ -191,69 +292,19 @@
   }
 
   &:hover {
-    background: #f6f7fb;
+    background: var(--canvas);
   }
 
   .cot-sugg-name {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 600;
-    color: #2a2e3f;
+    color: var(--ink);
   }
 
   .cot-sugg-sub {
     font-size: 12px;
-    color: #7a7f95;
+    color: var(--muted);
   }
-}
-
-.cot-cliente-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 16px;
-  background: #f6f7fb;
-  border: 1px solid #e8e9f1;
-  border-radius: 10px;
-
-  .cot-cliente-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: #2a2e3f;
-  }
-
-  .cot-cliente-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 14px;
-    margin-top: 4px;
-    font-size: 13px;
-    color: #7a7f95;
-  }
-}
-
-.cot-placeholder-inline {
-  color: #9095a8;
-  font-size: 13px;
-  padding: 12px 0;
-}
-
-/* --- Productos / líneas --- */
-.cot-prod-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-
-  h2 {
-    margin: 0;
-  }
-}
-
-.cot-prod-search {
-  position: relative;
-  margin-bottom: 16px;
 }
 
 .cot-sugg-prod .cot-sugg-tag {
@@ -265,44 +316,87 @@
   letter-spacing: 0.03em;
   padding: 1px 6px;
   border-radius: 999px;
-  background: #ece8fb;
-  color: #5a45e0;
+  background: var(--primary-wash);
+  color: var(--primary-ink);
 }
 
+.cot-cliente-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 4px 0;
+
+  .cot-cliente-avatar {
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    border-radius: 11px;
+    background: var(--primary-wash);
+    color: var(--primary-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-family: "Plus Jakarta Sans", sans-serif;
+    text-transform: uppercase;
+  }
+
+  .cot-cliente-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .cot-cliente-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .cot-cliente-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+}
+
+/* --- Productos / líneas --- */
 .cot-empty-lines {
-  color: #9095a8;
+  color: var(--muted);
   font-size: 13px;
   padding: 16px 0;
   text-align: center;
-  border: 1px dashed #e2e4ee;
+  border: 1.5px dashed var(--line);
   border-radius: 10px;
 }
 
 .cot-lines {
   display: flex;
   flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  overflow: hidden;
 }
 
 .cot-line-row {
   display: grid;
   grid-template-columns: 1fr 80px 210px 120px 40px;
-  align-items: center;
+  align-items: start;
   gap: 12px;
-  padding: 10px 4px;
-  border-bottom: 1px solid #f0f1f6;
+  padding: 9px 12px;
+  border-top: 1px solid var(--line2);
 
   &.cot-line-head {
-    font-size: 12px;
-    font-weight: 600;
-    color: #6a6f85;
+    background: var(--canvas);
+    border-top: none;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
     text-transform: uppercase;
-    letter-spacing: 0.03em;
+    letter-spacing: 0.04em;
     align-items: center;
-  }
-
-  // Las líneas con celda de precio editable se alinean arriba.
-  &:not(.cot-line-head) {
-    align-items: start;
   }
 
   .cl-prod {
@@ -314,24 +408,24 @@
 
   .cl-titulo {
     font-weight: 600;
-    color: #2a2e3f;
+    color: var(--ink);
     font-size: 14px;
   }
 
   .cl-ref {
-    font-size: 12px;
-    color: #7a7f95;
+    font-size: 11px;
+    color: var(--muted);
   }
 
   .cl-precio,
   .cl-sub {
     font-size: 14px;
-    color: #2a2e3f;
+    color: var(--ink);
     text-align: right;
   }
 
   .cl-sub {
-    font-weight: 600;
+    font-weight: 700;
     padding-top: 6px;
   }
 
@@ -339,7 +433,7 @@
     text-align: center;
   }
 
-  // ---- Celda de precio/IVA editable (T-20) ----
+  // ---- Celda de precio/IVA editable ----
   .cl-price-edit {
     display: flex;
     flex-direction: column;
@@ -367,12 +461,12 @@
   .cl-price-value {
     font-size: 14px;
     font-weight: 600;
-    color: #2a2e3f;
+    color: var(--ink);
   }
 
   .cl-price-break {
     font-size: 11px;
-    color: #5a8f4e;
+    color: #0a7d56;
     white-space: nowrap;
   }
 
@@ -385,78 +479,367 @@
     }
   }
 
+  .cl-acc {
+    text-align: center;
+  }
+
   .cot-del {
-    color: #c0392b;
-    padding: 2px 6px;
-    text-decoration: none;
-    font-weight: 700;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    padding: 6px;
+    border-radius: 7px;
+    font-size: 15px;
+    line-height: 1;
+
+    &:hover {
+      background: var(--danger-wash);
+      color: var(--danger);
+    }
   }
 }
 
-// ---- Panel de totales (T-21) ----
-.cot-totales {
-  .cot-tot-grid {
+// ============ COLUMNA LATERAL: resumen + acciones ============
+.cot-summary {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px;
+
+  .sum-row {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 420px;
-    margin-left: auto;
+    justify-content: space-between;
+    font-size: 13.5px;
+    padding: 5px 0;
+
+    &.muted {
+      color: var(--muted);
+    }
   }
 
-  .cot-tot-row {
+  .sum-global {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    font-size: 14px;
-    color: #2a2e3f;
+    gap: 8px;
+    font-size: 13px;
+    padding: 5px 0;
+
+    .in-pct {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 0 7px;
+      background: var(--surface);
+      width: 78px;
+
+      input {
+        border: none;
+        outline: none;
+        width: 100%;
+        padding: 6px 0;
+        text-align: right;
+        background: none;
+      }
+
+      span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+    }
   }
 
-  .cot-tot-label {
-    color: #6a6f85;
+  .sum-total {
     display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1.5px solid var(--line);
 
-  .cot-tot-value {
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-  }
-
-  .cot-tot-neg {
-    color: #c0392b;
-  }
-
-  .cot-desc-input {
-    width: 64px;
-    text-align: right;
-  }
-
-  .cot-tot-pct {
-    color: #6a6f85;
-  }
-
-  .cot-tot-total {
-    border-top: 1px solid #e8e9f1;
-    padding-top: 8px;
-    margin-top: 4px;
-    font-size: 16px;
-
-    .cot-tot-label {
-      color: #2a2e3f;
-      font-weight: 700;
+    span {
+      font-weight: 600;
+      color: var(--ink2);
     }
 
-    .cot-tot-value {
-      font-size: 18px;
-      font-weight: 700;
+    strong {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
     }
   }
 
-  .cot-hint {
+  .sum-foot {
+    margin: 8px 0 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+}
+
+.cot-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .cot-divider {
+    height: 1px;
+    background: var(--line);
+    margin: 4px 0;
+  }
+}
+
+.btn-cot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-size: 14px;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  &.primary {
+    background: var(--primary);
+    color: #fff;
+
+    &:hover:not(:disabled) {
+      background: var(--primary-ink);
+    }
+  }
+
+  &.ghost {
+    background: var(--surface);
+    border-color: var(--line);
+    color: var(--ink2);
+
+    &:hover:not(:disabled) {
+      background: var(--canvas);
+    }
+  }
+
+  &.wa {
+    background: #25d366;
+    color: #063d24;
+  }
+
+  &.light {
+    background: var(--line2);
+    color: var(--ink2);
+
+    &:hover:not(:disabled) {
+      background: var(--line);
+    }
+  }
+}
+
+// ============ DOCUMENTO (vista previa + PDF) ============
+.cot-doc {
+  background: #fff;
+  color: var(--ink);
+  font-family: "Inter", system-ui, sans-serif;
+  padding: 34px 38px;
+
+  .doc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    padding-bottom: 22px;
+    border-bottom: 2px solid var(--ink);
+  }
+
+  .doc-logo {
+    font-family: "Plus Jakarta Sans", sans-serif;
+    font-weight: 800;
+    font-size: 26px;
+    letter-spacing: -0.01em;
+    color: var(--primary);
+  }
+
+  .doc-sub {
     display: block;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .doc-meta {
     text-align: right;
-    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 12px;
+    color: var(--ink2);
+
+    strong {
+      font-family: "Plus Jakarta Sans", sans-serif;
+      font-size: 15px;
+      letter-spacing: 0.08em;
+      color: var(--ink);
+    }
+  }
+
+  .doc-client {
+    margin: 20px 0;
+
+    small {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+    }
+
+    strong {
+      display: block;
+      font-size: 16px;
+      margin: 2px 0;
+    }
+
+    span {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+  }
+
+  .doc-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+
+    th {
+      text-align: left;
+      padding: 9px 8px;
+      border-bottom: 1.5px solid var(--line);
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    td {
+      padding: 9px 8px;
+      border-bottom: 1px solid var(--line2);
+      vertical-align: top;
+    }
+
+    th:not(:first-child),
+    td:not(:first-child) {
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .doc-ref {
+      color: var(--muted);
+      font-size: 11px;
+    }
+  }
+
+  .doc-totals {
+    margin: 18px 0 0 auto;
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 13px;
+
+    > div {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .doc-total {
+      border-top: 1.5px solid var(--ink);
+      padding-top: 9px;
+      margin-top: 4px;
+      font-weight: 800;
+      font-size: 16px;
+      font-family: "Plus Jakarta Sans", sans-serif;
+    }
+  }
+
+  .doc-notes {
+    margin-top: 26px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line2);
+    white-space: pre-line;
+    font-size: 12.5px;
+    color: var(--ink2);
+    line-height: 1.7;
+  }
+}
+
+// Documento oculto (fuera de pantalla) que captura html2pdf.
+.cot-doc-capture {
+  position: absolute;
+  left: -10000px;
+  top: 0;
+  width: 700px;
+
+  .cot-doc {
+    width: 700px;
+  }
+}
+
+// ---- Overlay de vista previa ----
+.cot-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(22, 22, 35, 0.55);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 36px 16px;
+  overflow: auto;
+  z-index: 1060;
+}
+
+.cot-doc-modal {
+  background: #fff;
+  width: 100%;
+  max-width: 680px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.3);
+
+  .doc-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 16px;
+    background: var(--canvas);
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  .doc-close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 15px;
+    padding: 4px 8px;
+    border-radius: 7px;
+
+    &:hover {
+      background: var(--line2);
+      color: var(--ink);
+    }
+  }
+
+  .doc-scroll {
+    max-height: calc(100vh - 140px);
+    overflow: auto;
   }
 }
