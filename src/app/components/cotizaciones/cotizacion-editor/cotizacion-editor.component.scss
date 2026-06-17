@@ -1,0 +1,462 @@
+.cot-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 22px;
+}
+
+.cot-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+
+  h1 {
+    font-size: 20px;
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+
+  .muted {
+    color: #7a7f95;
+    font-size: 14px;
+  }
+}
+
+.estado-wrap {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .estado-select {
+    width: auto;
+    min-width: 120px;
+  }
+}
+
+.estado-badge {
+  text-transform: capitalize;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef0f7;
+  color: #4a4f63;
+
+  &.estado-borrador { background: #eef0f7; color: #4a4f63; }
+  &.estado-enviada { background: #e6f0ff; color: #1f5fd1; }
+  &.estado-aceptada { background: #e4f7ec; color: #1c8a4d; }
+  &.estado-rechazada { background: #fdeaea; color: #c0392b; }
+  &.estado-vencida { background: #fff2e0; color: #c47b16; }
+  &.estado-convertida { background: #ece8fb; color: #5a45e0; }
+}
+
+.cot-loading {
+  background: #fff;
+  border: 1px solid #e8e9f1;
+  border-radius: 14px;
+  padding: 32px;
+  color: #7a7f95;
+}
+
+.cot-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.cot-card {
+  background: #fff;
+  border: 1px solid #e8e9f1;
+  border-left: 4px solid #5a45e0;
+  border-radius: 14px;
+  padding: 20px 22px;
+
+  h2 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 0 0 16px;
+    color: #2a2e3f;
+  }
+}
+
+.cot-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cot-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 220px;
+  min-width: 180px;
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6a6f85;
+  }
+
+  &.cot-field-sm {
+    flex: 0 0 140px;
+    min-width: 120px;
+  }
+}
+
+// ---- Barra de acciones (T-22) ----
+.cot-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 0 8px;
+  position: sticky;
+  bottom: 0;
+  background: #f8f9fc;
+  border-top: 1px solid #e8e9f1;
+
+  .cot-footer-left,
+  .cot-footer-right {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-primary {
+    min-width: 160px;
+  }
+}
+
+.cot-hint {
+  color: #9095a8;
+  font-size: 12px;
+}
+
+.cot-readonly {
+  padding: 8px 12px;
+  background: #f6f7fb;
+  border: 1px solid #e8e9f1;
+  border-radius: 8px;
+  color: #2a2e3f;
+  font-size: 14px;
+}
+
+.cot-vendedor {
+  margin-top: 16px;
+}
+
+/* --- Picker de cliente --- */
+.cot-cliente-search {
+  position: relative;
+}
+
+.cot-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 30;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid #e8e9f1;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(20, 23, 40, 0.12);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.cot-sugg-loading,
+.cot-sugg-empty {
+  padding: 12px 14px;
+  color: #9095a8;
+  font-size: 13px;
+}
+
+.cot-sugg-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #f0f1f6;
+  padding: 10px 14px;
+  cursor: pointer;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: #f6f7fb;
+  }
+
+  .cot-sugg-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2a2e3f;
+  }
+
+  .cot-sugg-sub {
+    font-size: 12px;
+    color: #7a7f95;
+  }
+}
+
+.cot-cliente-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  background: #f6f7fb;
+  border: 1px solid #e8e9f1;
+  border-radius: 10px;
+
+  .cot-cliente-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2a2e3f;
+  }
+
+  .cot-cliente-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+    margin-top: 4px;
+    font-size: 13px;
+    color: #7a7f95;
+  }
+}
+
+.cot-placeholder-inline {
+  color: #9095a8;
+  font-size: 13px;
+  padding: 12px 0;
+}
+
+/* --- Productos / líneas --- */
+.cot-prod-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.cot-prod-search {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.cot-sugg-prod .cot-sugg-tag {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #ece8fb;
+  color: #5a45e0;
+}
+
+.cot-empty-lines {
+  color: #9095a8;
+  font-size: 13px;
+  padding: 16px 0;
+  text-align: center;
+  border: 1px dashed #e2e4ee;
+  border-radius: 10px;
+}
+
+.cot-lines {
+  display: flex;
+  flex-direction: column;
+}
+
+.cot-line-row {
+  display: grid;
+  grid-template-columns: 1fr 80px 210px 120px 40px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  border-bottom: 1px solid #f0f1f6;
+
+  &.cot-line-head {
+    font-size: 12px;
+    font-weight: 600;
+    color: #6a6f85;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    align-items: center;
+  }
+
+  // Las líneas con celda de precio editable se alinean arriba.
+  &:not(.cot-line-head) {
+    align-items: start;
+  }
+
+  .cl-prod {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .cl-titulo {
+    font-weight: 600;
+    color: #2a2e3f;
+    font-size: 14px;
+  }
+
+  .cl-ref {
+    font-size: 12px;
+    color: #7a7f95;
+  }
+
+  .cl-precio,
+  .cl-sub {
+    font-size: 14px;
+    color: #2a2e3f;
+    text-align: right;
+  }
+
+  .cl-sub {
+    font-weight: 600;
+    padding-top: 6px;
+  }
+
+  .cl-cant input {
+    text-align: center;
+  }
+
+  // ---- Celda de precio/IVA editable (T-20) ----
+  .cl-price-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: right;
+  }
+
+  .cl-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  .cl-price-input {
+    width: 110px;
+    text-align: right;
+  }
+
+  .cl-iva-select {
+    width: 72px;
+    padding-right: 4px;
+  }
+
+  .cl-price-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2a2e3f;
+  }
+
+  .cl-price-break {
+    font-size: 11px;
+    color: #5a8f4e;
+    white-space: nowrap;
+  }
+
+  .cl-price-orig {
+    font-size: 11px;
+    color: #9aa0b3;
+
+    .cl-price-orig-iva {
+      margin-left: 4px;
+    }
+  }
+
+  .cot-del {
+    color: #c0392b;
+    padding: 2px 6px;
+    text-decoration: none;
+    font-weight: 700;
+  }
+}
+
+// ---- Panel de totales (T-21) ----
+.cot-totales {
+  .cot-tot-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 420px;
+    margin-left: auto;
+  }
+
+  .cot-tot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 14px;
+    color: #2a2e3f;
+  }
+
+  .cot-tot-label {
+    color: #6a6f85;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cot-tot-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  .cot-tot-neg {
+    color: #c0392b;
+  }
+
+  .cot-desc-input {
+    width: 64px;
+    text-align: right;
+  }
+
+  .cot-tot-pct {
+    color: #6a6f85;
+  }
+
+  .cot-tot-total {
+    border-top: 1px solid #e8e9f1;
+    padding-top: 8px;
+    margin-top: 4px;
+    font-size: 16px;
+
+    .cot-tot-label {
+      color: #2a2e3f;
+      font-weight: 700;
+    }
+
+    .cot-tot-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+  }
+
+  .cot-hint {
+    display: block;
+    text-align: right;
+    margin-top: 8px;
+  }
+}

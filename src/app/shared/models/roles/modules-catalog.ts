@@ -52,6 +52,18 @@ export const MODULES_CATALOG: ModuleDef[] = [
     ],
   },
   {
+    id: 'cotizaciones',
+    label: 'Cotizaciones',
+    description: 'Propuestas de precio a clientes; borrador, envío y seguimiento.',
+    icon: 'file-text',
+    actions: [
+      A('view', 'Ver'),
+      A('create', 'Crear'),
+      A('edit', 'Editar'),
+      A('delete', 'Eliminar'),
+    ],
+  },
+  {
     id: 'pos',
     label: 'Punto de venta (POS)',
     description: 'Caja registradora, ventas rápidas en tienda.',

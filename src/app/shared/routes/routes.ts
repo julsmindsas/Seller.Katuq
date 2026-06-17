@@ -112,6 +112,14 @@ export const content: Routes = [
     canActivate: [AuthGuard], // Agregar el guard
   },
   {
+    path: "cotizaciones",
+    loadChildren: () =>
+      import("../../components/cotizaciones/cotizaciones.module").then(
+        (m) => m.CotizacionesModule,
+      ),
+    canActivate: [AuthGuard],
+  },
+  {
     path: "dashboards", // Ruta existente para el dashboard principal
     loadChildren: () =>
       import("../../components/dashboard/dashboard.module").then(

@@ -18,8 +18,9 @@ Este directorio contiene las especificaciones del proyecto bajo la metodología 
 | 003 | woocommerce-360-marco | **implementación done — pending Emulator validation** | Spec marco del 360 WooCommerce plug-and-play + 7 sub-specs hijas (003.1..003.7 todas implementadas). Goal: cualquier comercio puede integrar Woo "facilísimo". |
 | 003.7 | cleanup-legacy-woocommerce | **implementación done** | Audit colecciones legacy + extracción mappers + DEFER refactor importAllProducts por shape incompatible. Ver D-022..D-025. |
 | 004 | user-docs-flows | spec + USER-GUIDE-FLOWS.md publicada | Documentación de `/flows` orientada al comerciante final (no técnico). |
+| 007 | assisted-sale-step1-customer | **in-review** | Re-arquitectura del Paso 1 (Cliente) de la venta asistida: buscador sin callejones + creación inline + búsqueda performante (por prefijo, sin tocar la base) en móvil y desktop. |
 
-> Roadmap completo + decisiones D-001..D-021 en `CONTRACT.md`.
+> Roadmap completo + decisiones D-001..D-037 en `CONTRACT.md`.
 
 ## Cómo crear una nueva spec
 
