@@ -15,6 +15,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ImportResult } from '../../../../shared/models/column-mapping.model';
 import { ClientConfigService, ClientTag } from '../services/client-config.service';
+import Swal from 'sweetalert2';
 
 @Component({
     selector: 'app-clientes-lista',
@@ -58,6 +59,10 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     newTagColor: string = 'violet';
     availableColors: string[] = [];
 
+    // Filtro por etiquetas
+    availableTagsForFilter: ClientTag[] = [];
+    selectedTagNames: string[] = [];
+
     constructor(
         private modalService: NgbModal,
         private router: Router,
@@ -84,6 +89,9 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.cargarClientes();
+        this.clientConfig.loadClientTags().subscribe(tags => {
+            this.availableTagsForFilter = tags;
+        });
 
         // Configurar debounce para búsqueda global
         this.searchSubject
@@ -195,6 +203,14 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             );
         }
 
+        // Filtro por etiquetas (OR: el cliente debe tener al menos una de las etiquetas seleccionadas)
+        if (this.selectedTagNames.length > 0) {
+            clientesFiltrados = clientesFiltrados.filter(c => {
+                const etiquetas: string[] = c.etiquetas || [];
+                return this.selectedTagNames.some(t => etiquetas.includes(t));
+            });
+        }
+
         // Aplicar resultados filtrados
         this.clientes = clientesFiltrados;
         this.totalRecords = clientesFiltrados.length;
@@ -227,6 +243,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
 
         this.selectedCliente = null;
         this.selectedEstadoFilter = 'todos';
+        this.selectedTagNames = [];
         this.globalFilterValue = '';
         localStorage.removeItem('clientesLista_filtros');
 
@@ -296,17 +313,66 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     removeTag(index: number): void {
-        this.editableTags.splice(index, 1);
+        const tag = this.editableTags[index];
+        Swal.fire({
+            title: `¿Eliminar etiqueta "${tag.name}"?`,
+            text: 'Se quitará de todos los clientes que la tengan asignada. Esta acción no se puede deshacer.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc2626',
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar',
+            didOpen: () => {
+                const container = document.querySelector('.swal2-container') as HTMLElement;
+                if (container) container.style.zIndex = '99999';
+            }
+        }).then(result => {
+            if (!result.isConfirmed) return;
+            this.editableTags.splice(index, 1);
+            this.clientConfig.saveClientTags(this.editableTags).subscribe();
+            this.clientConfig.removeTagFromClients(tag.name).subscribe(() => {
+                this.availableTagsForFilter = [...this.clientConfig.getClientTags()];
+                // Limpiar del filtro activo si estaba seleccionada
+                this.selectedTagNames = this.selectedTagNames.filter(n => n !== tag.name);
+                // Limpiar de los clientes cargados en memoria
+                this.clientes = this.clientes.map(c => ({
+                    ...c,
+                    etiquetas: Array.isArray(c.etiquetas) ? c.etiquetas.filter((e: string) => e !== tag.name) : []
+                }));
+                this.clientesOriginales = this.clientesOriginales.map(c => ({
+                    ...c,
+                    etiquetas: Array.isArray(c.etiquetas) ? c.etiquetas.filter((e: string) => e !== tag.name) : []
+                }));
+                Swal.fire({
+                    title: 'Etiqueta eliminada',
+                    text: `La etiqueta "${tag.name}" fue eliminada del catálogo y de los clientes asignados.`,
+                    icon: 'success',
+                    timer: 2500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end',
+                    didOpen: () => {
+                        const container = document.querySelector('.swal2-container') as HTMLElement;
+                        if (container) container.style.zIndex = '99999';
+                    }
+                });
+            });
+        });
     }
 
     guardarConfig(): void {
-        this.clientConfig.saveClientTags(this.editableTags);
-        this.showConfigModal = false;
-        this.messageService.add({
-            severity: 'success',
-            summary: 'Configuración guardada',
-            detail: 'Los tipos y etiquetas han sido actualizados.',
-            life: 3000
+        this.addTag();
+        this.clientConfig.saveClientTags(this.editableTags).subscribe(() => {
+            this.availableTagsForFilter = [...this.clientConfig.getClientTags()];
+            this.showConfigModal = false;
+            this.messageService.add({
+                severity: 'success',
+                summary: 'Configuración guardada',
+                detail: 'Etiquetas actualizadas correctamente.',
+                life: 3000
+            });
         });
     }
 
@@ -324,6 +390,16 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             amber: '#92400e', red: '#991b1b', gray: '#374151'
         };
         return map[color] || '#374151';
+    }
+
+    toggleTagFilter(tagName: string): void {
+        const idx = this.selectedTagNames.indexOf(tagName);
+        if (idx >= 0) {
+            this.selectedTagNames.splice(idx, 1);
+        } else {
+            this.selectedTagNames.push(tagName);
+        }
+        this.aplicarFiltros();
     }
 
     verDetalles(cliente: any): void {

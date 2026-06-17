@@ -733,7 +733,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.IndicativoPlaceholder = 'indicativo'
     this.indicativos = this.infoIndicativo.datos
 
-    this.clientTagsCatalog = this.clientConfig.getClientTags();
+    this.clientConfig.loadClientTags().subscribe((tags) => {
+      this.clientTagsCatalog = tags;
+    });
     this.service.consultarTiposClienteActivos().subscribe({
       next: (tipos: any) => {
         this.clientTypes = Array.isArray(tipos) ? tipos.filter((t: any) => t.active !== false).map((t: any) => t.nombre) : [];
@@ -1363,28 +1365,22 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             Swal.fire({ title: 'Editado!', text: 'Cliente actualizado (con advertencia)', icon: 'warning', confirmButtonText: 'Ok' });
           });
         } else {
-          // Recargar datos del cliente y refrescar ficha 360°
-          this.service.getClientByDocument(data).subscribe((clienteActualizado: any) => {
-            this.datos = clienteActualizado;
-            this.etiquetasSeleccionadas = Array.isArray(clienteActualizado.etiquetas) ? [...clienteActualizado.etiquetas] : [];
-            this.formulario.patchValue(clienteActualizado);
-            this.bloqueado = clienteActualizado.estado === 'bloqueado';
-            this.datosFacturacionElectronica = clienteActualizado.datosFacturacionElectronica || [];
-            this.datosEntregas = clienteActualizado.datosEntrega || [];
-            this.notas = clienteActualizado.notas || [];
-            this.encontrado = true;
-            sessionStorage.setItem('cliente', JSON.stringify(clienteActualizado));
-            this.showClienteModal = false;
-            Swal.fire({
-              title: '¡Cliente actualizado!',
-              text: `${clienteActualizado.nombres_completos} ${clienteActualizado.apellidos_completos || ''} fue actualizado exitosamente.`,
-              icon: 'success',
-              timer: 2500,
-              timerProgressBar: true,
-              showConfirmButton: false,
-              toast: true,
-              position: 'top-end'
-            });
+          // Actualizar estado local con los datos del formulario (sin request adicional)
+          const datosActualizados = { ...this.datos, ...this.formulario.value };
+          datosActualizados.etiquetas = this.etiquetasSeleccionadas;
+          this.datos = datosActualizados;
+          this.bloqueado = this.formulario.value.estado === 'bloqueado';
+          this.encontrado = true;
+          sessionStorage.setItem('cliente', JSON.stringify(datosActualizados));
+          this.showClienteModal = false;
+          Swal.fire({
+            title: '¡Cliente actualizado!',
+            icon: 'success',
+            timer: 2000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end'
           });
         }
       });
@@ -1554,13 +1550,60 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   removeTagCfg(index: number): void {
-    this.editableTagsCfg.splice(index, 1);
+    const tag = this.editableTagsCfg[index];
+    Swal.fire({
+      title: `¿Eliminar etiqueta "${tag.name}"?`,
+      text: 'Se quitará de todos los clientes que la tengan asignada. Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container') as HTMLElement;
+        if (container) container.style.zIndex = '99999';
+      }
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.editableTagsCfg.splice(index, 1);
+      this.clientConfig.saveClientTags(this.editableTagsCfg).subscribe();
+      this.clientConfig.removeTagFromClients(tag.name).subscribe(() => {
+        this.clientTagsCatalog = [...this.clientConfig.getClientTags()];
+        // Limpiar del cliente activo en la UI
+        this.etiquetasSeleccionadas = this.etiquetasSeleccionadas.filter(e => e !== tag.name);
+        if (this.datos) {
+          this.datos.etiquetas = [...this.etiquetasSeleccionadas];
+          const clienteSession = JSON.parse(sessionStorage.getItem('cliente') || '{}');
+          clienteSession.etiquetas = this.datos.etiquetas;
+          sessionStorage.setItem('cliente', JSON.stringify(clienteSession));
+        }
+        this.cdr.detectChanges();
+        Swal.fire({
+          title: 'Etiqueta eliminada',
+          text: `La etiqueta "${tag.name}" fue eliminada del catálogo y de los clientes asignados.`,
+          icon: 'success',
+          timer: 2500,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end',
+          didOpen: () => {
+            const container = document.querySelector('.swal2-container') as HTMLElement;
+            if (container) container.style.zIndex = '99999';
+          }
+        });
+      });
+    });
   }
 
   guardarConfigEtiquetas(): void {
-    this.clientConfig.saveClientTags(this.editableTagsCfg);
-    this.clientTagsCatalog = [...this.editableTagsCfg];
-    this.showEtiquetasConfig = false;
+    this.addTagCfg();
+    this.clientConfig.saveClientTags(this.editableTagsCfg).subscribe(() => {
+      this.clientTagsCatalog = [...this.clientConfig.getClientTags()];
+      this.showEtiquetasConfig = false;
+      this.cdr.detectChanges();
+    });
   }
 
   getTagBgColorCfg(color: string): string {
@@ -1587,29 +1630,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     const n = (this.datos.nombres_completos || '').trim();
     const a = (this.datos.apellidos_completos || '').trim();
     return ((n[0] || '') + (a[0] || '')).toUpperCase() || '?';
-  }
-
-  formatMetricCurrency(val: any): string {
-    if (val === null || val === undefined) return '—';
-    return new Intl.NumberFormat('es-CO', {
-      style: 'currency', currency: 'COP', maximumFractionDigits: 0
-    }).format(val);
-  }
-
-  formatMetricDate(val: any): string {
-    if (!val) return '—';
-    try {
-      const d = val._seconds ? new Date(val._seconds * 1000) : new Date(val);
-      return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short' });
-    } catch { return '—'; }
-  }
-
-  getDaysSince(val: any): any {
-    if (!val) return '—';
-    try {
-      const d = val._seconds ? new Date(val._seconds * 1000) : new Date(val);
-      return Math.floor((Date.now() - d.getTime()) / 86400000);
-    } catch { return '—'; }
   }
 
 }

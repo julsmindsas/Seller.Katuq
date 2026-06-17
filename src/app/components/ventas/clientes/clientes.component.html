@@ -16,6 +16,14 @@
                 <button *ngIf="!isEdit"
                         pButton
                         type="button"
+                        icon="pi pi-tags"
+                        label="{{ 'Etiquetas' | translate }}"
+                        class="p-button-outlined p-button-sm btn-tags-cfg"
+                        (click)="abrirConfigEtiquetas()"
+                        pTooltip="{{ 'Gestionar etiquetas de clientes' | translate }}"></button>
+                <button *ngIf="!isEdit"
+                        pButton
+                        type="button"
                         icon="pi pi-plus"
                         label="{{ 'Crear Cliente' | translate }}"
                         class="p-button-primary p-button-sm"
@@ -173,29 +181,6 @@
                 </span>
             </div>
 
-            <!-- Métricas -->
-            <div class="c360-metrics">
-                <div class="c360-metric">
-                    <div class="c360-metric-val">{{ formatMetricCurrency(datos?.stats?.totalSpent) }}</div>
-                    <div class="c360-metric-key">Total comprado</div>
-                </div>
-                <div class="c360-metric">
-                    <div class="c360-metric-val">{{ datos?.stats?.orderCount ?? '—' }}</div>
-                    <div class="c360-metric-key">Pedidos</div>
-                </div>
-                <div class="c360-metric">
-                    <div class="c360-metric-val">{{ formatMetricCurrency(datos?.stats?.avgTicket) }}</div>
-                    <div class="c360-metric-key">Ticket promedio</div>
-                </div>
-                <div class="c360-metric">
-                    <div class="c360-metric-val">{{ formatMetricDate(datos?.stats?.lastPurchase) }}</div>
-                    <div class="c360-metric-key">Última compra</div>
-                </div>
-                <div class="c360-metric" [class.c360-metric-alert]="getDaysSince(datos?.stats?.lastPurchase) > 60">
-                    <div class="c360-metric-val">{{ getDaysSince(datos?.stats?.lastPurchase) }}</div>
-                    <div class="c360-metric-key">Días sin comprar</div>
-                </div>
-            </div>
         </div>
 
         <div class="card-body p-0">
@@ -923,7 +908,7 @@
     [appendTo]="'body'"
     [baseZIndex]="10000"
     [style]="{ width: '92vw', maxWidth: '920px' }"
-    [contentStyle]="{ padding: '0.75rem 1.25rem 1.25rem', background: '#fafbfc', overflow: 'hidden' }"
+    [contentStyle]="{ padding: '0.75rem 1.25rem 1.25rem', background: '#fafbfc', overflow: 'auto', maxHeight: '70vh' }"
     styleClass="cliente-form-dialog">
     <ng-template pTemplate="header">
         <div class="d-flex align-items-center gap-3">
@@ -1173,7 +1158,7 @@
     [(visible)]="showEtiquetasConfig"
     [modal]="true"
     [closable]="true"
-    [dismissableMask]="true"
+    [dismissableMask]="false"
     [appendTo]="'body'"
     [style]="{ width: '460px' }"
     [baseZIndex]="11000">

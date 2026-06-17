@@ -9,9 +9,12 @@ $bg-light:     #f8f9fa;
 // ── Contenedor principal ────────────────────────────────────────
 .cliente-modal {
   border-radius: 10px;
-  overflow: hidden;
   border: none;
   animation: slideIn 0.2s ease-out;
+  display: flex;
+  flex-direction: column;
+  max-height: 92vh;
+  overflow: hidden;
 }
 
 @keyframes slideIn {
@@ -78,7 +81,8 @@ $bg-light:     #f8f9fa;
 .modal-body-modern {
   background: #fafbfc;
   padding: 1rem 1.25rem;
-  overflow-y: visible; // sin scroll — todo cabe
+  overflow-y: auto;
+  max-height: 70vh;
 }
 
 // ── Sección de formulario ────────────────────────────────────────
@@ -319,5 +323,15 @@ $bg-light:     #f8f9fa;
   .modal-dialog {
     max-width: 860px;
     margin: 0.75rem auto;
+    max-height: calc(100vh - 1.5rem);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-content.cliente-modal {
+    max-height: calc(100vh - 1.5rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 }

@@ -1468,6 +1468,22 @@ form.integration-form,
 }
 
 .cliente-form-dialog .p-dialog-content {
-  overflow: hidden !important;
+  overflow: auto !important;
+}
+
+/* ── Modal crear/editar cliente: scroll vertical ── */
+ngb-modal-window .modal-dialog:has(.cliente-modal) {
+  max-width: 860px;
+  max-height: 92vh;
+  margin: 1rem auto;
+  display: flex;
+  flex-direction: column;
+}
+
+ngb-modal-window .modal-dialog:has(.cliente-modal) .modal-content {
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 

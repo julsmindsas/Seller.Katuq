@@ -98,6 +98,18 @@ export class MaestroService {
     return this.http.post(this.urlBase + '/v1/clients/doc', data, this.httpOptions);
   }
 
+  public removeTagFromClients(tagName: string) {
+    return this.http.post(this.urlBase + '/v1/clients/tags/remove', { tagName }, this.httpOptions);
+  }
+
+  public getClientTags(): Observable<any[]> {
+    return this.http.get<any[]>(this.urlBase + '/v1/clients/tags', this.httpOptions) as any;
+  }
+
+  public saveClientTags(tags: any[]) {
+    return this.http.post(this.urlBase + '/v1/clients/tags', { tags }, this.httpOptions);
+  }
+
   /**
    * Busca clientes por término (documento, nombre, correo, teléfono)
    * Para autocompletado

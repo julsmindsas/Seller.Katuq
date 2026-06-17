@@ -1321,44 +1321,6 @@ input[type="checkbox"] {
   letter-spacing: 0.2px;
 }
 
-.c360-metrics {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 1px;
-  background: #ede9fe;
-  border-top: 1px solid #ede9fe;
-  margin: 0 -1.5rem;
-  overflow: hidden;
-
-  @media (max-width: 760px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-.c360-metric {
-  background: #fff;
-  padding: 0.9rem 1rem;
-
-  &.c360-metric-alert .c360-metric-val {
-    color: #dc2626;
-  }
-}
-
-.c360-metric-val {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: #5b21b6;
-  letter-spacing: -0.5px;
-  line-height: 1.2;
-}
-
-.c360-metric-key {
-  font-size: 0.72rem;
-  color: #9ca3af;
-  font-weight: 500;
-  margin-top: 0.2rem;
-}
-
 // ==============================================
 // TAGS PICKER (Etiquetas en formulario)
 // ==============================================
@@ -1485,6 +1447,21 @@ input[type="checkbox"] {
       flex-shrink: 0;
       pointer-events: none;
     }
+  }
+}
+
+// ==============================================
+// BOTÓN GESTIONAR ETIQUETAS (header)
+// ==============================================
+::ng-deep .btn-tags-cfg.p-button.p-button-outlined {
+  color: #8b5cf6 !important;
+  border-color: #8b5cf6 !important;
+  background: transparent !important;
+
+  &:hover {
+    background: #f5f3ff !important;
+    border-color: #7c3aed !important;
+    color: #7c3aed !important;
   }
 }
 

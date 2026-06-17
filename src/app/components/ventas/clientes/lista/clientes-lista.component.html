@@ -32,6 +32,12 @@
                                 (click)="deleteAllClients()"
                                 pTooltip="Eliminar TODOS los clientes de la empresa"></button> -->
                         <button pButton type="button"
+                                icon="pi pi-tags"
+                                label="{{ 'Etiquetas' | translate }}"
+                                class="p-button-outlined p-button-sm btn-tags-cfg"
+                                (click)="abrirConfigModal()"
+                                pTooltip="{{ 'Gestionar etiquetas de clientes' | translate }}"></button>
+                        <button pButton type="button"
                                 icon="pi pi-plus"
                                 label="{{ 'Crear cliente' | translate }}"
                                 class="p-button-primary p-button-sm"
@@ -110,6 +116,35 @@
                             </div>
                         </div>
 
+                        <!-- Filtro por etiquetas -->
+                        <div class="row mt-3" *ngIf="availableTagsForFilter.length > 0">
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">
+                                    <i class="pi pi-tag me-1" style="color: #8b5cf6;"></i>
+                                    {{ "Etiquetas" | translate }}
+                                    <span *ngIf="selectedTagNames.length > 0"
+                                          class="ms-1 badge"
+                                          style="background:#8b5cf6; color:white; font-size:0.7rem;">
+                                        {{selectedTagNames.length}} activa(s)
+                                    </span>
+                                </label>
+                                <div class="d-flex flex-wrap gap-2 mt-1">
+                                    <span *ngFor="let tag of availableTagsForFilter"
+                                          class="tag-filter-chip"
+                                          [class.tag-filter-chip--active]="selectedTagNames.includes(tag.name)"
+                                          [style.background]="selectedTagNames.includes(tag.name) ? getTagBgColor(tag.color) : null"
+                                          [style.color]="selectedTagNames.includes(tag.name) ? getTagFgColor(tag.color) : null"
+                                          [style.border-color]="selectedTagNames.includes(tag.name) ? getTagFgColor(tag.color) : null"
+                                          (click)="toggleTagFilter(tag.name)">
+                                        <i *ngIf="selectedTagNames.includes(tag.name)"
+                                           class="pi pi-check me-1"
+                                           style="font-size: 0.7rem;"></i>
+                                        {{ tag.name }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Botones de acción -->
                         <div class="row mt-3">
                             <div class="col-12 text-end">
@@ -165,6 +200,29 @@
                                 <i class="pi pi-times-circle"></i>
                                 <span class="metric-label">{{ "Bloqueados" | translate }}</span>
                             </div>
+
+                            <!-- Tags activos como chips removibles -->
+                            <ng-container *ngIf="selectedTagNames.length > 0">
+                                <span class="separator">/</span>
+                                <span class="text-muted small me-1" style="font-size: 0.78rem; white-space: nowrap;">
+                                    <i class="pi pi-tag"></i> Etiquetas:
+                                </span>
+                                <ng-container *ngFor="let tagName of selectedTagNames">
+                                    <ng-container *ngFor="let tag of availableTagsForFilter">
+                                        <span *ngIf="tag.name === tagName"
+                                              class="tag-filter-chip tag-filter-chip--active"
+                                              [style.background]="getTagBgColor(tag.color)"
+                                              [style.color]="getTagFgColor(tag.color)"
+                                              [style.border-color]="getTagFgColor(tag.color)"
+                                              (click)="toggleTagFilter(tagName)"
+                                              pTooltip="Quitar filtro por '{{tagName}}'"
+                                              tooltipPosition="top">
+                                            {{ tagName }}
+                                            <i class="pi pi-times ms-1" style="font-size: 0.65rem;"></i>
+                                        </span>
+                                    </ng-container>
+                                </ng-container>
+                            </ng-container>
                         </div>
                     </div>
                 </div>
@@ -369,6 +427,24 @@
                                                             {{cliente.estado | titlecase}}
                                                         </span>
                                                     </div>
+                                                    <!-- Etiquetas del cliente -->
+                                                    <div class="detail-row" *ngIf="cliente.etiquetas && cliente.etiquetas.length > 0">
+                                                        <span class="detail-label">{{ "Etiquetas:" | translate }}</span>
+                                                        <span class="detail-value">
+                                                            <span class="d-flex flex-wrap gap-1">
+                                                                <ng-container *ngFor="let tagName of cliente.etiquetas">
+                                                                    <ng-container *ngFor="let tag of availableTagsForFilter">
+                                                                        <span *ngIf="tag.name === tagName"
+                                                                              class="tag-preview"
+                                                                              [style.background]="getTagBgColor(tag.color)"
+                                                                              [style.color]="getTagFgColor(tag.color)">
+                                                                            {{ tagName }}
+                                                                        </span>
+                                                                    </ng-container>
+                                                                </ng-container>
+                                                            </span>
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -438,7 +514,7 @@
     [(visible)]="showConfigModal"
     [modal]="true"
     [closable]="true"
-    [dismissableMask]="true"
+    [dismissableMask]="false"
     [style]="{ width: '480px' }"
     styleClass="config-clientes-dialog">
 

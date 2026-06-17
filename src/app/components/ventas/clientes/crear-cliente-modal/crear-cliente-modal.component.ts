@@ -34,7 +34,9 @@ export class CrearClienteModalComponent implements OnInit {
 
   ngOnInit(): void {
     this.indicativos = this.infoIndicativos.datos;
-    this.clientTagsCatalog = this.clientConfig.getClientTags();
+    this.clientConfig.loadClientTags().subscribe((tags) => {
+      this.clientTagsCatalog = tags;
+    });
     this.maestroService.consultarTiposClienteActivos().subscribe({
       next: (tipos: any) => {
         this.clientTypes = Array.isArray(tipos)

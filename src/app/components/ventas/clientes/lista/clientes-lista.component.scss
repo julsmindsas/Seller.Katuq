@@ -1467,3 +1467,51 @@ $border-radius: 8px;
     &:hover { transform: scale(1.15); }
     &.selected { transform: scale(1.2); }
 }
+
+// ===================================
+// BOTÓN GESTIONAR ETIQUETAS (header)
+// ===================================
+::ng-deep .btn-tags-cfg.p-button.p-button-outlined {
+    color: #8b5cf6 !important;
+    border-color: #8b5cf6 !important;
+    background: transparent !important;
+
+    &:hover {
+        background: #f5f3ff !important;
+        border-color: #7c3aed !important;
+        color: #7c3aed !important;
+    }
+
+    .p-button-icon {
+        color: #8b5cf6 !important;
+    }
+}
+
+// ===================================
+// CHIPS DE FILTRO POR ETIQUETAS
+// ===================================
+.tag-filter-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    user-select: none;
+    background: #f3f4f6;
+    color: #6b7280;
+    border: 1.5px solid transparent;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background: #e9ecef;
+        color: #374151;
+        transform: translateY(-1px);
+    }
+
+    &.tag-filter-chip--active {
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+}
