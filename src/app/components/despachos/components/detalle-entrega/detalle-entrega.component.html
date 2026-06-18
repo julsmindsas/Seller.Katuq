@@ -116,31 +116,27 @@
             </div>
             
             <div class="evidence-gallery">
-                <ng-container *ngIf="isArray(pedido?.fotosEvidencia); else singleImage">
-                    <div class="gallery-grid">
-                        <div *ngFor="let image of pedido?.fotosEvidencia" class="gallery-item">
-                            <div class="image-container">
-                                <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" class="evidence-image" (click)="showImageViewer(image)">
-                                <div class="image-overlay" (click)="showImageViewer(image)">
-                                    <i class="pi pi-search"></i>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </ng-container>
-                
-                <ng-template #singleImage>
-                    <div *ngIf="pedido?.fotoEvidencia" class="single-image-container">
+                <!-- Galería unificada: imágenes del mensajero propio + de Guía Cereza -->
+                <div class="gallery-grid" *ngIf="imagenesEvidencia.length > 0">
+                    <div *ngFor="let image of imagenesEvidencia" class="gallery-item">
                         <div class="image-container">
-                            <img [src]="pedido?.fotoEvidencia" alt="{{ 'Foto de evidencia' | translate }}" class="evidence-image" (click)="showImageViewer(pedido?.fotoEvidencia)">
-                            <div class="image-overlay" (click)="showImageViewer(pedido?.fotoEvidencia)">
+                            <img [src]="image" alt="{{ 'Foto de evidencia' | translate }}" class="evidence-image" (click)="showImageViewer(image)">
+                            <div class="image-overlay" (click)="showImageViewer(image)">
                                 <i class="pi pi-search"></i>
                             </div>
                         </div>
                     </div>
-                </ng-template>
+                </div>
 
-                <div *ngIf="(!pedido?.fotosEvidencia || pedido?.fotosEvidencia.length === 0) && !pedido?.fotoEvidencia" 
+                <!-- Archivos no-imagen de Cereza (PDF de la guía) -->
+                <div class="evidence-files" *ngIf="archivosEvidencia.length > 0">
+                    <a *ngFor="let ev of archivosEvidencia" class="evidence-file" [href]="evidenciaUrl(ev)" target="_blank" rel="noopener">
+                        <i class="pi" [ngClass]="esPdfEvidencia(ev) ? 'pi-file-pdf' : 'pi-download'"></i>
+                        <span>{{ nombreEvidencia(ev) }}</span>
+                    </a>
+                </div>
+
+                <div *ngIf="imagenesEvidencia.length === 0 && archivosEvidencia.length === 0"
                      class="no-evidence">
                     <div class="no-evidence-icon">
                         <i class="pi pi-image"></i>
@@ -179,18 +175,26 @@
             </div>
             
             <div class="notes-container">
-                <div *ngIf="pedido?.notasEntregaMensajero; else noNotas" class="notes-content">
+                <!-- Nota del mensajero propio -->
+                <div *ngIf="pedido?.notasEntregaMensajero" class="notes-content">
                     <p>{{ pedido?.notasEntregaMensajero }}</p>
                 </div>
-                
-                <ng-template #noNotas>
-                    <div class="no-notes">
-                        <div class="no-notes-icon">
-                            <i class="pi pi-comment"></i>
-                        </div>
-                        <p>{{ 'No hay notas de entrega disponibles' | translate }}</p>
+
+                <!-- Notas de Guía Cereza (mismo lugar que las del mensajero) -->
+                <div class="notes-content cereza-note" *ngFor="let n of cerezaNotas">
+                    <p>
+                        <span class="cereza-note-status" *ngIf="n.statusKatuq">[{{ n.statusKatuq }}]</span>
+                        {{ n.nota }}
+                    </p>
+                    <small class="info-subtitle" *ngIf="n.fecha">{{ n.fecha | date:'dd/MM/yyyy HH:mm' }}</small>
+                </div>
+
+                <div *ngIf="!pedido?.notasEntregaMensajero && cerezaNotas.length === 0" class="no-notes">
+                    <div class="no-notes-icon">
+                        <i class="pi pi-comment"></i>
                     </div>
-                </ng-template>
+                    <p>{{ 'No hay notas de entrega disponibles' | translate }}</p>
+                </div>
             </div>
         </div>
     </div>

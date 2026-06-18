@@ -639,3 +639,37 @@
     background: rgba(0, 0, 0, 0.7);
   }
 } 
+// ---------------------------------------------------------------------------
+// Evidencia de Guía Cereza (Osmosis) — integrada en las secciones del mensajero
+// ---------------------------------------------------------------------------
+// Contenedor de archivos no-imagen (PDF de la guía), debajo de la galería.
+.evidence-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+// Link de descarga para PDF / archivos no-imagen.
+.evidence-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--border-radius-sm);
+  background: var(--gray-50);
+  color: var(--gray-700);
+  text-decoration: none;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
+
+  i { font-size: 1.2rem; color: var(--danger-color); }
+  &:hover { background: var(--gray-100); box-shadow: var(--shadow-sm); }
+}
+
+// Nota proveniente de Cereza dentro de la sección de notas.
+.cereza-note .cereza-note-status {
+  font-weight: 600;
+  color: var(--primary-dark);
+  margin-right: 0.35rem;
+}
