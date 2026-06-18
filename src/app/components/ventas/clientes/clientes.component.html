@@ -189,15 +189,25 @@
             <div class="mt-4">
                 <ul class="nav nav-tabs" id="customerTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link nav-link-dark" [class.active]="activarNotas" (click)="verNotas()">Notas</button>
+                        <button class="nav-link nav-link-dark" [class.active]="activarNotas"
+                            [attr.aria-selected]="activarNotas"
+                            (click)="verNotas()">
+                            <i class="pi pi-file-edit me-1"></i>Notas
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link nav-link-dark" [class.active]="activarDatosFact"
-                            (click)="verDatosFacturacion()">Facturación</button>
+                            [attr.aria-selected]="activarDatosFact"
+                            (click)="verDatosFacturacion()">
+                            <i class="pi pi-file me-1"></i>Facturación
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
                         <button class="nav-link nav-link-dark" [class.active]="activarDatosEntrega"
-                            (click)="verDatosEntrega()">Entrega</button>
+                            [attr.aria-selected]="activarDatosEntrega"
+                            (click)="verDatosEntrega()">
+                            <i class="pi pi-map-marker me-1"></i>Entrega
+                        </button>
                     </li>
                 </ul>
 

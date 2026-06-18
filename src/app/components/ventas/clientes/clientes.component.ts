@@ -1288,59 +1288,49 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       })
     });
   }
+  private activarTab(tab: 'notas' | 'facturacion' | 'entrega') {
+    this.activarNotas = tab === 'notas';
+    this.activarDatosFact = tab === 'facturacion';
+    this.activarDatosEntrega = tab === 'entrega';
+  }
+
   verNotas() {
-    if (this.activarNotas == true) {
-      this.activarNotas = false
-    } else {
-      this.activarNotas = true
-      this.notas = []
-      const data = {
-        documento: this.documentoBusqueda.nativeElement.value
-      }
-
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        res.notas.map(x => {
-          this.notas.push(x)
-
-        })
-      })
+    if (this.activarNotas) {
+      this.activarNotas = false;
+      return;
     }
+    this.activarTab('notas');
+    this.notas = [];
+    const data = { documento: this.documentoBusqueda.nativeElement.value };
+    this.service.getClientByDocument(data).subscribe((res: any) => {
+      (res?.notas || []).forEach((x: any) => this.notas.push(x));
+    });
   }
+
   verDatosFacturacion() {
-    if (this.activarDatosFact == true) {
-      this.activarDatosFact = false
-    } else {
-      this.activarDatosFact = true
-      this.datosFacturacionElectronica = []
-      const data = {
-        documento: this.documentoBusqueda.nativeElement.value
-      }
-
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        res.datosFacturacionElectronica.map(x => {
-          this.datosFacturacionElectronica.push(x)
-
-        })
-      })
+    if (this.activarDatosFact) {
+      this.activarDatosFact = false;
+      return;
     }
+    this.activarTab('facturacion');
+    this.datosFacturacionElectronica = [];
+    const data = { documento: this.documentoBusqueda.nativeElement.value };
+    this.service.getClientByDocument(data).subscribe((res: any) => {
+      (res?.datosFacturacionElectronica || []).forEach((x: any) => this.datosFacturacionElectronica.push(x));
+    });
   }
+
   verDatosEntrega() {
-    if (this.activarDatosEntrega == true) {
-      this.activarDatosEntrega = false
-    } else {
-      this.activarDatosEntrega = true
-      this.datosEntregas = []
-      const data = {
-        documento: this.documentoBusqueda.nativeElement.value
-      }
-
-      this.service.getClientByDocument(data).subscribe((res: any) => {
-        res.datosEntrega.map(x => {
-          this.datosEntregas.push(x)
-
-        })
-      })
+    if (this.activarDatosEntrega) {
+      this.activarDatosEntrega = false;
+      return;
     }
+    this.activarTab('entrega');
+    this.datosEntregas = [];
+    const data = { documento: this.documentoBusqueda.nativeElement.value };
+    this.service.getClientByDocument(data).subscribe((res: any) => {
+      (res?.datosEntrega || []).forEach((x: any) => this.datosEntregas.push(x));
+    });
   }
 
   editarCliente() {

@@ -173,6 +173,8 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
   geocodificando = false;
   errorGeocodificacion = false;
   mensajeError = "";
+  geocodingQuality = 0;
+  urlGoogleMaps = '';
 
   // Coordenadas geocodificadas
   latitud?: string;
@@ -452,28 +454,28 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Construir dirección urbana colombiana
+    // Construir dirección urbana colombiana en formato canónico: Carrera 41A #30C-56
     let direccion = `${form.tipoVia} ${form.numeroVia}`;
 
     if (form.letraVia) {
-      direccion += ` ${form.letraVia}`;
+      direccion += form.letraVia; // sin espacio: "Carrera 41A"
     }
 
     if (form.complementoVia) {
       direccion += ` ${form.complementoVia}`;
     }
 
-    direccion += ` # ${form.numero}`;
+    direccion += ` #${form.numero}`; // sin espacio tras #: "#30"
 
     if (form.letraCruce) {
-      direccion += ` ${form.letraCruce}`;
+      direccion += form.letraCruce; // sin espacio: "#30C"
     }
 
     if (form.complementoCruce) {
       direccion += ` ${form.complementoCruce}`;
     }
 
-    direccion += ` - ${form.numeroCasa}`;
+    direccion += `-${form.numeroCasa}`; // guion pegado: "#30C-56"
 
     this.vistaPrevia = direccion;
   }
@@ -577,10 +579,16 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
     this.geocodingService.geocodeDireccion(direccion, ciudad).subscribe({
       next: (respuesta) => {
         this.geocodificando = false;
+        this.geocodingQuality = respuesta.quality;
 
         // Guardar coordenadas
         this.latitud = respuesta.latitud;
         this.longitud = respuesta.longitud;
+
+        // Construir URL de verificación en Google Maps
+        const ciudad = this.direccionForm.get('ciudad')?.value || '';
+        const query = encodeURIComponent(`${this.vistaPrevia}, ${ciudad}, Colombia`);
+        this.urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${query}`;
 
         // Actualizar el campo de coordenadas
         this.direccionForm
@@ -590,11 +598,10 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
         // Actualizar el marcador en el mapa
         this.actualizarMarcador();
 
-        // Mostrar un mensaje informativo si la calidad de geocodificación es baja
-        if (respuesta.quality < 0.7) {
+        if (respuesta.quality < 70) {
           this.errorGeocodificacion = true;
           this.mensajeError =
-            "Las coordenadas pueden no ser exactas. Por favor, ajusta la ubicación manualmente en el mapa.";
+            "Las coordenadas pueden no ser exactas. Verifica y ajusta la ubicación en el mapa.";
         }
       },
       error: (error) => {
@@ -602,7 +609,10 @@ export class DireccionEstructuradaComponent implements OnInit, OnDestroy {
         this.geocodificando = false;
         this.errorGeocodificacion = true;
         this.mensajeError =
-          "No se pudo obtener la ubicación geográfica. Por favor verifica la dirección y la ciudad o ubica manualmente el punto en el mapa.";
+          "No se pudo obtener la ubicación. Verifica la dirección o búscala en Google Maps.";
+        const ciudad = this.direccionForm.get('ciudad')?.value || '';
+        const query = encodeURIComponent(`${this.vistaPrevia}, ${ciudad}, Colombia`);
+        this.urlGoogleMaps = `https://www.google.com/maps/search/?api=1&query=${query}`;
       },
     });
   }

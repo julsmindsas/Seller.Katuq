@@ -1447,6 +1447,24 @@ $border-radius: 8px;
     .btn-link { font-size: 0.85rem; }
 }
 
+.tag-chip-sm {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    &.tag-chip-more {
+        background-color: #e5e7eb !important;
+        color: #374151 !important;
+        cursor: default;
+    }
+}
+
 .tag-preview {
     display: inline-block;
     padding: 0.15rem 0.6rem;
