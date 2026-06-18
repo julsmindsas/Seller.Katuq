@@ -683,6 +683,7 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "notificaciones", title: "Notificaciones", type: "link", icon: "settings" },
+        { path: "/notificaciones/whatsapp/inbox", title: "Conversaciones WhatsApp", type: "link", icon: "message-circle" },
       ],
     },
 

@@ -1,0 +1,108 @@
+<div class="thread-detail" *ngIf="phoneHash; else emptyState">
+  <header class="thread-detail__header">
+    <button
+      type="button"
+      class="thread-detail__back btn btn-link"
+      (click)="onBack()"
+      aria-label="Volver al listado"
+    >
+      ←
+    </button>
+
+    <div class="thread-detail__header-info">
+      <h3 class="thread-detail__name">
+        {{ headerName }}
+      </h3>
+      <p class="thread-detail__phone" *ngIf="profile">
+        {{ profile.phoneMasked }}
+      </p>
+    </div>
+
+    <div class="thread-detail__header-actions">
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        (click)="markAsRead()"
+        [disabled]="!phoneHash"
+      >
+        Marcar leído
+      </button>
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-secondary"
+        [class.is-active]="contactPanelOpen"
+        (click)="toggleContactPanel()"
+      >
+        {{ contactPanelOpen ? "Cerrar panel" : "Abrir panel" }}
+      </button>
+    </div>
+  </header>
+
+  <div class="thread-detail__body">
+    <div class="thread-detail__chat">
+      <div *ngIf="loading" class="thread-detail__state">Cargando mensajes…</div>
+
+      <div
+        *ngIf="!loading && messages.length === 0"
+        class="thread-detail__state"
+      >
+        Aún no hay mensajes en este hilo.
+      </div>
+
+      <div
+        #messagesContainer
+        class="thread-detail__messages"
+        *ngIf="!loading && messages.length > 0"
+      >
+        <div
+          *ngFor="let msg of messages; trackBy: trackById"
+          class="thread-detail__message"
+          [class.is-outbound]="msg.direction === 'outbound'"
+          [class.is-inbound]="msg.direction === 'inbound'"
+        >
+          <div class="thread-detail__bubble">
+            <p
+              class="thread-detail__body-text"
+              *ngIf="!msg.mediaPlaceholder"
+            >
+              {{ msg.body || msg.snippet }}
+            </p>
+            <p
+              class="thread-detail__media"
+              *ngIf="msg.mediaPlaceholder"
+            >
+              {{ mediaLabel(msg) }}
+            </p>
+            <div class="thread-detail__meta">
+              <span class="thread-detail__time">
+                {{ msg.sentAt | date: "short" }}
+              </span>
+              <span
+                *ngIf="msg.direction === 'outbound'"
+                class="thread-detail__status"
+                [attr.data-status]="msg.status"
+              >
+                {{ msg.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside
+      class="thread-detail__panel"
+      *ngIf="contactPanelOpen"
+    >
+      <app-whatsapp-contact-panel
+        [phoneHash]="phoneHash"
+      ></app-whatsapp-contact-panel>
+    </aside>
+  </div>
+</div>
+
+<ng-template #emptyState>
+  <div class="thread-detail__placeholder">
+    <p>Selecciona una conversación de la lista</p>
+  </div>
+</ng-template>

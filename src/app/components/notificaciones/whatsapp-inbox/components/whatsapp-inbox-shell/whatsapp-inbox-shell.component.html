@@ -1,0 +1,24 @@
+<div
+  class="wa-shell"
+  [class.wa-shell--detail-open]="selectedPhoneHash"
+>
+  <header class="wa-shell__header">
+    <h2 class="wa-shell__title">Conversaciones WhatsApp</h2>
+    <span class="wa-shell__demo-badge">Demo</span>
+  </header>
+
+  <div class="wa-shell__body">
+    <aside class="wa-shell__list">
+      <app-whatsapp-thread-list
+        (threadSelected)="onThreadSelected($event)"
+      ></app-whatsapp-thread-list>
+    </aside>
+
+    <section class="wa-shell__detail">
+      <app-whatsapp-thread-detail
+        [phoneHash]="selectedPhoneHash"
+        (backToList)="onBackToList()"
+      ></app-whatsapp-thread-detail>
+    </section>
+  </div>
+</div>

@@ -1,0 +1,210 @@
+// Lista de hilos. Estilo plano (sin gradientes); border-left de 4px en activo.
+
+$accent: #1f7a4d;          // verde acento Katuq
+$border: #e3e6ea;
+$text: #1d2330;
+$muted: #6b7280;
+
+.thread-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+
+  &__header {
+    padding: 12px;
+    border-bottom: 1px solid $border;
+    background: #ffffff;
+  }
+
+  &__search {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  &__chips {
+    margin-top: 8px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid $border;
+    background: #ffffff;
+    border-radius: 14px;
+    font-size: 12px;
+    color: $muted;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+
+    &:hover {
+      background: #f7f8fa;
+    }
+
+    &.is-active {
+      background: #e8f5ee;
+      border-color: $accent;
+      color: $accent;
+      font-weight: 600;
+    }
+  }
+
+  &__chip-check {
+    display: inline-block;
+    width: 12px;
+    text-align: center;
+  }
+
+  &__banner {
+    padding: 8px 12px;
+    background: #fef3c7;
+    color: #92400e;
+    font-size: 12px;
+    border-bottom: 1px solid #fde68a;
+  }
+
+  &__body {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  &__state {
+    text-align: center;
+    color: $muted;
+    padding: 24px 12px;
+    font-size: 13px;
+  }
+
+  &__item {
+    width: 100%;
+    text-align: left;
+    background: #ffffff;
+    border: 0;
+    border-bottom: 1px solid $border;
+    border-left: 4px solid transparent;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    transition: background-color 0.12s ease;
+
+    &:hover {
+      background: #f7f8fa;
+    }
+
+    &.is-active {
+      background: #f1f8f4;
+      border-left-color: $accent;
+    }
+
+    &.is-unread {
+      .thread-list__name {
+        font-weight: 700;
+      }
+      .thread-list__snippet {
+        color: $text;
+      }
+    }
+  }
+
+  &__avatar {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #e8eaed;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__row-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  &__name {
+    font-weight: 600;
+    font-size: 13px;
+    color: $text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__date {
+    font-size: 11px;
+    color: $muted;
+    flex-shrink: 0;
+  }
+
+  &__row-phone {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  &__phone {
+    font-size: 11px;
+    color: $muted;
+  }
+
+  &__row-bottom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  &__direction {
+    font-size: 12px;
+    color: $muted;
+    flex-shrink: 0;
+  }
+
+  &__snippet {
+    flex: 1;
+    font-size: 12px;
+    color: #4b5563;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+
+    &--unread {
+      background: $accent;
+      color: #ffffff;
+    }
+
+    &--warn {
+      background: #fef3c7;
+      color: #92400e;
+    }
+  }
+}

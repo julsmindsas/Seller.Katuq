@@ -1,0 +1,90 @@
+// Shell Master-Detail. Sin gradientes — estilo plano, fondo blanco/gris claro.
+
+.wa-shell {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  min-height: 480px;
+  background: #f8f9fa;
+  border: 1px solid #e3e6ea;
+  border-radius: 6px;
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #ffffff;
+    border-bottom: 1px solid #e3e6ea;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1d2330;
+  }
+
+  &__demo-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #fef3c7;
+    color: #92400e;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  &__list {
+    flex: 0 0 35%;
+    max-width: 35%;
+    min-width: 280px;
+    background: #ffffff;
+    border-right: 1px solid #e3e6ea;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__detail {
+    flex: 1 1 65%;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Responsive: en pantallas chicas, sólo se ve uno (lista o detalle).
+  @media (max-width: 1023px) {
+    &__list,
+    &__detail {
+      flex: 1 1 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    // Por defecto: lista visible, detalle oculto.
+    &__detail {
+      display: none;
+    }
+
+    // Cuando hay hilo seleccionado: detalle visible, lista oculta.
+    &.wa-shell--detail-open {
+      .wa-shell__list {
+        display: none;
+      }
+      .wa-shell__detail {
+        display: flex;
+      }
+    }
+  }
+}

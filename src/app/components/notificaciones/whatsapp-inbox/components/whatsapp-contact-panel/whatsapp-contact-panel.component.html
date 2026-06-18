@@ -1,0 +1,168 @@
+<div class="contact-panel" *ngIf="phoneHash; else emptyState">
+  <div class="contact-panel__banner" role="status">
+    Demo — datos de ejemplo
+  </div>
+
+  <p *ngIf="loading" class="contact-panel__state">Cargando contacto…</p>
+
+  <ng-container *ngIf="!loading && profile">
+    <!-- Sección 1: Identidad -->
+    <details class="contact-panel__section is-identity" open>
+      <summary class="contact-panel__summary">Identidad</summary>
+
+      <div class="contact-panel__identity">
+        <div class="contact-panel__avatar" aria-hidden="true">
+          {{ initials }}
+        </div>
+
+        <div class="contact-panel__identity-info">
+          <h4 class="contact-panel__name">{{ displayName }}</h4>
+          <p class="contact-panel__phone">{{ profile.phoneMasked }}</p>
+          <span
+            class="contact-panel__chip"
+            [class.is-verified]="profile.isClienteRegistrado"
+            [class.is-unverified]="!profile.isClienteRegistrado"
+          >
+            {{
+              profile.isClienteRegistrado
+                ? "Cliente registrado"
+                : "No verificado"
+            }}
+          </span>
+        </div>
+      </div>
+    </details>
+
+    <!-- Sección 2: Historial de pedidos -->
+    <details class="contact-panel__section is-orders" open>
+      <summary class="contact-panel__summary">
+        Historial de pedidos ({{ orders.length }})
+      </summary>
+
+      <div class="contact-panel__orders" *ngIf="visibleOrders.length > 0">
+        <div
+          *ngFor="let order of visibleOrders; trackBy: trackByOrder"
+          class="contact-panel__order"
+        >
+          <div class="contact-panel__order-top">
+            <span class="contact-panel__order-num">{{ order.nroPedido }}</span>
+            <span
+              class="contact-panel__chip contact-panel__chip--state"
+              [ngClass]="estadoChipClass(order.estado)"
+            >
+              {{ order.estado }}
+            </span>
+          </div>
+          <div class="contact-panel__order-bottom">
+            <span class="contact-panel__muted">
+              {{ order.fechaCreacion | date: "shortDate" }}
+            </span>
+            <span class="contact-panel__order-total">
+              {{
+                order.total
+                  | currency: order.currency:"symbol-narrow":"1.0-0"
+              }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <p
+        *ngIf="visibleOrders.length === 0"
+        class="contact-panel__muted contact-panel__empty-line"
+      >
+        Sin pedidos previos
+      </p>
+    </details>
+
+    <!-- Sección 3: Lead CRM -->
+    <details class="contact-panel__section is-crm" open>
+      <summary class="contact-panel__summary">Lead CRM</summary>
+
+      <!-- Caso A: lead existente -->
+      <div *ngIf="hasLead" class="contact-panel__lead">
+        <p class="contact-panel__lead-name">{{ profile.lead?.name }}</p>
+        <p class="contact-panel__muted">
+          Etapa: <strong>{{ profile.lead?.stage }}</strong>
+        </p>
+        <p class="contact-panel__muted">
+          Owner: <strong>{{ profile.lead?.ownerName }}</strong>
+        </p>
+
+        <div class="contact-panel__rating-block">
+          <span class="contact-panel__rating-label">Calificación:</span>
+          <div
+            class="contact-panel__stars"
+            (mouseleave)="onLeaveStars()"
+          >
+            <span
+              *ngFor="let s of [1, 2, 3, 4, 5]"
+              class="contact-panel__star"
+              [class.is-on]="s <= (ratingHover || ratingScore)"
+              (mouseenter)="onHoverStar(s)"
+              (click)="onRate(s)"
+            >
+              {{ s <= (ratingHover || ratingScore) ? "★" : "☆" }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Caso B: ratingDraft sin lead -->
+      <div *ngIf="hasRatingDraft" class="contact-panel__rating-draft">
+        <div
+          class="contact-panel__stars"
+          (mouseleave)="onLeaveStars()"
+        >
+          <span
+            *ngFor="let s of [1, 2, 3, 4, 5]"
+            class="contact-panel__star"
+            [class.is-on]="s <= (ratingHover || ratingScore)"
+            (mouseenter)="onHoverStar(s)"
+            (click)="onRate(s)"
+          >
+            {{ s <= (ratingHover || ratingScore) ? "★" : "☆" }}
+          </span>
+        </div>
+        <p class="contact-panel__muted contact-panel__draft-note">
+          Calificación guardada, aún no se ha creado el Lead.
+        </p>
+      </div>
+
+      <!-- Caso C: nada — botón "Guardar en CRM" + estrellas para calificar -->
+      <div
+        *ngIf="!hasLead && !hasRatingDraft"
+        class="contact-panel__no-crm"
+      >
+        <button type="button" class="contact-panel__cta">
+          Guardar en CRM
+        </button>
+
+        <div
+          class="contact-panel__stars contact-panel__stars--large"
+          (mouseleave)="onLeaveStars()"
+        >
+          <span
+            *ngFor="let s of [1, 2, 3, 4, 5]"
+            class="contact-panel__star"
+            [class.is-on]="s <= (ratingHover || ratingScore)"
+            (mouseenter)="onHoverStar(s)"
+            (click)="onRate(s)"
+          >
+            {{ s <= (ratingHover || ratingScore) ? "★" : "☆" }}
+          </span>
+        </div>
+
+        <p class="contact-panel__muted contact-panel__draft-note">
+          Califica al contacto o guárdalo en CRM para enriquecer el perfil.
+        </p>
+      </div>
+    </details>
+  </ng-container>
+</div>
+
+<ng-template #emptyState>
+  <div class="contact-panel__placeholder">
+    <p>Selecciona un hilo para ver el contacto.</p>
+  </div>
+</ng-template>

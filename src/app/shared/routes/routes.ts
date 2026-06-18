@@ -286,4 +286,13 @@ export const content: Routes = [
     canActivate: [AuthGuard],
     data: { title: "Notificaciones" },
   },
+  {
+    path: "notificaciones/whatsapp/inbox",
+    loadChildren: () =>
+      import(
+        "../../components/notificaciones/whatsapp-inbox/whatsapp-inbox.module"
+      ).then((m) => m.WhatsappInboxModule),
+    canActivate: [AuthGuard],
+    data: { title: "Conversaciones WhatsApp" },
+  },
 ];

@@ -1,0 +1,94 @@
+<div class="thread-list">
+  <header class="thread-list__header">
+    <div class="thread-list__search-wrapper">
+      <input
+        type="search"
+        class="form-control thread-list__search"
+        placeholder="Buscar contacto o mensaje"
+        [ngModel]="searchQuery"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </div>
+
+    <div class="thread-list__chips">
+      <button
+        type="button"
+        class="thread-list__chip"
+        [class.is-active]="onlyInbound"
+        (click)="toggleInboundFilter()"
+      >
+        <span class="thread-list__chip-check" aria-hidden="true">
+          {{ onlyInbound ? "✓" : "" }}
+        </span>
+        Solo con respuesta entrante
+      </button>
+    </div>
+  </header>
+
+  <div
+    *ngIf="hasTruncatedThreads"
+    class="thread-list__banner"
+    role="status"
+  >
+    Algunas conversaciones tienen mensajes anteriores a 90 días no disponibles.
+  </div>
+
+  <div class="thread-list__body list-group list-group-flush">
+    <div *ngIf="loading" class="thread-list__state">Cargando…</div>
+
+    <div
+      *ngIf="!loading && visibleThreads.length === 0"
+      class="thread-list__state"
+    >
+      No hay hilos para este filtro.
+    </div>
+
+    <button
+      type="button"
+      *ngFor="let thread of visibleThreads; trackBy: trackByHash"
+      class="list-group-item list-group-item-action thread-list__item"
+      [class.is-active]="thread.phoneHash === selectedPhoneHash"
+      [class.is-unread]="thread.unreadCount > 0"
+      (click)="onSelect(thread)"
+    >
+      <div class="thread-list__avatar" aria-hidden="true">
+        {{ initialsFor(thread.contactName) }}
+      </div>
+
+      <div class="thread-list__content">
+        <div class="thread-list__row-top">
+          <span class="thread-list__name">{{ thread.contactName }}</span>
+          <span class="thread-list__date">
+            {{ formatRelative(thread.lastMessageAt) }}
+          </span>
+        </div>
+
+        <div class="thread-list__row-phone">
+          <span class="thread-list__phone">{{ thread.phoneMasked }}</span>
+          <span
+            *ngIf="thread.flags?.inboundTruncatedAt90d"
+            class="thread-list__badge thread-list__badge--warn"
+            title="Mensajes anteriores a 90 días no disponibles"
+          >
+            90d
+          </span>
+        </div>
+
+        <div class="thread-list__row-bottom">
+          <span class="thread-list__direction" aria-hidden="true">
+            {{ thread.lastDirection === "outbound" ? "→" : "←" }}
+          </span>
+          <span class="thread-list__snippet">
+            {{ truncateSnippet(thread.lastMessageSnippet) }}
+          </span>
+          <span
+            *ngIf="thread.unreadCount > 0"
+            class="thread-list__badge thread-list__badge--unread"
+          >
+            {{ thread.unreadCount }}
+          </span>
+        </div>
+      </div>
+    </button>
+  </div>
+</div>
