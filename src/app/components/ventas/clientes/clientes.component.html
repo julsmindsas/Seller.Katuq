@@ -154,7 +154,8 @@
                     <button *ngIf="!isEdit" class="btn-tbl-action btn-tbl-primary" ngbTooltip="Editar cliente" (click)="abrirModalEditar()">
                         <i class="pi pi-user-edit"></i>
                     </button>
-                    <button class="btn-tbl-action btn-tbl-neutral" ngbTooltip="Pedidos relacionados">
+                    <button class="btn-tbl-action btn-tbl-neutral" ngbTooltip="Pedidos relacionados"
+                        [class.active]="cm.mostrarPedidos" (click)="cm.togglePedidos()">
                         <i class="fa fa-list-alt"></i>
                     </button>
                     <button class="btn-tbl-action btn-tbl-primary" ngbTooltip="Nuevo Pedido" (click)="nuevoPedido()">
@@ -182,6 +183,9 @@
             </div>
 
         </div>
+
+        <!-- Spec 009: métricas del cliente (detrás de feature flag ENABLE_CUSTOMER_METRICS) -->
+        <app-customer-metrics #cm [documento]="datos?.documento"></app-customer-metrics>
 
         <div class="card-body p-0">
 

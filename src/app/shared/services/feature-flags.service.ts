@@ -29,6 +29,7 @@ export class FeatureFlagsService {
     ENABLE_PRODUCTION_NOTIFICATIONS: false,   // Notificaciones de producción
     ENABLE_DISPATCH_NOTIFICATIONS: false,     // Notificaciones de despacho
     ENABLE_DELIVERY_NOTIFICATIONS: false,     // Notificaciones de entrega
+    ENABLE_CUSTOMER_METRICS: true,            // Spec 009 - métricas del cliente en su ficha
   };
 
   private flags$ = new BehaviorSubject<typeof FeatureFlagsService.FLAGS>(

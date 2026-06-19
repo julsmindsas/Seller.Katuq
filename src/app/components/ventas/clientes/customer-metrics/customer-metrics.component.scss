@@ -1,0 +1,107 @@
+// Spec 009 — estilo plano con border-left de acento (convención del proyecto, sin gradientes).
+.cm-wrap {
+  padding: 0 1.25rem 1rem;
+}
+
+.cm-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+
+  @media (max-width: 992px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 576px) { grid-template-columns: 1fr; }
+}
+
+.cm-card {
+  background: #fff;
+  border: 1px solid #eef0f4;
+  border-left: 4px solid #c7ccd6;
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  min-height: 78px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cm-accent-1 { border-left-color: #6d28d9; } // ticket promedio
+.cm-accent-2 { border-left-color: #2563eb; } // valor total
+.cm-accent-3 { border-left-color: #059669; } // última compra
+.cm-accent-4 { border-left-color: #d97706; } // # pedidos
+
+.cm-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  margin-bottom: 0.2rem;
+}
+.cm-value {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+}
+.cm-sub {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
+
+.cm-skel {
+  border-left-color: #e5e7eb;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e9ebee 37%, #f3f4f6 63%);
+  background-size: 400% 100%;
+  animation: cm-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes cm-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+.cm-error {
+  margin-top: 0.5rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid #d97706;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+.cm-empty {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px dashed #e5e7eb;
+  border-radius: 8px;
+  color: #6b7280;
+  font-size: 0.83rem;
+}
+
+.cm-orders {
+  margin-top: 1rem;
+}
+.cm-orders-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.4rem;
+}
+.cm-table {
+  font-size: 0.83rem;
+  th { color: #6b7280; font-weight: 600; border-bottom: 2px solid #eef0f4; }
+}
+
+.cm-pager {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+.cm-page-info {
+  font-size: 0.8rem;
+  color: #6b7280;
+}

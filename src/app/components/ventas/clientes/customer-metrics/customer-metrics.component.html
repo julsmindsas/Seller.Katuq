@@ -1,0 +1,81 @@
+<div class="cm-wrap" *ngIf="enabled">
+
+  <!-- Cargando -->
+  <div *ngIf="loading" class="cm-grid" aria-busy="true">
+    <div class="cm-card cm-skel" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <!-- Error (aislado: no tumba el resto de la ficha) -->
+  <div *ngIf="error && !loading" class="cm-error" role="alert">
+    <i class="pi pi-exclamation-triangle me-1"></i>
+    No se pudieron cargar las métricas del cliente.
+    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="load()">Reintentar</button>
+  </div>
+
+  <!-- Datos -->
+  <ng-container *ngIf="summary && !loading && !error">
+    <div class="cm-grid">
+      <div class="cm-card cm-accent-1">
+        <div class="cm-label">Ticket promedio</div>
+        <div class="cm-value">{{ summary.metricas.ticketPromedio | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      </div>
+      <div class="cm-card cm-accent-2">
+        <div class="cm-label">Valor total comprado</div>
+        <div class="cm-value">{{ summary.metricas.valorTotal | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      </div>
+      <div class="cm-card cm-accent-3">
+        <div class="cm-label">Última compra</div>
+        <ng-container *ngIf="summary.metricas.ultimaCompra; else sinUltima">
+          <div class="cm-value">{{ summary.metricas.ultimaCompra.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+          <div class="cm-sub" *ngIf="summary.metricas.ultimaCompra.fecha">
+            {{ summary.metricas.ultimaCompra.fecha | date:'mediumDate' }}
+          </div>
+        </ng-container>
+        <ng-template #sinUltima><div class="cm-value">—</div></ng-template>
+      </div>
+      <div class="cm-card cm-accent-4">
+        <div class="cm-label">Pedidos relacionados</div>
+        <div class="cm-value">{{ summary.metricas.totalPedidos }}</div>
+      </div>
+    </div>
+
+    <!-- Listado toggleable con el botón "Pedidos relacionados" de la ficha -->
+    <div class="cm-empty" *ngIf="mostrarPedidos && summary.pedidos.total === 0">
+      Este cliente no tiene pedidos relacionados.
+    </div>
+
+    <div class="cm-orders" *ngIf="mostrarPedidos && summary.pedidos.total > 0">
+      <div class="cm-orders-title">Pedidos del cliente</div>
+      <div class="table-responsive">
+        <table class="table table-sm cm-table">
+          <thead>
+            <tr>
+              <th scope="col">#Pedido</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Estado proceso</th>
+              <th scope="col">Estado pago</th>
+              <th scope="col" class="text-end">Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of summary.pedidos.items">
+              <td>{{ p.nroPedido || '—' }}</td>
+              <td>{{ p.fechaCreacion ? (p.fechaCreacion | date:'short') : '—' }}</td>
+              <td>{{ p.estadoProceso || '—' }}</td>
+              <td>{{ p.estadoPago || '—' }}</td>
+              <td class="text-end">{{ p.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="cm-pager" *ngIf="totalPages > 1">
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                [disabled]="page <= 1" (click)="goToPage(page - 1)">Anterior</button>
+        <span class="cm-page-info">Página {{ page }} de {{ totalPages }}</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary"
+                [disabled]="page >= totalPages" (click)="goToPage(page + 1)">Siguiente</button>
+      </div>
+    </div>
+  </ng-container>
+</div>
