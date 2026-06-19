@@ -115,34 +115,28 @@ export class RecepcionMercanciaComponent implements OnInit {
     // Usar el servicio de maestros para buscar productos
     this.maestroService.getProductsBySearch(busqueda, this.pageSize, this.currentPage).subscribe({
       next: (response: any) => {
-        if (response.products && response.products.length > 0) {
-          const productoEncontrado = response.products[0]; // Tomamos el primer resultado
-          
-          // Verificar si el producto ya existe en la tabla
-          const productoExistente = this.productos.find(p => 
-            p.producto.identificacion?.referencia === productoEncontrado.identificacion?.referencia
-          );
-          
-          if (productoExistente) {
-            // Si ya existe, incrementar la cantidad
-            productoExistente.cantidad += 1;
-            this.toastr.info('Cantidad de producto actualizada', 'Producto actualizado');
-          } else {
-            // Si no existe, agregarlo a la tabla
-            const nuevoProducto: ProductoRecepcion = {
-              id: productoEncontrado.cd || Math.random().toString(36).substring(2, 9),
-              producto: productoEncontrado,
-              cantidad: 1
-            };
-            
-            this.productos.push(nuevoProducto);
-            this.toastr.success('Producto agregado correctamente', 'Éxito');
-          }
-          
-          // Limpiar el campo de búsqueda
-          this.busquedaInput = '';
-        } else {
+        const productos = response.products || [];
+
+        // Solo agregar ante una coincidencia EXACTA por referencia, código de
+        // barras o docId. NO tomar products[0]: el filtro del backend no tiene
+        // orden de relevancia, así que el "primer resultado" es arbitrario y
+        // agregaba un producto distinto al buscado (bug "sale otro producto").
+        // El escáner de barras teclea el código completo → coincidencia exacta;
+        // un término parcial/ambiguo no agrega nada y pide elegir del listado.
+        const termino = busqueda.toLowerCase();
+        const productoEncontrado = productos.find((p: any) =>
+          (p.identificacion?.referencia || '').toLowerCase() === termino ||
+          (p.identificacion?.codigoBarras || '').toLowerCase() === termino ||
+          (p.cd || '').toLowerCase() === termino
+        );
+
+        if (productoEncontrado) {
+          // Reutiliza el mismo flujo correcto del autocomplete (dedup + push).
+          this.agregarProductoSeleccionado(productoEncontrado);
+        } else if (productos.length === 0) {
           this.toastr.error('No se encontraron productos con ese criterio', 'Producto no encontrado');
+        } else {
+          this.toastr.info('Selecciona el producto del listado de sugerencias', 'Varias coincidencias');
         }
         this.buscandoProducto = false;
       },
