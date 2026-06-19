@@ -234,7 +234,17 @@
             </button>
           </div>
           <small *ngIf="geocodificando" class="text-info">Buscando coordenadas...</small>
-          <small *ngIf="errorGeocodificacion" class="text-danger">{{ mensajeError }}</small>
+          <div *ngIf="errorGeocodificacion" class="d-flex align-items-start gap-2 mt-1 flex-wrap">
+            <small class="text-danger">{{ mensajeError }}</small>
+            <a *ngIf="urlGoogleMaps"
+               [href]="urlGoogleMaps"
+               target="_blank"
+               rel="noopener"
+               class="btn btn-outline-danger btn-sm py-0 px-2"
+               style="font-size:0.72rem; white-space:nowrap;">
+              <i class="pi pi-map-marker me-1"></i>Ver en Google Maps
+            </a>
+          </div>
         </div>
 
         <!-- Botones de acción del formulario -->

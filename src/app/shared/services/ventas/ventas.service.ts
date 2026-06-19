@@ -3,6 +3,7 @@ import { BaseService } from '../base.service';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Producto } from '../../models/productos/Producto';
 import { Pedido, EstadoPago, EstadoProceso } from '../../../components/ventas/modelo/pedido';
+import { CustomerSummary } from '../../../components/ventas/modelo/customer-summary';
 import { POSPedido } from '../../../components/pos/pos-modelo/pedido';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
@@ -404,6 +405,15 @@ export class VentasService extends BaseService {
 
   enviarCorreoConfirmacionPedido(orderTemplate: any): Observable<any> {
     return this.post<any>('/v1/orders/sendEmail', orderTemplate);
+  }
+
+  /**
+   * Spec 009 — Métricas de un cliente: ticket promedio, valor total, última compra
+   * y pedidos relacionados (paginados). Solo lectura. Excluye anulados/rechazados.
+   */
+  getCustomerSummary(documento: string, page: number = 1, pageSize: number = 20): Observable<CustomerSummary> {
+    const qp = `documento=${encodeURIComponent(documento)}&page=${page}&pageSize=${pageSize}`;
+    return this.get<CustomerSummary>('/v1/orders/customer-summary?' + qp);
   }
 
 

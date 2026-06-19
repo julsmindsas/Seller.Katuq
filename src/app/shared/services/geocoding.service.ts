@@ -3,6 +3,8 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
 import { catchError, timeout, retry } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { AngularFirestore } from '@angular/fire/compat/firestore';
+import firebase from 'firebase/compat/app';
 
 export interface GeocodingResponse {
   id: string;
@@ -54,6 +56,22 @@ enum GeocodingProvider {
   NOMINATIM = 'nominatim'
 }
 
+interface GeocodingCacheDoc {
+  direccionKey: string;
+  direccion: string;
+  ciudad: string;
+  pais: string;
+  latitud: string;
+  longitud: string;
+  coordDestino: string;
+  quality: number;
+  source: string;
+  rawResponse: any;
+  createdAt: firebase.firestore.Timestamp;
+  lastUsedAt: firebase.firestore.Timestamp;
+  hitCount: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -66,12 +84,91 @@ export class GeocodingService {
   private geocodingCache = new Map<string, { result: GeocodingResponse, timestamp: number }>();
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 horas
 
-  constructor(private http: HttpClient) {
-    // Inicializar estadísticas
+  private readonly FIRESTORE_COLLECTION = 'geocoding_cache';
+
+  constructor(
+    private http: HttpClient,
+    private afs: AngularFirestore
+  ) {
     Object.values(GeocodingProvider).forEach(provider => {
       this.providerStats.set(provider, { success: 0, errors: 0 });
     });
   }
+
+  // ─── Caché Firestore ───────────────────────────────────────────────────────
+
+  private buildCacheKey(direccion: string, ciudad: string): string {
+    return `${direccion}_${ciudad}`
+      .toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '') // quitar tildes
+      .replace(/[^a-z0-9]/g, '_')
+      .replace(/_+/g, '_')
+      .substring(0, 200);
+  }
+
+  private async buscarEnCacheFirestore(key: string): Promise<GeocodingResponse | null> {
+    try {
+      const doc = await this.afs
+        .collection<GeocodingCacheDoc>(this.FIRESTORE_COLLECTION)
+        .doc(key)
+        .get()
+        .toPromise();
+
+      if (!doc?.exists) return null;
+
+      const data = doc.data() as GeocodingCacheDoc;
+
+      // Actualizar métricas de uso sin bloquear
+      this.afs.collection(this.FIRESTORE_COLLECTION).doc(key).update({
+        hitCount: firebase.firestore.FieldValue.increment(1),
+        lastUsedAt: firebase.firestore.Timestamp.now()
+      }).catch(() => {});
+
+      console.log(`📦 Coordinadas desde caché Firestore: ${data.latitud}, ${data.longitud}`);
+      return {
+        id: doc.id,
+        direccion: data.direccion,
+        ciudad: data.ciudad,
+        pais: data.pais,
+        latitud: data.latitud,
+        longitud: data.longitud,
+        coordDestino: data.coordDestino,
+        quality: data.quality
+      };
+    } catch (err) {
+      console.warn('Error consultando caché Firestore:', err);
+      return null;
+    }
+  }
+
+  private guardarEnCacheFirestore(
+    key: string,
+    result: GeocodingResponse,
+    source: string,
+    rawResponse: any = null
+  ): void {
+    const doc: GeocodingCacheDoc = {
+      direccionKey: key,
+      direccion: result.direccion,
+      ciudad: result.ciudad,
+      pais: result.pais,
+      latitud: result.latitud,
+      longitud: result.longitud,
+      coordDestino: result.coordDestino,
+      quality: result.quality,
+      source,
+      rawResponse: rawResponse || null,
+      createdAt: firebase.firestore.Timestamp.now(),
+      lastUsedAt: firebase.firestore.Timestamp.now(),
+      hitCount: 0
+    };
+
+    this.afs.collection(this.FIRESTORE_COLLECTION).doc(key).set(doc)
+      .then(() => console.log(`💾 Guardado en caché Firestore: ${key}`))
+      .catch(err => console.warn('Error guardando en caché Firestore:', err));
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
 
   /**
    * Geocodifica una dirección usando el sistema de fallback optimizado
@@ -95,11 +192,12 @@ export class GeocodingService {
    *   });
    */
   geocodeDireccion(direccion: string, ciudad: string): Observable<GeocodingResponse> {
+    // Normalizar antes de consultar cualquier API
     const direccionNormalizada = this.normalizarDireccion(direccion, ciudad);
     console.log(`🌍 Iniciando geocodificación: ${direccionNormalizada}`);
 
-    // Verificar caché primero
-    const cacheKey = `${direccion}|${ciudad}`.toLowerCase();
+    // Verificar caché primero (clave basada en la dirección normalizada)
+    const cacheKey = direccionNormalizada.toLowerCase();
     const cached = this.geocodingCache.get(cacheKey);
 
     if (cached && (Date.now() - cached.timestamp) < this.CACHE_DURATION) {
@@ -108,12 +206,9 @@ export class GeocodingService {
     }
 
     return new Observable(observer => {
-      this.geocodeWithFallback(direccion, ciudad).then(result => {
-        // Guardar en caché
-        this.geocodingCache.set(cacheKey, {
-          result: result,
-          timestamp: Date.now()
-        });
+      const direccionExpandida = this.expandirAbreviaturas(direccion);
+      this.geocodeWithFallback(direccionExpandida, ciudad).then(result => {
+        this.geocodingCache.set(cacheKey, { result, timestamp: Date.now() });
         observer.next(result);
         observer.complete();
       }).catch(error => {
@@ -123,22 +218,35 @@ export class GeocodingService {
   }
 
   /**
-   * Normaliza una dirección para mejorar las probabilidades de geocodificación exitosa
+   * Expande abreviaturas colombianas en la dirección para mejorar la geocodificación.
+   * Ej: "cr 41A #30C-56" → "Carrera 41A #30C-56"
+   */
+  private expandirAbreviaturas(direccion: string): string {
+    const abreviaturas: [RegExp, string][] = [
+      [/\bcra?\b/gi, 'Carrera'],
+      [/\bcll?\b/gi, 'Calle'],
+      [/\bav\b/gi, 'Avenida'],
+      [/\btv\b/gi, 'Transversal'],
+      [/\bdg\b/gi, 'Diagonal'],
+      [/\bac\b/gi, 'Avenida Calle'],
+      [/\bak\b/gi, 'Avenida Carrera'],
+      [/\bcir\b/gi, 'Circular'],
+      [/\bkm\b/gi, 'Kilometro'],
+      [/\bno\.\s*/gi, '#'],
+    ];
+
+    let dir = direccion.trim().replace(/\s+/g, ' ');
+    for (const [pattern, replacement] of abreviaturas) {
+      dir = dir.replace(pattern, replacement);
+    }
+    return dir;
+  }
+
+  /**
+   * Produce la clave de caché y el string de logging: dirección + ciudad + país.
    */
   private normalizarDireccion(direccion: string, ciudad: string): string {
-    let direccionLimpia = direccion
-      .trim()
-      .replace(/\s+/g, ' ') // Múltiples espacios a uno
-      .replace(/[^\w\s#-]/g, '') // Eliminar caracteres especiales excepto # y -
-      .toLowerCase();
-
-    let ciudadLimpia = ciudad
-      .trim()
-      .replace(/\s+/g, ' ')
-      .toLowerCase();
-
-    // Agregar país para mejor contexto
-    return `${direccionLimpia}, ${ciudadLimpia}, colombia`;
+    return `${this.expandirAbreviaturas(direccion)}, ${ciudad.trim()}, Colombia`;
   }
 
   /**
@@ -156,36 +264,47 @@ export class GeocodingService {
   private async geocodeWithFallback(direccion: string, ciudad: string): Promise<GeocodingResponse> {
     const providers = [
       GeocodingProvider.GEO_BLR,
-      GeocodingProvider.GOOGLE_MAPS
+      GeocodingProvider.GOOGLE_MAPS,
+      GeocodingProvider.NOMINATIM
     ];
 
-    console.log(`🗺️ Iniciando geocodificación con fallback: ${direccion}, ${ciudad}`);
+    console.log(`🗺️ Geocodificando: "${direccion}", ciudad: "${ciudad}"`);
 
-    // Intentar con cada proveedor en orden
+    const firestoreKey = this.buildCacheKey(direccion, ciudad);
+
     for (const provider of providers) {
+      // Antes de llamar a Google Maps, consultar caché Firestore
+      if (provider === GeocodingProvider.GOOGLE_MAPS) {
+        const cached = await this.buscarEnCacheFirestore(firestoreKey);
+        if (cached) {
+          this.lastProviderUsed = GeocodingProvider.FIREBASE;
+          return cached;
+        }
+      }
+
       try {
         console.log(`🔄 Intentando con ${provider}...`);
         const result = await this.geocodeWithProvider(provider, direccion, ciudad);
 
-        // Registrar éxito
         const stats = this.providerStats.get(provider)!;
         stats.success++;
         this.lastProviderUsed = provider;
+
+        // Guardar en Firestore solo si vino de Google Maps (el que tiene costo)
+        if (provider === GeocodingProvider.GOOGLE_MAPS) {
+          this.guardarEnCacheFirestore(firestoreKey, result, 'google_maps');
+        }
 
         console.log(`✅ Geocodificación exitosa con ${provider}`);
         return result;
       } catch (error) {
         console.warn(`❌ Error con ${provider}:`, error);
-
-        // Registrar error
         const stats = this.providerStats.get(provider)!;
         stats.errors++;
-
-        continue; // Intentar con el siguiente proveedor
+        continue;
       }
     }
 
-    // Si todos los proveedores fallaron, usar geocodificación aproximada
     console.log(`⚠️ Todos los proveedores fallaron, usando geocodificación aproximada`);
     return this.geocodificacionAproximada(direccion, ciudad);
   }
@@ -202,7 +321,12 @@ export class GeocodingService {
         return this.geocodeWithFirebase(direccion, ciudad);
 
       case GeocodingProvider.GOOGLE_MAPS:
-        return this.geocodeWithGoogleMaps(direccion, ciudad);
+        // Intenta REST primero (más confiable), si falla usa el JS SDK
+        try {
+          return await this.geocodeWithGoogleMapsRest(direccion, ciudad);
+        } catch {
+          return this.geocodeWithGoogleMaps(direccion, ciudad);
+        }
 
       case GeocodingProvider.OPEN_ROUTE:
         return this.geocodeWithOpenRoute(direccion, ciudad);
@@ -273,7 +397,14 @@ export class GeocodingService {
         throw new Error('GeoBlr API error: Empty response');
       }
 
-      console.log(`✅ GeoBlr geocoding exitoso: ${response.latitud}, ${response.longitud}`);
+      const lat = parseFloat(response.latitud);
+      const lng = parseFloat(response.longitud);
+
+      if (!lat || !lng || lat === 0 || lng === 0) {
+        throw new Error('GeoBlr API error: Coordinates not found (0,0) — falling back');
+      }
+
+      console.log(`✅ GeoBlr geocoding exitoso: ${lat}, ${lng}`);
 
       // Normalizar la respuesta al formato GeocodingResponse
       return {
@@ -281,9 +412,9 @@ export class GeocodingService {
         direccion: response.direccion || direccion,
         ciudad: response.ciudad || ciudad,
         pais: response.pais || 'Colombia',
-        latitud: response.latitud?.toString() || '0',
-        longitud: response.longitud?.toString() || '0',
-        coordDestino: `${response.latitud},${response.longitud}`,
+        latitud: lat.toString(),
+        longitud: lng.toString(),
+        coordDestino: `${lat},${lng}`,
         quality: 98 // Alta calidad para GeoBlr
       };
     } catch (error) {
@@ -321,6 +452,36 @@ export class GeocodingService {
       console.warn('Firebase geocoding error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Geocodificación con Google Maps REST API — HTTP GET directo, sin cargar el JS SDK.
+   * Más confiable que la versión JS en entornos con restricciones de carga dinámica.
+   */
+  private async geocodeWithGoogleMapsRest(direccion: string, ciudad: string): Promise<GeocodingResponse> {
+    const query = `${direccion}, ${ciudad}, Colombia`;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&region=CO&key=${environment.geocoding.googleMaps.apiKey}`;
+
+    const data = await this.http.get<any>(url).pipe(
+      timeout(8000),
+      catchError(error => { throw new Error(`GMaps REST error: ${error.message}`); })
+    ).toPromise();
+
+    if (!data || data.status !== 'OK' || !data.results?.length) {
+      throw new Error(`GMaps REST: ${data?.status || 'sin respuesta'} para "${query}"`);
+    }
+
+    const loc = data.results[0].geometry.location;
+    return {
+      id: `gmaps_rest_${Date.now()}`,
+      direccion,
+      ciudad,
+      pais: 'Colombia',
+      latitud: loc.lat.toString(),
+      longitud: loc.lng.toString(),
+      coordDestino: `${loc.lat},${loc.lng}`,
+      quality: 95
+    };
   }
 
   /**

@@ -308,6 +308,7 @@
                                 <th pSortableColumn="estado" style="width: 120px">
                                     {{ "Estado" | translate }} <p-sortIcon field="estado"></p-sortIcon>
                                 </th>
+                                <th style="width: 180px">{{ "Etiquetas" | translate }}</th>
                                 <th style="width: 100px" class="text-center">{{ "Acciones" | translate }}</th>
                             </tr>
                         </ng-template>
@@ -352,6 +353,26 @@
                                 <!-- Estado -->
                                 <td>
                                     {{cliente.estado | titlecase}}
+                                </td>
+
+                                <!-- Etiquetas -->
+                                <td>
+                                    <div *ngIf="cliente.etiquetas && cliente.etiquetas.length > 0; else sinEtiquetas"
+                                         class="d-flex align-items-center gap-1 flex-wrap">
+                                        <span *ngFor="let tagName of cliente.etiquetas.slice(0, 2)"
+                                              class="tag-chip-sm"
+                                              [style.background-color]="getTagBgColor(getTagColorByName(tagName))"
+                                              [style.color]="getTagFgColor(getTagColorByName(tagName))">
+                                            {{tagName}}
+                                        </span>
+                                        <span *ngIf="cliente.etiquetas.length > 2"
+                                              class="tag-chip-sm tag-chip-more"
+                                              [pTooltip]="cliente.etiquetas.slice(2).join(', ')"
+                                              tooltipPosition="top">
+                                            +{{cliente.etiquetas.length - 2}}
+                                        </span>
+                                    </div>
+                                    <ng-template #sinEtiquetas><span class="text-muted" style="font-size:0.8rem">—</span></ng-template>
                                 </td>
 
                                 <!-- Acciones -->

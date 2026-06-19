@@ -392,6 +392,10 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         return map[color] || '#374151';
     }
 
+    getTagColorByName(tagName: string): string {
+        return this.availableTagsForFilter.find(t => t.name === tagName)?.color || 'gray';
+    }
+
     toggleTagFilter(tagName: string): void {
         const idx = this.selectedTagNames.indexOf(tagName);
         if (idx >= 0) {

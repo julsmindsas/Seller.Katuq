@@ -371,6 +371,17 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Cambio aditivo en el popup:** `@Input() returnOnly: boolean = false`. Cuando es true, `agregar()` devuelve el `Carrito` vía `modalRef.dismiss(...)` sin tocar el carrito singleton; con `returnOnly=false` el comportamiento de venta asistida es idéntico al previo.
 - **Precio por categoría en el popup desde cotizaciones:** se hace save/restore de `sessionStorage['cliente']` alrededor del modal (el popup lee de ahí), sin contaminar el estado de venta asistida (R-01 de la spec respetado).
 
+### 2026-06-18 — D-043: Apertura spec 009 — Métricas de cliente en su ficha (solo lectura)
+- **Contexto:** la ficha individual del cliente no muestra su valor comercial; un intento previo era lento por leer órdenes completas (carrito + producto anidado, 50–100 KB c/u).
+- **Decisión:** feature de **solo lectura** que muestra 4 métricas (ticket promedio, valor total/LTV, última compra, # pedidos relacionados) + lista paginada, en la ficha 360 del cliente (`*ngIf="encontrado"`).
+- **Alcance de pedidos (decisión de negocio):** cuentan **todos menos anulados/rechazados** → excluir `estadoProceso ∈ {Rechazado,Cancelado}` o `estadoPago ∈ {Cancelado,Rechazado}`. No existe "Anulado"; el término real es "Cancelado" (verificado).
+- **Técnica:** un endpoint `GET /v1/orders/customer-summary` con **query proyectada** (`.select()` de campos escalares, **sin carrito**) sobre el índice ya existente `orders(company, cliente.documento, fechaCreacion DESC)`; cómputo en backend. **Sin colección paralela, sin dual-write, sin índices nuevos.**
+  - **Alternativa descartada:** aggregation queries nativas (`sum/avg/count`) — no combinan con exclusión multi-estado en Firestore. Colección paralela liviana — diferida (dual-write innecesario para la vista individual).
+- **Verificación read-only (muestra 5000 órdenes):** `totalPedididoConDescuento` fiable 99.9%; `cliente.documento` 99.3% (numero_identificacion 0%); índice presente. Script `functions/scripts/verify_customer_metrics_readonly.js`.
+- **Aislamiento (respuesta a inquietud "no tocar orders"):** lógica pura en `services/customerMetrics/computeCustomerSummary.js`; endpoint en `controllers/customerMetrics.js` (NO se edita `controllers/orders.js`); 1 línea aditiva en `routers/orders.js`. **Cero escrituras a `orders`.**
+- **Rollout:** feature flag `ENABLE_CUSTOMER_METRICS` (frontend, default OFF) → rollback = apagar flag.
+- **Estado:** spec/plan/tasks creados; backend implementado + 15 tests verdes (10 unit + 5 contract). Frontend (servicio + subcomponente `app-customer-metrics`) implementado, pendiente validar build + activar flag.
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
