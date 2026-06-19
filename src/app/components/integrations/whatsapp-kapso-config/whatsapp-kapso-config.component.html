@@ -1,0 +1,301 @@
+<div class="wa-kapso">
+  <!-- Loading -->
+  <div class="wa-kapso__loading" *ngIf="loading">
+    <i class="fa fa-spinner fa-spin"></i>
+    <span>Cargando configuración de WhatsApp...</span>
+  </div>
+
+  <!-- Load error -->
+  <div class="wa-kapso__error" *ngIf="loadError && !loading">
+    <i class="fa fa-exclamation-triangle"></i>
+    <div>
+      <p class="mb-1"><strong>No pudimos cargar la configuración.</strong></p>
+      <p class="mb-2">{{ loadError }}</p>
+      <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadConfig()">
+        <i class="fa fa-refresh me-1"></i> Reintentar
+      </button>
+    </div>
+  </div>
+
+  <!-- Card principal -->
+  <div class="wa-kapso__card" *ngIf="!loading && !loadError && form">
+    <!-- Header -->
+    <div class="wa-kapso__card-header">
+      <div class="wa-kapso__title">
+        <i class="fa fa-whatsapp wa-kapso__title-icon"></i>
+        <div>
+          <h3>WhatsApp Business</h3>
+          <p class="wa-kapso__subtitle">
+            Notificaciones automáticas a tus clientes vía WhatsApp.
+          </p>
+        </div>
+      </div>
+      <span [class]="statusClass">{{ statusLabel }}</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="saveConfig()" class="wa-kapso__form">
+      <!-- ============================================================ -->
+      <!-- Sección: Estado                                              -->
+      <!-- ============================================================ -->
+      <section class="wa-kapso__section">
+        <header class="wa-kapso__section-header">
+          <h4><i class="fa fa-power-off"></i> Estado</h4>
+          <p>Habilitá el envío de notificaciones por WhatsApp a tus clientes.</p>
+        </header>
+
+        <div class="wa-kapso__row wa-kapso__row--toggle">
+          <label class="wa-kapso__toggle">
+            <input type="checkbox" formControlName="enabled" />
+            <span class="wa-kapso__toggle-slider"></span>
+          </label>
+          <div class="wa-kapso__toggle-text">
+            <strong>WhatsApp habilitado</strong>
+            <small>Activá para que Katuq mande notificaciones de pedidos por WhatsApp.</small>
+          </div>
+
+          <button
+            type="button"
+            class="btn btn-outline-success wa-kapso__test-btn"
+            (click)="sendTest()"
+            [disabled]="!canSendTest || testing"
+            *ngIf="optInAccepted"
+          >
+            <i class="fa" [ngClass]="testing ? 'fa-spinner fa-spin' : 'fa-paper-plane'"></i>
+            {{ testing ? 'Enviando...' : 'Probar envío' }}
+          </button>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- Sección: Opt-in (TyC)                                        -->
+      <!-- ============================================================ -->
+      <section class="wa-kapso__section wa-kapso__optin-banner" *ngIf="!optInAccepted">
+        <div class="wa-kapso__optin-banner-content">
+          <i class="fa fa-exclamation-triangle"></i>
+          <div>
+            <strong>Aceptá los Términos para activar WhatsApp.</strong>
+            <p class="mb-2">
+              Al aceptar autorizás a Katuq y a Kapso a enviar notificaciones
+              transaccionales a tus clientes vía WhatsApp Business API. Tus
+              clientes deben dar consentimiento previo cuando hacen un pedido,
+              de acuerdo con la política de Meta. Vos sos responsable del
+              contenido enviado.
+            </p>
+            <button
+              type="button"
+              class="btn btn-warning"
+              (click)="acceptOptIn()"
+              [disabled]="acceptingOptIn"
+            >
+              <i class="fa" [ngClass]="acceptingOptIn ? 'fa-spinner fa-spin' : 'fa-check'"></i>
+              {{ acceptingOptIn ? 'Registrando...' : 'Acepto los términos' }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- Sección: Identidad                                           -->
+      <!-- ============================================================ -->
+      <section class="wa-kapso__section">
+        <header class="wa-kapso__section-header">
+          <h4><i class="fa fa-id-badge"></i> Identidad</h4>
+          <p>Qué nombre verán tus clientes en los mensajes.</p>
+        </header>
+
+        <div class="wa-kapso__field">
+          <label for="wa-commercial-name">Nombre comercial</label>
+          <input
+            type="text"
+            id="wa-commercial-name"
+            class="form-control"
+            formControlName="commercialName"
+            [placeholder]="commercialNamePlaceholder"
+            autocomplete="off"
+          />
+          <small class="wa-kapso__hint">
+            Si lo dejás vacío, usamos el nombre actual del comercio:
+            <strong>{{ currentCompanyName || '—' }}</strong>
+          </small>
+        </div>
+
+        <div class="wa-kapso__field wa-kapso__field--checkbox">
+          <label class="wa-kapso__checkbox">
+            <input type="checkbox" formControlName="commercialNameOverride" />
+            <span>Usar este nombre en vez del nombre de la empresa</span>
+          </label>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- Sección: Tipos de notificación                               -->
+      <!-- ============================================================ -->
+      <section class="wa-kapso__section">
+        <header class="wa-kapso__section-header">
+          <h4><i class="fa fa-bell"></i> Tipos de notificación habilitados</h4>
+          <p>Eventos en los que se enviará un mensaje al cliente.</p>
+        </header>
+
+        <div class="wa-kapso__notif-grid" formGroupName="enabledNotificationTypes">
+          <label
+            *ngFor="let opt of notificationTypeOptions"
+            class="wa-kapso__notif-item"
+          >
+            <input type="checkbox" [formControlName]="opt.id" />
+            <div class="wa-kapso__notif-text">
+              <strong>{{ opt.label }}</strong>
+              <small>{{ opt.description }}</small>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- Sección: Auto-respuesta                                      -->
+      <!-- ============================================================ -->
+      <section class="wa-kapso__section" formGroupName="autoRespond">
+        <header class="wa-kapso__section-header">
+          <h4><i class="fa fa-reply"></i> Auto-respuesta</h4>
+          <p>Mensaje automático cuando un cliente responde al chat.</p>
+        </header>
+
+        <div class="wa-kapso__row wa-kapso__row--toggle">
+          <label class="wa-kapso__toggle">
+            <input type="checkbox" formControlName="enabled" />
+            <span class="wa-kapso__toggle-slider"></span>
+          </label>
+          <div class="wa-kapso__toggle-text">
+            <strong>Activar auto-respuesta</strong>
+            <small>Responde con un mensaje predefinido a los entrantes.</small>
+          </div>
+        </div>
+
+        <div class="wa-kapso__field">
+          <label for="wa-autorespond-message">Mensaje</label>
+          <textarea
+            id="wa-autorespond-message"
+            class="form-control"
+            rows="3"
+            formControlName="message"
+            placeholder="Gracias por escribir a {nombreComercio}. Un asesor te responderá pronto."
+          ></textarea>
+          <small class="wa-kapso__hint">
+            Podés usar los tokens
+            <code>{{ '{nombreComercio}' }}</code> y
+            <code>{{ '{contacto}' }}</code>.
+          </small>
+        </div>
+
+        <div class="wa-kapso__field">
+          <label for="wa-autorespond-contact">Contacto para escalar</label>
+          <input
+            type="text"
+            id="wa-autorespond-contact"
+            class="form-control"
+            formControlName="contact"
+            placeholder="Ej: +57 300 123 4567 o soporte@miempresa.com"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="wa-kapso__preview" *ngIf="form.get('autoRespond.enabled')?.value">
+          <span class="wa-kapso__preview-label">Vista previa:</span>
+          <p>{{ autoRespondPreview }}</p>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- Sección: Credenciales propias (avanzado)                     -->
+      <!-- ============================================================ -->
+      <section class="wa-kapso__section wa-kapso__advanced">
+        <header
+          class="wa-kapso__section-header wa-kapso__advanced-header"
+          (click)="toggleAdvancedCredentials()"
+        >
+          <div>
+            <h4><i class="fa fa-cogs"></i> Credenciales propias (avanzado)</h4>
+            <p>Conectá tu propia cuenta Kapso/Meta para WhatsApp Business.</p>
+          </div>
+          <i
+            class="fa wa-kapso__advanced-chevron"
+            [ngClass]="showAdvancedCredentials ? 'fa-chevron-up' : 'fa-chevron-down'"
+          ></i>
+        </header>
+
+        <div class="wa-kapso__advanced-body" *ngIf="showAdvancedCredentials" formGroupName="ownCredentials">
+          <div class="wa-kapso__warning-box">
+            <i class="fa fa-exclamation-triangle"></i>
+            <span>
+              Solo si tu comercio tiene cuenta propia Kapso/Meta. Si no las
+              configurás, Katuq usa sus credenciales globales por defecto.
+            </span>
+          </div>
+
+          <div class="wa-kapso__row wa-kapso__row--toggle">
+            <label class="wa-kapso__toggle">
+              <input type="checkbox" formControlName="enabled" />
+              <span class="wa-kapso__toggle-slider"></span>
+            </label>
+            <div class="wa-kapso__toggle-text">
+              <strong>Usar mis credenciales</strong>
+              <small>Reemplaza las credenciales globales de Katuq por las tuyas.</small>
+            </div>
+          </div>
+
+          <div class="wa-kapso__field">
+            <label for="wa-own-apikey">API Key Kapso</label>
+            <input
+              type="password"
+              id="wa-own-apikey"
+              class="form-control"
+              formControlName="apiKey"
+              [placeholder]="hasStoredApiKey ? 'sk-*** (ya configurada — pegá una nueva solo si querés reemplazar)' : 'sk-...'"
+              autocomplete="new-password"
+            />
+            <small class="wa-kapso__hint" *ngIf="hasStoredApiKey">
+              Ya hay una clave guardada. Dejá vacío para conservarla.
+            </small>
+          </div>
+
+          <div class="wa-kapso__field">
+            <label for="wa-own-phone">Phone Number ID</label>
+            <input
+              type="text"
+              id="wa-own-phone"
+              class="form-control"
+              formControlName="phoneNumberId"
+              placeholder="Ej: 123456789012345"
+              autocomplete="off"
+            />
+          </div>
+
+          <div class="wa-kapso__field">
+            <label for="wa-own-baseurl">Base URL (opcional)</label>
+            <input
+              type="text"
+              id="wa-own-baseurl"
+              class="form-control"
+              formControlName="baseUrl"
+              placeholder="https://api.kapso.com/v1"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
+      <!-- Footer                                                        -->
+      <!-- ============================================================ -->
+      <div class="wa-kapso__footer">
+        <button
+          type="submit"
+          class="btn wa-kapso__save-btn"
+          [disabled]="saving || form.invalid"
+        >
+          <i class="fa" [ngClass]="saving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+          {{ saving ? 'Guardando...' : 'Guardar configuración' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

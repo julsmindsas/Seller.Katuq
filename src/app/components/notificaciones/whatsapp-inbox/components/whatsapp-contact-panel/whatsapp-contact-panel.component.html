@@ -31,6 +31,25 @@
           </span>
         </div>
       </div>
+
+      <div class="contact-panel__identity-links">
+        <a
+          *ngIf="profile.isClienteRegistrado"
+          class="contact-panel__link"
+          [routerLink]="['/ventas/clienteslista']"
+          title="Ver ficha del cliente en el módulo de ventas"
+        >
+          Ver datos del cliente →
+        </a>
+        <a
+          *ngIf="hasLead && profile.lead?.id"
+          class="contact-panel__link"
+          [routerLink]="['/katuq-flow/leads', profile.lead?.id]"
+          title="Abrir el lead en el CRM"
+        >
+          Abrir lead en CRM →
+        </a>
+      </div>
     </details>
 
     <!-- Sección 2: Historial de pedidos -->
@@ -40,9 +59,12 @@
       </summary>
 
       <div class="contact-panel__orders" *ngIf="visibleOrders.length > 0">
-        <div
+        <a
           *ngFor="let order of visibleOrders; trackBy: trackByOrder"
-          class="contact-panel__order"
+          class="contact-panel__order contact-panel__order--link"
+          [routerLink]="['/ventas/pedidos']"
+          [queryParams]="orderQueryParams(order)"
+          [title]="'Abrir el pedido ' + order.nroPedido"
         >
           <div class="contact-panel__order-top">
             <span class="contact-panel__order-num">{{ order.nroPedido }}</span>
@@ -64,8 +86,18 @@
               }}
             </span>
           </div>
-        </div>
+        </a>
       </div>
+
+      <a
+        *ngIf="visibleOrders.length > 0"
+        class="contact-panel__link contact-panel__link--full"
+        [routerLink]="['/ventas/pedidos']"
+        [queryParams]="allOrdersQueryParams"
+        title="Abrir el módulo de pedidos"
+      >
+        Ver todos los pedidos →
+      </a>
 
       <p
         *ngIf="visibleOrders.length === 0"
@@ -134,8 +166,13 @@
         *ngIf="!hasLead && !hasRatingDraft"
         class="contact-panel__no-crm"
       >
-        <button type="button" class="contact-panel__cta">
-          Guardar en CRM
+        <button
+          type="button"
+          class="contact-panel__cta"
+          (click)="saveToCrm()"
+          [disabled]="savingToCrm"
+        >
+          {{ savingToCrm ? "Guardando..." : "Guardar en CRM" }}
         </button>
 
         <div

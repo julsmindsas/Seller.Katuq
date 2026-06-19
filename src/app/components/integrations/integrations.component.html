@@ -45,13 +45,15 @@
               'fa-shopping-bag': type.id === 'shopify',
               'fa-credit-card': type.id === 'wompi' || type.id === 'epayco',
               'fa-paypal': type.id === 'paypal',
-              'fa-handshake': type.id === 'partners_logistics'
+              'fa-handshake': type.id === 'partners_logistics',
+              'fa-whatsapp': type.id === 'whatsapp_kapso'
             }"></i>
             </div>
             <div class="integration-name-compact">{{type.name}}</div>
             <div class="integration-type-compact">
               {{type.id === 'shopify' ? 'Tienda online' :
                 type.id === 'partners_logistics' ? 'Logística y envíos' :
+                type.id === 'whatsapp_kapso' ? 'Comunicaciones' :
                 'Pasarela de pago'}}
             </div>
           </div>
@@ -148,14 +150,20 @@
       </div>
     </ng-container>
 
+    <!-- WhatsApp Business (Kapso) — componente dedicado, NO wizard genérico -->
+    <div class="wa-kapso-host" *ngIf="(showOnlyForm || editingIntegrationId) && isWhatsappKapso">
+      <app-whatsapp-kapso-config></app-whatsapp-kapso-config>
+    </div>
+
     <!-- Integration Form -->
-    <div class="card" *ngIf="showOnlyForm || editingIntegrationId">
+    <div class="card" *ngIf="(showOnlyForm || editingIntegrationId) && !isWhatsappKapso">
       <div class="card-header">
         <h3>
           <i class="fa" [ngClass]="{
           'fa-shopping-bag': selectedIntegrationType === 'shopify',
           'fa-credit-card': selectedIntegrationType === 'wompi' || selectedIntegrationType === 'epayco',
-          'fa-paypal': selectedIntegrationType === 'paypal'
+          'fa-paypal': selectedIntegrationType === 'paypal',
+          'fa-whatsapp': selectedIntegrationType === 'whatsapp_kapso'
         }"></i>
           {{editingIntegrationId ? 'Editar' : 'Configurar'}}
           {{getIntegrationTypeName()}}

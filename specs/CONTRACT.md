@@ -36,6 +36,13 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **006** | **harmony-vendedor-filter** | **done** | Daniel | Filtro server-side multi-source por vendedor: orders por `asesor_email`, accounting_documents/balances por `vendedor_id` con fallback a `vendedor_nombre`. JWT con `vendedorIdWO/NombreWO`. Política estricta sin mapeo → 0 docs. Form crear-usuarios con dropdown autocomplete desde `/v1/reports/sellers/wo`. E2E PASS Harmony LUZ MARIA = 24 docs subset. |
 | **007** | **user-admin-credentials-delete** | **done** | Daniel | Normaliza contraseña en crear/editar usuarios y habilita eliminar usuario desde `/usuarios` con validación de empresa. |
 | **008** | **cotizaciones-mvp** | **tasks in-progress (Bloque 0 done)** | — | Módulo de Cotizaciones, Fase 1: listado + métricas + export + editor (cliente, fechas, productos con popup de config y precio/IVA editable, totales, términos, estados, guardar borrador, PDF, WhatsApp, vendedor). Colección propia, NO toca inventario/pedidos. **Existe implementación previa** (backend completo + rama frontend `origin/cotizaciones`) → se adopta/ajusta backend y se construye frontend fresco (ver D-040/D-041). Sub-fases: 008.2 conversión a pedido, 008.3 portal de aprobación por correo. |
+| **009** | **whatsapp-kapso-notifications-marco** | **approved (clarifications resueltas 2026-06-17)** | Daniel | Canal WhatsApp para notificaciones transaccionales vía Kapso. Sender compartido (Katuq) + branding en texto del mensaje. Prepago por comercio con medidor en `/notificaciones`. 4 sub-specs hijas (009.1..009.4). **Renumerada de 007 a 009 — D-043** (resuelve colisión con `007-user-admin-credentials-delete`). |
+| 009.1 | whatsapp-kapso-sender | siguiente en cola (spec.md creado 2026-06-17) | — | Adaptador Kapso + templates HSM + enum `WHATSAPP` + reemplazo placeholder `notificationQueue.js:595` + fix bug `case "WHATSAPP"` (pasa `"WEBHOOK"` en :317). |
+| 009.2 | whatsapp-usage-tracking | pendiente | — | Colección `whatsapp_usage` idempotente por `notificationId` + cron cierre mensual + cron purga anual (retención 1 año — D-047). |
+| 009.3 | whatsapp-billing-prepago | pendiente | — | Saldo prepago en `whatsapp_balance`, debit en transacción, umbrales 80%/0%, UI medidor en `/notificaciones`, endpoints `/v1/whatsapp/topup` + `/usage` + `/balance`. Precio fijo $80 COP/msg (D-044), mínimo recarga $50.000 COP (D-045), saldo no reembolsable al cerrar cuenta (D-048). |
+| 009.4 | whatsapp-inbound-autoresponder | pendiente | — | Webhook entrante `POST /v1/whatsapp/webhook` con firma HMAC SHA-256 (D-046) + auto-respond template redirigiendo a comercio. Sin ruteo a inbox del comercio en MVP. |
+| 009.5 | whatsapp-conversations-viewer | draft (clarifications abiertas) | Daniel | Viewer READ-ONLY de hilos WhatsApp por cliente final dentro de Katuq. Slot ratificado vía D-049 (renumeración: pasarela pago → 009.6, display name → 009.7). |
+| 009.5.1 | whatsapp-contact-profile-panel | draft (enmienda 009.5) | Daniel | Panel lateral de identidad + últimos 10 pedidos + Lead con score de estrellas dentro del viewer. Decisiones fijas D-050/D-051/D-052/D-053. Mismo feature flag `WHATSAPP_INBOX_VIEWER_ENABLED`. |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -290,6 +297,40 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Punto 3 (China + Tecnología en web):** clarificado por el usuario — son los productos NO-Cereza con stock (Aliaddo + propios + mixtos). Audit OH MY STORE: 91 NO-Cereza, 83 con stock + flags `exposicion.activo` y `disponibilidad.activo` faltantes. **Fix aplicado en prod (2026-05-22)** con script `activate-no-cereza-products-for-sale.js --apply --company "OH MY STORE"`: 83 productos activados (paginaWeb, puntoDeVenta, sellerCenter, exposicion.{activo,activar,disponible}, disponibilidad.activo). Verificado 5 muestras + re-audit 0 remanentes. Deuda 004.5.1: registrar el script como cron del sistema para activación automática futura.
 - **Puntos 4 y 7:** sin acción (P4 funciona, P7 requiere confirmación humana con Michael Pratt).
 
+### 2026-05-26 — D-037: Apertura spec 007 — WhatsApp Kapso Notifications
+
+- **Contexto:** El responsable producto pidió analizar viabilidad de integrar Kapso (`docs.kapso.ai/docs/build-with-ai`) como canal WhatsApp para notificaciones transaccionales. El sistema actual tiene IN_APP/EMAIL/SMS/FIREBASE_REALTIME pero no WhatsApp pese a que el modelo del cliente ya captura `numero_celular_whatsapp` y la UI `/notificaciones` muestra columna WhatsApp marcada como "próximamente".
+- **Auditoría rápida:** `notificationQueue.js:54` ya tiene feature flag `ENABLE_WHATSAPP_NOTIFICATIONS`, `:315-325` ya tiene branch `case "WHATSAPP"` en switch dispatcher, `:595-604` es placeholder con TODO. Frontend `notification.types.ts:67-74` enum NO incluye `WHATSAPP`. Todo el andamiaje está; falta el adaptador real.
+- **Decisión:** abrir spec marco 007 con 4 sub-specs hijas (007.1..007.4) siguiendo el patrón de 002/003. Estructura: spec.md + findings.md (con datos reales del estado actual) + sub-specs.md (roadmap).
+- **Sub-specs planificadas:** 007.1 (sender + templates + enum), 007.2 (usage tracking idempotente), 007.3 (billing prepago + UI medidor), 007.4 (webhook entrante + auto-respond).
+- **Onboarding Meta/Kapso (Daniel):** cuenta Kapso + número WhatsApp Business verificado + 6 templates HSM aprobados + TyC con cláusula opt-in. Es bloqueante de activación productiva, pero NO de implementación del código.
+
+### 2026-05-26 — D-038: Sender compartido (1 número Katuq), branding en texto del mensaje
+
+- **Contexto:** alternativas eran (a) un número WhatsApp Business por comercio (display name = nombre del comercio, costo + onboarding por empresa) vs (b) un único número Katuq compartido con `[NombreComercio]` al inicio del texto.
+- **Decisión:** opción (b). Display name = "Katuq Notificaciones" (lo que Meta verifica al número). Texto del mensaje arranca con `[NombreComercio]` para que el cliente final identifique el origen.
+- **Razón:** elimina onboarding Meta por empresa (24-72h × N comercios), elimina la complejidad de `integration_configs/{company}_kapso`, una sola cuenta Kapso para todo. El display name fijo es trade-off aceptado por el responsable producto.
+- **Riesgo asumido (R-01 spec 007):** posible confusión/desconfianza del cliente final del comercio. Mitigación: texto siempre arranca con `[NombreComercio]` y opcional firma "Notificación de Katuq.com".
+- **Riesgo asumido (R-02 spec 007):** spam de un comercio degrada rating del número compartido afectando a todos. Mitigación: throttle por empresa (AC-WA-07 = 100 msg/min) + monitoreo de bounces.
+- **Compliance Meta:** cláusula nueva en TyC del comercio: "Al usar Katuq, autorizas que las notificaciones WhatsApp salgan del número Katuq en tu nombre."
+
+### 2026-05-26 — D-039: WhatsApp se cobra ADICIONAL al plan vía saldo prepago
+
+- **Contexto:** alternativas eran (a) incluir en plan de suscripción (Katuq absorbe costo Meta+Kapso), (b) postpago facturable al cierre del mes, (c) prepago con saldo recargable.
+- **Decisión:** opción (c). Cada comercio tiene saldo prepago en `whatsapp_balance.balanceCOP`. Cada envío exitoso debita en transacción Firestore atómica. Sin saldo → mensaje NO se envía (skipped, no se marca FAILED) y email + SMS si están activos siguen funcionando.
+- **Razón:** evita default financiero (es servicio recurrente con costo Meta real). Control inmediato del comerciante sobre su gasto. Modelo familiar para mercado Colombia (recargas tipo telco).
+- **Precio único fijo en COP** por mensaje sin distinguir tipo (utility/marketing/service). Pendiente definir monto exacto antes de producción — debe cubrir Meta+Kapso+markup mínimo 40%.
+- **Bloqueo al agotar saldo:** envío skipped + email "Saldo agotado" UNA SOLA VEZ + email "Saldo bajo" cuando cruza 80% UNA SOLA VEZ por ciclo de recarga.
+- **Saldo de bienvenida (R-04 spec 007):** dar $20.000 COP iniciales al activar el toggle WhatsApp (~250 mensajes utility) para reducir fricción de adopción.
+
+### 2026-05-26 — D-040: Respuestas entrantes con auto-respond, sin inbox del comercio en MVP
+
+- **Contexto:** si el cliente final responde por WhatsApp al número Katuq ("¿dónde está mi pedido?"), llega al inbox de Katuq, no del comercio. Alternativas: (a) ignorar, (b) auto-respond redirigiendo al comercio, (c) rutear al inbox del comercio (necesita /flows + identificación de empresa + UI inbox).
+- **Decisión:** opción (b) para MVP. Webhook entrante recibe el mensaje, identifica el comercio dueño por el último envío al mismo `recipientPhone` (`whatsapp_usage` últimos 30 días), envía auto-respond template `"Soy un canal automático. Para atención, contacta a [Comercio] al [email/web]."`.
+- **Razón:** corta el costo de implementación ~50% vs opción (c). El comerciante puede iniciar con WhatsApp sin tener que aprender a manejar inbox conversacional. Opción (c) queda para spec futura (007.6) si algún comercio piloto lo pide.
+- **Persistencia auditoría:** `whatsapp_inbound` con TTL 90 días para que el comercio pueda ver mensajes entrantes históricos en panel read-only.
+- **El auto-respond NO consume saldo:** decisión de negocio (es respuesta de soporte que Katuq da en nombre del comercio). Costo absorbido por Katuq como parte del overhead del servicio.
+
 ### 2026-05-21 — D-025: Fechas de retiro código legacy WC (003.7 Fase 4)
 
 - **Decisión:** registrar fechas concretas de retiro (Art XII constitución — feature flags y código transitorio llevan dueño y fecha).
@@ -371,6 +412,80 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Cambio aditivo en el popup:** `@Input() returnOnly: boolean = false`. Cuando es true, `agregar()` devuelve el `Carrito` vía `modalRef.dismiss(...)` sin tocar el carrito singleton; con `returnOnly=false` el comportamiento de venta asistida es idéntico al previo.
 - **Precio por categoría en el popup desde cotizaciones:** se hace save/restore de `sessionStorage['cliente']` alrededor del modal (el popup lee de ahí), sin contaminar el estado de venta asistida (R-01 de la spec respetado).
 
+### 2026-06-17 — D-043: Renumeración WhatsApp Kapso 007 → 009 (resuelve colisión)
+- **Contexto:** la spec marco WhatsApp Kapso (abierta el 2026-05-26 con D-037..D-040) tomó número 007 sin verificar que ya existía la spec `007-user-admin-credentials-delete` (done en sesión 2026-05-28). El roadmap quedó marcado con "⚠️ COLISIÓN — decisión humana pendiente" desde el 2026-06-02. Hay también colisión real D-037..D-040 en el log (mismo rango usado por ambas specs en sesiones distintas — los IDs de decisión sobreviven, ambos contextos quedan en el contrato).
+- **Decisión:** renumerar la spec WhatsApp a **009** (008 está ocupado por cotizaciones in-progress). Folder físico renombrado `specs/007-whatsapp-kapso-notifications-marco/` → `specs/009-whatsapp-kapso-notifications-marco/`. Referencias internas en `spec.md`, `findings.md`, `sub-specs.md` actualizadas. Sub-specs hijas pasan a 009.1..009.4.
+- **NO se renumeran las decisiones existentes D-037..D-040 de WhatsApp** (sender compartido, prepago, auto-respond) — las decisiones son append-only y se asume el lector resuelve el contexto por la fecha y el cuerpo. La sesión 2026-05-28 (`user-admin-credentials-delete`) usó los mismos IDs (D-037, D-038) — ambos contextos quedan en el log; cuando se cite, hay que prefijar con la fecha (ej. `D-038/2026-05-26` para sender compartido vs `D-038/2026-05-28` para borrado de usuarios).
+- **Razón de NO renumerar IDs históricos:** sería retro-edit de append-only log, antipatrón fuerte en SDD. La colisión es un costo histórico aceptado.
+- **Alternativas descartadas:** dejar la colisión sin resolver (rompe inferencia automática de "qué spec es la 007"); renumerar `user-admin-credentials-delete` (ya está done y su SHA-256 está referenciado en código + commits — riesgo arqueológico).
+
+### 2026-06-17 — D-044: Precio fijo $80 COP por mensaje WhatsApp
+- **Contexto:** clarification abierta en spec 009 §7. Tres candidatos: $50, $80, $100.
+- **Decisión:** **$80 COP por mensaje**, único, sin distinguir tipo (utility/marketing/service).
+- **Razón:** cubre Meta utility Colombia (~$0.0055 USD ≈ $22 COP a tasa 4000), fee Kapso estimado (~$15 COP), markup Katuq (~$43 COP) = margen ~54% para absorber crecimiento de costos Meta/Kapso. $50 deja margen tan estrecho que cualquier alza obliga a notificar al comercio; $100 sube barrera de entrada.
+- **Implementación:** ENV var `WHATSAPP_PRICE_COP=80` en `kapsoService`. UI medidor lo muestra explícitamente al comercio antes de recargar (transparencia).
+- **Revisable:** si Meta sube utility >$30 COP o Kapso sube fee >$25 COP, abrir nueva decisión (no retro-edit D-044).
+
+### 2026-06-17 — D-045: Mínimo de recarga inicial = $50.000 COP
+- **Contexto:** clarification abierta en spec 009 §7. Recarga inicial debe ser suficiente para 1-2 meses sin fricción de microrecargas.
+- **Decisión:** **$50.000 COP mínimo para la primera recarga** del comercio (≈ 625 mensajes utility). Recargas posteriores SIN mínimo (el comercio elige el monto).
+- **Razón:** un comercio con 10-20 pedidos/día consume ~300-600 msg/mes. $50.000 le da margen para 1-2 meses + saldo de bienvenida ($20.000 — R-04 spec) cubre primera semana. Mínimos más altos ($100.000) podrían desincentivar adopción en comercios pequeños.
+- **Implementación:** ENV var `WHATSAPP_MIN_TOPUP_COP=50000`. Endpoint `POST /v1/whatsapp/topup` rechaza con `MIN_TOPUP_BELOW_THRESHOLD` si `amountCOP < min` y `whatsapp_balance.totalRecargadoHistoricoCOP === 0`.
+
+### 2026-06-17 — D-046: Firma webhook entrante Kapso = HMAC SHA-256 con `KAPSO_WEBHOOK_SECRET`
+- **Contexto:** clarification abierta en spec 009 §7. Docs Kapso no explicitan esquema de firma desde la página build-with-ai.
+- **Decisión:** asumir **HMAC SHA-256** con secret compartido `KAPSO_WEBHOOK_SECRET` en ENV. Header esperado: `X-Kapso-Signature: sha256=<hex>`. Si la consola Kapso solo expone Bearer al configurar el webhook, fallback documentado dentro de sub-spec 009.4 sin reescritura del flujo.
+- **Razón:** HMAC SHA-256 es el estándar de la industria (Shopify, WooCommerce, Stripe, Wompi). Asumirlo permite escribir el verificador antes de obtener la cuenta real. Si Kapso solo expone Bearer, el verificador cambia 10 LOC.
+- **Implementación:** función `verifyKapsoSignature(rawBody, signatureHeader)` en `controllers/whatsappWebhook.js`. Constant-time compare. ENV `KAPSO_WEBHOOK_SECRET` requerida; si falta, endpoint responde 503.
+
+### 2026-06-17 — D-047: Retención `whatsapp_usage` = 1 año + cierre mensual agregado
+- **Contexto:** clarification abierta en spec 009 §7. Volumen estimado: 100 comercios × 500 msg/mes = 50.000 docs/mes en `whatsapp_usage`. Sin política de retención, en 3 años son 1.8M docs.
+- **Decisión:** retener docs individuales de `whatsapp_usage` por **365 días**. Después, purgar — el `whatsapp_billing_summary/{company}_{yyyymm}` queda como sustituto agregado por mes para auditoría tributaria DIAN (que exige soportes de gastos por 5 años pero acepta resúmenes mensuales firmados).
+- **Razón:** balance entre costo Firestore (reads/storage), valor de soporte tributario, y privacidad (datos de clientes finales — teléfonos enmascarados pero aún PII parcial).
+- **Implementación:** cron `whatsapp-usage-purge-yearly` (sistema 002.8) corre diariamente, query `whatsapp_usage` por `sentAt < hoy - 365d`, batch delete 500 docs/run. Antes de purgar valida que existe el `whatsapp_billing_summary` correspondiente para no perder soporte.
+
+### 2026-06-17 — D-048: Saldo prepago no usado al cerrar cuenta = no reembolsable
+- **Contexto:** clarification abierta en spec 009 §7. Política inicial al cerrar cuenta del comercio.
+- **Decisión:** **no reembolsable**. Patrón estándar SaaS prepago (Twilio credits, AWS credits, Wompi saldo).
+- **Razón:** evita complicación operativa (devoluciones bancarias COP, conciliación contable Katuq), riesgo de fraude (recargar → cerrar → exigir devolución como vía de ataque), simplicidad TyC.
+- **Mitigación al comerciante:** cláusula explícita en TyC + sistema envía 2 emails pre-cierre (30 días antes y 7 días antes) recordando "tienes $X COP de saldo WhatsApp; úsalo antes del cierre". Estado `whatsapp_balance.accountStatus: 'closing'` activa estos emails.
+- **Implementación:** `whatsapp_balance.accountStatus` con valores `active | closing | closed`. Método `markClosing(company, closingDate)` se invoca desde el módulo de gestión de cuentas (cuando exista). Cron diario detecta `closingScheduledAt - 30d` y `- 7d` y dispara emails. Al `closingDate`, `accountStatus = 'closed'` y `balanceCOP = 0` (con doc histórico en `whatsapp_topup_history` con `source: 'forfeit_at_close'`).
+
+### 2026-06-17 — D-049: Apertura spec 009.5 — slot ratificado (viewer WhatsApp READ-ONLY)
+- **Contexto:** el slot 009.5 estaba reservado en `009/sub-specs.md` para "Pasarela de pago real" y "Display name dinámico". La spec 009.5 (viewer) propone reusar el slot para una herramienta de visibilidad operativa antes que el inbox bidireccional (009.6) o el bot KAI (009.7).
+- **Decisión:** ratificar el slot 009.5 para `whatsapp-conversations-viewer` (READ-ONLY). Renumeración derivada: pasarela de pago real → 009.6, display name dinámico → 009.7. Ambos quedan pendientes en backlog.
+- **Razón:** la pasarela y el display name son features comerciales/operativas que NO bloquean el sello `D-WA-MVP` (009.1..009.4). El viewer da visibilidad inmediata al comerciante sobre lo que ya está sucediendo en su canal WhatsApp y desbloquea hábito de uso antes de invertir en bidireccionalidad.
+- **Alternativas descartadas:** mantener slot 009.5 para pasarela (bloquea visibilidad operativa por meses sin razón de negocio); abrir slot 009.8 para el viewer (rompe orden cronológico del roadmap y obliga a renumerar 009.6/009.7 igual).
+- **Aplicación:** spec.md de 009.5 ya contiene aviso de colisión + nota de enmienda 009.5.1 en cabecera. Sub-specs.md del marco 009 actualizado con fila 009.5.1.
+
+### 2026-06-17 — D-050: Lead scoring manual con estrellas (1-5)
+- **Contexto:** en el panel 009.5.1, el operador necesita una forma rápida de calificar al contacto WhatsApp sin abrir el CRM completo. Alternativas: (a) scoring automático heurístico (frecuencia + monto historico), (b) scoring manual estrellas 1-5, (c) sin scoring (solo guardar Lead).
+- **Decisión:** opción (b) — rating manual 1-5 estrellas, persistido con `ratedBy + ratedAt + correlationId`. Debounce 250 ms para evitar flood al deslizar el cursor entre estrellas.
+- **Razón:** scoring automático requiere modelo + pipeline + explicabilidad ("¿por qué es 4?") que está fuera de alcance del MVP. El operador conoce mejor el contexto que cualquier heurística inicial. Sin scoring rompe la promesa del panel de "priorizar atención".
+- **Alternativas descartadas:** scoring automático (heurística inestable sin datos suficientes en piloto); thumbs up/down binario (insuficiente granularidad — el comerciante quiere "muy bueno" vs "cliente promedio").
+- **Aplicación:** componente `star-rating` con `role="radiogroup"` + nav teclado ←/→/Enter/Esc + tap-target ≥44 px. Persiste en `lead.score` si existe Lead, sino en colección `whatsapp_contact_rating_staging` con TTL 30 días (D-053 staging + migración al crear Lead).
+
+### 2026-06-17 — D-051: CRM bridge es opt-in (operador decide guardar como Lead)
+- **Contexto:** al abrir un hilo WhatsApp, hay 3 opciones para sincronizar con CRM: (a) crear Lead automáticamente al primer mensaje entrante, (b) opt-in vía botón "Guardar en CRM" que el operador presiona explícitamente, (c) no sincronizar nunca (CRM y WhatsApp separados).
+- **Decisión:** opción (b) — opt-in. Botón "Guardar en CRM" visible mientras el contacto NO tenga Lead asociado; al presionar, si ya existe Lead para `(company, phone)` responde 409 con `leadId` y CTA "Ver lead existente" (no duplica).
+- **Razón:** automático llenaría el CRM de basura (clientes que solo preguntan precio una vez, números equivocados, etc.). Sin sincronizar rompe la promesa de "trazar canal WhatsApp como fuente de Leads". Opt-in respeta el juicio del operador y permite medir el canal con `source=whatsapp_thread`.
+- **Alternativas descartadas:** automático (genera ruido en CRM, baja precisión del pipeline); sin sincronizar (rompe métricas de canal); auto al primer rating ≥3 estrellas (acopla scoring con bridge, complica UX).
+- **Aplicación:** endpoint `POST /v1/whatsapp/contact/:phoneHash/save-as-lead` con dedup `(company, phone)` server-side. Lead nacido desde el panel queda con `source=whatsapp_thread` para tracking.
+
+### 2026-06-17 — D-052: Historial de pedidos en el panel = read-only
+- **Contexto:** el panel muestra los últimos 10 pedidos del contacto. Alternativas: (a) read-only con link al detalle de venta, (b) acciones inline (re-enviar factura, cambiar estado), (c) edición rápida de campos del pedido.
+- **Decisión:** opción (a) — read-only. Cada fila muestra `nroPedido`, fecha relativa, estado, total. Link a `/ventas/detalle/:id` para acciones. Snapshot al abrir el hilo (sin polling).
+- **Razón:** el panel es de **visibilidad de contexto**, no de operación de pedidos. Editar desde acá multiplica superficie de bugs (concurrent edits con módulo de ventas) y rompe el principio de menor sorpresa. El link al detalle ya cubre el caso "necesito hacer algo con este pedido".
+- **Alternativas descartadas:** acciones inline (acopla viewer con módulo ventas, viola Art VI de la constitución); edición rápida (riesgo concurrencia + UX confusa).
+- **Aplicación:** endpoint `GET /v1/whatsapp/contact/:phoneHash/orders` retorna max 10 docs ordenados por `fechaCreacion desc`. Cache 60s. UI sin botones de acción; solo link.
+
+### 2026-06-17 — D-053: 009.5.1 es enmienda de 009.5 — mismo feature flag
+- **Contexto:** 009.5.1 podría ser (a) spec hija independiente con su propio feature flag, (b) enmienda del viewer 009.5 que comparte el mismo feature flag, (c) merge dentro de la spec 009.5 (sin sub-spec separado).
+- **Decisión:** opción (b) — enmienda. Mismo feature flag `WHATSAPP_INBOX_VIEWER_ENABLED`. Si el flag está OFF para el comercio, el panel completo NO renderiza (AC-009.5.1-13). El panel solo aparece dentro del viewer; no tiene ruta propia.
+- **Razón:** el panel NO tiene sentido sin el viewer abierto. Separar feature flags obligaría a tener "viewer ON + panel OFF" como estado válido que nadie consumiría. Merge dentro de 009.5 obligaría a reabrir la spec aprobada (rompe SDD). Enmienda con sub-spec separado preserva el log de decisiones y permite revisión humana focalizada en el panel.
+- **Alternativas descartadas:** feature flag separado (estado inútil "viewer ON + panel OFF"); merge en 009.5 (re-aprobación de spec aprobada).
+- **Aplicación:** `009.5.1/spec.md` registra dependencia de `WHATSAPP_INBOX_VIEWER_ENABLED`. El cabecero de `009.5/spec.md` ya tiene nota de enmienda. Sub-specs.md del marco lista 009.5.1 con marca "enmienda de 009.5".
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
@@ -426,6 +541,22 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **D-029**: Param `fechaCorte` parametrizable en `worldoffice-balances-sync` (era hardcoded `today`).
 - **D-030**: Opt-in `persistLines: true` en `worldoffice-documents-sync` → nueva colección `accounting_document_lines` + source `accounting_document_lines` en el builder.
 - Pendientes para próxima sesión: correr `scripts/explore-wo-renglones.js` contra Harmony para confirmar shape del descuento; correr historical run + balances-sync con `universeSource='wo'` y validar `sum(saldoTotal) ≈ $1.553M ± 1%`.
+
+### 2026-05-26 (sesión apertura 007 — WhatsApp Kapso)
+
+- Daniel pidió analizar viabilidad de integrar Kapso (`docs.kapso.ai/docs/build-with-ai`) para enviar notificaciones WhatsApp.
+- Auditoría rápida del sistema actual: `notificationQueue.js:54+315-325+595` tiene feature flag + branch switch + placeholder ya preparados. Frontend tiene columna WhatsApp "decorativa (próximamente)" en `notificaciones.component.ts:33`. Modelo del cliente ya captura `numero_celular_whatsapp` en 8+ formularios. Conclusión: andamiaje listo, falta el adaptador real.
+- Kapso es wrapper sobre WhatsApp Business Cloud API de Meta. Endpoint `POST https://api.kapso.ai/meta/whatsapp/v24.0/{phoneNumberId}/messages` con auth `X-API-Key`. Soporta texto libre (ventana 24h) + templates HSM (sin ventana).
+- 4 decisiones tomadas (D-037..D-040):
+  - Sender compartido único (Katuq), branding en texto del mensaje (`[NombreComercio]`).
+  - Display name fijo "Katuq Notificaciones".
+  - Cobro adicional al plan vía saldo prepago. Bloqueo al agotar saldo. Precio fijo único COP (monto pendiente).
+  - Respuestas entrantes con auto-respond redirigiendo al comercio. Sin inbox conversacional en MVP.
+- Spec marco 007 + 4 sub-specs hijas (007.1..007.4) en draft. Entregables: `spec.md` + `findings.md` + `sub-specs.md` en `/specs/007-whatsapp-kapso-notifications-marco/`.
+- Pendientes para próxima sesión (bloqueantes de aprobación):
+  - Daniel define precio fijo COP/mensaje + mínimo de recarga (NEEDS CLARIFICATION en spec).
+  - Daniel inicia onboarding Meta/Kapso: cuenta + número Business + 6 templates HSM + TyC con cláusula opt-in.
+  - Review humano del marco 007 → si OK, abrir 007.1 con plan.md.
 
 ### 2026-05-23 (sesión Harmony — spec 006: filtro vendedor en builder)
 - Aclaración del usuario: rol "vendedor" en builder = ver SOLO sus reportes/data WO. NO bloquear creación de reportes — solo filtrar server-side automáticamente.
@@ -494,3 +625,35 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **D-037**: Contraseña de usuarios se estandariza a SHA256 Base64 compatible con el login actual. El frontend hashea al crear y al editar; el backend conserva hashes existentes y normaliza contraseñas crudas si llegan por API.
 - **D-038**: Eliminación de usuarios queda habilitada vía `POST /v1/users/delete` solo para Administrador, usando el doc id `cd` y validando que el usuario pertenezca a la empresa activa salvo superadmin `Julsmind`.
 - Implementado en frontend `/usuarios` y backend `/v1/users`, sin migración de contraseñas históricas ni cambio del flujo completo de autenticación.
+
+### 2026-06-17 (sesión apertura 009.5 + enmienda 009.5.1 — viewer + panel contacto)
+- **Continuación de la sesión 2026-06-17 (mañana)** que cerró colisión 007/009 y clarifications de la spec marco WhatsApp.
+- **D-049 — slot 009.5 ratificado** para `whatsapp-conversations-viewer` (READ-ONLY). Renumeración derivada: pasarela de pago real → 009.6, display name dinámico → 009.7. Ambos pendientes en backlog.
+- **Apertura sub-spec 009.5** (`specs/009.5-whatsapp-conversations-viewer/`): viewer cronológico de hilos WhatsApp uniendo `whatsapp_usage` (outbound) + `whatsapp_inbound` (inbound). 17 criterios EARS, polling 30s/15s con Page Visibility API, `phoneHash` opaco al frontend, audit en `whatsapp_access_audit`. Estado `draft` (clarifications de salt rotación, rate-limit y roles default pendientes).
+- **Apertura enmienda 009.5.1** (`specs/009.5.1-whatsapp-contact-profile-panel/`): panel lateral dentro del viewer con 3 secciones (Identidad, Historial, Lead). 4 decisiones fijas:
+  - **D-050** lead scoring manual estrellas 1-5 con debounce 250ms (descartado scoring automático heurístico por falta de datos en piloto).
+  - **D-051** CRM bridge opt-in vía botón "Guardar en CRM" (descartado auto-crear Lead por ruido en CRM).
+  - **D-052** historial de pedidos read-only con link al detalle (descartadas acciones inline para no acoplar viewer con módulo ventas).
+  - **D-053** mismo feature flag `WHATSAPP_INBOX_VIEWER_ENABLED` que 009.5 (el panel solo tiene sentido dentro del viewer).
+- **Cabecero de 009.5/spec.md** actualizado con nota de enmienda; §6 Out of scope NO contenía "perfil del contacto con historial" (no se removió nada).
+- **sub-specs.md del marco 009** actualizado: fila 009.5.1 agregada con goal/entregables/AC/out-of-scope/tamaño (~450 LOC, 2-3 días). Total marco pasa de 1290 a 1740 LOC.
+- **Pendientes para próxima sesión:**
+  - Daniel resuelve los 5 NEEDS CLARIFICATION de 009.5 (salt rotación, rate-limit, retención audit, roles default, confirmación slot — esta última ya hecha vía D-049).
+  - Confirmar adición del campo `recipientPhoneNormalized` en 009.2 (bloqueante duro de implementación 009.5).
+  - Review humano de 009.5/spec.md y 009.5.1/spec.md → si OK, redactar plan.md de ambos en paralelo (mismo feature flag, mismo módulo Angular).
+
+### 2026-06-17 (sesión WhatsApp Kapso — resolución de colisión + cierre clarifications + 009.1)
+- **Continuación de la sesión 2026-05-26** que dejó la spec marco WhatsApp en draft con 5 NEEDS CLARIFICATION pendientes y colisión de número 007 sin resolver.
+- **D-043 — renumeración 007→009**: folder físico renombrado `specs/007-whatsapp-kapso-notifications-marco/` → `specs/009-whatsapp-kapso-notifications-marco/`. Referencias internas actualizadas en spec.md/findings.md/sub-specs.md. Sub-specs hijas pasan a 009.1..009.4. Fila del roadmap §1 corregida. IDs históricos de decisión D-037..D-040 NO se renumeran (append-only log, ambos contextos quedan en el contrato, se citan con prefijo de fecha).
+- **D-044..D-048 — defaults aplicados a clarifications** (Auto mode, valores razonables del análisis previo):
+  - D-044 precio $80 COP/mensaje (margen ~54% sobre Meta+Kapso estimados).
+  - D-045 mínimo recarga inicial $50.000 COP (≈ 625 msg utility, sin mínimo para recargas posteriores).
+  - D-046 firma webhook HMAC SHA-256 con `KAPSO_WEBHOOK_SECRET` (fallback Bearer documentado en 009.4 si Kapso solo expone Bearer).
+  - D-047 retención `whatsapp_usage` 365 días + `whatsapp_billing_summary` agregado mensual como sustituto para auditoría tributaria DIAN.
+  - D-048 saldo no usado al cerrar cuenta = no reembolsable, mitigado con emails pre-cierre 30d/7d + cláusula TyC.
+- Spec marco 009 pasa de `draft` a `approved (clarifications resueltas)`. Sub-specs.md actualizado con detalles operativos (ENV vars, schemas extendidos, crones nuevos).
+- Sub-spec **009.1/spec.md** creada — adaptador Kapso, templates HSM, enum WHATSAPP, fix bug `notificationQueue.js:317`.
+- **Pendientes para próxima sesión:**
+  - Daniel inicia onboarding Meta/Kapso: cuenta Kapso + número Business verificado + 6 templates HSM aprobados + cláusula opt-in en TyC. Bloqueante de activación productiva, NO de implementación.
+  - Review humano de 009.1/spec.md → si OK, abrir 009.1/plan.md.
+  - Confirmar/ajustar D-046 cuando Daniel tenga la cuenta Kapso real (verificar esquema de firma en consola).

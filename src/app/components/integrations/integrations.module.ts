@@ -28,6 +28,9 @@ import { IntegrationManualControlService } from './integration-manual-control.se
 import { SiigoConfigComponent } from './siigo-config/siigo-config.component';
 import { SiigoMappingComponent } from './siigo-config/siigo-mapping/siigo-mapping.component';
 
+// WhatsApp (Kapso) Components
+import { WhatsappKapsoConfigComponent } from './whatsapp-kapso-config/whatsapp-kapso-config.component';
+
 const routes: Routes = [
   // Vista principal de listado
   { path: '', component: IntegrationsListComponent, pathMatch: 'full' },
@@ -59,7 +62,8 @@ const routes: Routes = [
     IntegrationNotificationsComponent,
     CredentialStrengthIndicatorComponent,
     SiigoConfigComponent,
-    SiigoMappingComponent
+    SiigoMappingComponent,
+    WhatsappKapsoConfigComponent
   ],
   imports: [
     CommonModule,
@@ -88,7 +92,8 @@ const routes: Routes = [
   ],
   exports: [
     IntegrationsComponent,
-    IntegrationsListComponent
+    IntegrationsListComponent,
+    WhatsappKapsoConfigComponent
   ]
 })
 export class IntegrationsModule {}

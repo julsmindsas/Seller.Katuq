@@ -1356,6 +1356,14 @@ export class IntegrationsService {
       ],
       [IntegrationCategory.MARKETING]: [
         {
+          id: "whatsapp_kapso",
+          name: "WhatsApp Business",
+          description:
+            "Notificaciones transaccionales por WhatsApp Business (Kapso). Avisos automáticos a tus clientes sobre pedidos, pagos y despachos.",
+          logo: "assets/images/logos/whatsapp.svg",
+          active: true,
+        },
+        {
           id: "mailchimp",
           name: "Mailchimp",
           description:

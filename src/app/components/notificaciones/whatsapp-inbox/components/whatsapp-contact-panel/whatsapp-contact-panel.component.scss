@@ -198,6 +198,57 @@ $accent-crm: #b8860b;        // dorado opaco
     background: #fafbfc;
   }
 
+  &__order--link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.12s ease, border-color 0.12s ease;
+    cursor: pointer;
+
+    &:hover {
+      background: #f1f5f9;
+      border-color: #c7d2da;
+    }
+  }
+
+  &__identity-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed $border;
+  }
+
+  &__link {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: $accent-orders;
+    text-decoration: none;
+    padding: 4px 0;
+    cursor: pointer;
+
+    &:hover {
+      color: darken($accent-orders, 10%);
+      text-decoration: underline;
+    }
+  }
+
+  &__link--full {
+    display: block;
+    text-align: center;
+    margin-top: 6px;
+    padding: 6px;
+    background: #f1f5f9;
+    border-radius: 4px;
+
+    &:hover {
+      background: #e2e8f0;
+      text-decoration: none;
+    }
+  }
+
   &__order-top,
   &__order-bottom {
     display: flex;

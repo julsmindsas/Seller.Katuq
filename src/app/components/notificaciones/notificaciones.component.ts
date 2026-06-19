@@ -136,6 +136,13 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
               }
             });
           }
+          if (saved && saved.whatsapp_notifications) {
+            this.preferences.forEach(pref => {
+              if (saved.whatsapp_notifications[pref.id] !== undefined) {
+                pref.channels.whatsapp = saved.whatsapp_notifications[pref.id];
+              }
+            });
+          }
           this.isLoading = false;
         },
         error: () => {
@@ -174,6 +181,16 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     this.saveToFirestore(() => { pref.channels.company_copy = previousValue; });
   }
 
+  /** Activa o desactiva las notificaciones por WhatsApp para una categoría y guarda en Firestore */
+  public toggleWhatsapp(preferenceId: string): void {
+    const pref = this.preferences.find(p => p.id === preferenceId);
+    if (!pref || this.isSaving) return;
+
+    const previousValue = pref.channels.whatsapp;
+    pref.channels.whatsapp = !pref.channels.whatsapp;
+    this.saveToFirestore(() => { pref.channels.whatsapp = previousValue; });
+  }
+
   /** Guarda todas las preferencias de la empresa en Firestore */
   private saveToFirestore(rollback?: () => void): void {
     const companyName = this.empresaActual?.nomComercial;
@@ -184,13 +201,15 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
     const notifications: { [key: string]: boolean } = {};
     const sms_notifications: { [key: string]: boolean } = {};
     const company_copy_notifications: { [key: string]: boolean } = {};
+    const whatsapp_notifications: { [key: string]: boolean } = {};
     this.preferences.forEach(pref => {
       notifications[pref.id] = pref.channels.email;
       sms_notifications[pref.id] = pref.channels.sms;
       company_copy_notifications[pref.id] = pref.channels.company_copy;
+      whatsapp_notifications[pref.id] = pref.channels.whatsapp;
     });
 
-    this.maestroService.saveCompanyNotificationPreferences(companyName, { notifications, sms_notifications, company_copy_notifications })
+    this.maestroService.saveCompanyNotificationPreferences(companyName, { notifications, sms_notifications, company_copy_notifications, whatsapp_notifications })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: () => {

@@ -692,7 +692,17 @@ export const NOTIFICATION_CONFIG: NotificationConfig = {
       seller: '/v1/notifications/seller',
       preferences: '/v1/notification-preferences',
       markRead: '/v1/notifications/mark-read',
-      stats: '/v1/notifications/stats'
+      stats: '/v1/notifications/stats',
+      // WhatsApp Inbox (spec 009) — usados por WhatsappInboxService y por la
+      // pantalla de configuración del canal. Migran del mock al real cuando
+      // 009.1 / 009.2 / 009.4 entran a producción.
+      whatsappConversations: '/v1/whatsapp/conversations',
+      whatsappBalance: '/v1/whatsapp/balance',
+      whatsappTopup: '/v1/whatsapp/topup',
+      whatsappUsage: '/v1/whatsapp/usage',
+      whatsappPreferences: '/v1/whatsapp/preferences',
+      whatsappHealth: '/v1/whatsapp/health',
+      whatsappConfig: '/v1/whatsapp/config'
     }
   },
 

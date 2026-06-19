@@ -169,7 +169,8 @@ export class IntegrationUIHelperService {
     quickbooks: 'QuickBooks',
     siigo: 'Siigo',
     slack: 'Slack',
-    zapier: 'Zapier'
+    zapier: 'Zapier',
+    whatsapp_kapso: 'WhatsApp Business'
   };
 
   private integrationIcons = {
@@ -198,7 +199,8 @@ export class IntegrationUIHelperService {
     quickbooks: 'fa-calculator',
     siigo: 'fa-file-invoice',
     slack: 'fa-slack',
-    zapier: 'fa-link'
+    zapier: 'fa-link',
+    whatsapp_kapso: 'fa-whatsapp'
   };
 
   // Loading states

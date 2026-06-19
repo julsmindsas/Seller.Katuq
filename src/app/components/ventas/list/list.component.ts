@@ -2674,25 +2674,44 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Verificar si hay integración de facturación configurada
     this.checkInvoicingIntegration();
 
-    // Leer query param "buscar" (usado por notificaciones para navegar a un pedido)
+    // Leer query params: "buscar" (texto) + "fechaInicial"/"fechaFinal"
+    // (formato YYYY-MM-DD). Usados por orígenes externos como el panel de
+    // contacto de WhatsApp, que mandan rango amplio para no perder pedidos
+    // viejos por el default de hoy.
+    const qp = this.route.snapshot.queryParams;
+    if (qp['buscar']) {
+      this.searchQuery = qp['buscar'];
+    }
     this.route.queryParams.subscribe(params => {
       if (params['buscar']) {
         this.searchQuery = params['buscar'];
       }
     });
 
-    // Initialize dates first before subscribing to service
+    // Initialize dates. Si llegan en queryParams, se respetan; si no, hoy.
     const today = new Date();
-    this.fechaInicial = today.toISOString().split("T")[0];
-    this.fechaFinal = today.toISOString().split("T")[0];
-    this.fechaInicialDate = new Date(today);
-    this.fechaFinalDate = new Date(today);
+    const isoToday = today.toISOString().split("T")[0];
+    const qpFechaInicial = typeof qp['fechaInicial'] === 'string' ? qp['fechaInicial'] : '';
+    const qpFechaFinal = typeof qp['fechaFinal'] === 'string' ? qp['fechaFinal'] : '';
+    const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const hasQpFechas = isoRegex.test(qpFechaInicial) && isoRegex.test(qpFechaFinal);
+    this.fechaInicial = hasQpFechas ? qpFechaInicial : isoToday;
+    this.fechaFinal = hasQpFechas ? qpFechaFinal : isoToday;
+    this.fechaInicialDate = this.stringToDate(this.fechaInicial);
+    this.fechaFinalDate = this.stringToDate(this.fechaFinal);
 
     // Update the shared filter service with initial dates
     this.sharedFilterService.updateFilterState({
       fechaInicial: this.fechaInicialDate,
       fechaFinal: this.fechaFinalDate,
+      searchQuery: this.searchQuery || '',
     });
+
+    // Si vinimos con rango/buscar desde otro módulo, forzar el refresco una vez
+    // armada toda la inicialización (suscripciones, presets, etc.).
+    if (hasQpFechas || qp['buscar']) {
+      setTimeout(() => this.refrescarDatos(true), 0);
+    }
 
     // Suscribirse a los cambios del servicio de filtros compartido
     this.sharedFilterService.filterState$.subscribe((state) => {

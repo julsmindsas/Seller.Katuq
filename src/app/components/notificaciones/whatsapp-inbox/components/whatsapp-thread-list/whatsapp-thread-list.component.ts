@@ -5,7 +5,7 @@ import {
   OnInit,
   Output,
 } from "@angular/core";
-import { Subject, Subscription } from "rxjs";
+import { Subject, Subscription, interval } from "rxjs";
 import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 
 import { WhatsappInboxService } from "../../whatsapp-inbox.service";
@@ -41,6 +41,8 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   /** Stream de búsqueda con debounce para no disparar getThreads por cada tecla. */
   private readonly searchSubject = new Subject<string>();
   private searchSub?: Subscription;
+  /** Polling cada 10s para refrescar la lista (sin spinner) con inbounds nuevos. */
+  private refreshSub?: Subscription;
 
   constructor(private readonly inbox: WhatsappInboxService) {}
 
@@ -49,10 +51,72 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
       .pipe(debounceTime(350), distinctUntilChanged())
       .subscribe(() => this.fetchThreads());
     this.fetchThreads();
+    // Polling cada 10s: refresca la lista para que aparezcan badges/preview
+    // de hilos con mensajes nuevos sin necesidad de tener ese hilo abierto.
+    // Solo se hace si no estás escribiendo en el buscador (para no molestar).
+    this.refreshSub = interval(10000).subscribe(() => {
+      if ((this.searchQuery || "").trim().length === 0) {
+        this.fetchThreadsSilent();
+      }
+    });
   }
 
   ngOnDestroy(): void {
     this.searchSub?.unsubscribe();
+    this.refreshSub?.unsubscribe();
+  }
+
+  /**
+   * Igual que fetchThreads pero sin tocar el flag `loading` ni mostrar spinner —
+   * usado por el polling para refrescar en silencio. También dispara sync-inbound
+   * en paralelo para que el backend pollee Kapso (defensa por si el cron del
+   * backend no está corriendo).
+   */
+  private fetchThreadsSilent(): void {
+    const userStr = localStorage.getItem("user") || "{}";
+    let token = "", company = "", nit = "", email = "", authCode = "";
+    try {
+      const u = JSON.parse(userStr);
+      token = u.token || "";
+      company = u.company || "";
+      nit = u.nit || "";
+      email = u.email || "";
+      authCode = u.authorizationCode || "";
+    } catch {}
+    const headers: HeadersInit = {
+      "Authorization": "Bearer " + token,
+      "company": company,
+      "user": nit,
+      "usage-code": authCode,
+      "email": email,
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+    };
+    // Best-effort sync (ignoramos error).
+    fetch("http://localhost:3300/v1/whatsapp/sync-inbound", {
+      method: "POST",
+      headers,
+    }).catch(() => undefined);
+    // Refresh de threads.
+    const qs = this.searchQuery ? `?search=${encodeURIComponent(this.searchQuery)}` : "";
+    fetch("http://localhost:3300/v1/whatsapp/conversations" + qs, { headers })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((resp: any) => {
+        const items = resp?.items || [];
+        if (items.length === 0) return;
+        this.threads = items.map((it: any) => ({
+          phoneHash: it.phoneHash,
+          phoneMasked: it.phoneMasked,
+          contactName: it.clienteNombre || it.profileName || "Sin nombre",
+          lastMessageAt: it.lastMessageAt,
+          lastMessageSnippet: it.lastMessagePreview || "",
+          unreadCount: it.unreadCount || 0,
+          lastDirection: it.lastMessageDirection || "outbound",
+          messageCount: it.totalMessages || 0,
+          flags: it.flags,
+        }));
+      })
+      .catch(() => undefined);
   }
 
   onSearchChange(value: string): void {
@@ -146,15 +210,49 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
 
   private fetchThreads(): void {
     this.loading = true;
-    this.inbox.getThreads({ search: this.searchQuery }).subscribe({
-      next: (page) => {
-        this.threads = page.items;
+    const userStr = localStorage.getItem('user') || '{}';
+    let token = '', company = '', nit = '', email = '', authCode = '';
+    try {
+      const u = JSON.parse(userStr);
+      token = u.token || '';
+      company = u.company || '';
+      nit = u.nit || '';
+      email = u.email || '';
+      authCode = u.authorizationCode || '';
+    } catch {}
+    const headers: HeadersInit = {
+      'Authorization': 'Bearer ' + token,
+      'company': company,
+      'user': nit,
+      'usage-code': authCode,
+      'email': email,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    };
+    const qs = this.searchQuery ? `?search=${encodeURIComponent(this.searchQuery)}` : '';
+    fetch('http://localhost:3300/v1/whatsapp/conversations' + qs, { headers })
+      .then((r) => r.ok ? r.json() : Promise.reject(r))
+      .then((resp: any) => {
+        const items = resp?.items || [];
+        this.threads = items.map((it: any) => ({
+          phoneHash: it.phoneHash,
+          phoneMasked: it.phoneMasked,
+          contactName: it.clienteNombre || it.profileName || 'Sin nombre',
+          lastMessageAt: it.lastMessageAt,
+          lastMessageSnippet: it.lastMessagePreview || '',
+          unreadCount: it.unreadCount || 0,
+          lastDirection: it.lastMessageDirection || 'outbound',
+          messageCount: it.totalMessages || 0,
+          flags: it.flags,
+        }));
         this.loading = false;
-      },
-      error: () => {
-        this.threads = [];
-        this.loading = false;
-      },
-    });
+      })
+      .catch((err) => {
+        // Fallback al service (que cae al mock) si el endpoint falla.
+        this.inbox.getThreads({ search: this.searchQuery }).subscribe({
+          next: (page) => { this.threads = page.items; this.loading = false; },
+          error: () => { this.threads = []; this.loading = false; },
+        });
+      });
   }
 }
