@@ -1,0 +1,55 @@
+.field-mapping {
+  padding: 1.5rem;
+}
+
+:host ::ng-deep .mapping-card .p-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+}
+
+.tab-content-inner {
+  padding: 1rem 0;
+}
+
+.shopify-field {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.katuq-field {
+  background: #ede9fe;
+  color: #5b21b6;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.alert-info {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e40af;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+:host ::ng-deep .p-tabview .p-tabview-panels {
+  padding: 0;
+}
+
+:host ::ng-deep .p-tree {
+  padding: 0;
+}
+
+:host ::ng-deep .p-dropdown {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .field-mapping {
+    padding: 1rem;
+  }
+}

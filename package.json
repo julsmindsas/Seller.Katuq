@@ -7,7 +7,7 @@
     "start:4gb": "node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng serve",
     "start:8gb": "node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng serve",
     "start:full": "node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng serve",
-    "deploytest": "firebase hosting:channel:deploy preview-name",
+    "deploytest": "firebase hosting:channel:deploy logistic-test --expires 7d",
     "build": "node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng build",
     "build:4gb": "node --max_old_space_size=4096 node_modules/@angular/cli/bin/ng build",
     "build:8gb": "node --max_old_space_size=8192 node_modules/@angular/cli/bin/ng build",

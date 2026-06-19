@@ -1,0 +1,17 @@
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
+:host {
+  display: block;
+}
+
+details summary {
+  user-select: none;
+  &:hover {
+    color: $katuq-purple-700;
+  }
+}
+
+details[open] summary {
+  margin-bottom: 4px;
+}

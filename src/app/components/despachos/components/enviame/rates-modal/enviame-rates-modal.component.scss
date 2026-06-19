@@ -32,12 +32,15 @@
   }
 }
 
+// Katuq Design Tokens
+@import '../../../../../../assets/scss/utils/katuq-tokens';
+
 // ========================================
 // VARIABLES
 // ========================================
-$primary: #2563eb;
-$primary-dark: #1d4ed8;
-$primary-light: #dbeafe;
+$primary: $katuq-primary;
+$primary-dark: $katuq-primary-dark;
+$primary-light: $katuq-primary-bg;
 $secondary: #64748b;
 $success: #10b981;
 $warning: #f59e0b;
@@ -609,27 +612,27 @@ $radius-lg: 12px;
         gap: 0.75rem;
 
         &:hover {
-          border-color: #2196f3;
+          border-color: $katuq-primary;
           box-shadow: 0 2px 8px rgba(33, 150, 243, 0.1);
         }
 
         &.selected {
-          border-color: #2196f3;
+          border-color: $katuq-primary;
           background: #f0f7ff;
           box-shadow: 0 2px 12px rgba(33, 150, 243, 0.15);
 
           .option-name {
-            color: #2196f3;
+            color: $katuq-primary;
             font-weight: 600;
           }
 
           .option-icon {
-            color: #2196f3;
+            color: $katuq-primary;
             background-color: #e3f2fd;
           }
 
           .option-price {
-            color: #2196f3;
+            color: $katuq-primary;
             font-weight: 700;
           }
         }
@@ -647,7 +650,7 @@ $radius-lg: 12px;
           transition: all 0.2s ease;
 
           &:checked {
-            border-color: #2196f3;
+            border-color: $katuq-primary;
             border-width: 6px;
           }
         }
@@ -722,7 +725,7 @@ $radius-lg: 12px;
 
                 i {
                   font-size: 0.75rem;
-                  color: #2196f3;
+                  color: $katuq-primary;
                 }
               }
             }
@@ -748,7 +751,7 @@ $radius-lg: 12px;
           position: absolute;
           right: 0.75rem;
           font-size: 1.25rem;
-          color: #2196f3;
+          color: $katuq-primary;
           animation: checkPop 0.3s ease;
         }
       }

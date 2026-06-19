@@ -32,8 +32,6 @@
                                 [showIcon]="true"
                                 dateFormat="dd/mm/yy"
                                 placeholder="Inicio"
-                                appendTo="body"
-                                [baseZIndex]="10001"
                                 styleClass="input-compact"
                                 [disabled]="loadingPedidos">
                             </p-calendar>
@@ -42,8 +40,6 @@
                                 [showIcon]="true"
                                 dateFormat="dd/mm/yy"
                                 placeholder="Fin"
-                                appendTo="body"
-                                [baseZIndex]="10001"
                                 styleClass="input-compact"
                                 [disabled]="loadingPedidos">
                             </p-calendar>
@@ -91,11 +87,17 @@
                                 </h5>
 
                                 <div class="table-controls-compact">
+                                    <!-- Agregar todos button -->
+                                    <button pButton type="button" label="Agregar todos" icon="pi pi-plus-circle"
+                                        class="p-button-sm p-button-text"
+                                        (click)="addAllPedidos()"
+                                        [disabled]="pedidosDisponibles.length === 0"></button>
+
                                     <!-- Filtro mostrar pedidos en órdenes -->
                                     <div class="form-check form-switch compact-switch">
                                         <input class="form-check-input" type="checkbox" id="mostrarPedidosEnOrdenes"
                                             [(ngModel)]="mostrarPedidosEnOrdenes" [ngModelOptions]="{ standalone: true }"
-                                            (change)="actualizarPedidosDisponibles()" />
+                                            (change)="onToggleMostrarPedidosEnOrdenes()" />
                                         <label class="form-check-label" for="mostrarPedidosEnOrdenes">
                                             Mostrar en órdenes
                                         </label>
@@ -127,7 +129,8 @@
                                 currentPageReportTemplate="{first} - {last} de {totalRecords}"
                                 [tableStyle]="{ 'min-width': '100%' }" [globalFilterFields]="globalFilterFields"
                                 [sortMode]="'single'" dataKey="nroPedido"
-                                paginatorPosition="bottom">
+                                paginatorPosition="bottom"
+                                sortField="zonaKey" rowGroupMode="subheader" groupRowsBy="zonaKey">
                                 <ng-template pTemplate="header">
                                     <tr>
                                         <ng-container *ngFor="let col of selectedColumns">
@@ -196,6 +199,22 @@
                                     </tr>
                                 </ng-template>
 
+                                <ng-template pTemplate="groupheader" let-pedido>
+                                    <tr>
+                                        <td [attr.colspan]="selectedColumns.length + 2" style="background: #f0f4ff; font-weight: 600; padding: 8px 12px;">
+                                            <div style="display: flex; align-items: center; justify-content: space-between;">
+                                                <span>
+                                                    <i class="pi pi-map-marker" style="color: #6366f1; margin-right: 6px;"></i>
+                                                    {{pedido.zonaKey}}
+                                                </span>
+                                                <button pButton type="button" label="Agregar grupo" icon="pi pi-plus"
+                                                        class="p-button-sm p-button-outlined"
+                                                        (click)="addZoneGroup(pedido.zonaKey)"></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </ng-template>
+
                                 <ng-template pTemplate="body" let-pedido>
                                     <tr>
                                         <ng-container *ngFor="let col of selectedColumns">
@@ -227,7 +246,7 @@
                                                     class="p-button-sm p-button-success p-button-text"
                                                     icon="pi pi-plus"
                                                     (click)="agregarPedido(pedido)"
-                                                    [disabled]="pedidoExisteEnOrden(pedido)"
+                                                    [disabled]="pedidoYaSeleccionado(pedido)"
                                                     pTooltip="{{ 'Agregar' | translate }}"
                                                     tooltipPosition="top">
                                                 </button>
@@ -439,7 +458,7 @@
                     class="p-button-primary btn-footer"
                     [icon]="isSaving ? 'pi pi-spin pi-spinner' : 'pi pi-save'"
                     [label]="isSaving ? 'Guardando...' : 'Guardar'"
-                    [disabled]="ordenEnvioForm.invalid || pedidosSeleccionados.length === 0 || isSaving"
+                    [disabled]="ordenEnvioForm.invalid || (!isEditMode && pedidosSeleccionados.length === 0) || isSaving"
                     (click)="guardarOrden()">
                 </button>
 
@@ -986,7 +1005,7 @@
         </div>
 
         <div class="modal-footer-custom">
-            <button type="button" class="btn btn-secondary" (click)="closeTransporterModal()">
+            <button type="button" class="btn btn-secondary" (click)="closeTransporterModal(true)">
                 {{ 'Cancelar' | translate }}
             </button>
             <button type="button" class="btn btn-primary"

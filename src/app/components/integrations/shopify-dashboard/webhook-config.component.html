@@ -1,0 +1,138 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="webhook-config">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <h3 class="mb-1">Configuracion de Webhooks</h3>
+          <p class="text-muted mb-0">Gestiona los webhooks registrados en tu tienda Shopify</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button pButton type="button" label="Registrar Todos" icon="pi pi-plus-circle"
+            class="p-button-sm"
+            [loading]="registering"
+            (click)="registerAll()"></button>
+          <button pButton type="button" label="Recargar" icon="pi pi-refresh"
+            class="p-button-outlined p-button-secondary p-button-sm"
+            [loading]="loading"
+            (click)="loadWebhooks()"></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="text-center py-5">
+    <p-progressBar mode="indeterminate" [style]="{'height': '6px'}"></p-progressBar>
+    <p class="text-muted mt-2">Cargando webhooks...</p>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && webhooks.length === 0" class="text-center py-5">
+    <p-card styleClass="webhook-card">
+      <div class="py-4">
+        <i class="pi pi-bell-slash" style="font-size: 3rem; color: #ccc;"></i>
+        <h4 class="mt-3 mb-2">No hay webhooks registrados</h4>
+        <p class="text-muted mb-3">Registra webhooks para recibir notificaciones de eventos de Shopify en tiempo real.</p>
+        <button pButton type="button" label="Registrar Webhooks" icon="pi pi-plus-circle"
+          [loading]="registering"
+          (click)="registerAll()"></button>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Webhooks Table -->
+  <p-card *ngIf="!loading && webhooks.length > 0" styleClass="webhook-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <span class="text-muted small">{{ webhooks.length }} webhook(s) registrado(s)</span>
+    </div>
+
+    <p-table [value]="webhooks" styleClass="p-datatable-sm" [rowHover]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th style="width: 40px;"></th>
+          <th>Topic</th>
+          <th>Categoria</th>
+          <th>URL</th>
+          <th>Estado</th>
+          <th>Ultimo Evento</th>
+          <th style="width: 150px;">Acciones</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-webhook>
+        <tr>
+          <td>
+            <i [class]="getTopicIcon(webhook.topic)" style="color: #6366F1;"></i>
+          </td>
+          <td>
+            <div>
+              <strong class="d-block">{{ webhook.topic }}</strong>
+              <small class="text-muted">{{ getTopicLabel(webhook.topic) }}</small>
+            </div>
+          </td>
+          <td>
+            <span class="category-badge">{{ getTopicCategory(webhook.topic) }}</span>
+          </td>
+          <td>
+            <span class="url-text text-truncate d-inline-block" style="max-width: 200px;"
+              [pTooltip]="webhook.address" tooltipPosition="top">
+              {{ webhook.address }}
+            </span>
+          </td>
+          <td>
+            <p-tag [value]="webhook.active ? 'Activo' : 'Inactivo'"
+              [severity]="webhook.active ? 'success' : 'warning'"></p-tag>
+          </td>
+          <td>
+            <span class="small" *ngIf="webhook.lastEvent">{{ webhook.lastEvent | date:'short' }}</span>
+            <span class="small text-muted" *ngIf="!webhook.lastEvent">--</span>
+          </td>
+          <td>
+            <div class="d-flex gap-1">
+              <button pButton type="button" icon="pi pi-play"
+                class="p-button-text p-button-sm p-button-rounded p-button-info"
+                [loading]="isTesting(webhook.id)"
+                (click)="testWebhook(webhook)"
+                pTooltip="Probar webhook"></button>
+              <button pButton type="button" icon="pi pi-trash"
+                class="p-button-text p-button-sm p-button-rounded p-button-danger"
+                [loading]="isUnregistering(webhook.id)"
+                (click)="unregisterWebhook(webhook)"
+                pTooltip="Desregistrar"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center py-4">
+            <p class="text-muted mb-0">No hay webhooks para mostrar</p>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <!-- Info Panel -->
+  <div class="row mt-4" *ngIf="!loading">
+    <div class="col-12">
+      <div class="alert alert-info d-flex align-items-start">
+        <i class="pi pi-info-circle me-2 mt-1"></i>
+        <div>
+          <strong>Acerca de los webhooks</strong>
+          <ul class="small mb-0 mt-1">
+            <li>Los webhooks permiten recibir notificaciones en tiempo real cuando ocurren eventos en Shopify.</li>
+            <li>"Registrar Todos" creara los webhooks necesarios sin duplicar los existentes.</li>
+            <li>Si un webhook no funciona, prueba desregistrarlo y volver a registrarlo.</li>
+            <li>Las pruebas de webhook disparan una sincronizacion del recurso asociado.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

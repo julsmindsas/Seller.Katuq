@@ -258,7 +258,10 @@
                         <button class="action-btn" (click)="testIntegration(integration, $event); $event.stopPropagation();" title="Probar Conexión" [disabled]="isOperationLoading('test', integration.id)">
                           <i class="fa" [ngClass]="isOperationLoading('test', integration.id) ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
                         </button>
-                        <button *ngIf="hasDashboard(integration)" class="action-btn" (click)="goToDashboard(integration, $event); $event.stopPropagation();" title="Ver dashboard de esta integración">
+                        <button class="action-btn" *ngIf="integration.type === 'shopify'" (click)="navigateToShopifyDashboard($event)" title="Dashboard Shopify">
+                          <i class="fa fa-tachometer-alt"></i>
+                        </button>
+                        <button *ngIf="integration.type !== 'shopify' && hasDashboard(integration)" class="action-btn" (click)="goToDashboard(integration, $event); $event.stopPropagation();" title="Ver dashboard de esta integración">
                           <i class="fa fa-tachometer"></i>
                         </button>
                         <button class="action-btn" (click)="editIntegration(integration, $event); $event.stopPropagation();" title="Editar">

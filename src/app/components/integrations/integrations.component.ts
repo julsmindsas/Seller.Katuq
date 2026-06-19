@@ -6,6 +6,7 @@ import { IntegrationFormValidatorService, ValidationResult } from './integration
 import { IntegrationUIHelperService } from './integration-ui-helper.service';
 import { BodegaService } from '../../shared/services/bodegas/bodega.service';
 import { environment } from '../../../environments/environment';
+import { Router } from '@angular/router';
 import { Subject, timer, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil, catchError, filter } from 'rxjs/operators';
 
@@ -79,6 +80,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   woDefaults: any = null;
   woMasterDataLoading: boolean = false;
   woMasterDataLoaded: boolean = false;
+  isLoadingEdit = false;
   
   statusMessage: { type: 'success' | 'error', message: string } | null = null;
 
@@ -116,6 +118,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     private formValidator: IntegrationFormValidatorService,
     private uiHelper: IntegrationUIHelperService,
     private bodegaService: BodegaService,
+    private router: Router,
     public activeModal?: NgbActiveModal
   ) {
     this.integrationForm = this.createShopifyForm();
@@ -604,6 +607,7 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   editIntegration(integration: Integration): void {
     this.selectedIntegrationType = integration.type;
     this.editingIntegrationId = integration.id!;
+    this.isLoadingEdit = true;
 
     // Crear el formulario base según el tipo seleccionado
     switch (integration.type) {
@@ -669,30 +673,52 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
     }
 
-    // Parchear únicamente campos seguros (nombre y estado). Las credenciales se dejan vacías por seguridad.
+    // Parchar name y enabled desde los datos del listado mientras carga el detalle
     this.integrationForm.patchValue({
       name: integration.name,
       enabled: integration.enabled
     });
 
-    // Si el backend no envía credenciales, los campos relacionados quedan vacíos. Para evitar que el
-    // formulario quede inválido (Validators.required), eliminamos los validadores de todos los
-    // campos excepto "name" y "enabled" cuando los valores están vacíos.
-    Object.keys(this.integrationForm.controls).forEach(ctrlName => {
-      if (['name', 'enabled'].includes(ctrlName)) return;
-      const ctrl = this.integrationForm.get(ctrlName);
-      if (ctrl && (ctrl.value === '' || ctrl.value === null || ctrl.value === undefined)) {
-        ctrl.clearValidators();
-        ctrl.updateValueAndValidity({ emitEvent: false });
-      }
-    });
+    // Cargar datos completos desde el backend para poblar las credenciales
+    this.integrationsService.getIntegration(integration.type)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (fullIntegration) => {
+          this.isLoadingEdit = false;
+          const config = fullIntegration.config || fullIntegration.credentials || {};
 
-    // Establecer modo de pruebas por defecto al editar (más seguro). El usuario puede cambiarlo manualmente.
-    if (this.integrationForm.get('testMode')) {
-      this.integrationForm.patchValue({
-        testMode: true
+          // Parchar todos los campos disponibles del backend
+          this.integrationForm.patchValue({
+            name: fullIntegration.name || integration.name,
+            enabled: fullIntegration.enabled ?? integration.enabled,
+            ...config
+          });
+
+          // Para campos que el backend NO devuelve por seguridad (ej. accessKey encriptado),
+          // limpiar validators solo de esos campos vacíos
+          Object.keys(this.integrationForm.controls).forEach(ctrlName => {
+            if (['name', 'enabled'].includes(ctrlName)) return;
+            const ctrl = this.integrationForm.get(ctrlName);
+            if (ctrl && (ctrl.value === '' || ctrl.value === null || ctrl.value === undefined)) {
+              ctrl.clearValidators();
+              ctrl.updateValueAndValidity({ emitEvent: false });
+            }
+          });
+        },
+        error: () => {
+          this.isLoadingEdit = false;
+          // Fallback: si el backend falla, al menos name/enabled están listos.
+          // Limpiar validators de credenciales para permitir guardar sin re-ingresarlas.
+          Object.keys(this.integrationForm.controls).forEach(ctrlName => {
+            if (['name', 'enabled'].includes(ctrlName)) return;
+            const ctrl = this.integrationForm.get(ctrlName);
+            if (ctrl && (ctrl.value === '' || ctrl.value === null || ctrl.value === undefined)) {
+              ctrl.clearValidators();
+              ctrl.updateValueAndValidity({ emitEvent: false });
+            }
+          });
+        }
       });
-    }
   }
 
   testExistingIntegration(integration: Integration): void {
@@ -1053,29 +1079,40 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     const provider = this.selectedIntegrationType;
     
     this.isSaving = true;
-    
-    // Paso 1: Validar configuración
+
+    // En modo edición, filtrar campos vacíos del payload para no sobreescribir
+    // credenciales existentes que el backend no devuelve por seguridad.
+    const buildPayload = (creds: any) => {
+      const base = { enabled: formData.enabled, name: formData.name };
+      if (this.editingIntegrationId) {
+        const nonEmpty = Object.entries(creds).reduce((acc, [k, v]) => {
+          if (v !== '' && v !== null && v !== undefined) acc[k] = v;
+          return acc;
+        }, {} as any);
+        return { ...nonEmpty, ...base };
+      }
+      return { ...creds, ...base };
+    };
+
+    // Paso 1: Validar configuración. Si el endpoint falla, se procede con el guardado igual.
     this.integrationsService.validateConfig(provider, credentials).pipe(
+      catchError(() => of({ success: true, errors: [] } as ValidationResponse)),
       switchMap(validationResult => {
         if (!validationResult.success && validationResult.errors?.length) {
           // Si hay errores críticos, no proceder
-          const criticalErrors = validationResult.errors.filter(err => 
-            !err.toLowerCase().includes('warning') && 
+          const criticalErrors = validationResult.errors.filter(err =>
+            !err.toLowerCase().includes('warning') &&
             !err.toLowerCase().includes('opcional')
           );
-          
+
           if (criticalErrors.length > 0) {
             throw new Error('Errores de validación: ' + criticalErrors.join(', '));
           }
         }
-        
+
         // Paso 2: Proceder con el guardado
-        const configPayload = {
-          ...credentials,
-          enabled: formData.enabled,
-          name: formData.name
-        };
-        
+        const configPayload = buildPayload(credentials);
+
         if (this.editingIntegrationId) {
           return this.integrationsService.updateIntegration(provider, configPayload);
         } else {
@@ -2089,6 +2126,23 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   backToSelection(): void {
     this.showOnlyForm = false;
     this.isPlatformSelectorCollapsed = true;
+  }
+
+  /**
+   * Navegar al Dashboard de Shopify
+   */
+  goToShopifyDashboard(): void {
+    if (this.isModalMode && this.activeModal) {
+      this.activeModal.dismiss('navigate');
+    }
+    this.router.navigate(['/integrations/shopify']);
+  }
+
+  /**
+   * Verifica si la integración seleccionada es Shopify (para mostrar botón de dashboard)
+   */
+  isShopifySelected(): boolean {
+    return this.selectedIntegrationType === 'shopify';
   }
 
   // ============================================================

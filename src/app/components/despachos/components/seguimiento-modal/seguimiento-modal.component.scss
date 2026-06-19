@@ -1,3 +1,6 @@
+// Katuq Design Tokens
+@import '../../../../../assets/scss/utils/katuq-tokens';
+
 .seguimiento-modal {
   .modal-header {
     border-bottom: none;
@@ -59,64 +62,64 @@
     }
     
     &.estado-transito {
-      background: linear-gradient(135deg, #c4b5fd 0%, #20c997 100%);
+      background: linear-gradient(135deg, $katuq-purple-300 0%, $katuq-cyan-500 100%);
       color: white;
     }
-    
+
     &.estado-entregado {
-      background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+      background: linear-gradient(135deg, $katuq-success 0%, $katuq-success-dark 100%);
       color: white;
     }
-    
+
     &.estado-ruta {
-      background: linear-gradient(135deg, #a78bfa 0%, #6610f2 100%);
+      background: linear-gradient(135deg, $katuq-primary-light 0%, $katuq-purple-700 100%);
       color: white;
     }
-    
+
     &.estado-retenido {
-      background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
-      color: #212529;
+      background: linear-gradient(135deg, $katuq-warning 0%, $katuq-warning-dark 100%);
+      color: $katuq-gray-900;
     }
-    
+
     &.estado-devuelto {
-      background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+      background: linear-gradient(135deg, $katuq-danger 0%, $katuq-danger-dark 100%);
       color: white;
     }
-    
+
     &.estado-default {
-      background: linear-gradient(135deg, #6c757d 0%, #95a5a6 100%);
+      background: linear-gradient(135deg, $katuq-gray-500 0%, $katuq-gray-400 100%);
       color: white;
     }
 
     // Estados de Prindel
     &.estado-creado {
-      background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+      background: linear-gradient(135deg, $katuq-cyan-600 0%, $katuq-cyan-500 100%);
       color: white;
     }
 
     &.estado-recogido {
-      background: linear-gradient(135deg, #007bff 0%, #6610f2 100%);
+      background: linear-gradient(135deg, $katuq-primary 0%, $katuq-purple-700 100%);
       color: white;
     }
 
     &.estado-error {
-      background: linear-gradient(135deg, #dc3545 0%, #721c24 100%);
+      background: linear-gradient(135deg, $katuq-danger 0%, $katuq-danger-dark 100%);
       color: white;
     }
 
     // Estados normalizados
     &.estado-pendiente {
-      background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
-      color: #212529;
+      background: linear-gradient(135deg, $katuq-warning 0%, $katuq-warning-dark 100%);
+      color: $katuq-gray-900;
     }
 
     &.estado-procesando {
-      background: linear-gradient(135deg, #6610f2 0%, #a78bfa 100%);
+      background: linear-gradient(135deg, $katuq-purple-700 0%, $katuq-primary-light 100%);
       color: white;
     }
 
     &.estado-cancelado {
-      background: linear-gradient(135deg, #6c757d 0%, #343a40 100%);
+      background: linear-gradient(135deg, $katuq-gray-500 0%, $katuq-gray-800 100%);
       color: white;
     }
   }
@@ -133,7 +136,7 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: linear-gradient(to bottom, #a78bfa, #e9ecef);
+      background: linear-gradient(to bottom, $katuq-primary-light, #e9ecef);
     }
     
     .timeline-item {
@@ -151,7 +154,7 @@
         width: 1rem;
         height: 1rem;
         border-radius: 50%;
-        background: #a78bfa;
+        background: $katuq-primary-light;
         border: 3px solid white;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
@@ -160,7 +163,7 @@
         background: #f8f9fa;
         padding: 1rem;
         border-radius: 8px;
-        border-left: 3px solid #a78bfa;
+        border-left: 3px solid $katuq-primary-light;
         
         .evento-fecha {
           font-size: 0.8rem;
@@ -181,7 +184,7 @@
           color: #6c757d;
           
           i {
-            color: #a78bfa;
+            color: $katuq-primary-light;
           }
         }
       }

@@ -1,12 +1,14 @@
-// Variables
-$primary-color: #2196F3;
-$success-color: #66BB6A;
-$info-color: #42A5F5;
-$warning-color: #FFA726;
-$danger-color: #FF5252;
-$secondary-color: #78909C;
-$light-color: #f8f9fa;
-$dark-color: #343a40;
+// Katuq Design Tokens
+@import '../../../../assets/scss/utils/katuq-tokens';
+
+$primary-color: $katuq-primary;
+$success-color: $katuq-success;
+$info-color: $katuq-info;
+$warning-color: $katuq-warning;
+$danger-color: $katuq-danger;
+$secondary-color: $katuq-gray-500;
+$light-color: $katuq-gray-50;
+$dark-color: $katuq-gray-800;
 $border-radius: 8px;
 
 // Animaciones
@@ -85,51 +87,51 @@ $border-radius: 8px;
 
   &.stat-primary {
     .stat-icon {
-      background-color: #5c77ff;
+      background-color: $katuq-primary;
     }
 
     .stat-value {
-      color: #5c77ff;
+      color: $katuq-primary;
     }
   }
 
   &.stat-success {
     .stat-icon {
-      background-color: #2dce89;
+      background-color: $katuq-success;
     }
 
     .stat-value {
-      color: #2dce89;
+      color: $katuq-success;
     }
   }
 
   &.stat-info {
     .stat-icon {
-      background-color: #11cdef;
+      background-color: $katuq-info;
     }
 
     .stat-value {
-      color: #11cdef;
+      color: $katuq-info;
     }
   }
 
   &.stat-warning {
     .stat-icon {
-      background-color: #fb6340;
+      background-color: $katuq-warning;
     }
 
     .stat-value {
-      color: #fb6340;
+      color: $katuq-warning;
     }
   }
 
   &.stat-danger {
     .stat-icon {
-      background-color: #f5365c;
+      background-color: $katuq-danger;
     }
 
     .stat-value {
-      color: #f5365c;
+      color: $katuq-danger;
     }
   }
 
@@ -210,51 +212,51 @@ $border-radius: 8px;
     // Colores para diferentes tipos de cards
     &.stat-primary {
       .stat-icon {
-        background: linear-gradient(135deg, #5c77ff 0%, #3d5afe 100%);
+        background: linear-gradient(135deg, $katuq-purple-500 0%, $katuq-purple-600 100%);
       }
 
       .stat-value {
-        color: #5c77ff;
+        color: $katuq-primary;
       }
     }
 
     &.stat-success {
       .stat-icon {
-        background: linear-gradient(135deg, #2dce89 0%, #26a69a 100%);
+        background: linear-gradient(135deg, $katuq-success 0%, $katuq-success-dark 100%);
       }
 
       .stat-value {
-        color: #2dce89;
+        color: $katuq-success;
       }
     }
 
     &.stat-info {
       .stat-icon {
-        background: linear-gradient(135deg, #11cdef 0%, #00acc1 100%);
+        background: linear-gradient(135deg, $katuq-purple-400 0%, $katuq-purple-500 100%);
       }
 
       .stat-value {
-        color: #11cdef;
+        color: $katuq-info;
       }
     }
 
     &.stat-warning {
       .stat-icon {
-        background: linear-gradient(135deg, #fb6340 0%, #f5365c 100%);
+        background: linear-gradient(135deg, $katuq-warning 0%, $katuq-warning-dark 100%);
       }
 
       .stat-value {
-        color: #fb6340;
+        color: $katuq-warning;
       }
     }
 
     &.stat-danger {
       .stat-icon {
-        background: linear-gradient(135deg, #f5365c 0%, #ec0c38 100%);
+        background: linear-gradient(135deg, $katuq-danger 0%, $katuq-danger-dark 100%);
       }
 
       .stat-value {
-        color: #f5365c;
+        color: $katuq-danger;
       }
     }
 
@@ -270,21 +272,21 @@ $border-radius: 8px;
 
     &.stat-production {
       .stat-icon {
-        background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%);
+        background: linear-gradient(135deg, $katuq-purple-600 0%, $katuq-purple-700 100%);
       }
 
       .stat-value {
-        color: #9c27b0;
+        color: $katuq-purple-600;
       }
     }
 
     &.stat-packed {
       .stat-icon {
-        background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
+        background: linear-gradient(135deg, $katuq-cyan-500 0%, $katuq-cyan-600 100%);
       }
 
       .stat-value {
-        color: #00bcd4;
+        color: $katuq-cyan-500;
       }
     }
   }
@@ -482,21 +484,21 @@ $border-radius: 8px;
   font-weight: 600;
 
   &.prioridad-alta {
-    background-color: rgba(255, 62, 62, 0.15);
-    color: #de2a2a;
-    border: 1px solid rgba(255, 62, 62, 0.3);
+    background-color: rgba($katuq-danger, 0.15);
+    color: $katuq-danger;
+    border: 1px solid rgba($katuq-danger, 0.3);
   }
 
   &.prioridad-media {
-    background-color: rgba(255, 187, 51, 0.15);
-    color: #e09c0e;
-    border: 1px solid rgba(255, 187, 51, 0.3);
+    background-color: rgba($katuq-warning, 0.15);
+    color: $katuq-warning;
+    border: 1px solid rgba($katuq-warning, 0.3);
   }
 
   &.prioridad-baja {
-    background-color: rgba(39, 194, 76, 0.15);
-    color: #19a03e;
-    border: 1px solid rgba(39, 194, 76, 0.3);
+    background-color: rgba($katuq-success, 0.15);
+    color: $katuq-success;
+    border: 1px solid rgba($katuq-success, 0.3);
   }
 }
 
@@ -525,21 +527,21 @@ $border-radius: 8px;
 
   &.estado-pago {
     &.estado-warning {
-      background-color: rgba(255, 187, 51, 0.15);
-      color: #e09c0e;
-      border: 1px solid rgba(255, 187, 51, 0.3);
+      background-color: rgba($katuq-warning, 0.15);
+      color: $katuq-warning;
+      border: 1px solid rgba($katuq-warning, 0.3);
     }
 
     &.estado-success {
-      background-color: rgba(39, 194, 76, 0.15);
-      color: #19a03e;
-      border: 1px solid rgba(39, 194, 76, 0.3);
+      background-color: rgba($katuq-success, 0.15);
+      color: $katuq-success;
+      border: 1px solid rgba($katuq-success, 0.3);
     }
 
     &.estado-danger {
-      background-color: rgba(255, 62, 62, 0.15);
-      color: #de2a2a;
-      border: 1px solid rgba(255, 62, 62, 0.3);
+      background-color: rgba($katuq-danger, 0.15);
+      color: $katuq-danger;
+      border: 1px solid rgba($katuq-danger, 0.3);
     }
   }
 
@@ -551,33 +553,33 @@ $border-radius: 8px;
     }
 
     &.estado-info {
-      background-color: rgba(23, 162, 184, 0.15);
-      color: #c4b5fd;
-      border: 1px solid rgba(23, 162, 184, 0.3);
+      background-color: rgba($katuq-primary, 0.15);
+      color: $katuq-purple-300;
+      border: 1px solid rgba($katuq-primary, 0.3);
     }
 
     &.estado-primary {
-      background-color: rgba(13, 110, 253, 0.15);
-      color: #8b5cf6;
-      border: 1px solid rgba(13, 110, 253, 0.3);
+      background-color: rgba($katuq-primary, 0.15);
+      color: $katuq-primary;
+      border: 1px solid rgba($katuq-primary, 0.3);
     }
 
     &.estado-warning {
-      background-color: rgba(255, 187, 51, 0.15);
-      color: #e09c0e;
-      border: 1px solid rgba(255, 187, 51, 0.3);
+      background-color: rgba($katuq-warning, 0.15);
+      color: $katuq-warning;
+      border: 1px solid rgba($katuq-warning, 0.3);
     }
 
     &.estado-success {
-      background-color: rgba(39, 194, 76, 0.15);
-      color: #19a03e;
-      border: 1px solid rgba(39, 194, 76, 0.3);
+      background-color: rgba($katuq-success, 0.15);
+      color: $katuq-success;
+      border: 1px solid rgba($katuq-success, 0.3);
     }
 
     &.estado-danger {
-      background-color: rgba(255, 62, 62, 0.15);
-      color: #de2a2a;
-      border: 1px solid rgba(255, 62, 62, 0.3);
+      background-color: rgba($katuq-danger, 0.15);
+      color: $katuq-danger;
+      border: 1px solid rgba($katuq-danger, 0.3);
     }
   }
 }
@@ -597,6 +599,7 @@ $border-radius: 8px;
     padding-bottom: 0.5rem;
   }
 }
+
 
 /* Estilos para panel más compacto */
 .p-panel .p-panel-content {
@@ -618,11 +621,11 @@ $border-radius: 8px;
   }
 
   &.alert-info {
-    background-color: rgba(13, 202, 240, 0.15);
+    background-color: rgba($katuq-cyan-500, 0.15);
     color: #087990;
 
     i {
-      color: #0dcaf0;
+      color: $katuq-cyan-500;
     }
   }
 }
@@ -758,7 +761,7 @@ $border-radius: 8px;
 
     &:hover {
       border-color: #8b5cf6 !important;
-      box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+      box-shadow: 0 2px 8px rgba($katuq-primary, 0.15);
     }
 
     .card-body {
@@ -780,16 +783,16 @@ $border-radius: 8px;
       padding: 0.25em 0.5em;
 
       &.bg-success {
-        background-color: #198754 !important;
+        background-color: $katuq-success !important;
       }
 
       &.bg-warning {
-        background-color: #ffc107 !important;
+        background-color: $katuq-warning !important;
         color: #000 !important;
       }
 
       &.bg-info {
-        background-color: #0dcaf0 !important;
+        background-color: $katuq-cyan-500 !important;
         color: #000 !important;
       }
     }
@@ -826,7 +829,7 @@ $border-radius: 8px;
       }
 
       &.text-success {
-        color: #198754 !important;
+        color: $katuq-success !important;
       }
     }
 
@@ -875,7 +878,7 @@ $border-radius: 8px;
       }
 
       &.text-success {
-        color: #198754 !important;
+        color: $katuq-success !important;
       }
     }
 
@@ -891,10 +894,10 @@ $border-radius: 8px;
     border-left: 4px solid;
 
     &.en-ruta {
-      border-left-color: #0dcaf0;
+      border-left-color: $katuq-cyan-500;
 
       .stat-icon {
-        background: linear-gradient(45deg, #0dcaf0, #c4b5fd);
+        background: linear-gradient(45deg, $katuq-cyan-500, $katuq-purple-300);
       }
     }
 
@@ -911,15 +914,15 @@ $border-radius: 8px;
 /* Animaciones para indicadores en tiempo real */
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(13, 202, 240, 0.7);
+    box-shadow: 0 0 0 0 rgba($katuq-cyan-500, 0.7);
   }
 
   70% {
-    box-shadow: 0 0 0 10px rgba(13, 202, 240, 0);
+    box-shadow: 0 0 0 10px rgba($katuq-cyan-500, 0);
   }
 
   100% {
-    box-shadow: 0 0 0 0 rgba(13, 202, 240, 0);
+    box-shadow: 0 0 0 0 rgba($katuq-cyan-500, 0);
   }
 }
 
@@ -1195,75 +1198,152 @@ $border-radius: 8px;
 
 // NUEVOS ESTILOS PARA FASE 1
 
-// Panel de Métricas
-.metrics-panel {
-  background-color: #f8f9fa; // Un fondo suave para el panel
-  border-bottom: 1px solid #e9ecef;
+// Barra de métricas + acciones en la misma fila
+.metrics-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.75rem;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  gap: 0.75rem;
+
+  .metrics-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .actions-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-shrink: 0;
+  }
 }
 
-// Estilos para las pestañas modernas
+// Pestañas estilo segmented control
 :host ::ng-deep .modern-tabs {
+  border: none;
+
+  .p-tabview-nav-container {
+    background: #eef0f4;
+    padding: 0.3rem 0.75rem;
+    border-bottom: 1px solid #dde0e6;
+  }
+
+  .p-tabview-nav-content {
+    overflow-x: hidden;
+  }
+
+  .p-tabview-ink-bar {
+    display: none !important;
+  }
+
   .p-tabview-nav {
-    background: #ffffff;
-    border-bottom: 1px solid #dee2e6;
-    padding: 0 1rem;
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
+    gap: 0.25rem;
+
+    li {
+      margin: 0;
+
+      &.p-highlight .p-tabview-nav-link {
+        background: #fff !important;
+        color: #1e3a5f;
+        font-weight: 600;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+        border-radius: 6px;
+        border: 1px solid #d1d5db !important;
+      }
+    }
 
     .p-tabview-nav-link {
       border: none !important;
       background: transparent !important;
-      color: #6c757d;
+      color: #6b7280;
       font-weight: 500;
-      padding: 1rem 0.5rem;
-      margin: 0 0.5rem;
-      position: relative;
-      transition: color 0.2s;
+      font-size: 0.825rem;
+      padding: 0.45rem 0.85rem;
+      transition: all 0.15s ease;
+      border-radius: 6px;
+      white-space: nowrap;
 
       &:not(.p-disabled):focus {
         box-shadow: none;
       }
 
-      &::after {
-        content: '';
-        position: absolute;
-        bottom: -1px;
-        left: 0;
-        width: 100%;
-        height: 3px;
-        background: #8b5cf6;
-        transform: scaleX(0);
-        transition: transform 0.3s ease-out;
-      }
-    }
-
-    li.p-highlight .p-tabview-nav-link {
-      color: #8b5cf6;
-
-      &::after {
-        transform: scaleX(1);
+      &:hover {
+        background: rgba(255, 255, 255, 0.5) !important;
+        color: #374151;
       }
     }
   }
 
   .p-tabview-panels {
-    padding: 0; // El padding se manejará en los componentes hijos o wrappers
-    background-color: #ffffff;
+    padding: 0;
+    background: #fff;
+    border: none;
+  }
+}
+
+// Filtros embebidos: compactar dentro de despachos
+:host ::ng-deep app-shared-filters .filters-inline-row {
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0;
+  background: #fafbfc;
+  border-bottom: 1px solid #e5e7eb;
+
+  &::before {
+    display: none;
+  }
+
+  // Ocultar elementos que se desbordan a segunda fila
+  .filter-counter-inline {
+    display: none !important;
+  }
+
+  // Ocultar boton config (ya existe selector columnas en tabla)
+  .btn-secondary {
+    display: none !important;
+  }
+
+  // Ocultar boton clear inline (se usa el de la tabla)
+  .btn-clear {
+    display: none !important;
   }
 }
 
 @media (max-width: 576px) {
 
   // Estilos para pantallas extra pequeñas
+  :host ::ng-deep .modern-tabs .p-tabview-nav-content {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
   :host ::ng-deep .modern-tabs .p-tabview-nav {
-    flex-wrap: wrap;
-    justify-content: center; // Centrar las pestañas
+    flex-wrap: nowrap;
+    padding: 0 0.25rem;
   }
 
   :host ::ng-deep .modern-tabs .p-tabview-nav li {
-    flex-basis: 50%; // Cada pestaña ocupa el 50% del ancho
-    text-align: center;
+    flex-basis: auto;
+    flex-shrink: 0;
 
     .p-tabview-nav-link {
       justify-content: center;
+      white-space: nowrap;
+      padding: 0.45rem 0.5rem;
+      font-size: 0.8rem;
     }
   }
 
@@ -1338,8 +1418,8 @@ $border-radius: 8px;
               }
 
               &:focus-within {
-                box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-                border-color: #8b5cf6;
+                box-shadow: 0 0 0 0.2rem rgba($katuq-primary, 0.25);
+                border-color: $katuq-primary;
               }
 
               .p-inputgroup-addon {
@@ -1467,12 +1547,12 @@ $border-radius: 8px;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            background: #e3f2fd;
-            color: #1976d2;
+            background: $katuq-purple-50;
+            color: $katuq-primary;
             padding: 0.25rem 0.75rem;
             border-radius: 16px;
             font-size: 0.875rem;
-            border: 1px solid #bbdefb;
+            border: 1px solid $katuq-purple-200;
 
             .status-dot {
               width: 8px;
@@ -1481,19 +1561,19 @@ $border-radius: 8px;
               display: inline-block;
 
               &.status-warning {
-                background: #ff9800;
+                background: $katuq-warning;
               }
 
               &.status-success {
-                background: #4caf50;
+                background: $katuq-success;
               }
 
               &.status-info {
-                background: #2196f3;
+                background: $katuq-primary;
               }
 
               &.status-danger {
-                background: #f44336;
+                background: $katuq-danger;
               }
 
               &.status-secondary {
@@ -1501,18 +1581,18 @@ $border-radius: 8px;
               }
 
               &.status-primary {
-                background: #9c27b0;
+                background: $katuq-purple-600;
               }
 
               &.status-dark {
-                background: #343a40;
+                background: $katuq-gray-800;
               }
             }
 
             .tag-remove {
               background: none;
               border: none;
-              color: #1976d2;
+              color: $katuq-primary;
               padding: 0;
               margin-left: 0.25rem;
               width: 16px;
@@ -1524,7 +1604,7 @@ $border-radius: 8px;
               transition: all 0.2s ease;
 
               &:hover {
-                background: #1976d2;
+                background: $katuq-danger;
                 color: white;
               }
             }
@@ -1569,19 +1649,19 @@ $border-radius: 8px;
     display: inline-block;
 
     &.status-warning {
-      background: #ff9800;
+      background: $katuq-warning;
     }
 
     &.status-success {
-      background: #4caf50;
+      background: $katuq-success;
     }
 
     &.status-info {
-      background: #2196f3;
+      background: $katuq-primary;
     }
 
     &.status-danger {
-      background: #f44336;
+      background: $katuq-danger;
     }
 
     &.status-secondary {
@@ -1589,11 +1669,11 @@ $border-radius: 8px;
     }
 
     &.status-primary {
-      background: #9c27b0;
+      background: $katuq-purple-600;
     }
 
     &.status-dark {
-      background: #343a40;
+      background: $katuq-gray-800;
     }
   }
 }
@@ -1739,7 +1819,7 @@ $border-radius: 8px;
     font-size: 0.9rem;
 
     i {
-      color: #2196F3;
+      color: $katuq-primary;
     }
   }
 
@@ -1805,7 +1885,12 @@ $border-radius: 8px;
   .d-flex {
     overflow-x: auto;
     scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+    padding: 0.25rem 0;
+
+    .metric-chip {
+      flex-shrink: 0;
+    }
 
     &::-webkit-scrollbar {
       height: 4px;
@@ -1825,41 +1910,41 @@ $border-radius: 8px;
 .metric-chip {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.85rem;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
   user-select: none;
-  border: 1.5px solid transparent;
+  border: 1px solid transparent;
   background-color: #f1f3f5;
   color: #495057;
 
   i {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     opacity: 0.8;
   }
 
   .metric-label {
     font-weight: 600;
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
   }
 
   .metric-badge {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 24px;
-    height: 20px;
-    padding: 0 0.4rem;
-    border-radius: 10px;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 0.3rem;
+    border-radius: 9px;
     background-color: rgba(255, 255, 255, 0.9);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   }
 
   // Hover effect
@@ -1883,122 +1968,122 @@ $border-radius: 8px;
 
   // Variantes de color
   &.metric-chip-primary {
-    background-color: #e3f2fd;
-    color: #1976d2;
+    background-color: $katuq-purple-50;
+    color: $katuq-primary;
 
     .metric-badge {
-      background-color: #1976d2;
+      background-color: $katuq-primary;
       color: white;
     }
 
     &:hover {
-      background-color: #bbdefb;
-      border-color: #1976d2;
+      background-color: $katuq-purple-200;
+      border-color: $katuq-primary;
     }
   }
 
   &.metric-chip-success {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+    background-color: $katuq-success-light;
+    color: $katuq-success-text;
 
     .metric-badge {
-      background-color: #2e7d32;
+      background-color: $katuq-success;
       color: white;
     }
 
     &:hover {
       background-color: #c8e6c9;
-      border-color: #2e7d32;
+      border-color: $katuq-success-text;
     }
   }
 
   &.metric-chip-info {
-    background-color: #e1f5fe;
-    color: #0277bd;
+    background-color: $katuq-info-light;
+    color: $katuq-info-text;
 
     .metric-badge {
-      background-color: #0277bd;
+      background-color: $katuq-info-dark;
       color: white;
     }
 
     &:hover {
-      background-color: #b3e5fc;
-      border-color: #0277bd;
+      background-color: $katuq-purple-200;
+      border-color: $katuq-info-text;
     }
   }
 
   &.metric-chip-warning {
-    background-color: #fff3e0;
-    color: #ef6c00;
+    background-color: $katuq-warning-light;
+    color: $katuq-warning-text;
 
     .metric-badge {
-      background-color: #ef6c00;
+      background-color: $katuq-warning;
       color: white;
     }
 
     &:hover {
       background-color: #ffe0b2;
-      border-color: #ef6c00;
+      border-color: $katuq-warning-text;
     }
   }
 
   &.metric-chip-danger {
-    background-color: #ffebee;
-    color: #c62828;
+    background-color: $katuq-danger-light;
+    color: $katuq-danger-text;
 
     .metric-badge {
-      background-color: #c62828;
+      background-color: $katuq-danger;
       color: white;
     }
 
     &:hover {
       background-color: #ffcdd2;
-      border-color: #c62828;
+      border-color: $katuq-danger-text;
     }
   }
 
   &.metric-chip-secondary {
-    background-color: #f5f5f5;
-    color: #616161;
+    background-color: $katuq-gray-100;
+    color: $katuq-gray-600;
 
     .metric-badge {
-      background-color: #616161;
+      background-color: $katuq-gray-600;
       color: white;
     }
 
     &:hover {
-      background-color: #eeeeee;
-      border-color: #616161;
+      background-color: $katuq-gray-200;
+      border-color: $katuq-gray-600;
     }
   }
 
   &.metric-chip-production {
-    background-color: #f3e5f5;
-    color: #7b1fa2;
+    background-color: $katuq-purple-100;
+    color: $katuq-purple-700;
 
     .metric-badge {
-      background-color: #7b1fa2;
+      background-color: $katuq-purple-600;
       color: white;
     }
 
     &:hover {
       background-color: #e1bee7;
-      border-color: #7b1fa2;
+      border-color: $katuq-purple-700;
     }
   }
 
   &.metric-chip-packed {
-    background-color: #e0f2f1;
-    color: #00695c;
+    background-color: $katuq-cyan-50;
+    color: $katuq-cyan-800;
 
     .metric-badge {
-      background-color: #00695c;
+      background-color: $katuq-cyan-700;
       color: white;
     }
 
     &:hover {
       background-color: #b2dfdb;
-      border-color: #00695c;
+      border-color: $katuq-cyan-800;
     }
   }
 }
@@ -2100,7 +2185,7 @@ $border-radius: 8px;
 .metric-chip-compact {
   padding: 0.25rem 0.5rem !important;
   gap: 0.25rem !important;
-  max-width: 80px;
+  max-width: 90px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   white-space: nowrap;
@@ -2131,11 +2216,16 @@ $border-radius: 8px;
       display: inline;
     }
   }
+
+  // Chips info-only (montos) necesitan mas espacio base
+  &.metric-chip-info-only {
+    max-width: 120px;
+  }
 }
 
 // Extra compact for process metrics
 .metric-chip-sm.metric-chip-compact {
-  max-width: 65px;
+  max-width: 75px;
   padding: 0.2rem 0.4rem !important;
 
   &:hover {

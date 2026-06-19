@@ -12,9 +12,18 @@
 /* ---------------------
 	*** Utils ***
 -----------------------*/
-@import "~bootstrap/scss/bootstrap";
-
+@import "utils/katuq-tokens";
 @import "utils/variables";
+
+// Override Bootstrap color variables BEFORE importing Bootstrap
+$primary: $katuq-primary-light;  // #a78bfa
+$success: $katuq-success;        // #10b981
+$info:    $katuq-primary;        // #8b5cf6
+$warning: $katuq-warning;        // #f59e0b
+$danger:  $katuq-danger;         // #ef4444
+$min-contrast-ratio: 2.5;        // Allow white text on light purple
+
+@import "~bootstrap/scss/bootstrap";
 @import "utils/mixin";
 
 :root {
@@ -174,19 +183,19 @@
 }
 
 .fc-danger {
-    color: #dc3545 !important;
+    color: $katuq-danger !important;
 }
 
 .fc-warning {
-    color: #f8d62b !important;
+    color: $katuq-warning !important;
 }
 
 .fc-success {
-    color: #51bb25 !important;
+    color: $katuq-success !important;
 }
 
 .fc-info {
-    color: #a927f9 !important
+    color: $katuq-primary !important
 }
 
 .bc-white {
@@ -210,19 +219,19 @@
 }
 
 .bc-danger {
-    background-color: #dc3545 !important;
+    background-color: $katuq-danger !important;
 }
 
 .bc-warning {
-    background-color: #f8d62b !important;
+    background-color: $katuq-warning !important;
 }
 
 .bc-success {
-    background-color: #51bb25 !important;
+    background-color: $katuq-success !important;
 }
 
 .bc-info {
-    background-color: #a927f9 !important
+    background-color: $katuq-primary !important
 }
 
 

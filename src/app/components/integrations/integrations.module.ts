@@ -14,6 +14,15 @@ import { CardModule } from 'primeng/card';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ToastModule } from 'primeng/toast';
+import { TableModule } from 'primeng/table';
+import { TagModule } from 'primeng/tag';
+import { TimelineModule } from 'primeng/timeline';
+import { DialogModule } from 'primeng/dialog';
+import { TabViewModule } from 'primeng/tabview';
+import { TreeModule } from 'primeng/tree';
+import { CalendarModule } from 'primeng/calendar';
+import { TooltipModule } from 'primeng/tooltip';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { SharedModule } from '../../shared/shared.module';
 
 import { IntegrationsComponent } from './integrations.component';
@@ -28,6 +37,12 @@ import { IntegrationManualControlService } from './integration-manual-control.se
 import { SiigoConfigComponent } from './siigo-config/siigo-config.component';
 import { SiigoMappingComponent } from './siigo-config/siigo-mapping/siigo-mapping.component';
 
+// Shopify Dashboard Components
+import { ShopifyDashboardComponent } from './shopify-dashboard/shopify-dashboard.component';
+import { SyncLogsComponent } from './shopify-dashboard/sync-logs.component';
+import { FieldMappingComponent } from './shopify-dashboard/field-mapping.component';
+import { WebhookConfigComponent } from './shopify-dashboard/webhook-config.component';
+
 const routes: Routes = [
   // Vista principal de listado
   { path: '', component: IntegrationsListComponent, pathMatch: 'full' },
@@ -37,9 +52,14 @@ const routes: Routes = [
   { path: 'configure', component: IntegrationsComponent },
   // Siigo configuration
   { path: 'siigo', component: SiigoConfigComponent },
+  // Shopify Dashboard (UI concreta de Shopify)
+  { path: 'shopify', component: ShopifyDashboardComponent },
+  { path: 'shopify/logs', component: SyncLogsComponent },
+  { path: 'shopify/mapping', component: FieldMappingComponent },
+  { path: 'shopify/webhooks', component: WebhookConfigComponent },
   // Dashboard genérico por proveedor (lazy). DEBE ir antes del catch-all '**'.
-  // Ej: /integrations/osmosis/dashboard, /integrations/shopify/dashboard
-  // El componente lee :provider y resuelve config con provider-registry.
+  // Ej: /integrations/osmosis/dashboard. El componente lee :provider y resuelve
+  // config con provider-registry. Mantiene Osmosis/Woo (Artículo VI / D-360).
   {
     path: ':provider/dashboard',
     loadChildren: () =>
@@ -59,7 +79,11 @@ const routes: Routes = [
     IntegrationNotificationsComponent,
     CredentialStrengthIndicatorComponent,
     SiigoConfigComponent,
-    SiigoMappingComponent
+    SiigoMappingComponent,
+    ShopifyDashboardComponent,
+    SyncLogsComponent,
+    FieldMappingComponent,
+    WebhookConfigComponent
   ],
   imports: [
     CommonModule,
@@ -77,6 +101,15 @@ const routes: Routes = [
     CheckboxModule,
     ProgressBarModule,
     ToastModule,
+    TableModule,
+    TagModule,
+    TimelineModule,
+    DialogModule,
+    TabViewModule,
+    TreeModule,
+    CalendarModule,
+    TooltipModule,
+    ConfirmDialogModule,
     RouterModule.forChild(routes),
     NgbModule,
     SharedModule

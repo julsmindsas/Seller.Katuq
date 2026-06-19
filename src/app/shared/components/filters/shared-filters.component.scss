@@ -1,75 +1,176 @@
 // ==========================================
-// SHARED-FILTERS - TODO EN UNA FILA HORIZONTAL
+// SHARED-FILTERS - MODERN HORIZONTAL FILTERS
 // ==========================================
-// Diseño minimalista basado en generar-orden.component.scss
+// Clean, spacious design with consistent Tailwind-inspired colors
+// Improved visual hierarchy, focus states, and mobile responsiveness
 
 // ===========================================
-// VARIABLES MINIMALISTAS
+// COLOR PALETTE - Tailwind-inspired consistency
 // ===========================================
-$text-primary: #18181b;      // zinc-900
-$text-secondary: #71717a;    // zinc-500
-$text-muted: #a1a1aa;        // zinc-400
-$border-color: #e4e4e7;      // zinc-200
+$color-primary: #2563eb;        // blue-600 (single primary blue)
+$color-primary-hover: #1d4ed8;  // blue-700
+$color-primary-light: #dbeafe;  // blue-100
+$color-primary-50: #eff6ff;     // blue-50
+
+$color-success: #10b981;        // emerald-500
+$color-success-hover: #059669;  // emerald-600
+$color-warning: #f59e0b;        // amber-500
+$color-danger: #ef4444;         // red-500
+$color-danger-hover: #dc2626;   // red-600
+
+// Neutrals (Zinc palette for consistency)
+$text-primary: #18181b;         // zinc-900
+$text-secondary: #52525b;       // zinc-600
+$text-muted: #a1a1aa;           // zinc-400
+$text-placeholder: #a1a1aa;     // zinc-400
+
+$border-default: #e4e4e7;       // zinc-200
+$border-hover: #d4d4d8;         // zinc-300
+$border-focus: $color-primary;
+
 $bg-white: #ffffff;
-$bg-gray: #fafafa;
-$bg-hover: #f4f4f5;
-
-$accent-primary: #2563eb;    // blue-600
-$accent-success: #10b981;    // emerald-500
-$accent-warning: #f59e0b;    // amber-500
-$accent-danger: #ef4444;     // red-500
-
-// Espaciado compacto
-$spacing-xs: 0.25rem;  // 4px
-$spacing-sm: 0.5rem;   // 8px
-$spacing-md: 0.75rem;  // 12px
-$spacing-lg: 1rem;     // 16px
-
-// Tipografía reducida
-$font-xs: 0.6875rem;   // 11px
-$font-sm: 0.75rem;     // 12px
-$font-base: 0.875rem;  // 14px
-
-// Bordes
-$border: 1px solid $border-color;
-$radius: 6px;
+$bg-subtle: #fafafa;            // zinc-50
+$bg-hover: #f4f4f5;             // zinc-100
+$bg-active: #e4e4e7;            // zinc-200
 
 // ===========================================
-// ANIMACIONES
+// SPACING SCALE - More generous spacing
+// ===========================================
+$space-1: 0.25rem;   // 4px
+$space-2: 0.5rem;    // 8px
+$space-3: 0.75rem;   // 12px
+$space-4: 1rem;      // 16px
+$space-5: 1.25rem;   // 20px
+$space-6: 1.5rem;    // 24px
+
+// ===========================================
+// TYPOGRAPHY
+// ===========================================
+$font-xs: 0.6875rem;    // 11px
+$font-sm: 0.8125rem;    // 13px
+$font-base: 0.875rem;   // 14px
+$font-md: 0.9375rem;    // 15px
+
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+
+$font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+// ===========================================
+// BORDERS & SHADOWS
+// ===========================================
+$radius-sm: 6px;
+$radius-md: 8px;
+$radius-lg: 10px;
+$radius-full: 9999px;
+
+$border: 1px solid $border-default;
+
+$shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+$shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+$shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+$shadow-focus: 0 0 0 3px rgba($color-primary, 0.15);
+
+// ===========================================
+// Z-INDEX LAYERS (avoiding modal conflicts)
+// ===========================================
+$z-filters: 10;
+$z-dropdown: 1000;
+$z-datepicker: 1001;
+$z-tooltip: 1100;
+
+// ===========================================
+// TRANSITIONS
+// ===========================================
+$transition-fast: 150ms ease;
+$transition-normal: 200ms ease;
+$transition-slow: 300ms ease;
+
+// ===========================================
+// ANIMATIONS
 // ===========================================
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 // ===========================================
-// CONTENEDOR PRINCIPAL - UNA FILA HORIZONTAL
+// MAIN CONTAINER
 // ===========================================
 .filters-inline-row {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
-  padding: $spacing-md;
+  gap: $space-3;
+  padding: $space-4 $space-5;
   background: $bg-white;
   border: $border;
-  border-radius: $radius;
-  margin-bottom: $spacing-lg;
-  flex-wrap: wrap; // Permitir wrap en pantallas pequeñas
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  border-radius: $radius-lg;
+  margin-bottom: $space-5;
+  flex-wrap: wrap;
+  font-family: $font-family;
+  position: relative;
+  z-index: $z-filters;
+  box-shadow: $shadow-sm;
+
+  // Subtle top accent line
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: $space-4;
+    right: $space-4;
+    height: 2px;
+    background: linear-gradient(90deg, $color-primary 0%, transparent 100%);
+    border-radius: $radius-full;
+    opacity: 0.6;
+  }
 }
 
 // ===========================================
-// INPUT GROUP (BÚSQUEDA - 180px)
+// FILTER INPUT GROUP WRAPPER
+// ===========================================
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: $space-1;
+}
+
+.filter-label {
+  font-size: $font-xs;
+  font-weight: $font-weight-medium;
+  color: $text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+// ===========================================
+// SEARCH INPUT GROUP
 // ===========================================
 .filter-search {
-  width: 180px;
-  max-width: 180px;
+  width: 200px;
+  max-width: 200px;
   display: flex;
   align-items: center;
-  border: $border;
-  border-radius: 4px;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
   overflow: hidden;
   background: $bg-white;
+  transition: all $transition-normal;
+
+  &:hover {
+    border-color: $border-hover;
+  }
+
+  &:focus-within {
+    border-color: $color-primary;
+    box-shadow: $shadow-focus;
+  }
 }
 
 .p-inputgroup {
@@ -79,45 +180,58 @@ $radius: 6px;
   width: 100%;
 
   .p-inputgroup-addon {
-    background: $bg-gray;
+    background: $bg-subtle;
     border: none;
-    border-right: $border;
+    border-right: 1px solid $border-default;
     color: $text-secondary;
-    padding: 0 $spacing-sm;
-    height: 32px;
+    padding: 0 $space-3;
+    height: 38px;
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 32px;
+    min-width: 38px;
+    transition: all $transition-fast;
 
     i {
       font-size: $font-base;
+      transition: color $transition-fast;
 
       &.pi-spin {
         animation: spin 1s linear infinite;
+        color: $color-primary;
       }
     }
+  }
+
+  &:focus-within .p-inputgroup-addon {
+    color: $color-primary;
+    background: $color-primary-50;
+    border-color: $color-primary-light;
   }
 }
 
 .btn-clear-search {
   background: none;
   border: none;
-  border-left: $border;
+  border-left: 1px solid $border-default;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: $text-secondary;
+  color: $text-muted;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all $transition-fast;
   flex-shrink: 0;
 
   &:hover {
-    background: $bg-hover;
-    color: $accent-danger;
+    background: rgba($color-danger, 0.08);
+    color: $color-danger;
+  }
+
+  &:active {
+    background: rgba($color-danger, 0.15);
   }
 
   i {
@@ -126,33 +240,41 @@ $radius: 6px;
 }
 
 // ===========================================
-// BOTONES PEQUEÑOS
+// BUTTONS - UNIFIED DESIGN
 // ===========================================
 .btn-sm {
-  height: 32px;
-  padding: 0 $spacing-md;
+  height: 38px;
+  padding: 0 $space-4;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: $spacing-xs;
+  gap: $space-2;
   background: $bg-white;
-  border: $border;
-  border-radius: 4px;
+  border: 1px solid $border-default;
+  border-radius: $radius-md;
   font-size: $font-sm;
-  font-weight: 500;
+  font-weight: $font-weight-medium;
   color: $text-primary;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all $transition-fast;
   white-space: nowrap;
   flex-shrink: 0;
+  font-family: $font-family;
 
   i {
     font-size: $font-sm;
+    transition: transform $transition-fast;
   }
 
   &:hover:not(:disabled) {
     background: $bg-hover;
-    border-color: darken($border-color, 10%);
+    border-color: $border-hover;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    background: $bg-active;
   }
 
   &:disabled {
@@ -160,279 +282,513 @@ $radius: 6px;
     cursor: not-allowed;
   }
 
+  // Primary action button (Filter)
   &.btn-primary {
-    background: $accent-primary;
-    border-color: $accent-primary;
+    background: $color-primary;
+    border-color: $color-primary;
     color: white;
+    box-shadow: 0 1px 3px rgba($color-primary, 0.3);
 
     &:hover:not(:disabled) {
-      background: darken($accent-primary, 5%);
+      background: $color-primary-hover;
+      border-color: $color-primary-hover;
+      box-shadow: 0 4px 12px rgba($color-primary, 0.35);
     }
-  }
 
-  &.btn-success {
-    background: $accent-success;
-    border-color: $accent-success;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background: darken($accent-success, 5%);
+    &:active:not(:disabled) {
+      box-shadow: 0 1px 2px rgba($color-primary, 0.3);
     }
-  }
 
-  &.btn-secondary {
-    background: $text-primary;
-    border: $text-primary;
-    color: white;
-
-    &:hover:not(:disabled) {
-      background: lighten($text-primary, 10%);
-      border-color: lighten($text-primary, 10%);
+    i {
       color: white;
     }
   }
 
+  // Success button (Export)
+  &.btn-success {
+    background: $color-success;
+    border-color: $color-success;
+    color: white;
+    box-shadow: 0 1px 3px rgba($color-success, 0.3);
+
+    &:hover:not(:disabled) {
+      background: $color-success-hover;
+      border-color: $color-success-hover;
+      box-shadow: 0 4px 12px rgba($color-success, 0.35);
+    }
+
+    i {
+      color: white;
+    }
+  }
+
+  // Secondary button (Settings)
+  &.btn-secondary {
+    background: $text-primary;
+    border-color: $text-primary;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: lighten($text-primary, 15%);
+      border-color: lighten($text-primary, 15%);
+    }
+
+    i {
+      color: white;
+    }
+  }
+
+  // Clear/Reset button
   &.btn-clear {
     background: transparent;
-    border: $border;
+    border: 1px solid $border-default;
     color: $text-secondary;
     padding: 0;
-    width: 32px;
+    width: 38px;
+
+    &:hover:not(:disabled) {
+      background: rgba($color-danger, 0.08);
+      border-color: rgba($color-danger, 0.3);
+      color: $color-danger;
+    }
+  }
+
+  // Ghost variant
+  &.btn-ghost {
+    background: transparent;
+    border-color: transparent;
+    color: $text-secondary;
 
     &:hover:not(:disabled) {
       background: $bg-hover;
-      color: $accent-danger;
+      color: $text-primary;
     }
   }
 }
 
 // ===========================================
-// CONTADOR DE FILTROS ACTIVOS
+// ACTIVE FILTERS COUNTER
 // ===========================================
 .filter-counter-inline {
   display: inline-flex;
   align-items: center;
-  gap: $spacing-xs;
+  gap: $space-2;
   flex-shrink: 0;
+  padding-left: $space-2;
+  border-left: 1px solid $border-default;
+  margin-left: $space-1;
 }
 
 .count-badge {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 24px;
-  height: 20px;
-  padding: 0 $spacing-xs;
-  background: $accent-primary;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 $space-2;
+  background: linear-gradient(135deg, $color-primary, darken($color-primary, 8%));
   color: white;
-  border-radius: 10px;
+  border-radius: $radius-full;
   font-size: $font-xs;
-  font-weight: 600;
+  font-weight: $font-weight-semibold;
+  box-shadow: 0 2px 4px rgba($color-primary, 0.3);
 }
 
 // ===========================================
-// OVERRIDES DE PRIMENG (INPUTS PEQUEÑOS)
+// PRIMENG COMPONENT OVERRIDES
 // ===========================================
 ::ng-deep {
-  // Inputs con clase .input-sm
+  // Input with .input-sm class
   .input-sm {
+
     // AutoComplete
     .p-autocomplete {
       width: 100%;
 
       .p-autocomplete-input {
-        height: 32px;
-        padding: 0 $spacing-md;
+        height: 38px;
+        padding: 0 $space-3;
         font-size: $font-sm;
+        font-family: $font-family;
         border: none;
         border-radius: 0;
+        background: transparent;
 
         &:focus {
-          border-color: $accent-primary;
+          border-color: transparent;
           box-shadow: none;
           outline: none;
         }
 
         &::placeholder {
-          color: $text-muted;
+          color: $text-placeholder;
           font-size: $font-sm;
         }
       }
 
       .p-autocomplete-loader {
-        right: $spacing-sm;
+        right: $space-3;
+        color: $color-primary;
       }
     }
 
-    // Calendar
+    // Calendar - FIXED border-radius
     .p-calendar {
       .p-inputtext {
-        height: 32px;
-        padding: 0 $spacing-md;
+        height: 38px;
+        padding: 0 $space-3;
         font-size: $font-sm;
-        border: $border;
-        border-radius: 4px;
+        font-family: $font-family;
+        border: 1px solid $border-default;
+        border-radius: $radius-md !important;  // Force border-radius
+        background: $bg-white;
+        transition: all $transition-normal;
+
+        &:hover {
+          border-color: $border-hover;
+        }
 
         &:focus {
-          border-color: $accent-primary;
-          box-shadow: none;
+          border-color: $color-primary;
+          box-shadow: $shadow-focus;
           outline: none;
         }
 
         &::placeholder {
-          color: $text-muted;
+          color: $text-placeholder;
           font-size: $font-sm;
         }
       }
 
       .p-datepicker-trigger {
-        width: 32px;
-        height: 32px;
+        width: 38px;
+        height: 38px;
         color: $text-secondary;
+        border-radius: 0 $radius-md $radius-md 0 !important;
+        border: 1px solid $border-default;
+        border-left: none;
+        background: $bg-subtle;
+        transition: all $transition-fast;
+
+        &:hover {
+          background: $bg-hover;
+          color: $color-primary;
+        }
+
+        &:focus {
+          box-shadow: none;
+        }
+      }
+
+      // Calendar with icon - fix the input
+      &.p-calendar-w-btn {
+        .p-inputtext {
+          border-radius: $radius-md 0 0 $radius-md !important;
+          border-right: none;
+        }
+      }
+    }
+
+    // Dropdown - consistent styling
+    .p-dropdown {
+      height: 38px;
+      border: 1px solid $border-default;
+      border-radius: $radius-md;
+      background: $bg-white;
+      transition: all $transition-normal;
+
+      .p-dropdown-label {
+        padding: 0 $space-3;
+        font-size: $font-sm;
+        font-family: $font-family;
+        line-height: 36px;
+        color: $text-primary;
+
+        &.p-placeholder {
+          color: $text-placeholder;
+        }
+      }
+
+      .p-dropdown-trigger {
+        width: 36px;
+        color: $text-secondary;
+        transition: color $transition-fast;
+      }
+
+      .p-dropdown-clear-icon {
+        color: $text-muted;
+        right: 36px;
+
+        &:hover {
+          color: $color-danger;
+        }
+      }
+
+      &:not(.p-disabled):hover {
+        border-color: $border-hover;
+      }
+
+      &:not(.p-disabled).p-focus {
+        border-color: $color-primary;
+        box-shadow: $shadow-focus;
+
+        .p-dropdown-trigger {
+          color: $color-primary;
+        }
+      }
+    }
+  }
+
+  // MultiSelect for column selector
+  .column-selector-compact {
+    border-radius: $radius-md;
+
+    .p-multiselect-label {
+      font-size: $font-sm;
+      padding: $space-2 $space-3;
+    }
+
+    .p-multiselect-trigger {
+      width: 36px;
+    }
+  }
+
+  // Calendar datepicker panel - FIX z-index
+  .p-datepicker {
+    font-size: $font-sm;
+    font-family: $font-family;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+    border: 1px solid $border-default;
+    z-index: $z-datepicker !important;
+
+    .p-datepicker-header {
+      padding: $space-3;
+      background: $bg-subtle;
+      border-bottom: 1px solid $border-default;
+      border-radius: $radius-lg $radius-lg 0 0;
+
+      .p-datepicker-title {
+        .p-datepicker-month,
+        .p-datepicker-year {
+          font-weight: $font-weight-semibold;
+          color: $text-primary;
+
+          &:hover {
+            color: $color-primary;
+          }
+        }
+      }
+
+      .p-datepicker-prev,
+      .p-datepicker-next {
+        color: $text-secondary;
+        border-radius: $radius-sm;
+
+        &:hover {
+          background: $bg-hover;
+          color: $color-primary;
+        }
+      }
+    }
+
+    table {
+      font-size: $font-sm;
+
+      th {
+        padding: $space-2;
+        font-weight: $font-weight-medium;
+        color: $text-secondary;
+      }
+
+      td {
+        padding: $space-1;
+
+        > span {
+          width: 2.25rem;
+          height: 2.25rem;
+          border-radius: $radius-sm;
+          transition: all $transition-fast;
+
+          &:hover:not(.p-highlight):not(.p-disabled) {
+            background: $bg-hover;
+          }
+
+          &.p-highlight {
+            background: $color-primary;
+            color: white;
+          }
+        }
+
+        &.p-datepicker-today > span:not(.p-highlight) {
+          background: $color-primary-light;
+          color: $color-primary;
+          font-weight: $font-weight-semibold;
+        }
+      }
+    }
+
+    .p-datepicker-buttonbar {
+      padding: $space-3;
+      border-top: 1px solid $border-default;
+
+      button {
+        font-size: $font-sm;
+        padding: $space-2 $space-3;
+        border-radius: $radius-sm;
+      }
+    }
+  }
+
+  // Dropdown panels - FIX z-index
+  .p-dropdown-panel {
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+    border: 1px solid $border-default;
+    z-index: $z-dropdown !important;
+    animation: fadeIn $transition-fast;
+
+    .p-dropdown-header {
+      padding: $space-3;
+      border-bottom: 1px solid $border-default;
+      background: $bg-subtle;
+      border-radius: $radius-lg $radius-lg 0 0;
+    }
+
+    .p-dropdown-items {
+      padding: $space-2;
+
+      .p-dropdown-item {
+        padding: $space-2 $space-3;
+        font-size: $font-sm;
+        font-family: $font-family;
+        border-radius: $radius-sm;
+        margin: 1px 0;
+        transition: all $transition-fast;
+
+        &:hover:not(.p-highlight):not(.p-disabled) {
+          background: $bg-hover;
+        }
+
+        &.p-highlight {
+          background: $color-primary-light;
+          color: $color-primary;
+          font-weight: $font-weight-medium;
+        }
+      }
+
+      .p-dropdown-empty-message {
+        padding: $space-4;
+        color: $text-muted;
+        text-align: center;
+        font-size: $font-sm;
+      }
+    }
+  }
+
+  // AutoComplete panel
+  .p-autocomplete-panel {
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+    border: 1px solid $border-default;
+    z-index: $z-dropdown !important;
+
+    .p-autocomplete-items {
+      padding: $space-2;
+
+      .p-autocomplete-item {
+        border-radius: $radius-sm;
+        transition: all $transition-fast;
 
         &:hover {
           background: $bg-hover;
         }
       }
     }
-
-    // Dropdown
-    .p-dropdown {
-      height: 32px;
-      border: $border;
-      border-radius: 4px;
-
-      .p-dropdown-label {
-        padding: 0 $spacing-md;
-        font-size: $font-sm;
-        line-height: 30px;
-
-        &.p-placeholder {
-          color: $text-muted;
-        }
-      }
-
-      .p-dropdown-trigger {
-        width: 32px;
-        color: $text-secondary;
-      }
-
-      &:not(.p-disabled):hover {
-        border-color: darken($border-color, 10%);
-      }
-
-      &:not(.p-disabled).p-focus {
-        border-color: $accent-primary;
-        box-shadow: none;
-      }
-    }
   }
 
-  // MultiSelect
-  .column-selector-compact {
-    .p-multiselect-label {
-      font-size: $font-sm;
-      padding: $spacing-xs $spacing-md;
-    }
-
-    .p-multiselect-trigger {
-      width: 32px;
-    }
-  }
-
-  // Panel de calendario (tamaño reducido)
-  .p-datepicker {
-    font-size: $font-sm;
-
-    table td {
-      padding: 0.25rem;
-
-      > span {
-        width: 2rem;
-        height: 2rem;
-      }
-    }
-  }
-
-  // Dropdowns (tamaño reducido)
-  .p-dropdown-panel {
-    .p-dropdown-items {
-      .p-dropdown-item {
-        padding: $spacing-xs $spacing-md;
-        font-size: $font-sm;
-      }
-    }
+  // Tooltip z-index fix
+  .p-tooltip {
+    z-index: $z-tooltip !important;
   }
 }
 
 // ===========================================
-// PANEL DE FILTROS AVANZADOS
+// ADVANCED FILTERS PANEL
 // ===========================================
 .advanced-filters-panel {
-  background: $bg-gray;
-  border: $border;
+  background: $bg-subtle;
+  border: 1px solid $border-default;
   border-top: none;
-  border-radius: 0 0 $radius $radius;
+  border-radius: 0 0 $radius-lg $radius-lg;
   overflow: hidden;
-  margin-top: -$spacing-md;
-  margin-bottom: $spacing-lg;
+  margin-top: calc(-#{$space-5} + 1px);
+  margin-bottom: $space-5;
+  animation: fadeIn $transition-normal;
 
   .advanced-panel-content {
-    padding: $spacing-lg;
+    padding: $space-5;
 
     .active-filters-tags {
-      margin-bottom: $spacing-lg;
+      margin-bottom: $space-5;
 
       .tags-container {
         display: flex;
         flex-wrap: wrap;
-        gap: $spacing-sm;
+        gap: $space-2;
 
         .filter-tag {
           display: inline-flex;
           align-items: center;
-          gap: $spacing-xs;
-          padding: $spacing-xs $spacing-md;
+          gap: $space-2;
+          padding: $space-2 $space-3;
           background: white;
-          border: $border;
-          border-radius: 20px;
+          border: 1px solid $border-default;
+          border-radius: $radius-full;
           font-size: $font-sm;
           color: $text-primary;
+          transition: all $transition-fast;
+
+          &:hover {
+            border-color: $border-hover;
+            box-shadow: $shadow-sm;
+          }
 
           .status-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             display: inline-block;
+            flex-shrink: 0;
 
-            &.status-pending { background: $accent-warning; }
-            &.status-approved { background: $accent-success; }
-            &.status-rejected { background: $accent-danger; }
-            &.status-in-progress { background: #c4b5fd; }
-            &.status-produced { background: #20c997; }
-            &.status-packed { background: #6f42c1; }
-            &.status-shipped { background: #a78bfa; }
-            &.status-delivered { background: $accent-success; }
+            &.status-pending { background: $color-warning; }
+            &.status-approved { background: $color-success; }
+            &.status-rejected { background: $color-danger; }
+            &.status-in-progress { background: #8b5cf6; }
+            &.status-produced { background: #14b8a6; }
+            &.status-packed { background: #a855f7; }
+            &.status-shipped { background: #6366f1; }
+            &.status-delivered { background: $color-success; }
           }
 
           .tag-remove {
             background: none;
             border: none;
             padding: 0;
-            margin-left: $spacing-xs;
-            color: $text-secondary;
+            margin-left: $space-1;
+            color: $text-muted;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
-            transition: all 0.15s;
+            transition: all $transition-fast;
 
             &:hover {
-              background: $bg-hover;
-              color: $accent-danger;
+              background: rgba($color-danger, 0.1);
+              color: $color-danger;
             }
 
             i {
@@ -445,20 +801,21 @@ $radius: 6px;
 
     .config-section {
       background: white;
-      border-radius: $radius;
-      padding: $spacing-lg;
-      border: $border;
+      border-radius: $radius-md;
+      padding: $space-5;
+      border: 1px solid $border-default;
 
       .config-section-header {
         display: flex;
         align-items: center;
-        font-weight: 600;
+        font-weight: $font-weight-semibold;
         color: $text-primary;
-        margin-bottom: $spacing-md;
+        margin-bottom: $space-4;
         font-size: $font-base;
 
         i {
-          color: $text-secondary;
+          color: $color-primary;
+          margin-right: $space-2;
         }
       }
 
@@ -472,26 +829,27 @@ $radius: 6px;
 }
 
 // ===========================================
-// DROPDOWN ITEMS CON BADGE
+// DROPDOWN ITEMS WITH STATUS BADGE
 // ===========================================
 .dropdown-item-with-badge {
   display: flex;
   align-items: center;
-  gap: $spacing-sm;
+  gap: $space-2;
 
   .status-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
+    flex-shrink: 0;
 
-    &.status-pending { background: $accent-warning; }
-    &.status-approved { background: $accent-success; }
-    &.status-rejected { background: $accent-danger; }
-    &.status-in-progress { background: #c4b5fd; }
-    &.status-produced { background: #20c997; }
-    &.status-packed { background: #6f42c1; }
-    &.status-shipped { background: #a78bfa; }
-    &.status-delivered { background: $accent-success; }
+    &.status-pending { background: $color-warning; }
+    &.status-approved { background: $color-success; }
+    &.status-rejected { background: $color-danger; }
+    &.status-in-progress { background: #8b5cf6; }
+    &.status-produced { background: #14b8a6; }
+    &.status-packed { background: #a855f7; }
+    &.status-shipped { background: #6366f1; }
+    &.status-delivered { background: $color-success; }
   }
 }
 
@@ -499,10 +857,10 @@ $radius: 6px;
 // AUTOCOMPLETE ITEMS
 // ===========================================
 .autocomplete-item {
-  padding: $spacing-sm;
+  padding: $space-3;
   display: flex;
   flex-direction: column;
-  gap: $spacing-xs;
+  gap: $space-1;
 
   .item-main {
     display: flex;
@@ -510,7 +868,7 @@ $radius: 6px;
     font-size: $font-base;
 
     i {
-      color: $accent-primary;
+      color: $color-primary;
     }
 
     strong {
@@ -523,106 +881,180 @@ $radius: 6px;
     font-size: $font-sm;
 
     i {
-      color: $text-secondary;
+      color: $text-muted;
     }
 
     small {
       color: $text-secondary;
     }
   }
-
-  &:hover {
-    background: $bg-hover;
-  }
 }
 
 .autocomplete-empty {
-  padding: 1.5rem;
+  padding: $space-6;
   text-align: center;
   color: $text-muted;
 
   i {
     font-size: 2rem;
-    margin-bottom: $spacing-sm;
-    opacity: 0.5;
+    margin-bottom: $space-3;
+    opacity: 0.4;
+    color: $text-muted;
   }
 
   p {
     font-size: $font-base;
-    font-weight: 500;
-    margin-bottom: $spacing-xs;
+    font-weight: $font-weight-medium;
+    margin-bottom: $space-1;
     color: $text-secondary;
   }
 
   small {
     font-size: $font-sm;
+    color: $text-muted;
   }
 }
 
 // ===========================================
-// RESPONSIVE
+// RESPONSIVE DESIGN - MOBILE FIRST
 // ===========================================
-@media (max-width: 991px) {
+
+// Tablet breakpoint
+@media (max-width: 1024px) {
   .filters-inline-row {
-    gap: $spacing-sm;
+    gap: $space-3;
+    padding: $space-4;
+  }
+
+  .filter-search {
+    width: 180px;
+    max-width: 180px;
   }
 }
 
-@media (max-width: 767px) {
+// Small tablet / large phone
+@media (max-width: 768px) {
   .filters-inline-row {
     flex-direction: column;
     align-items: stretch;
-    padding: $spacing-sm;
-    gap: $spacing-sm;
+    padding: $space-4;
+    gap: $space-3;
 
-    // En móvil, todos los inputs ocupan el ancho completo
-    .filter-search,
-    ::ng-deep .input-sm {
+    &::before {
+      left: $space-3;
+      right: $space-3;
+    }
+
+    // Full width for all inputs on mobile
+    .filter-search {
       width: 100% !important;
       max-width: 100% !important;
     }
 
+    ::ng-deep .input-sm {
+      width: 100% !important;
+      max-width: 100% !important;
+
+      .p-calendar,
+      .p-dropdown,
+      .p-autocomplete {
+        width: 100% !important;
+      }
+    }
+
+    // Button row on mobile
     .btn-sm {
       width: 100%;
       justify-content: center;
+      height: 44px; // Larger touch target
+      font-size: $font-base;
+
+      &.btn-clear {
+        width: 44px;
+      }
     }
 
     .filter-counter-inline {
       width: 100%;
       justify-content: center;
+      padding-left: 0;
+      border-left: none;
+      margin-left: 0;
+      padding-top: $space-3;
+      border-top: 1px solid $border-default;
     }
   }
 
   .advanced-filters-panel {
+    margin-top: -$space-4;
+
     .advanced-panel-content {
-      padding: $spacing-md;
+      padding: $space-4;
 
       .active-filters-tags {
         .tags-container {
           .filter-tag {
-            font-size: $font-xs;
-            padding: $spacing-xs $spacing-sm;
+            font-size: $font-sm;
+            padding: $space-2 $space-3;
           }
+        }
+      }
+
+      .config-section {
+        padding: $space-4;
+      }
+    }
+  }
+}
+
+// Small phone
+@media (max-width: 480px) {
+  .filters-inline-row {
+    padding: $space-3;
+    gap: $space-3;
+    border-radius: $radius-md;
+  }
+
+  .btn-sm {
+    padding: 0 $space-3;
+
+    // Keep text visible but smaller
+    span {
+      font-size: $font-sm;
+    }
+
+    &.btn-primary,
+    &.btn-success {
+      // Primary actions keep full visibility
+      span {
+        display: inline;
+      }
+    }
+  }
+
+  .count-badge {
+    min-width: 20px;
+    height: 20px;
+    font-size: 0.625rem;
+  }
+
+  .advanced-filters-panel {
+    .advanced-panel-content {
+      padding: $space-3;
+
+      .config-section {
+        padding: $space-3;
+
+        .config-section-header {
+          font-size: $font-sm;
         }
       }
     }
   }
 }
 
-@media (max-width: 576px) {
-  .btn-sm {
-    padding: 0 $spacing-sm;
-    font-size: 0.7rem;
-
-    // En móvil muy pequeño, ocultar texto de botones (solo iconos)
-    span {
-      display: none;
-    }
-  }
-}
-
 // ===========================================
-// SCROLLBAR MINIMALISTA
+// SCROLLBAR STYLING
 // ===========================================
 ::-webkit-scrollbar {
   width: 8px;
@@ -634,10 +1066,31 @@ $radius: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: $border-color;
-  border-radius: 4px;
+  background: $border-default;
+  border-radius: $radius-sm;
 
   &:hover {
-    background: darken($border-color, 15%);
+    background: $border-hover;
+  }
+}
+
+// ===========================================
+// DARK MODE SUPPORT (optional)
+// ===========================================
+@media (prefers-color-scheme: dark) {
+  // Add dark mode variables here if needed in future
+  // For now, leaving as light mode only
+}
+
+// ===========================================
+// PRINT STYLES
+// ===========================================
+@media print {
+  .filters-inline-row {
+    display: none !important;
+  }
+
+  .advanced-filters-panel {
+    display: none !important;
   }
 }

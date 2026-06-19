@@ -323,6 +323,15 @@
             </a>
           </div>
 
+          <div class="shopify-dashboard-link mb-3">
+            <button type="button" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-2"
+              (click)="goToShopifyDashboard()">
+              <i class="fa fa-tachometer-alt"></i>
+              Ver Dashboard Shopify
+              <i class="fa fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+
           <div class="form-group">
             <label for="shopUrl">
               <i class="fa fa-link"></i> URL de la tienda:
@@ -2711,15 +2720,15 @@
               <button type="button"
                       class="btn btn-info"
                       (click)="testConnection()"
-                      [disabled]="integrationForm.invalid || isTesting">
+                      [disabled]="integrationForm.invalid || isTesting || isLoadingEdit">
                 <i class="fa me-2" [ngClass]="isTesting ? 'fa-spinner fa-spin' : 'fa-plug'"></i>
                 {{isTesting ? 'Probando...' : 'Probar conexión'}}
               </button>
               <button type="submit"
                       class="btn btn-primary btn-lg px-4"
-                      [disabled]="integrationForm.invalid || isSaving">
-                <i class="fa me-2" [ngClass]="isSaving ? 'fa-spinner fa-spin' : 'fa-save'"></i>
-                {{isSaving ? 'Guardando...' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar integración')}}
+                      [disabled]="integrationForm.invalid || isSaving || isLoadingEdit">
+                <i class="fa me-2" [ngClass]="(isSaving || isLoadingEdit) ? 'fa-spinner fa-spin' : 'fa-save'"></i>
+                {{isLoadingEdit ? 'Cargando datos...' : isSaving ? 'Guardando...' : (editingIntegrationId ? 'Actualizar integración' : 'Guardar integración')}}
               </button>
             </div>
           </div>
