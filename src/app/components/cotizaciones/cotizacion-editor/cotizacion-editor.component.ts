@@ -13,6 +13,7 @@ import { MaestroService } from "../../../shared/services/maestros/maestro.servic
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import { SecurityService } from "../../../shared/services/security/security.service";
 import { CotizacionesService } from "../cotizaciones.service";
+import { CotizacionConvertService } from "../cotizacion-convert.service";
 import {
   Cotizacion,
   EstadoCotizacion,
@@ -90,8 +91,19 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     private ventas: VentasService,
     private security: SecurityService,
     private modal: NgbModal,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private convertService: CotizacionConvertService
   ) {}
+
+  /** True si la cotización en edición puede convertirse a pedido (aceptada). */
+  get puedeConvertir(): boolean {
+    return this.convertService.puedeConvertir(this.cotizacion);
+  }
+
+  /** Convierte la cotización a pedido (hidrata la venta asistida — spec 008.2). */
+  convertirAPedido(): void {
+    this.convertService.iniciar(this.cotizacion);
+  }
 
   ngOnInit(): void {
     this.configurarBusquedaCliente();
@@ -421,6 +433,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
         precioUnitarioConIva: pc.precioConIva,
         precioUnitarioSinIva: pc.precio,
         valorIva: pc.valorIva,
+        precioUnitarioIva: pc.porcentajeIva ?? (producto as any)?.precio?.precioUnitarioIva,
       },
       _precioAplicadoPorCategoria: {
         tipoClienteId: pc.tipoClienteId,
@@ -483,11 +496,36 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return (item?.producto as any)?.procesoComercial?.permitePrecioManual === true;
   }
 
-  /** % de IVA vigente: override manual si existe, si no el del producto. */
+  /**
+   * Rango de precio por volumen que aplica a la cantidad del ítem (o null).
+   * Réplica del carrito (`checkIVAPrice`): NO aplica volumen si el precio ya viene
+   * por categoría de cliente (categoría > volumen). Tampoco si hay override manual.
+   */
+  private getRangoVolumen(item: Carrito): any {
+    if ((item?.producto as any)?._precioAplicadoPorCategoria) return null;
+    if (item?._precioManualOverride !== undefined && item?._precioManualOverride !== null && this.permitePrecioManual(item)) return null;
+    if (item?._ivaManualOverride !== undefined && item?._ivaManualOverride !== null) return null;
+    const preciosVolumen = (item?.producto as any)?.precio?.preciosVolumen;
+    if (!Array.isArray(preciosVolumen) || preciosVolumen.length === 0) return null;
+    const cantidad = Number(item?.cantidad) || 0;
+    for (const x of preciosVolumen) {
+      const tieneMin = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+      const tieneMax = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+      if (!tieneMin || !tieneMax) continue;
+      const ini = Number(x.numeroUnidadesInicial) || 0;
+      const lim = Number(x.numeroUnidadesLimite) || Infinity;
+      if (cantidad >= ini && cantidad <= lim) return x;
+    }
+    return null;
+  }
+
+  /** % de IVA vigente: override manual → volumen → del producto. */
   getIvaActual(item: Carrito): number {
     if (item?._ivaManualOverride !== undefined && item?._ivaManualOverride !== null) {
       return Number(item._ivaManualOverride);
     }
+    const rango = this.getRangoVolumen(item);
+    if (rango) return Number(rango.valorIVAPorVolumen) || 0;
     return Number((item?.producto as any)?.precio?.precioUnitarioIva) || 0;
   }
 
@@ -500,6 +538,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
    */
   itemPrecio(item: Carrito): number {
     const precio = (item?.producto as any)?.precio;
+    // Prioridad 0: override manual de precio (base sin IVA × (1+IVA)).
     if (
       item?._precioManualOverride !== undefined &&
       item?._precioManualOverride !== null &&
@@ -509,10 +548,18 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       const iva = this.getIvaActual(item);
       return base * (1 + iva / 100);
     }
+    // Prioridad 0b: override manual de IVA.
     if (item?._ivaManualOverride !== undefined && item?._ivaManualOverride !== null) {
       const precioSinIva = Number(precio?.precioUnitarioSinIva) || 0;
       return precioSinIva * (1 + item._ivaManualOverride / 100);
     }
+    // Prioridad 2: precio por volumen según la cantidad. (La categoría, si aplica, ya
+    // está horneada en precioUnitarioConIva y getRangoVolumen la excluye → categoría > volumen.)
+    const rango = this.getRangoVolumen(item);
+    if (rango) {
+      return Number(rango.valorUnitarioPorVolumenConIVA) || 0;
+    }
+    // Prioridad 3: precio base (o el de categoría ya horneado).
     return Number(precio?.precioUnitarioConIva) || 0;
   }
 

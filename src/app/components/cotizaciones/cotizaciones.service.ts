@@ -72,4 +72,15 @@ export class CotizacionesService extends BaseService {
   updateConfig(terminosBase: string): Observable<{ success: boolean; message?: string }> {
     return this.put<{ success: boolean; message?: string }>("/v1/cotizaciones/config", { terminosBase });
   }
+
+  /**
+   * Marca la cotización como convertida y la enlaza al pedido generado (spec 008.2).
+   * Se llama desde la venta asistida cuando el pedido se crea de verdad.
+   */
+  marcarConvertida(id: string, nroPedido?: string): Observable<{ success: boolean; message?: string; data?: any }> {
+    return this.post<{ success: boolean; message?: string; data?: any }>(
+      `/v1/cotizaciones/${id}/convertida`,
+      { nroPedido: nroPedido || null }
+    );
+  }
 }

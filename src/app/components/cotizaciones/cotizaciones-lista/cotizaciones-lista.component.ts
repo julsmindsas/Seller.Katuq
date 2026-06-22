@@ -5,6 +5,7 @@ import { debounceTime, distinctUntilChanged } from "rxjs/operators";
 import { ToastrService } from "ngx-toastr";
 import * as XLSX from "xlsx";
 import { CotizacionesService } from "../cotizaciones.service";
+import { CotizacionConvertService } from "../cotizacion-convert.service";
 import {
   Cotizacion,
   CotizacionMetrics,
@@ -65,7 +66,8 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   constructor(
     private service: CotizacionesService,
     private router: Router,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private convertService: CotizacionConvertService
   ) {}
 
   ngOnInit(): void {
@@ -256,6 +258,17 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
       error: () => this.toastr.error("No se pudo duplicar la cotización."),
     });
     this.subs.push(sub);
+  }
+
+  /** True si la cotización puede convertirse a pedido (aceptada, no convertida). */
+  puedeConvertir(c: Cotizacion): boolean {
+    return this.convertService.puedeConvertir(c);
+  }
+
+  /** Convierte la cotización a pedido (hidrata la venta asistida — spec 008.2). */
+  convertir(c: Cotizacion, ev: Event): void {
+    ev.stopPropagation();
+    this.convertService.iniciar(c);
   }
 
   // ---- Helpers de presentación ----
