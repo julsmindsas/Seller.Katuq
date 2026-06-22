@@ -1,7 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { Producto, PrecioPorTipoCliente } from 'src/app/shared/models/productos/Producto';
 
@@ -16,6 +15,7 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
   preciosForm: FormGroup;
   tiposCliente: any[] = [];
   cargando = false;
+  guardando = false;
 
   // Configuración de IVA
   porcentajesIva = [
@@ -29,7 +29,6 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private service: MaestroService,
-    private afs: AngularFirestore,
     public activeModal: NgbActiveModal
   ) {
     this.preciosForm = this.fb.group({});
@@ -167,30 +166,33 @@ export class EditarPreciosTipoClienteComponent implements OnInit {
 
     console.log('Producto actualizado:', productoActualizado);
 
-    // Guardar directo en Firestore (el backend /v1/productos/edit no persiste preciosPorTipoCliente)
+    // Persistir vía backend (Admin SDK) en lugar de escribir directo a Firestore desde el
+    // navegador: la escritura de cliente fallaba en silencio si las reglas bloqueaban
+    // `products`. El backend hace merge por tipoClienteId (no pisa otros tipos).
     if (!this.producto.cd) {
       this.activeModal.close({ success: false, error: 'Producto sin ID' });
       return;
     }
 
-    this.afs.collection('products').doc(this.producto.cd)
-      .update({
-        preciosPorTipoCliente: preciosPorTipoCliente,
-        date_edit: new Date().toISOString()
-      })
-      .then(() => {
+    this.guardando = true;
+    this.service.guardarPreciosTipoCliente(this.producto.cd, preciosPorTipoCliente).subscribe({
+      next: (resp: any) => {
+        this.guardando = false;
+        const merged = resp?.data?.preciosPorTipoCliente || preciosPorTipoCliente;
         this.activeModal.close({
           success: true,
-          producto: productoActualizado,
-          preciosPorTipoCliente: preciosPorTipoCliente
+          producto: { ...this.producto, preciosPorTipoCliente: merged, date_edit: new Date().toISOString() },
+          preciosPorTipoCliente: merged
         });
-      })
-      .catch((error) => {
+      },
+      error: (err) => {
+        this.guardando = false;
         this.activeModal.close({
           success: false,
-          error: error
+          error: err?.error?.error || err?.message || 'Error al guardar los precios'
         });
-      });
+      }
+    });
   }
 
   cancelar() {

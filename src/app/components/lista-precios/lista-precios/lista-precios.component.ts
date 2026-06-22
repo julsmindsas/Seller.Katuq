@@ -311,6 +311,9 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
       if (result?.success) {
         this.actualizarProductoEnVista(result.producto);
         Swal.fire('Éxito', 'Precios por tipo de cliente guardados correctamente', 'success');
+      } else if (result && result.success === false) {
+        const msg = typeof result.error === 'string' ? result.error : (result.error?.message || 'No se pudieron guardar los precios');
+        Swal.fire('Error', msg, 'error');
       }
     }).catch(() => {});
   }
