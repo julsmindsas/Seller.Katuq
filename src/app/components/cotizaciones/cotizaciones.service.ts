@@ -74,6 +74,17 @@ export class CotizacionesService extends BaseService {
   }
 
   /**
+   * Genera (o devuelve) el token público para compartir la cotización (spec 008.3).
+   * Si está en borrador, el backend la pasa a 'enviada'.
+   */
+  generarShareToken(id: string): Observable<{ success: boolean; data?: { token: string } }> {
+    return this.post<{ success: boolean; data?: { token: string } }>(
+      `/v1/cotizaciones/${id}/share-token`,
+      {}
+    );
+  }
+
+  /**
    * Marca la cotización como convertida y la enlaza al pedido generado (spec 008.2).
    * Se llama desde la venta asistida cuando el pedido se crea de verdad.
    */

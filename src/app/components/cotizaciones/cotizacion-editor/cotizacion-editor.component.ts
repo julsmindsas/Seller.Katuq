@@ -47,6 +47,7 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   loading = false;
   saving = false;
   generandoPDF = false;
+  compartiendo = false;
 
   /** Overlay de "Vista previa del cliente" (documento de cotización). */
   showPreview = false;
@@ -978,24 +979,51 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       );
       return;
     }
-    const cli = this.cotizacion.cliente as any;
-    const telefono = (this.clienteCelular(cli) || "").replace(/\D/g, "");
+    // El link público necesita una cotización guardada (con id).
+    if (!this.cotizacionId) {
+      this.toastr.info(
+        "Guarda la cotización antes de compartir el enlace de aprobación.",
+        "Guarda primero"
+      );
+      return;
+    }
 
-    const lineas = [
-      `Hola ${this.clienteNombre(cli) || ""}`.trim() + ",",
-      "",
-      `Te comparto la cotización ${this.cotizacion.nroCotizacion || "(borrador)"}.`,
-      `Total: ${this.formatCurrency(this.total)}`,
-      this.fechaVencimiento ? `Válida hasta: ${this.fechaVencimiento}` : "",
-      "",
-      "Quedo atento(a) a tus comentarios.",
-    ].filter((l) => l !== null && l !== undefined);
+    this.compartiendo = true;
+    this.service.generarShareToken(this.cotizacionId).subscribe({
+      next: (res) => {
+        this.compartiendo = false;
+        const token = res?.data?.token || "";
+        const link = token ? `${window.location.origin}/c/${token}` : "";
+        // Compartir = enviar: refleja localmente el cambio de estado del backend.
+        if (this.cotizacion.estadoCotizacion === "borrador") {
+          this.cotizacion.estadoCotizacion = "enviada" as any;
+        }
 
-    const mensaje = encodeURIComponent(lineas.join("\n"));
-    const url = telefono
-      ? `https://wa.me/${telefono}?text=${mensaje}`
-      : `https://wa.me/?text=${mensaje}`;
-    window.open(url, "_blank");
+        const cli = this.cotizacion.cliente as any;
+        const telefono = (this.clienteCelular(cli) || "").replace(/\D/g, "");
+        const lineas = [
+          `Hola ${this.clienteNombre(cli) || ""}`.trim() + ",",
+          "",
+          `Te comparto la cotización ${this.cotizacion.nroCotizacion || ""}.`,
+          `Total: ${this.formatCurrency(this.total)}`,
+          this.fechaVencimiento ? `Válida hasta: ${this.fechaVencimiento}` : "",
+          link ? "" : null,
+          link ? `Puedes verla y aprobarla aquí: ${link}` : null,
+          "",
+          "Quedo atento(a) a tus comentarios.",
+        ].filter((l) => l !== null && l !== undefined);
+
+        const mensaje = encodeURIComponent(lineas.join("\n"));
+        const url = telefono
+          ? `https://wa.me/${telefono}?text=${mensaje}`
+          : `https://wa.me/?text=${mensaje}`;
+        window.open(url, "_blank");
+      },
+      error: () => {
+        this.compartiendo = false;
+        this.toastr.error("No se pudo generar el enlace para compartir.", "Error");
+      },
+    });
   }
 
   // ---- Navegación ----

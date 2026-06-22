@@ -171,6 +171,17 @@ const routes: Routes = [
       }
     ]
   },
+  // Landing pública de aprobación de cotización (spec 008.3) — sin login, por token
+  {
+    path: 'c',
+    component: BlankComponent,
+    children: [
+      {
+        path: '',
+        loadChildren: () => import('./components/cotizacion-publica/cotizacion-publica.module').then(m => m.CotizacionPublicaModule),
+      }
+    ]
+  },
   {
     path: '',
     component: ContentComponent,
