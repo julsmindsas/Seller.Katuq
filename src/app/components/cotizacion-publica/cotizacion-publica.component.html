@@ -1,0 +1,125 @@
+<div class="cp-page">
+  <!-- Cargando -->
+  <div *ngIf="loading" class="cp-card cp-center">
+    <div class="cp-spinner"></div>
+    <p>Cargando tu cotización…</p>
+  </div>
+
+  <!-- No encontrada -->
+  <div *ngIf="!loading && notFound" class="cp-card cp-center">
+    <div class="cp-icon">🔍</div>
+    <h2>Cotización no encontrada</h2>
+    <p class="cp-muted">El enlace no es válido o ya no está disponible.</p>
+  </div>
+
+  <!-- Cotización -->
+  <div *ngIf="!loading && cot" class="cp-card">
+    <header class="cp-header">
+      <div>
+        <div class="cp-empresa">{{ cot.empresaNombre }}</div>
+        <div class="cp-nro">Cotización <strong>{{ cot.nroCotizacion || "—" }}</strong></div>
+      </div>
+      <span class="cp-badge" [attr.data-estado]="estadoMostrado">{{ estadoLabel(estadoMostrado) }}</span>
+    </header>
+
+    <section class="cp-meta">
+      <div><span class="cp-label">Cliente</span><span>{{ cot.clienteNombre || "—" }}</span></div>
+      <div><span class="cp-label">Emisión</span><span>{{ fecha(cot.fechaEmision) }}</span></div>
+      <div><span class="cp-label">Válida hasta</span><span>{{ fecha(cot.fechaVencimiento) }}</span></div>
+    </section>
+
+    <!-- Resultado tras responder -->
+    <div *ngIf="resultadoEstado === 'aceptada'" class="cp-result cp-ok">
+      ✅ ¡Gracias! Aceptaste esta cotización. Nos pondremos en contacto para continuar.
+    </div>
+    <div *ngIf="resultadoEstado === 'rechazada'" class="cp-result cp-no">
+      Registramos que rechazaste esta cotización. ¡Gracias por tu respuesta!
+    </div>
+
+    <!-- Avisos de estado (no accionable) -->
+    <div *ngIf="!resultadoEstado && cot.vencida" class="cp-result cp-warn">
+      ⏳ Esta cotización venció el {{ fecha(cot.fechaVencimiento) }}. Contáctanos para renovarla.
+    </div>
+    <div *ngIf="!resultadoEstado && !cot.vencida && cot.estado !== 'enviada'" class="cp-result cp-info">
+      Esta cotización está <strong>{{ estadoLabel(cot.estado) }}</strong>.
+    </div>
+
+    <!-- Tabla de ítems -->
+    <table class="cp-table">
+      <thead>
+        <tr>
+          <th>Descripción</th>
+          <th class="cp-c">Cant.</th>
+          <th class="cp-r">V. Unit.</th>
+          <th class="cp-r">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let it of cot.items">
+          <td>{{ it.titulo }}</td>
+          <td class="cp-c">{{ it.cantidad }}</td>
+          <td class="cp-r">{{ money(it.precioUnitarioConIva) }}</td>
+          <td class="cp-r">{{ money(it.subtotal) }}</td>
+        </tr>
+        <tr *ngIf="!cot.items?.length">
+          <td colspan="4" class="cp-muted cp-c">Sin ítems.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Totales -->
+    <div class="cp-totales">
+      <div><span>Subtotal</span><span>{{ money(cot.subtotal) }}</span></div>
+      <div *ngIf="cot.totalDescuento > 0"><span>Descuento</span><span>- {{ money(cot.totalDescuento) }}</span></div>
+      <div><span>Base gravable</span><span>{{ money(cot.baseGravable) }}</span></div>
+      <div><span>IVA</span><span>{{ money(cot.totalImpuesto) }}</span></div>
+      <div class="cp-total"><span>Total</span><span>{{ money(cot.total) }}</span></div>
+    </div>
+
+    <!-- Términos -->
+    <section *ngIf="cot.terminos" class="cp-terminos">
+      <div class="cp-label">Términos y condiciones</div>
+      <p>{{ cot.terminos }}</p>
+    </section>
+
+    <!-- Acciones del cliente -->
+    <section *ngIf="puedeResponder" class="cp-acciones">
+      <ng-container *ngIf="!accionActiva">
+        <p class="cp-acciones-hint">¿Deseas aprobar esta cotización?</p>
+        <div class="cp-btn-row">
+          <button class="cp-btn cp-btn-ok" (click)="iniciarAccion('aceptar')">✓ Aceptar</button>
+          <button class="cp-btn cp-btn-no" (click)="iniciarAccion('rechazar')">✕ Rechazar</button>
+        </div>
+      </ng-container>
+
+      <div *ngIf="accionActiva" class="cp-form">
+        <p class="cp-form-title">
+          {{ accionActiva === 'aceptar' ? 'Confirmar aceptación' : 'Confirmar rechazo' }}
+        </p>
+        <label class="cp-field">
+          <span>Tu número de documento</span>
+          <input type="text" [(ngModel)]="documento" placeholder="Ej. 1234567890" autocomplete="off" />
+        </label>
+        <label *ngIf="accionActiva === 'rechazar'" class="cp-field">
+          <span>Motivo (opcional)</span>
+          <textarea [(ngModel)]="motivo" rows="2" placeholder="Cuéntanos por qué"></textarea>
+        </label>
+        <div *ngIf="errorAccion" class="cp-error">{{ errorAccion }}</div>
+        <div class="cp-btn-row">
+          <button class="cp-btn cp-btn-light" (click)="cancelarAccion()" [disabled]="enviando">Cancelar</button>
+          <button
+            class="cp-btn"
+            [class.cp-btn-ok]="accionActiva === 'aceptar'"
+            [class.cp-btn-no]="accionActiva === 'rechazar'"
+            (click)="confirmar()"
+            [disabled]="enviando"
+          >
+            {{ enviando ? 'Enviando…' : (accionActiva === 'aceptar' ? 'Confirmar aceptación' : 'Confirmar rechazo') }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="cp-footer">Cotización generada por {{ cot.empresaNombre }} · Katuq</footer>
+  </div>
+</div>

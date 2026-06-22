@@ -352,6 +352,14 @@
         <button type="button" class="btn-cot wa" (click)="enviarWhatsApp()" [disabled]="!puedeGuardar">
           💬 Enviar por WhatsApp
         </button>
+        <button
+          *ngIf="puedeConvertir"
+          type="button"
+          class="btn-cot primary"
+          (click)="convertirAPedido()"
+        >
+          🛒 Convertir a pedido
+        </button>
         <div class="cot-divider"></div>
         <button type="button" class="btn-cot light" (click)="volver()" [disabled]="saving">
           Cancelar

@@ -423,12 +423,12 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
           this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
           this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
-          this.formulario.controls['apellidos_completos'].setValue(res.apellidos_completos);
-          this.formulario.controls['nombres_completos'].setValue(res.nombres_completos);
+          this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(res.apellidos_completos));
+          this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(res.nombres_completos));
           this.formulario.controls['documento'].setValue(res.documento);
           this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
           this.formulario.controls['estado'].setValue(res.estado);
-          this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? [...res.etiquetas] : [];
+          this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? res.etiquetas.map((e: string) => this.toTitleCase(e)) : [];
 
           this.activarNotas = false;
           this.verNotas();
@@ -511,8 +511,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
             this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
             this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
-            this.formulario.controls['apellidos_completos'].setValue(res.apellidos_completos);
-            this.formulario.controls['nombres_completos'].setValue(res.nombres_completos);
+            this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(res.apellidos_completos));
+            this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(res.nombres_completos));
             this.formulario.controls['documento'].setValue(res.documento);
             this.formulario.controls['correo_electronico_comprador'].setValue(res.correo_electronico_comprador);
             this.formulario.controls['estado'].setValue(res.estado);
@@ -522,7 +522,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             console.log(error);
           }
           this.datos = res
-          this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? [...res.etiquetas] : [];
+          this.etiquetasSeleccionadas = Array.isArray(res.etiquetas) ? res.etiquetas.map((e: string) => this.toTitleCase(e)) : [];
           this.formularioFacturacion.patchValue(res.datosFacturacionElectronica)
           this.formularioEntrega.patchValue(res.datosEntrega)
           this.identificarDepto()
@@ -588,8 +588,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['numero_celular_comprador'].setValue(cliente.numero_celular_comprador);
       this.formulario.controls['indicativo_celular_whatsapp'].setValue(cliente.indicativo_celular_whatsapp);
       this.formulario.controls['numero_celular_whatsapp'].setValue(cliente.numero_celular_whatsapp);
-      this.formulario.controls['apellidos_completos'].setValue(cliente.apellidos_completos);
-      this.formulario.controls['nombres_completos'].setValue(cliente.nombres_completos);
+      this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(cliente.apellidos_completos));
+      this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(cliente.nombres_completos));
       this.formulario.controls['documento'].setValue(cliente.documento);
       this.formulario.controls['correo_electronico_comprador'].setValue(cliente.correo_electronico_comprador);
       this.formulario.controls['estado'].setValue(cliente.estado);
@@ -599,7 +599,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       console.log(error);
     }
     this.datos = cliente;
-    this.etiquetasSeleccionadas = Array.isArray(cliente.etiquetas) ? [...cliente.etiquetas] : [];
+    this.etiquetasSeleccionadas = Array.isArray(cliente.etiquetas) ? cliente.etiquetas.map((e: string) => this.toTitleCase(e)) : [];
     if (cliente.datosFacturacionElectronica) this.formularioFacturacion.patchValue(cliente.datosFacturacionElectronica);
     if (cliente.datosEntrega) this.formularioEntrega.patchValue(cliente.datosEntrega);
     this.identificarDepto();
@@ -874,7 +874,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.formulario.controls['datosEntrega'].setValue([]);
     this.formulario.controls['notas'].setValue([]);
     this.formulario.controls['estado'].setValue('activo');
-    this.formulario.controls['etiquetas'].setValue(this.etiquetasSeleccionadas);
+    this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(this.formulario.value.nombres_completos));
+    this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(this.formulario.value.apellidos_completos));
+    this.formulario.controls['etiquetas'].setValue(this.etiquetasSeleccionadas.map(e => this.toTitleCase(e)));
     this.service.createClient(this.formulario.value).subscribe(r => {
       const data = { documento: this.formulario.value.documento };
       this.service.getClientByDocument(data).subscribe((res: any) => {
@@ -947,6 +949,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.razon_social = this.datosFacturacionElectronica[index].nombres
     this.tipo_documento_facturacion = this.datosFacturacionElectronica[index].tipoDocumento
     this.numero_documento_facturacion = this.datosFacturacionElectronica[index].documento
+    this.correo_electronico_facturacion = this.datosFacturacionElectronica[index].correo || ''
     this.direccion_facturacion = this.datosFacturacionElectronica[index].direccion
     this.pais = this.datosFacturacionElectronica[index].pais
     this.departamento = this.datosFacturacionElectronica[index].departamento
@@ -970,6 +973,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       nombres: this.razon_social,
       tipoDocumento: this.tipo_documento_facturacion,
       documento: this.numero_documento_facturacion,
+      correo: this.correo_electronico_facturacion || '',
     }
     this.datosFacturacionElectronica[this.idenxFacturacion] = datosFacturacionElec
     const data = {
@@ -1099,6 +1103,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.razon_social = '';
     this.tipo_documento_facturacion = 'CC-NIT';
     this.numero_documento_facturacion = '';
+    this.correo_electronico_facturacion = '';
   }
   private notaModalRef: any;
 
@@ -1179,6 +1184,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       nombres: this.razon_social,
       tipoDocumento: this.tipo_documento_facturacion,
       documento: this.numero_documento_facturacion,
+      correo: this.correo_electronico_facturacion || '',
     }
     const data = {
       documento: this.documentoBusqueda.nativeElement.value
@@ -1343,8 +1349,9 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.controls['datosEntrega'].setValue(res.datosEntrega);
       this.formulario.controls['notas'].setValue(res.notas);
       this.formulario.controls['estado'].setValue(res.estado);
-      // Guardar etiquetas seleccionadas en el formulario antes de enviar
-      this.formulario.controls['etiquetas'].setValue(this.etiquetasSeleccionadas);
+      this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(this.formulario.value.nombres_completos));
+      this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(this.formulario.value.apellidos_completos));
+      this.formulario.controls['etiquetas'].setValue(this.etiquetasSeleccionadas.map(e => this.toTitleCase(e)));
       this.service.editClient(this.formulario.value).subscribe(r => {
         if (this.isEdit) {
           this.service.getClientByDocument(data).subscribe((clienteActualizado: any) => {
@@ -1532,7 +1539,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   addTagCfg(): void {
-    const name = this.newTagNameCfg.trim();
+    const name = this.toTitleCase(this.newTagNameCfg.trim());
     if (name && !this.editableTagsCfg.find(t => t.name === name)) {
       this.editableTagsCfg.push({ name, color: this.newTagColorCfg });
     }
@@ -1610,6 +1617,11 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       amber: '#92400e', red: '#991b1b', gray: '#374151'
     };
     return map[color] || '#374151';
+  }
+
+  private toTitleCase(str: string): string {
+    if (!str) return str;
+    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
   }
 
   // =============================================

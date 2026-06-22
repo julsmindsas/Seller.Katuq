@@ -267,10 +267,15 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         modalRef.componentInstance.isEdit = false;
 
         modalRef.result.then((result) => {
-            if (result === 'success') {
-                this.cargarClientes();
+            if (result?.action === 'created' && result?.cliente) {
+                const nuevo = result.cliente;
+                this.clientesOriginales = [nuevo, ...this.clientesOriginales];
+                this.clientes = [nuevo, ...this.clientes];
+                this.totalRecords = this.clientes.length;
+            } else if (result?.action === 'existing_found') {
+                // Cliente ya existía — no era nuevo, no agregar duplicado
             }
-        });
+        }).catch(() => {});
     }
 
     editarCliente(cliente: any): void {
@@ -406,14 +411,32 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         this.aplicarFiltros();
     }
 
+    // ── Panel de detalles ────────────────────────────────────────────
+    showDetallePanel: boolean = false;
+    clienteDetalle: any = null;
+
     verDetalles(cliente: any): void {
         this.selectedCliente = null;
-        this.messageService.add({
-            severity: 'info',
-            summary: 'Detalles del Cliente',
-            detail: `${cliente.nombres_completos} - ${cliente.documento}`,
-            life: 3000
-        });
+        this.clienteDetalle = cliente;
+        this.showDetallePanel = true;
+    }
+
+    cerrarDetallePanel(): void {
+        this.showDetallePanel = false;
+        this.clienteDetalle = null;
+    }
+
+    getInitialsDetalle(cliente: any): string {
+        if (!cliente) return '?';
+        const n = (cliente.nombres_completos || '').trim();
+        const a = (cliente.apellidos_completos || '').trim();
+        return ((n[0] || '') + (a[0] || '')).toUpperCase() || '?';
+    }
+
+    editarDesdeDetalle(): void {
+        const c = this.clienteDetalle;
+        this.cerrarDetallePanel();
+        this.editarCliente(c);
     }
 
     exportarCliente(cliente: any): void {
@@ -447,40 +470,93 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     exportarExcel(): void {
-        const headers = [
-            'Nombres Completos',
-            'Tipo Documento',
-            'Documento',
-            'Email',
-            'Celular',
-            'Estado',
-            'Empresa',
-            'Fecha de Adición'
-        ];
-
-        const data = this.clientes.map(cliente => [
-            cliente.nombres_completos || '',
-            cliente.tipo_documento_comprador || '',
-            cliente.documento || '',
-            cliente.correo_electronico_comprador || '',
-            cliente.numero_celular_comprador || '',
-            cliente.estado || '',
-            cliente.company || '',
-            cliente.date_add ? this.formatearFecha(cliente.date_add) : ''
-        ]);
-
-        data.unshift(headers);
-
-        const worksheet = XLSX.utils.aoa_to_sheet(data);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Clientes');
+
+        // ── Hoja 1: Clientes ──────────────────────────────────────────
+        const headersClientes = [
+            'Nombres Completos', 'Apellidos', 'Tipo Documento', 'Documento',
+            'Email', 'Celular', 'WhatsApp', 'Estado', 'Tipo de Cliente',
+            'Etiquetas', '¿Cómo nos conoció?', 'Fecha de Cumpleaños',
+            'Empresa', 'Fecha de Adición'
+        ];
+        const dataClientes = this.clientes.map(c => [
+            c.nombres_completos || '',
+            c.apellidos_completos || '',
+            c.tipo_documento_comprador || '',
+            c.documento || '',
+            c.correo_electronico_comprador || '',
+            c.numero_celular_comprador || '',
+            c.numero_celular_whatsapp || '',
+            c.estado || '',
+            c.tipoCliente || '',
+            Array.isArray(c.etiquetas) ? c.etiquetas.join(', ') : '',
+            c.comoNosConocio || '',
+            c.fechaCumpleanos || '',
+            c.company || '',
+            c.date_add ? this.formatearFecha(c.date_add) : ''
+        ]);
+        dataClientes.unshift(headersClientes);
+        XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(dataClientes), 'Clientes');
+
+        // ── Hoja 2: Notas ─────────────────────────────────────────────
+        const headersNotas = ['Documento', 'Nombre', 'Fecha', 'Nota'];
+        const dataNotas: any[][] = [headersNotas];
+        this.clientes.forEach(c => {
+            const notas: any[] = Array.isArray(c.notas) ? c.notas : [];
+            if (notas.length === 0) return;
+            notas.forEach(n => dataNotas.push([
+                c.documento || '',
+                `${c.nombres_completos || ''} ${c.apellidos_completos || ''}`.trim(),
+                n.fecha || '',
+                n.nota || ''
+            ]));
+        });
+        XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(dataNotas), 'Notas');
+
+        // ── Hoja 3: Facturación ───────────────────────────────────────
+        const headersFact = ['Documento Cliente', 'Nombre Cliente', 'Referencia', 'Razón Social', 'Tipo Doc.', 'Nro. Documento', 'Correo'];
+        const dataFact: any[][] = [headersFact];
+        this.clientes.forEach(c => {
+            const facts: any[] = Array.isArray(c.datosFacturacionElectronica) ? c.datosFacturacionElectronica : [];
+            if (facts.length === 0) return;
+            facts.forEach(f => dataFact.push([
+                c.documento || '',
+                `${c.nombres_completos || ''} ${c.apellidos_completos || ''}`.trim(),
+                f.alias || '',
+                f.nombres || '',
+                f.tipoDocumento || '',
+                f.documento || '',
+                f.correo || ''
+            ]));
+        });
+        XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(dataFact), 'Facturación');
+
+        // ── Hoja 4: Entrega ───────────────────────────────────────────
+        const headersEntrega = ['Documento Cliente', 'Nombre Cliente', 'Referencia', 'Destinatario', 'Celular', 'Dirección', 'Ciudad', 'Departamento', 'País'];
+        const dataEntrega: any[][] = [headersEntrega];
+        this.clientes.forEach(c => {
+            const entregas: any[] = Array.isArray(c.datosEntrega) ? c.datosEntrega : [];
+            if (entregas.length === 0) return;
+            entregas.forEach(e => dataEntrega.push([
+                c.documento || '',
+                `${c.nombres_completos || ''} ${c.apellidos_completos || ''}`.trim(),
+                e.alias || '',
+                `${e.nombres || ''} ${e.apellidos || ''}`.trim(),
+                e.celular || '',
+                e.direccionEntrega || '',
+                e.ciudad || '',
+                e.departamento || '',
+                e.pais || ''
+            ]));
+        });
+        XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(dataEntrega), 'Entrega');
 
         XLSX.writeFile(workbook, `clientes_${new Date().getTime()}.xlsx`);
 
         this.messageService.add({
             severity: 'success',
             summary: 'Éxito',
-            detail: 'Archivo exportado correctamente',
+            detail: `${this.clientes.length} clientes exportados en 4 hojas`,
             life: 3000
         });
     }

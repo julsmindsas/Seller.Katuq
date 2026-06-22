@@ -332,6 +332,11 @@ export class MaestroService {
     return this.http.post<any>(this.urlBase + '/v1/productos/import-precios', data, this.httpOptions);
   }
 
+  /** Guarda los precios por tipo de cliente de UN producto (merge por tipoClienteId en backend). */
+  public guardarPreciosTipoCliente(cd: string, precios: any[]) {
+    return this.http.post<any>(this.urlBase + '/v1/productos/precios-tipo-cliente', { cd, precios }, this.httpOptions);
+  }
+
   public limpiarPreciosTipoCliente() {
     return this.http.post<any>(this.urlBase + '/v1/productos/limpiar-precios', {}, this.httpOptions);
   }

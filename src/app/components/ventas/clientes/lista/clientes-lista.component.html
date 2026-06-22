@@ -1,3 +1,5 @@
+<p-toast position="bottom-right"></p-toast>
+
 <!-- Header del módulo estilo Katuq -->
 <div class="container-fluid">
     <div class="row">
@@ -521,6 +523,113 @@
         </div>
     </div>
 </div>
+
+<!-- Panel lateral: Detalles del cliente -->
+<p-sidebar [(visible)]="showDetallePanel" position="right" [style]="{ width: '420px' }"
+           styleClass="cliente-detalle-sidebar" (onHide)="cerrarDetallePanel()">
+    <ng-template pTemplate="header">
+        <span class="fw-bold" style="color:#8b5cf6; font-size:1rem;">
+            <i class="pi pi-user me-2"></i>Detalles del cliente
+        </span>
+    </ng-template>
+
+    <ng-container *ngIf="clienteDetalle">
+
+        <!-- Avatar + identidad -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <div class="detalle-avatar">{{ getInitialsDetalle(clienteDetalle) }}</div>
+            <div>
+                <h6 class="mb-0 fw-bold" style="color:#111;">
+                    {{ clienteDetalle.nombres_completos }} {{ clienteDetalle.apellidos_completos }}
+                </h6>
+                <small class="text-muted">{{ clienteDetalle.tipo_documento_comprador }}: {{ clienteDetalle.documento }}</small><br>
+                <span class="badge mt-1" [style.background]="clienteDetalle.estado === 'activo' ? '#d1fae5' : '#fee2e2'"
+                      [style.color]="clienteDetalle.estado === 'activo' ? '#065f46' : '#991b1b'">
+                    <i class="pi" [ngClass]="clienteDetalle.estado === 'activo' ? 'pi-check-circle' : 'pi-lock'"></i>
+                    {{ clienteDetalle.estado | titlecase }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Etiquetas -->
+        <div class="mb-3" *ngIf="clienteDetalle.etiquetas?.length > 0">
+            <div class="detalle-section-title">Etiquetas</div>
+            <div class="d-flex flex-wrap gap-1 mt-1">
+                <span *ngFor="let tagName of clienteDetalle.etiquetas"
+                      class="tag-chip-sm"
+                      [style.background-color]="getTagBgColor(getTagColorByName(tagName))"
+                      [style.color]="getTagFgColor(getTagColorByName(tagName))">
+                    {{ tagName }}
+                </span>
+            </div>
+        </div>
+
+        <!-- Contacto -->
+        <div class="detalle-card mb-3">
+            <div class="detalle-section-title">Contacto</div>
+            <div class="detalle-row">
+                <i class="pi pi-envelope"></i>
+                <span>{{ clienteDetalle.correo_electronico_comprador || '—' }}</span>
+            </div>
+            <div class="detalle-row">
+                <i class="pi pi-phone"></i>
+                <span>+{{ clienteDetalle.indicativo_celular_comprador }} {{ clienteDetalle.numero_celular_comprador || '—' }}</span>
+            </div>
+            <div class="detalle-row" *ngIf="clienteDetalle.numero_celular_whatsapp">
+                <i class="pi pi-whatsapp"></i>
+                <span>+{{ clienteDetalle.indicativo_celular_whatsapp }} {{ clienteDetalle.numero_celular_whatsapp }}</span>
+            </div>
+            <div class="detalle-row" *ngIf="clienteDetalle.tipoCliente">
+                <i class="pi pi-tag"></i>
+                <span>Tipo: {{ clienteDetalle.tipoCliente }}</span>
+            </div>
+            <div class="detalle-row" *ngIf="clienteDetalle.fechaCumpleanos">
+                <i class="pi pi-gift"></i>
+                <span>Cumpleaños: {{ clienteDetalle.fechaCumpleanos }}</span>
+            </div>
+            <div class="detalle-row" *ngIf="clienteDetalle.comoNosConocio">
+                <i class="pi pi-compass"></i>
+                <span>Nos conoció por: {{ clienteDetalle.comoNosConocio }}</span>
+            </div>
+        </div>
+
+        <!-- Facturación -->
+        <div class="detalle-card mb-3" *ngIf="clienteDetalle.datosFacturacionElectronica?.length > 0">
+            <div class="detalle-section-title">Facturación</div>
+            <div *ngFor="let f of clienteDetalle.datosFacturacionElectronica" class="mb-2">
+                <div class="detalle-row" *ngIf="f.alias">
+                    <i class="pi pi-bookmark"></i><span class="fw-semibold">{{ f.alias }}</span>
+                </div>
+                <div class="detalle-row"><i class="pi pi-building"></i><span>{{ f.nombres }}</span></div>
+                <div class="detalle-row"><i class="pi pi-id-card"></i><span>{{ f.tipoDocumento }}: {{ f.documento }}</span></div>
+                <div class="detalle-row" *ngIf="f.correo"><i class="pi pi-envelope"></i><span>{{ f.correo }}</span></div>
+            </div>
+        </div>
+
+        <!-- Entrega -->
+        <div class="detalle-card mb-4" *ngIf="clienteDetalle.datosEntrega?.length > 0">
+            <div class="detalle-section-title">Direcciones de entrega</div>
+            <div *ngFor="let e of clienteDetalle.datosEntrega" class="mb-2">
+                <div class="detalle-row" *ngIf="e.alias">
+                    <i class="pi pi-bookmark"></i><span class="fw-semibold">{{ e.alias }}</span>
+                </div>
+                <div class="detalle-row"><i class="pi pi-user"></i><span>{{ e.nombres }} {{ e.apellidos }}</span></div>
+                <div class="detalle-row"><i class="pi pi-map-marker"></i><span>{{ e.direccionEntrega }}</span></div>
+                <div class="detalle-row" *ngIf="e.ciudad"><i class="pi pi-globe"></i><span>{{ e.ciudad }}{{ e.departamento ? ', ' + e.departamento : '' }}</span></div>
+                <div class="detalle-row"><i class="pi pi-phone"></i><span>{{ e.celular }}</span></div>
+            </div>
+        </div>
+
+        <!-- Acciones -->
+        <div class="d-flex gap-2">
+            <button pButton type="button" icon="pi pi-pencil" label="Editar"
+                    class="p-button-primary flex-grow-1" (click)="editarDesdeDetalle()"></button>
+            <button pButton type="button" icon="pi pi-times" label="Cerrar"
+                    class="p-button-outlined p-button-secondary" (click)="cerrarDetallePanel()"></button>
+        </div>
+
+    </ng-container>
+</p-sidebar>
 
 <!-- Modal de Importacion de Clientes -->
 <app-import-modal

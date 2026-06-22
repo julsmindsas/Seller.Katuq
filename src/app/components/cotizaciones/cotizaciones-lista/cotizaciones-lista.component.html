@@ -175,6 +175,14 @@
                       <button class="btn btn-outline-info" title="Duplicar" (click)="duplicar(c, $event)">
                         <i class="fa fa-copy"></i>
                       </button>
+                      <button
+                        *ngIf="puedeConvertir(c)"
+                        class="btn btn-outline-success"
+                        title="Convertir a pedido"
+                        (click)="convertir(c, $event)"
+                      >
+                        <i class="fa fa-shopping-cart"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>
