@@ -139,16 +139,49 @@ export class CrearClienteModalComponent implements OnInit {
     return map[tag.color] || '#5a5470';
   }
 
+  private toTitleCase(str: string): string {
+    if (!str) return str;
+    return str.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  private getCamposFaltantes(): string[] {
+    const labels: Record<string, string> = {
+      tipo_documento_comprador:      'Tipo de Documento',
+      documento:                     'Número de Documento',
+      nombres_completos:             'Nombres Completos',
+      apellidos_completos:           'Apellidos Completos',
+      indicativo_celular_comprador:  'Indicativo Celular',
+      numero_celular_comprador:      'Teléfono Celular',
+      correo_electronico_comprador:  'Correo Electrónico',
+    };
+    return Object.entries(labels)
+      .filter(([key]) => this.formulario.get(key)?.invalid)
+      .map(([, label]) => label);
+  }
+
   guardarCliente() {
     if (this.formulario.invalid) {
       this.marcarControlesComoTocados();
-      Swal.fire("Error", "Por favor complete todos los campos requeridos", "error");
+      const faltantes = this.getCamposFaltantes();
+      const lista = faltantes.map(f => `• ${f}`).join('<br>');
+      Swal.fire({
+        title: 'Campos incompletos',
+        html: `Por favor completa los siguientes campos:<br><br>${lista}`,
+        icon: 'warning',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#8b5cf6',
+      });
       return;
     }
 
     const formValue = this.formulario.getRawValue();
     const clienteData = {
       ...formValue,
+      nombres_completos: this.toTitleCase(formValue.nombres_completos),
+      apellidos_completos: this.toTitleCase(formValue.apellidos_completos),
+      etiquetas: Array.isArray(formValue.etiquetas)
+        ? formValue.etiquetas.map((e: string) => this.toTitleCase(e))
+        : formValue.etiquetas,
       numero_celular_comprador: Number(formValue.numero_celular_comprador),
       numero_celular_whatsapp: formValue.numero_celular_whatsapp
         ? Number(formValue.numero_celular_whatsapp)

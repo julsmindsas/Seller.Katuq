@@ -35,6 +35,7 @@ import { PedidosUtilService } from "./service/pedidos.util.service";
 import { ToastModule } from "primeng/toast";
 import { TooltipModule } from "primeng/tooltip";
 import { DialogModule } from "primeng/dialog";
+import { SidebarModule } from "primeng/sidebar";
 import { TagModule } from "primeng/tag";
 import { ButtonModule } from "primeng/button";
 import { InputTextModule } from "primeng/inputtext";
@@ -107,6 +108,7 @@ import { CustomerMetricsComponent } from "./clientes/customer-metrics/customer-m
     ToastModule,
     TooltipModule,
     DialogModule,
+    SidebarModule,
     TagModule,
     ButtonModule,
     InputTextModule,

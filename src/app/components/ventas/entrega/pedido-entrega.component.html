@@ -558,6 +558,16 @@
 
         <hr class="my-2">
 
+        <!-- Ubicación seleccionada via DANE -->
+        <div class="row mb-2" *ngIf="departamento_entrega || ciudad_municipio_entrega">
+            <div class="col-12">
+                <span class="badge" style="background:#ede9fe;color:#5b21b6;font-size:0.82rem;padding:0.4rem 0.75rem;">
+                    <i class="fa fa-map-marker me-1"></i>
+                    {{ ciudad_municipio_entrega }}{{ departamento_entrega ? ' — ' + departamento_entrega : '' }}{{ pais_entrega ? ' (' + pais_entrega + ')' : '' }}
+                </span>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-sm-4 mb-3">
                 <label class="form-label" for="pais_crear">Pa&iacute;s</label>
@@ -574,58 +584,11 @@
                 </select>
             </div>
             <div class="col-md-4 mb-3">
-                <label class="form-label" for="depto_crear">Departamento</label>
-                <select
-                    [(ngModel)]="departamento_entrega"
-                    class="form-control select-default"
-                    id="depto_crear"
-                    type="text"
-                    placeholder="Departamento"
-                    required=""
-                    (change)="onDepartamentoChange()"
-                >
-                    <option disabled selected>Departamento</option>
-                    <option
-                        *ngFor="let item of departamentos1"
-                        value="{{ item }}"
-                    >
-                        {{ item }}
-                    </option>
-                </select>
-            </div>
-            <div class="col-md-4 mb-3">
-                <label class="form-label" for="ciudad_crear">Ciudad <span class="text-danger">*</span></label>
-                <select
-                    [(ngModel)]="ciudad_municipio_entrega"
-                    class="form-control select-default"
-                    id="ciudad_crear"
-                    type="text"
-                    placeholder="Ciudad"
-                    required=""
-                    (change)="onCiudadChange()"
-                >
-                    <option disabled selected>Ciudad / Municipio</option>
-                    <option *ngFor="let item of ciudades1" value="{{ item }}">
-                        {{ item }}
-                    </option>
-                </select>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-sm-4">
                 <label class="form-label" for="zona_cobro_crear">Zona Cobro</label>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4 mb-3">
                 <select
                     class="form-control select-default"
                     [(ngModel)]="zona_cobro"
                     id="zona_cobro_crear"
-                    type="text"
-                    placeholder="Zona Cobro"
-                    required=""
                     (ngModelChange)="onZonaCobroSelected()"
                 >
                     <option disabled selected>Zona Cobro</option>
@@ -922,20 +885,23 @@
 
         <hr class="my-2">
 
+        <!-- Ubicación seleccionada via DANE -->
+        <div class="row mb-2" *ngIf="departamento_entrega || ciudad_municipio_entrega">
+            <div class="col-12">
+                <span class="badge" style="background:#ede9fe;color:#5b21b6;font-size:0.82rem;padding:0.4rem 0.75rem;">
+                    <i class="fa fa-map-marker me-1"></i>
+                    {{ ciudad_municipio_entrega }}{{ departamento_entrega ? ' — ' + departamento_entrega : '' }}{{ pais_entrega ? ' (' + pais_entrega + ')' : '' }}
+                </span>
+            </div>
+        </div>
+
         <div class="row">
             <div class="col-sm-4 mb-3">
-                <label
-                    class="form-label"
-                    class="form-label"
-                    for="validationCustom01"
-                    >Pa&iacute;s</label
-                >
-
+                <label class="form-label" for="pais_editar">Pa&iacute;s</label>
                 <select
                     [(ngModel)]="pais_entrega"
                     class="form-control select-default"
-                    name=""
-                    id=""
+                    id="pais_editar"
                     (change)="onPaisChange()"
                 >
                     <option disabled selected>Pa&iacute;s</option>
@@ -944,64 +910,8 @@
                     </option>
                 </select>
             </div>
-
-            <div class="col-md-4 mb-3">
-                <label
-                    class="form-label"
-                    class="form-label"
-                    for="validationCustom01"
-                    >Departamento</label
-                >
-                <select
-                    [(ngModel)]="departamento_entrega"
-                    class="form-control select-default"
-                    id="validationCustom01"
-                    type="text"
-                    placeholder="Departamento"
-                    required=""
-                    (change)="onDepartamentoChange()"
-                >
-                    <option disabled selected>Departamento</option>
-                    <option
-                        *ngFor="let item of departamentos1"
-                        value="{{ item }}"
-                    >
-                        {{ item }}
-                    </option>
-                </select>
-            </div>
-
-            <div class="col-md-4 mb-3">
-                <label
-                    class="form-label"
-                    class="form-label"
-                    for="validationCustom01"
-                    >Ciudad</label
-                >
-                <select
-                    [(ngModel)]="ciudad_municipio_entrega"
-                    class="form-control select-default"
-                    id="validationCustom01"
-                    type="text"
-                    placeholder="Ciudad"
-                    required=""
-                    (change)="onCiudadChange()"
-                >
-                    <option disabled selected>Ciudad / Municipio</option>
-                    <option *ngFor="let item of ciudades1" value="{{ item }}">
-                        {{ item }}
-                    </option>
-                </select>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-sm-4">
-                <label
-                    class="form-label"
-                    class="form-label"
-                    for="validationCustom01"
-                    >Zona Cobro</label
-                >
+            <div class="col-sm-4 mb-3">
+                <label class="form-label" for="zona_cobro_editar">Zona Cobro</label>
             </div>
         </div>
         <div class="row">
@@ -1009,10 +919,7 @@
                 <select
                     class="form-control select-default"
                     [(ngModel)]="zona_cobro"
-                    id="validationCustom01"
-                    type="text"
-                    placeholder="Zona Cobro"
-                    required=""
+                    id="zona_cobro_editar"
                     (ngModelChange)="onZonaCobroSelected()"
                 >
                     <option disabled selected>Zona Cobro</option>

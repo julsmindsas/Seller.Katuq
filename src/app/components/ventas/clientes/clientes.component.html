@@ -520,7 +520,17 @@
 
         <hr class="my-2">
 
-        <!-- Fila 4: País | Departamento | Ciudad | Zona Cobro | Código Postal | Botón -->
+        <!-- Ubicación seleccionada via DANE -->
+        <div class="row g-2 mb-2" *ngIf="departamento_entrega || ciudad_municipio_entrega">
+            <div class="col-12">
+                <span class="badge" style="background:#ede9fe;color:#5b21b6;font-size:0.82rem;padding:0.4rem 0.75rem;">
+                    <i class="pi pi-map-marker me-1"></i>
+                    {{ ciudad_municipio_entrega }}{{ departamento_entrega ? ' — ' + departamento_entrega : '' }}{{ pais_entrega ? ' (' + pais_entrega + ')' : '' }}
+                </span>
+            </div>
+        </div>
+
+        <!-- País | Zona Cobro | Código Postal | Botón -->
         <div class="row g-2">
             <div class="col-2">
                 <label class="form-label mb-1"><strong>País</strong></label>
@@ -530,23 +540,7 @@
                     <option *ngFor="let item of paises" value="{{item}}">{{item}}</option>
                 </select>
             </div>
-            <div class="col-2">
-                <label class="form-label mb-1"><strong>Departamento</strong></label>
-                <select [(ngModel)]="departamento_entrega" class="form-control form-control-sm select-default"
-                    (change)="onDepartamentoChange()">
-                    <option disabled selected>Dpto.</option>
-                    <option *ngFor="let item of departamentos1" value="{{item}}">{{item}}</option>
-                </select>
-            </div>
             <div class="col-3">
-                <label class="form-label mb-1"><strong>Ciudad <span class="text-danger">*</span></strong></label>
-                <select [(ngModel)]="ciudad_municipio_entrega" class="form-control form-control-sm select-default"
-                    (change)="onCiudadChange()">
-                    <option disabled selected>Ciudad</option>
-                    <option *ngFor="let item of ciudades1" value="{{item}}">{{item}}</option>
-                </select>
-            </div>
-            <div class="col-2">
                 <label class="form-label mb-1"><strong>Zona Cobro</strong></label>
                 <select class="form-control form-control-sm select-default" [(ngModel)]="zona_cobro"
                     (ngModelChange)="onZonaCobroSelected()">
@@ -557,7 +551,7 @@
                 </select>
                 <small *ngIf="valor_zona_cobro" class="text-muted">Domicilio: <strong>{{valor_zona_cobro | currency}}</strong></small>
             </div>
-            <div class="col-1">
+            <div class="col-2">
                 <label class="form-label mb-1"><strong>Cód. Postal</strong></label>
                 <input class="form-control form-control-sm" type="text" [(ngModel)]="codigo_postal_entrega" />
             </div>
@@ -626,6 +620,16 @@
             <div class="col-3">
                 <label class="form-label mb-1"><strong>Documento <span class="text-danger">*</span></strong></label>
                 <input class="form-control form-control-sm" type="text" [(ngModel)]="numero_documento_facturacion" required />
+            </div>
+        </div>
+
+        <!-- Fila 2: Correo -->
+        <div class="row g-2 mb-2">
+            <div class="col-6">
+                <label class="form-label mb-1"><strong>Correo Electrónico</strong></label>
+                <input class="form-control form-control-sm" type="email"
+                    placeholder="correo@empresa.com (opcional)"
+                    [(ngModel)]="correo_electronico_facturacion" />
             </div>
         </div>
 
