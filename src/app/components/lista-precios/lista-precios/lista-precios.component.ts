@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MaestroService } from 'src/app/shared/services/maestros/maestro.service';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -751,48 +751,72 @@ export class ListaPreciosComponent implements OnInit, OnDestroy {
 
     if (!isConfirmed) return;
 
+    // Agrupar por referencia: el backend sobrescribe preciosPorTipoCliente completo,
+    // así que TODOS los precios de una referencia deben viajar en el mismo lote.
+    const preciosPorRef = new Map<string, any[]>();
+    precios.forEach(p => {
+      const arr = preciosPorRef.get(p.referencia) || [];
+      arr.push(p);
+      preciosPorRef.set(p.referencia, arr);
+    });
+    const gruposRef = Array.from(preciosPorRef.values());
+
+    // Lotes de referencias completas (evita 413 por payload y 504 por timeout)
+    const CHUNK_REFS = 1000;
+    const lotes: any[][] = [];
+    for (let i = 0; i < gruposRef.length; i += CHUNK_REFS) {
+      lotes.push(gruposRef.slice(i, i + CHUNK_REFS).flat());
+    }
+
+    let actualizados = 0, noEncontrados = 0, errores = 0;
+    const erroresDetalle: string[] = [];
+    const lotesFallidos: number[] = [];
+
     Swal.fire({
       title: 'Importando precios...',
-      text: 'Enviando al servidor',
+      html: `Preparando ${lotes.length} lote(s)...`,
       allowOutsideClick: false,
       didOpen: () => { Swal.showLoading(); }
     });
 
-    // Enviar al backend — UNA sola petición
-    this.service.importPreciosTipoCliente({
-      precios,
-      porcentajeIva: 19,
-      preciosConIva
-    }).pipe(takeUntil(this.destroy$)).subscribe({
-      next: (response: any) => {
-        const data = response?.data || response;
-        const actualizados = data.actualizados || 0;
-        const noEncontrados = data.noEncontrados || 0;
-        const errores = data.errores || 0;
-        const erroresDetalle = data.erroresDetalle || [];
-
-        let html = `
-          <p><strong>Actualizados:</strong> ${actualizados}</p>
-          <p><strong>No encontrados:</strong> ${noEncontrados}</p>
-        `;
-        if (erroresDetalle.length > 0 && erroresDetalle.length <= 10) {
-          html += '<hr><ul style="text-align:left;font-size:.85em">';
-          erroresDetalle.forEach((e: string) => { html += `<li>${e}</li>`; });
-          html += '</ul>';
-        }
-
-        Swal.fire({
-          title: actualizados > 0 ? 'Importación completada' : 'Sin cambios',
-          html,
-          icon: actualizados > 0 ? 'success' : 'warning',
-          width: '600px'
-        }).then(() => {
-          this.cargarPagina(1);
-        });
-      },
-      error: (err) => {
-        Swal.fire('Error', 'Error del servidor: ' + (err?.error?.details || err?.message || 'desconocido'), 'error');
+    for (let i = 0; i < lotes.length; i++) {
+      Swal.update({
+        html: `Procesando lote <strong>${i + 1} de ${lotes.length}</strong>...<br>
+               <small class="text-muted">${actualizados} actualizados hasta ahora</small>`
+      });
+      try {
+        const response: any = await firstValueFrom(
+          this.service.importPreciosTipoCliente({ precios: lotes[i], porcentajeIva: 19, preciosConIva })
+        );
+        const data = response?.data || response || {};
+        actualizados += data.actualizados || 0;
+        noEncontrados += data.noEncontrados || 0;
+        errores += data.errores || 0;
+        if (Array.isArray(data.erroresDetalle)) erroresDetalle.push(...data.erroresDetalle);
+      } catch (err: any) {
+        lotesFallidos.push(i + 1);
+        erroresDetalle.push(`Lote ${i + 1}: ${err?.error?.details || err?.message || 'error desconocido'}`);
       }
+    }
+
+    let html = `
+      <p><strong>Actualizados:</strong> ${actualizados}</p>
+      <p><strong>No encontrados:</strong> ${noEncontrados}</p>
+      ${lotesFallidos.length ? `<p class="text-danger"><strong>Lotes con error:</strong> ${lotesFallidos.join(', ')}</p>` : ''}
+    `;
+    if (erroresDetalle.length > 0 && erroresDetalle.length <= 10) {
+      html += '<hr><ul style="text-align:left;font-size:.85em">';
+      erroresDetalle.forEach((e: string) => { html += `<li>${e}</li>`; });
+      html += '</ul>';
+    }
+
+    Swal.fire({
+      title: actualizados > 0 ? 'Importación completada' : 'Sin cambios',
+      html,
+      icon: lotesFallidos.length ? 'warning' : (actualizados > 0 ? 'success' : 'warning'),
+      width: '600px'
+    }).then(() => {
+      this.cargarPagina(1);
     });
   }
 
