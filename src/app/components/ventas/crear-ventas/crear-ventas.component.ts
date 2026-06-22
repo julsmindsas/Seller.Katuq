@@ -44,6 +44,7 @@ import { ActivatedRoute } from "@angular/router";
 import { VentasService } from "../../../shared/services/ventas/ventas.service";
 import { PaymentService } from "../../../shared/services/ventas/payment.service";
 import { CartSingletonService } from "../../../shared/services/ventas/cart.singleton.service";
+import { CotizacionesService } from "../../cotizaciones/cotizaciones.service";
 import { NgxHotkeysService } from "@balticcode/ngx-hotkeys";
 import { ToastrService } from "ngx-toastr";
 import { UtilsService } from "../../../shared/services/utils.service";
@@ -316,6 +317,7 @@ export class CrearVentasComponent
     private inventarioService: InventarioService,
     private daneCodesService: DaneCodesService,
     private integrationsService: IntegrationsService,
+    private cotizacionesService: CotizacionesService,
   ) {
     this.initForm();
 
@@ -351,6 +353,83 @@ export class CrearVentasComponent
     }
 
     this.cargarBodegas();
+  }
+
+  /**
+   * Spec 008.2 — Si esta venta proviene de "Convertir a pedido" de una cotización
+   * (marcador en sessionStorage['cotizacionOrigen']), sella la cotización como
+   * convertida y la enlaza al pedido recién creado. Idempotente y defensivo: si
+   * algo falla, NO interrumpe el flujo del pedido (ya creado).
+   */
+  private marcarCotizacionConvertidaSiAplica(nroPedido: string): void {
+    let origen: any = null;
+    try {
+      const raw = sessionStorage.getItem("cotizacionOrigen");
+      if (raw) origen = JSON.parse(raw);
+    } catch {
+      origen = null;
+    }
+    if (!origen || !origen.id) return;
+
+    // Limpiar el marcador de una vez para evitar doble marcado.
+    try { sessionStorage.removeItem("cotizacionOrigen"); } catch { /* noop */ }
+
+    this.cotizacionesService.marcarConvertida(origen.id, nroPedido).subscribe({
+      next: () => console.log("✅ Cotización", origen.nro || origen.id, "marcada como convertida →", nroPedido),
+      error: (err) => console.error("⚠️ No se pudo marcar la cotización como convertida:", err),
+    });
+  }
+
+  /**
+   * Spec 008.2 — Si esta venta proviene de "Convertir a pedido" de una cotización
+   * (contexto en sessionStorage['cotizacionVentaCtx']), setea bodega + ciudad SIN
+   * pasar por los handlers públicos (que limpian el carrito) y salta directo al
+   * paso del Carrito. El carrito ya viene pre-cargado desde la cotización.
+   */
+  private aplicarContextoConversionSiAplica(): void {
+    let ctx: any = null;
+    try {
+      const raw = sessionStorage.getItem("cotizacionVentaCtx");
+      if (raw) ctx = JSON.parse(raw);
+    } catch {
+      ctx = null;
+    }
+    if (!ctx) return;
+    // Consumir el contexto una sola vez.
+    try { sessionStorage.removeItem("cotizacionVentaCtx"); } catch { /* noop */ }
+
+    // Cargar el carrito con las líneas de la cotización AQUÍ (newPedido ya limpió el
+    // carrito al iniciar). La suscripción de ngOnInit sincroniza a pedidoGral.carrito
+    // y habilita tieneProductosEnCarrito.
+    try {
+      if (Array.isArray(ctx.items) && ctx.items.length) {
+        this.cartService.clearCart();
+        for (const item of ctx.items) {
+          this.cartService.addToCart(item);
+        }
+      }
+    } catch (e) {
+      console.error("Conversión cotización: error cargando el carrito", e);
+    }
+
+    // Setear bodega y ciudad vía los métodos privados (NO onWarehouseChange/onSelectCity,
+    // que limpian el carrito). Estos actualizan pedidoGral.bodegaId / envio.ciudad.
+    try {
+      if (ctx.bodega) this.aplicarCambioBodega(ctx.bodega);
+      if (ctx.ciudad) this.aplicarCambioCiudad(ctx.ciudad);
+    } catch (e) {
+      console.error("Conversión cotización: error seteando bodega/ciudad", e);
+    }
+
+    // Saltar al paso del Carrito (índice 2) con avance secuencial (patrón del wizard).
+    setTimeout(() => {
+      try {
+        this.mywizard?.goToNextStep(); // Cliente → Productos
+        setTimeout(() => {
+          try { this.mywizard?.goToNextStep(); } catch { /* noop */ } // Productos → Carrito
+        }, 80);
+      } catch { /* noop */ }
+    }, 0);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -1572,6 +1651,10 @@ export class CrearVentasComponent
           this.encontrado = true;
           this.mostrarFormularioCliente = false;
           this.clienteRecienCreado = false; // Asegurar que este flag esté en false para clientes encontrados
+
+          // Spec 008.2 — si venimos de "Convertir a pedido", setear bodega/ciudad y
+          // saltar al carrito (cliente y carrito ya están listos en este punto).
+          this.aplicarContextoConversionSiAplica();
 
           // Recuperar categoría existente del cliente si la tiene
           console.log('🔍 DEBUG - Verificando categoría del cliente:', {
@@ -3104,6 +3187,8 @@ export class CrearVentasComponent
 
                 context.cartService.clearCart();
                 context.pedidoSinGuardar = false;
+                // Spec 008.2: sellar la cotización origen (si esta venta vino de "Convertir a pedido").
+                this.marcarCotizacionConvertidaSiAplica(nroPedido);
                 this.mywizard.goToNextStep();
 
                 // Mostrar mensaje de éxito
@@ -4108,6 +4193,9 @@ export class CrearVentasComponent
                   if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {
                     context.encolarFacturacionSiigo(orderId, nroPedido);
                   }
+
+                  // Spec 008.2: sellar la cotización origen (si esta venta vino de "Convertir a pedido").
+                  context.marcarCotizacionConvertidaSiAplica(nroPedido);
 
                   resolve(true); // Pedido guardado exitosamente
                 },

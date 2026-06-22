@@ -1,0 +1,174 @@
+.cp-page {
+  min-height: 100vh;
+  background: #f4f5f7;
+  padding: 24px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color: #1f2937;
+}
+
+.cp-card {
+  width: 100%;
+  max-width: 720px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+}
+
+.cp-center {
+  text-align: center;
+  padding: 56px 24px;
+}
+.cp-icon { font-size: 40px; margin-bottom: 8px; }
+.cp-muted { color: #6b7280; }
+
+.cp-spinner {
+  width: 32px; height: 32px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  margin: 0 auto 12px;
+  animation: cp-spin 0.8s linear infinite;
+}
+@keyframes cp-spin { to { transform: rotate(360deg); } }
+
+.cp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-bottom: 1px solid #eef0f3;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.cp-empresa { font-size: 18px; font-weight: 700; }
+.cp-nro { color: #6b7280; font-size: 14px; margin-top: 2px; }
+
+.cp-badge {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  white-space: nowrap;
+}
+.cp-badge[data-estado="aceptada"] { background: #ecfdf5; color: #065f46; }
+.cp-badge[data-estado="rechazada"] { background: #fef2f2; color: #991b1b; }
+.cp-badge[data-estado="vencida"] { background: #fffbeb; color: #92400e; }
+.cp-badge[data-estado="convertida"] { background: #eff6ff; color: #1e40af; }
+
+.cp-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  div { display: flex; flex-direction: column; }
+}
+.cp-label { font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; }
+
+.cp-result {
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  border-left: 4px solid;
+}
+.cp-ok { background: #ecfdf5; border-color: #10b981; color: #065f46; }
+.cp-no { background: #fef2f2; border-color: #ef4444; color: #991b1b; }
+.cp-warn { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
+.cp-info { background: #eff6ff; border-color: #3b82f6; color: #1e40af; }
+
+.cp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 14px;
+  th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #9ca3af;
+    border-bottom: 2px solid #eef0f3;
+    padding: 8px 6px;
+  }
+  td { padding: 10px 6px; border-bottom: 1px solid #f3f4f6; }
+}
+.cp-c { text-align: center; }
+.cp-r { text-align: right; }
+
+.cp-totales {
+  margin-left: auto;
+  max-width: 300px;
+  font-size: 14px;
+  div { display: flex; justify-content: space-between; padding: 4px 0; }
+}
+.cp-total {
+  border-top: 2px solid #eef0f3;
+  margin-top: 4px;
+  padding-top: 8px !important;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.cp-terminos {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid #eef0f3;
+  p { white-space: pre-wrap; font-size: 13px; color: #4b5563; margin-top: 6px; }
+}
+
+.cp-acciones {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid #eef0f3;
+}
+.cp-acciones-hint { font-weight: 600; margin-bottom: 12px; }
+.cp-btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.cp-btn {
+  border: 0;
+  border-radius: 8px;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  background: #e5e7eb;
+  color: #111827;
+  &:disabled { opacity: .6; cursor: not-allowed; }
+}
+.cp-btn-ok { background: #10b981; color: #fff; }
+.cp-btn-no { background: #ef4444; color: #fff; }
+.cp-btn-light { background: #f3f4f6; color: #374151; }
+
+.cp-form { margin-top: 4px; }
+.cp-form-title { font-weight: 700; margin-bottom: 10px; }
+.cp-field {
+  display: block;
+  margin-bottom: 12px;
+  span { display: block; font-size: 13px; color: #4b5563; margin-bottom: 4px; }
+  input, textarea {
+    width: 100%;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  input:focus, textarea:focus { outline: none; border-color: #2563eb; }
+}
+.cp-error { color: #b91c1c; font-size: 13px; margin-bottom: 10px; }
+
+.cp-footer {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid #eef0f3;
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+}
