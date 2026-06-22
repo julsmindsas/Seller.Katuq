@@ -157,6 +157,7 @@ export class IntegrationsService {
 
   getIntegrations(): Observable<Integration[]> {
     this.stateService.setLoading("list", true);
+    const companyId = this.getCurrentCompanyId(); // Cache key por empresa (aislamiento multi-tenant)
 
     const fetchIntegrations$ = this.http
       .get<{
@@ -198,7 +199,7 @@ export class IntegrationsService {
       );
 
     const integrationsFromCacheOrApi$ = this.cacheService.get(
-      "integrations:all",
+      `integrations:all:${companyId}`,
       () => fetchIntegrations$,
       5 * 60 * 1000, // 5 minutos TTL
     );
@@ -439,8 +440,9 @@ export class IntegrationsService {
   getIntegrationsByCategory(
     category: IntegrationCategory,
   ): Observable<Integration[]> {
+    const companyId = this.getCurrentCompanyId();
     return this.cacheService.get(
-      `integrations:category:${category}`,
+      `integrations:category:${category}:${companyId}`,
       () =>
         this.getIntegrations().pipe(
           map((integrations) =>
@@ -455,8 +457,9 @@ export class IntegrationsService {
    * Obtener solo integraciones activas
    */
   getActiveIntegrations(): Observable<Integration[]> {
+    const companyId = this.getCurrentCompanyId();
     return this.cacheService.get(
-      "integrations:active",
+      `integrations:active:${companyId}`,
       () =>
         this.getIntegrations().pipe(
           map((integrations) => (integrations || []).filter((i) => i.enabled)),
@@ -469,7 +472,8 @@ export class IntegrationsService {
    * Buscar integraciones con cache
    */
   searchIntegrations(query: string): Observable<Integration[]> {
-    const cacheKey = `integrations:search:${query.toLowerCase()}`;
+    const companyId = this.getCurrentCompanyId();
+    const cacheKey = `integrations:search:${query.toLowerCase()}:${companyId}`;
     return this.cacheService.get(
       cacheKey,
       () =>

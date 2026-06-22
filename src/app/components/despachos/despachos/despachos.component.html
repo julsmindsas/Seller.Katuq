@@ -150,10 +150,9 @@
                                 <!-- Separador visual entre estados y alertas -->
                                 <div class="metric-divider" style="display:none"></div>
 
-                                <!-- Urgentes -->
-                                <div class="metric-chip metric-chip-danger metric-chip-compact"
-                                     (click)="onMetricClick('urgentes')"
-                                     pTooltip="{{ 'Filtrar pedidos urgentes' | translate }}"
+                                <!-- Urgentes (solo info, filtro pendiente de implementar) -->
+                                <div class="metric-chip metric-chip-danger metric-chip-info-only metric-chip-compact"
+                                     pTooltip="{{ 'Pedidos urgentes: entrega en 1 día o menos, sin despachar' | translate }}"
                                      tooltipPosition="top">
                                     <i class="pi pi-clock"></i>
                                     <span class="metric-label-short">URG</span>

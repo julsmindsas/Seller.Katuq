@@ -7030,7 +7030,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
         EstadoPago.Pendiente,
         EstadoPago.Pospendiente,
       ],
-      tipoFecha: "fechaEntrega"
+      tipoFecha: "fechaCreacion" // Filtrar el rango de fecha de arriba por fecha de compra (no de entrega)
     };
 
     // Apply quick filters from metrics (breadcrumbs)
