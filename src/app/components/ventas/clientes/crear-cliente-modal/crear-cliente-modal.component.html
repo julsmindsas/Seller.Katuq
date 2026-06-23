@@ -78,8 +78,12 @@
               <div class="col-12 col-sm-6" *ngIf="clientTypes && clientTypes.length > 0">
                 <label class="form-label-modern">{{ "Tipo de Cliente" | translate }}</label>
                 <p-dropdown formControlName="tipoCliente" [options]="clientTypes"
+                  optionLabel="label" optionValue="value"
                   placeholder="{{ 'Seleccionar tipo...' | translate }}"
-                  [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel">
+                  [showClear]="true" styleClass="w-100" panelStyleClass="buscar-por-panel"
+                  appendTo="body" scrollHeight="180px"
+                  [filter]="true" filterBy="label" filterMatchMode="contains"
+                  filterPlaceholder="{{ 'Buscar tipo...' | translate }}">
                 </p-dropdown>
               </div>
               <div class="col-12" [class.col-sm-6]="clientTypes && clientTypes.length > 0">

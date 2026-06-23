@@ -103,7 +103,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   resultadosBusqueda: any[] = [];
 
   // Tipo de cliente y etiquetas
-  clientTypes: string[] = [];
+  clientTypes: { label: string; value: string }[] = [];
   clientTagsCatalog: ClientTag[] = [];
   etiquetasSeleccionadas: string[] = [];
 
@@ -738,7 +738,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     });
     this.service.consultarTiposClienteActivos().subscribe({
       next: (tipos: any) => {
-        this.clientTypes = Array.isArray(tipos) ? tipos.filter((t: any) => t.active !== false).map((t: any) => t.nombre) : [];
+        this.clientTypes = Array.isArray(tipos) ? tipos.filter((t: any) => t.active !== false).map((t: any) => ({ label: t.nombre, value: t.nombre })) : [];
       },
       error: () => { this.clientTypes = []; }
     });

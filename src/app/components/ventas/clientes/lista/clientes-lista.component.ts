@@ -49,6 +49,9 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         { label: 'Bloqueado', value: 'bloqueado' }
     ];
 
+    // Opciones para dropdown de tipo de cliente
+    clientTypes: { label: string; value: string }[] = [];
+
     // Import modal
     showImportModal: boolean = false;
 
@@ -78,7 +81,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             cliente: [''],
             documento: [''],
             email: [''],
-            estado: [null]
+            estado: [null],
+            tipoCliente: [null]
         });
 
         const savedFilters = this.loadSavedFilters();
@@ -91,6 +95,14 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
         this.cargarClientes();
         this.clientConfig.loadClientTags().subscribe(tags => {
             this.availableTagsForFilter = tags;
+        });
+        this.clienteService.consultarTiposClienteActivos().subscribe({
+            next: (tipos: any) => {
+                this.clientTypes = Array.isArray(tipos)
+                    ? tipos.filter((t: any) => t.active !== false).map((t: any) => ({ label: t.nombre, value: t.nombre }))
+                    : [];
+            },
+            error: () => { this.clientTypes = []; }
         });
 
         // Configurar debounce para búsqueda global
@@ -203,6 +215,15 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             );
         }
 
+        // Filtro por tipo de cliente (puede estar en c.categoria.nombre o c.tipoCliente)
+        if (filtros.tipoCliente) {
+            const filtroNombre = filtros.tipoCliente.toLowerCase();
+            clientesFiltrados = clientesFiltrados.filter(c => {
+                const tipo = (c.categoria?.nombre || c.tipoCliente || '').toLowerCase();
+                return tipo === filtroNombre;
+            });
+        }
+
         // Filtro por etiquetas (OR: el cliente debe tener al menos una de las etiquetas seleccionadas)
         if (this.selectedTagNames.length > 0) {
             clientesFiltrados = clientesFiltrados.filter(c => {
@@ -238,7 +259,8 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             cliente: '',
             documento: '',
             email: '',
-            estado: null
+            estado: null,
+            tipoCliente: null
         });
 
         this.selectedCliente = null;
@@ -488,7 +510,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             c.numero_celular_comprador || '',
             c.numero_celular_whatsapp || '',
             c.estado || '',
-            c.tipoCliente || '',
+            c.categoria?.nombre || c.tipoCliente || '',
             Array.isArray(c.etiquetas) ? c.etiquetas.join(', ') : '',
             c.comoNosConocio || '',
             c.fechaCumpleanos || '',

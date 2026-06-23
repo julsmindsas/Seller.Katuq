@@ -2674,19 +2674,62 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Verificar si hay integración de facturación configurada
     this.checkInvoicingIntegration();
 
-    // Leer query param "buscar" (usado por notificaciones para navegar a un pedido)
+    // Leer query param "buscar" (usado por notificaciones / customer-metrics para navegar a un pedido)
     this.route.queryParams.subscribe(params => {
       if (params['buscar']) {
         this.searchQuery = params['buscar'];
+
+        // Si viene la fecha del pedido, usarla como rango exacto; si no, últimos 2 años
+        let desde: Date;
+        let hasta: Date;
+        if (params['fecha']) {
+          const fechaPedido = new Date(params['fecha']);
+          if (!isNaN(fechaPedido.getTime())) {
+            desde = new Date(fechaPedido);
+            desde.setHours(0, 0, 0, 0);
+            hasta = new Date(fechaPedido);
+            hasta.setHours(23, 59, 59, 999);
+          } else {
+            desde = new Date(); desde.setFullYear(desde.getFullYear() - 2);
+            hasta = new Date();
+          }
+        } else {
+          desde = new Date(); desde.setFullYear(desde.getFullYear() - 2);
+          hasta = new Date();
+        }
+
+        this.fechaInicial = desde.toISOString().split('T')[0];
+        this.fechaFinal = hasta.toISOString().split('T')[0];
+        this.fechaInicialDate = desde;
+        this.fechaFinalDate = hasta;
+
+        this.sharedFilterService.updateFilterState({
+          searchQuery: params['buscar'],
+          fechaInicial: desde,
+          fechaFinal: hasta,
+        });
+        setTimeout(() => this.refrescarDatos(true), 500);
       }
     });
 
-    // Initialize dates first before subscribing to service
+    // Initialize dates - si el snapshot ya trae fecha de pedido, usarla; si no, hoy
+    const snapParams = this.route.snapshot.queryParams;
     const today = new Date();
-    this.fechaInicial = today.toISOString().split("T")[0];
-    this.fechaFinal = today.toISOString().split("T")[0];
-    this.fechaInicialDate = new Date(today);
-    this.fechaFinalDate = new Date(today);
+    if (snapParams['buscar'] && snapParams['fecha']) {
+      const fp = new Date(snapParams['fecha']);
+      if (!isNaN(fp.getTime())) {
+        this.fechaInicialDate = new Date(fp); this.fechaInicialDate.setHours(0, 0, 0, 0);
+        this.fechaFinalDate   = new Date(fp); this.fechaFinalDate.setHours(23, 59, 59, 999);
+      } else {
+        this.fechaInicialDate = new Date(today);
+        this.fechaFinalDate   = new Date(today);
+      }
+    } else {
+      this.fechaInicialDate = new Date(today);
+      this.fechaFinalDate   = new Date(today);
+    }
+    this.fechaInicial = this.fechaInicialDate.toISOString().split('T')[0];
+    this.fechaFinal   = this.fechaFinalDate.toISOString().split('T')[0];
 
     // Update the shared filter service with initial dates
     this.sharedFilterService.updateFilterState({

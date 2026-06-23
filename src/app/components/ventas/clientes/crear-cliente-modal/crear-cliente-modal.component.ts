@@ -18,7 +18,7 @@ export class CrearClienteModalComponent implements OnInit {
 
   formulario: FormGroup;
   indicativos: any[] = [];
-  clientTypes: string[] = [];
+  clientTypes: { label: string; value: string }[] = [];
   clientTagsCatalog: ClientTag[] = [];
   etiquetasSeleccionadas: string[] = [];
 
@@ -40,7 +40,7 @@ export class CrearClienteModalComponent implements OnInit {
     this.maestroService.consultarTiposClienteActivos().subscribe({
       next: (tipos: any) => {
         this.clientTypes = Array.isArray(tipos)
-          ? tipos.filter((t: any) => t.active !== false).map((t: any) => t.nombre)
+          ? tipos.filter((t: any) => t.active !== false).map((t: any) => ({ label: t.nombre, value: t.nombre }))
           : [];
       },
       error: () => { this.clientTypes = []; }

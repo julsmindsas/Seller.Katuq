@@ -59,7 +59,16 @@
           </thead>
           <tbody>
             <tr *ngFor="let p of summary.pedidos.items">
-              <td>{{ p.nroPedido || '—' }}</td>
+              <td>
+                <a *ngIf="p.nroPedido; else sinNro"
+                   [routerLink]="['/ventas/pedidos']"
+                   [queryParams]="{buscar: p.nroPedido, fecha: p.fechaCreacion}"
+                   style="color:#7c3aed; font-weight:600; text-decoration:none; white-space:nowrap;"
+                   pTooltip="Ver pedido en módulo de pedidos" tooltipPosition="top">
+                  {{ p.nroPedido }}&nbsp;<i class="pi pi-external-link" style="font-size:0.65rem;"></i>
+                </a>
+                <ng-template #sinNro>—</ng-template>
+              </td>
               <td>{{ p.fechaCreacion ? (p.fechaCreacion | date:'short') : '—' }}</td>
               <td>{{ p.estadoProceso || '—' }}</td>
               <td>{{ p.estadoPago || '—' }}</td>

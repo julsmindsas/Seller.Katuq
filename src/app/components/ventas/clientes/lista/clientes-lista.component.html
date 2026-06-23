@@ -116,6 +116,27 @@
                                             placeholder="{{ 'Todos los estados' | translate }}"
                                             styleClass="w-100"></p-dropdown>
                             </div>
+
+                            <!-- Tipo de Cliente -->
+                            <div class="col-12 col-md-6 col-lg-3" *ngIf="clientTypes.length > 0">
+                                <label class="form-label fw-semibold">
+                                    {{ "Tipo de Cliente" | translate }}
+                                </label>
+                                <p-dropdown [options]="clientTypes"
+                                            formControlName="tipoCliente"
+                                            optionLabel="label"
+                                            optionValue="value"
+                                            [showClear]="true"
+                                            placeholder="{{ 'Todos los tipos' | translate }}"
+                                            styleClass="w-100"
+                                            appendTo="body"
+                                            scrollHeight="180px"
+                                            [filter]="true"
+                                            filterBy="label"
+                                            filterMatchMode="contains"
+                                            filterPlaceholder="{{ 'Buscar tipo...' | translate }}">
+                                </p-dropdown>
+                            </div>
                         </div>
 
                         <!-- Filtro por etiquetas -->
@@ -287,6 +308,7 @@
                                 <td><p-skeleton width="80%"></p-skeleton></td>
                                 <td><p-skeleton width="80%"></p-skeleton></td>
                                 <td><p-skeleton width="80px"></p-skeleton></td>
+                                <td><p-skeleton width="90px"></p-skeleton></td>
                                 <td><p-skeleton width="2rem" height="2rem" shape="circle"></p-skeleton></td>
                             </tr>
                         </ng-template>
@@ -310,6 +332,7 @@
                                 <th pSortableColumn="estado" style="width: 120px">
                                     {{ "Estado" | translate }} <p-sortIcon field="estado"></p-sortIcon>
                                 </th>
+                                <th style="width: 140px">{{ "Tipo de Cliente" | translate }}</th>
                                 <th style="width: 180px">{{ "Etiquetas" | translate }}</th>
                                 <th style="width: 100px" class="text-center">{{ "Acciones" | translate }}</th>
                             </tr>
@@ -355,6 +378,16 @@
                                 <!-- Estado -->
                                 <td>
                                     {{cliente.estado | titlecase}}
+                                </td>
+
+                                <!-- Tipo de Cliente -->
+                                <td>
+                                    <span *ngIf="cliente.categoria?.nombre || cliente.tipoCliente; else sinTipo"
+                                          class="badge"
+                                          style="background:#ede9fe; color:#7c3aed; font-size:0.75rem; font-weight:600; border-radius:12px; padding:0.25rem 0.6rem;">
+                                        {{ cliente.categoria?.nombre || cliente.tipoCliente }}
+                                    </span>
+                                    <ng-template #sinTipo><span class="text-muted" style="font-size:0.8rem">—</span></ng-template>
                                 </td>
 
                                 <!-- Etiquetas -->
@@ -579,9 +612,9 @@
                 <i class="pi pi-whatsapp"></i>
                 <span>+{{ clienteDetalle.indicativo_celular_whatsapp }} {{ clienteDetalle.numero_celular_whatsapp }}</span>
             </div>
-            <div class="detalle-row" *ngIf="clienteDetalle.tipoCliente">
+            <div class="detalle-row" *ngIf="clienteDetalle.categoria?.nombre || clienteDetalle.tipoCliente">
                 <i class="pi pi-tag"></i>
-                <span>Tipo: {{ clienteDetalle.tipoCliente }}</span>
+                <span>Tipo: {{ clienteDetalle.categoria?.nombre || clienteDetalle.tipoCliente }}</span>
             </div>
             <div class="detalle-row" *ngIf="clienteDetalle.fechaCumpleanos">
                 <i class="pi pi-gift"></i>
