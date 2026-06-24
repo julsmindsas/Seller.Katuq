@@ -2712,7 +2712,9 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    // Initialize dates - si el snapshot ya trae fecha de pedido, usarla; si no, hoy
+    // Initialize dates - si el snapshot ya trae fecha de pedido, usarla;
+    // si viene buscar sin fecha, usar 2 años (para navegación desde customer-metrics);
+    // si no hay nada, usar hoy.
     const snapParams = this.route.snapshot.queryParams;
     const today = new Date();
     if (snapParams['buscar'] && snapParams['fecha']) {
@@ -2721,9 +2723,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         this.fechaInicialDate = new Date(fp); this.fechaInicialDate.setHours(0, 0, 0, 0);
         this.fechaFinalDate   = new Date(fp); this.fechaFinalDate.setHours(23, 59, 59, 999);
       } else {
-        this.fechaInicialDate = new Date(today);
+        this.fechaInicialDate = new Date(today); this.fechaInicialDate.setFullYear(today.getFullYear() - 2);
         this.fechaFinalDate   = new Date(today);
       }
+    } else if (snapParams['buscar']) {
+      // Buscar sin fecha específica → rango 2 años para no perder pedidos históricos
+      this.fechaInicialDate = new Date(today); this.fechaInicialDate.setFullYear(today.getFullYear() - 2);
+      this.fechaFinalDate   = new Date(today);
     } else {
       this.fechaInicialDate = new Date(today);
       this.fechaFinalDate   = new Date(today);
@@ -3362,11 +3368,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     const startDate = new Date(this.fechaInicial + "T00:00:00");
     const endDate = new Date(this.fechaFinal + "T23:59:59.999");
 
+    // Cuando hay búsqueda por número de pedido, usar fechaCreacion para que el rango
+    // coincida con la fecha del pedido seleccionado (no la fecha de entrega).
+    const tipoFechaFiltro = (this.searchQuery && this.searchQuery.trim()) ? "fechaCreacion" : "fechaEntrega";
+
     const filter: any = {
       fechaInicial: startDate.toISOString(),
       fechaFinal: endDate.toISOString(),
       company: (() => { const c = JSON.parse(localStorage.getItem("currentCompany") || '{}'); return c.nomComercial || c.nombreComercio; })(),
-      tipoFecha: "fechaEntrega",
+      tipoFecha: tipoFechaFiltro,
       estadoProceso: ["Todos"],
       //se comenta mientras salimos del dia de amor y amistad PARA ALMARA - 17/09/2025
       /*this.isFromProduction
@@ -8753,6 +8763,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Métodos para persistir estado de filtros
   private loadFiltersState(): void {
+    // Si hay navegación directa a un pedido (buscar + fecha en URL), no pisar las
+    // fechas que ya fijó el queryParams handler — de lo contrario el refrescarDatos
+    // usa las fechas guardadas de la sesión anterior y no encuentra el pedido.
+    const snapParams = this.route.snapshot.queryParams;
+    const navDirectaAPedido = !!snapParams['buscar'];
+
     const savedState = localStorage.getItem("ventasFiltersState");
     if (savedState) {
       try {
@@ -8761,14 +8777,16 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
         // Restore UI state (existing logic)
         this.showFilters = state.showFilters || false;
 
-        // Restore filter values (NEW)
-        if (state.fechaInicial) {
-          this.fechaInicial = state.fechaInicial;
-          this.fechaInicialDate = this.stringToDate(state.fechaInicial);
-        }
-        if (state.fechaFinal) {
-          this.fechaFinal = state.fechaFinal;
-          this.fechaFinalDate = this.stringToDate(state.fechaFinal);
+        // Restore filter values (NEW) — saltar fechas si venimos de navegación directa
+        if (!navDirectaAPedido) {
+          if (state.fechaInicial) {
+            this.fechaInicial = state.fechaInicial;
+            this.fechaInicialDate = this.stringToDate(state.fechaInicial);
+          }
+          if (state.fechaFinal) {
+            this.fechaFinal = state.fechaFinal;
+            this.fechaFinalDate = this.stringToDate(state.fechaFinal);
+          }
         }
         if (state.nroPedido) this.nroPedido = state.nroPedido;
         if (state.quickFilters) {

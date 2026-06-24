@@ -33,9 +33,18 @@
               <div class="col-12 col-sm-6">
                 <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
                 <p-dropdown [options]="[
-                    {label: 'CC-NIT', value: 'CC-NIT'},
-                    {label: 'Pasaporte', value: 'PA'},
-                    {label: 'TI', value: 'TI'}
+                    {label: 'CC - Cédula de ciudadanía', value: 'CC'},
+                    {label: 'NIT', value: 'NIT'},
+                    {label: 'TI - Tarjeta de identidad', value: 'TI'},
+                    {label: 'RC - Registro civil', value: 'RC'},
+                    {label: 'CE - Cédula de extranjería', value: 'CE'},
+                    {label: 'TE - Tarjeta de extranjería', value: 'TE'},
+                    {label: 'PA - Pasaporte', value: 'PA'},
+                    {label: 'DIE - Doc. identificación extranjero', value: 'DIE'},
+                    {label: 'PEP - Permiso Especial de Permanencia', value: 'PEP'},
+                    {label: 'PPT - Permiso por Protección Temporal', value: 'PPT'},
+                    {label: 'NIT_EXT - NIT de otro país', value: 'NIT_EXT'},
+                    {label: 'NUIP', value: 'NUIP'}
                   ]"
                   formControlName="tipo_documento_comprador"
                   optionLabel="label" optionValue="value"

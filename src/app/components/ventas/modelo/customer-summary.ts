@@ -14,6 +14,18 @@ export interface CustomerSummary {
     valorTotal: number;
     ultimaCompra: { valor: number; fecha: string | null; nroPedido: string | null } | null;
     totalPedidos: number;
+    // métricas extendidas (Spec 009 v2)
+    fechaPrimeraCompra: string | null;
+    diasDesdeUltimaCompra: number | null;
+    cadenciaPromedioDias: number | null;
+    alertaCadencia: boolean;
+    tasaDevoluciones: number;
+    rfmSegmento: 'Campeón' | 'Fiel' | 'En riesgo' | 'Hibernando' | 'Perdido' | null;
+    clv: number | null;
+    canalPreferido: string | null;
+    metodoPagoPreferido: string | null;
+    categoriasMasCompradas: { nombre: string; cantidad: number }[];
+    productosMasComprados: { nombre: string; cantidad: number }[];
   };
   pedidos: {
     page: number;

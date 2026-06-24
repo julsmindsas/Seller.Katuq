@@ -59,7 +59,7 @@ export class CrearClienteModalComponent implements OnInit {
     } else {
       this.formulario.reset();
       this.formulario.patchValue({
-        tipo_documento_comprador: "CC-NIT",
+        tipo_documento_comprador: "CC",
         documento: this.documentoPrellenado || "",
         indicativo_celular_comprador: "57",
         indicativo_celular_whatsapp: "57",
@@ -70,7 +70,7 @@ export class CrearClienteModalComponent implements OnInit {
 
   initForm() {
     this.formulario = this.fb.group({
-      tipo_documento_comprador: ["CC-NIT", Validators.required],
+      tipo_documento_comprador: ["CC", Validators.required],
       documento: ["", Validators.required],
       nombres_completos: ["", Validators.required],
       apellidos_completos: ["", Validators.required],

@@ -39,6 +39,123 @@
       </div>
     </div>
 
+    <!-- Botón Ver Detalles -->
+    <div class="cm-details-toggle">
+      <button type="button" class="cm-btn-details" (click)="toggleDetalles()">
+        <i class="pi" [ngClass]="mostrarDetalles ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
+        {{ mostrarDetalles ? 'Ocultar detalles' : 'Ver detalles del cliente' }}
+      </button>
+    </div>
+
+    <!-- Panel de métricas extendidas -->
+    <div class="cm-details-panel" *ngIf="mostrarDetalles">
+
+      <!-- Fila 1: Fechas y recencia -->
+      <div class="cm-details-section">
+        <div class="cm-details-title">Historial de compras</div>
+        <div class="cm-details-grid">
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">Primera compra</span>
+            <span class="cm-detail-value">
+              {{ summary.metricas.fechaPrimeraCompra ? (summary.metricas.fechaPrimeraCompra | date:'mediumDate') : '—' }}
+            </span>
+          </div>
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">Última compra</span>
+            <span class="cm-detail-value">
+              {{ summary.metricas.ultimaCompra?.fecha ? (summary.metricas.ultimaCompra.fecha | date:'mediumDate') : '—' }}
+            </span>
+          </div>
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">Días sin comprar</span>
+            <span class="cm-detail-value" [style.color]="summary.metricas.alertaCadencia ? '#dc2626' : '#1f2937'">
+              <ng-container *ngIf="summary.metricas.diasDesdeUltimaCompra != null; else sinDatos">
+                {{ summary.metricas.diasDesdeUltimaCompra }} días
+                <span *ngIf="summary.metricas.alertaCadencia" class="cm-alert-badge"
+                  pTooltip="Lleva más tiempo del habitual sin comprar" tooltipPosition="top">
+                  ⚠ Alerta
+                </span>
+              </ng-container>
+              <ng-template #sinDatos>—</ng-template>
+            </span>
+          </div>
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">Cadencia promedio</span>
+            <span class="cm-detail-value">
+              {{ summary.metricas.cadenciaPromedioDias != null ? ('Cada ' + summary.metricas.cadenciaPromedioDias + ' días') : '—' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: Valor y segmentación -->
+      <div class="cm-details-section">
+        <div class="cm-details-title">Valor y segmentación</div>
+        <div class="cm-details-grid">
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">CLV estimado (2 años)</span>
+            <span class="cm-detail-value">
+              {{ summary.metricas.clv != null ? (summary.metricas.clv | currency:'COP':'symbol-narrow':'1.0-0') : '—' }}
+            </span>
+          </div>
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">Tasa de cancelaciones</span>
+            <span class="cm-detail-value">{{ summary.metricas.tasaDevoluciones != null ? (summary.metricas.tasaDevoluciones + '%') : '—' }}</span>
+          </div>
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">Segmento RFM</span>
+            <span class="cm-rfm-badge"
+              *ngIf="summary.metricas.rfmSegmento"
+              [style.background]="rfmBg(summary.metricas.rfmSegmento)"
+              [style.color]="rfmColor(summary.metricas.rfmSegmento)">
+              {{ summary.metricas.rfmSegmento }}
+            </span>
+            <span *ngIf="!summary.metricas.rfmSegmento" class="cm-detail-value">—</span>
+          </div>
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">Canal preferido</span>
+            <span class="cm-detail-value">{{ summary.metricas.canalPreferido || '—' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3: Pago y comportamiento -->
+      <div class="cm-details-section">
+        <div class="cm-details-title">Comportamiento</div>
+        <div class="cm-details-grid">
+          <div class="cm-detail-item">
+            <span class="cm-detail-label">Método de pago preferido</span>
+            <span class="cm-detail-value">{{ summary.metricas.metodoPagoPreferido || '—' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top categorías -->
+      <div class="cm-details-section" *ngIf="summary.metricas.categoriasMasCompradas?.length">
+        <div class="cm-details-title">Categorías más compradas</div>
+        <div class="cm-top-list">
+          <div class="cm-top-item" *ngFor="let c of summary.metricas.categoriasMasCompradas; let i = index">
+            <span class="cm-top-rank">{{ i + 1 }}</span>
+            <span class="cm-top-name">{{ c.nombre }}</span>
+            <span class="cm-top-qty">{{ c.cantidad }} uds.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top productos -->
+      <div class="cm-details-section" *ngIf="summary.metricas.productosMasComprados?.length">
+        <div class="cm-details-title">Productos más comprados</div>
+        <div class="cm-top-list">
+          <div class="cm-top-item" *ngFor="let p of summary.metricas.productosMasComprados; let i = index">
+            <span class="cm-top-rank">{{ i + 1 }}</span>
+            <span class="cm-top-name">{{ p.nombre }}</span>
+            <span class="cm-top-qty">{{ p.cantidad }} uds.</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
     <!-- Listado toggleable con el botón "Pedidos relacionados" de la ficha -->
     <div class="cm-empty" *ngIf="mostrarPedidos && summary.pedidos.total === 0">
       Este cliente no tiene pedidos relacionados.

@@ -22,7 +22,8 @@ export class CustomerMetricsComponent implements OnChanges {
   summary: CustomerSummary | null = null;
   page = 1;
   pageSize = 20;
-  mostrarPedidos = false; // el listado se muestra/oculta con el botón "Pedidos relacionados"
+  mostrarPedidos = false;
+  mostrarDetalles = false;
 
   constructor(
     private ventas: VentasService,
@@ -73,5 +74,31 @@ export class CustomerMetricsComponent implements OnChanges {
   /** Lo invoca el botón "Pedidos relacionados" de la ficha del cliente. */
   togglePedidos(): void {
     this.mostrarPedidos = !this.mostrarPedidos;
+  }
+
+  toggleDetalles(): void {
+    this.mostrarDetalles = !this.mostrarDetalles;
+  }
+
+  rfmColor(segmento: string | null): string {
+    const map: Record<string, string> = {
+      'Campeón':    '#16a34a',
+      'Fiel':       '#2563eb',
+      'En riesgo':  '#d97706',
+      'Hibernando': '#6b7280',
+      'Perdido':    '#dc2626',
+    };
+    return map[segmento ?? ''] ?? '#6b7280';
+  }
+
+  rfmBg(segmento: string | null): string {
+    const map: Record<string, string> = {
+      'Campeón':    '#f0fdf4',
+      'Fiel':       '#eff6ff',
+      'En riesgo':  '#fffbeb',
+      'Hibernando': '#f9fafb',
+      'Perdido':    '#fef2f2',
+    };
+    return map[segmento ?? ''] ?? '#f9fafb';
   }
 }

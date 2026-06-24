@@ -404,8 +404,11 @@ export class AppComponent implements OnInit, OnDestroy {
       });
     }
 
-    // Forzar detección de cambios
-    this.cdr.detectChanges();
+    // Marcar para detección de cambios (markForCheck es seguro dentro de eventos del router;
+    // detectChanges() lanza NG0901 si se llama mientras Angular procesa un ciclo de CD)
+    try {
+      this.cdr.markForCheck();
+    } catch (_) { /* view ya destruida o en transición */ }
   }
 
   ngOnDestroy() {

@@ -611,10 +611,18 @@
             <div class="col-3">
                 <label class="form-label mb-1"><strong>Tipo de Documento <span class="text-danger">*</span></strong></label>
                 <select class="form-control form-control-sm" [(ngModel)]="tipo_documento_facturacion" required>
-                    <option value="CC-NIT">CC-NIT</option>
-                    <option value="PA">PA</option>
-                    <option value="TI">TI</option>
+                    <option value="CC">CC - Cédula de ciudadanía</option>
                     <option value="NIT">NIT</option>
+                    <option value="TI">TI - Tarjeta de identidad</option>
+                    <option value="RC">RC - Registro civil</option>
+                    <option value="CE">CE - Cédula de extranjería</option>
+                    <option value="TE">TE - Tarjeta de extranjería</option>
+                    <option value="PA">PA - Pasaporte</option>
+                    <option value="DIE">DIE - Doc. identificación extranjero</option>
+                    <option value="PEP">PEP - Permiso Especial de Permanencia</option>
+                    <option value="PPT">PPT - Permiso por Protección Temporal</option>
+                    <option value="NIT_EXT">NIT_EXT - NIT de otro país</option>
+                    <option value="NUIP">NUIP</option>
                 </select>
             </div>
             <div class="col-3">
@@ -699,9 +707,18 @@
                     <div class="col-12 col-sm-6">
                         <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
                         <p-dropdown [options]="[
-                            {label: 'CC-NIT', value: 'CC-NIT'},
-                            {label: 'Pasaporte', value: 'PA'},
-                            {label: 'TI', value: 'TI'}
+                            {label: 'CC - Cédula de ciudadanía', value: 'CC'},
+                            {label: 'NIT', value: 'NIT'},
+                            {label: 'TI - Tarjeta de identidad', value: 'TI'},
+                            {label: 'RC - Registro civil', value: 'RC'},
+                            {label: 'CE - Cédula de extranjería', value: 'CE'},
+                            {label: 'TE - Tarjeta de extranjería', value: 'TE'},
+                            {label: 'PA - Pasaporte', value: 'PA'},
+                            {label: 'DIE - Doc. identificación extranjero', value: 'DIE'},
+                            {label: 'PEP - Permiso Especial de Permanencia', value: 'PEP'},
+                            {label: 'PPT - Permiso por Protección Temporal', value: 'PPT'},
+                            {label: 'NIT_EXT - NIT de otro país', value: 'NIT_EXT'},
+                            {label: 'NUIP', value: 'NUIP'}
                         ]"
                         optionLabel="label"
                         optionValue="value"
@@ -959,7 +976,20 @@
                     <div class="row g-3">
                         <div class="col-12 col-sm-6">
                             <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
-                            <p-dropdown [options]="[{label:'CC-NIT',value:'CC-NIT'},{label:'Pasaporte',value:'PA'},{label:'TI',value:'TI'}]"
+                            <p-dropdown [options]="[
+                                {label: 'CC - Cédula de ciudadanía', value: 'CC'},
+                                {label: 'NIT', value: 'NIT'},
+                                {label: 'TI - Tarjeta de identidad', value: 'TI'},
+                                {label: 'RC - Registro civil', value: 'RC'},
+                                {label: 'CE - Cédula de extranjería', value: 'CE'},
+                                {label: 'TE - Tarjeta de extranjería', value: 'TE'},
+                                {label: 'PA - Pasaporte', value: 'PA'},
+                                {label: 'DIE - Doc. identificación extranjero', value: 'DIE'},
+                                {label: 'PEP - Permiso Especial de Permanencia', value: 'PEP'},
+                                {label: 'PPT - Permiso por Protección Temporal', value: 'PPT'},
+                                {label: 'NIT_EXT - NIT de otro país', value: 'NIT_EXT'},
+                                {label: 'NUIP', value: 'NUIP'}
+                            ]"
                                 optionLabel="label" optionValue="value"
                                 placeholder="{{ 'Seleccionar...' | translate }}"
                                 formControlName="tipo_documento_comprador"

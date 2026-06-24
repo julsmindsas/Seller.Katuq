@@ -211,13 +211,6 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       }
     } catch (error) {
       console.error('Error al cargar datos desde IndexedDB:', error);
-      // Opcional: Mostrar mensaje al usuario
-      Swal.fire({
-        title: 'Error',
-        text: 'No se pudieron cargar los datos de edición',
-        icon: 'error',
-        confirmButtonText: 'Ok'
-      });
     }
   }
 
@@ -747,7 +740,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       cd: [''],
       nombres_completos: ['', Validators.required],
       apellidos_completos: ['', Validators.required],
-      tipo_documento_comprador: ['CC-NIT', Validators.required],
+      tipo_documento_comprador: ['CC', Validators.required],
       documento: ['', Validators.required],
       indicativo_celular_comprador: ['57', Validators.required],
       numero_celular_comprador: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
@@ -1101,7 +1094,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.facturacionElectronica = false;
     this.alias_facturacion = '';
     this.razon_social = '';
-    this.tipo_documento_facturacion = 'CC-NIT';
+    this.tipo_documento_facturacion = 'CC';
     this.numero_documento_facturacion = '';
     this.correo_electronico_facturacion = '';
   }
@@ -1493,7 +1486,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       this.formulario.patchValue({
         indicativo_celular_comprador: '57',
         indicativo_celular_whatsapp: '57',
-        tipo_documento_comprador: 'CC-NIT',
+        tipo_documento_comprador: 'CC',
         estado: 'activo'
       });
     }

@@ -94,6 +94,138 @@
   th { color: #6b7280; font-weight: 600; border-bottom: 2px solid #eef0f4; }
 }
 
+// ── Ver Detalles ────────────────────────────────────────────────────────────
+.cm-details-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.cm-btn-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 20px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  &:hover { background: #ede9fe; box-shadow: 0 1px 4px rgba(109,40,217,.12); }
+}
+
+.cm-details-panel {
+  margin-top: 0.75rem;
+  border: 1px solid #ede9fe;
+  border-radius: 10px;
+  padding: 1rem 1.1rem 0.5rem;
+  background: #fafafe;
+  animation: cm-fade-in 0.2s ease;
+}
+@keyframes cm-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.cm-details-section {
+  margin-bottom: 1rem;
+}
+.cm-details-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8b5cf6;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #ede9fe;
+  padding-bottom: 0.25rem;
+}
+.cm-details-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  @media (max-width: 992px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 576px) { grid-template-columns: 1fr; }
+}
+.cm-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.cm-detail-label {
+  font-size: 0.68rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.cm-detail-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.cm-alert-badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fca5a5;
+  border-radius: 10px;
+  padding: 0.05rem 0.45rem;
+}
+
+.cm-rfm-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 0.15rem 0.65rem;
+  border: 1.5px solid currentColor;
+  width: fit-content;
+}
+
+.cm-top-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.cm-top-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+}
+.cm-top-rank {
+  min-width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-weight: 700;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cm-top-name {
+  flex: 1;
+  color: #374151;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cm-top-qty {
+  color: #6b7280;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
 .cm-pager {
   display: flex;
   align-items: center;
