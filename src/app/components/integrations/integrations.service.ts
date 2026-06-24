@@ -1047,6 +1047,7 @@ export class IntegrationsService {
     const body: any = { orderId };
     if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
     if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
+    if (options?.dueDate) body.dueDate = options.dueDate; // D-042: vencimiento de crédito (yyyy-MM-dd)
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order`,
@@ -1064,6 +1065,7 @@ export class IntegrationsService {
     if (options?.documentTypeId) body.documentTypeId = options.documentTypeId;
     if (options?.paymentTypeId) body.paymentTypeId = options.paymentTypeId;
     if (options?.prefijoId) body.prefijoId = options.prefijoId;
+    if (options?.dueDate) body.dueDate = options.dueDate; // D-042: vencimiento de crédito (yyyy-MM-dd)
 
     return this.http.post<any>(
       `${environment.urlApi}/v1/accounting/${provider}/invoices/from-order-async`,

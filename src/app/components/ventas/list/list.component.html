@@ -2060,6 +2060,82 @@
     </div>
 </ng-template>
 
+<!-- Modal de facturación SIIGO: tipo doc + forma de pago + vencimiento de crédito (D-042) -->
+<ng-template #facturaSiigoModal let-modal>
+    <div class="modal-header">
+        <h4 class="modal-title" id="factura-siigo-title">¿Generar Factura Electrónica?</h4>
+        <button type="button" class="close" aria-label="Close" (click)="modal.dismiss('Cross click')">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+    <div class="modal-body" *ngIf="facturaPedido">
+        <p class="mb-1">Se generará una factura electrónica para el pedido:</p>
+        <p class="mb-1"><strong>{{ facturaPedido.nroPedido }}</strong></p>
+        <p class="text-muted mb-1">Cliente: {{ facturaPedido.cliente?.nombres_completos || 'N/A' }}</p>
+        <p class="text-muted">Total: {{ (facturaPedido.totalPedididoConDescuento || facturaPedido.subtotal || 0) | currency:'USD':'symbol':'1.0-0' }}</p>
+        <hr>
+
+        <!-- 1. Tipo de documento -->
+        <div class="form-group mb-3">
+            <label for="facturaDocumentType">Tipo de documento <span class="text-danger">*</span></label>
+            <select id="facturaDocumentType" class="form-select form-control"
+                    [(ngModel)]="facturaDocumentTypeId">
+                <option [ngValue]="null" disabled>Seleccione un tipo de documento</option>
+                <option *ngFor="let dt of facturaDocumentTypes" [ngValue]="dt.id">
+                    {{ dt.name || dt.nombre || ('Documento ' + dt.id) }}
+                </option>
+            </select>
+        </div>
+
+        <!-- 2. Forma de pago (deshabilitada hasta elegir tipo de documento) -->
+        <div class="form-group mb-3">
+            <label for="facturaPaymentType">Forma de pago <span class="text-danger">*</span></label>
+            <select id="facturaPaymentType" class="form-select form-control"
+                    [(ngModel)]="facturaPaymentTypeId"
+                    (ngModelChange)="onFacturaPaymentTypeChange()"
+                    [disabled]="!facturaDocumentTypeId">
+                <option [ngValue]="null" disabled>Seleccione una forma de pago</option>
+                <option *ngFor="let pt of facturaPaymentTypes" [ngValue]="pt.id">
+                    {{ pt.name || pt.nombre || ('Medio ' + pt.id) }}
+                </option>
+            </select>
+            <small class="text-muted" *ngIf="!facturaDocumentTypeId">
+                Primero seleccione el tipo de documento.
+            </small>
+        </div>
+
+        <!-- 3. Vencimiento (solo si la forma de pago es a crédito) -->
+        <div *ngIf="facturaEsCredito" class="ps-3 mb-2" style="border-left: 3px solid #3085d6;">
+            <div class="form-group mb-2">
+                <label for="facturaPlazo">Plazo de crédito <span class="text-danger">*</span></label>
+                <select id="facturaPlazo" class="form-select form-control"
+                        [(ngModel)]="facturaPlazo" (ngModelChange)="onFacturaPlazoChange()">
+                    <option value="" disabled>Seleccione un plazo</option>
+                    <option *ngFor="let p of facturaPlazosCredito" [value]="p.value">{{ p.label }}</option>
+                </select>
+            </div>
+            <div class="form-group mb-1" *ngIf="facturaPlazo === 'exacta'">
+                <label for="facturaDueDate">Fecha de vencimiento <span class="text-danger">*</span></label>
+                <input id="facturaDueDate" type="date" class="form-control"
+                       [(ngModel)]="facturaDueDate" [min]="facturaHoy">
+            </div>
+            <p class="text-muted mb-0" *ngIf="facturaDueDate && facturaPlazo !== 'exacta'">
+                Vence: <strong>{{ facturaDueDate }}</strong>
+            </p>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" (click)="modal.dismiss('cancel')">
+            <i class="fa fa-times me-1"></i> Cancelar
+        </button>
+        <button type="button" class="btn btn-primary"
+                [disabled]="!facturaFormValido"
+                (click)="confirmarFacturaSiigo(modal)">
+            <i class="fa fa-file-invoice me-1"></i> Generar factura
+        </button>
+    </div>
+</ng-template>
+
 <!-- Modal para editar/eliminar descuento -->
 <ng-template #editarDescuentoModal let-modal>
     <div class="modal-header">

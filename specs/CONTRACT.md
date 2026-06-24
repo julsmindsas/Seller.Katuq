@@ -35,6 +35,7 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | **005** | **wo-cartera-universo-completo** | **draft (código mergeado, pendiente validación)** | Daniel | Refactor `woBalancesSyncService`: universo desde `listCustomers` (resuelve bug Harmony $1.553M→$1.860M). Suma CE en montoPagadoHistorico + docsCE. `fechaCorte` param. Fix descuento (`porDescuento` vs `porcentajeDescuento`). Persist renglones opt-in en `accounting_document_lines`. |
 | **006** | **harmony-vendedor-filter** | **done** | Daniel | Filtro server-side multi-source por vendedor: orders por `asesor_email`, accounting_documents/balances por `vendedor_id` con fallback a `vendedor_nombre`. JWT con `vendedorIdWO/NombreWO`. Política estricta sin mapeo → 0 docs. Form crear-usuarios con dropdown autocomplete desde `/v1/reports/sellers/wo`. E2E PASS Harmony LUZ MARIA = 24 docs subset. |
 | **007** | **user-admin-credentials-delete** | **done** | Daniel | Normaliza contraseña en crear/editar usuarios y habilita eliminar usuario desde `/usuarios` con validación de empresa. |
+| **008** | **siigo-integration-consolidation** | **draft** | — | Consolidar los 3 caminos de facturación SIIGO en uno solo canónico multi-tenant. Matar el Camino B (POS legacy con datos de prueba + IDs de cuenta ajena), arreglar nodos de flow rotos (Camino C), rotar credencial filtrada en código. Mejoras puntuales en curso: forma de pago + vencimiento de crédito en el modal (D-042) y mapeo de descuento (D-043). Ver D-039. |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -307,6 +308,66 @@ Orden = prioridad. La spec piloto siempre encabeza.
 
 ---
 
+### 2026-06-20 — D-039: Apertura spec 008 — Consolidación de la integración SIIGO
+- **Contexto:** análisis profundo (front `Seller.Katuq` + back `katuq_admin_back_firebase`) de la integración SIIGO reveló **tres caminos paralelos** de facturación, solo uno sano:
+  - **Camino A (sano):** venta asistida → `encolarFacturacionSiigo()` → `POST /v1/accounting/siigo/invoices/from-order-async` → `accountingManager`/`siigoProvider`. Multi-tenant, config-driven, no bloquea el pedido.
+  - **Camino B (peligroso, vivo en POS clásico):** `FacturacionIntegracionService.transformarPedido*()` → `createFacturaSiigo()` → `POST /v1/invoice/siigo/invoice/create` (controller `invoiceintegration.js`, DEPRECATED). El payload trae datos de prueba literales (`name: [nombres, " prueba"]`, obs "Prueba pedido katuq") e **IDs fijos de una sola cuenta** (`document 27391`, `seller 329`, IVA `6856`, pago `2940`) + geo que solo resuelve Antioquia/Medellín. Verificado vivo en `pos-crear-ventas.component.ts:1308` y `pos-order-creator.service.ts:230` (gated por `generarFacturaElectronica`). En `crear-ventas.ts:3092/4093` y `pos-checkout.ts:209` el camino quedó **vestigial** (se calcula `orderSiigo` y no se envía).
+  - **Camino C (roto):** nodos de flow `siigo-customer-upsert` (llama `siigo.upsertCustomer()` inexistente) y `siigo-invoice-create` (busca `createSiigoInvoice/Async` inexistentes en `invoiceintegration.js`, cuyo handler real es `createSigoInvoice` con typo y firma `(req,res)`). Fallan en runtime.
+  - **Fuga de secreto:** `controllers/invoiceintegration.js:70-71` tiene credencial real `gerencia@almara.com.co` + `access_key` en texto plano como fallback (solo se usa si falta el header `company`; el controller reenvía a `accountingManager` con el companyId real cuando está presente).
+- **Decisión:** abrir spec marco 008 `siigo-integration-consolidation` para unificar todo en el Camino A canónico, eliminar Camino B, decidir/arreglar Camino C, y rotar la credencial filtrada.
+- **Scope cubierto por la spec:** un único camino canónico multi-tenant; cero datos de prueba/IDs ajenos en facturas; abortar si falta config requerida (no usar defaults de otra cuenta); idempotencia anti-duplicado; nodos de flow funcionales; canónica inglés `integrations.siigo.*`; retiro del legacy con fecha (Art XII); cero credenciales en el código.
+- **Fuera de scope:** notas crédito/débito y otros documentos contables; paridad World Office; endurecimiento del núcleo que NO causa facturas incorrectas (token expiry, responsabilidad fiscal, fallback IVA) → deuda aparte; webhooks bidireccionales; migración de facturas históricas.
+- **Pendiente antes de planear (Q-01..Q-07 en la spec):** Q-01 (POS ¿síncrono para tirilla o background?) y Q-02 (rotación de credencial filtrada) son bloqueantes.
+- **Excepción urgente al flujo SDD:** la rotación/eliminación de la credencial filtrada (`invoiceintegration.js:70-71`) es un riesgo de seguridad y puede ejecutarse fuera del ciclo de la spec si el usuario lo prioriza (Art I — fix de seguridad).
+
+### 2026-06-20 — D-040: POS factura por el camino canónico SÍNCRONO (resuelve Q-01 spec 008)
+- **Contexto:** el POS hoy imprime la tirilla con número de factura en el momento (Camino B legacy síncrono). El camino canónico que usa la venta asistida es asíncrono (`from-order-async`, retorna jobId). Migrar el POS tal cual rompería esa UX.
+- **Hallazgo:** ya existe un endpoint canónico **síncrono** `POST /v1/accounting/:provider/invoices/from-order` → `accountingController.createInvoiceFromOrder` (router `accounting.js:434`), y el frontend ya tiene el método cliente `integrationsService.createSiigoInvoiceFromOrder(orderId, options)` (`integrations.service.ts:1022`) + el genérico `createAccountingInvoiceFromOrder(provider, …)`.
+- **Decisión:** el POS (clásico y nuevo) emite la factura de forma **síncrona** por el camino canónico (`from-order`), espera la respuesta con número + PDF e imprime la tirilla. La venta asistida mantiene el **async** (`from-order-async`). No se usa patrón de polling.
+- **Impacto:** cero trabajo backend nuevo en la ruta. El trabajo es reemplazar `FacturacionIntegracionService.createFacturaSiigo()` por `integrationsService.createSiigoInvoiceFromOrder()` en `pos-crear-ventas.component.ts:1308-1310` y `pos-order-creator.service.ts:230-232`, y mapear la respuesta canónica (número/`public_url`) al render de tirilla. Validar en el plan que la respuesta de `createInvoiceFromOrder` trae número + PDF (Q-06).
+
+### 2026-06-20 — D-041: Rotar y eliminar credencial SIIGO hardcodeada (resuelve Q-02 spec 008)
+- **Contexto:** `controllers/invoiceintegration.js:70-71` contiene credencial real de SIIGO (`gerencia@almara.com.co` + `access_key` en texto plano), usada por `obtenerToken()`/`createApiSiigo()`/`listarFacturas()`.
+- **Radio de impacto verificado:** las 2 rutas legacy (`/v1/invoice/siigo/invoice/{create,list}`, montadas en `index.js:594`) **redirigen a `AccountingManager`** cuando llega el header `company` (el interceptor del frontend SIEMPRE lo envía). El fallback hardcodeado solo se alcanza sin ese header. `exports.obtenerToken` está exportado pero **sin ruta**. `getFacturasSiigo()` (frontend, llama a `list`) **no se invoca en ningún lado**. → quitar el secreto es seguro para el tráfico real.
+- **Decisión:** (1) confirmar que **Almara** tiene config en `integration_configs`; (2) **rotar** el `access_key` en la consola de SIIGO — obligatorio porque el secreto está en **git history**, borrarlo del código no basta; (3) eliminar el bloque hardcodeado, leer de variables de entorno y, si faltan, lanzar error claro (el fallback deja de usar credenciales embebidas).
+- **Excepción SDD:** fix de seguridad ejecutable fuera del ciclo de la spec (Art I). La limpieza completa de las rutas legacy y de `facturacion.service.ts` va dentro de la spec 008.
+- **Pendiente del usuario:** la rotación en SIIGO (paso manual, no automatizable desde el código).
+
+### 2026-06-23 — D-042: Forma de pago + vencimiento de crédito en el modal canónico de facturación (spec 008)
+- **Contexto:** el modal "¿Generar Factura Electrónica?" (`list.component.ts:facturarPedidoSiigo`, línea 918) solo pide **tipo de documento**. Falta la **forma de pago** (medio de pago SIIGO) y, para crédito, la **fecha de vencimiento**.
+- **Hallazgos SIIGO (doc oficial verificada):** `payments[] = { id, value, due_date }`; `due_date` es obligatorio **solo si el medio de pago "maneja vencimiento"** (el objeto de `/payment-types` trae `due_date: true` → así detectamos crédito); SIIGO **no** define plazos predefinidos (el integrador calcula la fecha); **Resolución 165 (abr-2025):** una factura es **crédito _o_ contado**, **solo un medio con vencimiento**, combinar → **400**. → Modelo: una forma de pago; si es crédito, **una sola** fecha de vencimiento.
+- **Infra ya existente (no se construye):** front `getAccountingPaymentTypes(provider)` / `getSiigoPaymentTypes()`; `from-order(-async)` ya acepta `paymentTypeId`; back `siigoProvider.getPaymentTypes()` (router `accounting.js:189`); `siigoDataMapper.mapOrderToInvoice` ya usa `config.paymentTypeId`. `NgbModal` ya inyectado en `list.component.ts` (línea 2100) y usado para modales (ej. `aplicarCodigoDescuento`, 6636).
+- **Decisión:**
+  1. El modal pasa de `Swal` con `input:'select'` (un solo campo) a **modal ng-bootstrap** con form reactivo y **secuencia dependiente**: tipo doc (habilitado) → forma de pago (**deshabilitada hasta elegir tipo doc**) → si `selectedPaymentType.due_date === true` → bloque vencimiento (`*ngIf`).
+  2. **Plazos definidos en Katuq** (SIIGO no los trae): Contado / 8 / 15 / 30 / 45 / 60 / 90 / 120 días / **fecha exacta** → `dueDate = fecha factura + plazo`.
+  3. `ejecutarFacturacionSiigo` (línea 1137) y `createAccountingInvoiceAsync` reenvían `paymentTypeId` (ya) + **`dueDate`** (nuevo). Backend: `from-order(-async)` acepta `dueDate` → `buildInvoiceConfig` lo lleva → `mapOrderToInvoice` usa `config.dueDate || #getColombiaDate()`.
+- **Scope:** SIIGO-only en este modal (World Office mantiene su camino de prefijo por rol, `facturarConPrefijoRol`). La migración del POS queda en D-040.
+
+### 2026-06-23 — D-043: Mapear el descuento del pedido a la factura SIIGO (corregir mapper)
+- **Contexto / bug:** en Katuq el descuento es **a nivel pedido** (cupón → `porceDescuento` → `totalDescuento`), aplicado **solo a productos** (no al envío), sobre el precio **con IVA** y luego el IVA se back-calcula (`list.component.ts:2907-3088`). El mapper SIIGO hace `discount: item.descuento || 0` (`siigoDataMapper.js:694,709`), pero **el carrito no tiene `item.descuento`** → siempre manda **0** → **toda factura con cupón se emite por el valor lleno, sin descuento**. Discrepancia de facturación real.
+- **SIIGO modela descuento por línea:** request `items[].discount` numérico (valor); respuesta `{ percentage, value }`. No hay descuento global de factura → hay que distribuir.
+- **Decisión (solo backend, `siigoDataMapper.mapOrderToInvoice`):**
+  1. Leer la fuente real `katuqPedido.porceDescuento` (no `item.descuento`).
+  2. Distribuir por **línea de producto**: `discount_línea = price × quantity × (porceDescuento/100)`; el envío queda en 0 (igual que hoy).
+  3. **Corregir el cálculo del pago** (`siigoDataMapper.js:746-757`): hoy suma `price×qty×(1+iva)` **sin** restar descuento → si se agregan descuentos sin esto, SIIGO rechaza **400** (pago ≠ total). Pasa a `(price×qty − descuento)×(1+iva)`.
+  4. Reconcilia exacto (el % es invariante entre precio neto y bruto).
+- **Pendiente de validar en pruebas:** si `totalDescuento` es pre o post IVA, contra un pedido real con cupón.
+- **Independiente de D-042:** este cambio es 100% backend (el descuento ya viaja en el pedido persistido), no toca `list.component.ts`.
+
+---
+
+### 2026-06-24 — D-044: SIIGO `items[].discount` es PORCENTAJE, no monto (corrige D-043 vía E2E)
+- **Contexto:** al facturar en E2E un pedido con cupón (ORE-000430, cuenta de prueba `james-0421@hotmail.com`), SIIGO rechazó con **400 `invalid_range`**: *"The field discount only allows a value between 0 and 100"*, `Params: ["items[0].discount"]`. El payload mandaba `discount: 11168` (el monto en pesos calculado por D-043).
+- **Hallazgo:** el campo `items[].discount` de SIIGO es un **porcentaje 0-100**, NO el valor absoluto. La lectura previa de la doc (punto 2 de D-043) era incorrecta; el E2E contra la API real lo destapó.
+- **Corrección (`siigoDataMapper.mapOrderToInvoice`):**
+  1. `items[].discount = porceDescuento` (el %), uniforme por línea de **producto**; envío en 0. El % es invariante entre precio neto y bruto, así que aplica igual a la base sin IVA de SIIGO.
+  2. `payments[].value` se recalcula **replicando a SIIGO**: por línea `descuento = base×%/100`, `baseNeta = base − descuento`, `IVA = baseNeta×tasa`, total `= Σ(baseNeta+IVA)`, con redondeo a 2 decimales en descuento e IVA (helper `round2`). Sin esto, el pago no cuadra con el total que SIIGO recalcula → otro 400.
+  3. Se introduce `lineCalc[]` (base/%/tasa por línea) para el cálculo exacto; el envío aporta solo su precio (exento).
+- **SUPERSEDE** el punto 2 de **D-043** (distribuir el monto absoluto por línea). El resto de D-043 sigue vigente.
+- **Verificación:** contract test `scripts/test-siigo-discount-mapping.js` actualizado (discount = 10% por línea, value 10497/11330) → **10/10 PASS**.
+- **✅ VALIDADO contra SIIGO real (E2E):** ORE-000429 (10% cupón) → **FV-2-5126** (`ed4480c4…`). Payload `items[].discount: 10`; SIIGO devolvió `discount: {percentage:10, value:5033.6}`, IVA `8607.46` sobre base neta `45302.4`, total línea `53909.86`, total factura `68809.86`, `payments[].value 68809.86` → `balance 0` (sin 400). Mi `round2` replicó a SIIGO **al centavo**. Cross-check Katuq: 50336×1,19 −10% = 53909.86 = total línea SIIGO → **el % es invariante pre/post IVA, Q-09 RESUELTA**.
+
+---
 
 ### 2026-05-21 — D-WOO-360-MVP: Sello operativo WooCommerce 360 plug-and-play
 
@@ -393,3 +454,35 @@ _(vacío)_
 - **D-037**: Contraseña de usuarios se estandariza a SHA256 Base64 compatible con el login actual. El frontend hashea al crear y al editar; el backend conserva hashes existentes y normaliza contraseñas crudas si llegan por API.
 - **D-038**: Eliminación de usuarios queda habilitada vía `POST /v1/users/delete` solo para Administrador, usando el doc id `cd` y validando que el usuario pertenezca a la empresa activa salvo superadmin `Julsmind`.
 - Implementado en frontend `/usuarios` y backend `/v1/users`, sin migración de contraseñas históricas ni cambio del flujo completo de autenticación.
+
+### 2026-06-20 (sesión SIIGO — apertura spec 008)
+- Análisis profundo de la integración SIIGO en ambos repos (4 exploraciones en paralelo + verificación manual del código clave).
+- **Hallazgo central:** 3 caminos de facturación (A sano, B legacy peligroso vivo en POS, C nodos de flow rotos) + credencial real filtrada en `invoiceintegration.js:70-71`.
+- **Verificación del Paso 1 (¿se emiten facturas de prueba hoy?):** en venta asistida NO (Camino B vestigial; usa Camino A). En POS clásico SÍ es posible (Camino B vivo, gated por `generarFacturaElectronica`); en la práctica probablemente solo "funciona" para la empresa dueña de los IDs (Medellín) y falla en SIIGO para el resto.
+- **D-039**: apertura spec marco 008 `siigo-integration-consolidation` (draft). Spec escrita con criterios EARS, NFRs, out-of-scope y Q-01..Q-07.
+- **D-040** (resuelve Q-01): POS factura por el camino canónico **síncrono** (`from-order`, ya existe); venta asistida sigue async. Sin trabajo backend nuevo en la ruta.
+- **D-041** (resuelve Q-02): rotar (manual en SIIGO, está en git history) + eliminar credencial hardcodeada de Almara en `invoiceintegration.js`; fallback pasa a env/error. Seguro porque el tráfico real lleva header `company` y va por AccountingManager. Fix de seguridad fuera del ciclo (Art I).
+- Pendientes Q-03..Q-07 antes de `plan.md`. Paso de seguridad pendiente del usuario: rotación del access_key en la consola de SIIGO.
+
+### 2026-06-23 (sesión SIIGO — Camino A: forma de pago, vencimiento y descuento)
+- Decisión de dirección: trabajar **solo el Camino A** (canónico/seguro). Foco inmediato: el modal "¿Generar Factura Electrónica?" del listado de pedidos (`list.component.ts:facturarPedidoSiigo`, 918).
+- **D-042**: añadir **forma de pago** (mapeada a SIIGO) + **vencimiento de crédito** al modal, con secuencia dependiente (tipo doc → forma de pago habilitada → vencimiento si crédito). Verificado contra doc oficial SIIGO: un solo `due_date`, plazos los define Katuq, Resolución 165 (crédito o contado, no mezclar). Infra parcialmente existente (payment-types y `paymentTypeId` ya soportados); falta propagar `dueDate` (front service + backend mapper).
+- **D-043**: bug — el descuento de pedido (cupón `porceDescuento`) **no se mapea** a SIIGO (mapper lee `item.descuento` inexistente → 0). Corregir `siigoDataMapper`: distribuir `porceDescuento%` por línea de producto + ajustar `payments[].value` (evitar 400). Solo backend.
+- Revisión puntual de `list.component.ts`: confirmado patrón ng-bootstrap reusable (`modalService`, 2100), servicios ya inyectados (`integrationsService`, 2108), y que el cálculo de descuento del archivo (2907-3088) resuelve la base de mapeo (solo productos, % invariante neto/bruto).
+- **Próximo paso:** `plan.md` de 008 acotado a D-042 + D-043 (tasks: modal/template + form, `ejecutarFacturacionSiigo`/service `dueDate`, backend `from-order(-async)` + `buildInvoiceConfig` + `mapOrderToInvoice`). Q-03..Q-07 (consolidación total) siguen abiertas pero no bloquean estas dos mejoras puntuales.
+- **`plan.md` creado** (`008…/plan.md`, draft) con fases A-E y puntos de inserción exactos.
+- **Fase A (D-043) IMPLEMENTADA + verificada:** `siigoDataMapper.mapOrderToInvoice` distribuye `porceDescuento%` por línea de producto y resta el descuento en el cálculo de `payments[].value`. Contract test `scripts/test-siigo-discount-mapping.js` → **8/8 PASS** (descuento por línea, envío sin descuento, cuadre 10497 con 10% / 11330 sin descuento, formato due_date). Cambio aditivo y retrocompatible. **Pendiente:** validar base pre/post IVA de `totalDescuento` contra pedido real con cupón (Q-09).
+- **Fase B (D-042) IMPLEMENTADA:** `accountingController` (handlers `from-order` y `from-order-async`) acepta `dueDate` → `buildInvoiceConfig` lo lleva a `config.dueDate` → `mapOrderToInvoice` usa `config.dueDate || hoy`. Contract test extendido → **10/10 PASS** (override + default). Retrocompatible.
+- **Fase C (D-042) IMPLEMENTADA:** `integrations.service.ts` propaga `dueDate` en `createAccountingInvoiceAsync` y `createAccountingInvoiceFromOrder`.
+- **Fase D (D-042) IMPLEMENTADA:** modal ng-bootstrap `#facturaSiigoModal` en `list.component.{ts,html}`. Reemplaza el `Swal` select por form con secuencia: tipo doc → forma de pago (deshabilitada hasta elegir tipo doc) → vencimiento (`*ngIf` crédito por flag `due_date`). Plazos 8/15/30/45/60/90/120 días + fecha exacta → calcula `dueDate`. `ejecutarFacturacionSiigo` ahora propaga `paymentTypeId` + `dueDate`. **Build Angular OK (exit 0, solo warnings preexistentes de CommonJS).**
+- **E2E en local iniciado** (front :4200 + back :3300, empresa "OH MY STORE"). **Bug encontrado y corregido:** el endpoint `GET /v1/accounting/:provider/payment-types` llamaba a SIIGO **sin `document_type`** → SIIGO responde **400** → formas de pago vacías en el modal. Era latente (el endpoint se diseñó para World Office y nunca se ejercitó para SIIGO; `createInvoice` sí pasaba 'FV'). Fix: `accountingController.getPaymentTypes` + `accountingManager.getPaymentTypes` ahora pasan `document_type` (default 'FV', `req.query.type` override). Backend reiniciado.
+- **Pendiente:** continuar E2E (verificar count>0 de formas de pago, factura crédito + pedido con cupón); validar base pre/post IVA de `totalDescuento` (Q-09); commit del trabajo (front + back) cuando el usuario lo indique.
+
+### 2026-06-24 (sesión SIIGO — E2E en local contra API real)
+- **E2E #1 (D-042) ✅ VALIDADO contra SIIGO real:** pedido ORE-000427 (sin cupón), cuenta de prueba `james-0421@hotmail.com` (NO Almara). Factura creada **FV-2-5125** (`011f00f8…`). Verificado en payload+respuesta: forma de pago **Crédito (5546)** mapeada, `due_date: 2026-07-24` (hoy+30, plazo elegido), `payments[].value` = `total` = **147800.39** (cuadre al centavo, pago único Resolución 165 sin 400), IVA 19% → `taxId 12946`, `documentTypeId 42267`. La factura es **fiscal real** (`stamp.send=true` → DIAN timbrando; `mail.send=true` envió PDF a `gerencia@almara.com.co`, que es el email del **cliente** del pedido, no la credencial).
+- **E2E #2 (D-043) → bug encontrado:** ORE-000430 (con 10% cupón) → SIIGO **400 `invalid_range`** en `items[0].discount` (mandaba monto 11168). Origen → **D-044**: `discount` es porcentaje 0-100, no monto.
+- **D-044 implementado:** `siigoDataMapper` ahora manda `discount = porceDescuento%` por línea de producto y recalcula `payments[].value` replicando a SIIGO (descuento%→base neta→IVA, round2). Test `test-siigo-discount-mapping.js` actualizado → **10/10 PASS**. Backend reiniciado con el fix (require cachea módulos).
+- **Hallazgo cosmético (no corregido):** `ACCOUNTING_GET_PAYMENT_TYPES_SUCCESS` loguea `count:0` aunque obtiene 9 formas de pago (`result.length` sobre objeto con `.paymentTypes`). Solo el log; dato correcto.
+- **E2E #3 (D-044) ✅ VALIDADO:** ORE-000429 (10% cupón) → **FV-2-5126**. SIIGO aceptó `discount: 10` (%), devolvió `{percentage:10, value:5033.6}`, IVA `8607.46`, total línea `53909.86`, total `68809.86`, `payments[].value 68809.86` → `balance 0`, sin 400. Reconciliación al centavo. **Q-09 RESUELTA** (el % es invariante pre/post IVA: Katuq 50336×1,19 −10% = 53909.86 = total línea SIIGO).
+- **Estado spec 008 (D-042 + D-043/D-044): mejoras puntuales COMPLETAS y validadas E2E contra SIIGO real.** Facturas de prueba creadas: FV-2-5125 (contado/crédito sin descuento) y FV-2-5126 (con descuento), cuenta `james-0421@hotmail.com`.
+- **Pendiente:** (a) commit del trabajo (front + back) cuando el usuario lo indique — recomendado branch propio con sello D-042/D-043/D-044; (b) rotación de credencial Almara (D-041, manual del usuario); (c) opcional: arreglar log cosmético `count:0` en `getPaymentTypes`. La consolidación total de 008 (matar Camino B, flows rotos Camino C, Q-03..Q-07) sigue abierta como trabajo mayor aparte.

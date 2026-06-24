@@ -18,8 +18,9 @@ Este directorio contiene las especificaciones del proyecto bajo la metodología 
 | 003 | woocommerce-360-marco | **implementación done — pending Emulator validation** | Spec marco del 360 WooCommerce plug-and-play + 7 sub-specs hijas (003.1..003.7 todas implementadas). Goal: cualquier comercio puede integrar Woo "facilísimo". |
 | 003.7 | cleanup-legacy-woocommerce | **implementación done** | Audit colecciones legacy + extracción mappers + DEFER refactor importAllProducts por shape incompatible. Ver D-022..D-025. |
 | 004 | user-docs-flows | spec + USER-GUIDE-FLOWS.md publicada | Documentación de `/flows` orientada al comerciante final (no técnico). |
+| 008 | siigo-integration-consolidation | draft | Consolidar los 3 caminos de facturación SIIGO en uno solo canónico multi-tenant; matar el legacy del POS con datos de prueba, arreglar nodos de flow rotos y rotar credencial filtrada. Ver D-039. |
 
-> Roadmap completo + decisiones D-001..D-021 en `CONTRACT.md`.
+> Roadmap completo + decisiones D-001..D-039 en `CONTRACT.md`.
 
 ## Cómo crear una nueva spec
 

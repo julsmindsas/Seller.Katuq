@@ -15,7 +15,7 @@
                 <div
                     class="module-header px-4 py-3 bg-white border-bottom d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-1 fw-bold text-primary"><i class="pi pi-box me-2"></i>Producción</h5>
+                        <h4 class="mb-1 fw-bold text-dark"><i class="pi pi-box me-2"></i>Producción</h4>
                         <p class="text-muted small mb-0">Gestión de producción y seguimiento de artículos</p>
                     </div>
 
@@ -88,7 +88,7 @@
 
                         <!-- KPIs de estado de producción -->
                         <div class="col-md-4">
-                            <div class="card shadow-sm h-100">
+                            <div class="card shadow-sm h-100 border-start border-4" style="border-color: #5c6ac4 !important;">
                                 <div class="card-body p-3">
                                     <h6 class="card-title text-muted mb-3">Estado de Producción</h6>
                                     <div class="d-flex flex-column gap-2">
@@ -139,7 +139,7 @@
 
                         <!-- KPIs de eficiencia por proceso -->
                         <div class="col-md-4">
-                            <div class="card shadow-sm h-100">
+                            <div class="card shadow-sm h-100 border-start border-4" style="border-color: #5c6ac4 !important;">
                                 <div class="card-body p-3">
                                     <h6 class="card-title text-muted mb-3">Eficiencia por Proceso</h6>
                                     <div class="d-flex flex-column gap-2">
@@ -171,7 +171,7 @@
 
                         <!-- KPI de capacidad y carga -->
                         <div class="col-md-4">
-                            <div class="card shadow-sm h-100">
+                            <div class="card shadow-sm h-100 border-start border-4" style="border-color: #5c6ac4 !important;">
                                 <div class="card-body p-3">
                                     <h6 class="card-title text-muted mb-3">Capacidad y Carga</h6>
                                     <div class="capacity-container">
@@ -620,7 +620,7 @@
                                 <div class="production-table-container">
                                     <p-table #dtEnsamble [value]="ordersEnsamble" dataKey="nombreArticulo" [rows]="10"
                                         [rowsPerPageOptions]="[5,10,25,50]" [loading]="loading"
-                                        styleClass="modern-production-table density-{{tableDensity}}" [paginator]="true"
+                                        styleClass="modern-production-table p-datatable-striped p-datatable-gridlines density-{{tableDensity}}" [paginator]="true"
                                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} artículos"
                                         [globalFilterFields]="['nombreProducto', 'nombreArticulo']">
 
