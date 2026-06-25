@@ -176,8 +176,6 @@ export class CrmListComponent implements OnInit, OnDestroy {
             severity: 'success', summary: '¡Lead creado!',
             detail: `${formData.name} fue agregado a "${firstStage}"`,
           });
-          // Sincronizar con backend en segundo plano (sin spinner)
-          this.refreshLeads();
           this.loadStats();
         } else {
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lead. Revisa que el backend esté corriendo.' });
