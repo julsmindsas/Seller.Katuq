@@ -1,0 +1,189 @@
+<div class="thread-detail" *ngIf="phoneHash; else emptyState">
+  <header class="thread-detail__header">
+    <button
+      type="button"
+      class="thread-detail__back"
+      (click)="onBack()"
+      aria-label="Volver al listado"
+    >
+      ←
+    </button>
+
+    <div class="thread-detail__avatar" aria-hidden="true">
+      {{ headerInitials }}
+    </div>
+
+    <div class="thread-detail__header-info">
+      <a
+        class="thread-detail__client-link"
+        [routerLink]="['/ventas/clienteslista']"
+        [queryParams]="clientLinkParams"
+        title="Abrir ficha del cliente en el módulo de ventas"
+      >
+        Ver datos del cliente →
+      </a>
+      <h3 class="thread-detail__name">
+        {{ headerName }}
+      </h3>
+      <p class="thread-detail__phone" *ngIf="profile">
+        {{ profile.phoneMasked }}
+      </p>
+    </div>
+
+    <div class="thread-detail__header-actions">
+      <button
+        type="button"
+        class="btn"
+        (click)="markAsRead()"
+        [disabled]="!phoneHash"
+      >
+        Marcar leído
+      </button>
+      <button
+        type="button"
+        class="btn"
+        [class.is-active]="contactPanelOpen"
+        (click)="toggleContactPanel()"
+      >
+        {{ contactPanelOpen ? "Cerrar panel" : "Ver contacto" }}
+      </button>
+    </div>
+  </header>
+
+  <div class="thread-detail__body">
+    <div class="thread-detail__chat">
+      <div *ngIf="loading" class="thread-detail__state">Cargando mensajes…</div>
+
+      <div
+        *ngIf="!loading && messages.length === 0"
+        class="thread-detail__state"
+      >
+        Aún no hay mensajes en este hilo.
+      </div>
+
+      <div
+        #messagesContainer
+        class="thread-detail__messages"
+        *ngIf="!loading && messages.length > 0"
+      >
+        <ng-container *ngFor="let item of feedItems; trackBy: trackFeedItem">
+          <!-- Separador de fecha -->
+          <div
+            *ngIf="isDateItem(item)"
+            class="thread-detail__date-separator"
+          >
+            <span>{{ item.label }}</span>
+          </div>
+
+          <!-- Mensaje -->
+          <div
+            *ngIf="isMessageItem(item)"
+            class="thread-detail__message"
+            [class.is-outbound]="item.msg.direction === 'outbound'"
+            [class.is-inbound]="item.msg.direction === 'inbound'"
+            [class.is-grouped]="item.grouped"
+          >
+            <div class="thread-detail__bubble">
+              <p
+                class="thread-detail__body-text"
+                *ngIf="!item.msg.mediaPlaceholder"
+              >
+                {{ item.msg.body || item.msg.snippet }}
+              </p>
+              <p
+                class="thread-detail__media"
+                *ngIf="item.msg.mediaPlaceholder"
+              >
+                {{ mediaLabel(item.msg) }}
+              </p>
+              <div class="thread-detail__meta">
+                <span class="thread-detail__time">
+                  {{ formatTime(item.msg.sentAt) }}
+                </span>
+                <span
+                  *ngIf="item.msg.direction === 'outbound'"
+                  class="thread-detail__status-icon"
+                  [attr.data-status]="item.msg.status"
+                  [attr.aria-label]="item.msg.status"
+                >
+                  {{ statusIcon(item.msg.status) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+      </div>
+
+      <!-- Composer: chip plantillas + textarea + botón enviar -->
+      <div class="thread-detail__composer-wrap" *ngIf="canShowComposer">
+        <div class="thread-detail__templates">
+          <button
+            type="button"
+            class="thread-detail__templates-chip"
+            (click)="toggleTemplates()"
+            [class.is-open]="templatesOpen"
+            aria-haspopup="true"
+            [attr.aria-expanded]="templatesOpen"
+          >
+            Plantillas rápidas
+            <span class="thread-detail__templates-caret" aria-hidden="true">
+              {{ templatesOpen ? "▴" : "▾" }}
+            </span>
+          </button>
+
+          <ul
+            class="thread-detail__templates-menu"
+            *ngIf="templatesOpen"
+            role="menu"
+          >
+            <li
+              *ngFor="let tpl of quickTemplates"
+              class="thread-detail__templates-item"
+              role="menuitem"
+              (click)="applyTemplate(tpl)"
+            >
+              <span class="thread-detail__templates-label">{{ tpl.label }}</span>
+              <span class="thread-detail__templates-preview">
+                {{ tpl.sandboxBody }}
+              </span>
+            </li>
+          </ul>
+        </div>
+
+        <form class="thread-detail__composer" (submit)="onSend($event)">
+          <textarea
+            class="thread-detail__composer-input"
+            [(ngModel)]="composerText"
+            name="composerText"
+            placeholder="Escribe un mensaje..."
+            (keydown.enter)="onEnterPress($event)"
+            [disabled]="sending"
+            rows="1"
+          ></textarea>
+          <button
+            type="submit"
+            class="thread-detail__composer-send"
+            [disabled]="!composerText.trim() || sending"
+          >
+            {{ sending ? "Enviando..." : "Enviar" }}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <aside
+      class="thread-detail__panel"
+      *ngIf="contactPanelOpen"
+    >
+      <app-whatsapp-contact-panel
+        [phoneHash]="phoneHash"
+      ></app-whatsapp-contact-panel>
+    </aside>
+  </div>
+</div>
+
+<ng-template #emptyState>
+  <div class="thread-detail__placeholder">
+    <p>Selecciona una conversación de la lista</p>
+  </div>
+</ng-template>

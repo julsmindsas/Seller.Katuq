@@ -2674,15 +2674,30 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     // Verificar si hay integración de facturación configurada
     this.checkInvoicingIntegration();
 
-    // Leer query param "buscar" (usado por notificaciones / customer-metrics para navegar a un pedido)
+    // Leer query params: "buscar" (texto) + "fecha" (fecha exacta del pedido)
+    // + "fechaInicial"/"fechaFinal" (rango YYYY-MM-DD, usados por el panel de
+    // WhatsApp y customer-metrics para navegar a pedidos viejos sin perderlos
+    // por el default de hoy).
+    const qp = this.route.snapshot.queryParams;
+    if (qp['buscar']) {
+      this.searchQuery = qp['buscar'];
+    }
     this.route.queryParams.subscribe(params => {
       if (params['buscar']) {
         this.searchQuery = params['buscar'];
 
-        // Si viene la fecha del pedido, usarla como rango exacto; si no, últimos 2 años
+        // Prioridad: 1) fechaInicial/fechaFinal explícitos (panel WhatsApp),
+        // 2) fecha exacta del pedido (customer-metrics), 3) últimos 2 años.
+        const isoRegex2 = /^\d{4}-\d{2}-\d{2}$/;
         let desde: Date;
         let hasta: Date;
-        if (params['fecha']) {
+        if (
+          typeof params['fechaInicial'] === 'string' && isoRegex2.test(params['fechaInicial']) &&
+          typeof params['fechaFinal'] === 'string' && isoRegex2.test(params['fechaFinal'])
+        ) {
+          desde = this.stringToDate(params['fechaInicial']);
+          hasta = this.stringToDate(params['fechaFinal']);
+        } else if (params['fecha']) {
           const fechaPedido = new Date(params['fecha']);
           if (!isNaN(fechaPedido.getTime())) {
             desde = new Date(fechaPedido);
@@ -2712,12 +2727,21 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    // Initialize dates - si el snapshot ya trae fecha de pedido, usarla;
-    // si viene buscar sin fecha, usar 2 años (para navegación desde customer-metrics);
-    // si no hay nada, usar hoy.
+    // Initialize dates - prioridad:
+    //   1) fechaInicial/fechaFinal explícitos en queryParam (panel WhatsApp)
+    //   2) buscar + fecha exacta del pedido (customer-metrics)
+    //   3) buscar sin fecha → rango 2 años
+    //   4) sin nada → hoy
     const snapParams = this.route.snapshot.queryParams;
     const today = new Date();
-    if (snapParams['buscar'] && snapParams['fecha']) {
+    const isoRegex = /^\d{4}-\d{2}-\d{2}$/;
+    const hasQpFechas =
+      typeof snapParams['fechaInicial'] === 'string' && isoRegex.test(snapParams['fechaInicial']) &&
+      typeof snapParams['fechaFinal'] === 'string' && isoRegex.test(snapParams['fechaFinal']);
+    if (hasQpFechas) {
+      this.fechaInicialDate = this.stringToDate(snapParams['fechaInicial']);
+      this.fechaFinalDate   = this.stringToDate(snapParams['fechaFinal']);
+    } else if (snapParams['buscar'] && snapParams['fecha']) {
       const fp = new Date(snapParams['fecha']);
       if (!isNaN(fp.getTime())) {
         this.fechaInicialDate = new Date(fp); this.fechaInicialDate.setHours(0, 0, 0, 0);
@@ -2741,7 +2765,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sharedFilterService.updateFilterState({
       fechaInicial: this.fechaInicialDate,
       fechaFinal: this.fechaFinalDate,
+      searchQuery: this.searchQuery || '',
     });
+
+    // Si vinimos con rango/buscar desde otro módulo, forzar el refresco una vez
+    // armada toda la inicialización (suscripciones, presets, etc.).
+    if (hasQpFechas || qp['buscar']) {
+      setTimeout(() => this.refrescarDatos(true), 0);
+    }
 
     // Suscribirse a los cambios del servicio de filtros compartido
     this.sharedFilterService.filterState$.subscribe((state) => {

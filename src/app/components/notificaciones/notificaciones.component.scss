@@ -183,11 +183,4 @@
 
     }
 
-    &.whatsapp-disabled input[type="checkbox"] {
-        &+label {
-            cursor: not-allowed;
-            border-color: #d1d1d1;
-            background: #f5f5f5;
-        }
-    }
 }

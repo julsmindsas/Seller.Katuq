@@ -518,6 +518,16 @@ export class NavService implements OnDestroy {
       ],
     },
 
+    // MARKETING
+    { headTitle1: "Marketing" },
+    {
+      title: "Conversaciones WhatsApp",
+      icon: "message-circle",
+      type: "link",
+      path: "/notificaciones/whatsapp/inbox",
+      active: false,
+    },
+
     // INTELIGENCIA DE NEGOCIOS
     { headTitle1: "Inteligencia de Negocios" },
     {

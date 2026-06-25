@@ -1,0 +1,448 @@
+// =============================================================
+// WhatsApp Kapso Config — estilo plano (sin gradientes),
+// border-left 4px verde Katuq.
+// =============================================================
+
+$wa-green: #10b981;            // verde Katuq / success
+$wa-green-dark: #047857;
+$wa-green-soft: #ecfdf5;
+$wa-yellow: #f59e0b;
+$wa-yellow-soft: #fef3c7;
+$wa-text: #1f2937;
+$wa-text-muted: #6b7280;
+$wa-border: #e5e7eb;
+$wa-bg-surface: #ffffff;
+$wa-bg-subtle: #f9fafb;
+
+.wa-kapso {
+  display: block;
+  width: 100%;
+  color: $wa-text;
+  font-size: 14px;
+
+  &__loading,
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+    border-radius: 8px;
+    background: $wa-bg-subtle;
+    border: 1px solid $wa-border;
+
+    i {
+      color: $wa-green;
+      font-size: 20px;
+    }
+  }
+
+  &__error {
+    border-left: 4px solid $wa-yellow;
+    background: $wa-yellow-soft;
+
+    i { color: $wa-yellow; }
+  }
+
+  // ---------- Card principal ----------
+  &__card {
+    background: $wa-bg-surface;
+    border: 1px solid $wa-border;
+    border-left: 4px solid $wa-green;   // acento Katuq
+    border-radius: 8px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+  }
+
+  &__card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 20px 24px;
+    background: $wa-bg-subtle;
+    border-bottom: 1px solid $wa-border;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: $wa-text;
+    }
+  }
+
+  &__title-icon {
+    width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: $wa-green-soft;
+    color: $wa-green-dark;
+    border-radius: 8px;
+    font-size: 22px;
+  }
+
+  &__subtitle {
+    margin: 4px 0 0 0;
+    color: $wa-text-muted;
+    font-size: 13px;
+  }
+
+  // ---------- Status chip ----------
+  &__form { padding: 0; }
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+
+  &--success {
+    background: $wa-green-soft;
+    color: $wa-green-dark;
+    border: 1px solid rgba($wa-green, 0.3);
+  }
+  &--warning {
+    background: $wa-yellow-soft;
+    color: #92400e;
+    border: 1px solid rgba($wa-yellow, 0.3);
+  }
+  &--muted {
+    background: #f3f4f6;
+    color: $wa-text-muted;
+    border: 1px solid $wa-border;
+  }
+}
+
+// ---------- Secciones ----------
+.wa-kapso__section {
+  padding: 20px 24px;
+  border-bottom: 1px solid $wa-border;
+
+  &:last-of-type { border-bottom: none; }
+}
+
+.wa-kapso__section-header {
+  margin-bottom: 16px;
+
+  h4 {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: $wa-text;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    i { color: $wa-green; font-size: 14px; }
+  }
+
+  p {
+    margin: 4px 0 0 0;
+    color: $wa-text-muted;
+    font-size: 13px;
+  }
+}
+
+// ---------- Field básico ----------
+.wa-kapso__field {
+  margin-bottom: 14px;
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    font-size: 13px;
+    color: $wa-text;
+  }
+
+  .form-control {
+    border-radius: 6px;
+    border: 1px solid $wa-border;
+    padding: 8px 12px;
+    font-size: 14px;
+
+    &:focus {
+      border-color: $wa-green;
+      box-shadow: 0 0 0 3px rgba($wa-green, 0.15);
+      outline: none;
+    }
+  }
+}
+
+.wa-kapso__field--checkbox {
+  margin-top: 6px;
+}
+
+.wa-kapso__hint {
+  display: block;
+  margin-top: 6px;
+  color: $wa-text-muted;
+  font-size: 12px;
+
+  code {
+    background: $wa-bg-subtle;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    color: $wa-green-dark;
+  }
+}
+
+// ---------- Toggle row ----------
+.wa-kapso__row--toggle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: $wa-bg-subtle;
+  border: 1px solid $wa-border;
+  border-radius: 8px;
+
+  & + .wa-kapso__field { margin-top: 14px; }
+}
+
+.wa-kapso__toggle-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+
+  strong { font-size: 14px; color: $wa-text; }
+  small { color: $wa-text-muted; font-size: 12px; }
+}
+
+.wa-kapso__toggle {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 24px;
+  flex-shrink: 0;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .wa-kapso__toggle-slider {
+      background: $wa-green;
+    }
+    &:checked + .wa-kapso__toggle-slider::before {
+      transform: translateX(18px);
+    }
+  }
+}
+
+.wa-kapso__toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: #cbd5e1;
+  border-radius: 999px;
+  transition: background 0.18s ease;
+  cursor: pointer;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.18s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.wa-kapso__checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: $wa-text;
+
+  input { accent-color: $wa-green; transform: scale(1.05); }
+}
+
+// ---------- Test button ----------
+.wa-kapso__test-btn {
+  border-color: $wa-green;
+  color: $wa-green-dark;
+
+  &:hover:not(:disabled) {
+    background: $wa-green-soft;
+    border-color: $wa-green;
+    color: $wa-green-dark;
+  }
+  &:disabled { opacity: 0.6; }
+}
+
+// ---------- Opt-in banner ----------
+.wa-kapso__optin-banner {
+  background: $wa-yellow-soft;
+  border-bottom: 1px solid rgba($wa-yellow, 0.3);
+  border-left: 4px solid $wa-yellow;
+}
+
+.wa-kapso__optin-banner-content {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+
+  > i {
+    color: $wa-yellow;
+    font-size: 20px;
+    margin-top: 2px;
+  }
+
+  strong { display: block; margin-bottom: 4px; color: #78350f; }
+  p { margin: 0 0 8px 0; color: #78350f; font-size: 13px; line-height: 1.5; }
+}
+
+// ---------- Notification grid ----------
+.wa-kapso__notif-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.wa-kapso__notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid $wa-border;
+  border-radius: 8px;
+  background: $wa-bg-surface;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: $wa-bg-subtle;
+    border-color: rgba($wa-green, 0.3);
+  }
+
+  input {
+    margin-top: 2px;
+    accent-color: $wa-green;
+    transform: scale(1.05);
+  }
+}
+
+.wa-kapso__notif-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong { font-size: 13px; color: $wa-text; }
+  small { color: $wa-text-muted; font-size: 12px; line-height: 1.4; }
+}
+
+// ---------- Preview ----------
+.wa-kapso__preview {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: $wa-green-soft;
+  border: 1px solid rgba($wa-green, 0.25);
+  border-radius: 8px;
+
+  p {
+    margin: 4px 0 0 0;
+    color: $wa-text;
+    white-space: pre-wrap;
+    font-size: 13px;
+  }
+}
+
+.wa-kapso__preview-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: $wa-green-dark;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+// ---------- Avanzado (collapse) ----------
+.wa-kapso__advanced { background: $wa-bg-subtle; }
+
+.wa-kapso__advanced-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  margin-bottom: 0;
+  user-select: none;
+
+  &:hover h4 { color: $wa-green-dark; }
+}
+
+.wa-kapso__advanced-chevron {
+  color: $wa-text-muted;
+  transition: transform 0.18s ease;
+}
+
+.wa-kapso__advanced-body {
+  margin-top: 16px;
+  padding: 16px;
+  background: $wa-bg-surface;
+  border: 1px solid $wa-border;
+  border-radius: 8px;
+}
+
+.wa-kapso__warning-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  background: $wa-yellow-soft;
+  border: 1px solid rgba($wa-yellow, 0.3);
+  border-left: 3px solid $wa-yellow;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: #78350f;
+
+  i { color: $wa-yellow; margin-top: 2px; }
+}
+
+// ---------- Footer ----------
+.wa-kapso__footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  background: $wa-bg-subtle;
+  border-top: 1px solid $wa-border;
+}
+
+.wa-kapso__save-btn {
+  background: $wa-green;
+  border: 1px solid $wa-green;
+  color: #fff;
+  padding: 10px 24px;
+  font-weight: 600;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  &:hover:not(:disabled) {
+    background: $wa-green-dark;
+    border-color: $wa-green-dark;
+    color: #fff;
+  }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}

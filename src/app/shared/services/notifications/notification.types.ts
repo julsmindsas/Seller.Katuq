@@ -70,6 +70,7 @@ export enum NotificationChannel {
   PUSH = 'PUSH',               // Push notifications del navegador
   SMS = 'SMS',                 // SMS (futuro)
   FIREBASE_REALTIME = 'FIREBASE_REALTIME', // Firebase Realtime Database
+  WHATSAPP = 'WHATSAPP',       // Mensajería WhatsApp (spec 009)
   WEBHOOK = 'WEBHOOK'          // Webhooks para integraciones externas
 }
 
@@ -270,6 +271,15 @@ export interface NotificationConfig {
       preferences: string;
       markRead: string;
       stats: string;
+      // WhatsApp (spec 009) — listado, balance, top-up, uso, preferencias,
+      // health-check y configuración del canal WhatsApp por empresa.
+      whatsappConversations: string;
+      whatsappBalance: string;
+      whatsappTopup: string;
+      whatsappUsage: string;
+      whatsappPreferences: string;
+      whatsappHealth: string;
+      whatsappConfig: string;
     };
   };
   

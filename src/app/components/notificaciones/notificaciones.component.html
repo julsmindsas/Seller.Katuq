@@ -19,6 +19,9 @@
                 </div>
             </div>
 
+            <!-- Medidor de saldo WhatsApp Business -->
+            <app-whatsapp-billing-meter></app-whatsapp-billing-meter>
+
             <!-- Texto descriptivo de política de privacidad -->
             <div class="privacy-note mb-2">
                 <p class="text-muted">
@@ -64,7 +67,6 @@
                                         <div class="channel-header">
                                             <i class="fa fa-whatsapp me-1" aria-hidden="true"></i>
                                             WhatsApp
-                                            <span class="badge badge-decorative ms-1">{{ 'Próximamente' | translate }}</span>
                                         </div>
                                     </th>
                                 </tr>
@@ -105,10 +107,11 @@
                                     </td>
 
                                     <td class="td-channel td-whatsapp text-center align-middle">
-                                        <div class="checkbox-container whatsapp-disabled">
+                                        <div class="checkbox-container">
                                             <input type="checkbox" class="custom-checkbox" [id]="'wa-' + pref.id"
-                                                disabled [attr.checked]="false">
-                                            <label [for]="'wa-' + pref.id" [attr.title]="'Próximamente' | translate"></label>
+                                                [checked]="pref.channels.whatsapp"
+                                                (change)="toggleWhatsapp(pref.id)">
+                                            <label [for]="'wa-' + pref.id"></label>
                                         </div>
                                     </td>
                                 </tr>

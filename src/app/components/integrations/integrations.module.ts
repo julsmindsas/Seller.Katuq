@@ -43,6 +43,9 @@ import { SyncLogsComponent } from './shopify-dashboard/sync-logs.component';
 import { FieldMappingComponent } from './shopify-dashboard/field-mapping.component';
 import { WebhookConfigComponent } from './shopify-dashboard/webhook-config.component';
 
+// WhatsApp (Kapso) Components
+import { WhatsappKapsoConfigComponent } from './whatsapp-kapso-config/whatsapp-kapso-config.component';
+
 const routes: Routes = [
   // Vista principal de listado
   { path: '', component: IntegrationsListComponent, pathMatch: 'full' },
@@ -83,7 +86,8 @@ const routes: Routes = [
     ShopifyDashboardComponent,
     SyncLogsComponent,
     FieldMappingComponent,
-    WebhookConfigComponent
+    WebhookConfigComponent,
+    WhatsappKapsoConfigComponent
   ],
   imports: [
     CommonModule,
@@ -121,7 +125,8 @@ const routes: Routes = [
   ],
   exports: [
     IntegrationsComponent,
-    IntegrationsListComponent
+    IntegrationsListComponent,
+    WhatsappKapsoConfigComponent
   ]
 })
 export class IntegrationsModule {}

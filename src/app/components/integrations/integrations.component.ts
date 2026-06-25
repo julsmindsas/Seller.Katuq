@@ -47,7 +47,8 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
     { id: 'wompi', name: 'Wompi', logo: 'assets/images/logos/wompi.svg' },
     { id: 'epayco', name: 'ePayco', logo: 'assets/images/logos/epayco.svg' },
     { id: 'paypal', name: 'PayPal', logo: 'assets/images/logos/paypal.svg' },
-    { id: 'partners_logistics', name: 'Partners Logística', logo: 'assets/images/logos/partners-logistics.svg' }
+    { id: 'partners_logistics', name: 'Partners Logística', logo: 'assets/images/logos/partners-logistics.svg' },
+    { id: 'whatsapp_kapso', name: 'WhatsApp Business', logo: 'assets/images/logos/whatsapp.svg' }
   ];
 
   apiVersionOptions = [
@@ -576,6 +577,15 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'osmosis':
         this.integrationForm = this.createOsmosisForm();
         break;
+      case 'whatsapp_kapso':
+        // WhatsApp Business (Kapso) usa el componente dedicado
+        // <app-whatsapp-kapso-config>. Creamos un FormGroup minimal para
+        // que los bindings genéricos del template no truenen.
+        this.integrationForm = this.fb.group({
+          name: ['WhatsApp Business'],
+          enabled: [true]
+        });
+        break;
       default:
         this.integrationForm = this.createShopifyForm();
         break;
@@ -667,6 +677,15 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'osmosis':
         this.integrationForm = this.createOsmosisForm();
+        break;
+      case 'whatsapp_kapso':
+        // WhatsApp Business (Kapso) usa el componente dedicado
+        // <app-whatsapp-kapso-config>. Creamos un FormGroup minimal para
+        // que los bindings genéricos del template no truenen.
+        this.integrationForm = this.fb.group({
+          name: ['WhatsApp Business'],
+          enabled: [true]
+        });
         break;
       default:
         this.integrationForm = this.createShopifyForm();
@@ -2025,6 +2044,14 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Indica si la integración seleccionada usa un componente dedicado
+   * (no el wizard genérico de 4 pasos).
+   */
+  get isWhatsappKapso(): boolean {
+    return this.selectedIntegrationType === 'whatsapp_kapso';
+  }
+
+  /**
    * Método para obtener la URL de documentación de Enviame
    */
   getDocumentationUrl(integrationType: string): string | null {
@@ -2038,7 +2065,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'mercadopago': 'https://www.mercadopago.com.co/developers',
       'siigo': 'https://siigoapi.docs.apiary.io',
       'osmosis': 'https://osmosis-api.guiacereza.tech/api',
-      'woocommerce': 'https://woocommerce.github.io/woocommerce-rest-api-docs/'
+      'woocommerce': 'https://woocommerce.github.io/woocommerce-rest-api-docs/',
+      'whatsapp_kapso': 'https://docs.kapso.com',
+      'kapso': 'https://docs.kapso.com',
+      'whatsapp': 'https://docs.kapso.com'
     };
     return urls[integrationType] || null;
   }
@@ -2058,7 +2088,10 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       'partners_logistics': 'Partners Logística',
       'siigo': 'Siigo',
       'osmosis': 'Guiacereza',
-      'woocommerce': 'WooCommerce'
+      'woocommerce': 'WooCommerce',
+      'whatsapp_kapso': 'WhatsApp Business',
+      'kapso': 'WhatsApp Business',
+      'whatsapp': 'WhatsApp Business'
     };
     return names[this.selectedIntegrationType] || this.selectedIntegrationType;
   }

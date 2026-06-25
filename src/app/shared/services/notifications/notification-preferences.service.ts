@@ -197,6 +197,13 @@ export class NotificationPreferencesService {
       [NotificationChannel.FIREBASE_REALTIME]: {
         enabled: true
       },
+      [NotificationChannel.WHATSAPP]: {
+        enabled: false,
+        quietHours: {
+          start: '22:00',
+          end: '08:00'
+        }
+      },
       [NotificationChannel.WEBHOOK]: {
         enabled: false
       }

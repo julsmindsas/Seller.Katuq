@@ -1,0 +1,366 @@
+// Panel de contacto (demo). Sin gradientes. Cards planos con border-left de color.
+
+$border: #e3e6ea;
+$text: #1d2330;
+$muted: #6b7280;
+
+// Colores acento por sección — distintos para diferenciación visual rápida.
+$accent-identity: #1f7a4d;   // verde Katuq
+$accent-orders: #1e6091;     // azul
+$accent-crm: #b8860b;        // dorado opaco
+
+.contact-panel {
+  padding: 12px;
+  height: 100%;
+  overflow-y: auto;
+  background: #ffffff;
+
+  &__banner {
+    padding: 6px 10px;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+
+  &__state,
+  &__placeholder {
+    text-align: center;
+    color: $muted;
+    padding: 24px 12px;
+    font-size: 13px;
+  }
+
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+  }
+
+  &__section {
+    border: 1px solid $border;
+    border-left-width: 4px;
+    border-radius: 6px;
+    background: #ffffff;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+
+    &.is-identity {
+      border-left-color: $accent-identity;
+    }
+    &.is-orders {
+      border-left-color: $accent-orders;
+    }
+    &.is-crm {
+      border-left-color: $accent-crm;
+    }
+
+    &[open] .contact-panel__summary::after {
+      content: "−";
+    }
+  }
+
+  &__summary {
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: $muted;
+    padding: 4px 0;
+    position: relative;
+    list-style: none;
+    user-select: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after {
+      content: "+";
+      position: absolute;
+      right: 0;
+      font-size: 14px;
+      color: $muted;
+    }
+  }
+
+  // Sección identidad
+  &__identity {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+    align-items: center;
+  }
+
+  &__avatar {
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #e8eaed;
+    color: #4b5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  &__identity-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: $text;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__phone {
+    margin: 2px 0;
+    font-size: 12px;
+    color: $muted;
+  }
+
+  &__chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    &.is-verified {
+      background: #e8f5ee;
+      color: $accent-identity;
+    }
+
+    &.is-warmlead {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
+    &.is-unverified {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    &--state {
+      &.is-success {
+        background: #e8f5ee;
+        color: $accent-identity;
+      }
+      &.is-info {
+        background: #e3effa;
+        color: $accent-orders;
+      }
+      &.is-danger {
+        background: #fdecea;
+        color: #b91c1c;
+      }
+      &.is-neutral {
+        background: #eef0f3;
+        color: $muted;
+      }
+    }
+  }
+
+  &__muted {
+    color: $muted;
+    font-size: 12px;
+    margin: 2px 0;
+  }
+
+  &__empty-line {
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  // Sección pedidos
+  &__orders {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  &__order {
+    border: 1px solid $border;
+    border-radius: 4px;
+    padding: 6px 8px;
+    background: #fafbfc;
+  }
+
+  &__order--link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    transition: background 0.12s ease, border-color 0.12s ease;
+    cursor: pointer;
+
+    &:hover {
+      background: #f1f5f9;
+      border-color: #c7d2da;
+    }
+  }
+
+  &__identity-links {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed $border;
+  }
+
+  &__link {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 600;
+    color: $accent-orders;
+    text-decoration: none;
+    padding: 4px 0;
+    cursor: pointer;
+
+    &:hover {
+      color: darken($accent-orders, 10%);
+      text-decoration: underline;
+    }
+  }
+
+  &__link--full {
+    display: block;
+    text-align: center;
+    margin-top: 6px;
+    padding: 6px;
+    background: #f1f5f9;
+    border-radius: 4px;
+
+    &:hover {
+      background: #e2e8f0;
+      text-decoration: none;
+    }
+  }
+
+  &__order-top,
+  &__order-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__order-num {
+    font-weight: 600;
+    font-size: 12px;
+    color: $text;
+  }
+
+  &__order-total {
+    font-size: 12px;
+    font-weight: 600;
+    color: $text;
+  }
+
+  // Sección CRM
+  &__lead {
+    margin-top: 8px;
+  }
+
+  &__lead-name {
+    margin: 0 0 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $text;
+  }
+
+  &__rating-block {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  &__rating-label {
+    font-size: 11px;
+    color: $muted;
+  }
+
+  &__stars {
+    display: inline-flex;
+    gap: 2px;
+    cursor: pointer;
+    user-select: none;
+
+    &--large {
+      .contact-panel__star {
+        font-size: 22px;
+      }
+    }
+  }
+
+  &__star {
+    font-size: 16px;
+    color: #d1d5db;
+    line-height: 1;
+    transition: color 0.12s ease;
+
+    &.is-on {
+      color: #f59e0b;
+    }
+
+    &:hover {
+      color: #f59e0b;
+    }
+  }
+
+  &__rating-draft {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__draft-note {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: $muted;
+    font-style: italic;
+  }
+
+  &__no-crm {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  &__cta {
+    border: 1px solid $accent-identity;
+    background: $accent-identity;
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.12s ease;
+
+    &:hover {
+      background: darken($accent-identity, 6%);
+    }
+  }
+}

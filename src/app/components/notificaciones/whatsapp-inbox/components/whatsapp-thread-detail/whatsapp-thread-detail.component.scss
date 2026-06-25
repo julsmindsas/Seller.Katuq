@@ -1,0 +1,587 @@
+// Detalle del hilo — chat estilo WhatsApp, estándar Katuq (plano, sin gradientes).
+
+// El componente Angular debe llenar el espacio del Master-Detail.
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 0;
+}
+
+$border: #e3e6ea;
+$border-soft: #eef0f3;
+$text: #1d2330;
+$text-strong: #0f172a;
+$muted: #6b7280;
+$accent: #1f7a4d;
+$accent-soft: #e8f5ee;
+$bubble-out: #dcf8e8;
+$bubble-out-text: #0f3a23;
+$bubble-in: #ffffff;
+$chat-bg: #f0f2f5;
+
+.thread-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #ffffff;
+
+  // ─── HEADER ──────────────────────────────────────────────────────────
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 20px;
+    border-bottom: 1px solid $border;
+    background: #ffffff;
+    flex-shrink: 0;
+    min-height: 64px;
+  }
+
+  &__avatar {
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: $accent-soft;
+    color: $accent;
+    border: 1px solid #cfe6da;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    user-select: none;
+  }
+
+  &__back {
+    display: none;
+    padding: 6px 12px;
+    margin: 0;
+    color: $text;
+    font-size: 16px;
+    line-height: 1;
+    background: transparent;
+    border: 1px solid $border;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.12s ease;
+
+    &:hover {
+      background: #f7f8fa;
+    }
+
+    @media (max-width: 1023px) {
+      display: inline-block;
+    }
+  }
+
+  &__header-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__client-link {
+    display: inline-block;
+    margin: 0 0 2px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #1e6091;
+    text-decoration: none;
+    letter-spacing: 0.01em;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.12s ease;
+
+    &:hover {
+      color: darken(#1e6091, 12%);
+      text-decoration: underline;
+    }
+  }
+
+  &__name {
+    margin: 0;
+    font-size: 15.5px;
+    font-weight: 600;
+    color: $text-strong;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  &__phone {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    color: $muted;
+    letter-spacing: 0.02em;
+  }
+
+  &__header-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+
+    .btn {
+      font-size: 12.5px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-weight: 500;
+      border: 1px solid $border;
+      background: #ffffff;
+      color: $text;
+      cursor: pointer;
+      transition: background-color 0.12s ease, border-color 0.12s ease,
+        box-shadow 0.12s ease;
+
+      &:hover {
+        background: #f7f8fa;
+        border-color: #c9cdd3;
+      }
+
+      &:focus-visible {
+        outline: none;
+        border-color: $accent;
+        box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.18);
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .is-active {
+      background: $accent-soft;
+      border-color: $accent;
+      color: $accent;
+      font-weight: 600;
+
+      &:hover {
+        background: #d7ecdf;
+      }
+    }
+  }
+
+  // ─── BODY (chat + panel lateral) ─────────────────────────────────────
+  &__body {
+    flex: 1 1 0;
+    display: flex;
+    min-height: 0;
+  }
+
+  &__chat {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0; // ← CRÍTICO: permite que __messages haga scroll
+    background: $chat-bg;
+    position: relative;
+
+    // Patrón sutil de fondo, tipo papel.
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.03) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  &__messages {
+    flex: 1 1 0;
+    min-height: 0; // ← CRÍTICO: scroll interno funciona
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px 28px 24px; // padding-bottom extra para que el último mensaje respire
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    scroll-behavior: smooth;
+
+    // Scrollbar fina y discreta (estilo Katuq).
+    scrollbar-width: thin;
+    scrollbar-color: rgba(31, 41, 55, 0.2) transparent;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: rgba(31, 41, 55, 0.15);
+      border-radius: 4px;
+      border: 2px solid transparent;
+      background-clip: padding-box;
+
+      &:hover {
+        background: rgba(31, 41, 55, 0.25);
+        background-clip: padding-box;
+      }
+    }
+
+    @media (max-width: 1023px) {
+      padding: 16px 12px;
+    }
+  }
+
+  &__state {
+    text-align: center;
+    color: $muted;
+    padding: 48px 16px;
+    font-size: 13.5px;
+  }
+
+  &__placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: $muted;
+    background: $chat-bg;
+    font-size: 14px;
+    padding: 32px;
+    text-align: center;
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(15, 23, 42, 0.03) 1px, transparent 0);
+    background-size: 22px 22px;
+  }
+
+  // ─── DATE SEPARATOR ──────────────────────────────────────────────────
+  &__date-separator {
+    display: flex;
+    justify-content: center;
+    margin: 16px 0 8px;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+
+    span {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(4px);
+      color: $muted;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 12px;
+      border: 1px solid $border-soft;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+    }
+  }
+
+  // ─── MENSAJES ────────────────────────────────────────────────────────
+  &__message {
+    display: flex;
+    margin-top: 8px;
+
+    &.is-outbound {
+      justify-content: flex-end;
+    }
+
+    &.is-inbound {
+      justify-content: flex-start;
+    }
+
+    // Mensajes consecutivos del mismo emisor van más juntos.
+    &.is-grouped {
+      margin-top: 2px;
+    }
+  }
+
+  &__bubble {
+    max-width: 62%;
+    min-width: 80px;
+    padding: 8px 12px 6px;
+    border-radius: 12px;
+    box-shadow: 0 1px 1.5px rgba(15, 23, 42, 0.08);
+    position: relative;
+    border: 1px solid transparent;
+    word-wrap: break-word;
+
+    .is-outbound & {
+      background: $bubble-out;
+      color: $bubble-out-text;
+      border-bottom-right-radius: 4px;
+    }
+
+    .is-outbound.is-grouped & {
+      border-bottom-right-radius: 4px;
+      border-top-right-radius: 4px;
+    }
+
+    .is-inbound & {
+      background: $bubble-in;
+      color: $text;
+      border: 1px solid $border-soft;
+      border-bottom-left-radius: 4px;
+    }
+
+    .is-inbound.is-grouped & {
+      border-bottom-left-radius: 4px;
+      border-top-left-radius: 4px;
+    }
+
+    @media (max-width: 767px) {
+      max-width: 80%;
+    }
+  }
+
+  &__body-text,
+  &__media {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.42;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    color: inherit;
+  }
+
+  &__media {
+    font-style: italic;
+    color: $muted;
+    font-size: 13px;
+  }
+
+  &__meta {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    font-size: 10.5px;
+    color: $muted;
+    letter-spacing: 0.02em;
+    line-height: 1;
+  }
+
+  .is-outbound &__meta {
+    color: rgba(15, 58, 35, 0.55);
+  }
+
+  &__time {
+    font-size: 10.5px;
+    opacity: 0.9;
+  }
+
+  &__status-icon {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    line-height: 1;
+    color: $muted;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+
+    &[data-status="read"] {
+      color: #1976d2;
+    }
+
+    &[data-status="delivered"] {
+      color: rgba(15, 58, 35, 0.55);
+    }
+
+    &[data-status="failed"] {
+      color: #b91c1c;
+    }
+  }
+
+  // ─── COMPOSER (footer del chat) ──────────────────────────────────────
+  // Sección de respuesta del comercio. Diseño plano sin gradientes.
+  // Vive como hijo de .thread-detail__chat, justo después de __messages.
+  &__composer-wrap {
+    flex-shrink: 0;
+    background: #ffffff;
+    border-top: 1px solid $border;
+    padding: 10px 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: relative;
+  }
+
+  &__templates {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__templates-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #f0f2f5;
+    color: $text;
+    border: 1px solid $border-soft;
+    border-radius: 14px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+
+    &:hover {
+      background: #e6e9ed;
+      border-color: #d8dce1;
+    }
+
+    &.is-open {
+      background: $accent-soft;
+      border-color: $accent;
+      color: $accent;
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: $accent;
+      box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.18);
+    }
+  }
+
+  &__templates-caret {
+    font-size: 10px;
+    line-height: 1;
+  }
+
+  &__templates-menu {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    z-index: 4;
+    min-width: 280px;
+    max-width: 380px;
+    max-height: 280px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: #ffffff;
+    border: 1px solid $border;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(31, 41, 55, 0.2) transparent;
+  }
+
+  &__templates-item {
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    transition: background-color 0.1s ease;
+
+    &:hover {
+      background: $accent-soft;
+    }
+  }
+
+  &__templates-label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: $text-strong;
+  }
+
+  &__templates-preview {
+    font-size: 11.5px;
+    color: $muted;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.35;
+  }
+
+  &__composer {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  &__composer-input {
+    flex: 1 1 auto;
+    border: 1px solid $border;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    line-height: 1.4;
+    color: $text;
+    background: #ffffff;
+    min-height: 40px;
+    max-height: 120px;
+    resize: vertical;
+    transition: border-color 0.12s ease, box-shadow 0.12s ease;
+
+    &::placeholder {
+      color: $muted;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $accent;
+      box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.16);
+    }
+
+    &:disabled {
+      background: #f7f8fa;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+  }
+
+  &__composer-send {
+    flex-shrink: 0;
+    background: $accent;
+    color: #ffffff;
+    border: 1px solid $accent;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13.5px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 40px;
+    transition: background-color 0.12s ease, border-color 0.12s ease;
+
+    &:hover:not(:disabled) {
+      background: #19613d;
+      border-color: #19613d;
+    }
+
+    &:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.32);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  // ─── PANEL DE CONTACTO ───────────────────────────────────────────────
+  &__panel {
+    flex: 0 0 360px;
+    max-width: 360px;
+    border-left: 1px solid $border;
+    background: #ffffff;
+    overflow-y: auto;
+    min-height: 0;
+
+    @media (max-width: 1199px) {
+      flex: 0 0 300px;
+      max-width: 300px;
+    }
+
+    @media (max-width: 767px) {
+      display: none;
+    }
+  }
+}

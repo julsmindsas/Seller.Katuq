@@ -1,0 +1,110 @@
+// Shell Master-Detail. Estilo Katuq: plano, sin gradientes.
+
+// Wrapper del componente: separa el shell de los bordes del .page-body y del sidebar.
+:host {
+  display: block;
+  padding: 4px 8px 12px 8px;
+  box-sizing: border-box;
+}
+
+.wa-shell {
+  display: flex;
+  flex-direction: column;
+  // Header Katuq 54px + page-body padding 32px + :host padding ~16 = ~102px
+  // (footer está oculto mientras el shell está activo — patch en TS).
+  height: calc(100vh - 110px);
+  min-height: 480px;
+  background: #ffffff;
+  border: 1px solid #e3e6ea;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: #ffffff;
+    border-bottom: 1px solid #e3e6ea;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 600;
+    color: #0f172a;
+    letter-spacing: -0.01em;
+  }
+
+  &__demo-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 9px;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  &__body {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  &__list {
+    flex: 0 0 340px;
+    max-width: 340px;
+    min-width: 300px;
+    background: #ffffff;
+    border-right: 1px solid #e3e6ea;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+
+    @media (max-width: 1199px) {
+      flex: 0 0 320px;
+      max-width: 320px;
+      min-width: 280px;
+    }
+  }
+
+  &__detail {
+    flex: 1 1 auto;
+    background: #ffffff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // Responsive: en pantallas chicas, sólo se ve uno.
+  @media (max-width: 1023px) {
+    height: calc(100vh - 100px);
+
+    &__list,
+    &__detail {
+      flex: 1 1 100%;
+      max-width: 100%;
+      min-width: 0;
+    }
+
+    &__detail {
+      display: none;
+    }
+
+    &.wa-shell--detail-open {
+      .wa-shell__list {
+        display: none;
+      }
+      .wa-shell__detail {
+        display: flex;
+      }
+    }
+  }
+}

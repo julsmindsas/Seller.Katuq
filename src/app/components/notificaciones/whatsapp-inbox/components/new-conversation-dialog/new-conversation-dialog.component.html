@@ -1,0 +1,110 @@
+<div
+  *ngIf="visible"
+  class="ncd-backdrop"
+  (click)="onBackdropClick($event)"
+  role="dialog"
+  aria-modal="true"
+>
+  <div class="ncd-dialog">
+    <header class="ncd-header">
+      <h3 class="ncd-title">Iniciar nueva conversación</h3>
+      <button
+        type="button"
+        class="ncd-close"
+        (click)="onCancel()"
+        aria-label="Cerrar"
+      >
+        ×
+      </button>
+    </header>
+
+    <div class="ncd-body">
+      <p class="ncd-hint">
+        Para escribirle a un contacto que <strong>no te ha escrito</strong>,
+        WhatsApp exige usar una plantilla aprobada por Meta.
+      </p>
+
+      <!-- Teléfono -->
+      <label class="ncd-field">
+        <span class="ncd-label">Teléfono del destinatario</span>
+        <input
+          type="tel"
+          class="form-control ncd-input"
+          placeholder="Ej: 573243564016 (sin + ni espacios)"
+          [(ngModel)]="phone"
+          [disabled]="sending"
+          inputmode="numeric"
+        />
+        <span class="ncd-help">Incluye el código de país (ej: 57 para Colombia).</span>
+      </label>
+
+      <!-- Templates -->
+      <label class="ncd-field">
+        <span class="ncd-label">Plantilla aprobada</span>
+        <select
+          class="form-select ncd-input"
+          [(ngModel)]="selectedTemplateName"
+          (ngModelChange)="onTemplateChange()"
+          [disabled]="sending || loadingTemplates"
+        >
+          <option value="" disabled>
+            {{ loadingTemplates ? "Cargando plantillas..." : "Selecciona una plantilla" }}
+          </option>
+          <option *ngFor="let t of templates" [value]="t.name">
+            {{ t.name }} ({{ t.category }})
+          </option>
+        </select>
+        <span *ngIf="!loadingTemplates && templates.length === 0" class="ncd-help ncd-help--warn">
+          No hay plantillas aprobadas en Kapso.
+        </span>
+      </label>
+
+      <!-- Variables -->
+      <div *ngIf="selectedTemplate && selectedTemplate.variables.length > 0" class="ncd-variables">
+        <div class="ncd-label">Variables</div>
+        <label
+          *ngFor="let n of selectedTemplate.variables; let i = index"
+          class="ncd-field ncd-field--var"
+        >
+          <span class="ncd-label-sm">Variable {{ "{{" }}{{ n }}{{ "}}" }}</span>
+          <input
+            type="text"
+            class="form-control ncd-input"
+            [placeholder]="'Valor para {{' + n + '}}'"
+            [(ngModel)]="variableValues[i]"
+            [disabled]="sending"
+          />
+        </label>
+      </div>
+
+      <!-- Preview -->
+      <div *ngIf="selectedTemplate" class="ncd-preview">
+        <div class="ncd-label">Vista previa</div>
+        <div class="ncd-preview-bubble">{{ previewText }}</div>
+      </div>
+
+      <!-- Mensajes -->
+      <div *ngIf="errorMsg" class="ncd-msg ncd-msg--error">{{ errorMsg }}</div>
+      <div *ngIf="successMsg" class="ncd-msg ncd-msg--success">{{ successMsg }}</div>
+    </div>
+
+    <footer class="ncd-footer">
+      <button
+        type="button"
+        class="btn btn-light ncd-btn"
+        (click)="onCancel()"
+        [disabled]="sending"
+      >
+        Cancelar
+      </button>
+      <button
+        type="button"
+        class="btn btn-primary ncd-btn"
+        (click)="onSend()"
+        [disabled]="!canSend"
+      >
+        {{ sending ? "Enviando..." : "Enviar" }}
+      </button>
+    </footer>
+  </div>
+</div>
