@@ -77,6 +77,7 @@ export interface CotizacionConfig {
 export interface CotizacionListFilter {
   estado?: EstadoCotizacion | "";
   q?: string;
+  pedido?: string;
   page?: number;
   limit?: number;
 }

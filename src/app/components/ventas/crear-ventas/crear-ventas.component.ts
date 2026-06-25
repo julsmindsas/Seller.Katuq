@@ -3183,12 +3183,17 @@ export class CrearVentasComponent
 
                 // Obtener el ID del pedido creado
                 const orderId = res.order?._id || res.orderId || res.id;
-                const nroPedido = this.pedidoGral.nroPedido || this.pedidoGral.referencia || '';
+                // Preferir el nro confirmado por el backend; fallback al pre-generado en el cliente.
+                const nroPedido = res.order?.nroPedido || res.order?.referencia || this.pedidoGral.nroPedido || this.pedidoGral.referencia || '';
 
                 context.cartService.clearCart();
                 context.pedidoSinGuardar = false;
-                // Spec 008.2: sellar la cotización origen (si esta venta vino de "Convertir a pedido").
-                this.marcarCotizacionConvertidaSiAplica(nroPedido);
+                // Spec 008.2: sellar la cotización origen SOLO si el pedido se creó de verdad
+                // (la respuesta trae order/orderId). Evita asociar un pedido inexistente
+                // ante un 2xx vacío o un success:false.
+                if (orderId || res.order) {
+                  this.marcarCotizacionConvertidaSiAplica(nroPedido);
+                }
                 this.mywizard.goToNextStep();
 
                 // Mostrar mensaje de éxito
@@ -4187,15 +4192,19 @@ export class CrearVentasComponent
 
                   // Obtener el ID del pedido creado
                   const orderId = res.order?._id || res.orderId || res.id;
-                  const nroPedido = context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
+                  // Preferir el nro confirmado por el backend; fallback al pre-generado en el cliente.
+                  const nroPedido = res.order?.nroPedido || res.order?.referencia || context.pedidoGral.nroPedido || context.pedidoGral.referencia || '';
 
                   // Encolar facturación electrónica en background si está habilitada globalmente o si el checkbox está marcado
                   if (orderId && (context.siigoEnabled || context.generarFacturaElectronica)) {
                     context.encolarFacturacionSiigo(orderId, nroPedido);
                   }
 
-                  // Spec 008.2: sellar la cotización origen (si esta venta vino de "Convertir a pedido").
-                  context.marcarCotizacionConvertidaSiAplica(nroPedido);
+                  // Spec 008.2: sellar la cotización origen SOLO si el pedido se creó de verdad
+                  // (la respuesta trae order/orderId). Evita asociar un pedido inexistente.
+                  if (orderId || res.order) {
+                    context.marcarCotizacionConvertidaSiAplica(nroPedido);
+                  }
 
                   resolve(true); // Pedido guardado exitosamente
                 },

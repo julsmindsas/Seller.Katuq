@@ -23,6 +23,7 @@ import {
 import { Carrito, Cliente } from "../../ventas/modelo/pedido";
 import { Producto } from "../../../shared/models/productos/Producto";
 import { ConfProductToCartComponent } from "../../ventas/catalogo/conf-product-to-cart/conf-product-to-cart.component";
+import { CrearClienteModalComponent } from "../../ventas/clientes/crear-cliente-modal/crear-cliente-modal.component";
 
 /**
  * Editor de cotización — T-18 (cliente + fechas + términos).
@@ -208,6 +209,16 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return (v && (v.nombre || v.email)) || "—";
   }
 
+  /**
+   * Navega al pedido generado a partir de esta cotización (deep-link a la lista
+   * de pedidos filtrada por nroPedido — ver ListOrdersComponent, query `nroPedido`).
+   */
+  verPedido(): void {
+    const nro = this.cotizacion.pedidoGenerado;
+    if (!nro) return;
+    this.router.navigate(["/ventas/pedidos"], { queryParams: { nroPedido: nro } });
+  }
+
   // ---- Picker de cliente ----
   private configurarBusquedaCliente(): void {
     const sub = this.clienteSearch$
@@ -249,6 +260,63 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     this.cotizacion.cliente = null;
     this.clienteTerm = "";
     this.clienteSuggestions = [];
+  }
+
+  /**
+   * Abre el modal de cliente para crear uno nuevo y, al guardarlo, lo selecciona
+   * en la cotización. Reusa `CrearClienteModalComponent` (ClientesSharedModule).
+   * Si lo que se escribió en el buscador es un número de documento, se preplena.
+   */
+  crearCliente(): void {
+    const ref = this.modal.open(CrearClienteModalComponent, {
+      size: "lg",
+      centered: true,
+    });
+    ref.componentInstance.isEdit = false;
+    const term = (this.clienteTerm || "").trim();
+    if (term && /^\d+$/.test(term)) {
+      ref.componentInstance.documentoPrellenado = term;
+    }
+    ref.result.then(
+      (result: any) => {
+        // 'created' (nuevo) o 'existing_found' (ya existía): en ambos casos hay cliente.
+        if (result && result.cliente) {
+          this.seleccionarCliente(result.cliente);
+        }
+      },
+      () => {
+        /* dismiss → no hacer nada */
+      }
+    );
+  }
+
+  /**
+   * Abre el modal de cliente en modo edición con el cliente seleccionado y
+   * refleja los cambios en la cotización tras guardar.
+   */
+  editarCliente(): void {
+    if (!this.cotizacion.cliente) {
+      return;
+    }
+    const ref = this.modal.open(CrearClienteModalComponent, {
+      size: "lg",
+      centered: true,
+    });
+    ref.componentInstance.isEdit = true;
+    ref.componentInstance.clienteData = this.cotizacion.cliente;
+    const cdPrevio = (this.cotizacion.cliente as any)?.cd || (this.cotizacion.cliente as any)?.id;
+    ref.result.then(
+      (result: any) => {
+        if (result && result.cliente) {
+          // Preservar el doc id si el cliente refrescado no lo trae (para reeditar).
+          const actualizado = { cd: cdPrevio, ...result.cliente };
+          this.seleccionarCliente(actualizado);
+        }
+      },
+      () => {
+        /* dismiss → no hacer nada */
+      }
+    );
   }
 
   // ---- Picker de productos (T-19) ----
@@ -623,7 +691,28 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     item._ivaManualOverride = iva;
   }
 
+  /** % de descuento de la línea (0–100), saneado. */
+  descLineaPct(item: Carrito): number {
+    const d = Number(item?.descuentoLinea) || 0;
+    return Math.min(100, Math.max(0, d));
+  }
+
+  onDescLineaChange(item: Carrito, value: any): void {
+    if (!item) return;
+    let d = Number(value);
+    if (isNaN(d) || d < 0) d = 0;
+    if (d > 100) d = 100;
+    item.descuentoLinea = d;
+  }
+
+  /** Subtotal de la línea CON IVA, ya aplicado el descuento de línea. */
   itemSubtotal(item: Carrito): number {
+    const bruto = this.itemPrecio(item) * (item?.cantidad || 0);
+    return bruto * (1 - this.descLineaPct(item) / 100);
+  }
+
+  /** Subtotal de la línea CON IVA, ANTES del descuento de línea (para tachado). */
+  itemSubtotalBruto(item: Carrito): number {
     return this.itemPrecio(item) * (item?.cantidad || 0);
   }
 
@@ -631,20 +720,44 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return !(item?.producto as any)?.identificacion?.referencia;
   }
 
+  /**
+   * Precios por tipo de cliente (segmentación) definidos para el producto de la
+   * línea. Indicador informativo: nombre de la categoría + precio. Marca como
+   * `aplicado` el segmento que coincide con la categoría del cliente seleccionado
+   * (el que efectivamente determina el precio de la línea).
+   * Devuelve [] para empresas sin segmentación o ítems libres.
+   */
+  preciosSegmento(item: Carrito): { nombre: string; precio: number; aplicado: boolean }[] {
+    if (this.itemEsLibre(item)) return [];
+    const lista = (item?.producto as any)?.preciosPorTipoCliente;
+    if (!Array.isArray(lista) || lista.length === 0) return [];
+    const categoriaId = (this.cotizacion.cliente as any)?.categoria?.id;
+    return lista
+      .filter((p: any) => p && p.activo === true)
+      .map((p: any) => ({
+        nombre: p.tipoClienteNombre || p.tipoClienteId || "Segmento",
+        precio: Number(p.precioConIva) || 0,
+        aplicado: !!categoriaId && p.tipoClienteId === categoriaId,
+      }));
+  }
+
   // ---- Fechas / validez ----
   onEmisionChange(value: string): void {
     this.fechaEmision = value;
     this.recalcularVencimiento();
+    this.reactivarSiVencidaExtendida();
   }
 
   onValidezChange(dias: number): void {
     this.validezDias = Number(dias) || 0;
     this.recalcularVencimiento();
+    this.reactivarSiVencidaExtendida();
   }
 
   onVencimientoChange(value: string): void {
     this.fechaVencimiento = value;
     this.validezDias = this.diasEntre(this.fechaEmision, this.fechaVencimiento);
+    this.reactivarSiVencidaExtendida();
   }
 
   private recalcularVencimiento(): void {
@@ -652,6 +765,30 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     const venc = new Date(base);
     venc.setDate(venc.getDate() + (Number(this.validezDias) || 0));
     this.fechaVencimiento = this.toInputDate(venc);
+  }
+
+  /**
+   * Reactiva una cotización VENCIDA cuando se extiende la vigencia a una fecha
+   * futura: vuelve al estado 'enviada' y re-emite con fecha de hoy (D-045).
+   * La vigencia elegida por el usuario se conserva; la validez se recalcula
+   * desde hoy. No hace nada si la cotización no está vencida o sigue caducada.
+   */
+  private reactivarSiVencidaExtendida(): void {
+    if (this.cotizacion.estadoCotizacion !== ("vencida" as EstadoCotizacion)) return;
+    const venc = this.fromInputDate(this.fechaVencimiento);
+    if (!venc) return;
+    const hoy = new Date();
+    hoy.setHours(0, 0, 0, 0);
+    if (venc.getTime() < hoy.getTime()) return; // sigue vencida
+
+    this.cotizacion.estadoCotizacion = "enviada" as EstadoCotizacion;
+    this.fechaEmision = this.toInputDate(new Date());
+    this.validezDias = this.diasEntre(this.fechaEmision, this.fechaVencimiento);
+    this.toastr.info(
+      "Cotización reactivada: estado 'Enviada' y emisión actualizada a hoy.",
+      "Reactivada",
+      { timeOut: 3500 }
+    );
   }
 
   // ---- Helpers de presentación de cliente ----
@@ -687,6 +824,22 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
   clienteCiudad(cli: any): string {
     if (!cli) return "";
     return cli.ciudad || cli.municipio || cli.ciudad_comprador || "";
+  }
+
+  /**
+   * Tipo de cliente (segmentación) a mostrar como indicador. La fuente
+   * autoritativa es `categoria` (la misma que define el precio por tipo de
+   * cliente); si el cliente solo trae el `tipoCliente` del formulario, se usa
+   * como respaldo (solo display, sin efecto en precios).
+   */
+  clienteTipo(cli: any): string {
+    if (!cli) return "";
+    return (
+      cli.categoria?.nombre ||
+      cli.categoria?.descripcion ||
+      cli.tipoCliente ||
+      ""
+    );
   }
 
   /** Meta del cliente para el documento: documento · ciudad · correo. */
@@ -733,9 +886,9 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return this.cotizacion.cliente || null;
   }
 
-  // ---- T-21: totales + descuento global ----
+  // ---- T-21: totales + descuento por línea + descuento global ----
 
-  /** Subtotal: suma de bases SIN IVA por línea (precio sin IVA × cantidad). */
+  /** Subtotal BRUTO: suma de bases SIN IVA por línea (precio sin IVA × cantidad), antes de descuentos. */
   get subtotal(): number {
     return (this.cotizacion.items || []).reduce(
       (acc, item) => acc + this.getPrecioSinIva(item) * (item?.cantidad || 0),
@@ -743,10 +896,27 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     );
   }
 
-  /** IVA total antes de aplicar el descuento global (suma del IVA por línea). */
-  private get ivaSinDescuento(): number {
+  /** Suma de descuentos por línea (sobre base SIN IVA). */
+  get totalDescuentoLineas(): number {
     return (this.cotizacion.items || []).reduce(
-      (acc, item) => acc + this.getValorIva(item) * (item?.cantidad || 0),
+      (acc, item) =>
+        acc +
+        this.getPrecioSinIva(item) * (item?.cantidad || 0) * (this.descLineaPct(item) / 100),
+      0
+    );
+  }
+
+  /** Subtotal SIN IVA neto de descuentos por línea (base para el descuento global). */
+  private get subtotalNetoLineas(): number {
+    return this.subtotal - this.totalDescuentoLineas;
+  }
+
+  /** IVA por línea ya neto del descuento de línea (antes del descuento global). */
+  private get ivaNetoLineas(): number {
+    return (this.cotizacion.items || []).reduce(
+      (acc, item) =>
+        acc +
+        this.getValorIva(item) * (item?.cantidad || 0) * (1 - this.descLineaPct(item) / 100),
       0
     );
   }
@@ -757,19 +927,24 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return Math.min(100, Math.max(0, d));
   }
 
-  /** Valor del descuento global (sobre el subtotal, antes de IVA). */
-  get totalDescuento(): number {
-    return this.subtotal * (this.descGlobalPct / 100);
+  /** Valor del descuento global (sobre el subtotal ya neto de descuentos por línea). */
+  get totalDescuentoGlobal(): number {
+    return this.subtotalNetoLineas * (this.descGlobalPct / 100);
   }
 
-  /** Base gravable: subtotal menos descuento global. */
+  /** Descuento total mostrado: descuentos por línea + descuento global. */
+  get totalDescuento(): number {
+    return this.totalDescuentoLineas + this.totalDescuentoGlobal;
+  }
+
+  /** Base gravable: subtotal bruto menos todos los descuentos. */
   get baseGravable(): number {
     return this.subtotal - this.totalDescuento;
   }
 
-  /** IVA sobre la base ya descontada (descuento global aplica antes de IVA). */
+  /** IVA sobre la base ya descontada (descuentos de línea y global aplican antes de IVA). */
   get totalImpuesto(): number {
-    return this.ivaSinDescuento * (1 - this.descGlobalPct / 100);
+    return this.ivaNetoLineas * (1 - this.descGlobalPct / 100);
   }
 
   /** Total a pagar. */

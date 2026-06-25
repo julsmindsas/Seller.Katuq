@@ -329,6 +329,8 @@ export interface Carrito {
   _precioManualOverride?: number;
   _ivaManualOverride?: number;
   _precioManualTemp?: any;
+  /** Descuento opcional por línea (porcentaje 0–100). Usado en cotizaciones. */
+  descuentoLinea?: number;
 }
 
 export interface Facturacion {

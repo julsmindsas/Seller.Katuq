@@ -75,17 +75,27 @@
         </div>
         <div class="card-body">
           <div class="row g-3 align-items-end">
-            <div class="col-md-5">
+            <div class="col-md-4">
               <label class="form-label">Buscar</label>
               <input
                 type="text"
                 class="form-control"
-                placeholder="Número, cliente o documento"
+                placeholder="Número, cliente, documento o pedido"
                 [value]="q"
                 (input)="onSearch($any($event.target).value)"
               />
             </div>
-            <div class="col-md-7">
+            <div class="col-md-3">
+              <label class="form-label">N° Pedido</label>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="Ej. DAD-0345"
+                [value]="filtroPedido"
+                (input)="onPedidoSearch($any($event.target).value)"
+              />
+            </div>
+            <div class="col-md-5">
               <label class="form-label d-block">Estado</label>
               <div class="chips">
                 <button
@@ -125,22 +135,23 @@
                 <tr>
                   <th role="button" (click)="sortBy('nroCotizacion')">Número</th>
                   <th role="button" (click)="sortBy('cliente')">Cliente</th>
-                  <th role="button" (click)="sortBy('fechaCreacion')">Emisión</th>
+                  <th role="button" (click)="sortBy('fechaEmision')">Emisión</th>
                   <th role="button" (click)="sortBy('fechaVencimiento')">Válida hasta</th>
                   <th class="text-end" role="button" (click)="sortBy('total')">Total</th>
                   <th>Estado</th>
+                  <th role="button" (click)="sortBy('pedidoGenerado')">Pedido</th>
                   <th class="text-end">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngIf="loading">
-                  <td colspan="7" class="text-center text-muted py-4">Cargando…</td>
+                  <td colspan="8" class="text-center text-muted py-4">Cargando…</td>
                 </tr>
                 <tr *ngIf="!loading && error">
-                  <td colspan="7" class="text-center text-danger py-4">{{ error }}</td>
+                  <td colspan="8" class="text-center text-danger py-4">{{ error }}</td>
                 </tr>
                 <tr *ngIf="!loading && !error && cotizaciones.length === 0">
-                  <td colspan="7" class="text-center py-5">
+                  <td colspan="8" class="text-center py-5">
                     <i class="fa fa-file-text-o fa-2x text-muted mb-2 d-block"></i>
                     <div class="text-muted mb-2">No hay cotizaciones que coincidan con el filtro.</div>
                     <button class="btn btn-primary btn-sm" (click)="nuevaCotizacion()">
@@ -159,13 +170,25 @@
                     <div class="fw-semibold">{{ clienteNombre(c) }}</div>
                     <small class="text-muted">{{ clienteSub(c) }}</small>
                   </td>
-                  <td>{{ fecha(c.fechaCreacion) }}</td>
+                  <td>{{ fecha(c.fechaEmision || c.fechaCreacion) }}</td>
                   <td><span [ngClass]="validezClase(c)">{{ fecha(c.fechaVencimiento) }}</span></td>
                   <td class="text-end"><strong>{{ money(c.total) }}</strong></td>
                   <td>
                     <span class="badge" [ngClass]="getEstadoClass(c.estadoCotizacion)">
                       {{ estadoLabel(c.estadoCotizacion) }}
                     </span>
+                  </td>
+                  <td>
+                    <button
+                      *ngIf="c.pedidoGenerado; else sinPedido"
+                      type="button"
+                      class="btn btn-sm btn-link p-0 cot-pedido-link"
+                      title="Ver el pedido generado"
+                      (click)="verPedido(c, $event)"
+                    >
+                      🧾 {{ c.pedidoGenerado }}
+                    </button>
+                    <ng-template #sinPedido><span class="text-muted">—</span></ng-template>
                   </td>
                   <td class="text-end">
                     <div class="btn-group btn-group-sm" role="group" (click)="$event.stopPropagation()">

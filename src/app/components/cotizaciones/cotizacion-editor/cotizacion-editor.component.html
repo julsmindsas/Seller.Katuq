@@ -5,6 +5,16 @@
       <button class="cot-back" (click)="volver()">← Volver</button>
       <h1>Cotización</h1>
       <span class="ednum">{{ cotizacion.nroCotizacion ? cotizacion.nroCotizacion : '(nueva)' }}</span>
+      <button
+        type="button"
+        class="cot-pedido-chip"
+        *ngIf="cotizacion.pedidoGenerado"
+        (click)="verPedido()"
+        title="Ver el pedido generado a partir de esta cotización"
+      >
+        🧾 Pedido {{ cotizacion.pedidoGenerado }}
+        <span class="cot-pedido-chip-go">→</span>
+      </button>
     </div>
     <div class="estado-wrap">
       <span class="estado-badge estado-{{ estado }}">{{ estadoLabel(estado) }}</span>
@@ -48,7 +58,12 @@
                   *ngFor="let cli of clienteSuggestions"
                   (click)="seleccionarCliente(cli)"
                 >
-                  <span class="cot-sugg-name">{{ clienteNombre(cli) }}</span>
+                  <span class="cot-sugg-name">
+                    {{ clienteNombre(cli) }}
+                    <span class="cot-cliente-tag cot-cliente-tag-sm" *ngIf="clienteTipo(cli)">
+                      🏷️ {{ clienteTipo(cli) }}
+                    </span>
+                  </span>
                   <span class="cot-sugg-sub">
                     {{ clienteDocumento(cli) }}
                     <ng-container *ngIf="clienteCorreo(cli)"> · {{ clienteCorreo(cli) }}</ng-container>
@@ -59,13 +74,24 @@
                 </div>
               </ng-container>
             </div>
+            <div class="cot-cliente-actions">
+              <button type="button" class="cot-link" (click)="crearCliente()">
+                ＋ Crear cliente nuevo
+              </button>
+            </div>
           </div>
         </ng-container>
 
         <div class="cot-cliente-card" *ngIf="clienteSeleccionado">
           <div class="cot-cliente-avatar">{{ (clienteNombre(clienteSeleccionado) || '?')[0] }}</div>
           <div class="cot-cliente-info">
-            <div class="cot-cliente-name">{{ clienteNombre(clienteSeleccionado) }}</div>
+            <div class="cot-cliente-name">
+              {{ clienteNombre(clienteSeleccionado) }}
+              <span class="cot-cliente-tag" *ngIf="clienteTipo(clienteSeleccionado)"
+                    title="Tipo de cliente (define precios por segmento)">
+                🏷️ {{ clienteTipo(clienteSeleccionado) }}
+              </span>
+            </div>
             <div class="cot-cliente-meta">
               <span *ngIf="clienteDocumento(clienteSeleccionado)">
                 # {{ clienteDocumento(clienteSeleccionado) }}
@@ -81,7 +107,10 @@
               </span>
             </div>
           </div>
-          <button type="button" class="cot-link" (click)="quitarCliente()">✎ Cambiar</button>
+          <div class="cot-cliente-card-actions">
+            <button type="button" class="cot-link" (click)="editarCliente()">✎ Editar</button>
+            <button type="button" class="cot-link" (click)="quitarCliente()">⇄ Cambiar</button>
+          </div>
         </div>
       </section>
 
@@ -183,6 +212,13 @@
               <ng-container *ngIf="!itemEsLibre(item)">
                 <span class="cl-titulo">{{ itemTitulo(item) }}</span>
                 <span class="cl-ref" *ngIf="itemReferencia(item)">Ref: {{ itemReferencia(item) }}</span>
+                <div class="cl-segmentos" *ngIf="preciosSegmento(item).length">
+                  <span class="cl-seg-chip" *ngFor="let s of preciosSegmento(item)"
+                        [class.cl-seg-aplicado]="s.aplicado"
+                        [title]="s.aplicado ? 'Precio aplicado a este cliente' : 'Precio para el segmento ' + s.nombre">
+                    🏷️ {{ s.nombre }}: {{ s.precio | currency:'COP':'symbol-narrow':'1.0-0' }}
+                  </span>
+                </div>
               </ng-container>
               <input
                 *ngIf="itemEsLibre(item)"
@@ -260,8 +296,29 @@
                   </div>
                 </div>
               </ng-template>
+              <div class="cl-desc-linea">
+                <label>Desc.</label>
+                <div class="cl-desc-input">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    class="form-control form-control-sm"
+                    [ngModel]="item.descuentoLinea || null"
+                    (ngModelChange)="onDescLineaChange(item, $event)"
+                    placeholder="0"
+                  />
+                  <span class="cl-desc-pct">%</span>
+                </div>
+              </div>
             </span>
-            <span class="cl-sub">{{ itemSubtotal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+            <span class="cl-sub">
+              <span class="cl-sub-net">{{ itemSubtotal(item) | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+              <s class="cl-sub-orig" *ngIf="descLineaPct(item) > 0">
+                {{ itemSubtotalBruto(item) | currency:'COP':'symbol-narrow':'1.0-0' }}
+              </s>
+            </span>
             <span class="cl-acc">
               <button type="button" class="cot-del" (click)="eliminarItem(i)" title="Eliminar">
                 🗑
@@ -293,9 +350,13 @@
           <span>Subtotal</span>
           <span>{{ subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
         </div>
-        <div class="sum-row muted">
-          <span>Descuentos</span>
-          <span>− {{ totalDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        <div class="sum-row muted" *ngIf="totalDescuentoLineas > 0">
+          <span>Desc. por producto</span>
+          <span>− {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+        <div class="sum-row muted" *ngIf="totalDescuentoGlobal > 0">
+          <span>Desc. global</span>
+          <span>− {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
         </div>
         <div class="sum-row">
           <span>Base gravable</span>
@@ -380,6 +441,7 @@
           <strong>COTIZACIÓN</strong>
           <span>{{ cotizacion.nroCotizacion || '(borrador)' }}</span>
           <span *ngIf="fechaVencimiento">Válida hasta: {{ fechaVencimiento }}</span>
+          <span class="doc-pedido" *ngIf="cotizacion.pedidoGenerado">Pedido: {{ cotizacion.pedidoGenerado }}</span>
         </div>
       </div>
 
@@ -395,6 +457,7 @@
             <th>Descripción</th>
             <th>Cant.</th>
             <th>Precio</th>
+            <th>Desc.</th>
             <th>IVA</th>
             <th>Total</th>
           </tr>
@@ -407,6 +470,7 @@
             </td>
             <td>{{ it.cantidad }}</td>
             <td>{{ docPrecioUnit(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+            <td>{{ descLineaPct(it) > 0 ? (descLineaPct(it) + '%') : '—' }}</td>
             <td>{{ getIvaActual(it) }}%</td>
             <td>{{ itemSubtotal(it) | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
           </tr>
@@ -415,9 +479,13 @@
 
       <div class="doc-totals">
         <div><span>Subtotal</span><span>{{ subtotal | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+        <div *ngIf="totalDescuentoLineas > 0">
+          <span>Descuento por producto</span>
+          <span>– {{ totalDescuentoLineas | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
         <div *ngIf="descGlobalPct > 0">
-          <span>Descuento ({{ descGlobalPct }}%)</span>
-          <span>– {{ totalDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+          <span>Descuento global ({{ descGlobalPct }}%)</span>
+          <span>– {{ totalDescuentoGlobal | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
         </div>
         <div><span>IVA</span><span>{{ totalImpuesto | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
         <div class="doc-total"><span>Total</span><span>{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>

@@ -382,6 +382,23 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Rollout:** feature flag `ENABLE_CUSTOMER_METRICS` (frontend, default OFF) → rollback = apagar flag.
 - **Estado:** spec/plan/tasks creados; backend implementado + 15 tests verdes (10 unit + 5 contract). Frontend (servicio + subcomponente `app-customer-metrics`) implementado, pendiente validar build + activar flag.
 
+### 2026-06-23 — D-044: Crear/editar cliente desde el editor de cotización (supera D-CLAR-05)
+- **Contexto:** D-CLAR-05 difirió la creación rápida de cliente en Fase 1 (solo selección de cliente existente). El responsable de producto pidió habilitar **crear y editar** cliente directamente desde la pantalla de nueva cotización para no tener que salir al módulo de clientes.
+- **Decisión (mismo patrón que D-042):** reusar `CrearClienteModalComponent` vía un módulo compartido nuevo `src/app/components/ventas/clientes/clientes-shared.module.ts` (`ClientesSharedModule`) que **declara y exporta** el modal. `VentasModule` quita la declaración del modal e importa el shared module (sin cambio de comportamiento); `CotizacionesModule` lo importa también. Cero duplicación de UI, sin acoplar cotizaciones a todo `VentasModule` (Art. VI).
+- **Verificación previa:** el modal es autocontenido — su template solo usa `SharedModule` (`translate`, `NgbModule`, Forms) + PrimeNG (`Dropdown`/`InputText`/`Button`); sus servicios (`MaestroService`, `ClientConfigService`, `InfoIndicativos`) son `providedIn: 'root'` → funciona con `NgbModal.open()` desde cualquier inyector. El endpoint `searchClients` ya retorna `cd` (doc id) → el modo edición funciona.
+- **UX en el editor:** botón "＋ Crear cliente nuevo" bajo el buscador (preplena documento si lo escrito es numérico) y botón "✎ Editar" en la tarjeta del cliente seleccionado. Al cerrar el modal (`action ∈ {created, existing_found, updated}`) el cliente resultante queda seleccionado en la cotización; en edición se preserva el `cd` por si el cliente refrescado no lo trae.
+- **Alternativas descartadas:** importar `VentasModule` completo (arrastra routing/providers, acopla todo ventas); duplicar un formulario de cliente propio en cotizaciones (divergencia de validaciones y campos).
+- **Impacto:** ningún cambio de comportamiento en el módulo de ventas; build verificado OK.
+
+### 2026-06-24 — D-045: Edición de cotización — fecha de emisión visible + reactivación de vencidas
+- **Contexto (bugs reportados):** al editar una cotización (1) las fechas "no se actualizaban" y (2) el estado tampoco.
+- **Causa fecha:** el listado mostraba `fechaCreacion` (inmutable; el backend la borra del `update`) en la columna "Emisión", mientras el editor edita y persiste `fechaEmision`. **Fix:** listado (celda, orden y export) usa `fechaEmision || fechaCreacion`.
+- **Causa estado (caso específico del usuario):** `vencida` es estado DERIVADO (enviada + vigencia pasada); `getById` auto-expira hacia adelante (enviada→vencida) pero nada revertía cuando se extendía la vigencia.
+- **Decisión:** al extender la vigencia de una cotización **vencida** a una fecha **futura**, se **reactiva** → estado vuelve a **`enviada`** y la **fecha de emisión se re-emite a HOY** (validez recalculada desde hoy; la vigencia elegida por el usuario se conserva). Decidido con el responsable de producto (enviada + emisión=hoy).
+  - **Frontend:** `reactivarSiVencidaExtendida()` se dispara en los 3 handlers de fecha del editor (emisión/validez/vencimiento) con toast informativo.
+  - **Backend (red de seguridad, espejo de la auto-expiración):** en `edit`, si llega `estadoCotizacion === "vencida"` y `fechaVencimiento` futura → se persiste `enviada`.
+- **Alternativas descartadas:** volver a `borrador` (obligaría a reenviar); dejar el cambio solo al usuario vía selector (poco intuitivo y `vencida` no es seleccionable en el editor).
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.

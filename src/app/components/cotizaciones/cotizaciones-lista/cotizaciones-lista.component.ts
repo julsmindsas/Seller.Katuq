@@ -43,6 +43,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   ];
   filtroEstado: EstadoCotizacion | "" = "";
   q = "";
+  filtroPedido = "";
 
   // Paginación (server-side)
   page = 1;
@@ -55,6 +56,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
   sortDir: 1 | -1 = -1;
 
   private searchSubject = new Subject<string>();
+  private pedidoSubject = new Subject<string>();
   private subs: Subscription[] = [];
 
   private readonly COP = new Intl.NumberFormat("es-CO", {
@@ -76,6 +78,15 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
         .pipe(debounceTime(350), distinctUntilChanged())
         .subscribe((value) => {
           this.q = value;
+          this.page = 1;
+          this.cargar();
+        })
+    );
+    this.subs.push(
+      this.pedidoSubject
+        .pipe(debounceTime(350), distinctUntilChanged())
+        .subscribe((value) => {
+          this.filtroPedido = value;
           this.page = 1;
           this.cargar();
         })
@@ -114,6 +125,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
       .list({
         estado: this.filtroEstado || undefined,
         q: this.q || undefined,
+        pedido: this.filtroPedido || undefined,
         page: this.page,
         limit: this.limit,
       })
@@ -150,6 +162,10 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     this.searchSubject.next(value || "");
   }
 
+  onPedidoSearch(value: string): void {
+    this.pedidoSubject.next(value || "");
+  }
+
   // ---- Orden (página actual) ----
   sortBy(key: string): void {
     if (this.sortKey === key) {
@@ -173,6 +189,10 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
       } else if (key === "total") {
         x = a.total || 0;
         y = b.total || 0;
+      } else if (key === "fechaEmision") {
+        // Fallback a fechaCreacion para cotizaciones antiguas sin fechaEmision.
+        x = (a as any).fechaEmision || (a as any).fechaCreacion || "";
+        y = (b as any).fechaEmision || (b as any).fechaCreacion || "";
       } else {
         x = (a as any)[key];
         y = (b as any)[key];
@@ -197,6 +217,13 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
     if (c.id) this.router.navigate(["/cotizaciones/editor", c.id]);
   }
 
+  /** Navega al pedido generado a partir de la cotización (deep-link a la lista de pedidos). */
+  verPedido(c: Cotizacion, ev: Event): void {
+    ev.stopPropagation();
+    if (!c.pedidoGenerado) return;
+    this.router.navigate(["/ventas/pedidos"], { queryParams: { nroPedido: c.pedidoGenerado } });
+  }
+
   /** Exporta TODAS las cotizaciones del filtro vigente a Excel (no solo la página). */
   exportar(): void {
     this.exporting = true;
@@ -204,6 +231,7 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
       .list({
         estado: this.filtroEstado || undefined,
         q: this.q || undefined,
+        pedido: this.filtroPedido || undefined,
         page: 1,
         limit: 5000,
       })
@@ -214,10 +242,11 @@ export class CotizacionesListaComponent implements OnInit, OnDestroy {
             "Cliente": this.clienteNombre(c),
             "Documento": (c.cliente as any)?.documento || "",
             "Vendedor": (c.vendedor && (c.vendedor.nombre || c.vendedor.email)) || "",
-            "Emisión": this.fecha(c.fechaCreacion),
+            "Emisión": this.fecha(c.fechaEmision || c.fechaCreacion),
             "Válida hasta": this.fecha(c.fechaVencimiento),
             "Total": c.total || 0,
             "Estado": this.estadoLabel(c.estadoCotizacion),
+            "Pedido": c.pedidoGenerado || "",
           }));
           const ws = XLSX.utils.json_to_sheet(rows);
           const wb = XLSX.utils.book_new();

@@ -58,6 +58,29 @@
     font-weight: 600;
     font-size: 13px;
   }
+
+  .cot-pedido-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 11px;
+    border-radius: 20px;
+    background: var(--money-wash, #e6f7f0);
+    color: #0a7d56;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: border-color 0.15s ease;
+
+    &:hover {
+      border-color: #0a7d56;
+    }
+
+    .cot-pedido-chip-go {
+      font-weight: 800;
+    }
+  }
 }
 
 .cot-back {
@@ -360,6 +383,44 @@
     font-size: 12px;
     color: var(--muted);
   }
+
+  .cot-cliente-card-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex: 0 0 auto;
+  }
+}
+
+/* Acción "crear cliente" bajo el buscador. */
+.cot-cliente-actions {
+  margin-top: 8px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Indicador de tipo de cliente (segmentación / precio por tipo). */
+.cot-cliente-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--primary-wash);
+  color: var(--primary-ink);
+  font-size: 11px;
+  font-weight: 700;
+  vertical-align: middle;
+  white-space: nowrap;
+
+  &.cot-cliente-tag-sm {
+    margin-left: 6px;
+    padding: 0 6px;
+    font-size: 10px;
+    font-weight: 600;
+  }
 }
 
 /* --- Productos / líneas --- */
@@ -415,6 +476,34 @@
   .cl-ref {
     font-size: 11px;
     color: var(--muted);
+  }
+
+  .cl-segmentos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .cl-seg-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--muted);
+    font-size: 10.5px;
+    font-weight: 600;
+    white-space: nowrap;
+
+    &.cl-seg-aplicado {
+      border-color: var(--primary);
+      background: var(--primary-wash);
+      color: var(--primary-ink);
+      font-weight: 700;
+    }
   }
 
   .cl-precio,
@@ -497,6 +586,49 @@
       background: var(--danger-wash);
       color: var(--danger);
     }
+  }
+
+  // ---- Descuento por línea ----
+  .cl-desc-linea {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    margin-top: 4px;
+
+    label {
+      font-size: 11px;
+      color: var(--muted);
+      margin: 0;
+    }
+  }
+
+  .cl-desc-input {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    input {
+      width: 56px;
+      text-align: right;
+    }
+
+    .cl-desc-pct {
+      font-size: 11px;
+      color: var(--muted);
+    }
+  }
+
+  // ---- Subtotal con descuento ----
+  .cl-sub-net {
+    display: block;
+  }
+
+  .cl-sub-orig {
+    display: block;
+    font-size: 11px;
+    font-weight: 400;
+    color: #9aa0b3;
   }
 }
 
@@ -687,6 +819,11 @@
       font-size: 15px;
       letter-spacing: 0.08em;
       color: var(--ink);
+    }
+
+    .doc-pedido {
+      font-weight: 700;
+      color: #0a7d56;
     }
   }
 

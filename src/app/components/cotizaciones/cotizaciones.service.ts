@@ -30,6 +30,12 @@ export class CotizacionesService extends BaseService {
     if (filter.estado) {
       url += `&estado=${encodeURIComponent(filter.estado)}`;
     }
+    if (filter.q) {
+      url += `&q=${encodeURIComponent(filter.q)}`;
+    }
+    if (filter.pedido) {
+      url += `&pedido=${encodeURIComponent(filter.pedido)}`;
+    }
     return this.get<CotizacionPaginatedResponse>(url);
   }
 
