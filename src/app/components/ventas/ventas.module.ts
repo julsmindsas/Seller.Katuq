@@ -83,6 +83,7 @@ import { OrderHistoryTimelineComponent } from "./order-history-timeline/order-hi
 import { OrdenVentaComponent } from "./orden-venta/orden-venta.component";
 import { ImportModalModule } from "../../shared/components/import-modal/import-modal.module";
 import { CustomerMetricsComponent } from "./clientes/customer-metrics/customer-metrics.component";
+import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics.component";
 
 @NgModule({
   imports: [
@@ -164,6 +165,7 @@ import { CustomerMetricsComponent } from "./clientes/customer-metrics/customer-m
     ListProduccionComponent,
     OrdenVentaComponent, // NUEVO: 2025-10-21 - Componente de orden de venta profesional
     CustomerMetricsComponent, // Spec 009 - métricas del cliente en su ficha
+    GlobalMetricsComponent, // Panel de métricas globales de clientes (top del listado)
   ],
   exports: [
     CrearVentasComponent,

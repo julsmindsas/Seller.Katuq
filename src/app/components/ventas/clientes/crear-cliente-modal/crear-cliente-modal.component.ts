@@ -21,6 +21,22 @@ export class CrearClienteModalComponent implements OnInit {
   clientTypes: { label: string; value: string }[] = [];
   clientTagsCatalog: ClientTag[] = [];
   etiquetasSeleccionadas: string[] = [];
+  tipoDocSeleccionado: string = 'CC';
+
+  readonly tipoDocOptions = [
+    { label: 'CC - Cédula de ciudadanía', value: 'CC' },
+    { label: 'NIT', value: 'NIT' },
+    { label: 'TI - Tarjeta de identidad', value: 'TI' },
+    { label: 'RC - Registro civil', value: 'RC' },
+    { label: 'CE - Cédula de extranjería', value: 'CE' },
+    { label: 'TE - Tarjeta de extranjería', value: 'TE' },
+    { label: 'PA - Pasaporte', value: 'PA' },
+    { label: 'DIE - Doc. identificación extranjero', value: 'DIE' },
+    { label: 'PEP - Permiso Especial de Permanencia', value: 'PEP' },
+    { label: 'PPT - Permiso por Protección Temporal', value: 'PPT' },
+    { label: 'NIT_EXT - NIT de otro país', value: 'NIT_EXT' },
+    { label: 'NUIP', value: 'NUIP' },
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -46,26 +62,63 @@ export class CrearClienteModalComponent implements OnInit {
       error: () => { this.clientTypes = []; }
     });
 
-    if (this.clienteData && this.isEdit) {
-      this.formulario.patchValue(this.clienteData);
-      this.etiquetasSeleccionadas = Array.isArray(this.clienteData.etiquetas)
-        ? [...this.clienteData.etiquetas]
-        : [];
-      this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
+    // Diferir al siguiente tick para que el template (y los [options] del p-dropdown)
+    // estén renderizados antes de intentar setear el valor seleccionado
+    setTimeout(() => {
+      if (this.clienteData && this.isEdit) {
+        this.formulario.patchValue(this.clienteData);
+        this.etiquetasSeleccionadas = Array.isArray(this.clienteData.etiquetas)
+          ? [...this.clienteData.etiquetas]
+          : [];
+        this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
 
-      if (!this.clienteData.indicativo_celular_whatsapp && !this.clienteData.numero_celular_whatsapp) {
-        this.replicarWhatsApp({ target: { checked: true } });
+        // tipo_documento: sincroniza ngModel standalone Y el form control
+        const tipoDoc = this.clienteData.tipo_documento_comprador || 'CC';
+        this.tipoDocSeleccionado = tipoDoc;
+        this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
+
+        // Normalizar indicativos a string (pueden venir como número desde Firestore)
+        this.formulario.controls['indicativo_celular_comprador'].setValue(
+          this.clienteData.indicativo_celular_comprador != null
+            ? String(this.clienteData.indicativo_celular_comprador) : '57'
+        );
+        this.formulario.controls['indicativo_celular_whatsapp'].setValue(
+          this.clienteData.indicativo_celular_whatsapp != null
+            ? String(this.clienteData.indicativo_celular_whatsapp) : '57'
+        );
+
+        // Coercionar números de celular a string
+        if (this.clienteData.numero_celular_comprador != null) {
+          this.formulario.controls['numero_celular_comprador'].setValue(
+            String(this.clienteData.numero_celular_comprador)
+          );
+        }
+        if (this.clienteData.numero_celular_whatsapp != null) {
+          this.formulario.controls['numero_celular_whatsapp'].setValue(
+            String(this.clienteData.numero_celular_whatsapp)
+          );
+        }
+
+        if (!this.clienteData.indicativo_celular_whatsapp && !this.clienteData.numero_celular_whatsapp) {
+          this.replicarWhatsApp({ target: { checked: true } });
+        }
+      } else {
+        this.tipoDocSeleccionado = 'CC';
+        this.formulario.reset();
+        this.formulario.patchValue({
+          tipo_documento_comprador: "CC",
+          documento: this.documentoPrellenado || "",
+          indicativo_celular_comprador: "57",
+          indicativo_celular_whatsapp: "57",
+          estado: "activo",
+        });
       }
-    } else {
-      this.formulario.reset();
-      this.formulario.patchValue({
-        tipo_documento_comprador: "CC",
-        documento: this.documentoPrellenado || "",
-        indicativo_celular_comprador: "57",
-        indicativo_celular_whatsapp: "57",
-        estado: "activo",
-      });
-    }
+    });
+  }
+
+  onTipoDocChange(value: string): void {
+    this.tipoDocSeleccionado = value;
+    this.formulario.controls['tipo_documento_comprador'].setValue(value);
   }
 
   initForm() {

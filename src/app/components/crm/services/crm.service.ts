@@ -72,6 +72,11 @@ export class CrmService {
       .pipe(catchError(() => of({ success: false })));
   }
 
+  createLead(data: Record<string, any>): Observable<any> {
+    return this.http.post<any>(`${this.base}/leads`, data)
+      .pipe(catchError(() => of({ success: false })));
+  }
+
   // ─── Delete ─────────────────────────────────────────────────
 
   deleteLead(id: string): Observable<any> {

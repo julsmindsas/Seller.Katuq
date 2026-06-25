@@ -1201,7 +1201,7 @@ export class CrearVentasComponent
       // Datos del comprador
       nombres_completos: ["", Validators.required],
       apellidos_completos: ["", Validators.required],
-      tipo_documento_comprador: ["", Validators.required],
+      tipo_documento_comprador: ["CC", Validators.required],
       documento: ["", Validators.required],
       indicativo_celular_comprador: ["57", Validators.required], // Valor por defecto: Colombia +57
       numero_celular_comprador: ["", Validators.required],
@@ -1251,12 +1251,12 @@ export class CrearVentasComponent
           cd: res.cd, // ✅ IMPORTANTE: Setear el cd del cliente para identificarlo en ediciones
           nombres_completos: res.nombres_completos,
           apellidos_completos: res.apellidos_completos,
-          tipo_documento_comprador: res.tipo_documento_comprador,
+          tipo_documento_comprador: res.tipo_documento_comprador || 'CC',
           documento: res.documento,
-          indicativo_celular_comprador: res.indicativo_celular_comprador,
-          numero_celular_comprador: res.numero_celular_comprador,
-          indicativo_celular_whatsapp: res.indicativo_celular_whatsapp,
-          numero_celular_whatsapp: res.numero_celular_whatsapp,
+          indicativo_celular_comprador: res.indicativo_celular_comprador != null ? String(res.indicativo_celular_comprador) : '57',
+          numero_celular_comprador: res.numero_celular_comprador != null ? String(res.numero_celular_comprador) : '',
+          indicativo_celular_whatsapp: res.indicativo_celular_whatsapp != null ? String(res.indicativo_celular_whatsapp) : '57',
+          numero_celular_whatsapp: res.numero_celular_whatsapp != null ? String(res.numero_celular_whatsapp) : '',
           correo_electronico_comprador: res.correo_electronico_comprador,
           datosFacturacionElectronica: res.datosFacturacionElectronica || [],
           datosEntrega: res.datosEntrega || [],

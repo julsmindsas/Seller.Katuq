@@ -32,26 +32,22 @@
               <!-- Tipo Doc + Documento -->
               <div class="col-12 col-sm-6">
                 <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
-                <p-dropdown [options]="[
-                    {label: 'CC - Cédula de ciudadanía', value: 'CC'},
-                    {label: 'NIT', value: 'NIT'},
-                    {label: 'TI - Tarjeta de identidad', value: 'TI'},
-                    {label: 'RC - Registro civil', value: 'RC'},
-                    {label: 'CE - Cédula de extranjería', value: 'CE'},
-                    {label: 'TE - Tarjeta de extranjería', value: 'TE'},
-                    {label: 'PA - Pasaporte', value: 'PA'},
-                    {label: 'DIE - Doc. identificación extranjero', value: 'DIE'},
-                    {label: 'PEP - Permiso Especial de Permanencia', value: 'PEP'},
-                    {label: 'PPT - Permiso por Protección Temporal', value: 'PPT'},
-                    {label: 'NIT_EXT - NIT de otro país', value: 'NIT_EXT'},
-                    {label: 'NUIP', value: 'NUIP'}
-                  ]"
-                  formControlName="tipo_documento_comprador"
-                  optionLabel="label" optionValue="value"
-                  placeholder="{{ 'Seleccionar...' | translate }}"
-                  [disabled]="isEdit"
-                  styleClass="w-100" panelStyleClass="buscar-por-panel">
-                </p-dropdown>
+                <select formControlName="tipo_documento_comprador" class="form-select tipo-doc-select"
+                  [style.pointer-events]="isEdit ? 'none' : 'auto'"
+                  [style.opacity]="isEdit ? '0.75' : '1'">
+                  <option value="CC">CC - Cédula de ciudadanía</option>
+                  <option value="NIT">NIT</option>
+                  <option value="TI">TI - Tarjeta de identidad</option>
+                  <option value="RC">RC - Registro civil</option>
+                  <option value="CE">CE - Cédula de extranjería</option>
+                  <option value="TE">TE - Tarjeta de extranjería</option>
+                  <option value="PA">PA - Pasaporte</option>
+                  <option value="DIE">DIE - Doc. identificación extranjero</option>
+                  <option value="PEP">PEP - Permiso Especial de Permanencia</option>
+                  <option value="PPT">PPT - Permiso por Protección Temporal</option>
+                  <option value="NIT_EXT">NIT_EXT - NIT de otro país</option>
+                  <option value="NUIP">NUIP</option>
+                </select>
                 <div *ngIf="formulario.get('tipo_documento_comprador')?.invalid && formulario.get('tipo_documento_comprador')?.touched" class="error-message mt-1">
                   <i class="pi pi-exclamation-circle"></i>{{ "Campo obligatorio" | translate }}
                 </div>

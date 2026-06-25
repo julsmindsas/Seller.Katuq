@@ -416,6 +416,15 @@ export class VentasService extends BaseService {
     return this.get<CustomerSummary>('/v1/orders/customer-summary?' + qp);
   }
 
+  /**
+   * Métricas globales de clientes (panel superior del listado).
+   * El header `company` lo agrega el interceptor. El backend cachea (~30 min) y
+   * marca `_stale` cuando recalcula en segundo plano.
+   */
+  getGlobalCustomerMetrics(): Observable<any> {
+    return this.get<any>('/v1/orders/global-metrics');
+  }
+
 
   //preorders
   savePreOrders(order: Pedido) {

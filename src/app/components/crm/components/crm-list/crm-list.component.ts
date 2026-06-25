@@ -1,12 +1,13 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { DragulaService } from 'ng2-dragula';
 import { CrmService } from '../../services/crm.service';
 import * as XLSX from 'xlsx';
-import { CrmLead, CrmStats, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
+import { CrmLead, CrmStats, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
 
 @Component({
   selector: 'app-crm-list',
@@ -36,16 +37,58 @@ export class CrmListComponent implements OnInit, OnDestroy {
   deletingLeads = false;
   showManageMenu = false;
 
+  // Crear lead
+  showCreateDialog = false;
+  creating = false;
+  createForm: FormGroup;
+  readonly sourceOptions = [
+    { label: 'Redes sociales', value: 'social_media' },
+    { label: 'Referido', value: 'referral' },
+    { label: 'Búsqueda web', value: 'web' },
+    { label: 'Evento / Feria', value: 'event' },
+    { label: 'WhatsApp / Email', value: 'whatsapp' },
+    { label: 'Visita directa', value: 'direct' },
+    { label: 'Otro', value: 'other' },
+  ];
+  readonly tipoDocOptions = [
+    { label: 'CC — Cédula de ciudadanía', value: 'CC' },
+    { label: 'NIT', value: 'NIT' },
+    { label: 'TI — Tarjeta de identidad', value: 'TI' },
+    { label: 'CE — Cédula de extranjería', value: 'CE' },
+    { label: 'PA — Pasaporte', value: 'PA' },
+    { label: 'RC — Registro civil', value: 'RC' },
+    { label: 'TE — Tarjeta de extranjería', value: 'TE' },
+    { label: 'PEP — Permiso Especial de Permanencia', value: 'PEP' },
+    { label: 'PPT — Permiso por Protección Temporal', value: 'PPT' },
+    { label: 'DIE — Doc. identificación extranjero', value: 'DIE' },
+    { label: 'NIT_EXT — NIT de otro país', value: 'NIT_EXT' },
+    { label: 'NUIP', value: 'NUIP' },
+  ];
+  readonly priorityOpts = PRIORITY_OPTIONS;
+
   private destroy$ = new Subject<void>();
   private searchSubject = new Subject<string>();
 
   constructor(
     private crmService: CrmService,
+    private fb: FormBuilder,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private dragulaService: DragulaService,
     private router: Router,
-  ) {}
+  ) {
+    this.createForm = this.fb.group({
+      name:            ['', Validators.required],
+      tipoDocumento:   ['CC'],
+      nit:             [''],
+      email:           ['', Validators.email],
+      phone:           [''],
+      source:          ['other'],
+      priority:        ['medium'],
+      estimatedValue:  [null],
+      productoInteres: [''],
+    });
+  }
 
   ngOnInit(): void {
     // Debounced search
@@ -97,15 +140,82 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   // ─── Data ──────────────────────────────────────────────────
 
+  openCreateDialog(): void {
+    this.createForm.reset({ source: 'other', priority: 'medium', tipoDocumento: 'CC' });
+    this.showCreateDialog = true;
+  }
+
+  submitCreate(): void {
+    if (this.createForm.invalid) return;
+    this.creating = true;
+    const firstStage = this.stages[0] || 'nuevo';
+    const formData = { ...this.createForm.value, stage: firstStage };
+
+    this.crmService.createLead(formData)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => {
+        this.creating = false;
+        if (res && res.success) {
+          this.showCreateDialog = false;
+          // Insertar tarjeta al instante sin esperar reload
+          const newLead: any = {
+            id: res.data?.entityId || ('new-' + Date.now()),
+            name: formData.name,
+            email: formData.email || null,
+            phone: formData.phone || null,
+            nit: formData.nit || null,
+            stage: firstStage,
+            priority: formData.priority || 'medium',
+            estimatedValue: formData.estimatedValue || 0,
+            activo: true,
+            pipelineCreatedAt: new Date().toISOString(),
+          };
+          this.leads = [newLead, ...this.leads];
+          this.groupByStage();
+          this.messageService.add({
+            severity: 'success', summary: '¡Lead creado!',
+            detail: `${formData.name} fue agregado a "${firstStage}"`,
+          });
+          // Sincronizar con backend en segundo plano (sin spinner)
+          this.refreshLeads();
+          this.loadStats();
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lead. Revisa que el backend esté corriendo.' });
+        }
+      });
+  }
+
   loadLeads(): void {
     this.loading = true;
     this.crmService.getLeads({ limit: 200 })
       .pipe(takeUntil(this.destroy$))
-      .subscribe(res => {
-        this.leads = res.data || [];
-        this.groupByStage();
-        this.loading = false;
+      .subscribe({
+        next: res => {
+          this.leads = res.data || [];
+          this.groupByStage();
+          this.loading = false;
+        },
+        error: () => { this.loading = false; },
       });
+  }
+
+  /** Recarga silenciosa — sin loading spinner. Preserva leads locales que el backend aún no devuelva. */
+  private refreshLeads(): void {
+    // Delay para que Firestore propague el write antes de leer
+    setTimeout(() => {
+      this.crmService.getLeads({ limit: 200 })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: res => {
+            if (!res.data) return;
+            const backendIds = new Set(res.data.map((l: any) => l.id));
+            // Conservar leads locales con id temporal que el backend aún no conoce
+            const localOnly = this.leads.filter(l => !backendIds.has(l.id));
+            this.leads = [...localOnly, ...res.data];
+            this.groupByStage();
+          },
+        });
+    }, 1500);
   }
 
   loadStats(): void {
@@ -123,13 +233,20 @@ export class CrmListComponent implements OnInit, OnDestroy {
         )
       : this.leads;
 
+    // Ordenar: más recientes primero
+    const sorted = [...filtered].sort((a, b) => {
+      const da = (a as any).pipelineCreatedAt || '';
+      const db2 = (b as any).pipelineCreatedAt || '';
+      return da < db2 ? 1 : da > db2 ? -1 : 0;
+    });
+
     this.leadsByStage = {};
     for (const stage of this.stages) {
-      this.leadsByStage[stage] = filtered.filter(l => l.stage === stage);
+      this.leadsByStage[stage] = sorted.filter(l => l.stage === stage);
     }
 
     // Leads sin stage van al primero
-    const noStage = filtered.filter(l => !this.stages.includes(l.stage));
+    const noStage = sorted.filter(l => !this.stages.includes(l.stage));
     if (noStage.length > 0 && this.stages.length > 0) {
       this.leadsByStage[this.stages[0]] = [
         ...noStage,
@@ -206,6 +323,13 @@ export class CrmListComponent implements OnInit, OnDestroy {
       negociacion: '#fff7ed', convertido: '#faf5ff', perdido: '#fef2f2',
     };
     return colors[stage] || '#f1f3f5';
+  }
+
+  getPriorityLabel(priority: string): string {
+    const labels: Record<string, string> = {
+      low: 'Baja', medium: 'Media', high: 'Alta', urgent: 'Urgente',
+    };
+    return labels[priority] || priority;
   }
 
   getPriorityColor(priority: string): string {

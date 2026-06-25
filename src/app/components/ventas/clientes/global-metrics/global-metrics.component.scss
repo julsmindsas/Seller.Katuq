@@ -1,0 +1,278 @@
+// Panel de métricas globales de clientes — estilo plano, border-left de acento (sin gradientes en cards).
+.gm-wrap {
+  padding: 0.75rem 1.25rem 1rem;
+}
+
+// ── Barra superior ──────────────────────────────────────────────────────────
+.gm-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+}
+.gm-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.gm-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6d28d9;
+}
+.gm-stale {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  color: #9ca3af;
+  background: #f9fafb;
+  border: 1px solid #eef0f4;
+  border-radius: 12px;
+  padding: 0.1rem 0.55rem;
+}
+.gm-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 20px;
+  padding: 0.3rem 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  &:hover:not(:disabled) { background: #ede9fe; box-shadow: 0 1px 4px rgba(109, 40, 217, 0.12); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+// ── Grid de cards ───────────────────────────────────────────────────────────
+.gm-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 1200px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 768px)  { grid-template-columns: repeat(2, 1fr); }
+}
+
+.gm-card {
+  background: #fff;
+  border: 1px solid #eef0f4;
+  border-left: 4px solid #c7ccd6;
+  border-radius: 8px;
+  padding: 0.75rem 0.9rem;
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.gm-accent-blue   { border-left-color: #2563eb; }
+.gm-accent-green  { border-left-color: #059669; }
+.gm-accent-purple { border-left-color: #6d28d9; }
+.gm-accent-orange { border-left-color: #d97706; }
+.gm-accent-cyan   { border-left-color: #0891b2; }
+.gm-accent-red    { border-left-color: #dc2626; }
+.gm-accent-gray   { border-left-color: #c7ccd6; }
+
+.gm-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  margin-bottom: 0.2rem;
+}
+.gm-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.2;
+}
+.gm-sub {
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-top: 0.15rem;
+}
+
+// ── Skeleton shimmer ────────────────────────────────────────────────────────
+.gm-skel {
+  border-left-color: #e5e7eb;
+  background: linear-gradient(90deg, #f3f4f6 25%, #e9ebee 37%, #f3f4f6 63%);
+  background-size: 400% 100%;
+  animation: gm-shimmer 1.3s ease-in-out infinite;
+}
+@keyframes gm-shimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+// ── Error ───────────────────────────────────────────────────────────────────
+.gm-error {
+  margin-top: 0.25rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #fcd34d;
+  border-left: 4px solid #d97706;
+  border-radius: 8px;
+  background: #fffbeb;
+  color: #92400e;
+  font-size: 0.85rem;
+}
+
+// ── Toggle ──────────────────────────────────────────────────────────────────
+.gm-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0.6rem 0 0.25rem;
+}
+.gm-btn-details {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6d28d9;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 20px;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  &:hover { background: #ede9fe; box-shadow: 0 1px 4px rgba(109, 40, 217, 0.12); }
+}
+
+// ── Panel expandible ────────────────────────────────────────────────────────
+.gm-panel {
+  margin-top: 0.5rem;
+  border: 1px solid #ede9fe;
+  border-radius: 10px;
+  padding: 1rem 1.1rem;
+  background: #fafafe;
+  animation: gm-fade-in 0.2s ease;
+}
+@keyframes gm-fade-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.gm-section { margin-bottom: 1rem; &:last-child { margin-bottom: 0; } }
+.gm-section-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8b5cf6;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #ede9fe;
+  padding-bottom: 0.25rem;
+}
+
+.gm-section-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  @media (max-width: 768px) { grid-template-columns: 1fr; gap: 0.75rem; }
+}
+
+// RFM badges
+.gm-rfm-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.gm-rfm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 0.2rem 0.7rem;
+  border: 1.5px solid currentColor;
+  strong { font-weight: 800; }
+}
+
+// Chips de canal
+.gm-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.gm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #374151;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 0.2rem 0.65rem;
+}
+.gm-chip-qty {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #6d28d9;
+  background: #ede9fe;
+  border-radius: 10px;
+  padding: 0.02rem 0.4rem;
+}
+
+// Top categorías
+.gm-top-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.gm-top-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.82rem;
+}
+.gm-top-rank {
+  min-width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-weight: 700;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gm-top-name {
+  flex: 1;
+  color: #374151;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gm-top-qty {
+  color: #6b7280;
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.gm-cancel-badge {
+  display: inline-block;
+  font-size: 0.95rem;
+  font-weight: 800;
+  border-radius: 8px;
+  padding: 0.3rem 0.8rem;
+}
+
+.gm-muted {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}

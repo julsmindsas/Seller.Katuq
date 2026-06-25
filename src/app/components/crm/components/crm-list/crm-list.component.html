@@ -7,46 +7,50 @@
         <!-- Header -->
         <div class="card-header bg-white">
           <div class="row align-items-center">
-            <div class="col-md-5">
+            <div class="col-md-4">
               <h5 class="mb-0 fw-bold" style="color: #334155;">
                 <i class="fa fa-bullseye me-2" style="color: #8b5cf6;"></i>
                 {{ getTitle() }}
               </h5>
-              <small class="text-muted">{{ 'Arrastra las tarjetas para cambiar de etapa' | translate }}</small>
+              <small class="text-muted">Arrastra las tarjetas para cambiar de etapa</small>
             </div>
-            <div class="col-md-5">
+            <div class="col-md-4">
               <div class="input-group">
                 <span class="input-group-text"><i class="fa fa-search"></i></span>
                 <input type="text" class="form-control" [value]="searchTerm"
                   (input)="onSearch($any($event.target).value)"
-                  placeholder="{{ 'Buscar por nombre, email, NIT...' | translate }}" />
+                  placeholder="Buscar por nombre, correo, NIT..." />
               </div>
             </div>
-            <div class="col-md-2 text-end d-flex align-items-center justify-content-end gap-2">
+            <div class="col-md-4 text-end d-flex align-items-center justify-content-end gap-2">
+              <!-- Crear lead -->
+              <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" (click)="openCreateDialog()"
+                pTooltip="Agregar nuevo lead al pipeline" tooltipPosition="bottom">
+                <i class="fa fa-plus"></i> Nuevo lead
+              </button>
               <!-- Export / Import -->
               <button class="btn btn-outline-success btn-sm" (click)="exportToExcel()"
-                pTooltip="{{ 'Exportar Excel' | translate }}" [disabled]="leads.length === 0">
+                pTooltip="Exportar a Excel" tooltipPosition="bottom" [disabled]="leads.length === 0">
                 <i class="fa fa-download"></i>
               </button>
-              <button class="btn btn-outline-primary btn-sm" (click)="fileInput.click()"
-                pTooltip="{{ 'Importar Excel' | translate }}">
+              <button class="btn btn-outline-secondary btn-sm" (click)="fileInput.click()"
+                pTooltip="Importar desde Excel" tooltipPosition="bottom">
                 <i class="fa fa-upload"></i>
               </button>
-              <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden
-                (change)="onFileImport($event)" />
-              <!-- Gestionar duplicados -->
+              <input #fileInput type="file" accept=".xlsx,.xls,.csv" hidden (change)="onFileImport($event)" />
+              <!-- Duplicados -->
               <button class="btn btn-outline-warning btn-sm" (click)="openDuplicatesDialog()"
-                pTooltip="{{ 'Buscar duplicados' | translate }}" [disabled]="leads.length === 0">
+                pTooltip="Limpiar duplicados" tooltipPosition="bottom" [disabled]="leads.length === 0">
                 <i class="fa fa-clone"></i>
               </button>
-              <!-- View toggle -->
+              <!-- Vista -->
               <div class="btn-group btn-group-sm">
                 <button class="btn" [ngClass]="viewMode === 'kanban' ? 'btn-primary' : 'btn-outline-secondary'"
-                  (click)="viewMode = 'kanban'" pTooltip="Kanban">
+                  (click)="viewMode = 'kanban'" pTooltip="Vista Kanban" tooltipPosition="bottom">
                   <i class="fa fa-columns"></i>
                 </button>
                 <button class="btn" [ngClass]="viewMode === 'table' ? 'btn-primary' : 'btn-outline-secondary'"
-                  (click)="viewMode = 'table'" pTooltip="Tabla">
+                  (click)="viewMode = 'table'" pTooltip="Vista Tabla" tooltipPosition="bottom">
                   <i class="fa fa-list"></i>
                 </button>
               </div>
@@ -57,7 +61,7 @@
         <!-- Stats chips -->
         <div class="card-body py-2 border-bottom" *ngIf="stats">
           <div class="d-flex flex-wrap align-items-center gap-2">
-            <span class="stat-badge stat-badge-primary">{{ stats.total }} {{ 'total' | translate }}</span>
+            <span class="stat-badge stat-badge-primary">{{ stats.total }} en total</span>
             <ng-container *ngFor="let stage of stages">
               <span class="stat-badge cursor-pointer"
                 [style.background-color]="getStageBgColor(stage)" [style.color]="getStageColor(stage)"
@@ -67,11 +71,11 @@
               </span>
             </ng-container>
             <span class="stat-badge stat-badge-warning" *ngIf="stats.tasksPending > 0">
-              <i class="fa fa-clock-o me-1"></i>{{ stats.tasksPending }} {{ 'tareas' | translate }}
+              <i class="fa fa-clock-o me-1"></i>{{ stats.tasksPending }} tareas pendientes
             </span>
-            <!-- Pipeline total value -->
-            <span class="stat-badge stat-badge-primary ms-auto" *ngIf="stats.totalValue > 0">
-              <i class="fa fa-dollar me-1"></i>{{ formatCurrency(stats.totalValue) }}
+            <span class="stat-badge stat-badge-primary ms-auto" *ngIf="stats.totalValue > 0"
+              pTooltip="Valor estimado total del pipeline" tooltipPosition="bottom">
+              <i class="fa fa-dollar me-1"></i>Pipeline: {{ formatCurrency(stats.totalValue) }}
             </span>
           </div>
         </div>
@@ -87,9 +91,9 @@
             <div class="kanban-column" *ngFor="let stage of stages"
               [class.d-none]="selectedStage && selectedStage !== stage">
 
-              <!-- Column header -->
+              <!-- Header fijo -->
               <div class="kanban-column-header" [style.border-top-color]="getStageColor(stage)">
-                <div>
+                <div class="d-flex align-items-center gap-2">
                   <span class="kanban-column-title">{{ capitalize(stage) }}</span>
                   <span class="kanban-column-count">{{ getStageCount(stage) }}</span>
                 </div>
@@ -98,7 +102,7 @@
                 </small>
               </div>
 
-              <!-- Cards container (dragula) -->
+              <!-- Cards con scroll independiente -->
               <div class="kanban-cards"
                 [dragula]="'crm-kanban'" [dragulaModel]="leadsByStage[stage]"
                 [attr.data-stage]="stage">
@@ -106,7 +110,6 @@
                 <div class="kanban-card" *ngFor="let lead of leadsByStage[stage]; trackBy: trackById"
                   [attr.data-lead-id]="lead.id">
 
-                  <!-- Card header -->
                   <div class="kanban-card-header">
                     <a class="kanban-card-link" (click)="viewDetail(lead)">{{ lead.name }}</a>
                     <span class="stat-badge badge-sm" *ngIf="lead.subscriptionPlan"
@@ -116,7 +119,6 @@
                     </span>
                   </div>
 
-                  <!-- Card body -->
                   <div class="kanban-card-body">
                     <small class="text-muted d-block" *ngIf="lead.email">
                       <i class="fa fa-envelope-o me-1"></i>{{ lead.email }}
@@ -124,13 +126,11 @@
                     <small class="text-muted d-block" *ngIf="lead.nit">
                       <i class="fa fa-id-card-o me-1"></i>{{ lead.nit }}
                     </small>
-                    <!-- Estimated value -->
                     <small class="d-block fw-semibold" style="color: #8b5cf6;" *ngIf="lead.estimatedValue">
                       <i class="fa fa-dollar me-1"></i>{{ formatCurrency(lead.estimatedValue) }}
                     </small>
                   </div>
 
-                  <!-- Quick actions -->
                   <div class="kanban-card-actions">
                     <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn-pill"
                       (click)="$event.stopPropagation()">
@@ -138,7 +138,7 @@
                     </a>
                     <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn-pill"
                       (click)="$event.stopPropagation()">
-                      <i class="fa fa-envelope-o me-1"></i>Email
+                      <i class="fa fa-envelope-o me-1"></i>Correo
                     </a>
                     <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
                       class="action-btn-pill action-btn-wa"
@@ -148,18 +148,16 @@
                     <a class="action-btn-pill action-btn-detail" (click)="viewDetail(lead)">
                       <i class="fa fa-external-link me-1"></i>Ver
                     </a>
-                    <a class="action-btn-pill action-btn-delete" (click)="deleteSingleLead(lead, $event)"
-                      pTooltip="Eliminar" tooltipPosition="top">
+                    <a class="action-btn-pill action-btn-delete" (click)="deleteSingleLead(lead, $event)">
                       <i class="fa fa-trash"></i>
                     </a>
                   </div>
 
-                  <!-- Card footer -->
                   <div class="kanban-card-footer">
                     <span class="stat-badge" *ngIf="lead.priority"
                       [style.background-color]="getPriorityBgColor(lead.priority)"
                       [style.color]="getPriorityColor(lead.priority)">
-                      {{ lead.priority }}
+                      {{ getPriorityLabel(lead.priority) }}
                     </span>
                     <small class="text-muted" *ngIf="lead.assignedTo">
                       <i class="fa fa-user-o me-1"></i>{{ lead.assignedTo?.split('@')[0] }}
@@ -172,9 +170,10 @@
                   </div>
                 </div>
 
-                <!-- Empty column -->
+                <!-- Columna vacía -->
                 <div class="kanban-empty" *ngIf="getStageCount(stage) === 0">
-                  <small class="text-muted">{{ 'Sin leads' | translate }}</small>
+                  <i class="fa fa-inbox" style="font-size:1.5rem; color:#d1d5db;"></i>
+                  <small class="d-block text-muted mt-1">Sin leads en esta etapa</small>
                 </div>
               </div>
 
@@ -182,7 +181,7 @@
           </div>
         </div>
 
-        <!-- Barra de selección masiva -->
+        <!-- Barra selección masiva -->
         <div class="card-body py-2 border-bottom bg-light" *ngIf="selectedCount > 0">
           <div class="d-flex align-items-center gap-3">
             <span class="fw-semibold" style="color: #334155;">
@@ -202,21 +201,21 @@
           <p-table [value]="filteredLeads" dataKey="id"
             [paginator]="true" [rows]="20" [rowsPerPageOptions]="[10,20,50]"
             [showCurrentPageReport]="true"
-            currentPageReportTemplate="{{ 'Mostrando {first} a {last} de {totalRecords}' | translate }}"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}"
             styleClass="p-datatable p-datatable-gridlines p-datatable-striped"
             style="font-size: 0.75em;">
 
             <ng-template pTemplate="header">
               <tr>
                 <th style="width:4%"></th>
-                <th style="width:20%">{{ 'Nombre' | translate }}</th>
-                <th style="width:12%" *ngIf="entityType === 'company'">{{ 'Plan' | translate }}</th>
-                <th style="width:10%">{{ 'Etapa' | translate }}</th>
-                <th style="width:8%">{{ 'Estado' | translate }}</th>
-                <th style="width:10%">{{ 'Prioridad' | translate }}</th>
-                <th style="width:12%">{{ 'Asignado' | translate }}</th>
-                <th style="width:10%">{{ 'Valor' | translate }}</th>
-                <th style="width:14%">{{ 'Acciones' | translate }}</th>
+                <th style="width:20%">Nombre</th>
+                <th style="width:12%" *ngIf="entityType === 'company'">Plan</th>
+                <th style="width:10%">Etapa</th>
+                <th style="width:8%">Estado</th>
+                <th style="width:10%">Prioridad</th>
+                <th style="width:12%">Asignado a</th>
+                <th style="width:10%">Valor est.</th>
+                <th style="width:14%">Acciones</th>
               </tr>
             </ng-template>
 
@@ -252,7 +251,7 @@
                   <span class="stat-badge badge-sm" *ngIf="lead.priority"
                     [style.background-color]="getPriorityBgColor(lead.priority)"
                     [style.color]="getPriorityColor(lead.priority)">
-                    {{ lead.priority }}
+                    {{ getPriorityLabel(lead.priority) }}
                   </span>
                 </td>
                 <td><small>{{ lead.assignedTo || '-' }}</small></td>
@@ -263,10 +262,10 @@
                 </td>
                 <td (click)="$event.stopPropagation()">
                   <div class="d-flex gap-2 align-items-center">
-                    <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn"><i class="fa fa-phone"></i></a>
-                    <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn"><i class="fa fa-envelope-o"></i></a>
+                    <a *ngIf="lead.phone" [href]="'tel:' + lead.phone" class="action-btn" pTooltip="Llamar"><i class="fa fa-phone"></i></a>
+                    <a *ngIf="lead.email" [href]="'mailto:' + lead.email" class="action-btn" pTooltip="Correo"><i class="fa fa-envelope-o"></i></a>
                     <a *ngIf="lead.phone" [href]="'https://wa.me/' + lead.phone" target="_blank"
-                      class="action-btn action-btn-wa"><i class="fa fa-whatsapp"></i></a>
+                      class="action-btn action-btn-wa" pTooltip="WhatsApp"><i class="fa fa-whatsapp"></i></a>
                     <a class="action-btn action-btn-delete-table" (click)="deleteSingleLead(lead, $event)"
                       pTooltip="Eliminar"><i class="fa fa-trash"></i></a>
                   </div>
@@ -276,9 +275,9 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td [attr.colspan]="entityType === 'company' ? 8 : 7" class="text-center p-4">
+                <td [attr.colspan]="entityType === 'company' ? 9 : 8" class="text-center p-4">
                   <i class="fa fa-inbox" style="font-size:2rem; color:#9ca3af;"></i>
-                  <p class="text-muted mt-2 mb-0">{{ 'No hay leads' | translate }}</p>
+                  <p class="text-muted mt-2 mb-0">No hay leads que mostrar</p>
                 </td>
               </tr>
             </ng-template>
@@ -290,22 +289,104 @@
   </div>
 </div>
 
+<!-- ═══════ DIALOG CREAR LEAD ═══════ -->
+<p-dialog header="Nuevo lead" [(visible)]="showCreateDialog"
+  [modal]="true" [style]="{width: '480px'}" [closable]="true" [draggable]="false">
+
+  <form [formGroup]="createForm" autocomplete="off">
+    <div class="row g-3 mt-1">
+
+      <div class="col-12">
+        <label class="form-label fw-semibold">Nombre completo <span class="text-danger">*</span></label>
+        <input pInputText formControlName="name" placeholder="Ej: Laura Gómez" class="w-100" />
+        <small class="text-danger d-block mt-1"
+          *ngIf="createForm.get('name')?.invalid && createForm.get('name')?.touched">
+          El nombre es obligatorio
+        </small>
+      </div>
+
+      <div class="col-12 col-sm-6">
+        <label class="form-label fw-semibold">Correo electrónico</label>
+        <input pInputText formControlName="email" placeholder="correo@ejemplo.com" class="w-100" />
+        <small class="text-danger d-block mt-1"
+          *ngIf="createForm.get('email')?.invalid && createForm.get('email')?.touched">
+          Correo inválido
+        </small>
+      </div>
+
+      <div class="col-12 col-sm-6">
+        <label class="form-label fw-semibold">Teléfono / WhatsApp</label>
+        <input pInputText formControlName="phone" placeholder="3142087654" class="w-100" />
+      </div>
+
+      <div class="col-12 col-sm-5">
+        <label class="form-label fw-semibold">Tipo de documento</label>
+        <p-dropdown formControlName="tipoDocumento" [options]="tipoDocOptions"
+          optionLabel="label" optionValue="value"
+          styleClass="w-100" appendTo="body"></p-dropdown>
+      </div>
+
+      <div class="col-12 col-sm-7">
+        <label class="form-label fw-semibold">Número de documento</label>
+        <input pInputText formControlName="nit" placeholder="Ej: 1045234567" class="w-100" />
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          <i class="fa fa-tag me-1" style="color:#8b5cf6;"></i>¿Qué le vas a vender?
+        </label>
+        <textarea pInputTextarea formControlName="productoInteres" rows="2"
+          placeholder="Ej: Plan básico de ventas por WhatsApp, arreglos florales por catálogo digital, suscripción mensual..."
+          class="w-100" style="resize:none; font-size:0.875rem;"></textarea>
+        <small class="text-muted">Describe el producto o servicio que le vas a ofrecer a este lead.</small>
+      </div>
+
+      <div class="col-12 col-sm-6">
+        <label class="form-label fw-semibold">Valor estimado (COP)</label>
+        <p-inputNumber formControlName="estimatedValue" [useGrouping]="true" mode="currency" currency="COP"
+          locale="es-CO" placeholder="Opcional" styleClass="w-100"></p-inputNumber>
+      </div>
+
+      <div class="col-12 col-sm-6">
+        <label class="form-label fw-semibold">¿Cómo nos conoció?</label>
+        <p-dropdown formControlName="source" [options]="sourceOptions"
+          optionLabel="label" optionValue="value"
+          styleClass="w-100" appendTo="body"></p-dropdown>
+      </div>
+
+      <div class="col-12 col-sm-6">
+        <label class="form-label fw-semibold">Prioridad</label>
+        <p-dropdown formControlName="priority" [options]="priorityOpts"
+          optionLabel="label" optionValue="value"
+          styleClass="w-100" appendTo="body"></p-dropdown>
+      </div>
+
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancelar" icon="pi pi-times" class="p-button-text p-button-secondary"
+      (click)="showCreateDialog = false" [disabled]="creating"></button>
+    <button pButton label="Crear lead" icon="pi pi-plus" class="p-button-primary"
+      (click)="submitCreate()" [disabled]="createForm.invalid || creating"
+      [loading]="creating"></button>
+  </ng-template>
+</p-dialog>
+
 <!-- ═══════ DIALOG DUPLICADOS ═══════ -->
-<p-dialog header="Leads duplicados" [(visible)]="showDuplicatesDialog"
+<p-dialog header="Limpiar leads duplicados" [(visible)]="showDuplicatesDialog"
   [modal]="true" [style]="{width: '800px', maxHeight: '85vh'}" [closable]="true">
 
-  <!-- Loading -->
   <div *ngIf="loadingDuplicates" class="text-center py-4">
     <div class="loader-8"></div>
     <p class="text-muted mt-2">Analizando duplicados...</p>
   </div>
 
-  <!-- Stats -->
   <div *ngIf="!loadingDuplicates" class="mb-3">
     <div class="d-flex gap-3 align-items-center flex-wrap">
       <span class="stat-badge stat-badge-primary">{{ duplicateStats.totalLeads }} leads totales</span>
       <span class="stat-badge" style="background-color:#fff7ed; color:#D35400;">
-        {{ duplicateStats.duplicateGroups }} grupo(s) de duplicados
+        {{ duplicateStats.duplicateGroups }} grupo(s) duplicados
       </span>
       <span class="stat-badge" style="background-color:#fef2f2; color:#d12b38;">
         {{ duplicateStats.duplicateLeads }} leads duplicados
@@ -318,25 +399,23 @@
     </div>
   </div>
 
-  <!-- Sin duplicados -->
   <div *ngIf="!loadingDuplicates && duplicateGroups.length === 0" class="text-center py-4">
     <i class="fa fa-check-circle" style="font-size: 2.5rem; color: #27AE60;"></i>
     <p class="mt-2 fw-semibold" style="color: #334155;">No se encontraron duplicados</p>
     <p class="text-muted">Todos los leads son únicos.</p>
   </div>
 
-  <!-- Grupos de duplicados -->
   <div *ngIf="!loadingDuplicates && duplicateGroups.length > 0"
     style="max-height: 55vh; overflow-y: auto;">
     <div *ngFor="let group of duplicateGroups; let gi = index" class="mb-3">
       <div class="d-flex align-items-center justify-content-between mb-1">
         <small class="fw-semibold" style="color: #64748b;">
-          Grupo {{ gi + 1 }} &mdash; coincide por: {{ group.matchedBy.join(', ') }}
+          Grupo {{ gi + 1 }} — coincide por: {{ group.matchedBy.join(', ') }}
         </small>
         <div class="d-flex gap-1">
           <button class="btn btn-outline-danger btn-sm py-0 px-2" style="font-size:0.7rem;"
             (click)="selectAllDuplicatesInGroup(group)"
-            pTooltip="Seleccionar duplicados (conserva el primero)">
+            pTooltip="Selecciona los duplicados y conserva el original">
             Seleccionar duplicados
           </button>
           <button class="btn btn-outline-secondary btn-sm py-0 px-2" style="font-size:0.7rem;"
@@ -345,14 +424,13 @@
           </button>
         </div>
       </div>
-
       <div class="table-responsive">
         <table class="table table-sm table-bordered mb-0" style="font-size: 0.8rem;">
           <thead class="table-light">
             <tr>
               <th style="width:30px;"></th>
               <th>Nombre</th>
-              <th>Email</th>
+              <th>Correo</th>
               <th>Teléfono</th>
               <th>Etapa</th>
               <th>Estado</th>
@@ -392,5 +470,5 @@
   </div>
 </p-dialog>
 
-<p-confirmDialog></p-confirmDialog>
+<p-confirmDialog acceptLabel="Eliminar" rejectLabel="Cancelar"></p-confirmDialog>
 <p-toast></p-toast>

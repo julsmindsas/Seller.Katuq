@@ -107,6 +107,28 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   clientTagsCatalog: ClientTag[] = [];
   etiquetasSeleccionadas: string[] = [];
 
+  // ngModel standalone para p-dropdown tipo_documento (bypasses PrimeNG CVA timing bug)
+  tipoDocSeleccionado: string = 'CC';
+  readonly tipoDocOptions = [
+    { label: 'CC - Cédula de ciudadanía', value: 'CC' },
+    { label: 'NIT', value: 'NIT' },
+    { label: 'TI - Tarjeta de identidad', value: 'TI' },
+    { label: 'RC - Registro civil', value: 'RC' },
+    { label: 'CE - Cédula de extranjería', value: 'CE' },
+    { label: 'TE - Tarjeta de extranjería', value: 'TE' },
+    { label: 'PA - Pasaporte', value: 'PA' },
+    { label: 'DIE - Doc. identificación extranjero', value: 'DIE' },
+    { label: 'PEP - Permiso Especial de Permanencia', value: 'PEP' },
+    { label: 'PPT - Permiso por Protección Temporal', value: 'PPT' },
+    { label: 'NIT_EXT - NIT de otro país', value: 'NIT_EXT' },
+    { label: 'NUIP', value: 'NUIP' },
+  ];
+
+  onTipoDocChange(value: string): void {
+    this.tipoDocSeleccionado = value;
+    this.formulario.controls['tipo_documento_comprador'].setValue(value);
+  }
+
   // Visibilidad de columnas por tabla
   colsCliente = [
     { key: 'cliente',   label: 'Cliente',     visible: true },
@@ -411,6 +433,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           this.formulario.patchValue(res);
 
           // Establecer valores específicos del formulario
+          this.tipoDocSeleccionado = res.tipo_documento_comprador || 'CC';
           this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
           this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
           this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
@@ -499,11 +522,20 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           sessionStorage.setItem('cliente', JSON.stringify(res))
           try {
             this.formulario.patchValue(res)
-            this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
-            this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
-            this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
-            this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
-            this.formulario.controls['numero_celular_whatsapp'].setValue(res.numero_celular_whatsapp);
+            this.tipoDocSeleccionado = res.tipo_documento_comprador || 'CC';
+            this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador || 'CC');
+            this.formulario.controls['indicativo_celular_comprador'].setValue(
+              res.indicativo_celular_comprador != null ? String(res.indicativo_celular_comprador) : '57'
+            );
+            this.formulario.controls['numero_celular_comprador'].setValue(
+              res.numero_celular_comprador != null ? String(res.numero_celular_comprador) : ''
+            );
+            this.formulario.controls['indicativo_celular_whatsapp'].setValue(
+              res.indicativo_celular_whatsapp != null ? String(res.indicativo_celular_whatsapp) : '57'
+            );
+            this.formulario.controls['numero_celular_whatsapp'].setValue(
+              res.numero_celular_whatsapp != null ? String(res.numero_celular_whatsapp) : ''
+            );
             this.formulario.controls['apellidos_completos'].setValue(this.toTitleCase(res.apellidos_completos));
             this.formulario.controls['nombres_completos'].setValue(this.toTitleCase(res.nombres_completos));
             this.formulario.controls['documento'].setValue(res.documento);
@@ -576,6 +608,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     sessionStorage.setItem('cliente', JSON.stringify(cliente));
     try {
       this.formulario.patchValue(cliente);
+      this.tipoDocSeleccionado = cliente.tipo_documento_comprador || 'CC';
       this.formulario.controls['tipo_documento_comprador'].setValue(cliente.tipo_documento_comprador);
       this.formulario.controls['indicativo_celular_comprador'].setValue(cliente.indicativo_celular_comprador);
       this.formulario.controls['numero_celular_comprador'].setValue(cliente.numero_celular_comprador);
@@ -768,7 +801,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       // Datos de Entrega
       nombres_entrega: ['', Validators.required],
       apellidos_entrega: ['', Validators.required],
-      indicativo_celular_entrega: ['', Validators.required],
+      indicativo_celular_entrega: ['57', Validators.required],
       numero_celular_entrega: ['', Validators.required],
       otro_numero_entrega: [''],
       direccion_entrega: ['', Validators.required],
@@ -826,6 +859,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             // Cargar los datos del cliente existente en el formulario
             sessionStorage.setItem('cliente', JSON.stringify(res));
             this.formulario.patchValue(res);
+            this.tipoDocSeleccionado = res.tipo_documento_comprador || 'CC';
             this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
             this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
             this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
@@ -1481,6 +1515,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     this.bloqueado = false;
     this.etiquetasSeleccionadas = [];
     this.resultadosBusqueda = [];
+    this.tipoDocSeleccionado = 'CC';
     if (this.formulario) {
       this.formulario.reset();
       this.formulario.patchValue({
@@ -1494,24 +1529,36 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   }
 
   abrirModalEditar(): void {
-    if (this.datos) {
+    this.showClienteModal = true;
+    setTimeout(() => {
+      if (!this.datos) return;
       this.formulario.patchValue(this.datos);
-      this.formulario.controls['tipo_documento_comprador'].setValue(this.datos.tipo_documento_comprador);
-      this.formulario.controls['indicativo_celular_comprador'].setValue(this.datos.indicativo_celular_comprador);
-      this.formulario.controls['numero_celular_comprador'].setValue(this.datos.numero_celular_comprador);
-      this.formulario.controls['indicativo_celular_whatsapp'].setValue(this.datos.indicativo_celular_whatsapp);
-      this.formulario.controls['numero_celular_whatsapp'].setValue(this.datos.numero_celular_whatsapp);
+
+      const tipoDoc = this.datos.tipo_documento_comprador || 'CC';
+      this.tipoDocSeleccionado = tipoDoc;
+      this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
+      this.formulario.controls['indicativo_celular_comprador'].setValue(
+        this.datos.indicativo_celular_comprador != null ? String(this.datos.indicativo_celular_comprador) : '57'
+      );
+      this.formulario.controls['indicativo_celular_whatsapp'].setValue(
+        this.datos.indicativo_celular_whatsapp != null ? String(this.datos.indicativo_celular_whatsapp) : '57'
+      );
+      this.formulario.controls['numero_celular_comprador'].setValue(
+        this.datos.numero_celular_comprador != null ? String(this.datos.numero_celular_comprador) : ''
+      );
+      this.formulario.controls['numero_celular_whatsapp'].setValue(
+        this.datos.numero_celular_whatsapp != null ? String(this.datos.numero_celular_whatsapp) : ''
+      );
       this.formulario.controls['apellidos_completos'].setValue(this.datos.apellidos_completos);
       this.formulario.controls['nombres_completos'].setValue(this.datos.nombres_completos);
       this.formulario.controls['documento'].setValue(this.datos.documento);
       this.formulario.controls['correo_electronico_comprador'].setValue(this.datos.correo_electronico_comprador);
-      this.formulario.controls['estado'].setValue(this.datos.estado);
+      this.formulario.controls['estado'].setValue(this.datos.estado || 'activo');
       if (this.datos.tipoCliente) {
         this.formulario.controls['tipoCliente'].setValue(this.datos.tipoCliente);
       }
       this.etiquetasSeleccionadas = Array.isArray(this.datos.etiquetas) ? [...this.datos.etiquetas] : [];
-    }
-    this.showClienteModal = true;
+    });
   }
 
   // =============================================

@@ -55,6 +55,9 @@
                     </div>
                 </div>
 
+                <!-- Panel de métricas globales de clientes -->
+                <app-global-metrics></app-global-metrics>
+
                 <!-- Panel de Filtros Colapsable -->
                 <div class="card-header bg-light d-flex justify-content-between align-items-center py-2 cursor-pointer"
                      (click)="toggleFiltros()">
@@ -558,8 +561,13 @@
 </div>
 
 <!-- Panel lateral: Detalles del cliente -->
-<p-sidebar [(visible)]="showDetallePanel" position="right" [style]="{ width: '420px' }"
-           styleClass="cliente-detalle-sidebar" (onHide)="cerrarDetallePanel()">
+<p-sidebar [(visible)]="showDetallePanel" position="right"
+           appendTo="body"
+           [style]="{ width: '420px', height: '100vh' }"
+           styleClass="cliente-detalle-sidebar"
+           [baseZIndex]="10001"
+           [autoZIndex]="true"
+           (onHide)="cerrarDetallePanel()">
     <ng-template pTemplate="header">
         <span class="fw-bold" style="color:#8b5cf6; font-size:1rem;">
             <i class="pi pi-user me-2"></i>Detalles del cliente
