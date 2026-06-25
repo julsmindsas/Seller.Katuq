@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subject } from 'rxjs';
+import { Subject, forkJoin } from 'rxjs';
 import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { DragulaService } from 'ng2-dragula';
@@ -23,7 +23,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
   leadsByStage: Record<string, CrmLead[]> = {};
 
   // UI
-  loading = true;
+  loading = false;
   searchTerm = '';
   viewMode: 'kanban' | 'table' = 'kanban';
   selectedStage: string | null = null;
@@ -102,18 +102,50 @@ export class CrmListComponent implements OnInit, OnDestroy {
     // Setup dragula for kanban drag-and-drop
     this.setupDragula();
 
-    // Load data
-    this.crmService.getStages()
-      .pipe(takeUntil(this.destroy$))
+    // Restore cache → kanban visible de inmediato
+    this.restoreFromCache();
+
+    // Fetch en paralelo sin bloquear la vista
+    forkJoin({
+      stages: this.crmService.getStages(),
+      leads: this.crmService.getLeads({ limit: 200 }),
+    }).pipe(takeUntil(this.destroy$))
       .subscribe({
-        next: (r) => {
-          this.stages = r.stages;
-          this.entityType = r.entityType;
+        next: ({ stages, leads }) => {
+          this.stages = stages.stages;
+          this.entityType = stages.entityType;
+          this.leads = leads.data || [];
+          this.groupByStage();
+          this.loading = false;
+          this.saveToCache();
         },
+        error: () => { this.loading = false; },
       });
 
-    this.loadLeads();
     this.loadStats();
+  }
+
+  private restoreFromCache(): void {
+    try {
+      const cs = localStorage.getItem('crm_stages_v1');
+      const cl = localStorage.getItem('crm_leads_v1');
+      if (cs) {
+        const s = JSON.parse(cs);
+        this.stages = s.stages || [];
+        this.entityType = s.entityType || 'client';
+      }
+      if (cl) {
+        this.leads = JSON.parse(cl);
+        this.groupByStage();
+      }
+    } catch (_) {}
+  }
+
+  private saveToCache(): void {
+    try {
+      localStorage.setItem('crm_stages_v1', JSON.stringify({ stages: this.stages, entityType: this.entityType }));
+      localStorage.setItem('crm_leads_v1', JSON.stringify(this.leads));
+    } catch (_) {}
   }
 
   ngOnDestroy(): void {
@@ -147,44 +179,60 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   submitCreate(): void {
     if (this.createForm.invalid) return;
-    this.creating = true;
     const firstStage = this.stages[0] || 'nuevo';
     const formData = { ...this.createForm.value, stage: firstStage };
+
+    // Verdadero optimistic update: tarjeta visible ANTES del HTTP call
+    const tempId = 'temp-' + Date.now();
+    const newLead: any = {
+      id: tempId,
+      name: formData.name,
+      email: formData.email || null,
+      phone: formData.phone || null,
+      nit: formData.nit || null,
+      stage: firstStage,
+      priority: formData.priority || 'medium',
+      estimatedValue: formData.estimatedValue || 0,
+      activo: true,
+      pipelineCreatedAt: new Date().toISOString(),
+    };
+    this.leads = [newLead, ...this.leads];
+    this.groupByStage();
+    this.showCreateDialog = false;
+    this.creating = true;
 
     this.crmService.createLead(formData)
       .pipe(takeUntil(this.destroy$))
       .subscribe(res => {
         this.creating = false;
         if (res && res.success) {
-          this.showCreateDialog = false;
-          // Insertar tarjeta al instante sin esperar reload
-          const newLead: any = {
-            id: res.data?.entityId || ('new-' + Date.now()),
-            name: formData.name,
-            email: formData.email || null,
-            phone: formData.phone || null,
-            nit: formData.nit || null,
-            stage: firstStage,
-            priority: formData.priority || 'medium',
-            estimatedValue: formData.estimatedValue || 0,
-            activo: true,
-            pipelineCreatedAt: new Date().toISOString(),
-          };
-          this.leads = [newLead, ...this.leads];
-          this.groupByStage();
+          // Reemplazar id temporal por el id real del backend
+          const realId = res.data?.entityId;
+          if (realId) {
+            const lead = this.leads.find(l => l.id === tempId);
+            if (lead) lead.id = realId;
+          }
           this.messageService.add({
             severity: 'success', summary: '¡Lead creado!',
             detail: `${formData.name} fue agregado a "${firstStage}"`,
           });
           this.loadStats();
+          this.saveToCache();
         } else {
+          // Rollback: quitar la tarjeta optimista
+          this.leads = this.leads.filter(l => l.id !== tempId);
+          this.groupByStage();
+          this.showCreateDialog = true;
           this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo crear el lead. Revisa que el backend esté corriendo.' });
         }
       });
   }
 
   loadLeads(): void {
-    this.loading = true;
+    // Solo mostrar spinner si no hay datos en pantalla (e.g. primer load sin caché)
+    if (this.leads.length === 0) {
+      this.loading = true;
+    }
     this.crmService.getLeads({ limit: 200 })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
@@ -192,6 +240,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
           this.leads = res.data || [];
           this.groupByStage();
           this.loading = false;
+          this.saveToCache();
         },
         error: () => { this.loading = false; },
       });

@@ -72,10 +72,15 @@ export class CrearClienteModalComponent implements OnInit {
           : [];
         this.formulario.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
 
-        // tipo_documento: sincroniza ngModel standalone Y el form control
-        const tipoDoc = this.clienteData.tipo_documento_comprador || 'CC';
+        // tipo_documento: normaliza el valor guardado (puede venir legacy como
+        // "CC-NIT" o texto completo "Cédula de ciudadanía") al código real del
+        // catálogo, para que el <select> muestre el tipo correcto del cliente.
+        const tipoDoc = this.normalizeTipoDoc(this.clienteData.tipo_documento_comprador);
         this.tipoDocSeleccionado = tipoDoc;
         this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
+        // En edición el tipo de documento no es editable (igual que el número).
+        // El guardado usa getRawValue(), así que el valor se conserva.
+        this.formulario.controls['tipo_documento_comprador'].disable({ emitEvent: false });
 
         // Normalizar indicativos a string (pueden venir como número desde Firestore)
         this.formulario.controls['indicativo_celular_comprador'].setValue(
@@ -119,6 +124,34 @@ export class CrearClienteModalComponent implements OnInit {
   onTipoDocChange(value: string): void {
     this.tipoDocSeleccionado = value;
     this.formulario.controls['tipo_documento_comprador'].setValue(value);
+  }
+
+  /**
+   * Convierte el valor guardado (que puede ser un código válido, un combinado
+   * legacy "CC-NIT" o el texto completo "Cédula de ciudadanía") al código del
+   * catálogo. Cae a 'CC' solo cuando no se puede determinar.
+   */
+  private normalizeTipoDoc(raw: any): string {
+    if (raw === null || raw === undefined || raw === '') return 'CC';
+    const v = String(raw).trim();
+    // Ya es un código válido del catálogo
+    if (this.tipoDocOptions.some(o => o.value === v)) return v;
+    // Combinado legacy → cédula por defecto
+    if (v.toUpperCase() === 'CC-NIT') return 'CC';
+    // Variantes en texto completo
+    const lower = v.toLowerCase();
+    if (lower.includes('extranjer')) {
+      return (lower.includes('cédula') || lower.includes('cedula')) ? 'CE' : 'DIE';
+    }
+    if (lower.includes('cédula de ciudad') || lower.includes('cedula de ciudad')) return 'CC';
+    if (lower.includes('tarjeta de identidad')) return 'TI';
+    if (lower.includes('registro civil')) return 'RC';
+    if (lower.includes('pasaporte')) return 'PA';
+    if (lower.includes('permiso especial')) return 'PEP';
+    if (lower.includes('protección temporal') || lower.includes('proteccion temporal')) return 'PPT';
+    if (lower.includes('nit')) return 'NIT';
+    if (lower.includes('cédula') || lower.includes('cedula')) return 'CC';
+    return 'CC';
   }
 
   initForm() {

@@ -29,7 +29,21 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   formularioFacturacionElectronica: any;
   formularioFacturacion: any;
   formularioEntrega: any;
-  encontrado: boolean = false
+  private _encontrado = false;
+  /**
+   * En modo edición (cliente encontrado) el tipo de documento NO es editable,
+   * igual que el número de documento. Al cambiar este flag se deshabilita /
+   * habilita el control. El valor se conserva: el backend hace .update() (merge)
+   * y no pisa el campo aunque no venga en formulario.value.
+   */
+  get encontrado(): boolean { return this._encontrado; }
+  set encontrado(val: boolean) {
+    this._encontrado = val;
+    const ctrl = this.formulario?.controls?.['tipo_documento_comprador'];
+    if (!ctrl) return;
+    if (val) ctrl.disable({ emitEvent: false });
+    else ctrl.enable({ emitEvent: false });
+  }
   formPrincipal: any;
   facturacionElectronica: boolean = false
   formularioNotas: any;
@@ -127,6 +141,31 @@ export class ClientesComponent implements OnInit, AfterViewInit {
   onTipoDocChange(value: string): void {
     this.tipoDocSeleccionado = value;
     this.formulario.controls['tipo_documento_comprador'].setValue(value);
+  }
+
+  /**
+   * Convierte el valor guardado (que puede ser un código válido, un combinado
+   * legacy "CC-NIT" o el texto completo "Cédula de ciudadanía") al código del
+   * catálogo. Cae a 'CC' solo cuando no se puede determinar.
+   */
+  private normalizeTipoDoc(raw: any): string {
+    if (raw === null || raw === undefined || raw === '') return 'CC';
+    const v = String(raw).trim();
+    if (this.tipoDocOptions.some(o => o.value === v)) return v;
+    if (v.toUpperCase() === 'CC-NIT') return 'CC';
+    const lower = v.toLowerCase();
+    if (lower.includes('extranjer')) {
+      return (lower.includes('cédula') || lower.includes('cedula')) ? 'CE' : 'DIE';
+    }
+    if (lower.includes('cédula de ciudad') || lower.includes('cedula de ciudad')) return 'CC';
+    if (lower.includes('tarjeta de identidad')) return 'TI';
+    if (lower.includes('registro civil')) return 'RC';
+    if (lower.includes('pasaporte')) return 'PA';
+    if (lower.includes('permiso especial')) return 'PEP';
+    if (lower.includes('protección temporal') || lower.includes('proteccion temporal')) return 'PPT';
+    if (lower.includes('nit')) return 'NIT';
+    if (lower.includes('cédula') || lower.includes('cedula')) return 'CC';
+    return 'CC';
   }
 
   // Visibilidad de columnas por tabla
@@ -433,8 +472,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           this.formulario.patchValue(res);
 
           // Establecer valores específicos del formulario
-          this.tipoDocSeleccionado = res.tipo_documento_comprador || 'CC';
-          this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
+          this.tipoDocSeleccionado = this.normalizeTipoDoc(res.tipo_documento_comprador);
+          this.formulario.controls['tipo_documento_comprador'].setValue(this.tipoDocSeleccionado);
           this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
           this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
           this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
@@ -522,8 +561,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
           sessionStorage.setItem('cliente', JSON.stringify(res))
           try {
             this.formulario.patchValue(res)
-            this.tipoDocSeleccionado = res.tipo_documento_comprador || 'CC';
-            this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador || 'CC');
+            this.tipoDocSeleccionado = this.normalizeTipoDoc(res.tipo_documento_comprador);
+            this.formulario.controls['tipo_documento_comprador'].setValue(this.tipoDocSeleccionado);
             this.formulario.controls['indicativo_celular_comprador'].setValue(
               res.indicativo_celular_comprador != null ? String(res.indicativo_celular_comprador) : '57'
             );
@@ -608,8 +647,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
     sessionStorage.setItem('cliente', JSON.stringify(cliente));
     try {
       this.formulario.patchValue(cliente);
-      this.tipoDocSeleccionado = cliente.tipo_documento_comprador || 'CC';
-      this.formulario.controls['tipo_documento_comprador'].setValue(cliente.tipo_documento_comprador);
+      this.tipoDocSeleccionado = this.normalizeTipoDoc(cliente.tipo_documento_comprador);
+      this.formulario.controls['tipo_documento_comprador'].setValue(this.tipoDocSeleccionado);
       this.formulario.controls['indicativo_celular_comprador'].setValue(cliente.indicativo_celular_comprador);
       this.formulario.controls['numero_celular_comprador'].setValue(cliente.numero_celular_comprador);
       this.formulario.controls['indicativo_celular_whatsapp'].setValue(cliente.indicativo_celular_whatsapp);
@@ -859,8 +898,8 @@ export class ClientesComponent implements OnInit, AfterViewInit {
             // Cargar los datos del cliente existente en el formulario
             sessionStorage.setItem('cliente', JSON.stringify(res));
             this.formulario.patchValue(res);
-            this.tipoDocSeleccionado = res.tipo_documento_comprador || 'CC';
-            this.formulario.controls['tipo_documento_comprador'].setValue(res.tipo_documento_comprador);
+            this.tipoDocSeleccionado = this.normalizeTipoDoc(res.tipo_documento_comprador);
+            this.formulario.controls['tipo_documento_comprador'].setValue(this.tipoDocSeleccionado);
             this.formulario.controls['indicativo_celular_comprador'].setValue(res.indicativo_celular_comprador);
             this.formulario.controls['numero_celular_comprador'].setValue(res.numero_celular_comprador);
             this.formulario.controls['indicativo_celular_whatsapp'].setValue(res.indicativo_celular_whatsapp);
@@ -1534,7 +1573,7 @@ export class ClientesComponent implements OnInit, AfterViewInit {
       if (!this.datos) return;
       this.formulario.patchValue(this.datos);
 
-      const tipoDoc = this.datos.tipo_documento_comprador || 'CC';
+      const tipoDoc = this.normalizeTipoDoc(this.datos.tipo_documento_comprador);
       this.tipoDocSeleccionado = tipoDoc;
       this.formulario.controls['tipo_documento_comprador'].setValue(tipoDoc);
       this.formulario.controls['indicativo_celular_comprador'].setValue(

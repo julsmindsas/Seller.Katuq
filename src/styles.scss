@@ -63,12 +63,23 @@ select.tipo-doc-select {
   padding: 0 0.65rem;
   color: #495057;
   background-color: #fff;
-  appearance: auto;
+  // Solo la flecha SVG de Bootstrap (.form-select). Sin appearance:auto
+  // se evita la flecha nativa duplicada del navegador.
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   width: 100%;
-  &:disabled {
-    background-color: #f8f9fa;
-    opacity: 0.75;
+  // Estado bloqueado (edición): mismo look que el input de Número de
+  // Documento deshabilitado — sin flecha, gris plano y no editable.
+  // Se usa una clase en vez de :disabled porque el guardado lee
+  // formulario.value y .disable() excluiría el valor del payload.
+  &:disabled,
+  &.tipo-doc-locked {
+    background-color: #f5f5f5;
+    background-image: none;
+    color: #6b7280;
     cursor: not-allowed;
+    pointer-events: none;
   }
   &:focus {
     border-color: #8b5cf6;

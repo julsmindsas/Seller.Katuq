@@ -706,7 +706,8 @@
                     <!-- Tipo de Documento -->
                     <div class="col-12 col-sm-6">
                         <label class="form-label-modern">{{ "Tipo de Documento" | translate }} <span class="required">*</span></label>
-                        <select formControlName="tipo_documento_comprador" class="form-select tipo-doc-select">
+                        <select formControlName="tipo_documento_comprador" class="form-select tipo-doc-select"
+                            [class.tipo-doc-locked]="encontrado">
                             <option value="CC">CC - Cédula de ciudadanía</option>
                             <option value="NIT">NIT</option>
                             <option value="TI">TI - Tarjeta de identidad</option>
