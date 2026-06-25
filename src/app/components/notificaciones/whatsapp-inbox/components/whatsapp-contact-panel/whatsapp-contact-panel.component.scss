@@ -147,6 +147,11 @@ $accent-crm: #b8860b;        // dorado opaco
       color: $accent-identity;
     }
 
+    &.is-warmlead {
+      background: #dbeafe;
+      color: #1e40af;
+    }
+
     &.is-unverified {
       background: #fef3c7;
       color: #92400e;

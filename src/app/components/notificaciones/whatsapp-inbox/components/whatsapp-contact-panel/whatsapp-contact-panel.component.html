@@ -1,8 +1,4 @@
 <div class="contact-panel" *ngIf="phoneHash; else emptyState">
-  <div class="contact-panel__banner" role="status">
-    Demo — datos de ejemplo
-  </div>
-
   <p *ngIf="loading" class="contact-panel__state">Cargando contacto…</p>
 
   <ng-container *ngIf="!loading && profile">
@@ -21,12 +17,15 @@
           <span
             class="contact-panel__chip"
             [class.is-verified]="profile.isClienteRegistrado"
-            [class.is-unverified]="!profile.isClienteRegistrado"
+            [class.is-warmlead]="!profile.isClienteRegistrado && profile.hasOrderHistory"
+            [class.is-unverified]="!profile.isClienteRegistrado && !profile.hasOrderHistory"
           >
             {{
               profile.isClienteRegistrado
                 ? "Cliente registrado"
-                : "No verificado"
+                : profile.hasOrderHistory
+                  ? "Cliente con pedidos"
+                  : "No verificado"
             }}
           </span>
         </div>

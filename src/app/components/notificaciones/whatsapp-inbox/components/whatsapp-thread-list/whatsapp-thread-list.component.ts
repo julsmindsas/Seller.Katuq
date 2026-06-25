@@ -37,6 +37,7 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   searchQuery = "";
   onlyInbound = false;
   selectedPhoneHash: string | null = null;
+  newConversationOpen = false;
 
   /** Stream de búsqueda con debounce para no disparar getThreads por cada tecla. */
   private readonly searchSubject = new Subject<string>();
@@ -139,6 +140,19 @@ export class WhatsappThreadListComponent implements OnInit, OnDestroy {
   /** True si al menos un hilo tiene el flag de truncamiento por retención. */
   get hasTruncatedThreads(): boolean {
     return this.threads.some((t) => !!t.flags?.inboundTruncatedAt90d);
+  }
+
+  openNewConversation(): void {
+    this.newConversationOpen = true;
+  }
+
+  onNewConversationClosed(): void {
+    this.newConversationOpen = false;
+  }
+
+  onNewConversationSent(_evt: { phone: string; templateName: string }): void {
+    // Refresca la lista para que el outbound recién enviado aparezca como hilo.
+    this.fetchThreadsSilent();
   }
 
   onSelect(thread: WhatsappThread): void {

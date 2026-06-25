@@ -313,6 +313,7 @@ export class WhatsappContactPanelComponent implements OnChanges {
           clienteNombre: profResp?.clienteNombre || null,
           profileName: profResp?.profileName || null,
           isClienteRegistrado: !!profResp?.isClienteRegistrado,
+          hasOrderHistory: !!profResp?.hasOrderHistory,
           lead: profResp?.lead || null,
           ratingDraft: profResp?.ratingDraft || null,
         };

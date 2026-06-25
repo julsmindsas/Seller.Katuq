@@ -10,6 +10,7 @@ import { WhatsappInboxShellComponent } from "./components/whatsapp-inbox-shell/w
 import { WhatsappThreadListComponent } from "./components/whatsapp-thread-list/whatsapp-thread-list.component";
 import { WhatsappThreadDetailComponent } from "./components/whatsapp-thread-detail/whatsapp-thread-detail.component";
 import { WhatsappContactPanelComponent } from "./components/whatsapp-contact-panel/whatsapp-contact-panel.component";
+import { WhatsappNewConversationDialogComponent } from "./components/new-conversation-dialog/new-conversation-dialog.component";
 
 import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
 
@@ -31,6 +32,7 @@ import { PhoneMaskPipe } from "./pipes/phone-mask.pipe";
     WhatsappThreadListComponent,
     WhatsappThreadDetailComponent,
     WhatsappContactPanelComponent,
+    WhatsappNewConversationDialogComponent,
     PhoneMaskPipe,
   ],
   imports: [

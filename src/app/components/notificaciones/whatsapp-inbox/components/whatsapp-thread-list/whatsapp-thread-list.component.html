@@ -1,13 +1,24 @@
 <div class="thread-list">
   <header class="thread-list__header">
-    <div class="thread-list__search-wrapper">
-      <input
-        type="search"
-        class="form-control thread-list__search"
-        placeholder="Buscar contacto o mensaje"
-        [ngModel]="searchQuery"
-        (ngModelChange)="onSearchChange($event)"
-      />
+    <div class="thread-list__search-row">
+      <div class="thread-list__search-wrapper">
+        <input
+          type="search"
+          class="form-control thread-list__search"
+          placeholder="Buscar contacto o mensaje"
+          [ngModel]="searchQuery"
+          (ngModelChange)="onSearchChange($event)"
+        />
+      </div>
+      <button
+        type="button"
+        class="thread-list__new-btn"
+        (click)="openNewConversation()"
+        title="Iniciar nueva conversación"
+        aria-label="Iniciar nueva conversación"
+      >
+        +
+      </button>
     </div>
 
     <div class="thread-list__chips">
@@ -91,4 +102,10 @@
       </div>
     </button>
   </div>
+
+  <app-whatsapp-new-conversation-dialog
+    [visible]="newConversationOpen"
+    (closed)="onNewConversationClosed()"
+    (sent)="onNewConversationSent($event)"
+  ></app-whatsapp-new-conversation-dialog>
 </div>
