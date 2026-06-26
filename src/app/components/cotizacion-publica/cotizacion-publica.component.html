@@ -14,6 +14,11 @@
 
   <!-- Cotización -->
   <div *ngIf="!loading && cot" class="cp-card">
+    <img
+      *ngIf="cot.branding?.encabezado"
+      [src]="cot.branding!.encabezado"
+      alt="Encabezado"
+      class="cp-banner cp-banner-top">
     <header class="cp-header">
       <div>
         <div class="cp-empresa">{{ cot.empresaNombre }}</div>
@@ -119,6 +124,17 @@
         </div>
       </div>
     </section>
+
+    <img
+      *ngIf="cot.branding?.piepagina"
+      [src]="cot.branding!.piepagina"
+      alt="Pie de página"
+      class="cp-banner cp-banner-foot">
+    <img
+      *ngIf="cot.branding?.publicidad"
+      [src]="cot.branding!.publicidad"
+      alt="Katuq"
+      class="cp-banner cp-banner-ad">
 
     <footer class="cp-footer">Cotización generada por {{ cot.empresaNombre }} · Katuq</footer>
   </div>

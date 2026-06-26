@@ -1,6 +1,6 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { ActivatedRoute, Router } from "@angular/router";
-import { Subject, Subscription, of } from "rxjs";
+import { Subject, Subscription, of, firstValueFrom } from "rxjs";
 import {
   catchError,
   debounceTime,
@@ -94,7 +94,8 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     private security: SecurityService,
     private modal: NgbModal,
     private toastr: ToastrService,
-    private convertService: CotizacionConvertService
+    private convertService: CotizacionConvertService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   /** True si la cotización en edición puede convertirse a pedido (aceptada). */
@@ -588,6 +589,57 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     return null;
   }
 
+  /**
+   * Tier de volumen que aplica SOLO por cantidad, ignorando overrides. Se usa para
+   * el camino de IVA-override: el override cambia la TARIFA, no qué escala aplica.
+   */
+  private rangoVolumenPorCantidad(item: Carrito): any {
+    if ((item?.producto as any)?._precioAplicadoPorCategoria) return null;
+    const preciosVolumen = (item?.producto as any)?.precio?.preciosVolumen;
+    if (!Array.isArray(preciosVolumen) || preciosVolumen.length === 0) return null;
+    const cantidad = Number(item?.cantidad) || 0;
+    for (const x of preciosVolumen) {
+      const tieneMin = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
+      const tieneMax = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
+      if (!tieneMin || !tieneMax) continue;
+      const ini = Number(x.numeroUnidadesInicial) || 0;
+      const lim = Number(x.numeroUnidadesLimite) || Infinity;
+      if (cantidad >= ini && cantidad <= lim) return x;
+    }
+    return null;
+  }
+
+  /**
+   * Sin-IVA robusto de un tier de volumen: usa el campo almacenado y, si falta o es 0,
+   * lo deriva de `valorUnitarioPorVolumenConIVA / (1 + valorIVAPorVolumen/100)`. Evita
+   * que un dato legacy sin `valorUnitarioPorVolumenSinIVA` colapse al precio de 1 unidad.
+   */
+  private tierSinIva(rango: any, precioFallback: any): number {
+    const sinIva = Number(rango?.valorUnitarioPorVolumenSinIVA) || 0;
+    if (sinIva > 0) return sinIva;
+    const conIva =
+      Number(rango?.valorUnitarioPorVolumenConIVA) ||
+      Number(rango?.valorUnitarioPorVolumenIva) ||
+      0;
+    const tierIva = Number(rango?.valorIVAPorVolumen) || 0;
+    if (conIva > 0) return conIva / (1 + tierIva / 100);
+    return Number(precioFallback?.precioUnitarioSinIva) || 0;
+  }
+
+  /**
+   * Precio unitario SIN IVA base de la línea, respetando categoría y escala de volumen,
+   * SIN aplicar ningún override de IVA. Es la base sobre la que se aplica la tarifa.
+   */
+  private precioSinIvaBaseLinea(item: Carrito): number {
+    const precio = (item?.producto as any)?.precio;
+    if ((item?.producto as any)?._precioAplicadoPorCategoria) {
+      return Number(precio?.precioUnitarioSinIva) || 0;
+    }
+    const rango = this.rangoVolumenPorCantidad(item);
+    if (rango) return this.tierSinIva(rango, precio);
+    return Number(precio?.precioUnitarioSinIva) || 0;
+  }
+
   /** % de IVA vigente: override manual → volumen → del producto. */
   getIvaActual(item: Carrito): number {
     if (item?._ivaManualOverride !== undefined && item?._ivaManualOverride !== null) {
@@ -617,9 +669,11 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       const iva = this.getIvaActual(item);
       return base * (1 + iva / 100);
     }
-    // Prioridad 0b: override manual de IVA.
+    // Prioridad 0b: override manual de IVA. Mantiene la escala de volumen vigente
+    // para la cantidad — el override solo cambia la TARIFA, no el precio base.
+    // (Bug histórico: antes reseteaba al precio de 1 unidad / primera escala.)
     if (item?._ivaManualOverride !== undefined && item?._ivaManualOverride !== null) {
-      const precioSinIva = Number(precio?.precioUnitarioSinIva) || 0;
+      const precioSinIva = this.precioSinIvaBaseLinea(item);
       return precioSinIva * (1 + item._ivaManualOverride / 100);
     }
     // Prioridad 2: precio por volumen según la cantidad. (La categoría, si aplica, ya
@@ -877,6 +931,79 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
       .join(" · ");
   }
 
+  // ---- Banners del documento (paridad con la factura del pedido) ----
+  // Encabezado y pie de página de la empresa + publicidad de Katuq al final,
+  // tomados de `currentCompany.imageEmail` (igual que payment.service.ts).
+  private readonly KATUQ_AD_URL =
+    "https://firebasestorage.googleapis.com/v0/b/julsmind-katuq.appspot.com/o/Empresas%2FJulsmind%2Fimagenes%2FEmail%2FPublicidad%2FContactanos.png?alt=media&token=5df01a71-6869-40cb-a4c4-d2a2675c1a0f";
+
+  private get _companyImageEmail(): any {
+    const e: any = this.security.getCompanyInformationLogged();
+    if (e?.imageEmail) return e.imageEmail;
+    try {
+      return JSON.parse(localStorage.getItem("currentCompany") || "{}")?.imageEmail || {};
+    } catch {
+      return {};
+    }
+  }
+
+  // Cache de banners convertidos a data URL (base64). Se llena antes de generar el
+  // PDF para que html2canvas pueda rasterizarlos (las URLs remotas se quedan en
+  // blanco al rasterizar por CORS/timing, aunque sí se vean en pantalla).
+  private bannerDataCache: { [k: string]: string } = {};
+
+  /** Banner de encabezado de la empresa (data URL si está precargado, si no URL). */
+  get bannerEncabezado(): string {
+    return this.bannerDataCache["encabezado"] || this._companyImageEmail?.encabezado || "";
+  }
+
+  /** Banner de pie de página de la empresa (data URL si está precargado, si no URL). */
+  get bannerPiePagina(): string {
+    return (
+      this.bannerDataCache["piepagina"] ||
+      this._companyImageEmail?.piepagina ||
+      this._companyImageEmail?.piePagina ||
+      ""
+    );
+  }
+
+  /** Publicidad de Katuq: la de la empresa si existe; si no, el banner por defecto. */
+  get bannerPublicidad(): string {
+    if (this.bannerDataCache["publicidad"]) return this.bannerDataCache["publicidad"];
+    const propia = this._companyImageEmail?.publicidad;
+    return propia && String(propia).trim() ? propia : this.KATUQ_AD_URL;
+  }
+
+  /**
+   * Convierte una imagen remota a data URL (base64) vía el proxy del backend.
+   * No se puede hacer `fetch` directo a Firebase Storage por CORS (el bucket no
+   * expone Access-Control-Allow-Origin); el backend sí puede leerla. "" si falla.
+   */
+  private async toDataUrl(url: string): Promise<string> {
+    if (!url || url.startsWith("data:")) return url || "";
+    try {
+      const res = await firstValueFrom(this.service.imageToBase64(url));
+      return res?.dataUrl || "";
+    } catch {
+      return "";
+    }
+  }
+
+  /** Precarga los 3 banners a data URL para incrustarlos en el PDF. Best-effort. */
+  private async preloadBannersForPdf(): Promise<void> {
+    const encUrl = this._companyImageEmail?.encabezado || "";
+    const pieUrl = this._companyImageEmail?.piepagina || this._companyImageEmail?.piePagina || "";
+    const adUrl = this.bannerPublicidad; // ya resuelve empresa→Katuq
+    const [enc, pie, ad] = await Promise.all([
+      this.toDataUrl(encUrl),
+      this.toDataUrl(pieUrl),
+      this.toDataUrl(adUrl),
+    ]);
+    if (enc) this.bannerDataCache["encabezado"] = enc;
+    if (pie) this.bannerDataCache["piepagina"] = pie;
+    if (ad) this.bannerDataCache["publicidad"] = ad;
+  }
+
   /** Precio unitario SIN IVA para la columna "Precio" del documento. */
   docPrecioUnit(item: Carrito): number {
     return this.getPrecioSinIva(item);
@@ -1116,6 +1243,13 @@ export class CotizacionEditorComponent implements OnInit, OnDestroy {
     this.generandoPDF = true;
     try {
       const html2pdf = (await import("html2pdf.js")).default;
+
+      // Incrustar banners como base64 para que html2canvas los rasterice (las URLs
+      // remotas se ven en pantalla pero quedan en blanco al generar el PDF).
+      await this.preloadBannersForPdf();
+      this.cdr.detectChanges();
+      // Pequeña espera para que el navegador pinte las <img> con el data URL.
+      await new Promise((r) => setTimeout(r, 80));
 
       const element = this.docCapture?.nativeElement?.querySelector(".cot-doc");
       if (!element) {

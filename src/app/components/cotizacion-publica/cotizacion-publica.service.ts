@@ -27,6 +27,12 @@ export interface CotizacionPublicaView {
   fechaEmision: string;
   fechaVencimiento: string;
   validezDias: number | null;
+  /** Banners del documento: encabezado/pie de la empresa + publicidad Katuq. */
+  branding?: {
+    encabezado: string;
+    piepagina: string;
+    publicidad: string;
+  };
 }
 
 @Injectable({ providedIn: "root" })

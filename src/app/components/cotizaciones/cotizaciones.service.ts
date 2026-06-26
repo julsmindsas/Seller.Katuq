@@ -91,6 +91,17 @@ export class CotizacionesService extends BaseService {
   }
 
   /**
+   * Convierte una imagen de Firebase Storage a data URL (base64) vía el backend.
+   * Necesario para incrustar los banners en el PDF: el navegador no puede leer
+   * Storage por CORS, pero el backend sí. Devuelve { dataUrl }.
+   */
+  imageToBase64(url: string): Observable<{ success: boolean; dataUrl?: string }> {
+    return this.get<{ success: boolean; dataUrl?: string }>(
+      `/v1/cotizaciones/image-proxy?url=${encodeURIComponent(url)}`
+    );
+  }
+
+  /**
    * Marca la cotización como convertida y la enlaza al pedido generado (spec 008.2).
    * Se llama desde la venta asistida cuando el pedido se crea de verdad.
    */

@@ -16,6 +16,23 @@
   border-radius: 10px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   padding: 24px;
+  overflow: hidden;
+}
+
+// Banners (paridad con la factura del pedido): encabezado/pie de empresa + Katuq.
+// Full-bleed: contrarrestan el padding de 24px de la tarjeta.
+.cp-banner {
+  display: block;
+  width: calc(100% + 48px);
+  max-width: calc(100% + 48px);
+  margin-left: -24px;
+  margin-right: -24px;
+  height: auto;
+  border: 0;
+
+  &.cp-banner-top { margin-top: -24px; margin-bottom: 18px; }
+  &.cp-banner-foot { margin-top: 22px; }
+  &.cp-banner-ad { margin-top: 12px; }
 }
 
 .cp-center {

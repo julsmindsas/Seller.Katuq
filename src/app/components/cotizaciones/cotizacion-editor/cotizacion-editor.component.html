@@ -432,6 +432,12 @@
   <!-- ===================== DOCUMENTO (vista previa + PDF) ===================== -->
   <ng-template #docTpl>
     <div class="cot-doc">
+      <img
+        *ngIf="bannerEncabezado"
+        [src]="bannerEncabezado"
+        alt="Encabezado"
+        class="doc-banner doc-banner-top"
+        crossorigin="anonymous">
       <div class="doc-head">
         <div class="doc-brand">
           <div class="doc-logo">{{ empresaNombre }}</div>
@@ -492,6 +498,19 @@
       </div>
 
       <div class="doc-notes" *ngIf="(cotizacion.terminos || '').trim()">{{ cotizacion.terminos }}</div>
+
+      <img
+        *ngIf="bannerPiePagina"
+        [src]="bannerPiePagina"
+        alt="Pie de página"
+        class="doc-banner doc-banner-foot"
+        crossorigin="anonymous">
+      <img
+        *ngIf="bannerPublicidad"
+        [src]="bannerPublicidad"
+        alt="Katuq"
+        class="doc-banner doc-banner-ad"
+        crossorigin="anonymous">
     </div>
   </ng-template>
 

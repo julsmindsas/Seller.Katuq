@@ -782,6 +782,27 @@
   font-family: "Inter", system-ui, sans-serif;
   padding: 34px 38px;
 
+  // Banners (paridad con la factura del pedido): encabezado/pie de empresa + Katuq.
+  .doc-banner {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border: 0;
+
+    &.doc-banner-top {
+      margin-bottom: 18px;
+    }
+
+    &.doc-banner-foot {
+      margin-top: 22px;
+    }
+
+    &.doc-banner-ad {
+      margin-top: 12px;
+    }
+  }
+
   .doc-head {
     display: flex;
     justify-content: space-between;
