@@ -1,0 +1,167 @@
+{
+  "meta": {
+    "spec": "010-venta-asistida-impuestos-congruencia",
+    "version": "1.0.0",
+    "fecha": "2026-06-25",
+    "descripcion": "Fixtures dorados = contrato de cálculo. FE (PaymentService) y BE (orderCalculationService) DEBEN producir estos resultados exactos. Si divergen, falla el test.",
+    "jerarquiaPrecio": ["manual (si permitePrecioManual)", "tipoCliente/categoria", "volumen", "base"],
+    "ancla": "IVA = precioSinIVA_resuelto * (tarifaVigente/100). tarifaVigente = _ivaManualOverride si configurado, si no la de la fuente de precio. Nunca confiar en montos de IVA pre-guardados.",
+    "camposEsperado": {
+      "subtotalSinDescuento": "Σ (precioSinIVA_resuelto * cantidad) + adiciones/preferencias sin IVA",
+      "totalDescuento": "subtotalSinDescuento * porceDescuento/100",
+      "totalImpuesto": "Σ por línea: sinIVA * tarifa/100 * cantidad * (1 - porceDescuento/100)",
+      "desgloseIVA": "totalImpuesto repartido por tarifa {0,5,8,19}",
+      "totalEnvio": "costo de envío SIN IVA (base); 0 si no hay domicilio",
+      "total": "subtotalSinDescuento - totalDescuento + totalEnvio + totalImpuesto"
+    },
+    "envio": "El envío (domicilio) lleva IVA con la TARIFA DE LA ZONA (impuestoZonaCobro). totalEnvio se guarda SIN IVA. ivaEnvio = totalEnvio * tarifaEnvio/100, calculado UNA sola vez dentro de totalImpuesto. La tarifa del envío se persiste en el pedido (tarifaEnvio) para no depender de allBillingZone. (D-058)",
+    "toleranciaRedondeo": 0.01
+  },
+  "casos": [
+    {
+      "id": "F-01-base-simple",
+      "_regla": "Sin volumen, sin categoría, sin manual → precio base. sinIVA 100 @ 19%, qty 2.",
+      "_computo": "subtotal=200; IVA=100*0.19*2=38; total=238",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 2, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 200, "totalDescuento": 0, "totalImpuesto": 38, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 38 }, "total": 238 }
+    },
+    {
+      "id": "F-02-base-multitarifa",
+      "_regla": "Dos líneas con tarifas distintas (19% y 5%).",
+      "_computo": "subtotal=150; IVA=19+2.5=21.5; total=171.5",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 1, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } },
+        { "cantidad": 1, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 50, "precioUnitarioIva": "5", "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 150, "totalDescuento": 0, "totalImpuesto": 21.5, "desgloseIVA": { "0": 0, "5": 2.5, "8": 0, "19": 19 }, "total": 171.5 }
+    },
+    {
+      "id": "F-03-volumen-con-sinIVA",
+      "_regla": "Volumen con valorUnitarioPorVolumenSinIVA presente. qty 10, tier [1-10] sinIVA 80 @ 19%.",
+      "_computo": "sinIVA=80; subtotal=800; IVA=80*0.19*10=152; total=952",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 10, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [ { "numeroUnidadesInicial": 1, "numeroUnidadesLimite": 10, "valorUnitarioPorVolumenSinIVA": 80, "valorUnitarioPorVolumenConIVA": 95.2, "valorIVAPorVolumen": 19 } ] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 800, "totalDescuento": 0, "totalImpuesto": 152, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 152 }, "total": 952 }
+    },
+    {
+      "id": "F-04-volumen-legacy-sin-sinIVA",
+      "_regla": "EL BUG D-046/F-01: tier SIN valorUnitarioPorVolumenSinIVA (legacy). Debe DERIVAR de conIVA, NO colapsar al base de 1 unidad.",
+      "_computo": "sinIVA = 95.2/(1+0.19)=80; subtotal=800; IVA=152; total=952. (Comportamiento INCORRECTO daría base 100 → subtotal 1000, IVA 190.)",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 10, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [ { "numeroUnidadesInicial": 1, "numeroUnidadesLimite": 10, "valorUnitarioPorVolumenConIVA": 95.2, "valorIVAPorVolumen": 19 } ] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 800, "totalDescuento": 0, "totalImpuesto": 152, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 152 }, "total": 952 }
+    },
+    {
+      "id": "F-05-categoria",
+      "_regla": "Cliente con categoría MAYORISTA y producto con preciosPorTipoCliente. sinIVA categoría 70 @ 19%, qty 3.",
+      "_computo": "sinIVA=70; subtotal=210; IVA=70*0.19*3=39.9; total=249.9",
+      "ctx": { "categoriaClienteId": "MAYORISTA", "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 3, "producto": { "procesoComercial": { "permitePrecioManual": false }, "preciosPorTipoCliente": [ { "tipoClienteId": "MAYORISTA", "precio": 70, "precioConIva": 83.3, "porcentajeIva": 19, "valorIva": 13.3, "activo": true } ], "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 210, "totalDescuento": 0, "totalImpuesto": 39.9, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 39.9 }, "total": 249.9 }
+    },
+    {
+      "id": "F-06-categoria-gana-a-volumen",
+      "_regla": "AC-10: producto con categoría Y volumen, cliente con categoría → CATEGORÍA gana, volumen ignorado. qty 10.",
+      "_computo": "sinIVA=70 (categoría, NO 80 del volumen); subtotal=700; IVA=70*0.19*10=133; total=833",
+      "ctx": { "categoriaClienteId": "MAYORISTA", "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 10, "producto": { "procesoComercial": { "permitePrecioManual": false }, "preciosPorTipoCliente": [ { "tipoClienteId": "MAYORISTA", "precio": 70, "precioConIva": 83.3, "porcentajeIva": 19, "valorIva": 13.3, "activo": true } ], "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [ { "numeroUnidadesInicial": 1, "numeroUnidadesLimite": 10, "valorUnitarioPorVolumenSinIVA": 80, "valorIVAPorVolumen": 19 } ] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 700, "totalDescuento": 0, "totalImpuesto": 133, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 133 }, "total": 833 }
+    },
+    {
+      "id": "F-07-iva-manual-sobre-volumen",
+      "_regla": "AC-04/D-046: IVA manual sobre línea de volumen. Conserva sinIVA del tier (80), solo cambia tarifa a 5%. qty 10.",
+      "_computo": "sinIVA=80 (tier, NO base 100); tarifa=5; subtotal=800; IVA=80*0.05*10=40; total=840",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 10, "_ivaManualOverride": 5, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [ { "numeroUnidadesInicial": 1, "numeroUnidadesLimite": 10, "valorUnitarioPorVolumenSinIVA": 80, "valorIVAPorVolumen": 19 } ] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 800, "totalDescuento": 0, "totalImpuesto": 40, "desgloseIVA": { "0": 0, "5": 40, "8": 0, "19": 0 }, "total": 840 }
+    },
+    {
+      "id": "F-08-precio-manual",
+      "_regla": "Precio manual (permitePrecioManual=true). _precioManualOverride=120 (sinIVA), sin IVA manual → usa tarifa base 19%. qty 2.",
+      "_computo": "sinIVA=120; tarifa=19; subtotal=240; IVA=120*0.19*2=45.6; total=285.6",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 2, "_precioManualOverride": 120, "producto": { "procesoComercial": { "permitePrecioManual": true }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 240, "totalDescuento": 0, "totalImpuesto": 45.6, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 45.6 }, "total": 285.6 }
+    },
+    {
+      "id": "F-09-precio-e-iva-manual",
+      "_regla": "Precio manual 120 + IVA manual 5%. Ambos overrides priman. qty 2.",
+      "_computo": "sinIVA=120; tarifa=5; subtotal=240; IVA=120*0.05*2=12; total=252",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 2, "_precioManualOverride": 120, "_ivaManualOverride": 5, "producto": { "procesoComercial": { "permitePrecioManual": true }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 240, "totalDescuento": 0, "totalImpuesto": 12, "desgloseIVA": { "0": 0, "5": 12, "8": 0, "19": 0 }, "total": 252 }
+    },
+    {
+      "id": "F-10-adiciones",
+      "_regla": "Línea base + adición. Producto sinIVA 100 @19, adición sinIVA 10 @19. qty 1.",
+      "_computo": "subtotal=100+10=110; IVA=19+1.9=20.9; total=130.9",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 1, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } }, "configuracion": { "adiciones": [ { "cantidad": 1, "valorUnitarioSinIva": 10, "porcentajeIva": 19 } ] } }
+      ],
+      "esperado": { "subtotalSinDescuento": 110, "totalDescuento": 0, "totalImpuesto": 20.9, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 20.9 }, "total": 130.9 }
+    },
+    {
+      "id": "F-11-descuento-global",
+      "_regla": "Descuento global 10% sobre línea base 100 @19. Descuento aplica antes del IVA.",
+      "_computo": "subtotalSinDesc=100; desc=10; IVA=19*0.9=17.1; total=100-10+17.1=107.1",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 10 },
+      "carrito": [
+        { "cantidad": 1, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 100, "totalDescuento": 10, "totalImpuesto": 17.1, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 17.1 }, "total": 107.1 }
+    },
+    {
+      "id": "F-12-cantidad-cero",
+      "_regla": "Línea con cantidad 0 no aporta nada.",
+      "_computo": "subtotal=0; IVA=0; total=0",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 0, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 0, "totalDescuento": 0, "totalImpuesto": 0, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 0 }, "total": 0 }
+    },
+    {
+      "id": "F-14-campos-NaN",
+      "_regla": "AC-08: campos no numéricos/ausentes → 0 explícito, sin propagar NaN.",
+      "_computo": "sinIVA inválido → 0; subtotal=0; IVA=0; total=0",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        { "cantidad": 2, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": "abc", "precioUnitarioIva": null, "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 0, "totalDescuento": 0, "totalImpuesto": 0, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 0 }, "total": 0 }
+    },
+    {
+      "id": "F-13-envio-con-iva",
+      "_regla": "D-058: domicilio. totalEnvio SIN IVA = 10, tarifa de la zona 19%. IVA del envío se cuenta UNA vez en totalImpuesto. Línea base 100 @19, qty 1.",
+      "_computo": "ivaProducto=19; ivaEnvio=10*0.19=1.9; totalImpuesto=20.9; total=100(prod sinIVA)+10(envio sinIVA)+20.9=130.9. (Cliente paga 119 prod + 11.9 envío = 130.9, sin doble conteo.)",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "pedido": { "totalEnvio": 10, "tarifaEnvio": 19, "formaEntrega": "Domicilio" },
+      "carrito": [
+        { "cantidad": 1, "producto": { "procesoComercial": { "permitePrecioManual": false }, "precio": { "precioUnitarioSinIva": 100, "precioUnitarioIva": "19", "preciosVolumen": [] } } }
+      ],
+      "esperado": { "subtotalSinDescuento": 100, "totalDescuento": 0, "totalEnvio": 10, "totalImpuesto": 20.9, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 20.9 }, "total": 130.9 }
+    }
+  ],
+  "_pendientes": {
+    "real-cases": "T-03: agregar 10-20 fixtures derivados de pedidos reales que descuadran (carpeta contracts/real-cases/, PII anonimizada)."
+  }
+}

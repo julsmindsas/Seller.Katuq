@@ -270,13 +270,31 @@ export class CarritoComponent implements OnInit {
         const rangoActual = rangosValidos.find((pv: any) =>
           cantidad >= Number(pv.numeroUnidadesInicial) && cantidad <= Number(pv.numeroUnidadesLimite)
         );
-        precioSinIva = rangoActual?.valorUnitarioPorVolumenSinIVA || Number(precio?.precioUnitarioSinIva) || 0;
+        precioSinIva = this.tierSinIva(rangoActual, precio);
       } else {
         precioSinIva = Number(precio?.precioUnitarioSinIva) || 0;
       }
       return precioSinIva * (1 + itemCarrito._ivaManualOverride / 100);
     }
     return this.getProductPriceWithScale(itemCarrito);
+  }
+
+  /**
+   * Sin-IVA robusto de un tier de volumen: usa el campo almacenado y, si falta o es 0,
+   * lo deriva de `valorUnitarioPorVolumenConIVA / (1 + valorIVAPorVolumen/100)`. Evita que
+   * un dato legacy sin `valorUnitarioPorVolumenSinIVA` colapse al precio de 1 unidad cuando
+   * se cambia el IVA de una línea con precio por volumen.
+   */
+  private tierSinIva(rango: any, precioFallback: any): number {
+    const sinIva = Number(rango?.valorUnitarioPorVolumenSinIVA) || 0;
+    if (sinIva > 0) return sinIva;
+    const conIva =
+      Number(rango?.valorUnitarioPorVolumenConIVA) ||
+      Number(rango?.valorUnitarioPorVolumenIva) ||
+      0;
+    const tierIva = Number(rango?.valorIVAPorVolumen) || 0;
+    if (conIva > 0) return conIva / (1 + tierIva / 100);
+    return Number(precioFallback?.precioUnitarioSinIva) || 0;
   }
 
   permitePrecioManual(itemCarrito: any): boolean {

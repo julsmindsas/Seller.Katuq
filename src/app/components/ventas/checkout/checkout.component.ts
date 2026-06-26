@@ -484,13 +484,31 @@ export class CheckOutComponent implements OnInit, OnChanges {
         cantidad >= pv.numeroUnidadesInicial && cantidad <= pv.numeroUnidadesLimite
       );
       if (rangoActual) {
-        return rangoActual.valorUnitarioPorVolumenSinIVA || 0;
+        return this.tierSinIva(rangoActual, productoPrecio);
       } else {
         return productoPrecio.precioUnitarioSinIva || 0;
       }
     } else {
       return productoPrecio.precioUnitarioSinIva || 0;
     }
+  }
+
+  /**
+   * Sin-IVA robusto de un tier de volumen: usa el campo almacenado y, si falta o es 0,
+   * lo deriva de `valorUnitarioPorVolumenConIVA / (1 + valorIVAPorVolumen/100)`. Evita que
+   * un dato legacy sin `valorUnitarioPorVolumenSinIVA` colapse al precio de 1 unidad cuando
+   * se recalcula el IVA de una línea con precio por volumen (paridad con el carrito).
+   */
+  private tierSinIva(rango: any, precioFallback: any): number {
+    const sinIva = Number(rango?.valorUnitarioPorVolumenSinIVA) || 0;
+    if (sinIva > 0) return sinIva;
+    const conIva =
+      Number(rango?.valorUnitarioPorVolumenConIVA) ||
+      Number(rango?.valorUnitarioPorVolumenIva) ||
+      0;
+    const tierIva = Number(rango?.valorIVAPorVolumen) || 0;
+    if (conIva > 0) return conIva / (1 + tierIva / 100);
+    return Number(precioFallback?.precioUnitarioSinIva) || 0;
   }
 
   /**
