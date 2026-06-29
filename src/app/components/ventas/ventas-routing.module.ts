@@ -4,6 +4,7 @@ import { CrearVentasComponent } from "./crear-ventas/crear-ventas.component";
 import { ClientesComponent } from "./clientes/clientes.component";
 import { ListOrdersComponent } from "./list/list.component";
 import { ClientesListaComponent } from "./clientes/lista/clientes-lista.component";
+import { ClientesCorporativosComponent } from "./clientes/corporativos/clientes-corporativos.component";
 import { CargaVentasComponent } from "./carga-ventas/carga-ventas.component";
 import { PosComponent } from "./pos2/pos.component";
 
@@ -23,6 +24,10 @@ const routes: Routes = [
   {
     path: "clienteslista",
     component: ClientesListaComponent,
+  },
+  {
+    path: "clientes-corporativos",
+    component: ClientesCorporativosComponent,
   },
   {
     path: "carga-ventas",

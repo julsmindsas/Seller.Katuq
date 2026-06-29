@@ -343,7 +343,9 @@ export class CrmListComponent implements OnInit, OnDestroy {
   }
 
   getTitle(): string {
-    return this.entityType === 'company' ? 'Pipeline Empresas' : 'Pipeline Clientes';
+    if (this.entityType === 'company') return 'Pipeline Empresas';
+    if (this.entityType === 'corporate') return 'Pipeline Corporativos';
+    return 'Pipeline Clientes';
   }
 
   trackById(index: number, item: CrmLead): string {

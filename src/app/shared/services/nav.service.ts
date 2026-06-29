@@ -315,6 +315,12 @@ export class NavService implements OnDestroy {
           type: "link",
           icon: "list",
         },
+        {
+          path: "ventas/clientes-corporativos",
+          title: "Clientes corporativos",
+          type: "link",
+          icon: "briefcase",
+        },
       ],
     },
     {

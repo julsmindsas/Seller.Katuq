@@ -1,0 +1,85 @@
+<div class="corp-page">
+  <p-toast></p-toast>
+
+  <!-- Header -->
+  <div class="corp-header">
+    <div>
+      <h2 class="corp-title">Clientes corporativos</h2>
+      <p class="corp-subtitle">Prospectos B2B que alimentan el CRM. Lista independiente de los clientes habituales.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openCrearModal()">
+      <i class="pi pi-plus"></i> Nuevo corporativo
+    </button>
+  </div>
+
+  <!-- Toolbar: búsqueda + filtros de estado -->
+  <div class="corp-toolbar">
+    <span class="p-input-icon-left search-box">
+      <i class="pi pi-search"></i>
+      <input type="text" pInputText placeholder="Buscar por nombre, documento, correo…"
+             [value]="globalFilterValue" (input)="onGlobalFilter($any($event.target).value)" />
+    </span>
+
+    <div class="estado-filters">
+      <button class="chip" [class.active]="selectedEstadoFilter === 'todos'" (click)="filtrarPorEstado('todos')">Todos</button>
+      <button class="chip" [class.active]="selectedEstadoFilter === 'activo'" (click)="filtrarPorEstado('activo')">Activos</button>
+      <button class="chip" [class.active]="selectedEstadoFilter === 'bloqueado'" (click)="filtrarPorEstado('bloqueado')">Bloqueados</button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <p-table #dt [value]="corporativos" [loading]="cargando" [paginator]="true" [rows]="10"
+           [rowsPerPageOptions]="[10, 25, 50]" [globalFilterFields]="['nombres_completos','documento','correo_electronico_comprador','numero_celular_comprador']"
+           styleClass="p-datatable-sm corp-table" responsiveLayout="scroll"
+           currentPageReportTemplate="{first}–{last} de {totalRecords}" [showCurrentPageReport]="true">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Documento</th>
+        <th>Nombre / Razón social</th>
+        <th>Contacto</th>
+        <th>Etiquetas</th>
+        <th>Estado</th>
+        <th class="text-center">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-c>
+      <tr>
+        <td>
+          <span class="doc-tipo">{{ c.tipo_documento_comprador || 'CC' }}</span>
+          {{ c.documento || '—' }}
+        </td>
+        <td class="nombre-cell">{{ c.nombres_completos || '—' }}</td>
+        <td>
+          <div class="contacto">
+            <span *ngIf="c.correo_electronico_comprador"><i class="pi pi-envelope"></i> {{ c.correo_electronico_comprador }}</span>
+            <span *ngIf="c.numero_celular_comprador"><i class="pi pi-phone"></i> {{ c.numero_celular_comprador }}</span>
+          </div>
+        </td>
+        <td>
+          <span class="tag" *ngFor="let e of (c.etiquetas || [])">{{ e }}</span>
+        </td>
+        <td>
+          <span class="estado-badge" [class.bloqueado]="c.estado === 'bloqueado'">
+            {{ c.estado === 'bloqueado' ? 'Bloqueado' : 'Activo' }}
+          </span>
+        </td>
+        <td class="text-center">
+          <button class="icon-btn" title="Editar" (click)="editarCorporativo(c)"><i class="pi pi-pencil"></i></button>
+          <button class="icon-btn danger" title="Eliminar" (click)="eliminarCorporativo(c)"><i class="pi pi-trash"></i></button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="empty">
+          <i class="pi pi-briefcase"></i>
+          <p>No hay clientes corporativos todavía.</p>
+          <button class="btn btn-outline-primary btn-sm" (click)="openCrearModal()">Crear el primero</button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

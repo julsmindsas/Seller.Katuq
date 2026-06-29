@@ -52,6 +52,7 @@ import { MenuModule } from "primeng/menu";
 import { AsentarpagomanualComponent } from "./asentarpagomanual/asentarpagomanual.component";
 import { AutoCompleteModule } from "primeng/autocomplete";
 import { ClientesListaComponent } from "./clientes/lista/clientes-lista.component";
+import { ClientesCorporativosComponent } from "./clientes/corporativos/clientes-corporativos.component";
 import { CargaVentasComponent } from "./carga-ventas/carga-ventas.component";
 import { HttpClientModule } from "@angular/common/http";
 import { VoiceInteractionModule } from "../../shared/components/voice-interaction/voice-interaction.module";
@@ -133,6 +134,7 @@ import { GlobalMetricsComponent } from "./clientes/global-metrics/global-metrics
   declarations: [
     PedidoFacturacionComponent,
     ClientesListaComponent,
+    ClientesCorporativosComponent,
     CheckOutComponent,
     PedidoEntregaComponent,
     ListOrdersComponent,

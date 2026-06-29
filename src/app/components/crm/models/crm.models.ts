@@ -1,6 +1,6 @@
 // ─── Types ────────────────────────────────────────────────────
 
-export type CrmEntityType = 'company' | 'client';
+export type CrmEntityType = 'company' | 'client' | 'corporate';
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 
 // Pipeline stages por contexto (vienen del backend via GET /stages)

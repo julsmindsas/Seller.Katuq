@@ -1,0 +1,136 @@
+// Clientes corporativos — estilo plano, border-left de acento (sin gradientes).
+$accent: #6d28d9; // violeta corporativo
+$ink: #1f2937;
+$muted: #6b7280;
+$line: #e5e7eb;
+
+.corp-page {
+  padding: 1.25rem 1.5rem;
+}
+
+.corp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-left: 4px solid $accent;
+  padding-left: 0.85rem;
+  margin-bottom: 1.25rem;
+
+  .corp-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: $ink;
+  }
+  .corp-subtitle {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: $muted;
+  }
+}
+
+.corp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  .search-box input {
+    width: 320px;
+    max-width: 60vw;
+  }
+}
+
+.estado-filters {
+  display: flex;
+  gap: 0.4rem;
+
+  .chip {
+    border: 1px solid $line;
+    background: #fff;
+    color: $muted;
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover { border-color: $accent; color: $accent; }
+    &.active {
+      background: $accent;
+      border-color: $accent;
+      color: #fff;
+    }
+  }
+}
+
+.corp-table {
+  .doc-tipo {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: $accent;
+    background: rgba($accent, 0.08);
+    border-radius: 4px;
+    padding: 0.05rem 0.35rem;
+    margin-right: 0.35rem;
+  }
+
+  .nombre-cell { font-weight: 600; color: $ink; }
+
+  .contacto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.8rem;
+    color: $muted;
+    i { color: $accent; margin-right: 0.3rem; }
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    background: #f3f4f6;
+    color: $ink;
+    border-radius: 4px;
+    padding: 0.1rem 0.45rem;
+    margin: 0.1rem 0.15rem 0.1rem 0;
+  }
+
+  .estado-badge {
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #047857;
+    background: rgba(4, 120, 87, 0.1);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+
+    &.bloqueado {
+      color: #b91c1c;
+      background: rgba(185, 28, 28, 0.1);
+    }
+  }
+
+  .icon-btn {
+    border: none;
+    background: transparent;
+    color: $muted;
+    cursor: pointer;
+    padding: 0.25rem 0.4rem;
+    border-radius: 4px;
+    &:hover { background: #f3f4f6; color: $accent; }
+    &.danger:hover { color: #b91c1c; }
+  }
+
+  .empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: $muted;
+
+    i { font-size: 2rem; color: $line; display: block; margin-bottom: 0.5rem; }
+    p { margin: 0 0 0.75rem; }
+  }
+}

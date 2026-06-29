@@ -2,6 +2,7 @@ import { Component, Input, OnInit } from "@angular/core";
 import { FormGroup, FormBuilder, Validators } from "@angular/forms";
 import { NgbActiveModal } from "@ng-bootstrap/ng-bootstrap";
 import { MaestroService } from "../../../../shared/services/maestros/maestro.service";
+import { CorporateClientsService } from "../services/corporate-clients.service";
 import { ClientConfigService, ClientTag } from "../services/client-config.service";
 import { InfoIndicativos } from "../../../../../Mock/indicativosPais";
 import Swal from "sweetalert2";
@@ -15,6 +16,12 @@ export class CrearClienteModalComponent implements OnInit {
   @Input() clienteData: any;
   @Input() isEdit: boolean = false;
   @Input() documentoPrellenado: string = "";
+  /**
+   * Destino de persistencia. 'client' (default) usa la colección de clientes
+   * habituales; 'corporate' persiste en la lista de clientes corporativos que
+   * alimenta el CRM (spec 011). El resto del formulario es idéntico.
+   */
+  @Input() target: 'client' | 'corporate' = 'client';
 
   formulario: FormGroup;
   indicativos: any[] = [];
@@ -41,6 +48,7 @@ export class CrearClienteModalComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private maestroService: MaestroService,
+    private corpService: CorporateClientsService,
     public activeModal: NgbActiveModal,
     private infoIndicativos: InfoIndicativos,
     private clientConfig: ClientConfigService,
@@ -281,14 +289,35 @@ export class CrearClienteModalComponent implements OnInit {
     }
   }
 
+  // ── Persistencia según target (client | corporate) ──────────────────
+  private lookupByDocument(documento: string) {
+    return this.target === 'corporate'
+      ? this.corpService.getByDocument(documento)
+      : this.maestroService.getClientByDocument({ documento });
+  }
+
+  private persistCreate(clienteData: any) {
+    return this.target === 'corporate'
+      ? this.corpService.crear(clienteData)
+      : this.maestroService.createClient(clienteData);
+  }
+
+  private persistEdit(payload: any) {
+    return this.target === 'corporate'
+      ? this.corpService.editar(payload)
+      : this.maestroService.editClient(payload);
+  }
+
   private ejecutarEdicion(clienteData: any) {
     const payload = { ...clienteData, cd: this.clienteData.cd || this.clienteData.id };
 
-    this.maestroService.editClient(payload).subscribe({
+    this.persistEdit(payload).subscribe({
       next: () => {
-        const doc = { documento: payload.documento };
-        this.maestroService.getClientByDocument(doc).subscribe({
-          next: (clienteActualizado: any) => {
+        this.lookupByDocument(payload.documento).subscribe({
+          next: (resultadoLookup: any) => {
+            const clienteActualizado = Array.isArray(resultadoLookup)
+              ? (resultadoLookup[0] || payload)
+              : (resultadoLookup || payload);
             Swal.fire({
               title: '¡Cliente actualizado!',
               text: `${clienteActualizado.nombres_completos} ${clienteActualizado.apellidos_completos || ''} fue actualizado exitosamente.`,
@@ -313,7 +342,7 @@ export class CrearClienteModalComponent implements OnInit {
   }
 
   private verificarYCrearCliente(clienteData: any) {
-    this.maestroService.getClientByDocument({ documento: clienteData.documento }).subscribe({
+    this.lookupByDocument(clienteData.documento).subscribe({
       next: (res: any) => {
         const esArrayVacio = Array.isArray(res) && res.length === 0;
         if (res && !esArrayVacio) {
@@ -336,7 +365,7 @@ export class CrearClienteModalComponent implements OnInit {
   }
 
   private crearCliente(clienteData: any) {
-    this.maestroService.createClient(clienteData).subscribe({
+    this.persistCreate(clienteData).subscribe({
       next: (response: any) => {
         const clienteCreado = response.cliente || response || clienteData;
         Swal.fire({

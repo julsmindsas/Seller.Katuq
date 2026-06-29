@@ -44,6 +44,7 @@ Orden = prioridad. La spec piloto siempre encabeza.
 | 009.5 | whatsapp-conversations-viewer | draft (clarifications abiertas) | Daniel | Viewer READ-ONLY de hilos WhatsApp por cliente final dentro de Katuq. Slot ratificado vía D-049 (renumeración: pasarela pago → 009.6, display name → 009.7). |
 | 009.5.1 | whatsapp-contact-profile-panel | draft (enmienda 009.5) | Daniel | Panel lateral de identidad + últimos 10 pedidos + Lead con score de estrellas dentro del viewer. Decisiones fijas D-050/D-051/D-052/D-053. Mismo feature flag `WHATSAPP_INBOX_VIEWER_ENABLED`. |
 | **010** | **venta-asistida-impuestos-congruencia** | **approved — tasks in-progress (Fase A)** | — | Unificar el cálculo IVA en 1 punto por entorno (FE `PaymentService`, BE `orderCalculationService`) con ancla A + jerarquía manual→categoría→volumen→base. Fantasma identificado (F-08): FE confía en montos de IVA pre-guardados y BE recalcula → descuadre en líneas con volumen/categoría. Integraciones (Osmosis/Shopify/Woo) NO se tocan (solo leen). spec.md (12 EARS) + findings.md + plan.md (7 fases, feature flag) + tasks.md. Ver D-054/D-055/D-056/D-057. |
+| **011** | **crm-clientes-corporativos** | **implementación done — pending E2E con login** | jnavarrog | CRM deja de alimentarse de clientes normales (`/v1/clients`) y pasa a una **lista nueva y propia de clientes corporativos** (prospectos B2B). Nuevo `entityType: 'corporate'` reusando kanban/servicio CRM actual. Formulario = el de crear cliente existente + campo etiquetas. Etapas reusadas de `client`. Lista bajo menú Clientes. Colección propia, NO toca clientes habituales (solo reusa su form). Ver D-058. |
 
 > El roadmap se reordena en discusión humana. Cualquier cambio se registra en §3 (Decisiones).
 
@@ -61,6 +62,34 @@ Orden = prioridad. La spec piloto siempre encabeza.
 ## 3. Decisiones (append-only, con fecha)
 
 > Una entrada por decisión. Nunca se borran; si una decisión cambia, se añade otra que la supera y se referencia.
+
+### 2026-06-29 — D-059: Implementación spec 011 — CRM de Clientes Corporativos (MVP)
+- **Estado:** implementación done en frontend + backend. Pendiente E2E con login real (crear corporativo → verlo en lista → verlo en kanban).
+- **Backend (`katuq_admin_back_firebase`):**
+  - `crmConstants.js`: `ENTITY_TYPES.CORPORATE='corporate'`, constante `CORPORATE_CLIENTS='corporate_clients'`, flag `isCorporateSourceEnabled()` (env `CRM_SOURCE_CORPORATE`, default ON). `detectContext()`: tenant normal → `corporate` (reusa `CLIENT_STAGES`); Katuq superadmin intacto en `company`; flag OFF → `client` legacy.
+  - `crmLeadService.js`: helper `_sourceCollection(entityType)` + loaders genéricos (`_loadSource`, `_loadSourceCapped`, `_ensurePipelineEntities(collection,...)`) + branches corporate en list/getById/updatePipeline/createLead/importLead/deleteLead/findDuplicates. `getById`/`deleteLead` verifican tenant para client **y** corporate. `activo` ahora respeta `estado==='bloqueado'`.
+  - `crmStatsService.js`: cuenta sobre `corporate_clients` cuando entityType es corporate.
+  - Nuevo `controllers/corporateClients.js` + `routers/corporateClients.js` montado en `/v1/corporate-clients` (getAll, doc, create con dedupe por company+documento, edit, delete). Auth middleware aplicado.
+  - Contract tests `scripts/test-011-crm-corporate.js`: 15/15 puras PASS (detectContext flag, _sourceCollection); 4 de integración SKIP sin emulador.
+- **Frontend (`Seller.Katuq`):**
+  - `CorporateClientsService extends BaseService` → `/v1/corporate-clients`.
+  - Nuevo módulo de listado `ventas/clientes/corporativos/` (sin export/import — OQ-2), ruta `ventas/clientes-corporativos`, entrada de menú bajo "Clientes".
+  - `crear-cliente-modal`: `@Input() target: 'client'|'corporate'` con branch de persistencia (helpers lookup/create/edit). Etiquetas reusadas tal cual.
+  - CRM: `CrmEntityType` + `'corporate'`, `getTitle()` → "Pipeline Corporativos". Kanban sin cambios funcionales (consume `entityType` del backend).
+- **Verificación:** backend compila (`node -c` OK) + endpoints montados (401 con auth, 404 control). Frontend `Compiled successfully`. Ambos servers corriendo (3300 / 4200).
+- **Desvío vs plan §5:** el router corporativo usa la forma del router `clients` (`/create`,`/edit`,`/delete` POST) en vez de REST puro, por consistencia con el código existente y reúso directo del modal. Sin impacto en el contrato funcional.
+- **Pendiente:** E2E con login (sello D-CRM-CORP-MVP cuando los pasos manuales pasen). Nota de rollout: con el flag ON (default), los tenants normales que hoy veían sus `clients` en el kanban verán el pipeline corporativo (vacío hasta cargar corporativos) — comportamiento deseado por D-058.
+
+### 2026-06-29 — D-058: Apertura spec 011 — CRM de Clientes Corporativos (lista propia)
+- **Contexto:** el CRM (`components/crm`, `/v1/crm`) hoy se alimenta de los clientes normales (`entityType:'client'`, `/v1/clients`), que ya compraron. El responsable producto quiere trabajar **prospectos corporativos B2B nuevos** en el CRM. Decisión: el CRM **deja de alimentarse de los clientes normales** y pasa a una **lista nueva y propia de clientes corporativos**. El CRM se comporta **exactamente igual que hoy**; solo cambia la fuente.
+- **Decisiones de clarificación (resueltas con el usuario 2026-06-29):**
+  - Q-01: reusar el **formulario de crear cliente existente** (todos los tipos de documento) + **campo de etiquetas** equivalente al del módulo de clientes.
+  - Q-02: nuevo **`entityType: 'corporate'`** reusando kanban/servicio del CRM actual (NO un CRM aparte).
+  - Q-03: reusar las **mismas etapas** del pipeline `client`.
+  - Q-04: la nueva lista vive bajo el menú **Clientes**.
+  - Q-05: **sin** lógica de "convertir" a cliente real — solo se mueve de etapa, igual que hoy.
+- **Out of scope:** no se toca colección ni UI de clientes habituales (salvo reusar su form), no migración, no `company` (tenants), no inventario/pedidos/facturación, no importación masiva.
+- **Pendiente:** `plan.md` (cómo: colección backend en repo separado, endpoints, parametrización de `crm-list` por entityType). Backend en `katuq_admin_back_firebase` requiere coordinación de endpoints antes del frontend.
 
 ### 2026-05-13 — D-001: Adopción de SDD
 - **Contexto:** los dolores recurrentes en `/flows ↔ Cereza` son de requisitos no especificados.
