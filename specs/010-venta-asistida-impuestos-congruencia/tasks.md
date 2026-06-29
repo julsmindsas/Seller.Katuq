@@ -6,31 +6,40 @@
 ## Fase A — Contrato (fixtures dorados) · sin tocar cálculo
 - ✅ **T-01** Crear `contracts/iva-fixtures.json`: 13 casos con entrada (carrito + ctx) y salida esperada (subtotal, totalImpuesto, desgloseIVA, total). Envío (F-13) marcado pendiente por ambigüedad de doble conteo.
 - ✅ **T-02** Cada fixture documenta `_regla` y `_computo` (revisable por producto).
-- ⬜ **T-03** Derivar 10-20 fixtures de **pedidos reales** que hoy descuadran (export read-only de prod) → carpeta `contracts/real-cases/`. Anonimizar PII.
+- ✅ **T-03** Auditoría READ-ONLY de pedidos reales (`functions/scripts/audit-iva-divergence-readonly.js`, 500 pedidos). Canónico **validado**: 96.4% idéntico al persistido; los 3.6% que descuadran son **a favor del canónico** (IVA fantasma sobre exentos / IVA faltante). Hallazgos F-10/F-11 en `findings.md §T-03`. **Pendiente sub-paso:** materializar 1-2 fixtures real-case anonimizados en `contracts/real-cases/` (exento por volumen → IVA 0).
 - ✅ **T-04** Harness BE: `functions/scripts/test-iva-contract.js` corre 14 fixtures vs `orderCalculationService` actual → **7 PASS / 7 FAIL** (foto del fantasma, ver `findings.md §D-ter`). Reutilizable como gate en Fase B.
-- ⬜ **T-05** Harness FE: spec Jasmine que carga los mismos fixtures y corre el cálculo actual → documenta los rojos.
+- ✅ **T-05** Harness FE: `contracts/test-iva-contract-fe.js` corre los fixtures contra el núcleo FE compilado (`iva-canonico.ts` → tsc). **14/14 + real-case 1/1**, idéntico al BE. (Se eligió harness node sobre Jasmine para no depender de ng test/headless chrome.)
 
 ## Fase B — Algoritmo canónico (puro, sin swap de call-sites aún)
 - ✅ **T-06** BE: `resolverPrecioLinea` + `tierSinIVA` + `calcularTotalesPedido` añadidos (PUROS, additivos) a `services/orderCalculationService.js`. Jerarquía manual→categoría→volumen→base, ancla A, tier robusto, desgloseIVA {0,5,8,19}, guardas NaN. Harness: **canónico 14/14**, viejo 7/14 intacto. `calculateOrderTotals` y call-sites SIN tocar.
-- ⬜ **T-07** FE: implementar el mismo algoritmo en `PaymentService` (`checkPriceScale`/`checkIVAPrice` reescritos sobre el núcleo puro). Mantener firma `Pedido | POSPedido`.
-- ⬜ **T-08** Ambos harness (T-04/T-05) en **verde** contra todos los fixtures, incluidos los reales. Este es el gate de la Fase B.
+- ✅ **T-07** FE: núcleo canónico puro `src/app/shared/services/ventas/iva-canonico.ts` (espejo exacto del BE: `resolverPrecioLinea`/`tierSinIVA`/`calcularTotalesCanonico` + `baseExcluidaCanonica`). `PaymentService.checkPriceScale`/`checkIVAPrice` **delegan detrás de feature flag** `ivaCalcUnificado` (default OFF → producción intacta; override QA `localStorage['IVA_CALC_UNIFICADO']`). Firma `Pedido | POSPedido` intacta. tsc limpio (los 70 errores son cascada del `environment.ts` generado, pre-existente).
+- ✅ **T-08** Gate Fase B: BE 14/14 + FE 14/14 + real-case 1/1, mismos números. **Fase B cerrada.**
 
 ## Fase C — Backend manda lo persistido (muere el fantasma en lo guardado)
-- ⬜ **T-09** `orders.js` create/edit/list ya llaman `calculateOrderTotals` → verificar que usan el nuevo núcleo. Persistir `desgloseIVA` en el doc (AC-06, OT-1).
-- ⬜ **T-10** Feature flag `IVA_CALC_UNIFICADO` + **dark-launch**: calcular old+new, persistir old, loggear divergencias `{nroPedido, productoCd, fuentePrecio, oldIva, newIva}`.
+- ✅ **T-09** (D-062, Opción B) — `calculateOrderTotals` usa el motor canónico cuando `IVA_PERSIST_CANONICAL=true`: fija `subtotal/totalDescuento/totalImpuesto/desgloseIVA` desde `calcularTotalesPedido` **y** graba la **tarifa efectiva** por línea en el snapshot (`producto.precio.precioUnitarioIva`). Gateado por env (OFF → desplegar no cambia nada). `node -c` OK; harness canónico **14/14** intacto. Como `calculateOrderTotals` corre en create/edit/list, queda cableado en todos. **Falta:** prender el env tras observar dark-launch (→ T-12).
+- ✅ **T-10** **Dark-launch** en `orders.js`: helper `logIvaDivergenceDarkLaunch(order, phase)` hookeado en `create` (tras `calculateOrderTotals`) y en `updateOrderInternal` (tras `update`). Calcula canónico, compara vs lo que se persiste (viejo), y si |Δ|>$1 escribe a `iva_divergence_audit` `{phase,nroPedido,company,oldIva,newIva,delta,oldTotal,newTotal,desgloseIVA,lineas[{cd,fuentePrecio,precioSinIVA,tarifa}]}`. **NO muta el pedido; fire-and-forget; nunca rompe el flujo.** Gateado por env `IVA_DARK_LAUNCH` (=true en `.env` local). Verificado E2E (escritura+lectura, doc de prueba borrado). Sigue persistiendo el VIEJO. **Nota:** sin echo F-11 (el canónico no recibe el persistido).
 - ⬜ **T-11** Retirar competidores BE: `analytics.js` deja de usar `recalcularPedidoCompleto` (lee persistido o llama canónico); eliminar `utils/priceCalculations.js`; borrar código muerto `orders.js:7066 getTotalImpuesto`/`:7222`.
 - ⬜ **T-12** Cuando divergencias→0 en pedidos nuevos (ventana de observación), switch flag a `new`.
 
 ## Fase D — FE venta asistida + cotizaciones delegan al punto único
-- ⬜ **T-13** `carrito.component.ts`, `checkout.component.ts`, `pedidos.util.service.ts` delegan a `PaymentService` (quita lógica inline). Agente IA `order-tools-registrar` queda cubierto vía `pedidos.util`.
-- ⬜ **T-14** `cotizacion-editor.component.ts`, `orden-venta.component.ts`, `list.component.ts` delegan al mismo núcleo. Verificar checkout = doc persistido (E2E).
+- 🔄 **T-13** `carrito.component.ts`, `checkout.component.ts`, `pedidos.util.service.ts` delegan a `PaymentService` (quita lógica inline). Agente IA `order-tools-registrar` queda cubierto vía `pedidos.util`.
+  - ✅ `checkout.component.ts`: `checkPriceScale()`/`checkIVAPrice()` delegan a `this.payment.*(this.pedido)` (legacy de `checkIVAPrice` queda inalcanzable, se limpia en T-18).
+  - ✅ `pedidos.util.service.ts`: `checkIVAPrice()` usa `calcularTotalesCanonico` directo bajo el flag (NO se inyecta `PaymentService` para evitar **ciclo de DI**: PaymentService ya depende de PedidosUtilService). Cubre al agente IA.
+  - ⏭️ `carrito.component.ts`: `checkPriceScale(item)` es **por ítem** (display) y ya tiene el fix D-046 (tier de volumen en override) → se deja; no es el total del pedido.
+- 🔄 **T-14** `cotizacion-editor.component.ts`, `orden-venta.component.ts`, `list.component.ts` delegan al mismo núcleo. Verificar checkout = doc persistido (E2E).
+  - ✅ `list.component.ts` (D-061): `checkPriceScale`/`checkIVAPrice` delegan a `PaymentService` (−234 líneas de copia legacy). Mató el bug D-046 del listado (DAD-010760: 485.450 → 434.777).
+  - ⏭️ `orden-venta.component.ts`: el getter `totalImpuestos` solo **lee** `pedido.totalImpuesto` (no calcula) → nada que delegar.
+  - ⏭️ `cotizacion-editor.component.ts`: usa `descGlobal` (%) en vez de `porceDescuento`; delegar a `calcularTotalesCanonico` requiere **mapear el descuento** primero. Sus getters ya están D-046-correctos → se difiere a un paso con el mapeo (no urgente).
 
 ## Fase E — POS delega al mismo punto
 - ⬜ **T-15** `pos-carrito`, `pos-checkout`, `pos-service/pos-pedidos.util`, `pos-checkout.service`, `factura-tirilla` delegan a `PaymentService`/núcleo. E2E POS: tirilla = pedido.
 
 ## Fase F — Documentos + factura electrónica (alcance acotado)
 - ⬜ **T-16** Email/PDF: `templateHelpers.js`/`emailTemplates.js` consumen `totalImpuesto`+`desgloseIVA` canónicos; eliminar su copia de cálculo.
-- ⬜ **T-17** Factura electrónica: `worldOfficeDataMapper.extractTaxPercentage` + FE `facturacion.service.getTaxeByProduct` usan la **tarifa efectiva por línea** (override/categoría), no la base. (NO se tocan push Osmosis/Shopify/Woo — solo leen.)
+- 🔄 **T-17** Factura electrónica:
+  - ✅ **World Office** queda automático con Opción B (D-062/T-09): `extractTaxPercentage` lee `producto.precio.precioUnitarioIva`, que ahora trae la **tarifa efectiva** cuando el env está ON.
+  - 🚫 **SIIGO — AISLADO a propósito (decisión del usuario):** se deja **tal cual hoy**. Verificado: `siigoDataMapper`/`siigoProvider`/`siigoSyncService`/tools **NO usan** `precioUnitarioIva`, `totalImpuesto` ni `desgloseIVA` (saca el IVA de `preciosPorTipoCliente` o deduce de `precioConIva/precioSinIva`, ninguno tocado). Nuestro cambio **no lo afecta**. Si en el futuro se quiere SIIGO con tarifa efectiva, priorizar `precioUnitarioIva` en su mapper (gateado).
+  - ⬜ **FE** `facturacion.service.getTaxeByProduct` — pendiente verificar (solo si el FE arma factura electrónica propia).
 
 ## Fase G — Limpieza + rollout
 - ⬜ **T-18** Retirar feature flag tras 2 semanas estable (divergencias=0). Borrar ruta old.

@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "spec": "010-venta-asistida-impuestos-congruencia",
+    "version": "1.0.0",
+    "fecha": "2026-06-26",
+    "origen": "T-03 auditoría read-only (functions/scripts/audit-iva-divergence-readonly.js). Casos DERIVADOS de pedidos reales que descuadran. PII anonimizada (sin cliente/nroPedido/company).",
+    "descripcion": "Lock contra F-11: producto IVA-exento (tarifa 0 en todos los tiers) → totalImpuesto DEBE ser 0. El backend viejo enmascaraba esto con `calculatedImpuesto || persistido` (0 es falsy → echo del fantasma). El canónico debe dar 0 y NUNCA reintroducir ese fallback.",
+    "toleranciaRedondeo": 0.01
+  },
+  "casos": [
+    {
+      "id": "R-01-exento-volumen-tarifa0",
+      "_regla": "F-10: producto IVA-exento vendido por volumen. Todos los tiers con valorIVAPorVolumen 0, precioUnitarioIva 0, sinIVA==conIVA. qty 771 → tier [501-900] sinIVA 4899.",
+      "_computo": "sinIVA=4899; subtotal=4899*771=3.777.129; IVA=4899*0*771=0; total=3.777.129. (El pedido real persistió totalImpuesto≈937.975 = fantasma.)",
+      "ctx": { "categoriaClienteId": null, "porceDescuento": 0 },
+      "carrito": [
+        {
+          "cantidad": 771,
+          "producto": {
+            "procesoComercial": { "permitePrecioManual": false },
+            "precio": {
+              "precioUnitarioSinIva": 6403,
+              "precioUnitarioIva": 0,
+              "preciosVolumen": [
+                { "numeroUnidadesInicial": 1, "numeroUnidadesLimite": 100, "valorUnitarioPorVolumenSinIVA": 6403, "valorUnitarioPorVolumenConIVA": 6403, "valorIVAPorVolumen": "0" },
+                { "numeroUnidadesInicial": 101, "numeroUnidadesLimite": 200, "valorUnitarioPorVolumenSinIVA": 6021, "valorUnitarioPorVolumenConIVA": 6021, "valorIVAPorVolumen": "0" },
+                { "numeroUnidadesInicial": 201, "numeroUnidadesLimite": 300, "valorUnitarioPorVolumenSinIVA": 5715, "valorUnitarioPorVolumenConIVA": 5715, "valorIVAPorVolumen": "0" },
+                { "numeroUnidadesInicial": 301, "numeroUnidadesLimite": 400, "valorUnitarioPorVolumenSinIVA": 5425, "valorUnitarioPorVolumenConIVA": 5425, "valorIVAPorVolumen": "0" },
+                { "numeroUnidadesInicial": 401, "numeroUnidadesLimite": 500, "valorUnitarioPorVolumenSinIVA": 5155, "valorUnitarioPorVolumenConIVA": 5155, "valorIVAPorVolumen": "0" },
+                { "numeroUnidadesInicial": 501, "numeroUnidadesLimite": 900, "valorUnitarioPorVolumenSinIVA": 4899, "valorUnitarioPorVolumenConIVA": 4899, "valorIVAPorVolumen": "0" },
+                { "numeroUnidadesInicial": 901, "numeroUnidadesLimite": 10000, "valorUnitarioPorVolumenSinIVA": 4660, "valorUnitarioPorVolumenConIVA": 4660, "valorIVAPorVolumen": "0" }
+              ]
+            }
+          }
+        }
+      ],
+      "esperado": { "subtotalSinDescuento": 3777129, "totalDescuento": 0, "totalImpuesto": 0, "desgloseIVA": { "0": 0, "5": 0, "8": 0, "19": 0 }, "total": 3777129 }
+    }
+  ]
+}

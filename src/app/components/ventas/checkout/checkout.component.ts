@@ -552,22 +552,19 @@ export class CheckOutComponent implements OnInit, OnChanges {
    * Calcula el precio total sin IVA de todos los productos
    */
   checkPriceScale(): number {
-    if (!this.pedido || !this.pedido.carrito) {
-      return 0;
-    }
-
-    let totalPedidoSinIVA = 0;
-    this.pedido.carrito.forEach(itemCarrito => {
-      totalPedidoSinIVA += this.checkPriceScaleProd(itemCarrito);
-    });
-
-    return totalPedidoSinIVA;
+    // spec 010 (T-13): delega al punto único de cálculo (PaymentService).
+    // Flag `ivaCalcUnificado` ON → motor canónico (iva-canonico.ts).
+    return this.payment.checkPriceScale(this.pedido as any);
   }
   
   /**
    * Calcula el desglose del IVA por categoría (0%, 5%, 8%, 19%)
    */
   checkIVAPrice() {
+    // spec 010 (T-13): delega al punto único de cálculo (PaymentService).
+    // Flag `ivaCalcUnificado` ON → motor canónico (volumen + override + desglose + IVA envío D-058).
+    return this.payment.checkIVAPrice(this.pedido as any);
+    // --- lógica legacy (inalcanzable; se retira en T-18 con el flag permanente) ---
     let totalPrecioIVA = 0;
     let totalPrecioIVADef = 0;
     let totalExcluidosDef = 0;
