@@ -7,6 +7,8 @@ import Swal from "sweetalert2";
 import { parse } from "flatted";
 import { Pedido } from "../modelo/pedido";
 import { map, catchError, retry, shareReplay, switchMap, takeUntil, filter, timeout, take } from 'rxjs/operators';
+import { environment } from "src/environments/environment";
+import { calcularTotalesCanonico } from "src/app/shared/services/ventas/iva-canonico"; // spec 010 — núcleo canónico (sin ciclo con PaymentService)
 
 interface MaestrosData {
     formaEntrega: any[];
@@ -757,7 +759,22 @@ export class PedidosUtilService {
         }
     }
 
+    /** spec 010 — flag del cálculo unificado (mismo criterio que PaymentService; sin acoplar a él para evitar ciclo de DI). */
+    private ivaCalcUnificadoEnabled(): boolean {
+        try {
+            const ls = localStorage.getItem("IVA_CALC_UNIFICADO");
+            if (ls === "true") return true;
+            if (ls === "false") return false;
+        } catch { }
+        return (environment as any).ivaCalcUnificado === true;
+    }
+
     checkIVAPrice() {
+        // spec 010 (T-13): delega al punto único de cálculo. Flag ON → núcleo canónico
+        // (volumen + override + descuento + IVA envío D-058). Evita el ciclo de DI con PaymentService.
+        if (this.ivaCalcUnificadoEnabled()) {
+            return calcularTotalesCanonico(this.pedido as any).totalImpuesto;
+        }
         let totalPrecioIVA = 0;
 
         this.pedido.carrito?.forEach((itemCarrito: any) => {

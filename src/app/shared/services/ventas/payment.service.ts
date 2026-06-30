@@ -16,6 +16,10 @@ import {
   Tarjeta,
 } from "../../../components/ventas/modelo/pedido"; // Importar tipos necesarios
 import { forkJoin, map, Observable, of, switchMap, catchError } from "rxjs"; // Importar operadores RxJS
+import {
+  calcularTotalesCanonico,
+  baseExcluidaCanonica,
+} from "./iva-canonico"; // Núcleo canónico spec 010 (espejo del backend)
 
 declare var WidgetCheckout: any;
 
@@ -194,8 +198,26 @@ export class PaymentService extends BaseService {
     }
   }
 
+  /**
+   * Feature flag spec 010 (D-056/D-057): cuando está ON, checkPriceScale/checkIVAPrice
+   * delegan al núcleo canónico (`iva-canonico.ts`, espejo del backend). Default OFF →
+   * comportamiento de producción intacto. Override por localStorage para QA/dark-launch.
+   */
+  private get ivaCalcUnificadoEnabled(): boolean {
+    try {
+      const ls = localStorage.getItem("IVA_CALC_UNIFICADO");
+      if (ls === "true") return true;
+      if (ls === "false") return false;
+    } catch {}
+    return (environment as any).ivaCalcUnificado === true;
+  }
+
   // Calcula el subtotal (suma de precios base sin IVA)
   checkPriceScale(pedido: Pedido | POSPedido): number {
+    // spec 010 — punto único de cálculo (detrás de feature flag)
+    if (this.ivaCalcUnificadoEnabled) {
+      return calcularTotalesCanonico(pedido as any).subtotalSinDescuento;
+    }
     let totalPrecioSinIVADef = 0;
     if (!pedido?.carrito) return 0;
 
@@ -289,6 +311,18 @@ export class PaymentService extends BaseService {
     totalImpo: number;
     totalIva19: number;
   } {
+    // spec 010 — punto único de cálculo (detrás de feature flag).
+    // Ancla canónica sinIVA×tarifa; no depende de allBillingZone (envío vía tarifaEnvio, D-058).
+    if (this.ivaCalcUnificadoEnabled) {
+      const t = calcularTotalesCanonico(pedido as any);
+      return {
+        totalPrecioIVADef: t.totalImpuesto,
+        totalExcluidos: baseExcluidaCanonica(pedido as any),
+        totalIva5: t.desgloseIVA["5"],
+        totalImpo: t.desgloseIVA["8"],
+        totalIva19: t.desgloseIVA["19"],
+      };
+    }
     // Asegurarse que allBillingZone esté cargado
     if (!this.allBillingZone) {
       console.warn(

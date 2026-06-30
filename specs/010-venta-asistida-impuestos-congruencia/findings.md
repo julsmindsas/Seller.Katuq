@@ -148,3 +148,37 @@ Analytics restantes, `services/reports/*`, tools IA de ventas (`getSalesToday`, 
 - `orderCalculationService.js` afecta create + edit + list + métricas + POS + fulfillment (CLAUDE.md: orders/inventory alto impacto). Cambios requieren tests de contrato FE↔BE.
 - Datos legacy sin `valorUnitarioPorVolumenSinIVA` pueden además tener `conIVA` inconsistente → derivación necesita guardas.
 - Retirar BE-2/BE-3/BE-4 cambia números en analytics y email → validar contra el persistido antes de mergear.
+
+## T-03 — Auditoría READ-ONLY sobre pedidos reales (2026-06-26)
+> Script: `functions/scripts/audit-iva-divergence-readonly.js` (read-only, no escribe nada). Muestra: 500 pedidos más recientes, todas las empresas. Compara, por pedido: **persistido** (lo que el cliente vio) vs **canónico** (`calcularTotalesPedido`) vs **viejo** (`calculateOrderTotals`).
+
+**Resultado (496 procesados, 4 sin carrito):**
+- **IVA canónico vs persistido:** 478 cuadran (**96.4%**), **18 descuadran (3.6%) — TODAS >$1000**. Suma |Δ IVA| = **$2.394.061** en solo 500 pedidos. Δ máx = -$937.975.
+- **Total canónico vs persistido:** 470 cuadran (94.8%), 26 descuadran (5.2%).
+- **Fuente de los divergentes:** 11 volumen · 5 base · 3 categoría.
+
+**F-10 (hallazgo clave — el canónico es CORRECTO, lo persistido es el fantasma):** los descuadres grandes NO son un bug del canónico. Verificado leyendo los pedidos (ej. `ALMARA FELICIDAD`, producto IVA-exento: todos los tiers con `valorIVAPorVolumen:"0"`, `precioUnitarioIva:0`, `sinIVA==conIVA`) → IVA correcto = **0**, pero el pedido tiene `totalImpuesto=937.975`. Dos patrones:
+  - (a) **IVA fantasma sobre productos exentos** (tarifa 0): persistido alto, correcto 0.
+  - (b) **IVA faltante**: persistido = 0 donde el producto sí tributa (canon 54.589, etc.).
+
+**F-11 (bug latente en el VIEJO que enmascara F-10):** `calculateOrderTotals` hace `order.totalImpuesto = calculatedImpuesto || order.totalImpuesto` (línea ~250). Cuando el IVA correcto es `0` (falsy), **hace echo del valor persistido viejo** en vez de 0 → por eso el viejo "coincide" con lo persistido en los casos exentos (`viejoΔ=0`) y el descuadre queda oculto. El canónico **no** tiene este fallback → NO reintroducirlo al cablear Fase C (nada de `canon || persistido`).
+
+**Implicaciones para el plan:**
+- Fase B (canónico) queda **validada contra datos reales**: 96.4% idéntico y los descuadres son a su favor.
+- Añadir fixture real-case: **producto IVA-exento por volumen → IVA 0** (lock contra "arreglos" que reintroduzcan el echo de F-11).
+- En Fase C, el dark-launch debe loggear estos 3.6% como divergencias esperadas (la cura), no como regresión.
+- **Pregunta abierta OT-3:** parte de los exentos podrían ser pedidos históricos cuyo producto cambió de tarifa DESPUÉS de la venta (el carrito guarda snapshot; un cron pudo reescribirlo). No afecta el go-forward (spec 010 = pedidos nuevos congruentes) y **no se corrige histórico** ([[feedback_db_caution_zero_write]]), pero condiciona cómo se reporta el dark-launch.
+
+## F-14 — Sobrepago NO degrada "Pagado" (verificación read-only, 2026-06-29)
+> Solicitud: confirmar que cuando el pago sea **mayor al valor del pedido**, el estado no cambie de "Pagado"/Aprobado a otro. **Resultado: ya se cumple en las 6 rutas; no requiere cambio.** Blindaje común: `faltaPorPagar = Math.max(0, total − pagado)` y "Pagado" solo baja cuando `faltaPorPagar > 0`.
+
+| # | Ruta | Evidencia | Estado |
+|---|---|---|---|
+| 1 | Asentar pago manual (FE) | `asentarpagomanual.component.ts`: `faltaPorPagar=Math.max(0,…)` (L235), `faltaPorPagar<=0 → Aprobado` (L249-250), marca `_estadoCalculadoEnFrontend`. Además **bloquea sobrepago de entrada**: botón `[disabled]="…|| valorExcedido"` (HTML L266) con `valorExcedido = faltaPorPagar>0 && pago>faltaPorPagar` (L85). | ✅ |
+| 2 | BE `calculateOrderTotals` | `orderCalculationService.js:296-299` clampea `faltaPorPagar`; **no toca `estadoPago`** (respeta el del FE). Implica que el canónico de IVA (T-09), aunque recalcule el total, no degrada el estado. | ✅ |
+| 3 | BE `updateOrderInternal` (editOrder) | `orders.js:3099-3103` solo gestiona transiciones de `estadoProceso`; toma `estadoPago` tal cual del payload. | ✅ |
+| 4 | BE `recalcularPedidoCompleto` (analytics) | `priceCalculations.js:164` clampea, `:167` respeta `_estadoCalculadoEnFrontend`, `:171` `<=0 → Aprobado`. | ✅ |
+| 5 | Pagos online/integración (Wompi) | `integration.js:2247` y `:2589` usan `if (valorRestante <= 0) estadoPago="Pagado"` (≤0, no ===0 → cubre sobrepago). | ✅ |
+| 6 | Editar pedido bajando total < pagado | `crear-ventas.component.ts:3146` `faltaPorPagar=Math.max(0,…)`; `estadoPago` no se degrada salvo set explícito. | ✅ |
+
+**Matiz de vocabulario (no es bug):** flujo manual/edición usa `"Aprobado"`, integraciones usan `"Pagado"`; ambos se pintan verde (`badge-success` / `pi-check-circle`) en `list.component.html`. Ninguno se degrada por sobrepago.
