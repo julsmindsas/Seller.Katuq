@@ -75,6 +75,16 @@ export class CrearClienteModalComponent implements OnInit {
     setTimeout(() => {
       if (this.clienteData && this.isEdit) {
         this.formulario.patchValue(this.clienteData);
+
+        // Legacy: algunos clientes guardan el nombre completo en `nombres_completos`
+        // con `apellidos_completos` vacío. Separar para que cada campo muestre lo suyo.
+        const split = this.splitNombreApellido(
+          this.clienteData.nombres_completos,
+          this.clienteData.apellidos_completos,
+        );
+        this.formulario.controls['nombres_completos'].setValue(split.nombres);
+        this.formulario.controls['apellidos_completos'].setValue(split.apellidos);
+
         this.etiquetasSeleccionadas = Array.isArray(this.clienteData.etiquetas)
           ? [...this.clienteData.etiquetas]
           : [];
@@ -132,6 +142,24 @@ export class CrearClienteModalComponent implements OnInit {
   onTipoDocChange(value: string): void {
     this.tipoDocSeleccionado = value;
     this.formulario.controls['tipo_documento_comprador'].setValue(value);
+  }
+
+  /**
+   * Separa nombre completo en nombres + apellidos cuando los apellidos vienen
+   * vacíos (datos legacy). Si ya hay apellidos, NO toca nada.
+   * Heurística Colombia: 2 palabras → 1 nombre + 1 apellido; 3+ → 2 apellidos al final.
+   */
+  private splitNombreApellido(nombresRaw: any, apellidosRaw: any): { nombres: string; apellidos: string } {
+    const nombres = String(nombresRaw || '').trim().replace(/\s+/g, ' ');
+    const apellidos = String(apellidosRaw || '').trim();
+    if (apellidos) return { nombres, apellidos }; // ya separados → respetar
+    const words = nombres ? nombres.split(' ') : [];
+    if (words.length <= 1) return { nombres, apellidos: '' };
+    const nApellidos = words.length === 2 ? 1 : 2;
+    return {
+      nombres: words.slice(0, words.length - nApellidos).join(' '),
+      apellidos: words.slice(words.length - nApellidos).join(' '),
+    };
   }
 
   /**
