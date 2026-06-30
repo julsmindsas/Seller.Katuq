@@ -16,6 +16,8 @@ import { CrearCanalesComponent } from './canales/crear-canales/crear-canales.com
 import { BodegasPorCanalComponent } from './bodegas-por-canal/bodegas-por-canal.component';
 import { TiposClienteComponent } from './tipos-cliente/tipos-cliente.component';
 import { CrearTipoClienteComponent } from './tipos-cliente/crear-tipo-cliente/crear-tipo-cliente.component';
+import { DescuentosPromocionesComponent } from './descuentos-promociones/descuentos-promociones.component';
+import { CrearDescuentoPromocionComponent } from './descuentos-promociones/crear-descuento-promocion/crear-descuento-promocion.component';
 import { TableModule } from 'primeng/table';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -41,7 +43,9 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
     CrearCanalesComponent,
     BodegasPorCanalComponent,
     TiposClienteComponent,
-    CrearTipoClienteComponent
+    CrearTipoClienteComponent,
+    DescuentosPromocionesComponent,
+    CrearDescuentoPromocionComponent
   ]
 })
 export class ProcesoModule { }

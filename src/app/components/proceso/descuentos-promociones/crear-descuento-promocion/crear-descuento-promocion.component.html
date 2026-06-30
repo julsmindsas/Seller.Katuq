@@ -1,0 +1,175 @@
+<div class="modal-header">
+  <h5 class="modal-title">{{ mostrarCrear ? 'Crear Descuento' : 'Editar Descuento' }}</h5>
+  <button type="button" class="btn-close" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+  <form [formGroup]="form">
+    <div class="row g-4">
+
+      <!-- Fila 1: Nombre / Código -->
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Nombre <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" formControlName="nombre"
+            placeholder="Ej: Descuento de verano">
+          <div *ngIf="form.get('nombre')?.invalid && form.get('nombre')?.touched" class="text-danger">
+            Este campo es requerido
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Código personalizado <span class="text-danger">*</span></label>
+          <input type="text" class="form-control text-uppercase"
+            formControlName="codigoPersonalizado"
+            placeholder="Ej: VERANO2026"
+            (input)="codigoUpper($event)"
+            [attr.disabled]="!mostrarCrear && descuentoData?.usosActuales > 0 ? true : null">
+          <small class="text-muted d-block"
+            *ngIf="!mostrarCrear && descuentoData?.usosActuales > 0">
+            El código no puede editarse porque ya tiene usos registrados.
+          </small>
+          <div *ngIf="form.get('codigoPersonalizado')?.invalid && form.get('codigoPersonalizado')?.touched" class="text-danger">
+            Este campo es requerido
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: Tipo / Valor -->
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Tipo de descuento <span class="text-danger">*</span></label>
+          <select class="form-control" formControlName="tipo">
+            <option *ngFor="let t of tiposDescuento" [value]="t.value">{{ t.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-6" *ngIf="tipoSeleccionado !== 'envio_gratis'">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Valor <span class="text-danger">*</span></label>
+          <div class="input-group">
+            <input type="number" class="form-control" formControlName="valor" min="0">
+            <span class="input-group-text">
+              {{ tipoSeleccionado === 'porcentaje' ? '%' : '$' }}
+            </span>
+          </div>
+          <div *ngIf="form.get('valor')?.invalid && form.get('valor')?.touched" class="text-danger">
+            Valor inválido
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3: Fechas -->
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Fecha inicio <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" formControlName="fechaInicio">
+          <div *ngIf="form.get('fechaInicio')?.invalid && form.get('fechaInicio')?.touched" class="text-danger">
+            Este campo es requerido
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Fecha fin <span class="text-danger">*</span></label>
+          <input type="date" class="form-control" formControlName="fechaFin">
+          <div *ngIf="form.get('fechaFin')?.invalid && form.get('fechaFin')?.touched" class="text-danger">
+            Este campo es requerido
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 4: Aplica a / Límite global -->
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Aplica a <span class="text-danger">*</span></label>
+          <select class="form-control" formControlName="aplicaA">
+            <option *ngFor="let op of aplicaAOpciones" [value]="op.value">{{ op.label }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Límite de usos global</label>
+          <input type="number" class="form-control" formControlName="limiteUsos"
+            placeholder="Vacío = ilimitado" min="1">
+          <small class="text-muted">
+            Número máximo de veces que este código puede usarse en total.
+          </small>
+        </div>
+      </div>
+
+      <!-- Fila 5: Monto mínimo / Límite por cliente (CAMPOS NUEVOS) -->
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Monto mínimo de orden</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input type="number" class="form-control" formControlName="montoMinimo"
+              placeholder="Vacío = sin mínimo" min="0">
+          </div>
+          <small class="text-muted">
+            El carrito debe superar este monto para que el código aplique.
+          </small>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Límite de usos por cliente</label>
+          <input type="number" class="form-control" formControlName="limiteUsosPorCliente"
+            placeholder="Vacío = sin límite" min="1">
+          <small class="text-muted">
+            Cuántas veces puede usar este código un mismo cliente.
+          </small>
+        </div>
+      </div>
+
+      <!-- Fila 6: Descripción -->
+      <div class="col-12">
+        <div class="mb-3">
+          <label class="form-label fw-bold">Descripción</label>
+          <textarea class="form-control" formControlName="descripcion" rows="2"
+            placeholder="Descripción interna del descuento..."></textarea>
+        </div>
+      </div>
+
+      <!-- Fila 7: Toggles Activo / Combinable -->
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label d-block fw-bold mb-2">Estado</label>
+          <div class="d-flex align-items-center">
+            <label class="toggle-switch me-3">
+              <input type="checkbox" formControlName="activo">
+              <span class="slider round"></span>
+            </label>
+            <span class="text-muted">{{ form.get('activo')?.value ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-3">
+          <label class="form-label d-block fw-bold mb-2">¿Combinable con otros códigos?</label>
+          <div class="d-flex align-items-center">
+            <label class="toggle-switch me-3">
+              <input type="checkbox" formControlName="combinable">
+              <span class="slider round"></span>
+            </label>
+            <span class="text-muted">{{ form.get('combinable')?.value ? 'Sí' : 'No' }}</span>
+          </div>
+          <small class="d-block text-muted">
+            Si está desactivado, el checkout rechazará otros códigos activos simultáneos.
+          </small>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-outline-secondary" (click)="activeModal.dismiss()">Cancelar</button>
+  <button type="button" class="btn btn-primary" (click)="mostrarCrear ? guardar() : editar()">
+    {{ mostrarCrear ? 'Crear' : 'Guardar cambios' }}
+  </button>
+</div>
