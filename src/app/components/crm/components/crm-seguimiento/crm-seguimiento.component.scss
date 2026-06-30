@@ -1,0 +1,34 @@
+.seguimiento-wrap {
+  padding: 1rem;
+  max-width: 760px;
+}
+
+// Card plana con border-left de acento (regla de diseño: sin gradientes)
+.stat-card-overdue {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #d12b38;
+  border-radius: 8px;
+}
+
+.stat-badge {
+  display: inline-block;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  &.stat-badge-danger {
+    background: #fef2f2;
+    color: #d12b38;
+  }
+}
+
+.badge-overdue {
+  background: #fff7ed;
+  color: #d35400;
+  padding: 0.05rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}

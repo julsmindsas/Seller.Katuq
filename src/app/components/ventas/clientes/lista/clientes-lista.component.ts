@@ -492,6 +492,7 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
     }
 
     exportarExcel(): void {
+      try {
         const workbook = XLSX.utils.book_new();
 
         // ── Hoja 1: Clientes ──────────────────────────────────────────
@@ -581,11 +582,30 @@ export class ClientesListaComponent implements OnInit, OnDestroy {
             detail: `${this.clientes.length} clientes exportados en 4 hojas`,
             life: 3000
         });
+      } catch (err) {
+        console.error('[exportarExcel] error:', err);
+        this.messageService.add({
+            severity: 'error',
+            summary: 'Error al exportar',
+            detail: 'No se pudo generar el Excel. Revisa la consola para más detalle.',
+            life: 5000
+        });
+      }
     }
 
     formatearFecha(fecha: any): string {
         if (!fecha) return '';
-        const date = new Date(fecha._seconds * 1000 + (fecha._nanoseconds || 0) / 1e6);
+        let date: Date;
+        // Timestamp Firestore: { _seconds, _nanoseconds } o { seconds, nanoseconds }
+        if (typeof fecha === 'object' && (fecha._seconds != null || fecha.seconds != null)) {
+            const secs = fecha._seconds != null ? fecha._seconds : fecha.seconds;
+            const nanos = fecha._nanoseconds != null ? fecha._nanoseconds : (fecha.nanoseconds || 0);
+            date = new Date(secs * 1000 + nanos / 1e6);
+        } else {
+            // String ISO, número (epoch) o Date
+            date = new Date(fecha);
+        }
+        if (isNaN(date.getTime())) return ''; // fecha inválida → no romper la exportación
         return this.datePipe.transform(date, 'dd/MM/yyyy HH:mm') || '';
     }
 

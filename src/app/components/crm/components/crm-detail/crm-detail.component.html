@@ -89,7 +89,10 @@
           <form [formGroup]="activityForm" (ngSubmit)="addActivity()" class="d-flex gap-2 align-items-end flex-wrap">
             <p-dropdown [options]="activityTypes" formControlName="type" optionLabel="label" optionValue="value"
               [style]="{'width':'140px'}"></p-dropdown>
-            <input pInputText formControlName="description" placeholder="{{ 'Descripción...' | translate }}"
+            <input pInputText formControlName="description"
+              placeholder="{{ 'Anota lo que pasó con el cliente. Ej: Llamé y quedó en confirmar la compra el viernes…' | translate }}"
+              pTooltip="Registra cada interacción con el cliente (llamadas, correos, notas) para llevar la bitácora del lead"
+              tooltipPosition="top"
               style="flex:1; min-width:200px;" />
             <button pButton type="submit" icon="pi pi-plus" label="{{ 'Agregar' | translate }}"
               class="p-button-sm" [disabled]="activityForm.invalid"></button>
@@ -135,10 +138,13 @@
           <div class="card-body py-2">
             <form [formGroup]="taskForm" (ngSubmit)="createTask()">
               <div class="row">
-                <div class="col-md-4 mb-2">
-                  <input pInputText formControlName="title" placeholder="{{ 'Título' | translate }} *" class="w-100" />
+                <div class="col-md-5 mb-2">
+                  <input pInputText formControlName="title"
+                    placeholder="¿Qué hay que hacer? Ej: Llamar al cliente para confirmar la cotización"
+                    pTooltip="Describe la acción pendiente con el cliente (una tarea concreta de seguimiento)"
+                    tooltipPosition="top" class="w-100" />
                 </div>
-                <div class="col-md-2 mb-2">
+                <div class="col-md-3 mb-2">
                   <p-dropdown [options]="taskTypes" formControlName="type" optionLabel="label" optionValue="value"
                     [style]="{'width':'100%'}"></p-dropdown>
                 </div>
@@ -148,12 +154,13 @@
                 </div>
                 <div class="col-md-2 mb-2">
                   <p-calendar formControlName="dueDate" [showIcon]="true" dateFormat="yy-mm-dd"
-                    placeholder="{{ 'Fecha' | translate }}" [style]="{'width':'100%'}"></p-calendar>
+                    appendTo="body" placeholder="{{ 'Fecha' | translate }}"
+                    [style]="{'width':'100%'}"></p-calendar>
                 </div>
-                <div class="col-md-2 mb-2 d-flex gap-1">
-                  <button pButton type="submit" icon="pi pi-check" label="Guardar" class="p-button-sm" [disabled]="taskForm.invalid"></button>
-                  <button pButton type="button" icon="pi pi-times" label="Cancelar" class="p-button-text p-button-sm" (click)="showTaskForm=false"></button>
-                </div>
+              </div>
+              <div class="d-flex justify-content-end gap-2 mt-1">
+                <button pButton type="button" icon="pi pi-times" label="Cancelar" class="p-button-text p-button-sm" (click)="showTaskForm=false"></button>
+                <button pButton type="submit" icon="pi pi-check" label="Guardar" class="p-button-sm" [disabled]="taskForm.invalid"></button>
               </div>
             </form>
           </div>
@@ -189,3 +196,4 @@
 </div>
 
 <p-toast></p-toast>
+<p-confirmDialog [style]="{width: '420px'}"></p-confirmDialog>

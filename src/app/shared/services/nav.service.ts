@@ -368,7 +368,7 @@ export class NavService implements OnDestroy {
       active: false,
       children: [
         { path: "crm/list", title: "Pipeline", type: "link", icon: "bar-chart-2" },
-        { path: "crm/tasks", title: "Tareas", type: "link", icon: "check-square" },
+        { path: "crm/tasks", title: "Seguimiento", type: "link", icon: "alert-circle" },
       ],
     },
 

@@ -21,6 +21,7 @@ export interface CrmLead {
   phone?: string;
   nit?: string;
   city?: string;
+  etiquetas?: string[];
   activo?: boolean;
   // Company-specific
   subscriptionPlan?: string;
@@ -69,6 +70,16 @@ export interface CrmStats {
   tasksOverdue: number;
   tasksDueToday: number;
   tasksPending: number;
+  // Indicadores de gestión (opcionales — backend extendido)
+  tasksDue7d?: number;
+  citasEstaSemana?: number;
+  nuevos7d?: number;
+  nuevos30d?: number;
+  leadsEstancados?: number;
+  convertidos?: number;
+  perdidos?: number;
+  conversionRate?: number;
+  perdidaRate?: number;
 }
 
 // ─── API Responses ────────────────────────────────────────────

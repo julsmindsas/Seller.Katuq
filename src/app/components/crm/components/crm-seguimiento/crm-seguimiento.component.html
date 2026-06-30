@@ -1,0 +1,48 @@
+<div class="seguimiento-wrap">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h5 class="mb-0"><i class="fa fa-flag me-2" style="color:#d12b38;"></i>Seguimiento</h5>
+    <button class="btn btn-sm btn-outline-secondary" (click)="load()" [disabled]="loading">
+      <i class="fa fa-refresh me-1"></i>Actualizar
+    </button>
+  </div>
+
+  <!-- Tareas vencidas -->
+  <div class="card stat-card-overdue">
+    <div class="card-body">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <h6 class="mb-0"><i class="fa fa-clock-o me-2" style="color:#d12b38;"></i>Tareas vencidas</h6>
+        <span class="stat-badge stat-badge-danger">{{ overdueTasks.length }}</span>
+      </div>
+      <small class="text-muted d-block mb-2">Tareas pendientes cuya fecha de vencimiento ya pasó.</small>
+
+      <div *ngIf="loading" class="text-center text-muted py-4">
+        <i class="fa fa-spinner fa-spin me-1"></i>Cargando…
+      </div>
+
+      <div *ngIf="!loading && overdueTasks.length === 0" class="text-center text-muted py-4">
+        <i class="fa fa-check-circle" style="font-size:2rem; color:#27AE60;"></i>
+        <p class="mb-0 mt-2">No hay tareas vencidas 🎉</p>
+      </div>
+
+      <div *ngIf="!loading && overdueTasks.length > 0">
+        <div *ngFor="let task of overdueTasks"
+          class="d-flex align-items-center justify-content-between gap-2 py-2 border-bottom">
+          <div class="flex-grow-1" style="min-width:0;">
+            <div class="fw-semibold text-truncate">{{ task.title }}</div>
+            <small class="text-muted d-block">
+              <i class="fa fa-user-o me-1"></i>{{ leadName(task) }}
+              <span class="ms-2"><i class="fa fa-calendar-o me-1"></i>Venció {{ formatDate(task.dueDate) }}</span>
+              <span class="badge-overdue ms-2">{{ task._daysOverdue }}d vencida</span>
+            </small>
+          </div>
+          <p-tag [value]="task.priority" [severity]="getPrioritySeverity(task.priority)"
+            [style]="{'font-size':'0.7rem'}"></p-tag>
+          <button class="btn btn-outline-primary btn-sm py-0 px-2"
+            style="font-size:0.75rem; white-space:nowrap;" (click)="goToTask(task)">
+            <i class="fa fa-external-link me-1"></i>Ver
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

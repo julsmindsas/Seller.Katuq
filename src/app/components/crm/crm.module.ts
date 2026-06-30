@@ -26,11 +26,12 @@ import { DragulaModule } from 'ng2-dragula';
 
 import { CrmListComponent } from './components/crm-list/crm-list.component';
 import { CrmDetailComponent } from './components/crm-detail/crm-detail.component';
+import { CrmSeguimientoComponent } from './components/crm-seguimiento/crm-seguimiento.component';
 
 import { MessageService, ConfirmationService } from 'primeng/api';
 
 @NgModule({
-  declarations: [CrmListComponent, CrmDetailComponent],
+  declarations: [CrmListComponent, CrmDetailComponent, CrmSeguimientoComponent],
   imports: [
     CommonModule, FormsModule, ReactiveFormsModule,
     SharedModule, CrmRoutingModule,

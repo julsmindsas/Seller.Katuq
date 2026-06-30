@@ -6,8 +6,11 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { DragulaService } from 'ng2-dragula';
 import { CrmService } from '../../services/crm.service';
+import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
+import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
+import Swal from 'sweetalert2';
 import * as XLSX from 'xlsx';
-import { CrmLead, CrmStats, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
+import { CrmLead, CrmStats, CrmTask, PRIORITY_OPTIONS, getStageSeverity, getPrioritySeverity } from '../../models/crm.models';
 
 @Component({
   selector: 'app-crm-list',
@@ -27,6 +30,12 @@ export class CrmListComponent implements OnInit, OnDestroy {
   searchTerm = '';
   viewMode: 'kanban' | 'table' = 'kanban';
   selectedStage: string | null = null;
+  showDashboard = true; // panel "Indicadores de gestión"
+
+  // Tareas pendientes (diálogo desde el badge agregado)
+  showTasksDialog = false;
+  pendingTasks: CrmTask[] = [];
+  loadingTasks = false;
 
   // Duplicados & eliminación
   showDuplicatesDialog = false;
@@ -41,6 +50,18 @@ export class CrmListComponent implements OnInit, OnDestroy {
   showCreateDialog = false;
   creating = false;
   createForm: FormGroup;
+
+  // Etiquetas / tags
+  clientTagsCatalog: ClientTag[] = [];
+  etiquetasSeleccionadas: string[] = [];
+  // Filtro por etiqueta (segmentación del pipeline)
+  selectedTagNames: string[] = [];
+  // Modal de configuración de etiquetas
+  showConfigModal = false;
+  editableTags: ClientTag[] = [];
+  availableColors: string[] = [];
+  newTagName = '';
+  newTagColor = 'violet';
   readonly sourceOptions = [
     { label: 'Redes sociales', value: 'social_media' },
     { label: 'Referido', value: 'referral' },
@@ -76,6 +97,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
     private confirmationService: ConfirmationService,
     private dragulaService: DragulaService,
     private router: Router,
+    private corpConfig: CorporateConfigService,
   ) {
     this.createForm = this.fb.group({
       name:            ['', Validators.required],
@@ -87,6 +109,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       priority:        ['medium'],
       estimatedValue:  [null],
       productoInteres: [''],
+      etiquetas:       [[]],
     });
   }
 
@@ -101,6 +124,11 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
     // Setup dragula for kanban drag-and-drop
     this.setupDragula();
+
+    // Catálogo de etiquetas PROPIO de corporativos (separado de clientes)
+    this.corpConfig.loadTags()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(tags => { this.clientTagsCatalog = tags; });
 
     // Restore cache → kanban visible de inmediato
     this.restoreFromCache();
@@ -173,7 +201,8 @@ export class CrmListComponent implements OnInit, OnDestroy {
   // ─── Data ──────────────────────────────────────────────────
 
   openCreateDialog(): void {
-    this.createForm.reset({ source: 'other', priority: 'medium', tipoDocumento: 'CC' });
+    this.etiquetasSeleccionadas = [];
+    this.createForm.reset({ source: 'other', priority: 'medium', tipoDocumento: 'CC', etiquetas: [] });
     this.showCreateDialog = true;
   }
 
@@ -193,6 +222,7 @@ export class CrmListComponent implements OnInit, OnDestroy {
       stage: firstStage,
       priority: formData.priority || 'medium',
       estimatedValue: formData.estimatedValue || 0,
+      etiquetas: Array.isArray(formData.etiquetas) ? formData.etiquetas : [],
       activo: true,
       pipelineCreatedAt: new Date().toISOString(),
     };
@@ -272,13 +302,20 @@ export class CrmListComponent implements OnInit, OnDestroy {
   }
 
   groupByStage(): void {
-    const filtered = this.searchTerm
+    let filtered = this.searchTerm
       ? this.leads.filter(l =>
           (l.name || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
           (l.email || '').toLowerCase().includes(this.searchTerm.toLowerCase()) ||
           (l.nit || '').includes(this.searchTerm)
         )
       : this.leads;
+
+    // Filtro por etiquetas (segmentación): el lead debe tener TODAS las seleccionadas
+    if (this.selectedTagNames.length > 0) {
+      filtered = filtered.filter(l =>
+        this.selectedTagNames.every(tn => (l.etiquetas || []).includes(tn))
+      );
+    }
 
     // Ordenar: más recientes primero
     const sorted = [...filtered].sort((a, b) => {
@@ -327,6 +364,139 @@ export class CrmListComponent implements OnInit, OnDestroy {
 
   viewDetail(lead: CrmLead): void {
     this.router.navigate(['/crm/detail', lead.id]);
+  }
+
+  // ─── Etiquetas (picker en el form de Nuevo lead) ───────────
+
+  toggleEtiqueta(nombre: string): void {
+    const idx = this.etiquetasSeleccionadas.indexOf(nombre);
+    if (idx >= 0) this.etiquetasSeleccionadas.splice(idx, 1);
+    else this.etiquetasSeleccionadas.push(nombre);
+    this.createForm.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
+  }
+
+  tieneEtiqueta(nombre: string): boolean {
+    return this.etiquetasSeleccionadas.includes(nombre);
+  }
+
+  getTagBgColor(color: string): string {
+    const map: Record<string, string> = {
+      violet: '#ede9fe', green: '#d1fae5', blue: '#dbeafe',
+      amber: '#fef3c7', red: '#fee2e2', gray: '#f3f4f6',
+    };
+    return map[color] || '#f3f4f6';
+  }
+
+  getTagFgColor(color: string): string {
+    const map: Record<string, string> = {
+      violet: '#5b21b6', green: '#065f46', blue: '#1e40af',
+      amber: '#92400e', red: '#991b1b', gray: '#374151',
+    };
+    return map[color] || '#374151';
+  }
+
+  getTagColorByName(tagName: string): string {
+    return this.clientTagsCatalog.find(t => t.name === tagName)?.color || 'gray';
+  }
+
+  // ─── Configuración del catálogo de etiquetas ───────────────
+
+  abrirConfigModal(): void {
+    this.editableTags = this.corpConfig.getTags().map(t => ({ ...t }));
+    this.availableColors = this.corpConfig.getColors();
+    this.newTagName = '';
+    this.newTagColor = 'violet';
+    this.showConfigModal = true;
+  }
+
+  cerrarConfigModal(): void {
+    this.showConfigModal = false;
+  }
+
+  addTag(): void {
+    const name = this.newTagName.trim();
+    if (name && !this.editableTags.find(t => t.name === name)) {
+      this.editableTags.push({ name, color: this.newTagColor });
+    }
+    this.newTagName = '';
+  }
+
+  removeTag(index: number): void {
+    const tag = this.editableTags[index];
+    Swal.fire({
+      title: `¿Eliminar etiqueta "${tag.name}"?`,
+      text: 'Se quitará de todos los leads/clientes que la tengan asignada. Esta acción no se puede deshacer.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container') as HTMLElement;
+        if (container) container.style.zIndex = '99999';
+      },
+    }).then(result => {
+      if (!result.isConfirmed) return;
+      this.editableTags.splice(index, 1);
+      this.corpConfig.saveTags(this.editableTags).subscribe();
+      this.corpConfig.removeTag(tag.name).subscribe(() => {
+        this.clientTagsCatalog = [...this.corpConfig.getTags()];
+        this.selectedTagNames = this.selectedTagNames.filter(n => n !== tag.name);
+        this.etiquetasSeleccionadas = this.etiquetasSeleccionadas.filter(n => n !== tag.name);
+        this.leads = this.leads.map(l => ({
+          ...l,
+          etiquetas: Array.isArray(l.etiquetas) ? l.etiquetas.filter(e => e !== tag.name) : [],
+        }));
+        this.groupByStage();
+      });
+    });
+  }
+
+  guardarConfig(): void {
+    this.addTag();
+    this.corpConfig.saveTags(this.editableTags).subscribe(() => {
+      this.clientTagsCatalog = [...this.corpConfig.getTags()];
+      this.showConfigModal = false;
+      this.messageService.add({
+        severity: 'success', summary: 'Configuración guardada',
+        detail: 'Etiquetas actualizadas correctamente.', life: 3000,
+      });
+    });
+  }
+
+  // ─── Filtro por etiqueta (segmentación del pipeline) ───────
+
+  toggleTagFilter(tagName: string): void {
+    const idx = this.selectedTagNames.indexOf(tagName);
+    if (idx >= 0) this.selectedTagNames.splice(idx, 1);
+    else this.selectedTagNames.push(tagName);
+    this.groupByStage();
+  }
+
+  // ─── Tareas pendientes ─────────────────────────────────────
+
+  /** Abre el diálogo con las tareas pendientes del pipeline (badge agregado). */
+  openPendingTasks(): void {
+    this.showTasksDialog = true;
+    this.loadingTasks = true;
+    this.crmService.getTasks({ status: 'pending' })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: tasks => { this.pendingTasks = tasks || []; this.loadingTasks = false; },
+        error: () => { this.pendingTasks = []; this.loadingTasks = false; },
+      });
+  }
+
+  /** Nombre del lead dueño de la tarea (para mostrar en el diálogo). */
+  taskLeadName(task: CrmTask): string {
+    return this.leads.find(l => l.id === task.entityId)?.name || 'Lead';
+  }
+
+  /** Va al detalle del lead de la tarea, abriendo la pestaña Tareas. */
+  goToTaskLead(task: CrmTask): void {
+    this.showTasksDialog = false;
+    this.router.navigate(['/crm/detail', task.entityId], { queryParams: { tab: 'tasks' } });
   }
 
   // ─── Helpers ───────────────────────────────────────────────
@@ -410,6 +580,12 @@ export class CrmListComponent implements OnInit, OnDestroy {
         (l.name || '').toLowerCase().includes(t) ||
         (l.email || '').toLowerCase().includes(t) ||
         (l.nit || '').includes(t)
+      );
+    }
+    // Filtro por etiquetas (segmentación) — aplica también a la vista tabla
+    if (this.selectedTagNames.length > 0) {
+      list = list.filter(l =>
+        this.selectedTagNames.every(tn => (l.etiquetas || []).includes(tn))
       );
     }
     return list;

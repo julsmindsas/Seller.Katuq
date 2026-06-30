@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { CrmService } from '../../services/crm.service';
 import {
   CrmActivity, CrmTask, getStageSeverity, getPrioritySeverity,
@@ -42,6 +42,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private crmService: CrmService,
     private messageService: MessageService,
+    private confirmationService: ConfirmationService,
   ) {
     this.activityForm = this.fb.group({
       type: ['note'],
@@ -59,6 +60,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.entityId = this.route.snapshot.paramMap.get('id') || '';
+    // Deep-link: ?tab=tasks abre directo la pestaña Tareas (índice 2)
+    if (this.route.snapshot.queryParamMap.get('tab') === 'tasks') {
+      this.activeTab = 2;
+    }
     this.loadStages();
     this.loadLead();
   }
@@ -162,6 +167,17 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   }
 
   completeTask(task: CrmTask): void {
+    this.confirmationService.confirm({
+      message: `¿Marcar la tarea "${task.title}" como completada?`,
+      header: 'Confirmar',
+      icon: 'pi pi-question-circle',
+      acceptLabel: 'Sí, completar',
+      rejectLabel: 'Cancelar',
+      accept: () => this.doCompleteTask(task),
+    });
+  }
+
+  private doCompleteTask(task: CrmTask): void {
     this.crmService.updateTask(task.id, { status: 'completed' })
       .pipe(takeUntil(this.destroy$))
       .subscribe(updated => {

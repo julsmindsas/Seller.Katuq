@@ -58,6 +58,59 @@
           </div>
         </div>
 
+        <!-- ═══════ Indicadores de gestión ═══════ -->
+        <div class="card-body py-2 border-bottom crm-dashboard" *ngIf="stats">
+          <div class="d-flex align-items-center justify-content-between mb-2">
+            <span class="dash-title"><i class="fa fa-tachometer me-2"></i>Indicadores de gestión</span>
+            <button class="btn btn-link btn-sm p-0 text-decoration-none" (click)="showDashboard = !showDashboard">
+              <i class="fa" [ngClass]="showDashboard ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+              {{ showDashboard ? 'Ocultar' : 'Ver' }}
+            </button>
+          </div>
+
+          <div class="dash-grid" *ngIf="showDashboard">
+            <div class="dash-card dash-blue">
+              <div class="dash-label">Valor del pipeline</div>
+              <div class="dash-value">{{ formatCurrency(stats.totalValue) }}</div>
+              <div class="dash-sub">valor potencial total</div>
+            </div>
+            <div class="dash-card dash-indigo">
+              <div class="dash-label">Contactos totales</div>
+              <div class="dash-value">{{ stats.total | number }}</div>
+              <div class="dash-sub">+{{ stats.nuevos30d || 0 | number }} en los últimos 30 días</div>
+            </div>
+            <div class="dash-card dash-green">
+              <div class="dash-label">Conversión</div>
+              <div class="dash-value">{{ stats.conversionRate || 0 }}%</div>
+              <div class="dash-sub">{{ stats.convertidos || 0 | number }} convertidos</div>
+            </div>
+            <div class="dash-card dash-red">
+              <div class="dash-label">Pérdida</div>
+              <div class="dash-value">{{ stats.perdidaRate || 0 }}%</div>
+              <div class="dash-sub">{{ stats.perdidos || 0 | number }} perdidos</div>
+            </div>
+            <div class="dash-card" [ngClass]="(stats.tasksOverdue || 0) > 0 ? 'dash-red' : 'dash-gray'">
+              <div class="dash-label">Recordatorios vencidos</div>
+              <div class="dash-value" [style.color]="(stats.tasksOverdue || 0) > 0 ? '#dc2626' : '#6b7280'">
+                {{ stats.tasksOverdue | number }}
+              </div>
+              <div class="dash-sub">{{ stats.tasksDue7d || 0 | number }} próximos 7 días</div>
+            </div>
+            <div class="dash-card dash-cyan">
+              <div class="dash-label">Citas esta semana</div>
+              <div class="dash-value">{{ stats.citasEstaSemana || 0 | number }}</div>
+              <div class="dash-sub">reuniones agendadas (7d)</div>
+            </div>
+            <div class="dash-card" [ngClass]="(stats.leadsEstancados || 0) > 0 ? 'dash-orange' : 'dash-gray'">
+              <div class="dash-label">Leads estancados</div>
+              <div class="dash-value" [style.color]="(stats.leadsEstancados || 0) > 0 ? '#d97706' : '#6b7280'">
+                {{ stats.leadsEstancados || 0 | number }}
+              </div>
+              <div class="dash-sub">sin avanzar hace +30 días</div>
+            </div>
+          </div>
+        </div>
+
         <!-- Stats chips -->
         <div class="card-body py-2 border-bottom" *ngIf="stats">
           <div class="d-flex flex-wrap align-items-center gap-2">
@@ -70,13 +123,35 @@
                 {{ capitalize(stage) }}: {{ stats.byStage[stage] || 0 }}
               </span>
             </ng-container>
-            <span class="stat-badge stat-badge-warning" *ngIf="stats.tasksPending > 0">
+            <span class="stat-badge stat-badge-warning cursor-pointer" *ngIf="stats.tasksPending > 0"
+              (click)="openPendingTasks()" pTooltip="Ver tareas pendientes" tooltipPosition="bottom">
               <i class="fa fa-clock-o me-1"></i>{{ stats.tasksPending }} tareas pendientes
             </span>
             <span class="stat-badge stat-badge-primary ms-auto" *ngIf="stats.totalValue > 0"
               pTooltip="Valor estimado total del pipeline" tooltipPosition="bottom">
               <i class="fa fa-dollar me-1"></i>Pipeline: {{ formatCurrency(stats.totalValue) }}
             </span>
+          </div>
+
+          <!-- Etiquetas: botón configurar + filtro de segmentación -->
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-2">
+            <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="abrirConfigModal()"
+              pTooltip="Crear o gestionar etiquetas de segmentación" tooltipPosition="bottom">
+              <i class="fa fa-tags"></i> Etiquetas
+            </button>
+            <ng-container *ngIf="clientTagsCatalog.length > 0">
+              <small class="text-muted ms-2 me-1"><i class="pi pi-tags me-1"></i>Segmentar:</small>
+              <span *ngFor="let tag of clientTagsCatalog" class="tag-filter-chip"
+                [class.tag-filter-chip-active]="selectedTagNames.includes(tag.name)"
+                [style.background-color]="selectedTagNames.includes(tag.name) ? getTagBgColor(tag.color) : ''"
+                [style.color]="selectedTagNames.includes(tag.name) ? getTagFgColor(tag.color) : ''"
+                [style.border-color]="selectedTagNames.includes(tag.name) ? getTagFgColor(tag.color) : ''"
+                (click)="toggleTagFilter(tag.name)">
+                {{ tag.name }}
+              </span>
+              <button *ngIf="selectedTagNames.length > 0" class="btn btn-link btn-sm p-0 ms-1"
+                (click)="selectedTagNames = []; groupByStage()">Limpiar</button>
+            </ng-container>
           </div>
         </div>
 
@@ -129,6 +204,13 @@
                     <small class="d-block fw-semibold" style="color: #8b5cf6;" *ngIf="lead.estimatedValue">
                       <i class="fa fa-dollar me-1"></i>{{ formatCurrency(lead.estimatedValue) }}
                     </small>
+                    <div class="card-tags mt-1" *ngIf="lead.etiquetas?.length">
+                      <span *ngFor="let tagName of lead.etiquetas" class="tag-chip-sm"
+                        [style.background-color]="getTagBgColor(getTagColorByName(tagName))"
+                        [style.color]="getTagFgColor(getTagColorByName(tagName))">
+                        {{ tagName }}
+                      </span>
+                    </div>
                   </div>
 
                   <div class="kanban-card-actions">
@@ -213,14 +295,15 @@
                 <th style="width:10%">Etapa</th>
                 <th style="width:8%">Estado</th>
                 <th style="width:10%">Prioridad</th>
-                <th style="width:12%">Asignado a</th>
-                <th style="width:10%">Valor est.</th>
-                <th style="width:14%">Acciones</th>
+                <th style="width:11%">Asignado a</th>
+                <th style="width:9%">Valor est.</th>
+                <th style="width:13%">Etiquetas</th>
+                <th style="width:12%">Acciones</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-lead>
-              <tr class="cursor-pointer" (click)="viewDetail(lead)">
+              <tr>
                 <td (click)="$event.stopPropagation()">
                   <input type="checkbox" [checked]="isDuplicateSelected(lead.id)"
                     (change)="toggleTableSelection(lead)" class="form-check-input" />
@@ -236,29 +319,39 @@
                     {{ lead.subscriptionPlan }}
                   </span>
                 </td>
-                <td>
+                <td (click)="$event.stopPropagation()" style="cursor:default">
                   <p-tag [value]="capitalize(lead.stage)" [severity]="getStageSeverity(lead.stage)"
                     [style]="{'font-size':'0.75rem'}"></p-tag>
                 </td>
-                <td>
+                <td (click)="$event.stopPropagation()" style="cursor:default">
                   <span class="stat-badge badge-sm"
                     [style.background-color]="lead.activo ? '#f0fdf4' : '#fef2f2'"
                     [style.color]="lead.activo ? '#27AE60' : '#d12b38'">
                     {{ lead.activo ? 'activo' : 'inactivo' }}
                   </span>
                 </td>
-                <td>
+                <td (click)="$event.stopPropagation()" style="cursor:default">
                   <span class="stat-badge badge-sm" *ngIf="lead.priority"
                     [style.background-color]="getPriorityBgColor(lead.priority)"
                     [style.color]="getPriorityColor(lead.priority)">
                     {{ getPriorityLabel(lead.priority) }}
                   </span>
                 </td>
-                <td><small>{{ lead.assignedTo || '-' }}</small></td>
+                <td (click)="$event.stopPropagation()" style="cursor:default"><small>{{ lead.assignedTo || '-' }}</small></td>
                 <td>
                   <small *ngIf="lead.estimatedValue" style="color:#8b5cf6; font-weight:600;">
                     {{ formatCurrency(lead.estimatedValue) }}
                   </small>
+                </td>
+                <td>
+                  <div class="card-tags" *ngIf="lead.etiquetas?.length; else sinTags">
+                    <span *ngFor="let tagName of lead.etiquetas" class="tag-chip-sm"
+                      [style.background-color]="getTagBgColor(getTagColorByName(tagName))"
+                      [style.color]="getTagFgColor(getTagColorByName(tagName))">
+                      {{ tagName }}
+                    </span>
+                  </div>
+                  <ng-template #sinTags><small class="text-muted">-</small></ng-template>
                 </td>
                 <td (click)="$event.stopPropagation()">
                   <div class="d-flex gap-2 align-items-center">
@@ -275,7 +368,7 @@
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td [attr.colspan]="entityType === 'company' ? 9 : 8" class="text-center p-4">
+                <td [attr.colspan]="entityType === 'company' ? 10 : 9" class="text-center p-4">
                   <i class="fa fa-inbox" style="font-size:2rem; color:#9ca3af;"></i>
                   <p class="text-muted mt-2 mb-0">No hay leads que mostrar</p>
                 </td>
@@ -359,6 +452,30 @@
         <p-dropdown formControlName="priority" [options]="priorityOpts"
           optionLabel="label" optionValue="value"
           styleClass="w-100" appendTo="body"></p-dropdown>
+      </div>
+
+      <!-- Etiquetas para segmentar el lead -->
+      <div class="col-12">
+        <div class="d-flex align-items-center justify-content-between mb-1">
+          <label class="form-label fw-semibold mb-0">
+            <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>Etiquetas
+          </label>
+          <button pButton type="button" label="Configurar" icon="pi pi-cog"
+            class="p-button-text p-button-sm" (click)="abrirConfigModal()"
+            pTooltip="Crear o eliminar etiquetas para segmentar tus leads" tooltipPosition="top"></button>
+        </div>
+        <div class="tags-picker" *ngIf="clientTagsCatalog.length > 0">
+          <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"
+            [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
+            [style.background-color]="tieneEtiqueta(tag.name) ? getTagBgColor(tag.color) : ''"
+            [style.color]="tieneEtiqueta(tag.name) ? getTagFgColor(tag.color) : ''"
+            (click)="toggleEtiqueta(tag.name)">
+            <i class="pi pi-check me-1" *ngIf="tieneEtiqueta(tag.name)"></i>{{ tag.name }}
+          </span>
+        </div>
+        <div class="tags-empty-hint" *ngIf="clientTagsCatalog.length === 0">
+          <i class="pi pi-info-circle me-1"></i>No hay etiquetas configuradas. Usa "Configurar" para crear la primera.
+        </div>
       </div>
 
     </div>
@@ -468,6 +585,82 @@
       </div>
     </div>
   </div>
+</p-dialog>
+
+<!-- Tareas pendientes del pipeline -->
+<p-dialog header="Tareas pendientes" [(visible)]="showTasksDialog"
+  [modal]="true" [style]="{width: '640px', maxHeight: '85vh'}" [closable]="true">
+
+  <div *ngIf="loadingTasks" class="text-center py-4">
+    <div class="loader-8"></div>
+    <p class="text-muted mt-2">Cargando tareas...</p>
+  </div>
+
+  <div *ngIf="!loadingTasks && pendingTasks.length === 0" class="text-center py-4">
+    <i class="fa fa-check-circle" style="font-size: 2.5rem; color: #27AE60;"></i>
+    <p class="mt-2 fw-semibold" style="color: #334155;">Sin tareas pendientes</p>
+  </div>
+
+  <div *ngIf="!loadingTasks && pendingTasks.length > 0" style="max-height: 60vh; overflow-y: auto;">
+    <div *ngFor="let task of pendingTasks"
+      class="d-flex align-items-center justify-content-between gap-2 py-2 px-1 border-bottom">
+      <div class="flex-grow-1" style="min-width:0;">
+        <div class="fw-semibold text-truncate" style="color:#334155;">{{ task.title }}</div>
+        <small class="text-muted d-block">
+          <i class="fa fa-user-o me-1"></i>{{ taskLeadName(task) }}
+          <span *ngIf="task.dueDate"><i class="fa fa-calendar-o ms-2 me-1"></i>{{ task.dueDate | date:'dd/MM/yyyy' }}</span>
+        </small>
+      </div>
+      <span class="stat-badge badge-sm" *ngIf="task.priority"
+        [style.background-color]="getPriorityBgColor(task.priority)"
+        [style.color]="getPriorityColor(task.priority)">
+        {{ getPriorityLabel(task.priority) }}
+      </span>
+      <button class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size:0.75rem; white-space:nowrap;"
+        (click)="goToTaskLead(task)">
+        <i class="fa fa-external-link me-1"></i>Ver
+      </button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Configuración del catálogo de etiquetas -->
+<p-dialog header="Configuración de Etiquetas" [(visible)]="showConfigModal"
+  [modal]="true" [closable]="true" [dismissableMask]="false" [style]="{width: '480px'}">
+
+  <p class="text-muted small mb-3">Crea etiquetas con color para segmentar tus leads.</p>
+
+  <div class="config-list mb-3">
+    <div *ngFor="let tag of editableTags; let i = index" class="config-list-item">
+      <span class="tag-preview"
+        [style.background]="getTagBgColor(tag.color)"
+        [style.color]="getTagFgColor(tag.color)">{{ tag.name }}</span>
+      <button type="button" class="btn btn-link text-danger p-0" (click)="removeTag(i)">
+        <i class="pi pi-times-circle"></i>
+      </button>
+    </div>
+    <div *ngIf="editableTags.length === 0" class="text-muted small text-center py-2">Sin etiquetas configuradas</div>
+  </div>
+
+  <div class="d-flex gap-2 align-items-center flex-wrap">
+    <input pInputText type="text" [(ngModel)]="newTagName" placeholder="Nombre etiqueta..."
+      class="flex-grow-1" style="min-width: 140px;" (keyup.enter)="addTag()" />
+    <div class="d-flex gap-1 flex-wrap">
+      <span *ngFor="let c of availableColors" class="color-swatch"
+        [class.selected]="newTagColor === c"
+        [style.background]="getTagBgColor(c)"
+        [style.border-color]="newTagColor === c ? getTagFgColor(c) : 'transparent'"
+        (click)="newTagColor = c" [title]="c"></span>
+    </div>
+    <button pButton type="button" icon="pi pi-plus" class="p-button-primary p-button-sm" (click)="addTag()"></button>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" icon="pi pi-times"
+      class="p-button-text" (click)="cerrarConfigModal()"></button>
+    <button pButton type="button" label="Guardar" icon="pi pi-check"
+      class="p-button-primary" (click)="guardarConfig()"></button>
+  </ng-template>
 </p-dialog>
 
 <p-confirmDialog acceptLabel="Eliminar" rejectLabel="Cancelar"></p-confirmDialog>

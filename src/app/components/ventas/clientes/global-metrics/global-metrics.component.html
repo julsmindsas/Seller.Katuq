@@ -30,15 +30,22 @@
   <!-- Datos -->
   <ng-container *ngIf="metrics && !loading && !error">
 
-    <!-- Fila 1: 6 KPI principales -->
+    <!-- Fila 1: KPI principales -->
     <div class="gm-grid">
       <div class="gm-card gm-accent-blue">
         <div class="gm-label">Total clientes</div>
         <div class="gm-value">{{ metrics.totalClientes | number }}</div>
+        <div class="gm-sub">compradores y no compradores</div>
+      </div>
+      <div class="gm-card gm-accent-indigo">
+        <div class="gm-label">Clientes que han comprado</div>
+        <div class="gm-value">{{ metrics.clientesConPedidos | number }}</div>
+        <div class="gm-sub">con al menos 1 compra (último año)</div>
       </div>
       <div class="gm-card gm-accent-green">
         <div class="gm-label">Clientes nuevos (30d)</div>
         <div class="gm-value">{{ metrics.clientesNuevos30dias | number }}</div>
+        <div class="gm-sub">su primera compra fue en los últimos 30 días</div>
       </div>
       <div class="gm-card gm-accent-purple">
         <div class="gm-label">Total facturado</div>
@@ -51,7 +58,7 @@
       <div class="gm-card gm-accent-cyan">
         <div class="gm-label">Pedidos últimos 7 días</div>
         <div class="gm-value">{{ metrics.pedidosUltimos7dias | number }}</div>
-        <div class="gm-sub">{{ metrics.pedidosUltimos30dias | number }} en 30 días</div>
+        <div class="gm-sub">{{ metrics.pedidosUltimos30dias | number }} en los últimos 30 días</div>
       </div>
       <div class="gm-card" [ngClass]="metrics.clientesEnAlerta > 0 ? 'gm-accent-red' : 'gm-accent-gray'">
         <div class="gm-label">En alerta de cadencia</div>

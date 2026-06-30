@@ -2,6 +2,7 @@
   [(visible)]="visible"
   [header]="config?.title || 'Importar'"
   [modal]="true"
+  appendTo="body"
   [closable]="!isUploading && !isAnalyzingColumns && !isDeleting"
   [style]="{width: '90vw', maxWidth: '900px'}"
   [contentStyle]="{'max-height': '80vh', 'overflow': 'auto'}"

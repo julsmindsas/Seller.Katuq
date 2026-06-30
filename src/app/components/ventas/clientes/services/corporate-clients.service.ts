@@ -39,4 +39,18 @@ export class CorporateClientsService extends BaseService {
   eliminar(cd: string): Observable<any> {
     return this.post<any>('/v1/corporate-clients/delete', { cd });
   }
+
+  // ─── Etiquetas (catálogo PROPIO de corporativos, separado de clientes) ───
+
+  getCorporateTags(): Observable<any> {
+    return this.get<any>('/v1/corporate-clients/tags');
+  }
+
+  saveCorporateTags(tags: any[]): Observable<any> {
+    return this.post<any>('/v1/corporate-clients/tags', { tags });
+  }
+
+  removeCorporateTag(tagName: string): Observable<any> {
+    return this.post<any>('/v1/corporate-clients/tags/remove', { tagName });
+  }
 }

@@ -15,7 +15,8 @@ interface GlobalCustomerMetrics {
   pedidosUltimos30dias: number;
   pedidosUltimos7dias: number;
   tasaCancelaciones: number;
-  totalClientes: number;
+  totalClientes: number;       // total REAL de clientes (colección clients)
+  clientesConPedidos: number;  // subconjunto: con ≥1 pedido en los últimos 12m
   clientesNuevos30dias: number;
   distribucionRFM: { 'Campeón': number; Fiel: number; 'En riesgo': number; Hibernando: number; Perdido: number };
   clientesEnAlerta: number;

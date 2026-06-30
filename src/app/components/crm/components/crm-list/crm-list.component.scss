@@ -238,3 +238,154 @@
   .gu-unselectable { user-select: none !important; }
   .gu-transit { opacity: 0.3; }
 }
+
+// ─── Indicadores de gestión (dashboard) ─────────────────────
+.crm-dashboard {
+  background: #fbfbfd;
+
+  .dash-title {
+    font-weight: 700;
+    color: #334155;
+    font-size: 0.9rem;
+    i { color: #8b5cf6; }
+  }
+}
+
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+
+.dash-card {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #c7ccd6;
+  border-radius: 8px;
+  padding: 0.55rem 0.75rem;
+
+  .dash-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #6b7280;
+    font-weight: 600;
+  }
+  .dash-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1.3;
+  }
+  .dash-sub {
+    font-size: 0.7rem;
+    color: #9ca3af;
+  }
+
+  &.dash-blue   { border-left-color: #2563eb; }
+  &.dash-indigo { border-left-color: #4f46e5; }
+  &.dash-green  { border-left-color: #059669; }
+  &.dash-red    { border-left-color: #dc2626; }
+  &.dash-orange { border-left-color: #d97706; }
+  &.dash-cyan   { border-left-color: #0891b2; }
+  &.dash-gray   { border-left-color: #c7ccd6; }
+}
+
+// ─── Etiquetas / tags ────────────────────────────────────────
+.tags-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #f8f9fa;
+  color: #6b7280;
+  font-size: 0.78rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+
+  &:hover { border-color: #c4b5fd; }
+  &.tag-chip-selected { border-color: transparent; font-weight: 600; }
+}
+
+.tags-empty-hint {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  background: #f8f9fa;
+  border: 1px dashed #e5e7eb;
+  border-radius: 6px;
+  padding: 0.45rem 0.65rem;
+}
+
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.tag-chip-sm {
+  display: inline-block;
+  padding: 0.08rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: default;   // es una etiqueta informativa, NO un botón
+}
+
+.tag-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.12rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #6b7280;
+  font-size: 0.75rem;
+  cursor: pointer;
+  user-select: none;
+
+  &.tag-filter-chip-active { font-weight: 600; }
+}
+
+// Modal de configuración
+.config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.config-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.tag-preview {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.color-swatch {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  display: inline-block;
+
+  &.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 3px currentColor; }
+}
