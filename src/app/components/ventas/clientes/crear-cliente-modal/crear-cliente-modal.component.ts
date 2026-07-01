@@ -66,6 +66,16 @@ export class CrearClienteModalComponent implements OnInit {
         this.clientTypes = Array.isArray(tipos)
           ? tipos.filter((t: any) => t.active !== false).map((t: any) => ({ label: t.nombre, value: t.nombre }))
           : [];
+        // Preseleccionar el tipo de cliente actual UNA VEZ cargadas las opciones
+        // (evita el race con el setTimeout de abajo, que corre antes de esta
+        // respuesta HTTP). El tipo puede venir en `tipoCliente` (string) o, en
+        // clientes legacy, en `categoria.nombre`.
+        if (this.isEdit && this.clienteData) {
+          const tipoActual = this.clienteData.tipoCliente || this.clienteData.categoria?.nombre || '';
+          if (tipoActual) {
+            this.formulario.controls['tipoCliente'].setValue(tipoActual);
+          }
+        }
       },
       error: () => { this.clientTypes = []; }
     });
