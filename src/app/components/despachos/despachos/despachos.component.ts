@@ -3720,13 +3720,19 @@ export class DespachosComponent implements OnInit, OnDestroy {
           return;
         }
 
+        // Capturar el número de la orden ACTUAL en una constante local. Usar la variable
+        // de instancia this.nroShippingOrder directamente es lo que provocaba que, si se
+        // iniciaba otro despacho mientras corría el setTimeout de limpieza, los pedidos
+        // recibieran el número de OTRA orden (mutación 2194 → 2196).
+        const nroOrden = this.nuevaOrdenEnvio?.nroShippingOrder ?? this.nroShippingOrder;
+
         this.pedidosSeleccionados.forEach((pedido) => {
           pedido.transportador = this.transportadorSeleccionado;
           pedido.despachador = userLite;
           pedido.fechaYHorarioDespachado = new Date().toISOString();
           pedido.estadoProceso = EstadoProceso.Despachado;
-          pedido.nroShippingOrder = this.nroShippingOrder;
-          pedido.shippingOrder = this.nroShippingOrder;
+          pedido.nroShippingOrder = nroOrden;
+          pedido.shippingOrder = nroOrden;
         });
 
         // Asegurarse de que nuevaOrdenEnvio esté inicializado
@@ -3738,7 +3744,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
           this.nuevaOrdenEnvio = {
             id: "",
-            nroShippingOrder: this.nroShippingOrder,
+            nroShippingOrder: nroOrden,
             fecha: new Date().toISOString(),
             metodoEnvio: this.nuevaOrdenEnvio?.metodoEnvio || 'mensajeroPropio',
             transportador: this.transportadorSeleccionado,
@@ -3760,7 +3766,7 @@ export class DespachosComponent implements OnInit, OnDestroy {
 
               // Guardar datos antes de cerrar el modal
               const pedidosParaImprimir = [...this.pedidosSeleccionados];
-              const nroOrdenParaImprimir = this.nroShippingOrder;
+              const nroOrdenParaImprimir = nroOrden;
               const transportadorParaImprimir = this.transportadorSeleccionado;
 
               // Cerrar el modal
@@ -3779,13 +3785,19 @@ export class DespachosComponent implements OnInit, OnDestroy {
                 }
               }, 2000); // Delay de 2 segundos para asegurar que el despacho se complete
 
-              // Limpiar datos después de tiempo suficiente para que termine todo el proceso
+              // Limpiar datos después de tiempo suficiente para que termine todo el proceso.
+              // Solo limpiar la orden compartida si NO se inició otro despacho entretanto,
+              // para no borrar el número de una orden más reciente (evita contaminación).
               setTimeout(() => {
                 console.log("Limpiando datos después de impresión completa...");
                 this.pedidosSeleccionados = [];
                 this.transportadorSeleccionado = null;
-                this.nroShippingOrder = null;
-                this.nuevaOrdenEnvio = null;
+                if (this.nroShippingOrder === nroOrden) {
+                  this.nroShippingOrder = null;
+                }
+                if (this.nuevaOrdenEnvio?.nroShippingOrder === nroOrden) {
+                  this.nuevaOrdenEnvio = null;
+                }
               }, 5000); // 5 segundos para asegurar que todos los timeouts internos terminen
             },
             (error) => {
