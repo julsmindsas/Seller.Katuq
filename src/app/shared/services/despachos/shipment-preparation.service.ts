@@ -40,6 +40,7 @@ export interface ShipmentPackage {
   value: number;
   description: string;
   items: any[];
+  nPackages?: number;      // Número de bultos (default 1; el usuario lo edita en cotización)
 }
 
 export interface PreparedShipment {

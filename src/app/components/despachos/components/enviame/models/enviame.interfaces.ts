@@ -86,6 +86,7 @@ export interface EnviameQuoteRequest {
     value?: number;
     description?: string;
     quantity?: number;
+    nPackages?: number;      // Número de bultos (paquetes físicos de la guía)
   };
   shippingType?: 'estandar' | 'express' | 'prioritario'; // Nuevo campo para tipo de envío
   options?: {
@@ -301,6 +302,7 @@ export interface PedidoQuoteData {
     };
     value: number;
     description: string;
+    nPackages?: number;      // Número de bultos (paquetes físicos de la guía)
   };
 
   // Municipios DANE
@@ -404,6 +406,7 @@ export interface ShipmentPackage {
   value: number;
   description: string;
   quantity?: number;
+  nPackages?: number;      // Número de bultos (paquetes físicos de la guía)
 }
 
 /**

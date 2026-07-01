@@ -286,6 +286,7 @@ export class EnviameRatesModalComponent implements OnInit {
 
         // Paquete
         weight: [1, [Validators.required, Validators.min(0.1), Validators.max(50)]],
+        nPackages: [1, [Validators.required, Validators.min(1)]],  // Número de bultos
         length: [30, [Validators.min(1)]],  // Opcional
         width: [20, [Validators.min(1)]],    // Opcional
         height: [15, [Validators.min(1)]],   // Opcional
@@ -354,6 +355,7 @@ export class EnviameRatesModalComponent implements OnInit {
 
             // Paquete (consolidado)
             weight: shipment.package?.weight || 1,
+            nPackages: shipment.package?.nPackages || 1,
             length: shipment.package?.dimensions?.length || 30,
             width: shipment.package?.dimensions?.width || 20,
             height: shipment.package?.dimensions?.height || 15,
@@ -436,7 +438,8 @@ export class EnviameRatesModalComponent implements OnInit {
               weight: shipment.package?.weight || 1,
               dimensions: shipment.package?.dimensions || undefined,
               value: shipment.package?.value || 0,
-              description: shipment.package?.description || 'Productos varios'
+              description: shipment.package?.description || 'Productos varios',
+              nPackages: shipment.package?.nPackages || 1
             },
 
             // Municipios (se cargarán después)
@@ -609,6 +612,7 @@ export class EnviameRatesModalComponent implements OnInit {
 
             // Paquete (consolidado)
             weight: shipment.package?.weight || 1,
+            nPackages: shipment.package?.nPackages || 1,
             length: shipment.package?.dimensions?.length || 30,
             width: shipment.package?.dimensions?.width || 20,
             height: shipment.package?.dimensions?.height || 15,
@@ -704,7 +708,8 @@ export class EnviameRatesModalComponent implements OnInit {
     const packageData: any = {
       weight: formData.weight,
       value: formData.value,
-      description: formData.description
+      description: formData.description,
+      nPackages: formData.nPackages || 1
     };
 
     // Solo incluir dimensiones si están completas
@@ -992,7 +997,8 @@ export class EnviameRatesModalComponent implements OnInit {
     const packageData: any = {
       weight: pedidoData.packageData.weight,
       value: pedidoData.packageData.value,
-      description: pedidoData.packageData.description
+      description: pedidoData.packageData.description,
+      nPackages: pedidoData.packageData.nPackages || 1
     };
 
     // Agregar dimensiones si existen
@@ -1110,7 +1116,8 @@ export class EnviameRatesModalComponent implements OnInit {
         height: formData.height
       } : pedidoData.packageData.dimensions,
       value: formData.value || pedidoData.packageData.value,
-      description: formData.description || pedidoData.packageData.description
+      description: formData.description || pedidoData.packageData.description,
+      nPackages: formData.nPackages || pedidoData.packageData.nPackages || 1
     };
 
     console.log(`💾 Datos guardados para pedido ${pedidoIndex + 1}`);
@@ -1163,6 +1170,7 @@ export class EnviameRatesModalComponent implements OnInit {
 
       // Paquete
       weight: pedidoData.packageData.weight || 1,
+      nPackages: pedidoData.packageData.nPackages || 1,
       value: pedidoData.packageData.value || 0,
       description: pedidoData.packageData.description || ''
     };
@@ -1307,7 +1315,8 @@ export class EnviameRatesModalComponent implements OnInit {
           height: formData.height
         },
         value: formData.value,
-        description: formData.description
+        description: formData.description,
+        nPackages: formData.nPackages || 1
       },
       options: {
         insuranceValue: formData.insurance ? formData.value : 0,
@@ -1412,7 +1421,8 @@ export class EnviameRatesModalComponent implements OnInit {
           weight: pedidoData.packageData.weight,
           dimensions: pedidoData.packageData.dimensions,
           value: pedidoData.packageData.value,
-          description: pedidoData.packageData.description
+          description: pedidoData.packageData.description,
+          nPackages: pedidoData.packageData.nPackages || 1
         },
         options: {
           insuranceValue: this.quoteForm?.get('insurance')?.value ? pedidoData.packageData.value : 0,

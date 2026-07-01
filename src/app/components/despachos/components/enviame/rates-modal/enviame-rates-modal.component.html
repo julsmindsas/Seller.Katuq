@@ -558,6 +558,37 @@
                         </div>
                       </div>
 
+                      <!-- Número de Bultos Field -->
+                      <div class="enhanced-field packages-field">
+                        <div class="field-icon">
+                          <i class="pi pi-clone"></i>
+                        </div>
+                        <div class="field-content">
+                          <div class="floating-label-group">
+                            <input type="number"
+                                   id="package-nPackages"
+                                   formControlName="nPackages"
+                                   step="1"
+                                   min="1"
+                                   placeholder=" "
+                                   class="enhanced-input"
+                                   [class.has-value]="quoteForm.get('nPackages')?.value">
+                            <label for="package-nPackages" class="floating-label">
+                              Número de bultos <span class="required">*</span>
+                            </label>
+                            <span class="field-unit">bultos</span>
+                          </div>
+                          <div class="field-helper">
+                            <i class="pi pi-info-circle"></i>
+                            <span>Paquetes físicos de la guía</span>
+                          </div>
+                          <div class="field-helper" *ngIf="isFieldInvalid('nPackages')">
+                            <i class="pi pi-exclamation-triangle"></i>
+                            <span>Debe ser al menos 1</span>
+                          </div>
+                        </div>
+                      </div>
+
                       <!-- Value Field -->
                       <div class="enhanced-field value-field">
                         <div class="field-icon">
