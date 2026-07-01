@@ -2967,53 +2967,6 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   /**
-   * Calcula el precio unitario sin IVA considerando escalas de volumen
-   */
-  private calcularPrecioUnitarioSinIVA(itemCarrito: any): number {
-    const producto = itemCarrito.producto;
-    const cantidad = itemCarrito.cantidad;
-
-    if (!producto?.precio) {
-      return 0;
-    }
-
-    // PRIORIDAD 0: Si tiene precio manual override Y el producto permite precio manual
-    // _precioManualOverride es el precio BASE (sin IVA), se retorna directamente
-    if (itemCarrito._precioManualOverride !== undefined && itemCarrito._precioManualOverride !== null
-        && producto?.procesoComercial?.permitePrecioManual === true) {
-      return Number(itemCarrito._precioManualOverride) || 0;
-    }
-
-    const preciosVolumen = producto.precio.preciosVolumen || [];
-
-    // Si no hay precios por volumen, usar precio base
-    if (preciosVolumen.length === 0) {
-      return Number(producto.precio.precioUnitarioSinIva) || 0;
-    }
-
-    // ✅ CORREGIDO: Filtrar solo rangos con límites válidos definidos
-    const rangosValidos = preciosVolumen.filter((x: any) => {
-      const tieneMinimo = x?.numeroUnidadesInicial !== undefined && x?.numeroUnidadesInicial !== null;
-      const tieneMaximo = x?.numeroUnidadesLimite !== undefined && x?.numeroUnidadesLimite !== null;
-      return tieneMinimo && tieneMaximo;
-    });
-
-    // Buscar el precio por volumen que aplique para esta cantidad
-    const precioVolumen = rangosValidos.find((x: any) => {
-      const min = Number(x.numeroUnidadesInicial) || 0;
-      const max = Number(x.numeroUnidadesLimite) || Infinity;
-      return cantidad >= min && cantidad <= max;
-    });
-
-    // Si se encuentra un precio por volumen, usarlo; sino usar precio base
-    if (precioVolumen) {
-      return Number(precioVolumen.valorUnitarioPorVolumenSinIVA) || 0;
-    } else {
-      return Number(producto.precio.precioUnitarioSinIva) || 0;
-    }
-  }
-
-  /**
    * Calcula el subtotal de productos SIN IVA
    * Incluye: productos, adiciones y preferencias
    * Consistente con PaymentService
