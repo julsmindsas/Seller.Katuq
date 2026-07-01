@@ -5,6 +5,8 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { CrmService } from '../../services/crm.service';
+import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
+import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
 import {
   CrmActivity, CrmTask, getStageSeverity, getPrioritySeverity,
   ACTIVITY_TYPE_OPTIONS, TASK_TYPE_OPTIONS, PRIORITY_OPTIONS,
@@ -28,10 +30,31 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   taskForm: FormGroup;
   showTaskForm = false;
 
+  // Editar lead
+  showEditDialog = false;
+  saving = false;
+  editForm: FormGroup;
+  clientTagsCatalog: ClientTag[] = [];
+  etiquetasSeleccionadas: string[] = [];
+
   // Options
   activityTypes = ACTIVITY_TYPE_OPTIONS;
   taskTypes = TASK_TYPE_OPTIONS;
   priorityOptions = PRIORITY_OPTIONS;
+  readonly tipoDocOptions = [
+    { label: 'CC — Cédula de ciudadanía', value: 'CC' },
+    { label: 'NIT', value: 'NIT' },
+    { label: 'TI — Tarjeta de identidad', value: 'TI' },
+    { label: 'CE — Cédula de extranjería', value: 'CE' },
+    { label: 'PA — Pasaporte', value: 'PA' },
+    { label: 'RC — Registro civil', value: 'RC' },
+    { label: 'TE — Tarjeta de extranjería', value: 'TE' },
+    { label: 'PEP — Permiso Especial de Permanencia', value: 'PEP' },
+    { label: 'PPT — Permiso por Protección Temporal', value: 'PPT' },
+    { label: 'DIE — Doc. identificación extranjero', value: 'DIE' },
+    { label: 'NIT_EXT — NIT de otro país', value: 'NIT_EXT' },
+    { label: 'NUIP', value: 'NUIP' },
+  ];
 
   private entityId = '';
   private destroy$ = new Subject<void>();
@@ -43,6 +66,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     private crmService: CrmService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
+    private corpConfig: CorporateConfigService,
   ) {
     this.activityForm = this.fb.group({
       type: ['note'],
@@ -56,6 +80,15 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
       dueDate: [null],
       description: [''],
     });
+    this.editForm = this.fb.group({
+      name: ['', Validators.required],
+      email: ['', Validators.email],
+      phone: [''],
+      tipoDocumento: ['CC'],
+      nit: [''],
+      productoInteres: [''],
+      etiquetas: [[]],
+    });
   }
 
   ngOnInit(): void {
@@ -66,6 +99,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     }
     this.loadStages();
     this.loadLead();
+
+    this.corpConfig.loadTags()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(tags => { this.clientTagsCatalog = tags; });
   }
 
   ngOnDestroy(): void {
@@ -124,6 +161,71 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
           this.messageService.add({ severity: 'success', summary: 'Actualizado' });
         }
       });
+  }
+
+  // ─── Editar datos del lead ─────────────────────────────────
+
+  openEditDialog(): void {
+    const e = this.lead?.entity || {};
+    this.etiquetasSeleccionadas = Array.isArray(e.etiquetas) ? [...e.etiquetas] : [];
+    this.editForm.reset({
+      name: this.entityName,
+      email: e.email || e.correo_electronico_comprador || '',
+      phone: e.phone || e.numero_celular_comprador || '',
+      tipoDocumento: e.tipo_documento_comprador || 'CC',
+      nit: e.nit || e.documento || '',
+      productoInteres: e.productoInteres || '',
+      etiquetas: [...this.etiquetasSeleccionadas],
+    });
+    this.showEditDialog = true;
+  }
+
+  submitEdit(): void {
+    if (this.editForm.invalid) return;
+    this.saving = true;
+    this.crmService.updateLead(this.entityId, this.editForm.value)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(res => {
+        this.saving = false;
+        if (res.success) {
+          this.showEditDialog = false;
+          this.messageService.add({ severity: 'success', summary: 'Lead actualizado' });
+          this.loadLead();
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'No se pudo actualizar el lead' });
+        }
+      });
+  }
+
+  toggleEtiqueta(nombre: string): void {
+    const idx = this.etiquetasSeleccionadas.indexOf(nombre);
+    if (idx >= 0) this.etiquetasSeleccionadas.splice(idx, 1);
+    else this.etiquetasSeleccionadas.push(nombre);
+    this.editForm.controls['etiquetas'].setValue([...this.etiquetasSeleccionadas]);
+  }
+
+  tieneEtiqueta(nombre: string): boolean {
+    return this.etiquetasSeleccionadas.includes(nombre);
+  }
+
+  getTagBgColor(color: string): string {
+    const map: Record<string, string> = {
+      violet: '#ede9fe', green: '#d1fae5', blue: '#dbeafe',
+      amber: '#fef3c7', red: '#fee2e2', gray: '#f3f4f6',
+    };
+    return map[color] || '#f3f4f6';
+  }
+
+  getTagFgColor(color: string): string {
+    const map: Record<string, string> = {
+      violet: '#5b21b6', green: '#065f46', blue: '#1e40af',
+      amber: '#92400e', red: '#991b1b', gray: '#374151',
+    };
+    return map[color] || '#374151';
+  }
+
+  getTagColorByName(tagName: string): string {
+    return this.clientTagsCatalog.find(t => t.name === tagName)?.color || 'gray';
   }
 
   // ─── Activities ────────────────────────────────────────────

@@ -84,7 +84,7 @@
     <!-- Términos -->
     <section *ngIf="cot.terminos" class="cp-terminos">
       <div class="cp-label">Términos y condiciones</div>
-      <p>{{ cot.terminos }}</p>
+      <p [innerHTML]="cot.terminos | linkify"></p>
     </section>
 
     <!-- Acciones del cliente -->

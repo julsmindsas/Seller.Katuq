@@ -32,6 +32,11 @@ export class CrmService {
       .pipe(catchError(() => of({ success: false })));
   }
 
+  updateLead(id: string, data: Record<string, any>): Observable<any> {
+    return this.http.put<any>(`${this.base}/leads/${id}`, data)
+      .pipe(catchError(() => of({ success: false })));
+  }
+
   // ─── Activities ─────────────────────────────────────────────
 
   getActivities(entityId: string): Observable<CrmActivity[]> {

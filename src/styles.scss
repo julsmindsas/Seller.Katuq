@@ -1527,6 +1527,18 @@ form.integration-form,
   }
 }
 
+/* El p-dropdown usa appendTo="body", por lo que su panel se renderiza fuera del
+   ngb-modal-window. En PrimeNG 14 el panel va envuelto en <p-overlay>, y el
+   z-index (~1000) lo asigna PrimeNG INLINE sobre el wrapper `.p-overlay` (no
+   sobre `.p-dropdown-panel`, donde cae `panelStyleClass`). Ese ~1000 es menor
+   que el modal de ng-bootstrap/Bootstrap (1055), así que el dropdown queda
+   DETRÁS del modal (ej. editar tipo de cliente dentro del modal de edición de
+   cliente). Elevamos el wrapper que contiene nuestro panel por encima del modal.
+   `:has()` ya se usa en este archivo; el `!important` gana al z-index inline. */
+.p-overlay:has(.buscar-por-panel) {
+  z-index: 2000 !important;
+}
+
 /* ===========================================
    DIALOG CREAR / EDITAR CLIENTE (global)
    =========================================== */
