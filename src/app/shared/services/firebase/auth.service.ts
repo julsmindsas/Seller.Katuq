@@ -8,6 +8,7 @@ import { NavService } from "../nav.service";
 import { InitializationService } from "../initialization.service";
 import { OnboardingService } from "../../../components/onboarding/services/onboarding.service";
 import { BehaviorSubject } from 'rxjs';
+import { syncSentryUserContext } from "../errores/sentry-context";
 
 export interface User {
   uid: string;
@@ -83,6 +84,7 @@ export class AuthService implements OnInit {
 
       localStorage.setItem("user", JSON.stringify(result));
       localStorage.setItem("loginTime", new Date().toISOString());
+      syncSentryUserContext();
 
       // Inicializar datos maestros en segundo plano después del login exitoso
       this.initializeBackgroundServices();

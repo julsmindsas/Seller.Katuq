@@ -11,6 +11,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../firebase/auth.service';
 import { ServiciosService } from '../servicios.service';
 import { ToastrService } from 'ngx-toastr';
+import * as Sentry from '@sentry/angular';
 
 @Injectable()
 export class HttpInterceptor2 implements HttpInterceptor {
@@ -47,6 +48,17 @@ export class HttpInterceptor2 implements HttpInterceptor {
             this.showConnectionError();
           } else {
             console.error('Error en petición HTTP:', err);
+          }
+
+          // Los 5xx del backend suelen quedar "manejados" por el subscribe del
+          // componente y nunca llegarían al ErrorHandler global — se capturan
+          // acá explícitamente para verlos en Sentry con la URL agrupadora.
+          if (err.status >= 500) {
+            Sentry.captureException(err, {
+              fingerprint: ['http-5xx', String(err.status), request.method, request.url.split('?')[0]],
+              tags: { http_status: String(err.status), http_method: request.method },
+              extra: { url: request.url, backendMessage: err.error?.message || null },
+            });
           }
 
           // Mostrar notificación en errores 401/403 sin cerrar sesión
