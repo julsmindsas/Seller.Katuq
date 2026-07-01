@@ -826,37 +826,40 @@
 
             <div class="step-content">
               <div class="options-checkboxes">
-                <label class="checkbox-option">
-                  <p-checkbox formControlName="insurance"
-                             inputId="insurance"
-                             [binary]="true">
-                  </p-checkbox>
+                <label class="checkbox-option" [class.checked]="quoteForm.get('insurance')?.value">
+                  <div class="option-icon"><i class="pi pi-shield"></i></div>
                   <div class="option-text">
                     <span class="option-name">Seguro Adicional</span>
                     <span class="option-desc">Protección extra para tu envío</span>
                   </div>
-                </label>
-
-                <label class="checkbox-option">
-                  <p-checkbox formControlName="cashOnDelivery"
-                             inputId="cashOnDelivery"
+                  <p-checkbox formControlName="insurance"
+                             inputId="insurance"
                              [binary]="true">
                   </p-checkbox>
+                </label>
+
+                <label class="checkbox-option" [class.checked]="quoteForm.get('cashOnDelivery')?.value">
+                  <div class="option-icon"><i class="pi pi-money-bill"></i></div>
                   <div class="option-text">
                     <span class="option-name">Pago Contra Entrega</span>
                     <span class="option-desc">El destinatario paga al recibir</span>
                   </div>
-                </label>
-
-                <label class="checkbox-option">
-                  <p-checkbox formControlName="signature"
-                             inputId="signature"
+                  <p-checkbox formControlName="cashOnDelivery"
+                             inputId="cashOnDelivery"
                              [binary]="true">
                   </p-checkbox>
+                </label>
+
+                <label class="checkbox-option" [class.checked]="quoteForm.get('signature')?.value">
+                  <div class="option-icon"><i class="pi pi-verified"></i></div>
                   <div class="option-text">
                     <span class="option-name">Requiere Firma</span>
                     <span class="option-desc">Confirmación de entrega con firma</span>
                   </div>
+                  <p-checkbox formControlName="signature"
+                             inputId="signature"
+                             [binary]="true">
+                  </p-checkbox>
                 </label>
               </div>
 

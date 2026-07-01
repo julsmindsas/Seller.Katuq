@@ -2107,39 +2107,8 @@ $radius-lg: 12px;
       }
     }
 
-    .options-checkboxes {
-      display: flex;
-      flex-direction: column;
-      gap: $spacing-md;
-      padding: $spacing-base;
-      background: $light-bg;
-      border: 1px solid $border;
-      border-radius: $radius-md;
-
-      .checkbox-option {
-        display: flex;
-        align-items: center;
-        gap: $spacing-md;
-        cursor: pointer;
-
-        .option-text {
-          display: flex;
-          flex-direction: column;
-          gap: $spacing-xs;
-
-          .option-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: $text-primary;
-          }
-
-          .option-desc {
-            font-size: 12px;
-            color: $text-secondary;
-          }
-        }
-      }
-    }
+    // (El bloque .options-checkboxes vive ahora a nivel del contenedor del acordeón,
+    // al final del archivo — aquí quedaba huérfano y nunca aplicaba al Paso 4.)
   } // Cierra .package-card y .section-package
 
   // ========================================
@@ -3372,6 +3341,89 @@ $radius-lg: 12px;
           background-color: $primary !important;
           border-color: $primary !important;
         }
+      }
+    }
+  }
+
+  // ========================================
+  // PASO 4 · OPCIONES ADICIONALES (checkbox cards)
+  // Estilo propio del step del acordeón. El bloque anidado en .section-package
+  // no alcanzaba este paso, por eso se veía sin estilos.
+  // ========================================
+  .options-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-md;
+
+    .checkbox-option {
+      display: flex;
+      align-items: center;
+      gap: $spacing-base;
+      padding: $spacing-base;
+      background: $background;
+      border: 1.5px solid $border;
+      border-radius: $radius-lg;
+      cursor: pointer;
+      transition: all $transition-base;
+
+      &:hover {
+        border-color: $primary;
+        box-shadow: $shadow-md;
+        transform: translateY(-1px);
+      }
+
+      &.checked {
+        border-color: $primary;
+        background: $primary-light;
+
+        .option-icon {
+          background: $primary;
+          color: #fff;
+        }
+
+        .option-name {
+          color: $primary-dark;
+        }
+      }
+
+      .option-icon {
+        flex-shrink: 0;
+        width: 42px;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: $radius-md;
+        background: $lighter-bg;
+        color: $secondary;
+        transition: all $transition-base;
+
+        i {
+          font-size: 18px;
+        }
+      }
+
+      .option-text {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+
+        .option-name {
+          font-size: 14px;
+          font-weight: 600;
+          color: $text-primary;
+        }
+
+        .option-desc {
+          font-size: 12px;
+          color: $text-secondary;
+          line-height: 1.35;
+        }
+      }
+
+      ::ng-deep .p-checkbox {
+        flex-shrink: 0;
       }
     }
   }
