@@ -192,6 +192,31 @@ export class MaestroService {
   public deleteTipoCliente(tipoCliente: any) {
     return this.http.post(this.urlBase + '/v1/tipos-precios/remove', tipoCliente, this.httpOptions);
   }
+
+  // DESCUENTOS Y PROMOCIONES
+  public consultarDescuentosPromociones() {
+    return this.http.get(this.urlBase + '/v1/descuentos-promociones/all', this.httpOptions);
+  }
+
+  public createDescuentoPromocion(descuento: any) {
+    return this.http.post(this.urlBase + '/v1/descuentos-promociones/create', descuento, this.httpOptions);
+  }
+
+  public editDescuentoPromocion(descuento: any) {
+    return this.http.post(this.urlBase + '/v1/descuentos-promociones/edit', descuento, this.httpOptions);
+  }
+
+  public deleteDescuentoPromocion(descuento: any) {
+    return this.http.post(this.urlBase + '/v1/descuentos-promociones/remove', descuento, this.httpOptions);
+  }
+
+  // HISTORIAL DE REDENCIONES — solo lectura desde el admin
+  public consultarRedenciones(descuentoId: string) {
+    return this.http.get(
+      this.urlBase + `/v1/descuentos-promociones/redenciones/${descuentoId}`,
+      this.httpOptions
+    );
+  }
   public createCompany(company: any) {
     return this.http.post(this.urlBase + '/v1/companies/create', company, this.httpOptions);
   }

@@ -11,6 +11,7 @@ import { CanalesComponent } from './canales/canales.component';
 import { CrearCanalesComponent } from './canales/crear-canales/crear-canales.component';
 import { BodegasPorCanalComponent } from './bodegas-por-canal/bodegas-por-canal.component';
 import { TiposClienteComponent } from './tipos-cliente/tipos-cliente.component';
+import { DescuentosPromocionesComponent } from './descuentos-promociones/descuentos-promociones.component';
 
 const routes: Routes = [
   {
@@ -52,6 +53,10 @@ const routes: Routes = [
   {
     path: 'tipos-cliente',
     component: TiposClienteComponent
+  },
+  {
+    path: 'descuentos-promociones',
+    component: DescuentosPromocionesComponent
   }
 ];
 

@@ -1,0 +1,124 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-sm-12 p-2">
+      <br />
+      <div class="card">
+        <i class="icon-bg" width="80" height="80" style="
+              opacity: 0.4;
+              position: absolute;
+              color: #6ec0d4;
+              top: 10px;
+              left: 10px;
+          "></i>
+        <div class="loader-box" *ngIf="cargando">
+          <div class="loader-8"></div>
+        </div>
+
+        <!-- Header Standar -->
+        <div class="row col-12 p-4 pb-0">
+          <div class="col-6">
+            <p class="text-left fc-secondary fw-bold fs-24 m-0 p-0">{{ "Descuentos y Promociones" | translate }}</p>
+            <p class="text-left text-muted fs-18 m-0 p-0">{{ "Gestiona cupones, descuentos por porcentaje y promociones especiales." | translate }}</p>
+          </div>
+
+          <div class="col-6 p-3" style="text-align: end">
+            <input type="text" class="form-control d-inline-block w-auto mr-2"
+              placeholder="{{ 'Buscar nombre o código...' | translate }}" (input)="updateFilter($event)">
+            <button class="btn btn-primary btn-previous ml-3 mb-2" type="button" (click)="openCrearModal()">
+              <i placement="top" ngbTooltip="Nuevo" style="font-size: 18px; color: white; cursor: pointer;"
+                 class="icofont icofont-plus"></i>&nbsp;
+              <span style="color: white">{{ "Crear Descuento" | translate }}</span>
+            </button>
+          </div>
+        </div>
+        <!-- FIN Header Standar -->
+
+        <div class="card-body custom-datatable" *ngIf="!cargando">
+          <p-table #dt [value]="rows" [paginator]="true" [rows]="10"
+            [resizableColumns]="true" [scrollable]="true" scrollHeight="flex" [loading]="cargando"
+            styleClass="p-datatable-gridlines p-datatable-striped" [rowsPerPageOptions]="[10, 20, 50]"
+            [sortField]="'nombre'" [sortOrder]="1" [globalFilterFields]="[
+                'nombre',
+                'codigoPersonalizado',
+                'tipo'
+            ]" [tableStyle]="{ 'min-width': '20rem' }" [rowHover]="true" [showCurrentPageReport]="true"
+            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} total registros">
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="text-center" pSortableColumn="nombre">
+                  {{ "Nombre" | translate }}
+                  <p-sortIcon field="nombre"></p-sortIcon>
+                </th>
+                <th class="text-center">{{ "Código" | translate }}</th>
+                <th class="text-center">{{ "Tipo / Valor" | translate }}</th>
+                <th *ngIf="!isMobile" class="text-center">{{ "Monto mínimo" | translate }}</th>
+                <th *ngIf="!isMobile" class="text-center">{{ "Vigencia" | translate }}</th>
+                <th *ngIf="!isMobile" class="text-center">{{ "Usos (actual / global / x cliente)" | translate }}</th>
+                <th *ngIf="!isMobile" class="text-center">{{ "Combinable" | translate }}</th>
+                <th class="text-center">{{ "Estado" | translate }}</th>
+                <th class="text-center">{{ "Acciones" | translate }}</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.nombre }}</td>
+                <td class="text-center"><span class="badge bg-secondary fw-bold">{{ row.codigoPersonalizado }}</span></td>
+                <td class="text-center">
+                  {{ row.tipo === 'porcentaje' ? row.valor + '%' :
+                     row.tipo === 'valor_fijo' ? '$' + (row.valor | number) :
+                     'Envío gratis' }}
+                </td>
+                <td *ngIf="!isMobile" class="text-center">{{ row.montoMinimo ? ('$' + (row.montoMinimo | number)) : 'Sin mínimo' }}</td>
+                <td *ngIf="!isMobile" class="text-center">{{ row.fechaInicio }} → {{ row.fechaFin }}</td>
+                <td *ngIf="!isMobile" class="text-center">
+                  {{ row.usosActuales || 0 }} /
+                  {{ row.limiteUsos || '∞' }} global |
+                  {{ row.limiteUsosPorCliente || '∞' }} x cliente
+                </td>
+                <td *ngIf="!isMobile" class="text-center">
+                  <i [class]="row.combinable
+                    ? 'icofont icofont-check text-success'
+                    : 'icofont icofont-close text-danger'"></i>
+                </td>
+                <td class="text-center">
+                  <span [ngClass]="{
+                    'badge bg-success':           getEstado(row) === 'vigente',
+                    'badge bg-warning text-dark': getEstado(row) === 'agotado',
+                    'badge bg-secondary':         getEstado(row) === 'vencido',
+                    'badge bg-danger':            getEstado(row) === 'inactivo'
+                  }">
+                    {{ getEstado(row) | titlecase }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <i placement="top" ngbTooltip="{{ 'Editar' | translate }}"
+                    style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                    class="icofont icofont-pencil-alt-5 fc-primary" (click)="openEditarModal(row)">
+                  </i>
+                  <i placement="top" ngbTooltip="{{ 'Desactivar' | translate }}"
+                    style="font-size: 18px; margin-left: 10px; cursor: pointer;"
+                    class="icofont icofont-trash fc-danger" (click)="eliminar(row)">
+                  </i>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td [attr.colspan]="isMobile ? 5 : 9">{{ "No hay descuentos registrados" | translate }}</td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="summary">
+              <div class="flex align-items-center justify-content-between">
+                {{ "Total en esta consulta" | translate }}: {{ rows ? rows.length : 0 }} {{ "registros" | translate }}.
+              </div>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
