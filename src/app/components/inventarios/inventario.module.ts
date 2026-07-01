@@ -40,6 +40,7 @@ import { FulfillmentSyncHistoryComponent } from './fulfillment-sync-history/fulf
 import { ImportModalModule } from '../../shared/components/import-modal/import-modal.module';
 import { CentralAbastecimientoComponent } from './central-abastecimiento/central-abastecimiento.component';
 import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.component';
+import { SiigoBodegaMappingComponent } from './siigo-bodega-mapping/siigo-bodega-mapping.component';
 
 @NgModule({
     imports: [
@@ -83,7 +84,8 @@ import { BodegaDetalleComponent } from './bodega-detalle/bodega-detalle.componen
         ImportarBodegasModalComponent,
         FulfillmentSyncHistoryComponent,
         CentralAbastecimientoComponent,
-        BodegaDetalleComponent
+        BodegaDetalleComponent,
+        SiigoBodegaMappingComponent
     ],
     providers: [NgbActiveModal, ModalGalleryService, ImageOptimizerDirective, ConfirmationService],
 })

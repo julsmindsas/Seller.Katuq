@@ -9,6 +9,8 @@ import { FulfillmentService } from '../../../shared/services/fulfillment/fulfill
 import { DaneCodesService } from '../../../shared/services/dane-codes.service';
 import { CiudadCobertura } from '../../../shared/models/inventarios/bodega.model';
 import { FulfillmentWarehouse } from '../../../shared/models/fulfillment/fulfillment.model';
+import { IntegrationsService } from '../../integrations/integrations.service';
+import { SiigoBodegaMappingComponent } from '../siigo-bodega-mapping/siigo-bodega-mapping.component';
 import Swal from 'sweetalert2';
 import { forkJoin, of, Subject } from 'rxjs';
 import { catchError, take, takeUntil } from 'rxjs/operators';
@@ -24,17 +26,44 @@ export class BodegasComponent implements OnInit, OnDestroy {
   todasLasBodegas: any[] = [];  // Incluye inactivas para verificar fulfillmentId
   selectedColumns: any[] = [];
   importandoFulfillment: boolean = false;
+  siigoEnabled: boolean = false;
   private destroy$ = new Subject<void>();
 
   constructor(
     private modalService: NgbModal,
     private bodegaService: BodegaService,
     private fulfillmentService: FulfillmentService,
-    private daneCodesService: DaneCodesService
+    private daneCodesService: DaneCodesService,
+    private integrationsService: IntegrationsService
   ) { }
 
   ngOnInit(): void {
     this.cargarBodegas();
+    this.checkSiigoIntegration();
+  }
+
+  /** Detecta si el comercio logueado tiene integración SIIGO activa (para mostrar "Importar SIIGO"). */
+  checkSiigoIntegration(): void {
+    this.integrationsService.getIntegrations()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (integrations: any[]) => {
+          this.siigoEnabled = !!(integrations || []).find(i =>
+            i.enabled && (i.provider === 'siigo' || i.type === 'siigo' || i.id === 'siigo')
+          );
+        },
+        error: () => { this.siigoEnabled = false; }
+      });
+  }
+
+  /** Abre el mapeo de bodegas Katuq ↔ SIIGO como modal. (D-046) */
+  abrirMapeoSiigo(): void {
+    this.modalService.open(SiigoBodegaMappingComponent, {
+      size: 'xl',
+      backdrop: 'static',
+      scrollable: true,
+      centered: true
+    });
   }
 
   ngOnDestroy(): void {
