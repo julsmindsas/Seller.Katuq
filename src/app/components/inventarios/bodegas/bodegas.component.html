@@ -30,14 +30,24 @@
                                 "></i>&nbsp;
                             <span style="color: white">Crear Bodega</span>
                         </button>
-                        <button class="btn btn-info ml-3 mb-2" style="color: white"
-                                (click)="importarBodegasFulfillment()"
-                                [disabled]="importandoFulfillment"
-                                ngbTooltip="Importar bodegas desde proveedores de fulfillment (ej: Aliaddo)">
-                            <i class="fa fa-cloud-download" *ngIf="!importandoFulfillment"></i>
-                            <i class="fa fa-spinner fa-spin" *ngIf="importandoFulfillment"></i>&nbsp;
-                            Importar de Fulfillment
-                        </button>
+                        <div class="btn-group ml-3 mb-2" ngbDropdown>
+                            <button class="btn btn-importar" ngbDropdownToggle
+                                    [disabled]="importandoFulfillment"
+                                    ngbTooltip="Importar bodegas">
+                                <i class="fa fa-cloud-download" *ngIf="!importandoFulfillment"></i>
+                                <i class="fa fa-spinner fa-spin" *ngIf="importandoFulfillment"></i>&nbsp;
+                                Importar
+                            </button>
+                            <div ngbDropdownMenu>
+                                <button ngbDropdownItem (click)="importarBodegasFulfillment()"
+                                        [disabled]="importandoFulfillment">
+                                    <i class="fa fa-cloud-download"></i>&nbsp; Importar de Fulfillment
+                                </button>
+                                <button ngbDropdownItem *ngIf="siigoEnabled" (click)="abrirMapeoSiigo()">
+                                    <i class="fa fa-refresh"></i>&nbsp; Importar SIIGO
+                                </button>
+                            </div>
+                        </div>
                         <button class="btn btn-success ml-3 mb-2" style="color: white" (click)="exportarExcel()">
                             <i class="fa fa-file-excel-o"></i>&nbsp;
                             Excel

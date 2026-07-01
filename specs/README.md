@@ -19,8 +19,9 @@ Este directorio contiene las especificaciones del proyecto bajo la metodología 
 | 003.7 | cleanup-legacy-woocommerce | **implementación done** | Audit colecciones legacy + extracción mappers + DEFER refactor importAllProducts por shape incompatible. Ver D-022..D-025. |
 | 004 | user-docs-flows | spec + USER-GUIDE-FLOWS.md publicada | Documentación de `/flows` orientada al comerciante final (no técnico). |
 | 007 | assisted-sale-step1-customer | **in-review** | Re-arquitectura del Paso 1 (Cliente) de la venta asistida: buscador sin callejones + creación inline + búsqueda performante (por prefijo, sin tocar la base) en móvil y desktop. |
+| 012 | siigo-integration-consolidation | draft | Consolidar los 3 caminos de facturación SIIGO en uno solo canónico multi-tenant; matar el legacy del POS con datos de prueba, arreglar nodos de flow rotos y rotar credencial filtrada. Ver D-039 (2026-06-20). Renumerada de 008 → 012 (colisión con cotizaciones-mvp — D-067). |
 
-> Roadmap completo + decisiones D-001..D-037 en `CONTRACT.md`.
+> Roadmap completo + decisiones D-001..D-067 en `CONTRACT.md`.
 
 ## Cómo crear una nueva spec
 

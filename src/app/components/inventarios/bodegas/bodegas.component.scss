@@ -27,6 +27,41 @@ $green-bg: #e8f5e9;
 $green-text: #2e7d32;
 
 // =============================================
+// BOTÓN "IMPORTAR" (bodegas) — magenta tenue → hover magenta fuerte + animación
+// =============================================
+.btn-importar {
+  background-color: #d17aae;   // magenta tenue (default)
+  border-color: #d17aae;
+  color: #ffffff;
+  transition: background-color 0.25s ease, border-color 0.25s ease,
+              transform 0.2s ease, box-shadow 0.25s ease;
+
+  &:hover,
+  &:focus,
+  &.show {                      // .show = dropdown abierto
+    background-color: #a61d78;  // magenta más fuerte (hover/activo)
+    border-color: #a61d78;
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(166, 29, 120, 0.35);
+  }
+
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(166, 29, 120, 0.3);
+  }
+
+  &:disabled,
+  &.disabled {
+    background-color: #d17aae;
+    border-color: #d17aae;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+// =============================================
 // ICON STYLES
 // =============================================
 .icon-bg {

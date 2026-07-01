@@ -122,6 +122,28 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   hasInvoicingIntegration: boolean = false;
   activeAccountingProvider: string = null;
 
+  // ===== Modal de facturación SIIGO: forma de pago + vencimiento de crédito (D-042) =====
+  @ViewChild("facturaSiigoModal") facturaSiigoModal: any;
+  facturaPedido: Pedido | null = null;
+  facturaDocumentTypes: any[] = [];
+  facturaPaymentTypes: any[] = [];
+  facturaDocumentTypeId: string | number | null = null;
+  facturaPaymentTypeId: string | number | null = null;
+  facturaPlazo: string = ""; // '8' | '15' | '30' | ... | '120' | 'exacta'
+  facturaDueDate: string = ""; // yyyy-MM-dd
+  facturaGenerando: boolean = false;
+  // SIIGO no define plazos: los define Katuq y se calcula la fecha. 'exacta' abre date-picker.
+  readonly facturaPlazosCredito: { value: string; label: string }[] = [
+    { value: "8", label: "8 días" },
+    { value: "15", label: "15 días" },
+    { value: "30", label: "30 días" },
+    { value: "45", label: "45 días" },
+    { value: "60", label: "60 días" },
+    { value: "90", label: "90 días" },
+    { value: "120", label: "120 días" },
+    { value: "exacta", label: "Fecha exacta" },
+  ];
+
   // Variables temporales para el modal de cambio de estado
   tempEstadoPago: EstadoPago;
   tempEstadoProceso: EstadoProceso;
@@ -925,31 +947,24 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    // Siigo: necesita seleccionar tipo de documento
+    // Siigo: modal con tipo de documento + forma de pago + vencimiento de crédito (D-042)
     Swal.fire({
-      title: 'Cargando tipos de documento...',
+      title: 'Cargando datos de facturación...',
       allowOutsideClick: false,
       didOpen: () => Swal.showLoading()
     });
 
-    this.integrationsService.getAccountingDocumentTypes(provider).subscribe({
-      next: (response) => {
+    forkJoin({
+      docs: this.integrationsService.getAccountingDocumentTypes(provider),
+      pays: this.integrationsService.getAccountingPaymentTypes(provider)
+    }).subscribe({
+      next: ({ docs, pays }) => {
         Swal.close();
 
-        let documentTypes: any[] = [];
-        if (Array.isArray(response?.data?.documentTypes)) {
-          documentTypes = response.data.documentTypes;
-        } else if (Array.isArray(response?.data?.data?.documentTypes)) {
-          documentTypes = response.data.data.documentTypes;
-        } else if (Array.isArray(response?.data)) {
-          documentTypes = response.data;
-        } else if (Array.isArray(response?.documentTypes)) {
-          documentTypes = response.documentTypes;
-        } else if (Array.isArray(response)) {
-          documentTypes = response;
-        }
+        const documentTypes = this.extraerListaFactura(docs, 'documentTypes');
+        const paymentTypes = this.extraerListaFactura(pays, 'paymentTypes');
 
-        if (!documentTypes || documentTypes.length === 0) {
+        if (!documentTypes.length) {
           Swal.fire({
             title: 'Error',
             text: `No se encontraron tipos de documento en ${providerDisplayName}. Verifique la configuración.`,
@@ -958,57 +973,110 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           return;
         }
 
-        const inputOptions: { [key: string]: string } = {};
-        documentTypes.forEach((dt: any) => {
-          const id = dt.id;
-          const name = dt.name || dt.nombre || `Documento ${id}`;
-          if (id) {
-            inputOptions[id] = `${name}`;
-          }
-        });
+        // Inicializar estado del modal
+        this.facturaPedido = pedido;
+        this.facturaDocumentTypes = documentTypes;
+        this.facturaPaymentTypes = paymentTypes;
+        this.facturaDocumentTypeId = null;
+        this.facturaPaymentTypeId = null;
+        this.facturaPlazo = '';
+        this.facturaDueDate = '';
+        this.facturaGenerando = false;
 
-        Swal.fire({
-          title: '¿Generar Factura Electrónica?',
-          html: `
-            <p>Se generará una factura electrónica para el pedido:</p>
-            <p><strong>${pedido.nroPedido}</strong></p>
-            <p class="text-muted">Cliente: ${pedido.cliente?.nombres_completos || 'N/A'}</p>
-            <p class="text-muted">Total: $${(pedido.subtotal || 0).toLocaleString()}</p>
-            <hr>
-            <p><strong>Seleccione el tipo de documento:</strong></p>
-          `,
-          input: 'select',
-          inputOptions: inputOptions,
-          inputPlaceholder: 'Seleccione un tipo de documento',
-          icon: 'question',
-          showCancelButton: true,
-          confirmButtonColor: '#3085d6',
-          cancelButtonColor: '#d33',
-          confirmButtonText: 'Generar factura',
-          cancelButtonText: 'Cancelar',
-          inputValidator: (value) => {
-            if (!value) {
-              return 'Debe seleccionar un tipo de documento';
-            }
-            return null;
-          }
-        }).then((result) => {
-          if (result.isConfirmed && result.value) {
-            const selectedDocumentTypeId = parseInt(result.value, 10);
-            this.ejecutarFacturacionSiigo(pedido, selectedDocumentTypeId);
-          }
+        this.modalService.open(this.facturaSiigoModal, {
+          size: 'md',
+          centered: true,
+          backdrop: 'static',
+          ariaLabelledBy: 'factura-siigo-title'
         });
       },
       error: (error) => {
         Swal.close();
-        console.error('Error cargando tipos de documento:', error);
+        console.error('Error cargando datos de facturación:', error);
         Swal.fire({
           title: 'Error',
-          text: `No se pudieron cargar los tipos de documento de ${providerDisplayName}`,
+          text: `No se pudieron cargar los datos de facturación de ${providerDisplayName}`,
           icon: 'error'
         });
       }
     });
+  }
+
+  /** Normaliza la lista (documentTypes/paymentTypes) sin importar cómo venga envuelta la respuesta. */
+  private extraerListaFactura(response: any, key: string): any[] {
+    if (Array.isArray(response?.data?.[key])) return response.data[key];
+    if (Array.isArray(response?.data?.data?.[key])) return response.data.data[key];
+    if (Array.isArray(response?.data)) return response.data;
+    if (Array.isArray(response?.[key])) return response[key];
+    if (Array.isArray(response)) return response;
+    return [];
+  }
+
+  /** Forma de pago seleccionada en el modal (objeto completo de SIIGO). */
+  get facturaPaymentTypeSeleccionado(): any {
+    return this.facturaPaymentTypes.find(
+      (p) => String(p.id) === String(this.facturaPaymentTypeId)
+    ) || null;
+  }
+
+  /** Crédito = el medio de pago "maneja vencimiento" (flag due_date de SIIGO). */
+  get facturaEsCredito(): boolean {
+    return this.facturaPaymentTypeSeleccionado?.due_date === true;
+  }
+
+  /** El form del modal es válido para generar la factura. */
+  get facturaFormValido(): boolean {
+    if (!this.facturaDocumentTypeId || !this.facturaPaymentTypeId) return false;
+    if (this.facturaEsCredito && !this.facturaDueDate) return false;
+    return true;
+  }
+
+  /** Fecha de hoy (yyyy-MM-dd) — usada como mínimo del date-picker de vencimiento. */
+  get facturaHoy(): string {
+    return this.calcularVencimiento(0);
+  }
+
+  /** Al cambiar la forma de pago: si deja de ser crédito, limpiar el vencimiento. */
+  onFacturaPaymentTypeChange(): void {
+    if (!this.facturaEsCredito) {
+      this.facturaPlazo = '';
+      this.facturaDueDate = '';
+    }
+  }
+
+  /** Al elegir un plazo: calcular la fecha de vencimiento (o limpiar si es "fecha exacta"). */
+  onFacturaPlazoChange(): void {
+    if (this.facturaPlazo && this.facturaPlazo !== 'exacta') {
+      this.facturaDueDate = this.calcularVencimiento(parseInt(this.facturaPlazo, 10));
+    } else {
+      this.facturaDueDate = ''; // 'exacta' → lo elige el usuario en el date-picker
+    }
+  }
+
+  /** Calcula una fecha (yyyy-MM-dd) sumando N días a hoy. */
+  private calcularVencimiento(dias: number): string {
+    const d = new Date();
+    d.setDate(d.getDate() + dias);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  /** Confirma el modal y dispara la facturación con forma de pago + vencimiento. */
+  confirmarFacturaSiigo(modal: any): void {
+    if (!this.facturaFormValido || !this.facturaPedido) return;
+    const pedido = this.facturaPedido;
+    const documentTypeId = this.facturaDocumentTypeId
+      ? parseInt(String(this.facturaDocumentTypeId), 10)
+      : undefined;
+    const paymentTypeId = this.facturaPaymentTypeId
+      ? parseInt(String(this.facturaPaymentTypeId), 10)
+      : undefined;
+    const dueDate = this.facturaEsCredito ? (this.facturaDueDate || undefined) : undefined;
+
+    modal.close();
+    this.ejecutarFacturacionSiigo(pedido, documentTypeId, undefined, paymentTypeId, dueDate);
   }
 
   /**
@@ -1133,8 +1201,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    *
    * @param pedido Pedido a facturar
    * @param prefijoId ID numérico del prefijo a usar (override del rol)
+   * @param paymentTypeId ID de la forma de pago en SIIGO (D-042)
+   * @param dueDate Fecha de vencimiento de crédito en formato yyyy-MM-dd (D-042)
    */
-  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number): void {
+  private ejecutarFacturacionSiigo(pedido: Pedido, documentTypeId?: number, prefijoId?: number, paymentTypeId?: number, dueDate?: string): void {
     const providerDisplayName = this.getAccountingProviderDisplayName();
     const nroPedido = pedido.nroPedido || pedido.referencia || pedido._id;
 
@@ -1148,10 +1218,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
       { timeOut: 5000 }
     );
 
-    // Preparar opciones con el tipo de documento y/o prefijo seleccionado
+    // Preparar opciones con el tipo de documento, prefijo, forma de pago y vencimiento
     const options: any = {};
     if (documentTypeId) options.documentTypeId = documentTypeId;
     if (prefijoId) options.prefijoId = prefijoId;
+    if (paymentTypeId) options.paymentTypeId = paymentTypeId; // D-042: forma de pago SIIGO
+    if (dueDate) options.dueDate = dueDate; // D-042: vencimiento de crédito (yyyy-MM-dd)
 
     // Usar endpoint async para no bloquear (responde 202 inmediato)
     const provider = this.activeAccountingProvider || 'siigo';

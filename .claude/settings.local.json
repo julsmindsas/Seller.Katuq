@@ -253,7 +253,9 @@
       "PowerShell(npm run *)",
       "PowerShell($conns = Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue; if \\($conns\\) { $conns | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Write-Output \"Killing PID $_\"; Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } } else { Write-Output \"No listener on 3300\" }; Start-Sleep -Seconds 2; if \\(Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue\\) { Write-Output \"STILL LISTENING\" } else { Write-Output \"Port 3300 free\" })",
       "PowerShell($conns = Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue; if \\($conns\\) { $conns | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }; Start-Sleep -Seconds 2; if \\(Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue\\) { \"STILL LISTENING\" } else { \"Port 3300 free\" })",
-      "PowerShell($conn = Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $conn | Select-Object -First 1 OwningProcess; \\(Get-Process -Id $conn[0].OwningProcess\\).Path } else { \"no listener on 3300\" })"
+      "PowerShell($conn = Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $conn | Select-Object -First 1 OwningProcess; \\(Get-Process -Id $conn[0].OwningProcess\\).Path } else { \"no listener on 3300\" })",
+      "PowerShell(npm start *)",
+      "Bash(npm *)"
     ]
   }
 }

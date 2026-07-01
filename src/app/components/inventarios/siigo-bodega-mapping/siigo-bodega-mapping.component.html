@@ -1,0 +1,136 @@
+<div class="siigo-mapping">
+
+  <!-- Header del modal -->
+  <div class="modal-header">
+    <div>
+      <h5 class="modal-title mb-1">Importar / Sincronizar bodegas SIIGO</h5>
+      <p class="text-muted mb-0 small">
+        Asociá cada bodega de Katuq con su bodega equivalente en SIIGO. Al facturar, el stock se
+        descontará de la bodega SIIGO mapeada. Katuq es la fuente de verdad: tus bodegas no se modifican.
+      </p>
+    </div>
+    <button type="button" class="btn-close" aria-label="Cerrar" (click)="cerrar()"></button>
+  </div>
+
+  <!-- Body -->
+  <div class="modal-body">
+
+    <!-- Acciones -->
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <button type="button" class="btn btn-outline-primary btn-sm"
+              (click)="consultarBodegasSiigo()" [disabled]="loadingWarehouses">
+        <i class="fa fa-cloud-download-alt me-1"></i>
+        {{ loadingWarehouses ? 'Consultando…' : 'Consultar bodegas de SIIGO' }}
+      </button>
+      <button type="button" class="btn btn-outline-secondary btn-sm"
+              (click)="autoMatchByName()" [disabled]="!hayCatalogoSiigo || loading">
+        <i class="fa fa-magic me-1"></i> Auto-emparejar por nombre
+      </button>
+    </div>
+
+    <!-- Aviso sin catálogo SIIGO -->
+    <div *ngIf="!loading && !hayCatalogoSiigo" class="alert alert-warning py-2 small">
+      No se encontraron bodegas en SIIGO. Verificá que la integración SIIGO esté configurada y que existan
+      bodegas creadas en SIIGO Nube, luego usá "Consultar bodegas de SIIGO".
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="text-center text-muted py-5">
+      <i class="fa fa-spinner fa-spin fa-2x"></i>
+      <p class="mt-2 mb-0">Cargando bodegas…</p>
+    </div>
+
+    <!-- Tabla de mapeo -->
+    <div *ngIf="!loading" class="card card-flat">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Bodega Katuq</th>
+              <th>Código</th>
+              <th style="min-width: 260px;">Bodega SIIGO</th>
+              <th class="text-center">Estado</th>
+              <th class="text-end">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of rows" [class.row-dirty]="row.selectedWarehouseId != row.originalWarehouseId">
+              <td>
+                <span class="fw-semibold">{{ row.nombre }}</span>
+                <span *ngIf="row.tipo" class="badge bg-light text-dark ms-1 small">{{ row.tipo }}</span>
+              </td>
+              <td><code>{{ row.idBodega }}</code></td>
+              <td>
+                <select class="form-select form-select-sm"
+                        [(ngModel)]="row.selectedWarehouseId"
+                        (ngModelChange)="onSelectChange()"
+                        [disabled]="!hayCatalogoSiigo">
+                  <option [ngValue]="null">— Sin mapear —</option>
+                  <option *ngFor="let w of siigoWarehouses" [ngValue]="w.id" [disabled]="!w.active">
+                    {{ w.name }} (id {{ w.id }}){{ !w.active ? ' — inactiva' : '' }}
+                  </option>
+                  <option *ngIf="row.status === 'roto'" [ngValue]="row.selectedWarehouseId">
+                    id {{ row.selectedWarehouseId }} — no existe / inactiva en SIIGO
+                  </option>
+                </select>
+              </td>
+              <td class="text-center">
+                <span class="badge status-badge" [ngClass]="{
+                  'badge-ok': row.status === 'ok',
+                  'badge-warn': row.status === 'sin-mapear',
+                  'badge-bad': row.status === 'roto'
+                }">
+                  <ng-container [ngSwitch]="row.status">
+                    <span *ngSwitchCase="'ok'">● Mapeada</span>
+                    <span *ngSwitchCase="'sin-mapear'">● Sin mapear</span>
+                    <span *ngSwitchCase="'roto'">● Mapeo roto</span>
+                  </ng-container>
+                </span>
+              </td>
+              <td class="text-end">
+                <button type="button" class="btn btn-sm btn-link text-secondary p-0 me-2"
+                        *ngIf="row.selectedWarehouseId !== null"
+                        (click)="limpiarFila(row)" ngbTooltip="Quitar mapeo">
+                  <i class="fa fa-times"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary"
+                        (click)="guardarFila(row)"
+                        [disabled]="row.saving || row.selectedWarehouseId == row.originalWarehouseId">
+                  {{ row.saving ? '…' : 'Guardar' }}
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="rows.length === 0">
+              <td colspan="5" class="text-center text-muted py-4">No hay bodegas de Katuq.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Bodegas SIIGO sin equivalente en Katuq (informativo) -->
+    <div *ngIf="!loading && unmatchedSiigo.length > 0" class="card card-flat card-info mt-3">
+      <div class="card-body py-2">
+        <p class="small text-muted mb-1">
+          <i class="fa fa-info-circle me-1"></i>
+          Bodegas de SIIGO sin equivalente mapeado en Katuq ({{ unmatchedSiigo.length }}):
+        </p>
+        <span *ngFor="let w of unmatchedSiigo" class="badge bg-light text-dark me-1 mb-1">
+          {{ w.name }} (id {{ w.id }})<span *ngIf="!w.active"> — inactiva</span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="modal-footer">
+    <button type="button" class="btn btn-secondary" (click)="cerrar()">Cerrar</button>
+    <button type="button" class="btn btn-primary"
+            (click)="guardarTodo()" [disabled]="saving || dirtyRows.length === 0">
+      <i class="fa fa-save me-1"></i>
+      {{ saving ? 'Guardando…' : 'Guardar cambios' + (dirtyRows.length ? ' (' + dirtyRows.length + ')' : '') }}
+    </button>
+  </div>
+
+</div>

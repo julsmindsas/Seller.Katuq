@@ -1,0 +1,69 @@
+.siigo-mapping {
+
+  h4 {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  // Cards planas con acento lateral (sin gradientes)
+  .card-flat {
+    border: 1px solid #e9ecef;
+    border-left: 4px solid #5e72e4;
+    border-radius: 6px;
+    box-shadow: none;
+
+    &.card-info {
+      border-left-color: #11cdef;
+    }
+  }
+
+  .table {
+    font-size: 0.875rem;
+
+    thead th {
+      font-weight: 600;
+      color: #6c757d;
+      text-transform: uppercase;
+      font-size: 0.72rem;
+      letter-spacing: 0.03em;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    code {
+      color: #5e72e4;
+      background: #f4f5ff;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+    }
+  }
+
+  tr.row-dirty {
+    background-color: #fffdf4;
+  }
+
+  .status-badge {
+    font-weight: 600;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 4px;
+
+    &.badge-ok {
+      color: #1aae6f;
+      background: #e9f9f1;
+    }
+
+    &.badge-warn {
+      color: #b58100;
+      background: #fff6e0;
+    }
+
+    &.badge-bad {
+      color: #c0392b;
+      background: #fdecea;
+    }
+  }
+
+  .gap-2 {
+    gap: 0.5rem;
+  }
+}

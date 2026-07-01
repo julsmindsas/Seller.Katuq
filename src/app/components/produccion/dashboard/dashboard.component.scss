@@ -1,6 +1,7 @@
 // Variables
-$primary-color: #2196F3;
-$primary-light: rgba(33, 150, 243, 0.12);
+// Acento del módulo: morado B2B, alineado con despachos / inventarios.
+$primary-color: #5c6ac4;
+$primary-light: rgba(92, 106, 196, 0.12);
 $success-color: #66BB6A;
 $success-light: rgba(102, 187, 106, 0.12);
 $warning-color: #FFA726;
@@ -99,18 +100,18 @@ $transition: all 0.3s ease;
 .btn-primary {
   background: $primary-color;
   border-color: $primary-color;
-  box-shadow: 0 2px 5px rgba(33, 150, 243, 0.3);
+  box-shadow: 0 2px 5px rgba(92, 106, 196, 0.3);
   
   &:hover, &:focus {
     background: darken($primary-color, 5%);
     border-color: darken($primary-color, 5%);
-    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.4);
+    box-shadow: 0 4px 8px rgba(92, 106, 196, 0.4);
   }
 }
 
 .btn-outline-primary {
   color: $primary-color;
-  border-color: rgba(33, 150, 243, 0.3);
+  border-color: rgba(92, 106, 196, 0.3);
   
   &:hover, &:focus {
     background-color: $primary-light;
@@ -150,7 +151,7 @@ $transition: all 0.3s ease;
       }
       
       &:hover {
-        background-color: rgba(33, 150, 243, 0.04);
+        background-color: rgba(92, 106, 196, 0.04);
       }
     }
     
@@ -160,7 +161,7 @@ $transition: all 0.3s ease;
       border-radius: $border-radius;
       
       &:hover {
-        background-color: rgba(33, 150, 243, 0.04);
+        background-color: rgba(92, 106, 196, 0.04);
         transform: translateY(-1px);
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
       }
@@ -188,7 +189,7 @@ $transition: all 0.3s ease;
         border-radius: $border-radius;
         
         &:focus {
-          box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+          box-shadow: 0 0 0 2px rgba(92, 106, 196, 0.2);
         }
       }
       
@@ -204,12 +205,12 @@ $transition: all 0.3s ease;
     transition: all 0.2s ease;
     
     &:hover {
-      border-color: rgba(33, 150, 243, 0.5);
+      border-color: rgba(92, 106, 196, 0.5);
     }
     
     &:focus, &.p-focus {
       border-color: $primary-color;
-      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+      box-shadow: 0 0 0 2px rgba(92, 106, 196, 0.2);
     }
     
     .p-dropdown-label, .p-multiselect-label {
@@ -225,7 +226,7 @@ $transition: all 0.3s ease;
         transition: all 0.2s ease;
         
         &:hover {
-          background-color: rgba(33, 150, 243, 0.04);
+          background-color: rgba(92, 106, 196, 0.04);
         }
         
         &.p-highlight {
@@ -244,12 +245,12 @@ $transition: all 0.3s ease;
       transition: all 0.2s ease;
       
       &:hover {
-        border-color: rgba(33, 150, 243, 0.5);
+        border-color: rgba(92, 106, 196, 0.5);
       }
       
       &:focus {
         border-color: $primary-color;
-        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        box-shadow: 0 0 0 2px rgba(92, 106, 196, 0.2);
       }
     }
     
@@ -310,7 +311,7 @@ $transition: all 0.3s ease;
       background-color: transparent;
       
       &:hover {
-        background-color: rgba(33, 150, 243, 0.04);
+        background-color: rgba(92, 106, 196, 0.04);
       }
     }
     
@@ -319,12 +320,12 @@ $transition: all 0.3s ease;
       border: none;
       
       &:hover {
-        background-color: rgba(33, 150, 243, 0.04);
+        background-color: rgba(92, 106, 196, 0.04);
       }
     }
     
     &:focus {
-      box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+      box-shadow: 0 0 0 2px rgba(92, 106, 196, 0.2);
     }
   }
   
@@ -381,8 +382,24 @@ $transition: all 0.3s ease;
 }
 
 // Estilos específicos para el componente
+// Cabecera estándar Katuq: plana, con acento border-left (alineado a despachos/inventarios).
 .module-header {
-  background: linear-gradient(to right, #f9fbfd, white);
+  background: #ffffff;
+  border-left: 4px solid $primary-color;
+
+  h4, h5 {
+    font-weight: 700;
+    color: #2c323f;
+
+    i {
+      color: $primary-color;
+    }
+  }
+
+  p {
+    color: #6c757d;
+    opacity: 0.85;
+  }
 }
 
 .text-primary {
@@ -485,7 +502,7 @@ $transition: all 0.3s ease;
       border-radius: 50%;
       background-color: white;
       color: $primary-color;
-      border: 1px solid rgba(33, 150, 243, 0.3);
+      border: 1px solid rgba(92, 106, 196, 0.3);
       transition: all 0.2s ease;
       
       &:hover {
@@ -510,7 +527,7 @@ $transition: all 0.3s ease;
     border-radius: 50%;
     background-color: white;
     color: $primary-color;
-    border: 1px solid rgba(33, 150, 243, 0.3);
+    border: 1px solid rgba(92, 106, 196, 0.3);
     transition: all 0.2s ease;
     
     &:hover {
@@ -652,11 +669,11 @@ $transition: all 0.3s ease;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   
   &.bg-primary {
-    background: linear-gradient(to right, $primary-color, darken($primary-color, 10%)) !important;
+    background: $primary-color !important;
   }
-  
+
   &.bg-success {
-    background: linear-gradient(to right, $success-color, darken($success-color, 10%)) !important;
+    background: $success-color !important;
   }
   
   .modal-title {
@@ -731,12 +748,12 @@ $transition: all 0.3s ease;
 .btn-modal-primary {
   background-color: $primary-color;
   color: white;
-  box-shadow: 0 2px 5px rgba(33, 150, 243, 0.25);
+  box-shadow: 0 2px 5px rgba(92, 106, 196, 0.25);
   
   &:hover:not(:disabled) {
     background-color: darken($primary-color, 5%);
     transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+    box-shadow: 0 4px 8px rgba(92, 106, 196, 0.3);
   }
 }
 
@@ -767,7 +784,7 @@ $transition: all 0.3s ease;
     
     &:focus {
       border-color: $primary-color;
-      box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+      box-shadow: 0 0 0 3px rgba(92, 106, 196, 0.1);
       outline: none;
     }
   }
@@ -788,7 +805,7 @@ $transition: all 0.3s ease;
 }
 
 .proceso-info {
-  background-color: rgba(33, 150, 243, 0.05);
+  background-color: rgba(92, 106, 196, 0.05);
   padding: 1.25rem;
   border-radius: $border-radius;
   border-left: 4px solid $primary-color;
@@ -856,11 +873,11 @@ $transition: all 0.3s ease;
   &:hover:not(.proceso-disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    background-color: rgba(33, 150, 243, 0.02);
+    background-color: rgba(92, 106, 196, 0.02);
   }
   
   &.proceso-selected {
-    background-color: rgba(33, 150, 243, 0.05);
+    background-color: rgba(92, 106, 196, 0.05);
     border-left: 3px solid $primary-color;
   }
   
@@ -1128,7 +1145,7 @@ $transition: all 0.3s ease;
 /* Inspirados en ventas/list pero adaptados para producción */
 
 .modern-filters-container {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: #ffffff;
   border-radius: $border-radius;
   border: 1px solid #e9ecef;
   margin-bottom: 1rem;
@@ -1489,7 +1506,7 @@ $transition: all 0.3s ease;
    ======================================== */
 
 .metrics-breadcrumb-panel {
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+  background: #ffffff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 
   .d-flex {
