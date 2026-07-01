@@ -30,7 +30,7 @@ import { HttpInterceptor2 } from '../app/shared/services/interceptor/http.interc
 import { NotificationService } from './shared/services/notification.service';
 import { CartSingletonService } from './shared/services/ventas/cart.singleton.service';
 import { KatuqintelligenceService } from './shared/services/katuqintelligence/katuqintelligence.service';
-import { GlobalErrorHandlerService } from './shared/services/errores/globalerror.service';
+import * as Sentry from '@sentry/angular';
 import { LoaderComponent } from './components/loader/loader.component';
 import { LoaderInterceptor } from './shared/services/interceptor/loader.interceptor';
 import { NotificationrlService } from './shared/services/notificationrl.service';
@@ -144,15 +144,17 @@ export function HttpLoaderFactory(http: HttpClient) {
     //{ provide: TOOL_REGISTRARS, useExisting: SalesToolsRegistrarService, multi: true },
     { provide: TOOL_REGISTRARS, useExisting: OrderToolsRegistrarService, multi: true },
     TOOL_REGISTRARS_INITIALIZER,
-    { 
-      provide: POS_CHECKOUT_SERVICE, 
-      useFactory: (injector: Injector) => injector.get(PosCheckoutService), 
-      deps: [Injector] 
+    {
+      provide: POS_CHECKOUT_SERVICE,
+      useFactory: (injector: Injector) => injector.get(PosCheckoutService),
+      deps: [Injector]
+    },
+    // Sentry captura todo error no manejado de Angular. logErrors mantiene
+    // el console.error para que en desarrollo se sigan viendo igual que antes.
+    {
+      provide: ErrorHandler,
+      useValue: Sentry.createErrorHandler({ showDialog: false, logErrors: true })
     }
-    // {
-    //   provide: ErrorHandler,
-    //   useClass: GlobalErrorHandlerService,
-    // }
   ],
   bootstrap: [AppComponent]
 })

@@ -15,7 +15,7 @@ import { NotificationrlService } from './shared/services/notificationrl.service'
 import { NotificationManagerService } from './shared/services/notifications/notification-manager.service'
 import { NotificationType, NotificationPriority } from './shared/services/notifications/notification.types'
 import { Toast, ToastrService } from 'ngx-toastr';
-import { ErrorHandlerService } from './shared/services/errores/error-handler.service';
+import { syncSentryUserContext } from './shared/services/errores/sentry-context';
 import { AuthService } from './shared/services/firebase/auth.service';
 import { LayoutService } from './shared/services/layout.service';
 import { NgpThemeService } from './shared/services/ngtheme.service';
@@ -74,7 +74,6 @@ export class AppComponent implements OnInit, OnDestroy {
     private loader: LoadingBarService,
     translate: TranslateService,
     // private updates: SwUpdate, // SW desactivado (2026-03-25)
-    private errorHandlerService: ErrorHandlerService,
     private cdr: ChangeDetectorRef
   ) {
     // Initialize loader
@@ -222,37 +221,15 @@ export class AppComponent implements OnInit, OnDestroy {
         this.checkPublicRoute();
       });
 
-    // Configurar manejadores de error global para debugging
-    if (!environment.production) {
-      window.addEventListener('error', (event) => {
-        // Filtrar errores del Angular DevTools
-        if (event.error && event.error.stack &&
-            (event.error.stack.includes('ng-debug-api') ||
-             event.error.stack.includes('getComponent'))) {
-          console.warn('Angular DevTools error ignorado:', event.error.message);
-          event.preventDefault();
-          return;
-        }
-        console.error('Error global de ventana:', event.error);
-        this.errorHandlerService.logError(event.error);
-      });
-
-      window.addEventListener('unhandledrejection', (event) => {
-        // Filtrar errores del Angular DevTools
-        if (event.reason && event.reason.stack &&
-            (event.reason.stack.includes('ng-debug-api') ||
-             event.reason.message?.includes('getComponent'))) {
-          console.warn('Angular DevTools promise rejection ignorada:', event.reason);
-          event.preventDefault();
-          return;
-        }
-        console.error('Promesa no manejada:', event.reason);
-        this.errorHandlerService.logError(event.reason);
-      });
-    }
+    // Errores globales (window.onerror / unhandledrejection) los captura
+    // Sentry desde main.ts — los listeners manuales anteriores enviaban a un
+    // endpoint que no existía (/v1/errorcenter/regitererror).
 
     // Restaurar datos de sesión al inicializar la aplicación
     this.initializeSessionData();
+
+    // Contexto de usuario/empresa para Sentry si ya hay sesión guardada.
+    syncSentryUserContext();
 
     try {
       const raw = localStorage.getItem('user');
