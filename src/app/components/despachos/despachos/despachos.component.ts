@@ -4472,6 +4472,52 @@ export class DespachosComponent implements OnInit, OnDestroy {
       );
   }
 
+  /**
+   * Descarga la guía/etiqueta REAL de la transportadora (Enviame) consultando el
+   * backend on-demand. A diferencia de descargarRotulo (rótulo interno de Katuq),
+   * esto obtiene el PDF de la guía generada por Enviame. La guía puede no estar
+   * lista al momento de crear el envío; en ese caso se avisa al usuario.
+   */
+  descargarGuiaEnviame(pedido: any): void {
+    // Solo el tracking real del envío: shippingOrder es el nº de orden interna
+    // de Katuq (otro concepto) y no sirve como guía ante el provider.
+    const trackingNumber = pedido?.shippment?.trackingNumber;
+    if (!trackingNumber) {
+      this.toastr.warning('Este pedido no tiene número de guía Enviame.', 'Sin guía');
+      return;
+    }
+
+    const provider = pedido?.providerShipment || pedido?.shippment?.provider || pedido?.transportador || 'enviame';
+    const companyId = this.getCompanyId();
+
+    this.toastr.info('Obteniendo guía…', 'Descargar guía');
+
+    this.logisticaService.getShipmentLabel({ companyId, provider, trackingNumber }).subscribe({
+      next: (resp: any) => {
+        const raw = resp?.labelUrl || resp?.labelPdf;
+        if (resp?.success && raw) {
+          // Soporta URL http(s), data URI o base64 crudo (PDF).
+          const finalUrl = (/^https?:\/\//i.test(raw) || raw.startsWith('data:'))
+            ? raw
+            : `data:application/pdf;base64,${raw}`;
+          const win = window.open(finalUrl, '_blank');
+          if (!win) {
+            this.toastr.error('No se pudo abrir la guía. Revisa que las ventanas emergentes no estén bloqueadas.', 'Ventana bloqueada');
+          }
+        } else {
+          this.toastr.warning(
+            resp?.error || 'La guía aún no está disponible. Intenta de nuevo en unos minutos.',
+            'Guía no disponible'
+          );
+        }
+      },
+      error: (err) => {
+        console.error('Error descargando guía Enviame:', err);
+        this.toastr.error('No se pudo obtener la guía. Intenta nuevamente.', 'Error');
+      }
+    });
+  }
+
   descargarRotulo(pedido: any): void {
     const escapeHtml = (text: string) => (text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const recibe = `${pedido.envio?.nombres || ''} ${pedido.envio?.apellidos || ''}`.trim() || pedido.cliente?.nombres_completos || '-';

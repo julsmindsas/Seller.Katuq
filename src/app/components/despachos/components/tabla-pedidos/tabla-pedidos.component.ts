@@ -748,7 +748,8 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    const trackingNumber = pedido.shippingOrder;
+    // Guía real del envío (shippingOrder es el nº de orden interna de Katuq).
+    const trackingNumber = pedido.shippment?.trackingNumber;
     if (!trackingNumber) {
       console.warn('⚠️ TablaPedidos - No tracking number found for Enviame shipment');
       return;
@@ -781,7 +782,8 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       };
     }
 
-    const trackingNumber = pedido.shippingOrder || '';
+    // Preferir la guía real del envío; fallback al nº de orden interna (comportamiento previo).
+    const trackingNumber = pedido.shippment?.trackingNumber || pedido.shippingOrder || '';
     const status = pedido.estadoProceso?.toString() || '';
 
     return {
@@ -789,7 +791,7 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
       status,
       canCancel: this.canCancelEnviameShipment(pedido),
       canTrack: !!trackingNumber,
-      canDownloadLabel: !!trackingNumber
+      canDownloadLabel: !!pedido.shippment?.trackingNumber
     };
   }
 

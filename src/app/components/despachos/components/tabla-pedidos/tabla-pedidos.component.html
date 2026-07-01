@@ -341,15 +341,15 @@
                                                             {{ 'Cancelar' | translate }}
                                                         </button>
 
-                                                        <!-- Enviame Label Download -->
-                                                        <!-- <button *ngIf="getEnviameShipmentInfo(pedido).canDownloadLabel"
+                                                        <!-- Enviame Label Download (guía on-demand vía backend) -->
+                                                        <button *ngIf="getEnviameShipmentInfo(pedido).canDownloadLabel"
                                                             pButton pRipple type="button" icon="pi pi-download"
                                                             class="p-button-outlined p-button-sm p-button-secondary mb-1"
                                                             (click)="downloadEnviameLabel(pedido)"
-                                                            pTooltip="Descargar etiqueta Enviame.io"
+                                                            pTooltip="Descargar guía Enviame.io"
                                                             tooltipPosition="top">
-                                                            {{ 'Etiqueta' | translate }}
-                                                        </button> -->
+                                                            {{ 'Guía' | translate }}
+                                                        </button>
 
                                                         <!-- Enviame Shipment Info Badge -->
                                                         <div class="enviame-info-badge mt-1" *ngIf="getEnviameShipmentInfo(pedido).trackingNumber">
