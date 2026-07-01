@@ -497,7 +497,7 @@
         <div class="doc-total"><span>Total</span><span>{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
       </div>
 
-      <div class="doc-notes" *ngIf="(cotizacion.terminos || '').trim()">{{ cotizacion.terminos }}</div>
+      <div class="doc-notes" *ngIf="(cotizacion.terminos || '').trim()" [innerHTML]="cotizacion.terminos | linkify"></div>
 
       <img
         *ngIf="bannerPiePagina"
