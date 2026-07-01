@@ -55,6 +55,10 @@ export interface Cotizacion {
   // Banderas de conversión (fase 008.2).
   convertidaAPedido?: boolean;
   pedidoGenerado?: string | null;
+  // Tracking de apertura del link público (spec 008.3 — seguimiento CRM).
+  vistaCliente?: boolean;
+  fechaPrimeraVista?: string | null;
+  vistasCount?: number;
   date_edit?: string;
   user_edit?: string;
 }

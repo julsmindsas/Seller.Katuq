@@ -18,6 +18,9 @@
       <h5 class="mb-0">{{ entityName }}</h5>
       <p-tag [value]="capitalize(currentStage)" [severity]="getStageSeverity(currentStage)"></p-tag>
       <span class="text-muted ms-2" *ngIf="lead.entity?.email">{{ lead.entity.email }}</span>
+      <button pButton icon="pi pi-pencil" label="{{ 'Editar' | translate }}" class="p-button-text p-button-sm ms-auto"
+        pTooltip="Corregir los datos ingresados de este lead" tooltipPosition="bottom"
+        (click)="openEditDialog()"></button>
     </div>
 
     <!-- Stage selector -->
@@ -75,6 +78,15 @@
               <span class="info-label">{{ 'Plan' | translate }}</span>
               <p-tag [value]="lead.entity.subscriptionPlan"
                 [severity]="lead.entity.subscriptionPlan === 'premium' ? 'success' : 'info'"></p-tag>
+            </div>
+            <div class="info-row" style="border-bottom:none;">
+              <span class="info-label"><i class="pi pi-tags"></i>{{ 'Etiquetas' | translate }}</span>
+              <div class="card-tags">
+                <span *ngFor="let e of (lead.entity?.etiquetas || [])" class="tag-chip-sm"
+                  [style.background-color]="getTagBgColor(getTagColorByName(e))"
+                  [style.color]="getTagFgColor(getTagColorByName(e))">{{ e }}</span>
+                <small class="text-muted" *ngIf="!(lead.entity?.etiquetas?.length)">{{ 'Sin etiquetas' | translate }}</small>
+              </div>
             </div>
           </div>
         </div>
@@ -194,6 +206,88 @@
 
   </p-tabView>
 </div>
+
+<!-- ═══════ DIALOG EDITAR LEAD ═══════ -->
+<p-dialog header="{{ 'Editar lead' | translate }}" [(visible)]="showEditDialog"
+  [modal]="true" [style]="{width: '480px'}" [closable]="true" [draggable]="false">
+
+  <form [formGroup]="editForm" autocomplete="off">
+    <div class="row g-3 mt-1">
+
+      <div class="col-12">
+        <label class="form-label fw-semibold">{{ 'Nombre completo' | translate }} <span class="text-danger">*</span></label>
+        <input pInputText formControlName="name" placeholder="Ej: Laura Gómez" class="w-100" />
+        <small class="text-danger d-block mt-1"
+          *ngIf="editForm.get('name')?.invalid && editForm.get('name')?.touched">
+          {{ 'El nombre es obligatorio' | translate }}
+        </small>
+      </div>
+
+      <div class="col-12 col-sm-6">
+        <label class="form-label fw-semibold">{{ 'Correo electrónico' | translate }}</label>
+        <input pInputText formControlName="email" placeholder="correo@ejemplo.com" class="w-100" />
+        <small class="text-danger d-block mt-1"
+          *ngIf="editForm.get('email')?.invalid && editForm.get('email')?.touched">
+          {{ 'Correo inválido' | translate }}
+        </small>
+      </div>
+
+      <div class="col-12 col-sm-6">
+        <label class="form-label fw-semibold">{{ 'Teléfono / WhatsApp' | translate }}</label>
+        <input pInputText formControlName="phone" placeholder="3142087654" class="w-100" />
+      </div>
+
+      <div class="col-12 col-sm-5">
+        <label class="form-label fw-semibold">{{ 'Tipo de documento' | translate }}</label>
+        <p-dropdown formControlName="tipoDocumento" [options]="tipoDocOptions"
+          optionLabel="label" optionValue="value"
+          styleClass="w-100" appendTo="body"></p-dropdown>
+      </div>
+
+      <div class="col-12 col-sm-7">
+        <label class="form-label fw-semibold">{{ 'Número de documento' | translate }}</label>
+        <input pInputText formControlName="nit" placeholder="Ej: 1045234567" class="w-100" />
+      </div>
+
+      <div class="col-12">
+        <label class="form-label fw-semibold">
+          <i class="fa fa-tag me-1" style="color:#8b5cf6;"></i>{{ '¿Qué le vas a vender?' | translate }}
+        </label>
+        <textarea pInputTextarea formControlName="productoInteres" rows="2"
+          placeholder="Ej: Plan básico de ventas por WhatsApp, arreglos florales por catálogo digital, suscripción mensual..."
+          class="w-100" style="resize:none; font-size:0.875rem;"></textarea>
+      </div>
+
+      <!-- Etiquetas -->
+      <div class="col-12">
+        <label class="form-label fw-semibold mb-1">
+          <i class="pi pi-tags me-1" style="color:#8b5cf6;"></i>{{ 'Etiquetas' | translate }}
+        </label>
+        <div class="tags-picker" *ngIf="clientTagsCatalog.length > 0">
+          <span *ngFor="let tag of clientTagsCatalog" class="tag-chip"
+            [class.tag-chip-selected]="tieneEtiqueta(tag.name)"
+            [style.background-color]="tieneEtiqueta(tag.name) ? getTagBgColor(tag.color) : ''"
+            [style.color]="tieneEtiqueta(tag.name) ? getTagFgColor(tag.color) : ''"
+            (click)="toggleEtiqueta(tag.name)">
+            <i class="pi pi-check me-1" *ngIf="tieneEtiqueta(tag.name)"></i>{{ tag.name }}
+          </span>
+        </div>
+        <div class="tags-empty-hint" *ngIf="clientTagsCatalog.length === 0">
+          <i class="pi pi-info-circle me-1"></i>{{ 'No hay etiquetas configuradas.' | translate }}
+        </div>
+      </div>
+
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="{{ 'Cancelar' | translate }}" icon="pi pi-times" class="p-button-text p-button-secondary"
+      (click)="showEditDialog = false" [disabled]="saving"></button>
+    <button pButton label="{{ 'Guardar cambios' | translate }}" icon="pi pi-check" class="p-button-primary"
+      (click)="submitEdit()" [disabled]="editForm.invalid || saving"
+      [loading]="saving"></button>
+  </ng-template>
+</p-dialog>
 
 <p-toast></p-toast>
 <p-confirmDialog [style]="{width: '420px'}"></p-confirmDialog>
