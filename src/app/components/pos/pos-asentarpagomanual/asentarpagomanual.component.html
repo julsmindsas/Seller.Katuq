@@ -14,6 +14,7 @@
                 <th>Valor Restante</th>
                 <th>Usuario de Registro</th>
                 <th>Fecha y Hora de Carga</th>
+                <th>Estado</th>
                 <th>Acciones</th>
             </tr>
         </thead>
@@ -30,6 +31,15 @@
                 <td>{{pago.valorRestante | currency:'USD':'symbol':'1.0-0'}}</td>
                 <td>{{pago.usuarioRegistro}}</td>
                 <td>{{pago.fechaHoraCarga | date: 'yyyy-MM-dd hh:mm'}}</td>
+                <td>
+                    <span class="badge"
+                        [class.bg-warning]="pago.estadoVerificacion === 'Pendiente'"
+                        [class.bg-success]="pago.estadoVerificacion === 'Aprobado'"
+                        [class.bg-danger]="pago.estadoVerificacion === 'Rechazado'"
+                        [class.bg-secondary]="!pago.estadoVerificacion">
+                        {{ pago.estadoVerificacion || 'Aprobado' }}
+                    </span>
+                </td>
                 <td>
                     <!-- <button class="btn btn-primary" (click)="editarPago(pago)">Editar</button> -->
                     <button class="btn btn-danger"
