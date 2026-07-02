@@ -799,6 +799,20 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Issue del revisor corregido post-workflow:** el `archivedReason` en Firestore y el `_archiveNote` del JSON citaban "D-067" (ID ya ocupado por la renumeración SIIGO) — corregidos a **D-068** (esta decisión). El playbook `FLOW_MAPPING_PLAYBOOK_2026-05-25.md` recibió nota de que el zombie está archivado.
 - **Deudas que esta decisión NO cubre (siguen abiertas):** R-05 (webhookTrigger responde 200 con runs failed), R-06 (fan-out de inventario multi-línea del flow WooCommerce — el nodo adjust sigue desconectado), decisión estratégica sobre canal legacy vs flow para Café Escobar (hoy conviven), y automatizar el build del canvas en CI.
 
+### 2026-07-01 — D-069: Guards de precios en product-upsert + fin del falso "partial" + gap Cereza→Shopify cerrado
+
+- **Contexto (auditoría de la cadena Cereza→Katuq→Shopify de OH MY STORE, misma sesión que D-068):**
+  1. **Eslabón 1 sano:** 8.276/8.363 productos vienen de Cereza; 0 sin referencia/título; 130 sin precio (sin stock, sin impacto). Inventario: 2.318 con stock, 0 huérfanos, dedup OK.
+  2. **Repisado de precios (reportado por Daniel):** el mapping del flow `cereza-products-to-shopify-a5156643` reconstruye `preciosPorTipoCliente` COMPLETO en cada tick con solo lo que Cereza trae (listas 1=público y 3=mayorista) y `katuq-product-upsert` hacía `set(merge:true)` sin protección → cada sync PISABA ajustes manuales y BORRABA el tipo "modelo" (curado solo en Katuq). El upsert de pedidos tenía campos protegidos; el de productos no.
+  3. **Falso positivo "partial" (90% de los 257/300 runs):** `shopify-product-upsert` y `shopify-inventory-adjust` emitían `missing_input` al error port cuando el tick del polling venía VACÍO (sin cambios en Cereza) — caso normal reportado como error.
+  4. **Gap real Katuq→Shopify: solo 18 de 2.318 con stock** sin publicar (99.2% cobertura) — todos con datos completos y activos en Cereza; el diff del trigger simplemente nunca los re-emitió.
+- **Decisiones/fixes (commits BE `98f423f`, FE `13e0577a`, deployado a prod con autorización explícita):**
+  1. **`katuq-product-upsert` nuevo param `pricingMode` (default `merge`):** `preciosPorTipoCliente` se mergea por `tipoClienteId` (tipos que el sync no trae SE CONSERVAN — "modelo" sobrevive); respeta `manualOverride` por entrada y `precio._precioManualOverride`; un precio entrante 0/null NUNCA pisa uno existente > 0; cambios ≥50% se aplican pero quedan en logger + `_pricingWarnings` del item. `replace` = comportamiento viejo como escape hatch.
+  2. **Ticks vacíos = éxito:** los 2 nodos Shopify retornan `main: [[]]` sin error item → el run queda `success` con `statusReason: no_items`. "Partial" vuelve a significar problema real.
+  3. **Push one-shot de los 18** (dry-run primero per regla de backfills, luego `--apply` autorizado): raw traído de Osmosis por referencia (secuencial anti-429) → `flowEngine.startRun` del flow real → run `success/ok`, 6/6 nodos verdes. **Verificado: 18/18 con `integrations.shopify.productId`, gap = 0.** Prueba en vivo de los guards: los productos conservaron sus 3 tipos de precio (el sync solo trae 2).
+- **Nota técnica:** `osmosisApiClient.getProductsByReference` devuelve `{products: []}` — no array ni `.data` (costó un dry-run fallido).
+- **Deuda que abre:** el frontend de maestro de productos aún no setea `manualOverride`/`_precioManualOverride` al editar precios a mano — los guards ya los respetan; falta que el form los escriba (mejora futura para protección total de ediciones manuales por entrada).
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
