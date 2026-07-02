@@ -813,6 +813,14 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Nota técnica:** `osmosisApiClient.getProductsByReference` devuelve `{products: []}` — no array ni `.data` (costó un dry-run fallido).
 - **Deuda que abre:** el frontend de maestro de productos aún no setea `manualOverride`/`_precioManualOverride` al editar precios a mano — los guards ya los respetan; falta que el form los escriba (mejora futura para protección total de ediciones manuales por entrada).
 
+### 2026-07-02 — D-070: Café Escobar = primera empresa migrada a notificaciones unificadas (spec 010) + fixes del incidente "no llegan pedidos"
+
+- **Incidente reportado:** Café Escobar decía no recibir pedidos. Verificado contra el API de WooCommerce (fuente de verdad): TODOS los pedidos reales (#2011/#2013/#2014) estaban en Katuq — el día "sin pedidos" (1-jul) fue un día sin ventas real y el #2012 no existe ni en WooCommerce (hueco de numeración). La integración estaba sana; el problema era de PERCEPCIÓN por 3 causas reales:
+  1. **`formaEntrega` crudo del canal ("Precio fijo")** en vez del canónico → el módulo de despachos no mostraba los pedidos para generar orden de envío. **Ortografía crítica descubierta:** el frontend compara `=== "Envío a Domicilio"` (CON la "a"); el controller legacy y el mapper Shopify usan "Envío Domicilio" (sin "a") que TAMPOCO matchea — deuda anotada para Shopify. Fix: `normalizeFormaEntrega()` en el mapper WC (`Envío a Domicilio` / `Recoge en Tienda`), título original preservado en `integrations.woocommerce.shippingMethodTitle`, pedidos existentes (BAR-000341/342/343) corregidos en Firestore (commit `9d5c23c`).
+  2. **Sin correo de aviso:** el canal legacy llamaba `notificationHooks.onOrderCreated` DIRECTO (sin flag) — cliente recibía email de Katuq y la empresa su copia; el flow lo gatea con `ORDER_NOTIF_UNIFIED` (off) → silencio total desde D-065. **Decisión:** activar `ORDER_NOTIF_UNIFIED_COMPANIES=CAFE ESCOBAR` en el `.env` de prod (piloto de migración spec 010). Sus preferencias en `company_notification_preferences` YA tenían order_created activo para cliente + copia empresa + SMS (configuradas por ellos en mayo). Sin riesgo de duplicados: `createOrder` apaga el camino legacy cuando el flag está on (diseño spec 010). WhatsApp sin saldo → no factura.
+  3. **Hora UTC del WordPress de la tienda** (+5h en pantalla, pedidos nocturnos con fecha del día siguiente) → mapper ahora usa `date_created` (hora de la tienda, commit `3a616d8`) + recomendación operativa: la tienda debe poner su WP en `America/Bogota`.
+- **Monitoreo:** primer pedido real post-activación debe mostrar en logs `[orderNotif] order_created despachado` (antes decía `dark-launch (flag off)`).
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.
