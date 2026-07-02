@@ -1450,10 +1450,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.canDeleteOrder() || this.isAdminUser()) {
       return this.estadosPago as EstadoPago[];
     }
-    // Spec 013 — con tesorería activa el vendedor NO puede aprobar ni preaprobar:
-    // esas decisiones son exclusivas del tesorero (validado también en el servidor).
+    // Spec 013 (ajuste D-074, incidente Almara 2026-07-02) — con tesorería
+    // activa el vendedor NO puede APROBAR (decisión exclusiva del tesorero,
+    // validado también en el servidor), pero conserva PreAprobado: las
+    // comerciales lo usan a diario para autorizar entregas (contraentrega /
+    // cliente de confianza). El servidor bloquea además cualquier cambio de
+    // estado cuando el pedido tiene pagos en verificación.
     if (this.treasuryService.treasuryEnabledCached === true) {
-      return [EstadoPago.Pendiente, EstadoPago.Pospendiente];
+      return [
+        EstadoPago.Pendiente,
+        EstadoPago.Pospendiente,
+        EstadoPago.PreAprobado,
+      ];
     }
     // Vendedores ven estados básicos (sin Rechazado, Precancelado, Cancelado)
     return [
