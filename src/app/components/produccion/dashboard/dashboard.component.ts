@@ -1221,7 +1221,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       const filter = {
         fechaInicial: this.fechaInicial,
         fechaFinal: this.fechaFinal,
-        estadosPago: ['Prependiente', 'PreAprobado', 'Aprobado'],
+        // Fix typo latente: era 'Prependiente' (no matchea ningún estado) y
+        // omitía Pendiente. Alineado con refrescarDatosEnsamble (spec 013:
+        // Pospendiente visible en todos los módulos operativos).
+        estadosPago: ['Pospendiente', 'PreAprobado', 'Aprobado', 'Pendiente'],
         company: currentCompany.nomComercial || ''
       }
 

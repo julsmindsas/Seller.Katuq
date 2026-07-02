@@ -136,9 +136,15 @@ export class SharedFiltersComponent implements OnInit {
 
   private initializeFilters(): void {
     if (this.estadosPagoOptions.length === 0) {
+      // Fallback con el enum completo: omitir estados aquí los vuelve
+      // infiltrables para los consumidores que no pasan [estadosPagoOptions]
+      // (spec 013: Pospendiente = pago en revisión de tesorería, debe ser
+      // visible en todos los módulos operativos).
       this.estadosPagoOptions = [
         { label: 'Todos', value: 'all' },
         { label: 'Pendiente', value: 'Pendiente' },
+        { label: 'Pospendiente', value: 'Pospendiente' },
+        { label: 'PreAprobado', value: 'PreAprobado' },
         { label: 'Aprobado', value: 'Aprobado' },
         { label: 'Rechazado', value: 'Rechazado' }
       ];

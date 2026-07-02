@@ -142,6 +142,28 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
       clientes: ['view'],
     },
   },
+  {
+    // Spec 013 — Tesorería MVP: el tesorero verifica pagos en el banco y los
+    // aprueba/rechaza. El backend valida este rol por nombre ("Tesorero") en
+    // los endpoints de decisión de /v1/treasury (junto a Administrador y
+    // Super Administrador).
+    id: 'tesorero',
+    nombreSugerido: 'Tesorero',
+    descripcion: 'Verifica los pagos en el banco y los aprueba o rechaza desde Tesorería. Ve la cartera de pedidos y el historial de pagos. No crea pedidos.',
+    icon: 'dollar-sign',
+    color: '#198754',
+    menus: [
+      'tesoreria',
+      'ventas/pedidos',
+      'dashboards',
+    ],
+    permissions: {
+      tesoreria: ['view', 'approve', 'reject'],
+      ventas: ['view'],
+      reportes: ['view'],
+      contabilidad: ['view'],
+    },
+  },
 ];
 
 /** Helper: buscar plantilla por ID */
