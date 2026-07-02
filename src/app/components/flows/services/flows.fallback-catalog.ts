@@ -788,12 +788,23 @@ export const FALLBACK_NODE_CATALOG: NodeSpec[] = [
         "createIfMissing": {
           "type": "boolean",
           "default": true
+        },
+        "pricingMode": {
+          "type": "string",
+          "enum": [
+            "merge",
+            "replace"
+          ],
+          "default": "merge",
+          "title": "Modo de precios en UPDATE",
+          "description": "merge (default): protege precios curados en Katuq — conserva tipos de cliente que el sync no trae (ej. \"modelo\"), respeta overrides manuales y nunca pisa un precio > 0 con 0/null. replace: comportamiento viejo (el sync pisa todo)."
         }
       }
     },
     "defaults": {
       "matchBy": "referencia",
-      "createIfMissing": true
+      "createIfMissing": true,
+      "pricingMode": "merge"
     },
     "tags": [
       "katuq",
