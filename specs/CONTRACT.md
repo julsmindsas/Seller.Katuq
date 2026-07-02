@@ -1021,6 +1021,15 @@ Orden = prioridad. La spec piloto siempre encabeza.
   - **Instrucción explícita del usuario: NO desplegar.** Solo commit (sin push, sin deploy). Producción intacta.
   - **Pendiente para que los banners salgan en prod (2 despliegues, decisión del usuario):** (1) desplegar backend `backend-aws-security` → `back.katuq.com`; (2) el commit de UI de banners `1bb95ae` está solo en `feature/venta-asistida-mejorada`, **no en `main`** → el build de prod del frontend debe salir de una rama que lo incluya. Ambas piezas deben ir juntas (sin backend no llega `branding`; sin frontend no hay HTML que lo pinte). Nota: el banner de publicidad Katuq sale siempre (default `KATUQ_DEFAULT_AD_URL`); encabezado/pie solo si la empresa tiene `imageEmail.encabezado/piepagina`.
 
+### 2026-07-01 (sesión maratónica — WooCommerce, Sentry, saneamiento /flows, precios Cereza)
+- **4 frentes cerrados en el día, todos en producción:**
+  1. **D-065:** flow WooCommerce de Café Escobar reparado (companyId equivocado + mapper vacío) — pedido real perdido recuperado como `BAR-000341`.
+  2. **D-066:** observabilidad de errores con Sentry (front + back), verificada E2E, con protección de cuota. Org `julsmind-sas`, dashboard "Errores Katuq" con 4 gráficas. Idioma español + TZ Bogotá.
+  3. **D-068:** saneamiento /flows vía ejército de agentes con revisión adversaria: drift del canvas resuelto, 3 catálogos unificados (58 nodos), runs con `statusReason`/`errorSamples`, flow zombie archivado.
+  4. **D-069:** guards de precios en `katuq-product-upsert` (el sync de Cereza repisaba precios y borraba el tipo "modelo"), fin del falso "partial" (ticks vacíos), y gap Cereza→Shopify cerrado (18/18 publicados, cobertura 100%).
+- **Hallazgo operativo:** el backend local ejecuta los crons de flows contra el Firestore de PROD (misma serviceAccountKey) → runs duplicados. Mitigación: apagarlo tras probar. Fix limpio pendiente: env flag `DISABLE_FLOW_CRONS`.
+- **Deudas priorizadas que quedan:** R-05 (webhook 200 con run failed), R-06 (fan-out inventario WooCommerce), sourcemaps Sentry (`SENTRY_AUTH_TOKEN`), alertas Slack, flag `manualOverride` en el form del maestro de productos, build del canvas en CI.
+
 ### 2026-07-01 (sesión — WooCommerce Café Escobar no entraban pedidos)
 - **Diagnóstico en vivo (Firestore + código backend, sin asumir desde docs viejos):** el flow `woo-orders-to-katuq-a786f1a8` (piloto instanciado 2026-05-25 para Café Escobar) tenía 3 bugs encadenados — ver **D-065**. El canal legacy (`/v1/woocommerceWebhook/order/update`) seguía funcionando (prod nunca desplegó el refactor 003.7 que lo hubiera cerrado con 410 Gone), pero el canal nuevo (`order.created` → flow) perdía pedidos en silencio desde al menos 2026-06-05.
 - **Caso real detectado en caliente:** WC order #2011 (Camilo Andrés Rincón Lopera, $149.000 COP, transferencia Bancolombia pendiente) llegó durante la investigación y confirmó el bug con evidencia fresca — se usó su payload real (guardado en `webhook_logs`) para probar el fix antes de darlo por bueno.
