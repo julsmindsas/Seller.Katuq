@@ -279,11 +279,25 @@
   }
 }
 
-.indicator-card--gray {
-  border-left-color: $katuq-gray-500;
+.indicator-card--danger {
+  border-left-color: $katuq-danger;
 
   .indicator-value {
-    color: $katuq-gray-600;
+    color: $katuq-danger-dark;
+  }
+}
+
+// Cards de "Tu negocio hoy": mismos indicator-card pero navegables
+.negocio-card {
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: $katuq-primary-light;
+    box-shadow: 0 2px 12px rgba($katuq-primary, 0.08);
+    transform: translateY(-1px);
+    text-decoration: none;
   }
 }
 

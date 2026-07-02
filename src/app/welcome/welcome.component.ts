@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { AngularFirestore } from '@angular/fire/compat/firestore';
-import { take } from 'rxjs/operators';
 import { SecurityService } from '../shared/services/security/security.service';
 import { CompanyInformation } from '../shared/models/User/CompanyInformation';
+import { AnalyticsService } from '../shared/services/dashboard/analytics.service';
+import { LogisticaServiceV2 } from '../shared/services/despachos/logistica.service.v2';
+import { InventarioService } from '../shared/services/inventarios/inventario.service';
+import { CrmService } from '../components/crm/services/crm.service';
+import { VentasService } from '../shared/services/ventas/ventas.service';
 
 @Component({
   selector: 'app-welcome',
@@ -24,6 +26,20 @@ export class WelcomeComponent implements OnInit {
     'despachos', 'dashboards', 'dashboards/builder', 'empresas', 'integrations',
   ];
 
+  // "Tu negocio hoy" — métricas del comercio calculadas server-side (regla del
+  // proyecto: el frontend solo muestra). Cada widget se pide únicamente si el
+  // rol tiene acceso a la pantalla destino; valor null = endpoint falló ("—").
+  ventasHoy: { cargando: boolean; total: number | null; pedidos: number | null } =
+    { cargando: false, total: null, pedidos: null };
+  despachosHoy: { cargando: boolean; paraDespacho: number | null; urgentes: number | null } =
+    { cargando: false, paraDespacho: null, urgentes: null };
+  stockCritico: { cargando: boolean; sinStock: number | null; bajoStock: number | null } =
+    { cargando: false, sinStock: null, bajoStock: null };
+  crmTareas: { cargando: boolean; vencidas: number | null; paraHoy: number | null } =
+    { cargando: false, vencidas: null, paraHoy: null };
+  clientesResumen: { cargando: boolean; nuevosMes: number | null; enAlerta: number | null; total: number | null } =
+    { cargando: false, nuevosMes: null, enAlerta: null, total: null };
+
   // Set de paths del menú asignados al rol del usuario (sin barra inicial).
   // Se llena en ngOnInit leyendo user.menu del localStorage. Los admins lo dejan
   // vacío y `canAccess()` retorna true siempre para ellos (escape hatch).
@@ -36,20 +52,13 @@ export class WelcomeComponent implements OnInit {
   // Onboarding banner
   showOnboardingBanner = false;
 
-  // Indicadores economicos Colombia (defaults como fallback)
-  trmHoy: number | null = null;
-  trmCargando = false;
-  indicadores = {
-    salarioMinimo: 1623500,
-    auxilioTransporte: 229468,
-    uvt: 49799,
-    anio: 2026,
-  };
-
   constructor(
-    private http: HttpClient,
-    private afs: AngularFirestore,
-    private securityService: SecurityService
+    private securityService: SecurityService,
+    private analyticsService: AnalyticsService,
+    private logisticaService: LogisticaServiceV2,
+    private inventarioService: InventarioService,
+    private crmService: CrmService,
+    private ventasService: VentasService
   ) {}
 
   ngOnInit() {
@@ -76,8 +85,7 @@ export class WelcomeComponent implements OnInit {
       this.showOnboardingBanner = true;
     }
 
-    this.cargarTRM();
-    this.cargarIndicadoresEconomicos();
+    this.cargarMetricasNegocio();
   }
 
   get showAccionesRapidas(): boolean {
@@ -86,6 +94,34 @@ export class WelcomeComponent implements OnInit {
 
   get showHerramientas(): boolean {
     return this.canAccessAny(this.herramientasPaths);
+  }
+
+  // Visibilidad por widget: la misma regla que la pantalla a la que navega la
+  // card. "Ventas de hoy" son cifras globales del comercio — solo roles con
+  // analíticas (un vendedor sin dashboards no debe ver ventas de otros).
+  get showVentasHoy(): boolean {
+    return this.canAccess('dashboards') || this.canAccess('dashboards/builder');
+  }
+
+  get showDespachosHoy(): boolean {
+    return this.canAccess('despachos');
+  }
+
+  get showStockCritico(): boolean {
+    return this.canAccess('inventario/inventario-catalogo');
+  }
+
+  get showCrmTareas(): boolean {
+    return this.canAccess('crm/list');
+  }
+
+  get showClientesResumen(): boolean {
+    return this.canAccess('ventas/clienteslista');
+  }
+
+  get showNegocioHoy(): boolean {
+    return this.showVentasHoy || this.showDespachosHoy || this.showStockCritico
+      || this.showCrmTareas || this.showClientesResumen;
   }
 
   /**
@@ -124,40 +160,103 @@ export class WelcomeComponent implements OnInit {
     localStorage.removeItem('showOnboardingBanner');
   }
 
-  cargarTRM(): void {
-    this.trmCargando = true;
-    this.http.get<any[]>('https://www.datos.gov.co/resource/mcec-87by.json?$limit=1&$order=vigenciadesde%20DESC')
-      .subscribe({
-        next: (data) => {
-          if (data?.length > 0) {
-            this.trmHoy = parseFloat(data[0].valor);
-          }
-          this.trmCargando = false;
+  /**
+   * Dispara la carga de los widgets de negocio visibles para el rol. Cada
+   * endpoint es independiente: si uno falla, su card muestra "—" sin bloquear
+   * a los demás. Los observables HTTP completan solos (sin leak).
+   */
+  private cargarMetricasNegocio(): void {
+    const hoy = this.formatearFechaLocal(new Date());
+
+    if (this.showVentasHoy) {
+      this.ventasHoy.cargando = true;
+      this.analyticsService.getDashboardCore(hoy, hoy).subscribe({
+        next: (r) => {
+          this.ventasHoy = {
+            cargando: false,
+            total: r?.kpis?.ventasTotales ?? 0,
+            pedidos: r?.kpis?.totalPedidos ?? 0,
+          };
         },
-        error: () => { this.trmCargando = false; }
+        error: () => { this.ventasHoy.cargando = false; },
       });
+    }
+
+    if (this.showDespachosHoy) {
+      this.despachosHoy.cargando = true;
+      // Sin filtro de fechas: la cola operativa activa completa.
+      this.logisticaService.getShippingMetrics().subscribe({
+        next: (r) => {
+          this.despachosHoy = {
+            cargando: false,
+            paraDespacho: r?.pedidosParaDespacho ?? 0,
+            urgentes: r?.pedidosUrgentes ?? 0,
+          };
+        },
+        error: () => { this.despachosHoy.cargando = false; },
+      });
+    }
+
+    if (this.showStockCritico) {
+      this.stockCritico.cargando = true;
+      // limit: 1 + includeMetrics: solo los agregados, sin pagar el listado.
+      // OJO: `estadisticas` es de la página actual (con limit=1 siempre da 0/1)
+      // — los globales correctos salen de totalesGlobales y bodegas[].metricas.
+      this.inventarioService.obtenerInventarioConsolidado({ limit: 1, includeMetrics: true }).subscribe({
+        next: (r) => {
+          const tg = r?.totalesGlobales;
+          // SKUs inventariables sin stock = catálogo total - SKUs con stock.
+          const sinStock = tg ? Math.max(0, (tg.totalSKUsCatalogo || 0) - (tg.totalProductos || 0)) : 0;
+          // Suma de bajo stock por bodega (exacto para tenants de 1 bodega;
+          // aproximado en multi-bodega hasta tener el agregado global backend).
+          const bajoStock = (r?.bodegas || []).reduce(
+            (acc, b) => acc + (b?.metricas?.productosBajoStock || 0), 0);
+          this.stockCritico = { cargando: false, sinStock, bajoStock };
+        },
+        error: () => { this.stockCritico.cargando = false; },
+      });
+    }
+
+    if (this.showCrmTareas) {
+      this.crmTareas.cargando = true;
+      // /v1/crm/stats es el CRM real multi-tenant (el viejo /v1/prospectos/stats
+      // no existe en el backend — 404 silencioso). getStats() ya desenvuelve
+      // `data` y en error emite null (catchError interno) → la card queda "—".
+      this.crmService.getStats().subscribe({
+        next: (r) => {
+          this.crmTareas = {
+            cargando: false,
+            vencidas: r ? (r.tasksOverdue ?? 0) : null,
+            paraHoy: r ? (r.tasksDueToday ?? 0) : null,
+          };
+        },
+        error: () => { this.crmTareas.cargando = false; },
+      });
+    }
+
+    if (this.showClientesResumen) {
+      this.clientesResumen.cargando = true;
+      // Cacheado ~30 min server-side (metricas_globales/{company}) — 1 read por
+      // login. Solo se renderizan conteos; las cifras de dinero del payload
+      // (totalFacturado) no se muestran acá.
+      this.ventasService.getGlobalCustomerMetrics().subscribe({
+        next: (r) => {
+          this.clientesResumen = {
+            cargando: false,
+            nuevosMes: r?.clientesNuevos30dias ?? 0,
+            enAlerta: r?.clientesEnAlerta ?? 0,
+            total: r?.totalClientes ?? 0,
+          };
+        },
+        error: () => { this.clientesResumen.cargando = false; },
+      });
+    }
   }
 
-  /**
-   * Carga indicadores económicos desde Firestore (colección config/indicadores_economicos).
-   * Si no existe el documento, usa los valores hardcodeados como fallback.
-   * Para actualizar: editar el doc en Firestore o crear un script.
-   * take(1): es una carga one-shot — sin él, cada visita al welcome dejaba un
-   * listener onSnapshot vivo toda la sesión.
-   */
-  private cargarIndicadoresEconomicos(): void {
-    this.afs.doc('config/indicadores_economicos').valueChanges().pipe(take(1)).subscribe({
-      next: (data: any) => {
-        if (data) {
-          this.indicadores = {
-            salarioMinimo: data.salarioMinimo || this.indicadores.salarioMinimo,
-            auxilioTransporte: data.auxilioTransporte || this.indicadores.auxilioTransporte,
-            uvt: data.uvt || this.indicadores.uvt,
-            anio: data.anio || this.indicadores.anio,
-          };
-        }
-      },
-      error: () => { /* Usa fallback hardcodeado */ }
-    });
+  private formatearFechaLocal(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 }
