@@ -13,6 +13,22 @@ import { Injectable } from '@angular/core';
  *     // copy dist/flow-canvas.js + dist/flow-canvas.css to
  *     //    src/assets/flow-canvas/
  *
+ * ATENCIÓN — regresión conocida de `localeCompare` (ver commit e41486f8):
+ * el catálogo de nodos usa `.sort((a,b) => a.displayName.localeCompare(...))`
+ * en `packages/flow-canvas/src/components/NodePalette.tsx`, ya con guard
+ * defensivo en el fuente TSX (sobrevive al rebuild). Pero React Flow
+ * (`@reactflow/core`, dependencia en node_modules, NO en nuestro src) trae
+ * OTRO `.sort((o,i) => o.id.localeCompare(i.id))` sin guard al calcular los
+ * markers de las flechas — ese vive en el vendor bundle y Vite lo inlinea
+ * tal cual. Cada `npm run build` reintroduce ese crash porque no es código
+ * nuestro. Después de compilar y ANTES de copiar a `src/assets/flow-canvas/`,
+ * hay que volver a parchear esa línea en `dist/flow-canvas.js` (buscar
+ * `.sort((o, i) => o.id.localeCompare(i.id))` cerca de la línea ~10092 del
+ * bundle minificado y envolver ambos lados en `String(x && x.id || '')`).
+ * No hay forma de fijarlo de forma durable en el fuente sin tocar
+ * node_modules (fuera de alcance) o subir de versión react-flow con el fix
+ * upstream.
+ *
  * If you want a CDN-hosted bundle instead, override
  * `bundleUrl` / `cssUrl` from `environment.ts` and feed them in via DI.
  */

@@ -37,6 +37,9 @@
           <span class="kf-runs__item-id">{{ run.runId | slice : 0 : 12 }}…</span>
           <span [class]="statusClass(run.status)">{{ run.status }}</span>
         </div>
+        <div class="kf-runs__item-reason" *ngIf="statusReasonLabel(run.statusReason) as reasonLabel">
+          {{ reasonLabel }}
+        </div>
         <div class="kf-runs__item-meta">
           <div>{{ run.startedAt }}</div>
           <div>{{ run.totalDurationMs ? run.totalDurationMs + ' ms' : '—' }}</div>
@@ -47,7 +50,12 @@
     <div class="kf-runs__detail" *ngIf="selectedRun">
       <div class="kf-runs__detail-head">
         <h2>Run {{ selectedRun.runId }}</h2>
-        <span [class]="statusClass(selectedRun.status)">{{ selectedRun.status }}</span>
+        <div class="kf-runs__detail-head-status">
+          <span [class]="statusClass(selectedRun.status)">{{ selectedRun.status }}</span>
+          <span class="kf-runs__reason" *ngIf="statusReasonLabel(selectedRun.statusReason) as reasonLabel">
+            {{ reasonLabel }}
+          </span>
+        </div>
       </div>
 
       <dl class="kf-runs__detail-meta">
@@ -88,6 +96,18 @@
           <pre *ngIf="n.error" class="kf-runs__error">
 {{ n.error.code }}: {{ n.error.message }}
 {{ n.error.stack }}</pre>
+          <div class="kf-runs__erritems" *ngIf="n.errorItemCount">
+            <div class="kf-runs__erritems-head">
+              <i class="pi pi-exclamation-circle"></i>
+              {{ n.errorItemCount }} ítem(s) desviados al puerto de error
+            </div>
+            <ul class="kf-runs__errsamples" *ngIf="n.errorSamples?.length">
+              <li *ngFor="let s of n.errorSamples">
+                <span class="kf-runs__errsample-code" *ngIf="s.code">{{ s.code }}</span>
+                <span class="kf-runs__errsample-msg">{{ s.message }}</span>
+              </li>
+            </ul>
+          </div>
           <pre *ngIf="n.output" class="kf-runs__output">{{ formatJson(n.output) }}</pre>
         </li>
       </ul>

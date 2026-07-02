@@ -5,6 +5,14 @@
 > en pedidos Katuq sin depender de un dev específico.
 >
 > **Última edición**: 2026-05-25, tras consolidar fixes Shopify + WC.
+>
+> ⚠️ **Actualización 2026-07-01 (D-068):** el flow `flow-cafe-escobar-woo-orders`
+> que este playbook referencia fue **ARCHIVADO** (era un duplicado del trigger de
+> `woo-orders-to-katuq-a786f1a8`, riesgo de doble disparo). NO lo reactives ni le
+> dispares triggers. Su graph quedó preservado en
+> `specs/003-woocommerce-360-marco/zombie-flow-cafe-escobar-graph.json`.
+> El flow VIVO de Café Escobar es `woo-orders-to-katuq-a786f1a8`
+> (con mapper dedicado `woocommerce-order-map`, ver D-065).
 
 ---
 

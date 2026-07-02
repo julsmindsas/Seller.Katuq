@@ -23,6 +23,16 @@ export type RunStatus =
   | 'partial'
   | 'cancelled';
 
+/**
+ * [Observabilidad] Etiqueta el POR QUÉ del `status` final del run (no cambia
+ * la lógica de decisión del status, solo la explica en la UI).
+ */
+export type RunStatusReason =
+  | 'node_failed' // Hubo throws (con o sin recovery in-graph vía error port).
+  | 'error_port_items' // 'partial' por ítems desviados al error port (sin throws).
+  | 'no_items' // 'success' técnico pero ningún terminal recibió items — trigger vacío.
+  | 'ok'; // success real, con items en los terminales.
+
 export type NodeStatus =
   | 'pending'
   | 'running'
@@ -140,6 +150,16 @@ export interface NodeState {
   output?: { main: NodeItem[][]; error?: NodeItem[] };
   error?: NodeError;
   subscriptionId?: string;
+  /**
+   * [Observabilidad] Cantidad de ítems que el nodo desvió a su puerto
+   * `error` (sin throw). Se persiste siempre que sea > 0.
+   */
+  errorItemCount?: number;
+  /**
+   * [Observabilidad] Hasta 3 muestras livianas de los ítems desviados al
+   * puerto `error`. `message` truncado a 300 chars.
+   */
+  errorSamples?: Array<{ message: string; code?: string }>;
 }
 
 export interface RunContext {
@@ -151,6 +171,11 @@ export interface RunContext {
   startedAt: string;
   finishedAt?: string;
   status: RunStatus;
+  /**
+   * [Observabilidad] Etiqueta del POR QUÉ del status (ver RunStatusReason).
+   * Opcional por compatibilidad con runs históricos previos a este campo.
+   */
+  statusReason?: RunStatusReason;
   triggerData: NodeItem[];
   nodeStates: Record<string, NodeState>;
   errors: NodeError[];

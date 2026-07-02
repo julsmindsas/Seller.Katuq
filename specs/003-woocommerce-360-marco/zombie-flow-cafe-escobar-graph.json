@@ -1,0 +1,273 @@
+{
+  "_archiveNote": {
+    "what": "Este es el doc completo de Firestore del flow 'flow-cafe-escobar-woo-orders' (CAFE ESCOBAR), archivado por ser un duplicado peligroso.",
+    "why": "Duplicado del trigger webhook {provider:'woocommerce', topic:'order.created'} del flow 'woo-orders-to-katuq-a786f1a8' (el que SÍ recibe el tráfico real). Fue un intento paralelo del 25-may. Hoy no recibe tráfico, pero si algún día se usa la ruta canónica de webhooks (eventBus → dispatcher getActiveFlowsByEventType) AMBOS flows dispararían por el mismo pedido → pedido/inventario duplicado. Por eso se archivó (status: \"archived\") en vez de dejarlo activo. Ver D-068 en specs/CONTRACT.md.",
+    "graphValue": "El graph de este flow preserva el patrón fan-out completo de inventario (katuq-canonical-mapper → katuq-product-resolver-by-ref → katuq-order-upsert → split-array → katuq-canonical-mapper → katuq-inventory-adjust) que el flow bueno ('woo-orders-to-katuq-a786f1a8') NO tiene. Se preserva este JSON como referencia para el fix futuro R-06.",
+    "archivedFlowId": "flow-cafe-escobar-woo-orders",
+    "keptActiveFlowId": "woo-orders-to-katuq-a786f1a8",
+    "archivedOn": "2026-07-02T00:10:29.865Z"
+  },
+  "description": "Pedidos creados en cafeescobar.shop entran a Katuq automáticamente, resuelven SKU y descuentan stock de BOD-001.",
+  "triggers": [
+    {
+      "nodeId": "trigger",
+      "config": {
+        "topic": "order.created",
+        "provider": "woocommerce"
+      },
+      "type": "webhook"
+    }
+  ],
+  "name": "WooCommerce → Katuq (Pedidos)",
+  "companyId": "CAFE ESCOBAR",
+  "createdBy": "adminapps@julsmind.com",
+  "createdAt": "2026-05-25T20:19:48.077Z",
+  "tags": [
+    "woocommerce",
+    "pedidos",
+    "piloto"
+  ],
+  "id": "flow-cafe-escobar-woo-orders",
+  "status": "active",
+  "version": 9,
+  "updatedAt": "2026-05-25T21:29:37.536Z",
+  "date_edit": "2026-05-25T22:23:15.346Z",
+  "_mappingFixVersion": "fix-inventory-adjust-reason-enum-2026-05-25",
+  "graph": {
+    "edges": [
+      {
+        "sourcePort": "main",
+        "targetPort": "main",
+        "target": "mapper",
+        "source": "trigger",
+        "id": "e1"
+      },
+      {
+        "sourcePort": "main",
+        "targetPort": "main",
+        "target": "product-resolver",
+        "source": "mapper",
+        "id": "e2"
+      },
+      {
+        "sourcePort": "main",
+        "targetPort": "main",
+        "target": "persist",
+        "source": "product-resolver",
+        "id": "e3"
+      },
+      {
+        "targetPort": "main",
+        "target": "split-cart",
+        "source": "persist",
+        "id": "e4",
+        "sourcePort": "main"
+      },
+      {
+        "targetPort": "main",
+        "target": "adj-mapper",
+        "source": "split-cart",
+        "id": "e5",
+        "sourcePort": "main"
+      },
+      {
+        "targetPort": "main",
+        "target": "inventory-adjust",
+        "source": "adj-mapper",
+        "id": "e6",
+        "sourcePort": "main"
+      }
+    ],
+    "nodes": [
+      {
+        "id": "trigger",
+        "type": "woocommerce-order-created",
+        "position": {
+          "y": 140,
+          "x": 80
+        },
+        "params": {}
+      },
+      {
+        "id": "mapper",
+        "params": {
+          "targetSchema": "order",
+          "mapping": {
+            "date_add": "{{ new Date().toISOString() }}",
+            "company": "{{ $companyId }}",
+            "subtotal": "{{ (function(){ var t = parseFloat($json.total || 0); var s = parseFloat($json.shipping_total || 0); var tx = parseFloat($json.total_tax || 0); var d = parseFloat($json.discount_total || 0); return Math.round((t - s - tx + d) * 100) / 100; })() }}",
+            "nroPedidoReferencia": "{{ \"#\" + String($json.number || $json.id || \"\") }}",
+            "estadoProceso": "{{ ($json.status === \"cancelled\" || $json.status === \"refunded\" || $json.status === \"failed\") ? \"Cancelado\" : ($json.status === \"completed\" ? \"Despachado\" : \"ParaDespachar\") }}",
+            "totalEnvio": "{{ parseFloat($json.shipping_total || 0) }}",
+            "envio": {
+              "direccionEntrega": "{{ String(($json.shipping && (($json.shipping.address_1 || \"\") + ($json.shipping.address_2 ? \" \" + $json.shipping.address_2 : \"\"))) || \"\") }}",
+              "ciudad": "{{ String(($json.shipping && $json.shipping.city) || \"\") }}",
+              "celular": "{{ (function(){ var raw=String(($json.shipping && $json.shipping.phone) || ($json.billing && $json.billing.phone) || \"\").trim(); if (!raw) return \"\"; if (raw.charAt(0)===\"+\") return raw; if (raw.indexOf(\"57\")===0 && raw.length>=12) return \"+\"+raw; return \"+57\"+raw; })() }}",
+              "nombres": "{{ String(($json.shipping && $json.shipping.first_name) || \"\") }}",
+              "codigoPostal": "{{ String(($json.shipping && $json.shipping.postcode) || \"\") }}",
+              "barrio": "",
+              "alias": "Principal",
+              "pais": "{{ (function(){ var c=String(($json.shipping && $json.shipping.country) || \"\").trim(); var map={CO:\"Colombia\",US:\"Estados Unidos\",MX:\"México\",AR:\"Argentina\",ES:\"España\",PE:\"Perú\",CL:\"Chile\",EC:\"Ecuador\",VE:\"Venezuela\",PA:\"Panamá\",CR:\"Costa Rica\"}; return map[c] || (c || \"Colombia\"); })() }}",
+              "apellidos": "{{ String(($json.shipping && $json.shipping.last_name) || \"\") }}",
+              "observaciones": "{{ String($json.customer_note || \"\") }}",
+              "indicativoCel": "57",
+              "departamento": "{{ (function(){ var s=String(($json.shipping && $json.shipping.state) || \"\").trim().toUpperCase(); var map={AMA:\"Amazonas\",ANT:\"Antioquia\",ARA:\"Arauca\",ATL:\"Atlántico\",BOL:\"Bolívar\",BOY:\"Boyacá\",CAL:\"Caldas\",CAQ:\"Caquetá\",CAS:\"Casanare\",CAU:\"Cauca\",CES:\"Cesar\",CHO:\"Chocó\",COR:\"Córdoba\",CUN:\"Cundinamarca\",DC:\"Bogotá D.C.\",GUA:\"Guainía\",GUV:\"Guaviare\",HUI:\"Huila\",LAG:\"La Guajira\",MAG:\"Magdalena\",MET:\"Meta\",NAR:\"Nariño\",NSA:\"Norte de Santander\",PUT:\"Putumayo\",QUI:\"Quindío\",RIS:\"Risaralda\",SAP:\"San Andrés y Providencia\",SAN:\"Santander\",SUC:\"Sucre\",TOL:\"Tolima\",VAC:\"Valle del Cauca\",VAU:\"Vaupés\",VID:\"Vichada\"}; return map[s] || (s || \"\"); })() }}"
+            },
+            "horarioEntrega": "LO MAS PRONTO POSIBLE",
+            "totalImpuesto": "{{ parseFloat($json.total_tax || 0) }}",
+            "fechaEntrega": "{{ String($json.date_created || new Date().toISOString()) }}",
+            "ciudadNombre": "{{ String(($json.shipping && $json.shipping.city) || ($json.billing && $json.billing.city) || \"\") }}",
+            "facturacion": {
+              "codigoPostal": "{{ String(($json.billing && $json.billing.postcode) || \"\") }}",
+              "alias": "Principal",
+              "pais": "{{ (function(){ var c=String(($json.billing && $json.billing.country) || \"\").trim(); var map={CO:\"Colombia\",US:\"Estados Unidos\",MX:\"México\",AR:\"Argentina\",ES:\"España\",PE:\"Perú\",CL:\"Chile\",EC:\"Ecuador\",VE:\"Venezuela\",PA:\"Panamá\",CR:\"Costa Rica\"}; return map[c] || (c || \"Colombia\"); })() }}",
+              "indicativoCel": "57",
+              "departamento": "{{ (function(){ var s=String(($json.billing && $json.billing.state) || \"\").trim().toUpperCase(); var map={AMA:\"Amazonas\",ANT:\"Antioquia\",ARA:\"Arauca\",ATL:\"Atlántico\",BOL:\"Bolívar\",BOY:\"Boyacá\",CAL:\"Caldas\",CAQ:\"Caquetá\",CAS:\"Casanare\",CAU:\"Cauca\",CES:\"Cesar\",CHO:\"Chocó\",COR:\"Córdoba\",CUN:\"Cundinamarca\",DC:\"Bogotá D.C.\",GUA:\"Guainía\",GUV:\"Guaviare\",HUI:\"Huila\",LAG:\"La Guajira\",MAG:\"Magdalena\",MET:\"Meta\",NAR:\"Nariño\",NSA:\"Norte de Santander\",PUT:\"Putumayo\",QUI:\"Quindío\",RIS:\"Risaralda\",SAP:\"San Andrés y Providencia\",SAN:\"Santander\",SUC:\"Sucre\",TOL:\"Tolima\",VAC:\"Valle del Cauca\",VAU:\"Vaupés\",VID:\"Vichada\"}; return map[s] || (s || \"\"); })() }}",
+              "ciudad": "{{ String(($json.billing && $json.billing.city) || \"\") }}",
+              "direccion": "{{ String(($json.billing && (($json.billing.address_1 || \"\") + ($json.billing.address_2 ? \" \" + $json.billing.address_2 : \"\"))) || \"\") }}",
+              "correoElectronico": "{{ String(($json.billing && $json.billing.email) || \"\") }}",
+              "celular": "{{ (function(){ var raw=String(($json.billing && $json.billing.phone) || ($json.shipping && $json.shipping.phone) || \"\").trim(); if (!raw) return \"\"; if (raw.charAt(0)===\"+\") return raw; if (raw.indexOf(\"57\")===0 && raw.length>=12) return \"+\"+raw; return \"+57\"+raw; })() }}",
+              "tipoDocumento": "",
+              "nombres": "{{ String(($json.billing && $json.billing.first_name) || ($json.shipping && $json.shipping.first_name) || \"\") }}",
+              "documento": ""
+            },
+            "bodegaId": "{{ $companyConfig.woocommerce.bodegaCode }}",
+            "channel": {
+              "tipo": "E-commerce",
+              "name": "WooCommerce"
+            },
+            "integrations": {
+              "woocommerce": {
+                "orderNumber": "{{ String($json.number || \"\") }}",
+                "datePaid": "{{ String($json.date_paid || \"\") }}",
+                "dateCompleted": "{{ String($json.date_completed || \"\") }}",
+                "createdAt": "{{ String($json.date_created || \"\") }}",
+                "transactionId": "{{ String($json.transaction_id || \"\") }}",
+                "paymentMethod": "{{ String($json.payment_method || \"\") }}",
+                "currency": "{{ String($json.currency || \"COP\") }}",
+                "paymentMethodTitle": "{{ String($json.payment_method_title || \"\") }}",
+                "pricesIncludeTax": "{{ Boolean($json.prices_include_tax) }}",
+                "orderId": "{{ $json.id ? String($json.id) : null }}",
+                "status": "{{ String($json.status || \"\") }}",
+                "lastSyncedAt": "{{ new Date().toISOString() }}"
+              }
+            },
+            "estadoPago": "{{ ($json.status === \"cancelled\" || $json.status === \"refunded\" || $json.status === \"failed\") ? \"Cancelado\" : ($json.status === \"completed\" ? \"Aprobado\" : ($json.status === \"processing\" && $json.payment_method !== \"cod\" ? \"PreAprobado\" : \"Pendiente\")) }}",
+            "sourceOrder": "woocommerce",
+            "generarFacturaElectronica": false,
+            "totalPedididoConDescuento": "{{ parseFloat($json.total || 0) }}",
+            "totalPedidoSinDescuento": "{{ (function(){ var t = parseFloat($json.total || 0); var d = parseFloat($json.discount_total || 0); return t + d; })() }}",
+            "_calculadoEnBackend": true,
+            "user_add": "woocommerce-webhook",
+            "cliente": {
+              "nombres_completos": "{{ String(($json.billing && $json.billing.first_name) || ($json.shipping && $json.shipping.first_name) || \"\") }}",
+              "apellidos_completos": "{{ String(($json.billing && $json.billing.last_name) || ($json.shipping && $json.shipping.last_name) || \"\") }}",
+              "numero_celular_whatsapp": "{{ (function(){ var raw=String(($json.billing && $json.billing.phone) || ($json.shipping && $json.shipping.phone) || \"\").trim(); if (!raw) return \"\"; if (raw.charAt(0)===\"+\") return raw; if (raw.indexOf(\"57\")===0 && raw.length>=12) return \"+\"+raw; return \"+57\"+raw; })() }}",
+              "numero_celular_comprador": "{{ (function(){ var raw=String(($json.billing && $json.billing.phone) || ($json.shipping && $json.shipping.phone) || \"\").trim(); if (!raw) return \"\"; if (raw.charAt(0)===\"+\") return raw; if (raw.indexOf(\"57\")===0 && raw.length>=12) return \"+\"+raw; return \"+57\"+raw; })() }}",
+              "company": "{{ $companyId }}",
+              "estado": "activo",
+              "correo_electronico_comprador": "{{ String(($json.billing && $json.billing.email) || \"\") }}",
+              "tipo_documento_comprador": "",
+              "user_add": "woocommerce-webhook",
+              "indicativo_celular_whatsapp": "57",
+              "documento": "",
+              "indicativo_celular_comprador": "57"
+            },
+            "carrito": "{{ (function(){ var price0 = parseFloat($json.total || 0); var tax0 = parseFloat($json.total_tax || 0); var ivaPct = (price0 && tax0) ? Math.round((tax0/(price0-tax0))*100) : 0; var taxIncl = $json.prices_include_tax === true || $json.prices_include_tax === \"true\"; var fechaSrc = new Date($json.date_created || Date.now()); var feObj = { day: fechaSrc.getDate(), month: fechaSrc.getMonth() + 1, year: fechaSrc.getFullYear() }; return ($json.line_items || []).map(function(li){ var priceWith = parseFloat(li.price || 0); var qty = li.quantity || 1; var priceWithout = ivaPct > 0 ? +(priceWith / (1 + ivaPct/100)).toFixed(2) : priceWith; if (!taxIncl) { priceWithout = priceWith; priceWith = ivaPct > 0 ? +(priceWith * (1 + ivaPct/100)).toFixed(2) : priceWith; } return { producto: { cd: \"\", identificacion: { referencia: String(li.sku || li.product_id || \"\"), marca: \"\", codigoBarras: \"\" }, crearProducto: { titulo: String(li.name || \"\"), descripcion: String(li.name || \"\") }, precio: { precioUnitarioConIva: priceWith, precioUnitarioSinIva: priceWithout, precioUnitarioIva: ivaPct } }, cantidad: qty, configuracion: { datosEntrega: { fechaEntrega: feObj, formaEntrega: \"Envío a Domicilio\", horarioEntrega: \"LO MAS PRONTO POSIBLE\", tipoEntrega: null, genero: null, ocasion: null, colores: [], observaciones: null } }, precioAplicado: { precioUnitarioConIva: priceWith, precioUnitarioSinIva: priceWithout, precioUnitarioIva: ivaPct }, subtotalLinea: +(priceWith * qty).toFixed(2) }; }); })() }}",
+            "fechaCreacion": "{{ String($json.date_created || new Date().toISOString()) }}",
+            "faltaPorPagar": "{{ ($json.status === \"cancelled\" || $json.status === \"refunded\" || $json.status === \"failed\") ? 0 : ($json.status === \"completed\" ? 0 : parseFloat($json.total || 0)) }}",
+            "direccionEntregaNombre": "{{ String(($json.shipping && (($json.shipping.address_1 || \"\") + ($json.shipping.address_2 ? \" \" + $json.shipping.address_2 : \"\"))) || \"\") }}",
+            "totalDescuento": "{{ parseFloat($json.discount_total || 0) }}",
+            "clienteNombre": "{{ String((($json.billing && (($json.billing.first_name || \"\") + \" \" + ($json.billing.last_name || \"\"))) || ($json.shipping && (($json.shipping.first_name || \"\") + \" \" + ($json.shipping.last_name || \"\"))) || \"\").trim()) }}",
+            "PagosAsentados": "{{ (function(){ var status = String($json.status||\"\"); var cancelled = status===\"cancelled\" || status===\"refunded\" || status===\"failed\"; var paid = !!$json.date_paid || status===\"completed\"; if (!paid || cancelled) return []; var total = parseFloat($json.total || 0); if (total <= 0) return []; var gw = String($json.payment_method_title || $json.payment_method || \"WooCommerce\"); var processed = String($json.date_paid || $json.date_completed || $json.date_created || new Date().toISOString()); var parts = processed.split(\"T\"); var nowIso = new Date().toISOString(); var comprobante = String($json.transaction_id || $json.id || \"\"); return [{ fecha: parts[0]||\"\", hora: ((parts[1]||\"\").split(\".\")[0])||\"\", numeroPedido: String($json.number || $json.id || \"\"), numeroComprobante: comprobante, estadoVerificacion: \"Aprobado\", formaPago: gw, metodoPago: gw, valor: total, valorRegistrado: total, valorTotalVenta: total, valorRestante: 0, comprobante: comprobante, observaciones: \"Pago confirmado vía WooCommerce - gateway: \"+gw, usuarioCarga: \"Sistema WooCommerce\", fechaHoraCarga: nowIso, fechaHoraAprobacionRechazo: processed }]; })() }}",
+            "formaEntrega": "{{ (function(){ var lines=$json.shipping_lines||[]; var m=String((lines[0] && lines[0].method_id) || \"\").toLowerCase(); if (m===\"local_pickup\" || m.indexOf(\"pickup\")>=0) return \"Retiro en tienda\"; return \"Domicilio\"; })() }}",
+            "notasPedido": {
+              "notasProduccion": [],
+              "notasCliente": "{{ $json.customer_note ? [{ fecha: new Date().toISOString(), nota: String($json.customer_note), usuario: \"Cliente WooCommerce\", fromFormulario: true, descripcion: \"Nota del cliente desde WooCommerce\" }] : [] }}",
+              "notasFacturacionPagos": "{{ ($json.status === \"cancelled\" || $json.status === \"refunded\") ? [{ fecha: String($json.date_modified || new Date().toISOString()), nota: \"Pedido \" + $json.status + \" en WooCommerce.\", usuario: \"WooCommerce Webhook\", fromFormulario: false, descripcion: \"Cancelacion sincronizada desde WooCommerce\" }] : [] }}",
+              "notasDespachos": [],
+              "notasEntregas": []
+            },
+            "formaDePago": "{{ String(($json.payment_method_title || $json.payment_method || \"\")).toUpperCase() }}",
+            "pago": {
+              "paymentProvider": "{{ String($json.payment_method || \"\") }}",
+              "financialStatus": "{{ String($json.status || \"pending\") }}",
+              "faltaPorPagar": "{{ ($json.status === \"cancelled\" || $json.status === \"refunded\" || $json.status === \"failed\") ? 0 : ($json.status === \"completed\" ? 0 : parseFloat($json.total || 0)) }}",
+              "totalPagado": "{{ $json.status === \"completed\" ? parseFloat($json.total || 0) : 0 }}"
+            },
+            "typeOrder": "E-commerce",
+            "anticipo": 0,
+            "fecha": "{{ String($json.date_created || new Date().toISOString()) }}"
+          }
+        },
+        "type": "katuq-canonical-mapper",
+        "position": {
+          "x": 360,
+          "y": 140
+        }
+      },
+      {
+        "params": {
+          "strict": false
+        },
+        "type": "katuq-product-resolver-by-ref",
+        "position": {
+          "y": 140,
+          "x": 640
+        },
+        "id": "product-resolver"
+      },
+      {
+        "params": {
+          "matchBy": "externalId"
+        },
+        "type": "katuq-order-upsert",
+        "position": {
+          "y": 140,
+          "x": 920
+        },
+        "id": "persist"
+      },
+      {
+        "id": "split-cart",
+        "type": "split-array",
+        "position": {
+          "y": 140,
+          "x": 1200
+        },
+        "params": {
+          "fieldPath": "carrito"
+        }
+      },
+      {
+        "params": {
+          "mapping": {
+            "reason": "sale",
+            "referenciaPedido": "{{ String(($node[\"persist\"]?.json?.[0]?.nroPedido) || ($node[\"trigger\"]?.json?.[0]?.number) || \"\") }}",
+            "productoId": "{{ String($json.producto?.cd || $json.producto?.identificacion?.referencia || \"\") }}",
+            "delta": "{{ -1 * Number($json.cantidad || 0) }}",
+            "motivo": "Venta WooCommerce",
+            "notas": "Venta WooCommerce",
+            "bodegaCode": "{{ $companyConfig.woocommerce.bodegaCode }}"
+          },
+          "targetSchema": "inventory-adjustment"
+        },
+        "type": "katuq-canonical-mapper",
+        "position": {
+          "y": 140,
+          "x": 1480
+        },
+        "id": "adj-mapper"
+      },
+      {
+        "id": "inventory-adjust",
+        "params": {},
+        "type": "katuq-inventory-adjust",
+        "position": {
+          "y": 140,
+          "x": 1760
+        }
+      }
+    ]
+  }
+}

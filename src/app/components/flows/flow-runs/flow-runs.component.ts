@@ -5,7 +5,7 @@ import { takeUntil } from 'rxjs/operators';
 import { FlowsService } from '../services/flows.service';
 import { FlowsStateService } from '../services/flows-state.service';
 import { RunStreamService } from '../services/run-stream.service';
-import { FlowSpec, RunContext, RunStatus } from '../interfaces/flow.interface';
+import { FlowSpec, RunContext, RunStatus, RunStatusReason } from '../interfaces/flow.interface';
 
 @Component({
   selector: 'app-flow-runs',
@@ -189,6 +189,26 @@ export class FlowRunsComponent implements OnInit, OnDestroy {
       return JSON.stringify(obj, null, 2);
     } catch {
       return String(obj);
+    }
+  }
+
+  /**
+   * [Observabilidad] Texto amigable del `statusReason` del run, para mostrar
+   * junto al badge de status. Antes: un run 'partial' con nodos success y
+   * errors[] vacío no daba pistas de qué pasó.
+   */
+  statusReasonLabel(reason?: RunStatusReason): string {
+    switch (reason) {
+      case 'node_failed':
+        return 'Un nodo falló con error';
+      case 'error_port_items':
+        return 'Ítems fallaron dentro de nodos';
+      case 'no_items':
+        return 'El trigger no produjo ítems';
+      case 'ok':
+        return 'Ejecución correcta';
+      default:
+        return '';
     }
   }
 }

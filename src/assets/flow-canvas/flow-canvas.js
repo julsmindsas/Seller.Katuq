@@ -11352,7 +11352,7 @@ function bk(e, t) {
   for (const i of r)
     o[i.group] || (o[i.group] = []), o[i.group].push(i);
   for (const i of Object.keys(o))
-    o[i].sort((s, l) => String(s && s.displayName || '').localeCompare(String(l && l.displayName || '')));
+    o[i].sort((s, l) => String((s == null ? void 0 : s.displayName) ?? "").localeCompare(String((l == null ? void 0 : l.displayName) ?? "")));
   return o;
 }
 const Uk = ({ onClose: e }) => {

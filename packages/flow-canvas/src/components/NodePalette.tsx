@@ -101,8 +101,11 @@ function groupCatalog(catalog: NodeSpec[], q: string): Record<string, NodeSpec[]
         groups[spec.group].push(spec);
     }
     // Stable order per group, alphabetical inside.
+    // Guard defensivo: coercionar a String antes de localeCompare — si el
+    // catálogo trae un NodeSpec malformado (displayName no-string), el sort
+    // no debe crashear el editor completo (ver commit e41486f8).
     for (const k of Object.keys(groups)) {
-        groups[k].sort((a, b) => a.displayName.localeCompare(b.displayName));
+        groups[k].sort((a, b) => String(a?.displayName ?? '').localeCompare(String(b?.displayName ?? '')));
     }
     return groups;
 }
