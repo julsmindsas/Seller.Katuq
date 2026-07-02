@@ -396,15 +396,6 @@ export class NavService implements OnDestroy {
       badgeValue: "NUEVO",
       active: false,
     },
-    // Movido desde Configuración → Producto a Operaciones (petición Almara
-    // 2026-07-02). Mismo path — la autorización de roles existente se conserva.
-    {
-      title: "Descuentos y Promociones",
-      icon: "percent",
-      type: "link",
-      path: "proceso/descuentos-promociones",
-      active: false,
-    },
     {
       title: "Producción",
       icon: "archive",
@@ -669,8 +660,7 @@ export class NavService implements OnDestroy {
         { path: "proceso/ocasiones", title: "Ocasiones", type: "link", icon: "gift" },
         { path: "proceso/generos", title: "Géneros", type: "link", icon: "users" },
         { path: "proceso/tipos-cliente", title: "Tipos de Cliente", type: "link", icon: "user-check" },
-        // "Descuentos y Promociones" vive ahora en la sección Operaciones
-        // (petición Almara 2026-07-02) — mismo path, misma autorización.
+        { path: "proceso/descuentos-promociones", title: "Descuentos y Promociones", type: "link", icon: "percent" },
       ],
     },
     {

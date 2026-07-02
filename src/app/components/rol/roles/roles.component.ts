@@ -119,6 +119,13 @@ export class RolesComponent implements OnInit {
           child['index'] = index++;
         });
         childrenMenus = childrenMenus.concat(menu.children);
+      } else if (menu.path && menu.type === 'link') {
+        // Links de PRIMER NIVEL del menú (sin submenu), ej: "Tesorería"
+        // (spec 013, path "tesoreria"). Antes quedaban FUERA del catálogo
+        // del pickList y el administrador no podía asignarlos a ningún rol.
+        menuParaAgregar['movable'] = true;
+        menuParaAgregar['index'] = index++;
+        childrenMenus.push(menuParaAgregar);
       }
     });
     return childrenMenus;
