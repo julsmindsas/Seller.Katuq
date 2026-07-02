@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { ServiciosService } from '../shared/services/servicios.service';
 import { HttpClient } from '@angular/common/http';
 import { AngularFirestore } from '@angular/fire/compat/firestore';
+import { take } from 'rxjs/operators';
+import { SecurityService } from '../shared/services/security/security.service';
+import { CompanyInformation } from '../shared/models/User/CompanyInformation';
 
 @Component({
   selector: 'app-welcome',
@@ -10,7 +12,17 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 })
 export class WelcomeComponent implements OnInit {
   public userActive: any;
-  public currentCompany: any;
+  public currentCompany: CompanyInformation | null = null;
+
+  // Paths del menú por sección — única fuente para el *ngIf de cada bloque del
+  // template (título + grid comparten contenedor, sin listas duplicadas).
+  readonly accionesRapidasPaths: string[] = [
+    'ventas/crear-ventas', 'ventas/ventas-pos', 'productos', 'ventas/pedidos',
+    'inventario/inventario-catalogo', 'ventas/clienteslista', 'crm/list',
+  ];
+  readonly herramientasPaths: string[] = [
+    'despachos', 'dashboards', 'dashboards/builder', 'empresas', 'integrations',
+  ];
 
   // Set de paths del menú asignados al rol del usuario (sin barra inicial).
   // Se llena en ngOnInit leyendo user.menu del localStorage. Los admins lo dejan
@@ -35,13 +47,16 @@ export class WelcomeComponent implements OnInit {
   };
 
   constructor(
-    private service: ServiciosService,
     private http: HttpClient,
-    private afs: AngularFirestore
+    private afs: AngularFirestore,
+    private securityService: SecurityService
   ) {}
 
   ngOnInit() {
-    this.currentCompany = JSON.parse(sessionStorage.getItem('currentCompany') || '{}');
+    // SecurityService encapsula los fallbacks (localStorage → user.company);
+    // sessionStorage solo se escribe en la rama Administrador del login, así que
+    // leerlo directo dejaba el hero sin nombre de comercio para los demás roles.
+    this.currentCompany = this.securityService.getCompanyInformationLogged();
     this.userActive = JSON.parse(localStorage.getItem('user') ?? '{}');
 
     // Construir set de paths del menú del rol — usado por canAccess() para
@@ -63,6 +78,14 @@ export class WelcomeComponent implements OnInit {
 
     this.cargarTRM();
     this.cargarIndicadoresEconomicos();
+  }
+
+  get showAccionesRapidas(): boolean {
+    return this.canAccessAny(this.accionesRapidasPaths);
+  }
+
+  get showHerramientas(): boolean {
+    return this.canAccessAny(this.herramientasPaths);
   }
 
   /**
@@ -119,9 +142,11 @@ export class WelcomeComponent implements OnInit {
    * Carga indicadores económicos desde Firestore (colección config/indicadores_economicos).
    * Si no existe el documento, usa los valores hardcodeados como fallback.
    * Para actualizar: editar el doc en Firestore o crear un script.
+   * take(1): es una carga one-shot — sin él, cada visita al welcome dejaba un
+   * listener onSnapshot vivo toda la sesión.
    */
   private cargarIndicadoresEconomicos(): void {
-    this.afs.doc('config/indicadores_economicos').valueChanges().subscribe({
+    this.afs.doc('config/indicadores_economicos').valueChanges().pipe(take(1)).subscribe({
       next: (data: any) => {
         if (data) {
           this.indicadores = {

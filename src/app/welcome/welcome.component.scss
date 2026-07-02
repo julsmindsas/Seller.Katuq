@@ -2,20 +2,14 @@
 // KATUQ WELCOME - Clean flat design
 // ==========================================
 
-// Katuq Brand Colors
-$katuq-primary: #8b5cf6;
-$katuq-primary-dark: #7c3aed;
-$katuq-primary-light: #a78bfa;
-$katuq-dark: #0f172a;
-$katuq-gray: #64748b;
-$katuq-gray-light: #cbd5e1;
+@import '../../assets/scss/utils/katuq-tokens';
 
 // ==========================================
 // HERO BANNER
 // ==========================================
 
 .hero-banner {
-  background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 50%, #dbeafe 100%);
+  background: $katuq-purple-100;
   border-radius: 14px;
   padding: 0;
   overflow: hidden;
@@ -37,17 +31,22 @@ $katuq-gray-light: #cbd5e1;
     .hero-title {
       font-weight: 800;
       font-size: 1.35rem;
-      color: $katuq-dark;
+      color: $katuq-gray-900;
       margin-bottom: 6px;
       line-height: 1.2;
     }
 
     .hero-subtitle {
       font-size: 0.82rem;
-      color: $katuq-gray;
+      color: $katuq-gray-500;
       margin-bottom: 14px;
       max-width: 420px;
       line-height: 1.4;
+    }
+
+    .hero-company {
+      color: $katuq-primary-dark;
+      font-weight: 600;
     }
 
     .hero-actions {
@@ -84,14 +83,14 @@ $katuq-gray-light: #cbd5e1;
     background: $katuq-primary-dark;
     color: #fff;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    box-shadow: 0 4px 12px rgba($katuq-primary, 0.3);
   }
 }
 
 .btn-katuq-outline-light {
   background: rgba(255, 255, 255, 0.7);
   color: $katuq-primary;
-  border: 1px solid rgba(139, 92, 246, 0.2);
+  border: 1px solid rgba($katuq-primary, 0.2);
   border-radius: 8px;
   font-weight: 600;
   font-size: 0.8rem;
@@ -111,7 +110,7 @@ $katuq-gray-light: #cbd5e1;
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: $katuq-gray;
+  color: $katuq-gray-500;
   margin-bottom: 0;
 }
 
@@ -131,12 +130,37 @@ $katuq-gray-light: #cbd5e1;
   }
 }
 
+// ==========================================
+// ONBOARDING CHECKLIST
+// ==========================================
+
+.onboarding-card {
+  border-radius: 10px;
+  // .card de Bootstrap lleva border-0 en el template; el acento necesita ganar
+  border-left: 4px solid $katuq-primary !important;
+}
+
+.onboarding-title {
+  font-size: 1rem;
+  color: $katuq-gray-900;
+
+  i {
+    color: $katuq-primary;
+  }
+}
+
+.onboarding-close {
+  // Amplía el target táctil del btn-close de Bootstrap (glifo ~16px)
+  padding: 10px;
+}
+
 // Setup links (onboarding checklist)
 .setup-link {
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
+  min-height: 44px; // target táctil mínimo en mobile
   border-radius: 8px;
   text-decoration: none;
   border: 1px solid;
@@ -154,13 +178,53 @@ $katuq-gray-light: #cbd5e1;
   small {
     font-size: 0.75rem;
     line-height: 1.2;
+    color: $katuq-gray-700;
   }
 }
 
-// Indicator cards (TRM, SMLMV, etc.)
+.setup-link--primary {
+  background: $katuq-purple-50;
+  border-color: $katuq-purple-200;
+
+  i {
+    color: $katuq-primary;
+  }
+}
+
+.setup-link--success {
+  background: $katuq-success-light;
+  border-color: $katuq-accent-light;
+
+  i {
+    color: $katuq-success-dark;
+  }
+}
+
+.setup-link--warning {
+  background: $katuq-warning-light;
+  border-color: rgba($katuq-warning, 0.35);
+
+  i {
+    color: $katuq-warning-dark;
+  }
+}
+
+.setup-link--gray {
+  background: $katuq-gray-100;
+  border-color: $katuq-gray-200;
+
+  i {
+    color: $katuq-gray-600;
+  }
+}
+
+// ==========================================
+// INDICATOR CARDS (TRM, SMLMV, etc.)
+// ==========================================
+
 .indicator-card {
   background: #fff;
-  border: 1px solid #f1f5f9;
+  border: 1px solid $katuq-gray-100;
   border-left: 3px solid;
   border-radius: 8px;
   padding: 10px 12px;
@@ -170,10 +234,10 @@ $katuq-gray-light: #cbd5e1;
   gap: 1px;
 
   .indicator-label {
-    font-size: 0.6rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: $katuq-gray;
+    color: $katuq-gray-500;
     font-weight: 600;
   }
 
@@ -184,19 +248,56 @@ $katuq-gray-light: #cbd5e1;
   }
 
   .indicator-sub {
-    font-size: 0.6rem;
-    color: $katuq-gray;
+    font-size: 0.7rem;
+    color: $katuq-gray-500;
   }
 }
 
-// Action cards (main shortcuts)
+// Variantes: border de acento claro, valor en la variante oscura del token
+// para cumplir contraste AA sobre blanco.
+.indicator-card--primary {
+  border-left-color: $katuq-primary;
+
+  .indicator-value {
+    color: $katuq-primary-dark;
+  }
+}
+
+.indicator-card--success {
+  border-left-color: $katuq-success;
+
+  .indicator-value {
+    color: $katuq-success-dark;
+  }
+}
+
+.indicator-card--warning {
+  border-left-color: $katuq-warning;
+
+  .indicator-value {
+    color: $katuq-warning-text;
+  }
+}
+
+.indicator-card--gray {
+  border-left-color: $katuq-gray-500;
+
+  .indicator-value {
+    color: $katuq-gray-600;
+  }
+}
+
+// ==========================================
+// ACTION CARDS (main shortcuts)
+// ==========================================
+
 .action-card {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 14px 16px;
   background: #fff;
-  border: 1px solid #f1f5f9;
+  border: 1px solid $katuq-gray-100;
   border-radius: 10px;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -204,7 +305,7 @@ $katuq-gray-light: #cbd5e1;
 
   &:hover {
     border-color: $katuq-primary-light;
-    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.08);
+    box-shadow: 0 2px 12px rgba($katuq-primary, 0.08);
     transform: translateY(-1px);
     text-decoration: none;
 
@@ -235,20 +336,20 @@ $katuq-gray-light: #cbd5e1;
     .action-title {
       font-weight: 700;
       font-size: 0.85rem;
-      color: $katuq-dark;
+      color: $katuq-gray-900;
       margin-bottom: 0;
       line-height: 1.2;
     }
 
     .action-desc {
       font-size: 0.7rem;
-      color: $katuq-gray;
+      color: $katuq-gray-500;
       line-height: 1.2;
     }
   }
 
   .action-arrow {
-    color: $katuq-gray-light;
+    color: $katuq-gray-300;
     font-size: 0.7rem;
     opacity: 0;
     transition: all 0.2s ease;
@@ -256,7 +357,59 @@ $katuq-gray-light: #cbd5e1;
   }
 }
 
-// Tool cards (secondary shortcuts)
+// Variantes de color del ícono (fondo tinted + glifo en tono de marca)
+.action-icon--primary {
+  background: $katuq-purple-50;
+
+  i {
+    color: $katuq-primary;
+  }
+}
+
+.action-icon--success {
+  background: $katuq-success-light;
+
+  i {
+    color: $katuq-success-dark;
+  }
+}
+
+.action-icon--warning {
+  background: $katuq-warning-light;
+
+  i {
+    color: $katuq-warning-dark;
+  }
+}
+
+.action-icon--accent {
+  background: $katuq-cyan-50;
+
+  i {
+    color: $katuq-cyan-600;
+  }
+}
+
+.action-icon--danger {
+  background: $katuq-danger-light;
+
+  i {
+    color: $katuq-danger;
+  }
+}
+
+.action-icon--info {
+  background: $katuq-purple-100;
+
+  i {
+    color: $katuq-info-dark;
+  }
+}
+
+// ==========================================
+// TOOL CARDS (secondary shortcuts)
+// ==========================================
+
 .tool-card {
   display: flex;
   flex-direction: column;
@@ -264,7 +417,7 @@ $katuq-gray-light: #cbd5e1;
   gap: 8px;
   padding: 16px 12px;
   background: #fff;
-  border: 1px solid #f1f5f9;
+  border: 1px solid $katuq-gray-100;
   border-radius: 10px;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -272,7 +425,7 @@ $katuq-gray-light: #cbd5e1;
 
   &:hover {
     border-color: $katuq-primary-light;
-    box-shadow: 0 2px 12px rgba(139, 92, 246, 0.08);
+    box-shadow: 0 2px 12px rgba($katuq-primary, 0.08);
     transform: translateY(-2px);
     text-decoration: none;
   }
@@ -284,8 +437,24 @@ $katuq-gray-light: #cbd5e1;
   .tool-label {
     font-size: 0.75rem;
     font-weight: 600;
-    color: $katuq-dark;
+    color: $katuq-gray-900;
   }
+}
+
+.tool-icon--primary {
+  color: $katuq-primary;
+}
+
+.tool-icon--success {
+  color: $katuq-success-dark;
+}
+
+.tool-icon--warning {
+  color: $katuq-warning-dark;
+}
+
+.tool-icon--accent {
+  color: $katuq-cyan-600;
 }
 
 // ==========================================

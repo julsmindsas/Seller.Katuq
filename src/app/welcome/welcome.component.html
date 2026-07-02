@@ -3,26 +3,26 @@
     <div class="hero-banner">
         <div class="hero-content">
             <div class="hero-text">
-                <h4 class="hero-title">
+                <h1 class="hero-title">
                     Hola, {{ userActive?.name?.split(' ')[0] || 'Bienvenido' }}
-                </h4>
+                </h1>
                 <p class="hero-subtitle">
-                    <span *ngIf="currentCompany?.nomComercial" style="color: #6366f1; font-weight: 600;">{{ currentCompany.nomComercial }}</span>
-                    <span *ngIf="currentCompany?.nomComercial"> &middot; </span>
-                    Gestiona productos, ventas, inventarios y envios desde un solo lugar.
+                    <span *ngIf="currentCompany?.nombreComercio" class="hero-company">{{ currentCompany?.nombreComercio }}</span>
+                    <span *ngIf="currentCompany?.nombreComercio"> &middot; </span>
+                    Gestiona productos, ventas, inventarios y envíos desde un solo lugar.
                 </p>
                 <div class="hero-actions">
                     <a *ngIf="canAccess('ventas/crear-ventas')" class="btn btn-katuq-solid btn-sm" routerLink="/ventas/crear-ventas">
-                        <i class="fa fa-plus me-1"></i>Nueva venta
+                        <i class="fa fa-plus me-1" aria-hidden="true"></i>Nueva venta
                     </a>
                     <!-- Mi perfil siempre visible — todos pueden editar su perfil propio -->
                     <a class="btn btn-katuq-outline-light btn-sm" routerLink="/usuarios/editarUsuario">
-                        <i class="fa fa-user me-1"></i>Mi perfil
+                        <i class="fa fa-user me-1" aria-hidden="true"></i>Mi perfil
                     </a>
                 </div>
             </div>
             <div class="hero-image">
-                <img src="assets/images/dashboard/katuqIA.png" alt="Katuq IA">
+                <img src="assets/images/dashboard/katuqIA.png" alt="">
             </div>
         </div>
     </div>
@@ -30,39 +30,38 @@
 
 <!-- Setup checklist (usuarios nuevos) -->
 <div class="container-fluid px-4 mb-3" *ngIf="showOnboardingBanner">
-    <div class="card border-0 shadow-sm" style="border-radius: 10px; border-left: 4px solid #8b5cf6 !important;">
+    <div class="card border-0 shadow-sm onboarding-card">
         <div class="card-body p-3">
             <div class="d-flex align-items-center justify-content-between mb-2">
-                <h6 class="fw-bold mb-0" style="color: #0f172a;">
-                    <i class="fa fa-rocket me-2" style="color: #8b5cf6;"></i>Configura tu tienda
-                </h6>
-                <button class="btn btn-sm p-0" style="color: #94a3b8;" (click)="dismissOnboarding()">
-                    <i class="fa fa-times"></i>
-                </button>
+                <h2 class="onboarding-title fw-bold mb-0">
+                    <i class="fa fa-rocket me-2" aria-hidden="true"></i>Configura tu tienda
+                </h2>
+                <button type="button" class="btn-close onboarding-close" aria-label="Cerrar checklist de configuración"
+                        (click)="dismissOnboarding()"></button>
             </div>
             <div class="row g-2">
-                <div class="col-6 col-md-3" *ngIf="canAccess('productos/crearProductos')">
-                    <a routerLink="/productos/crearProductos" class="setup-link" style="background: #faf5ff; border-color: #e9d5ff;">
-                        <i class="fa fa-cube" style="color: #8b5cf6;"></i>
-                        <small class="fw-semibold" style="color: #334155;">Agregar productos</small>
+                <div class="col-6 col-md-3" *ngIf="canAccess('productos')">
+                    <a routerLink="/productos/crearProductos" class="setup-link setup-link--primary">
+                        <i class="fa fa-cube" aria-hidden="true"></i>
+                        <small class="fw-semibold">Agregar productos</small>
                     </a>
                 </div>
                 <div class="col-6 col-md-3" *ngIf="canAccess('ventas/clientes')">
-                    <a routerLink="/ventas/clientes" class="setup-link" style="background: #f0fdf4; border-color: #bbf7d0;">
-                        <i class="fa fa-user-plus" style="color: #27ae60;"></i>
-                        <small class="fw-semibold" style="color: #334155;">Agregar clientes</small>
+                    <a routerLink="/ventas/clientes" class="setup-link setup-link--success">
+                        <i class="fa fa-user-plus" aria-hidden="true"></i>
+                        <small class="fw-semibold">Agregar clientes</small>
                     </a>
                 </div>
                 <div class="col-6 col-md-3" *ngIf="canAccess('empresas')">
-                    <a routerLink="/empresas" class="setup-link" style="background: #fef3c7; border-color: #fde68a;">
-                        <i class="fa fa-building" style="color: #e67e22;"></i>
-                        <small class="fw-semibold" style="color: #334155;">Info de tu empresa</small>
+                    <a routerLink="/empresas" class="setup-link setup-link--warning">
+                        <i class="fa fa-building" aria-hidden="true"></i>
+                        <small class="fw-semibold">Info de tu empresa</small>
                     </a>
                 </div>
                 <div class="col-6 col-md-3" *ngIf="canAccess('empresas')">
-                    <a routerLink="/empresas" class="setup-link" style="background: #f1f5f9; border-color: #e2e8f0;">
-                        <i class="fa fa-cog" style="color: #64748b;"></i>
-                        <small class="fw-semibold" style="color: #334155;">Personalizar</small>
+                    <a routerLink="/empresas" class="setup-link setup-link--gray">
+                        <i class="fa fa-cog" aria-hidden="true"></i>
+                        <small class="fw-semibold">Personalizar</small>
                     </a>
                 </div>
             </div>
@@ -70,185 +69,176 @@
     </div>
 </div>
 
-<!-- Indicadores economicos -->
-<div class="container-fluid px-4 mb-3">
-    <div class="row g-2">
-        <div class="col-6 col-lg-3">
-            <div class="indicator-card" style="border-left-color: #8b5cf6;">
-                <small class="indicator-label">TRM Hoy</small>
-                <span class="indicator-value" style="color: #8b5cf6;">
-                    {{ trmCargando ? '...' : (trmHoy ? ('$' + (trmHoy | number:'1.2-2')) : 'N/D') }}
-                </span>
-                <small class="indicator-sub">USD/COP</small>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="indicator-card" style="border-left-color: #27ae60;">
-                <small class="indicator-label">SMLMV {{ indicadores.anio }}</small>
-                <span class="indicator-value" style="color: #27ae60;">
-                    ${{ indicadores.salarioMinimo | number:'1.0-0' }}
-                </span>
-                <small class="indicator-sub">Salario minimo</small>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="indicator-card" style="border-left-color: #e67e22;">
-                <small class="indicator-label">Aux. Transporte</small>
-                <span class="indicator-value" style="color: #e67e22;">
-                    ${{ indicadores.auxilioTransporte | number:'1.0-0' }}
-                </span>
-                <small class="indicator-sub">Subsidio {{ indicadores.anio }}</small>
-            </div>
-        </div>
-        <div class="col-6 col-lg-3">
-            <div class="indicator-card" style="border-left-color: #64748b;">
-                <small class="indicator-label">UVT {{ indicadores.anio }}</small>
-                <span class="indicator-value" style="color: #64748b;">
-                    ${{ indicadores.uvt | number:'1.0-0' }}
-                </span>
-                <small class="indicator-sub">DIAN</small>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Acciones rapidas — solo si el usuario tiene acceso a al menos una -->
-<div class="container-fluid px-4 mb-2"
-     *ngIf="canAccessAny(['ventas/crear-ventas','pos','ventas/ventas-pos','productos','ventas/pedidos','inventario/inventario-catalogo','ventas/clienteslista','crm/list'])">
-    <h6 class="section-title">Acciones rapidas</h6>
-</div>
-
-<div class="container-fluid px-4 mb-4"
-     *ngIf="canAccessAny(['ventas/crear-ventas','pos','ventas/ventas-pos','productos','ventas/pedidos','inventario/inventario-catalogo','ventas/clienteslista','crm/list'])">
+<!-- Acciones rápidas — solo si el usuario tiene acceso a al menos una -->
+<div class="container-fluid px-4 mb-4" *ngIf="showAccionesRapidas">
+    <h2 class="section-title mb-2">Acciones rápidas</h2>
     <div class="row g-3">
         <div class="col-6 col-lg-4" *ngIf="canAccess('ventas/crear-ventas')">
             <a routerLink="/ventas/crear-ventas" class="action-card">
-                <div class="action-icon" style="background: #faf5ff;">
-                    <i class="fa fa-shopping-cart" style="color: #8b5cf6;"></i>
+                <div class="action-icon action-icon--primary">
+                    <i class="fa fa-shopping-cart" aria-hidden="true"></i>
                 </div>
                 <div class="action-content">
-                    <h6 class="action-title">Vender</h6>
+                    <h3 class="action-title">Vender</h3>
                     <small class="action-desc">Crear nueva venta asistida</small>
                 </div>
-                <i class="fa fa-chevron-right action-arrow"></i>
+                <i class="fa fa-chevron-right action-arrow" aria-hidden="true"></i>
             </a>
         </div>
 
-        <div class="col-6 col-lg-4" *ngIf="canAccess('pos') || canAccess('ventas/ventas-pos')">
+        <div class="col-6 col-lg-4" *ngIf="canAccess('ventas/ventas-pos')">
             <a routerLink="/pos" class="action-card">
-                <div class="action-icon" style="background: #f0fdf4;">
-                    <i class="fa fa-calculator" style="color: #27ae60;"></i>
+                <div class="action-icon action-icon--success">
+                    <i class="fa fa-calculator" aria-hidden="true"></i>
                 </div>
                 <div class="action-content">
-                    <h6 class="action-title">POS</h6>
+                    <h3 class="action-title">POS</h3>
                     <small class="action-desc">Abrir punto de venta</small>
                 </div>
-                <i class="fa fa-chevron-right action-arrow"></i>
+                <i class="fa fa-chevron-right action-arrow" aria-hidden="true"></i>
             </a>
         </div>
 
         <div class="col-6 col-lg-4" *ngIf="canAccess('productos')">
             <a routerLink="/productos" class="action-card">
-                <div class="action-icon" style="background: #fff7ed;">
-                    <i class="fa fa-cube" style="color: #e67e22;"></i>
+                <div class="action-icon action-icon--warning">
+                    <i class="fa fa-cube" aria-hidden="true"></i>
                 </div>
                 <div class="action-content">
-                    <h6 class="action-title">Productos</h6>
-                    <small class="action-desc">Gestionar catalogo</small>
+                    <h3 class="action-title">Productos</h3>
+                    <small class="action-desc">Gestionar catálogo</small>
                 </div>
-                <i class="fa fa-chevron-right action-arrow"></i>
+                <i class="fa fa-chevron-right action-arrow" aria-hidden="true"></i>
             </a>
         </div>
 
         <div class="col-6 col-lg-4" *ngIf="canAccess('ventas/pedidos')">
             <a routerLink="/ventas/pedidos" class="action-card">
-                <div class="action-icon" style="background: #eff6ff;">
-                    <i class="fa fa-file-text" style="color: #3b82f6;"></i>
+                <div class="action-icon action-icon--accent">
+                    <i class="fa fa-file-text" aria-hidden="true"></i>
                 </div>
                 <div class="action-content">
-                    <h6 class="action-title">Pedidos</h6>
-                    <small class="action-desc">Control de ordenes</small>
+                    <h3 class="action-title">Pedidos</h3>
+                    <small class="action-desc">Control de órdenes</small>
                 </div>
-                <i class="fa fa-chevron-right action-arrow"></i>
+                <i class="fa fa-chevron-right action-arrow" aria-hidden="true"></i>
             </a>
         </div>
 
         <div class="col-6 col-lg-4" *ngIf="canAccess('inventario/inventario-catalogo')">
             <a routerLink="/inventario/inventario-catalogo" class="action-card">
-                <div class="action-icon" style="background: #fef3c7;">
-                    <i class="fa fa-cubes" style="color: #d97706;"></i>
+                <div class="action-icon action-icon--warning">
+                    <i class="fa fa-cubes" aria-hidden="true"></i>
                 </div>
                 <div class="action-content">
-                    <h6 class="action-title">Inventario</h6>
+                    <h3 class="action-title">Inventario</h3>
                     <small class="action-desc">Stock y bodegas</small>
                 </div>
-                <i class="fa fa-chevron-right action-arrow"></i>
+                <i class="fa fa-chevron-right action-arrow" aria-hidden="true"></i>
             </a>
         </div>
 
         <div class="col-6 col-lg-4" *ngIf="canAccess('ventas/clienteslista')">
             <a routerLink="/ventas/clienteslista" class="action-card">
-                <div class="action-icon" style="background: #fdf2f8;">
-                    <i class="fa fa-users" style="color: #ec4899;"></i>
+                <div class="action-icon action-icon--danger">
+                    <i class="fa fa-users" aria-hidden="true"></i>
                 </div>
                 <div class="action-content">
-                    <h6 class="action-title">Clientes</h6>
+                    <h3 class="action-title">Clientes</h3>
                     <small class="action-desc">Base de datos</small>
                 </div>
-                <i class="fa fa-chevron-right action-arrow"></i>
+                <i class="fa fa-chevron-right action-arrow" aria-hidden="true"></i>
             </a>
         </div>
 
         <div class="col-6 col-lg-4" *ngIf="canAccess('crm/list')">
             <a routerLink="/crm/list" class="action-card">
-                <div class="action-icon" style="background: #eef2ff;">
-                    <i class="fa fa-bullseye" style="color: #6366f1;"></i>
+                <div class="action-icon action-icon--info">
+                    <i class="fa fa-bullseye" aria-hidden="true"></i>
                 </div>
                 <div class="action-content">
-                    <h6 class="action-title">CRM</h6>
+                    <h3 class="action-title">CRM</h3>
                     <small class="action-desc">Pipeline de ventas</small>
                 </div>
-                <i class="fa fa-chevron-right action-arrow"></i>
+                <i class="fa fa-chevron-right action-arrow" aria-hidden="true"></i>
             </a>
         </div>
     </div>
 </div>
 
 <!-- Herramientas — solo si el usuario tiene acceso a al menos una -->
-<div class="container-fluid px-4 mb-2"
-     *ngIf="canAccessAny(['despachos','dashboards','dashboards/builder','empresas','integrations'])">
-    <h6 class="section-title">Herramientas</h6>
-</div>
-
-<div class="container-fluid px-4 mb-4"
-     *ngIf="canAccessAny(['despachos','dashboards','dashboards/builder','empresas','integrations'])">
+<div class="container-fluid px-4 mb-4" *ngIf="showHerramientas">
+    <h2 class="section-title mb-2">Herramientas</h2>
     <div class="row g-3">
         <div class="col-6 col-md-4 col-lg-3" *ngIf="canAccess('despachos')">
             <a routerLink="/despachos" class="tool-card">
-                <i class="fa fa-truck tool-icon" style="color: #8b5cf6;"></i>
+                <i class="fa fa-truck tool-icon tool-icon--primary" aria-hidden="true"></i>
                 <span class="tool-label">Despachos</span>
             </a>
         </div>
 
         <div class="col-6 col-md-4 col-lg-3" *ngIf="canAccess('dashboards') || canAccess('dashboards/builder')">
             <a routerLink="/dashboards" class="tool-card">
-                <i class="fa fa-bar-chart tool-icon" style="color: #27ae60;"></i>
-                <span class="tool-label">Analiticas</span>
+                <i class="fa fa-bar-chart tool-icon tool-icon--success" aria-hidden="true"></i>
+                <span class="tool-label">Analíticas</span>
             </a>
         </div>
 
         <div class="col-6 col-md-4 col-lg-3" *ngIf="canAccess('empresas')">
             <a routerLink="/empresas" class="tool-card">
-                <i class="fa fa-building tool-icon" style="color: #e67e22;"></i>
+                <i class="fa fa-building tool-icon tool-icon--warning" aria-hidden="true"></i>
                 <span class="tool-label">Mi Empresa</span>
             </a>
         </div>
 
         <div class="col-6 col-md-4 col-lg-3" *ngIf="canAccess('integrations')">
             <a routerLink="/integrations" class="tool-card">
-                <i class="fa fa-plug tool-icon" style="color: #3b82f6;"></i>
+                <i class="fa fa-plug tool-icon tool-icon--accent" aria-hidden="true"></i>
                 <span class="tool-label">Integraciones</span>
             </a>
+        </div>
+    </div>
+</div>
+
+<!-- Indicadores económicos Colombia — contexto secundario, va al final -->
+<div class="container-fluid px-4 mb-4">
+    <h2 class="section-title mb-2">Indicadores económicos</h2>
+    <div class="row g-2">
+        <div class="col-6 col-lg-3">
+            <div class="indicator-card indicator-card--primary">
+                <small class="indicator-label">TRM Hoy</small>
+                <span class="indicator-value">
+                    {{ trmCargando ? '...' : (trmHoy ? ('$' + (trmHoy | number:'1.2-2')) : 'N/D') }}
+                </span>
+                <small class="indicator-sub">USD/COP</small>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="indicator-card indicator-card--success">
+                <small class="indicator-label">SMLMV {{ indicadores.anio }}</small>
+                <span class="indicator-value">
+                    ${{ indicadores.salarioMinimo | number:'1.0-0' }}
+                </span>
+                <small class="indicator-sub">Salario mínimo</small>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="indicator-card indicator-card--warning">
+                <small class="indicator-label">Aux. Transporte</small>
+                <span class="indicator-value">
+                    ${{ indicadores.auxilioTransporte | number:'1.0-0' }}
+                </span>
+                <small class="indicator-sub">Subsidio {{ indicadores.anio }}</small>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="indicator-card indicator-card--gray">
+                <small class="indicator-label">UVT {{ indicadores.anio }}</small>
+                <span class="indicator-value">
+                    ${{ indicadores.uvt | number:'1.0-0' }}
+                </span>
+                <small class="indicator-sub">DIAN</small>
+            </div>
         </div>
     </div>
 </div>
