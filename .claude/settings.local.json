@@ -255,7 +255,9 @@
       "PowerShell($conns = Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue; if \\($conns\\) { $conns | Select-Object -ExpandProperty OwningProcess -Unique | ForEach-Object { Stop-Process -Id $_ -Force -ErrorAction SilentlyContinue } }; Start-Sleep -Seconds 2; if \\(Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue\\) { \"STILL LISTENING\" } else { \"Port 3300 free\" })",
       "PowerShell($conn = Get-NetTCPConnection -LocalPort 3300 -State Listen -ErrorAction SilentlyContinue; if \\($conn\\) { $conn | Select-Object -First 1 OwningProcess; \\(Get-Process -Id $conn[0].OwningProcess\\).Path } else { \"no listener on 3300\" })",
       "PowerShell(npm start *)",
-      "Bash(npm *)"
+      "Bash(npm *)",
+      "Bash(ssh -i ops/ec2-keys/lightsail-default-us-east-1.pem ubuntu@13.222.206.185 \"cd /home/ubuntu/katuq_admin_back_firebase && git pull origin backend-aws-security 2>&1 | tail -1 && pm2 restart katuq-api && sleep 5 && pm2 status katuq-api | grep katuq-api\")",
+      "Bash(ssh -i ops/ec2-keys/lightsail-default-us-east-1.pem ubuntu@13.222.206.185 \"cd /home/ubuntu/katuq_admin_back_firebase/functions && grep -q ORDER_NOTIF_UNIFIED_COMPANIES .env || printf '\\\\n# Migracion a notificaciones unificadas por empresa \\(spec 010\\) — piloto Cafe Escobar 2026-07-02\\\\nORDER_NOTIF_UNIFIED_COMPANIES=CAFE ESCOBAR\\\\n' >> .env; grep -n ORDER_NOTIF .env && pm2 restart katuq-api && sleep 5 && pm2 status katuq-api | grep katuq-api\")"
     ]
   }
 }

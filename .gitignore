@@ -166,3 +166,15 @@ ops/CLAUDE.md
 **/*gemini*api*key*
 **/openai-key*
 **/anthropic-key*
+
+# Basura de sesiones / archivos locales de herramientas
+tmp_*.json
+tmp_*.txt
+tmp_*.xlsx
+*.stackdump
+.claude/settings.local.json
+
+# Artefactos auto-generados del plugin claude-mem (el CLAUDE.md de la RAIZ si se versiona)
+**/CLAUDE.md
+!/CLAUDE.md
+CLAUDE.md.tmp
