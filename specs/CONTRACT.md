@@ -832,6 +832,16 @@ Orden = prioridad. La spec piloto siempre encabeza.
 - **Precedido por (misma limpieza, quick wins 2026-07-01, commit FE `8da81221`, deployado `2026.07.02.1`):** fix hero sessionStorage→SecurityService, take(1) al listener de indicadores (leak), tokens muertos de canAccess alineados, jerarquía acciones>indicadores, migración a `_katuq-tokens.scss`, accesibilidad (aria-labels, contraste AA, headings) y tildes.
 - **Fuera de alcance (queda abierto):** widget de salud de flows para admins (propuesta P4 del análisis), TRM servida por backend para tenants importadores (P6), validación DIAN 5 UVT en POS (P7), y auditoría de reglas Firestore no versionadas (write público de `geocoding_cache` — hallazgo del análisis, más grave que el welcome).
 
+### 2026-07-02 — D-072: Loader global deja de ser obligatorio — supresión por pantalla + SKIP_LOADER por request (piloto: /welcome)
+
+- **Problema (reportado por Daniel, molestia de vieja data):** `LoaderInterceptor` enciende el overlay fullscreen bloqueante (`app.component.html:4` → `LoaderComponent`) en CADA request HTTP de la app. Pantallas con cargas rápidas o parciales quedan bloqueadas enteras sin necesidad.
+- **Decisión — dos mecanismos componibles, opt-out explícito (el default sigue siendo el overlay para no cambiar el comportamiento de ninguna pantalla existente):**
+  1. **Por pantalla:** `LoaderService.suppressGlobalLoader()/releaseGlobalLoader()` (contador, soporta anidamiento) — la pantalla que maneja sus propios loaders lo llama en `ngOnInit`/`ngOnDestroy`. Si al liberar hay requests en vuelo, el overlay reaparece.
+  2. **Por request:** `HttpContextToken SKIP_LOADER` en `loader.interceptor.ts` — un servicio marca llamadas puntuales con `{ context: new HttpContext().set(SKIP_LOADER, true) }` (reemplaza el patrón de hardcodear URLs en el interceptor).
+- **Piloto /welcome:** la landing renderiza inmediato (suppress en OnInit) y cada card de "Tu negocio hoy" muestra skeleton propio (pulso flat `$katuq-gray-200`, sin gradiente) mientras su endpoint responde.
+- **Bug preexistente corregido de paso:** el interceptor llamaba `hide()` en `finalize` incluso para requests excluidas que nunca hicieron `show()` (katuqintelligence) — podía apagar el loader de otra request en vuelo. Ahora las excluidas retornan temprano sin tocar el contador.
+- **Siguientes candidatas a migrar (cuando se decida):** listados con paginación server-side (pedidos, clientes, inventario-catálogo) — cada una con sus skeletons por sección antes de suprimir el overlay.
+
 ## 4. Cambios de alcance (scope changes)
 
 > Cuando una spec ya iniciada cambia de alcance, se registra aquí antes de tocar código.

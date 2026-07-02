@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { SecurityService } from '../shared/services/security/security.service';
+import { LoaderService } from '../shared/services/loader.service';
 import { CompanyInformation } from '../shared/models/User/CompanyInformation';
 import { AnalyticsService } from '../shared/services/dashboard/analytics.service';
 import { LogisticaServiceV2 } from '../shared/services/despachos/logistica.service.v2';
@@ -12,7 +13,7 @@ import { VentasService } from '../shared/services/ventas/ventas.service';
   templateUrl: './welcome.component.html',
   styleUrls: ['./welcome.component.scss']
 })
-export class WelcomeComponent implements OnInit {
+export class WelcomeComponent implements OnInit, OnDestroy {
   public userActive: any;
   public currentCompany: CompanyInformation | null = null;
 
@@ -58,10 +59,15 @@ export class WelcomeComponent implements OnInit {
     private logisticaService: LogisticaServiceV2,
     private inventarioService: InventarioService,
     private crmService: CrmService,
-    private ventasService: VentasService
+    private ventasService: VentasService,
+    private loaderService: LoaderService
   ) {}
 
   ngOnInit() {
+    // La landing renderiza de una: sin overlay global bloqueante. Cada card
+    // de "Tu negocio hoy" tiene su propio skeleton mientras carga.
+    this.loaderService.suppressGlobalLoader();
+
     // SecurityService encapsula los fallbacks (localStorage → user.company);
     // sessionStorage solo se escribe en la rama Administrador del login, así que
     // leerlo directo dejaba el hero sin nombre de comercio para los demás roles.
@@ -86,6 +92,11 @@ export class WelcomeComponent implements OnInit {
     }
 
     this.cargarMetricasNegocio();
+  }
+
+  ngOnDestroy(): void {
+    // Reactivar el overlay global para las demás pantallas.
+    this.loaderService.releaseGlobalLoader();
   }
 
   get showAccionesRapidas(): boolean {
