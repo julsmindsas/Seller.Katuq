@@ -1,0 +1,131 @@
+<div class="tk-page">
+
+  <!-- Encabezado -->
+  <div class="tk-header">
+    <div>
+      <h4 class="tk-page-title"><i class="pi pi-wallet me-2"></i>Gestión de pagos</h4>
+      <p class="tk-page-sub">Verifica comprobantes, aprueba o rechaza pagos y controla la cartera pendiente.</p>
+    </div>
+    <button type="button" class="tk-refresh" (click)="loadMetrics()" [disabled]="loadingMetrics"
+            aria-label="Actualizar indicadores">
+      <i class="pi" [ngClass]="loadingMetrics ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+      Actualizar
+    </button>
+  </div>
+
+  <!-- KPI cards (server-side) -->
+  <div *ngIf="loadingMetrics" class="tk-grid" aria-busy="true">
+    <div class="tk-card tk-skel" *ngFor="let i of [1,2,3,4,5,6]"></div>
+  </div>
+
+  <div *ngIf="metricsError && !loadingMetrics" class="tk-error" role="alert">
+    <i class="pi pi-exclamation-triangle me-1"></i>
+    No se pudieron cargar los indicadores.
+    <button type="button" class="btn btn-sm btn-link p-0 ms-1" (click)="loadMetrics()">Reintentar</button>
+  </div>
+
+  <div class="tk-grid" *ngIf="metrics && !loadingMetrics && !metricsError">
+    <div class="tk-card tk-accent-green">
+      <div class="tk-label">Recaudado hoy</div>
+      <div class="tk-value">{{ metrics.recaudadoHoy.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="tk-sub">{{ metrics.recaudadoHoy.cantidad | number }} pago(s) aprobado(s)</div>
+    </div>
+    <div class="tk-card tk-accent-orange">
+      <div class="tk-label">Cartera pendiente</div>
+      <div class="tk-value">{{ metrics.carteraPendiente.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="tk-sub">{{ metrics.carteraPendiente.cantidad | number }} pedido(s) por cobrar</div>
+    </div>
+    <div class="tk-card tk-accent-purple">
+      <div class="tk-label">Por revisar</div>
+      <div class="tk-value">{{ metrics.porRevisar.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="tk-sub">{{ metrics.porRevisar.cantidad | number }} comprobante(s) en cola</div>
+    </div>
+    <div class="tk-card tk-accent-blue">
+      <div class="tk-label">Sin pago</div>
+      <div class="tk-value">{{ metrics.sinPago.cantidad | number }}</div>
+      <div class="tk-sub">pedidos sin comprobante</div>
+    </div>
+    <div class="tk-card" [ngClass]="metrics.alertasActivas.cantidad > 0 ? 'tk-accent-red' : 'tk-accent-gray'">
+      <div class="tk-label">Alertas activas</div>
+      <div class="tk-value" [style.color]="metrics.alertasActivas.cantidad > 0 ? '#dc2626' : '#374151'">
+        {{ metrics.alertasActivas.cantidad | number }}
+      </div>
+      <div class="tk-sub">posibles duplicados</div>
+    </div>
+    <div class="tk-card tk-accent-gray">
+      <div class="tk-label">Rechazados</div>
+      <div class="tk-value">{{ metrics.rechazados.cantidad | number }}</div>
+      <div class="tk-sub">pagos rechazados</div>
+    </div>
+  </div>
+
+  <!-- Pestañas -->
+  <p-tabView [activeIndex]="activeIndex" (onChange)="onTabChange($event)" styleClass="tk-tabs">
+
+    <p-tabPanel>
+      <ng-template pTemplate="header">
+        <i class="pi pi-hourglass me-2"></i>
+        <span>Por revisar</span>
+        <span *ngIf="metrics?.porRevisar?.cantidad" class="tk-tab-badge">{{ metrics?.porRevisar?.cantidad }}</span>
+      </ng-template>
+      <app-tabla-pagos-pedidos
+        *ngIf="activeIndex === 0"
+        [estadosPago]="presetPorRevisar"
+        mode="porRevisar"
+        [active]="activeIndex === 0"
+        (changed)="onDataChanged()">
+      </app-tabla-pagos-pedidos>
+    </p-tabPanel>
+
+    <p-tabPanel>
+      <ng-template pTemplate="header">
+        <i class="pi pi-inbox me-2"></i>
+        <span>Sin pago</span>
+      </ng-template>
+      <app-tabla-pagos-pedidos
+        *ngIf="activeIndex === 1"
+        [estadosPago]="presetSinPago"
+        mode="sinPago"
+        [active]="activeIndex === 1"
+        (changed)="onDataChanged()">
+      </app-tabla-pagos-pedidos>
+    </p-tabPanel>
+
+    <p-tabPanel>
+      <ng-template pTemplate="header">
+        <i class="pi pi-times-circle me-2"></i>
+        <span>Rechazados</span>
+      </ng-template>
+      <app-tabla-pagos-pedidos
+        *ngIf="activeIndex === 2"
+        [estadosPago]="presetRechazados"
+        mode="rechazados"
+        [active]="activeIndex === 2"
+        (changed)="onDataChanged()">
+      </app-tabla-pagos-pedidos>
+    </p-tabPanel>
+
+    <p-tabPanel>
+      <ng-template pTemplate="header">
+        <i class="pi pi-list me-2"></i>
+        <span>Historial</span>
+      </ng-template>
+      <app-historial-pagos *ngIf="activeIndex === 3" [active]="activeIndex === 3"></app-historial-pagos>
+    </p-tabPanel>
+
+    <p-tabPanel>
+      <ng-template pTemplate="header">
+        <i class="pi pi-flag me-2"></i>
+        <span>Alertas</span>
+        <span *ngIf="metrics?.alertasActivas?.cantidad" class="tk-tab-badge tk-tab-badge-danger">{{ metrics?.alertasActivas?.cantidad }}</span>
+      </ng-template>
+      <app-alertas-tesoreria
+        *ngIf="activeIndex === 4"
+        [active]="activeIndex === 4"
+        (changed)="onDataChanged()"
+        (goToReview)="goToReview()">
+      </app-alertas-tesoreria>
+    </p-tabPanel>
+
+  </p-tabView>
+</div>

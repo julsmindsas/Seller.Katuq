@@ -1,0 +1,78 @@
+<div class="tk-hist-wrap">
+
+  <!-- Toolbar -->
+  <div class="tk-toolbar">
+    <div class="tk-field tk-field-search">
+      <label for="tk-hist-search">Buscar</label>
+      <input id="tk-hist-search" type="text" [(ngModel)]="search" (input)="onSearchInput()"
+             placeholder="Nro. de pedido o referencia" autocomplete="off">
+    </div>
+    <div class="tk-field">
+      <label for="tk-hist-status">Estado</label>
+      <select id="tk-hist-status" [(ngModel)]="status" (change)="applyFilters()">
+        <option *ngFor="let s of statusOptions" [value]="s.value">{{ s.label }}</option>
+      </select>
+    </div>
+    <div class="tk-field">
+      <label for="tk-hist-desde">Desde</label>
+      <input id="tk-hist-desde" type="date" [(ngModel)]="fechaDesde" (change)="applyFilters()">
+    </div>
+    <div class="tk-field">
+      <label for="tk-hist-hasta">Hasta</label>
+      <input id="tk-hist-hasta" type="date" [(ngModel)]="fechaHasta" (change)="applyFilters()">
+    </div>
+  </div>
+
+  <p-table #dt [value]="items" dataKey="id" [lazy]="true" (onLazyLoad)="loadData($event)"
+           [loading]="loading" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords"
+           [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true"
+           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pagos"
+           [scrollable]="true" scrollHeight="calc(100vh - 400px)"
+           styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped tk-table">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="min-width: 110px">Pedido</th>
+        <th style="min-width: 120px">Método</th>
+        <th style="min-width: 120px">Referencia</th>
+        <th class="text-end" style="min-width: 120px">Valor</th>
+        <th style="min-width: 110px">Fecha</th>
+        <th class="text-center" style="min-width: 120px">Estado</th>
+        <th style="min-width: 150px">Subido por</th>
+        <th style="min-width: 150px">Revisado por</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-item>
+      <tr>
+        <td class="fw-semibold">{{ item?.nroPedido }}</td>
+        <td>{{ item?.formaPago || '—' }}</td>
+        <td>
+          <span>{{ item?.referencia || '—' }}</span>
+          <button *ngIf="item?.archivoUrl" type="button" class="btn btn-sm btn-link p-0 ms-1"
+                  (click)="verComprobante(item)" title="Ver comprobante">
+            <i class="pi pi-external-link"></i>
+          </button>
+        </td>
+        <td class="text-end tk-money">{{ item?.valor | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+        <td>{{ (item?.fechaTransaccion || item?.createdAt) | date:'dd/MM/yyyy' }}</td>
+        <td class="text-center">
+          <span class="tk-badge" [ngClass]="meta(item?.estadoVerificacion).badgeClass">
+            <i class="pi" [ngClass]="meta(item?.estadoVerificacion).icon"></i>
+            {{ meta(item?.estadoVerificacion).label }}
+          </span>
+        </td>
+        <td class="tk-cell-muted">{{ item?.registradoPor || '—' }}</td>
+        <td class="tk-cell-muted">{{ item?.revisadoPor || '—' }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="8">
+          <div class="tk-empty"><i class="pi pi-list"></i> No hay pagos en el historial para este filtro.</div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

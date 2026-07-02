@@ -1,0 +1,83 @@
+<div class="modal-header">
+  <h5 class="modal-title"><i class="pi pi-plus-circle me-2"></i>Registrar pago — Pedido {{ pedido?.nroPedido }}</h5>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+
+  <!-- Resumen del pedido -->
+  <div class="tk-reg-summary mb-3">
+    <div><span class="tk-reg-label">Total</span><span class="tk-reg-num">{{ pedido?.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div><span class="tk-reg-label">Pagado</span><span class="tk-reg-num">{{ pedido?.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div><span class="tk-reg-label">Falta por pagar</span><span class="tk-reg-num" [class.text-danger]="faltaPorPagar > 0">{{ faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+  </div>
+
+  <div class="tk-note mb-3">
+    <i class="pi pi-info-circle me-1"></i>
+    Este pago lo registra el tesorero y queda <strong>aprobado directamente</strong> (transferencia ya verificada en el banco).
+  </div>
+
+  <form [formGroup]="form" class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label" for="tk-reg-fecha">Fecha <span class="text-danger">*</span></label>
+      <input id="tk-reg-fecha" type="date" class="form-control" formControlName="fecha">
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label" for="tk-reg-forma">Forma de pago <span class="text-danger">*</span></label>
+      <select id="tk-reg-forma" class="form-select" formControlName="formaPago">
+        <option value="">Seleccionar…</option>
+        <option *ngFor="let fp of formasPago" [value]="fp?.id">{{ fp?.nombre }}</option>
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label" for="tk-reg-valor">Valor <span class="text-danger">*</span></label>
+      <div class="input-group">
+        <span class="input-group-text">$</span>
+        <input id="tk-reg-valor" type="number" class="form-control" formControlName="valor" min="0" placeholder="0">
+      </div>
+      <small class="text-muted d-block mt-1">Falta por pagar: {{ faltaPorPagar | currency:'COP':'symbol-narrow':'1.0-0' }}</small>
+      <div class="text-warning small mt-1" *ngIf="valorExcedido">
+        <i class="pi pi-exclamation-triangle"></i> El valor supera lo que falta por pagar.
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label" for="tk-reg-ref">Número de comprobante <span class="text-danger">*</span></label>
+      <input id="tk-reg-ref" type="text" class="form-control" formControlName="numeroComprobante" placeholder="Ej: M1234567">
+    </div>
+
+    <div class="col-md-6">
+      <label class="form-label" for="tk-reg-notas">Notas</label>
+      <input id="tk-reg-notas" type="text" class="form-control" formControlName="notas" placeholder="Observaciones (opcional)">
+    </div>
+
+    <!-- Archivo -->
+    <div class="col-12">
+      <label class="form-label">Comprobante (opcional)</label>
+      <div class="tk-file-drop" [class.is-dragover]="isDragOver" [class.has-file]="selectedFile"
+           (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+        <input id="tk-reg-archivo" type="file" class="tk-file-input"
+               accept=".pdf,.jpg,.jpeg,.png" (change)="onFileChange($event)">
+        <div class="tk-file-empty" *ngIf="!selectedFile">
+          <i class="pi pi-cloud-upload"></i>
+          <span>Arrastra el comprobante o haz clic para seleccionar</span>
+          <small>PDF, JPG o PNG</small>
+        </div>
+        <div class="tk-file-selected" *ngIf="selectedFile">
+          <i class="pi pi-file"></i>
+          <span class="tk-file-name">{{ selectedFile.name }}</span>
+          <button type="button" class="btn btn-sm btn-link text-danger" (click)="removeFile()"><i class="pi pi-times"></i></button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">Cancelar</button>
+  <button type="button" class="btn btn-primary" (click)="registrar()" [disabled]="submitting || form.invalid">
+    <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check'"></i> Registrar y aprobar
+  </button>
+</div>

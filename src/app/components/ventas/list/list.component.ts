@@ -58,6 +58,7 @@ import { Subject, forkJoin, of } from "rxjs";
 import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from "rxjs/operators";
 import { OrdenVentaComponent } from "../orden-venta/orden-venta.component";
 import { IntegrationsService } from "../../integrations/integrations.service";
+import { TreasuryService } from "../../../shared/services/treasury/treasury.service";
 
 @Component({
   selector: "app-list-orders",
@@ -1441,9 +1442,18 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
    * - Vendedores: Pendiente, Pospendiente, PreAprobado, Aprobado
    */
   getAvailablePaymentStates(): EstadoPago[] {
-    // Super admins y administradores ven todos los estados
+    // Super admins y administradores ven todos los estados.
+    // Spec 013 — con tesorería activa, el camino recomendado para cambios manuales
+    // de estado es el módulo de Tesorería (/tesoreria → Cambiar estado), que exige
+    // motivo y valida la matriz de transiciones EN EL SERVIDOR. Este selector se
+    // mantiene para admins por compatibilidad, pero el enforcement real es server-side.
     if (this.canDeleteOrder() || this.isAdminUser()) {
       return this.estadosPago as EstadoPago[];
+    }
+    // Spec 013 — con tesorería activa el vendedor NO puede aprobar ni preaprobar:
+    // esas decisiones son exclusivas del tesorero (validado también en el servidor).
+    if (this.treasuryService.treasuryEnabledCached === true) {
+      return [EstadoPago.Pendiente, EstadoPago.Pospendiente];
     }
     // Vendedores ven estados básicos (sin Rechazado, Precancelado, Cancelado)
     return [
@@ -2178,6 +2188,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
     private loaderService: LoaderService,
     private changeDetectorRef: ChangeDetectorRef,
     private integrationsService: IntegrationsService,
+    private treasuryService: TreasuryService,
   ) {
     this.registerCustomFilters();
     this.setupSearchDebounce();
@@ -2717,6 +2728,13 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    // Spec 013 — precarga el flag de tesorería (cacheado en el servicio) para que
+    // el recálculo de estadoPago pueda leerlo de forma sincrónica al cargar pedidos.
+    this.treasuryService
+      .getConfig()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({ next: () => {}, error: () => {} });
+
     // Serializar saves del carrito: evita carrera cuando el usuario elimina/agrega
     // productos en ráfaga rápida (múltiples editOrder en vuelo simultáneos)
     this.editOrderSubject.pipe(
@@ -3402,8 +3420,15 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
             order.totalPedididoConDescuento = order.subtotal + order.totalImpuesto;
           }
 
+          // Spec 013 fix M-1 — con tesorería activa (flag cacheado true) los
+          // valores del SERVIDOR (anticipo, faltaPorPagar, estadoPago) son la
+          // verdad: no recalcular display client-side para no pisar lo que
+          // decidió tesorería (submit/review). Conservador: solo se salta
+          // cuando el flag ya cargó y es true; si aún no cargó (null) → legacy.
+          const treasuryOn = this.treasuryService.treasuryEnabledCached === true;
+
           // Calcular anticipo basado en PagosAsentados si existen
-          if (order.PagosAsentados && order.PagosAsentados.length > 0) {
+          if (!treasuryOn && order.PagosAsentados && order.PagosAsentados.length > 0) {
             order.anticipo = order.PagosAsentados.reduce((acc, pago) => {
               // ✅ CORREGIDO: Incluir TODOS los pagos, incluso los pendientes
               // Los pagos pendientes también representan dinero que el cliente ya pagó
@@ -3435,11 +3460,14 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           }
 
           // Calcular falta por pagar basado en el total y anticipo real (ya recalculado)
-          order.faltaPorPagar = Math.max(
-            0,
-            Number(order.totalPedididoConDescuento || 0) -
-            Number(order.anticipo || 0),
-          );
+          // Spec 013 fix M-1 — con tesorería activa se respeta el faltaPorPagar del server
+          if (!treasuryOn) {
+            order.faltaPorPagar = Math.max(
+              0,
+              Number(order.totalPedididoConDescuento || 0) -
+              Number(order.anticipo || 0),
+            );
+          }
 
           // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
           // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
@@ -3447,7 +3475,12 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado"];
           const esEstadoFinal = estadosFinales.includes(order.estadoPago);
 
+          // Spec 013 — con tesorería activa el estadoPago lo decide el SERVIDOR
+          // (submit/review de tesorería): no recalcular client-side para no pisar
+          // estados como Pospendiente (guard `treasuryOn` declarado arriba, fix M-1).
+
           const debeRecalcular =
+            !treasuryOn &&
             !order._estadoCalculadoEnFrontend &&
             !esEstadoFinal;
 
@@ -3501,6 +3534,7 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
               );
             }
           } else if (
+            !treasuryOn &&
             order._estadoCalculadoEnFrontend &&
             !esEstadoFinal
           ) {

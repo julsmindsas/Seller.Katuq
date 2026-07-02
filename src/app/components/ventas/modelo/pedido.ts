@@ -237,6 +237,8 @@ export interface Pago {
   fechaHoraSistema?: string;
   fechaHoraCarga?: string;
   fechaHoraAprobacionRechazo?: string;
+  /** Spec 013 — id del doc en la colección `payments` cuando el pago entró al flujo de tesorería. */
+  paymentId?: string;
 }
 
 export enum EstadoPago {

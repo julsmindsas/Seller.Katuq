@@ -68,8 +68,10 @@
                   <i class="pi pi-file"></i>
                   {{ 'Ver archivo' | translate }}
                 </button>
-                <button type="button" 
+                <button type="button"
                         class="btn btn-outline-danger btn-sm"
+                        [disabled]="isPagoBloqueadoPorTesoreria(pago)"
+                        [title]="isPagoBloqueadoPorTesoreria(pago) ? tooltipPagoTesoreria : ''"
                         (click)="eliminarPago(pago)">
                   <i class="pi pi-trash"></i>
                   {{ 'Eliminar' | translate }}

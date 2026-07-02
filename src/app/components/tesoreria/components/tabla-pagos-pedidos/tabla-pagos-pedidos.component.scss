@@ -1,0 +1,26 @@
+@import '../../tesoreria-shared';
+
+:host {
+  display: block;
+}
+
+.tk-tabla-wrap {
+  padding-top: 0.25rem;
+}
+
+.tk-table {
+  font-size: 0.82rem;
+}
+
+.tk-cell-strong {
+  font-weight: 600;
+  color: $katuq-gray-800;
+}
+.tk-cell-muted {
+  font-size: 0.75rem;
+  color: $katuq-gray-500;
+}
+
+.mt-1 {
+  margin-top: 0.35rem;
+}

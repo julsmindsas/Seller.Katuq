@@ -20,6 +20,7 @@ Este directorio contiene las especificaciones del proyecto bajo la metodología 
 | 004 | user-docs-flows | spec + USER-GUIDE-FLOWS.md publicada | Documentación de `/flows` orientada al comerciante final (no técnico). |
 | 007 | assisted-sale-step1-customer | **in-review** | Re-arquitectura del Paso 1 (Cliente) de la venta asistida: buscador sin callejones + creación inline + búsqueda performante (por prefijo, sin tocar la base) en móvil y desktop. |
 | 012 | siigo-integration-consolidation | draft | Consolidar los 3 caminos de facturación SIIGO en uno solo canónico multi-tenant; matar el legacy del POS con datos de prueba, arreglar nodos de flow rotos y rotar credencial filtrada. Ver D-039 (2026-06-20). Renumerada de 008 → 012 (colisión con cotizaciones-mvp — D-067). |
+| 013 | tesoreria-mvp | **approved — plan/tasks draft** | Tesorería MVP: verificación de pagos por tesorero (vendedor sube comprobante → Pospendiente → aprobar/rechazar con segregación de funciones server-side), anti-fraude por hash+referencia, tab Historial. Flag por empresa default OFF, rol nuevo "Tesorero". Diseño origen: ClickUp lista `901415301323`. Ver D-073. |
 
 > Roadmap completo + decisiones D-001..D-067 en `CONTRACT.md`.
 

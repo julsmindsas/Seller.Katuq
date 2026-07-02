@@ -1,0 +1,59 @@
+<div class="tk-alertas-wrap">
+
+  <!-- Barra superior -->
+  <div class="tk-alertas-bar">
+    <span class="tk-alertas-title"><i class="pi pi-flag me-1"></i>Alertas anti-fraude</span>
+    <div class="tk-alertas-actions">
+      <button type="button" class="tk-toggle-btn" (click)="toggleFiltro()">
+        <i class="pi" [ngClass]="soloActivas ? 'pi-filter' : 'pi-filter-slash'"></i>
+        {{ soloActivas ? 'Solo activas' : 'Ver todas' }}
+      </button>
+      <button type="button" class="tk-toggle-btn" (click)="load()" [disabled]="loading" aria-label="Actualizar">
+        <i class="pi" [ngClass]="loading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Cargando -->
+  <div *ngIf="loading" class="tk-empty"><i class="pi pi-spin pi-spinner"></i> Cargando alertas…</div>
+
+  <!-- Vacío -->
+  <div *ngIf="!loading && items.length === 0" class="tk-empty">
+    <i class="pi pi-check-circle"></i>
+    {{ soloActivas ? 'No hay alertas activas. Todo en orden.' : 'No hay alertas registradas.' }}
+  </div>
+
+  <!-- Lista -->
+  <div class="tk-alert-list" *ngIf="!loading && items.length > 0">
+    <div class="tk-alert-item" *ngFor="let alert of items; trackBy: trackByAlert"
+         [ngClass]="alert?.severity === 'high' ? 'sev-high' : 'sev-medium'"
+         [class.is-resolved]="alert?.resolved">
+
+      <div class="tk-alert-icon"><i class="pi pi-exclamation-triangle"></i></div>
+
+      <div class="tk-alert-body">
+        <div class="tk-alert-top">
+          <span class="tk-alert-type">{{ tipoLabel(alert) }}</span>
+          <span class="tk-sev-badge" [ngClass]="alert?.severity === 'high' ? 'sev-high' : 'sev-medium'">
+            {{ alert?.severity === 'high' ? 'Alta' : 'Media' }}
+          </span>
+          <span *ngIf="alert?.resolved" class="tk-resolved-badge"><i class="pi pi-check"></i> Resuelta</span>
+        </div>
+        <div class="tk-alert-msg">{{ alert?.message }}</div>
+        <div class="tk-alert-meta">
+          <span *ngIf="alert?.orderIds?.length"><i class="pi pi-shopping-cart"></i> Pedidos: {{ alert?.orderIds?.join(', ') }}</span>
+          <span *ngIf="alert?.createdAt"><i class="pi pi-clock"></i> {{ alert?.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+      </div>
+
+      <div class="tk-alert-buttons" *ngIf="!alert?.resolved">
+        <button type="button" class="btn btn-sm btn-outline-primary tk-btn-sm" (click)="irARevisar()">
+          <i class="pi pi-search"></i> Ir a revisar
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary tk-btn-sm" (click)="resolver(alert)">
+          <i class="pi pi-check"></i> Resolver
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

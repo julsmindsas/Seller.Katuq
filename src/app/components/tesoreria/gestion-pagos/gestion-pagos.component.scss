@@ -1,0 +1,67 @@
+@import '../tesoreria-shared';
+
+:host {
+  display: block;
+}
+
+.tk-page {
+  padding: 1rem 1.25rem 1.5rem;
+}
+
+.tk-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.9rem;
+}
+.tk-page-title {
+  margin: 0;
+  font-weight: 700;
+  color: $katuq-purple-700;
+  font-size: 1.15rem;
+}
+.tk-page-sub {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  color: $katuq-gray-500;
+}
+.tk-refresh {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: $katuq-purple-700;
+  background: $katuq-purple-50;
+  border: 1px solid $katuq-purple-200;
+  border-radius: 20px;
+  padding: 0.35rem 0.95rem;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  &:hover:not(:disabled) { background: $katuq-purple-100; box-shadow: 0 1px 4px rgba(109, 40, 217, 0.12); }
+  &:disabled { opacity: 0.6; cursor: default; }
+}
+
+// p-tabView tuning
+.tk-tabs {
+  margin-top: 1rem;
+  ::ng-deep .p-tabview-nav { flex-wrap: wrap; }
+}
+
+.tk-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 10px;
+  background: $katuq-purple-100;
+  color: $katuq-purple-700;
+  &.tk-tab-badge-danger { background: $katuq-danger-light; color: $katuq-danger-text; }
+}

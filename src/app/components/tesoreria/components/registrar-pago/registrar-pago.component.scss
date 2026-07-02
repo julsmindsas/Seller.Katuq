@@ -1,0 +1,66 @@
+@import '../../tesoreria-shared';
+
+.tk-reg-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 0.7rem 0.9rem;
+  background: $katuq-gray-50;
+  border: 1px solid $katuq-gray-200;
+  border-radius: 8px;
+  > div { display: flex; flex-direction: column; gap: 0.1rem; }
+}
+.tk-reg-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: $katuq-gray-500;
+  font-weight: 600;
+}
+.tk-reg-num {
+  font-size: 1rem;
+  font-weight: 700;
+  color: $katuq-gray-800;
+  font-family: 'Courier New', monospace;
+}
+
+.tk-file-drop {
+  position: relative;
+  border: 2px dashed $katuq-gray-300;
+  border-radius: 10px;
+  padding: 1.1rem;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+  &.is-dragover { border-color: $katuq-primary; background: $katuq-purple-50; }
+  &.has-file { border-style: solid; border-color: $katuq-success; background: $katuq-success-light; }
+}
+.tk-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+.tk-file-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  color: $katuq-gray-500;
+  i { font-size: 1.6rem; color: $katuq-gray-400; }
+  small { font-size: 0.72rem; }
+}
+.tk-file-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: $katuq-success-text;
+  font-weight: 600;
+  i { font-size: 1.1rem; }
+}
+.tk-file-name { max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.mb-3 { margin-bottom: 1rem; }
+.mt-1 { margin-top: 0.25rem; }

@@ -205,6 +205,15 @@ export const content: Routes = [
     canActivate: [AuthGuard],
   },
   {
+    path: "tesoreria",
+    loadChildren: () =>
+      import("../../components/tesoreria/tesoreria.module").then(
+        (m) => m.TesoreriaModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Tesorería" },
+  },
+  {
     path: "soporte",
     loadChildren: () =>
       import("../../components/soporte/soporte.module").then(

@@ -1,0 +1,86 @@
+<div class="modal-header">
+  <h5 class="modal-title"><i class="pi pi-search me-2"></i>Revisar pago — Pedido {{ pedido?.nroPedido }}</h5>
+  <button type="button" class="btn-close" aria-label="Cerrar" (click)="activeModal.dismiss()"></button>
+</div>
+
+<div class="modal-body">
+
+  <!-- Banner de duplicado (aiFlag = duplicate) -->
+  <div class="tk-alert-danger mb-3" *ngIf="esDuplicado">
+    <div class="fw-bold mb-1"><i class="pi pi-exclamation-triangle me-1"></i>Posible comprobante duplicado</div>
+    <div *ngIf="aiDetails">
+      <div *ngIf="aiDetails?.detalle">{{ aiDetails?.detalle }}</div>
+      <div *ngIf="aiDetails?.pedidosInvolucrados?.length" class="mt-1">
+        <strong>Pedidos involucrados:</strong> {{ aiDetails?.pedidosInvolucrados?.join(', ') }}
+      </div>
+      <div *ngIf="aiDetails?.tipo" class="mt-1"><strong>Tipo:</strong> {{ aiDetails?.tipo }}</div>
+    </div>
+  </div>
+
+  <!-- Datos del pago -->
+  <div class="tk-pago-grid mb-3">
+    <div class="tk-pago-item"><span class="tk-pago-label">Forma de pago</span><span class="tk-pago-value">{{ pago?.formaPago || '—' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">Referencia</span><span class="tk-pago-value">{{ pago?.numeroComprobante || '—' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">Fecha</span><span class="tk-pago-value">{{ (pago?.fecha || pago?.fechaTransaccion) | date:'dd/MM/yyyy' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">Valor de este pago</span><span class="tk-pago-value tk-money">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-pago-item"><span class="tk-pago-label">Subido por</span><span class="tk-pago-value">{{ pago?.usuarioRegistro || '—' }}</span></div>
+    <div class="tk-pago-item tk-pago-file">
+      <span class="tk-pago-label">Comprobante</span>
+      <button type="button" class="btn btn-sm btn-outline-secondary tk-btn-sm"
+              *ngIf="pago?.archivo || pago?.archivoUrl; else sinArchivo"
+              (click)="verComprobante()">
+        <i class="pi pi-external-link"></i> Ver comprobante
+      </button>
+      <ng-template #sinArchivo><span class="tk-pago-value text-muted">Sin archivo</span></ng-template>
+    </div>
+  </div>
+
+  <!-- Resumen de saldo -->
+  <div class="tk-resumen mb-3">
+    <div class="tk-resumen-col"><span class="tk-resumen-label">Total del pedido</span><span class="tk-resumen-num">{{ total | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col"><span class="tk-resumen-label">Ya aprobado</span><span class="tk-resumen-num">{{ yaAprobado | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col tk-resumen-hl"><span class="tk-resumen-label">Este pago</span><span class="tk-resumen-num">{{ estePago | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+    <div class="tk-resumen-col"><span class="tk-resumen-label">Quedaría faltando</span><span class="tk-resumen-num" [class.text-danger]="quedariaFaltando > 0">{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</span></div>
+  </div>
+
+  <!-- Aviso de pago parcial -->
+  <div class="tk-alert-warning mb-3" *ngIf="esParcial">
+    <i class="pi pi-info-circle me-1"></i>
+    Si apruebas, el pedido quedará <strong>Pre-aprobado</strong> con un saldo pendiente de
+    <strong>{{ quedariaFaltando | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>.
+  </div>
+
+  <!-- Nota fija anti-fraude -->
+  <div class="tk-note mb-3">
+    <i class="pi pi-shield me-1"></i>
+    La alerta <strong>no aprueba ni rechaza</strong>: verifica el dinero directamente en tu banco antes de decidir.
+    Para Nequi usa el <strong>QR Verificador</strong> (comprueba el pago real en ~30 segundos, sin iniciar sesión).
+  </div>
+
+  <!-- Formulario de rechazo (motivo obligatorio) -->
+  <div class="tk-reject-box" *ngIf="showRejectForm">
+    <label class="form-label fw-semibold" for="tk-motivo-rechazo">Motivo del rechazo <span class="text-danger">*</span></label>
+    <textarea id="tk-motivo-rechazo" class="form-control" rows="3" [(ngModel)]="motivoRechazo"
+              placeholder="Ej: el dinero no aparece en la cuenta / comprobante alterado"></textarea>
+  </div>
+</div>
+
+<div class="modal-footer">
+  <button type="button" class="btn btn-light" (click)="activeModal.dismiss()" [disabled]="submitting">Cerrar</button>
+
+  <ng-container *ngIf="!showRejectForm">
+    <button type="button" class="btn btn-outline-danger" (click)="mostrarRechazo()" [disabled]="submitting">
+      <i class="pi pi-times-circle me-1"></i> Rechazar
+    </button>
+    <button type="button" class="btn btn-success" (click)="aprobar()" [disabled]="submitting">
+      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-check-circle'"></i> Aprobar
+    </button>
+  </ng-container>
+
+  <ng-container *ngIf="showRejectForm">
+    <button type="button" class="btn btn-outline-secondary" (click)="showRejectForm = false" [disabled]="submitting">Volver</button>
+    <button type="button" class="btn btn-danger" (click)="confirmarRechazo()" [disabled]="submitting || !motivoRechazo.trim()">
+      <i class="pi" [ngClass]="submitting ? 'pi-spin pi-spinner' : 'pi-times-circle'"></i> Confirmar rechazo
+    </button>
+  </ng-container>
+</div>

@@ -1,0 +1,138 @@
+<div class="tk-tabla-wrap">
+
+  <!-- Toolbar de filtros -->
+  <div class="tk-toolbar">
+    <div class="tk-field tk-field-search">
+      <label for="tk-search-{{ mode }}">Buscar</label>
+      <input id="tk-search-{{ mode }}" type="text" [(ngModel)]="searchTerm" (input)="onSearchInput()"
+             placeholder="Nro. de pedido o nombre del cliente" autocomplete="off">
+    </div>
+
+    <div class="tk-field">
+      <label for="tk-fp-{{ mode }}">Forma de pago</label>
+      <select id="tk-fp-{{ mode }}" [(ngModel)]="formaPagoFilter" (change)="applyFilters()">
+        <option value="">Todas</option>
+        <option *ngFor="let fp of formasPago" [value]="fp?.nombre">{{ fp?.nombre }}</option>
+      </select>
+    </div>
+
+    <div class="tk-field">
+      <label for="tk-desde-{{ mode }}">Desde</label>
+      <input id="tk-desde-{{ mode }}" type="date" [(ngModel)]="fechaDesde" (change)="applyFilters()">
+    </div>
+
+    <div class="tk-field">
+      <label for="tk-hasta-{{ mode }}">Hasta</label>
+      <input id="tk-hasta-{{ mode }}" type="date" [(ngModel)]="fechaHasta" (change)="applyFilters()">
+    </div>
+  </div>
+
+  <!-- Tabla lazy server-side -->
+  <p-table #dt [value]="orders" dataKey="_id" [lazy]="true" (onLazyLoad)="loadData($event)"
+           [loading]="loading" [paginator]="true" [rows]="pageSize" [totalRecords]="totalRecords"
+           [rowsPerPageOptions]="[10,25,50]" [showCurrentPageReport]="true"
+           currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} pedidos"
+           [scrollable]="true" scrollHeight="calc(100vh - 430px)"
+           styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped tk-table">
+
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="min-width: 150px">Pedido</th>
+        <th style="min-width: 170px">Cliente</th>
+        <th style="min-width: 160px">Pago</th>
+        <th class="text-center" style="min-width: 130px">Estado</th>
+        <th style="min-width: 140px">Vendedor</th>
+        <th class="text-center" style="min-width: 150px">Acciones</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-pedido>
+      <tr>
+        <!-- Pedido: nro + fecha -->
+        <td>
+          <div class="tk-cell-strong">{{ pedido?.nroPedido }}</div>
+          <div class="tk-cell-muted">{{ pedido?.fechaCreacion | date:'dd/MM/yyyy' }}</div>
+        </td>
+
+        <!-- Cliente -->
+        <td>
+          <div class="tk-cell-strong">{{ clienteNombre(pedido) }}</div>
+          <div class="tk-cell-muted" *ngIf="pedido?.cliente?.documento">{{ pedido?.cliente?.documento }}</div>
+        </td>
+
+        <!-- Pago: barra anticipo/total -->
+        <td>
+          <div class="tk-progress">
+            <div class="tk-progress-track">
+              <div class="tk-progress-fill" [ngClass]="progresoClase(pedido)"
+                   [style.width.%]="progresoPct(pedido)"></div>
+            </div>
+            <div class="tk-progress-label">
+              {{ pedido?.anticipo | currency:'COP':'symbol-narrow':'1.0-0' }}
+              / {{ pedido?.totalPedididoConDescuento | currency:'COP':'symbol-narrow':'1.0-0' }}
+            </div>
+          </div>
+        </td>
+
+        <!-- Estado: badge clickable → cambiar estado -->
+        <td class="text-center">
+          <span class="tk-badge tk-badge-clickable" [ngClass]="meta(pedido?.estadoPago).badgeClass"
+                (click)="abrirCambiarEstado(pedido)"
+                [attr.title]="'Cambiar estado — ' + meta(pedido?.estadoPago).descripcion">
+            <i class="pi" [ngClass]="meta(pedido?.estadoPago).icon"></i>
+            {{ meta(pedido?.estadoPago).label }}
+          </span>
+          <!-- Motivo de rechazo inline (tab Rechazados) -->
+          <div *ngIf="mode === 'rechazados' && motivoRechazo(pedido)" class="tk-reject-reason mt-1">
+            <i class="pi pi-info-circle"></i> {{ motivoRechazo(pedido) }}
+          </div>
+        </td>
+
+        <!-- Vendedor -->
+        <td>
+          <span class="tk-cell-muted">{{ pedido?.asesorAsignado?.name || '—' }}</span>
+        </td>
+
+        <!-- Acciones según estado -->
+        <td class="text-center">
+          <button *ngIf="mode === 'porRevisar'" type="button"
+                  class="btn btn-sm btn-primary tk-btn-sm"
+                  [disabled]="!puedeRevisar(pedido)"
+                  (click)="abrirRevisar(pedido)">
+            <i class="pi pi-search"></i> Revisar
+          </button>
+
+          <button *ngIf="mode === 'sinPago'" type="button"
+                  class="btn btn-sm btn-outline-primary tk-btn-sm"
+                  (click)="abrirRegistrar(pedido)">
+            <i class="pi pi-plus-circle"></i> Registrar pago
+          </button>
+
+          <button *ngIf="mode === 'rechazados'" type="button"
+                  class="btn btn-sm btn-outline-primary tk-btn-sm"
+                  (click)="abrirRegistrar(pedido)">
+            <i class="pi pi-refresh"></i> Nuevo pago
+          </button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6">
+          <div class="tk-empty">
+            <i class="pi pi-inbox"></i>
+            No hay pedidos que coincidan con este filtro.
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <!-- Totales de la página -->
+  <div class="tk-summary" *ngIf="orders.length > 0">
+    <span><strong>Pedidos en pantalla:</strong> {{ orders.length | number }}</span>
+    <span><strong>Anticipos:</strong> <span class="tk-summary-value">{{ totalAnticipo() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
+    <span><strong>Falta por pagar:</strong> <span class="tk-summary-value">{{ totalFalta() | currency:'COP':'symbol-narrow':'1.0-0' }}</span></span>
+  </div>
+</div>

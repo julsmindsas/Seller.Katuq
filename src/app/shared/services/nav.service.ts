@@ -384,6 +384,18 @@ export class NavService implements OnDestroy {
         { path: "pos/list-ventas", title: "Pedidos POS", type: "link", icon: "monitor" },
       ],
     },
+    // Spec 013 — Tesorería MVP: gestión de pagos con verificación de tesorero.
+    // Visible solo si el path "tesoreria" está autorizado para el rol del usuario
+    // (filterMenuItemsByAuthorization contra el maestro de roles).
+    {
+      title: "Tesorería",
+      icon: "dollar-sign",
+      type: "link",
+      path: "tesoreria",
+      badgeType: "primary",
+      badgeValue: "NUEVO",
+      active: false,
+    },
     {
       title: "Producción",
       icon: "archive",

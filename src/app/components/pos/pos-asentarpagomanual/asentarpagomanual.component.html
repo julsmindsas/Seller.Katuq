@@ -32,7 +32,10 @@
                 <td>{{pago.fechaHoraCarga | date: 'yyyy-MM-dd hh:mm'}}</td>
                 <td>
                     <!-- <button class="btn btn-primary" (click)="editarPago(pago)">Editar</button> -->
-                    <button class="btn btn-danger" (click)="eliminarPago(pago)">Eliminar</button>
+                    <button class="btn btn-danger"
+                        [disabled]="isPagoBloqueadoPorTesoreria(pago)"
+                        [title]="isPagoBloqueadoPorTesoreria(pago) ? tooltipPagoTesoreria : ''"
+                        (click)="eliminarPago(pago)">Eliminar</button>
                 </td>
             </tr>
         </tbody>
