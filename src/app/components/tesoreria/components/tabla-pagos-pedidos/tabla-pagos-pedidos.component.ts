@@ -128,7 +128,12 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
       estadosPago: this.estadosPago,
       tipoFecha: 'fechaCreacion',
       fechaInicial: this.fechaDesde,
-      fechaFinal: this.fechaHasta,
+      // El backend compara strings: `fechaCreacion <= fechaFinal`. Con la
+      // fecha sola ("2026-07-02") los pedidos de ESE día quedan fuera porque
+      // su ISO trae hora ("2026-07-02T19:42..." > "2026-07-02"). Se envía el
+      // día siguiente para que el rango sea inclusivo (incidente Almara:
+      // los pedidos de hoy no aparecían en la cola Por revisar).
+      fechaFinal: this.addDays(this.fechaHasta, 1),
     };
 
     const term = (this.searchTerm || '').trim();
@@ -290,5 +295,13 @@ export class TablaPagosPedidosComponent implements OnChanges, OnDestroy {
 
   private toIso(d: Date): string {
     return d.toISOString().split('T')[0];
+  }
+
+  /** Suma días a una fecha "YYYY-MM-DD" y retorna "YYYY-MM-DD". */
+  private addDays(isoDate: string, days: number): string {
+    if (!isoDate) return isoDate;
+    const d = new Date(`${isoDate}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + days);
+    return this.toIso(d);
   }
 }
