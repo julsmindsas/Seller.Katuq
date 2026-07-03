@@ -11,9 +11,9 @@
 
 ## Bloque B — Frontend CxC
 
-- [ ] **T-04 [M]** FE: scaffold `components/finanzas/cxc/` (module + routing + página `cartera` con p-tabView) + ruta lazy `finanzas/cartera` en `shared/routes/routes.ts` + `CarteraService extends BaseService`.
-- [ ] **T-05 [L]** FE: tab **Cartera por Cliente** — 4 KPI cards flat, filtros (texto, riesgo, vendedor), cards por cliente (saldo, barra cupo semáforo, mini-bar aging, DSO, pedidos activos), detalle expandible de pedidos (CA-11).
-- [ ] **T-06 [M]** FE: tab **Aging** — 5 KPIs, barra horizontal segmentada con montos, tabla por cliente con footer de totales.
+- [x] **T-04 [M]** FE: scaffold `components/cartera/` (module + routing + página con p-tabView) + ruta lazy `cartera` en `shared/routes/routes.ts` + `CarteraService extends BaseService` (`shared/services/cartera/`). Implementado por agente angular-ux-craftsman (Opus), revisado por coordinador.
+- [x] **T-05 [L]** FE: tab **Cartera por Cliente** — 4 KPI cards flat, filtros client-side, cards con cupo semáforo + mini-bar aging + DSO, detalle expandible (CA-11), empty states, manejo 403/errores con retry, OnPush + trackBy.
+- [x] **T-06 [M]** FE: tab **Aging** — 5 KPIs con acentos por rango, barra segmentada (oculta label en segmentos angostos), p-table ordenable con footer de totales.
 
 ## Bloque C — Menú + cliente
 
@@ -22,6 +22,6 @@
 
 ## Bloque D — Validación + deploy
 
-- [ ] **T-09 [S]** Contract tests PASS + build FE prod verde.
-- [ ] **T-10 [M]** Deploy BE (commit → push → EC2 `git pull` + `pm2 restart katuq-api`) + verificar 401/403 en `/v1/treasury/cartera`.
-- [ ] **T-11 [M]** Deploy FE (`npm run release` con stash de cambios ajenos de despachos) + verificación visual en prod + bitácora D-076 en CONTRACT.md + comentario en tasks ClickUp (NO cerrarlas — regla del proyecto).
+- [x] **T-09 [S]** Contract tests 53/53 PASS + `tsc --noEmit` limpio + build FE prod verde (solo warnings preexistentes).
+- [ ] **T-10 [M]** Deploy BE: commit `1604c43` pusheado a `backend-aws-security`. ⚠️ **SSH a EC2 bloqueado por el clasificador de permisos de la sesión autónoma** — pendiente que Daniel ejecute/apruebe: `cd /home/ubuntu/katuq_admin_back_firebase && git pull origin backend-aws-security && pm2 restart katuq-api`.
+- [x] **T-11 [M]** Deploy FE: commit `035ce114` + `firebase deploy --only hosting` (versión **2026.07.02.16**, sin stash — los cambios de despachos ya estaban en prod desde builds anteriores del día). Verificado: main.js servido contiene "Cartera (CxC)" y versión .16. Bitácora D-076 en CONTRACT.md. Comentarios ClickUp bloqueados por permisos (escritura externa) — pendiente manual.
