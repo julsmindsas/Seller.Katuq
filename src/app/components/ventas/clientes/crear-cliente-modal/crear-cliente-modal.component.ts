@@ -144,6 +144,8 @@ export class CrearClienteModalComponent implements OnInit {
           indicativo_celular_comprador: "57",
           indicativo_celular_whatsapp: "57",
           estado: "activo",
+          creditLimit: 0,
+          payTermDays: 0,
         });
       }
     });
@@ -217,6 +219,11 @@ export class CrearClienteModalComponent implements OnInit {
       comoNosConocio: [""],
       etiquetas: [[]],
       estado: ["activo"],
+      // Spec 014 (CxC): cupo de crédito en COP (0 = sin cupo) y plazo de pago
+      // en días (0 = contado). Los usa el aging de Cartera (payDueDate =
+      // fechaEntrega + payTermDays).
+      creditLimit: [0, [Validators.min(0)]],
+      payTermDays: [0, [Validators.min(0)]],
     });
   }
 

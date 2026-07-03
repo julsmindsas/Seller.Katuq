@@ -1,0 +1,76 @@
+@import '../../cartera-shared';
+
+:host { display: block; }
+
+.cx-aging { padding-top: 0.5rem; }
+
+// 5 KPIs en una fila (colapsa en pantallas chicas vía auto-fit heredado)
+.cx-grid-aging {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+// ── Barra horizontal segmentada ────────────────────────────────────────────
+.cx-agingbar-wrap {
+  margin: 1.1rem 0 1.25rem;
+}
+.cx-agingbar {
+  display: flex;
+  width: 100%;
+  height: 34px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: $katuq-gray-200;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+.cx-agingbar-seg {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+.cx-agingbar-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0 0.35rem;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+.cx-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.55rem;
+}
+.cx-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.74rem;
+  color: $katuq-gray-600;
+}
+
+// ── Tabla aging ────────────────────────────────────────────────────────────
+.cx-cell-strong { font-weight: 700; color: $katuq-gray-800; }
+.text-end { text-align: right; font-variant-numeric: tabular-nums; }
+
+// Tinte sutil por columna de rango (coherente con el semáforo)
+.cx-c-corriente { color: $katuq-success-dark; }
+.cx-c-d16       { color: $katuq-warning-dark; }
+.cx-c-d31       { color: #c2410c; }
+.cx-c-d60       { color: $katuq-danger-dark; }
+
+::ng-deep .cx-table {
+  .p-datatable-tfoot > tr.cx-foot > td {
+    background: $katuq-gray-50;
+    border-top: 2px solid $katuq-primary;
+    font-size: 0.82rem;
+  }
+  .p-datatable-thead > tr > th { font-size: 0.75rem; }
+  .p-datatable-tbody > tr > td { font-size: 0.8rem; }
+}

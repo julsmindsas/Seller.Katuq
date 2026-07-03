@@ -134,6 +134,8 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
     color: '#6c757d',
     menus: [
       'dashboards', 'dashboards/builder',
+      // Spec 014 — CxC: el contador necesita el aging para provisiones.
+      'cartera',
     ],
     permissions: {
       reportes: ['view', 'create', 'share'],
@@ -154,6 +156,8 @@ export const ROLE_TEMPLATES: RoleTemplate[] = [
     color: '#198754',
     menus: [
       'tesoreria',
+      // Spec 014 — CxC: cartera agrupada por cliente + aging.
+      'cartera',
       'ventas/pedidos',
       'dashboards',
     ],

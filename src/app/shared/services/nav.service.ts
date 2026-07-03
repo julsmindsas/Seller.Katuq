@@ -372,6 +372,28 @@ export class NavService implements OnDestroy {
       ],
     },
 
+    // FINANZAS — spec 014: agrupa Tesorería (spec 013, path intacto para
+    // conservar la autorización de roles existente) + Cartera (CxC).
+    // Cada hijo entra por separado al pickList del maestro de roles.
+    { headTitle1: "Finanzas" },
+    {
+      title: "Finanzas",
+      icon: "dollar-sign",
+      type: "sub",
+      active: false,
+      children: [
+        { path: "tesoreria", title: "Tesorería", type: "link", icon: "check-square" },
+        {
+          path: "cartera",
+          title: "Cartera (CxC)",
+          type: "link",
+          icon: "credit-card",
+          badgeType: "primary",
+          badgeValue: "NUEVO",
+        },
+      ],
+    },
+
     // OPERACIONES
     { headTitle1: "Operaciones" },
     {
@@ -383,18 +405,6 @@ export class NavService implements OnDestroy {
         { path: "ventas/pedidos", title: "Todos los pedidos", type: "link", icon: "list" },
         { path: "pos/list-ventas", title: "Pedidos POS", type: "link", icon: "monitor" },
       ],
-    },
-    // Spec 013 — Tesorería MVP: gestión de pagos con verificación de tesorero.
-    // Visible solo si el path "tesoreria" está autorizado para el rol del usuario
-    // (filterMenuItemsByAuthorization contra el maestro de roles).
-    {
-      title: "Tesorería",
-      icon: "dollar-sign",
-      type: "link",
-      path: "tesoreria",
-      badgeType: "primary",
-      badgeValue: "NUEVO",
-      active: false,
     },
     {
       title: "Producción",

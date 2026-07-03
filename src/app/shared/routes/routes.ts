@@ -214,6 +214,15 @@ export const content: Routes = [
     data: { title: "Tesorería" },
   },
   {
+    path: "cartera",
+    loadChildren: () =>
+      import("../../components/cartera/cartera.module").then(
+        (m) => m.CarteraModule,
+      ),
+    canActivate: [AuthGuard],
+    data: { title: "Cartera (CxC)" },
+  },
+  {
     path: "soporte",
     loadChildren: () =>
       import("../../components/soporte/soporte.module").then(

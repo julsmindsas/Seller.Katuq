@@ -1,0 +1,82 @@
+<div class="cx-aging">
+
+  <!-- KPI cards por rango + total -->
+  <div class="cx-grid cx-grid-aging">
+    <div class="cx-card" [ngClass]="k.accentClass" *ngFor="let k of kpis">
+      <div class="cx-label">
+        <span class="cx-dot" *ngIf="!k.isTotal" [ngClass]="k.cssClass"></span>
+        {{ k.label }}
+      </div>
+      <div class="cx-value">{{ k.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+      <div class="cx-sub">{{ k.pct | number:'1.0-0' }}% del total</div>
+    </div>
+  </div>
+
+  <!-- Empty -->
+  <div *ngIf="rows.length === 0" class="cx-empty">
+    <i class="pi pi-check-circle"></i>
+    <div class="cx-empty-title">No hay cartera pendiente 🎉</div>
+  </div>
+
+  <ng-container *ngIf="rows.length > 0">
+    <!-- Barra horizontal segmentada -->
+    <div class="cx-agingbar-wrap">
+      <div class="cx-agingbar">
+        <div class="cx-agingbar-seg" *ngFor="let s of segments" [ngClass]="s.cssClass"
+             [style.width.%]="s.pct"
+             [attr.title]="s.label + ': ' + (s.monto | currency:'COP':'symbol-narrow':'1.0-0') + ' (' + (s.pct | number:'1.0-0') + '%)'">
+          <span class="cx-agingbar-label" *ngIf="s.showText">{{ s.monto | currency:'COP':'symbol-narrow':'1.0-0' }}</span>
+        </div>
+      </div>
+      <div class="cx-legend">
+        <span class="cx-legend-item" *ngFor="let b of agingBuckets">
+          <span class="cx-dot" [ngClass]="b.cssClass"></span> {{ b.label }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Tabla aging por cliente -->
+    <p-table [value]="rows" dataKey="documento" [scrollable]="true" scrollHeight="calc(100vh - 470px)"
+             [rowTrackBy]="trackByDoc"
+             styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped cx-table">
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="nombre" style="min-width: 180px">Cliente <p-sortIcon field="nombre"></p-sortIcon></th>
+          <th pSortableColumn="documento" style="min-width: 120px">Documento <p-sortIcon field="documento"></p-sortIcon></th>
+          <th pSortableColumn="aging.corriente" class="text-end" style="min-width: 120px">Corriente <p-sortIcon field="aging.corriente"></p-sortIcon></th>
+          <th pSortableColumn="aging.d16_30" class="text-end" style="min-width: 110px">16-30 d <p-sortIcon field="aging.d16_30"></p-sortIcon></th>
+          <th pSortableColumn="aging.d31_60" class="text-end" style="min-width: 110px">31-60 d <p-sortIcon field="aging.d31_60"></p-sortIcon></th>
+          <th pSortableColumn="aging.d60" class="text-end" style="min-width: 110px">60+ d <p-sortIcon field="aging.d60"></p-sortIcon></th>
+          <th pSortableColumn="saldoPendiente" class="text-end" style="min-width: 130px">Total <p-sortIcon field="saldoPendiente"></p-sortIcon></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-c>
+        <tr>
+          <td class="cx-cell-strong">{{ c.nombre || '—' }}</td>
+          <td>{{ c.documento || '—' }}</td>
+          <td class="text-end cx-c-corriente">{{ c.aging.corriente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-c-d16">{{ c.aging.d16_30 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-c-d31">{{ c.aging.d31_60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-c-d60">{{ c.aging.d60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-cell-strong">{{ c.saldoPendiente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="footer">
+        <tr class="cx-foot">
+          <td class="cx-cell-strong">Totales</td>
+          <td>{{ rows.length | number }} cliente(s)</td>
+          <td class="text-end cx-c-corriente">{{ totals.corriente | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-c-d16">{{ totals.d16_30 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-c-d31">{{ totals.d31_60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-c-d60">{{ totals.d60 | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+          <td class="text-end cx-cell-strong">{{ totals.total | currency:'COP':'symbol-narrow':'1.0-0' }}</td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  </ng-container>
+
+</div>
