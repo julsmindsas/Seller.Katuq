@@ -3480,7 +3480,10 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
           // 🔍 VERIFICACIÓN SIMPLIFICADA: Solo recalcular si NO fue calculado en frontend
           // ✅ CORREGIDO: Eliminar la lógica de expiración temporal para evitar recálculos automáticos
           // ✅ CORREGIDO: No recalcular estados finales (Aprobado, Rechazado, Cancelado, Precancelado)
-          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado"];
+          // Spec 013: "Pospendiente" también es intocable para el recálculo —
+          // lo administra SOLO el servidor (pago en revisión de tesorería),
+          // incluso si el flag de tesorería aún no cargó (null) en esta sesión.
+          const estadosFinales = ["Aprobado", "Rechazado", "Cancelado", "Precancelado", "Pospendiente"];
           const esEstadoFinal = estadosFinales.includes(order.estadoPago);
 
           // Spec 013 — con tesorería activa el estadoPago lo decide el SERVIDOR
@@ -4063,7 +4066,11 @@ export class ListOrdersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private static readonly PAGO_STATUS_MAP: { [key: string]: { short: string; full: string } } = {
-    Pospendiente: { short: "Pendiente", full: "Pospendiente - Pago en validación posterior" },
+    // Spec 013: el short label decía "Pendiente" y el usuario no podía
+    // distinguir un Pospendiente (pago subido, en revisión de tesorería) de
+    // un Pendiente real — reportado por Almara: "asenté el pago y sigue
+    // Pendiente" cuando el server SÍ estaba en Pospendiente.
+    Pospendiente: { short: "Pospendiente", full: "Pospendiente - Pago subido, en revisión de tesorería" },
     Pendiente: { short: "Pendiente", full: "Pendiente - Pago pendiente de confirmación" },
     PreAprobado: { short: "Pre-Aprob.", full: "Pre-Aprobado - Pago pre-aprobado, verificando" },
     Aprobado: { short: "Aprobado", full: "Aprobado - Pago confirmado y exitoso" },

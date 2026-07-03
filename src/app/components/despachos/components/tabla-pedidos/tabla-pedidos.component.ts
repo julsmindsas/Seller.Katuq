@@ -575,7 +575,9 @@ export class TablaPedidosComponent implements OnInit, OnChanges, OnDestroy {
   // Helper para mostrar estados de pago abreviados con tooltips
   getPaymentStatusDisplay(status: string): { short: string, full: string } {
     const statusMap: { [key: string]: { short: string, full: string } } = {
-      'Pospendiente': { short: 'Pendiente', full: 'Pospendiente' },
+      // Spec 013: "Pendiente" como short label hacía indistinguible el pago
+      // en revisión de tesorería de un pendiente real (reporte Almara).
+      'Pospendiente': { short: 'Pospendiente', full: 'Pospendiente - Pago subido, en revisión de tesorería' },
       'Pendiente': { short: 'Pendiente', full: 'Pendiente' },
       'PreAprobado': { short: 'Pre-Aprob.', full: 'Pre-Aprobado' },
       'Aprobado': { short: 'Aprobado', full: 'Aprobado' },
