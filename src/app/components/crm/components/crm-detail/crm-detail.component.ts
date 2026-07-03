@@ -8,7 +8,7 @@ import { CrmService } from '../../services/crm.service';
 import { CorporateConfigService } from '../../../ventas/clientes/services/corporate-config.service';
 import { ClientTag } from '../../../ventas/clientes/services/client-config.service';
 import {
-  CrmActivity, CrmTask, getStageSeverity, getPrioritySeverity,
+  CrmActivity, CrmTask, CrmStage, getStageSeverity, getPrioritySeverity,
   ACTIVITY_TYPE_OPTIONS, TASK_TYPE_OPTIONS, PRIORITY_OPTIONS,
 } from '../../models/crm.models';
 
@@ -21,7 +21,7 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
   lead: any = null;
   activities: CrmActivity[] = [];
   tasks: CrmTask[] = [];
-  stages: string[] = [];
+  stages: CrmStage[] = [];
   loading = true;
   activeTab = 0;
 
@@ -297,6 +297,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
     return this.lead?.pipeline?.stage || (this.lead?.entityType === 'company' ? 'registro' : 'nuevo');
   }
 
+  get visibleStages(): CrmStage[] {
+    return this.stages.filter(s => s.active !== false);
+  }
+
   get entityName(): string {
     const e = this.lead?.entity;
     if (!e) return '';
@@ -305,6 +309,10 @@ export class CrmDetailComponent implements OnInit, OnDestroy {
 
   getStageSeverity = getStageSeverity;
   getPrioritySeverity = getPrioritySeverity;
+
+  getStageLabel(key: string): string {
+    return this.stages.find(s => s.key === key)?.label || this.capitalize(key);
+  }
 
   capitalize(s: string): string {
     return s ? s.charAt(0).toUpperCase() + s.slice(1) : '';

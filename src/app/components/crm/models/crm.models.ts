@@ -7,6 +7,17 @@ export type Priority = 'low' | 'medium' | 'high' | 'urgent';
 export type CompanyStage = 'registro' | 'contactado' | 'demo' | 'trial' | 'activo' | 'premium' | 'churned';
 export type ClientStage = 'nuevo' | 'contactado' | 'calificado' | 'propuesta' | 'negociacion' | 'convertido' | 'perdido';
 
+// Etapa personalizable del pipeline (CLIENT/CORPORATE). `key` es estable e
+// inmutable (se guarda en CrmLead.stage); `label` es lo que el comercio edita.
+export interface CrmStage {
+  key: string;
+  label: string;
+  color?: string;
+  isWon?: boolean;
+  isLost?: boolean;
+  active?: boolean;
+}
+
 export type ActivityType = 'note' | 'call' | 'email' | 'whatsapp' | 'meeting' | 'stage_change' | 'task_created' | 'task_completed';
 export type TaskType = 'call' | 'email' | 'meeting' | 'follow_up' | 'other';
 export type TaskStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
@@ -61,6 +72,7 @@ export interface CrmTask {
   completedAt?: string;
   createdAt: string;
   createdBy: string;
+  lastReviewedAt?: string;
 }
 
 export interface CrmStats {

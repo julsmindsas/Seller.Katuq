@@ -115,12 +115,12 @@
         <div class="card-body py-2 border-bottom" *ngIf="stats">
           <div class="d-flex flex-wrap align-items-center gap-2">
             <span class="stat-badge stat-badge-primary">{{ stats.total }} en total</span>
-            <ng-container *ngFor="let stage of stages">
+            <ng-container *ngFor="let stage of visibleStages">
               <span class="stat-badge cursor-pointer"
-                [style.background-color]="getStageBgColor(stage)" [style.color]="getStageColor(stage)"
-                [class.stat-badge-active]="selectedStage === stage"
-                (click)="selectedStage = (selectedStage === stage ? null : stage); onStageFilter()">
-                {{ capitalize(stage) }}: {{ stats.byStage[stage] || 0 }}
+                [style.background-color]="getStageBgColor(stage.key)" [style.color]="getStageColor(stage.key)"
+                [class.stat-badge-active]="selectedStage === stage.key"
+                (click)="selectedStage = (selectedStage === stage.key ? null : stage.key); onStageFilter()">
+                {{ stage.label }}: {{ stats.byStage[stage.key] || 0 }}
               </span>
             </ng-container>
             <span class="stat-badge stat-badge-warning cursor-pointer" *ngIf="stats.tasksPending > 0"
@@ -138,6 +138,10 @@
             <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="abrirConfigModal()"
               pTooltip="Crear o gestionar etiquetas de segmentación" tooltipPosition="bottom">
               <i class="fa fa-tags"></i> Etiquetas
+            </button>
+            <button *ngIf="canManageStages" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" (click)="abrirEtapasModal()"
+              pTooltip="Renombrar, agregar o reordenar las etapas del pipeline" tooltipPosition="bottom">
+              <i class="fa fa-list-ol"></i> Etapas
             </button>
             <ng-container *ngIf="clientTagsCatalog.length > 0">
               <small class="text-muted ms-2 me-1"><i class="pi pi-tags me-1"></i>Segmentar:</small>
@@ -163,26 +167,26 @@
         <!-- ═══════ KANBAN VIEW ═══════ -->
         <div class="card-body p-2" *ngIf="!loading && viewMode === 'kanban'">
           <div class="kanban-board">
-            <div class="kanban-column" *ngFor="let stage of stages"
-              [class.d-none]="selectedStage && selectedStage !== stage">
+            <div class="kanban-column" *ngFor="let stage of visibleStages"
+              [class.d-none]="selectedStage && selectedStage !== stage.key">
 
               <!-- Header fijo -->
-              <div class="kanban-column-header" [style.border-top-color]="getStageColor(stage)">
+              <div class="kanban-column-header" [style.border-top-color]="getStageColor(stage.key)">
                 <div class="d-flex align-items-center gap-2">
-                  <span class="kanban-column-title">{{ capitalize(stage) }}</span>
-                  <span class="kanban-column-count">{{ getStageCount(stage) }}</span>
+                  <span class="kanban-column-title">{{ stage.label }}</span>
+                  <span class="kanban-column-count">{{ getStageCount(stage.key) }}</span>
                 </div>
-                <small class="kanban-column-value" *ngIf="getStageValue(stage) > 0">
-                  {{ formatCurrency(getStageValue(stage)) }}
+                <small class="kanban-column-value" *ngIf="getStageValue(stage.key) > 0">
+                  {{ formatCurrency(getStageValue(stage.key)) }}
                 </small>
               </div>
 
               <!-- Cards con scroll independiente -->
               <div class="kanban-cards"
-                [dragula]="'crm-kanban'" [dragulaModel]="leadsByStage[stage]"
-                [attr.data-stage]="stage">
+                [dragula]="'crm-kanban'" [dragulaModel]="leadsByStage[stage.key]"
+                [attr.data-stage]="stage.key">
 
-                <div class="kanban-card" *ngFor="let lead of leadsByStage[stage]; trackBy: trackById"
+                <div class="kanban-card" *ngFor="let lead of leadsByStage[stage.key]; trackBy: trackById"
                   [attr.data-lead-id]="lead.id">
 
                   <div class="kanban-card-header">
@@ -253,7 +257,7 @@
                 </div>
 
                 <!-- Columna vacía -->
-                <div class="kanban-empty" *ngIf="getStageCount(stage) === 0">
+                <div class="kanban-empty" *ngIf="getStageCount(stage.key) === 0">
                   <i class="fa fa-inbox" style="font-size:1.5rem; color:#d1d5db;"></i>
                   <small class="d-block text-muted mt-1">Sin leads en esta etapa</small>
                 </div>
@@ -320,7 +324,7 @@
                   </span>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
-                  <p-tag [value]="capitalize(lead.stage)" [severity]="getStageSeverity(lead.stage)"
+                  <p-tag [value]="getStageLabel(lead.stage)" [severity]="getStageSeverity(lead.stage)"
                     [style]="{'font-size':'0.75rem'}"></p-tag>
                 </td>
                 <td (click)="$event.stopPropagation()" style="cursor:default">
@@ -571,7 +575,7 @@
                 <span class="stat-badge badge-sm"
                   [style.background-color]="getStageBgColor(lead.stage)"
                   [style.color]="getStageColor(lead.stage)">
-                  {{ capitalize(lead.stage) }}
+                  {{ getStageLabel(lead.stage) }}
                 </span>
               </td>
               <td>
@@ -660,6 +664,33 @@
       class="p-button-text" (click)="cerrarConfigModal()"></button>
     <button pButton type="button" label="Guardar" icon="pi pi-check"
       class="p-button-primary" (click)="guardarConfig()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Configuración de Etapas" [(visible)]="showStagesModal"
+  [modal]="true" [closable]="true" [dismissableMask]="false" [style]="{width: '480px'}">
+
+  <p class="text-muted small mb-3">Activa o desactiva las etapas de tu pipeline según tu proceso de ventas. Los nombres y el orden son fijos.</p>
+
+  <div class="config-list mb-3">
+    <div *ngFor="let stage of editableStages; let i = index" class="config-list-item d-flex align-items-center justify-content-between gap-2 mb-2">
+      <span class="d-flex align-items-center gap-2">
+        <span class="stage-color-dot" [style.background-color]="getStageColor(stage.key)"></span>
+        {{ stage.label }}
+        <span class="stat-badge badge-sm" *ngIf="stage.isWon" style="background-color:#f0fdf4; color:#27AE60;">Ganada</span>
+        <span class="stat-badge badge-sm" *ngIf="stage.isLost" style="background-color:#fef2f2; color:#d12b38;">Perdida</span>
+      </span>
+      <p-inputSwitch [(ngModel)]="stage.active" [ngModelOptions]="{standalone: true}"
+        [trueValue]="true" [falseValue]="false" (onChange)="toggleStageActive(i)"></p-inputSwitch>
+    </div>
+    <div *ngIf="editableStages.length === 0" class="text-muted small text-center py-2">Sin etapas configuradas</div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancelar" icon="pi pi-times"
+      class="p-button-text" (click)="cerrarEtapasModal()"></button>
+    <button pButton type="button" label="Guardar" icon="pi pi-check"
+      class="p-button-primary" (click)="guardarEtapas()"></button>
   </ng-template>
 </p-dialog>
 

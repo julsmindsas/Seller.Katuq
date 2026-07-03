@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { CrmLead, CrmActivity, CrmTask, CrmStats, CrmPaginatedResponse } from '../models/crm.models';
+import { CrmLead, CrmActivity, CrmTask, CrmStats, CrmPaginatedResponse, CrmStage } from '../models/crm.models';
 
 @Injectable({ providedIn: 'root' })
 export class CrmService {
@@ -70,6 +70,11 @@ export class CrmService {
       .pipe(map(r => r.data || null), catchError(() => of(null)));
   }
 
+  reviewTask(taskId: string): Observable<CrmTask | null> {
+    return this.http.patch<{ success: boolean; data: CrmTask }>(`${this.base}/tasks/${taskId}/review`, {})
+      .pipe(map(r => r.data || null), catchError(() => of(null)));
+  }
+
   // ─── Import ─────────────────────────────────────────────────
 
   importLead(data: any): Observable<any> {
@@ -106,8 +111,13 @@ export class CrmService {
       .pipe(map(r => r.data || null), catchError(() => of(null)));
   }
 
-  getStages(): Observable<{ stages: string[]; entityType: string }> {
-    return this.http.get<{ success: boolean; data: string[]; entityType: string }>(`${this.base}/stages`)
+  getStages(): Observable<{ stages: CrmStage[]; entityType: string }> {
+    return this.http.get<{ success: boolean; data: CrmStage[]; entityType: string }>(`${this.base}/stages`)
       .pipe(map(r => ({ stages: r.data || [], entityType: r.entityType || 'client' })), catchError(() => of({ stages: [], entityType: 'client' })));
+  }
+
+  saveStages(stages: CrmStage[]): Observable<boolean> {
+    return this.http.put<{ success: boolean }>(`${this.base}/stages`, { stages })
+      .pipe(map(r => !!r.success), catchError(() => of(false)));
   }
 }

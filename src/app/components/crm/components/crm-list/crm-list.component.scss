@@ -371,6 +371,14 @@
   gap: 0.5rem;
 }
 
+.stage-color-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 .tag-preview {
   display: inline-block;
   padding: 0.2rem 0.6rem;

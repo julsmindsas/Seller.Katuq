@@ -16,7 +16,7 @@
     <div class="d-flex align-items-center gap-3 mb-2">
       <button pButton icon="pi pi-arrow-left" class="p-button-text p-button-sm" (click)="goBack()"></button>
       <h5 class="mb-0">{{ entityName }}</h5>
-      <p-tag [value]="capitalize(currentStage)" [severity]="getStageSeverity(currentStage)"></p-tag>
+      <p-tag [value]="getStageLabel(currentStage)" [severity]="getStageSeverity(currentStage)"></p-tag>
       <span class="text-muted ms-2" *ngIf="lead.entity?.email">{{ lead.entity.email }}</span>
       <button pButton icon="pi pi-pencil" label="{{ 'Editar' | translate }}" class="p-button-text p-button-sm ms-auto"
         pTooltip="Corregir los datos ingresados de este lead" tooltipPosition="bottom"
@@ -25,11 +25,11 @@
 
     <!-- Stage selector -->
     <div class="stage-bar">
-      <button *ngFor="let stage of stages" pButton [label]="capitalize(stage)"
+      <button *ngFor="let stage of visibleStages" pButton [label]="stage.label"
         class="p-button-sm"
-        [class.p-button-outlined]="currentStage !== stage"
-        [class.stage-active]="currentStage === stage"
-        (click)="changeStage(stage)">
+        [class.p-button-outlined]="currentStage !== stage.key"
+        [class.stage-active]="currentStage === stage.key"
+        (click)="changeStage(stage.key)">
       </button>
     </div>
   </div>
@@ -125,9 +125,9 @@
             </div>
             <small class="text-muted" *ngIf="a.detail">{{ a.detail }}</small>
             <div *ngIf="a.oldStage || a.newStage" class="mt-1">
-              <p-tag *ngIf="a.oldStage" [value]="a.oldStage" severity="secondary" [style]="{'font-size':'0.7rem'}"></p-tag>
+              <p-tag *ngIf="a.oldStage" [value]="getStageLabel(a.oldStage)" severity="secondary" [style]="{'font-size':'0.7rem'}"></p-tag>
               <i class="pi pi-arrow-right mx-1" style="font-size:0.6rem;" *ngIf="a.oldStage && a.newStage"></i>
-              <p-tag *ngIf="a.newStage" [value]="a.newStage" [severity]="getStageSeverity(a.newStage)" [style]="{'font-size':'0.7rem'}"></p-tag>
+              <p-tag *ngIf="a.newStage" [value]="getStageLabel(a.newStage)" [severity]="getStageSeverity(a.newStage)" [style]="{'font-size':'0.7rem'}"></p-tag>
             </div>
             <div><small class="text-muted">{{ a.createdBy }}</small></div>
           </div>
