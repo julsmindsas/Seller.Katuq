@@ -95,6 +95,11 @@ export class EcomerceProductsComponent
   // Flag para usar paginación server-side (feature flag)
   usarPaginacionServidor: boolean = true;
 
+  // Solo mostrar productos con unidades disponibles (toggle visible en la UI).
+  // ON por defecto: acelera la carga en bodegas grandes (ej. Guía Cereza,
+  // 8.2k productos → ~2.3k con stock) y evita ofrecer productos invendibles.
+  public soloConStock: boolean = true;
+
   // Cache de precio por categoría del cliente (evita parsear sessionStorage en cada CD cycle)
   private _cachedCategoriaClienteId: string | null = null;
   private _clienteCacheInitialized: boolean = false;
@@ -556,6 +561,7 @@ export class EcomerceProductsComponent
     filter.bodegaId = this.bodega.idBodega || this.bodega;
     filter.isChannelManual = true;
     filter.estado = 'activo';
+    filter.onlyWithStock = this.soloConStock;
 
     // Guardar filtros actuales
     this.filtrosActuales = { ...filter };
@@ -618,6 +624,12 @@ export class EcomerceProductsComponent
           });
         },
       });
+  }
+
+  /** Toggle "Solo con stock": recarga el catálogo con/sin productos agotados */
+  toggleSoloConStock(): void {
+    this.soloConStock = !this.soloConStock;
+    this.filtrarProductos();
   }
 
   sidebarToggle() {
@@ -760,6 +772,7 @@ export class EcomerceProductsComponent
       this.filtrosActuales.bodegaId = this.bodega?.idBodega || this.bodega;
       this.filtrosActuales.isChannelManual = true;
       this.filtrosActuales.estado = 'activo';
+      this.filtrosActuales.onlyWithStock = this.soloConStock;
     }
 
     this.filtrosActuales.searchTerm = searchTerm;
