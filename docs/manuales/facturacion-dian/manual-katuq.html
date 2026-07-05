@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facturación DIAN — Runbook interno de onboarding | Katuq</title>
+<style>
+  :root {
+    --primary: #1b55e2;
+    --primary-soft: #eef3ff;
+    --ok: #1a9c6b;
+    --ok-soft: #e8f7f1;
+    --warn: #c98a06;
+    --warn-soft: #fdf6e5;
+    --danger: #c0392b;
+    --danger-soft: #fdefed;
+    --purple: #6f42c1;
+    --purple-soft: #f3eefb;
+    --ink: #1f2937;
+    --ink-soft: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f9fafb;
+    --card: #ffffff;
+    --code-bg: #f3f4f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink); background: var(--bg); line-height: 1.6;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header.hero {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 6px solid var(--purple);
+    border-radius: 10px; padding: 26px 30px; margin-bottom: 24px;
+  }
+  header.hero h1 { font-size: 1.5rem; margin-bottom: 6px; }
+  header.hero p { color: var(--ink-soft); }
+  .badge {
+    display: inline-block; font-size: .75rem; font-weight: 700;
+    background: var(--purple-soft); color: var(--purple);
+    border-radius: 20px; padding: 3px 12px; margin-bottom: 10px; letter-spacing: .3px;
+  }
+
+  nav.toc {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 22px; margin-bottom: 24px; font-size: .9rem;
+  }
+  nav.toc strong { display: block; margin-bottom: 6px; }
+  nav.toc a { color: var(--primary); text-decoration: none; margin-right: 18px; white-space: nowrap; display: inline-block; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  section {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 24px 28px; margin-bottom: 22px;
+  }
+  section > h2 {
+    font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-soft);
+  }
+  section h3 { font-size: 1rem; margin: 18px 0 8px; }
+  section p { margin-bottom: 10px; font-size: .95rem; }
+  section ol, section ul { margin: 0 0 12px 22px; }
+  section li { margin-bottom: 6px; font-size: .95rem; }
+
+  .phase {
+    display: flex; gap: 14px; align-items: flex-start;
+    border: 1px solid var(--line); border-left: 5px solid var(--primary);
+    border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; background: var(--bg);
+  }
+  .phase .who {
+    flex-shrink: 0; font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 12px; margin-top: 2px;
+  }
+  .who.cliente { background: var(--warn-soft); color: var(--warn); }
+  .who.katuq { background: var(--ok-soft); color: var(--ok); }
+  .who.ambos { background: var(--purple-soft); color: var(--purple); }
+  .phase .txt strong { display: block; font-size: .95rem; }
+  .phase .txt span { font-size: .85rem; color: var(--ink-soft); }
+
+  .callout { border-radius: 8px; padding: 13px 16px; margin: 12px 0; font-size: .9rem; }
+  .callout.info { background: var(--primary-soft); border-left: 4px solid var(--primary); }
+  .callout.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); }
+  .callout.ok { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .callout.danger { background: var(--danger-soft); border-left: 4px solid var(--danger); }
+  .callout strong:first-child { display: block; margin-bottom: 4px; }
+
+  code, .mono {
+    font-family: Consolas, "Courier New", monospace; font-size: .85em;
+    background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; margin: 10px 0 14px;
+    font-family: Consolas, monospace; font-size: .82rem; line-height: 1.5;
+  }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .88rem; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-weight: 600; }
+  .table-scroll { overflow-x: auto; }
+
+  .check-list { list-style: none; margin-left: 0 !important; }
+  .check-list li {
+    padding: 8px 12px 8px 40px; position: relative; border: 1px solid var(--line);
+    border-radius: 6px; margin-bottom: 6px; background: var(--bg); cursor: pointer;
+  }
+  .check-list li::before {
+    content: ""; position: absolute; left: 12px; top: 11px; width: 18px; height: 18px;
+    border: 2px solid var(--ink-soft); border-radius: 4px; background: #fff;
+  }
+  .check-list li.done { color: var(--ink-soft); text-decoration: line-through; }
+  .check-list li.done::before {
+    content: "✓"; color: #fff; background: var(--ok); border-color: var(--ok);
+    display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700;
+  }
+
+  .env-pill {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 10px;
+    border-radius: 12px; margin-right: 6px; text-transform: uppercase;
+  }
+  .env-pill.hab { background: var(--warn-soft); color: var(--warn); }
+  .env-pill.prod { background: var(--danger-soft); color: var(--danger); }
+
+  footer { margin-top: 32px; text-align: center; font-size: .8rem; color: var(--ink-soft); }
+  a { color: var(--primary); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero">
+    <span class="badge">RUNBOOK INTERNO · CONFIDENCIAL</span>
+    <h1>Onboarding DIAN por empresa — facturación electrónica directa</h1>
+    <p>
+      Cómo llevar una empresa cliente de cero a facturando electrónicamente con el motor DIAN de Katuq
+      (modo de operación <strong>software propio</strong>, desarrollo tecnológico adquirido — Res. 000165/2023, art. 28).
+      El principio rector: <strong>el cliente solo hace lo que legalmente es indelegable</strong>; todo lo demás es nuestro.
+      Guía espejo para el cliente: <a href="manual-cliente.html">manual-cliente.html</a>.
+    </p>
+  </header>
+
+  <nav class="toc">
+    <strong>Contenido</strong>
+    <a href="#pipeline">1. Pipeline de onboarding</a>
+    <a href="#sesion">2. Sesión acompañada DIAN</a>
+    <a href="#datos">3. Paquete de activación</a>
+    <a href="#config">4. Configuración en Katuq</a>
+    <a href="#pruebas">5. Set de pruebas</a>
+    <a href="#golive">6. Checklist go-live</a>
+    <a href="#operacion">7. Operación y monitoreo</a>
+    <a href="#troubleshooting">8. Troubleshooting</a>
+    <a href="#referencias">9. URLs y referencias</a>
+  </nav>
+
+  <section id="pipeline">
+    <h2>1 · Pipeline de onboarding (quién hace qué, en orden)</h2>
+    <div class="phase"><span class="who cliente">Cliente</span><div class="txt">
+      <strong>F1 — RUT con responsabilidad 52</strong>
+      <span>Verificar casilla 53. Si falta, actualizar RUT en MUISCA. Bloqueante para todo lo demás.</span>
+    </div></div>
+    <div class="phase"><span class="who cliente">Cliente</span><div class="txt">
+      <strong>F2 — Certificado de firma digital (.p12) </strong>
+      <span>Persona jurídica, para facturación electrónica, en software (no token físico). CA acreditada ONAC: Certicámara, GSE, Andes SCD. Corre en paralelo con F3.</span>
+    </div></div>
+    <div class="phase"><span class="who ambos">Ambos</span><div class="txt">
+      <strong>F3 — Sesión acompañada: registro en portal de habilitación DIAN</strong>
+      <span>Videollamada de 30 min. El cliente entra (token al correo del RUT), nosotros dictamos. Salida: Software ID + PIN + TestSetId. Ver sección 2.</span>
+    </div></div>
+    <div class="phase"><span class="who katuq">Katuq</span><div class="txt">
+      <strong>F4 — Set de pruebas en ambiente de habilitación</strong>
+      <span>Enviar el set completo (facturas + notas C/D) al WS de habilitación hasta estado Aceptado. Ver sección 5.</span>
+    </div></div>
+    <div class="phase"><span class="who cliente">Cliente</span><div class="txt">
+      <strong>F5 — Resolución de numeración en MUISCA</strong>
+      <span>Prefijo + rango + vigencia. Recomendarles rango ≥ 50.000 y vigencia 24 meses. Puede correr en paralelo con F4.</span>
+    </div></div>
+    <div class="phase"><span class="who cliente">Cliente</span><div class="txt">
+      <strong>F6 — Entrega del paquete de activación</strong>
+      <span>Certificado + contraseña + resolución + datos fiscales, SOLO por canal seguro. Ver sección 3.</span>
+    </div></div>
+    <div class="phase"><span class="who katuq">Katuq</span><div class="txt">
+      <strong>F7 — Configuración, asociación en producción y go-live</strong>
+      <span>integration_configs/secrets, registro del rango en portal FE de producción (clave técnica), primera factura real acompañada. Ver secciones 4 y 6.</span>
+    </div></div>
+    <div class="callout info">
+      <strong>💡 Tiempos reales esperados</strong>
+      RUT al día → 1-2 semanas end-to-end. El camino crítico es certificado (1-3 días) + set de pruebas (2-5 días).
+      Los pasos del cliente suman &lt; 2 horas de su tiempo.
+    </div>
+  </section>
+
+  <section id="sesion">
+    <h2>2 · Sesión acompañada DIAN (guion de la videollamada)</h2>
+    <p>Objetivo: salir de la llamada con <strong>Software ID, PIN y TestSetId</strong> anotados. Duración: ~30 min.</p>
+    <ol>
+      <li><strong>Antes de la llamada:</strong> confirmar que el cliente tiene a mano NIT, cédula del representante legal y acceso al correo registrado en el RUT. Definir el PIN que vamos a usar (numérico, lo genera Katuq y queda registrado en el vault del tenant).</li>
+      <li>Cliente entra a <span class="env-pill hab">HAB</span> <a href="https://catalogo-vpfe-hab.dian.gov.co/User/Login" target="_blank">catalogo-vpfe-hab.dian.gov.co</a> → ingreso <strong>Empresa</strong> (NIT + cédula rep. legal).</li>
+      <li>DIAN envía token al correo del RUT → el cliente lo abre y comparte pantalla.</li>
+      <li>Menú <strong>Registro y habilitación</strong> → registrarse como <strong>Facturador electrónico</strong> (si no aparece, verificar responsabilidad 52 — F1 incompleta).</li>
+      <li>Asociar <strong>modo de operación → Software propio</strong>: nombre del software = <code>Katuq</code>, PIN = el acordado.</li>
+      <li>La DIAN muestra el <strong>Identificador de Software</strong> (UUID) y crea el <strong>set de pruebas</strong> con su <strong>TestSetId</strong>. Copiar AMBOS al vault del tenant en ese momento (no a chat, no a correo).</li>
+      <li>Cerrar la llamada explicándole F5 (numeración) y F6 (paquete de activación) con el <a href="manual-cliente.html">manual del cliente</a> en pantalla.</li>
+    </ol>
+    <div class="callout warn">
+      <strong>⚠️ Cliente que ya factura con otro proveedor/software</strong>
+      El registro como facturador ya existe: solo se agrega un modo de operación "Software propio" nuevo (Katuq) sin
+      tocar el vigente. Coordinar fecha de corte: el otro software sigue emitiendo hasta que el nuestro pase a producción,
+      y la numeración nueva arranca ese día. Nunca dos softwares emitiendo sobre el mismo rango.
+    </div>
+  </section>
+
+  <section id="datos">
+    <h2>3 · Paquete de activación (qué recibimos y dónde se guarda)</h2>
+    <div class="table-scroll">
+    <table>
+      <tr><th>Dato</th><th>Origen</th><th>Dónde se guarda</th><th>Sensible</th></tr>
+      <tr><td>Certificado .p12/.pfx</td><td>CA (cliente, F2)</td><td><code>integration_secrets</code> · provider <code>dian</code> (base64)</td><td>🔴 Sí</td></tr>
+      <tr><td>Contraseña del certificado</td><td>CA (cliente, F2)</td><td><code>integration_secrets</code> · provider <code>dian</code></td><td>🔴 Sí</td></tr>
+      <tr><td>Software ID + PIN</td><td>Sesión acompañada (F3)</td><td><code>integration_secrets</code> · provider <code>dian</code></td><td>🔴 Sí</td></tr>
+      <tr><td>TestSetId</td><td>Sesión acompañada (F3)</td><td><code>integration_configs</code> (solo se usa en habilitación)</td><td>🟡 Medio</td></tr>
+      <tr><td>Resolución de numeración (nro, prefijo, rango, fechas)</td><td>MUISCA (cliente, F5)</td><td><code>integration_configs</code> · provider <code>dian</code></td><td>🟢 No</td></tr>
+      <tr><td>Clave técnica del rango</td><td>Portal FE producción (Katuq, F7)</td><td><code>integration_secrets</code> · provider <code>dian</code></td><td>🔴 Sí</td></tr>
+      <tr><td>Datos fiscales (razón social, NIT+DV, dirección, municipio DANE, régimen, responsabilidades, CIIU)</td><td>RUT del cliente (F6)</td><td><code>integration_configs</code> · provider <code>dian</code></td><td>🟢 No</td></tr>
+    </table>
+    </div>
+    <div class="callout danger">
+      <strong>🔒 Reglas duras de manejo</strong>
+      <ul>
+        <li>Certificados y contraseñas NUNCA por WhatsApp, correo o chat — solo el canal seguro de onboarding.</li>
+        <li>Nada de secretos hardcodeados ni en <code>integration_configs</code> — los secretos viven en <code>integration_secrets</code> (mismo patrón que Shopify/WO/SIIGO).</li>
+        <li>Canónica de integraciones en INGLÉS: <code>integrations.dian</code> (Artículo XV v2 de la constitución de specs).</li>
+        <li>Registrar fecha de vencimiento del certificado al guardarlo — alimenta el monitoreo de la sección 7.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="config">
+    <h2>4 · Configuración en Katuq</h2>
+    <p>
+      El motor DIAN es una estrategia más del <code>AccountingManager</code>
+      (<code>services/accounting/providers/dianProvider.js</code>), igual que SIIGO y World Office.
+      Config por empresa vía <code>IntegrationConfigService</code>.
+    </p>
+    <h3>Estructura de configuración del tenant</h3>
+    <pre>integration_configs / {companyId} / dian
+{
+  "enabled": true,
+  "environment": "habilitacion" | "produccion",
+  "softwareName": "Katuq",
+  "testSetId": "...",                  // solo habilitación
+  "numbering": {
+    "resolutionNumber": "18760000001",
+    "prefix": "FEKQ",
+    "from": 1,
+    "to": 50000,
+    "current": 1,                      // consecutivo — SOLO se avanza en transacción Firestore
+    "validFrom": "2026-07-01",
+    "validTo": "2028-07-01"
+  },
+  "issuer": {
+    "businessName": "...", "nit": "...", "dv": "...",
+    "address": "...", "municipalityCode": "05001",   // código DANE
+    "taxRegime": "...", "responsibilities": ["O-13", "..."], "ciiu": "..."
+  },
+  "receiptEmailCopy": "facturas@cliente.com"
+}
+
+integration_secrets / {companyId} / dian
+{
+  "certificateP12Base64": "...",
+  "certificatePassword": "...",
+  "certificateExpiresAt": "2027-07-01",
+  "softwareId": "uuid-dian",
+  "softwarePin": "...",
+  "technicalKey": "..."                // clave técnica del rango (producción)
+}</pre>
+    <div class="callout warn">
+      <strong>⚠️ Consecutivos = transacción Firestore SIEMPRE</strong>
+      El número de factura se toma y avanza dentro de una transacción (mismo criterio que inventario).
+      Un consecutivo repetido o saltado frente al rango autorizado = rechazo DIAN y dolor de cabeza contable.
+    </div>
+    <h3>Activación del flujo de venta</h3>
+    <ul>
+      <li>En la empresa: <code>generarFacturaElectronica = true</code> y proveedor de facturación = <code>dian</code>.</li>
+      <li>El flujo es el mismo de SIIGO/WO: <code>crear-ventas</code> dispara la facturación al aprobarse el pago; el manager delega en la estrategia <code>dian</code>.</li>
+    </ul>
+  </section>
+
+  <section id="pruebas">
+    <h2>5 · Set de pruebas de habilitación (F4)</h2>
+    <p>
+      Con Software ID + PIN + TestSetId y el certificado del cliente, se corre el set contra el ambiente de habilitación
+      <span class="env-pill hab">HAB</span>. El set exige enviar documentos válidos de cada tipo (facturas de venta, notas
+      crédito, notas débito) hasta que el portal marque el set como <strong>Aceptado</strong>.
+    </p>
+    <ol>
+      <li>Configurar el tenant con <code>environment: "habilitacion"</code>.</li>
+      <li>Ejecutar el script de set de pruebas (envía vía <code>SendTestSetAsync</code> y consulta estado con <code>GetStatus</code> por <code>trackId</code>).</li>
+      <li>Revisar cada documento: los rechazos traen las reglas violadas (códigos de regla del anexo técnico) — corregir datos del emisor/documento y reenviar.</li>
+      <li>Verificar en el portal de habilitación que el set quedó <strong>Aceptado</strong>.</li>
+      <li>El cliente (en 2 minutos, o en la misma sesión si ya tiene numeración) asocia el modo de operación en <span class="env-pill prod">PROD</span> <a href="https://catalogo-vpfe.dian.gov.co/User/Login" target="_blank">catalogo-vpfe.dian.gov.co</a>, donde se registra/sincroniza el rango de numeración y obtenemos la <strong>clave técnica</strong>.</li>
+    </ol>
+    <div class="callout info">
+      <strong>💡 Los documentos de prueba no son reales</strong>
+      Todo lo del ambiente de habilitación es de mentira (sin efectos fiscales). Se pueden usar datos del emisor reales
+      con adquirientes ficticios del anexo (consumidor final 222222222222).
+    </div>
+  </section>
+
+  <section id="golive">
+    <h2>6 · Checklist go-live (clic para marcar — se guarda por navegador)</h2>
+    <p>Duplicar esta lista en el ticket del tenant. No se activa producción con un solo ítem sin chequear.</p>
+    <ul class="check-list" id="golive-list">
+      <li>RUT del cliente con responsabilidad 52 verificado (pantallazo en el ticket)</li>
+      <li>Certificado .p12 cargado en <code>integration_secrets</code>, contraseña probada (firma de prueba OK) y vencimiento registrado</li>
+      <li>Software ID + PIN en el vault; set de pruebas <strong>Aceptado</strong> en portal HAB</li>
+      <li>Resolución de numeración vigente cargada; prefijo/rango/fechas coinciden con el PDF de MUISCA</li>
+      <li>Rango asociado en portal PROD y clave técnica guardada en <code>integration_secrets</code></li>
+      <li>Datos fiscales del emisor validados contra el RUT (dirección y municipio DANE exactos — causa #1 de rechazo)</li>
+      <li><code>environment: "produccion"</code> y <code>generarFacturaElectronica: true</code> en la empresa</li>
+      <li>Primera factura real emitida en sesión acompañada: validada por DIAN (CUFE OK), PDF con QR correcto, email al adquiriente recibido</li>
+      <li>Nota crédito de prueba real sobre esa factura (anulación) emitida y validada</li>
+      <li>Monitoreo activo: alertas de consumo de numeración y vencimientos (sección 7)</li>
+      <li>Cliente confirmó recepción de la copia de facturas en su correo fiscal</li>
+    </ul>
+  </section>
+
+  <section id="operacion">
+    <h2>7 · Operación y monitoreo continuo</h2>
+    <ul>
+      <li><strong>Estados por documento:</strong> cada emisión guarda trackId, CUFE, estado DIAN y XML en la colección de auditoría del motor (nunca <code>console.log</code>). Los rechazos disparan reintento con backoff y alerta si persisten.</li>
+      <li><strong>Numeración:</strong> alerta al 80% de consumo del rango o a 60 días del vencimiento de la resolución — se le pide al cliente renovar en MUISCA (mismo trámite F5).</li>
+      <li><strong>Certificados:</strong> alerta a 45 y 15 días del vencimiento. Sin certificado vigente NO se factura: es el bloqueo duro más común.</li>
+      <li><strong>Contingencia:</strong> si la DIAN está caída, los documentos quedan en cola con reintento; no se entrega factura al cliente final sin validación DIAN (modelo de validación previa).</li>
+      <li><strong>Cambios normativos:</strong> los anexos técnicos cambian (p. ej. Res. 000202/2025 aplica en 2026). Suscribirse al micrositio DIAN y revisar trimestralmente.</li>
+    </ul>
+  </section>
+
+  <section id="troubleshooting">
+    <h2>8 · Troubleshooting — rechazos y errores frecuentes</h2>
+    <div class="table-scroll">
+    <table>
+      <tr><th>Síntoma</th><th>Causa típica</th><th>Acción</th></tr>
+      <tr>
+        <td>Rechazo por datos del emisor (dirección/municipio)</td>
+        <td>Dirección o código DANE no coincide exactamente con el RUT</td>
+        <td>Copiar textual del RUT (casillas 38-41). Corregir <code>issuer</code> y reemitir.</td>
+      </tr>
+      <tr>
+        <td>Rechazo por numeración</td>
+        <td>Consecutivo fuera de rango, resolución vencida o clave técnica errada</td>
+        <td>Validar <code>numbering</code> vs PDF de MUISCA y clave técnica del portal PROD.</td>
+      </tr>
+      <tr>
+        <td>Error de firma / política de firma</td>
+        <td>Certificado vencido, contraseña mala o cadena de confianza incompleta</td>
+        <td>Probar el .p12 con firma local; verificar vencimiento; si venció → cliente reexpide con la CA.</td>
+      </tr>
+      <tr>
+        <td>CUFE inválido</td>
+        <td>Diferencia entre los valores del XML y los usados para el hash (totales, fechas, clave técnica)</td>
+        <td>Bug del motor: comparar la cadena de concatenación contra el anexo técnico. Escalar a dev.</td>
+      </tr>
+      <tr>
+        <td>El set de pruebas no avanza</td>
+        <td>Documentos aceptados con notificación pero set incompleto (faltan tipos de documento)</td>
+        <td>Revisar en portal HAB qué tipos faltan (notas C/D suelen olvidarse) y enviarlos.</td>
+      </tr>
+      <tr>
+        <td>Timeout / caída del WS DIAN</td>
+        <td>Ventanas de mantenimiento DIAN (frecuentes de madrugada) o picos</td>
+        <td>La cola reintenta sola. Si es masivo, revisar estado de servicios en el micrositio DIAN antes de tocar nada.</td>
+      </tr>
+      <tr>
+        <td>Cliente no recibe el token de acceso al portal</td>
+        <td>Correo del RUT desactualizado o buzón lleno</td>
+        <td>Actualizar correo en el RUT (MUISCA) primero; reintentar al día siguiente.</td>
+      </tr>
+    </table>
+    </div>
+  </section>
+
+  <section id="referencias">
+    <h2>9 · URLs y referencias</h2>
+    <div class="table-scroll">
+    <table>
+      <tr><th>Qué</th><th>URL</th></tr>
+      <tr><td><span class="env-pill hab">HAB</span> Portal habilitación (registro, set de pruebas)</td><td><a href="https://catalogo-vpfe-hab.dian.gov.co/User/Login" target="_blank">catalogo-vpfe-hab.dian.gov.co</a></td></tr>
+      <tr><td><span class="env-pill prod">PROD</span> Portal producción (rangos, clave técnica, consulta docs)</td><td><a href="https://catalogo-vpfe.dian.gov.co/User/Login" target="_blank">catalogo-vpfe.dian.gov.co</a></td></tr>
+      <tr><td>MUISCA (RUT, numeración)</td><td><a href="https://muisca.dian.gov.co" target="_blank">muisca.dian.gov.co</a></td></tr>
+      <tr><td>Micrositio Sistema de Facturación (anexos técnicos, novedades)</td><td><a href="https://micrositios.dian.gov.co/sistema-de-facturacion-electronica/" target="_blank">micrositios.dian.gov.co/sistema-de-facturacion-electronica</a></td></tr>
+      <tr><td>Res. 000165/2023 (marco vigente, anexo FE v1.9)</td><td><a href="https://normograma.dian.gov.co/dian/compilacion/docs/resolucion_dian_0165_2023.htm" target="_blank">normograma.dian.gov.co → Res. 165/2023</a></td></tr>
+      <tr><td>Res. 000202/2025 (cambios que aplican en 2026)</td><td><a href="https://www.dian.gov.co/normatividad/Normatividad/Resoluci%C3%B3n%20000202%20de%2031-03-2025.pdf" target="_blank">Res. 202 de 2025 (PDF)</a></td></tr>
+      <tr><td>Guía del cliente (esta carpeta)</td><td><a href="manual-cliente.html">manual-cliente.html</a></td></tr>
+    </table>
+    </div>
+    <div class="callout warn">
+      <strong>⚠️ Marco legal del modelo — leer antes de vender esto</strong>
+      Operamos como <strong>software propio del cliente</strong> ("desarrollo tecnológico adquirido", Res. 000165/2023 art. 28):
+      cada empresa se habilita ante la DIAN con el software de Katuq registrado a su nombre y firma con SU certificado.
+      Katuq NO está habilitado como Proveedor Tecnológico (art. 616-4 E.T.) — no podemos ofrecer "nosotros facturamos por ti
+      ante la DIAN" como servicio; el habilitado y responsable ante la DIAN es siempre el cliente. Si el volumen de tenants
+      lo justifica, evaluar habilitación formal como PT o proveedor marca blanca (Factus u otro) — decisión abierta, ver CONTRACT.md.
+    </div>
+  </section>
+
+  <footer>
+    Katuq · Runbook interno onboarding DIAN · v1 — julio 2026 · specs/016 (por definir) · No compartir con clientes — para ellos existe <a href="manual-cliente.html">manual-cliente.html</a>
+  </footer>
+</div>
+
+<script>
+  const KEY = 'katuq-dian-golive-checklist';
+  const list = document.getElementById('golive-list');
+  const saved = JSON.parse(localStorage.getItem(KEY) || '[]');
+  [...list.children].forEach((li, i) => {
+    if (saved[i]) li.classList.add('done');
+    li.addEventListener('click', () => {
+      li.classList.toggle('done');
+      localStorage.setItem(KEY, JSON.stringify([...list.children].map(x => x.classList.contains('done'))));
+    });
+  });
+</script>
+</body>
+</html>
