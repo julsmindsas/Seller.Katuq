@@ -1,6 +1,6 @@
 import { Injectable } from "@angular/core";
 import { HttpClient } from "@angular/common/http";
-import { BehaviorSubject, forkJoin, Observable, of, timer, EMPTY } from "rxjs";
+import { BehaviorSubject, forkJoin, Observable, of, timer } from "rxjs";
 import { MaestroService } from "../../../shared/services/maestros/maestro.service";
 import { CacheService } from "../../../shared/services/cache/cache.service";
 import Swal from "sweetalert2";
@@ -337,7 +337,10 @@ export class PedidosUtilService {
                 
                 // Mostrar error solo si no hay datos disponibles
                 this.showErrorNotification();
-                return EMPTY;
+                // NO devolver EMPTY: completa sin emitir y cuelga a los suscriptores
+                // que esperan next/error (p.ej. waitUntilLoaded → vista previa de PDF).
+                // Degradamos con datos parciales (arrays vacíos) para que el flujo continúe.
+                return of(this.buildMaestrosData());
             })
         );
     }
@@ -451,16 +454,29 @@ export class PedidosUtilService {
             // Si hay error y no hay datos, intentar recargar
             if (currentState.error && !currentState.data) {
                 console.log('Maestros en error, intentando recargar...');
-                this.forceReloadMaestros().subscribe({
-                    next: () => {
-                        observer.next(true);
-                        observer.complete();
-                    },
-                    error: (err) => {
-                        console.error('Error recargando maestros:', err);
-                        observer.error(new Error('No se pudieron cargar los datos maestros'));
-                    }
-                });
+                // Cinturón de seguridad: la recarga puede completar SIN emitir
+                // (EMPTY heredado / degradación). Resolvemos tanto en `next` como en
+                // `complete`, y añadimos `timeout` para que esta rama nunca cuelgue
+                // indefinidamente (antes no tenía timeout, a diferencia de la rama C).
+                let settled = false;
+                const resolve = () => {
+                    if (settled) return;
+                    settled = true;
+                    observer.next(true);
+                    observer.complete();
+                };
+                this.forceReloadMaestros()
+                    .pipe(timeout(timeoutMs))
+                    .subscribe({
+                        next: () => resolve(),
+                        complete: () => resolve(),
+                        error: (err) => {
+                            if (settled) return;
+                            settled = true;
+                            console.error('Error recargando maestros:', err);
+                            observer.error(new Error('No se pudieron cargar los datos maestros'));
+                        }
+                    });
                 return;
             }
 
