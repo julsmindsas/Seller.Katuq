@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fullpi (WMS) — Manual de configuración | Katuq</title>
+<style>
+  :root {
+    --primary: #1b55e2;
+    --primary-soft: #eef3ff;
+    --ok: #1a9c6b;
+    --ok-soft: #e8f7f1;
+    --warn: #c98a06;
+    --warn-soft: #fdf6e5;
+    --danger: #c0392b;
+    --danger-soft: #fdefed;
+    --accent: #b45309;        /* Fullpi ámbar (flat, sin gradientes) */
+    --accent-soft: #fef3e2;
+    --ink: #1f2937;
+    --ink-soft: #6b7280;
+    --line: #e5e7eb;
+    --bg: #f9fafb;
+    --card: #ffffff;
+    --code-bg: #f3f4f6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    color: var(--ink); background: var(--bg); line-height: 1.6;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px 80px; }
+
+  header.hero {
+    background: var(--card); border: 1px solid var(--line);
+    border-left: 6px solid var(--accent);
+    border-radius: 10px; padding: 26px 30px; margin-bottom: 24px;
+  }
+  header.hero h1 { font-size: 1.5rem; margin-bottom: 6px; }
+  header.hero p { color: var(--ink-soft); }
+  .badge {
+    display: inline-block; font-size: .75rem; font-weight: 700;
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 20px; padding: 3px 12px; margin-bottom: 10px; letter-spacing: .3px;
+  }
+
+  nav.toc {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 16px 22px; margin-bottom: 24px; font-size: .9rem;
+  }
+  nav.toc strong { display: block; margin-bottom: 6px; }
+  nav.toc a { color: var(--primary); text-decoration: none; margin-right: 18px; white-space: nowrap; display: inline-block; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  section {
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 24px 28px; margin-bottom: 22px;
+  }
+  section > h2 {
+    font-size: 1.2rem; margin-bottom: 14px; padding-bottom: 10px;
+    border-bottom: 2px solid var(--accent-soft);
+  }
+  section h3 { font-size: 1rem; margin: 18px 0 8px; }
+  section p { margin-bottom: 10px; font-size: .95rem; }
+  section ol, section ul { margin: 0 0 12px 22px; }
+  section li { margin-bottom: 6px; font-size: .95rem; }
+
+  .callout { border-radius: 8px; padding: 13px 16px; margin: 12px 0; font-size: .9rem; }
+  .callout.info { background: var(--primary-soft); border-left: 4px solid var(--primary); }
+  .callout.warn { background: var(--warn-soft); border-left: 4px solid var(--warn); }
+  .callout.ok { background: var(--ok-soft); border-left: 4px solid var(--ok); }
+  .callout.danger { background: var(--danger-soft); border-left: 4px solid var(--danger); }
+  .callout strong:first-child { display: block; margin-bottom: 4px; }
+
+  code, .mono {
+    font-family: Consolas, "Courier New", monospace; font-size: .85em;
+    background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+  }
+  pre {
+    background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+    padding: 14px 16px; overflow-x: auto; margin: 10px 0 14px;
+    font-family: Consolas, monospace; font-size: .82rem; line-height: 1.5;
+  }
+  pre code { background: none; padding: 0; }
+
+  table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: .88rem; }
+  th, td { border: 1px solid var(--line); padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: var(--bg); font-weight: 600; }
+  .table-scroll { overflow-x: auto; }
+
+  .check-list { list-style: none; margin-left: 0 !important; }
+  .check-list li {
+    padding: 8px 12px 8px 40px; position: relative; border: 1px solid var(--line);
+    border-radius: 6px; margin-bottom: 6px; background: var(--bg); cursor: pointer;
+    user-select: none;
+  }
+  .check-list li::before {
+    content: ""; position: absolute; left: 12px; top: 11px; width: 18px; height: 18px;
+    border: 2px solid var(--ink-soft); border-radius: 4px; background: #fff;
+  }
+  .check-list li.done { color: var(--ink-soft); text-decoration: line-through; }
+  .check-list li.done::before {
+    content: "✓"; color: #fff; background: var(--ok); border-color: var(--ok);
+    display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 700;
+  }
+
+  .flow-card {
+    border: 1px solid var(--line); border-left: 5px solid var(--accent);
+    border-radius: 8px; padding: 14px 18px; margin-bottom: 12px; background: var(--bg);
+  }
+  .flow-card strong { display: block; font-size: .95rem; }
+  .flow-card span { font-size: .85rem; color: var(--ink-soft); }
+  .pill {
+    display: inline-block; font-size: .72rem; font-weight: 700; padding: 2px 10px;
+    border-radius: 12px; margin-left: 8px; vertical-align: middle;
+  }
+  .pill.draft { background: var(--warn-soft); color: var(--warn); }
+  .pill.on { background: var(--ok-soft); color: var(--ok); }
+
+  .steps { counter-reset: paso; list-style: none; margin-left: 0 !important; }
+  .steps > li {
+    counter-increment: paso; position: relative; padding-left: 44px; margin-bottom: 14px;
+  }
+  .steps > li::before {
+    content: counter(paso); position: absolute; left: 0; top: 0;
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent-soft); color: var(--accent);
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .9rem;
+  }
+  footer { text-align: center; color: var(--ink-soft); font-size: .8rem; margin-top: 30px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hero">
+  <span class="badge">SPEC 017 · D-082 · MANUAL INTERNO KATUQ</span>
+  <h1>Integración Fullpi (WMS) — Manual de configuración</h1>
+  <p>Cómo dejar operativa la integración Katuq ↔ Fullpi para OH MY STORE: cargar credenciales,
+     completar la configuración, probar en ambiente de pruebas y activar los flows.
+     El código y el provisioning ya están montados — este manual cubre lo que falta para el go-live.</p>
+</header>
+
+<nav class="toc">
+  <strong>Contenido</strong>
+  <a href="#como-funciona">1. Cómo funciona</a>
+  <a href="#estado">2. Qué ya está montado</a>
+  <a href="#correo">3. Prerrequisito: el correo de Fullpi</a>
+  <a href="#deploy">4. Paso 1 — Deploy</a>
+  <a href="#credenciales">5. Paso 2 — Credenciales</a>
+  <a href="#config">6. Paso 3 — Configuración</a>
+  <a href="#prueba">7. Paso 4 — Prueba dirigida</a>
+  <a href="#activar">8. Paso 5 — Activar flows</a>
+  <a href="#monitoreo">9. Monitoreo y troubleshooting</a>
+  <a href="#referencia">10. Referencia técnica</a>
+</nav>
+
+<!-- ============================================================ -->
+<section id="como-funciona">
+  <h2>1. Cómo funciona la integración</h2>
+  <p>Fullpi es el WMS (bodega externa) que despacha pedidos de OH MY STORE. La integración tiene
+     <strong>tres flujos independientes</strong>, cada uno implementado como un flow de <code>/flows</code>
+     (activarlos o apagarlos ahí <em>es</em> el interruptor de la integración — no hay otra configuración):</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Flujo</th><th>Dirección</th><th>Qué hace</th><th>Cadencia</th></tr>
+    <tr>
+      <td><code>fullpi-orders-push-oms</code></td>
+      <td>Katuq → Fullpi</td>
+      <td>Envía al WMS los pedidos <strong>pagados o contraentrega</strong> de la bodega
+          <code>BOD-FULLPI-1</code> que aún no fueron enviados. Idempotente: nunca duplica.
+          Tras el envío el pedido pasa a <em>EnDespacho</em>.</td>
+      <td>cada 10 min</td>
+    </tr>
+    <tr>
+      <td><code>fullpi-orders-status-pull-oms</code></td>
+      <td>Fullpi → Katuq</td>
+      <td>Lee el historial de estados del WMS y actualiza el pedido
+          (<em>Despachado</em>/<em>Entregado</em>) con su notificación al cliente.
+          Nunca retrocede un estado. Estado desconocido = queda en auditoría sin tocar el pedido.</td>
+      <td>cada 30 min</td>
+    </tr>
+    <tr>
+      <td><code>fullpi-inventory-to-katuq-oms</code></td>
+      <td>Fullpi → Katuq</td>
+      <td>Sincroniza unidades por SKU del WMS hacia la bodega <code>BOD-FULLPI-1</code>
+          (solo cambios; escribe vía el nodo genérico <code>katuq-inventory-adjust</code>).</td>
+      <td>cada 30 min</td>
+    </tr>
+  </table>
+  </div>
+  <div class="callout info">
+    <strong>Regla de elegibilidad del push</strong>
+    Un pedido entra al WMS solo si: (1) su <code>bodegaId</code> es <code>BOD-FULLPI-1</code>,
+    (2) está pagado (<code>estadoPago</code> Aprobado/Pagado) <em>o</em> es contraentrega,
+    (3) tiene <code>nroPedido</code>, y (4) no está cancelado ni entregado.
+    El match con el WMS es <code>idOrden = nroPedido</code>.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="estado">
+  <h2>2. Qué ya está montado (no hay que volver a hacerlo)</h2>
+  <ul>
+    <li>✅ <strong>Código backend</strong>: servicio completo (<code>services/integrations/fullpi/</code>),
+        3 nodos de flows y tests (48/48). Commits <code>26a64b3</code> + <code>762e891</code> en <code>backend-aws-security</code>.</li>
+    <li>✅ <strong>Bodega Katuq</strong> <code>BOD-FULLPI-1</code> "Fullpi (WMS)" creada para OH MY STORE.</li>
+    <li>✅ <strong>Configuración base</strong> <code>integration_configs/OH MY STORE_fullpi</code>
+        (apiUrl de pruebas, bodegaCode) — <em>sin secret</em>, por eso está inerte.</li>
+    <li>✅ <strong>Los 3 flows creados en borrador</strong> (draft = apagados) en <code>/flows</code>.</li>
+  </ul>
+  <div class="callout warn">
+    <strong>Ojo: los pasos 1 y 2 de este manual son los únicos bloqueantes.</strong>
+    Sin deploy el editor /flows no muestra los nodos Fullpi; sin secret la integración no puede llamar al API.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="correo">
+  <h2>3. Prerrequisito: el correo de Fullpi</h2>
+  <p>Fullpi debe enviar por correo (según su PDF). Reclamar si falta algo — <em>sin esto no hay go-live</em>:</p>
+  <ul class="check-list" data-ck="correo">
+    <li>El <strong>secret</strong> del ambiente de <strong>pruebas</strong></li>
+    <li>El <strong>secret</strong> del ambiente de <strong>producción</strong> (mismo endpoint, cambia el secret)</li>
+    <li>El <strong>archivo de cobertura</strong> de bodegas (ciudades y departamentos válidos)</li>
+    <li>El <strong>código de bodega</strong> asignado (ej. <code>ECF1</code>)</li>
+    <li>La <strong>tabla completa de estados</strong> del <code>status_history</code> (statusWMS → significado). El PDF solo trae ejemplos</li>
+    <li>Confirmación del <strong>dominio real</strong>: el PDF mezcla <code>wms.tien<u>ti</u>empresa.com.co</code> y <code>wms.tien<u>di</u>empresa.com.co</code> (typo en uno)</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="deploy">
+  <h2>4. Paso 1 — Desplegar el backend (una sola vez)</h2>
+  <p>El código está en git pero el server de producción aún no lo corre. Secuencia segura:</p>
+  <pre><code># SSH al server
+ssh -i "C:\sourcecodejuls\Seller.Katuq\ops\ec2-keys\lightsail-default-us-east-1.pem" ubuntu@ec2-13-222-206-185.compute-1.amazonaws.com
+
+# En el server — pull y confirmar que HEAD avanzó ANTES de reiniciar
+cd /home/ubuntu/katuq_admin_back_firebase
+git pull origin backend-aws-security
+git rev-parse --short HEAD        # debe ser 762e891 o posterior
+pm2 restart katuq-api             # SIN sudo</code></pre>
+  <p>Verificación: abrir <code>/flows</code> en Katuq → crear flow → la paleta debe mostrar el grupo
+     <strong>Fullpi</strong> con 3 nodos.</p>
+</section>
+
+<!-- ============================================================ -->
+<section id="credenciales">
+  <h2>5. Paso 2 — Cargar las credenciales</h2>
+  <div class="callout danger">
+    <strong>Regla de oro</strong>
+    El secret NUNCA va en código, en el chat, en un flow ni en un commit. Solo vive encriptado en
+    <code>integration_secrets</code> y se carga por variable de entorno con el script de abajo.
+  </div>
+  <p>Desde <code>katuq_admin_back_firebase/functions/</code> (PowerShell):</p>
+  <pre><code>$env:FULLPI_SECRET = "el-secret-que-llegó-por-correo"
+node scripts/load-017-fullpi-secret.js --company "OH MY STORE" --codigo-bodega-wms ECF1
+Remove-Item Env:FULLPI_SECRET     # limpiar SIEMPRE al terminar</code></pre>
+  <p>Si Fullpi confirma que el dominio es otro, corregirlo en el mismo comando:</p>
+  <pre><code>node scripts/load-017-fullpi-secret.js --company "OH MY STORE" --api-url https://wms.dominio-confirmado.com.co</code></pre>
+  <div class="callout info">
+    <strong>Pruebas vs producción</strong>
+    Es el mismo endpoint con secret distinto. Para pasar de pruebas a producción basta re-correr el script
+    con el secret de producción — cero cambios de código.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="config">
+  <h2>6. Paso 3 — Completar la configuración</h2>
+  <p>Campos de <code>integration_configs/OH MY STORE_fullpi</code> (se editan con el mismo script o vía consola Firestore):</p>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Campo</th><th>Qué es</th><th>Valor actual / ejemplo</th></tr>
+    <tr><td><code>apiUrl</code></td><td>Endpoint del WMS (https obligatorio)</td><td><code>https://wms.tiendiempresa.com.co</code> — confirmar con el correo</td></tr>
+    <tr><td><code>secret</code> 🔒</td><td>Credencial (encriptada en integration_secrets)</td><td>— cargar con el script del paso 2</td></tr>
+    <tr><td><code>bodegaCode</code></td><td>Bodega Katuq espejo del WMS (business code, nunca doc ID)</td><td><code>BOD-FULLPI-1</code> ✅ ya seteado</td></tr>
+    <tr><td><code>codigoBodegaWms</code></td><td>Código que Fullpi asigna (viene en el correo)</td><td><code>ECF1</code></td></tr>
+    <tr><td><code>statusMap</code></td><td>Overrides/tabla de estados statusWMS → estado Katuq</td><td><code>{"en reparto": "Despachado"}</code></td></tr>
+    <tr><td><code>shippingMethodMap</code></td><td>formaEntrega Katuq → shipping_method Fullpi</td><td><code>{"recoge en tienda": "PICKUP STORE"}</code></td></tr>
+  </table>
+  </div>
+  <h3>El statusMap: cómo completarlo</h3>
+  <p>De fábrica solo mapean 2 estados (los únicos confirmados del PDF):
+     <code>TRANSITO NACIONAL → Despachado</code> y <code>Entregado → Entregado</code>.
+     Cualquier otro estado que el WMS reporte queda registrado en
+     <code>fullpi_sync_log</code> con acción <code>unknown_status</code> <em>sin tocar el pedido</em>.</p>
+  <ol>
+    <li>Pedirle a Fullpi la tabla completa de estados (paso 3 del correo).</li>
+    <li>Revisar los <code>unknown_status</code> acumulados en <code>fullpi_sync_log</code> tras los primeros días.</li>
+    <li>Agregar cada estado al <code>statusMap</code> con su equivalente Katuq
+        (<code>Despachado</code>, <code>Entregado</code> o <code>Cancelado</code>).
+        Estados intermedios que no cambian nada en Katuq se pueden omitir a propósito.</li>
+  </ol>
+  <div class="callout warn">
+    <strong>"No entregado" / RETURNED</strong>
+    Deliberadamente SIN mapear: una devolución implica decisión operativa (¿reintento? ¿stock de vuelta?).
+    Cuando Fullpi confirme la semántica, decidir si mapea a Cancelado o si sigue manual.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="prueba">
+  <h2>7. Paso 4 — Prueba dirigida (ambiente de pruebas, ANTES de activar crons)</h2>
+  <p>Con el secret de <strong>pruebas</strong> cargado, validar los 3 flujos a mano. Los flows en draft
+     se pueden ejecutar manualmente con el botón <em>Ejecutar</em> del editor sin activar el cron.</p>
+  <ul class="steps">
+    <li><strong>Pedido de prueba:</strong> crear en venta asistida un pedido con bodega
+        <code>BOD-FULLPI-1</code>, con un SKU que exista en el WMS, y marcarlo pagado
+        (o contraentrega).</li>
+    <li><strong>Push:</strong> ejecutar el flow <code>Fullpi ← Pedidos pagados (OMS)</code>.
+        Verificar: el run termina <em>success</em> con <code>pushed: 1</code>; el pedido queda
+        <em>EnDespacho</em> con <code>integrations.fullpi.wmsOrderId</code>; Fullpi confirma
+        que ve la orden en su sistema.</li>
+    <li><strong>Idempotencia:</strong> ejecutar el mismo flow otra vez → <code>candidates: 0</code>
+        (no re-envía). Es el comportamiento correcto.</li>
+    <li><strong>Tracking:</strong> pedir a Fullpi que mueva la orden de estado en pruebas y ejecutar
+        <code>Fullpi → Estados de pedidos (OMS)</code>. Verificar que el pedido avanza
+        (o que el estado quedó como <code>unknown_status</code> en <code>fullpi_sync_log</code> —
+        entonces agregar el mapping al statusMap y re-ejecutar).</li>
+    <li><strong>Inventario:</strong> ejecutar <code>Fullpi → Inventario Katuq (OMS)</code>.
+        Verificar en <code>/inventarios</code> que <code>BOD-FULLPI-1</code> tomó las cantidades del WMS
+        y que los movimientos quedaron con reason <code>fullpi_sync</code>.
+        <strong>Validar el match de SKUs</strong>: el <code>sku</code> del WMS debe ser la
+        <code>identificacion.referencia</code> del producto Katuq — si no matchea, el ajuste no encuentra el producto.</li>
+  </ul>
+</section>
+
+<!-- ============================================================ -->
+<section id="activar">
+  <h2>8. Paso 5 — Activar los flows (el interruptor real)</h2>
+  <p>Con la prueba dirigida en verde y el secret de <strong>producción</strong> cargado, activar en
+     <code>/flows</code> (cambiar de borrador a activo). Se pueden activar de a uno:</p>
+  <div class="flow-card">
+    <strong>1º — Fullpi → Inventario Katuq (OMS) <span class="pill draft">draft</span></strong>
+    <span>El más inocuo. Primera corrida = baseline completo del stock; después solo cambios.
+    Verificar 24h de movimientos antes de seguir.</span>
+  </div>
+  <div class="flow-card">
+    <strong>2º — Fullpi ← Pedidos pagados (OMS) <span class="pill draft">draft</span></strong>
+    <span>Empieza a despachar pedidos reales por el WMS. Requiere que la operación ya asigne
+    pedidos a la bodega BOD-FULLPI-1.</span>
+  </div>
+  <div class="flow-card">
+    <strong>3º — Fullpi → Estados de pedidos (OMS) <span class="pill draft">draft</span></strong>
+    <span>Activar junto con el push (sin él, los pedidos quedan EnDespacho para siempre).
+    Dispara notificaciones de Despachado/Entregado al cliente.</span>
+  </div>
+  <div class="callout ok">
+    <strong>Apagar = desactivar el flow.</strong>
+    No hay flags ocultos ni configuración paralela. Si algo sale mal, desactivar el flow detiene
+    ese flujo de inmediato sin tocar nada más.
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="monitoreo">
+  <h2>9. Monitoreo y troubleshooting</h2>
+  <h3>Dónde mirar</h3>
+  <ul>
+    <li><strong>/flows → Runs</strong>: cada corrida con métricas (<code>pushed</code>, <code>updated</code>,
+        <code>unknown</code>, <code>errors</code>) y razón de fallo por ítem.</li>
+    <li><strong><code>fullpi_sync_log/{empresa}/orders/{pedidoId}</code></strong> (Firestore): traza por pedido
+        (pushed, already_existed, status_pulled, unknown_status, push_failed, map_error).</li>
+    <li><strong>El pedido mismo</strong>: <code>integrations.fullpi.*</code> (wmsOrderId, status, error, lastStatusSync).</li>
+  </ul>
+  <h3>Síntomas frecuentes</h3>
+  <div class="table-scroll">
+  <table>
+    <tr><th>Síntoma</th><th>Causa</th><th>Acción</th></tr>
+    <tr>
+      <td>Run falla con <code>FULLPI_MISSING_SECRET</code></td>
+      <td>El secret no está cargado</td>
+      <td>Paso 2 de este manual</td>
+    </tr>
+    <tr>
+      <td>Run falla con <code>FULLPI_UNAUTHORIZED</code> (401)</td>
+      <td>Secret inválido o rotado</td>
+      <td>Confirmar secret con Fullpi y recargarlo. NO se reintenta solo (es estático)</td>
+    </tr>
+    <tr>
+      <td>Pedido no se envía (<code>candidates: 0</code>)</td>
+      <td>No cumple elegibilidad</td>
+      <td>Verificar: ¿bodega = BOD-FULLPI-1? ¿pagado o contraentrega? ¿tiene nroPedido? ¿no cancelado?</td>
+    </tr>
+    <tr>
+      <td><code>push_failed</code> con validación del WMS</td>
+      <td>Campo requerido faltante (dirección, ciudad, teléfono...)</td>
+      <td>El detalle queda en <code>integrations.fullpi.error</code>. Completar el dato del pedido; el próximo barrido lo reintenta</td>
+    </tr>
+    <tr>
+      <td>Estados no avanzan + <code>unknown_status</code> en el log</td>
+      <td>statusWMS sin mapping</td>
+      <td>Agregar al <code>statusMap</code> (sección 6). Es el diseño: nunca se adivina un estado</td>
+    </tr>
+    <tr>
+      <td>Inventario no entra para un SKU</td>
+      <td>El sku del WMS no coincide con <code>identificacion.referencia</code></td>
+      <td>Alinear la referencia del producto en Katuq (o el SKU en el WMS)</td>
+    </tr>
+    <tr>
+      <td><code>already_existed</code> en el log</td>
+      <td>La orden ya estaba en el WMS (push previo sin marcar)</td>
+      <td>Nada — es autocuración: se marca como enviada y sigue el tracking normal</td>
+    </tr>
+  </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<section id="referencia">
+  <h2>10. Referencia técnica rápida</h2>
+  <h3>Piezas del código (backend)</h3>
+  <ul>
+    <li><code>services/integrations/fullpi/fullpiApiClient.js</code> — HTTP client (secret por query param)</li>
+    <li><code>services/integrations/fullpi/fullpiOrderService.js</code> — push batch + pull de estados</li>
+    <li><code>services/integrations/fullpi/fullpiStatusPolicy.js</code> — tabla de estados + anti-retroceso</li>
+    <li><code>services/flows/nodes/fullpi/</code> — los 3 nodos (wrappers del service)</li>
+    <li><code>scripts/seed-017-fullpi-oms.js</code> — provisioning (ya aplicado)</li>
+    <li><code>scripts/load-017-fullpi-secret.js</code> — carga de credenciales</li>
+    <li><code>scripts/test-017-fullpi.js</code> — tests de contrato (48)</li>
+  </ul>
+  <h3>Campos que la integración escribe en el pedido</h3>
+  <pre><code>integrations.fullpi = {
+  idOrden:        "OMS-000123",   // = nroPedido, clave de match con el WMS
+  wmsOrderId:     5597,           // ID interno que asigna Fullpi
+  isPushed:       true,
+  pushedAt:       &lt;timestamp&gt;,
+  status:         "TRANSITO NACIONAL",  // último statusWMS aplicado
+  lastStatusSync: &lt;timestamp&gt;,
+  error:          "...",          // solo si el WMS rechazó el push
+}</code></pre>
+  <h3>Payload al WMS — decisiones de mapeo</h3>
+  <ul>
+    <li><code>idOrden</code> = <code>nroPedido</code> · <code>currency_ID</code> = COP · <code>update</code> = 0</li>
+    <li><code>payment_Type</code>: pagado → "Pagado"; contraentrega → "Pago contraentrega" con <code>total_Paid_Amount = 0</code></li>
+    <li><code>shipping_method</code>: default "NORMAL (3 A 5 DIAS)" salvo override en <code>shippingMethodMap</code></li>
+    <li><code>products[].sku</code> = <code>identificacion.referencia</code> del producto Katuq</li>
+    <li>Requeridos duros (si faltan, el pedido queda en <code>map_error</code> y no viaja): dirección, ciudad, departamento, teléfono, ≥1 producto con SKU</li>
+  </ul>
+  <h3>Especificación completa</h3>
+  <p><code>specs/017-fullpi-wms-oms/</code> (spec + plan + tasks) y decisión <strong>D-082</strong> en <code>specs/CONTRACT.md</code>.</p>
+</section>
+
+<footer>
+  Katuq · Spec 017 · Integración Fullpi (WMS) · Generado 2026-07-06 — el checklist se guarda en este navegador.
+</footer>
+</div>
+
+<script>
+  // Checklist persistente en localStorage (mismo patrón del manual DIAN).
+  document.querySelectorAll('.check-list').forEach(function (list) {
+    var key = 'fullpi-manual-' + (list.dataset.ck || 'ck');
+    var saved = [];
+    try { saved = JSON.parse(localStorage.getItem(key) || '[]'); } catch (e) { saved = []; }
+    var items = list.querySelectorAll('li');
+    items.forEach(function (li, i) {
+      if (saved.indexOf(i) >= 0) li.classList.add('done');
+      li.addEventListener('click', function () {
+        li.classList.toggle('done');
+        var done = [];
+        items.forEach(function (x, j) { if (x.classList.contains('done')) done.push(j); });
+        try { localStorage.setItem(key, JSON.stringify(done)); } catch (e) { /* noop */ }
+      });
+    });
+  });
+</script>
+</body>
+</html>
