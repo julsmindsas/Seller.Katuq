@@ -2521,6 +2521,98 @@
           </div>
         </ng-container>
 
+        <!-- ===== FULLPI (WMS) — Spec 017 ===== -->
+        <ng-container *ngIf="selectedIntegrationType === 'fullpi'">
+          <div class="integration-info-box">
+            <i class="fa fa-info-circle"></i>
+            <span>Configure la integración con <strong>Fullpi (WMS)</strong>: sus pedidos pagados se envían automáticamente a la bodega de Fullpi para despacho, y Katuq recibe el estado de cada envío y el inventario disponible.</span>
+          </div>
+
+          <!-- API URL -->
+          <div class="form-group">
+            <label for="fullpiApiUrl">
+              <i class="fa fa-globe"></i> URL del API:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-globe prefix-icon"></i>
+              <input type="text" id="fullpiApiUrl" formControlName="apiUrl"
+                     placeholder="https://wms.tiendiempresa.com.co" autocomplete="off">
+            </div>
+            <div *ngIf="integrationForm.get('apiUrl')?.invalid && integrationForm.get('apiUrl')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> La URL es obligatoria y debe iniciar con https://
+            </div>
+            <small class="form-text text-muted">Endpoint del WMS. Confírmalo con el correo de credenciales de Fullpi.</small>
+          </div>
+
+          <!-- Secret -->
+          <div class="form-group">
+            <label for="fullpiSecret">
+              <i class="fa fa-key"></i> Secret de autenticación:
+              <span class="field-required">*</span>
+            </label>
+            <div class="input-with-icon password-field">
+              <i class="fa fa-lock prefix-icon"></i>
+              <input [type]="showApiKey ? 'text' : 'password'" id="fullpiSecret"
+                     formControlName="secret" placeholder="Secret enviado por correo por Fullpi" autocomplete="off">
+              <i class="fa fa-eye suffix-icon" title="Mostrar/Ocultar" (click)="toggleApiKeyVisibility()"></i>
+            </div>
+            <div *ngIf="integrationForm.get('secret')?.invalid && integrationForm.get('secret')?.touched" class="text-danger">
+              <i class="fa fa-exclamation-triangle"></i> El secret es obligatorio
+            </div>
+            <small class="form-text text-muted">Katuq lo guarda encriptado. Pruebas y producción usan secrets distintos (mismo endpoint).</small>
+          </div>
+
+          <div class="field-row">
+            <!-- Bodega Katuq -->
+            <div class="field-col form-group">
+              <label for="fullpiBodegaCode">
+                <i class="fa fa-warehouse"></i> Bodega Katuq:
+                <span class="field-required">*</span>
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-warehouse prefix-icon"></i>
+                <input type="text" id="fullpiBodegaCode" formControlName="bodegaCode"
+                       placeholder="BOD-FULLPI-1" autocomplete="off">
+              </div>
+              <small class="form-text text-muted">Los pedidos asignados a esta bodega viajan a Fullpi, y su inventario se sincroniza aquí.</small>
+            </div>
+
+            <!-- Código de bodega en Fullpi -->
+            <div class="field-col form-group">
+              <label for="fullpiCodigoBodegaWms">
+                <i class="fa fa-boxes"></i> Código de bodega en Fullpi:
+              </label>
+              <div class="input-with-icon">
+                <i class="fa fa-boxes prefix-icon"></i>
+                <input type="text" id="fullpiCodigoBodegaWms" formControlName="codigoBodegaWms"
+                       placeholder="Ej: ECF1" autocomplete="off">
+              </div>
+              <small class="form-text text-muted">Lo asigna Fullpi (llega en el correo de credenciales).</small>
+            </div>
+          </div>
+
+          <!-- Ambiente -->
+          <div class="form-group">
+            <label for="fullpiEnvironment">
+              <i class="fa fa-flask"></i> Ambiente:
+            </label>
+            <div class="input-with-icon">
+              <i class="fa fa-flask prefix-icon"></i>
+              <select id="fullpiEnvironment" formControlName="environment" class="form-control">
+                <option value="staging">Pruebas</option>
+                <option value="production">Producción</option>
+              </select>
+            </div>
+            <small class="form-text text-muted">Empieza en Pruebas con el secret de pruebas; al pasar a Producción solo cambias el secret y este selector.</small>
+          </div>
+
+          <div class="integration-info-box">
+            <i class="fa fa-lightbulb"></i>
+            <span><strong>Nota:</strong> guardar la configuración NO enciende la sincronización. El interruptor real son los tres flows de Fullpi en la pantalla <strong>Flows</strong> (enviar pedidos, estados e inventario) — actívalos cuando la prueba de conexión pase.</span>
+          </div>
+        </ng-container>
+
         <!-- ===== FORMULARIO DINÁMICO BASADO EN ESQUEMA ===== -->
         <ng-container *ngIf="isDynamicForm && currentSchema">
           <div class="dynamic-form-container">

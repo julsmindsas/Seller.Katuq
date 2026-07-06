@@ -577,6 +577,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       case 'osmosis':
         this.integrationForm = this.createOsmosisForm();
         break;
+      case 'fullpi':
+        this.integrationForm = this.createFullpiForm();
+        break;
       case 'whatsapp_kapso':
         // WhatsApp Business (Kapso) usa el componente dedicado
         // <app-whatsapp-kapso-config>. Creamos un FormGroup minimal para
@@ -677,6 +680,9 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
         break;
       case 'osmosis':
         this.integrationForm = this.createOsmosisForm();
+        break;
+      case 'fullpi':
+        this.integrationForm = this.createFullpiForm();
         break;
       case 'whatsapp_kapso':
         // WhatsApp Business (Kapso) usa el componente dedicado
@@ -1056,6 +1062,25 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
       syncOrders: [true],
       autoSyncProducts: [false],
       productSyncInterval: [6, [Validators.min(1), Validators.max(24)]]
+    });
+  }
+
+  createFullpiForm(): FormGroup {
+    // [Spec 017] Fullpi (WMS). El secret lo encripta el backend
+    // (PROVIDER_SCHEMAS.fullpi.sensitive) — acá solo viaja en el POST.
+    return this.fb.group({
+      name: ['Fullpi', Validators.required],
+      enabled: [true],
+      // URL del API (requerida, https). Confirmar dominio con el correo de Fullpi.
+      apiUrl: ['https://wms.tiendiempresa.com.co', [Validators.required, Validators.pattern(/^https:\/\/.+/)]],
+      // Secret de autenticación (llega por correo de Fullpi; sensible)
+      secret: ['', Validators.required],
+      // Bodega Katuq espejo del WMS (business code, ej. BOD-FULLPI-1)
+      bodegaCode: ['BOD-FULLPI-1', Validators.required],
+      // Código de bodega que asigna Fullpi (ej. ECF1, llega por correo)
+      codigoBodegaWms: [''],
+      // Ambiente: pruebas (staging) o producción — mismo endpoint, distinto secret
+      environment: ['staging']
     });
   }
 
@@ -1498,6 +1523,18 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
           autoSyncProducts:    formData.autoSyncProducts    ?? false,
           productSyncInterval: formData.productSyncInterval ?? 6
         };
+        break;
+      case 'fullpi':
+        credentials = {
+          apiUrl:      formData.apiUrl,
+          secret:      formData.secret,
+          bodegaCode:  formData.bodegaCode || 'BOD-FULLPI-1',
+          environment: formData.environment || 'staging'
+        };
+        // Opcional: solo viaja si tiene valor (validateConfig lo valida si viene)
+        if (formData.codigoBodegaWms) {
+          credentials.codigoBodegaWms = formData.codigoBodegaWms;
+        }
         break;
       case 'world_office':
         credentials = {
@@ -2029,6 +2066,41 @@ export class IntegrationsComponent implements OnInit, OnDestroy {
             placeholder: '6',
             icon: 'fa-clock',
             tooltip: 'Cada cuántas horas se sincroniza el catálogo automáticamente (1-24)'
+          }
+        ];
+      case 'fullpi':
+        return [
+          {
+            id: 'apiUrl',
+            label: 'URL del API',
+            type: 'string',
+            placeholder: 'https://wms.tiendiempresa.com.co',
+            icon: 'fa-link',
+            tooltip: 'Endpoint del WMS Fullpi (https). Confirmar el dominio con el correo de credenciales'
+          },
+          {
+            id: 'secret',
+            label: 'Secret de autenticación',
+            type: 'password',
+            placeholder: 'Secret enviado por correo por Fullpi',
+            icon: 'fa-key',
+            tooltip: 'Credencial del API. Katuq la guarda encriptada; pruebas y producción usan secrets distintos'
+          },
+          {
+            id: 'bodegaCode',
+            label: 'Bodega Katuq',
+            type: 'string',
+            placeholder: 'BOD-FULLPI-1',
+            icon: 'fa-warehouse',
+            tooltip: 'Código de la bodega Katuq espejo del WMS (los pedidos de esta bodega viajan a Fullpi)'
+          },
+          {
+            id: 'codigoBodegaWms',
+            label: 'Código de bodega en Fullpi',
+            type: 'string',
+            placeholder: 'ECF1',
+            icon: 'fa-boxes',
+            tooltip: 'Código que Fullpi asigna a tu bodega (llega en el correo de credenciales)'
           }
         ];
       default:

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Fullpi (WMS) — logo placeholder flat (spec 017), sin gradientes -->
+  <rect x="4" y="4" width="56" height="56" rx="12" fill="#fef3e2"/>
+  <rect x="4" y="4" width="56" height="56" rx="12" fill="none" stroke="#b45309" stroke-width="2"/>
+  <!-- caja de bodega -->
+  <path d="M32 14 L50 23 L50 41 L32 50 L14 41 L14 23 Z" fill="#f59e0b"/>
+  <path d="M32 14 L50 23 L32 32 L14 23 Z" fill="#fbbf24"/>
+  <path d="M32 32 L32 50 L14 41 L14 23 Z" fill="#d97706"/>
+  <!-- check de despacho -->
+  <circle cx="46" cy="46" r="11" fill="#b45309"/>
+  <path d="M40.5 46 L44.5 50 L52 42.5" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

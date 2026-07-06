@@ -252,16 +252,21 @@ pm2 restart katuq-api             # SIN sudo</code></pre>
     El secret NUNCA va en código, en el chat, en un flow ni en un commit. Solo vive encriptado en
     <code>integration_secrets</code> y se carga por variable de entorno con el script de abajo.
   </div>
-  <p>Desde <code>katuq_admin_back_firebase/functions/</code> (PowerShell):</p>
-  <pre><code>$env:FULLPI_SECRET = "el-secret-que-llegó-por-correo"
-node scripts/load-017-fullpi-secret.js --company "OH MY STORE" --codigo-bodega-wms ECF1
-Remove-Item Env:FULLPI_SECRET     # limpiar SIEMPRE al terminar</code></pre>
-  <p>Si Fullpi confirma que el dominio es otro, corregirlo en el mismo comando:</p>
-  <pre><code>node scripts/load-017-fullpi-secret.js --company "OH MY STORE" --api-url https://wms.dominio-confirmado.com.co</code></pre>
+  <p><strong>El camino oficial es la app</strong> (regla del equipo: las credenciales nunca se cargan
+     por scripts/.env): <span class="mono">Menú → Integraciones → categoría Logística → tarjeta Fullpi →
+     Configurar</span>. Ahí se pega el secret, se pone el código de bodega del WMS, se pulsa
+     <strong>Probar conexión</strong> (hace una llamada real al WMS: 200 = OK, 401 = secret inválido)
+     y se guarda. El backend lo encripta automáticamente en <code>integration_secrets</code>.
+     El paso a paso con pantallas está en el <a href="manual-usuario.html"><strong>manual de usuario</strong></a>.</p>
   <div class="callout info">
     <strong>Pruebas vs producción</strong>
-    Es el mismo endpoint con secret distinto. Para pasar de pruebas a producción basta re-correr el script
-    con el secret de producción — cero cambios de código.
+    Es el mismo endpoint con secret distinto. Para pasar a producción: editar la integración en la app,
+    pegar el secret de producción y cambiar el selector de Ambiente — cero cambios de código.
+  </div>
+  <div class="callout warn">
+    <strong>Fallback de emergencia (solo si la UI no está disponible)</strong>
+    Existe <code>scripts/load-017-fullpi-secret.js</code> (secret por variable de entorno
+    <code>FULLPI_SECRET</code>, nunca por argv). Usarlo únicamente en incidentes; el flujo normal es la app.
   </div>
 </section>
 
